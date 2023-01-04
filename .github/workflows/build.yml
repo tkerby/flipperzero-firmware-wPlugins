@@ -33,4 +33,5 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Latest Build"
+          body_path: ReadMe.md
           files: dist/f7-C/f7-update-RM420FAP/${{ github.sha }}.zip
