@@ -11,14 +11,23 @@
 #include <gui/scene_manager.h>
 #include <math.h>
 
+#ifndef PI
+#define PI 3.14159265358979f
+#endif
+
 #define TAG "Asteroids" // Used for logging
 #define DEBUG_MSG 1
 #define SCREEN_XRES 128
 #define SCREEN_YRES 64
 #define GAME_START_LIVES 3
-#ifndef PI
-#define PI 3.14159265358979f
-#endif
+
+/* The game uses the OK button both to fire and to accelerate the ship.
+ * This makes it a lot more playable since the finger does not have to
+ * move between two keys. However it is important that the extra time the
+ * player needs to press the button to accelerate instead of just firing
+ * is precisely selected to provide a smooth experience. After a few
+ * attempts, it looks like 70 milliseconds is the right spot. */
+#define SHIP_ACCELERATION_KEYPRESS_TIME 70
 
 /* ============================ Data structures ============================= */
 
@@ -27,7 +36,7 @@ typedef struct Ship {
         y, /* Ship y position. */
         vx, /* x velocity. */
         vy, /* y velocity. */
-        rot; /* Current rotation. 2*PI full ortation. */
+        rot; /* Current rotation. 2*PI full rotation. */
 } Ship;
 
 typedef struct Bullet {
@@ -50,11 +59,11 @@ typedef struct AsteroidsApp {
     Gui* gui;
     ViewPort* view_port; /* We just use a raw viewport and we render
                                 everything into the low level canvas. */
-    FuriMessageQueue* event_queue; /* Keypress events go here. */
+    FuriMessageQueue* event_queue; /* Key press events go here. */
 
     /* Game state. */
     int running; /* Once false exists the app. */
-    bool gameover; /* Gameover status. */
+    bool gameover; /* Game over status. */
     uint32_t ticks; /* Game ticks. Increments at each refresh. */
     uint32_t score; /* Game score. */
     uint32_t lives; /* Number of lives in the current game. */
@@ -81,7 +90,7 @@ typedef struct AsteroidsApp {
     bool fire; /* Short press detected: fire a bullet. */
 } AsteroidsApp;
 
-/* ============================== Prototyeps ================================ */
+/* ============================== Prototypes ================================ */
 
 // Only functions called before their definition are here.
 
@@ -103,7 +112,9 @@ typedef struct Poly {
 /* Define the polygons we use. */
 Poly ShipPoly = {{-3, 0, 3}, {-3, 6, -3}, 3};
 
-/* Rotate the point of the poligon 'poly' and store the new rotated
+Poly ShipFirePoly = {{-1.5, 0, 1.5}, {-3, -6, -3}, 3};
+
+/* Rotate the point of the polygon 'poly' and store the new rotated
  * polygon in 'rot'. The polygon is rotated by an angle 'a', with
  * center at 0,0. */
 void rotate_poly(Poly* rot, Poly* poly, float a) {
@@ -154,7 +165,7 @@ void draw_bullet(Canvas* const canvas, Bullet* b) {
 /* Draw an asteroid. The asteroid shapes is computed on the fly and
  * is not stored in a permanent shape structure. In order to generate
  * the shape, we use an initial fixed shape that we resize according
- * to the asteroid size, perturbate according to the asteroid shape
+ * to the asteroid size, perturbed according to the asteroid shape
  * seed, and finally draw it rotated of the right amount. */
 void draw_asteroid(Canvas* const canvas, Asteroid* ast) {
     Poly ap;
@@ -230,6 +241,8 @@ void render_callback(Canvas* const canvas, void* ctx) {
 
     /* Draw ship, asteroids, bullets. */
     draw_poly(canvas, &ShipPoly, app->ship.x, app->ship.y, app->ship.rot);
+    if(key_pressed_time(app, InputKeyOk) > SHIP_ACCELERATION_KEYPRESS_TIME)
+        draw_poly(canvas, &ShipFirePoly, app->ship.x, app->ship.y, app->ship.rot);
 
     for(int j = 0; j < app->bullets_num; j++) draw_bullet(canvas, &app->bullets[j]);
 
@@ -294,8 +307,8 @@ void ship_fire_bullet(AsteroidsApp* app) {
 
     /* Give the bullet some velocity (for now the vector is just
      * normalized to 1). */
-    b->vx *= 2;
-    b->vy *= 2;
+    b->vx *= 3;
+    b->vy *= 3;
 
     /* It's more realistic if we add the velocity vector of the
      * ship, too. Otherwise if the ship is going fast the bullets
@@ -353,7 +366,7 @@ void remove_asteroid(AsteroidsApp* app, int id) {
 /* Called when an asteroid was reached by a bullet. The asteroid
  * hit is the one with the specified 'id'. */
 void asteroid_was_hit(AsteroidsApp* app, int id) {
-    float sizelimit = 6; // Smaller than that polverize in one shot.
+    float sizelimit = 6; // Smaller than that, they disappear in one shot.
     Asteroid* a = &app->asteroids[id];
 
     /* Asteroid is large enough to break into fragments. */
@@ -377,8 +390,8 @@ void asteroid_was_hit(AsteroidsApp* app, int id) {
     }
 }
 
-/* Set gameover state. When in game-over mode, the game displays a gameover
- * text with a background of many asteroids floating around. */
+/* Set game over state. When in game-over mode, the game displays a
+ * game over text with a background of many asteroids floating around. */
 void game_over(AsteroidsApp* app) {
     restart_game_after_gameover(app);
     app->gameover = true;
@@ -411,14 +424,14 @@ void restart_game(AsteroidsApp* app) {
     app->asteroids_num = 0;
 }
 
-/* Called after gameover to restart the game. This function
+/* Called after game over to restart the game. This function
  * also calls restart_game(). */
 void restart_game_after_gameover(AsteroidsApp* app) {
     app->gameover = false;
     app->ticks = 0;
     app->score = 0;
     app->ship_hit = 0;
-    app->lives = GAME_START_LIVES;
+    app->lives = GAME_START_LIVES - 1; /* -1 to account for current one. */
     restart_game(app);
 }
 
@@ -455,7 +468,7 @@ void detect_collisions(AsteroidsApp* app) {
         Bullet* b = &app->bullets[j];
         for(int i = 0; i < app->asteroids_num; i++) {
             Asteroid* a = &app->asteroids[i];
-            if(objects_are_colliding(a->x, a->y, a->size, b->x, b->y, 1, 1)) {
+            if(objects_are_colliding(a->x, a->y, a->size, b->x, b->y, 1.5, 1)) {
                 asteroid_was_hit(app, i);
                 remove_bullet(app, j);
                 /* The bullet no longer exist. Break the loop.
@@ -502,7 +515,7 @@ void game_tick(void* ctx) {
     } else if(app->gameover) {
         /* 2. Game over. We need to update only background asteroids. In this
      * state the game just displays a GAME OVER text with the floating
-     * asteroids in backgroud. */
+     * asteroids in background. */
         if(key_pressed_time(app, InputKeyOk) > 100) {
             restart_game_after_gameover(app);
         }
@@ -511,19 +524,27 @@ void game_tick(void* ctx) {
         return;
     }
 
-    /* Handle keypresses. */
+    /* Handle key presses. */
     if(app->pressed[InputKeyLeft]) app->ship.rot -= .35;
     if(app->pressed[InputKeyRight]) app->ship.rot += .35;
-    if(app->pressed[InputKeyOk]) {
+    if(key_pressed_time(app, InputKeyOk) > SHIP_ACCELERATION_KEYPRESS_TIME) {
         app->ship.vx -= 0.5 * (float)sin(app->ship.rot);
         app->ship.vy += 0.5 * (float)cos(app->ship.rot);
+    } else if(app->pressed[InputKeyDown]) {
+        app->ship.vx *= 0.75;
+        app->ship.vy *= 0.75;
     }
 
     /* Fire a bullet if needed. app->fire is set in
      * asteroids_update_keypress_state() since depends on exact
      * pressure timing. */
     if(app->fire) {
-        ship_fire_bullet(app);
+        uint32_t bullet_min_period = 200; // In milliseconds
+        uint32_t now = furi_get_tick();
+        if(now - app->last_bullet_tick >= bullet_min_period) {
+            ship_fire_bullet(app);
+            app->last_bullet_tick = now;
+        }
         app->fire = false;
     }
 
