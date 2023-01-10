@@ -1,4 +1,4 @@
-#How to Automate Github Build for RogueMaster Flipper
+# How to Automate Github Build for RogueMaster Flipper
 This describes how you can automate a custom build process to generate your own releases on Github. This may be useful to include custom assets like @tkerby has used for UK based RF hopping.
 
 ## Step 1: Fork the repository
