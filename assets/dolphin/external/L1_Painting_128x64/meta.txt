@@ -16,7 +16,7 @@ Bubble slots: 2
 Slot: 0
 X: 57
 Y: 24
-Text: $20 to put this
+Text: $20 to buy this
 AlignH: Left
 AlignV: Center
 StartFrame: 11
@@ -25,7 +25,7 @@ EndFrame: 14
 Slot: 0
 X: 57
 Y: 21
-Text: in my blowhole
+Text: watercolour masterpiece
 AlignH: Left
 AlignV: Center
 StartFrame: 15
@@ -34,7 +34,7 @@ EndFrame: 18
 Slot: 1
 X: 57
 Y: 24
-Text: How many dicks
+Text: How many dolphins
 AlignH: Left
 AlignV: Center
 StartFrame: 11
