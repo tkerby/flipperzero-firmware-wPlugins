@@ -273,6 +273,15 @@ uint32_t bitmap_seek_bits(
     uint32_t startpos,
     uint32_t maxbits,
     const char* bits);
+bool bitmap_match_bitmap(
+    uint8_t* b1,
+    uint32_t b1len,
+    uint32_t b1off,
+    uint8_t* b2,
+    uint32_t b2len,
+    uint32_t b2off,
+    uint32_t cmplen);
+void bitmap_to_string(char* dst, uint8_t* b, uint32_t blen, uint32_t off, uint32_t len);
 uint32_t convert_from_line_code(
     uint8_t* buf,
     uint64_t buflen,
@@ -341,7 +350,7 @@ void fieldset_add_int(ProtoViewFieldSet* fs, const char* name, int64_t val, uint
 void fieldset_add_uint(ProtoViewFieldSet* fs, const char* name, uint64_t uval, uint8_t bits);
 void fieldset_add_hex(ProtoViewFieldSet* fs, const char* name, uint64_t uval, uint8_t bits);
 void fieldset_add_bin(ProtoViewFieldSet* fs, const char* name, uint64_t uval, uint8_t bits);
-void fieldset_add_str(ProtoViewFieldSet* fs, const char* name, const char* s);
+void fieldset_add_str(ProtoViewFieldSet* fs, const char* name, const char* s, size_t len);
 void fieldset_add_bytes(
     ProtoViewFieldSet* fs,
     const char* name,
@@ -361,3 +370,5 @@ void field_set_from_field(ProtoViewField* dst, ProtoViewField* src);
 
 /* crc.c */
 uint8_t crc8(const uint8_t* data, size_t len, uint8_t init, uint8_t poly);
+uint8_t sum_bytes(const uint8_t* data, size_t len, uint8_t init);
+uint8_t xor_bytes(const uint8_t* data, size_t len, uint8_t init);
