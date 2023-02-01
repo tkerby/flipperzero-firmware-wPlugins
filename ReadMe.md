@@ -29,7 +29,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0131-0038-0.75.1-065ec0b](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0131-1743-0.75.1-a97c543](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-01-30 10:20 EST`
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-01-30 10:20 EST`
@@ -42,12 +42,14 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Temp Sensors Reader (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31855/MAX6675`
 - SD Cleanup! Changed directories to make things more oganized: iButton Fuzzer, Picopass, Unitemp, NrfSniff and MouseJacker
 - Updated: [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
-- Updated: [MagSpoof WIP (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper)
 - Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
 - Updated: [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
 - [Move SCD30 App into GPIO category #518 (Thanks to maede97)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/518)
 - Patreon Build Update: ALL builds now have 6 more new animations [(Thanks to RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/1c0ddfdec013f3b44bb7192466a7e626ff47a460)
 - [Updated infrared assets + InfraredCaptures Documentation #306 (By amec0r)](https://github.com/DarkFlippers/unleashed-firmware/pull/306)
+- Updated: [MagSpoof WIP (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper)
+- Updated: [Scope (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
+- Updated: [Pomodoro 2 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
 
 <a name="release">
 
