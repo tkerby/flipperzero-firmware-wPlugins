@@ -1,7 +1,7 @@
 
 <a href='https://www.patreon.com/RogueMaster/membership'><img src="patreon.png" width="40%"></a>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0130-0055-0.75.1-4b05da6.tgz&channel=RM0130-0055-0.75.1-4b05da6&version=0.75.1)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0207-0219-0.76.1-31e3fb4.tgz&channel=RM0207-0219-0.76.1-31e3fb4&version=0.76.1)
 
 ## What Is Not In The Firmware? [SD CARD EXTRA FILES AND OTHER RESEARCH SOURCES](https://github.com/RogueMaster/awesome-flipperzero-withModules)
 
@@ -29,10 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0131-1743-0.75.1-a97c543](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0207-0218-0.76.1-31e3fb4](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-01-30 10:20 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-01-30 10:20 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-07 01:36 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-07 01:36 EST`
 - A few apps got renamed and save locations fixed. Authenticator and Astroids saves should be moved to `apps_data` folder.
 - Updated: [Dab Timer (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/main/clock) (New Primary Face w/Flipagotchi Faces!)
 - OFW: [Furi: getter for current thread stdout write callback #2344 (By Milk-Cool)](https://github.com/flipperdevices/flipperzero-firmware/pull/2344)
@@ -42,14 +42,31 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Temp Sensors Reader (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31855/MAX6675`
 - SD Cleanup! Changed directories to make things more oganized: iButton Fuzzer, Picopass, Unitemp, NrfSniff and MouseJacker
 - Updated: [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
-- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
-- Updated: [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
 - [Move SCD30 App into GPIO category #518 (Thanks to maede97)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/518)
 - Patreon Build Update: ALL builds now have 6 more new animations [(Thanks to RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/1c0ddfdec013f3b44bb7192466a7e626ff47a460)
 - [Updated infrared assets + InfraredCaptures Documentation #306 (By amec0r)](https://github.com/DarkFlippers/unleashed-firmware/pull/306)
 - Updated: [MagSpoof WIP (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper)
-- Updated: [Scope (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
 - Updated: [Pomodoro 2 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
+- [Improve Tetris fall speed algorithm #521 (By p3ngu19z)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/521)
+- OFW: [NFC: fix creating MF Classic tags from "Add Manually" menu (BCC calulation and ATQA/SAK writing) #2342 (By AloneLiberty)](https://github.com/flipperdevices/flipperzero-firmware/pull/2342)
+- OFW: [FreeRTOS: update to 10.5.1 #2353 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2353)
+- OFW: [SPI Mem Manager C port #1860 (By drunkbatya)](https://github.com/flipperdevices/flipperzero-firmware/pull/1860)
+- OFW: [Script that can find programmer and flash firmware via it. #2193 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2193)
+- OFW: [AleX83Xpert/add f keys to keyboard layout #2362 (By AleX83Xpert)](https://github.com/flipperdevices/flipperzero-firmware/pull/2362)
+- OFW: [Add Daikin FTXM20M & Mitsubishi SRK63HE #2349 (By WildRat)](https://github.com/flipperdevices/flipperzero-firmware/pull/2349)
+- OFW: [battery info temperature shown in C or F based on settings #2360 (By Round-Pi)](https://github.com/flipperdevices/flipperzero-firmware/pull/2360)
+- OFW: [nfc: Add mifare classic value block commands #2317 (By RouNNdeL)](https://github.com/flipperdevices/flipperzero-firmware/pull/2317)
+- UL: [External CC1101 support #307 (By quen0n)](https://github.com/DarkFlippers/unleashed-firmware/pull/307)
+- UL: [Updated infrared assets + InfraredCaptures Documentation #306 (By amec0e)](https://github.com/DarkFlippers/unleashed-firmware/pull/306)
+- UL: SubGHz: Fix GUI receiver bug - When keyboard is locked and popup appears it now shows bottom text correctly
+- UL: [GUI: Custom font set function (by LTVA1)](https://github.com/LTVA1/flipperzero-firmware-wPlugins/tree/patch-custom-font)
+- Updated: [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
+- Updated: [Geiger Counter (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
+- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
+- Updated: [Scope (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
+- Updated: [TAMA P1: Mute & Settings (By Round-Pi)](https://github.com/Round-Pi/flipperzero-tamagotch-p1)
+- Added: [LORA Terminal (By aafksab)](https://github.com/aafksab/LORA-Term)
+- Added: [Tic-Tac-Toe Multi (By RouNNdeL)](https://github.com/RouNNdeL/flipper-tictactoe-multi)
 
 <a name="release">
 
@@ -247,9 +264,10 @@ $ ./fbt dolphin_ext
 - [Snake (By OlegSchwann)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/829)(With updates from DrZlo13, xMasterX, QtRoS and RogueMaster) [Snake Score Saving (By JuanJakobo)](https://github.com/flipperdevices/flipperzero-firmware/pull/1922) [Turns anywhere (By TQMatvey)](https://github.com/DarkFlippers/unleashed-firmware/pull/125) [Food Spawns Anywwhere (By TQMatvey)](https://github.com/DarkFlippers/unleashed-firmware/pull/130)
 - [Solitaire (By teeebor)](https://github.com/teeebor/flipper_games)
 - [T-Rex (By gelin)](https://github.com/gelin/t-rex-runner) WIP
-- [TAMA P1: Save State & Layout Update (By DroomOne)](https://github.com/DroomOne/flipperzero-tamagotch-p1) [Original TAMA P1 (By GMMan)](https://github.com/GMMan/flipperzero-firmware/tree/tama-p1) [Mute (By Smileycathy1128)](https://github.com/Smileycathy1128/flipperzero-tamagotch-p1)
+- [TAMA P1: Save State & Layout Update (By DroomOne)](https://github.com/DroomOne/flipperzero-tamagotch-p1) [Original TAMA P1 (By GMMan)](https://github.com/GMMan/flipperzero-firmware/tree/tama-p1) [Mute & Settings (By Round-Pi)](https://github.com/Round-Pi/flipperzero-tamagotch-p1)
 - [Tanks (By Alexgr13)](https://github.com/alexgr13/flipperzero-firmware/tree/fork/dev/applications/tanks-game)
 - [Tetris (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game)
+- [Tic-Tac-Toe Multi (By RouNNdeL)](https://github.com/RouNNdeL/flipper-tictactoe-multi)
 - [Tic Tac Toe (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins)
 - [Video Poker (By PixlEmly)](https://github.com/PixlEmly/flipperzero-firmware-testing/blob/420/applications/VideoPoker/poker.c)
 - [Yatzee (By emfleak)](https://github.com/emfleak/flipperzero-yatzee)
@@ -296,10 +314,11 @@ $ ./fbt dolphin_ext
 - [HEX Viewer (By QtRoS)](https://github.com/QtRoS/flipperzero-firmware)
 - [i2c Tools (By NaejEL)](https://github.com/NaejEL/flipperzero-i2ctools)
 - [iButton Fuzzer (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware)
+- [IFTTT Virtual Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
 - [Intravelometer (By theageoflove)](https://github.com/theageoflove/flipperzero-zeitraffer)
 - [IR Remote (By Hong5489)](https://github.com/Hong5489/ir_remote)
 - [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
-- [IFTTT Virtual Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
+- [LORA Terminal (By aafksab)](https://github.com/aafksab/LORA-Term)
 - [MagSpoof WIP (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper)
 - [Metronome (By panki27)](https://github.com/panki27/Metronome)
 - [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
@@ -355,4 +374,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyser (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0130-0055-0.75.1-4b05da6.tgz&channel=RM0130-0055-0.75.1-4b05da6&version=0.75.1)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0207-0219-0.76.1-31e3fb4.tgz&channel=RM0207-0219-0.76.1-31e3fb4&version=0.76.1)
