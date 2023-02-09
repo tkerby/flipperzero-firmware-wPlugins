@@ -29,11 +29,11 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0208-0245-0.76.1-97b82d2](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0208-1702-0.76.1-2a84e03](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-08 01:45 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-08 01:45 EST`
-- [Separate Playlists for CVS, Walgreens and Lowes #523 (By coenmpostma)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/523)
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-08 16:45 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-08 16:45 EST`
+- [Separate Playlists for CVS, Walgreens and Lowes #523 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/523)
 - OFW: [Pin Reset #2367 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2367)
 - OFW: [multitarget support for fbt #2209 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/2209)
 - [Cart key wav fix (By ZabuzaDemon)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/522)
@@ -44,6 +44,30 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [TAMA P1: Mute & Settings (By Round-Pi)](https://github.com/Round-Pi/flipperzero-tamagotch-p1)
 - Added: [Reversi (By dimat)](https://github.com/dimat/flipperzero-reversi)
 - Added: [Root of Life (By Xorboo)](https://github.com/Xorboo/root-of-life)
+- [Create Playlist For Tesla #524 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/524)
+- [Create Playlist For Handicap Doors #525 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/525)
+- UL: [Fixes and Merges for the latest OFW Chagnes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commits/dev)
+- OFW: [Fix minor UI inconsistencies and bugs #2361 (By liamhays)](https://github.com/flipperdevices/flipperzero-firmware/pull/2361)
+- OFW: [Custom font set function #2261 (By LTVA1)](https://github.com/flipperdevices/flipperzero-firmware/pull/2261)
+- OFW: [SCons: do not include backup files in build #2221 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2221)
+- OFW: [Github: disable f18 build #2375 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2375)
+- OFW: [Update Missing SD Card icon (taken from #2373) #2376 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2376)
+- OFW: [SubGhz: Fix Raw write, add short duration filter setting #2300 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2300)
+- OFW: [BadUSB: Keyboard Layouts #2256 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/2256)
+- OFW: [SubGhz: add protocol "Linear Delta-3" #2239 (By brandonweeks)](https://github.com/flipperdevices/flipperzero-firmware/pull/2239)
+- OFW: [SubGhz: add DOOYA protocol #2178 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2178)
+- OFW: [SubGhz: add protocol Alutech at-4n #2352 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2352)
+- OFW: [SubGhz: add protocol Nice One #2358 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2358)
+- OFW: [Universal Projector Remote #2343 (By itsweekly)](https://github.com/flipperdevices/flipperzero-firmware/pull/2343)
+- OFW: [SubGhz: add protocol KingGates Stylo4k #2368 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2368)
+- OFW: [Move CSN space to prevent overflow #2232 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2232)
+- OFW: [fbt: building fap_dist for compact gh build; accessor: fixed for latest ibutton changes #2377 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2377)
+- Updated: [Asteroids (Modified By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Asteroids) - Now with PowerUps!
+- UL: Updated [Sub-GHz Bruteforcer v3.4 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
+- Removed: [NFC Magic: Add support for Gen4 "ultimate card" in Magic app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) (Seemingly Not Working)
+- UL: [SubGHz HAL Fixes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware)
+- UL PR: [Fix CTRL-SHIFT in mousejacker #316 (By notmarek)](https://github.com/DarkFlippers/unleashed-firmware/pull/316)
+- UL PR: [Updated infrared assets #318 (By amec0e)](https://github.com/DarkFlippers/unleashed-firmware/pull/318)
 
 <a name="release">
 
@@ -177,7 +201,6 @@ $ ./fbt dolphin_ext
 - NFC: Assets for RogueMaster GitHub and RogueMaster Patreon
 - NFC: [NFC - Machine Readable Travel Documents #1866 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1866)
 - NFC: [(WIP) added ISO15693 reading, saving and revealing from privacy mode (unlock) #1991 (By g3gg0)](https://github.com/flipperdevices/flipperzero-firmware/pull/1991)
-- [NFC Magic: Add support for Gen4 "ultimate card" in Magic app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238)
 - Plugins: 2048, Arkanoid, Snake, and Tetris show score. Thanks to [whoamins](https://github.com/flipperdevices/flipperzero-firmware/commit/7feda832ede1ba8468eff2ca055fef3ddbdc16ac) and [DevMilanIan](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/188) With position changes by RogueMaster. Also all + Tic Tac Toe updated by [Unleashed/Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware) for stability.
 - Plugins: Icon for Clock [Thanks to Redlink](https://github.com/redlink2/flipperzero-firmware/tree/menuChanges)
 - Plugins: OFW PR [Snake Plugin: Store game state on close and restore it on restart, show highscore #1922 (By JuanJakobo)](https://github.com/flipperdevices/flipperzero-firmware/pull/1922)
@@ -214,7 +237,6 @@ $ ./fbt dolphin_ext
 - SubGHz: Protocols An-Motors, BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware)
 - SubGHz: Unlock from SD flag from [(cloudbreakdaniel)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/97db0dc91ee3dff812b4dec0618e3f198de14405).  Update `subghz/assets/extend_range.txt` with [this file](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/assets/resources/subghz/assets/extend_range.txt) on SD.  **UPDATE IGNORE FLAG TO TRUE TO UNLEASH YOUR FLIPPER!!**
 - U2F: U2F.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
-- [WeatherStation: add protocol LaCrosse-TX (TFA Dostmann) #2292 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2292)
 
 ## Games
 
