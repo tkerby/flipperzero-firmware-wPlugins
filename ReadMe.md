@@ -1,7 +1,7 @@
 
 <a href='https://www.patreon.com/RogueMaster/membership'><img src="patreon.png" width="40%"></a>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0207-0219-0.76.1-31e3fb4.tgz&channel=RM0207-0219-0.76.1-31e3fb4&version=0.76.1)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0211-1305-0.76.1-6d6e96f.tgz&channel=RM0211-1305-0.76.1-6d6e96f&version=0.76.1)
 
 ## What Is Not In The Firmware? [SD CARD EXTRA FILES AND OTHER RESEARCH SOURCES](https://github.com/RogueMaster/awesome-flipperzero-withModules)
 
@@ -29,65 +29,15 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0209-2252-0.76.1-dcbe3cd](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0212-0048-0.76.1-09485ba](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-09 21:02 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-09 21:02 EST`
-- [Separate Playlists for CVS, Walgreens and Lowes #523 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/523)
-- OFW: [Pin Reset #2367 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2367)
-- OFW: [multitarget support for fbt #2209 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/2209)
-- [Cart key wav fix (By ZabuzaDemon)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/522)
-- OFW: [Allow use of any suitable pin for 1-Wire devices #2350 (By gsurkov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2350)
-- OFW: [SD over SPI improvements #2204 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2204)
-- [New Patreon Animation Build](https://www.patreon.com/RogueMaster/membership): P0KEMON (with only P0KEMON related animations)
-- Updated: [Authenticator/TOTP: Affecting dolphin level at start #71 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator/pull/71)
-- Updated: [TAMA P1: Mute & Settings (By Round-Pi)](https://github.com/Round-Pi/flipperzero-tamagotch-p1)
-- Added: [Reversi (By dimat)](https://github.com/dimat/flipperzero-reversi)
-- Added: [Root of Life (By Xorboo)](https://github.com/Xorboo/root-of-life)
-- [Create Playlist For Tesla #524 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/524)
-- [Create Playlist For Handicap Doors #525 (By pstmcm2)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/525)
-- UL: [Fixes and Merges for the latest OFW Chagnes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commits/dev)
-- OFW: [Fix minor UI inconsistencies and bugs #2361 (By liamhays)](https://github.com/flipperdevices/flipperzero-firmware/pull/2361)
-- OFW: [Custom font set function #2261 (By LTVA1)](https://github.com/flipperdevices/flipperzero-firmware/pull/2261)
-- OFW: [SCons: do not include backup files in build #2221 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2221)
-- OFW: [Github: disable f18 build #2375 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2375)
-- OFW: [Update Missing SD Card icon (taken from #2373) #2376 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2376)
-- OFW: [SubGhz: Fix Raw write, add short duration filter setting #2300 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2300)
-- OFW: [BadUSB: Keyboard Layouts #2256 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/2256)
-- OFW: [SubGhz: add protocol "Linear Delta-3" #2239 (By brandonweeks)](https://github.com/flipperdevices/flipperzero-firmware/pull/2239)
-- OFW: [SubGhz: add DOOYA protocol #2178 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2178)
-- OFW: [SubGhz: add protocol Alutech at-4n #2352 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2352)
-- OFW: [SubGhz: add protocol Nice One #2358 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2358)
-- OFW: [Universal Projector Remote #2343 (By itsweekly)](https://github.com/flipperdevices/flipperzero-firmware/pull/2343)
-- OFW: [SubGhz: add protocol KingGates Stylo4k #2368 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2368)
-- OFW: [Move CSN space to prevent overflow #2232 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2232)
-- OFW: [fbt: building fap_dist for compact gh build; accessor: fixed for latest ibutton changes #2377 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2377)
-- UL: Updated [Sub-GHz Bruteforcer v3.4 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Removed: [NFC Magic: Add support for Gen4 "ultimate card" in Magic app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) (Seemingly Not Working)
-- UL: [SubGHz HAL Fixes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware)
-- UL PR: [Fix CTRL-SHIFT in mousejacker #316 (By notmarek)](https://github.com/DarkFlippers/unleashed-firmware/pull/316)
-- UL PR: [Updated infrared assets #318 (By amec0e)](https://github.com/DarkFlippers/unleashed-firmware/pull/318)
-- Fixed naming for CVS/Lowes/Walgreens SubGHz Playlists.
-- [Passport as a FAP with Multiple Pages, and Dynamic Icons/Images support (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Old Passport moved but kept as a redundancy in case Passport FAP not found (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Passport Settings app to configure dynamic icons in Passport FAP (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [This does not change old Passport (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Updates to Desktop Settings app (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Desktop icons are now dynamic, and can be changed in Desktop Settings (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Updates to BT, Desktop, GUI, Power, and Storage services to support Dynamic Icons in Desktop (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Fixes for NameChanger app + service (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Cleaned up XP levels in Dolphin service for a more cleaner progression (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Fixed SubGHz CLI "Chat" command throwing errors at build time (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- [Fixed Dummy Mode build error in Desktop Views files (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
-- UL: Updates and BugFixes listed in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev)
-- UL: SubGHz: **Fixed bug in SubGHz HAL, now CC1101 shutdowns properly, (also this fixed unstable TX)**
-- UL: SubGHz: GUI Fixes
-- OFW: SubGhz: fix cc1101_read_fifo func
-- OFW: feat: add missing `const` qualifiers
-- OFW: **SubGhz: add protocol BinRAW (binarization of data quantized by the minimum correlated duration)**
-- OFW: Picopass: show elite key used from dictionary 
-- OFW: Firmware fixes and improvements for flashing via blackmagic
-- Updated: [Asteroids (Modified By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Asteroids) - Now with PowerUps!
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-12 00:45 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-12 00:45 EST`
+- UL: [iButton Fixes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/)
+- UL: [Update filebrowser #327 (By CrazyClara)](https://github.com/DarkFlippers/unleashed-firmware/pull/327) - File sorting SAME algorithm used, back action fixed...
+- UL: [added support for subghz pagers #328 (By jbohack)](https://github.com/DarkFlippers/unleashed-firmware/pull/328)
+- Added: [Text To SAM (By RoundPi)](https://github.com/Round-Pi/flipperzero-text2sam)
+- UL: [Fix file browser update issues #333 (By WillyJL)](https://github.com/DarkFlippers/unleashed-firmware/pull/333) - Also removed dumb assumptions from code comments
 
 <a name="release">
 
@@ -187,7 +137,7 @@ $ ./fbt dolphin_ext
 - Bluetooth Remote: [Add HID mouse auto-clicker. #2319 (By rwl4)](https://github.com/flipperdevices/flipperzero-firmware/pull/2319)
 - Bluetooth Remote + USB Keyboard: [Added movement interval in mouse_jiggler USB & BLE #303 (By DocKuro)](https://github.com/DarkFlippers/unleashed-firmware/pull/303)
 - Clock: Clock.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
-- Desktop: Hidden top bar [Thanks to ESurge](https://github.com/ESurge/)
+- Desktop: Desktop icons are now dynamic, and can be changed in Desktop Settings [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
 - Desktop: Hold Right goes to About with Battery Info [(Thanks to Willy-JL)]
 - Desktop: Exclude icons on the left and show minimal battery [Thanks to skizzophrenic/Talking-Sasquach](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/360)
 - Development free space thanks to removal of unused debug tools and [thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/46/files) for removal of first start assets.
@@ -196,7 +146,9 @@ $ ./fbt dolphin_ext
 - Dolphin: Internal manifest updated to have animations always available with max level 30
 - Dolphin: Level animation sequence for level 3+ to be lvl1->2 for levels 1-20 and lvl2->3 for levels 21-30.
 - Dolphin: Mood Stays Happy [(Thanks to biocage)](https://github.com/biocage/flipperzero-firmware), changed to Mood Stays Less Than 6 / Mood Stays High (but not in game mode) (By RogueMaster)
-- Dolphin: Passport: DB Themed [(Thanks to Kuronons)]
+- Dolphin: Passport: As a FAP with Multiple Pages, and Dynamic Icons/Images support [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
+- Dolphin: Passport: Mario Themed [(Thanks to Kuronons)](https://github.com/Kuronons/FZ_graphics/tree/main/Passport%20background)
+- Dolphin: Passport: Passport Settings app to configure dynamic icons in Passport FAP [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
 - Dolphin: Passport: Show EXP [(By Dabolus)](https://github.com/Dabolus/flipperzero-firmware-rpg/)
 - Dolphin: Changed daily MAX to 198 on all 7 Deed Types. Random Deed Selection used for MAX +3 EXP daily gain.
 - Dolphin: Plugin Achivement +3 EXP for a total of up to 700 EXP daily. Plugin Achivements are:
@@ -255,6 +207,7 @@ $ ./fbt dolphin_ext
 - SubGHz: OFW PR [Decode RAW recordings #1667 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1667)
 - SubGHz: [POCSAG protocol decoder for subghz #2055 (By Shuma)](https://github.com/flipperdevices/flipperzero-firmware/pull/2055)
 - SubGHz: Protocols An-Motors, BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware)
+- SubGHz: Region Locked -  To transmit to outside ranges (Unlock), use the Extend Range app under Applications=>Misc.
 - SubGHz: Unlock from SD flag from [(cloudbreakdaniel)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/97db0dc91ee3dff812b4dec0618e3f198de14405).  Update `subghz/assets/extend_range.txt` with [this file](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/assets/resources/subghz/assets/extend_range.txt) on SD.  **UPDATE IGNORE FLAG TO TRUE TO UNLEASH YOUR FLIPPER!!**
 - U2F: U2F.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
 
@@ -378,6 +331,7 @@ $ ./fbt dolphin_ext
 - [Sub-GHz Bruteforcer v3.4 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - [Sub-GHz Playlist (By darmiel)](https://github.com/darmiel/flipper-playlist)
 - [Temp Sensors Reader (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) `Req: BMP180/BMP280/BME280/BME680/DHT11/DHT22(AM2302)/AM2301/AM2320/HTU2XD/HTU21x/HDC1080/MAX31855/MAX6675`
+- [Text To SAM (By RoundPi)](https://github.com/Round-Pi/flipperzero-text2sam)
 - [Text Viewer (By kowalski7cc)](https://github.com/kowalski7cc/flipper-zero-text-viewer)
 - [Toy Serial (By maybe-hello-world)](https://github.com/maybe-hello-world/flipper-bp) WIP
 - [Tuning Fork (By besya)](https://github.com/besya/flipperzero-tuning-fork)
@@ -395,4 +349,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyser (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0207-0219-0.76.1-31e3fb4.tgz&channel=RM0207-0219-0.76.1-31e3fb4&version=0.76.1)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0211-1305-0.76.1-6d6e96f.tgz&channel=RM0211-1305-0.76.1-6d6e96f&version=0.76.1)

@@ -202,55 +202,33 @@ static bool
 
     uint32_t items_cnt = 0;
 
+    bool ret = false;
     do {
         if(!storage_dir_open(directory, furi_string_get_cstr(path))) {
             break;
         }
 
-        items_cnt = 0;
-        while(items_cnt < offset) {
-            if(!storage_dir_read(directory, &file_info, name_temp, FILE_NAME_LEN_MAX)) {
-                break;
-            }
-            if(storage_file_get_error(directory) == FSE_OK) {
-                furi_string_set(name_str, name_temp);
-                if(browser_filter_by_name(browser, name_str, (file_info.flags & FSF_DIRECTORY))) {
-                    items_cnt++;
-                }
-            } else {
-                break;
-            }
-        }
-        if(items_cnt != offset) {
-            break;
-        }
-
+        UNUSED(offset);
+        UNUSED(count);
         if(browser->list_load_cb) {
-            browser->list_load_cb(browser->cb_ctx, offset);
+            browser->list_load_cb(browser->cb_ctx, 0);
         }
-
-        items_cnt = 0;
-        while(items_cnt < count) {
-            if(!storage_dir_read(directory, &file_info, name_temp, FILE_NAME_LEN_MAX)) {
-                break;
-            }
-            if(storage_file_get_error(directory) == FSE_OK) {
-                furi_string_set(name_str, name_temp);
-                if(browser_filter_by_name(browser, name_str, (file_info.flags & FSF_DIRECTORY))) {
-                    furi_string_printf(name_str, "%s/%s", furi_string_get_cstr(path), name_temp);
-                    if(browser->list_item_cb) {
-                        browser->list_item_cb(
-                            browser->cb_ctx, name_str, (file_info.flags & FSF_DIRECTORY), false);
-                    }
-                    items_cnt++;
+        while(storage_dir_read(directory, &file_info, name_temp, FILE_NAME_LEN_MAX) &&
+              storage_file_get_error(directory) == FSE_OK) {
+            furi_string_set(name_str, name_temp);
+            if(browser_filter_by_name(browser, name_str, (file_info.flags & FSF_DIRECTORY))) {
+                furi_string_printf(name_str, "%s/%s", furi_string_get_cstr(path), name_temp);
+                if(browser->list_item_cb) {
+                    browser->list_item_cb(
+                        browser->cb_ctx, name_str, items_cnt, (file_info.flags & FSF_DIRECTORY), false);
                 }
-            } else {
-                break;
+                items_cnt++;
             }
         }
         if(browser->list_item_cb) {
-            browser->list_item_cb(browser->cb_ctx, NULL, false, true);
+            browser->list_item_cb(browser->cb_ctx, NULL, 0, false, true);
         }
+        ret = true;
     } while(0);
 
     furi_string_free(name_str);
@@ -260,7 +238,7 @@ static bool
 
     furi_record_close(RECORD_STORAGE);
 
-    return (items_cnt == count);
+    return ret;
 }
 
 static int32_t browser_worker(void* context) {

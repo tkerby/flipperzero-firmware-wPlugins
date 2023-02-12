@@ -265,7 +265,7 @@ uint8_t furi_hal_version_get_hw_connect() {
 }
 
 FuriHalVersionRegion furi_hal_version_get_hw_region() {
-    return FuriHalVersionRegionUnknown;
+    return furi_hal_version.board_region;
 }
 
 FuriHalVersionRegion furi_hal_version_get_hw_region_otp() {
@@ -273,7 +273,19 @@ FuriHalVersionRegion furi_hal_version_get_hw_region_otp() {
 }
 
 const char* furi_hal_version_get_hw_region_name() {
-    return "R00";
+    switch(furi_hal_version_get_hw_region_otp()) {
+    case FuriHalVersionRegionUnknown:
+        return "R00";
+    case FuriHalVersionRegionEuRu:
+        return "R01";
+    case FuriHalVersionRegionUsCaAu:
+        return "R02";
+    case FuriHalVersionRegionJp:
+        return "R03";
+    case FuriHalVersionRegionWorld:
+        return "R04";
+    }
+    return "R??";
 }
 
 const char* furi_hal_version_get_hw_region_name_otp() {
