@@ -1,8 +1,12 @@
 ### New changes
-* iButton: **Temp Fix of non working emulation on Metakom and Cyfral protocols**
-* Archive and FileBrowser: **Sort files and folders alphabetically.** Added a "Internal" tab to the Browser (only in DEBUG mode), other misc changes (by @ClaraCrazy and @Willy-JL | PR #327)
-* SubGHz: Custom modulation for lrs pagers and added frequency 467.75 to default list (by @jbohack | PR #328)
-* SubGHz: **Small fixes in SubGHz HAL**
+* SubGHz: **Nice ON2E (Nice One)** support (by @assasinfil | PR #335)
+* SubGHz: Remove 467.75 From freq analyzer since it has too much noise (Frequency is still can be used, just excluded from FA to avoid false detections)
+* Archive and FileBrowser: **Fixed more navigation issues** (by @Willy-JL | PR #334)
+* Plugins -> SubGHz Bruteforcer: Fix Linear Delta 3 repeats (now its more stable and we will be sure signal is received correctly)
+* Plugins: Updated TOTP (Authenticator) [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
+* OFW: **Fix Cyfral & Metakom emulation (My temp fix removed and proper fix from OFW applied)**
+* OFW: BadUSB: disable CDC mode, USB mode switch fix
+* OFW: Updater visual fixes
 
 #### [🎲 Download latest extra apps pack](https://download-directory.github.io/?url=https://github.com/xMasterX/unleashed-extra-pack/tree/main/apps)
 
