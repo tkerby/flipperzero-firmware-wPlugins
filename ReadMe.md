@@ -29,11 +29,18 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0222-1747-0.77.2-8621389](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0224-0121-0.77.2-059976a](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-22 18:00 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-22 18:00 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-24 01:13 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-24 01:13 EST`
 - [Passport Settings: App and Config now stored on SD card (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d76d5b79fe838c657b8f75f4861d5e7f01950642)
+- UL: Faster Power Off
+- UL: SWD Resouces Moved for SD install
+- UL: [Fix keyboard capitalization bug #362 (By Willy-JL)](https://github.com/DarkFlippers/unleashed-firmware/pull/362)
+- Added: [IR Xbox Controller (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
+- Updated: [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
+- Added: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
+- Added: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 
 <a name="release">
 
@@ -279,6 +286,7 @@ $ ./fbt dolphin_ext
 - [DTMF Dolphin (By litui)](https://github.com/litui/dtmf_dolphin)
 - [Extend Range (By maede97)](https://github.com/maede97/flipperzero-extend-range) (Allows SubGHz Unlock!)
 - [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
+- [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - [Flashlight (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
 - [Flizzer Tracker (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
@@ -292,6 +300,7 @@ $ ./fbt dolphin_ext
 - [IFTTT Virtual Button (By Ferrazzi)](https://github.com/Ferrazzi/FlipperZero_IFTTT_Virtual_Button) `Req: ESP8266 w/ IFTTT FW Flashed`
 - [Intravelometer (By theageoflove)](https://github.com/theageoflove/flipperzero-zeitraffer)
 - [IR Remote (By Hong5489)](https://github.com/Hong5489/ir_remote)
+- [IR Xbox Controller (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
 - [LORA Terminal (By aafksab)](https://github.com/aafksab/LORA-Term)
@@ -309,6 +318,7 @@ $ ./fbt dolphin_ext
 - [NFC Magic Gen4 app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238)
 - [Nightstand Clock (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [NRF Sniff (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) from nocomp/Frog/UberGuidoZ) `Req: NRF24`
+- [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 - [NRF24 Scanner v2.2 (By vad7)](https://github.com/vad7/nrf24scan)
 - [Ocarina (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron (By qqmajikpp)](https://github.com/qqmajikpp/flipperzero-firmware-wPlugins) [Updated by jbohack](https://github.com/jbohack)
