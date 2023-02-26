@@ -29,10 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0224-0121-0.77.2-059976a](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0226-0327-0.77.2-3626499](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-24 01:13 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-24 01:13 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-26 03:26 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-26 03:26 EST`
 - [Passport Settings: App and Config now stored on SD card (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d76d5b79fe838c657b8f75f4861d5e7f01950642)
 - UL: Faster Power Off
 - UL: SWD Resouces Moved for SD install
@@ -41,6 +41,17 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
 - Added: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - Added: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
+- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
+- UL: SubGHz improvements
+- OFW: BadUsb: STRINGDELAY feature, worker signal handling refactoring
+- [NRF24 Batch Documentation updates (By vad7)](https://github.com/vad7/nRF24-Batch)
+- UL: Keeloq: Beninca support included
+- UL: SubGHz: Hold right in received signal list to delete selected signal
+- UL: SubGHz: Custom buttons for Keeloq and Alutech AT4N - now you can use arrow buttons to send signal with different button code
+- UL: SubGHz: Debug mode counter increase settings (+5, +10, default: +1)
+- UL: Infrared: Debug TX PIN output settings (ability to move tx signal out to GPIO) 
+- Fix SubGHz Remote FAP Issue
+- OFW: [Picopass: factory key support, app rename and move to NFC category, minor code cleanup #2417 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2417)
 
 <a name="release">
 
