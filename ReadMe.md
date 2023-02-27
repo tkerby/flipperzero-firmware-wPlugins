@@ -29,10 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0226-0327-0.77.2-3626499](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0227-0215-0.77.2-cf26b3c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-26 03:26 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-26 03:26 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-27 01:21 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-27 01:21 EST`
 - [Passport Settings: App and Config now stored on SD card (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d76d5b79fe838c657b8f75f4861d5e7f01950642)
 - UL: Faster Power Off
 - UL: SWD Resouces Moved for SD install
@@ -41,7 +41,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
 - Added: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - Added: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
-- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 - UL: SubGHz improvements
 - OFW: BadUsb: STRINGDELAY feature, worker signal handling refactoring
 - [NRF24 Batch Documentation updates (By vad7)](https://github.com/vad7/nRF24-Batch)
@@ -52,6 +51,22 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: Infrared: Debug TX PIN output settings (ability to move tx signal out to GPIO) 
 - Fix SubGHz Remote FAP Issue
 - OFW: [Picopass: factory key support, app rename and move to NFC category, minor code cleanup #2417 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2417)
+- OFW: [SD Cache: moved to diskio layer, invalidation in case of error #2428 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2428)
+- OFW: [Unify power info, power debug, and device_info into one info command #2393 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/2393)
+- OFW: [Updater: handle storage errors when removing files, fix folder remove routine, prevent unused services from starting #2432 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2432)
+- OFW: [Fix incorrect type choice condition in image compressor #2434 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2434)
+- OFW: [FuriHal, Power, UnitTests: fix, rename battery charging voltage limit API #2228 (By digitalcircuit)](https://github.com/flipperdevices/flipperzero-firmware/pull/2228)
+- OFW: [F8, F18: bump API symbols version #2435 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2435)
+- OFW: [Drivers: remove excessive check in bq25896 and make PVS happy #2436 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2436)
+- Updated: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
+- Updated: [Geiger Counter (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
+- Updated: [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper) (Now With Setup Instructions)
+- UL: SubGHz: Custom buttons for Nice Flor S - now you can use arrow buttons to send signal with different button code
+- UL: [mousejacker FIX DEL, ADD TAB & ALTSTRING #366 (By MatthisC)](https://github.com/DarkFlippers/unleashed-firmware/pull/366)
+- Updated: [Color Guess (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
+- Added: [Reaction Test (By Milk-Cool)](https://github.com/Milk-Cool/fz-reaction-game)
+- Added: [EM4100 Key Generator (By Milk-Cool)](https://github.com/Milk-Cool/fz-em4100-generator)
+- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 
 <a name="release">
 
@@ -247,6 +262,7 @@ $ ./fbt dolphin_ext
 - [Minesweeper (By panki27)](https://github.com/panki27/minesweeper)
 - [Monty Hall (By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/203)
 - [Pong (By nmrr)](https://github.com/nmrr/flipperzero-pong) [(Patched By SimplyMinimal)](https://github.com/nmrr/flipperzero-pong/pull/2)
+- [Reaction Test (By Milk-Cool)](https://github.com/Milk-Cool/fz-reaction-game)
 - [Reversi (By dimat)](https://github.com/dimat/flipperzero-reversi)
 - [Root of Life (By Xorboo)](https://github.com/Xorboo/root-of-life)
 - [Scorched Tanks (By jasniec)](https://github.com/jasniec/flipper-scorched-tanks-game)
@@ -295,6 +311,7 @@ $ ./fbt dolphin_ext
 - [Dolphin Restorer (By nminaylov)](https://github.com/flipperdevices/flipperzero-firmware/pull/1384) Cloned by RogueMaster
 - [DSTIKE Deauther (By SequoiaSan)](https://github.com/SequoiaSan/FlipperZero-Wifi-ESP8266-Deauther-Module/tree/FlipperZero-Module-v2/FlipperZeroModule/FlipperZero-ESP8266-Deauth-App) `Req: ESP8266`
 - [DTMF Dolphin (By litui)](https://github.com/litui/dtmf_dolphin)
+- [EM4100 Key Generator (By Milk-Cool)](https://github.com/Milk-Cool/fz-em4100-generator)
 - [Extend Range (By maede97)](https://github.com/maede97/flipperzero-extend-range) (Allows SubGHz Unlock!)
 - [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
 - [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
