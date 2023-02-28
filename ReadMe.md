@@ -1,7 +1,7 @@
 
 <a href='https://www.patreon.com/RogueMaster/membership'><img src="patreon.png" width="40%"></a>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0222-1752-0.77.2-8621389.tgz&channel=RM0222-1752-0.77.2-8621389&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-0133-0.78.2-1c2a5cd.tgz&channel=RM0228-0133-0.78.2-1c2a5cd&version=0.77.2)
 
 ## What Is Not In The Firmware? [SD CARD EXTRA FILES AND OTHER RESEARCH SOURCES](https://github.com/RogueMaster/awesome-flipperzero-withModules)
 
@@ -29,44 +29,19 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0227-0215-0.77.2-cf26b3c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0228-0133-0.78.2-1c2a5cd](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-27 01:21 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-27 01:21 EST`
-- [Passport Settings: App and Config now stored on SD card (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d76d5b79fe838c657b8f75f4861d5e7f01950642)
-- UL: Faster Power Off
-- UL: SWD Resouces Moved for SD install
-- UL: [Fix keyboard capitalization bug #362 (By Willy-JL)](https://github.com/DarkFlippers/unleashed-firmware/pull/362)
-- Added: [IR Xbox Controller (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
-- Updated: [Lightmeter (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750`
-- Added: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
-- Added: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
-- UL: SubGHz improvements
-- OFW: BadUsb: STRINGDELAY feature, worker signal handling refactoring
-- [NRF24 Batch Documentation updates (By vad7)](https://github.com/vad7/nRF24-Batch)
-- UL: Keeloq: Beninca support included
-- UL: SubGHz: Hold right in received signal list to delete selected signal
-- UL: SubGHz: Custom buttons for Keeloq and Alutech AT4N - now you can use arrow buttons to send signal with different button code
-- UL: SubGHz: Debug mode counter increase settings (+5, +10, default: +1)
-- UL: Infrared: Debug TX PIN output settings (ability to move tx signal out to GPIO) 
-- Fix SubGHz Remote FAP Issue
-- OFW: [Picopass: factory key support, app rename and move to NFC category, minor code cleanup #2417 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2417)
-- OFW: [SD Cache: moved to diskio layer, invalidation in case of error #2428 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2428)
-- OFW: [Unify power info, power debug, and device_info into one info command #2393 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/2393)
-- OFW: [Updater: handle storage errors when removing files, fix folder remove routine, prevent unused services from starting #2432 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2432)
-- OFW: [Fix incorrect type choice condition in image compressor #2434 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2434)
-- OFW: [FuriHal, Power, UnitTests: fix, rename battery charging voltage limit API #2228 (By digitalcircuit)](https://github.com/flipperdevices/flipperzero-firmware/pull/2228)
-- OFW: [F8, F18: bump API symbols version #2435 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2435)
-- OFW: [Drivers: remove excessive check in bq25896 and make PVS happy #2436 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2436)
-- Updated: [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
-- Updated: [Geiger Counter (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
-- Updated: [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper) (Now With Setup Instructions)
-- UL: SubGHz: Custom buttons for Nice Flor S - now you can use arrow buttons to send signal with different button code
-- UL: [mousejacker FIX DEL, ADD TAB & ALTSTRING #366 (By MatthisC)](https://github.com/DarkFlippers/unleashed-firmware/pull/366)
-- Updated: [Color Guess (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
-- Added: [Reaction Test (By Milk-Cool)](https://github.com/Milk-Cool/fz-reaction-game)
-- Added: [EM4100 Key Generator (By Milk-Cool)](https://github.com/Milk-Cool/fz-em4100-generator)
-- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-28 01:20 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-27 01:20 EST`
+- Updated: 2 Clock Apps for Proper AM/PM switch.
+- Updated: [NFC Magic (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) & [NFC Magic Gen4 app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) [Both now have proper NFC folder by default (Thanks to AloneLiberty)](https://github.com/flipperdevices/flipperzero-firmware/pull/2437)
+- Updated: [NRF24 Scanner v2.2 (By vad7)](https://github.com/vad7/nrf24scan) - Fix NRF24 Scan Location
+- Relocated BlackJack Settings File, Move file into apps_data.
+- Relocated Passport Settings File, Move file into apps_data.
+- Relocated SWD Probe Scripts Folder, Move folder into apps_data.
+- Relocated TAMA P1 ROM/SAVE Folder, Move folder into apps_data.
+- Relocated IFTTT Folder, Move folder into apps_data.
+- Relocated Picopass Folder, Move folder into apps_data.
 
 <a name="release">
 
@@ -153,7 +128,6 @@ $ ./fbt dolphin_ext
 - Assets: Includes SubGHz SexToy files [from UberGuidoZ](https://github.com/UberGuidoZ/Flipper)
 - Assets: Includes Tama P1 Rom Game file. [this rom](https://tinyurl.com/tamap1)
 - Assets: Includes WAV files for Unlock/Lock Gatekeeper Systems wheels found on some Shopping Carts/Trolleys (Thanks to lukejtaylor) (May not work off lipper)
-- [BadUSB: BadUSB as FAP #396 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/396)
 - BadUSB: Added ignore DUCKY_LANG cmd to retain compatibility with existing scripts [(Thanks to v1nc)](https://github.com/v1nc/flipperzero-firmware)
 - BadUSB: Assets for Kiosk Evasion (By nocomp) and Wifi Stealer (By 7h30th3r0n3)
 - BadUSB: Assets for RickRoll, RogueMaster GitHub and RogueMaster Patreon
@@ -180,6 +154,7 @@ $ ./fbt dolphin_ext
 - Dolphin: Passport: Many thanks to Kuronons for the many passport backgrounds and profile images available and included.
 - Dolphin: Passport: Now has 9 selectable backgrounds options and 24 profile image options. (Changes By RogueMaster with thanks to ESurge)
 - Dolphin: Passport: Passport Settings app to configure dynamic icons in Passport FAP [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
+- Dolphin: Passport: Rename Dolphin with Name Changer app under Applications=>Main [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/488)
 - Dolphin: Passport: Show EXP [(By Dabolus)](https://github.com/Dabolus/flipperzero-firmware-rpg/)
 - Dolphin: Changed daily MAX to 198 on all 7 Deed Types. Random Deed Selection used for MAX +3 EXP daily gain.
 - Dolphin: Plugin Achivement +3 EXP for a total of up to 700 EXP daily. Plugin Achivements are:
@@ -238,7 +213,7 @@ $ ./fbt dolphin_ext
 - SubGHz: OFW PR [Decode RAW recordings #1667 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1667)
 - SubGHz: [POCSAG protocol decoder for subghz #2055 (By Shuma)](https://github.com/flipperdevices/flipperzero-firmware/pull/2055)
 - SubGHz: Protocols An-Motors, BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware)
-- SubGHz: Region Locked -  To transmit to outside ranges (Unlock), use the Extend Range app under Applications=>Misc.
+- SubGHz: Region Locked -  To transmit to outside ranges (Unlock), use the Extend Range app under Applications=>Main.
 - SubGHz: Unlock from SD flag from [(cloudbreakdaniel)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/97db0dc91ee3dff812b4dec0618e3f198de14405).  Update `subghz/assets/extend_range.txt` with [this file](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/assets/resources/subghz/assets/extend_range.txt) on SD.  **UPDATE IGNORE FLAG TO TRUE TO UNLEASH YOUR FLIPPER!!**
 - U2F: U2F.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
 
@@ -250,7 +225,6 @@ $ ./fbt dolphin_ext
 - [Arkanoid (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins) [(Score By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/188)
 - [Asteroids (By antirez)](https://github.com/antirez/flipper-asteroids) [(Modified By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Asteroids)
 - [BlackJack (By teeebor)](https://github.com/teeebor/flipper_games)
-- [Color Guess (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Dice (RM) Including SEX/WAR/8BALL/WEED/DRINK DICE (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/dice/dice.c)
 - [Dice (By Ka3u6y6a)](https://github.com/Ka3u6y6a/flipper-zero-dice)
 - [Doom (By p4nic4ttack)](https://github.com/p4nic4ttack/doom-flipper-zero/)
@@ -390,4 +364,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyser (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0222-1752-0.77.2-8621389.tgz&channel=RM0222-1752-0.77.2-8621389&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-0133-0.78.2-1c2a5cd.tgz&channel=RM0228-0133-0.78.2-1c2a5cd&version=0.77.2)
