@@ -1,7 +1,7 @@
 
 <a href='https://www.patreon.com/RogueMaster/membership'><img src="patreon.png" width="40%"></a>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-0133-0.78.2-1c2a5cd.tgz&channel=RM0228-0133-0.78.2-1c2a5cd&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-1235-0.78.2-5eb5e99.tgz&channel=RM0228-1235-0.78.2-5eb5e99&version=0.77.2)
 
 ## What Is Not In The Firmware? [SD CARD EXTRA FILES AND OTHER RESEARCH SOURCES](https://github.com/RogueMaster/awesome-flipperzero-withModules)
 
@@ -29,19 +29,19 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0228-0133-0.78.2-1c2a5cd](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0301-1627-0.78.2-353605d](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-02-28 01:20 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-02-27 01:20 EST`
-- Updated: 2 Clock Apps for Proper AM/PM switch.
-- Updated: [NFC Magic (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) & [NFC Magic Gen4 app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) [Both now have proper NFC folder by default (Thanks to AloneLiberty)](https://github.com/flipperdevices/flipperzero-firmware/pull/2437)
-- Updated: [NRF24 Scanner v2.2 (By vad7)](https://github.com/vad7/nrf24scan) - Fix NRF24 Scan Location
-- Relocated BlackJack Settings File, Move file into apps_data.
-- Relocated Passport Settings File, Move file into apps_data.
-- Relocated SWD Probe Scripts Folder, Move folder into apps_data.
-- Relocated TAMA P1 ROM/SAVE Folder, Move folder into apps_data.
-- Relocated IFTTT Folder, Move folder into apps_data.
-- Relocated Picopass Folder, Move folder into apps_data.
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-01 15:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-01 15:15 EST`
+- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
+- UL: Updated: SubGHz: Fixed timings for static CAME 12 bit and other types (fixed issue #280)
+- UL: Updated: Fix #370 and fix other protocol counter issues
+- Infrared Set To Internal. Archive Browser for Infrared & BadUSB Fixed.
+- OFW: [Getter for application data path #2181 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2181)
+- Moved music_player and wav_player SD folders into the apps_data folder. (Following OFW Example in #2181)
+- UL: Subghz protocol presets set to specific frequency
+- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
+- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 
 <a name="release">
 
@@ -174,7 +174,6 @@ $ ./fbt dolphin_ext
 - iButton: iButton.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
 - Icon Decode/Encode [(Thanks to PixlEmly)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/55/files)
 - [Infrared: allow disabling automatic signal decoding #273 (By Darmiel)](https://github.com/DarkFlippers/unleashed-firmware/pull/273)
-- [Infrared: Infrared AS FAP #398 (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/398) (With Thanks to ESurge) [Restored Infrared and RFID CLI #405 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/405)
 - Infrared: Universal AC, Audio, Fans & Projectors from [Unleashed/Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware)
 - NFC: Assets for RogueMaster GitHub and RogueMaster Patreon
 - NFC: [NFC - Machine Readable Travel Documents #1866 (By qistoph)](https://github.com/flipperdevices/flipperzero-firmware/pull/1866)
@@ -225,6 +224,7 @@ $ ./fbt dolphin_ext
 - [Arkanoid (By gotnull)](https://github.com/gotnull/flipperzero-firmware-wPlugins) [(Score By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/188)
 - [Asteroids (By antirez)](https://github.com/antirez/flipper-asteroids) [(Modified By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Asteroids)
 - [BlackJack (By teeebor)](https://github.com/teeebor/flipper_games)
+- [Color Guess (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Dice (RM) Including SEX/WAR/8BALL/WEED/DRINK DICE (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/dice/dice.c)
 - [Dice (By Ka3u6y6a)](https://github.com/Ka3u6y6a/flipper-zero-dice)
 - [Doom (By p4nic4ttack)](https://github.com/p4nic4ttack/doom-flipper-zero/)
@@ -364,4 +364,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyser (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-0133-0.78.2-1c2a5cd.tgz&channel=RM0228-0133-0.78.2-1c2a5cd&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-1235-0.78.2-5eb5e99.tgz&channel=RM0228-1235-0.78.2-5eb5e99&version=0.77.2)
