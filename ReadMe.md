@@ -1,5 +1,5 @@
 
-<a href='https://www.patreon.com/RogueMaster/membership'><img src="patreon.png" width="40%"></a>
+<a href='https://www.patreon.com/RogueMaster/membership'><img src="https://rogue-master.net/img/rmlogo.png" width="40%"></a>
 
 # Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-1236-0.78.2-5eb5e99.tgz&channel=RM0228-1236-0.78.2-5eb5e99&version=0.77.2)
 
@@ -29,10 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0306-1221-0.78.2-e079caa](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0306-1749-0.78.2-cc3b83c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-06 11:45 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-06 11:45 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-07 14:55 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-06 17:00 EST`
 - UL: Updated: SubGHz: Fixed timings for static CAME 12 bit and other types (fixed issue #280)
 - UL: Updated: Fix #370 and fix other protocol counter issues
 - Infrared Set To Internal. Archive Browser for Infrared & BadUSB Fixed.
@@ -50,10 +50,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [SubGhz: better and more verbose error handling in protocols, stricter CAME validation #2443 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2443)
 - POCSAG protocol fixed to use new error status
 - Updated: [POCSAG Pager (By XMasterx & Shmuma)](https://github.com/xMasterX/flipper-pager) (Updated by RogueMaster to meet new FW Error Format)
-- Added: [(ESP32CAM) Camera (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [(ESP32CAM) Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [(ESP32CAM) Motion Detection (By eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [(ESP32CAM) QR Code (By eried)](https://github.com/eried/flipperzero-mayhem)
+- Added: [ESP32CAM Camera (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem)
+- Added: [ESP32CAM Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem)
+- Added: [ESP32CAM Motion Detection (By eried)](https://github.com/eried/flipperzero-mayhem)
+- Added: [ESP32CAM QR Code (By eried)](https://github.com/eried/flipperzero-mayhem)
 - UL: Updates to SubGHz Protocols with Error Handling
 - UL: Keeloq Default Layout For Non Standard Remotes
 - [Chess Updated Readme (By okalachev)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/540)
@@ -66,10 +66,18 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [Fix SD card CID parsing #2463 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2463)
 - OFW: [Fixed picopass load save file overrun #2464 (By GuruSteve)](https://github.com/flipperdevices/flipperzero-firmware/pull/2464)
 - UL: Updated: [Sub-GHz Bruteforcer v3.4 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
-- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
 - Updated: [Sub-GHz Remote (By ESurge)](https://github.com/ESurge/flipperzero-firmware-unirfremix) - Now moves files to correct folder (Thanks to XMasterx)
 - Updated: [Dab Timer (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/main/clock) - Fix Time at 12PM
+- Added: [FlipBIP Crypto Tool (By xtruan)](https://github.com/xtruan/FlipBIP)
+- OFW PR: [Dumb mode menu freeze fix #2456 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/2456)
+- OFW PR: [NFC: Support reading Mifare Classic key B from sector trailer, reading sector with B key where A key can't read block, Nfc Magic app not using NFC folder by default (in file select) #2437 (By AloneLiberty)](https://github.com/flipperdevices/flipperzero-firmware/pull/2437)
+- OFW PR: [Upside down / left handed orientation support #2462 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2462)
+- OFW PR: [More UI fixes and improvements #2419 (By liamhays)](https://github.com/flipperdevices/flipperzero-firmware/pull/2419)
+- [Sub-GHz PlayList: Added the possibility to skip a file and play the previous one in #541 (By alvarotorijano}](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/541)
+- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
+- Updated build flags to allow Mfkey to function quicker (-O3)
+- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
+- OFW: [Support reseting iCx cards #2451 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2451) - PR Officialy Merged (Was Alreasdy in RM)
 
 <a name="release">
 
@@ -314,15 +322,16 @@ $ ./fbt dolphin_ext
 - [DSTIKE Deauther (By SequoiaSan)](https://github.com/SequoiaSan/FlipperZero-Wifi-ESP8266-Deauther-Module/tree/FlipperZero-Module-v2/FlipperZeroModule/FlipperZero-ESP8266-Deauth-App) `Req: ESP8266`
 - [DTMF Dolphin (By litui)](https://github.com/litui/dtmf_dolphin)
 - [EM4100 Key Generator (By Milk-Cool)](https://github.com/Milk-Cool/fz-em4100-generator)
-- [(ESP32CAM) Camera (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem)
-- [(ESP32CAM) Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem)
-- [(ESP32CAM) Motion Detection (By eried)](https://github.com/eried/flipperzero-mayhem)
-- [(ESP32CAM) QR Code (By eried)](https://github.com/eried/flipperzero-mayhem)
+- [ESP32CAM Camera (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem)
+- [ESP32CAM Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem)
+- [ESP32CAM Motion Detection (By eried)](https://github.com/eried/flipperzero-mayhem)
+- [ESP32CAM QR Code (By eried)](https://github.com/eried/flipperzero-mayhem)
 - [Extend Range (By maede97)](https://github.com/maede97/flipperzero-extend-range) (Allows SubGHz Unlock!)
 - [EXTRA Demo (By Milk-Cool)](https://github.com/Milk-Cool/EXTRA-demo) (This app has VERY useful functions!)
 - [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - [Flashlight (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
+- [FlipBIP Crypto Tool (By xtruan)](https://github.com/xtruan/FlipBIP)
 - [Flizzer Tracker (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
 - [Geiger Counter (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [GPIO Reader (biotinker) (By biotinker)](https://github.com/biotinker/flipperzero-gpioreader)
