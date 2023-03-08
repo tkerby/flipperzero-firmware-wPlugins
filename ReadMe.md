@@ -1,7 +1,7 @@
 
 <a href='https://www.patreon.com/RogueMaster/membership'><img src="https://rogue-master.net/img/rmlogo.png" width="40%"></a>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-1236-0.78.2-5eb5e99.tgz&channel=RM0228-1236-0.78.2-5eb5e99&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0307-2236-0.78.2-48b29d4.tgz&channel=RM0307-2236-0.78.2-48b29d4&version=0.77.2)
 
 ## What Is Not In The Firmware? [SD CARD EXTRA FILES AND OTHER RESEARCH SOURCES](https://github.com/RogueMaster/awesome-flipperzero-withModules)
 
@@ -29,55 +29,12 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0306-1749-0.78.2-cc3b83c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0307-2115-0.78.2-d6d9a7c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-07 14:55 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-06 17:00 EST`
-- UL: Updated: SubGHz: Fixed timings for static CAME 12 bit and other types (fixed issue #280)
-- UL: Updated: Fix #370 and fix other protocol counter issues
-- Infrared Set To Internal. Archive Browser for Infrared & BadUSB Fixed.
-- OFW: [Getter for application data path #2181 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2181)
-- Moved music_player and wav_player SD folders into the apps_data folder. (Following OFW Example in #2181)
-- UL: Subghz protocol presets set to specific frequency
-- OFW: [New pin reset splashscreen #2405 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/2405)
-- OFW: [iButton system and app refactoring #2388 (By gsurkov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2388)
-- Temporarily Removed: [iButton Fuzzer (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware)
-- UL: Updated: [iButton Fuzzer (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware)
-- UL: Updated: Fix iButton app - add manually - duplicate names
-- Fix Music Beeper Location
-- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
-- OFW: [Archive browser: update path on dir leave #2455 (By nminaylov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2455)
-- OFW: [SubGhz: better and more verbose error handling in protocols, stricter CAME validation #2443 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2443)
-- POCSAG protocol fixed to use new error status
-- Updated: [POCSAG Pager (By XMasterx & Shmuma)](https://github.com/xMasterX/flipper-pager) (Updated by RogueMaster to meet new FW Error Format)
-- Added: [ESP32CAM Camera (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [ESP32CAM Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [ESP32CAM Motion Detection (By eried)](https://github.com/eried/flipperzero-mayhem)
-- Added: [ESP32CAM QR Code (By eried)](https://github.com/eried/flipperzero-mayhem)
-- UL: Updates to SubGHz Protocols with Error Handling
-- UL: Keeloq Default Layout For Non Standard Remotes
-- [Chess Updated Readme (By okalachev)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/540)
-- UL: SubGHz Remote Fix unirf freeze (protocol deserialize status ok) (By Willy-JL)
-- UL: Blackjack game: fix bug counting more than one ace (By 403-Fruit)
-- UL: SubGHz: Fix 464Mhz and (390MHz for external module only) was showing up in Frequency analyzer all the time due to noise (By XMasterx)
-- Updated: [SWD Probe (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
-- UL: SubGHz: Fix issues with external module 5v power (now all works automatically, enabling +5v manually not required) (Only for modules that work with 5v->3.3v converter!!!!!) (By XMasterx)
-- UL: Some renames for SubGHz Remote (By XMasterx)
-- OFW: [Fix SD card CID parsing #2463 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2463)
-- OFW: [Fixed picopass load save file overrun #2464 (By GuruSteve)](https://github.com/flipperdevices/flipperzero-firmware/pull/2464)
-- UL: Updated: [Sub-GHz Bruteforcer v3.4 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Updated: [Sub-GHz Remote (By ESurge)](https://github.com/ESurge/flipperzero-firmware-unirfremix) - Now moves files to correct folder (Thanks to XMasterx)
-- Updated: [Dab Timer (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/main/clock) - Fix Time at 12PM
-- Added: [FlipBIP Crypto Tool (By xtruan)](https://github.com/xtruan/FlipBIP)
-- OFW PR: [Dumb mode menu freeze fix #2456 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/2456)
-- OFW PR: [NFC: Support reading Mifare Classic key B from sector trailer, reading sector with B key where A key can't read block, Nfc Magic app not using NFC folder by default (in file select) #2437 (By AloneLiberty)](https://github.com/flipperdevices/flipperzero-firmware/pull/2437)
-- OFW PR: [Upside down / left handed orientation support #2462 (By hramrach)](https://github.com/flipperdevices/flipperzero-firmware/pull/2462)
-- OFW PR: [More UI fixes and improvements #2419 (By liamhays)](https://github.com/flipperdevices/flipperzero-firmware/pull/2419)
-- [Sub-GHz PlayList: Added the possibility to skip a file and play the previous one in #541 (By alvarotorijano}](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/541)
-- Updated: [Mfkey32 WIP (By noproto)](https://github.com/noproto/FlipperMfkey)
-- Updated build flags to allow Mfkey to function quicker (-O3)
-- Updated: [NRF24 Batch (By vad7)](https://github.com/vad7/nRF24-Batch)
-- OFW: [Support reseting iCx cards #2451 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2451) - PR Officialy Merged (Was Alreasdy in RM)
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-08 09:54 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-08 09:54 EST`
+- Added: [RCWL-516 Motion Sensor (By ahmedafe1)](https://github.com/ahmedafe1/rcwl_0516-Flipperzero)
+- OFW: [PicoPass: auth cleanup #2470 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/2470)
 
 <a name="release">
 
@@ -374,6 +331,7 @@ $ ./fbt dolphin_ext
 - [Protocol Visualizer (By antirez)](https://github.com/antirez/protoview)
 - [QR Code (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [RC2014 ColecoVision (By ezod)](https://github.com/ezod/flipperzero-rc2014-coleco)
+- [RCWL-516 Motion Sensor (By ahmedafe1)](https://github.com/ahmedafe1/rcwl_0516-Flipperzero)
 - [RFID Fuzzer (By Ganapati)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/245) [Changes by Unleashed/xMasterX](https://github.com/DarkFlippers/unleashed-firmware)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
 - [Rubik's Cube Scrambler (By RaZeSloth)](https://github.com/RaZeSloth/flipperzero-rubiks-cube-scrambler)
@@ -405,4 +363,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyser (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0228-1236-0.78.2-5eb5e99.tgz&channel=RM0228-1236-0.78.2-5eb5e99&version=0.77.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0307-2236-0.78.2-48b29d4.tgz&channel=RM0307-2236-0.78.2-48b29d4&version=0.77.2)
