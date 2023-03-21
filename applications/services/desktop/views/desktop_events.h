@@ -5,6 +5,8 @@ typedef enum {
     DesktopMainEventOpenArchive,
     DesktopMainEventOpenFavoritePrimary,
     DesktopMainEventOpenFavoriteSecondary,
+    DesktopMainEventOpenFavoriteTertiary,
+    DesktopMainEventOpenFavoriteQuaternary,
     DesktopMainEventOpenMenu,
     DesktopMainEventOpenGames,
     DesktopMainEventOpenDebug,
@@ -20,7 +22,6 @@ typedef enum {
     DesktopMainEventOpenDice,
     DesktopMainEventOpenArkanoid,
     DesktopMainEventOpenHeap,
-    DesktopMainEventOpenSubRemote,
     DesktopMainEventOpenClock,
 
     DesktopLockedEventUnlocked,

@@ -14,8 +14,8 @@
 
 #define TAG "DesktopSrv"
 
-#define CLOCK_APP EXT_PATH("apps/Main/Clock.fap")
-#define PASSPORT_APP EXT_PATH("apps/Main/Passport.fap")
+#define CLOCK_APP EXT_PATH("apps/Main/Dab_Timer.fap")
+#define PASSPORT_APP EXT_PATH("apps/Settings/Passport.fap")
 #define SNAKE_APP EXT_PATH("apps/Games/Snake.fap")
 #define IMPROVED_2048_APP EXT_PATH("apps/Games/2048_improved.fap")
 #define ZOMBIEZ_APP EXT_PATH("apps/Games/Zombiez.fap")
@@ -206,6 +206,44 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             }
             consumed = true;
             break;
+        case DesktopMainEventOpenFavoriteTertiary:
+            DESKTOP_SETTINGS_LOAD(&desktop->settings);
+            if(desktop->settings.favorite_tertiary.is_external) {
+                LoaderStatus status = loader_start(
+                    desktop->loader,
+                    FAP_LOADER_APP_NAME,
+                    desktop->settings.favorite_tertiary.name_or_path);
+                if(status != LoaderStatusOk) {
+                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
+                }
+            } else {
+                LoaderStatus status = loader_start(
+                    desktop->loader, desktop->settings.favorite_tertiary.name_or_path, NULL);
+                if(status != LoaderStatusOk) {
+                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
+                }
+            }
+            consumed = true;
+            break;
+        case DesktopMainEventOpenFavoriteQuaternary:
+            DESKTOP_SETTINGS_LOAD(&desktop->settings);
+            if(desktop->settings.favorite_quaternary.is_external) {
+                LoaderStatus status = loader_start(
+                    desktop->loader,
+                    FAP_LOADER_APP_NAME,
+                    desktop->settings.favorite_quaternary.name_or_path);
+                if(status != LoaderStatusOk) {
+                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
+                }
+            } else {
+                LoaderStatus status = loader_start(
+                    desktop->loader, desktop->settings.favorite_quaternary.name_or_path, NULL);
+                if(status != LoaderStatusOk) {
+                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
+                }
+            }
+            consumed = true;
+            break;
         case DesktopAnimationEventCheckAnimation:
             animation_manager_check_blocking_process(desktop->animation_manager);
             consumed = true;
@@ -286,11 +324,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
         }
         case DesktopMainEventOpenHeap: {
             desktop_scene_main_open_app_or_profile(desktop, HEAP_DEFENCE_APP);
-            break;
-        }
-        case DesktopMainEventOpenSubRemote: {
-            loader_start(desktop->loader, FLIPPER_APPS[3].name, NULL);
-            consumed = true;
             break;
         }
         case DesktopMainEventOpenClock: {

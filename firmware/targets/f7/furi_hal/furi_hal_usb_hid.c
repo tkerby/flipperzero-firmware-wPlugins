@@ -11,9 +11,6 @@
 #define HID_EP_OUT 0x01
 #define HID_EP_SZ 0x10
 
-#define HID_KB_MAX_KEYS 6
-#define HID_CONSUMER_MAX_KEYS 2
-
 #define HID_INTERVAL 2
 
 #define HID_VID_DEFAULT 0x046D
@@ -164,8 +161,8 @@ static const struct HidConfigDescriptor hid_cfg_desc = {
                     .bAlternateSetting = 0,
                     .bNumEndpoints = 2,
                     .bInterfaceClass = USB_CLASS_HID,
-                    .bInterfaceSubClass = USB_HID_SUBCLASS_NONBOOT,
-                    .bInterfaceProtocol = USB_HID_PROTO_NONBOOT,
+                    .bInterfaceSubClass = USB_HID_SUBCLASS_BOOT,
+                    .bInterfaceProtocol = USB_HID_PROTO_KEYBOARD,
                     .iInterface = NO_DESCRIPTOR,
                 },
             .hid_desc =
