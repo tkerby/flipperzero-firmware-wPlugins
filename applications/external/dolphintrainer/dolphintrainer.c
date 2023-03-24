@@ -22,19 +22,22 @@ char strXp[16];
 char strLevel[10];
 int btnIndex = 0;
 uint32_t curLevel = 0;
-uint32_t level_array[29] = {500,    1250,   2250,   3500,   5000,  6750,  8750,  11000,
-                            13500,  16250,  19250,  22500,  26000, 29750, 33750, 38000,
-                            42500,  47250,  52250,  58250,  65250, 73250, 82250, 92250,
-                            103250, 115250, 128250, 142250, 157250};
+
+const int DOLPHIN_LEVELS[DOLPHIN_LEVEL_COUNT] = {500,    1250,   2250,   3500,   5000,  6750,
+                                                 8750,   11000,  13500,  16250,  19250, 22500,
+                                                 26000,  29750,  33750,  38000,  42500, 47250,
+                                                 52250,  58250,  65250,  73250,  82250, 92250,
+                                                 103250, 115250, 128250, 142250, 157250};
+
 #define NUM(a) (sizeof(a) / sizeof(*a))
 
-uint8_t dolphin_get_mylevel(uint32_t icounter) {
-    for(int i = 0; i < NUM(level_array); i++) {
-        if(icounter <= level_array[i]) {
+uint8_t dolphin_get_mylevel(int icounter) {
+    for(int i = 0; i < DOLPHIN_LEVEL_COUNT; ++i) {
+        if(icounter <= DOLPHIN_LEVELS[i]) {
             return i + 1;
         }
     }
-    return NUM(level_array) + 1;
+    return DOLPHIN_LEVEL_COUNT + 1;
 }
 
 static void draw_callback(Canvas* canvas, void* ctx) {
@@ -145,7 +148,7 @@ int32_t dolphin_trainer_app(void* p) {
                 } else if(btnIndex == 2) {
                     curLevel = dolphin_get_mylevel(stateLocal->data.icounter) - 1;
                     if(curLevel <= 28) {
-                        stateLocal->data.icounter = level_array[curLevel] + 1;
+                        stateLocal->data.icounter = DOLPHIN_LEVELS[curLevel] + 1;
                     }
                 }
             }
@@ -161,7 +164,7 @@ int32_t dolphin_trainer_app(void* p) {
                 } else if(btnIndex == 2) {
                     curLevel = dolphin_get_mylevel(stateLocal->data.icounter) - 3;
                     if(curLevel >= 1) {
-                        stateLocal->data.icounter = level_array[curLevel] + 1;
+                        stateLocal->data.icounter = DOLPHIN_LEVELS[curLevel] + 1;
                     } else if(curLevel == 0) {
                         stateLocal->data.icounter = 0;
                     }
