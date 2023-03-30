@@ -29,12 +29,24 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0329-0101-0.80.1-e959309](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0330-0217-0.80.1-29a2f71](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-29 12:01 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-29 12:01 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-30 02:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-30 02:15 EST`
 - Added: [Race (By zyuhel)](https://github.com/zyuhel/flipperzero-racegame)
 - UL: [Updated IR Assets #404 (By amec0e)](https://github.com/DarkFlippers/unleashed-firmware/pull/404)
+- Added: 24 SUPER-CHIP ROMs (Tested by qqMajiKpp)
+- No Animations Build will now have blank internal animations (Thanks to qqMajiKpp)
+- Updated: [ESP32CAM Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) (Changes Applied By RogueMaster)
+- UL: Plugins: Show External CC1101 module status in Weather Station and in POCSAG Pager plugins
+- UL: SubGHz: Fix false detections of StarLine 72bit, flipper can decode only 64bit
+- UL: SubGHz: ScherKhan, more informative messages instead of 'Unknown', may be not correct, because we guessing type by bits
+- UL: SubGHz: Clear code in 'Add Manually' scene (by gid9798 | PR #403)
+- UL: Plugins: GPS NMEA (UART) modifications:
+- - Ability to change baudrate using Up button, hold button to switch between baudrates (9600, 57600, 115200) (i set 57600 as default)
+- - Ok button will set backlight to always on mode, to disable press ok button again (it will restore default settings after app exit too)
+- - Long press Right button to change speed from knots to kilometers per hour
+- - Exit from app using long press on back button instead of short press, may be useful in case you want to turn backlight on and accidentally click back
 
 <a name="release">
 
