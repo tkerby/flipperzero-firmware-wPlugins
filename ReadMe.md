@@ -4,7 +4,7 @@
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://rogue-master.net/img/Merch.png' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://rogue-master.net/img/Resources.png' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-0101-0.80.1-e959309.tgz&channel=RM0329-0101-0.80.1-e959309&version=0.79.2) OR  [WITHOUT ANIMATIONS](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-0101-0.80.1-e959309-NoAnim.tgz&channel=RM0329-0101-0.80.1-e959309-NoAnim&version=0.79.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0402-2350-0.80.2-27c3e55.tgz&channel=RM0402-2350-0.80.2-27c3e55&version=0.80.2) OR  [WITHOUT ANIMATIONS](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0402-2350-0.80.2-27c3e55-NoAnim.tgz&channel=RM0402-2350-0.80.2-27c3e55-NoAnim&version=0.80.2)
 
 ## Thank you so much to our RM Pro/Extreme Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -29,25 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0330-1916-0.80.1-1364b30](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0402-1702-0.80.2-778a908](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-03-30 19:20 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-03-30 19:20 EST`
-- Added: [Race (By zyuhel)](https://github.com/zyuhel/flipperzero-racegame)
-- UL: [Updated IR Assets #404 (By amec0e)](https://github.com/DarkFlippers/unleashed-firmware/pull/404)
-- Added: 24 SUPER-CHIP ROMs (Tested by qqMajiKpp)
-- No Animations Build will now have blank internal animations (Thanks to qqMajiKpp)
-- Updated: [ESP32CAM Marauder (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) (Changes Applied By RogueMaster)
-- UL: Plugins: Show External CC1101 module status in Weather Station and in POCSAG Pager plugins
-- UL: SubGHz: Fix false detections of StarLine 72bit, flipper can decode only 64bit
-- UL: SubGHz: ScherKhan, more informative messages instead of 'Unknown', may be not correct, because we guessing type by bits
-- UL: SubGHz: Clear code in 'Add Manually' scene (by gid9798 | PR #403)
-- UL: Plugins: GPS NMEA (UART) modifications:
-- - Ability to change baudrate using Up button, hold button to switch between baudrates (9600, 57600, 115200) (i set 57600 as default)
-- - Ok button will set backlight to always on mode, to disable press ok button again (it will restore default settings after app exit too)
-- - Long press Right button to change speed from knots to kilometers per hour
-- - Exit from app using long press on back button instead of short press, may be useful in case you want to turn backlight on and accidentally click back
-- UL: SubGHz: ScherKhan Improvements
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-04-02 11:50 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-04-02 11:50 EST`
 
 <a name="release">
 
@@ -342,7 +327,7 @@ $ ./fbt dolphin_ext
 - [NFC Magic Gen4 app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) [(Updates By xMasterX)](https://github.com/xMasterX/unleashed-extra-pack)
 - [Nightstand Clock (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [NRF Sniff (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) from nocomp/Frog/UberGuidoZ) `Req: NRF24`
-- [NRF24 Batch v1.7 (By vad7)](https://github.com/vad7/nRF24-Batch)
+- [NRF24 Batch v1.8 (By vad7)](https://github.com/vad7/nRF24-Batch)
 - [NRF24 Scanner v2.2 (By vad7)](https://github.com/vad7/nrf24scan)
 - [Ocarina (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron (By qqmajikpp)](https://github.com/qqmajikpp/flipperzero-firmware-wPlugins) [Updated by jbohack](https://github.com/jbohack)
@@ -391,4 +376,4 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyzer (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Zero Tracker (By DrZlo13)](https://github.com/DrZlo13/flipper-zero-music-tracker)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-0101-0.80.1-e959309.tgz&channel=RM0329-0101-0.80.1-e959309&version=0.79.2) OR  [WITHOUT ANIMATIONS](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-0101-0.80.1-e959309-NoAnim.tgz&channel=RM0329-0101-0.80.1-e959309-NoAnim&version=0.79.2)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0402-2350-0.80.2-27c3e55.tgz&channel=RM0402-2350-0.80.2-27c3e55&version=0.80.2) OR  [WITHOUT ANIMATIONS](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0402-2350-0.80.2-27c3e55-NoAnim.tgz&channel=RM0402-2350-0.80.2-27c3e55-NoAnim&version=0.80.2)
