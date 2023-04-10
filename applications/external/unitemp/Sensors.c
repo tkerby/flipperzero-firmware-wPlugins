@@ -45,7 +45,7 @@ static const GPIO GPIOList[] = {
     {14, "14 (RX)", &RX_14},
     {15, "15 (C1)", &gpio_ext_pc1},
     {16, "16 (C0)", &gpio_ext_pc0},
-    {17, "17 (1W)", &ibutton_gpio}};
+    {17, "17 (1W)", &gpio_ibutton}};
 
 //Список интерфейсов, которые прикреплены к GPIO (определяется индексом)
 //NULL - порт свободен, указатель на интерфейс - порт занят этим интерфейсом
@@ -149,7 +149,8 @@ uint8_t unitemp_gpio_getAviablePortsCount(const Interface* interface, const GPIO
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
+                (i != 12)) || //Почему-то не работает на 17 порте
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 aviable_ports_count++;
             }
@@ -207,7 +208,9 @@ const GPIO*
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
+            //Почему-то не работает на 17 порте
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
+                (i != 12)) || //Почему-то не работает на 17 порте
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 if(aviable_index == index) {
                     return unitemp_gpio_getFromIndex(i);
