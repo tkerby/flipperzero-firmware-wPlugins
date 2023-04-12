@@ -72,6 +72,18 @@ void wifi_marauder_scene_console_output_on_enter(void* context) {
         app->lp_uart,
         wifi_marauder_console_output_handle_rx_packets_cb); // setup callback for packets rx thread
 
+    // Run the script if the file with the script has been opened
+    if(app->script != NULL) {
+        furi_string_reset(app->text_box_store);
+        app->text_box_store_strlen = 0;
+        app->script_worker = wifi_marauder_script_worker_alloc();
+        wifi_marauder_script_worker_start(
+            app->script_worker,
+            app->script,
+            wifi_marauder_script_execute_stage,
+            app->script_worker);
+    }
+
     // Get ready to send command
     if(app->is_command && app->selected_tx_string) {
         // Create files *before* sending command
@@ -116,6 +128,14 @@ void wifi_marauder_scene_console_output_on_exit(void* context) {
     // Unregister rx callback
     wifi_marauder_uart_set_handle_rx_data_cb(app->uart, NULL);
     wifi_marauder_uart_set_handle_rx_data_cb(app->lp_uart, NULL);
+
+    if(app->script_worker) {
+        wifi_marauder_script_worker_free(app->script_worker);
+    }
+
+    if(app->script) {
+        wifi_marauder_script_free(app->script);
+    }
 
     // Automatically stop the scan when exiting view
     if(app->is_command) {
