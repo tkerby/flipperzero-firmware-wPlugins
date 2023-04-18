@@ -3,7 +3,7 @@
 ![](https://thumb.tildacdn.com/tild3332-3839-4061-b663-363464303432/-/resize/214x/-/format/webp/noroot.png)
 
 ## What
-This Flipper application ("FAP") cracks Mifare Classic 1K keys on your Flipper Zero. No companion app/desktop needed.
+This Flipper application ("FAP") cracks Mifare Classic 1K/4K keys on your Flipper Zero. No companion app/desktop needed.
 
 ## How
 1. Use the Detect Reader function to save nonces on your Flipper from the reader
@@ -13,7 +13,16 @@ This Flipper application ("FAP") cracks Mifare Classic 1K keys on your Flipper Z
 All cracked nonces are automatically added to your user dictionary, allowing you to clone Mifare Classic 1K cards upon re-scanning them.
 
 ## Builds
-Published: https://github.com/noproto/FlipperMfkey/releases
+OFW pull request (will be soon provided by official channels): https://github.com/flipperdevices/flipperzero-firmware/pull/2517
+
+Published (options):
+* [Unleashed repository](https://github.com/xMasterX/all-the-plugins/tree/main/apps/Tools_Extra)
+* [FlipC.org](https://flipc.org/noproto/FlipperMfkey?branch=master&root=fap)
+  * Download the FAP at one of the above links then copy the FAP to your Flipper Zero device (using qFlipper or manually copying it to the SD)
+* [Unleashed firmware](https://github.com/DarkFlippers/unleashed-firmware/releases/latest)
+  * Use qFlipper to install the build that ends in "e"
+* [RogueMaster firmware](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/releases/latest)
+  * Built in to every release, you're good to go!
 
 Manual: Copy the fap/ directory to applications_user/mfkey32/ and build it with fbt
 

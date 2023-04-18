@@ -35,5 +35,6 @@ void overwrite_instrument_file_widget_no_input_callback(
 uint32_t submenu_exit_callback(void* context);
 uint32_t submenu_settings_exit_callback(void* context);
 void submenu_callback(void* context, uint32_t index);
+void submenu_copypaste_callback(void* context, uint32_t index);
 void audio_output_changed_callback(VariableItem* item);
 void process_input_event(FlizzerTrackerApp* tracker, FlizzerTrackerEvent* event);

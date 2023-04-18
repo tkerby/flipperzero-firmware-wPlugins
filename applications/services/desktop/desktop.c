@@ -534,6 +534,8 @@ int32_t desktop_srv(void* p) {
             desktop->settings.sdcard = true;
             desktop->settings.icon_style = ICON_STYLE_SLIM;
             desktop->settings.bt_icon = true;
+			desktop->settings.rpc_icon = true;
+			desktop->settings.dummy_mode = false;
             DESKTOP_SETTINGS_SAVE(&desktop->settings);
         }
 

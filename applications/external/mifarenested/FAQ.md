@@ -46,7 +46,7 @@ A: By nonces I mean authorization attempts on the tag. Because we can predict PR
 
 Q: How I can ask for help?
 
-A: Create issue **with label "Question"** or use [discussions](https://github.com/AloneLiberty/FlipperNested/discussions). If you can't share private info in issue you can contact me in [Telegram](https://t.me/liberydev). 
+A: Create issue **with label "Question"** or use [discussions](https://github.com/AloneLiberty/FlipperNested/discussions). If you can't share private info in issue you can contact me in [Telegram](https://t.me/libertydev). 
 
 Q: What is being done at the moment and what are the plans?
 
@@ -54,6 +54,6 @@ A: Check TODO.md.
 
 Q: When darkside/hardnested attacks?
 
-A: Hardnested attack requires active connection to PC so I'm not going to do it. 
+A: Hardnested attack is planned, I recovered keys successfully. I can't tell exact time when it will be finished, probably end of April.
 
-Darkside is easier but I don't have time for that (nested took me extra ~~month~~ two months). I would be happy to accept PR if you implement it.
+Darkside requires accurate PRNG prediction that we can't implement yet (Nested way probably won't work). Maybe I missed something...

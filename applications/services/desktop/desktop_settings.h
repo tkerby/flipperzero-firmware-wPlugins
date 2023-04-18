@@ -74,5 +74,6 @@ typedef struct {
     bool sdcard;
     uint8_t icon_style;
     bool bt_icon;
+	bool rpc_icon;
     bool auto_lock_with_pin;
 } DesktopSettings;

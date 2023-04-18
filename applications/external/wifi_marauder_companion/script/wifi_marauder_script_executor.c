@@ -57,13 +57,28 @@ void _wifi_marauder_script_execute_select(WifiMarauderScriptStageSelect* stage) 
     }
 
     char command[256];
-    if(strcmp(stage->filter, "all") == 0) {
-        snprintf(command, sizeof(command), "select %s all\n", select_type);
+    size_t command_length = 0;
+
+    if(stage->indexes != NULL) {
+        command_length = snprintf(command, sizeof(command), "select %s ", select_type);
+
+        for(int i = 0; stage->indexes[i] != -1; i++) {
+            int index = stage->indexes[i];
+            command_length += snprintf(
+                command + command_length, sizeof(command) - command_length, "%d, ", index);
+        }
+
+        // Remove the trailing comma and space
+        command_length -= 2;
+        command[command_length] = '\n';
+        command_length++;
+    } else if(stage->filter == NULL || strcmp(stage->filter, "all") == 0) {
+        command_length = snprintf(command, sizeof(command), "select %s all\n", select_type);
     } else {
-        snprintf(command, sizeof(command), "select %s {%s}\n", select_type, stage->filter);
+        command_length = snprintf(
+            command, sizeof(command), "select %s -f \"%s\"\n", select_type, stage->filter);
     }
 
-    const size_t command_length = strlen(command);
     wifi_marauder_uart_tx((uint8_t*)command, command_length);
 }
 
@@ -198,22 +213,26 @@ void wifi_marauder_script_execute_start(void* context) {
     char command[100];
 
     // Enables or disables the LED according to script settings
-    snprintf(
-        command,
-        sizeof(command),
-        "settings -s EnableLED %s",
-        script->enable_led ? "enable" : "disable");
-    wifi_marauder_uart_tx((uint8_t*)command, strlen(command));
-    _send_line_break();
+    if(script->enable_led != WifiMarauderScriptBooleanUndefined) {
+        snprintf(
+            command,
+            sizeof(command),
+            "settings -s EnableLED %s",
+            script->enable_led ? "enable" : "disable");
+        wifi_marauder_uart_tx((uint8_t*)command, strlen(command));
+        _send_line_break();
+    }
 
     // Enables or disables PCAP saving according to script settings
-    snprintf(
-        command,
-        sizeof(command),
-        "settings -s SavePCAP %s",
-        script->save_pcap ? "enable" : "disable");
-    wifi_marauder_uart_tx((uint8_t*)command, strlen(command));
-    _send_line_break();
+    if(script->save_pcap != WifiMarauderScriptBooleanUndefined) {
+        snprintf(
+            command,
+            sizeof(command),
+            "settings -s SavePCAP %s",
+            script->save_pcap ? "enable" : "disable");
+        wifi_marauder_uart_tx((uint8_t*)command, strlen(command));
+        _send_line_break();
+    }
 }
 
 void wifi_marauder_script_execute_stage(WifiMarauderScriptStage* stage, void* context) {

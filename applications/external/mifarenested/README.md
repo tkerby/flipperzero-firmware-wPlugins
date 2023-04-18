@@ -4,12 +4,12 @@ Ported nested attacks from proxmark3 (Iceman fork)
 
 ## Download
 
-[![FAP Factory](https://flipc.org/api/v1/AloneLiberty/FlipperNested/badge)](https://flipc.org/AloneLiberty/FlipperNested)
+[![FlipC.org](https://flipc.org/AloneLiberty/FlipperNested/badge?branch=dev)](https://flipc.org/AloneLiberty/FlipperNested?branch=dev)
 
-## Currently supported attacks:
+## Currently supported attacks
 
- - static nested attack
  - nested attack
+ - static nested attack
 
 ## Warning
 

@@ -277,6 +277,64 @@ void submenu_callback(void* context, uint32_t index) {
     }
 }
 
+void submenu_copypaste_callback(void* context, uint32_t index) {
+    FlizzerTrackerApp* tracker = (FlizzerTrackerApp*)context;
+
+    uint8_t sequence_position = tracker->tracker_engine.sequence_position;
+    uint8_t current_pattern_index =
+        tracker->tracker_engine.song->sequence.sequence_step[sequence_position]
+            .pattern_indices[tracker->current_channel];
+
+    TrackerSongPattern* source_pattern;
+
+    if(tracker->source_pattern_index >= 0) {
+        source_pattern = &tracker->song.pattern[tracker->source_pattern_index];
+    }
+
+    TrackerSongPattern* current_pattern = &tracker->song.pattern[current_pattern_index];
+
+    uint16_t pattern_length = tracker->tracker_engine.song->pattern_length;
+
+    switch(index) {
+    case SUBMENU_PATTERN_COPYPASTE_COPY: {
+        tracker->source_pattern_index = current_pattern_index;
+        tracker->cut_pattern = false;
+        break;
+    }
+
+    case SUBMENU_PATTERN_COPYPASTE_PASTE: {
+        if(tracker->source_pattern_index >= 0) {
+            memcpy(
+                current_pattern->step,
+                source_pattern->step,
+                sizeof(TrackerSongPatternStep) * pattern_length);
+
+            if(tracker->cut_pattern) {
+                set_empty_pattern(source_pattern, pattern_length);
+                tracker->cut_pattern = false;
+            }
+        }
+        break;
+    }
+
+    case SUBMENU_PATTERN_COPYPASTE_CUT: {
+        tracker->source_pattern_index = current_pattern_index;
+        tracker->cut_pattern = true;
+        break;
+    }
+
+    case SUBMENU_PATTERN_COPYPASTE_CLEAR: {
+        set_empty_pattern(current_pattern, pattern_length);
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    view_dispatcher_switch_to_view(tracker->view_dispatcher, VIEW_TRACKER);
+}
+
 void audio_output_changed_callback(VariableItem* item) {
     FlizzerTrackerApp* tracker = (FlizzerTrackerApp*)variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
@@ -362,7 +420,8 @@ void process_input_event(FlizzerTrackerApp* tracker, FlizzerTrackerEvent* event)
         return;
     }
 
-    if(tracker->showing_help || tracker->is_loading || tracker->is_saving)
+    if(tracker->showing_help || tracker->is_loading || tracker->is_saving ||
+       tracker->is_loading_instrument || tracker->is_saving_instrument)
         return; //do not react until these are finished
 
     if(event->input.key == InputKeyBack && event->input.type == InputTypeShort &&
@@ -376,15 +435,24 @@ void process_input_event(FlizzerTrackerApp* tracker, FlizzerTrackerEvent* event)
         event->input.key == InputKeyBack && event->input.type == InputTypeShort &&
         !(tracker->editing)) {
         cycle_focus(tracker);
-        stop_song(tracker);
+        //stop_song(tracker);
         return;
     }
 
     if(event->input.key == InputKeyBack && event->input.type == InputTypeLong) {
         switch(tracker->mode) {
         case PATTERN_VIEW: {
-            submenu_set_selected_item(tracker->pattern_submenu, SUBMENU_PATTERN_LOAD_SONG);
-            view_dispatcher_switch_to_view(tracker->view_dispatcher, VIEW_SUBMENU_PATTERN);
+            if(tracker->focus == EDIT_PATTERN) {
+                submenu_set_selected_item(
+                    tracker->pattern_copypaste_submenu, SUBMENU_PATTERN_COPYPASTE_COPY);
+                view_dispatcher_switch_to_view(
+                    tracker->view_dispatcher, VIEW_SUBMENU_PATTERN_COPYPASTE);
+            }
+
+            else {
+                submenu_set_selected_item(tracker->pattern_submenu, SUBMENU_PATTERN_LOAD_SONG);
+                view_dispatcher_switch_to_view(tracker->view_dispatcher, VIEW_SUBMENU_PATTERN);
+            }
             break;
         }
 
