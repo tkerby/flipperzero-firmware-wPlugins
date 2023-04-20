@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "Dolphin_Trainer_icons.h"
 #include "dolphin/helpers/dolphin_state.h"
-#include "saved_struct.h"
+#include <toolbox/saved_struct.h>
 #include <power/power_service/power.h>
 
 const char* funnyText[] = {
@@ -108,7 +108,7 @@ int32_t dolphin_trainer_app(void* p) {
 
     bool running = true;
     bool success = saved_struct_load(
-        "/int/.dolphin.state", &stateLocal->data, sizeof(DolphinStoreData), 0xD0, 0x01);
+        DOLPHIN_STATE_PATH, &stateLocal->data, sizeof(DolphinStoreData), 0xD0, 0x01);
     if(!success) {
         running = false;
     }
@@ -118,7 +118,7 @@ int32_t dolphin_trainer_app(void* p) {
         if(event.type == InputTypePress) {
             if(event.key == InputKeyOk && btnIndex == 3) {
                 bool result = saved_struct_save(
-                    "/int/.dolphin.state", &stateLocal->data, sizeof(DolphinStoreData), 0xD0, 0x01);
+                    DOLPHIN_STATE_PATH, &stateLocal->data, sizeof(DolphinStoreData), 0xD0, 0x01);
                 if(result) {
                     furi_delay_ms(100);
                     furi_hal_power_reset();

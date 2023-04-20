@@ -15,22 +15,19 @@
  * - Create function "void _wifi_marauder_script_execute_????(WifiMarauderScriptStage????* stage)"
  * - Add case in wifi_marauder_script_execute_stage()
  * 
+ * wifi_marauder_scene_script_edit.c
+ * - Add case in wifi_marauder_scene_script_edit_on_enter()
+ *
+ * wifi_marauder_scene_script_stage_add.c
+ * - Create stage creation function and add in wifi_marauder_scene_script_stage_add_on_enter()
+ * 
+ * wifi_marauder_scene_script_stage_edit.c
+ * - Create a list of WifiMarauderScriptEditItem[] items with the attributes on the stage
+ * - Implement the callbacks
+ * - Add case in wifi_marauder_scene_script_stage_edit_setup()
+ * 
  * ----------------------------------------------------------------------------------------------------
- * IMPLEMENTED STAGES (In order of execution):
- * - Scan
- * - Select
- * - Deauth
- * - Probe
- * - Sniff raw
- * - Sniff beacon
- * - Sniff deauth
- * - Sniff Espressif
- * - Sniff PMKID
- * - Sniff Pwnagotchi
- * - Beacon List/Random
- * - Beacon Ap
- * ----------------------------------------------------------------------------------------------------
- * SCRIPT SYNTAX:
+ * SCRIPT SYNTAX (In order of execution):
  * {
  *     "meta": {
  *         "description": "My script",
@@ -47,7 +44,6 @@
  *         "select": {
  *             "type": "ap" | "station" | "ssid",
  *             "filter": "all" | "contains -f '{SSID fragment}' or equals '{SSID}' or ...",
- *             "index": index number,
  *             "indexes": [0, 1, 2, 3...],
  *         },
  *         "deauth": {
@@ -88,6 +84,12 @@
  *         "beaconAp": {
  *             "timeout": seconds
  *         }
+ *         "exec": {
+ *             "command": Command (eg: "clearlist -a")
+ *         }
+ *         "delay": {
+ *             "timeout": seconds
+ *         }
  *     }
  * }
  * 
@@ -108,6 +110,12 @@
 #include <storage/storage.h>
 #include "cJSON.h"
 
+#define WIFI_MARAUDER_DEFAULT_TIMEOUT_SCAN 15
+#define WIFI_MARAUDER_DEFAULT_TIMEOUT_DEAUTH 30
+#define WIFI_MARAUDER_DEFAULT_TIMEOUT_PROBE 60
+#define WIFI_MARAUDER_DEFAULT_TIMEOUT_SNIFF 60
+#define WIFI_MARAUDER_DEFAULT_TIMEOUT_BEACON 60
+
 typedef enum {
     WifiMarauderScriptBooleanFalse = 0,
     WifiMarauderScriptBooleanTrue = 1,
@@ -127,11 +135,13 @@ typedef enum {
     WifiMarauderScriptStageTypeSniffPwn,
     WifiMarauderScriptStageTypeBeaconList,
     WifiMarauderScriptStageTypeBeaconAp,
+    WifiMarauderScriptStageTypeExec,
+    WifiMarauderScriptStageTypeDelay,
 } WifiMarauderScriptStageType;
 
 typedef enum {
-    WifiMarauderScriptScanTypeAp,
-    WifiMarauderScriptScanTypeStation
+    WifiMarauderScriptScanTypeAp = 0,
+    WifiMarauderScriptScanTypeStation = 1
 } WifiMarauderScriptScanType;
 
 typedef enum {
@@ -157,6 +167,7 @@ typedef struct WifiMarauderScriptStageSelect {
     WifiMarauderScriptSelectType type;
     char* filter;
     int* indexes;
+    int index_count;
     // TODO: Implement a feature to not select the same items in the next iteration of the script
     bool allow_repeat;
 } WifiMarauderScriptStageSelect;
@@ -206,6 +217,14 @@ typedef struct WifiMarauderScriptStageBeaconAp {
     int timeout;
 } WifiMarauderScriptStageBeaconAp;
 
+typedef struct WifiMarauderScriptStageExec {
+    char* command;
+} WifiMarauderScriptStageExec;
+
+typedef struct WifiMarauderScriptStageDelay {
+    int timeout;
+} WifiMarauderScriptStageDelay;
+
 // Script
 typedef struct WifiMarauderScript {
     char* name;
@@ -216,6 +235,11 @@ typedef struct WifiMarauderScript {
     WifiMarauderScriptBoolean save_pcap;
     int repeat;
 } WifiMarauderScript;
+
+typedef struct WifiMarauderScriptStageListItem {
+    char* value;
+    struct WifiMarauderScriptStageListItem* next_item;
+} WifiMarauderScriptStageListItem;
 
 WifiMarauderScript* wifi_marauder_script_alloc();
 WifiMarauderScript* wifi_marauder_script_create(const char* script_name);

@@ -76,8 +76,8 @@ struct RpcSession {
     RpcBufferIsEmptyCallback buffer_is_empty_callback;
     RpcSessionClosedCallback closed_callback;
     RpcSessionTerminatedCallback terminated_callback;
-	RpcOwner owner;
-	bool status;
+    RpcOwner owner;
+    bool status;
     void* context;
 };
 
@@ -364,7 +364,7 @@ RpcSession* rpc_session_open(Rpc* rpc, RpcOwner owner) {
     session->rpc = rpc;
     session->terminate = false;
     session->decode_error = false;
-	session->owner = owner;
+    session->owner = owner;
     RpcHandlerDict_init(session->handlers);
 
     session->decoded_message = malloc(sizeof(PB_Main));

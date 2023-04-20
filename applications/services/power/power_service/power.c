@@ -528,7 +528,12 @@ int32_t power_srv(void* p) {
     furi_record_create(RECORD_POWER, power);
 
     DesktopSettings* settings = malloc(sizeof(DesktopSettings));
-    DESKTOP_SETTINGS_LOAD(settings);
+    bool loaded = DESKTOP_SETTINGS_LOAD(settings);
+
+    if(!loaded) {
+        settings->displayBatteryPercentage = DISPLAY_BATTERY_BAR_PERCENT;
+        settings->icon_style = ICON_STYLE_SLIM;
+    }
 
     if(settings->displayBatteryPercentage != DISPLAY_BATTERY_NONE) {
         power->displayBatteryPercentage = settings->displayBatteryPercentage;
@@ -566,7 +571,12 @@ int32_t power_srv(void* p) {
         // Update battery view port
         if(need_refresh) {
             DesktopSettings* settings = malloc(sizeof(DesktopSettings));
-            DESKTOP_SETTINGS_LOAD(settings);
+            bool loaded = DESKTOP_SETTINGS_LOAD(settings);
+
+            if(!loaded) {
+                settings->displayBatteryPercentage = DISPLAY_BATTERY_BAR_PERCENT;
+                settings->icon_style = ICON_STYLE_SLIM;
+            }
 
             if(power->displayBatteryPercentage == DISPLAY_BATTERY_NONE) {
                 if(settings->displayBatteryPercentage != DISPLAY_BATTERY_NONE) {

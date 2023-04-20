@@ -13,11 +13,14 @@
 #define SCENE_EVENT_SELECT_AUTO_LOCK_PIN 6
 #define SCENE_EVENT_SELECT_ICON_STYLE 7
 #define SCENE_EVENT_SELECT_BATTERY_DISPLAY 8
-#define SCENE_EVENT_SELECT_BT_ICON 9
-#define SCENE_EVENT_SELECT_RPC_ICON 10
-#define SCENE_EVENT_SELECT_SDCARD_ICON 11
-#define SCENE_EVENT_SELECT_TOP_BAR 12
-#define SCENE_EVENT_SELECT_DUMBMODE 13
+#define SCENE_EVENT_SELECT_LOCK_ICON 9
+#define SCENE_EVENT_SELECT_BT_ICON 10
+#define SCENE_EVENT_SELECT_RPC_ICON 11
+#define SCENE_EVENT_SELECT_SDCARD_ICON 12
+#define SCENE_EVENT_SELECT_STEALTH_ICON 13
+#define SCENE_EVENT_SELECT_TOP_BAR 14
+#define SCENE_EVENT_SELECT_DUMBMODE 15
+#define SCENE_EVENT_SELECT_DUMBMODE_ICON 16
 
 #define AUTO_LOCK_DELAY_COUNT 9
 const char* const auto_lock_delay_text[AUTO_LOCK_DELAY_COUNT] = {
@@ -64,6 +67,9 @@ const char* const desktop_on_off_text[DESKTOP_ON_OFF_COUNT] = {
     "ON",
 };
 
+const uint32_t lockicon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
+uint8_t origLockIcon_value = true;
+
 const uint32_t bticon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
 uint8_t origBTIcon_value = true;
 
@@ -73,10 +79,16 @@ uint8_t origRPC_value = true;
 const uint32_t sdcard_value[DESKTOP_ON_OFF_COUNT] = {false, true};
 uint8_t origSDCard_value = true;
 
+const uint32_t stealth_value[DESKTOP_ON_OFF_COUNT] = {false, true};
+uint8_t origStealth_value = true;
+
 const uint32_t topbar_value[DESKTOP_ON_OFF_COUNT] = {false, true};
 uint8_t origTopBar_value = true;
 
 const uint32_t dumbmode_value[DESKTOP_ON_OFF_COUNT] = {false, true};
+
+const uint32_t dumbmode_icon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
+uint8_t origDumbIcon_value = true;
 
 static void desktop_settings_scene_start_var_list_enter_callback(void* context, uint32_t index) {
     DesktopSettingsApp* app = context;
@@ -107,6 +119,14 @@ static void desktop_settings_scene_start_icon_style_changed(VariableItem* item) 
     app->settings.icon_style = icon_style_value[index];
 }
 
+static void desktop_settings_scene_start_lockicon_changed(VariableItem* item) {
+    DesktopSettingsApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+
+    variable_item_set_current_value_text(item, desktop_on_off_text[index]);
+    app->settings.lock_icon = lockicon_value[index];
+}
+
 static void desktop_settings_scene_start_bticon_changed(VariableItem* item) {
     DesktopSettingsApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
@@ -131,6 +151,14 @@ static void desktop_settings_scene_start_sdcard_changed(VariableItem* item) {
     app->settings.sdcard = sdcard_value[index];
 }
 
+static void desktop_settings_scene_start_stealth_changed(VariableItem* item) {
+    DesktopSettingsApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+
+    variable_item_set_current_value_text(item, desktop_on_off_text[index]);
+    app->settings.stealth_icon = stealth_value[index];
+}
+
 static void desktop_settings_scene_start_topbar_changed(VariableItem* item) {
     DesktopSettingsApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
@@ -147,6 +175,14 @@ static void desktop_settings_scene_start_dumbmode_changed(VariableItem* item) {
     app->settings.is_dumbmode = dumbmode_value[index];
 }
 
+static void desktop_settings_scene_start_dumbmode_icon_changed(VariableItem* item) {
+    DesktopSettingsApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+
+    variable_item_set_current_value_text(item, desktop_on_off_text[index]);
+    app->settings.dumbmode_icon = stealth_value[index];
+}
+
 static void desktop_settings_scene_start_auto_lock_pin_changed(VariableItem* item) {
     DesktopSettingsApp* app = variable_item_get_context(item);
     uint8_t value = variable_item_get_current_value_index(item);
@@ -160,10 +196,13 @@ void desktop_settings_scene_start_on_enter(void* context) {
     VariableItemList* variable_item_list = app->variable_item_list;
     origIconStyle_value = app->settings.icon_style;
     origBattDisp_value = app->settings.displayBatteryPercentage;
+    origLockIcon_value = app->settings.lock_icon;
     origBTIcon_value = app->settings.bt_icon;
     origRPC_value = app->settings.rpc_icon;
     origSDCard_value = app->settings.sdcard;
+    origStealth_value = app->settings.stealth_icon;
     origTopBar_value = app->settings.top_bar;
+    origDumbIcon_value = app->settings.dumbmode_icon;
 
     VariableItem* item;
     uint8_t value_index;
@@ -227,6 +266,18 @@ void desktop_settings_scene_start_on_enter(void* context) {
 
     item = variable_item_list_add(
         variable_item_list,
+        "Lock Icon",
+        DESKTOP_ON_OFF_COUNT,
+        desktop_settings_scene_start_lockicon_changed,
+        app);
+
+    value_index =
+        value_index_uint32(app->settings.lock_icon, lockicon_value, DESKTOP_ON_OFF_COUNT);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, desktop_on_off_text[value_index]);
+
+    item = variable_item_list_add(
+        variable_item_list,
         "BT Icon",
         DESKTOP_ON_OFF_COUNT,
         desktop_settings_scene_start_bticon_changed,
@@ -260,6 +311,18 @@ void desktop_settings_scene_start_on_enter(void* context) {
 
     item = variable_item_list_add(
         variable_item_list,
+        "Stealth Icon",
+        DESKTOP_ON_OFF_COUNT,
+        desktop_settings_scene_start_stealth_changed,
+        app);
+
+    value_index =
+        value_index_uint32(app->settings.stealth_icon, stealth_value, DESKTOP_ON_OFF_COUNT);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, desktop_on_off_text[value_index]);
+
+    item = variable_item_list_add(
+        variable_item_list,
         "Top Bar",
         DESKTOP_ON_OFF_COUNT,
         desktop_settings_scene_start_topbar_changed,
@@ -278,6 +341,18 @@ void desktop_settings_scene_start_on_enter(void* context) {
 
     value_index =
         value_index_uint32(app->settings.is_dumbmode, dumbmode_value, DESKTOP_ON_OFF_COUNT);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, desktop_on_off_text[value_index]);
+
+    item = variable_item_list_add(
+        variable_item_list,
+        "Games Only Icon",
+        DESKTOP_ON_OFF_COUNT,
+        desktop_settings_scene_start_dumbmode_icon_changed,
+        app);
+
+    value_index =
+        value_index_uint32(app->settings.dumbmode_icon, dumbmode_icon_value, DESKTOP_ON_OFF_COUNT);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, desktop_on_off_text[value_index]);
 
@@ -328,6 +403,9 @@ bool desktop_settings_scene_start_on_event(void* context, SceneManagerEvent sme)
         case SCENE_EVENT_SELECT_BATTERY_DISPLAY:
             consumed = true;
             break;
+        case SCENE_EVENT_SELECT_LOCK_ICON:
+            consumed = true;
+            break;
         case SCENE_EVENT_SELECT_BT_ICON:
             consumed = true;
             break;
@@ -337,10 +415,16 @@ bool desktop_settings_scene_start_on_event(void* context, SceneManagerEvent sme)
         case SCENE_EVENT_SELECT_SDCARD_ICON:
             consumed = true;
             break;
+        case SCENE_EVENT_SELECT_STEALTH_ICON:
+            consumed = true;
+            break;
         case SCENE_EVENT_SELECT_TOP_BAR:
             consumed = true;
             break;
         case SCENE_EVENT_SELECT_DUMBMODE:
+            consumed = true;
+            break;
+        case SCENE_EVENT_SELECT_DUMBMODE_ICON:
             consumed = true;
             break;
         }
@@ -355,8 +439,12 @@ void desktop_settings_scene_start_on_exit(void* context) {
 
     if((app->settings.icon_style != origIconStyle_value) ||
        (app->settings.displayBatteryPercentage != origBattDisp_value) ||
-       (app->settings.bt_icon != origBTIcon_value) || (app->settings.rpc_icon != origRPC_value) || (app->settings.sdcard != origSDCard_value) ||
-       (app->settings.top_bar != origTopBar_value)) {
+       (app->settings.lock_icon != origLockIcon_value) ||
+       (app->settings.bt_icon != origBTIcon_value) || (app->settings.rpc_icon != origRPC_value) ||
+       (app->settings.sdcard != origSDCard_value) ||
+       (app->settings.stealth_icon != origStealth_value) ||
+       (app->settings.top_bar != origTopBar_value) ||
+       (app->settings.dumbmode_icon != origDumbIcon_value)) {
         furi_hal_power_reset();
     }
 }

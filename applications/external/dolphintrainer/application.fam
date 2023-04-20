@@ -4,7 +4,7 @@ App(
     name="Dolphin Trainer",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="dolphin_trainer_app",
-    requires=["gui"],
+    requires=["gui","dolphin"],
     stack_size=2 * 1024,
     order = 0,
     fap_icon="ico.png",
