@@ -102,6 +102,12 @@ bool power_is_battery_healthy(Power* power);
  */
 void power_enable_low_battery_level_notification(Power* power, bool enable);
 
+/** Update battery viewport
+ *
+ * @param power     Power instance
+ */
+void power_update_viewport(Power* power);
+
 #ifdef __cplusplus
 }
 #endif

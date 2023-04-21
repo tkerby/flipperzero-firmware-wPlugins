@@ -501,6 +501,54 @@ static void power_check_low_battery(Power* power) {
     }
 }
 
+void power_update_viewport(Power* power) {
+    DesktopSettings* settings = malloc(sizeof(DesktopSettings));
+    bool loaded = DESKTOP_SETTINGS_LOAD(settings);
+
+    if(!loaded) {
+        settings->displayBatteryPercentage = DISPLAY_BATTERY_BAR_PERCENT;
+        settings->icon_style = ICON_STYLE_SLIM;
+    }
+
+    if(power->displayBatteryPercentage == DISPLAY_BATTERY_NONE) {
+        if(settings->displayBatteryPercentage != DISPLAY_BATTERY_NONE) {
+            power->displayBatteryPercentage = settings->displayBatteryPercentage;
+            switch(settings->icon_style) {
+            case ICON_STYLE_SLIM:
+                view_port_enabled_set(power->battery_slim_view_port, true);
+                view_port_enabled_set(power->battery_view_port, false);
+                view_port_update(power->battery_slim_view_port);
+                break;
+            case ICON_STYLE_STOCK:
+                view_port_enabled_set(power->battery_slim_view_port, false);
+                view_port_enabled_set(power->battery_view_port, true);
+                view_port_update(power->battery_view_port);
+                break;
+            }
+        }
+    } else {
+        if(settings->displayBatteryPercentage == DISPLAY_BATTERY_NONE) {
+            power->displayBatteryPercentage = settings->displayBatteryPercentage;
+            view_port_enabled_set(power->battery_slim_view_port, false);
+            view_port_enabled_set(power->battery_view_port, false);
+        } else {
+            power->displayBatteryPercentage = settings->displayBatteryPercentage;
+            switch(settings->icon_style) {
+            case ICON_STYLE_SLIM:
+                view_port_enabled_set(power->battery_slim_view_port, true);
+                view_port_enabled_set(power->battery_view_port, false);
+                view_port_update(power->battery_slim_view_port);
+                break;
+            case ICON_STYLE_STOCK:
+                view_port_enabled_set(power->battery_slim_view_port, false);
+                view_port_enabled_set(power->battery_view_port, true);
+                view_port_update(power->battery_view_port);
+                break;
+            }
+        }
+    }
+}
+
 static void power_check_battery_level_change(Power* power) {
     if(power->battery_level != power->info.charge) {
         power->battery_level = power->info.charge;
@@ -541,16 +589,18 @@ int32_t power_srv(void* p) {
         case ICON_STYLE_SLIM:
             view_port_enabled_set(power->battery_slim_view_port, true);
             view_port_enabled_set(power->battery_view_port, false);
+            view_port_update(power->battery_slim_view_port);
             break;
         case ICON_STYLE_STOCK:
             view_port_enabled_set(power->battery_slim_view_port, false);
             view_port_enabled_set(power->battery_view_port, true);
+            view_port_update(power->battery_view_port);
             break;
         }
     } else {
         power->displayBatteryPercentage = settings->displayBatteryPercentage;
-        view_port_enabled_set(power->battery_view_port, false);
         view_port_enabled_set(power->battery_slim_view_port, false);
+        view_port_enabled_set(power->battery_view_port, false);
     }
 
     free(settings);
@@ -588,8 +638,8 @@ int32_t power_srv(void* p) {
                         view_port_update(power->battery_slim_view_port);
                         break;
                     case ICON_STYLE_STOCK:
-                        view_port_enabled_set(power->battery_view_port, true);
                         view_port_enabled_set(power->battery_slim_view_port, false);
+                        view_port_enabled_set(power->battery_view_port, true);
                         view_port_update(power->battery_view_port);
                         break;
                     }
@@ -597,15 +647,19 @@ int32_t power_srv(void* p) {
             } else {
                 if(settings->displayBatteryPercentage == DISPLAY_BATTERY_NONE) {
                     power->displayBatteryPercentage = settings->displayBatteryPercentage;
-                    view_port_enabled_set(power->battery_view_port, false);
                     view_port_enabled_set(power->battery_slim_view_port, false);
+                    view_port_enabled_set(power->battery_view_port, false);
                 } else {
                     power->displayBatteryPercentage = settings->displayBatteryPercentage;
                     switch(settings->icon_style) {
                     case ICON_STYLE_SLIM:
+                        view_port_enabled_set(power->battery_slim_view_port, true);
+                        view_port_enabled_set(power->battery_view_port, false);
                         view_port_update(power->battery_slim_view_port);
                         break;
                     case ICON_STYLE_STOCK:
+                        view_port_enabled_set(power->battery_slim_view_port, false);
+                        view_port_enabled_set(power->battery_view_port, true);
                         view_port_update(power->battery_view_port);
                         break;
                     }
