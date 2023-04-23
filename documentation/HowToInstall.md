@@ -12,6 +12,24 @@
 <br>
 <br>
 
+## With Web Updater
+
+- Be sure you updated to latest official release before(if installing for the first time), and verify that microSD card is installed
+- Make sure qFlipper app is closed
+- Open latest release page - [Releases](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/releases/latest)
+- Connect your device and select `Install via Web Updater`
+after that on web updater page - press `Connect` button
+- Press `Install` button
+
+- And wait, if all flashed
+ successfully - you will have all needed assets pre installed
+- Done
+![web](https://user-images.githubusercontent.com/40743392/233779040-596ad9a9-87cd-4b19-a831-16fdc678ba35.png)
+
+
+<br>
+<br>
+
 ## With iOS mobile app
 
 - Be sure you updated to latest official release before(if installing for the first time), and verify that microSD card is installed
@@ -23,8 +41,7 @@
 - Error in ios app will show up, but flipper will be updated successfully
 - And if all flashed successfully - you will have all needed assets pre installed
 - Done
-
-![ios](https://user-images.githubusercontent.com/10697207/192114863-75693972-31fb-4b5f-bcc4-4122abb352c2.jpg)
+![ios](https://user-images.githubusercontent.com/40743392/233779071-10e37af5-a7d9-41d6-81cd-9bb660352b4d.png)
 
 <br>
 <br>
@@ -32,7 +49,7 @@
 ## With Android mobile app (with .tgz download)
 
 - Be sure you updated to latest official release before(if installing for the first time), and verify that microSD card is installed
-- Open latest release page - [Releases](https://github.com/DarkFlippers/unleashed-firmware/releases/latest)
+- Open latest release page - [Releases](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/releases/latest)
 - Download `flipper-z-f7-update-(version).tgz`
 - In flipper app click `Update channel` button, select `Custom`
 - Select downloaded `.tgz` file
@@ -40,8 +57,7 @@
 - Wait until update is finished 
 - And if all flashed successfully - you will have all needed assets pre installed
 - Done
-
-![andro_tgz](https://user-images.githubusercontent.com/10697207/197042029-a5824787-08bc-4fd8-93ee-b7faff082c54.jpg)
+![andro_tgz](https://user-images.githubusercontent.com/40743392/233782806-e81c9634-4694-4faf-88ce-08b89a8b6fa0.png)
 
 <br>
 <br>
@@ -49,15 +65,15 @@
 ## With Android mobile app (via web updater link)
 
 - Be sure you updated to latest official release before(if installing for the first time), and verify that microSD card is installed
-- Open latest release page - [Releases](https://github.com/DarkFlippers/unleashed-firmware/releases/latest)
+- Open latest release page - [Releases](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/releases/latest)
 - Click `Install via Web Updater`
 - It will ask to open with browser or Flipper app, select Flipper App
 - Continue to install
 - Wait until update is finished 
 - And if all flashed successfully - you will have all needed assets pre installed
 - Done
+![androweb](https://user-images.githubusercontent.com/40743392/233782906-1f8f1ebf-c488-4d9f-9a6f-67a4e693cbda.png)
 
-![andro_web](https://user-images.githubusercontent.com/10697207/197042413-cfc93f31-8b84-4cdb-967b-276f46224e50.jpg)
 
 <br>
 <br>
@@ -66,7 +82,7 @@
 
 - Download qFlipper that allows `.tgz` installation [Download qFlipper (official link)](https://flipperzero.one/update)
 - Be sure you updated to latest official release before(only if installing for the first time), and verify that microSD card is installed
-- Open latest release page - [Releases](https://github.com/DarkFlippers/unleashed-firmware/releases/latest)
+- Open latest release page - [Releases](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/releases/latest)
 - Download `flipper-z-f7-update-(version).tgz`
 - Launch qFlipper
 - Connect your device and select `Install from file`
@@ -75,7 +91,9 @@
 - And wait, if all flashed successfully - you will have all needed assets pre installed
 - Done
 
-![qflip](https://user-images.githubusercontent.com/10697207/192114874-4edae5f5-6bff-4674-8e3b-030ceaf17abc.png)
+![qflip](https://user-images.githubusercontent.com/40743392/233779331-3f21c662-6e77-42e5-a928-f5441bd85bd4.png)
+
+
 
 <br>
 <br>
@@ -94,7 +112,9 @@
 - Update will start, wait for all stages
 - Done
 
-![manual](https://user-images.githubusercontent.com/10697207/192114890-b9220265-1fe3-4837-8e98-ed267282e11e.png)
+![manual](https://user-images.githubusercontent.com/40743392/233779363-faf5b35b-e136-4dca-b1fb-15188b26eb6a.png)
+
+
 
 <br>
 <br>
@@ -103,6 +123,6 @@
 - ### If you installed using .dfu - unpack files from archive `sd-card-(CURRENT VERSION).zip` to your microSD card
 <br>
 
-- ## [Read instructions how to use plugins and more](https://github.com/DarkFlippers/unleashed-firmware#instructions)
+- ## [Read instructions how to use plugins and more](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/)
 
-- ## [How To: Configure Sub-GHz Remote App](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemotePlugin.md)
+- ## [How To: Configure Sub-GHz Remote App](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/documentation/SubGHzRemotePlugin.md)

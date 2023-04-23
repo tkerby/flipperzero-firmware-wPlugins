@@ -442,6 +442,7 @@ void desktop_settings_scene_start_on_exit(void* context) {
 
     if((app->settings.icon_style != origIconStyle_value) ||
        (app->settings.displayBatteryPercentage != origBattDisp_value)) {
+        // Trigger UI update in case we changed battery layout
         Power* power = furi_record_open(RECORD_POWER);
         power_update_viewport(power);
         furi_record_close(RECORD_POWER);
