@@ -81,137 +81,14 @@ WifiMarauderApp* wifi_marauder_app_alloc() {
         (!storage_file_exists(app->storage, SAVE_PCAP_SETTING_FILEPATH) ||
          !storage_file_exists(app->storage, SAVE_LOGS_SETTING_FILEPATH));
 
-    // User input
-    app->user_input = text_input_alloc();
+    // Submenu
+    app->submenu = submenu_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, WifiMarauderAppViewUserInput, text_input_get_view(app->user_input));
-
-    // Script select
-    app->script_select_submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptSelect,
-        submenu_get_view(app->script_select_submenu));
-
-    // Script options
-    app->script_options_submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptOptions,
-        submenu_get_view(app->script_options_submenu));
-
-    // Script confirm delete
-    app->script_confirm_delete_widget = widget_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptConfirmDelete,
-        widget_get_view(app->script_confirm_delete_widget));
-
-    // Script stage add
-    app->script_stage_add_submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptStageAdd,
-        submenu_get_view(app->script_stage_add_submenu));
-
-    // Script edit
-    app->script_edit_submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptEdit,
-        submenu_get_view(app->script_edit_submenu));
-
-    // Script stage edit
-    app->script_settings_list = variable_item_list_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptSettings,
-        variable_item_list_get_view(app->script_settings_list));
-
-    // Script stage edit list submenu
-    app->script_stage_edit_list_submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptStageEditList,
-        submenu_get_view(app->script_stage_edit_list_submenu));
-
-    // Script stage edit
-    app->script_stage_edit_list = variable_item_list_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        WifiMarauderAppViewScriptStageEdit,
-        variable_item_list_get_view(app->script_stage_edit_list));
+        app->view_dispatcher, WifiMarauderAppViewSubmenu, submenu_get_view(app->submenu));
 
     scene_manager_next_scene(app->scene_manager, WifiMarauderSceneStart);
 
     return app;
-}
-
-void wifi_marauder_create_demo_scripts(WifiMarauderApp* app) {
-    // Beaconlist
-    const char* script_beaconlist_file = MARAUDER_APP_SCRIPT_PATH("demo_beaconlist");
-    if(!storage_file_exists(app->storage, script_beaconlist_file)) {
-        WifiMarauderScript* script_beaconlist = wifi_marauder_script_create("demo_deauth");
-        script_beaconlist->description = strdup("Beacon spam list");
-
-        WifiMarauderScriptStageBeaconList* stage_beaconlist_1 =
-            (WifiMarauderScriptStageBeaconList*)malloc(sizeof(WifiMarauderScriptStageBeaconList));
-        stage_beaconlist_1->ssid_count = 5;
-        stage_beaconlist_1->ssids = malloc(sizeof(char*) * stage_beaconlist_1->ssid_count);
-        stage_beaconlist_1->ssids[0] = strdup("01 APERTURE SCIENCE");
-        stage_beaconlist_1->ssids[1] = strdup("02 WE DO WHAT WE MUST");
-        stage_beaconlist_1->ssids[2] = strdup("03 BECAUSE WE CAN");
-        stage_beaconlist_1->ssids[3] = strdup("04 FOR THE GOOD");
-        stage_beaconlist_1->ssids[4] = strdup("05 OF ALL OF US");
-        stage_beaconlist_1->timeout = 60;
-        wifi_marauder_script_add_stage(
-            script_beaconlist, WifiMarauderScriptStageTypeBeaconList, stage_beaconlist_1);
-
-        WifiMarauderScriptStageBeaconList* stage_beaconlist_2 =
-            (WifiMarauderScriptStageBeaconList*)malloc(sizeof(WifiMarauderScriptStageBeaconList));
-        stage_beaconlist_2->ssid_count = 1;
-        stage_beaconlist_2->ssids = malloc(sizeof(char*) * stage_beaconlist_2->ssid_count);
-        stage_beaconlist_2->ssids[0] = strdup("FIXED SSID");
-        stage_beaconlist_2->random_ssids = 2;
-        stage_beaconlist_2->timeout = 30;
-        wifi_marauder_script_add_stage(
-            script_beaconlist, WifiMarauderScriptStageTypeBeaconList, stage_beaconlist_2);
-
-        wifi_marauder_script_save_json(app->storage, script_beaconlist_file, script_beaconlist);
-        wifi_marauder_script_free(script_beaconlist);
-    }
-
-    // Deauth
-    const char* script_deauth_file = MARAUDER_APP_SCRIPT_PATH("demo_deauth");
-    if(!storage_file_exists(app->storage, script_deauth_file)) {
-        WifiMarauderScript* script_deauth = wifi_marauder_script_create("demo_deauth");
-        script_deauth->description =
-            strdup("Deauth all clients that fit the filter on channel 10 for 30 seconds");
-
-        WifiMarauderScriptStageScan* stage_scan =
-            (WifiMarauderScriptStageScan*)malloc(sizeof(WifiMarauderScriptStageScan));
-        stage_scan->type = WifiMarauderScriptScanTypeAp;
-        stage_scan->channel = 10;
-        stage_scan->timeout = 30;
-        wifi_marauder_script_add_stage(script_deauth, WifiMarauderScriptStageTypeScan, stage_scan);
-
-        WifiMarauderScriptStageSelect* stage_select =
-            (WifiMarauderScriptStageSelect*)malloc(sizeof(WifiMarauderScriptStageSelect));
-        stage_select->type = WifiMarauderScriptSelectTypeAp;
-        stage_select->filter = strdup("all");
-        wifi_marauder_script_add_stage(
-            script_deauth, WifiMarauderScriptStageTypeSelect, stage_select);
-
-        WifiMarauderScriptStageDeauth* stage_deauth =
-            (WifiMarauderScriptStageDeauth*)malloc(sizeof(WifiMarauderScriptStageDeauth));
-        stage_deauth->timeout = 30;
-        wifi_marauder_script_add_stage(
-            script_deauth, WifiMarauderScriptStageTypeDeauth, stage_deauth);
-
-        wifi_marauder_script_save_json(
-            app->storage, MARAUDER_APP_SCRIPT_PATH("demo_deauth"), script_deauth);
-        wifi_marauder_script_free(script_deauth);
-    }
 }
 
 void wifi_marauder_make_app_folder(WifiMarauderApp* app) {
@@ -231,8 +108,6 @@ void wifi_marauder_make_app_folder(WifiMarauderApp* app) {
 
     if(!storage_simply_mkdir(app->storage, MARAUDER_APP_FOLDER_SCRIPTS)) {
         dialog_message_show_storage_error(app->dialogs, "Cannot create\nscripts folder");
-    } else {
-        wifi_marauder_create_demo_scripts(app);
     }
 }
 
@@ -268,26 +143,14 @@ void wifi_marauder_app_free(WifiMarauderApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewConsoleOutput);
     view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewTextInput);
     view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewWidget);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptSelect);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptOptions);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptEdit);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptSettings);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptStageEdit);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewScriptStageEditList);
-    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewUserInput);
+    view_dispatcher_remove_view(app->view_dispatcher, WifiMarauderAppViewSubmenu);
+
     widget_free(app->widget);
-    widget_free(app->script_confirm_delete_widget);
     text_box_free(app->text_box);
     furi_string_free(app->text_box_store);
     text_input_free(app->text_input);
-    text_input_free(app->user_input);
-    submenu_free(app->script_select_submenu);
-    submenu_free(app->script_options_submenu);
-    submenu_free(app->script_stage_add_submenu);
-    submenu_free(app->script_edit_submenu);
-    submenu_free(app->script_stage_edit_list_submenu);
-    variable_item_list_free(app->script_settings_list);
-    variable_item_list_free(app->script_stage_edit_list);
+    submenu_free(app->submenu);
+    variable_item_list_free(app->var_item_list);
     storage_file_free(app->capture_file);
     storage_file_free(app->log_file);
     storage_file_free(app->save_pcap_setting_file);
@@ -310,14 +173,6 @@ void wifi_marauder_app_free(WifiMarauderApp* app) {
 
 int32_t wifi_marauder_app(void* p) {
     UNUSED(p);
-
-    uint8_t attempts = 0;
-    while(!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
-        furi_hal_power_enable_otg();
-        furi_delay_ms(10);
-    }
-    furi_delay_ms(200);
-
     WifiMarauderApp* wifi_marauder_app = wifi_marauder_app_alloc();
 
     wifi_marauder_make_app_folder(wifi_marauder_app);
@@ -329,10 +184,6 @@ int32_t wifi_marauder_app(void* p) {
     view_dispatcher_run(wifi_marauder_app->view_dispatcher);
 
     wifi_marauder_app_free(wifi_marauder_app);
-
-    if(furi_hal_power_is_otg_enabled()) {
-        furi_hal_power_disable_otg();
-    }
 
     return 0;
 }

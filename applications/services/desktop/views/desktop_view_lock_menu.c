@@ -18,7 +18,7 @@
 
 typedef enum {
     DesktopLockMenuIndexLock,
-    DesktopLockMenuIndexPinLock,
+    // DesktopLockMenuIndexPinLock,
     DesktopLockMenuIndexPinLockShutdown,
     // DesktopLockMenuIndexGameMode,
     DesktopLockMenuIndexStealth,
@@ -82,13 +82,13 @@ void desktop_lock_menu_draw_callback(Canvas* canvas, void* model) {
         case DesktopLockMenuIndexLock:
             str = "Lock";
             break;
-        case DesktopLockMenuIndexPinLock:
-            if(m->pin_is_set) {
-                str = "Lock with PIN";
-            } else {
-                str = "Set PIN";
-            }
-            break;
+            // case DesktopLockMenuIndexPinLock:
+            // if(m->pin_is_set) {
+            // str = "Lock with PIN";
+            // } else {
+            // str = "Set PIN";
+            // }
+            // break;
         case DesktopLockMenuIndexPinLockShutdown:
             if(m->pin_is_set) {
                 str = "Lock with PIN + Off";
@@ -180,14 +180,14 @@ bool desktop_lock_menu_input_callback(InputEvent* event, void* context) {
         update);
 
     if(event->key == InputKeyOk) {
-        if((idx == DesktopLockMenuIndexLock) && (event->type == InputTypeShort)) {
-            if((pin_is_set) && (event->type == InputTypeShort)) {
+        if((idx == DesktopLockMenuIndexLock)) {
+            if((pin_is_set) && (event->type == InputTypeLong)) {
                 lock_menu->callback(DesktopLockMenuEventPinLock, lock_menu->context);
-            } else if((pin_is_set == false) && (event->type == InputTypeShort)) {
+            } else if(event->type == InputTypeShort) {
                 lock_menu->callback(DesktopLockMenuEventLock, lock_menu->context);
             }
-        } else if((idx == DesktopLockMenuIndexPinLock) && (event->type == InputTypeShort)) {
-            lock_menu->callback(DesktopLockMenuEventPinLock, lock_menu->context);
+            // } else if((idx == DesktopLockMenuIndexPinLock) && (event->type == InputTypeShort)) {
+            // lock_menu->callback(DesktopLockMenuEventPinLock, lock_menu->context);
         } else if((idx == DesktopLockMenuIndexPinLockShutdown) && (event->type == InputTypeShort)) {
             lock_menu->callback(DesktopLockMenuEventPinLockShutdown, lock_menu->context);
             // } else if((idx == DesktopLockMenuIndexGameMode) && (event->type == InputTypeShort)) {

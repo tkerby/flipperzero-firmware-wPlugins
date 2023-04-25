@@ -38,15 +38,15 @@ void wifi_marauder_scene_user_input_ok_callback(void* context) {
         if(app->user_input_string_reference != NULL) {
             strncpy(
                 *app->user_input_string_reference,
-                app->user_input_store,
-                strlen(app->user_input_store) + 1);
+                app->text_input_store,
+                strlen(app->text_input_store) + 1);
             app->user_input_string_reference = NULL;
         }
         break;
     // Writes the numerical value of the reference
     case WifiMarauderUserInputTypeNumber:
         if(app->user_input_number_reference != NULL) {
-            *app->user_input_number_reference = atoi(app->user_input_store);
+            *app->user_input_number_reference = atoi(app->text_input_store);
             app->user_input_number_reference = NULL;
         }
         break;
@@ -59,7 +59,7 @@ void wifi_marauder_scene_user_input_ok_callback(void* context) {
         }
         if(app->user_input_file_extension != NULL) {
             size_t file_path_len = strlen(app->user_input_file_dir) +
-                                   strlen(app->user_input_store) +
+                                   strlen(app->text_input_store) +
                                    strlen(app->user_input_file_extension) + 3;
             file_path = (char*)malloc(file_path_len);
             snprintf(
@@ -67,14 +67,14 @@ void wifi_marauder_scene_user_input_ok_callback(void* context) {
                 file_path_len,
                 "%s/%s.%s",
                 app->user_input_file_dir,
-                app->user_input_store,
+                app->text_input_store,
                 app->user_input_file_extension);
         } else {
             size_t file_path_len =
-                strlen(app->user_input_file_dir) + strlen(app->user_input_store) + 2;
+                strlen(app->user_input_file_dir) + strlen(app->text_input_store) + 2;
             file_path = (char*)malloc(file_path_len);
             snprintf(
-                file_path, file_path_len, "%s/%s", app->user_input_file_dir, app->user_input_store);
+                file_path, file_path_len, "%s/%s", app->user_input_file_dir, app->text_input_store);
         }
         if(storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_NEW)) {
             storage_file_close(file);
@@ -100,31 +100,31 @@ void wifi_marauder_scene_user_input_on_enter(void* context) {
     switch(app->user_input_type) {
     // Loads the string value of the reference
     case WifiMarauderUserInputTypeString:
-        text_input_set_header_text(app->user_input, "Enter value:");
-        text_input_set_validator(app->user_input, NULL, app);
+        text_input_set_header_text(app->text_input, "Enter value:");
+        text_input_set_validator(app->text_input, NULL, app);
         if(app->user_input_string_reference != NULL) {
             strncpy(
-                app->user_input_store,
+                app->text_input_store,
                 *app->user_input_string_reference,
                 strlen(*app->user_input_string_reference) + 1);
         }
         break;
     // Loads the numerical value of the reference
     case WifiMarauderUserInputTypeNumber:
-        text_input_set_header_text(app->user_input, "Enter a valid number:");
+        text_input_set_header_text(app->text_input, "Enter a valid number:");
         text_input_set_validator(
-            app->user_input, wifi_marauder_scene_user_input_validator_number_callback, app);
+            app->text_input, wifi_marauder_scene_user_input_validator_number_callback, app);
         if(app->user_input_number_reference != NULL) {
             char number_str[32];
             snprintf(number_str, sizeof(number_str), "%d", *app->user_input_number_reference);
-            strncpy(app->user_input_store, number_str, strlen(number_str) + 1);
+            strncpy(app->text_input_store, number_str, strlen(number_str) + 1);
         }
         break;
     // File name
     case WifiMarauderUserInputTypeFileName:
-        text_input_set_header_text(app->user_input, "Enter file name:");
+        text_input_set_header_text(app->text_input, "Enter file name:");
         text_input_set_validator(
-            app->user_input, wifi_marauder_scene_user_input_validator_file_callback, app);
+            app->text_input, wifi_marauder_scene_user_input_validator_file_callback, app);
         break;
     default:
         scene_manager_previous_scene(app->scene_manager);
@@ -132,14 +132,14 @@ void wifi_marauder_scene_user_input_on_enter(void* context) {
     }
 
     text_input_set_result_callback(
-        app->user_input,
+        app->text_input,
         wifi_marauder_scene_user_input_ok_callback,
         app,
-        app->user_input_store,
-        WIFI_MARAUDER_USER_INPUT_STORE_SIZE,
+        app->text_input_store,
+        WIFI_MARAUDER_TEXT_INPUT_STORE_SIZE,
         false);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewUserInput);
+    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewTextInput);
 }
 
 bool wifi_marauder_scene_user_input_on_event(void* context, SceneManagerEvent event) {
@@ -150,6 +150,6 @@ bool wifi_marauder_scene_user_input_on_event(void* context, SceneManagerEvent ev
 
 void wifi_marauder_scene_user_input_on_exit(void* context) {
     WifiMarauderApp* app = context;
-    memset(app->user_input_store, 0, sizeof(app->user_input_store));
-    text_input_reset(app->user_input);
+    memset(app->text_input_store, 0, sizeof(app->text_input_store));
+    text_input_reset(app->text_input);
 }

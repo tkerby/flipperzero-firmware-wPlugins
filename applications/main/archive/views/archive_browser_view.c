@@ -66,8 +66,35 @@ static void render_item_menu(Canvas* canvas, ArchiveBrowserViewModel* model) {
             furi_string_set(item_pin, "Unpin");
         }
 
-        if(selected->type == ArchiveFileTypeFolder) {
+        if(model->tab_idx == ArchiveTabFavorites) {
+            //FURI_LOG_D(TAG, "ArchiveTabFavorites");
+
+            furi_string_set(item_rename, "Move");
+
+            archive_menu_add_item(
+                menu_array_push_raw(model->context_menu),
+                item_run,
+                ArchiveBrowserEventFileMenuRun);
+            archive_menu_add_item(
+                menu_array_push_raw(model->context_menu),
+                item_pin,
+                ArchiveBrowserEventFileMenuPin);
+            if(selected->type <= ArchiveFileTypeBadUsb) {
+                archive_menu_add_item(
+                    menu_array_push_raw(model->context_menu),
+                    item_show,
+                    ArchiveBrowserEventFileMenuShow);
+            }
+            archive_menu_add_item(
+                menu_array_push_raw(model->context_menu),
+                item_rename,
+                ArchiveBrowserEventFileMenuRename);
+        } else if(selected->type == ArchiveFileTypeFolder) {
             //FURI_LOG_D(TAG, "Directory type");
+            archive_menu_add_item(
+                menu_array_push_raw(model->context_menu),
+                item_pin,
+                ArchiveBrowserEventFileMenuPin);
             archive_menu_add_item(
                 menu_array_push_raw(model->context_menu),
                 item_rename,

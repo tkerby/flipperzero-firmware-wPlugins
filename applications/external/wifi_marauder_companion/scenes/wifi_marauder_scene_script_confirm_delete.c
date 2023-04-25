@@ -12,24 +12,24 @@ void wifi_marauder_scene_script_confirm_delete_widget_callback(
 
 void wifi_marauder_scene_script_confirm_delete_on_enter(void* context) {
     WifiMarauderApp* app = context;
-    Widget* widget = app->script_confirm_delete_widget;
 
     widget_add_button_element(
-        widget,
+        app->widget,
         GuiButtonTypeLeft,
         "No",
         wifi_marauder_scene_script_confirm_delete_widget_callback,
         app);
     widget_add_button_element(
-        widget,
+        app->widget,
         GuiButtonTypeRight,
         "Yes",
         wifi_marauder_scene_script_confirm_delete_widget_callback,
         app);
 
-    widget_add_string_element(widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "Are you sure?");
+    widget_add_string_element(
+        app->widget, 0, 0, AlignLeft, AlignTop, FontPrimary, "Are you sure?");
     widget_add_text_box_element(
-        widget,
+        app->widget,
         0,
         12,
         128,
@@ -39,7 +39,7 @@ void wifi_marauder_scene_script_confirm_delete_on_enter(void* context) {
         "The script will be\npermanently deleted",
         false);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewScriptConfirmDelete);
+    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewWidget);
 }
 
 bool wifi_marauder_scene_script_confirm_delete_on_event(void* context, SceneManagerEvent event) {
@@ -79,5 +79,5 @@ bool wifi_marauder_scene_script_confirm_delete_on_event(void* context, SceneMana
 
 void wifi_marauder_scene_script_confirm_delete_on_exit(void* context) {
     WifiMarauderApp* app = context;
-    widget_reset(app->script_confirm_delete_widget);
+    widget_reset(app->widget);
 }

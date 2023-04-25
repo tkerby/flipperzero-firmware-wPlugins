@@ -30,7 +30,7 @@ static void wifi_marauder_scene_script_select_add_callback(void* context, uint32
 
 void wifi_marauder_scene_script_select_on_enter(void* context) {
     WifiMarauderApp* app = context;
-    Submenu* script_select_submenu = app->script_select_submenu;
+    Submenu* submenu = app->submenu;
 
     File* dir_scripts = storage_file_alloc(app->storage);
     if(storage_dir_open(dir_scripts, MARAUDER_APP_FOLDER_SCRIPTS)) {
@@ -42,7 +42,7 @@ void wifi_marauder_scene_script_select_on_enter(void* context) {
             app->script_list_count++;
         }
         if(app->script_list_count > 0) {
-            submenu_set_header(script_select_submenu, "Select a script:");
+            submenu_set_header(submenu, "Select a script:");
             app->script_list = malloc(app->script_list_count * sizeof(FuriString*));
             storage_dir_close(dir_scripts);
             storage_dir_open(dir_scripts, MARAUDER_APP_FOLDER_SCRIPTS);
@@ -52,7 +52,7 @@ void wifi_marauder_scene_script_select_on_enter(void* context) {
                 app->script_list[script_index] = furi_string_alloc();
                 path_extract_filename_no_ext(file_path, app->script_list[script_index]);
                 submenu_add_item(
-                    script_select_submenu,
+                    submenu,
                     furi_string_get_cstr(app->script_list[script_index]),
                     script_index,
                     wifi_marauder_scene_script_select_callback,
@@ -60,22 +60,17 @@ void wifi_marauder_scene_script_select_on_enter(void* context) {
                 script_index++;
             }
         } else {
-            submenu_set_header(script_select_submenu, "No script found");
+            submenu_set_header(submenu, "No script found");
         }
         submenu_add_item(
-            script_select_submenu,
-            "[+] ADD SCRIPT",
-            99,
-            wifi_marauder_scene_script_select_add_callback,
-            app);
+            submenu, "[+] ADD SCRIPT", 99, wifi_marauder_scene_script_select_add_callback, app);
         storage_dir_close(dir_scripts);
     }
     storage_file_free(dir_scripts);
 
     submenu_set_selected_item(
-        script_select_submenu,
-        scene_manager_get_scene_state(app->scene_manager, WifiMarauderSceneScriptSelect));
-    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewScriptSelect);
+        submenu, scene_manager_get_scene_state(app->scene_manager, WifiMarauderSceneScriptSelect));
+    view_dispatcher_switch_to_view(app->view_dispatcher, WifiMarauderAppViewSubmenu);
 }
 
 bool wifi_marauder_scene_script_select_on_event(void* context, SceneManagerEvent event) {
@@ -86,7 +81,7 @@ bool wifi_marauder_scene_script_select_on_event(void* context, SceneManagerEvent
 
 void wifi_marauder_scene_script_select_on_exit(void* context) {
     WifiMarauderApp* app = context;
-    submenu_reset(app->script_select_submenu);
+    submenu_reset(app->submenu);
 
     for(int i = 0; i < app->script_list_count; i++) {
         furi_string_free(app->script_list[i]);

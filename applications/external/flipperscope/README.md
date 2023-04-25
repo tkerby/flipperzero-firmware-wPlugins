@@ -10,11 +10,15 @@ cd ..
 ./fbt launch_app APPSRC=applications_user/flipperscope
 ```
 
-Provide signal to pin 16/C0, with a voltage ranging from 0V to 2.5V.
+Alternatively upload the **scope.fap** file in the binary folder of this repository to your flipper zero.
+
+Provide signal to **pin 16/PC0**, with a voltage ranging from 0V to 2.5V and ground to **pin 18/GND**.
 
 Press the 'ok' button (button in the centre of joypad) to pause/unpause the waveform display.
 
 [Demo](https://www.youtube.com/watch?v=tu2X1WwADF4) showing three different waveform types from a signal generator.
+
+Also see [Derek Jamison's demonstration](https://www.youtube.com/watch?v=iC5fBGwCPHw&t=374s) of this app as well as other interesting projects.
 
 ## Measurements
 
