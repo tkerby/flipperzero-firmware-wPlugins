@@ -1,6 +1,6 @@
 #include "../mifare_nested_i.h"
 
-void mifare_nested_scene_unpredictable_prng_widget_callback(
+void mifare_nested_scene_static_encrypted_nonce_widget_callback(
     GuiButtonType result,
     InputType type,
     void* context) {
@@ -10,30 +10,33 @@ void mifare_nested_scene_unpredictable_prng_widget_callback(
     }
 }
 
-void mifare_nested_scene_unpredictable_prng_on_enter(void* context) {
+void mifare_nested_scene_static_encrypted_nonce_on_enter(void* context) {
     MifareNested* mifare_nested = context;
     Widget* widget = mifare_nested->widget;
 
     notification_message(mifare_nested->notifications, &sequence_error);
 
-    widget_add_icon_element(widget, 73, 13, &I_DolphinCry);
+    widget_add_icon_element(widget, 73, 12, &I_DolphinCry);
     widget_add_string_element(
-        widget, 3, 4, AlignLeft, AlignTop, FontPrimary, "PRNG not predictable");
-    widget_add_string_element(widget, 3, 16, AlignLeft, AlignTop, FontPrimary, "This tag require");
-    widget_add_string_element(widget, 3, 28, AlignLeft, AlignTop, FontPrimary, "hardnested");
-    widget_add_string_element(widget, 3, 40, AlignLeft, AlignTop, FontPrimary, "attack");
+        widget, 1, 9, AlignLeft, AlignTop, FontPrimary, "Static encrypted nonce");
+    widget_add_string_element(
+        widget, 1, 19, AlignLeft, AlignTop, FontSecondary, "This tag can't be");
+    widget_add_string_element(
+        widget, 1, 29, AlignLeft, AlignTop, FontSecondary, "used with Nested");
+    widget_add_string_element(widget, 1, 39, AlignLeft, AlignTop, FontSecondary, "attack.");
+
     widget_add_button_element(
         widget,
         GuiButtonTypeLeft,
         "Back",
-        mifare_nested_scene_unpredictable_prng_widget_callback,
+        mifare_nested_scene_static_encrypted_nonce_widget_callback,
         mifare_nested);
 
     // Setup and start worker
     view_dispatcher_switch_to_view(mifare_nested->view_dispatcher, MifareNestedViewWidget);
 }
 
-bool mifare_nested_scene_unpredictable_prng_on_event(void* context, SceneManagerEvent event) {
+bool mifare_nested_scene_static_encrypted_nonce_on_event(void* context, SceneManagerEvent event) {
     MifareNested* mifare_nested = context;
     bool consumed = false;
 
@@ -50,7 +53,7 @@ bool mifare_nested_scene_unpredictable_prng_on_event(void* context, SceneManager
     return consumed;
 }
 
-void mifare_nested_scene_unpredictable_prng_on_exit(void* context) {
+void mifare_nested_scene_static_encrypted_nonce_on_exit(void* context) {
     MifareNested* mifare_nested = context;
 
     widget_reset(mifare_nested->widget);

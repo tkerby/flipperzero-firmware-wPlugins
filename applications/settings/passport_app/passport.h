@@ -9,8 +9,9 @@
 #include <furi_hal_version.h>
 
 #include "math.h"
+#include <dolphin/helpers/dolphin_state.h>
+#include <dolphin/helpers/dolphin_deed.h>
 #include <dolphin/dolphin.h>
-#include "dolphin/helpers/dolphin_state.h"
 #include "desktop/desktop_settings.h"
 #include "passport_settings/passport_settings.h"
 #include "Passport_icons.h"
@@ -18,9 +19,9 @@
 #define MOODS_TOTAL 1
 #define BUTTHURT_MAX 14
 
-typedef enum { AniRedVirus, AniYelVirus, AniBluVirus, AniRabbit, AniSonic } Animations;
+typedef enum { AniRedVirus, AniYelVirus, AniBluVirus, AniRabbit, AniSlime, AniSonic, AniMaxNum } Animations;
 
-static IconAnimation* animations[5];
+static IconAnimation* animations[AniMaxNum];
 
 typedef enum { EventGameTick, EventKeyPress } EventType;
 

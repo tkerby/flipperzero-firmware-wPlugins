@@ -1,7 +1,25 @@
 ### New changes 
-* Power + BLE Stack: Reverted OFW BLE stack upgrade, reverted deep sleep -> Temporarily, due to NFC issues, need more research on how deepsleep affects all systems -> **If you got any NFC (or orther) crashes / freezes on 044 release please upgrade to this one**
-* SubGHz: Combining add manual scenes (by @gid9798 | PR #433)
-* SubGHz: Fix add manually naming
+* Power + BLE: DeepSleep + required ble stack upgrade added back, all known issues was fixed in OFW, no issues was found during our tests
+* Desktop: Allow locking without pin using Up menu on desktop (Short click on `Lock` = Without PIN / Long = With PIN)
+* RFID: Add confirmation message before running `Clear T5577 Password` 
+* RFID: Add more user friendly RAW emulation via UI [(by Dan Caprita)](https://forum.flipperzero.one/t/electra-intercom/6368/43)
+* SubGHz: Fixed `Frequency Analyzer` issues, fixed `Read` mode issues
+* SubGHz: Fix NFC crash when using external CC1101 radio module
+* SubGHz: Fix multiple external CC1101 radio module issues, (int callbacks, SPI handlers init/reinit)
+* SubGHz: Using scene manager function in add manually (by @gid9798 | PR #437)
+* Plugins: ESP32: WiFi Marauder - add icon for log files in logs browser
+* Plugins: Update **ESP32: WiFi Marauder companion** plugin [(by 0xchocolate)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) merged [PR by @tcpassos](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion/pull/11)
+* Plugins: Update **TOTP (Authenticator)** [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
+* Plugins: Fix RFID Fuzzer and iButton Fuzzer crashes
+* Infrared: Updated infrared assets (by @amec0e | PR #441)
+* Docs: Update **How To Install** images (by @krolchonok | PR #436)
+* OFW PR 2620: NFC: Fix reading Mifare Classic cards with unusual access conditions and fix emulation of unknown keys (by Astrrra)
+* OFW PR 2616: Picopass: remove spaces in CSN (by bettse)
+* OFW PR 2604: WS: add protocol "Wendox W6726" (by Skorpionm)
+* OFW PR 2607: BadUSB: command parser fix (by nminaylov)
+* OFW: FuriHal: use proper divider for core2 when transition to sleep, remove extra stop mode transition checks, cleanup code. Furi: proper assert and check messages.
+* OFW: Don't reboot on crash in debug builds
+* OFW: cubewb: downgraded to v1.15.0 
 
 #### [🎲 Download latest extra apps pack](https://github.com/xMasterX/all-the-plugins/archive/refs/heads/main.zip)
 

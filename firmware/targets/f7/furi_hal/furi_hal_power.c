@@ -29,10 +29,6 @@
 #define FURI_HAL_POWER_DEBUG_STOP_GPIO (&gpio_ext_pc3)
 #endif
 
-#ifndef FURI_HAL_POWER_DEBUG_ABNORMAL_GPIO
-#define FURI_HAL_POWER_DEBUG_ABNORMAL_GPIO (&gpio_ext_pb3)
-#endif
-
 #ifndef FURI_HAL_POWER_STOP_MODE
 #define FURI_HAL_POWER_STOP_MODE (LL_PWR_MODE_STOP2)
 #endif
@@ -207,16 +203,7 @@ static inline void furi_hal_power_deep_sleep() {
     __force_stores();
 #endif
 
-    bool should_abort_sleep = LL_PWR_IsActiveFlag_CRPE() || LL_PWR_IsActiveFlag_CRP() ||
-                              LL_PWR_IsActiveFlag_BLEA() || LL_PWR_IsActiveFlag_BLEWU();
-
-    if(should_abort_sleep) {
-#ifdef FURI_HAL_POWER_DEBUG
-        furi_hal_gpio_write(FURI_HAL_POWER_DEBUG_ABNORMAL_GPIO, 1);
-#endif
-    } else {
-        __WFI();
-    }
+    __WFI();
 
     LL_LPM_EnableSleep();
 

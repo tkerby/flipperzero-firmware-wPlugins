@@ -2,6 +2,19 @@
 #include "m-string.h"
 #include <toolbox/path.h>
 #include <flipper_format/flipper_format.h>
+#include <bt/bt_service/bt_i.h>
+
+//invalid char check - credit Xtreme FW
+static bool namechanger_valid_name(const char* text) {
+    for(; *text; ++text) {
+        const char c = *text;
+        if((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') && (c != '_')) {
+            FURI_LOG_E(TAG, "Invalid characters. Only a-z, A-Z, 0-9, and _ allowed!");
+            return false;
+        }
+    }
+    return true;
+}
 
 int32_t namechanger_on_system_start(void* p) {
     UNUSED(p);
@@ -155,8 +168,11 @@ int32_t namechanger_on_system_start(void* p) {
             } else {
                 char newdata[9];
                 snprintf(newdata, 9, "%s", furi_string_get_cstr(data));
-                //set name from file
-                furi_hal_version_set_custom_name(newdata);
+
+                if(namechanger_valid_name(newdata)) {
+                    //set name from file
+                    furi_hal_version_set_custom_name(newdata);
+                }
             }
         }
 

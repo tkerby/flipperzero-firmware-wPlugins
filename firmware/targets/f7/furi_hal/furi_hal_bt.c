@@ -84,9 +84,7 @@ void furi_hal_bt_init() {
     }
 
     // Explicitly tell that we are in charge of CLK48 domain
-    if(!LL_HSEM_IsSemaphoreLocked(HSEM, CFG_HW_CLK48_CONFIG_SEMID)) {
-        furi_check(LL_HSEM_1StepLock(HSEM, CFG_HW_CLK48_CONFIG_SEMID) == 0);
-    }
+    furi_check(LL_HSEM_1StepLock(HSEM, CFG_HW_CLK48_CONFIG_SEMID) == 0);
 
     // Start Core2
     ble_glue_init();
@@ -129,9 +127,7 @@ bool furi_hal_bt_start_radio_stack() {
     furi_mutex_acquire(furi_hal_bt_core2_mtx, FuriWaitForever);
 
     // Explicitly tell that we are in charge of CLK48 domain
-    if(!LL_HSEM_IsSemaphoreLocked(HSEM, CFG_HW_CLK48_CONFIG_SEMID)) {
-        furi_check(LL_HSEM_1StepLock(HSEM, CFG_HW_CLK48_CONFIG_SEMID) == 0);
-    }
+    furi_check(LL_HSEM_1StepLock(HSEM, CFG_HW_CLK48_CONFIG_SEMID) == 0);
 
     do {
         // Wait until C2 is started or timeout
@@ -201,6 +197,7 @@ bool furi_hal_bt_start_app(FuriHalBtProfile profile, GapEventCallback event_cb, 
             FURI_LOG_E(TAG, "Can't start Ble App - unsupported radio stack");
             break;
         }
+        /*
         // Set mac address
         memcpy(
             profile_config[profile].config.mac_address,
@@ -211,16 +208,38 @@ bool furi_hal_bt_start_app(FuriHalBtProfile profile, GapEventCallback event_cb, 
             profile_config[profile].config.adv_name,
             furi_hal_version_get_ble_local_device_name_ptr(),
             FURI_HAL_VERSION_DEVICE_NAME_LENGTH);
+		*/
         // Configure GAP
         GapConfig* config = &profile_config[profile].config;
         if(profile == FuriHalBtProfileSerial) {
+            // Set mac address
+            memcpy(
+                config->mac_address, furi_hal_version_get_ble_mac(), sizeof(config->mac_address));
+            // Set advertise name
+            strlcpy(
+                config->adv_name,
+                furi_hal_version_get_ble_local_device_name_ptr(),
+                FURI_HAL_VERSION_DEVICE_NAME_LENGTH);
+
             config->adv_service_uuid |= furi_hal_version_get_hw_color();
         } else if(profile == FuriHalBtProfileHidKeyboard) {
             // Change MAC address for HID profile
-            config->mac_address[2]++;
+            uint8_t default_mac[GAP_MAC_ADDR_SIZE] = FURI_HAL_BT_DEFAULT_MAC_ADDR;
+            if(memcmp(config->mac_address, default_mac, 6) == 0) {
+                config->mac_address[2]++;
+            }
             // Change name Flipper -> Control
-            const char* clicker_str = "Control";
-            memcpy(&config->adv_name[1], clicker_str, strlen(clicker_str));
+            //const char* clicker_str = "Control";
+            //memcpy(&config->adv_name[1], clicker_str, strlen(clicker_str));
+            if(strnlen(config->adv_name, FURI_HAL_VERSION_DEVICE_NAME_LENGTH) < 2 ||
+               strnlen(config->adv_name + 1, FURI_HAL_VERSION_DEVICE_NAME_LENGTH) < 1) {
+                snprintf(
+                    config->adv_name,
+                    FURI_HAL_VERSION_DEVICE_NAME_LENGTH,
+                    "%cControl %s",
+                    *furi_hal_version_get_ble_local_device_name_ptr(),
+                    furi_hal_version_get_ble_local_device_name_ptr() + 1);
+            }
         }
         if(!gap_init(config, event_cb, context)) {
             gap_thread_stop();
@@ -443,4 +462,40 @@ bool furi_hal_bt_ensure_c2_mode(BleGlueC2Mode mode) {
 
     FURI_LOG_E(TAG, "Failed to switch C2 mode: %d", fw_start_res);
     return false;
+}
+
+void furi_hal_bt_set_profile_adv_name(
+    FuriHalBtProfile profile,
+    const char name[FURI_HAL_BT_ADV_NAME_LENGTH]) {
+    furi_assert(profile < FuriHalBtProfileNumber);
+    furi_assert(name);
+
+    if(strlen(name) == 0) {
+        memset(
+            &(profile_config[profile].config.adv_name[1]),
+            0,
+            strlen(&(profile_config[profile].config.adv_name[1])));
+    } else {
+        profile_config[profile].config.adv_name[0] = AD_TYPE_COMPLETE_LOCAL_NAME;
+        memcpy(&(profile_config[profile].config.adv_name[1]), name, FURI_HAL_BT_ADV_NAME_LENGTH);
+    }
+}
+
+const char* furi_hal_bt_get_profile_adv_name(FuriHalBtProfile profile) {
+    furi_assert(profile < FuriHalBtProfileNumber);
+    return &(profile_config[profile].config.adv_name[1]);
+}
+
+void furi_hal_bt_set_profile_mac_addr(
+    FuriHalBtProfile profile,
+    const uint8_t mac_addr[GAP_MAC_ADDR_SIZE]) {
+    furi_assert(profile < FuriHalBtProfileNumber);
+    furi_assert(mac_addr);
+
+    memcpy(profile_config[profile].config.mac_address, mac_addr, GAP_MAC_ADDR_SIZE);
+}
+
+const uint8_t* furi_hal_bt_get_profile_mac_addr(FuriHalBtProfile profile) {
+    furi_assert(profile < FuriHalBtProfileNumber);
+    return profile_config[profile].config.mac_address;
 }

@@ -3,7 +3,6 @@
 #include <furi_hal_nfc.h>
 #include "../../lib/parity/parity.h"
 #include "../../lib/crypto1/crypto1.h"
-
 #define TAG "Nested"
 
 void nfc_util_num2bytes(uint64_t src, uint8_t len, uint8_t* dest) {
@@ -229,7 +228,10 @@ struct nonce_info_static nested_static_nonce_attack(
 
     // Setup nfc poller
     nfc_activate();
-    if(!furi_hal_nfc_activate_nfca(200, &cuid)) return r;
+    if(!furi_hal_nfc_activate_nfca(200, &cuid)) {
+        free(crypto);
+        return r;
+    }
 
     r.cuid = cuid;
 
@@ -252,6 +254,7 @@ struct nonce_info_static nested_static_nonce_attack(
         mifare_sendcmd_short(crypto, tx_rx, true, 0x60 + (targetKeyType & 0x01), targetBlockNo);
 
     if(!success) {
+        free(crypto);
         return r;
     };
 
@@ -260,7 +263,10 @@ struct nonce_info_static nested_static_nonce_attack(
 
     nfc_activate();
 
-    if(!furi_hal_nfc_activate_nfca(200, &cuid)) return r;
+    if(!furi_hal_nfc_activate_nfca(200, &cuid)) {
+        free(crypto);
+        return r;
+    }
 
     crypto1_reset(crypto);
 
@@ -270,6 +276,8 @@ struct nonce_info_static nested_static_nonce_attack(
 
     success =
         mifare_sendcmd_short(crypto, tx_rx, true, 0x60 + (targetKeyType & 0x01), targetBlockNo);
+
+    free(crypto);
 
     if(!success) {
         return r;
@@ -335,6 +343,7 @@ uint32_t nested_calibrate_distance(
         } else {
             unsuccessful_tries++;
             if(unsuccessful_tries > 12) {
+                free(crypto);
                 FURI_LOG_E(
                     TAG,
                     "Tag isn't vulnerable to nested attack (random numbers are not predictable)");
@@ -356,6 +365,8 @@ uint32_t nested_calibrate_distance(
         davg,
         collected);
 
+    free(crypto);
+
     nfc_deactivate();
 
     return davg;
@@ -370,7 +381,9 @@ struct distance_info nested_calibrate_distance_info(
     Crypto1* crypto = malloc(sizeof(Crypto1));
     uint32_t nt1, nt2, i = 0, davg = 0, dmin = 0, dmax = 0, rtr = 0, unsuccessful_tries = 0;
     struct distance_info r;
-    r.invalid = 0;
+    r.min_prng = 0;
+    r.max_prng = 0;
+    r.mid_prng = 0;
 
     for(rtr = 0; rtr < 10; rtr++) {
         nfc_activate();
@@ -405,9 +418,12 @@ struct distance_info nested_calibrate_distance_info(
         } else {
             unsuccessful_tries++;
             if(unsuccessful_tries > 12) {
+                free(crypto);
+
                 FURI_LOG_E(
                     TAG,
                     "Tag isn't vulnerable to nested attack (random numbers are not predictable)");
+
                 return r;
             }
         }
@@ -421,6 +437,8 @@ struct distance_info nested_calibrate_distance_info(
     r.min_prng = dmin;
     r.max_prng = dmax;
     r.mid_prng = davg;
+
+    free(crypto);
 
     nfc_deactivate();
 
@@ -520,6 +538,89 @@ struct nonce_info nested_attack(
         r.full = true;
     }
 
+    free(crypto);
+
+    nfc_deactivate();
+
+    return r;
+}
+
+struct nonce_info_hard hard_nested_collect_nonces(
+    FuriHalNfcTxRxContext* tx_rx,
+    uint8_t blockNo,
+    uint8_t keyType,
+    uint8_t targetBlockNo,
+    uint8_t targetKeyType,
+    uint64_t ui64Key,
+    uint32_t* found,
+    Stream* file_stream) {
+    uint32_t cuid = 0;
+    uint8_t same = 0;
+    uint64_t previous = 0;
+    Crypto1* crypto = malloc(sizeof(Crypto1));
+    uint8_t par_array[4] = {0x00};
+    struct nonce_info_hard r;
+    r.full = false;
+    r.static_encrypted = false;
+
+    for(uint32_t i = 0; i < 8; i++) {
+        nfc_activate();
+        if(!furi_hal_nfc_activate_nfca(200, &cuid)) {
+            free(crypto);
+            return r;
+        }
+
+        r.cuid = cuid;
+
+        if(!mifare_classic_authex(crypto, tx_rx, cuid, blockNo, keyType, ui64Key, false, NULL))
+            continue;
+
+        if(!mifare_sendcmd_short(crypto, tx_rx, true, 0x60 + (targetKeyType & 0x01), targetBlockNo))
+            continue;
+
+        uint64_t nt = nfc_util_bytes2num(tx_rx->rx_data, 4);
+
+        for(uint32_t j = 0; j < 4; j++) {
+            par_array[j] =
+                (oddparity8(tx_rx->rx_data[j]) != ((tx_rx->rx_parity[0] >> (7 - j)) & 0x01));
+        }
+
+        // update unique nonces
+        if(!found[tx_rx->rx_data[0]]) {
+            found[tx_rx->rx_data[0]]++;
+        }
+
+        uint8_t pbits = 0;
+        for(uint8_t j = 0; j < 4; j++) {
+            uint8_t p = oddparity8(tx_rx->rx_data[j]);
+            if(par_array[j]) {
+                p ^= 1;
+            }
+            pbits <<= 1;
+            pbits |= p;
+        }
+
+        if(nt == previous) {
+            same++;
+        }
+
+        previous = nt;
+
+        FuriString* row = furi_string_alloc_printf("%llu|%u\n", nt, pbits);
+        stream_write_string(file_stream, row);
+
+        FURI_LOG_D(TAG, "Accured %lu/8 nonces", i + 1);
+        furi_string_free(row);
+    }
+
+    if(same > 4) {
+        r.static_encrypted = true;
+    }
+
+    r.full = true;
+
+    free(crypto);
+
     nfc_deactivate();
 
     return r;
@@ -537,7 +638,8 @@ NestedCheckKeyResult nested_check_key(
     nfc_activate();
     if(!furi_hal_nfc_activate_nfca(200, &cuid)) return NestedCheckKeyNoTag;
 
-    FURI_LOG_D(TAG, "Checking %c key %06llX for block %u", !keyType ? 'A' : 'B', ui64Key, blockNo);
+    FURI_LOG_D(
+        TAG, "Checking %c key %012llX for block %u", !keyType ? 'A' : 'B', ui64Key, blockNo);
 
     bool success =
         mifare_classic_authex(crypto, tx_rx, cuid, blockNo, keyType, ui64Key, false, &nt);

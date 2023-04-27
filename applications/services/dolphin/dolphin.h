@@ -1,6 +1,7 @@
 #pragma once
 
-#include "helpers/dolphin_deed.h"
+//#include "helpers/dolphin_deed.h"
+#include "helpers/dolphin_state.h"
 
 #include <gui/view.h>
 #include <core/pubsub.h>

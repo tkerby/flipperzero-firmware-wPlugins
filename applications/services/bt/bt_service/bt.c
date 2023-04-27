@@ -62,6 +62,7 @@ static ViewPort* bt_pin_code_view_port_alloc(Bt* bt) {
 }
 
 static void bt_pin_code_show(Bt* bt, uint32_t pin_code) {
+    furi_assert(bt);
     bt->pin_code = pin_code;
     notification_message(bt->notification, &sequence_display_backlight_on);
     gui_view_port_send_to_front(bt->gui, bt->pin_code_view_port);
@@ -374,6 +375,52 @@ static void bt_close_connection(Bt* bt) {
     bt_close_rpc_connection(bt);
     furi_hal_bt_stop_advertising();
     furi_event_flag_set(bt->api_event, BT_API_UNLOCK_EVENT);
+}
+
+static inline FuriHalBtProfile get_hal_bt_profile(BtProfile profile) {
+    if(profile == BtProfileHidKeyboard) {
+        return FuriHalBtProfileHidKeyboard;
+    } else {
+        return FuriHalBtProfileSerial;
+    }
+}
+
+void bt_restart(Bt* bt) {
+    furi_hal_bt_change_app(get_hal_bt_profile(bt->profile), bt_on_gap_event_callback, bt);
+    furi_hal_bt_start_advertising();
+}
+
+void bt_set_profile_adv_name(Bt* bt, const char* fmt, ...) {
+    furi_assert(bt);
+    furi_assert(fmt);
+
+    char name[FURI_HAL_BT_ADV_NAME_LENGTH];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(name, sizeof(name), fmt, args);
+    va_end(args);
+    furi_hal_bt_set_profile_adv_name(get_hal_bt_profile(bt->profile), name);
+
+    bt_restart(bt);
+}
+
+const char* bt_get_profile_adv_name(Bt* bt) {
+    furi_assert(bt);
+    return furi_hal_bt_get_profile_adv_name(get_hal_bt_profile(bt->profile));
+}
+
+void bt_set_profile_mac_address(Bt* bt, const uint8_t mac[6]) {
+    furi_assert(bt);
+    furi_assert(mac);
+
+    furi_hal_bt_set_profile_mac_addr(get_hal_bt_profile(bt->profile), mac);
+
+    bt_restart(bt);
+}
+
+const uint8_t* bt_get_profile_mac_address(Bt* bt) {
+    furi_assert(bt);
+    return furi_hal_bt_get_profile_mac_addr(get_hal_bt_profile(bt->profile));
 }
 
 int32_t bt_srv(void* p) {

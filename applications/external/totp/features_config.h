@@ -25,7 +25,6 @@
 // End of FlipC.org definition checks
 
 // If target firmware is not yet set, default it to Xtreme as I'm using it, and it is cool :)
-// Target firmware to build for.
 #ifndef TOTP_TARGET_FIRMWARE
 #define TOTP_TARGET_FIRMWARE TOTP_FIRMWARE_OFFICIAL_DEV
 #endif

@@ -83,6 +83,12 @@ void passport_alloc(Passport* passport) {
         icon_animation_start(animations[AniRabbit]);
     }
 
+    if(passport->settings.image == PIMG_SLIME) {
+        animations[AniSlime] = icon_animation_alloc(&A_Slime_46x49);
+
+        icon_animation_start(animations[AniSlime]);
+    }
+
     if(passport->settings.image == PIMG_SONIC) {
         animations[AniSonic] = icon_animation_alloc(&A_Sonic_46x49);
 
@@ -243,6 +249,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
             break;
         case PIMG_SHINKAI:
             canvas_draw_icon(canvas, 11, 2, &I_Shinkai);
+            break;
+        case PIMG_SLIME:
+            canvas_draw_icon_animation(canvas, 11, 2, animations[AniSlime]);
             break;
         case PIMG_SONIC:
             canvas_draw_icon_animation(canvas, 11, 2, animations[AniSonic]);
