@@ -4,7 +4,7 @@
 #include <flipper_format/flipper_format.h>
 #include <bt/bt_service/bt_i.h>
 
-//invalid char check - credit Xtreme FW
+//invalid char check - credit Willy-JL
 static bool namechanger_valid_name(const char* text) {
     for(; *text; ++text) {
         const char c = *text;

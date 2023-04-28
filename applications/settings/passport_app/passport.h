@@ -19,7 +19,15 @@
 #define MOODS_TOTAL 1
 #define BUTTHURT_MAX 14
 
-typedef enum { AniRedVirus, AniYelVirus, AniBluVirus, AniRabbit, AniSlime, AniSonic, AniMaxNum } Animations;
+typedef enum {
+    AniRedVirus,
+    AniYelVirus,
+    AniBluVirus,
+    AniRabbit,
+    AniSlime,
+    AniSonic,
+    AniMaxNum
+} Animations;
 
 static IconAnimation* animations[AniMaxNum];
 
