@@ -31,8 +31,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0428-0239-0.82.4-5122754](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-04-28 02:39 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-04-28 02:39 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-04-29 04:20 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-04-29 04:20 EST`
 - Added: [DVD Bounce (By schaene)](https://github.com/schaene/Flipper-DVD-Bounce)
 - Added: [ServoTester (2) (By mhasbini)](https://github.com/mhasbini/ServoTesterApp/tree/master)
 - Added: [Mx2125 Dual-Axis Accelerometer (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
@@ -41,6 +41,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Resistance Calculator (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - Thank You xMasterX for finding these apps.
 - Updated: [Authenticator/TOTP (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
+- UL: Bluetooth: Fix Version instead of branch (By xMasterX)
+- GPIO: Fix for P0kemon Trading app (Thanks to ESurge)
 
 <a name="release">
 
