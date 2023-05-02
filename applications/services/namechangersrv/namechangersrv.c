@@ -18,7 +18,7 @@ static bool namechanger_valid_name(const char* text) {
 
 int32_t namechanger_on_system_start(void* p) {
     UNUSED(p);
-    if(furi_hal_rtc_get_boot_mode() != FuriHalRtcBootModeNormal) {
+    if(!furi_hal_is_normal_boot()) {
         FURI_LOG_W(TAG, "NameChangerSRV load skipped. Device is in special startup mode.");
     } else {
         Storage* storage = furi_record_open(RECORD_STORAGE);

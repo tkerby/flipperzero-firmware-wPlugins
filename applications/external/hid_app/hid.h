@@ -26,6 +26,7 @@
 #include "views/hid_tiktok.h"
 #include "views/hid_camera.h"
 #include "views/hid_ytshorts.h"
+#include "views/hid_mouse_clicker.h"
 
 #define HID_BT_KEYS_STORAGE_NAME ".bt_hid.keys"
 
