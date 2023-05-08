@@ -4,14 +4,18 @@
 #include <input/input.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
+#include <dolphin/dolphin.h>
 
-FuriMutex* mutex;
-int matrix[6][7] = {0};
-int cursorx = 3;
-int cursory = 5;
-int player = 1;
-int scoreX = 0;
-int scoreO = 0;
+static int matrix[6][7] = {0};
+static int cursorx = 3;
+static int cursory = 5;
+static int player = 1;
+static int scoreX = 0;
+static int scoreO = 0;
+
+typedef struct {
+    FuriMutex* mutex;
+} FourInRowState;
 
 void init() {
     for(size_t i = 0; i < 6; i++) {
@@ -140,9 +144,10 @@ int wincheck() {
 }
 
 static void draw_callback(Canvas* canvas, void* ctx) {
-    UNUSED(ctx);
+    furi_assert(ctx);
+    const FourInRowState* fourinrow_state = ctx;
 
-    furi_mutex_acquire(mutex, FuriWaitForever);
+    furi_mutex_acquire(fourinrow_state->mutex, FuriWaitForever);
     canvas_clear(canvas);
 
     if(wincheck() != -1) {
@@ -158,7 +163,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
             canvas_draw_str(canvas, 30, 35, "Player O win!");
         }
 
-        furi_mutex_release(mutex);
+        furi_mutex_release(fourinrow_state->mutex);
 
         return;
     }
@@ -201,7 +206,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 80, 30, "O:");
     canvas_draw_str(canvas, 90, 30, scO);
 
-    furi_mutex_release(mutex);
+    furi_mutex_release(fourinrow_state->mutex);
 }
 
 static void input_callback(InputEvent* input_event, void* ctx) {
@@ -220,15 +225,25 @@ int32_t four_in_row_app(void* p) {
     // Очередь событий на 8 элементов размера InputEvent
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
 
+    FourInRowState* fourinrow_state = malloc(sizeof(FourInRowState));
+
+    fourinrow_state->mutex = furi_mutex_alloc(FuriMutexTypeNormal); // Alloc Mutex
+    if(!fourinrow_state->mutex) {
+        FURI_LOG_E("4inRow", "cannot create mutex\r\n");
+        furi_message_queue_free(event_queue);
+        free(fourinrow_state);
+        return 255;
+    }
+
+    DOLPHIN_DEED(DolphinDeedPluginGameStart);
+
     // Создаем новый view port
     ViewPort* view_port = view_port_alloc();
     // Создаем callback отрисовки, без контекста
-    view_port_draw_callback_set(view_port, draw_callback, NULL);
+    view_port_draw_callback_set(view_port, draw_callback, fourinrow_state);
     // Создаем callback нажатий на клавиши, в качестве контекста передаем
     // нашу очередь сообщений, чтоб запихивать в неё эти события
     view_port_input_callback_set(view_port, input_callback, event_queue);
-
-    mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
     // Создаем GUI приложения
     Gui* gui = furi_record_open(RECORD_GUI);
@@ -242,7 +257,7 @@ int32_t four_in_row_app(void* p) {
         // Выбираем событие из очереди в переменную event (ждем бесконечно долго, если очередь пуста)
         // и проверяем, что у нас получилось это сделать
         furi_check(furi_message_queue_get(event_queue, &event, FuriWaitForever) == FuriStatusOk);
-        furi_mutex_acquire(mutex, FuriWaitForever);
+        furi_mutex_acquire(fourinrow_state->mutex, FuriWaitForever);
         // Если нажата кнопка "назад", то выходим из цикла, а следовательно и из приложения
         if(wincheck() != -1) {
             notification_message(notification, &end);
@@ -285,8 +300,12 @@ int32_t four_in_row_app(void* p) {
             }
         }
         view_port_update(view_port);
-        furi_mutex_release(mutex);
+        furi_mutex_release(fourinrow_state->mutex);
     }
+
+    // Clear notification
+    notification_message_block(notification, &sequence_display_backlight_enforce_auto);
+    furi_record_close(RECORD_NOTIFICATION);
 
     // Специальная очистка памяти, занимаемой очередью
     furi_message_queue_free(event_queue);
@@ -294,8 +313,9 @@ int32_t four_in_row_app(void* p) {
     // Чистим созданные объекты, связанные с интерфейсом
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
-    furi_mutex_free(mutex);
+    furi_mutex_free(fourinrow_state->mutex);
     furi_record_close(RECORD_GUI);
+    free(fourinrow_state);
 
     return 0;
 }

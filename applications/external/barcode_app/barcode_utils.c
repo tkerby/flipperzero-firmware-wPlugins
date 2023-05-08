@@ -109,7 +109,7 @@ const char* get_error_code_name(ErrorCode error_code) {
         return "OK";
     default:
         return "Unknown Code";
-    };
+    }
 }
 
 const char* get_error_code_message(ErrorCode error_code) {
@@ -132,5 +132,5 @@ const char* get_error_code_message(ErrorCode error_code) {
         return "OK";
     default:
         return "Could not read barcode data";
-    };
+    }
 }

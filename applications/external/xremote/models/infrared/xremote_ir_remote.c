@@ -75,8 +75,6 @@ bool xremote_ir_remote_load(InfraredRemote* remote, FuriString* path) {
         success = true;
     } while(false);
 
-    UNUSED(remote);
-
     furi_string_free(buf);
     flipper_format_free(ff);
     furi_record_close(RECORD_STORAGE);

@@ -103,13 +103,12 @@ static DialogMessageButton hw_version_screen(DialogsApp* dialogs, DialogMessage*
 
     furi_string_cat_printf(
         buffer,
-        "%d.F%dB%dC%d %s:%s %s\n",
+        "%d.F%dB%dC%d %s %s\n",
         furi_hal_version_get_hw_version(),
         furi_hal_version_get_hw_target(),
         furi_hal_version_get_hw_body(),
         furi_hal_version_get_hw_connect(),
         furi_hal_version_get_hw_region_name_otp(),
-        furi_hal_region_get_name(),
         my_name ? my_name : "Unknown");
 
     furi_string_cat_printf(buffer, "Serial Number:\n");
@@ -171,7 +170,7 @@ static void draw_stat(Canvas* canvas, int x, int y, const Icon* icon, char* val)
     canvas_draw_box(canvas, x - 4, y + 16, 24, 6);
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_str_aligned(canvas, x + 8, y + 22, AlignCenter, AlignBottom, val);
-};
+}
 
 static void draw_battery(Canvas* canvas, PowerInfo* info, int x, int y) {
     char header[20] = {};
@@ -236,7 +235,7 @@ static void draw_battery(Canvas* canvas, PowerInfo* info, int x, int y) {
         canvas_draw_str_aligned(canvas, x + 92, y + 9, AlignCenter, AlignCenter, header);
         canvas_draw_str_aligned(canvas, x + 92, y + 19, AlignCenter, AlignCenter, value);
     }
-};
+}
 
 static void battery_info_draw_callback(Canvas* canvas, void* context) {
     furi_assert(context);

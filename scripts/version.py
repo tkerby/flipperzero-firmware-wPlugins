@@ -1,11 +1,11 @@
 #!/usb/bin/env python3
 
-from flipper.app import App
-
-import subprocess
-import os
 import json
+import os
+import subprocess
 from datetime import date, datetime
+
+from flipper.app import App
 
 
 class GitVersion:
@@ -61,7 +61,7 @@ class GitVersion:
                 "GIT_BRANCH": "dev",
                 "GIT_BRANCH_NUM": branch_num,
                 "FURI_CUSTOM_FLIPPER_NAME": custom_fz_name,
-                "VERSION": "0.82.4",
+                "VERSION": "0.82.5",
                 "BUILD_DIRTY": 0,
             }
         else:
@@ -69,7 +69,7 @@ class GitVersion:
                 "GIT_COMMIT": commit,
                 "GIT_BRANCH": "dev",
                 "GIT_BRANCH_NUM": branch_num,
-                "VERSION": "0.82.4",
+                "VERSION": "0.82.5",
                 "BUILD_DIRTY": 0,
             }
 

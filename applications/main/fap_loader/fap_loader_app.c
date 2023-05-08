@@ -284,7 +284,7 @@ int32_t fap_loader_app(void* p) {
             if(fap_loader_run_selected_app(loader, false)) {
                 fap_loader_run_selected_app(loader, true);
             }
-        };
+        }
     }
 
     fap_loader_free(loader);

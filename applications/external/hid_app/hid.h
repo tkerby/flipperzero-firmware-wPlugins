@@ -19,9 +19,9 @@
 #include "views/hid_keynote.h"
 #include "views/hid_keynote_vertical.h"
 #include "views/hid_keyboard.h"
+#include "views/hid_numpad.h"
 #include "views/hid_media.h"
 #include "views/hid_mouse.h"
-#include "views/hid_mouse_clicker.h"
 #include "views/hid_mouse_jiggler.h"
 #include "views/hid_tiktok.h"
 #include "views/hid_camera.h"
@@ -47,6 +47,7 @@ struct Hid {
     HidKeynote* hid_keynote;
     HidKeynoteVertical* hid_keynote_vertical;
     HidKeyboard* hid_keyboard;
+    HidNumpad* hid_numpad;
     HidMedia* hid_media;
     HidMouse* hid_mouse;
     HidMouseClicker* hid_mouse_clicker;

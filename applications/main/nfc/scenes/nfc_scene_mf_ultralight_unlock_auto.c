@@ -31,7 +31,7 @@ void nfc_scene_mf_ultralight_unlock_auto_on_enter(void* context) {
         nfc_scene_mf_ultralight_unlock_auto_worker_callback,
         nfc);
 
-    nfc_blink_emulate_start(nfc);
+    nfc_blink_read_start(nfc);
 }
 
 bool nfc_scene_mf_ultralight_unlock_auto_on_event(void* context, SceneManagerEvent event) {

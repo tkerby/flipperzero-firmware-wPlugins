@@ -39,6 +39,7 @@ XRemote* xremote_app_alloc() {
         app->view_dispatcher, xremote_tick_event_callback, 100);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, xremote_custom_event_callback);
     app->submenu = submenu_alloc();
+    app->editmenu = submenu_alloc();
 
     // Set defaults, in case no config loaded
     app->haptic = 1;
@@ -57,6 +58,8 @@ XRemote* xremote_app_alloc() {
     app->ir_worker = infrared_worker_alloc();
     app->cross_remote = cross_remote_alloc();
 
+    app->sg_remote_buffer = xremote_sg_remote_alloc();
+
     app->loading = loading_alloc();
 
     app->text_input = text_input_alloc();
@@ -65,6 +68,8 @@ XRemote* xremote_app_alloc() {
 
     view_dispatcher_add_view(
         app->view_dispatcher, XRemoteViewIdMenu, submenu_get_view(app->submenu));
+    view_dispatcher_add_view(
+        app->view_dispatcher, XRemoteViewIdEditItem, submenu_get_view(app->editmenu));
     app->xremote_infoscreen = xremote_infoscreen_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,

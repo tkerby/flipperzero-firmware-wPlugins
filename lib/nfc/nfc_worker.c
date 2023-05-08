@@ -621,8 +621,11 @@ static bool nfc_worker_read_nfca(NfcWorker* nfc_worker, FuriHalNfcTxRxContext* t
                 break;
             }
 
-            FURI_LOG_I(TAG, "Unknown card. Save UID");
-            nfc_worker->dev_data->protocol = NfcDeviceProtocolUnknown;
+            nfc_worker->dev_data->protocol = NfcDeviceProtocolEMV;
+            if(!nfc_worker_read_bank_card(nfc_worker, tx_rx)) {
+                FURI_LOG_I(TAG, "Unknown card. Save UID");
+                nfc_worker->dev_data->protocol = NfcDeviceProtocolUnknown;
+            }
         } while(false);
         card_read = true;
     } else {
@@ -854,6 +857,10 @@ void nfc_worker_read_type(NfcWorker* nfc_worker) {
                             break;
                         }
                     }
+                } else if(read_mode == NfcReadModeNFCF) {
+                    nfc_worker->dev_data->protocol = NfcDeviceProtocolUnknown;
+                    event = NfcWorkerEventReadUidNfcF;
+                    break;
                 }
             }
         } else {

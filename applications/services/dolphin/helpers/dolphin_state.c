@@ -132,7 +132,7 @@ bool dolphin_state_is_levelup(int icounter) {
         if((icounter == DOLPHIN_LEVELS[i])) {
             return true;
         }
-    };
+    }
     return false;
 }
 
