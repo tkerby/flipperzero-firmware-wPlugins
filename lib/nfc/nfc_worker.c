@@ -606,27 +606,18 @@ static bool nfc_worker_read_nfca(NfcWorker* nfc_worker, FuriHalNfcTxRxContext* t
         card_read = true;
     } else if(nfc_data->interface == FuriHalNfcInterfaceIsoDep) {
         FURI_LOG_I(TAG, "ISO14443-4 card detected");
-        //TODO: thoughts on improving logic/readability here?
-        do {
-            FURI_LOG_D(TAG, "Try reading EMV");
-            if(nfc_worker_read_bank_card(nfc_worker, tx_rx)) {
-                nfc_worker->dev_data->protocol = NfcDeviceProtocolEMV;
-                break;
-            }
-
+        FURI_LOG_D(TAG, "Try reading EMV");
+        nfc_worker->dev_data->protocol = NfcDeviceProtocolEMV;
+        if(!nfc_worker_read_bank_card(nfc_worker, tx_rx)) {
             furi_hal_nfc_sleep(); // Needed between checks
             FURI_LOG_D(TAG, "Try reading MRTD");
             if(nfc_worker_read_mrtd(nfc_worker, tx_rx)) {
                 nfc_worker->dev_data->protocol = NfcDeviceProtocolMRTD;
-                break;
-            }
-
-            nfc_worker->dev_data->protocol = NfcDeviceProtocolEMV;
-            if(!nfc_worker_read_bank_card(nfc_worker, tx_rx)) {
+            } else {
                 FURI_LOG_I(TAG, "Unknown card. Save UID");
                 nfc_worker->dev_data->protocol = NfcDeviceProtocolUnknown;
             }
-        } while(false);
+        }
         card_read = true;
     } else {
         nfc_worker->dev_data->protocol = NfcDeviceProtocolUnknown;

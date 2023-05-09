@@ -15,6 +15,7 @@ env.Append(
         Dir("u8g2"),
         Dir("update_util"),
         Dir("print"),
+        Dir("pulse_reader"),
     ],
     SDK_HEADERS=[
         File("ibutton/ibutton_worker.h"),
@@ -85,7 +86,7 @@ env.Append(
 
 libs = env.BuildModules(
     [
-        "STM32CubeWB",
+        "stm32wb",
         "freertos",
         "print",
         "microtar",

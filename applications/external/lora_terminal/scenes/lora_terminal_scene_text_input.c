@@ -1,4 +1,4 @@
-#include "applications/external/lora_terminal/lora_terminal_app_i.h"
+#include "../lora_terminal_app_i.h"
 
 void lora_terminal_scene_text_input_callback(void* context) {
     lora_terminalApp* app = context;

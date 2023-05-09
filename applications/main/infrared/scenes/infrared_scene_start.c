@@ -51,13 +51,14 @@ void infrared_scene_start_on_enter(void* context) {
             SubmenuIndexDebug,
             infrared_scene_start_submenu_callback,
             infrared);
-        submenu_add_item(
-            submenu,
-            "Debug Settings",
-            SubmenuIndexDebugSettings,
-            infrared_scene_start_submenu_callback,
-            infrared);
     }
+
+    submenu_add_item(
+        submenu,
+        "PIN Settings",
+        SubmenuIndexDebugSettings,
+        infrared_scene_start_submenu_callback,
+        infrared);
 
     const uint32_t submenu_index =
         scene_manager_get_scene_state(scene_manager, InfraredSceneStart);

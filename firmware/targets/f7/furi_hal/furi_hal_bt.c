@@ -19,6 +19,8 @@
 /* Time, in ms, to wait for mode transition before crashing */
 #define C2_MODE_SWITCH_TIMEOUT 10000
 
+#define FURI_HAL_BT_HARDFAULT_INFO_MAGIC 0x1170FD0F
+
 FuriMutex* furi_hal_bt_core2_mtx = NULL;
 static FuriHalBtStack furi_hal_bt_stack = FuriHalBtStackUnknown;
 
@@ -527,4 +529,13 @@ void furi_hal_bt_set_profile_pairing_method(FuriHalBtProfile profile, GapPairing
 GapPairing furi_hal_bt_get_profile_pairing_method(FuriHalBtProfile profile) {
     furi_assert(profile < FuriHalBtProfileNumber);
     return profile_config[profile].config.pairing_method;
+}
+
+const FuriHalBtHardfaultInfo* furi_hal_bt_get_hardfault_info() {
+    /* AN5289, 4.8.2 */
+    const FuriHalBtHardfaultInfo* info = (FuriHalBtHardfaultInfo*)(SRAM2A_BASE);
+    if(info->magic != FURI_HAL_BT_HARDFAULT_INFO_MAGIC) {
+        return NULL;
+    }
+    return info;
 }
