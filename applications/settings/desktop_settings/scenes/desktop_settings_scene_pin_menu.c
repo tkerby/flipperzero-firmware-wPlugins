@@ -1,5 +1,4 @@
 #include <gui/scene_manager.h>
-#include <applications.h>
 
 #include "../desktop_settings_app.h"
 #include "desktop_settings_scene.h"

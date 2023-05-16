@@ -29,13 +29,15 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0515-0538-0.83.1-6ccf2d5](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0516-0453-0.83.1-9743574](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-15 16:20 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-15 16:20 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-16 06:25 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-16 06:25 EST`
 - [Fixed SD Card icon issue + Clean up some code #633 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/633)
 - OFW: [api: added lib/nfc/protocols/nfc_util.h #2674 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/2674)
 - Removed Setting Migration Code
+- [Desktop Settings works externally as FAP (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2fca5f243885a2cce69a5f26eb7e6ac1c72a1da3)
+- [RFID: HiTag: minor memory correction in decoder_feed #634 (By blackvault88)](https://github.com/blackvault88/flipperzero-firmware-blackvault/commit/d8704f69673dbfd40b3478e019b5f15c14a8efe6)
 
 <a name="release">
 
@@ -136,9 +138,10 @@ $ ./fbt dolphin_ext
 - Bluetooth Remote + USB Keyboard: [Added movement interval in mouse_jiggler USB & BLE #303 (By DocKuro)](https://github.com/DarkFlippers/unleashed-firmware/pull/303)
 - Clock: Clock.fap loader apps and available as Favorites [Thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/336)
 - Desktop: Desktop icons are now dynamic, and can be changed in Desktop Settings [(By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/527)
+- Desktop: Exclude icons on the left and show minimal battery [Thanks to skizzophrenic/Talking-Sasquach](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/360)
 - Desktop: ['Game Mode' & 'Lock + Off' added to UP menu (By RogueMaster)]
 - Desktop: Hold Right goes to About with Battery Info [(Thanks to Willy-JL)]
-- Desktop: Exclude icons on the left and show minimal battery [Thanks to skizzophrenic/Talking-Sasquach](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/360)
+- [Desktop Settings works externally as FAP (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2fca5f243885a2cce69a5f26eb7e6ac1c72a1da3)
 - Development free space thanks to removal of unused debug tools and [thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/46/files) for removal of first start assets.
 - Dolphin: Assigned profile pic for levels 1-10 (Happy Lvl 1 Dolphin), 11-15 (Happy Lvl 2 Dolphin), 16-18 (Happy Lvl 3 Dolphin), 19-21 (Kid G0ku), 22-24 (Adult G0ku), 25-27 (SSJ G0ku) and 28-30 (SSJ3 G0ku)
 - Dolphin: Expanded max level from 3 to 30 using [Roll20](https://roll20.net/compendium/dnd5e/Monsters#h-Experience%20Points), Increased max deed XP per action type from 15 to 45 exp daily & updated animation manifest for max level 30 for all animations (By RogueMaster)
