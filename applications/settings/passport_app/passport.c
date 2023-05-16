@@ -57,7 +57,8 @@ void passport_alloc(Passport* passport) {
     passport->moodStrIndex = stats->butthurt;
 
     // set mood to "Happy" if dumbmode is enabled
-    if(passport->desktop_settings.is_dumbmode) passport->moodStrIndex = passport->moodStrIndex + 4;
+    if(passport->desktop_settings.is_dumbmode && passport->settings.image != PIMG_DOLPHINMOODY)
+        passport->moodStrIndex = passport->moodStrIndex + 4;
 
     // portrait
     passport->tmpLvl = 0;
@@ -74,6 +75,13 @@ void passport_alloc(Passport* passport) {
         passport->tmpLvl = 0;
         if(stats->level > 10) passport->tmpLvl = 1;
         if(stats->level > 20) passport->tmpLvl = 2;
+    } else if(passport->settings.image == PIMG_DOLPHINMOODY) {
+        passport->tmpLvl = 0;
+        if(stats->level > 10) passport->tmpLvl = 1;
+        if(stats->level > 20) passport->tmpLvl = 2;
+        passport->tmpMood = 2;
+        if(stats->butthurt <= 9) passport->tmpMood = 1;
+        if(stats->butthurt <= 4) passport->tmpMood = 0;
     }
 
     //start animation for sonic passport image if selected
@@ -205,6 +213,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_DOLPHIN:
             canvas_draw_icon(canvas, 11, 2, portrait[passport->tmpLvl]);
             break;
+        case PIMG_DOLPHINMOODY:
+            canvas_draw_icon(canvas, 11, 2, portraitsMoody[passport->tmpMood][passport->tmpLvl]);
+            break;
         case PIMG_ED209:
             canvas_draw_icon(canvas, 11, 2, &I_ED209);
             break;
@@ -243,6 +254,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
             break;
         case PIMG_NEUROMANCER:
             canvas_draw_icon(canvas, 11, 2, &I_Neuromancer);
+            break;
+        case PIMG_PIKASLEEPY:
+            canvas_draw_icon(canvas, 11, 2, &I_PikaSleepy);
             break;
         case PIMG_RABBIT:
             canvas_draw_icon_animation(canvas, 11, 2, animations[AniRabbit]);

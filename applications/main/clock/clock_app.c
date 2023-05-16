@@ -8,7 +8,7 @@
 #include <dolphin/dolphin.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
-#include "desktop/desktop_settings.h"
+#include "applications/settings/desktop_settings/desktop_settings_app.h"
 #include "Dab_Timer_icons.h"
 
 #define TAG "DabTimer"

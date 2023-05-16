@@ -34,16 +34,23 @@ void bad_bt_scene_config_on_enter(void* context) {
     variable_item_set_current_value_index(item, bad_bt->bt_remember);
     variable_item_set_current_value_text(item, bad_bt->bt_remember ? "ON" : "OFF");
 
-    item = variable_item_list_add(var_item_list, "BT device name", 0, NULL, bad_bt);
+    item = variable_item_list_add(var_item_list, "BT Device Name", 0, NULL, bad_bt);
+    if(bad_bt->bad_bt_script->set_bt_id) {
+        variable_item_set_locked(item, true, "Script has\nBT_ID cmd!\nLocked to\nset Name!");
+    }
 
-    item = variable_item_list_add(var_item_list, "BT MAC address", 0, NULL, bad_bt);
+    item = variable_item_list_add(var_item_list, "BT MAC Address", 0, NULL, bad_bt);
     if(bad_bt->bt_remember) {
         variable_item_set_locked(item, true, "Remember\nmust be Off!");
+    } else if(bad_bt->bad_bt_script->set_bt_id) {
+        variable_item_set_locked(item, true, "Script has\nBT_ID cmd!\nLocked to\nset MAC!");
     }
 
     item = variable_item_list_add(var_item_list, "Randomize BT MAC", 0, NULL, bad_bt);
     if(bad_bt->bt_remember) {
         variable_item_set_locked(item, true, "Remember\nmust be Off!");
+    } else if(bad_bt->bad_bt_script->set_bt_id) {
+        variable_item_set_locked(item, true, "Script has\nBT_ID cmd!\nLocked to\nset MAC!");
     }
 
     variable_item_list_set_enter_callback(

@@ -28,8 +28,6 @@ Canvas* canvas_init() {
     // Wake up display
     u8g2_SetPowerSave(&canvas->fb, 0);
 
-    canvas_set_orientation(canvas, CanvasOrientationHorizontal);
-
     // Clear buffer and send to device
     canvas_clear(canvas);
     canvas_commit(canvas);

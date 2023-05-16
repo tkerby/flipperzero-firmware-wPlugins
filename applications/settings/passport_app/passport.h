@@ -51,17 +51,20 @@ static const Icon* const portrait[7] = {
     &I_g0ku_1,
     &I_g0ku_2,
     &I_g0ku_3};
-// static const Icon* const portrait_ok[MOODS_TOTAL] = {
-// &I_passport_okay1_46x49,
-// &I_passport_okay2_46x49,
-// &I_passport_okay3_46x49};
-// static const Icon* const portrait_bad[MOODS_TOTAL] = {
-// &I_passport_bad1_46x49,
-// &I_passport_bad2_46x49,
-// &I_passport_bad3_46x49};
+static const Icon* const portrait_happy[3] = {
+    &I_passport_happy1_46x49,
+    &I_passport_happy2_46x49,
+    &I_passport_happy3_46x49};
+static const Icon* const portrait_ok[3] = {
+    &I_passport_okay1_46x49,
+    &I_passport_okay2_46x49,
+    &I_passport_okay3_46x49};
+static const Icon* const portrait_bad[3] = {
+    &I_passport_bad1_46x49,
+    &I_passport_bad2_46x49,
+    &I_passport_bad3_46x49};
 
-// static const Icon* const* portraits[MOODS_TOTAL] = {portrait_happy, portrait_ok, portrait_bad};
-//static const Icon* const* portraits[MOODS_TOTAL] = {portrait_happy};
+static const Icon* const* portraitsMoody[3] = {portrait_happy, portrait_ok, portrait_bad};
 
 static const char* const moods[MOOD_SET_COUNT][16] = {
     {},
@@ -119,6 +122,7 @@ typedef struct {
 
     int max_level;
     uint16_t tmpLvl;
+    uint16_t tmpMood;
     char level_str[12];
     char level_str1[12];
 

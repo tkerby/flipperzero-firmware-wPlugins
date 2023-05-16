@@ -1,6 +1,6 @@
 #include <furi.h>
 #include <furi_hal.h>
-#include "applications/services/applications.h"
+#include <applications.h>
 #include <assets_icons.h>
 #include <storage/storage.h>
 #include <loader/loader.h>
@@ -10,7 +10,6 @@
 #include "../views/desktop_view_main.h"
 #include "desktop_scene.h"
 #include "desktop_scene_i.h"
-#include "../helpers/pin_lock.h"
 
 #define TAG "DesktopSrv"
 
@@ -87,13 +86,6 @@ static void desktop_scene_main_open_app_or_profile(Desktop* desktop, const char*
             if(status != LoaderStatusOk) {
                 FURI_LOG_E(TAG, "loader_start failed: %d", status);
             }
-        } else {
-            furi_record_close(RECORD_STORAGE);
-            LoaderStatus status = loader_start(desktop->loader, "Passport (Old)", NULL);
-
-            if(status != LoaderStatusOk) {
-                FURI_LOG_E(TAG, "loader_start failed: %d", status);
-            }
         }
     } while(false);
 }
@@ -145,13 +137,8 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case DesktopMainEventLock:
-            if(desktop->settings.pin_code.length > 0) {
-                desktop_pin_lock(&desktop->settings);
-                desktop_lock(desktop);
-            } else {
-                scene_manager_set_scene_state(desktop->scene_manager, DesktopSceneLockMenu, 0);
-                desktop_lock(desktop);
-            }
+            scene_manager_set_scene_state(desktop->scene_manager, DesktopSceneLockMenu, 0);
+            desktop_lock(desktop);
             consumed = true;
             break;
 
@@ -265,13 +252,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
                     if(status != LoaderStatusOk) {
                         FURI_LOG_E(TAG, "loader_start failed: %d", status);
                     }
-                } else {
-                    furi_record_close(RECORD_STORAGE);
-                    LoaderStatus status = loader_start(desktop->loader, "Passport (Old)", NULL);
-
-                    if(status != LoaderStatusOk) {
-                        FURI_LOG_E(TAG, "loader_start failed: %d", status);
-                    }
                 }
             }
             consumed = true;
@@ -282,13 +262,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
                 furi_record_close(RECORD_STORAGE);
                 LoaderStatus status =
                     loader_start(desktop->loader, FAP_LOADER_APP_NAME, PASSPORT_APP);
-
-                if(status != LoaderStatusOk) {
-                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
-                }
-            } else {
-                furi_record_close(RECORD_STORAGE);
-                LoaderStatus status = loader_start(desktop->loader, "Passport (Old)", NULL);
 
                 if(status != LoaderStatusOk) {
                     FURI_LOG_E(TAG, "loader_start failed: %d", status);
@@ -329,7 +302,20 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             break;
         }
         case DesktopMainEventOpenClock: {
-            desktop_scene_main_open_app_or_profile(desktop, CLOCK_APP);
+            Storage* storage = furi_record_open(RECORD_STORAGE);
+            if(storage_file_exists(storage, CLOCK_APP)) {
+                furi_record_close(RECORD_STORAGE);
+                LoaderStatus status =
+                    loader_start(desktop->loader, FAP_LOADER_APP_NAME, CLOCK_APP);
+
+                if(status != LoaderStatusOk) {
+                    FURI_LOG_E(TAG, "loader_start failed: %d", status);
+                }
+            } else {
+                furi_record_close(RECORD_STORAGE);
+                scene_manager_next_scene(desktop->scene_manager, DesktopSceneDebug);
+                consumed = true;
+            }
             break;
         }
         case DesktopLockedEventUpdate:

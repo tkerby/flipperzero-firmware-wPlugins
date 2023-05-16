@@ -52,6 +52,7 @@ env.Append(
             )
         ),
         File("u8g2/u8g2.h"),
+        File("cfw/cfw.h"),
     ],
     CPPDEFINES=[
         '"M_MEMORY_FULL(x)=abort()"',

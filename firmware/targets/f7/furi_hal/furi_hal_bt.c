@@ -199,20 +199,8 @@ bool furi_hal_bt_start_app(FuriHalBtProfile profile, GapEventCallback event_cb, 
             FURI_LOG_E(TAG, "Can't start Ble App - unsupported radio stack");
             break;
         }
-        /*
-        // Set mac address
-        memcpy(
-            profile_config[profile].config.mac_address,
-            furi_hal_version_get_ble_mac(),
-            sizeof(profile_config[profile].config.mac_address));
-        // Set advertise name
-        strlcpy(
-            profile_config[profile].config.adv_name,
-            furi_hal_version_get_ble_local_device_name_ptr(),
-            FURI_HAL_VERSION_DEVICE_NAME_LENGTH);
-		*/
-        // Configure GAP
         GapConfig* config = &profile_config[profile].config;
+        // Configure GAP
         if(profile == FuriHalBtProfileSerial) {
             // Set mac address
             memcpy(
@@ -226,13 +214,15 @@ bool furi_hal_bt_start_app(FuriHalBtProfile profile, GapEventCallback event_cb, 
             config->adv_service_uuid |= furi_hal_version_get_hw_color();
         } else if(profile == FuriHalBtProfileHidKeyboard) {
             // Change MAC address for HID profile
-            uint8_t default_mac[GAP_MAC_ADDR_SIZE] = FURI_HAL_BT_DEFAULT_MAC_ADDR;
-            if(memcmp(config->mac_address, default_mac, 6) == 0) {
+            uint8_t default_mac[sizeof(config->mac_address)] = FURI_HAL_BT_DEFAULT_MAC_ADDR;
+            const uint8_t* normal_mac = furi_hal_version_get_ble_mac();
+            if(memcmp(config->mac_address, default_mac, sizeof(config->mac_address)) == 0) {
+                memcpy(config->mac_address, normal_mac, sizeof(config->mac_address));
+            }
+            if(memcmp(config->mac_address, normal_mac, sizeof(config->mac_address)) == 0) {
                 config->mac_address[2]++;
             }
             // Change name Flipper -> Control
-            //const char* clicker_str = "Control";
-            //memcpy(&config->adv_name[1], clicker_str, strlen(clicker_str));
             if(strnlen(config->adv_name, FURI_HAL_VERSION_DEVICE_NAME_LENGTH) < 2 ||
                strnlen(config->adv_name + 1, FURI_HAL_VERSION_DEVICE_NAME_LENGTH) < 1) {
                 snprintf(
@@ -240,7 +230,7 @@ bool furi_hal_bt_start_app(FuriHalBtProfile profile, GapEventCallback event_cb, 
                     FURI_HAL_VERSION_DEVICE_NAME_LENGTH,
                     "%cControl %s",
                     *furi_hal_version_get_ble_local_device_name_ptr(),
-                    furi_hal_version_get_ble_local_device_name_ptr() + 1);
+                    furi_hal_version_get_ble_local_device_name_ptr() + 9);
             }
         }
         if(!gap_init(config, event_cb, context)) {
@@ -460,31 +450,6 @@ uint32_t furi_hal_bt_get_conn_rssi(uint8_t* rssi) {
     return since;
 }
 
-uint32_t furi_hal_bt_get_transmitted_packets() {
-    uint32_t packets = 0;
-    aci_hal_le_tx_test_packet_number(&packets);
-    return packets;
-}
-
-void furi_hal_bt_stop_rx() {
-    aci_hal_rx_stop();
-}
-
-bool furi_hal_bt_ensure_c2_mode(BleGlueC2Mode mode) {
-    BleGlueCommandResult fw_start_res = ble_glue_force_c2_mode(mode);
-    if(fw_start_res == BleGlueCommandResultOK) {
-        return true;
-    } else if(fw_start_res == BleGlueCommandResultRestartPending) {
-        // Do nothing and wait for system reset
-        furi_delay_ms(C2_MODE_SWITCH_TIMEOUT);
-        furi_crash("Waiting for FUS->radio stack transition");
-        return true;
-    }
-
-    FURI_LOG_E(TAG, "Failed to switch C2 mode: %d", fw_start_res);
-    return false;
-}
-
 void furi_hal_bt_set_profile_adv_name(
     FuriHalBtProfile profile,
     const char name[FURI_HAL_BT_ADV_NAME_LENGTH]) {
@@ -529,6 +494,31 @@ void furi_hal_bt_set_profile_pairing_method(FuriHalBtProfile profile, GapPairing
 GapPairing furi_hal_bt_get_profile_pairing_method(FuriHalBtProfile profile) {
     furi_assert(profile < FuriHalBtProfileNumber);
     return profile_config[profile].config.pairing_method;
+}
+
+uint32_t furi_hal_bt_get_transmitted_packets() {
+    uint32_t packets = 0;
+    aci_hal_le_tx_test_packet_number(&packets);
+    return packets;
+}
+
+void furi_hal_bt_stop_rx() {
+    aci_hal_rx_stop();
+}
+
+bool furi_hal_bt_ensure_c2_mode(BleGlueC2Mode mode) {
+    BleGlueCommandResult fw_start_res = ble_glue_force_c2_mode(mode);
+    if(fw_start_res == BleGlueCommandResultOK) {
+        return true;
+    } else if(fw_start_res == BleGlueCommandResultRestartPending) {
+        // Do nothing and wait for system reset
+        furi_delay_ms(C2_MODE_SWITCH_TIMEOUT);
+        furi_crash("Waiting for FUS->radio stack transition");
+        return true;
+    }
+
+    FURI_LOG_E(TAG, "Failed to switch C2 mode: %d", fw_start_res);
+    return false;
 }
 
 const FuriHalBtHardfaultInfo* furi_hal_bt_get_hardfault_info() {

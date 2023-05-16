@@ -6,6 +6,7 @@
 #include <time.h>
 #include <storage/storage.h>
 
+#define DOLPHIN_STATE_OLD_PATH INT_PATH(".dolphin.state")
 #define DOLPHIN_STATE_PATH CFG_PATH("dolphin.state")
 
 #ifdef __cplusplus

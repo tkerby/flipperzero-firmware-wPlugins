@@ -42,8 +42,6 @@ static void bad_bt_draw_callback(Canvas* canvas, void* _model) {
 
     furi_string_reset(disp_str);
 
-    canvas_draw_icon(canvas, 22, 24, &I_UsbTree_48x22);
-
     if((model->state.state == BadBtStateIdle) || (model->state.state == BadBtStateDone) ||
        (model->state.state == BadBtStateNotConnected)) {
         elements_button_center(canvas, "Run");

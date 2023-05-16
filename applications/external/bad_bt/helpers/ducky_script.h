@@ -78,6 +78,11 @@ typedef struct {
     uint32_t repeat_cnt;
     uint8_t key_hold_nb;
 
+    bool set_usb_id;
+    bool set_bt_id;
+    bool has_usb_id;
+    bool has_bt_id;
+
     FuriString* string_print;
     size_t string_print_pos;
 
@@ -112,7 +117,7 @@ typedef enum {
 } BadBtAppError;
 
 typedef struct {
-    char bt_name[BAD_BT_ADV_NAME_MAX_LEN + 1];
+    char bt_name[BAD_BT_ADV_NAME_MAX_LEN];
     uint8_t bt_mac[BAD_BT_MAC_ADDRESS_LEN];
     GapPairing bt_mode;
 } BadBtConfig;

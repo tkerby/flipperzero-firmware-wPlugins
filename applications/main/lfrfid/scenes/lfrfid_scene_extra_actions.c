@@ -5,6 +5,7 @@ typedef enum {
     SubmenuIndexASK,
     SubmenuIndexPSK,
     SubmenuIndexClearT5577,
+    SubmenuIndexHitag,
     SubmenuIndexRAW,
     SubmenuIndexRAWEmulate,
 } SubmenuIndex;
@@ -37,21 +38,24 @@ void lfrfid_scene_extra_actions_on_enter(void* context) {
         SubmenuIndexClearT5577,
         lfrfid_scene_extra_actions_submenu_callback,
         app);
-
-    if(furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug)) {
-        submenu_add_item(
-            submenu,
-            "Read RAW RFID data",
-            SubmenuIndexRAW,
-            lfrfid_scene_extra_actions_submenu_callback,
-            app);
-        submenu_add_item(
-            submenu,
-            "Emulate RAW RFID data",
-            SubmenuIndexRAWEmulate,
-            lfrfid_scene_extra_actions_submenu_callback,
-            app);
-    }
+    submenu_add_item(
+        submenu,
+        "Read RTF (Reader Talks First)",
+        SubmenuIndexHitag,
+        lfrfid_scene_extra_actions_submenu_callback,
+        app);
+    submenu_add_item(
+        submenu,
+        "Read RAW RFID data",
+        SubmenuIndexRAW,
+        lfrfid_scene_extra_actions_submenu_callback,
+        app);
+    submenu_add_item(
+        submenu,
+        "Emulate RAW RFID data",
+        SubmenuIndexRAWEmulate,
+        lfrfid_scene_extra_actions_submenu_callback,
+        app);
 
     submenu_set_selected_item(
         submenu, scene_manager_get_scene_state(app->scene_manager, LfRfidSceneExtraActions));
@@ -81,6 +85,11 @@ bool lfrfid_scene_extra_actions_on_event(void* context, SceneManagerEvent event)
             consumed = true;
         } else if(event.event == SubmenuIndexClearT5577) {
             scene_manager_next_scene(app->scene_manager, LfRfidSceneClearT5577Confirm);
+            consumed = true;
+        } else if(event.event == SubmenuIndexHitag) {
+            app->read_type = LFRFIDWorkerReadTypeRTFOnly;
+            scene_manager_next_scene(app->scene_manager, LfRfidSceneRead);
+            DOLPHIN_DEED(DolphinDeedRfidRead);
             consumed = true;
         } else if(event.event == SubmenuIndexRAW) {
             scene_manager_next_scene(app->scene_manager, LfRfidSceneRawName);

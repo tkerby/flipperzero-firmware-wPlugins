@@ -217,7 +217,7 @@ static LoaderStatus loader_do_start_by_name(Loader* loader, const char* name, co
     }
 
     if(strcmp(app->link, "NULL") != 0) {
-        const FlipperApplication* new_app = loader_find_application_by_name("Applications");
+        const FlipperApplication* new_app = loader_find_application_by_name("Apps");
 
         if(!new_app) {
             return LoaderStatusErrorUnknownApp;

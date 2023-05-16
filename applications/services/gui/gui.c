@@ -3,6 +3,8 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_rtc.h>
+//#include <storage/storage.h>
+//#include <storage/storage_i.h>
 
 #define TAG "GuiSrv"
 
@@ -648,6 +650,12 @@ Gui* gui_alloc() {
 
     furi_check(gui->input_events);
     furi_pubsub_subscribe(gui->input_events, gui_input_events_callback, gui);
+
+    /*
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    gui_add_view_port(gui, storage->sd_gui.view_port, GuiLayerStatusBarLeft);
+    furi_record_close(RECORD_STORAGE);
+	*/
 
     return gui;
 }

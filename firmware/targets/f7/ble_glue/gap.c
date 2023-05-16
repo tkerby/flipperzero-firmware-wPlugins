@@ -55,6 +55,9 @@ static const uint8_t gap_erk[16] =
 
 static Gap* gap = NULL;
 
+static void gap_advertise_start(GapState new_state);
+static int32_t gap_app(void* context);
+
 /** function for updating rssi informations in global Gap object
  * 
 */
@@ -67,9 +70,6 @@ static inline void fetch_rssi() {
     }
     FURI_LOG_D(TAG, "Failed to read RSSI");
 }
-
-static void gap_advertise_start(GapState new_state);
-static int32_t gap_app(void* context);
 
 static void gap_verify_connection_parameters(Gap* gap) {
     furi_assert(gap);
@@ -144,7 +144,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void* pckt) {
             FURI_LOG_I(TAG, "Connection parameters event complete");
             gap_verify_connection_parameters(gap);
 
-            // save rssi for current connection
+            // Save rssi for current connection
             fetch_rssi();
             break;
         }
@@ -181,8 +181,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void* pckt) {
 
             gap_verify_connection_parameters(gap);
 
+            // Save rssi for current connection
             fetch_rssi();
-
             // Start pairing by sending security request
             aci_gap_slave_security_req(event->Connection_Handle);
         } break;
@@ -263,6 +263,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void* pckt) {
                     pairing_complete->Status);
                 aci_gap_terminate(gap->service.connection_handle, 5);
             } else {
+                // Save RSSI
                 fetch_rssi();
 
                 FURI_LOG_I(TAG, "Pairing complete");
@@ -368,9 +369,11 @@ static void gap_init_svc(Gap* gap) {
     hci_le_set_default_phy(ALL_PHYS_PREFERENCE, TX_2M_PREFERRED, RX_2M_PREFERRED);
     // Set I/O capability
     bool keypress_supported = false;
+    // New things below
     uint8_t conf_mitm = CFG_MITM_PROTECTION;
     uint8_t conf_used_fixed_pin = CFG_USED_FIXED_PIN;
     bool conf_bonding = gap->config->bonding_mode;
+
     if(gap->config->pairing_method == GapPairingPinCodeShow) {
         aci_gap_set_io_capability(IO_CAP_DISPLAY_ONLY);
     } else if(gap->config->pairing_method == GapPairingPinCodeVerifyYesNo) {
@@ -395,7 +398,7 @@ static void gap_init_svc(Gap* gap) {
         CFG_ENCRYPTION_KEY_SIZE_MAX,
         conf_used_fixed_pin, // 0x0 for no pin
         0,
-        PUBLIC_ADDR);
+        CFG_IDENTITY_ADDRESS);
     // Configure whitelist
     aci_gap_configure_whitelist();
 }
@@ -430,7 +433,7 @@ static void gap_advertise_start(GapState new_state) {
         ADV_IND,
         min_interval,
         max_interval,
-        PUBLIC_ADDR,
+        CFG_IDENTITY_ADDRESS,
         0,
         strlen(gap->service.adv_name),
         (uint8_t*)gap->service.adv_name,
@@ -513,16 +516,6 @@ bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     gap->advertise_timer = furi_timer_alloc(gap_advetise_timer_callback, FuriTimerTypeOnce, NULL);
     // Initialization of GATT & GAP layer
     gap->service.adv_name = config->adv_name;
-    FURI_LOG_D(TAG, "Advertising name: %s", &(gap->service.adv_name[1]));
-    FURI_LOG_D(
-        TAG,
-        "MAC @ : %02X:%02X:%02X:%02X:%02X:%02X",
-        config->mac_address[5],
-        config->mac_address[4],
-        config->mac_address[3],
-        config->mac_address[2],
-        config->mac_address[1],
-        config->mac_address[0]);
     gap_init_svc(gap);
     // Initialization of the BLE Services
     SVCCTL_Init();
@@ -554,6 +547,7 @@ bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     return true;
 }
 
+// Get RSSI
 uint32_t gap_get_remote_conn_rssi(int8_t* rssi) {
     if(gap && gap->state == GapStateConnected) {
         fetch_rssi();

@@ -171,7 +171,8 @@ int32_t namechanger_on_system_start(void* p) {
 
                 if(namechanger_valid_name(newdata)) {
                     //set name from file
-                    furi_hal_version_set_custom_name(newdata);
+                    version_set_custom_name(NULL, strdup(newdata));
+                    furi_hal_version_set_name(version_get_custom_name(NULL));
                 }
             }
         }

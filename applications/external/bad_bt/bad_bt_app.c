@@ -1,5 +1,4 @@
 #include "bad_bt_app.h"
-#include "bad_bt_settings_filename.h"
 #include <furi.h>
 #include <furi_hal.h>
 #include <storage/storage.h>
@@ -8,8 +7,6 @@
 
 #include <bt/bt_service/bt_i.h>
 #include <bt/bt_service/bt.h>
-
-#define BAD_BT_SETTINGS_PATH BAD_BT_APP_BASE_FOLDER "/" BAD_BT_SETTINGS_FILE_NAME
 
 static bool bad_bt_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -101,11 +98,15 @@ void bad_bt_reload_worker(BadBtApp* app) {
     bad_bt_script_set_keyboard_layout(app->bad_bt_script, app->keyboard_layout);
 }
 
+void bad_kb_config_refresh_menu(BadBtApp* app) {
+    scene_manager_next_scene(app->scene_manager, BadBtSceneConfig);
+    scene_manager_previous_scene(app->scene_manager);
+}
+
 int32_t bad_bt_config_switch_mode(BadBtApp* app) {
     bad_bt_reload_worker(app);
     furi_hal_bt_start_advertising();
-    scene_manager_next_scene(app->scene_manager, BadBtSceneConfig);
-    scene_manager_previous_scene(app->scene_manager);
+    bad_kb_config_refresh_menu(app);
     return 0;
 }
 
@@ -124,16 +125,16 @@ void bad_bt_config_switch_remember_mode(BadBtApp* app) {
 }
 
 int32_t bad_bt_connection_init(BadBtApp* app) {
+    // Set original name and mac address in prev config
     strcpy(
         app->prev_config.bt_name, furi_hal_bt_get_profile_adv_name(FuriHalBtProfileHidKeyboard));
-    memcpy(
-        app->prev_config.bt_mac,
-        furi_hal_bt_get_profile_mac_addr(FuriHalBtProfileHidKeyboard),
-        BAD_BT_MAC_ADDRESS_LEN);
-    app->prev_config.bt_mode = furi_hal_bt_get_profile_pairing_method(FuriHalBtProfileHidKeyboard);
+
+    memcpy(app->prev_config.bt_mac, furi_hal_version_get_ble_mac(), BAD_BT_MAC_ADDRESS_LEN);
 
     bt_timeout = bt_hid_delays[LevelRssi39_0];
     bt_disconnect(app->bt);
+    // Wait 2nd core to update nvm storage
+    furi_delay_ms(200);
     bt_keys_storage_set_storage_path(app->bt, BAD_BT_APP_PATH_BOUND_KEYS_FILE);
     if(strcmp(app->config.bt_name, "") != 0) {
         furi_hal_bt_set_profile_adv_name(FuriHalBtProfileHidKeyboard, app->config.bt_name);
@@ -175,10 +176,13 @@ int32_t bad_bt_connection_init(BadBtApp* app) {
 
 void bad_bt_connection_deinit(BadBtApp* app) {
     bt_disconnect(app->bt);
+    // Wait 2nd core to update nvm storage
+    furi_delay_ms(200);
     bt_keys_storage_set_default_path(app->bt);
     furi_hal_bt_set_profile_adv_name(FuriHalBtProfileHidKeyboard, app->prev_config.bt_name);
     furi_hal_bt_set_profile_mac_addr(FuriHalBtProfileHidKeyboard, app->prev_config.bt_mac);
-    furi_hal_bt_set_profile_pairing_method(FuriHalBtProfileHidKeyboard, app->prev_config.bt_mode);
+    furi_hal_bt_set_profile_pairing_method(
+        FuriHalBtProfileHidKeyboard, GapPairingPinCodeVerifyYesNo);
     bt_set_profile(app->bt, BtProfileSerial);
     bt_enable_peer_key_update(app->bt);
 }
@@ -195,7 +199,7 @@ BadBtApp* bad_bt_app_alloc(char* arg) {
     }
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_simply_mkdir(storage, BAD_BT_APP_BASE_FOLDER);
+    storage_simply_mkdir(storage, BAD_BT_APP_BASE_CONFIG_FOLDER);
     furi_record_close(RECORD_STORAGE);
 
     bad_bt_load_settings(app);

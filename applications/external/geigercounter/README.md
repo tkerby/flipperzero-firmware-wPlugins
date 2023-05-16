@@ -94,11 +94,21 @@ Measure of americium-241 button from a smoke detector :
 
 <img src="https://github.com/nmrr/flipperzero-geigercounter/blob/main/img/flipper7.png" width=25% height=25%>
 
+## What's next ?
+
+Here are some nice ideas to improve this app :
+
+* Save output data in XML / JSON file
+* Use the geiger board as random number generator
+* Send data on the air in real time to monitor remotly
+* Buzz when it gets dangerous like a dosimeter
+
 ## Changelog
 
 * 2023-04-11
   * More usable/unusable sources
   * Rad unit has been added
+  * Code refactoring by replacing old mutex call by new method
 
 * 2023-03-01
   * Usable/unusable sources have been added

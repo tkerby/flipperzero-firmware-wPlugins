@@ -1,0 +1,16 @@
+App(
+    appid="CFW",
+    name="CFW Settings",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="cfw_app",
+    requires=[
+        "gui",
+        "dolphin",
+    ],
+    stack_size=2 * 1024,
+    # icon="A_CFW_14",
+    order=90,
+    fap_libs=["assets"],
+    fap_category="Settings",
+    fap_icon="cfw_app_10px.png",
+)

@@ -1,10 +1,12 @@
 entry,status,name,type,params
-Version,+,26.2,,
+Version,+,26.3,,
+Header,+,applications/main/fap_loader/fap_loader_app.h,,
 Header,+,applications/services/bt/bt_service/bt.h,,
 Header,+,applications/services/cli/cli.h,,
 Header,+,applications/services/cli/cli_vcp.h,,
 Header,+,applications/services/dialogs/dialogs.h,,
 Header,+,applications/services/dolphin/dolphin.h,,
+Header,+,applications/services/dolphin/helpers/dolphin_state.h,,
 Header,+,applications/services/gui/canvas_i.h,,
 Header,+,applications/services/gui/elements.h,,
 Header,+,applications/services/gui/gui.h,,
@@ -85,6 +87,8 @@ Header,+,firmware/targets/furi_hal_include/furi_hal_usb_hid.h,,
 Header,+,firmware/targets/furi_hal_include/furi_hal_usb_hid_u2f.h,,
 Header,+,firmware/targets/furi_hal_include/furi_hal_version.h,,
 Header,+,firmware/targets/furi_hal_include/furi_hal_vibro.h,,
+Header,+,lib/cfw/cfw.h,,
+Header,+,lib/drivers/rgb_backlight.h,,
 Header,+,lib/flipper_application/api_hashtable/api_hashtable.h,,
 Header,+,lib/flipper_application/api_hashtable/compilesort.hpp,,
 Header,+,lib/flipper_application/flipper_application.h,,
@@ -145,6 +149,7 @@ Header,+,lib/mlib/m-rbtree.h,,
 Header,+,lib/mlib/m-tuple.h,,
 Header,+,lib/mlib/m-variant.h,,
 Header,+,lib/nfc/nfc_device.h,,
+Header,+,lib/nfc/protocols/nfc_util.h,,
 Header,+,lib/one_wire/maxim_crc.h,,
 Header,+,lib/one_wire/one_wire_host.h,,
 Header,+,lib/one_wire/one_wire_slave.h,,
@@ -213,6 +218,8 @@ Header,+,lib/toolbox/tar/tar_archive.h,,
 Header,+,lib/toolbox/value_index.h,,
 Header,+,lib/toolbox/version.h,,
 Header,+,lib/u8g2/u8g2.h,,
+Function,+,CFW_SETTINGS,CfwSettings*,
+Function,+,CFW_SETTINGS_SAVE,void,
 Function,-,LL_ADC_CommonDeInit,ErrorStatus,ADC_Common_TypeDef*
 Function,-,LL_ADC_CommonInit,ErrorStatus,"ADC_Common_TypeDef*, const LL_ADC_CommonInitTypeDef*"
 Function,-,LL_ADC_CommonStructInit,void,LL_ADC_CommonInitTypeDef*
@@ -310,6 +317,10 @@ Function,-,LL_USART_DeInit,ErrorStatus,const USART_TypeDef*
 Function,+,LL_USART_Init,ErrorStatus,"USART_TypeDef*, const LL_USART_InitTypeDef*"
 Function,-,LL_USART_StructInit,void,LL_USART_InitTypeDef*
 Function,-,LL_mDelay,void,uint32_t
+Function,-,SK6805_get_led_count,uint8_t,
+Function,-,SK6805_init,void,
+Function,-,SK6805_set_led_color,void,"uint8_t, uint8_t, uint8_t, uint8_t"
+Function,-,SK6805_update,void,
 Function,-,SystemCoreClockUpdate,void,
 Function,-,SystemInit,void,
 Function,-,_Exit,void,int
@@ -626,7 +637,7 @@ Function,+,byte_input_alloc,ByteInput*,
 Function,+,byte_input_free,void,ByteInput*
 Function,+,byte_input_get_view,View*,ByteInput*
 Function,+,byte_input_set_header_text,void,"ByteInput*, const char*"
-Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint8_t"
+Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint16_t"
 Function,-,bzero,void,"void*, size_t"
 Function,-,calloc,void*,"size_t, size_t"
 Function,+,canvas_clear,void,Canvas*
@@ -840,7 +851,7 @@ Function,+,elements_multiline_text_aligned,void,"Canvas*, uint8_t, uint8_t, Alig
 Function,+,elements_multiline_text_framed,void,"Canvas*, uint8_t, uint8_t, const char*"
 Function,+,elements_progress_bar,void,"Canvas*, uint8_t, uint8_t, uint8_t, float"
 Function,+,elements_progress_bar_with_text,void,"Canvas*, uint8_t, uint8_t, uint8_t, float, const char*"
-Function,+,elements_scrollable_text_line,void,"Canvas*, uint8_t, uint8_t, uint8_t, FuriString*, size_t, _Bool, _Bool"
+Function,+,elements_scrollable_text_line,void,"Canvas*, uint8_t, uint8_t, uint8_t, FuriString*, size_t, _Bool"
 Function,+,elements_scrollable_text_line_str,void,"Canvas*, uint8_t, uint8_t, uint8_t, const char*, size_t, _Bool, _Bool"
 Function,+,elements_scrollbar,void,"Canvas*, uint16_t, uint16_t"
 Function,+,elements_scrollbar_pos,void,"Canvas*, uint8_t, uint8_t, uint8_t, uint16_t, uint16_t"
@@ -877,6 +888,7 @@ Function,-,expm1l,long double,long double
 Function,-,fabs,double,double
 Function,-,fabsf,float,float
 Function,-,fabsl,long double,long double
+Function,+,fap_loader_load_name_and_icon,_Bool,"FuriString*, Storage*, uint8_t**, FuriString*"
 Function,-,fclose,int,FILE*
 Function,-,fcloseall,int,
 Function,-,fdim,double,"double, double"
@@ -1444,6 +1456,7 @@ Function,+,furi_hal_subghz_enable_ext_power,_Bool,
 Function,+,furi_hal_subghz_flush_rx,void,
 Function,+,furi_hal_subghz_flush_tx,void,
 Function,+,furi_hal_subghz_get_external_power_disable,_Bool,
+Function,+,furi_hal_subghz_get_is_extended,_Bool,
 Function,+,furi_hal_subghz_get_lqi,uint8_t,
 Function,+,furi_hal_subghz_get_radio_type,SubGhzRadioType,
 Function,+,furi_hal_subghz_get_rolling_counter_mult,uint8_t,
@@ -1470,6 +1483,7 @@ Function,+,furi_hal_subghz_set_async_mirror_pin,void,const GpioPin*
 Function,+,furi_hal_subghz_set_external_power_disable,void,_Bool
 Function,+,furi_hal_subghz_set_frequency,uint32_t,uint32_t
 Function,+,furi_hal_subghz_set_frequency_and_path,uint32_t,uint32_t
+Function,+,furi_hal_subghz_set_is_extended,void,_Bool
 Function,+,furi_hal_subghz_set_path,void,FuriHalSubGhzPath
 Function,+,furi_hal_subghz_set_rolling_counter_mult,void,uint8_t
 Function,+,furi_hal_subghz_set_timestamp_file_names,void,_Bool
@@ -1522,7 +1536,7 @@ Function,+,furi_hal_version_get_model_name,const char*,
 Function,+,furi_hal_version_get_name_ptr,const char*,
 Function,+,furi_hal_version_get_otp_version,FuriHalVersionOtpVersion,
 Function,-,furi_hal_version_init,void,
-Function,+,furi_hal_version_set_custom_name,void,const char*
+Function,+,furi_hal_version_set_name,void,const char*
 Function,+,furi_hal_version_uid,const uint8_t*,
 Function,+,furi_hal_version_uid_size,size_t,
 Function,-,furi_hal_vibro_init,void,
@@ -2113,6 +2127,7 @@ Function,-,mf_df_prepare_read_records,uint16_t,"uint8_t*, uint8_t, uint32_t, uin
 Function,-,mf_df_prepare_select_application,uint16_t,"uint8_t*, uint8_t[3]"
 Function,-,mf_df_read_card,_Bool,"FuriHalNfcTxRxContext*, MifareDesfireData*"
 Function,-,mf_ul_check_card_type,_Bool,FuriHalNfcADevData*
+Function,-,mf_ul_emulation_supported,_Bool,MfUltralightData*
 Function,-,mf_ul_is_full_capture,_Bool,MfUltralightData*
 Function,-,mf_ul_prepare_emulation,void,"MfUltralightEmulator*, MfUltralightData*"
 Function,-,mf_ul_prepare_emulation_response,_Bool,"uint8_t*, uint16_t, uint8_t*, uint16_t*, uint32_t*, void*"
@@ -2193,21 +2208,21 @@ Function,+,nfc_device_save_shadow,_Bool,"NfcDevice*, const char*"
 Function,+,nfc_device_set_loading_callback,void,"NfcDevice*, NfcLoadingCallback, void*"
 Function,+,nfc_device_set_name,void,"NfcDevice*, const char*"
 Function,+,nfc_file_select,_Bool,NfcDevice*
-Function,-,nfc_util_bytes2num,uint64_t,"const uint8_t*, uint8_t"
-Function,-,nfc_util_even_parity32,uint8_t,uint32_t
-Function,-,nfc_util_num2bytes,void,"uint64_t, uint8_t, uint8_t*"
-Function,-,nfc_util_odd_parity,void,"const uint8_t*, uint8_t*, uint8_t"
-Function,-,nfc_util_odd_parity8,uint8_t,uint8_t
+Function,+,nfc_util_bytes2num,uint64_t,"const uint8_t*, uint8_t"
+Function,+,nfc_util_even_parity32,uint8_t,uint32_t
+Function,+,nfc_util_num2bytes,void,"uint64_t, uint8_t, uint8_t*"
+Function,+,nfc_util_odd_parity,void,"const uint8_t*, uint8_t*, uint8_t"
+Function,+,nfc_util_odd_parity8,uint8_t,uint8_t
 Function,-,nfca_append_crc16,void,"uint8_t*, uint16_t"
 Function,-,nfca_emulation_handler,_Bool,"uint8_t*, uint16_t, uint8_t*, uint16_t*"
 Function,-,nfca_get_crc16,uint16_t,"uint8_t*, uint16_t"
 Function,-,nfca_signal_alloc,NfcaSignal*,
 Function,-,nfca_signal_encode,void,"NfcaSignal*, uint8_t*, uint16_t, uint8_t*"
 Function,-,nfca_signal_free,void,NfcaSignal*
-Function,-,nfcv_emu_deinit,void,NfcVData*
-Function,-,nfcv_emu_init,void,"FuriHalNfcDevData*, NfcVData*"
-Function,-,nfcv_emu_loop,_Bool,"FuriHalNfcTxRxContext*, FuriHalNfcDevData*, NfcVData*, uint32_t"
-Function,-,nfcv_emu_send,void,"FuriHalNfcTxRxContext*, NfcVData*, uint8_t*, uint8_t, NfcVSendFlags, uint32_t"
+Function,+,nfcv_emu_deinit,void,NfcVData*
+Function,+,nfcv_emu_init,void,"FuriHalNfcDevData*, NfcVData*"
+Function,+,nfcv_emu_loop,_Bool,"FuriHalNfcTxRxContext*, FuriHalNfcDevData*, NfcVData*, uint32_t"
+Function,+,nfcv_emu_send,void,"FuriHalNfcTxRxContext*, NfcVData*, uint8_t*, uint8_t, NfcVSendFlags, uint32_t"
 Function,-,nfcv_inventory,ReturnCode,uint8_t*
 Function,-,nfcv_read_blocks,ReturnCode,"NfcVReader*, NfcVData*"
 Function,-,nfcv_read_card,_Bool,"NfcVReader*, FuriHalNfcDevData*, NfcVData*"
@@ -2538,6 +2553,13 @@ Function,-,rfal_platform_spi_acquire,void,
 Function,-,rfal_platform_spi_release,void,
 Function,-,rfal_set_callback_context,void,void*
 Function,-,rfal_set_state_changed_callback,void,RfalStateChangedCallback
+Function,+,rgb_backlight_get_color_count,uint8_t,
+Function,+,rgb_backlight_get_color_text,const char*,uint8_t
+Function,+,rgb_backlight_get_settings,RGBBacklightSettings*,
+Function,-,rgb_backlight_load_settings,void,
+Function,+,rgb_backlight_save_settings,void,
+Function,+,rgb_backlight_set_color,void,uint8_t
+Function,-,rgb_backlight_update,void,uint8_t
 Function,-,rindex,char*,"const char*, int"
 Function,-,rint,double,double
 Function,-,rintf,float,float
@@ -2784,7 +2806,8 @@ Function,+,subghz_block_generic_get_preset_name,void,"const char*, FuriString*"
 Function,+,subghz_block_generic_serialize,SubGhzProtocolStatus,"SubGhzBlockGeneric*, FlipperFormat*, SubGhzRadioPreset*"
 Function,-,subghz_custom_btn_get,uint8_t,
 Function,-,subghz_custom_btn_get_original,uint8_t,
-Function,+,subghz_custom_btn_set,void,uint8_t
+Function,-,subghz_custom_btn_is_allowed,_Bool,
+Function,+,subghz_custom_btn_set,_Bool,uint8_t
 Function,-,subghz_custom_btn_set_max,void,uint8_t
 Function,-,subghz_custom_btn_set_original,void,uint8_t
 Function,+,subghz_custom_btns_reset,void,
@@ -4678,6 +4701,7 @@ Function,+,version_get_gitbranchnum,const char*,const Version*
 Function,+,version_get_githash,const char*,const Version*
 Function,+,version_get_target,uint8_t,const Version*
 Function,+,version_get_version,const char*,const Version*
+Function,-,version_set_custom_name,void,"Version*, const char*"
 Function,-,vfiprintf,int,"FILE*, const char*, __gnuc_va_list"
 Function,-,vfiscanf,int,"FILE*, const char*, __gnuc_va_list"
 Function,-,vfprintf,int,"FILE*, const char*, __gnuc_va_list"

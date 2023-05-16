@@ -1,19 +1,36 @@
 #pragma once
 
+#include "desktop_settings_filename.h"
+
 #include <furi_hal.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <toolbox/saved_struct.h>
 #include <storage/storage.h>
 
-#define DESKTOP_SETTINGS_VER (8)
+#define DESKTOP_SETTINGS_VER (9)
 
-#define DESKTOP_SETTINGS_OLD_PATH INT_PATH(".desktop.settings")
-#define DESKTOP_SETTINGS_PATH CFG_PATH("desktop.settings")
+#define DESKTOP_SETTINGS_PATH INT_PATH(DESKTOP_SETTINGS_FILE_NAME)
 #define DESKTOP_SETTINGS_MAGIC (0x17)
 #define PIN_MAX_LENGTH 12
 
 #define DESKTOP_SETTINGS_RUN_PIN_SETUP_ARG "run_pin_setup"
+
+#define DESKTOP_SETTINGS_SAVE(x) \
+    saved_struct_save(           \
+        DESKTOP_SETTINGS_PATH,   \
+        (x),                     \
+        sizeof(DesktopSettings), \
+        DESKTOP_SETTINGS_MAGIC,  \
+        DESKTOP_SETTINGS_VER)
+
+#define DESKTOP_SETTINGS_LOAD(x) \
+    saved_struct_load(           \
+        DESKTOP_SETTINGS_PATH,   \
+        (x),                     \
+        sizeof(DesktopSettings), \
+        DESKTOP_SETTINGS_MAGIC,  \
+        DESKTOP_SETTINGS_VER)
 
 #define MAX_PIN_SIZE 10
 #define MIN_PIN_SIZE 4
@@ -30,7 +47,7 @@
 #define ICON_STYLE_STOCK 0
 #define ICON_STYLE_SLIM 1
 
-#define FAP_LOADER_APP_NAME "Applications"
+#define FAP_LOADER_APP_NAME "Apps"
 
 typedef struct {
     InputKey data[MAX_PIN_SIZE];
@@ -48,7 +65,6 @@ typedef struct {
     FavoriteApp favorite_tertiary;
     FavoriteApp favorite_quaternary;
     PinCode pin_code;
-    uint8_t is_locked;
     uint32_t auto_lock_delay_ms;
     uint8_t displayBatteryPercentage;
     bool is_dumbmode;
@@ -63,7 +79,3 @@ typedef struct {
     bool dumbmode_icon;
     bool auto_lock_with_pin;
 } DesktopSettings;
-
-bool DESKTOP_SETTINGS_SAVE(DesktopSettings* x);
-
-bool DESKTOP_SETTINGS_LOAD(DesktopSettings* x);

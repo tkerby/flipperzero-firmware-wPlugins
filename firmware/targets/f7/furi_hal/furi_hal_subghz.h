@@ -225,6 +225,18 @@ bool furi_hal_subghz_is_frequency_valid(uint32_t value);
  */
 uint32_t furi_hal_subghz_set_frequency_and_path(uint32_t value);
 
+/** Read extend and bypass settings values into out params
+ *
+ * @return     is_extended bool
+ */
+bool furi_hal_subghz_get_is_extended();
+
+/** Set extend and bypass settings values to file
+ *
+ * @param      is_extended  bool for extend
+ */
+void furi_hal_subghz_set_is_extended(bool is_extended);
+
 /** Сheck if transmission is allowed on this frequency with your current config
  *
  * @param      value  frequency in Hz

@@ -1,7 +1,6 @@
 #include "popup.h"
 #include <gui/elements.h>
 #include <furi.h>
-#include <assets_icons.h>
 
 struct Popup {
     View* view;
@@ -38,9 +37,7 @@ static void popup_view_draw_callback(Canvas* canvas, void* _model) {
 
     // Prepare canvas
     canvas_clear(canvas);
-    // canvas_set_color(canvas, ColorBlack);
-    canvas_draw_icon(canvas, 0, 0, &I_black_128x64);
-    canvas_set_color(canvas, ColorWhite);
+    canvas_set_color(canvas, ColorBlack);
 
     if(model->icon.icon != NULL) {
         canvas_draw_icon(canvas, model->icon.x, model->icon.y, model->icon.icon);

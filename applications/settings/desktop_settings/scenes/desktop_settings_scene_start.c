@@ -69,27 +69,20 @@ const char* const desktop_on_off_text[DESKTOP_ON_OFF_COUNT] = {
 };
 
 const uint32_t lockicon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origLockIcon_value = true;
 
 const uint32_t bticon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origBTIcon_value = true;
 
 const uint32_t rpc_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origRPC_value = true;
 
 const uint32_t sdcard_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origSDCard_value = true;
 
 const uint32_t stealth_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origStealth_value = true;
 
 const uint32_t topbar_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origTopBar_value = true;
 
 const uint32_t dumbmode_value[DESKTOP_ON_OFF_COUNT] = {false, true};
 
 const uint32_t dumbmode_icon_value[DESKTOP_ON_OFF_COUNT] = {false, true};
-//uint8_t origDumbIcon_value = true;
 
 static void desktop_settings_scene_start_var_list_enter_callback(void* context, uint32_t index) {
     DesktopSettingsApp* app = context;
@@ -197,15 +190,6 @@ void desktop_settings_scene_start_on_enter(void* context) {
     VariableItemList* variable_item_list = app->variable_item_list;
     origIconStyle_value = app->settings.icon_style;
     origBattDisp_value = app->settings.displayBatteryPercentage;
-    /*
-    origLockIcon_value = app->settings.lock_icon;
-    origBTIcon_value = app->settings.bt_icon;
-    origRPC_value = app->settings.rpc_icon;
-    origSDCard_value = app->settings.sdcard;
-    origStealth_value = app->settings.stealth_icon;
-    origTopBar_value = app->settings.top_bar;
-    origDumbIcon_value = app->settings.dumbmode_icon;
-	*/
 
     VariableItem* item;
     uint8_t value_index;
@@ -447,16 +431,4 @@ void desktop_settings_scene_start_on_exit(void* context) {
         power_update_viewport(power);
         furi_record_close(RECORD_POWER);
     }
-    /*
-    if((app->settings.icon_style != origIconStyle_value) ||
-       (app->settings.displayBatteryPercentage != origBattDisp_value) ||
-       (app->settings.lock_icon != origLockIcon_value) ||
-       (app->settings.bt_icon != origBTIcon_value) || (app->settings.rpc_icon != origRPC_value) ||
-       (app->settings.sdcard != origSDCard_value) ||
-       (app->settings.stealth_icon != origStealth_value) ||
-       (app->settings.top_bar != origTopBar_value) ||
-       (app->settings.dumbmode_icon != origDumbIcon_value)) {
-        furi_hal_power_reset();
-    }
-	*/
 }

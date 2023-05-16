@@ -218,12 +218,7 @@ float furi_hal_bt_get_rssi();
  */
 uint32_t furi_hal_bt_get_transmitted_packets();
 
-/** Check & switch C2 to given mode
- *
- * @param[in]  mode  mode to switch into
- */
-bool furi_hal_bt_ensure_c2_mode(BleGlueC2Mode mode);
-
+// BadBT stuff
 /** Modify profile advertisement name and restart bluetooth
  * @param[in] profile   profile type
  * @param[in] name      new adv name
@@ -251,6 +246,12 @@ void furi_hal_bt_set_profile_pairing_method(FuriHalBtProfile profile, GapPairing
 GapPairing furi_hal_bt_get_profile_pairing_method(FuriHalBtProfile profile);
 
 bool furi_hal_bt_is_connected(void);
+
+/** Check & switch C2 to given mode
+ *
+ * @param[in]  mode  mode to switch into
+ */
+bool furi_hal_bt_ensure_c2_mode(BleGlueC2Mode mode);
 
 typedef struct {
     uint32_t magic;

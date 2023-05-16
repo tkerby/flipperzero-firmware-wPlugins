@@ -87,6 +87,8 @@ struct Desktop {
 
     Bt* bt;
     bool in_transition;
+
+    bool sdcard_status;
 };
 
 Desktop* desktop_alloc();

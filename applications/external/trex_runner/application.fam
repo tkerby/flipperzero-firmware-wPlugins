@@ -5,7 +5,8 @@ App(
     entry_point="trexrunner_app",
     requires=["gui"],
     stack_size=8 * 1024,
-    fap_category="Misc",
+    fap_category="Games",
     fap_icon="trexrunner_icon.png",
+    fap_icon_assets="assets",  
     order=36,
 )

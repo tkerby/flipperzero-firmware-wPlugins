@@ -9,9 +9,9 @@
 #include <furi_hal_resources.h>
 #include <furi_hal_power.h>
 
-#include <lib/flipper_format/flipper_format.h>
-
 #include <stm32wbxx_ll_dma.h>
+
+#include <lib/flipper_format/flipper_format.h>
 
 #include <furi.h>
 #include <cc1101.h>
@@ -446,6 +446,37 @@ uint32_t furi_hal_subghz_set_frequency_and_path(uint32_t value) {
         furi_crash("SubGhz: Incorrect frequency during set.");
     }
     return value;
+}
+
+bool furi_hal_subghz_get_is_extended() {
+    bool is_extended = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* file = flipper_format_file_alloc(storage);
+
+    if(flipper_format_file_open_existing(file, "/ext/subghz/assets/extend_range.txt")) {
+        flipper_format_read_bool(file, "use_ext_range_at_own_risk", &is_extended, 1);
+    }
+
+    flipper_format_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return is_extended;
+}
+
+void furi_hal_subghz_set_is_extended(bool is_extended) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* file = flipper_format_file_alloc(storage);
+
+    do {
+        if(!flipper_format_file_open_always(file, "/ext/subghz/assets/extend_range.txt")) break;
+        if(!flipper_format_write_header_cstr(file, "Flipper SubGhz Setting File", 1)) break;
+        if(!flipper_format_write_comment_cstr(
+               file, "Whether to allow extended ranges that can break your flipper"))
+            break;
+        if(!flipper_format_write_bool(file, "use_ext_range_at_own_risk", &is_extended, 1)) break;
+    } while(0);
+
+    flipper_format_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 bool furi_hal_subghz_is_tx_allowed(uint32_t value) {
