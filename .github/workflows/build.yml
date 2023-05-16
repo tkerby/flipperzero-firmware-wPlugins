@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@latest
+        uses: actions/checkout@v3
 
       - name: build updater package
         run: ./fbt updater_package
@@ -21,7 +21,7 @@ jobs:
         run: cd dist/f7-C/f7-update-RM420FAP && zip ${{ github.sha }}.zip *
 
       - name: upload artifact
-        uses: actions/upload-artifact@latest
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}
           path: dist/f7-C/f7-update-RM420FAP/${{ github.sha }}.zip
