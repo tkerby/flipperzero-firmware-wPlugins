@@ -20,6 +20,40 @@ static bool storage_move_to_sd_check_entry(const char* name, FileInfo* fileinfo,
     return (name && (*name != '.'));
 }
 
+void flipper_migrate_files() {
+    if(!furi_hal_is_normal_boot()) return;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+
+    // Migrate files, Int -> Ext
+    storage_common_remove(storage, INT_PATH(".passport.settings"));
+    storage_common_copy(storage, ARCHIVE_FAV_OLD_PATH, ARCHIVE_FAV_PATH);
+    storage_common_remove(storage, ARCHIVE_FAV_OLD_PATH);
+    storage_common_copy(storage, BT_SETTINGS_OLD_PATH, BT_SETTINGS_PATH);
+    storage_common_remove(storage, BT_SETTINGS_OLD_PATH);
+    storage_common_copy(storage, DOLPHIN_STATE_OLD_PATH, DOLPHIN_STATE_PATH);
+    storage_common_remove(storage, DOLPHIN_STATE_OLD_PATH);
+    storage_common_copy(storage, POWER_SETTINGS_OLD_PATH, POWER_SETTINGS_PATH);
+    storage_common_remove(storage, POWER_SETTINGS_OLD_PATH);
+    storage_common_copy(storage, BT_KEYS_STORAGE_OLD_PATH, BT_KEYS_STORAGE_PATH);
+    storage_common_remove(storage, BT_KEYS_STORAGE_OLD_PATH);
+    storage_common_copy(storage, NOTIFICATION_SETTINGS_OLD_PATH, NOTIFICATION_SETTINGS_PATH);
+    storage_common_remove(storage, NOTIFICATION_SETTINGS_OLD_PATH);
+    // Ext -> Int
+    storage_common_copy(storage, DESKTOP_SETTINGS_OLD_PATH, DESKTOP_SETTINGS_PATH);
+    storage_common_remove(storage, DESKTOP_SETTINGS_OLD_PATH);
+
+    FileInfo file_info;
+    if(storage_common_stat(storage, U2F_CNT_OLD_FILE, &file_info) == FSE_OK &&
+       file_info.size > 200) { // Is on Int and has content
+        storage_common_remove(storage, U2F_CNT_FILE); // Remove outdated on Ext
+        storage_common_copy(storage, U2F_CNT_OLD_FILE, U2F_CNT_FILE); // Int -> Ext
+    }
+    storage_common_copy(storage, U2F_KEY_OLD_FILE, U2F_KEY_FILE); // Ext -> Int
+
+    furi_record_close(RECORD_STORAGE);
+    FURI_LOG_I(TAG, "flipper_migrate_files DONE");
+}
+
 bool storage_move_to_sd_perform(void) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
@@ -161,6 +195,8 @@ int32_t storage_move_to_sd_app(void* p) {
     } else {
         FURI_LOG_I(TAG, "Nothing to move");
     }
+
+    flipper_migrate_files();
 
     return 0;
 }

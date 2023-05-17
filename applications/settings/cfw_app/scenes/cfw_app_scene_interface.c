@@ -1,7 +1,6 @@
 #include "../cfw_app.h"
 
 enum VarItemListIndex {
-    // VarItemListIndexGraphics,
     VarItemListIndexMainmenu,
     // VarItemListIndexLockscreen,
     // VarItemListIndexStatusbar,
@@ -17,7 +16,6 @@ void cfw_app_scene_interface_on_enter(void* context) {
     CfwApp* app = context;
     VariableItemList* var_item_list = app->var_item_list;
 
-    // variable_item_list_add(var_item_list, "Graphics", 0, NULL, app);
     variable_item_list_add(var_item_list, "Mainmenu", 0, NULL, app);
     // variable_item_list_add(var_item_list, "Lockscreen", 0, NULL, app);
     // variable_item_list_add(var_item_list, "Statusbar", 0, NULL, app);
@@ -40,18 +38,15 @@ bool cfw_app_scene_interface_on_event(void* context, SceneManagerEvent event) {
         scene_manager_set_scene_state(app->scene_manager, CfwAppSceneInterface, event.event);
         consumed = true;
         switch(event.event) {
-        // case VarItemListIndexGraphics:
-            // scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceGraphics);
-            // break;
         case VarItemListIndexMainmenu:
             scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceMainmenu);
             break;
         // case VarItemListIndexLockscreen:
-            // scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceLockscreen);
-            // break;
+        // scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceLockscreen);
+        // break;
         // case VarItemListIndexStatusbar:
-            // scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceStatusbar);
-            // break;
+        // scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceStatusbar);
+        // break;
         case VarItemListIndexCommon:
             scene_manager_next_scene(app->scene_manager, CfwAppSceneInterfaceCommon);
             break;

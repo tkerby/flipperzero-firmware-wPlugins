@@ -640,7 +640,7 @@ Function,+,byte_input_alloc,ByteInput*,
 Function,+,byte_input_free,void,ByteInput*
 Function,+,byte_input_get_view,View*,ByteInput*
 Function,+,byte_input_set_header_text,void,"ByteInput*, const char*"
-Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint16_t"
+Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint8_t"
 Function,-,bzero,void,"void*, size_t"
 Function,-,calloc,void*,"size_t, size_t"
 Function,+,canvas_clear,void,Canvas*
@@ -875,7 +875,7 @@ Function,+,elements_multiline_text_aligned,void,"Canvas*, uint8_t, uint8_t, Alig
 Function,+,elements_multiline_text_framed,void,"Canvas*, uint8_t, uint8_t, const char*"
 Function,+,elements_progress_bar,void,"Canvas*, uint8_t, uint8_t, uint8_t, float"
 Function,+,elements_progress_bar_with_text,void,"Canvas*, uint8_t, uint8_t, uint8_t, float, const char*"
-Function,+,elements_scrollable_text_line,void,"Canvas*, uint8_t, uint8_t, uint8_t, FuriString*, size_t, _Bool"
+Function,+,elements_scrollable_text_line,void,"Canvas*, uint8_t, uint8_t, uint8_t, FuriString*, size_t, _Bool, _Bool"
 Function,+,elements_scrollable_text_line_str,void,"Canvas*, uint8_t, uint8_t, uint8_t, const char*, size_t, _Bool, _Bool"
 Function,+,elements_scrollbar,void,"Canvas*, uint16_t, uint16_t"
 Function,+,elements_scrollbar_pos,void,"Canvas*, uint8_t, uint8_t, uint8_t, uint16_t, uint16_t"
@@ -1479,8 +1479,8 @@ Function,-,furi_hal_subghz_dump_state,void,
 Function,+,furi_hal_subghz_enable_ext_power,_Bool,
 Function,+,furi_hal_subghz_flush_rx,void,
 Function,+,furi_hal_subghz_flush_tx,void,
+Function,+,furi_hal_subghz_get_extend_settings,void,"_Bool*, _Bool*"
 Function,+,furi_hal_subghz_get_external_power_disable,_Bool,
-Function,+,furi_hal_subghz_get_is_extended,_Bool,
 Function,+,furi_hal_subghz_get_lqi,uint8_t,
 Function,+,furi_hal_subghz_get_radio_type,SubGhzRadioType,
 Function,+,furi_hal_subghz_get_rolling_counter_mult,uint8_t,
@@ -1504,10 +1504,10 @@ Function,+,furi_hal_subghz_rx,void,
 Function,+,furi_hal_subghz_rx_pipe_not_empty,_Bool,
 Function,+,furi_hal_subghz_select_radio_type,void,SubGhzRadioType
 Function,+,furi_hal_subghz_set_async_mirror_pin,void,const GpioPin*
+Function,+,furi_hal_subghz_set_extend_settings,void,"_Bool, _Bool"
 Function,+,furi_hal_subghz_set_external_power_disable,void,_Bool
 Function,+,furi_hal_subghz_set_frequency,uint32_t,uint32_t
 Function,+,furi_hal_subghz_set_frequency_and_path,uint32_t,uint32_t
-Function,+,furi_hal_subghz_set_is_extended,void,_Bool
 Function,+,furi_hal_subghz_set_path,void,FuriHalSubGhzPath
 Function,+,furi_hal_subghz_set_rolling_counter_mult,void,uint8_t
 Function,+,furi_hal_subghz_set_timestamp_file_names,void,_Bool
@@ -3586,6 +3586,7 @@ Function,-,u8g2_DrawUTF8Lines,u8g2_uint_t,"u8g2_t*, u8g2_uint_t, u8g2_uint_t, u8
 Function,-,u8g2_DrawVLine,void,"u8g2_t*, u8g2_uint_t, u8g2_uint_t, u8g2_uint_t"
 Function,-,u8g2_DrawXBM,void,"u8g2_t*, u8g2_uint_t, u8g2_uint_t, u8g2_uint_t, u8g2_uint_t, const uint8_t*"
 Function,-,u8g2_DrawXBMP,void,"u8g2_t*, u8g2_uint_t, u8g2_uint_t, u8g2_uint_t, u8g2_uint_t, const uint8_t*"
+Function,-,u8g2_FillBuffer,void,u8g2_t*
 Function,-,u8g2_FirstPage,void,u8g2_t*
 Function,-,u8g2_GetFontSize,size_t,const uint8_t*
 Function,-,u8g2_GetGlyphWidth,int8_t,"u8g2_t*, uint16_t"

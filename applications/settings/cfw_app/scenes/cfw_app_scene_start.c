@@ -4,7 +4,6 @@ enum VarItemListIndex {
     VarItemListIndexInterface,
     VarItemListIndexProtocols,
     VarItemListIndexMisc,
-    // VarItemListIndexVersion,
 };
 
 void cfw_app_scene_start_var_item_list_callback(void* context, uint32_t index) {
@@ -47,16 +46,6 @@ bool cfw_app_scene_start_on_event(void* context, SceneManagerEvent event) {
         case VarItemListIndexMisc:
             scene_manager_next_scene(app->scene_manager, CfwAppSceneMisc);
             break;
-        // case VarItemListIndexVersion: {
-            // if(storage_common_copy(
-                   // furi_record_open(RECORD_STORAGE),
-                   // EXT_PATH("dolphin/cfwfirstboot.bin"),
-                   // EXT_PATH(".slideshow"))) {
-                // app->show_slideshow = true;
-                // cfw_app_apply(app);
-            // }
-            // break;
-        // }
         default:
             break;
         }

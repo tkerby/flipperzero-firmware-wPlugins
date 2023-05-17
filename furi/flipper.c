@@ -44,13 +44,11 @@ void flipper_init() {
 
     FURI_LOG_I(TAG, "Boot mode %d, starting services", furi_hal_rtc_get_boot_mode());
 
-    flipper_start_service(&FLIPPER_SERVICES[0]);
-
-    // CFW_SETTINGS_LOAD();
-
-    for(size_t i = 1; i < FLIPPER_SERVICES_COUNT; i++) {
+    for(size_t i = 0; i < FLIPPER_SERVICES_COUNT; i++) {
         flipper_start_service(&FLIPPER_SERVICES[i]);
     }
+
+    CFW_SETTINGS_LOAD();
 
     FURI_LOG_I(TAG, "Startup complete");
 }

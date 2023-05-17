@@ -1,6 +1,5 @@
 ADD_SCENE(cfw_app, start, Start)
 ADD_SCENE(cfw_app, interface, Interface)
-// ADD_SCENE(cfw_app, interface_graphics, InterfaceGraphics)
 ADD_SCENE(cfw_app, interface_mainmenu, InterfaceMainmenu)
 ADD_SCENE(cfw_app, interface_mainmenu_add, InterfaceMainmenuAdd)
 // ADD_SCENE(cfw_app, interface_lockscreen, InterfaceLockscreen)

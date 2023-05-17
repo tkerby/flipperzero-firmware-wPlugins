@@ -59,13 +59,6 @@ void infrared_scene_start_on_enter(void* context) {
             infrared);
     }
 
-    submenu_add_item(
-        submenu,
-        "PIN Settings",
-        SubmenuIndexDebugSettings,
-        infrared_scene_start_submenu_callback,
-        infrared);
-
     const uint32_t submenu_index =
         scene_manager_get_scene_state(scene_manager, InfraredSceneStart);
     submenu_set_selected_item(submenu, submenu_index);

@@ -2,8 +2,6 @@
 
 enum VarItemListIndex {
     VarItemListIndexChangeDeviceName,
-    VarItemListIndexXpLevel,
-    VarItemListIndexButthurtTimer,
     VarItemListIndexRgbBacklight,
     VarItemListIndexLcdColor,
 };
@@ -12,28 +10,6 @@ void cfw_app_scene_misc_var_item_list_callback(void* context, uint32_t index) {
     CfwApp* app = context;
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
-
-// static void cfw_app_scene_misc_xp_level_changed(VariableItem* item) {
-    // CfwApp* app = variable_item_get_context(item);
-    // app->xp_level = variable_item_get_current_value_index(item) + 1;
-    // char level_str[4];
-    // snprintf(level_str, 4, "%li", app->xp_level);
-    // variable_item_set_current_value_text(item, level_str);
-    // app->save_level = true;
-// }
-
-// const char* const butthurt_timer_names[] =
-    // {"OFF", "30 M", "1 H", "2 H", "4 H", "6 H", "8 H", "12 H", "24 H", "48 H"};
-// const int32_t butthurt_timer_values[COUNT_OF(butthurt_timer_names)] =
-    // {-1, 1800, 3600, 7200, 14400, 21600, 28800, 43200, 86400, 172800};
-// static void cfw_app_scene_misc_butthurt_timer_changed(VariableItem* item) {
-    // CfwApp* app = variable_item_get_context(item);
-    // uint8_t index = variable_item_get_current_value_index(item);
-    // variable_item_set_current_value_text(item, butthurt_timer_names[index]);
-    // CFW_SETTINGS()->butthurt_timer = butthurt_timer_values[index];
-    // app->save_settings = true;
-    // app->require_reboot = true;
-// }
 
 static void cfw_app_scene_misc_lcd_color_changed(VariableItem* item) {
     CfwApp* app = variable_item_get_context(item);
@@ -52,28 +28,6 @@ void cfw_app_scene_misc_on_enter(void* context) {
     uint8_t value_index;
 
     variable_item_list_add(var_item_list, "Change Device Name", 0, NULL, app);
-
-    // char level_str[4];
-    // snprintf(level_str, 4, "%li", app->xp_level);
-    // item = variable_item_list_add(
-        // var_item_list,
-        // "XP Level",
-        // DOLPHIN_LEVEL_COUNT + 1,
-        // cfw_app_scene_misc_xp_level_changed,
-        // app);
-    // variable_item_set_current_value_index(item, app->xp_level - 1);
-    // variable_item_set_current_value_text(item, level_str);
-
-    // item = variable_item_list_add(
-        // var_item_list,
-        // "Butthurt Timer",
-        // COUNT_OF(butthurt_timer_names),
-        // cfw_app_scene_misc_butthurt_timer_changed,
-        // app);
-    // value_index = value_index_int32(
-        // cfw_settings->butthurt_timer, butthurt_timer_values, COUNT_OF(butthurt_timer_names));
-    // variable_item_set_current_value_index(item, value_index);
-    // variable_item_set_current_value_text(item, butthurt_timer_names[value_index]);
 
     item = variable_item_list_add(var_item_list, "RGB Backlight", 1, NULL, app);
     variable_item_set_current_value_text(item, cfw_settings->rgb_backlight ? "ON" : "OFF");

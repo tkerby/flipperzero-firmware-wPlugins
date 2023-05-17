@@ -6,6 +6,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <dialogs/dialogs.h>
+#include <assets_icons.h>
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/popup.h>
@@ -21,8 +22,8 @@
 #include <notification/notification_app.h>
 #include <rgb_backlight.h>
 #include <m-array.h>
-#include <cfw.h>
 #include "namespoof.h"
+#include <cfw.h>
 
 #define CFW_SUBGHZ_FREQ_BUFFER_SIZE 6
 
@@ -38,8 +39,6 @@ typedef struct {
     TextInput* text_input;
     Popup* popup;
 
-    // CharList_t asset_pack_names;
-    // uint8_t asset_pack_index;
     CharList_t mainmenu_app_names;
     CharList_t mainmenu_app_paths;
     uint8_t mainmenu_app_index;
@@ -50,18 +49,16 @@ typedef struct {
     uint8_t subghz_hopper_index;
     char subghz_freq_buffer[CFW_SUBGHZ_FREQ_BUFFER_SIZE];
     bool subghz_extend;
+    bool subghz_bypass;
     char device_name[FURI_HAL_VERSION_ARRAY_NAME_LENGTH];
-    // int32_t xp_level;
     FuriString* version_tag;
 
     bool save_mainmenu_apps;
     bool save_subghz_frequencies;
     bool save_subghz;
     bool save_name;
-    // bool save_level;
     bool save_backlight;
     bool save_settings;
-    // bool show_slideshow;
     bool require_reboot;
 } CfwApp;
 

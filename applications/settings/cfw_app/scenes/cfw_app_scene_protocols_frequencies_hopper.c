@@ -53,8 +53,7 @@ void cfw_app_scene_protocols_frequencies_hopper_on_enter(void* context) {
 
     variable_item_list_set_selected_item(
         var_item_list,
-        scene_manager_get_scene_state(
-            app->scene_manager, CfwAppSceneProtocolsFrequenciesHopper));
+        scene_manager_get_scene_state(app->scene_manager, CfwAppSceneProtocolsFrequenciesHopper));
 
     view_dispatcher_switch_to_view(app->view_dispatcher, CfwAppViewVarItemList);
 }

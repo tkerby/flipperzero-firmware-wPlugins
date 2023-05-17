@@ -269,7 +269,8 @@ void subghz_view_receiver_draw(Canvas* canvas, SubGhzViewReceiverModel* model) {
             (scrollbar ? MAX_LEN_PX - 6 : MAX_LEN_PX),
             str_buff,
             scroll_counter,
-            (model->idx != idx));
+            (model->idx != idx),
+            false);
         furi_string_reset(str_buff);
     }
     if(scrollbar) {

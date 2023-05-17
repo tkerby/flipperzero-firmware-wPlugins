@@ -18,6 +18,7 @@
 #include "desktop/views/desktop_view_pin_timeout.h"
 #include "desktop_i.h"
 #include "helpers/pin.h"
+#include <cfw/private.h>
 
 #define TAG "Desktop"
 
@@ -671,6 +672,8 @@ int32_t desktop_srv(void* p) {
         FURI_LOG_W(TAG, "Skipping start in special boot mode");
         return 0;
     }
+
+    CFW_SETTINGS_LOAD();
 
     Desktop* desktop = desktop_alloc();
 

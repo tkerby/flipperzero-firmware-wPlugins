@@ -13,6 +13,7 @@
 #include <core/log.h>
 #include "m-algo.h"
 #include <m-array.h>
+#include <cfw.h>
 
 #define LIST_ITEMS 5u
 #define MAX_LEN_PX 110
@@ -82,21 +83,22 @@ static void BrowserItem_t_clear(BrowserItem_t* obj) {
 
 static int BrowserItem_t_cmp(const BrowserItem_t* a, const BrowserItem_t* b) {
     // Back indicator comes before everything, then folders, then all other files.
-
     if(a->type == BrowserItemTypeBack) {
         return -1;
     }
     if(b->type == BrowserItemTypeBack) {
         return 1;
     }
-    if(a->type == BrowserItemTypeFolder && b->type != BrowserItemTypeFolder) {
-        return -1;
-    }
-    if(a->type != BrowserItemTypeFolder && b->type == BrowserItemTypeFolder) {
-        return 1;
+    if(CFW_SETTINGS()->sort_dirs_first) {
+        if(a->type == BrowserItemTypeFolder && b->type != BrowserItemTypeFolder) {
+            return -1;
+        }
+        if(a->type != BrowserItemTypeFolder && b->type == BrowserItemTypeFolder) {
+            return 1;
+        }
     }
 
-    return furi_string_cmpi(a->path, b->path);
+    return furi_string_cmpi(a->display_name, b->display_name);
 }
 
 #define M_OPL_BrowserItem_t()                 \
@@ -600,7 +602,8 @@ static void browser_draw_list(Canvas* canvas, FileBrowserModel* model) {
             (show_scrollbar ? MAX_LEN_PX - 6 : MAX_LEN_PX),
             filename,
             scroll_counter,
-            (model->item_idx != idx));
+            (model->item_idx != idx),
+            false);
     }
 
     if(show_scrollbar) {
