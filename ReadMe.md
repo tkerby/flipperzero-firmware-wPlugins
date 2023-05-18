@@ -29,16 +29,20 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0516-2350-0.83.1-29e98b7](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0517-1708-0.83.2-9efe974](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-16 23:53 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-16 23:53 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-17 17:00 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-17 17:00 EST`
 - [Join our Discord and see #announcemnets for our current giveaway!](https://discord.gg/roguemaster)
 - [Desktop Settings Migrate If Present (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d4c5c1d043e49a09a015dac0673190ea21fe7f58)
 - [CFW Settings fixes for Extended Range / Bypass (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/dcd0225ffcbf958951db2d6f5da7a400a75f289b)
 - [CFW Settings Loader In Settings Menu (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/bde45edb8ccbe7e6125b1b2c7ea38aa78efac83a)
 - [crypto: Erase key from RAM after storing into enclave (By Bonstra)](https://github.com/Bonstra/flipperzero-firmware/tree/erase-keys-from-memory-after-use)
 - [sort_dirs_first (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/08d529de831409f83d4f93cf7d20b0cceda1b5ee)
+- UL: RFID Exit Properly (By xMasterX)
+- UL: SubGHz: CAME Atomo - Add manually support and custom buttons support (By xMasterX)
+- UL: SubGHz: Fix crashes when deleting signals using right arrow button in `Read` mode (By xMasterX)
+- UL: SubGHz: Restore Rx indication after deletion after Memory is FULL (by wosk | PR #464)
 
 <a name="release">
 

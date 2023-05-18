@@ -358,7 +358,6 @@ bool nfc_scene_nfc_data_info_on_event(void* context, SceneManagerEvent event) {
                 consumed = true;
             } else if(protocol == NfcDeviceProtocolMifareClassic) {
                 scene_manager_next_scene(nfc->scene_manager, NfcSceneMfClassicData);
-                consumed = true;
             } else if(protocol == NfcDeviceProtocolNfcV) {
                 scene_manager_next_scene(nfc->scene_manager, NfcSceneNfcVMenu);
                 consumed = true;

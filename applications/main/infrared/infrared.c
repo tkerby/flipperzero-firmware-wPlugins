@@ -171,13 +171,11 @@ static Infrared* infrared_alloc() {
     view_dispatcher_add_view(
         view_dispatcher, InfraredViewStack, view_stack_get_view(infrared->view_stack));
 
-    if(app_state->is_debug_enabled) {
-        infrared->debug_view = infrared_debug_view_alloc();
-        view_dispatcher_add_view(
-            view_dispatcher,
-            InfraredViewDebugView,
-            infrared_debug_view_get_view(infrared->debug_view));
-    }
+    infrared->debug_view = infrared_debug_view_alloc();
+    view_dispatcher_add_view(
+        view_dispatcher,
+        InfraredViewDebugView,
+        infrared_debug_view_get_view(infrared->debug_view));
 
     infrared->button_panel = button_panel_alloc();
     infrared->loading = loading_alloc();
@@ -218,10 +216,8 @@ static void infrared_free(Infrared* infrared) {
     view_dispatcher_remove_view(view_dispatcher, InfraredViewStack);
     view_stack_free(infrared->view_stack);
 
-    if(app_state->is_debug_enabled) {
-        view_dispatcher_remove_view(view_dispatcher, InfraredViewDebugView);
-        infrared_debug_view_free(infrared->debug_view);
-    }
+    view_dispatcher_remove_view(view_dispatcher, InfraredViewDebugView);
+    infrared_debug_view_free(infrared->debug_view);
 
     button_panel_free(infrared->button_panel);
     loading_free(infrared->loading);

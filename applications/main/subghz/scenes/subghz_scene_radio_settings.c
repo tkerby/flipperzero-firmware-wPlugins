@@ -162,17 +162,15 @@ void subghz_scene_radio_settings_on_enter(void* context) {
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, debug_counter_text[value_index]);
 
-    if(furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug)) {
-        item = variable_item_list_add(
-            subghz->variable_item_list,
-            "Debug Pin",
-            DEBUG_P_COUNT,
-            subghz_scene_receiver_config_set_debug_pin,
-            subghz);
-        value_index = subghz_txrx_get_debug_pin_state(subghz->txrx);
-        variable_item_set_current_value_index(item, value_index);
-        variable_item_set_current_value_text(item, debug_pin_text[value_index]);
-    }
+    item = variable_item_list_add(
+        subghz->variable_item_list,
+        "Debug Pin",
+        DEBUG_P_COUNT,
+        subghz_scene_receiver_config_set_debug_pin,
+        subghz);
+    value_index = subghz_txrx_get_debug_pin_state(subghz->txrx);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, debug_pin_text[value_index]);
 
     view_dispatcher_switch_to_view(subghz->view_dispatcher, SubGhzViewIdVariableItemList);
 }
