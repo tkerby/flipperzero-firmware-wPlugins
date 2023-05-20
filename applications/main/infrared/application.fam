@@ -2,7 +2,6 @@ App(
     appid="infrared",
     name="Infrared",
     apptype=FlipperAppType.APP,
-    # apptype=FlipperAppType.EXTERNAL,
     entry_point="infrared_app",
     targets=["f7"],
     cdefines=["APP_INFRARED"],
@@ -18,6 +17,7 @@ App(
     # fap_icon="ir_10px.png",
     # fap_icon_assets="images",
     fap_libs=["assets"],
+    # link="/ext/apps/Main/infrared.fap",
 )
 
 App(

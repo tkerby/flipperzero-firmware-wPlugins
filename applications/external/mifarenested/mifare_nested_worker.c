@@ -861,6 +861,8 @@ void mifare_nested_worker_collect_nonces_hard(MifareNestedWorker* mifare_nested_
         FURI_LOG_I(TAG, "Found Mifare Classic Mini tag");
     }
 
+    furi_string_set(folder_path, NESTED_FOLDER);
+    storage_common_mkdir(storage, furi_string_get_cstr(folder_path));
     mifare_nested_worker_get_hardnested_folder_path(&data, folder_path);
     storage_common_mkdir(storage, furi_string_get_cstr(folder_path));
     furi_string_free(folder_path);
@@ -1147,6 +1149,9 @@ void mifare_nested_worker_collect_nonces(MifareNestedWorker* mifare_nested_worke
             free(mf_data);
             free_nonces(&nonces, sector_count, 3);
 
+            mifare_nested_worker_change_state(
+                mifare_nested_worker, MifareNestedWorkerStateCollectingHard);
+
             mifare_nested_worker_collect_nonces_hard(mifare_nested_worker);
             return;
         }
@@ -1227,6 +1232,9 @@ void mifare_nested_worker_collect_nonces(MifareNestedWorker* mifare_nested_worke
 
                 free(mf_data);
                 free_nonces(&nonces, sector_count, 3);
+
+                mifare_nested_worker_change_state(
+                    mifare_nested_worker, MifareNestedWorkerStateCollectingHard);
 
                 mifare_nested_worker_collect_nonces_hard(mifare_nested_worker);
                 return;
@@ -1653,3 +1661,4 @@ void mifare_nested_worker_check_keys(MifareNestedWorker* mifare_nested_worker) {
 
     return;
 }
+ 

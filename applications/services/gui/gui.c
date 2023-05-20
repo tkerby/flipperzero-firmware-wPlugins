@@ -593,6 +593,21 @@ size_t gui_get_framebuffer_size(const Gui* gui) {
     return canvas_get_buffer_size(gui->canvas);
 }
 
+void gui_set_hide_statusbar(Gui* gui, bool hidden) {
+    furi_assert(gui);
+
+    gui_lock(gui);
+    if(hidden) {
+        gui->hide_statusbar_count++;
+    } else {
+        gui->hide_statusbar_count--;
+    }
+    gui_unlock(gui);
+
+    // Request redraw
+    gui_update(gui);
+}
+
 void gui_set_lockdown(Gui* gui, bool lockdown) {
     furi_assert(gui);
 
