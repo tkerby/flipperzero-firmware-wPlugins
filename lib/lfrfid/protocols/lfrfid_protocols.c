@@ -17,6 +17,7 @@
 #include "protocol_keri.h"
 #include "protocol_gallagher.h"
 #include "protocol_hitag1.h"
+#include "protocol_nexwatch.h"
 
 const ProtocolBase* lfrfid_protocols[] = {
     [LFRFIDProtocolEM4100] = &protocol_em4100,
@@ -37,4 +38,5 @@ const ProtocolBase* lfrfid_protocols[] = {
     [LFRFIDProtocolKeri] = &protocol_keri,
     [LFRFIDProtocolGallagher] = &protocol_gallagher,
     [LFRFIDProtocolHitag1] = &protocol_hitag1,
+    [LFRFIDProtocolNexwatch] = &protocol_nexwatch,
 };
