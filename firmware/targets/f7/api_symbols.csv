@@ -199,6 +199,7 @@ Header,+,lib/subghz/subghz_setting.h,,
 Header,+,lib/subghz/subghz_tx_rx_worker.h,,
 Header,+,lib/subghz/subghz_worker.h,,
 Header,+,lib/subghz/transmitter.h,,
+Header,+,lib/toolbox/api_lock.h,,
 Header,+,lib/toolbox/args.h,,
 Header,+,lib/toolbox/crc32_calc.h,,
 Header,+,lib/toolbox/dir_walk.h,,
@@ -745,6 +746,7 @@ Function,-,ctermid,char*,char*
 Function,-,ctime,char*,const time_t*
 Function,-,ctime_r,char*,"const time_t*, char*"
 Function,-,cuserid,char*,char*
+Function,-,desktop_api_get_status_pubsub,FuriPubSub*,Desktop*
 Function,-,desktop_api_is_locked,_Bool,Desktop*
 Function,-,desktop_api_unlock,void,Desktop*
 Function,+,desktop_pin_compare,_Bool,"const PinCode*, const PinCode*"

@@ -29,10 +29,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0525-0040-0.83.2-c86c2a2](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0527-2114-0.83.2-f4bab8d](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-25 00:40 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-25 00:40 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-05-28 10:14 JST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-05-28 10:14 JST`
 - Cleaned up GitHub branch so all CFW/UL/RM changes are in 4 commits... going from 7118 commits to 2694 commits (mostly added from UL merge check)...
 - UL: [Clock on desktop #484 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/484)
 - Updated: [GPS (By ezod)](https://github.com/ezod/flipperzero-gps) `Req: NMEA 0183`
@@ -40,6 +40,20 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Remote Refactored (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/477) (SubGhz Fixes By Willy-JL)
 - [Fixed Desktop Clock to have Slim/Stock Viewports #648 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/648)
 - [Small fix for Desktop Clock Slim/Stock Viewports Logic #649 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/649)
+- OFW: [Storage, common_rename: check that old path is exists #2698 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2698)
+- OFW: [Desktop,Rpc: desktop status subscription #2696 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/2696)
+- OFW: [Add fr-FR-mac key layout #2666 (By FelixLgr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2666)
+- OFW: [Infrared: respect carrier frequency and duty cycle settings #2677 (By gsurkov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2677)
+- OFW: [USB HID report timeout #2682 (By nminaylov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2682)
+- OFW: [Add Airwell Prime DCI Series and match file style #2686 (By minchogaydarov)](https://github.com/flipperdevices/flipperzero-firmware/pull/2686)
+- OFW: [desktop: Refactor favorites settings and allow app browser in selection #2687 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/2687)
+- OFW: [NFC: Add support for Gen4 'ultimate card' in Magic app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238)
+- OFW: [nfc: Fix MFUL tearing flags read #2669 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/2669)
+- OFW: [api: added toolbox/api_lock.h #2702 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/2702)
+- OFW: [Update ac.ir #2701 (By technobulb)](https://github.com/flipperdevices/flipperzero-firmware/pull/2701)
+- OFW: [nfc: Mifare Ultralight C detection #2668 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/2668)
+- UL: Added: [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
+- Removed Old NFC Magic Gen 4 App since NFC Magic app now supports both
 
 <a name="release">
 
@@ -347,8 +361,7 @@ $ ./fbt dolphin_ext
 - [Music Player (By DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1189)
 - [Mx2125 Dual-Axis Accelerometer (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [Name Changer (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/488) (Change Flipper name)
-- [NFC Magic (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
-- [NFC Magic Gen4 app #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238) [(Updates By xMasterX)](https://github.com/xMasterX/unleashed-extra-pack)
+- [NFC Magic (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) with [NFC Magic Gen4 Support #2238 (By nullableVoidPtr)](https://github.com/flipperdevices/flipperzero-firmware/pull/2238)
 - [Nightstand Clock (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [Notes for FZ WIP (By AdrianN001)](https://github.com/AdrianN001/Flipper-Zero-Note-Application)
 - [NRF Sniff (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) from nocomp/Frog/UberGuidoZ) `Req: NRF24`
@@ -368,6 +381,7 @@ $ ./fbt dolphin_ext
 - [Radiation Sensor (By sionyx)](https://github.com/sionyx/flipper_radsens) `Req: RadSens`
 - [RC2014 ColecoVision (By ezod)](https://github.com/ezod/flipperzero-rc2014-coleco)
 - [RCWL-516 Motion Sensor (By ahmedafe1)](https://github.com/ahmedafe1/rcwl_0516-Flipperzero)
+- [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [RFID Fuzzer (By Ganapati)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/245) [Changes by Unleashed/xMasterX](https://github.com/DarkFlippers/unleashed-firmware)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
