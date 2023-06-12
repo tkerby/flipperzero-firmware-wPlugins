@@ -16,6 +16,9 @@ jobs:
 
       - name: build updater package
         run: ./fbt updater_package
+        
+      - name: build animation package
+        run: ./fbt dolphin_ext
 
       - name: zip updater package
         run: cd dist/f7-C/f7-update-RM420FAP && zip ${{ github.sha }}.zip *
