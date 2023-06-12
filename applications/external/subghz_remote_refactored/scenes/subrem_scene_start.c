@@ -19,6 +19,12 @@ void subrem_scene_start_on_enter(void* context) {
         SubmenuIndexSubRemOpenMapFile,
         subrem_scene_start_submenu_callback,
         app);
+    submenu_add_item(
+        submenu,
+        "New Map File",
+        SubmenuIndexSubRemNewMapFile,
+        subrem_scene_start_submenu_callback,
+        app);
 #if FURI_DEBUG
     submenu_add_item(
         submenu,
@@ -33,13 +39,11 @@ void subrem_scene_start_on_enter(void* context) {
     //     SubmenuIndexSubGhzRemoteAbout,
     //     subrem_scene_start_submenu_callback,
     //     app);
-
-    // TODO: set scene state in subrem alloc
-    // submenu_set_selected_item(
-    //     submenu, scene_manager_get_scene_state(app->scene_manager, SubRemSceneStart));
-    submenu_set_selected_item(submenu, SubmenuIndexSubRemOpenMapFile);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, SubRemViewSubmenu);
+#ifndef SUBREM_LIGHT
+    submenu_set_selected_item(
+        submenu, scene_manager_get_scene_state(app->scene_manager, SubRemSceneStart));
+#endif
+    view_dispatcher_switch_to_view(app->view_dispatcher, SubRemViewIDSubmenu);
 }
 
 bool subrem_scene_start_on_event(void* context, SceneManagerEvent event) {
@@ -50,7 +54,16 @@ bool subrem_scene_start_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SubmenuIndexSubRemOpenMapFile) {
+#ifndef SUBREM_LIGHT
+            scene_manager_set_scene_state(
+                app->scene_manager, SubRemSceneStart, SubmenuIndexSubRemOpenMapFile);
+#endif
             scene_manager_next_scene(app->scene_manager, SubRemSceneOpenMapFile);
+            consumed = true;
+        } else if(event.event == SubmenuIndexSubRemNewMapFile) {
+            scene_manager_set_scene_state(
+                app->scene_manager, SubRemSceneStart, SubmenuIndexSubRemNewMapFile);
+            scene_manager_next_scene(app->scene_manager, SubRemSceneEnterNewName);
             consumed = true;
         }
         // } else if(event.event == SubmenuIndexSubRemAbout) {

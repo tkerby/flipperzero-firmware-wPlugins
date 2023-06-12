@@ -8,8 +8,7 @@
 #include <furi_hal_bt_hid.h>
 #include <furi_hal_bt_serial.h>
 #include <furi_hal_bus.c>
-#include "battery_service.h"
-
+#include <services/battery_service.h>
 #include <furi.h>
 
 #define TAG "FuriHalBt"
@@ -85,6 +84,7 @@ void furi_hal_bt_init() {
     furi_hal_bus_enable(FuriHalBusIPCC);
     furi_hal_bus_enable(FuriHalBusAES2);
     furi_hal_bus_enable(FuriHalBusPKA);
+    furi_hal_bus_enable(FuriHalBusCRC);
 
     if(!furi_hal_bt_core2_mtx) {
         furi_hal_bt_core2_mtx = furi_mutex_alloc(FuriMutexTypeNormal);
@@ -279,6 +279,7 @@ void furi_hal_bt_reinit() {
     furi_hal_bus_disable(FuriHalBusIPCC);
     furi_hal_bus_disable(FuriHalBusAES2);
     furi_hal_bus_disable(FuriHalBusPKA);
+    furi_hal_bus_disable(FuriHalBusCRC);
 
     FURI_LOG_I(TAG, "Start BT initialization");
     furi_hal_bt_init();

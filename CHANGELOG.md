@@ -1,40 +1,44 @@
 ### New changes
-* !!! **Warning! After installing, Desktop settings (Favoutite apps, PIN Code, AutoLock time..) will be resetted to default due to settings changes, Please set your PIN code, Favourite apps again in Settings->Desktop** !!!
 * If you have copied any apps manually into `apps` folder - remove `apps` folder or that specific apps you copied on your microSD before installing this release to avoid issues due to OFW API version update! If you using regular builds or extra pack builds (e) without your manually added apps, all included apps will be installed automatically, no extra actions needed!
+* Settings->LCD and Notifications will be resetted to default due to new Contrast setting from OFW
+* Core2 (Crash in idle) issues was reduced to current possible minimum, you can try using DeepSleep again (Sleep Method = Default) (+ more checks was added, if you get `Slow HSE/PLL startup` message more than one time, create issue with steps what to do to reproduce it again)
 -----
-* Desktop: **Show clock on main screen** (Enable in Settings->Desktop->Show Clock) (by @gid9798 | PR #484)
-* SubGHz Remote: New plugin - Configurator (Remote Maker) - Now you can create and edit map files on flipper! (by @gid9798 | PR #487)
-* SubGHz Remote: Full refactoring, app was re-made from scratch (by @gid9798)
-* Archive: Fix rename, show error message to user
-* API: Cleanup, mini refactoring of some apps (+6k of free flash space)
-* LFRFID: Debug: Allow PSK RAW emulation in gui
-* SubGHz: Security+ 2.0 -> add extra custom button `0x78` - Fixes issue #469
-* SubGHz: Various fixes (by @gid9798)
-* SubGHz: Fix counter settings in debug
-* SubGHz: Move dangerous_settings check (by @gid9798 | PR #475)
-* Misc: Move NFC plugins into NFC folder
-* Misc: Name changer code moved to proper place, load after system startup + extra checks
-* Plugins: Merge tiktok and ytshorts remote into one (by @Willy-JL)
-* Plugins: NMEA GPS UART - stability fix
-* Plugins: Port XFW keyboard with extra symbols to WiFi Marauder instead of using UART Term keyboard (thanks to @Willy-JL)
-* Plugins: Moved from extra pack to main FW: Mifare Nested [(by AloneLiberty)](https://github.com/AloneLiberty/FlipperNested) - Works with PC and python app `FlipperNested`
-* Plugins: Update TOTP (Authenticator) [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator) (+ Add option to set custom fonts)
-* Plugins: Update NMEA GPS UART [(by ezod)](https://github.com/ezod/flipperzero-gps) (GLL support)
-* Plugins: Update WiFi Marauder [(by 0xchocolate)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion)
-* OFW PR 2680: RFID - Add support for Nexkey/Nexwatch (by @mauimauer)
-* OFW: nfc: Mifare Ultralight C detection
-* OFW: api: added toolbox/api_lock.h
-* OFW: NFC: Add support for Gen4 "ultimate card" in Magic app
-* OFW: desktop: Refactor favorites settings and allow app browser in selection
-* OFW: Infrared: respect carrier frequency and duty cycle settings -> **Breaking API change, API version was changed from 26.x to 27.x** 
-* OFW: Desktop,Rpc: desktop status subscription
-* OFW: Storage, common_rename: check that old path is exists
-* OFW: Services: remove deallocator for persistent services
-* OFW: Storage: common_rename is now POSIX compliant
-* OFW: Removed user-specific data from tar artifacts
-* OFW: fbt: Fix tar uid overflow when packaging
-* OFW: fbt: Use union for old py (Fix builds if using older python versions)
-* OFW: USB HID report timeout
+* Plugins: **New RFID 125KHz and iButton Fuzzers (remake from scratch + new features)** (by @gid9798 | PR #507)
+* Plugins: SubGHz Bruteforcer -> Time delay (between signals) setting (hold Up in main screen(says Up to Save)) + allow more repeats (by @gid9798 & @xMasterX)
+* Plugins: Update TOTP (Authenticator) [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
+* Plugins: Unitemp SCD30 support (PR in unitemp repo by @divinebird / fixed by @xMasterX)
+* Plugins: Fix ProtoView issue #503 -> (Broken saved files with custom modulation)
+* SubGHz: Added 430, 431 MHz to default list
+* SubGHz: Remove broken modulation that was causing buffer overrun (fixes issue #506)
+* SubGHz: Notifications fixes (by @wosk | PR #464)
+* GUI: `Byte input` new feature: editor without keyboard (press Up until you get into new input, then use up/down to input values) (by @gid9798 | PR #509)
+* CI/CD: Provide builds with RGB patch for modded flippers (with special led board installed)
+* Infrared: `RCA` protocol support
+* Infrared: Update universal remote assets - add new ACs and TCL TV
+* API: Add furi_hal_version_uid_default (+ Fix TOTP) (by @ClaraCrazy | PR #502)
+* OFW PR 2760: NFC: Improvements to NFC Magic app (by AloneLiberty)
+* OFW PR 2756: fix: make dialog_file_browser_set_basic_options initialize all fields (by JarvisCraft)
+* OFW: Fix reading Mifare Classic cards with unusual access conditions and fix emulation of unknown keys
+* OFW: fbt: stable build dates
+* OFW: weather_station: add oregon3 with THGR221
+* OFW: Services: simplify api (DOLPHIN_DEED->dolphin_deed - function instead of macros + remake all apps in extra pack and main fw to use new API) -> **Breaking API change, API version was changed from 29.x to 30.x**
+* OFW: Core2, SRAM2: provide safety gap
+* OFW: FuriHal: always clock SMPS from HSI
+* OFW: ble: refactored bt gatt characteristics setup (+ remake of BT HID Led descriptor in new way to work with this changes)
+* OFW: Scripts: WiFi board updater
+* OFW: github: re-enabled f18 build
+* OFW: added ISO15693 (NfcV) (was already added before, so we just updated it with latest changes)
+* OFW: fbt: added Flipper selection when multiple are connected over USB
+* OFW: fbt, ufbt: added checks for appid in app manifests
+* OFW: Fix core2 permisions
+* OFW: SubGhz: add subghz_protocol_registry external API (was already in our API but in different way)
+* OFW: Furi: smaller critical enter and critical exit macro
+* OFW: Serial_CLI: Fixing serial cli logger error so it sounds more concise
+* OFW: Remove unused resources
+* OFW: Dolphin: new animation
+* OFW: f7: add PB9 to debug pins
+* OFW: Settings: add contrast adjustment -> **Settings->LCD and Notifications will be resetted to default values one time after installing**
+* OFW: FuriHal: add system setting to device info, bump device info version
 
 #### [🎲 Download latest extra apps pack](https://github.com/xMasterX/all-the-plugins/archive/refs/heads/main.zip)
 
@@ -50,9 +54,11 @@ and all other great people who supported our project and me (xMasterX), thanks t
 
 **Recommended option - Web Updater**
 
+### What `n`, `e`, `r` means? What I need to download if I don't want to use Web updater?
 What means `n` or `e` in - `flipper-z-f7-update-(version)(n / e).tgz` ? - `n` means this build comes without our custom animations, only official flipper animations, 
-`e` means build has extra apps pack preinstalled
+`e` means build has extra apps pack preinstalled,
+`r` means RGB patch (+ extra apps) for flippers with rgb backlight mod (this is hardware mod!) (Works only on modded flippers!)
 
-Self-update package (update from microSD) - `flipper-z-f7-update-(version).zip` or download `.tgz` for mobile app / qFlipper
+Self-update package (update from microSD) - `flipper-z-f7-update-(version).zip` or download `.tgz` for mobile app / qFlipper / web
 
 

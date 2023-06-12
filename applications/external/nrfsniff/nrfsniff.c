@@ -5,6 +5,7 @@
 #include <notification/notification_messages.h>
 #include <stdlib.h>
 #include <dolphin/dolphin.h>
+
 #include <nrf24.h>
 #include <toolbox/stream/file_stream.h>
 
@@ -290,7 +291,7 @@ static void wrap_up(Storage* storage, NotificationApp* notification) {
             hexlify(addr, 5, top_address);
             found_count++;
             save_addr_to_file(storage, addr, 5, notification);
-            DOLPHIN_DEED(getRandomDeed());
+            dolphin_deed(getRandomDeed());
             if(confirmed_idx < MAX_CONFIRMED) memcpy(confirmed[confirmed_idx++], addr, 5);
             break;
         }
@@ -315,7 +316,7 @@ static void start_sniffing() {
 
 int32_t nrfsniff_app(void* p) {
     UNUSED(p);
-    DOLPHIN_DEED(DolphinDeedPluginStart);
+    dolphin_deed(DolphinDeedPluginStart);
     uint8_t address[5] = {0};
     uint32_t start = 0;
     hexlify(address, 5, top_address);
@@ -330,6 +331,10 @@ int32_t nrfsniff_app(void* p) {
     }
 
     nrf24_init();
+
+    while(!furi_hal_speaker_acquire(100)) {
+        furi_delay_ms(100);
+    }
 
     // Set system callbacks
     ViewPort* view_port = view_port_alloc();
@@ -390,10 +395,27 @@ int32_t nrfsniff_app(void* p) {
                     case InputKeyOk:
                         // toggle sniffing
                         sniffing_state = !sniffing_state;
+
                         if(sniffing_state) {
-                            clear_cache();
-                            start_sniffing();
-                            start = furi_get_tick();
+                            if(nrf24_checkconnected(nrf24_HANDLE)) {
+                                clear_cache();
+                                start_sniffing();
+                                start = furi_get_tick();
+                            } else {
+                                nrf24_flush_rx(nrf24_HANDLE);
+
+                                // check again
+                                if(nrf24_checkconnected(nrf24_HANDLE)) {
+                                    clear_cache();
+                                    start_sniffing();
+                                    start = furi_get_tick();
+                                } else {
+                                    sniffing_state = false;
+                                    furi_hal_speaker_start(100, 100);
+                                    furi_delay_ms(100);
+                                    furi_hal_speaker_stop();
+                                }
+                            }
                         } else
                             wrap_up(storage, notification);
                         break;
@@ -405,12 +427,9 @@ int32_t nrfsniff_app(void* p) {
                     }
                 }
             }
-        } else {
-            // FURI_LOG_D(TAG, "osMessageQueue: event timeout");
-            // event timeout
         }
 
-        if(sniffing_state) {
+        if(sniffing_state && nrf24_checkconnected(nrf24_HANDLE)) {
             if(nrf24_sniff_address(nrf24_HANDLE, 5, address)) {
                 int idx;
                 uint8_t* top_addr;
@@ -447,6 +466,7 @@ int32_t nrfsniff_app(void* p) {
     target_rate = 8; // rate can be either 8 (2Mbps) or 0 (1Mbps)
     sniffing_state = false;
     nrf24_deinit();
+    furi_hal_speaker_release();
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
     furi_record_close(RECORD_GUI);

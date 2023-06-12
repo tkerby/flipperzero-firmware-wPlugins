@@ -1,3 +1,8 @@
+// Application automatic lock timeout if user IDLE. (ticks)
+#ifndef TOTP_AUTO_LOCK_IDLE_TIMEOUT_SEC
+#define TOTP_AUTO_LOCK_IDLE_TIMEOUT_SEC (60)
+#endif
+
 // Include Bluetooth token input automation
 #ifndef TOTP_NO_BADBT_TYPE
 #define TOTP_BADBT_TYPE_ENABLED
@@ -15,3 +20,6 @@
 // End of list
 
 #define TOTP_TARGET_FIRMWARE TOTP_FIRMWARE_CFW
+
+// Max custom fonts value
+#define MAX_CUSTOM_FONTS (9)

@@ -95,51 +95,42 @@ void nfc_magic_worker_write(NfcMagicWorker* nfc_magic_worker) {
 
     while(nfc_magic_worker->state == NfcMagicWorkerStateWrite) {
         do {
-            if(furi_hal_nfc_detect(&nfc_data, 200)) {
-                if(nfc_data.cuid != magic_dev->cuid) break;
-                if(!card_found_notified) {
-                    nfc_magic_worker->callback(
-                        NfcMagicWorkerEventCardDetected, nfc_magic_worker->context);
-                    card_found_notified = true;
-                }
-                furi_hal_nfc_sleep();
-
-                magic_activate();
-                if(magic_dev->type == MagicTypeClassicGen1) {
-                    if(dev_protocol != NfcDeviceProtocolMifareClassic) break;
-                    MfClassicData* mfc_data = &dev_data->mf_classic_data;
-
-                    if(mfc_data->type != MfClassicType1k) break;
+            if(magic_dev->type == MagicTypeClassicGen1) {
+                if(furi_hal_nfc_detect(&nfc_data, 200)) {
+                    magic_deactivate();
+                    magic_activate();
                     if(!magic_gen1_wupa()) {
-                        FURI_LOG_E(TAG, "Not Magic card");
+                        FURI_LOG_E(TAG, "No card response to WUPA (not a magic card)");
                         nfc_magic_worker->callback(
                             NfcMagicWorkerEventWrongCard, nfc_magic_worker->context);
                         done = true;
                         break;
                     }
-                    if(!magic_gen1_data_access_cmd()) {
-                        FURI_LOG_E(TAG, "Not Magic card");
-                        nfc_magic_worker->callback(
-                            NfcMagicWorkerEventWrongCard, nfc_magic_worker->context);
-                        done = true;
-                        break;
-                    }
+                    magic_deactivate();
+                }
+                magic_activate();
+                if(magic_gen1_wupa()) {
+                    magic_gen1_data_access_cmd();
+
+                    MfClassicData* mfc_data = &dev_data->mf_classic_data;
                     for(size_t i = 0; i < 64; i++) {
                         FURI_LOG_D(TAG, "Writing block %d", i);
                         if(!magic_gen1_write_blk(i, &mfc_data->block[i])) {
                             FURI_LOG_E(TAG, "Failed to write %d block", i);
+                            done = true;
                             nfc_magic_worker->callback(
                                 NfcMagicWorkerEventFail, nfc_magic_worker->context);
-                            done = true;
                             break;
                         }
                     }
 
+                    done = true;
                     nfc_magic_worker->callback(
                         NfcMagicWorkerEventSuccess, nfc_magic_worker->context);
-                    done = true;
                     break;
-                } else if(magic_dev->type == MagicTypeGen4) {
+                }
+            } else if(magic_dev->type == MagicTypeGen4) {
+                if(furi_hal_nfc_detect(&nfc_data, 200)) {
                     uint8_t gen4_config[28];
                     uint32_t password = magic_dev->password;
 
@@ -199,6 +190,7 @@ void nfc_magic_worker_write(NfcMagicWorker* nfc_magic_worker) {
                     gen4_config[25] = dev_data->nfc_data.atqa[1];
                     gen4_config[26] = dev_data->nfc_data.sak;
 
+                    furi_hal_nfc_sleep();
                     furi_hal_nfc_activate_nfca(200, &cuid);
                     if(!magic_gen4_set_cfg(password, gen4_config, sizeof(gen4_config), false)) {
                         nfc_magic_worker->callback(
@@ -300,6 +292,7 @@ void nfc_magic_worker_write(NfcMagicWorker* nfc_magic_worker) {
 }
 
 void nfc_magic_worker_check(NfcMagicWorker* nfc_magic_worker) {
+    FuriHalNfcDevData nfc_data = {};
     NfcMagicDevice* magic_dev = nfc_magic_worker->magic_dev;
     bool card_found_notified = false;
     uint8_t gen4_config[MAGIC_GEN4_CONFIG_LEN];
@@ -314,32 +307,44 @@ void nfc_magic_worker_check(NfcMagicWorker* nfc_magic_worker) {
                 card_found_notified = true;
             }
 
-            furi_hal_nfc_activate_nfca(200, &magic_dev->cuid);
-            nfc_magic_worker->callback(NfcMagicWorkerEventSuccess, nfc_magic_worker->context);
-            break;
-        }
-
-        magic_deactivate();
-        furi_delay_ms(300);
-        magic_activate();
-
-        furi_hal_nfc_activate_nfca(200, &magic_dev->cuid);
-        if(magic_gen4_get_cfg(magic_dev->password, gen4_config)) {
-            magic_dev->type = MagicTypeGen4;
-            if(!card_found_notified) {
-                nfc_magic_worker->callback(
-                    NfcMagicWorkerEventCardDetected, nfc_magic_worker->context);
-                card_found_notified = true;
+            if(furi_hal_nfc_detect(&nfc_data, 200)) {
+                magic_dev->cuid = nfc_data.cuid;
+                magic_dev->uid_len = nfc_data.uid_len;
+            } else {
+                // wrong BCC
+                magic_dev->uid_len = 4;
             }
-
             nfc_magic_worker->callback(NfcMagicWorkerEventSuccess, nfc_magic_worker->context);
             break;
-        }
+        } else {
+            magic_deactivate();
+            magic_activate();
+            if(furi_hal_nfc_detect(&nfc_data, 200)) {
+                magic_dev->cuid = nfc_data.cuid;
+                magic_dev->uid_len = nfc_data.uid_len;
+                if(magic_gen4_get_cfg(magic_dev->password, gen4_config)) {
+                    magic_dev->type = MagicTypeGen4;
+                    if(!card_found_notified) {
+                        nfc_magic_worker->callback(
+                            NfcMagicWorkerEventCardDetected, nfc_magic_worker->context);
+                        card_found_notified = true;
+                    }
 
-        if(card_found_notified) {
-            nfc_magic_worker->callback(
-                NfcMagicWorkerEventNoCardDetected, nfc_magic_worker->context);
-            card_found_notified = false;
+                    nfc_magic_worker->callback(
+                        NfcMagicWorkerEventSuccess, nfc_magic_worker->context);
+                } else {
+                    nfc_magic_worker->callback(
+                        NfcMagicWorkerEventWrongCard, nfc_magic_worker->context);
+                    card_found_notified = true;
+                }
+                break;
+            } else {
+                if(card_found_notified) {
+                    nfc_magic_worker->callback(
+                        NfcMagicWorkerEventNoCardDetected, nfc_magic_worker->context);
+                    card_found_notified = false;
+                }
+            }
         }
 
         magic_deactivate();
@@ -397,6 +402,11 @@ void nfc_magic_worker_wipe(NfcMagicWorker* nfc_magic_worker) {
 
     MfClassicBlock block;
     memset(&block, 0, sizeof(MfClassicBlock));
+    MfClassicBlock empty_block;
+    memset(&empty_block, 0, sizeof(MfClassicBlock));
+    MfClassicBlock trailer_block;
+    memset(&trailer_block, 0xff, sizeof(MfClassicBlock));
+
     block.value[0] = 0x01;
     block.value[1] = 0x02;
     block.value[2] = 0x03;
@@ -404,6 +414,10 @@ void nfc_magic_worker_wipe(NfcMagicWorker* nfc_magic_worker) {
     block.value[4] = 0x04;
     block.value[5] = 0x08;
     block.value[6] = 0x04;
+
+    trailer_block.value[7] = 0x07;
+    trailer_block.value[8] = 0x80;
+    trailer_block.value[9] = 0x69;
 
     while(nfc_magic_worker->state == NfcMagicWorkerStateWipe) {
         do {
@@ -418,9 +432,25 @@ void nfc_magic_worker_wipe(NfcMagicWorker* nfc_magic_worker) {
                     card_found_notified = true;
                 }
 
-                if(!magic_gen1_wipe()) break;
                 if(!magic_gen1_data_access_cmd()) break;
                 if(!magic_gen1_write_blk(0, &block)) break;
+
+                for(size_t i = 1; i < 64; i++) {
+                    FURI_LOG_D(TAG, "Wiping block %d", i);
+                    bool success = false;
+                    if((i | 0x03) == i) {
+                        success = magic_gen1_write_blk(i, &trailer_block);
+                    } else {
+                        success = magic_gen1_write_blk(i, &empty_block);
+                    }
+
+                    if(!success) {
+                        FURI_LOG_E(TAG, "Failed to write %d block", i);
+                        nfc_magic_worker->callback(
+                            NfcMagicWorkerEventFail, nfc_magic_worker->context);
+                        break;
+                    }
+                }
 
                 card_wiped = true;
                 nfc_magic_worker->callback(NfcMagicWorkerEventSuccess, nfc_magic_worker->context);

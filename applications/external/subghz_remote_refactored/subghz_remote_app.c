@@ -1,7 +1,5 @@
 #include "subghz_remote_app_i.h"
 
-#include <lib/subghz/protocols/protocol_items.h>
-
 static bool subghz_remote_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     SubGhzRemoteApp* app = context;
@@ -70,10 +68,24 @@ SubGhzRemoteApp* subghz_remote_app_alloc() {
     // SubMenu
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, SubRemViewSubmenu, submenu_get_view(app->submenu));
+        app->view_dispatcher, SubRemViewIDSubmenu, submenu_get_view(app->submenu));
 
-    //Dialog
+    // Dialog
     app->dialogs = furi_record_open(RECORD_DIALOGS);
+
+    // TextInput
+    app->text_input = text_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, SubRemViewIDTextInput, text_input_get_view(app->text_input));
+
+    // Widget
+    app->widget = widget_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, SubRemViewIDWidget, widget_get_view(app->widget));
+
+    // Popup
+    app->popup = popup_alloc();
+    view_dispatcher_add_view(app->view_dispatcher, SubRemViewIDPopup, popup_get_view(app->popup));
 
     // Remote view
     app->subrem_remote_view = subrem_view_remote_alloc();
@@ -81,6 +93,13 @@ SubGhzRemoteApp* subghz_remote_app_alloc() {
         app->view_dispatcher,
         SubRemViewIDRemote,
         subrem_view_remote_get_view(app->subrem_remote_view));
+
+    // Edit Menu view
+    app->subrem_edit_menu = subrem_view_edit_menu_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        SubRemViewIDEditMenu,
+        subrem_view_edit_menu_get_view(app->subrem_edit_menu));
 
     app->map_preset = malloc(sizeof(SubRemMapPreset));
     for(uint8_t i = 0; i < SubRemSubKeyNameMaxCount; i++) {
@@ -91,12 +110,14 @@ SubGhzRemoteApp* subghz_remote_app_alloc() {
 
     subghz_txrx_set_need_save_callback(app->txrx, subrem_save_active_sub, app);
 
-    app->tx_running = false;
+    app->map_not_saved = false;
 
 #ifdef SUBREM_LIGHT
     scene_manager_next_scene(app->scene_manager, SubRemSceneOpenMapFile);
 #else
     scene_manager_next_scene(app->scene_manager, SubRemSceneStart);
+    scene_manager_set_scene_state(
+        app->scene_manager, SubRemSceneStart, SubmenuIndexSubRemEditMapFile);
 #endif
 
     return app;
@@ -113,15 +134,31 @@ void subghz_remote_app_free(SubGhzRemoteApp* app) {
     furi_hal_subghz_init_radio_type(SubGhzRadioInternal);
 
     // Submenu
-    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewSubmenu);
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDSubmenu);
     submenu_free(app->submenu);
 
-    //Dialog
+    // Dialog
     furi_record_close(RECORD_DIALOGS);
+
+    // TextInput
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDTextInput);
+    text_input_free(app->text_input);
+
+    // Widget
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDWidget);
+    widget_free(app->widget);
+
+    // Popup
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDPopup);
+    popup_free(app->popup);
 
     // Remote view
     view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDRemote);
     subrem_view_remote_free(app->subrem_remote_view);
+
+    // Edit view
+    view_dispatcher_remove_view(app->view_dispatcher, SubRemViewIDEditMenu);
+    subrem_view_edit_menu_free(app->subrem_edit_menu);
 
     scene_manager_free(app->scene_manager);
     view_dispatcher_free(app->view_dispatcher);

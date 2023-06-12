@@ -184,7 +184,6 @@ void nfc_worker_nfcv_emulate(NfcWorker* nfc_worker) {
                 }
             }
         }
-        furi_delay_ms(10);
     }
     nfcv_emu_deinit(nfcv_data);
 
@@ -212,7 +211,6 @@ void nfc_worker_nfcv_sniff(NfcWorker* nfc_worker) {
                 nfc_worker->callback(NfcWorkerEventNfcVCommandExecuted, nfc_worker->context);
             }
         }
-        furi_delay_ms(10);
     }
     nfcv_emu_deinit(nfcv_data);
 
@@ -253,13 +251,13 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
         furi_hal_nfc_ll_set_error_handling(FuriHalNfcErrorHandlingNfc);
         furi_hal_nfc_ll_set_guard_time(FURI_HAL_NFC_LL_GT_NFCV);
 
-        furi_hal_console_printf("Detect presence\r\n");
+        FURI_LOG_D(TAG, "Detect presence");
         ReturnCode ret = slix_get_random(nfcv_data);
 
         if(ret == ERR_NONE) {
             /* there is some chip, responding with a RAND */
             nfc_worker->dev_data->protocol = NfcDeviceProtocolNfcV;
-            furi_hal_console_printf("  Chip detected. In privacy?\r\n");
+            FURI_LOG_D(TAG, "  Chip detected. In privacy?");
             ret = nfcv_inventory(NULL);
 
             if(ret == ERR_NONE) {
@@ -268,15 +266,15 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
                     NfcVReader reader = {};
 
                     if(!nfcv_read_card(&reader, &nfc_worker->dev_data->nfc_data, nfcv_data)) {
-                        furi_hal_console_printf("    => failed, wait for chip to disappear.\r\n");
+                        FURI_LOG_D(TAG, "    => failed, wait for chip to disappear.");
                         snprintf(nfcv_data->error, sizeof(nfcv_data->error), "Read card\nfailed");
                         nfc_worker->callback(NfcWorkerEventWrongCardDetected, nfc_worker->context);
                     } else {
-                        furi_hal_console_printf("    => success, wait for chip to disappear.\r\n");
+                        FURI_LOG_D(TAG, "    => success, wait for chip to disappear.");
                         nfc_worker->callback(NfcWorkerEventCardDetected, nfc_worker->context);
                     }
                 } else {
-                    furi_hal_console_printf("    => success, wait for chip to disappear.\r\n");
+                    FURI_LOG_D(TAG, "    => success, wait for chip to disappear.");
                     nfc_worker->callback(NfcWorkerEventCardDetected, nfc_worker->context);
                 }
 
@@ -284,8 +282,7 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
                     furi_delay_ms(100);
                 }
 
-                furi_hal_console_printf(
-                    "    => chip is already visible, wait for chip to disappear.\r\n");
+                FURI_LOG_D(TAG, "    => chip is already visible, wait for chip to disappear.\r\n");
                 nfc_worker->callback(NfcWorkerEventAborted, nfc_worker->context);
                 while(slix_get_random(NULL) == ERR_NONE) {
                     furi_delay_ms(100);
@@ -298,7 +295,7 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
 
             } else {
                 /* chip is invisible, try to unlock */
-                furi_hal_console_printf("    chip is invisible, unlocking\r\n");
+                FURI_LOG_D(TAG, "    chip is invisible, unlocking");
 
                 if(nfcv_data->auth_method == NfcVAuthMethodManual) {
                     key |= key_data[0] << 24;
@@ -309,15 +306,15 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
                     ret = slix_unlock(nfcv_data, 4);
                 } else {
                     key = 0x7FFD6E5B;
-                    key_data[0] = key >> 24;
-                    key_data[1] = key >> 16;
-                    key_data[2] = key >> 8;
-                    key_data[3] = key >> 0;
+                    key_data[0] = (key >> 24) & 0xFF;
+                    key_data[1] = (key >> 16) & 0xFF;
+                    key_data[2] = (key >> 8) & 0xFF;
+                    key_data[3] = (key >> 0) & 0xFF;
                     ret = slix_unlock(nfcv_data, 4);
 
                     if(ret != ERR_NONE) {
                         /* main key failed, trying second one */
-                        furi_hal_console_printf("    trying second key after resetting\r\n");
+                        FURI_LOG_D(TAG, "    trying second key after resetting");
 
                         /* reset chip */
                         furi_hal_nfc_ll_txrx_off();
@@ -325,20 +322,20 @@ void nfc_worker_nfcv_unlock(NfcWorker* nfc_worker) {
                         furi_hal_nfc_ll_txrx_on();
 
                         if(slix_get_random(nfcv_data) != ERR_NONE) {
-                            furi_hal_console_printf("    reset failed\r\n");
+                            FURI_LOG_D(TAG, "    reset failed");
                         }
 
                         key = 0x0F0F0F0F;
-                        key_data[0] = key >> 24;
-                        key_data[1] = key >> 16;
-                        key_data[2] = key >> 8;
-                        key_data[3] = key >> 0;
+                        key_data[0] = (key >> 24) & 0xFF;
+                        key_data[1] = (key >> 16) & 0xFF;
+                        key_data[2] = (key >> 8) & 0xFF;
+                        key_data[3] = (key >> 0) & 0xFF;
                         ret = slix_unlock(nfcv_data, 4);
                     }
                 }
                 if(ret != ERR_NONE) {
                     /* unlock failed */
-                    furi_hal_console_printf("    => failed, wait for chip to disappear.\r\n");
+                    FURI_LOG_D(TAG, "    => failed, wait for chip to disappear.");
                     snprintf(
                         nfcv_data->error, sizeof(nfcv_data->error), "Passwords not\naccepted");
                     nfc_worker->callback(NfcWorkerEventWrongCardDetected, nfc_worker->context);
@@ -1201,7 +1198,7 @@ void nfc_worker_mf_classic_dict_attack(NfcWorker* nfc_worker) {
                     memcpy(current_key, &key, 6);
 
                     if(mf_classic_is_key_found(data, i, MfClassicKeyA) &&
-                       found_key == current_key) {
+                       memcmp(found_key, current_key, 6) == 0) {
                         mf_classic_set_key_not_found(data, i, MfClassicKeyA);
                         is_key_a_found = false;
                         FURI_LOG_D(TAG, "Key %dA not found in attack", i);
@@ -1227,7 +1224,7 @@ void nfc_worker_mf_classic_dict_attack(NfcWorker* nfc_worker) {
                     memcpy(current_key, &key, 6);
 
                     if(mf_classic_is_key_found(data, i, MfClassicKeyB) &&
-                       found_key == current_key) {
+                       memcmp(found_key, current_key, 6) == 0) {
                         mf_classic_set_key_not_found(data, i, MfClassicKeyB);
                         is_key_b_found = false;
                         FURI_LOG_D(TAG, "Key %dB not found in attack", i);
@@ -1272,7 +1269,7 @@ void nfc_worker_emulate_mf_classic(NfcWorker* nfc_worker) {
     furi_hal_nfc_listen_start(nfc_data);
     while(nfc_worker->state == NfcWorkerStateMfClassicEmulate) { //-V1044
         if(furi_hal_nfc_listen_rx(&tx_rx, 300)) {
-            mf_classic_emulator(&emulator, &tx_rx);
+            mf_classic_emulator(&emulator, &tx_rx, false);
         }
     }
     if(emulator.data_changed) {
@@ -1557,7 +1554,7 @@ void nfc_worker_analyze_reader(NfcWorker* nfc_worker) {
             NfcProtocol protocol =
                 reader_analyzer_guess_protocol(reader_analyzer, tx_rx.rx_data, tx_rx.rx_bits / 8);
             if(protocol == NfcDeviceProtocolMifareClassic) {
-                mf_classic_emulator(&emulator, &tx_rx);
+                mf_classic_emulator(&emulator, &tx_rx, true);
             }
         } else {
             reader_no_data_received_cnt++;
