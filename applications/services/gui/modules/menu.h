@@ -17,11 +17,12 @@ typedef struct Menu Menu;
 /** Menu Item Callback */
 typedef void (*MenuItemCallback)(void* context, uint32_t index);
 
-/** Menu allocation and initialization
+/** Menu allocation and initialization with positioning
  *
  * @return     Menu instance
+ * @param      pos  size_t position
  */
-Menu* menu_alloc();
+Menu* menu_pos_alloc(size_t pos);
 
 /** Free menu
  *

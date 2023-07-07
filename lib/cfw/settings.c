@@ -7,15 +7,10 @@
 
 CfwSettings cfw_settings = {
     .wii_menu = false, // OFF
-    .bad_pins_format = false, // OFF
-    // .lockscreen_time = true, // ON
-    // .lockscreen_seconds = false, // OFF
-    // .lockscreen_date = true, // ON
-    // .lockscreen_statusbar = true, // ON
-    // .lockscreen_prompt = true, // ON
+    .start_point = 0, // First Item
+    .lock_menu_type = true, // Adv Grid VS FALSE=LIST
     .sort_dirs_first = true, // ON
     .dark_mode = false, // OFF
-    // .favorite_timeout = 0, // OFF
     .charge_cap = 100, // 100%
     .rgb_backlight = false, // OFF
 };
@@ -30,25 +25,15 @@ void CFW_SETTINGS_LOAD() {
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "wii_menu", &x->wii_menu, 1);
         flipper_format_rewind(file);
-        flipper_format_read_bool(file, "bad_pins_format", &x->bad_pins_format, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_bool(file, "lockscreen_time", &x->lockscreen_time, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_bool(file, "lockscreen_seconds", &x->lockscreen_seconds, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_bool(file, "lockscreen_date", &x->lockscreen_date, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_bool(file, "lockscreen_statusbar", &x->lockscreen_statusbar, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_bool(file, "lockscreen_prompt", &x->lockscreen_prompt, 1);
+        flipper_format_read_uint32(file, "start_point", &x->start_point, 1);
+        flipper_format_rewind(file);
+        flipper_format_read_bool(file, "lock_menu_type", &x->lock_menu_type, 1);
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "sort_dirs_first", &x->sort_dirs_first, 1);
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "dark_mode", &x->dark_mode, 1);
-        // flipper_format_rewind(file);
-        // flipper_format_read_uint32(file, "favorite_timeout", &x->favorite_timeout, 1);
-        flipper_format_read_uint32(file, "charge_cap", &x->charge_cap, 1);
         flipper_format_rewind(file);
+        flipper_format_read_uint32(file, "charge_cap", &x->charge_cap, 1);
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
     }
@@ -65,15 +50,10 @@ void CFW_SETTINGS_SAVE() {
     FlipperFormat* file = flipper_format_file_alloc(storage);
     if(flipper_format_file_open_always(file, CFW_SETTINGS_PATH)) {
         flipper_format_write_bool(file, "wii_menu", &x->wii_menu, 1);
-        flipper_format_write_bool(file, "bad_pins_format", &x->bad_pins_format, 1);
-        // flipper_format_write_bool(file, "lockscreen_time", &x->lockscreen_time, 1);
-        // flipper_format_write_bool(file, "lockscreen_seconds", &x->lockscreen_seconds, 1);
-        // flipper_format_write_bool(file, "lockscreen_date", &x->lockscreen_date, 1);
-        // flipper_format_write_bool(file, "lockscreen_statusbar", &x->lockscreen_statusbar, 1);
-        // flipper_format_write_bool(file, "lockscreen_prompt", &x->lockscreen_prompt, 1);
+        flipper_format_write_uint32(file, "start_point", &x->start_point, 1);
+        flipper_format_write_bool(file, "lock_menu_type", &x->lock_menu_type, 1);
         flipper_format_write_bool(file, "sort_dirs_first", &x->sort_dirs_first, 1);
         flipper_format_write_bool(file, "dark_mode", &x->dark_mode, 1);
-        // flipper_format_write_uint32(file, "favorite_timeout", &x->favorite_timeout, 1);
         flipper_format_write_uint32(file, "charge_cap", &x->charge_cap, 1);
         flipper_format_write_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
     }

@@ -68,7 +68,8 @@ class FlipperExtAppBuildArtifacts:
 apps_to_build_as_faps = [
     FlipperAppType.PLUGIN,
     FlipperAppType.EXTERNAL,
-    FlipperAppType.EXTMAINAPP,
+    FlipperAppType.MENUEXTERNAL,
+    FlipperAppType.EXTSETTINGSAPP,
     FlipperAppType.DEBUG,
 ]
 

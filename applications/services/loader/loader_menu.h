@@ -1,6 +1,8 @@
 #pragma once
 #include <furi.h>
-#include "loader_extmainapp.h"
+#include "loader_extapps.h"
+
+#define MANUALLY_ADDED_ITEMS_COUNT 2
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,23 +10,9 @@ extern "C" {
 
 typedef struct LoaderMenu LoaderMenu;
 
-LoaderMenu* loader_menu_alloc();
+LoaderMenu* loader_menu_alloc(void (*closed_cb)(void*), void* context);
 
 void loader_menu_free(LoaderMenu* loader_menu);
-
-void loader_menu_start(LoaderMenu* loader_menu, bool settings, ExtMainAppList_t* ext_main_apps);
-
-void loader_menu_stop(LoaderMenu* loader_menu);
-
-void loader_menu_set_closed_callback(
-    LoaderMenu* loader_menu,
-    void (*callback)(void*),
-    void* context);
-
-void loader_menu_set_click_callback(
-    LoaderMenu* loader_menu,
-    void (*callback)(const char*, bool, void*),
-    void* context);
 
 #ifdef __cplusplus
 }

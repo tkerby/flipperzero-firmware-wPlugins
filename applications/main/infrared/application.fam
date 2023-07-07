@@ -1,9 +1,9 @@
 App(
     appid="infrared",
     name="Infrared",
-    apptype=FlipperAppType.EXTMAINAPP,
+    apptype=FlipperAppType.MENUEXTERNAL,
     entry_point="infrared_app",
-    targets=["f7"],
+    # targets=["f7"],
     # cdefines=["APP_INFRARED"],
     requires=[
         "gui",

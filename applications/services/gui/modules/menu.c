@@ -249,7 +249,7 @@ static void menu_exit(void* context) {
     furi_timer_stop(menu->scroll_timer);
 }
 
-Menu* menu_alloc() {
+Menu* menu_pos_alloc(size_t pos) {
     Menu* menu = malloc(sizeof(Menu));
     menu->view = view_alloc(menu->view);
     view_set_context(menu->view, menu);
@@ -258,15 +258,13 @@ Menu* menu_alloc() {
     view_set_input_callback(menu->view, menu_input_callback);
     view_set_enter_callback(menu->view, menu_enter);
     view_set_exit_callback(menu->view, menu_exit);
-
     menu->scroll_timer = furi_timer_alloc(menu_scroll_timer_callback, FuriTimerTypePeriodic, menu);
-
     with_view_model(
         menu->view,
         MenuModel * model,
         {
             MenuItemArray_init(model->items);
-            model->position = 0;
+            model->position = pos;
         },
         true);
 
@@ -356,14 +354,12 @@ static void menu_process_up(Menu* menu) {
             }
 
             if(CFW_SETTINGS()->wii_menu) {
-                if(!(model->position == count - 1 && count % 2)) {
-                    if(model->position % 2) {
-                        model->position--;
-                    } else {
-                        model->position++;
-                    }
-                    model->scroll_counter = 0;
+                if(model->position % 2 || (model->position == count - 1 && count % 2)) {
+                    model->position--;
+                } else {
+                    model->position++;
                 }
+                model->scroll_counter = 0;
             } else {
                 if(model->position > 0) {
                     model->position--;
@@ -392,14 +388,12 @@ static void menu_process_down(Menu* menu) {
             }
 
             if(CFW_SETTINGS()->wii_menu) {
-                if(!(model->position == count - 1 && count % 2)) {
-                    if(model->position % 2) {
-                        model->position--;
-                    } else {
-                        model->position++;
-                    }
-                    model->scroll_counter = 0;
+                if(model->position % 2 || (model->position == count - 1 && count % 2)) {
+                    model->position--;
+                } else {
+                    model->position++;
                 }
+                model->scroll_counter = 0;
             } else {
                 if(model->position < count - 1) {
                     model->position++;

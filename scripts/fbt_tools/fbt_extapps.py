@@ -384,10 +384,16 @@ def generate_embed_app_metadata_actions(source, target, env, for_signature):
         "${SOURCES} ${TARGET}"
     )
 
-    actions.append(
-        Action(
-            objcopy_str,
-            "$APPMETAEMBED_COMSTR",
+    actions.extend(
+        (
+            Action(
+                objcopy_str,
+                "$APPMETAEMBED_COMSTR",
+            ),
+            Action(
+                "${PYTHON3} ${FBT_SCRIPT_DIR}/fastfap.py ${TARGET} ${OBJCOPY}",
+                "$FASTFAP_COMSTR",
+            ),
         )
     )
 
@@ -417,7 +423,11 @@ def AddAppLaunchTarget(env, appname, launch_target_name):
         host_app = env["APPMGR"].get(artifacts_app_to_run.app.requires[0])
 
         if host_app:
-            if host_app.apptype == FlipperAppType.EXTERNAL:
+            if host_app.apptype in [
+                FlipperAppType.EXTERNAL,
+                FlipperAppType.MENUEXTERNAL,
+                FlipperAppType.EXTSETTINGSAPP,
+            ]:
                 _add_host_app_to_targets(host_app)
             else:
                 # host app is a built-in app
@@ -450,6 +460,7 @@ def generate(env, **kw):
             APPMETA_COMSTR="\tAPPMETA\t${TARGET}",
             APPFILE_COMSTR="\tAPPFILE\t${TARGET}",
             APPMETAEMBED_COMSTR="\tFAP\t${TARGET}",
+            FASTFAP_COMSTR="\tFASTFAP\t${TARGET}",
             APPCHECK_COMSTR="\tAPPCHK\t${SOURCE}",
         )
 

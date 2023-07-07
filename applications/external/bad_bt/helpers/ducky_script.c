@@ -118,6 +118,7 @@ bool ducky_get_number(const char* param, uint32_t* val) {
 }
 
 void ducky_numlock_on(BadBtScript* bad_bt) {
+    UNUSED(bad_bt);
     if((furi_hal_bt_hid_get_led_state() & HID_KB_LED_NUM) == 0) {
         furi_hal_bt_hid_kb_press(HID_KEYBOARD_LOCK_NUM_LOCK);
         furi_delay_ms(bt_timeout);
@@ -126,6 +127,7 @@ void ducky_numlock_on(BadBtScript* bad_bt) {
 }
 
 bool ducky_numpad_press(BadBtScript* bad_bt, const char num) {
+    UNUSED(bad_bt);
     if((num < '0') || (num > '9')) return false;
 
     uint16_t key = numpad_keys[num - '0'];
