@@ -1,5 +1,5 @@
 App(
-    appid="MagSpoof",
+    appid="magspoof",
     name="MagSpoof",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mag_app",
@@ -9,7 +9,6 @@ App(
         "notification",
         "dialogs",
     ],
-    provides=[],
     stack_size=6 * 1024,
     order=64,
     fap_icon="icons/mag_10px.png",

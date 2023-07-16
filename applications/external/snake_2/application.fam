@@ -1,5 +1,5 @@
 App(
-    appid="Snake20",
+    appid="snake20",
     name="Snake 2.0",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="snake_20_app",
@@ -10,6 +10,6 @@ App(
     fap_category="Games",
     fap_author="@Willzvul",
     fap_weburl="https://github.com/Willzvul/Snake_2.0",
-    # fap_version="2.0",
+    fap_version=(2, 0),
     fap_description="Advanced Snake Game (Remake of original Snake)",
 )

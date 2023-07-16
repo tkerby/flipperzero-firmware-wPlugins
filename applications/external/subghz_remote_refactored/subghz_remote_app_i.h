@@ -6,7 +6,7 @@
 
 #include "helpers/txrx/subghz_txrx.h"
 
-#include <assets_icons.h>
+#include "subghz_remote_icons.h"
 
 #include "views/remote.h"
 #include "views/edit_menu.h"
@@ -37,7 +37,6 @@ typedef struct {
     Popup* popup;
     TextInput* text_input;
     Submenu* submenu;
-    Submenu* open_submenu;
 
     FuriString* file_path;
     char file_name_tmp[SUBREM_MAX_LEN_NAME];

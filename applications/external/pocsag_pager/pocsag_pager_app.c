@@ -5,6 +5,7 @@
 #include <lib/flipper_format/flipper_format.h>
 #include "protocols/protocol_items.h"
 #include <dolphin/dolphin.h>
+#include <storage/storage.h>
 
 static bool pocsag_pager_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -84,13 +85,23 @@ POCSAGPagerApp* pocsag_pager_app_alloc() {
 
     //ToDo FIX  file name setting
 
-    subghz_setting_load(app->setting, EXT_PATH("pocsag/settings.txt"));
+    subghz_setting_load(app->setting, EXT_PATH("subghz/assets/setting_user.pocsag"));
 
     //init Worker & Protocol & History
     app->lock = PCSGLockOff;
     app->txrx = malloc(sizeof(POCSAGPagerTxRx));
     app->txrx->preset = malloc(sizeof(SubGhzRadioPreset));
     app->txrx->preset->name = furi_string_alloc();
+
+    furi_hal_power_suppress_charge_enter();
+
+    // Radio Devices init & load
+    subghz_devices_init();
+    app->txrx->radio_device =
+        radio_device_loader_set(app->txrx->radio_device, SubGhzRadioDeviceTypeExternalCC1101);
+
+    subghz_devices_reset(app->txrx->radio_device);
+    subghz_devices_idle(app->txrx->radio_device);
 
     // Custom Presets load without using config file
 
@@ -123,17 +134,6 @@ POCSAGPagerApp* pocsag_pager_app_alloc() {
         app->txrx->worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
     subghz_worker_set_context(app->txrx->worker, app->txrx->receiver);
 
-    // Enable power for External CC1101 if it is connected
-    furi_hal_subghz_enable_ext_power();
-    // Auto switch to internal radio if external radio is not available
-    furi_delay_ms(15);
-    if(!furi_hal_subghz_check_radio()) {
-        furi_hal_subghz_select_radio_type(SubGhzRadioInternal);
-        furi_hal_subghz_init_radio_type(SubGhzRadioInternal);
-    }
-
-    furi_hal_power_suppress_charge_enter();
-
     scene_manager_next_scene(app->scene_manager, POCSAGPagerSceneStart);
 
     return app;
@@ -142,13 +142,11 @@ POCSAGPagerApp* pocsag_pager_app_alloc() {
 void pocsag_pager_app_free(POCSAGPagerApp* app) {
     furi_assert(app);
 
-    //CC1101 off
+    // Radio Devices sleep & off
     pcsg_sleep(app);
+    radio_device_loader_end(app->txrx->radio_device);
 
-    // Disable power for External CC1101 if it was enabled and module is connected
-    furi_hal_subghz_disable_ext_power();
-    // Reinit SPI handles for internal radio / nfc
-    furi_hal_subghz_init_radio_type(SubGhzRadioInternal);
+    subghz_devices_deinit();
 
     // Submenu
     view_dispatcher_remove_view(app->view_dispatcher, POCSAGPagerViewSubmenu);

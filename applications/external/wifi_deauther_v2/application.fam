@@ -1,5 +1,5 @@
 App(
-    appid="ESP8266_Wifi_Deauther_v2",
+    appid="esp8266_wifi_deauther_v2",
     name="[ESP8266] Deauther v2",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="wifi_deauther_app",
@@ -10,6 +10,6 @@ App(
     fap_category="GPIO",
     fap_author="@jamisonderek",
     fap_weburl="https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio",
-    # fap_version="1.0",
+    fap_version=(1, 0),
     fap_description="This application can be used to test Wiegand readers and keypads",
 )

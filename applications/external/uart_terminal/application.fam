@@ -1,5 +1,5 @@
 App(
-    appid="UART_Terminal",
+    appid="uart_terminal",
     name="UART Terminal",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="uart_terminal_app",
@@ -11,6 +11,6 @@ App(
     fap_icon_assets="assets",
     fap_icon_assets_symbol="uart_terminal",
     fap_author="@cool4uma & (some fixes by @xMasterX)",
-    # fap_version="1.0",
+    fap_version=(1, 0),
     fap_description="App to control various devices via UART interface.",
 )

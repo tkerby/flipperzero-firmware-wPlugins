@@ -1,5 +1,5 @@
 App(
-    appid="Text_Viewer",
+    appid="text_viewer",
     name="Text Viewer",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="text_viewer_app",
@@ -14,6 +14,6 @@ App(
     fap_icon_assets="icons",
     fap_icon_assets_symbol="text_viewer",
     fap_author="@kowalski7cc & @kyhwana",
-    # fap_version="1.0",
+    fap_version=(1, 0),
     fap_description="Text viewer application",
 )

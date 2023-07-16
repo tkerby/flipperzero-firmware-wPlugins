@@ -55,7 +55,7 @@ SubGhzRemote* xremote_sg_remote_alloc() {
 
     // SubGhz Settings
     remote->setting = subghz_setting_alloc();
-    subghz_setting_load(remote->setting, EXT_PATH("subghz/assets/setting_user"));
+    subghz_setting_load(remote->setting, EXT_PATH("subghz/assets/setting_user.txt"));
 
     remote->txrx = malloc(sizeof(SubGhzTxRx));
     remote->txrx->preset = malloc(sizeof(SubGhzRadioPreset));
@@ -177,7 +177,10 @@ bool xremote_sg_remote_load(SubGhzRemote* remote, FuriString* path) {
         }
 
         if(!strcmp(furi_string_get_cstr(buf), "RAW")) {
-            subghz_protocol_raw_gen_fff_data(remote->txrx->fff_data, furi_string_get_cstr(path));
+            subghz_protocol_raw_gen_fff_data(
+                remote->txrx->fff_data,
+                furi_string_get_cstr(path),
+                subghz_txrx_radio_device_get_name(remote->txrx));
         } else {
             stream_copy_full(
                 flipper_format_get_raw_stream(ff),

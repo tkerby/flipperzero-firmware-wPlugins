@@ -1,5 +1,6 @@
 #include "transmitter.h"
 #include "../subghz_i.h"
+#include <subghz_icons.h>
 
 #include <input/input.h>
 #include <gui/elements.h>
@@ -17,6 +18,7 @@ typedef struct {
     FuriString* preset_str;
     FuriString* key_str;
     bool show_button;
+    SubGhzRadioDeviceType device_type;
     FuriString* temp_button_id;
     bool draw_temp_button;
 } SubGhzViewTransmitterModel;
@@ -47,6 +49,17 @@ void subghz_view_transmitter_add_data_to_show(
             furi_string_set(model->preset_str, preset_str);
             model->show_button = show_button;
         },
+        true);
+}
+
+void subghz_view_transmitter_set_radio_device_type(
+    SubGhzViewTransmitter* subghz_transmitter,
+    SubGhzRadioDeviceType device_type) {
+    furi_assert(subghz_transmitter);
+    with_view_model(
+        subghz_transmitter->view,
+        SubGhzViewTransmitterModel * model,
+        { model->device_type = device_type; },
         true);
 }
 
@@ -100,7 +113,12 @@ void subghz_view_transmitter_draw(Canvas* canvas, SubGhzViewTransmitterModel* mo
     }
 
     if(model->show_button) {
-        canvas_draw_str(canvas, 58, 62, furi_hal_subghz_get_radio_type() ? "R: Ext" : "R: Int");
+        // TODO
+        canvas_draw_str(
+            canvas,
+            58,
+            62,
+            (model->device_type == SubGhzRadioDeviceTypeInternal) ? "R: Int" : "R: Ext");
         subghz_view_transmitter_button_right(canvas, "Send");
     }
 }

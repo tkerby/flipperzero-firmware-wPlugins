@@ -1,5 +1,5 @@
 App(
-    appid="Brainfuck",
+    appid="brainfuck",
     name="Brainfuck",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="brainfuck_app",
@@ -14,6 +14,6 @@ App(
     fap_icon_assets_symbol="brainfuck",
     fap_author="@nymda",
     fap_weburl="https://github.com/nymda/FlipperZeroBrainfuck",
-    # fap_version="1.0",
+    fap_version=(1, 0),
     fap_description="Brainfuck language interpreter",
 )

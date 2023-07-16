@@ -1,5 +1,5 @@
 App(
-    appid="NRF24_AZERTY_Mouse_Jacker",
+    appid="nrf24_azerty_mouse_jacker",
     name="[NRF24] AZERTY Mouse Jacker",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mousejacker_app_azerty",
@@ -20,5 +20,5 @@ App(
             ],
         ),
     ],
-    fap_icon_assets_symbol="NRF24_Mouse_Jacker",
+    fap_icon_assets_symbol="nrf24_azerty_mouse_jacker",
 )

@@ -1,5 +1,5 @@
 App(
-    appid="Plantower_PMSx003_Sensor_Reader",
+    appid="plantower_pmsx003_sensor_reader",
     name="Plantower PMSx003 sensor reader",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="airmon_app",
@@ -11,6 +11,6 @@ App(
     fap_icon_assets_symbol="airmon",
     fap_author="3cky",
     fap_weburl="https://github.com/3cky/flipperzero-airmon",
-    # fap_version="1.0.0",
+    fap_version=(1, 0),
     fap_description="Plantower PMSx003 sensor reader",
 )

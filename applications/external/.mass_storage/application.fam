@@ -1,5 +1,5 @@
 App(
-    appid="USB_Mass_Storage",
+    appid="usb_mass_storage",
     name="USB Mass Storage",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="mass_storage_app",
@@ -8,6 +8,6 @@ App(
     fap_icon="storage_10px.png",
     order=2,
     fap_category="USB",
-    fap_libs=["assets"],
+    fap_icon_assets="images",
     fap_icon_assets_symbol="mass_storage",
 )

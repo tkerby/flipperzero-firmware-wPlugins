@@ -12,7 +12,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <notification/notification_messages.h>
-#include <seader_icons.h>
+#include "seader_icons.h"
 
 #include <gui/modules/submenu.h>
 #include <gui/modules/popup.h>
@@ -34,7 +34,7 @@
 
 #include "scenes/seader_scene.h"
 
-#include "sub.h"
+#include "seader_bridge.h"
 #include "seader.h"
 #include "ccid.h"
 #include "uart.h"
@@ -75,6 +75,7 @@ typedef enum {
 
 struct Seader {
     bool revert_power;
+    bool is_debug_enabled;
     SeaderWorker* worker;
     ViewDispatcher* view_dispatcher;
     Gui* gui;

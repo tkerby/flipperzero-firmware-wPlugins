@@ -1,5 +1,5 @@
 App(
-    appid="NMEA_GPS",
+    appid="nmea_gps",
     name="[NMEA] GPS",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="gps_app",
@@ -16,6 +16,6 @@ App(
         ),
     ],
     fap_author="@ezod & @xMasterX",
-    # fap_version="1.0",
+    fap_version=(1, 0),
     fap_description="Works with GPS modules via UART, using NMEA protocol.",
 )

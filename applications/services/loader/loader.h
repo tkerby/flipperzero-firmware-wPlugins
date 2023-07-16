@@ -1,5 +1,6 @@
 #pragma once
 #include <furi.h>
+#include <applications.h>
 #include "loader_extapps.h"
 
 #ifdef __cplusplus
