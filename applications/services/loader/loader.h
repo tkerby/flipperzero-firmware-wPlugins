@@ -1,7 +1,7 @@
 #pragma once
 #include <furi.h>
 #include <applications.h>
-#include "loader_extapps.h"
+#include "loader_mainmenu.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,26 +77,21 @@ bool loader_is_locked(Loader* instance);
 void loader_show_menu(Loader* instance);
 
 /**
+ * @brief Show loader gamesmenu
+ * @param[in] instance loader instance
+ */
+void loader_show_gamesmenu(Loader* instance);
+
+/**
  * @brief Get loader pubsub
  * @param[in] instance loader instance
  * @return FuriPubSub* 
  */
 FuriPubSub* loader_get_pubsub(Loader* instance);
 
-/**
-* @brief Get ExtMainApp item
-* @param[in] instance loader instance
-* @param[in] size_t of item
-* @return ExtMainApp*
-*/
-ExtMainApp* loader_get_ext_main_app_item(Loader* instance, size_t x);
+MainMenuList_t* loader_get_mainmenu_apps(Loader* loader);
 
-/**
-* @brief Get ExtMainAppList_t size
-* @param[in] instance loader instance
-* @return size_t of ExtMainAppList_t size
-*/
-size_t loader_get_ext_main_app_list_size(Loader* loader);
+GamesMenuList_t* loader_get_gamesmenu_apps(Loader* loader);
 
 #ifdef __cplusplus
 }

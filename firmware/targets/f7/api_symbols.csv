@@ -1,5 +1,6 @@
 entry,status,name,type,params
-Version,+,34.2,,
+Version,+,34.5,,
+Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/services/bt/bt_service/bt.h,,
 Header,+,applications/services/cli/cli.h,,
 Header,+,applications/services/cli/cli_vcp.h,,
@@ -53,7 +54,6 @@ Header,+,firmware/targets/f7/furi_hal/furi_hal_idle_timer.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_interrupt.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_nfc.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_os.h,,
-Header,-,firmware/targets/f7/furi_hal/furi_hal_power_calibration.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_pwm.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_resources.h,,
 Header,+,firmware/targets/f7/furi_hal/furi_hal_rfid.h,,
@@ -93,6 +93,7 @@ Header,+,firmware/targets/furi_hal_include/furi_hal_version.h,,
 Header,+,firmware/targets/furi_hal_include/furi_hal_vibro.h,,
 Header,+,lib/cfw/cfw.h,,
 Header,+,lib/digital_signal/digital_signal.h,,
+Header,+,lib/drivers/cc1101_regs.h,,
 Header,+,lib/drivers/rgb_backlight.h,,
 Header,+,lib/flipper_application/api_hashtable/api_hashtable.h,,
 Header,+,lib/flipper_application/api_hashtable/compilesort.hpp,,
@@ -205,6 +206,7 @@ Header,+,lib/subghz/blocks/encoder.h,,
 Header,+,lib/subghz/blocks/generic.h,,
 Header,+,lib/subghz/blocks/math.h,,
 Header,+,lib/subghz/devices/cc1101_configs.h,,
+Header,+,lib/subghz/devices/cc1101_int/cc1101_int_interconnect.h,,
 Header,+,lib/subghz/environment.h,,
 Header,+,lib/subghz/protocols/raw.h,,
 Header,+,lib/subghz/receiver.h,,
@@ -1142,7 +1144,7 @@ Function,+,furi_hal_bt_serial_start,void,
 Function,+,furi_hal_bt_serial_stop,void,
 Function,+,furi_hal_bt_serial_tx,_Bool,"uint8_t*, uint16_t"
 Function,+,furi_hal_bt_set_key_storage_change_callback,void,"BleGlueKeyStorageChangedCallback, void*"
-Function,+,furi_hal_bt_set_profile_adv_name,void,"FuriHalBtProfile, const char[( ( 1 + 8 + ( 8 + 1 ) ) + 1 )]"
+Function,+,furi_hal_bt_set_profile_adv_name,void,"FuriHalBtProfile, const char[( 18 + 1 )]"
 Function,+,furi_hal_bt_set_profile_mac_addr,void,"FuriHalBtProfile, const uint8_t[( 6 )]"
 Function,+,furi_hal_bt_set_profile_pairing_method,void,"FuriHalBtProfile, GapPairing"
 Function,+,furi_hal_bt_start_advertising,void,
@@ -1368,6 +1370,7 @@ Function,-,furi_hal_power_insomnia_level,uint16_t,
 Function,+,furi_hal_power_is_charging,_Bool,
 Function,+,furi_hal_power_is_charging_done,_Bool,
 Function,+,furi_hal_power_is_otg_enabled,_Bool,
+Function,+,furi_hal_power_is_shutdown_requested,_Bool,
 Function,+,furi_hal_power_off,void,
 Function,+,furi_hal_power_reset,void,
 Function,+,furi_hal_power_set_battery_charge_voltage_limit,void,float
@@ -1938,11 +1941,12 @@ Function,-,llrintl,long long int,long double
 Function,-,llround,long long int,double
 Function,-,llroundf,long long int,float
 Function,-,llroundl,long long int,long double
-Function,+,loader_get_ext_main_app_item,ExtMainApp*,"Loader*, size_t"
-Function,+,loader_get_ext_main_app_list_size,size_t,Loader*
+Function,+,loader_get_gamesmenu_apps,GamesMenuList_t*,Loader*
+Function,+,loader_get_mainmenu_apps,MainMenuList_t*,Loader*
 Function,+,loader_get_pubsub,FuriPubSub*,Loader*
 Function,+,loader_is_locked,_Bool,Loader*
 Function,+,loader_lock,_Bool,Loader*
+Function,+,loader_show_gamesmenu,void,Loader*
 Function,+,loader_show_menu,void,Loader*
 Function,+,loader_start,LoaderStatus,"Loader*, const char*, const char*, FuriString*"
 Function,+,loader_start_with_gui_error,LoaderStatus,"Loader*, const char*, const char*"
@@ -2859,6 +2863,7 @@ Function,+,subghz_custom_btn_get_original,uint8_t,
 Function,+,subghz_custom_btn_is_allowed,_Bool,
 Function,+,subghz_custom_btn_set,_Bool,uint8_t
 Function,+,subghz_custom_btns_reset,void,
+Function,-,subghz_device_cc1101_ext_ep,const FlipperAppPluginDescriptor*,
 Function,+,subghz_devices_begin,_Bool,const SubGhzDevice*
 Function,+,subghz_devices_deinit,void,
 Function,+,subghz_devices_end,void,const SubGhzDevice*
@@ -3203,6 +3208,7 @@ Function,+,variable_item_list_set_enter_callback,void,"VariableItemList*, Variab
 Function,+,variable_item_list_set_selected_item,void,"VariableItemList*, uint8_t"
 Function,+,variable_item_set_current_value_index,void,"VariableItem*, uint8_t"
 Function,+,variable_item_set_current_value_text,void,"VariableItem*, const char*"
+Function,+,variable_item_set_item_label,void,"VariableItem*, const char*"
 Function,+,variable_item_set_locked,void,"VariableItem*, _Bool, const char*"
 Function,+,variable_item_set_values_count,void,"VariableItem*, uint8_t"
 Function,-,vasiprintf,int,"char**, const char*, __gnuc_va_list"
@@ -3644,6 +3650,7 @@ Variable,+,sequence_set_vibro_on,const NotificationSequence,
 Variable,+,sequence_single_vibro,const NotificationSequence,
 Variable,+,sequence_solid_yellow,const NotificationSequence,
 Variable,+,sequence_success,const NotificationSequence,
+Variable,-,subghz_device_cc1101_int,const SubGhzDevice,
 Variable,+,subghz_device_cc1101_preset_2fsk_dev2_38khz_async_regs,const uint8_t[],
 Variable,+,subghz_device_cc1101_preset_2fsk_dev47_6khz_async_regs,const uint8_t[],
 Variable,+,subghz_device_cc1101_preset_gfsk_9_99kb_async_regs,const uint8_t[],

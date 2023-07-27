@@ -14,7 +14,6 @@
 #define TAG "DesktopSrv"
 
 #define CLOCK_APP EXT_PATH("apps/Main/dab_timer.fap")
-#define DICE_APP EXT_PATH("apps/Games/dice.fap")
 #define DOOM_APP EXT_PATH("apps/Games/doom.fap")
 #define HEAP_DEFENCE_APP EXT_PATH("apps/Games/heap_defence.fap")
 #define IMPROVED_2048_APP EXT_PATH("apps/Games/2048_improved.fap")
@@ -22,7 +21,7 @@
 #define SNAKE_APP EXT_PATH("apps/Games/snake.fap")
 #define TETRIS_APP EXT_PATH("apps/Games/tetris.fap")
 #define ZOMBIEZ_APP EXT_PATH("apps/Games/zombiez.fap")
-#define JETPACK_JOYRIDE_APP EXT_PATH("apps/Games/jetpack_joyride.fap")
+#define JETPACK_APP EXT_PATH("apps/Games/jetpack.fap")
 
 static void desktop_scene_main_new_idle_animation_callback(void* context) {
     furi_assert(context);
@@ -126,6 +125,13 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } break;
 
+        case DesktopMainEventOpenGamesMenu: {
+            Loader* loader = furi_record_open(RECORD_LOADER);
+            loader_show_gamesmenu(loader);
+            furi_record_close(RECORD_LOADER);
+            consumed = true;
+        } break;
+
         case DesktopMainEventOpenLockMenu:
             scene_manager_next_scene(desktop->scene_manager, DesktopSceneLockMenu);
             consumed = true;
@@ -212,16 +218,12 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             desktop_scene_main_open_app_or_profile(desktop, DOOM_APP);
             break;
         }
-        case DesktopMainEventOpenDice: {
-            desktop_scene_main_open_app_or_profile(desktop, DICE_APP);
-            break;
-        }
         case DesktopMainEventOpenHeap: {
             desktop_scene_main_open_app_or_profile(desktop, HEAP_DEFENCE_APP);
             break;
         }
-        case DesktopMainEventOpenJetPackJoyRide: {
-            desktop_scene_main_open_app_or_profile(desktop, JETPACK_JOYRIDE_APP);
+        case DesktopMainEventOpenJetPack: {
+            desktop_scene_main_open_app_or_profile(desktop, JETPACK_APP);
             break;
         }
         case DesktopMainEventOpenClock: {

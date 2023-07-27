@@ -1,8 +1,5 @@
 #pragma once
 #include <furi.h>
-#include "loader_extapps.h"
-
-#define MANUALLY_ADDED_ITEMS_COUNT 2
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,6 +8,8 @@ extern "C" {
 typedef struct LoaderMenu LoaderMenu;
 
 LoaderMenu* loader_menu_alloc(void (*closed_cb)(void*), void* context);
+
+LoaderMenu* loader_gamesmenu_alloc(void (*closed_cb)(void*), void* context);
 
 void loader_menu_free(LoaderMenu* loader_menu);
 

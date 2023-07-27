@@ -33,7 +33,6 @@ void seader_uart_serial_deinit(SeaderUartBridge* seader_uart, uint8_t uart_ch) {
 void seader_uart_set_baudrate(SeaderUartBridge* seader_uart, uint32_t baudrate) {
     if(baudrate != 0) {
         furi_hal_uart_set_br(seader_uart->cfg.uart_ch, baudrate);
-        seader_uart->st.baudrate_cur = baudrate;
     } else {
         FURI_LOG_I(TAG, "No baudrate specified");
     }
@@ -48,7 +47,7 @@ size_t seader_uart_process_buffer(Seader* seader, uint8_t* cmd, size_t cmd_len) 
 
     size_t consumed = 0;
     do {
-        consumed = processCCID(seader_worker, cmd, cmd_len);
+        consumed = seader_ccid_process(seader_worker, cmd, cmd_len);
 
         if(consumed > 0) {
             memset(cmd, 0, consumed);

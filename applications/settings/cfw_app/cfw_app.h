@@ -6,13 +6,16 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <dialogs/dialogs.h>
+#include <gui/modules/dialog_ex.h>
+#include <applications.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/popup.h>
+#include <lib/toolbox/path.h>
+#include <lib/toolbox/value_index.h>
 #include <storage/storage.h>
-#include <toolbox/path.h>
 #include <toolbox/stream/file_stream.h>
-#include <toolbox/value_index.h>
 #include "scenes/cfw_app_scene.h"
 #include "dolphin/helpers/dolphin_state.h"
 #include "dolphin/dolphin.h"
@@ -20,11 +23,14 @@
 #include <lib/flipper_format/flipper_format.h>
 #include <lib/subghz/subghz_setting.h>
 #include <flipper_application/flipper_application.h>
+#include <loader/loader.h>
+#include <loader/loader_mainmenu.h>
 #include <notification/notification_app.h>
 #include <power/power_service/power.h>
 #include <rgb_backlight.h>
 #include <m-array.h>
 #include "namespoof.h"
+#include "cfw_icons.h"
 #include <cfw.h>
 #include <applications.h>
 #include <desktop/desktop_settings.h>
@@ -42,8 +48,10 @@ typedef struct {
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
     VariableItemList* var_item_list;
+    Submenu* submenu;
     TextInput* text_input;
     Popup* popup;
+    DialogEx* dialog_ex;
 
     DesktopSettings desktop;
     PassportSettings passport;
@@ -52,8 +60,7 @@ typedef struct {
     CharList_t mainmenu_app_paths;
     uint8_t mainmenu_app_index;
 
-    CharList_t start_point_names;
-    uint32_t start_point_index;
+    uint8_t start_point_index;
 
     bool subghz_use_defaults;
     FrequencyList_t subghz_static_freqs;
@@ -77,8 +84,10 @@ typedef struct {
 
 typedef enum {
     CfwAppViewVarItemList,
+    CfwAppViewSubmenu,
     CfwAppViewTextInput,
     CfwAppViewPopup,
+    CfwAppViewDialogEx,
 } CfwAppView;
 
 bool cfw_app_apply(CfwApp* app);

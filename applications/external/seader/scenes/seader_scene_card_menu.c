@@ -5,6 +5,7 @@ enum SubmenuIndex {
     SubmenuIndexSavePicopass,
     SubmenuIndexSaveRFID,
     SubmenuIndexSaveSR,
+    SubmenuIndexSaveMFC,
 };
 
 void seader_scene_card_menu_submenu_callback(void* context, uint32_t index) {
@@ -33,16 +34,16 @@ void seader_scene_card_menu_on_enter(void* context) {
         SubmenuIndexSaveRFID,
         seader_scene_card_menu_submenu_callback,
         seader);
-    if(seader->is_debug_enabled) {
-        if(credential->sio[0] != 0) {
-            submenu_add_item(
-                submenu,
-                "Save SR",
-                SubmenuIndexSaveSR,
-                seader_scene_card_menu_submenu_callback,
-                seader);
-        }
+    if(credential->sio[0] == 0x30) {
+        submenu_add_item(
+            submenu,
+            "Save SR",
+            SubmenuIndexSaveSR,
+            seader_scene_card_menu_submenu_callback,
+            seader);
     }
+    submenu_add_item(
+        submenu, "Save MFC", SubmenuIndexSaveMFC, seader_scene_card_menu_submenu_callback, seader);
 
     submenu_set_selected_item(
         seader->submenu,
@@ -77,6 +78,12 @@ bool seader_scene_card_menu_on_event(void* context, SceneManagerEvent event) {
             scene_manager_set_scene_state(
                 seader->scene_manager, SeaderSceneCardMenu, SubmenuIndexSaveSR);
             seader->credential->save_format = SeaderCredentialSaveFormatSR;
+            scene_manager_next_scene(seader->scene_manager, SeaderSceneSaveName);
+            consumed = true;
+        } else if(event.event == SubmenuIndexSaveMFC) {
+            scene_manager_set_scene_state(
+                seader->scene_manager, SeaderSceneCardMenu, SubmenuIndexSaveMFC);
+            seader->credential->save_format = SeaderCredentialSaveFormatMFC;
             scene_manager_next_scene(seader->scene_manager, SeaderSceneSaveName);
             consumed = true;
         }

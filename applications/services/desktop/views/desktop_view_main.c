@@ -91,15 +91,15 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
         if(event->type == InputTypeShort) {
             if(event->key == InputKeyOk) {
                 main_view->callback(
-                    DesktopMainEventOpenJetPackJoyRide,
-                    main_view->context); // OPENS JETPACK JOYRIDE
+                    DesktopMainEventOpenGamesMenu, main_view->context); // OPENS GamesMenu
             } else if(event->key == InputKeyUp) {
                 main_view->callback(DesktopMainEventOpenSnake, main_view->context); // OPENS SNAKE
             } else if(event->key == InputKeyDown) {
                 main_view->callback(
                     DesktopMainEventOpenTetris, main_view->context); // OPENS TETRIS
             } else if(event->key == InputKeyLeft) {
-                main_view->callback(DesktopMainEventOpenDice, main_view->context); // OPENS Dice
+                main_view->callback(
+                    DesktopMainEventOpenJetPack, main_view->context); // OPENS JETPACK
             }
         } else if(event->type == InputTypeLong) {
             if(event->key == InputKeyOk) {
@@ -119,15 +119,15 @@ bool desktop_main_input_callback(InputEvent* event, void* context) {
         if(event->type == InputTypeShort) {
             if(event->key == InputKeyOk) {
                 main_view->callback(
-                    DesktopMainEventOpenJetPackJoyRide,
-                    main_view->context); // OPENS JETPACK JOYRIDE
+                    DesktopMainEventOpenGamesMenu, main_view->context); // OPENS GamesMenu
             } else if(event->key == InputKeyUp) {
                 main_view->callback(DesktopMainEventOpenLockMenu, main_view->context);
             } else if(event->key == InputKeyDown) {
                 main_view->callback(
                     DesktopMainEventOpenTetris, main_view->context); // OPENS Tetris
             } else if(event->key == InputKeyLeft) {
-                main_view->callback(DesktopMainEventOpenDice, main_view->context); // OPENS Dice
+                main_view->callback(
+                    DesktopMainEventOpenJetPack, main_view->context); // OPENS JETPACK
             }
         } else if(event->type == InputTypeLong) {
             if(event->key == InputKeyOk) {

@@ -50,12 +50,14 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
         size_t shift_position;
         if(CFW_SETTINGS()->wii_menu) {
             FuriString* name = furi_string_alloc();
-            if(position < 2) {
-                shift_position = 0;
-            } else if(position >= items_count - 2 + (items_count % 2)) {
-                shift_position = position - (position % 2) - 4;
+            if(items_count > 6 && position >= 4) {
+                if(position >= items_count - 2 + (items_count % 2)) {
+                    shift_position = position - (position % 2) - 4;
+                } else {
+                    shift_position = position - (position % 2) - 2;
+                }
             } else {
-                shift_position = position - (position % 2) - 2;
+                shift_position = 0;
             }
             canvas_set_font(canvas, FontSecondary);
             size_t item_i;
@@ -152,7 +154,11 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
             elements_scrollbar(canvas, position, items_count);
         }
     } else {
-        canvas_draw_str(canvas, 2, 32, "Empty");
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "Menu is Empty");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Use CFW Settings");
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignTop, "to add menu items.");
         elements_scrollbar(canvas, 0, 0);
     }
 }

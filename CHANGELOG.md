@@ -1,29 +1,10 @@
 ## New changes
-* !!! **Warning! After installing, Desktop settings (Favoutite apps, PIN Code, AutoLock time..) will be resetted to default due to settings changes, Please set your PIN code, Favourite apps again in Settings->Desktop** !!!
-* This next text applies to you only **If you have copied any apps manually** into `apps` folder and don't know that you need to update those apps manually in same way you added them - remove `apps` folder or that specific apps you copied on your microSD before installing this release to avoid issues due to OFW API version update! **If you using regular builds or extra pack builds (e) without your manually added apps, all included apps will be installed automatically, no extra actions needed!**
------
-* SubGHz: Port latest OFW external radio driver, fix issues (now you can make drivers for other radio chips) (by @gid9798 | PR #539 #536 #535 #534)
-* GUI module: SubMenu fix vertical orientation (by @gid9798 | PR #543)
-* Apps: After merge fixes (by @gid9798 | PR #537)
-* Docs: Update docs for debug build and update vscode example, please remove `debug_pack` target if you had it in your workflow
-* Infrared: Updated universal remote assets (by @amec0e | PR #544)
-* Plugins: Added Camera Suite GPIO application for the ESP32-CAM module. [(by CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite) (PR #541)
-* Plugins: Updated ESP32: WiFi Marauder companion plugin [(by 0xchocolate)](https://github.com/0xchocolate/flipperzero-wifi-marauder)
-* Plugins: Updated **NFC Maker** plugin (make tags with URLs, Wifi and other things) [(by Willy-JL)](https://github.com/ClaraCrazy/Flipper-Xtreme/tree/dev/applications/external/nfc_maker) 
-* Plugins: Updated **Mifare Nested** [(by AloneLiberty)](https://github.com/AloneLiberty/FlipperNested)
-* Plugins: Updated Lightmeter [(by oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter)
-* Plugins: Updated **Multi (RFID/iButton) Fuzzer** [(by @gid9798)](https://github.com/DarkFlippers/Multi_Fuzzer)
-* OFW: Loader: good looking error messages
-* OFW: Desktop,Cli: add uptime info
-* OFW: Archive and file browser fixes
-* OFW: Loader: exit animation fix
-* OFW: SubGhz: fix check connect cc1101_ext 
-* OFW: NFC: Improved MFC emulation on some readers
-* OFW: Dolphin: add new animation
-* OFW: Update toolchain to v23
-* OFW: More descriptive error messages for the log command
-* OFW: **External menu apps** -> now we have ton of free internal space
-* OFW: Device Info update
+* Plugins: **22+ plugins was fixed (UI update issues) in extra pack and in base firmware pack**
+* Plugins: Spectrum Analyzer - Modulation switching (hold OK) (by @ALEEF02 | PR #557)
+* Plugins: BadBT -> Temp fix for macOS
+* Plugins: Update TOTP (Authenticator) [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator) -> + added fix for UI update too
+* Infrared: Add Play / Pause in universal projector remote
+* Infrared: Update Universal remote assets (by @amec0e)
 
 [-> How to install firmware](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/HowToInstall.md)
 
