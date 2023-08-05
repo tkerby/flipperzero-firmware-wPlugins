@@ -1,5 +1,17 @@
 #include "uhf_app_i.h"
 
+static const char* uhf_file_header = "Flipper UHF device";
+static const uint32_t uhf_file_version = 1;
+static const uint8_t bank_data_start = 20;
+static const uint8_t bank_data_length = 16;
+
+// empty callback
+void empty_rx_callback(UartIrqEvent event, uint8_t data, void* ctx) {
+    UNUSED(event);
+    UNUSED(data);
+    UNUSED(ctx);
+}
+
 char* convertToHexString(const uint8_t* array, size_t length) {
     if(array == NULL || length == 0) {
         return NULL;
@@ -21,6 +33,66 @@ char* convertToHexString(const uint8_t* array, size_t length) {
     hexArray[hexLength - 1] = '\0';
 
     return hexArray;
+}
+
+bool uhf_save_read_data(UHFResponseData* uhf_response_data, Storage* storage, const char* filename) {
+    if(!storage_dir_exists(storage, UHF_APPS_DATA_FOLDER)) {
+        storage_simply_mkdir(storage, UHF_APPS_DATA_FOLDER);
+    }
+    if(!storage_dir_exists(storage, UHF_APPS_STORAGE_FOLDER)) {
+        storage_simply_mkdir(storage, UHF_APPS_STORAGE_FOLDER);
+    }
+
+    FlipperFormat* file = flipper_format_file_alloc(storage);
+    FuriString* temp_str = furi_string_alloc();
+    // set file name
+    furi_string_cat_printf(
+        temp_str, "%s/%s%s", UHF_APPS_STORAGE_FOLDER, filename, UHF_FILE_EXTENSION);
+    // open file
+    if(!flipper_format_file_open_always(file, furi_string_get_cstr(temp_str))) return false;
+    // write header
+    if(!flipper_format_write_header_cstr(file, uhf_file_header, uhf_file_version)) return false;
+    // write rfu data to file
+    UHFData* rfu_data = uhf_response_data_get_uhf_data(uhf_response_data, 1);
+    if(rfu_data->length) {
+        if(!flipper_format_write_hex(
+               file, "RFU", rfu_data->data + bank_data_start, bank_data_length))
+            return false;
+    } else {
+        if(!flipper_format_write_hex(file, "RFU", UHF_BANK_DOES_NOT_EXIST, 1)) return false;
+    }
+
+    // write epc data to file
+    UHFData* epc_data = uhf_response_data_get_uhf_data(uhf_response_data, 2);
+    if(epc_data->length) {
+        if(!flipper_format_write_hex(
+               file, "EPC", epc_data->data + bank_data_start, bank_data_length))
+            return false;
+    } else {
+        if(!flipper_format_write_hex(file, "EPC", UHF_BANK_DOES_NOT_EXIST, 1)) return false;
+    }
+
+    // write tid data to file
+    UHFData* tid_data = uhf_response_data_get_uhf_data(uhf_response_data, 3);
+    if(tid_data->length) {
+        if(!flipper_format_write_hex(
+               file, "TID", tid_data->data + bank_data_start, bank_data_length))
+            return false;
+    } else {
+        if(!flipper_format_write_hex(file, "TID", UHF_BANK_DOES_NOT_EXIST, 1)) return false;
+    }
+    // write user data to file
+    UHFData* user_data = uhf_response_data_get_uhf_data(uhf_response_data, 4);
+    if(user_data->length) {
+        if(!flipper_format_write_hex(
+               file, "USER", user_data->data + bank_data_start, bank_data_length))
+            return false;
+    } else {
+        if(!flipper_format_write_hex(file, "USER", UHF_BANK_DOES_NOT_EXIST, 1)) return false;
+    }
+    furi_string_free(temp_str);
+    flipper_format_free(file);
+    return true;
 }
 
 bool uhf_custom_event_callback(void* ctx, uint32_t event) {
@@ -58,6 +130,9 @@ UHFApp* uhf_alloc() {
     uhf_app->gui = furi_record_open(RECORD_GUI);
     view_dispatcher_attach_to_gui(
         uhf_app->view_dispatcher, uhf_app->gui, ViewDispatcherTypeFullscreen);
+
+    // Storage
+    uhf_app->storage = furi_record_open(RECORD_STORAGE);
 
     // Open Notification record
     uhf_app->notifications = furi_record_open(RECORD_NOTIFICATION);
@@ -127,6 +202,10 @@ void uhf_free(UHFApp* uhf_app) {
     furi_record_close(RECORD_GUI);
     uhf_app->gui = NULL;
 
+    // Storage
+    furi_record_close(RECORD_STORAGE);
+    uhf_app->storage = NULL;
+
     // Notifications
     furi_record_close(RECORD_NOTIFICATION);
     uhf_app->notifications = NULL;
@@ -134,19 +213,6 @@ void uhf_free(UHFApp* uhf_app) {
     free(uhf_app);
 }
 
-// void uhf_text_store_set(UHFApp* uhf_app, const char* text, ...) {
-//     va_list args;
-//     va_start(args, text);
-
-//     vsnprintf(uhf_app->text_store, sizeof(uhf_app->text_store), text, args);
-
-//     va_end(args);
-// }
-
-// void uhf_text_store_clear(UHFApp* uhf_app) {
-//     memset(uhf_app->text_store, 0, sizeof(uhf_app->text_store));
-// }
-//  ==================
 static const NotificationSequence uhf_sequence_blink_start_cyan = {
     &message_blink_start_10,
     &message_blink_set_color_cyan,
@@ -184,11 +250,19 @@ void uhf_show_loading_popup(void* ctx, bool show) {
 int32_t uhf_app_main(void* ctx) {
     UNUSED(ctx);
     UHFApp* uhf_app = uhf_alloc();
-    view_dispatcher_attach_to_gui(
-        uhf_app->view_dispatcher, uhf_app->gui, ViewDispatcherTypeFullscreen);
-    scene_manager_next_scene(uhf_app->scene_manager, UHFSceneStart);
+
+    // enable 5v pin
+    furi_hal_power_enable_otg();
+    scene_manager_next_scene(uhf_app->scene_manager, UHFSceneVerify);
     view_dispatcher_run(uhf_app->view_dispatcher);
 
+    // disable 5v pin
+    furi_hal_power_disable_otg();
+
+    // set uart callback to none
+    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, empty_rx_callback, NULL);
+
+    // exit app
     uhf_free(uhf_app);
     return 0;
 }

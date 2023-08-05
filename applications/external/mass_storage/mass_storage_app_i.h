@@ -8,11 +8,12 @@
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
-#include <gui/modules/submenu.h>
 #include <dialogs/dialogs.h>
-#include <notification/notification_messages.h>
 #include <gui/modules/variable_item_list.h>
-#include <gui/modules/widget.h>
+#include <gui/modules/submenu.h>
+#include <gui/modules/text_input.h>
+#include <gui/modules/popup.h>
+#include <gui/modules/loading.h>
 #include <storage/storage.h>
 #include "views/mass_storage_view.h"
 
@@ -25,9 +26,16 @@ struct MassStorageApp {
     Storage* fs_api;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
-    NotificationApp* notifications;
     DialogsApp* dialogs;
-    Widget* widget;
+    VariableItemList* var_item_list;
+    Submenu* submenu;
+    TextInput* text_input;
+    Popup* popup;
+    Loading* loading;
+
+    uint64_t create_image_max;
+    uint8_t create_image_size;
+    char create_image_name[MASS_STORAGE_FILE_NAME_LEN];
 
     FuriString* file_path;
     File* file;
@@ -38,6 +46,12 @@ struct MassStorageApp {
 };
 
 typedef enum {
-    MassStorageAppViewError,
+    MassStorageAppViewVarItemList,
+    MassStorageAppViewSubmenu,
+    MassStorageAppViewTextInput,
+    MassStorageAppViewPopup,
+    MassStorageAppViewLoading,
     MassStorageAppViewWork,
 } MassStorageAppView;
+
+void mass_storage_app_show_loading_popup(MassStorageApp* app, bool show);

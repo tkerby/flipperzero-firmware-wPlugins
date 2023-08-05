@@ -18,18 +18,30 @@
 #include "scenes/uhf_scene.h"
 
 #include <storage/storage.h>
-#include <lib/toolbox/path.h>
+// #include <lib/toolbox/path.h>
+#include <toolbox/path.h>
+#include <flipper_format/flipper_format.h>
 
 #include "uhf_app.h"
 #include "uhf_worker.h"
-#include "uhf_rfid_icons.h"
+#include <uhf_rfid_icons.h>
 
+#define UHF_BANK_DOES_NOT_EXIST \
+    (uint8_t[]) {               \
+        0xFF                    \
+    }
 #define UHF_TEXT_STORE_SIZE 128
+#define UHF_APPS_DATA_FOLDER EXT_PATH("apps_data")
+#define UHF_APPS_STORAGE_FOLDER \
+    UHF_APPS_DATA_FOLDER "/"    \
+                         "uhf_rfid"
+#define UHF_FILE_EXTENSION ".uhf"
 
 enum UHFCustomEvent {
     // Reserve first 100 events for button types and indexes, starting from 0
     UHFCustomEventReserved = 100,
 
+    UHFCustomEventVerifyDone,
     UHFCustomEventViewExit,
     UHFCustomEventWorkerExit,
     UHFCustomEventByteInputDone,
@@ -47,7 +59,7 @@ struct UHFApp {
     Gui* gui;
     NotificationApp* notifications;
     SceneManager* scene_manager;
-    // UHFDevice* dev;
+    Storage* storage;
 
     char text_store[UHF_TEXT_STORE_SIZE + 1];
     FuriString* text_box_store;
@@ -93,3 +105,5 @@ void uhf_show_loading_popup(void* context, bool show);
 bool uhf_is_memset(const uint8_t* data, const uint8_t pattern, size_t size);
 
 char* convertToHexString(const uint8_t* array, size_t length);
+
+bool uhf_save_read_data(UHFResponseData* uhf_response_data, Storage* storage, const char* filename);

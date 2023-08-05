@@ -9,9 +9,10 @@ typedef enum {
     UHFWorkerStateNone,
     UHFWorkerStateBroken,
     UHFWorkerStateReady,
+    UHFWorkerStateVerify,
     // Main worker states
-    UHFWorkerStateDetect,
-    UHFWorkerStateWrite,
+    UHFWorkerStateDetectSingle,
+    UHFWorkerStateWriteSingle,
     UHFWorkerStateWriteKey,
     // Transition
     UHFWorkerStateStop,
@@ -29,7 +30,7 @@ typedef void (*UHFWorkerCallback)(UHFWorkerEvent event, void* ctx);
 
 typedef struct UHFWorker {
     FuriThread* thread;
-    UHFResponseData* data;
+    UHFResponseData* response_data;
     UHFWorkerCallback callback;
     UHFWorkerState state;
     void* ctx;
@@ -45,3 +46,5 @@ void uhf_worker_start(
     void* ctx);
 void uhf_worker_stop(UHFWorker* uhf_worker);
 void uhf_worker_free(UHFWorker* uhf_worker);
+uint8_t calculate_checksum(UHFData* uhf_data);
+bool validate_checksum(UHFData* uhf_data);

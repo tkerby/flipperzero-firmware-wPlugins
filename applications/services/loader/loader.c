@@ -329,7 +329,7 @@ static Loader* loader_alloc() {
             }
 
             if(!path && strcmp(furi_string_get_cstr(line), "Applications") == 0) {
-                label = "Applications";
+                label = "Apps";
                 icon = &A_Plugins_14;
                 path = "Applications";
             }

@@ -4,6 +4,11 @@ enum VarItemListIndex {
     VarItemListIndexSubghzFrequencies,
     VarItemListIndexSubghzExtend,
     VarItemListIndexSubghzBypass,
+    VarItemListIndexSpiCc1101Handle,
+    VarItemListIndexSpiNrf24Handle,
+    VarItemListIndexUartEspChannel,
+    VarItemListIndexUartNmeaChannel,
+    VarItemListIndexUartGeneralChannel,
 };
 
 void cfw_app_scene_protocols_var_item_list_callback(void* context, uint32_t index) {
@@ -144,6 +149,7 @@ bool cfw_app_scene_protocols_on_event(void* context, SceneManagerEvent event) {
         consumed = true;
         switch(event.event) {
         case VarItemListIndexSubghzFrequencies:
+            scene_manager_set_scene_state(app->scene_manager, CfwAppSceneProtocolsFrequencies, 0);
             scene_manager_next_scene(app->scene_manager, CfwAppSceneProtocolsFrequencies);
             break;
         default:

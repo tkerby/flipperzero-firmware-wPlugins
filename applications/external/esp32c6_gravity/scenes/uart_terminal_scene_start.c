@@ -1,5 +1,4 @@
 #include "../uart_terminal_app_i.h"
-#include <dolphin/dolphin.h>
 
 // For each command, define whether additional arguments are needed
 // (enabling text input to fill them out), and whether the console
@@ -28,12 +27,19 @@ typedef struct {
 */
 const UART_TerminalItem items[NUM_MENU_ITEMS] = {
     {"Console", {"View", "Clear"}, 2, {"", "cls"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
+    {"Bluetooth",
+     {"On", "Off"},
+     2,
+     {"bluetooth on", "bluetooth off"},
+     NO_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"Beacon",
      {"Status", "target-ssids", "APs", "RickRoll", "Random", "Infinite", "Off"},
      6,
      {"beacon",
       "beacon target-ssids",
-      "beacon ap",
+      "beacon aps",
       "beacon rickroll",
       "beacon random ",
       "beacon infinite",
@@ -44,7 +50,7 @@ const UART_TerminalItem items[NUM_MENU_ITEMS] = {
     {"Probe",
      {"Status", "Any", "target-ssids", "APs", "Off"},
      4,
-     {"probe", "probe any", "probe target-ssids", "probe ap", "probe off"},
+     {"probe", "probe any", "probe target-ssids", "probe aps", "probe off"},
      NO_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
@@ -91,9 +97,9 @@ const UART_TerminalItem items[NUM_MENU_ITEMS] = {
      FOCUS_CONSOLE_END,
      NO_TIP},
     {"Hop",
-     {"Status", "On", "Off", "Default", "Set "},
-     5,
-     {"hop", "hop on", "hop off", "hop default", "hop "},
+     {"Status", "On", "Off", "Sequential", "Random", "Default", "Set "},
+     7,
+     {"hop", "hop on", "hop off", "hop sequential", "hop random", "hop default", "hop "},
      TOGGLE_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
@@ -114,21 +120,31 @@ const UART_TerminalItem items[NUM_MENU_ITEMS] = {
     {"Selected",
      {"STA", "AP", "STA+AP"},
      3,
-     {"selected sta", "selected ap", "selected sta ap"},
+     {"selected sta", "selected ap", "selected"},
      NO_ARGS,
      FOCUS_CONSOLE_START,
      NO_TIP},
-    {"Clear", {"STA", "AP"}, 2, {"clear sta", "clear ap"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
+    {"Clear",
+     {"STA", "AP", "ALL"},
+     3,
+     {"clear sta", "clear ap", "clear all"},
+     NO_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"Get",
-     {"PACKET_EXPIRY",
-      "SSID_LEN_MIN",
-      "SSID_LEN_MAX",
-      "DEFAULT_SSID_COUNT",
+     {"pkt expiry",
+      "SSID rnd chars",
+      "Attack millis",
+      "SSID min len",
+      "SSID max len",
+      "default SSID count",
       "Channel",
       "MAC",
-      "MAC_RAND"},
-     7,
+      "MAC Randomisation"},
+     9,
      {"get expiry",
+      "get scramble_words",
+      "get attack_millis",
       "get ssid_len_min",
       "get ssid_len_max",
       "get default_ssid_count",
@@ -139,16 +155,18 @@ const UART_TerminalItem items[NUM_MENU_ITEMS] = {
      FOCUS_CONSOLE_END,
      NO_TIP},
     {"Set",
-     {"PACKET_EXPIRY",
-      "ATTACK_MILLIS",
-      "SSID_LEN_MIN",
-      "SSID_LEN_MAX",
-      "DEFAULT_SSID_COUNT",
+     {"pkt expiry",
+      "SSID rnd chars",
+      "Attack millis",
+      "SSID min len",
+      "SSID max len",
+      "default SSID count",
       "Channel",
       "MAC",
-      "MAC_RAND"},
+      "MAC Randomisation"},
      8,
      {"set expiry ",
+      "set scramble_words ",
       "set attack_millis ",
       "set ssid_len_min ",
       "set ssid_len_max ",
@@ -209,6 +227,13 @@ const UART_TerminalItem items[NUM_MENU_ITEMS] = {
      NO_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
+    {"selectedAP DOS",
+     {"Status", "On", "Off"},
+     3,
+     {"ap-dos", "ap-dos on", "ap-dos off"},
+     NO_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"Help",
      {"Info <cmd>", "Get Started", "Commands", "About", "Help"},
      5,
@@ -259,8 +284,6 @@ static void uart_terminal_scene_start_var_list_enter_callback(void* context, uin
     furi_assert(index < NUM_MENU_ITEMS);
     const UART_TerminalItem* item = &items[index];
 
-    dolphin_deed(DolphinDeedGpioUartBridge);
-
     const int selected_option_index = app->selected_option_index[index];
     furi_assert(selected_option_index < item->num_options_menu);
     app->selected_tx_string = item->actual_commands[selected_option_index];
@@ -310,6 +333,8 @@ static void uart_terminal_scene_start_var_list_enter_callback(void* context, uin
         app->gravityCommand = GRAVITY_VIEW;
     } else if(!strcmp(cmd, "select")) {
         app->gravityCommand = GRAVITY_SELECT;
+    } else if(!strcmp(cmd, "selected")) {
+        app->gravityCommand = GRAVITY_SELECTED;
     } else if(!strcmp(cmd, "clear")) {
         app->gravityCommand = GRAVITY_CLEAR;
     } else if(!strcmp(cmd, "handshake")) {
@@ -329,6 +354,9 @@ static void uart_terminal_scene_start_var_list_enter_callback(void* context, uin
     bool needs_keyboard =
         ((item->needs_keyboard == INPUT_ARGS) ||
          (item->needs_keyboard == TOGGLE_ARGS && (app->selected_tx_string[cmdLen - 1] == ' ')));
+    /* Initialise the serial console */
+    uart_terminal_uart_tx((uint8_t*)("\n"), 1);
+
     if(needs_keyboard) {
         view_dispatcher_send_custom_event(app->view_dispatcher, UART_TerminalEventStartKeyboard);
     } else {

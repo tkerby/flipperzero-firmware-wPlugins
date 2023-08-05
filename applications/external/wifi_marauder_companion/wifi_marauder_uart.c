@@ -1,8 +1,6 @@
 #include "wifi_marauder_app_i.h"
 #include "wifi_marauder_uart.h"
 
-#define BAUDRATE (115200)
-
 struct WifiMarauderUart {
     WifiMarauderApp* app;
     FuriHalUartId channel;
@@ -56,8 +54,16 @@ static int32_t uart_worker(void* context) {
     return 0;
 }
 
-void wifi_marauder_uart_tx(uint8_t* data, size_t len) {
-    furi_hal_uart_tx(UART_CH, data, len);
+void wifi_marauder_cfw_uart_tx(uint8_t* data, size_t len) {
+    furi_hal_uart_tx(CFW_UART_CH, data, len);
+}
+
+void wifi_marauder_usart_tx(uint8_t* data, size_t len) {
+    furi_hal_uart_tx(US_ART_CH, data, len);
+}
+
+void wifi_marauder_lp_uart_tx(uint8_t* data, size_t len) {
+    furi_hal_uart_tx(LP_UART_CH, data, len);
 }
 
 WifiMarauderUart*
@@ -82,6 +88,14 @@ WifiMarauderUart*
     furi_hal_uart_set_irq_cb(channel, wifi_marauder_uart_on_irq_cb, uart);
 
     return uart;
+}
+
+WifiMarauderUart* wifi_marauder_usart_init(WifiMarauderApp* app) {
+    return wifi_marauder_uart_init(app, US_ART_CH, "WifiMarauderUartRxThread");
+}
+
+WifiMarauderUart* wifi_marauder_lp_uart_init(WifiMarauderApp* app) {
+    return wifi_marauder_uart_init(app, LP_UART_CH, "WifiMarauderLPUartRxThread");
 }
 
 void wifi_marauder_uart_free(WifiMarauderUart* uart) {

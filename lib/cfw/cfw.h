@@ -18,6 +18,15 @@ extern "C" {
 #define NAMESPOOF_PATH EXT_PATH("dolphin/name.txt")
 
 typedef enum {
+    MenuStyleList,
+    MenuStyleWii,
+    MenuStyleDsi,
+    MenuStylePs4,
+    MenuStyleVertical,
+    MenuStyleCount,
+} MenuStyle;
+
+typedef enum {
     SpiDefault, // cs on pa4
     SpiExtra, // cs on pc3
     SpiCount,
@@ -30,7 +39,7 @@ typedef enum {
 } UARTChannel;
 
 typedef struct {
-    bool wii_menu;
+    MenuStyle menu_style;
     uint32_t start_point;
     bool lock_menu_type;
     bool sort_dirs_first;
