@@ -21,7 +21,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Keep Your Flipper Up To Date With [PATREON membership](https://www.patreon.com/RogueMaster/membership)
 - [PATREON for daily compiled releases](https://www.patreon.com/RogueMaster) for nearly ALL updates. GitHub releases will occur weekly or with OFW version updates.
 - [Contact me on Discord/Patreon to RENAME your Flipper or for GIF conversion for Flipper Zero](https://www.patreon.com/RogueMaster/membership)
-- [:fire: PATREON ANIMATION BUILDS AVAILABLE](https://www.patreon.com/RogueMaster/membership): [ALL](https://www.patreon.com/posts/animation-all-v4-77935728), 420, 420+18, Anime Only, Anime+420, Anime+420+18, BMO, CHERUI 18+, DBZ, Dolphin, HACKZ, MARIO, No Anim, ONE PIECE, P0KEMON, RM 18PLUS, RM SELECT, RM SELECT + 18PLUS, RM MINIMAL (default on GitHub), SAO, SCIENCE, SJUMP AND STOCK with all assets updated to look like stock. ALL, Anime and RM Select builds are very large and can slow down F0.
+- [:fire: PATREON ANIMATION BUILDS AVAILABLE](https://www.patreon.com/RogueMaster/membership): [ALL](https://www.patreon.com/posts/animation-all-v4-77935728), 420, 420+18, Anime Only, Anime+420, Anime+420+18, BMO, CHERUI 18+, DBZ, Dolphin, HACKZ, MARIO, No Anim, ONE PIECE, P0KEMON, RM 18PLUS, RM SELECT, RM SELECT + 18PLUS, RM MINIMAL (default on GitHub), SAO, SCIENCE, SJUMP, WATCHDOGS AND STOCK with all assets updated to look like stock. ALL, Anime and RM Select builds are very large and can slow down F0.
 - [VIDEO PREVIEW FOR ALL ANIMATIONS](https://www.patreon.com/posts/animation-all-v4-77935728)
 - [Supporters also get SD Card Assets zip file with extra NFC Assets such as Infrared remotes, NFC files, SubGHz files and 86 RM Pro Trained Level 50 Sm@sh Amiib0 (By RogueMaster)](https://www.patreon.com/RogueMaster/membership)
 - Donations: BTC: `3MPQbKmGRCstg4FjnadfHa3woCT94JkR2a` - Let me know on Discord when you send
@@ -29,13 +29,39 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0804-1555-0.88.1-ab80f82](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Release RM0808-2107-0.88.1-037e763](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-08-05 03:55 EST`
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-08-05 03:55 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md) and in [commits](https://github.com/DarkFlippers/unleashed-firmware/commits/dev): `2023-08-08 21:07 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2023-08-08 21:07 EST`
 - Updated: [USB Mass Storage (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage) [(Changed By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/396e9f0b74f558b3076c04f2ca54c9474194dc3c)
-- Updated: [YRM100 UHF RFID WIP (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: YRM100`
+- UL: [IR: buttons move feature rework (By nminaylov)](https://github.com/DarkFlippers/unleashed-firmware/commit/becc8edd8cc2d67ea49d61075113bf5eeafbfe02)
+- UL: Infrared: Update universal remote assets (by amec0e PR #570)
+- UL: Infrared: Update universal AC asset (by Leptopt1los PR #569)
+- UL: Plugins: Add * in NFC Maker keyboard (hold `.`) (By xMasterX)
+- UL: Revert old nfc debug defines was used to save space (By xMasterX)
+- UL: FDX-B temperature now uses system units (By Astrrra)
+- Updated: [Sub-GHz Bruteforcer v3.7 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
+- Added: [Atomic Dice Roller (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
+- Updated: [PicoPass Reader (By Bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/1366)
+- Fixes for [Enhanced Sub-Ghz Chat (By twisted-pear)](https://github.com/twisted-pear/esubghz_chat) for menu_alloc (By xtruan)
+- Fixes to bring back menu_alloc (By RogueMaster)
+- Updated: [ESP32-C6 Gravity (By chris-bc)](https://github.com/chris-bc/Flipper-Gravity)
+- Updated: [ESP32 Camera Suite (By CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite)
 - Updated: [Enhanced Sub-Ghz Chat (By twisted-pear)](https://github.com/twisted-pear/esubghz_chat)
+- Updated: [J305 Geiger Counter (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
+- Updated: [Scope (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
+- Updated: [u-blox GPS (By liamhays)](https://github.com/liamhays/ublox)
+- [New Patreon Animation Set](https://www.patreon.com/RogueMaster/membership): [WatchDogs (By wrenchathome)](https://github.com/wrenchathome/flip0anims/tree/main/Animations/WatchDogs)
+- OFW: [RPC: md5 in storage list #2929 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/pull/2929)
+- OFW: [Fixes #2957 - subghz decode_raw #2958 (By jamisonderek)](https://github.com/flipperdevices/flipperzero-firmware/pull/2958)
+- Updated: [QR Code (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
+- Updated: [MagSpoof (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper) [(Updates By hummusec)](https://github.com/hummusec/magspoof_flipper)
+- [Evil Portal Assets: Better Google Login (By 8Root)](https://github.com/bigbrodude6119/flipper-zero-evil-portal/pull/56)
+- Updated: [T-Rex Runner (By Rrycbarm)](https://github.com/Rrycbarm/t-rex-runner)
+- Updated: [FlipBIP Crypto Wallet v1.12 (By xtruan)](https://github.com/xtruan/FlipBIP) [add ZEC t-address #19 (By wh00hw)](https://github.com/xtruan/FlipBIP/pull/19)
+- Updated: [DnD Dice (By Ka3u6y6a)](https://github.com/Ka3u6y6a/flipper-zero-dice)
+- Updated: [Chronometer (By nmrr)](https://github.com/nmrr/flipperzero-chronometer)
+- Updated: [YRM100 UHF RFID WIP (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: YRM100`
 
 <a name="release">
 
@@ -261,6 +287,7 @@ $ ./fbt dolphin_ext
 - [Air Mouse (By ginkage)](https://github.com/ginkage/FlippAirMouse/)
 - [Analog Clock (By scrolltex)](https://github.com/scrolltex/flipper_analog_clock)
 - [APRS Cln Hello World (By NSV47)](https://github.com/NSV47/APRS_hello_world_clean)
+- [Atomic Dice Roller (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
 - [Authenticator/TOTP v3.2 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - [AVR Flasher (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
 - [AZERTY Mouse Jacker (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) `Req: NRF24` (Uses AZERTY keyboard - Source Unknown)
@@ -316,7 +343,7 @@ $ ./fbt dolphin_ext
 - [FAP Boilerplate (By leedave)](https://github.com/leedave/flipper-zero-fap-boilerplate)
 - [Flashlight (By xMasterX)](https://github.com/xMasterX/flipper-flashlight)
 - [Flipagotchi WIP (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
-- [FlipBIP Crypto Wallet v1.11 (By xtruan)](https://github.com/xtruan/FlipBIP)
+- [FlipBIP Crypto Wallet v1.12 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - [Flizzer Tracker (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
 - [GPIO Controller (By Lokno)](https://github.com/Lokno/gpio_controller)
 - [GPIO Reader (biotinker) (By biotinker)](https://github.com/biotinker/flipperzero-gpioreader)

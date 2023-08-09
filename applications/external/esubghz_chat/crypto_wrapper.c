@@ -60,7 +60,10 @@ void crypto_ctx_free(ESubGhzChatCryptoCtx* ctx) {
 }
 
 void crypto_ctx_clear(ESubGhzChatCryptoCtx* ctx) {
-    crypto_explicit_bzero(ctx, sizeof(ESubGhzChatCryptoCtx));
+    crypto_explicit_bzero(ctx->key, sizeof(ctx->key));
+#ifndef FURI_HAL_CRYPTO_ADVANCED_AVAIL
+    crypto_explicit_bzero(&(ctx->gcm_ctx), sizeof(ctx->gcm_ctx));
+#endif /* FURI_HAL_CRYPTO_ADVANCED_AVAIL */
     ESubGhzChatReplayDict_reset(ctx->replay_dict);
     ctx->run_id = 0;
     ctx->counter = 1;
@@ -189,8 +192,9 @@ bool crypto_ctx_encrypt(ESubGhzChatCryptoCtx* ctx, uint8_t* in, size_t in_len, u
              TAG_BYTES) == 0);
 #endif /* FURI_HAL_CRYPTO_ADVANCED_AVAIL */
 
-    // increase internal counter
+    // update replay dict and increase internal counter
     if(ret) {
+        ESubGhzChatReplayDict_set_at(ctx->replay_dict, ctx->run_id, ctx->counter);
         ctx->counter++;
     }
 
