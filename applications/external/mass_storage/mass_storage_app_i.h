@@ -8,14 +8,15 @@
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
+#include <gui/modules/submenu.h>
 #include <dialogs/dialogs.h>
 #include <gui/modules/variable_item_list.h>
-#include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
-#include <gui/modules/popup.h>
 #include <gui/modules/loading.h>
+#include <gui/modules/widget.h>
 #include <storage/storage.h>
 #include "views/mass_storage_view.h"
+#include "mass_storage_icons.h"
 
 #define MASS_STORAGE_APP_PATH_FOLDER STORAGE_APP_DATA_PATH_PREFIX
 #define MASS_STORAGE_APP_EXTENSION ".img"
@@ -26,16 +27,11 @@ struct MassStorageApp {
     Storage* fs_api;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
+    Widget* widget;
     DialogsApp* dialogs;
-    VariableItemList* var_item_list;
-    Submenu* submenu;
     TextInput* text_input;
-    Popup* popup;
+    VariableItemList* variable_item_list;
     Loading* loading;
-
-    uint64_t create_image_max;
-    uint8_t create_image_size;
-    char create_image_name[MASS_STORAGE_FILE_NAME_LEN];
 
     FuriString* file_path;
     File* file;
@@ -43,15 +39,29 @@ struct MassStorageApp {
 
     FuriMutex* usb_mutex;
     MassStorageUsb* usb;
+
+    char new_file_name[MASS_STORAGE_FILE_NAME_LEN + 1];
+    uint32_t new_file_size;
+
+    uint32_t bytes_read, bytes_written;
 };
 
 typedef enum {
-    MassStorageAppViewVarItemList,
-    MassStorageAppViewSubmenu,
+    MassStorageAppViewStart,
     MassStorageAppViewTextInput,
-    MassStorageAppViewPopup,
-    MassStorageAppViewLoading,
     MassStorageAppViewWork,
+    MassStorageAppViewLoading,
+    MassStorageAppViewWidget,
 } MassStorageAppView;
+
+enum MassStorageCustomEvent {
+    // Reserve first 100 events for button types and indexes, starting from 0
+    MassStorageCustomEventReserved = 100,
+
+    MassStorageCustomEventEject,
+    MassStorageCustomEventFileSelect,
+    MassStorageCustomEventNewImage,
+    MassStorageCustomEventNameInput,
+};
 
 void mass_storage_app_show_loading_popup(MassStorageApp* app, bool show);

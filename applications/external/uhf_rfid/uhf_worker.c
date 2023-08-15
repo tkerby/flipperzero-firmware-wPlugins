@@ -2,28 +2,12 @@
 #include "uhf_cmd.h"
 
 #define CB_DELAY 50
-// inner functions
-uint8_t calculate_checksum(UHFData* uhf_data) {
-    // CheckSum8 Modulo 256
-    // Sum of Bytes % 256
-    uint8_t sum_val = 0x00;
-    size_t length = uhf_data->length - 2;
-    for(size_t i = 1; i < length; i++) {
-        sum_val += uhf_data->data[i];
-    }
-    return sum_val % 256;
-}
-bool validate_checksum(UHFData* uhf_data) {
-    uint8_t data_checksum = uhf_data->data[uhf_data->length - 2];
-    uint8_t actual_checksum = calculate_checksum(uhf_data);
-    return data_checksum == actual_checksum;
-}
+
 // uart callback functions
 void module_rx_callback(UartIrqEvent event, uint8_t data, void* ctx) {
     UNUSED(event);
     UHFData* uhf_data = ctx;
     uhf_data_append(uhf_data, data);
-    // FURI_LOG_E("module_rx_callback", "%02x", data);
 }
 
 // yrm100 module commands
@@ -48,18 +32,102 @@ UHFWorkerEvent verify_module_connected(UHFWorker* uhf_worker) {
     furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, manufacturer);
     furi_hal_uart_tx(FuriHalUartIdUSART1, CMD_MANUFACTURERS.cmd, CMD_MANUFACTURERS.length);
     furi_delay_ms(CB_DELAY);
-    // FURI_LOG_E("log", "done sending tx");
+    // verify that we received all data
     if(!hardware_version->end || !software_version->end || !manufacturer->end) {
         return UHFWorkerEventFail;
     }
+    // verify all data was received correctly
+    if(!uhf_data_verfiy_checksum(hardware_version) ||
+       !uhf_data_verfiy_checksum(software_version) || !uhf_data_verfiy_checksum(manufacturer))
+        return UHFWorkerEventFail;
+
     return UHFWorkerEventSuccess;
 }
 
-UHFWorkerEvent read_single_card(UHFWorker* uhf_worker) {
-    UHFResponseData* uhf_response_data = uhf_worker->response_data;
-    uhf_response_data_reset(uhf_response_data);
-    UHFData* raw_read_data = uhf_response_data_get_uhf_data(uhf_response_data, 0);
-    furi_hal_uart_set_br(FuriHalUartIdUSART1, DEFAULT_BAUD_RATE);
+uint8_t get_epc_length_in_bits(uint8_t pc) {
+    uint8_t epc_length = pc;
+    epc_length >>= 3;
+    return (uint8_t)epc_length * 16; // x-words * 16 bits
+}
+
+bool send_set_select_command(UHFData* selected_tag, UHFBank bank) {
+    bool success = false;
+    // Set select
+    UHFData* select_cmd = uhf_data_alloc();
+    select_cmd->start = true;
+    select_cmd->length = CMD_SET_SELECT_PARAMETER.length;
+    memcpy((void*)&select_cmd->data, (void*)&CMD_SET_SELECT_PARAMETER.cmd[0], select_cmd->length);
+    // set select param
+    size_t mask_length_bits = (size_t)get_epc_length_in_bits(selected_tag->data[6]);
+    size_t mask_length_bytes = (size_t)mask_length_bits / 8;
+    select_cmd->data[5] = bank; // 0x00=rfu, 0x01=epc, 0x10=tid, 0x11=user
+    // set ptr
+    select_cmd->data[9] = 0x20; // epc data begins after 0x20
+    // set mask length
+    select_cmd->data[10] = mask_length_bits;
+    // set mask starting position
+    select_cmd->length = 12;
+    // set mask
+    for(size_t i = 0; i < mask_length_bytes; i++) {
+        uhf_data_append(select_cmd, selected_tag->data[8 + i]);
+    }
+    uhf_data_append(select_cmd, 0x00); // add checksum section
+    uhf_data_append(select_cmd, FRAME_END); // command end
+    // add checksum
+    select_cmd->data[select_cmd->length - 2] = uhf_data_calculate_checksum(select_cmd);
+    UHFData* select_response = uhf_data_alloc();
+    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, select_response);
+    furi_hal_uart_tx(FuriHalUartIdUSART1, select_cmd->data, select_cmd->length);
+    furi_delay_ms(CB_DELAY);
+
+    success = select_response->data[5] == 0x00;
+
+    uhf_data_free(select_cmd);
+    uhf_data_free(select_response);
+
+    return success;
+}
+
+bool read_bank(UHFData* read_bank_cmd, UHFData* response_bank, UHFBank bank) {
+    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, response_bank);
+    read_bank_cmd->data[9] = bank;
+    read_bank_cmd->data[read_bank_cmd->length - 2] = uhf_data_calculate_checksum(read_bank_cmd);
+    uhf_data_reset(response_bank);
+    furi_hal_uart_tx(FuriHalUartIdUSART1, read_bank_cmd->data, read_bank_cmd->length);
+    furi_delay_ms(CB_DELAY);
+    return response_bank->data[2] == read_bank_cmd->data[2];
+}
+
+bool write_bank(UHFData* write_bank_cmd, UHFBank bank, uint8_t* bank_data, size_t bank_len) {
+    UHFData* rp_data = uhf_data_alloc();
+    write_bank_cmd->end = false;
+    for(size_t i = 0; i < write_bank_cmd->length; i++) {
+        continue;
+    }
+    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, rp_data);
+    for(int i = 5; i < 9; i++) { // no access password for now
+        write_bank_cmd->data[i] = 0;
+    }
+    write_bank_cmd->data[9] = bank;
+    size_t word_len = bank_len / 2;
+    write_bank_cmd->data[13] = word_len;
+    write_bank_cmd->length = 14;
+    write_bank_cmd->start = true;
+    for(size_t i = 0; i < bank_len; i++) {
+        uhf_data_append(write_bank_cmd, bank_data[i]);
+    }
+    uhf_data_append(write_bank_cmd, 00);
+    uhf_data_append(write_bank_cmd, FRAME_END);
+    write_bank_cmd->data[4] = write_bank_cmd->length - 7;
+    write_bank_cmd->data[write_bank_cmd->length - 2] = uhf_data_calculate_checksum(write_bank_cmd);
+    furi_hal_uart_tx(FuriHalUartIdUSART1, write_bank_cmd->data, write_bank_cmd->length);
+    furi_delay_ms(CB_DELAY);
+    bool success = rp_data->data[2] == write_bank_cmd->data[2];
+    uhf_data_free(rp_data);
+    return success;
+}
+
+UHFWorkerEvent send_polling_command(UHFWorker* uhf_worker, UHFData* raw_read_data) {
     furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, raw_read_data);
     uhf_data_reset(raw_read_data);
     // read epc bank
@@ -77,27 +145,29 @@ UHFWorkerEvent read_single_card(UHFWorker* uhf_worker) {
                 break; // read success
         }
     }
-    // Set select
-    UHFData* select_cmd = uhf_data_alloc();
-    select_cmd->length = CMD_SET_SELECT_PARAMETER.length;
-    memcpy((void*)&select_cmd->data, (void*)&CMD_SET_SELECT_PARAMETER.cmd[0], select_cmd->length);
-    // set select param
-    select_cmd->data[5] = 0x01; // 0x00=rfu, 0x01=epc, 0x10=tid, 0x11=user
-    // set ptr
-    select_cmd->data[9] = 0x20;
-    // set mask
-    for(int i = 0; i < 12; i++) // 96 bits, 12 bytes
-    {
-        select_cmd->data[12 + i] = raw_read_data->data[8 + i];
-    }
-    // checksum
-    select_cmd->data[select_cmd->length - 2] = calculate_checksum(select_cmd);
-    UHFData* select_response = uhf_response_data_add_new_uhf_data(uhf_response_data);
-    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, select_response);
-    furi_hal_uart_tx(FuriHalUartIdUSART1, select_cmd->data, select_cmd->length);
-    furi_delay_ms(CB_DELAY);
+    return UHFWorkerEventSuccess;
+}
 
-    if(select_response->data[5] != 0x00) return UHFWorkerEventFail;
+UHFWorkerEvent read_single_card(UHFWorker* uhf_worker) {
+    // debug
+    // FuriString* temp_str;
+    // temp_str = furi_string_alloc();
+    // e-debug
+    UHFResponseData* uhf_response_data = uhf_worker->response_data;
+    uhf_response_data_reset(uhf_response_data);
+    UHFData* raw_read_data = uhf_response_data_get_uhf_data(uhf_response_data, 0);
+    furi_hal_uart_set_br(FuriHalUartIdUSART1, DEFAULT_BAUD_RATE);
+
+    send_polling_command(uhf_worker, raw_read_data);
+
+    // todo : rfu ?
+    UHFTag* uhf_tag = uhf_worker->uhf_tag;
+    uhf_tag_reset(uhf_tag);
+
+    // add to tag object
+    UHFData* raw_bank_data = uhf_data_alloc();
+    size_t epc_length = (size_t)get_epc_length_in_bits(raw_read_data->data[6]) / 8;
+    size_t offset = (size_t)(8 + epc_length);
 
     UHFData* read_bank_cmd = uhf_data_alloc();
     read_bank_cmd->length = CMD_READ_LABEL_DATA_STORAGE.length;
@@ -106,69 +176,95 @@ UHFWorkerEvent read_single_card(UHFWorker* uhf_worker) {
         (void*)&CMD_READ_LABEL_DATA_STORAGE.cmd[0],
         read_bank_cmd->length);
 
-    // int retry = 10;
-    // read rfu bank
-    UHFData* rfu_bank = select_response;
-    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, rfu_bank);
-    read_bank_cmd->data[9] = 0x00;
-    read_bank_cmd->data[read_bank_cmd->length - 2] = calculate_checksum(read_bank_cmd);
-    uhf_data_reset(rfu_bank);
-    furi_hal_uart_tx(FuriHalUartIdUSART1, read_bank_cmd->data, read_bank_cmd->length);
-    furi_delay_ms(CB_DELAY);
-    if(rfu_bank->data[2] != read_bank_cmd->data[2]) {
-        uhf_data_reset(rfu_bank);
-    }
+    if(!send_set_select_command(raw_read_data, EPC_BANK)) return UHFWorkerEventFail;
 
-    // read epc bank
-    UHFData* epc_bank = uhf_response_data_add_new_uhf_data(uhf_response_data);
-    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, epc_bank);
-    read_bank_cmd->data[9] = 0x01;
-    read_bank_cmd->data[read_bank_cmd->length - 2] = calculate_checksum(read_bank_cmd);
-    uhf_data_reset(epc_bank);
-    furi_hal_uart_tx(FuriHalUartIdUSART1, read_bank_cmd->data, read_bank_cmd->length);
-    furi_delay_ms(CB_DELAY);
-    if(epc_bank->data[2] != read_bank_cmd->data[2]) {
-        uhf_data_reset(epc_bank);
-    }
+    int retry = 3;
+    do {
+        if(read_bank(read_bank_cmd, raw_bank_data, EPC_BANK)) {
+            uhf_tag_set_epc(uhf_tag, raw_bank_data->data + offset, epc_length + 2);
+            break;
+        }
 
-    // read tid bank
-    UHFData* tid_bank = uhf_response_data_add_new_uhf_data(uhf_response_data);
-    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, tid_bank);
-    read_bank_cmd->data[9] = 0x02;
-    read_bank_cmd->data[read_bank_cmd->length - 2] = calculate_checksum(read_bank_cmd);
-    uhf_data_reset(tid_bank);
-    furi_hal_uart_tx(FuriHalUartIdUSART1, read_bank_cmd->data, read_bank_cmd->length);
-    furi_delay_ms(CB_DELAY);
-    if(tid_bank->data[2] != read_bank_cmd->data[2]) {
-        uhf_data_reset(tid_bank);
+    } while(retry--);
+    // // debug
+    // furi_string_reset(temp_str);
+    // for(size_t i = 0; i < raw_bank_data->length; i++) {
+    //     furi_string_cat_printf(temp_str, "%02x ", raw_bank_data->data[i]);
+    // }
+    // FURI_LOG_E("TAG", "data = %s", furi_string_get_cstr(temp_str));
+    // // e-debug
+    uhf_data_reset(raw_bank_data);
+    retry = 3;
+    do {
+        if(read_bank(read_bank_cmd, raw_bank_data, TID_BANK)) {
+            uhf_tag_set_tid(uhf_tag, raw_bank_data->data + offset, 16);
+            break;
+        }
+    } while(retry--);
+    // // debug
+    // furi_string_reset(temp_str);
+    // for(size_t i = 0; i < raw_bank_data->length; i++) {
+    //     furi_string_cat_printf(temp_str, "%02x ", raw_bank_data->data[i]);
+    // }
+    // FURI_LOG_E("TAG", "data = %s", furi_string_get_cstr(temp_str));
+    // // e-debug
+    uhf_data_reset(raw_bank_data);
+    retry = 3;
+    if(raw_read_data->data[6] & 0x04) {
+        do {
+            if(read_bank(read_bank_cmd, raw_bank_data, USER_BANK)) {
+                uhf_tag_set_user(uhf_tag, raw_bank_data->data + offset, 16);
+                break;
+            }
+        } while(retry--);
     }
-
-    // read user bank
-    UHFData* user_bank = uhf_response_data_add_new_uhf_data(uhf_response_data);
-    furi_hal_uart_set_irq_cb(FuriHalUartIdUSART1, module_rx_callback, user_bank);
-    read_bank_cmd->data[9] = 0x03;
-    read_bank_cmd->data[read_bank_cmd->length - 2] = calculate_checksum(read_bank_cmd);
-    uhf_data_reset(user_bank);
-    furi_hal_uart_tx(FuriHalUartIdUSART1, read_bank_cmd->data, read_bank_cmd->length);
-    furi_delay_ms(CB_DELAY);
-    if(user_bank->data[2] != read_bank_cmd->data[2]) {
-        uhf_data_reset(user_bank);
-    }
-
-    // for(int i = 0; i < (int)user_bank->length; i++) {
-    //     FURI_LOG_E("user_bank", "data[%d]=%02x", i, user_bank->data[i]);
+    // // debug
+    // furi_string_reset(temp_str);
+    // for(size_t i = 0; i < raw_bank_data->length; i++) {
+    //     furi_string_cat_printf(temp_str, "%02x ", raw_bank_data->data[i]);
     // }
-    // for(int i = 0; i < (int)rfu_bank->length; i++) {
-    //     FURI_LOG_E("rfu_bank", "data[%d]=%02x", i, rfu_bank->data[i]);
-    // }
-    // for(int i = 0; i < (int)epc_bank->length; i++) {
-    //     FURI_LOG_E("epc_bank", "data[%d]=%02x", i, epc_bank->data[i]);
-    // }
-    // for(int i = 0; i < (int)tid_bank->length; i++) {
-    //     FURI_LOG_E("tid_bank", "data[%d]=%02x", i, tid_bank->data[i]);
-    // }
-    uhf_data_free(select_cmd);
+    // FURI_LOG_E("TAG", "data = %s", furi_string_get_cstr(temp_str));
+    // // e-debug
+    uhf_data_reset(raw_bank_data);
+    uhf_data_free(raw_bank_data);
     uhf_data_free(read_bank_cmd);
+    // debug
+    // furi_string_free(temp_str);
+    // e-debug
+
+    return UHFWorkerEventSuccess;
+}
+
+UHFWorkerEvent write_single_card(UHFWorker* uhf_worker) {
+    UHFResponseData* uhf_response_data = uhf_worker->response_data;
+    uhf_response_data_reset(uhf_response_data);
+    UHFData* raw_read_data = uhf_response_data_get_uhf_data(uhf_response_data, 0);
+    furi_hal_uart_set_br(FuriHalUartIdUSART1, DEFAULT_BAUD_RATE);
+
+    send_polling_command(uhf_worker, raw_read_data);
+    // todo : rfu ?
+    UHFTag* uhf_tag = uhf_worker->uhf_tag;
+
+    UHFData* write_bank_cmd = uhf_data_alloc();
+    write_bank_cmd->length = CMD_WRITE_LABEL_DATA_STORAGE.length;
+
+    memcpy(
+        (void*)&write_bank_cmd->data[0],
+        (void*)&CMD_WRITE_LABEL_DATA_STORAGE.cmd[0],
+        write_bank_cmd->length);
+    if(!send_set_select_command(raw_read_data, EPC_BANK)) return UHFWorkerEventFail;
+
+    if(raw_read_data->data[6] & 0x04) {
+        if(!write_bank(write_bank_cmd, USER_BANK, uhf_tag->user, uhf_tag->user_length))
+            return UHFWorkerEventFail;
+    }
+    uint8_t write_data[uhf_tag->epc_length + 2];
+    memcpy(&write_data, &raw_read_data->data[raw_read_data->length - 4], 2);
+    memcpy(&write_data[2], &uhf_tag->epc, uhf_tag->epc_length);
+    write_data[10] = 0xF1;
+    if(!write_bank(write_bank_cmd, EPC_BANK, write_data, uhf_tag->epc_length + 2)) {
+        return UHFWorkerEventFail;
+    }
     return UHFWorkerEventSuccess;
 }
 
@@ -177,9 +273,11 @@ int32_t uhf_worker_task(void* ctx) {
     if(uhf_worker->state == UHFWorkerStateVerify) {
         UHFWorkerEvent event = verify_module_connected(uhf_worker);
         uhf_worker->callback(event, uhf_worker->ctx);
-    }
-    if(uhf_worker->state == UHFWorkerStateDetectSingle) {
+    } else if(uhf_worker->state == UHFWorkerStateDetectSingle) {
         UHFWorkerEvent event = read_single_card(uhf_worker);
+        uhf_worker->callback(event, uhf_worker->ctx);
+    } else if(uhf_worker->state == UHFWorkerStateWriteSingle) {
+        UHFWorkerEvent event = write_single_card(uhf_worker);
         uhf_worker->callback(event, uhf_worker->ctx);
     }
     return 0;

@@ -11,6 +11,8 @@ typedef struct UHF_RFID_CMD {
 
 typedef enum { COMMAND_FRAME = 0x00, RESPONSE_FRAME, NOTIFICATION_FRAME } UHFFrameType;
 
+typedef enum { RFU_BANK, EPC_BANK, TID_BANK, USER_BANK } UHFBank;
+
 typedef enum { CHINA_900MHZ = 1, CHINA_800MHZ = 4, US = 2, EU = 3, KOREA = 6 } UHFWorkArea;
 
 #define DEFAULT_BAUD_RATE 115200
@@ -78,7 +80,7 @@ UHF_RFID_CMD CMD_READ_LABEL_DATA_STORAGE = {
     .length = 16};
 
 UHF_RFID_CMD CMD_WRITE_LABEL_DATA_STORAGE = {
-    .cmd = (uint8_t[]){0xBB, 0x00, 0x49, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
+    .cmd = (uint8_t[]){0xBB, 0x00, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
                        0x00, 0x04, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x71, 0x7E},
     .length = 24};
 
