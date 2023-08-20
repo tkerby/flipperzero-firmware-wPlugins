@@ -1,6 +1,7 @@
 #include "cfw.h"
 #include "private.h"
 #include <furi_hal.h>
+#include <rgb_backlight.h>
 #include <flipper_format/flipper_format.h>
 
 #define TAG "CfwSettings"
@@ -18,6 +19,7 @@ CfwSettings cfw_settings = {
     .uart_nmea_channel = UARTDefault, // pin 13,14
     .uart_general_channel = UARTDefault, // pin 13,14
     .rgb_backlight = false, // OFF
+    .lcd_style = 0, // Static
 };
 
 void CFW_SETTINGS_LOAD() {
@@ -52,9 +54,13 @@ void CFW_SETTINGS_LOAD() {
             file, "uart_general_channel", (uint32_t*)&x->uart_general_channel, 1);
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
+        flipper_format_rewind(file);
+        flipper_format_read_uint32(file, "lcd_style", (uint32_t*)&x->lcd_style, 1);
     }
     flipper_format_free(file);
     furi_record_close(RECORD_STORAGE);
+
+    rgb_backlight_reconfigure(x->rgb_backlight);
     FURI_LOG_I(TAG, "RM WUZ HERE");
 }
 
@@ -84,6 +90,7 @@ void CFW_SETTINGS_SAVE() {
         flipper_format_write_uint32(
             file, "uart_general_channel", (uint32_t*)&x->uart_general_channel, 1);
         flipper_format_write_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
+        flipper_format_write_uint32(file, "lcd_style", (uint32_t*)&x->lcd_style, 1);
     }
     flipper_format_free(file);
     furi_record_close(RECORD_STORAGE);

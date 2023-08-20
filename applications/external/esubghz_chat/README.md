@@ -5,9 +5,7 @@ feature that is available on the CLI. In addition it allows for basic
 encryption of messages.
 
 The plugin has been tested on the official firmware (version 0.87.0) and on
-Unleashed (version unlshd-059).
-
-Currently the use of an external antenna is not supported.
+Unleashed (version unlshd-060).
 
 ## Warning
 
@@ -16,14 +14,14 @@ bugs. You have been warned.
 
 ## Usage
 
-Once opened the plugin will ask for a frequency to operate on which must be
-entered in HZ.
-
-On the next screen the plugin will ask for the method of deriving the key. If
+Once opened the plugin will ask for the method of deriving the key. If
 "No encryption" is selected, the encryption is disabled. If "Generate Key" is
 selected, a random key is generated. Otherwise, the plugin will ask for the
 selected input method. Currently a password and a hex key, as well as reading
 the key from another Flipper via NFC are supported.
+
+On the next screen the plugin will ask for a frequency to operate on which must
+be entered in HZ.
 
 Finally the a message can be input. After the message is confirmed, the plugin
 will switch to the chat view, where sent and received messages are displayed.
@@ -85,5 +83,14 @@ The implementations of AES and GCM are taken directly from
 https://github.com/mko-x/SharedAES-GCM. They were released to the public domain
 by Markus Kosmal.
 
-The app icon was made by [xMasterX](https://github.com/xMasterX). Other icons
-and graphics were taken from the Flipper Zero firmware.
+The app icon was made by [xMasterX](https://github.com/xMasterX). The icon for
+the hexadecimal key input was taken from [QtRoS](https://github.com/QtRoS) hex
+viewer app, which can be found here:
+https://github.com/QtRoS/flipper-zero-hex-viewer. Other icons and graphics were
+taken from the Flipper Zero firmware.
+
+The icons used in the key input method menu were picked by
+[Willy-JL](https://github.com/Willy-JL).
+
+Support for the external radio was also contributed by
+[xMasterX](https://github.com/xMasterX).

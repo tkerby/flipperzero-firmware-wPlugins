@@ -282,13 +282,11 @@ static bool desktop_custom_event_callback(void* context, uint32_t event) {
         return true;
     case DesktopGlobalAfterAppFinished:
         animation_manager_load_and_continue_animation(desktop->animation_manager);
-        // TODO: Implement a message mechanism for loading settings and (optionally)
-        // locking and unlocking
         DESKTOP_SETTINGS_LOAD(&desktop->settings);
-
         desktop_clock_toggle_view(desktop, desktop->settings.display_clock);
-
-        desktop_auto_lock_arm(desktop);
+        if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagLock)) {
+            desktop_auto_lock_arm(desktop);
+        }
         return true;
     case DesktopGlobalAutoLock:
         if(!loader_is_locked(desktop->loader)) {

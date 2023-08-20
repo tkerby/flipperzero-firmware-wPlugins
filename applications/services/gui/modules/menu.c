@@ -52,6 +52,15 @@ static void menu_short_name(MenuItem* item, FuriString* name) {
     }
 }
 
+static void menu_string_to_upper_case(FuriString* str) {
+    for(size_t i = 0; i < furi_string_size(str); i++) {
+        char c = furi_string_get_char(str, i);
+        if(c >= 'a' && c <= 'z') {
+            furi_string_set_char(str, i, c - 'a' + 'A');
+        }
+    }
+}
+
 static void menu_centered_icon(
     Canvas* canvas,
     MenuItem* item,
@@ -271,6 +280,95 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
             }
             furi_string_free(name);
             canvas_set_orientation(canvas, CanvasOrientationHorizontal);
+            break;
+        }
+
+        case MenuStyleC64: {
+            FuriString* memstr = furi_string_alloc();
+            FuriString* name = furi_string_alloc();
+
+            size_t index;
+            size_t y_off, x_off;
+
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(
+                canvas, 64, 0, AlignCenter, AlignTop, "* FLIPPADORE 64 BASIC *");
+
+            furi_string_printf(memstr, "%d BASIC BYTES FREE", memmgr_get_free_heap());
+
+            canvas_draw_str_aligned(
+                canvas, 64, 9, AlignCenter, AlignTop, furi_string_get_cstr(memstr));
+
+            canvas_set_font(canvas, FontKeyboard);
+
+            for(size_t i = 0; i < 2; i++) {
+                for(size_t j = 0; j < 5; j++) {
+                    index = i * 5 + j + (position - (position % 10));
+                    if(index >= items_count) continue;
+                    y_off = (9 * j) + 13;
+                    x_off = 64 * i;
+                    bool selected = index == position;
+                    size_t scroll_counter = menu_scroll_counter(model, selected);
+                    if(selected) {
+                        canvas_draw_box(canvas, x_off, y_off + 4, 64, 9);
+                        canvas_set_color(canvas, ColorWhite);
+                    }
+                    item = MenuItemArray_get(model->items, index);
+                    menu_short_name(item, name);
+
+                    FuriString* item_str = furi_string_alloc();
+
+                    furi_string_printf(item_str, "%d.%s", index, furi_string_get_cstr(name));
+
+                    elements_scrollable_text_line(
+                        canvas, x_off + 2, y_off + 12, 64, item_str, scroll_counter, false, false);
+
+                    furi_string_free(item_str);
+
+                    if(selected) {
+                        canvas_set_color(canvas, ColorBlack);
+                    }
+                }
+            }
+
+            furi_string_free(memstr);
+            furi_string_free(name);
+
+            break;
+        }
+        case MenuStyleEurocorp: {
+            FuriString* name = furi_string_alloc();
+
+#ifdef CANVAS_HAS_FONT_EUROCORP
+            canvas_set_font(canvas, FontEurocorp);
+#else
+            canvas_set_font(canvas, FontPrimary);
+#endif
+            for(uint8_t i = 0; i < 3; i++) {
+                canvas_set_color(canvas, ColorBlack);
+                shift_position = (position + items_count + i - 1) % items_count;
+                item = MenuItemArray_get(model->items, shift_position);
+                menu_short_name(item, name);
+                menu_string_to_upper_case(name);
+                size_t scroll_counter = menu_scroll_counter(model, i == 1);
+                if(i == 1) {
+                    canvas_draw_box(canvas, 0, 22, 128, 22);
+                    canvas_set_color(canvas, ColorWhite);
+                    // Clip corner
+                    for(uint8_t i = 0; i < 6; i++) {
+                        for(uint8_t j = 0; j < 6; j++) {
+                            if(j - i >= 0) {
+                                canvas_draw_dot(canvas, 128 - i, 22 + j - i);
+                            }
+                        }
+                    }
+                }
+                elements_scrollable_text_line(
+                    canvas, 2, 19 + 22 * i, 128 - 3, name, scroll_counter, false, false);
+            }
+
+            furi_string_free(name);
+
             break;
         }
         default:
@@ -499,6 +597,7 @@ static void menu_process_up(Menu* menu) {
 
             switch(CFW_SETTINGS()->menu_style) {
             case MenuStyleList:
+            case MenuStyleEurocorp:
                 if(position > 0) {
                     position--;
                     if(vertical_offset && vertical_offset == position) {
@@ -516,6 +615,13 @@ static void menu_process_up(Menu* menu) {
                     position++;
                 }
                 vertical_offset = CLAMP(MAX((int)position - 4, 0), MAX((int)count - 8, 0), 0);
+                break;
+            case MenuStyleC64:
+                if(position > 0) {
+                    position--;
+                } else {
+                    position = count - 1;
+                }
                 break;
             default:
                 break;
@@ -539,6 +645,7 @@ static void menu_process_down(Menu* menu) {
 
             switch(CFW_SETTINGS()->menu_style) {
             case MenuStyleList:
+            case MenuStyleEurocorp:
                 if(position < count - 1) {
                     position++;
                     if(vertical_offset < count - 8 && vertical_offset == position - 7) {
@@ -556,6 +663,13 @@ static void menu_process_down(Menu* menu) {
                     position++;
                 }
                 vertical_offset = CLAMP(MAX((int)position - 4, 0), MAX((int)count - 8, 0), 0);
+                break;
+            case MenuStyleC64:
+                if(position < count - 1) {
+                    position++;
+                } else {
+                    position = 0;
+                }
                 break;
             default:
                 break;
@@ -603,6 +717,12 @@ static void menu_process_left(Menu* menu) {
                     vertical_offset = count - 8;
                 }
                 break;
+            case MenuStyleC64:
+                if((position % 10) < 5) {
+                    position = position + 5;
+                } else if((position % 10) >= 5) {
+                    position = position - 5;
+                }
             default:
                 break;
             }
@@ -654,6 +774,12 @@ static void menu_process_right(Menu* menu) {
                     vertical_offset = 0;
                 }
                 break;
+            case MenuStyleC64:
+                if(position >= (count - count) && (position % 10) < 5) {
+                    position = position + 5;
+                } else if((position % 10) >= 5 && position < count) {
+                    position = position - 5;
+                }
             default:
                 break;
             }

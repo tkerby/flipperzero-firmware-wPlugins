@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,34.5,,
+Version,+,36.0,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/services/bt/bt_service/bt.h,,
 Header,+,applications/services/cli/cli.h,,
@@ -219,6 +219,7 @@ Header,+,lib/subghz/subghz_worker.h,,
 Header,+,lib/subghz/transmitter.h,,
 Header,+,lib/toolbox/api_lock.h,,
 Header,+,lib/toolbox/args.h,,
+Header,+,lib/toolbox/compress.h,,
 Header,+,lib/toolbox/crc32_calc.h,,
 Header,+,lib/toolbox/dir_walk.h,,
 Header,+,lib/toolbox/float_tools.h,,
@@ -659,7 +660,7 @@ Function,+,byte_input_alloc,ByteInput*,
 Function,+,byte_input_free,void,ByteInput*
 Function,+,byte_input_get_view,View*,ByteInput*
 Function,+,byte_input_set_header_text,void,"ByteInput*, const char*"
-Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint8_t"
+Function,+,byte_input_set_result_callback,void,"ByteInput*, ByteInputCallback, ByteChangedCallback, void*, uint8_t*, uint16_t"
 Function,-,bzero,void,"void*, size_t"
 Function,-,calloc,void*,"size_t, size_t"
 Function,+,canvas_clear,void,Canvas*
@@ -722,6 +723,13 @@ Function,+,composite_api_resolver_add,void,"CompositeApiResolver*, const ElfApiI
 Function,+,composite_api_resolver_alloc,CompositeApiResolver*,
 Function,+,composite_api_resolver_free,void,CompositeApiResolver*
 Function,+,composite_api_resolver_get,const ElfApiInterface*,CompositeApiResolver*
+Function,+,compress_alloc,Compress*,uint16_t
+Function,+,compress_decode,_Bool,"Compress*, uint8_t*, size_t, uint8_t*, size_t, size_t*"
+Function,+,compress_encode,_Bool,"Compress*, uint8_t*, size_t, uint8_t*, size_t, size_t*"
+Function,+,compress_free,void,Compress*
+Function,+,compress_icon_alloc,CompressIcon*,
+Function,+,compress_icon_decode,void,"CompressIcon*, const uint8_t*, uint8_t**"
+Function,+,compress_icon_free,void,CompressIcon*
 Function,-,copysign,double,"double, double"
 Function,-,copysignf,float,"float, float"
 Function,-,copysignl,long double,"long double, long double"
@@ -1198,14 +1206,20 @@ Function,+,furi_hal_cortex_instructions_per_microsecond,uint32_t,
 Function,+,furi_hal_cortex_timer_get,FuriHalCortexTimer,uint32_t
 Function,+,furi_hal_cortex_timer_is_expired,_Bool,FuriHalCortexTimer
 Function,+,furi_hal_cortex_timer_wait,void,FuriHalCortexTimer
+Function,+,furi_hal_crypto_ctr,_Bool,"const uint8_t*, const uint8_t*, const uint8_t*, uint8_t*, size_t"
 Function,+,furi_hal_crypto_decrypt,_Bool,"const uint8_t*, uint8_t*, size_t"
+Function,+,furi_hal_crypto_enclave_ensure_key,_Bool,uint8_t
+Function,+,furi_hal_crypto_enclave_load_key,_Bool,"uint8_t, const uint8_t*"
+Function,+,furi_hal_crypto_enclave_store_key,_Bool,"FuriHalCryptoKey*, uint8_t*"
+Function,+,furi_hal_crypto_enclave_unload_key,_Bool,uint8_t
+Function,+,furi_hal_crypto_enclave_verify,_Bool,"uint8_t*, uint8_t*"
 Function,+,furi_hal_crypto_encrypt,_Bool,"const uint8_t*, uint8_t*, size_t"
+Function,+,furi_hal_crypto_gcm,_Bool,"const uint8_t*, const uint8_t*, const uint8_t*, size_t, const uint8_t*, uint8_t*, size_t, uint8_t*, _Bool"
+Function,+,furi_hal_crypto_gcm_decrypt_and_verify,FuriHalCryptoGCMState,"const uint8_t*, const uint8_t*, const uint8_t*, size_t, const uint8_t*, uint8_t*, size_t, const uint8_t*"
+Function,+,furi_hal_crypto_gcm_encrypt_and_tag,FuriHalCryptoGCMState,"const uint8_t*, const uint8_t*, const uint8_t*, size_t, const uint8_t*, uint8_t*, size_t, uint8_t*"
 Function,-,furi_hal_crypto_init,void,
-Function,+,furi_hal_crypto_store_add_key,_Bool,"FuriHalCryptoKey*, uint8_t*"
-Function,+,furi_hal_crypto_store_load_key,_Bool,"uint8_t, const uint8_t*"
-Function,+,furi_hal_crypto_store_unload_key,_Bool,uint8_t
-Function,+,furi_hal_crypto_verify_enclave,_Bool,"uint8_t*, uint8_t*"
-Function,+,furi_hal_crypto_verify_key,_Bool,uint8_t
+Function,+,furi_hal_crypto_load_key,_Bool,"const uint8_t*, const uint8_t*"
+Function,+,furi_hal_crypto_unload_key,_Bool,
 Function,+,furi_hal_debug_disable,void,
 Function,+,furi_hal_debug_enable,void,
 Function,+,furi_hal_debug_is_gdb_session_active,_Bool,
@@ -1713,6 +1727,7 @@ Function,+,furi_thread_suspend,void,FuriThreadId
 Function,+,furi_thread_yield,void,
 Function,+,furi_timer_alloc,FuriTimer*,"FuriTimerCallback, FuriTimerType, void*"
 Function,+,furi_timer_free,void,FuriTimer*
+Function,-,furi_timer_get_current_name,const char*,
 Function,+,furi_timer_is_running,uint32_t,FuriTimer*
 Function,+,furi_timer_pending_callback,void,"FuriTimerPendigCallback, void*, uint32_t"
 Function,+,furi_timer_start,FuriStatus,"FuriTimer*, uint32_t"
@@ -1759,6 +1774,8 @@ Function,+,hex_char_to_hex_nibble,_Bool,"char, uint8_t*"
 Function,+,hex_char_to_uint8,_Bool,"char, char, uint8_t*"
 Function,+,hex_chars_to_uint64,_Bool,"const char*, uint64_t*"
 Function,+,hex_chars_to_uint8,_Bool,"const char*, uint8_t*"
+Function,+,hsv2rgb,RgbColor,HsvColor
+Function,+,hsvcmp,int,"const HsvColor*, const HsvColor*"
 Function,-,hypot,double,"double, double"
 Function,-,hypotf,float,"float, float"
 Function,-,hypotl,long double,"long double, long double"
@@ -2253,6 +2270,7 @@ Function,+,nfc_device_set_name,void,"NfcDevice*, const char*"
 Function,+,nfc_felica_type,const char*,FelicaICType
 Function,+,nfc_file_select,_Bool,NfcDevice*
 Function,-,nfc_generate_mf_classic,void,"NfcDeviceData*, uint8_t, MfClassicType"
+Function,+,nfc_generate_mf_classic_ext,void,"NfcDeviceData*, uint8_t, MfClassicType, _Bool, uint8_t*"
 Function,+,nfc_get_dev_type,const char*,FuriHalNfcType
 Function,-,nfc_guess_protocol,const char*,NfcProtocol
 Function,+,nfc_mf_classic_type,const char*,MfClassicType
@@ -2612,13 +2630,22 @@ Function,-,rfal_platform_spi_acquire,void,
 Function,-,rfal_platform_spi_release,void,
 Function,-,rfal_set_callback_context,void,void*
 Function,-,rfal_set_state_changed_callback,void,RfalStateChangedCallback
-Function,+,rgb_backlight_get_color_count,uint8_t,
-Function,+,rgb_backlight_get_color_text,const char*,uint8_t
-Function,+,rgb_backlight_get_settings,RGBBacklightSettings*,
+Function,+,rgb2hsv,HsvColor,RgbColor
+Function,+,rgb_backlight_get_color,RgbColor,uint8_t
+Function,+,rgb_backlight_get_rainbow_interval,uint32_t,
+Function,+,rgb_backlight_get_rainbow_mode,RGBBacklightRainbowMode,
+Function,+,rgb_backlight_get_rainbow_saturation,uint8_t,
+Function,+,rgb_backlight_get_rainbow_speed,uint8_t,
 Function,-,rgb_backlight_load_settings,void,
+Function,+,rgb_backlight_reconfigure,void,_Bool
 Function,+,rgb_backlight_save_settings,void,
-Function,+,rgb_backlight_set_color,void,uint8_t
-Function,-,rgb_backlight_update,void,uint8_t
+Function,+,rgb_backlight_set_color,void,"uint8_t, RgbColor"
+Function,+,rgb_backlight_set_rainbow_interval,void,uint32_t
+Function,+,rgb_backlight_set_rainbow_mode,void,RGBBacklightRainbowMode
+Function,+,rgb_backlight_set_rainbow_saturation,void,uint8_t
+Function,+,rgb_backlight_set_rainbow_speed,void,uint8_t
+Function,-,rgb_backlight_update,void,"uint8_t, _Bool"
+Function,+,rgbcmp,int,"const RgbColor*, const RgbColor*"
 Function,-,rindex,char*,"const char*, int"
 Function,-,rint,double,double
 Function,-,rintf,float,float

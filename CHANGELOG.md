@@ -1,25 +1,11 @@
 ## New changes
-* SubGHz: Support for Ebyte E07 module power amp switch (works with TehRabbitt's Flux Capacitor Board) (by @Sil333033) (PR #559 by @Z3BRO) -> Remade by @xMasterX -> Driver code fixed and reworked by @gid9798
-* Infrared: Update universal remote assets (by @amec0e | PR #570)
-* Infrared: Update universal AC asset (by @Leptopt1los | PR #569)
-* Plugins: Add * in NFC Maker keyboard (hold `.`)
-* Plugins: Update TOTP (Authenticator) [(by akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
-* Plugins: Update ESP32: WiFi Marauder companion plugin [(by 0xchocolate)](https://github.com/0xchocolate/flipperzero-wifi-marauder)
-* Plugins: Update ESP32-CAM -> Camera Suite [(by CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite) -> (PR #562 by @CodyTolene)
-* OFW PR 2949: IR: buttons move feature rework (by nminaylov)
-* OFW PR 2941: FDX-B temperature now uses system units (by Astrrra)
-* OFW: fbtenv: add additional environ variable to control execution flow
-* OFW: NFC CLI: Fix multiple apdu commands from not working when one of them gives an empty response
-* OFW: NFC: Fix MFC key invalidation
-* OFW: Rename Applications to Apps 
-* OFW: Fix about screen
-* OFW: change FuriThreadPriorityIsr to 31 (configMAX_PRIORITIES-1)
-* OFW: External apps icounter
-* OFW: Overly missed feature: Infrared: move button (change button order in a remote)
-* OFW: Move U2F path to ext
-* OFW: New RTC flags in device info
-* OFW: Backlight notification fix
-* OFW: Fix fbtenv restore
+* !!! **Warning! After installing, Desktop settings (Favoutite apps, PIN Code, AutoLock time..) will be resetted to default due to settings changes, Please set your PIN code, Favourite apps again in Settings->Desktop** !!!
+* Desktop: **New way to set favourite apps and fully configurable dummy mode** (now you can set up to 4 favourite apps!) (port of OFW PR 2972 by nminaylov) (by @gid9798 | PR #578)
+* Desktop: Fix lock timer after rebooting (by @gid9798 | PR #578)
+* Infrared: Updated universal assets (by @amec0e | PR #581)
+* Core: Added proper error message on out of memory crash (by @Willy-JL)
+* SubGHz: Fix FAAC SLH add manually issues and fix sending signals with unknown seed
+* SubGHz: Temporarily reverted changes from OFW PR 2984: SubGhz: fix todo (by Skorpionm) - Fixes Enhanced Sub-GHz Chat app and various issues related to receiving signals that was found in 061 release
 
 [-> How to install firmware](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/HowToInstall.md)
 
@@ -32,14 +18,16 @@ and all other great people who supported our project and me (xMasterX), thanks t
 
 ## **Recommended update option - Web Updater**
 
-### What `n`, `r`, `e` means? What I need to download if I don't want to use Web updater?
-What build I should download and what this name means - `flipper-z-f7-update-(version)(n / r / e).tgz` ? <br>
+### What `n`, `r`, `e`, ` `, `c` means? What I need to download if I don't want to use Web updater?
+What build I should download and what this name means - `flipper-z-f7-update-(version)(n / r / e / c).tgz` ? <br>
 `flipper-z` = for Flipper Zero device<br>
 `f7` = Hardware version - same for all flipper zero devices<br>
 `update` = Update package, contains updater, all assets (plugins, IR libs, etc.), and firmware itself<br>
 `(version)` = Firmware version<br>
-`n` = this build comes without our custom animations (we have only 3 of them), only official flipper animations<br>
-`e` = build has 🎲 [extra apps pack](https://github.com/xMasterX/all-the-plugins) preinstalled<br>
+` ` = this build comes with 3 custom animations, and default apps preinstalled (base pack)<br>
+`c` = this build comes with 3 custom animations, and only main apps (Clean build like latest OFW)<br>
+`n` = this build comes without our custom animations (we have only 3 of them), only official flipper animations, and base pack apps<br>
+`e` = build has 🎲 [extra apps pack](https://github.com/xMasterX/all-the-plugins) preinstalled, our custom animations, and base pack apps too<br>
 `r` = RGB patch (+ extra apps) for flippers with rgb backlight mod (this is hardware mod!) (Works only on modded flippers!) (do not install on non modded device!)
 
 Firmware Self-update package (update from microSD) - `flipper-z-f7-update-(version).tgz` for mobile app / qFlipper / web<br>

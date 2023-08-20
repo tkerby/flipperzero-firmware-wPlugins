@@ -3,9 +3,10 @@
 [![Build](https://github.com/xtruan/FlipBIP/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/xtruan/FlipBIP/actions/workflows/build.yml)
 
 ## Crypto toolkit for Flipper Zero
-- Last built against `0.86.1` Flipper Zero firmware release
+- Last built against `0.88.0` Flipper Zero firmware release
 - Using Trezor crypto libs from `core/v2.5.3` release
 - Included in [RogueMaster Custom Firmware](https://github.com/RogueMaster/flipperzero-firmware-wPlugins)
+- NOTE: This app uses very close to the maximum Flipper Zero RAM. If you get `furi_check failed` on launch, try running again!
 
 ### DONATE IF YOU FIND THE APP USEFUL
   - ETH (or ERC-20): `xtruan.eth` or `0xa9Ad79502cdaf4F6881f3C2ef260713e5B771CE2`
@@ -42,7 +43,7 @@ The application will be compiled and copied onto your device
   - Generation of offline `m/44'/0'/0'/0` BTC wallet
   - Generation of offline `m/44'/60'/0'/0` ETH wallet (coded from the $SPORK Castle of ETHDenver 2023!)
   - Generation of offline `m/44'/3'/0'/0` DOGE wallet
-  - Generation of offline `m/44'/133'/0'/0` ZEC transparent address wallet
+  - Generation of offline `m/44'/133'/0'/0` ZEC transparent address wallet (by @wh00hw)
   - Similar features to: https://iancoleman.io/bip39/
 - Saving wallets to SD card
   - Wallets are saved to SD card upon creation in `apps_data/flipbip`

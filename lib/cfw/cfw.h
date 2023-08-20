@@ -23,6 +23,8 @@ typedef enum {
     MenuStyleDsi,
     MenuStylePs4,
     MenuStyleVertical,
+    MenuStyleC64,
+    MenuStyleEurocorp,
     MenuStyleCount,
 } MenuStyle;
 
@@ -51,6 +53,7 @@ typedef struct {
     UARTChannel uart_nmea_channel;
     UARTChannel uart_general_channel;
     bool rgb_backlight;
+    uint32_t lcd_style;
 } CfwSettings;
 
 void CFW_SETTINGS_SAVE();

@@ -46,6 +46,8 @@ To run cleanup (think of `make clean`) for specified targets, add the `-c` optio
 
 `fbt` includes basic development environment configuration for VS Code. Run `./fbt vscode_dist` to deploy it. That will copy the initial environment configuration to the `.vscode` folder. After that, you can use that configuration by starting VS Code and choosing the firmware root folder in the "File > Open Folder" menu.
 
+To use language servers other than the default VS Code C/C++ language server, use `./fbt vscode_dist LANG_SERVER=<language-server>` instead. Currently `fbt` supports the default language server (`cpptools`) and `clangd`.
+
 - On the first start, you'll be prompted to install recommended plugins. We highly recommend installing them for the best development experience. _You can find a list of them in `.vscode/extensions.json`._
 - Basic build tasks are invoked in the Ctrl+Shift+B menu.
 - Debugging requires a supported probe. That includes:
@@ -64,11 +66,12 @@ FBT keeps track of internal dependencies, so you only need to build the highest-
 - `fap_dist` - build external plugins & publish to the `dist` folder.
 - `updater_package`, `updater_minpackage` - build a self-update package. The minimal version only includes the firmware's DFU file; the full version also includes a radio stack & resources for the SD card.
 - `copro_dist` - bundle Core2 FUS+stack binaries for qFlipper.
-- `flash` - flash the attached device with OpenOCD over ST-Link.
+- `flash`, `flash_blackmagic`, `flash_dap` - flash the attached device with OpenOCD over ST-Link; blackmagic probe over WiFi or USB; DAP interface over USB.
 - `flash_usb`, `flash_usb_full` - build, upload and install the update package to the device over USB. See details on `updater_package` and `updater_minpackage`.
 - `debug` - build and flash firmware, then attach with gdb with firmware's .elf loaded.
 - `debug_other`, `debug_other_blackmagic` - attach GDB without loading any `.elf`. It will allow you to manually add external `.elf` files with `add-symbol-file` in GDB.
 - `updater_debug` - attach GDB with the updater's `.elf` loaded.
+- `devboard_flash` - update WiFi dev board with the latest firmware.
 - `blackmagic` - debug firmware with Blackmagic probe (WiFi dev board).
 - `openocd` - just start OpenOCD.
 - `get_blackmagic` - output the blackmagic address in the GDB remote format. Useful for IDE integration.
