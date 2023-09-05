@@ -38,11 +38,11 @@ volatile FuriHalSubGhz furi_hal_subghz = {
     .ext_power_amp = false,
 };
 
-uint8_t furi_hal_subghz_get_rolling_counter_mult(void) {
+int8_t furi_hal_subghz_get_rolling_counter_mult(void) {
     return furi_hal_subghz.rolling_counter_mult;
 }
 
-void furi_hal_subghz_set_rolling_counter_mult(uint8_t mult) {
+void furi_hal_subghz_set_rolling_counter_mult(int8_t mult) {
     furi_hal_subghz.rolling_counter_mult = mult;
 }
 
@@ -202,7 +202,7 @@ bool furi_hal_subghz_rx_pipe_not_empty() {
     cc1101_read_reg(
         &furi_hal_spi_bus_handle_subghz, (CC1101_STATUS_RXBYTES) | CC1101_BURST, (uint8_t*)status);
     furi_hal_spi_release(&furi_hal_spi_bus_handle_subghz);
-    // TODO: you can add a buffer overflow flag if needed
+    // TODO: Find reason why RXFIFO_OVERFLOW doesnt work correctly
     if(status->NUM_RXBYTES > 0) {
         return true;
     } else {

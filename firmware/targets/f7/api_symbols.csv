@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,36.0,,
+Version,+,36.1,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/services/bt/bt_service/bt.h,,
 Header,+,applications/services/cli/cli.h,,
@@ -227,10 +227,10 @@ Header,+,lib/toolbox/hex.h,,
 Header,+,lib/toolbox/manchester_decoder.h,,
 Header,+,lib/toolbox/manchester_encoder.h,,
 Header,+,lib/toolbox/md5.h,,
+Header,+,lib/toolbox/name_generator.h,,
 Header,+,lib/toolbox/path.h,,
 Header,+,lib/toolbox/pretty_format.h,,
 Header,+,lib/toolbox/protocols/protocol_dict.h,,
-Header,+,lib/toolbox/random_name.h,,
 Header,+,lib/toolbox/saved_struct.h,,
 Header,+,lib/toolbox/sha256.h,,
 Header,+,lib/toolbox/stream/buffered_file_stream.h,,
@@ -620,6 +620,7 @@ Function,+,ble_glue_start,_Bool,
 Function,+,ble_glue_thread_stop,void,
 Function,+,ble_glue_wait_for_c2_start,_Bool,int32_t
 Function,-,bsearch,void*,"const void*, const void*, size_t, size_t, __compar_fn_t"
+Function,+,bt_close_rpc_connection,void,Bt*
 Function,+,bt_disable_peer_key_update,void,Bt*
 Function,+,bt_disconnect,void,Bt*
 Function,+,bt_enable_peer_key_update,void,Bt*
@@ -630,6 +631,7 @@ Function,+,bt_get_profile_pairing_method,GapPairing,Bt*
 Function,+,bt_get_status,BtStatus,Bt*
 Function,+,bt_keys_storage_set_default_path,void,Bt*
 Function,+,bt_keys_storage_set_storage_path,void,"Bt*, const char*"
+Function,+,bt_open_rpc_connection,void,Bt*
 Function,+,bt_remote_rssi,_Bool,"Bt*, uint8_t*"
 Function,+,bt_set_profile,_Bool,"Bt*, BtProfile"
 Function,+,bt_set_profile_adv_name,void,"Bt*, const char*, ..."
@@ -648,6 +650,7 @@ Function,+,button_menu_get_view,View*,ButtonMenu*
 Function,+,button_menu_reset,void,ButtonMenu*
 Function,+,button_menu_set_header,void,"ButtonMenu*, const char*"
 Function,+,button_menu_set_selected_item,void,"ButtonMenu*, uint32_t"
+Function,+,button_panel_add_icon,void,"ButtonPanel*, uint16_t, uint16_t, const Icon*"
 Function,+,button_panel_add_item,void,"ButtonPanel*, uint32_t, uint16_t, uint16_t, uint16_t, uint16_t, const Icon*, const Icon*, ButtonItemCallback, void*"
 Function,+,button_panel_add_label,void,"ButtonPanel*, uint16_t, uint16_t, Font, const char*"
 Function,+,button_panel_alloc,ButtonPanel*,
@@ -1152,6 +1155,7 @@ Function,+,furi_hal_bt_serial_set_rpc_status,void,FuriHalBtSerialRpcStatus
 Function,+,furi_hal_bt_serial_start,void,
 Function,+,furi_hal_bt_serial_stop,void,
 Function,+,furi_hal_bt_serial_tx,_Bool,"uint8_t*, uint16_t"
+Function,+,furi_hal_bt_set_custom_adv_data,void,"const uint8_t*, size_t"
 Function,+,furi_hal_bt_set_key_storage_change_callback,void,"BleGlueKeyStorageChangedCallback, void*"
 Function,+,furi_hal_bt_set_profile_adv_name,void,"FuriHalBtProfile, const char[( 18 + 1 )]"
 Function,+,furi_hal_bt_set_profile_mac_addr,void,"FuriHalBtProfile, const uint8_t[( 6 )]"
@@ -1495,7 +1499,7 @@ Function,+,furi_hal_subghz_get_data_gpio,const GpioPin*,
 Function,+,furi_hal_subghz_get_ext_power_amp,_Bool,
 Function,+,furi_hal_subghz_get_extend_settings,void,"_Bool*, _Bool*"
 Function,+,furi_hal_subghz_get_lqi,uint8_t,
-Function,+,furi_hal_subghz_get_rolling_counter_mult,uint8_t,
+Function,+,furi_hal_subghz_get_rolling_counter_mult,int8_t,
 Function,+,furi_hal_subghz_get_rssi,float,
 Function,+,furi_hal_subghz_idle,void,
 Function,-,furi_hal_subghz_init,void,
@@ -1516,7 +1520,7 @@ Function,+,furi_hal_subghz_set_extend_settings,void,"_Bool, _Bool"
 Function,+,furi_hal_subghz_set_frequency,uint32_t,uint32_t
 Function,+,furi_hal_subghz_set_frequency_and_path,uint32_t,uint32_t
 Function,+,furi_hal_subghz_set_path,void,FuriHalSubGhzPath
-Function,+,furi_hal_subghz_set_rolling_counter_mult,void,uint8_t
+Function,+,furi_hal_subghz_set_rolling_counter_mult,void,int8_t
 Function,+,furi_hal_subghz_shutdown,void,
 Function,+,furi_hal_subghz_sleep,void,
 Function,+,furi_hal_subghz_start_async_rx,void,"FuriHalSubGhzCaptureCallback, void*"
@@ -1536,6 +1540,7 @@ Function,+,furi_hal_uart_tx,void,"FuriHalUartId, uint8_t*, size_t"
 Function,+,furi_hal_usb_disable,void,
 Function,+,furi_hal_usb_enable,void,
 Function,+,furi_hal_usb_get_config,FuriHalUsbInterface*,
+Function,+,furi_hal_usb_get_config_context,void*,
 Function,-,furi_hal_usb_init,void,
 Function,+,furi_hal_usb_is_locked,_Bool,
 Function,+,furi_hal_usb_lock,void,
@@ -1727,6 +1732,7 @@ Function,+,furi_thread_suspend,void,FuriThreadId
 Function,+,furi_thread_yield,void,
 Function,+,furi_timer_alloc,FuriTimer*,"FuriTimerCallback, FuriTimerType, void*"
 Function,+,furi_timer_free,void,FuriTimer*
+Function,-,furi_timer_get_current_name,const char*,
 Function,+,furi_timer_is_running,uint32_t,FuriTimer*
 Function,+,furi_timer_pending_callback,void,"FuriTimerPendigCallback, void*, uint32_t"
 Function,+,furi_timer_start,FuriStatus,"FuriTimer*, uint32_t"
@@ -1740,6 +1746,7 @@ Function,-,gammaf_r,float,"float, int*"
 Function,-,gap_get_remote_conn_rssi,uint32_t,int8_t*
 Function,-,gap_get_state,GapState,
 Function,-,gap_init,_Bool,"GapConfig*, GapEventCallback, void*"
+Function,-,gap_set_custom_adv_data,void,"size_t, const uint8_t*"
 Function,-,gap_start_advertising,void,
 Function,-,gap_stop_advertising,void,
 Function,-,gap_thread_stop,void,
@@ -1773,6 +1780,8 @@ Function,+,hex_char_to_hex_nibble,_Bool,"char, uint8_t*"
 Function,+,hex_char_to_uint8,_Bool,"char, char, uint8_t*"
 Function,+,hex_chars_to_uint64,_Bool,"const char*, uint64_t*"
 Function,+,hex_chars_to_uint8,_Bool,"const char*, uint8_t*"
+Function,+,hsv2rgb,RgbColor,HsvColor
+Function,+,hsvcmp,int,"const HsvColor*, const HsvColor*"
 Function,-,hypot,double,"double, double"
 Function,-,hypotf,float,"float, float"
 Function,-,hypotl,long double,"long double, long double"
@@ -2240,6 +2249,9 @@ Function,-,music_worker_set_callback,void,"MusicWorker*, MusicWorkerCallback, vo
 Function,-,music_worker_set_volume,void,"MusicWorker*, float"
 Function,-,music_worker_start,void,MusicWorker*
 Function,-,music_worker_stop,void,MusicWorker*
+Function,+,name_generator_make_auto,void,"char*, size_t, const char*"
+Function,+,name_generator_make_detailed,void,"char*, size_t, const char*"
+Function,+,name_generator_make_random,void,"char*, size_t"
 Function,-,nan,double,const char*
 Function,-,nanf,float,const char*
 Function,-,nanl,long double,const char*
@@ -2259,6 +2271,7 @@ Function,+,nfc_device_delete,_Bool,"NfcDevice*, _Bool"
 Function,+,nfc_device_free,void,NfcDevice*
 Function,+,nfc_device_load,_Bool,"NfcDevice*, const char*, _Bool"
 Function,+,nfc_device_load_key_cache,_Bool,NfcDevice*
+Function,+,nfc_device_prepare_format_string,void,"NfcDevice*, FuriString*"
 Function,+,nfc_device_restore,_Bool,"NfcDevice*, _Bool"
 Function,+,nfc_device_save,_Bool,"NfcDevice*, const char*"
 Function,+,nfc_device_save_shadow,_Bool,"NfcDevice*, const char*"
@@ -2627,13 +2640,22 @@ Function,-,rfal_platform_spi_acquire,void,
 Function,-,rfal_platform_spi_release,void,
 Function,-,rfal_set_callback_context,void,void*
 Function,-,rfal_set_state_changed_callback,void,RfalStateChangedCallback
-Function,+,rgb_backlight_get_color_count,uint8_t,
-Function,+,rgb_backlight_get_color_text,const char*,uint8_t
-Function,+,rgb_backlight_get_settings,RGBBacklightSettings*,
+Function,+,rgb2hsv,HsvColor,RgbColor
+Function,+,rgb_backlight_get_color,RgbColor,uint8_t
+Function,+,rgb_backlight_get_rainbow_interval,uint32_t,
+Function,+,rgb_backlight_get_rainbow_mode,RGBBacklightRainbowMode,
+Function,+,rgb_backlight_get_rainbow_saturation,uint8_t,
+Function,+,rgb_backlight_get_rainbow_speed,uint8_t,
 Function,-,rgb_backlight_load_settings,void,
+Function,+,rgb_backlight_reconfigure,void,_Bool
 Function,+,rgb_backlight_save_settings,void,
-Function,+,rgb_backlight_set_color,void,uint8_t
-Function,-,rgb_backlight_update,void,uint8_t
+Function,+,rgb_backlight_set_color,void,"uint8_t, RgbColor"
+Function,+,rgb_backlight_set_rainbow_interval,void,uint32_t
+Function,+,rgb_backlight_set_rainbow_mode,void,RGBBacklightRainbowMode
+Function,+,rgb_backlight_set_rainbow_saturation,void,uint8_t
+Function,+,rgb_backlight_set_rainbow_speed,void,uint8_t
+Function,-,rgb_backlight_update,void,"uint8_t, _Bool"
+Function,+,rgbcmp,int,"const RgbColor*, const RgbColor*"
 Function,-,rindex,char*,"const char*, int"
 Function,-,rint,double,double
 Function,-,rintf,float,float
@@ -2697,7 +2719,6 @@ Function,-,serial_svc_set_rpc_status,void,SerialServiceRpcStatus
 Function,-,serial_svc_start,void,
 Function,-,serial_svc_stop,void,
 Function,-,serial_svc_update_tx,_Bool,"uint8_t*, uint16_t"
-Function,+,set_random_name,void,"char*, uint8_t"
 Function,-,setbuf,void,"FILE*, char*"
 Function,-,setbuffer,void,"FILE*, char*, int"
 Function,-,setenv,int,"const char*, const char*, int"
@@ -2773,6 +2794,7 @@ Function,+,storage_int_backup,FS_Error,"Storage*, const char*"
 Function,+,storage_int_restore,FS_Error,"Storage*, const char*, Storage_name_converter"
 Function,+,storage_sd_format,FS_Error,Storage*
 Function,+,storage_sd_info,FS_Error,"Storage*, SDInfo*"
+Function,+,storage_sd_mount,FS_Error,Storage*
 Function,+,storage_sd_status,FS_Error,Storage*
 Function,+,storage_sd_unmount,FS_Error,Storage*
 Function,+,storage_simply_mkdir,_Bool,"Storage*, const char*"
@@ -3378,6 +3400,8 @@ Variable,+,FLIPPER_APPS,const FlipperInternalApplication[],
 Variable,+,FLIPPER_APPS_COUNT,const size_t,
 Variable,+,FLIPPER_ARCHIVE,const FlipperInternalApplication,
 Variable,+,FLIPPER_AUTORUN_APP_NAME,const char*,
+Variable,+,FLIPPER_DEBUG_APPS,const FlipperInternalApplication[],
+Variable,+,FLIPPER_DEBUG_APPS_COUNT,const size_t,
 Variable,+,FLIPPER_EXTERNAL_APPS,const FlipperExternalApplication[],
 Variable,+,FLIPPER_EXTERNAL_APPS_COUNT,const size_t,
 Variable,+,FLIPPER_ON_SYSTEM_START,const FlipperInternalOnStartHook[],

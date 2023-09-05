@@ -170,7 +170,7 @@ static bool subghz_protocol_keeloq_gen_data(
     }
     if(counter_up && prog_mode == PROG_MODE_OFF) {
         if(instance->generic.cnt < 0xFFFF) {
-            if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) >= 0xFFFF) {
+            if((instance->generic.cnt + furi_hal_subghz_get_rolling_counter_mult()) > 0xFFFF) {
                 instance->generic.cnt = 0;
             } else {
                 instance->generic.cnt += furi_hal_subghz_get_rolling_counter_mult();
@@ -989,7 +989,7 @@ static void subghz_protocol_keeloq_check_remote_controller(
         instance->cnt = temp_counter;
     } else {
         // Counter protection
-        furi_crash("Unsuported Prog Mode");
+        furi_crash("Unsupported Prog Mode");
     }
 
     instance->serial = key_fix & 0x0FFFFFFF;
@@ -1248,6 +1248,23 @@ void subghz_protocol_decoder_keeloq_get_string(void* context, FuriString* output
             instance->generic.btn,
             instance->manufacture_name,
             instance->generic.seed);
+    } else if(strcmp(instance->manufacture_name, "Unknown") == 0) {
+        instance->generic.cnt = 0x0;
+        furi_string_cat_printf(
+            output,
+            "%s %dbit\r\n"
+            "Key:%08lX%08lX\r\n"
+            "Fix:0x%08lX    Cnt:????\r\n"
+            "Hop:0x%08lX    Btn:%01X\r\n"
+            "MF:%s",
+            instance->generic.protocol_name,
+            instance->generic.data_count_bit,
+            code_found_hi,
+            code_found_lo,
+            code_found_reverse_hi,
+            code_found_reverse_lo,
+            instance->generic.btn,
+            instance->manufacture_name);
     } else {
         furi_string_cat_printf(
             output,

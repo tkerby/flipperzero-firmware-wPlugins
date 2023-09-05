@@ -246,7 +246,6 @@ static void desktop_clock_draw_callback(Canvas* canvas, void* context) {
     view_port_set_width(desktop->clock_slim_viewport, new_w - !(d[0] == 1));
 
     uint8_t x = new_w;
-
     uint8_t y = 8;
     uint8_t offset_r;
 
@@ -282,13 +281,11 @@ static bool desktop_custom_event_callback(void* context, uint32_t event) {
         return true;
     case DesktopGlobalAfterAppFinished:
         animation_manager_load_and_continue_animation(desktop->animation_manager);
-        // TODO: Implement a message mechanism for loading settings and (optionally)
-        // locking and unlocking
         DESKTOP_SETTINGS_LOAD(&desktop->settings);
-
         desktop_clock_toggle_view(desktop, desktop->settings.display_clock);
-
-        desktop_auto_lock_arm(desktop);
+        if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagLock)) {
+            desktop_auto_lock_arm(desktop);
+        }
         return true;
     case DesktopGlobalAutoLock:
         if(!loader_is_locked(desktop->loader)) {
@@ -475,7 +472,6 @@ void desktop_lock(Desktop* desktop) {
     scene_manager_set_scene_state(
         desktop->scene_manager, DesktopSceneLocked, SCENE_LOCKED_FIRST_ENTER);
     scene_manager_next_scene(desktop->scene_manager, DesktopSceneLocked);
-    notification_message(desktop->notification, &sequence_display_backlight_off_delay_1000);
 
     DesktopStatus status = {.locked = true};
     furi_pubsub_publish(desktop->status_pubsub, &status);

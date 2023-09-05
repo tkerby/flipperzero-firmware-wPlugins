@@ -24,7 +24,8 @@ extern "C" {
 #define NFC_READER_DATA_MAX_SIZE 64
 #define NFC_DICT_KEY_BATCH_SIZE 10
 
-#define NFC_APP_EXTENSION ".nfc"
+#define NFC_APP_FILENAME_PREFIX "NFC"
+#define NFC_APP_FILENAME_EXTENSION ".nfc"
 #define NFC_APP_SHADOW_EXTENSION ".shd"
 
 typedef void (*NfcLoadingCallback)(void* context, bool state);
@@ -109,6 +110,8 @@ typedef struct {
 NfcDevice* nfc_device_alloc();
 
 void nfc_device_free(NfcDevice* nfc_dev);
+
+void nfc_device_prepare_format_string(NfcDevice* dev, FuriString* format_string);
 
 void nfc_device_set_name(NfcDevice* dev, const char* name);
 

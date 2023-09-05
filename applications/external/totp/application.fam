@@ -4,14 +4,9 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="totp_app",
     stack_size=2 * 1024,
-    order=20,
-    fap_version="4.01",
-    fap_author="Alexander Kopachov (@akopachov)",
-    fap_description="Software-based TOTP authenticator for Flipper Zero device",
-    fap_weburl="https://github.com/akopachov/flipper-zero_authenticator",
     fap_category="Tools",
-    fap_icon_assets="images",
     fap_icon="totp_10px.png",
+    fap_icon_assets="images",
     fap_icon_assets_symbol="totp",
     fap_private_libs=[
         Lib(
@@ -40,11 +35,15 @@ App(
                 "wolfcrypt/src/hash.c",
                 "wolfcrypt/src/sha.c",
                 "wolfcrypt/src/sha256.c",
-                "wolfcrypt/src/sha512.c"
+                "wolfcrypt/src/sha512.c",
             ],
             cflags=["-Wno-error"],
             cdefines=["HAVE_CONFIG_H"],
-            cincludes=["config/wolfssl"]
+            cincludes=["config/wolfssl"],
         ),
     ],
+    fap_author="Alexander Kopachov (@akopachov)",
+    fap_weburl="https://github.com/akopachov/flipper-zero_authenticator",
+    fap_version="4.10",
+    fap_description="Software-based TOTP authenticator for Flipper Zero device",
 )

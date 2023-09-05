@@ -1,5 +1,5 @@
 #include "../nfc_i.h"
-#include <lib/toolbox/random_name.h>
+#include <lib/toolbox/name_generator.h>
 #include <gui/modules/validators.h>
 #include <toolbox/path.h>
 
@@ -18,7 +18,16 @@ void nfc_scene_passport_auth_save_name_on_enter(void* context) {
     TextInput* text_input = nfc->text_input;
     bool docnr_empty = false;
     if(!strcmp(mrtd_data->auth.doc_number, "")) {
-        set_random_name(nfc->text_store, sizeof(nfc->text_store));
+        FuriString* prefix = furi_string_alloc();
+        nfc_device_prepare_format_string(nfc->dev, prefix);
+        furi_string_replace(prefix, "Mifare", "MF");
+        furi_string_replace(prefix, "Ultralight", "UL");
+        furi_string_replace(prefix, " Plus", "+");
+        furi_string_replace_all(prefix, " ", "_");
+        furi_string_left(prefix, 12);
+        name_generator_make_auto(
+            nfc->text_store, sizeof(nfc->text_store), furi_string_get_cstr(prefix));
+        furi_string_free(prefix);
         docnr_empty = true;
     } else {
         nfc_text_store_set(nfc, mrtd_data->auth.doc_number);
@@ -29,20 +38,20 @@ void nfc_scene_passport_auth_save_name_on_enter(void* context) {
         nfc_scene_passport_auth_save_name_text_input_callback,
         nfc,
         nfc->text_store,
-        NFC_DEV_NAME_MAX_LEN,
+        sizeof(nfc->text_store),
         docnr_empty);
 
     FuriString* folder_path;
     folder_path = furi_string_alloc();
 
-    if(furi_string_end_with(nfc->dev->load_path, NFC_APP_EXTENSION)) {
+    if(furi_string_end_with(nfc->dev->load_path, NFC_APP_FILENAME_EXTENSION)) {
         path_extract_dirname(furi_string_get_cstr(nfc->dev->load_path), folder_path);
     } else {
         furi_string_set(folder_path, NFC_APP_FOLDER);
     }
 
-    ValidatorIsFile* validator_is_file =
-        validator_is_file_alloc_init(furi_string_get_cstr(folder_path), NFC_APP_EXTENSION, NULL);
+    ValidatorIsFile* validator_is_file = validator_is_file_alloc_init(
+        furi_string_get_cstr(folder_path), NFC_APP_FILENAME_EXTENSION, NULL);
     text_input_set_validator(text_input, validator_is_file_callback, validator_is_file);
 
     view_dispatcher_switch_to_view(nfc->view_dispatcher, NfcViewTextInput);

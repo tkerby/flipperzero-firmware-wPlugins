@@ -274,7 +274,7 @@ void subghz_txrx_receiver_set_filter(SubGhzTxRx* instance, SubGhzProtocolFlag fi
  * @param callback Callback for receive data
  * @param context Context for callback
  */
-void subghz_txrx_set_rx_calback(
+void subghz_txrx_set_rx_callback(
     SubGhzTxRx* instance,
     SubGhzReceiverCallback callback,
     void* context);
@@ -329,12 +329,14 @@ float subghz_txrx_radio_device_get_rssi(SubGhzTxRx* instance);
 */
 const char* subghz_txrx_radio_device_get_name(SubGhzTxRx* instance);
 
-/* Get get intelligence whether frequency the selected radio device to use
+/* Get intelligence whether frequency the selected radio device to use
 *
 * @param instance Pointer to a SubGhzTxRx
 * @return bool True if the frequency is valid
 */
-bool subghz_txrx_radio_device_is_frequecy_valid(SubGhzTxRx* instance, uint32_t frequency);
+bool subghz_txrx_radio_device_is_frequency_valid(SubGhzTxRx* instance, uint32_t frequency);
+
+bool subghz_txrx_radio_device_is_tx_allowed(SubGhzTxRx* instance, uint32_t frequency);
 
 void subghz_txrx_set_debug_pin_state(SubGhzTxRx* instance, bool state);
 bool subghz_txrx_get_debug_pin_state(SubGhzTxRx* instance);
@@ -342,3 +344,22 @@ bool subghz_txrx_get_debug_pin_state(SubGhzTxRx* instance);
 void subghz_txrx_reset_dynamic_and_custom_btns(SubGhzTxRx* instance);
 
 SubGhzReceiver* subghz_txrx_get_receiver(SubGhzTxRx* instance); // TODO use only in DecodeRaw
+
+/**
+ * @brief Set current preset AM650 without additional params
+ * 
+ * @param instance - instance Pointer to a SubGhzTxRx
+ * @param frequency - frequency of preset, if pass 0 then taking default frequency 433.92MHz
+ */
+void subghz_txrx_set_default_preset(SubGhzTxRx* instance, uint32_t frequency);
+
+/**
+ * @brief Set current preset by index
+ * 
+ * @param instance  - instance Pointer to a SubGhzTxRx
+ * @param frequency - frequency of new preset
+ * @param index - index of preset taken from SubGhzSetting
+ * @return const char* -  name of preset
+ */
+const char*
+    subghz_txrx_set_preset_internal(SubGhzTxRx* instance, uint32_t frequency, uint8_t index);
