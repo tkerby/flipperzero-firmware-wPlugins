@@ -40,6 +40,7 @@
 
 #define PICOPASS_APP_FOLDER ANY_PATH("picopass")
 #define PICOPASS_APP_EXTENSION ".picopass"
+#define PICOPASS_APP_FILE_PREFIX "Picopass"
 #define PICOPASS_APP_SHADOW_EXTENSION ".pas"
 
 #define PICOPASS_DICT_KEY_BATCH_SIZE 10
@@ -72,13 +73,6 @@ typedef enum {
 } PicopassEmulatorState;
 
 typedef struct {
-    bool valid;
-    uint8_t bitLength;
-    uint8_t FacilityCode;
-    uint16_t CardNumber;
-} PicopassWiegandRecord;
-
-typedef struct {
     bool legacy;
     bool se_enabled;
     bool sio;
@@ -87,10 +81,10 @@ typedef struct {
     bool elite_kdf;
     uint8_t pin_length;
     PicopassEncryption encryption;
+    uint8_t bitLength;
     uint8_t credential[8];
     uint8_t pin0[8];
     uint8_t pin1[8];
-    PicopassWiegandRecord record;
 } PicopassPacs;
 
 typedef struct {
@@ -145,4 +139,4 @@ void picopass_device_set_loading_callback(
     void* context);
 
 ReturnCode picopass_device_parse_credential(PicopassBlock* AA1, PicopassPacs* pacs);
-ReturnCode picopass_device_parse_wiegand(uint8_t* data, PicopassWiegandRecord* record);
+ReturnCode picopass_device_parse_wiegand(uint8_t* credential, PicopassPacs* pacs);

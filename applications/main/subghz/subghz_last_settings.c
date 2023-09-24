@@ -6,11 +6,6 @@
 #define SUBGHZ_LAST_SETTING_FILE_TYPE "Flipper SubGhz Last Setting File"
 #define SUBGHZ_LAST_SETTING_FILE_VERSION 1
 #define SUBGHZ_LAST_SETTINGS_PATH EXT_PATH("subghz/assets/last_subghz.settings")
-// 1 = "AM650"
-// "AM270", "AM650", "FM238", "FM476",
-#define SUBGHZ_LAST_SETTING_DEFAULT_PRESET 1
-#define SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY 433920000
-#define SUBGHZ_LAST_SETTING_FREQUENCY_ANALYZER_FEEDBACK_LEVEL 2
 
 #define SUBGHZ_LAST_SETTING_FIELD_FREQUENCY "Frequency"
 #define SUBGHZ_LAST_SETTING_FIELD_PRESET "Preset" // AKA Modulation
@@ -325,6 +320,6 @@ void subghz_last_settings_log(SubGhzLastSettings* instance) {
         subghz_last_settings_log_filter_get_index(
             instance->ignore_filter, SubGhzProtocolFlag_AutoAlarms),
         subghz_last_settings_log_filter_get_index(
-            instance->ignore_filter, SubGhzProtocolFlag_Magelan),
+            instance->ignore_filter, SubGhzProtocolFlag_Magellan),
         subghz_last_settings_log_filter_get_index(instance->filter, SubGhzProtocolFlag_BinRAW));
 }

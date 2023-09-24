@@ -2,14 +2,17 @@
 
 #include <ble/ble.h>
 #include <interface/patterns/ble_thread/shci/shci.h>
+
 #include <stm32wbxx.h>
+#include <stm32wbxx_ll_hsem.h>
+
+#include <hsem_map.h>
 
 #include <furi_hal_version.h>
 #include <furi_hal_bt_hid.h>
 #include <furi_hal_bt_serial.h>
 #include <furi_hal_bus.c>
-#include "battery_service.h"
-
+#include <services/battery_service.h>
 #include <furi.h>
 
 #define TAG "FuriHalBt"
@@ -484,10 +487,48 @@ uint32_t furi_hal_bt_get_conn_rssi(uint8_t* rssi) {
 }
 
 // API for BLE beacon plugin
-void furi_hal_bt_set_custom_adv_data(const uint8_t* adv_data, size_t adv_len) {
-    gap_set_custom_adv_data(adv_len, adv_data);
-    furi_hal_bt_stop_advertising();
-    furi_hal_bt_start_advertising();
+bool furi_hal_bt_custom_adv_set(const uint8_t* adv_data, size_t adv_len) {
+    tBleStatus status = aci_gap_additional_beacon_set_data(adv_len, adv_data);
+    if(status) {
+        FURI_LOG_E(TAG, "custom_adv_set failed %d", status);
+        return false;
+    } else {
+        FURI_LOG_D(TAG, "custom_adv_set success");
+        return true;
+    }
+}
+
+bool furi_hal_bt_custom_adv_start(
+    uint16_t min_interval,
+    uint16_t max_interval,
+    uint8_t mac_type,
+    const uint8_t mac_addr[GAP_MAC_ADDR_SIZE],
+    uint8_t power_amp_level) {
+    tBleStatus status = aci_gap_additional_beacon_start(
+        min_interval / 0.625, // Millis to gap time
+        max_interval / 0.625, // Millis to gap time
+        0b00000111, // All 3 channels
+        mac_type,
+        mac_addr,
+        power_amp_level);
+    if(status) {
+        FURI_LOG_E(TAG, "custom_adv_start failed %d", status);
+        return false;
+    } else {
+        FURI_LOG_D(TAG, "custom_adv_start success");
+        return true;
+    }
+}
+
+bool furi_hal_bt_custom_adv_stop() {
+    tBleStatus status = aci_gap_additional_beacon_stop();
+    if(status) {
+        FURI_LOG_E(TAG, "custom_adv_stop failed %d", status);
+        return false;
+    } else {
+        FURI_LOG_D(TAG, "custom_adv_stop success");
+        return true;
+    }
 }
 
 void furi_hal_bt_reverse_mac_addr(uint8_t mac_addr[GAP_MAC_ADDR_SIZE]) {

@@ -11,7 +11,9 @@ enum SubGhzSettingIndex {
     SubGhzSettingIndexIgnoreStarline,
     SubGhzSettingIndexIgnoreCars,
     SubGhzSettingIndexIgnoreMagellan,
+    SubGhzSettingIndexIgnorePrinceton,
     SubGhzSettingIndexSound,
+    SubGhzSettingIndexResetToDefault,
     SubGhzSettingIndexLock,
     SubGhzSettingIndexRAWThresholdRSSI,
 };
@@ -269,7 +271,11 @@ static void subghz_scene_receiver_config_set_auto_alarms(VariableItem* item) {
 }
 
 static void subghz_scene_receiver_config_set_magellan(VariableItem* item) {
-    subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFlag_Magelan);
+    subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFlag_Magellan);
+}
+
+static void subghz_scene_receiver_config_set_princeton(VariableItem* item) {
+    subghz_scene_receiver_config_set_ignore_filter(item, SubGhzProtocolFlag_Princeton);
 }
 
 static void subghz_scene_receiver_config_var_list_enter_callback(void* context, uint32_t index) {
@@ -278,6 +284,46 @@ static void subghz_scene_receiver_config_var_list_enter_callback(void* context, 
     if(index == SubGhzSettingIndexLock) {
         view_dispatcher_send_custom_event(
             subghz->view_dispatcher, SubGhzCustomEventSceneSettingLock);
+    } else if(index == SubGhzSettingIndexResetToDefault) {
+        // Reset all values to default state!
+#if SUBGHZ_LAST_SETTING_SAVE_PRESET
+        subghz_txrx_set_preset_internal(
+            subghz->txrx,
+            SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY,
+            SUBGHZ_LAST_SETTING_DEFAULT_PRESET);
+#else
+        subghz_txrx_set_default_preset(subghz->txrx, SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY);
+#endif
+        SubGhzSetting* setting = subghz_txrx_get_setting(subghz->txrx);
+        SubGhzRadioPreset preset = subghz_txrx_get_preset(subghz->txrx);
+        const char* preset_name = furi_string_get_cstr(preset.name);
+        int preset_index = subghz_setting_get_inx_preset_by_name(setting, preset_name);
+        const int default_index = 0;
+
+        subghz->last_settings->frequency = preset.frequency;
+        subghz->last_settings->preset_index = preset_index;
+
+        subghz_threshold_rssi_set(subghz->threshold_rssi, raw_threshold_rssi_value[default_index]);
+        subghz->filter = bin_raw_value[0];
+        subghz->ignore_filter = 0x00;
+        subghz_txrx_receiver_set_filter(subghz->txrx, subghz->filter);
+        subghz->last_settings->ignore_filter = subghz->ignore_filter;
+        subghz->last_settings->filter = subghz->filter;
+
+        subghz_txrx_speaker_set_state(subghz->txrx, speaker_value[default_index]);
+
+        subghz_txrx_hopper_set_state(subghz->txrx, hopping_value[default_index]);
+        subghz->last_settings->enable_hopping = hopping_value[default_index];
+
+        variable_item_list_set_selected_item(subghz->variable_item_list, default_index);
+        variable_item_list_reset(subghz->variable_item_list);
+#ifdef FURI_DEBUG
+        subghz_last_settings_log(subghz->last_settings);
+#endif
+        subghz_last_settings_save(subghz->last_settings);
+
+        view_dispatcher_send_custom_event(
+            subghz->view_dispatcher, SubGhzCustomEventSceneSettingResetToDefault);
     }
 }
 
@@ -383,7 +429,19 @@ void subghz_scene_receiver_config_on_enter(void* context) {
             subghz);
 
         value_index = subghz_scene_receiver_config_ignore_filter_get_index(
-            subghz->ignore_filter, SubGhzProtocolFlag_Magelan);
+            subghz->ignore_filter, SubGhzProtocolFlag_Magellan);
+        variable_item_set_current_value_index(item, value_index);
+        variable_item_set_current_value_text(item, combobox_text[value_index]);
+
+        item = variable_item_list_add(
+            subghz->variable_item_list,
+            "Ignore Princeton:",
+            COMBO_BOX_COUNT,
+            subghz_scene_receiver_config_set_princeton,
+            subghz);
+
+        value_index = subghz_scene_receiver_config_ignore_filter_get_index(
+            subghz->ignore_filter, SubGhzProtocolFlag_Princeton);
         variable_item_set_current_value_index(item, value_index);
         variable_item_set_current_value_text(item, combobox_text[value_index]);
     }
@@ -402,6 +460,16 @@ void subghz_scene_receiver_config_on_enter(void* context) {
 
     if(scene_manager_get_scene_state(subghz->scene_manager, SubGhzSceneReadRAW) !=
        SubGhzCustomEventManagerSet) {
+        // Reset to default
+        variable_item_list_add(subghz->variable_item_list, "Reset to default", 1, NULL, NULL);
+
+        variable_item_list_set_enter_callback(
+            subghz->variable_item_list,
+            subghz_scene_receiver_config_var_list_enter_callback,
+            subghz);
+    }
+    if(scene_manager_get_scene_state(subghz->scene_manager, SubGhzSceneReadRAW) !=
+       SubGhzCustomEventManagerSet) {
         // Lock keyboard
         variable_item_list_add(subghz->variable_item_list, "Lock Keyboard", 1, NULL, NULL);
         variable_item_list_set_enter_callback(
@@ -409,6 +477,7 @@ void subghz_scene_receiver_config_on_enter(void* context) {
             subghz_scene_receiver_config_var_list_enter_callback,
             subghz);
     }
+
     if(scene_manager_get_scene_state(subghz->scene_manager, SubGhzSceneReadRAW) ==
        SubGhzCustomEventManagerSet) {
         item = variable_item_list_add(
@@ -434,6 +503,9 @@ bool subghz_scene_receiver_config_on_event(void* context, SceneManagerEvent even
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SubGhzCustomEventSceneSettingLock) {
             subghz_lock(subghz);
+            scene_manager_previous_scene(subghz->scene_manager);
+            consumed = true;
+        } else if(event.event == SubGhzCustomEventSceneSettingResetToDefault) {
             scene_manager_previous_scene(subghz->scene_manager);
             consumed = true;
         }

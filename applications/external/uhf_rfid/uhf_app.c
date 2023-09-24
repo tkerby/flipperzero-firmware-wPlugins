@@ -69,6 +69,13 @@ UHFApp* uhf_alloc() {
     // Open Notification record
     uhf_app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
+    // Variable Item List
+    uhf_app->variable_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        uhf_app->view_dispatcher,
+        UHFViewVariableItemList,
+        variable_item_list_get_view(uhf_app->variable_item_list));
+
     // Submenu
     uhf_app->submenu = submenu_alloc();
     view_dispatcher_add_view(
@@ -139,6 +146,9 @@ void uhf_free(UHFApp* uhf_app) {
     // GUI
     furi_record_close(RECORD_GUI);
     uhf_app->gui = NULL;
+
+    // Variable Item List
+    variable_item_list_free(uhf_app->variable_item_list);
 
     // Notifications
     furi_record_close(RECORD_NOTIFICATION);

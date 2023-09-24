@@ -1,44 +1,58 @@
-// #include "../uhf_app_i.h"
+#include "../uhf_app_i.h"
+#include "../uhf_module.h"
 
-// void uhf_settings_set_module_baudrate(VariableItem* item) {
-//     uint32_t baudrate =
-// }
+void uhf_settings_set_module_baudrate(VariableItem* item) {
+    M100Module* uhf_module = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+    uint32_t baudrate = BAUD_RATES[index];
+    m100_set_baudrate(uhf_module, baudrate);
+    char text_buf[10];
+    snprintf(text_buf, sizeof(text_buf), "%lu", uhf_module->baudrate);
+    variable_item_set_current_value_text(item, text_buf);
+}
 
-// void uhf_scene_on_enter(void* ctx) {
-//     UHFApp* uhf_app = ctx;
-//     view_dispatcher_switch_to_view(uhf_app->view_dispatcher, UHFViewMenu);
-// }
+uint8_t uhf_settings_get_module_baudrate_index(M100Module* module) {
+    uint32_t baudrate = module->baudrate;
+    for(uint8_t i = 0; i < sizeof(BAUD_RATES); i++) {
+        if(BAUD_RATES[i] == baudrate) {
+            return i;
+        }
+    }
+    return 0;
+}
 
-// bool uhf_scene_on_event(void* ctx, SceneManagerEvent event) {
-//     UHFApp* uhf_app = ctx;
-//     bool consumed = false;
-//     VariableItem* item;
-//     uint8_t value_index;
-//     // SubGhzSetting* setting = subghz_txrx_get_setting(subghz->txrx);
-//     // SubGhzRadioPreset preset = subghz_txrx_get_preset(subghz->txrx);
+void uhf_scene_settings_on_enter(void* ctx) {
+    furi_assert(ctx != NULL, "ctx is NULL in uhf_scene_settings_on_enter");
+    UHFApp* uhf_app = ctx;
+    M100Module* uhf_module = uhf_app->worker->module;
+    VariableItem* item;
+    VariableItemList* variable_item_list = uhf_app->variable_item_list;
 
-//     item = variable_item_list_add(
-//         subghz->variable_item_list,
-//         "Baud Rate:",
-//         subghz_setting_get_frequency_count(setting),
-//         subghz_scene_receiver_config_set_frequency,
-//         subghz);
-//     value_index = subghz_scene_receiver_config_next_frequency(preset.frequency, subghz);
-//     scene_manager_set_scene_state(
-//         subghz->scene_manager, SubGhzSceneReceiverConfig, (uint32_t)item);
-//     variable_item_set_current_value_index(item, value_index);
-//     char text_buf[10] = {0};
-//     uint32_t frequency = subghz_setting_get_frequency(setting, value_index);
-//     snprintf(
-//         text_buf,
-//         sizeof(text_buf),
-//         "%lu.%02lu",
-//         frequency / 1000000,
-//         (frequency % 1000000) / 10000);
-//     variable_item_set_current_value_text(item, text_buf);
-// }
+    uint8_t value_index = uhf_settings_get_module_baudrate_index(uhf_module);
+    char text_buf[10];
+    snprintf(text_buf, sizeof(text_buf), "%lu", uhf_module->baudrate);
 
-// void uhf_scene_on_exit(void* ctx) {
-//     UHFApp* uhf_app = ctx;
-//     submenu_reset(uhf_app->submenu);
-// }
+    item = variable_item_list_add(
+        variable_item_list,
+        "Baudrate:",
+        sizeof(BAUD_RATES),
+        uhf_settings_set_module_baudrate,
+        uhf_module);
+
+    variable_item_set_current_value_text(item, text_buf);
+    variable_item_set_current_value_index(item, value_index);
+    view_dispatcher_switch_to_view(uhf_app->view_dispatcher, UHFViewVariableItemList);
+}
+
+bool uhf_scene_settings_on_event(void* ctx, SceneManagerEvent event) {
+    UHFApp* uhf_app = ctx;
+    UNUSED(uhf_app);
+    UNUSED(event);
+    return false;
+}
+
+void uhf_scene_settings_on_exit(void* ctx) {
+    UHFApp* uhf_app = ctx;
+    variable_item_list_set_selected_item(uhf_app->variable_item_list, 0);
+    variable_item_list_reset(uhf_app->variable_item_list);
+}

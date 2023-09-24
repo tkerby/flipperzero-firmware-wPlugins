@@ -25,6 +25,7 @@ typedef enum {
     MenuStyleVertical,
     MenuStyleC64,
     MenuStyleEurocorp,
+    MenuStyleCompact,
     MenuStyleCount,
 } MenuStyle;
 
@@ -42,7 +43,9 @@ typedef enum {
 
 typedef struct {
     MenuStyle menu_style;
+    MenuStyle game_menu_style;
     uint32_t start_point;
+    uint32_t game_start_point;
     bool lock_menu_type;
     bool sort_dirs_first;
     bool dark_mode;
