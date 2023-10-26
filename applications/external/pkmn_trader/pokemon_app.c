@@ -1863,6 +1863,17 @@ const NamedList type_list[] = {
     {},
 };
 
+int pokemon_table_get_num_from_index(const PokemonTable* table, uint8_t index) {
+    int i;
+
+    for(i = 0;; i++) {
+        if(table[i].index == index) return i;
+        if(table[i].name == NULL) break;
+    }
+
+    return 0;
+}
+
 int pokemon_named_list_get_num_elements(const NamedList* list) {
     int i;
 
@@ -1920,6 +1931,7 @@ void pokemon_trade_block_set_default_name(char* dest, PokemonFap* pokemon_fap, s
             toupper(pokemon_fap->pokemon_table[pokemon_fap->curr_pokemon].name[i]));
         buf[i] = toupper(pokemon_fap->pokemon_table[pokemon_fap->curr_pokemon].name[i]);
     }
+    FURI_LOG_D(TAG, "[app] Set default nickname");
 
     if(dest != NULL) {
         strncpy(dest, buf, n);
@@ -1972,6 +1984,8 @@ void pokemon_trade_block_recalculate_stats_from_level(PokemonFap* pokemon_fap) {
 
     pkmn->level_again = level;
     UINT32_TO_EXP(experience, pkmn->exp);
+    FURI_LOG_D(TAG, "[app] Set pkmn level %d", level);
+    FURI_LOG_D(TAG, "[app] Set pkmn exp %d", (int)experience);
 
     /* Generate STATEXP */
     switch(curr_stats) {
@@ -1988,6 +2002,7 @@ void pokemon_trade_block_recalculate_stats_from_level(PokemonFap* pokemon_fap) {
         break;
     }
 
+    FURI_LOG_D(TAG, "[app] EVs set to %d", stat);
     stat = __builtin_bswap16(stat);
 
     pkmn->hp_ev = stat;
@@ -2006,33 +2021,50 @@ void pokemon_trade_block_recalculate_stats_from_level(PokemonFap* pokemon_fap) {
                    ((special_iv & 0x0f));
         hp_iv = (pkmn->iv & 0xAA) >> 4;
     }
+    FURI_LOG_D(
+        TAG,
+        "[app] atk_iv %d, def_iv %d, spd_iv %d, spc_iv %d, hp_iv %d",
+        atk_iv,
+        def_iv,
+        spd_iv,
+        special_iv,
+        hp_iv);
 
     /* Calculate HP */
     // https://bulbapedia.bulbagarden.net/wiki/Stat#Generations_I_and_II
     stat = floor((((2 * (table->base_hp + hp_iv)) + floor(sqrt(pkmn->hp_ev) / 4)) * level) / 100) +
            (level + 10);
+    FURI_LOG_D(TAG, "[app] HP set to %d", stat);
     pkmn->hp = __builtin_bswap16(stat);
     pkmn->max_hp = pkmn->hp;
 
     /* Calculate ATK, DEF, SPD, SP */
+    /* TODO: these all use the same calculations, could put the stats in a sub-array and iterate
+     * through each element in order rather than having to repeat the code. IVs would also need
+     * to be in a similar array.
+     **/
     // https://bulbapedia.bulbagarden.net/wiki/Stat#Generations_I_and_II
     stat =
         floor((((2 * (table->base_atk + atk_iv)) + floor(sqrt(pkmn->atk_ev) / 4)) * level) / 100) +
         5;
+    FURI_LOG_D(TAG, "[app] ATK set to %d", stat);
     pkmn->atk = __builtin_bswap16(stat);
     stat =
         floor((((2 * (table->base_def + def_iv)) + floor(sqrt(pkmn->def_ev) / 4)) * level) / 100) +
         5;
+    FURI_LOG_D(TAG, "[app] DEF set to %d", stat);
     pkmn->def = __builtin_bswap16(stat);
     stat =
         floor((((2 * (table->base_spd + spd_iv)) + floor(sqrt(pkmn->spd_ev) / 4)) * level) / 100) +
         5;
+    FURI_LOG_D(TAG, "[app] SPD set to %d", stat);
     pkmn->spd = __builtin_bswap16(stat);
     stat = floor(
                (((2 * (table->base_special + special_iv)) + floor(sqrt(pkmn->special_ev) / 4)) *
                 level) /
                100) +
            5;
+    FURI_LOG_D(TAG, "[app] SPC set to %d", stat);
     pkmn->special = __builtin_bswap16(stat);
 }
 
@@ -2045,15 +2077,24 @@ void pokemon_trade_block_recalculate(PokemonFap* pokemon_fap) {
     /* Set current pokemon to the trade structure */
     pkmn->index = table->index;
     pokemon_fap->trade_block->party_members[0] = table->index;
+    FURI_LOG_D(TAG, "[app] Set %s in trade block", table->name);
 
     /* Set current pokemon's moves to the trade structure */
     for(i = 0; i < 4; i++) {
         pkmn->move[i] = table->move[i];
+        FURI_LOG_D(
+            TAG,
+            "[app] Set %s in trade block",
+            pokemon_named_list_get_name_from_index(pokemon_fap->move_list, pkmn->move[i]));
     }
 
     /* Set current pokemon's types to the trade structure */
     for(i = 0; i < 2; i++) {
         pkmn->type[i] = table->type[i];
+        FURI_LOG_D(
+            TAG,
+            "[app] Set %s in trade block",
+            pokemon_named_list_get_name_from_index(pokemon_fap->type_list, pkmn->type[i]));
     }
 
     pokemon_trade_block_recalculate_stats_from_level(pokemon_fap);
@@ -2103,6 +2144,7 @@ static void trade_block_free(TradeBlock* trade) {
 
 PokemonFap* pokemon_alloc() {
     PokemonFap* pokemon_fap = (PokemonFap*)malloc(sizeof(PokemonFap));
+    View* trade_view;
 
     // View dispatcher
     pokemon_fap->view_dispatcher = view_dispatcher_alloc();
@@ -2150,8 +2192,19 @@ PokemonFap* pokemon_alloc() {
         pokemon_fap->view_dispatcher, AppViewSelectPokemon, pokemon_fap->select_view);
 
     // Trade View
-    pokemon_fap->trade_view = trade_alloc(pokemon_fap);
-    view_dispatcher_add_view(pokemon_fap->view_dispatcher, AppViewTrade, pokemon_fap->trade_view);
+    /* Allocate a view and pass it to the trade routines. The trade API is
+     * responsible for freeing every resource, including the view itself. This
+     * is actually how it was already designed anyway, so we just create it first. The
+     * main FAP does not keep track of it. In theory, we could let the trade
+     * API handle all of it, however, it doesn't make sense to have the trade
+     * API add itself to the view dispatcher since that kind of management is
+     * outside the scope of the trade routines and is the responsibility of the
+     * main FAP.
+     */
+    trade_view = view_alloc();
+    pokemon_fap->trade =
+        trade_alloc(pokemon_fap->trade_block, pokemon_fap->pokemon_table, trade_view);
+    view_dispatcher_add_view(pokemon_fap->view_dispatcher, AppViewTrade, trade_view);
 
     return pokemon_fap;
 }
@@ -2164,7 +2217,7 @@ void free_app(PokemonFap* pokemon_fap) {
     select_pokemon_free(pokemon_fap);
 
     view_dispatcher_remove_view(pokemon_fap->view_dispatcher, AppViewTrade);
-    trade_free(pokemon_fap);
+    trade_free(pokemon_fap->trade);
 
     view_dispatcher_remove_view(pokemon_fap->view_dispatcher, AppViewMainMenu);
 

@@ -31,10 +31,6 @@
 
 #define PICOPASS_TEXT_STORE_SIZE 128
 
-#define LOCLASS_NUM_CSNS 9
-// Collect 2 MACs per CSN to account for keyroll modes
-#define LOCLASS_MACS_TO_COLLECT (LOCLASS_NUM_CSNS * 2)
-
 enum PicopassCustomEvent {
     // Reserve first 100 events for button types and indexes, starting from 0
     PicopassCustomEventReserved = 100,
@@ -61,7 +57,7 @@ struct Picopass {
 
     char text_store[PICOPASS_TEXT_STORE_SIZE + 1];
     FuriString* text_box_store;
-    uint8_t byte_input_store[RFAL_PICOPASS_BLOCK_LEN];
+    uint8_t byte_input_store[PICOPASS_BLOCK_LEN];
 
     // Common Views
     Submenu* submenu;

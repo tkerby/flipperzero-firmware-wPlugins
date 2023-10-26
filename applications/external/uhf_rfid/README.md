@@ -7,17 +7,11 @@ justify-content: space-evenly;
 align-items: center;
 ">
   <img style="
-  border-radius: 10px;
-  margin: 10px;
-  width: 350px;
-  height: 350px;
-  object-fit: cover;"
-  src="assets/img/uhf_demo_app2.jpg">
-  <img style="border-radius: 10px;
-  margin: 10px;
-  width: 350px;
-  height: 350px;
-  object-fit: cover;"
+    width: 350px;"
+    src="assets/img/uhf_demo_app2.jpg">
+  <img style="
+    border-radius: 10px;
+    width: 400px;"
   src="assets/img/uhf_demo_app.jpg">
 </div>
 
@@ -32,23 +26,29 @@ Adding options like settings the access password, baud rate, rf power, channel, 
 
 ## What's Changed
 
-- A complete refractor from the concept code to covert to a framework. So that it's easy to refractor for different possible module's. See [module.h](uhf_module.h) for more info.
-- Reading bank now can automatically detect bank size, for cases that PC(protocol control) bits aren't properly written to tag.
-- Can now view tag from saved.
-- Can now write tags from saved.
-- Icon added by [@xMasterX](https://github.com/xMasterX)
-- App is now named `[(Q)M100] UHF RFID`, meaning for M100 and QM100 modules
+- Added a settings page to allow for changing of the module's settings.
+- Added options like baud rate, rf power, region; more to come.
+- Tx communication is much more stable and faster now; more improvements to come.
+- Bug fixes and improvements.
 
 ## Features
 
-- [x] Read Single UHF RFID tag.
-- [x] View saved UHF RFID tag.
-- [x] Write Single UHF RFID tag.
-- [ ] Change Module setting parameters. **(In Progress)**
+- [x] Read Single UHF RFID tag
+  - [x] EPC Bank
+  - [x] TID Bank
+  - [x] USER Bank
+- [x] View saved UHF RFID tags
+- [x] Write Single UHF RFID tag
+  - [x] EPC Bank
+  - [ ] TID Bank (Not Supported if locked)
+  - [x] USER Bank
+- [ ] Change Module setting parameters **(In Progress)**
+  - [x] Set Baudrates
+  - [x] Set RF Power
+  - [x] Set Region
   - [ ] Set/Reset Access Password
   - [ ] Set Kill Password
   - [ ] Kill Tag
-  - [ ] TBD
 - [ ] Edit/Create new data to write.
 - Extras
   - [ ] Read multiple tags at once
@@ -79,7 +79,7 @@ To run this application on FlipperZero, you will need:
 1. Power on your FlipperZero device.
 2. Connect the uhf module to the flipper via gpio.
 3. Navigate to the UHF RFID app on FlipperZero's menu.
-4. Currently Reading the EPC tag is the only usable option
+4. Currently Read for EPC, TID, USER Banks are supported, as well as saving and Writing EPC, USER Banks
    ... will further update this page as it development goes
 
 ## Contributions

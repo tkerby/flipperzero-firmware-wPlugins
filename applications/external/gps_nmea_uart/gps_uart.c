@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "minmea.h"
+#include <minmea.h>
 #include "gps_uart.h"
 
 typedef enum {
@@ -211,6 +211,9 @@ GpsUart* gps_uart_enable() {
     gps_uart->notifications = furi_record_open(RECORD_NOTIFICATION);
 
     gps_uart->baudrate = gps_baudrates[current_gps_baudrate];
+    gps_uart->changing_baudrate = false;
+    gps_uart->backlight_on = false;
+    gps_uart->speed_units = KNOTS;
 
     gps_uart_init_thread(gps_uart);
 

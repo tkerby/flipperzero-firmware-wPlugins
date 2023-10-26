@@ -14,9 +14,6 @@
 // TODO: More accurate timing for Nested
 // TODO: Eliminate OOM crashes (updated application is larger)
 
-// Static Nested TODO:
-// 1. Find bug which causes keys to not be found (most likely cause: in parameter)
-
 #include <furi.h>
 #include <furi_hal.h>
 #include "time.h"
@@ -338,6 +335,7 @@ int check_state(struct Crypto1State* t, MfClassicNonce* n) {
         struct Crypto1State temp = {t->odd, t->even};
         rollback_word_noret(t, n->uid_xor_nt1, 0);
         if(n->ks1_1_enc == crypt_word_ret(t, n->uid_xor_nt0, 0)) {
+            rollback_word_noret(&temp, n->uid_xor_nt1, 0);
             crypto1_get_lfsr(&temp, &(n->key));
             return 1;
         }
@@ -346,15 +344,20 @@ int check_state(struct Crypto1State* t, MfClassicNonce* n) {
     return 0;
 }
 
-static inline int
-    state_loop(unsigned int* states_buffer, int xks, int m1, int m2, unsigned int in) {
+static inline int state_loop(
+    unsigned int* states_buffer,
+    int xks,
+    int m1,
+    int m2,
+    unsigned int in,
+    uint8_t and_val) {
     int states_tail = 0;
     int round = 0, s = 0, xks_bit = 0, round_in = 0;
 
     for(round = 1; round <= 12; round++) {
         xks_bit = BIT(xks, round);
         if(round > 4) {
-            round_in = (in >> (2 * round)) << 24;
+            round_in = ((in >> (2 * (round - 4))) & and_val) << 24;
         }
 
         for(s = 0; s <= states_tail; s++) {
@@ -555,7 +558,7 @@ int calculate_msb_tables(
 
         if(filter(semi_state) == (oks & 1)) { //-V547
             states_buffer[0] = semi_state;
-            states_tail = state_loop(states_buffer, oks, CONST_M1_1, CONST_M2_1, 0);
+            states_tail = state_loop(states_buffer, oks, CONST_M1_1, CONST_M2_1, 0, 0);
 
             for(i = states_tail; i >= 0; i--) {
                 msb = states_buffer[i] >> 24;
@@ -578,7 +581,7 @@ int calculate_msb_tables(
 
         if(filter(semi_state) == (eks & 1)) { //-V547
             states_buffer[0] = semi_state;
-            states_tail = state_loop(states_buffer, eks, CONST_M1_2, CONST_M2_2, in & 3);
+            states_tail = state_loop(states_buffer, eks, CONST_M1_2, CONST_M2_2, in, 3);
 
             for(i = 0; i <= states_tail; i++) {
                 msb = states_buffer[i] >> 24;
