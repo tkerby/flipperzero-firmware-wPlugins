@@ -13,7 +13,7 @@
 //#include <lib/subghz/blocks/math.h>
 //#include <lib/subghz/protocols/raw.h>
 //#include <lib/subghz/protocols/bin_raw.h>
-//#include <lib/subghz/protocols/protocol_items.h> //Not found
+//#include <lib/subghz/protocols/protocol_items.h>
 //#include <lib/subghz/protocols/protocol_items.c>
 #include <lib/subghz/subghz_keystore.h>
 //#include <lib/subghz/subghz_file_encoder_worker.h>
@@ -60,7 +60,7 @@ SubGhzRemote* xremote_sg_remote_alloc() {
 
     // SubGhz Settings
     remote->setting = subghz_setting_alloc();
-    subghz_setting_load(remote->setting, EXT_PATH("subghz/assets/setting_user.txt"));
+    subghz_setting_load(remote->setting, EXT_PATH("subghz/assets/setting_user"));
 
     remote->txrx = malloc(sizeof(SubGhzTxRx));
     remote->txrx->preset = malloc(sizeof(SubGhzRadioPreset));

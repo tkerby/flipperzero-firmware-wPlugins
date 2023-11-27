@@ -85,8 +85,9 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
         canvas_set_bitmap_mode(canvas, 0);
         canvas_set_color(canvas, ColorWhite);
     }
-    hid_media_draw_arrow(canvas, 65, 28, CanvasDirectionRightToLeft);
+    hid_media_draw_arrow(canvas, 67, 28, CanvasDirectionRightToLeft);
     hid_media_draw_arrow(canvas, 70, 28, CanvasDirectionRightToLeft);
+    canvas_draw_line(canvas, 64, 26, 64, 30);
     canvas_set_color(canvas, ColorBlack);
 
     // Right
@@ -97,7 +98,8 @@ static void hid_media_draw_callback(Canvas* canvas, void* context) {
         canvas_set_color(canvas, ColorWhite);
     }
     hid_media_draw_arrow(canvas, 96, 28, CanvasDirectionLeftToRight);
-    hid_media_draw_arrow(canvas, 101, 28, CanvasDirectionLeftToRight);
+    hid_media_draw_arrow(canvas, 99, 28, CanvasDirectionLeftToRight);
+    canvas_draw_line(canvas, 102, 26, 102, 30);
     canvas_set_color(canvas, ColorBlack);
 
     // Ok
@@ -186,12 +188,15 @@ static bool hid_media_input_callback(InputEvent* event, void* context) {
     HidMedia* hid_media = context;
     bool consumed = false;
 
-    if(event->type == InputTypePress) {
-        hid_media_process_press(hid_media, event);
+    if(event->type == InputTypeLong && event->key == InputKeyBack) {
+        hid_hal_keyboard_release_all(hid_media->hid);
+    } else {
         consumed = true;
-    } else if(event->type == InputTypeRelease) {
-        hid_media_process_release(hid_media, event);
-        consumed = true;
+        if(event->type == InputTypePress) {
+            hid_media_process_press(hid_media, event);
+        } else if(event->type == InputTypeRelease) {
+            hid_media_process_release(hid_media, event);
+        }
     }
     return consumed;
 }

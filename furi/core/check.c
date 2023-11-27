@@ -128,7 +128,7 @@ static void __furi_print_name(bool isr) {
     }
 }
 
-FURI_NORETURN void __furi_crash() {
+FURI_NORETURN void __furi_crash_implementation() {
     __disable_irq();
     GET_MESSAGE_AND_STORE_REGISTERS();
 
@@ -171,7 +171,7 @@ FURI_NORETURN void __furi_crash() {
             ptr = (uint32_t) "Check serial logs";
         }
         furi_hal_rtc_set_fault_data(ptr);
-        furi_hal_console_puts("\r\nRebooting system.\r\n");
+        furi_hal_console_puts("\r\nRebooting Flipper Zero.\r\n");
         furi_hal_console_puts("\033[0m\r\n");
         furi_hal_power_reset();
     }
@@ -179,7 +179,7 @@ FURI_NORETURN void __furi_crash() {
     __builtin_unreachable();
 }
 
-FURI_NORETURN void __furi_halt() {
+FURI_NORETURN void __furi_halt_implementation() {
     __disable_irq();
     GET_MESSAGE_AND_STORE_REGISTERS();
 

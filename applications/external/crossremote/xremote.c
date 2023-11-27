@@ -47,6 +47,8 @@ XRemote* xremote_app_alloc() {
     app->led = 1;
     app->save_settings = 1;
     app->transmitting = 0;
+    app->ir_timing = 1000;
+    app->ir_timing_char = "1000";
 
     // Load configs
     xremote_read_settings(app);
@@ -113,22 +115,6 @@ XRemote* xremote_app_alloc() {
     return app;
 }
 
-void xremote_show_loading_popup(XRemote* app, bool show) {
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
-    ViewStack* view_stack = app->view_stack;
-    Loading* loading = app->loading;
-
-    if(show) {
-        // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
-        view_stack_add_view(view_stack, loading_get_view(loading));
-    } else {
-        view_stack_remove_view(view_stack, loading_get_view(loading));
-        // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
-    }
-}
-
 void xremote_app_free(XRemote* app) {
     furi_assert(app);
 
@@ -157,6 +143,11 @@ void xremote_app_free(XRemote* app) {
 
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
+
+    furi_record_close(RECORD_DIALOGS);
+    furi_string_free(app->file_path);
+
+    loading_free(app->loading);
 
     app->gui = NULL;
     app->notification = NULL;

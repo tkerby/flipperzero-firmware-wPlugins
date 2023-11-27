@@ -184,7 +184,8 @@ void totp_scene_generate_token_activate(PluginState* plugin_state) {
             scene_state->last_code,
             TokenDigitsCountMax + 1,
             scene_state->last_code_update_sync,
-            plugin_state->automation_kb_layout);
+            plugin_state->automation_kb_layout,
+            plugin_state->automation_initial_delay);
     }
 
     scene_state->active_font = totp_font_info_alloc();
@@ -207,7 +208,8 @@ void totp_scene_generate_token_activate(PluginState* plugin_state) {
             scene_state->last_code,
             TokenDigitsCountMax + 1,
             scene_state->last_code_update_sync,
-            plugin_state->automation_kb_layout);
+            plugin_state->automation_kb_layout,
+            plugin_state->automation_initial_delay);
     }
 #endif
     const TokenInfoIteratorContext* iterator_context =
@@ -422,14 +424,13 @@ bool totp_scene_generate_token_handle_event(
             break;
         }
         case InputKeyOk:
+            totp_scene_director_activate_scene(plugin_state, TotpSceneTokenMenu);
             break;
         case InputKeyBack:
             break;
         default:
             break;
         }
-    } else if(event->input.type == InputTypeShort && event->input.key == InputKeyOk) {
-        totp_scene_director_activate_scene(plugin_state, TotpSceneTokenMenu);
     }
 
     return true;

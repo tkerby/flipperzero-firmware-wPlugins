@@ -3,16 +3,30 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-#include <timezone_utils.h>
 #include "../../config/wolfssl/config.h"
 #include <wolfssl/wolfcrypt/hmac.h>
+#ifdef NO_INLINE
+#include <wolfssl/wolfcrypt/misc.h>
+#else
+#define WOLFSSL_MISC_INCLUDED
+#include <wolfcrypt/src/misc.c>
+#endif
 
 #define HMAC_MAX_RESULT_SIZE WC_SHA512_DIGEST_SIZE
 
-static uint64_t swap_uint64(uint64_t val) {
-    val = ((val << 8) & 0xFF00FF00FF00FF00ULL) | ((val >> 8) & 0x00FF00FF00FF00FFULL);
-    val = ((val << 16) & 0xFFFF0000FFFF0000ULL) | ((val >> 16) & 0x0000FFFF0000FFFFULL);
-    return (val << 32) | (val >> 32);
+static int32_t timezone_offset_from_hours(float hours) {
+    return hours * 3600.0f;
+}
+
+static uint64_t timezone_offset_apply(uint64_t time, int32_t offset) {
+    uint64_t for_time_adjusted;
+    if(offset > 0) {
+        for_time_adjusted = time - offset;
+    } else {
+        for_time_adjusted = time + (-offset);
+    }
+
+    return for_time_adjusted;
 }
 
 /**
@@ -43,7 +57,7 @@ uint64_t otp_generate(
     uint64_t input) {
     uint8_t hmac[HMAC_MAX_RESULT_SIZE] = {0};
 
-    uint64_t input_swapped = swap_uint64(input);
+    uint64_t input_swapped = ByteReverseWord64(input);
 
     int hmac_len =
         (*algo)(plain_secret, plain_secret_length, (uint8_t*)&input_swapped, 8, &hmac[0]);

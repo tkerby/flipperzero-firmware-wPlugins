@@ -1,18 +1,20 @@
 #pragma once
 
 #include "continuity.h"
-#include "fastpair.h"
 #include "easysetup.h"
+#include "fastpair.h"
+#include "lovespouse.h"
 #include "swiftpair.h"
 
 typedef enum {
-    ProtocolModeRandom,
-    ProtocolModeValue,
-    ProtocolModeBruteforce,
-} ProtocolMode;
+    PayloadModeRandom,
+    PayloadModeValue,
+    PayloadModeBruteforce,
+} PayloadMode;
 
-struct ProtocolCfg {
-    ProtocolMode mode;
+struct Payload {
+    bool random_mac;
+    PayloadMode mode;
     struct {
         uint8_t counter;
         uint32_t value;
@@ -20,20 +22,16 @@ struct ProtocolCfg {
     } bruteforce;
     union {
         ContinuityCfg continuity;
-        FastpairCfg fastpair;
         EasysetupCfg easysetup;
+        FastpairCfg fastpair;
+        LovespouseCfg lovespouse;
         SwiftpairCfg swiftpair;
-    } specific;
+    } cfg;
 };
 
 extern const Protocol* protocols[];
 
 extern const size_t protocols_count;
-
-typedef struct {
-    bool random_mac;
-    ProtocolCfg cfg;
-} Payload;
 
 struct Attack {
     const char* title;

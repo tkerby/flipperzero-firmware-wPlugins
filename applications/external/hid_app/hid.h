@@ -20,11 +20,13 @@
 #include "views/hid_keyboard.h"
 #include "views/hid_numpad.h"
 #include "views/hid_media.h"
+#include "views/hid_movie.h"
 #include "views/hid_mouse.h"
+#include "views/hid_mouse_clicker.h"
 #include "views/hid_mouse_jiggler.h"
 #include "views/hid_tikshorts.h"
 #include "views/hid_camera.h"
-#include "views/hid_mouse_clicker.h"
+#include "views/hid_ptt.h"
 
 #include "hid_path.h"
 
@@ -46,11 +48,13 @@ struct Hid {
     HidKeyboard* hid_keyboard;
     HidNumpad* hid_numpad;
     HidMedia* hid_media;
+    HidMovie* hid_movie;
     HidMouse* hid_mouse;
     HidMouseClicker* hid_mouse_clicker;
     HidMouseJiggler* hid_mouse_jiggler;
     HidTikShorts* hid_tikshorts;
     HidCamera* hid_camera;
+    HidPtt* hid_ptt;
 
     HidTransport transport;
     uint32_t view_id;
