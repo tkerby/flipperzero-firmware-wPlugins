@@ -12,13 +12,7 @@
 #define CFW_DESKTOP_SELECT_STEALTH_ICON 9
 #define CFW_DESKTOP_SELECT_TOP_BAR 10
 
-const char* const anim_style_names[AnimStyleCount] = {
-    "None",      "Default",      "Minimal", "420",        "420+18",        "ALL",      "Anime",
-    "Anime+420", "Anime+420+18", "BMO",     "Cherry 18+", "Corp Logos",    "Custom 1", "Custom 2",
-    "DBZ",       "Digim0n",      "Dolphin", "Hackz",      "Mario",         "Marvel",   "NYAN",
-    "One Piece", "P0kemon",      "RM 18+",  "RM Select",  "RM Select 18+", "SAO",      "Science",
-    "SJUMP",     "Squatch",      "Stock",   "Virus",      "WatchDogs",
-};
+#define FILE_NAME_LEN_MAX 256
 
 #define BATTERY_VIEW_COUNT 7
 const char* const battery_view_count_text[BATTERY_VIEW_COUNT] =
@@ -34,6 +28,14 @@ const uint32_t displayBatteryPercentage_value[BATTERY_VIEW_COUNT] = {
     DISPLAY_BATTERY_NONE};
 
 uint8_t origBattDisp_value = 0;
+
+//Dolphin Manifest Switcher menu.
+struct ManifestInfo {
+    char* FileName;
+    char* MenuName;
+};
+uint8_t ManifestFileCount; //Anymore than 255 manifests and kaboom!
+ManifestFilesArray_t ManifestFiles;
 
 #define CFW_DESKTOP_ICON_STYLE_COUNT 2
 
@@ -73,8 +75,9 @@ static void cfw_app_scene_interface_desktop_var_item_list_callback(void* context
 static void cfw_app_scene_interface_desktop_anim_style_changed(VariableItem* item) {
     CfwApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, anim_style_names[index]);
-    CFW_SETTINGS()->anim_style = index;
+    ManifestInfo* CurrentManifest = *ManifestFilesArray_get(ManifestFiles, index);
+    variable_item_set_current_value_text(item, CurrentManifest->MenuName);
+    CFW_SETTINGS()->manifest_name = CurrentManifest->FileName;
     app->save_settings = true;
 }
 
@@ -169,14 +172,75 @@ void cfw_app_scene_interface_desktop_on_enter(void* context) {
     origIconStyle_value = app->desktop.icon_style;
     origBattDisp_value = app->desktop.displayBatteryPercentage;
 
+    //Initialization.
+    ManifestFileCount = 0;
+    ManifestFilesArray_init(ManifestFiles);
+
+    //Open up Storage.
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* folder = storage_file_alloc(storage);
+    FileInfo info;
+    char* name = malloc(FILE_NAME_LEN_MAX);
+    uint8_t current_manifest = 0;
+
+    //Lets walk the dolphin folder and get the filenamess.
+    if(storage_dir_open(folder, EXT_PATH("dolphin"))) {
+        while(storage_dir_read(folder, &info, name, FILE_NAME_LEN_MAX)) {
+            if(!(info.flags & FSF_DIRECTORY)) {
+                //Create the struct to add to the array of Manifests.
+                ManifestInfo* NewManifestInfo = malloc(sizeof(ManifestInfo));
+                NewManifestInfo->FileName = strdup(name);
+
+                //Are we on a manifest>
+                if(strncasecmp(NewManifestInfo->FileName, "manifest", 8) == 0) {
+                    if(strlen(NewManifestInfo->FileName) == 12) {
+                        //Default Manifest on every Flipper (You'd Hope!)
+                        NewManifestInfo->MenuName = "Default";
+
+                        //Add to the list of names.
+                        ManifestFilesArray_push_back(ManifestFiles, NewManifestInfo);
+                        ManifestFileCount++;
+                    } else {
+                        //Allocate memory for the menuname
+                        NewManifestInfo->MenuName = malloc(strlen(NewManifestInfo->FileName) - 12);
+                        snprintf(
+                            NewManifestInfo->MenuName,
+                            strlen(NewManifestInfo->FileName) - 12,
+                            "%s",
+                            NewManifestInfo->FileName + 9);
+
+                        //Sanity Check.
+                        if(strcmp(NewManifestInfo->MenuName, "") != 0) {
+                            //Add to the list of Manifests.
+                            ManifestFilesArray_push_back(ManifestFiles, NewManifestInfo);
+
+                            //Select in menu if its our manifest.
+                            if(strcmp(NewManifestInfo->FileName, cfw_settings->manifest_name) == 0)
+                                current_manifest = ManifestFileCount;
+
+                            //Count the added Files.
+                            ManifestFileCount++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Close up and free.
+    free(name);
+    storage_file_free(folder);
+
+    //Add items to list.
     item = variable_item_list_add(
         var_item_list,
         "Animations",
-        AnimStyleCount,
+        ManifestFileCount,
         cfw_app_scene_interface_desktop_anim_style_changed,
         app);
-    variable_item_set_current_value_index(item, cfw_settings->anim_style);
-    variable_item_set_current_value_text(item, anim_style_names[cfw_settings->anim_style]);
+    variable_item_set_current_value_index(item, current_manifest);
+    ManifestInfo* CurrentManifest = *ManifestFilesArray_get(ManifestFiles, current_manifest);
+    variable_item_set_current_value_text(item, CurrentManifest->MenuName);
 
     item = variable_item_list_add(
         var_item_list,
@@ -352,6 +416,14 @@ void cfw_app_scene_interface_desktop_on_exit(void* context) {
     CfwApp* app = context;
     variable_item_list_reset(app->var_item_list);
     DESKTOP_SETTINGS_SAVE(&app->desktop);
+
+    //Free the Manifest List.
+    ManifestFilesArray_it_t ManifestFiles_it;
+    for(ManifestFilesArray_it(ManifestFiles_it, ManifestFiles);
+        !ManifestFilesArray_end_p(ManifestFiles_it);
+        ManifestFilesArray_next(ManifestFiles_it)) {
+        free(*ManifestFilesArray_cref(ManifestFiles_it));
+    }
 
     if((app->desktop.icon_style != origIconStyle_value) ||
        (app->desktop.displayBatteryPercentage != origBattDisp_value)) {

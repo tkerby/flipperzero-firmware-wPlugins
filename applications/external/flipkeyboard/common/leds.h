@@ -8,6 +8,7 @@
 */
 
 #include <furi.h>
+#include "resources.h"
 
 typedef struct FlipboardLeds FlipboardLeds;
 
@@ -22,9 +23,10 @@ typedef enum {
  * @brief Allocates a FlipboardLeds struct.
  * @details This method allocates a FlipboardLeds struct.  This is used to
  * control the status LED and the addressable LEDs on the flipboard.
+ * @param resources The resources struct to use for hardware access.
  * @return The allocated FlipboardLeds struct.
 */
-FlipboardLeds* flipboard_leds_alloc();
+FlipboardLeds* flipboard_leds_alloc(Resources* resources);
 
 /**
  * @brief Frees a FlipboardLeds struct.
@@ -33,8 +35,8 @@ FlipboardLeds* flipboard_leds_alloc();
 void flipboard_leds_free(FlipboardLeds* leds);
 
 /**
- * @brief Resets the LEDs to their default colors.
- * @details This method resets the LEDs data to their default color pattern.
+ * @brief Resets the LEDs to their default color pattern (off).
+ * @details This method resets the LEDs data to their default color pattern (off).
  * You must still call flipboard_leds_update to update the LEDs.
  * @param leds The FlipboardLeds struct to reset.
 */

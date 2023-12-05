@@ -14,12 +14,14 @@ typedef struct {
  * @brief Allocates a FlipboardLeds struct.
  * @details This method allocates a FlipboardLeds struct.  This is used to
  * control the addressable LEDs on the flipboard.
+ * @param resources The resources struct to use for hardware access.
  * @return The allocated FlipboardLeds struct.
 */
-FlipboardLeds* flipboard_leds_alloc() {
+FlipboardLeds* flipboard_leds_alloc(Resources* resources) {
     FlipboardLeds* leds = malloc(sizeof(FlipboardLeds));
 #ifdef USE_LED_DRIVER
     FURI_LOG_D(TAG, "Using LED driver");
+    leds->resources = resources;
     leds->led_driver = led_driver_alloc(LED_COUNT, pin_ws2812_leds);
 #else
     FURI_LOG_D(TAG, "Using Bit-bang LEDs");
@@ -49,16 +51,16 @@ void flipboard_leds_free(FlipboardLeds* leds) {
 }
 
 /**
- * @brief Resets the LEDs to their default colors.
- * @details This method resets the LEDs data to their default color pattern.
+ * @brief Resets the LEDs to their default color pattern (off).
+ * @details This method resets the LEDs data to their default color pattern (off).
  * You must still call flipboard_leds_update to update the LEDs.
  * @param leds The FlipboardLeds struct to reset.
 */
 void flipboard_leds_reset(FlipboardLeds* leds) {
-    leds->color[0] = 0x2000FF;
-    leds->color[1] = 0xFF0000;
-    leds->color[2] = 0x00FF00;
-    leds->color[3] = 0x0000FF;
+    leds->color[0] = 0x000000;
+    leds->color[1] = 0x000000;
+    leds->color[2] = 0x000000;
+    leds->color[3] = 0x000000;
 }
 
 /**
@@ -90,11 +92,13 @@ void flipboard_leds_set(FlipboardLeds* leds, LedIds led, uint32_t color) {
 */
 void flipboard_leds_update(FlipboardLeds* leds) {
 #ifdef USE_LED_DRIVER
+    resources_acquire(leds->resources, ResourceIdLedDriver, FuriWaitForever);
     for(int i = 0; i < LED_COUNT; i++) {
         led_driver_set_led(leds->led_driver, i, leds->color[i]);
     }
     led_driver_transmit(leds->led_driver);
     led_driver_transmit(leds->led_driver);
+    resources_release(leds->resources, ResourceIdLedDriver);
 #else
     furi_hal_gpio_write(pin_ws2812_leds, false);
     uint8_t bits[4 * 8 * 3 * 2];
