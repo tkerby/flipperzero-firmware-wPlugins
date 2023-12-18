@@ -73,7 +73,7 @@ static void usb_can_on_irq_cb(void* context) {
 
 static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
     furi_hal_usb_unlock();
-    if(vcp_ch == 0) {
+    /* if(vcp_ch == 0) {
         Cli* cli = (Cli*)furi_record_open(RECORD_CLI);
         cli_session_close(cli);
         furi_record_close(RECORD_CLI);
@@ -83,7 +83,7 @@ static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
         Cli* cli = (Cli*)furi_record_open(RECORD_CLI);
         cli_session_open(cli, &cli_vcp);
         furi_record_close(RECORD_CLI);
-    }
+    }*/
     furi_hal_cdc_set_callbacks(vcp_ch, (CdcCallbacks*)&cdc_cb, usb_can);
 }
 
@@ -128,18 +128,19 @@ static int32_t usb_can_worker(void* context) {
     usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 512, usb_can_tx_thread, usb_can);
 
     usb_can_vcp_init(usb_can, usb_can->cfg.vcp_ch);
-    if(usb_can->state != UsbCanLoopBackTestState) {
-        const char hello_bridge_usb[] = "USB BRIDGE STARTED";
-        furi_hal_cdc_send(
-            usb_can->cfg.vcp_ch, (uint8_t*)hello_bridge_usb, sizeof(hello_bridge_usb));
-    } else {
-        const char hello_test_usb[] = "USB LOOPBACK TEST START";
-        furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)hello_test_usb, sizeof(hello_test_usb));
+    if(furi_mutex_acquire(usb_can->tx_mutex, FuriWaitForever) == FuriStatusOk) {
+        if(usb_can->state != UsbCanLoopBackTestState) {
+            const char hello_bridge_usb[] = "USB BRIDGE STARTED";
+            furi_hal_cdc_send(
+                usb_can->cfg.vcp_ch, (uint8_t*)hello_bridge_usb, sizeof(hello_bridge_usb));
+        } else {
+            const char hello_test_usb[] = "USB LOOPBACK TEST START";
+            furi_hal_cdc_send(
+                usb_can->cfg.vcp_ch, (uint8_t*)hello_test_usb, sizeof(hello_test_usb));
+        }
     }
-
-    furi_thread_flags_set(furi_thread_get_id(usb_can->tx_thread), WorkerEvtCdcRx);
-
     furi_thread_start(usb_can->tx_thread);
+    //furi_thread_flags_set(furi_thread_get_id(usb_can->tx_thread), WorkerEvtCdcRx);
 
     while(1) {
         events = furi_thread_flags_wait(WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
@@ -149,12 +150,9 @@ static int32_t usb_can_worker(void* context) {
             size_t len = furi_stream_buffer_receive(
                 usb_can->rx_stream, usb_can->rx_buf, USB_CDC_PKT_LEN, 0);
             if(len > 0) {
-                if(furi_mutex_acquire(usb_can->tx_mutex, 100) == FuriStatusOk) {
+                if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
                     usb_can->st.rx_cnt += len;
-                    furi_check(
-                        furi_mutex_acquire(usb_can->usb_mutex, FuriWaitForever) == FuriStatusOk);
                     furi_hal_cdc_send(usb_can->cfg.vcp_ch, usb_can->rx_buf, len);
-                    furi_check(furi_mutex_release(usb_can->usb_mutex) == FuriStatusOk);
                 } else {
                     furi_stream_buffer_reset(usb_can->rx_stream);
                 }
@@ -204,25 +202,25 @@ static int32_t usb_can_tx_thread(void* context) {
         furi_check(!(events & FuriFlagError));
         if(events & WorkerEvtTxStop) break;
         if(events & WorkerEvtCdcRx) {
-            furi_check(furi_mutex_acquire(usb_can->usb_mutex, FuriWaitForever) == FuriStatusOk);
+            furi_check(furi_mutex_acquire(usb_can->usb_mutex, 500) == FuriStatusOk);
             size_t len = furi_hal_cdc_receive(usb_can->cfg.vcp_ch, data, USB_CDC_PKT_LEN);
             furi_check(furi_mutex_release(usb_can->usb_mutex) == FuriStatusOk);
             if(usb_can->state == UsbCanLoopBackTestState) {
+                furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
+                usb_can->st.rx_cnt += len;
+                usb_can->st.tx_cnt += len;
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, data, len);
-                return 0;
-            }
-            if((len >= 4) && (len <= 12)) {
+
+            } else if((len >= 4) && (len <= 12)) {
                 usb_can->st.tx_cnt += len;
                 id = __builtin_bswap32(*((uint32_t*)data));
                 usb_can->can->sendMsgBuf(
                     id, (byte)((id & 0x80000000) != 0), (byte)len - 4, &data[4]);
             } else {
-                /*furi_check(
-                    furi_mutex_acquire(usb_can->usb_mutex, FuriWaitForever) == FuriStatusOk);
+                furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
                 const char err_msg[] =
-                    "[error]: invalid payload (should be <Identifier on 4 bytes><Payload: 1 to 8 bytes>)";
+                    "[err]: invalid input (should be <Identifier:4bytes><payload>)";
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)err_msg, sizeof(err_msg));
-                furi_check(furi_mutex_release(usb_can->usb_mutex) == FuriStatusOk);*/
             }
         }
     }
@@ -233,7 +231,7 @@ static int32_t usb_can_tx_thread(void* context) {
 
 static void vcp_on_cdc_tx_complete(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
-    furi_mutex_release(usb_can->tx_mutex);
+    furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
 }
 
 static void vcp_on_cdc_rx(void* context) {
