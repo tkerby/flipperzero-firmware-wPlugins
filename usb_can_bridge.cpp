@@ -108,6 +108,7 @@ static int32_t usb_can_worker(void* context) {
         furi_hal_gpio_add_int_callback(&gpio_ext_pc3, usb_can_on_irq_cb, NULL);
         furi_hal_spi_bus_handle_init(&furi_hal_spi_bus_handle_external);
         usb_can->can = new mcp2518fd(0);
+        usb_can->can->begin(CAN20_500KBPS);
         if(usb_can->state == UsbCanPingTestState) {
             const char test_can_msg[] = "CANLIVE";
 
@@ -125,7 +126,7 @@ static int32_t usb_can_worker(void* context) {
     usb_can->tx_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     usb_can->usb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
-    usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 512, usb_can_tx_thread, usb_can);
+    usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 1024, usb_can_tx_thread, usb_can);
 
     usb_can_vcp_init(usb_can, usb_can->cfg.vcp_ch);
     if(furi_mutex_acquire(usb_can->tx_mutex, FuriWaitForever) == FuriStatusOk) {
@@ -207,7 +208,6 @@ static int32_t usb_can_tx_thread(void* context) {
             furi_check(furi_mutex_release(usb_can->usb_mutex) == FuriStatusOk);
             if(usb_can->state == UsbCanLoopBackTestState) {
                 furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
-                usb_can->st.rx_cnt += len;
                 usb_can->st.tx_cnt += len;
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, data, len);
 

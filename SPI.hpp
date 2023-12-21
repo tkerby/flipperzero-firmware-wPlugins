@@ -12,17 +12,24 @@ typedef enum { MSB_FIRST, LSB_FIRST } e_spi_endiannes_t;
 typedef uint8_t byte;
 #define pinMode(X, Y)
 #define digitalWrite(X, Y)
+#define SPI_HAS_TRANSACTION
+#define MSBFIRST MSB_FIRST
+#define SPI_MODE0 SPI_MODE_0
+#define transfer_0x00(X) rx(X)
 
 class SPISettings {
+public:
     uint32_t freqHz;
     e_spi_endiannes_t endianness;
     e_spi_mode_t mode;
-    uint32_t BitOrder;
+    SPISettings(uint32_t freqHz, e_spi_endiannes_t endianness, e_spi_mode_t mode);
 };
+
+extern uint8_t (*transfer_spiTransmitBuffer[98])(uint8_t tx_val);
+extern uint8_t rx(uint8_t tx_val);
 
 class SPIClass {
 public:
-    uint8_t transfer(uint8_t tx_val);
     void beginTransaction(SPISettings settings);
     void endTransaction(void);
     void begin(void);

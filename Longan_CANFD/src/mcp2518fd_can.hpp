@@ -20,7 +20,7 @@
 #define SPI_DEFAULT_BUFFER_LENGTH 96
 
 //extern SPIClass* pSPI;
-#define spi_readwrite pSPI->transfer
+#define spi_readwrite(X) transfer_##X(X)
 #define spi_read() spi_readwrite(0x00)
 #define spi_write(spi_val) spi_readwrite(spi_val)
 #define SPI_BEGIN() pSPI->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0))
