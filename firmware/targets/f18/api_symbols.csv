@@ -1231,6 +1231,7 @@ Function,+,furi_hal_rtc_set_log_level,void,uint8_t
 Function,+,furi_hal_rtc_set_pin_fails,void,uint32_t
 Function,+,furi_hal_rtc_set_register,void,"FuriHalRtcRegister, uint32_t"
 Function,+,furi_hal_rtc_sync_shadow,void,
+Function,+,furi_hal_rtc_timestamp_to_datetime,void,"uint32_t, FuriHalRtcDateTime*"
 Function,+,furi_hal_rtc_validate_datetime,_Bool,FuriHalRtcDateTime*
 Function,+,furi_hal_sd_get_card_state,FuriStatus,
 Function,+,furi_hal_sd_info,FuriStatus,FuriHalSdInfo*
@@ -1300,7 +1301,9 @@ Function,+,furi_hal_version_get_mic_id,const char*,
 Function,+,furi_hal_version_get_model_code,const char*,
 Function,+,furi_hal_version_get_model_name,const char*,
 Function,+,furi_hal_version_get_name_ptr,const char*,
+Function,+,furi_hal_version_get_ncc_id,const char*,
 Function,+,furi_hal_version_get_otp_version,FuriHalVersionOtpVersion,
+Function,+,furi_hal_version_get_srrc_id,const char*,
 Function,-,furi_hal_version_init,void,
 Function,+,furi_hal_version_uid,const uint8_t*,
 Function,+,furi_hal_version_uid_size,size_t,
@@ -2685,6 +2688,7 @@ Variable,+,sequence_reset_red,const NotificationSequence,
 Variable,+,sequence_reset_rgb,const NotificationSequence,
 Variable,+,sequence_reset_sound,const NotificationSequence,
 Variable,+,sequence_reset_vibro,const NotificationSequence,
+Variable,+,sequence_semi_success,const NotificationSequence,
 Variable,+,sequence_set_blue_255,const NotificationSequence,
 Variable,+,sequence_set_green_255,const NotificationSequence,
 Variable,+,sequence_set_only_blue_255,const NotificationSequence,

@@ -171,7 +171,7 @@ void hangman_render_callback(Canvas* canvas, void* ctx) {
 
         if(app->eog != HangmanGameOn) {
             if(app->eog == HangmanGameLoose) {
-                hangman_text_window(canvas, app->lang->message_ok, app->lang->message_loose);
+                hangman_text_window(canvas, app->lang->message_ok, app->lang->message_lose);
             } else {
                 hangman_text_window(canvas, app->lang->message_ok, app->lang->message_won);
             }
@@ -236,7 +236,10 @@ void hangman_clear_state(HangmanApp* app) {
     app->gallows_state = HANGMAN_GALLOWS_INIT_STATE;
     app->eog = HangmanGameOn;
 
-    memset(app->opened, HangmanOpenedInit, HANGMAN_MAX_ALP_SIZE);
+    for(int i = 0; i < HANGMAN_MAX_ALP_SIZE; i++) {
+        app->opened[i] = HangmanOpenedInit;
+    }
+
     free(app->word.arr);
     app->word = (HangmanWord){NULL, 0};
 
@@ -324,7 +327,7 @@ HangmanLangConfig* hangman_load_config(char* meta_file) {
 
     config->message_ok = hangman_read_str(stream);
     config->message_won = hangman_read_str(stream);
-    config->message_loose = hangman_read_str(stream);
+    config->message_lose = hangman_read_str(stream);
 
     furi_string_free(line);
     file_stream_close(stream);
@@ -386,7 +389,7 @@ void hangman_app_free(HangmanApp** app) {
     if((*app)->lang != NULL) {
         free((*app)->lang->dict_file);
         free((*app)->lang->message_ok);
-        free((*app)->lang->message_loose);
+        free((*app)->lang->message_lose);
         free((*app)->lang->message_won);
         free((*app)->lang);
     }

@@ -1,12 +1,12 @@
-# [MALVEKE] ***GAME BOY*** Link Camera
+# ***GAME BOY*** Link Camera MALVEKE
 
 ## Introduction
 
 <div align="center">
 
-**Official** | **Unleashed** | **RogueMaster** | **Xtreme**
+**Official** | **Unleashed** | **RogueMaster**
 :- | :- | :- | :- 
-[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=official)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=official)|[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=unleashed)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=unleashed)|[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=roguemaster)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=roguemaster)|[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=xtreme)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=xtreme)
+[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=official)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=official)|[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=unleashed)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=unleashed)|[![FlipC.org](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero/badge?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=roguemaster)](https://flipc.org/EstebanFuentealba/MALVEKE-Flipper-Zero?branch=main&root=flipper_companion_apps%2Fapplications%2Fexternal%2Fmalveke_gb_link_camera&firmware=roguemaster)
 </div>
 
 <p align='center'>
@@ -24,7 +24,7 @@ These instructions assume that you are starting at the Flipper Zero desktop. Oth
 - Press the `OK` button on the Flipper to open the main menu.
 - Choose `Applications` from the menu.
 - Choose `GPIO` from the submenu.
-- Choose `[MALVEKE] GAME BOY Link-Camera`
+- Choose `GAME BOY Link-Camera MALVEKE`
 - The Flipper Zero will show the loading screen of the application. 
 
     <p align='center'>

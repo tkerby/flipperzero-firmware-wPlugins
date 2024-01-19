@@ -1452,6 +1452,7 @@ Function,+,furi_hal_rtc_set_log_level,void,uint8_t
 Function,+,furi_hal_rtc_set_pin_fails,void,uint32_t
 Function,+,furi_hal_rtc_set_register,void,"FuriHalRtcRegister, uint32_t"
 Function,+,furi_hal_rtc_sync_shadow,void,
+Function,+,furi_hal_rtc_timestamp_to_datetime,void,"uint32_t, FuriHalRtcDateTime*"
 Function,+,furi_hal_rtc_validate_datetime,_Bool,FuriHalRtcDateTime*
 Function,+,furi_hal_sd_get_card_state,FuriStatus,
 Function,+,furi_hal_sd_info,FuriStatus,FuriHalSdInfo*
@@ -1562,7 +1563,9 @@ Function,+,furi_hal_version_get_mic_id,const char*,
 Function,+,furi_hal_version_get_model_code,const char*,
 Function,+,furi_hal_version_get_model_name,const char*,
 Function,+,furi_hal_version_get_name_ptr,const char*,
+Function,+,furi_hal_version_get_ncc_id,const char*,
 Function,+,furi_hal_version_get_otp_version,FuriHalVersionOtpVersion,
+Function,+,furi_hal_version_get_srrc_id,const char*,
 Function,-,furi_hal_version_init,void,
 Function,-,furi_hal_version_set_name,void,const char*
 Function,+,furi_hal_version_uid,const uint8_t*,
@@ -1942,6 +1945,7 @@ Function,+,lfrfid_worker_start_thread,void,LFRFIDWorker*
 Function,+,lfrfid_worker_stop,void,LFRFIDWorker*
 Function,+,lfrfid_worker_stop_thread,void,LFRFIDWorker*
 Function,+,lfrfid_worker_write_start,void,"LFRFIDWorker*, LFRFIDProtocol, LFRFIDWorkerWriteCallback, void*"
+Function,+,lfrfid_worker_write_with_pass_start,void,"LFRFIDWorker*, LFRFIDProtocol, LFRFIDWorkerWriteCallback, void*"
 Function,-,lgamma,double,double
 Function,-,lgamma_r,double,"double, int*"
 Function,-,lgammaf,float,float
@@ -3071,10 +3075,12 @@ Function,+,submenu_set_header,void,"Submenu*, const char*"
 Function,+,submenu_set_orientation,void,"Submenu*, ViewOrientation"
 Function,+,submenu_set_selected_item,void,"Submenu*, uint32_t"
 Function,-,system,int,const char*
+Function,+,t5577_get_default_passwords,const uint32_t*,uint8_t*
 Function,+,t5577_write,void,LFRFIDT5577*
 Function,+,t5577_write_page_block_pass,void,"uint8_t, uint8_t, _Bool, uint32_t, _Bool, uint32_t"
 Function,+,t5577_write_page_block_pass_with_start_and_stop,void,"uint8_t, uint8_t, _Bool, uint32_t, _Bool, uint32_t"
 Function,+,t5577_write_page_block_simple_with_start_and_stop,void,"uint8_t, uint8_t, _Bool, uint32_t"
+Function,+,t5577_write_with_mask,void,"LFRFIDT5577*, uint8_t, _Bool, uint32_t"
 Function,+,t5577_write_with_pass,void,"LFRFIDT5577*, uint32_t"
 Function,-,tan,double,double
 Function,-,tanf,float,float
@@ -3674,6 +3680,7 @@ Variable,+,sequence_reset_red,const NotificationSequence,
 Variable,+,sequence_reset_rgb,const NotificationSequence,
 Variable,+,sequence_reset_sound,const NotificationSequence,
 Variable,+,sequence_reset_vibro,const NotificationSequence,
+Variable,+,sequence_semi_success,const NotificationSequence,
 Variable,+,sequence_set_blue_255,const NotificationSequence,
 Variable,+,sequence_set_green_255,const NotificationSequence,
 Variable,+,sequence_set_only_blue_255,const NotificationSequence,

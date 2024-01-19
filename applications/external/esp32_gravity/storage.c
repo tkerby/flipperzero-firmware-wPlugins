@@ -20,7 +20,7 @@
           Except for 'Get' menu options, which may still be "Get" if
           the sync on startup failed. Default values are #define'd
  */
-bool writeSettingsToFile(UART_TerminalApp* app, File* file) {
+bool writeSettingsToFile(GravityApp* app, File* file) {
     int bufLen = 0;
     char fBuffer[FILEBUFFER_SIZE] = "";
     char strBuffer[32] = "";
@@ -154,23 +154,30 @@ void close_file(File* file) {
 
 /* So much goddamn repeated code! The APP_DATA_PATH macro, as far as I can figure, can't be
    called with a variable, even a const char[] :( */
-bool save_settings(UART_TerminalApp* app) {
+bool save_settings(GravityApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
+    bool retVal = true;
     if(!storage_file_open(file, APP_DATA_PATH(FILENAME_SETTINGS), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         FURI_LOG_E(TAG, "Failed to open %s for writing", FILENAME_SETTINGS);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
-        return false;
+        retVal = false;
     }
-    if(!storage_file_truncate(file)) {
+    if(retVal && !storage_file_truncate(file)) {
         FURI_LOG_E(TAG, "Unable to truncate settings file for writing");
         close_file(file);
-        return false;
+        retVal = false;
     }
-    if(!writeSettingsToFile(app, file)) {
+    if(retVal && !writeSettingsToFile(app, file)) {
         FURI_LOG_E(TAG, "Failed to write settings");
         close_file(file);
+        retVal = false;
+    }
+    if(!retVal) {
+        popup_set_header(app->popup, "Save Failed", 64, 10, AlignCenter, AlignTop);
+        popup_set_text(app->popup, "Save Settings Failed", 10, 40, AlignLeft, AlignTop);
+        view_dispatcher_switch_to_view(app->view_dispatcher, Gravity_AppViewPopup);
         return false;
     }
     /* Keeping this comment block as an example of writing arbitrary text to a file
@@ -182,10 +189,13 @@ bool save_settings(UART_TerminalApp* app) {
     /* Flush write cache */
     storage_file_sync(file);
     close_file(file);
+    popup_set_header(app->popup, "Save Succeeded", 64, 10, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Saved Settings", 10, 40, AlignLeft, AlignTop);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Gravity_AppViewPopup);
     return true;
 }
 
-bool load_settings(UART_TerminalApp* app) {
+bool load_settings(GravityApp* app) {
     uint16_t bufferSize = 1024;
     char buffer[bufferSize];
     uint16_t bytesRead;
@@ -196,6 +206,9 @@ bool load_settings(UART_TerminalApp* app) {
         FURI_LOG_E(TAG, "Failed to open %s for reading", FILENAME_SETTINGS);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
+        popup_set_header(app->popup, "Load Failed", 64, 10, AlignCenter, AlignTop);
+        popup_set_text(app->popup, "Failed to load settings", 10, 40, AlignLeft, AlignTop);
+        view_dispatcher_switch_to_view(app->view_dispatcher, Gravity_AppViewPopup);
         return false;
     }
 
@@ -205,9 +218,12 @@ bool load_settings(UART_TerminalApp* app) {
     memset(app->syncBuffer, '\0', SYNC_BUFFER_SIZE);
     app->syncBufLen = bytesRead;
     strncpy((char*)app->syncBuffer, buffer, SYNC_BUFFER_SIZE);
-    syncProcessResponse(app);
+    syncProcessResponse(app, true);
 
     close_file(file);
+    popup_set_header(app->popup, "Load Successful", 64, 10, AlignCenter, AlignTop);
+    popup_set_text(app->popup, "Settings Loaded", 10, 40, AlignLeft, AlignTop);
+    view_dispatcher_switch_to_view(app->view_dispatcher, Gravity_AppViewPopup);
     /* Another nod to the person with the insane compiler */
     if(app->is_command) {
         return true;
@@ -216,7 +232,7 @@ bool load_settings(UART_TerminalApp* app) {
     }
 }
 
-bool writeDataToFile(UART_TerminalApp* app, File* file) {
+bool writeDataToFile(GravityApp* app, File* file) {
     int bufLen = 0;
     uint8_t dataBuffer[DATABUFFER_SIZE];
 
@@ -226,7 +242,7 @@ bool writeDataToFile(UART_TerminalApp* app, File* file) {
     return true;
 }
 
-bool save_data(UART_TerminalApp* app) {
+bool save_data(GravityApp* app) {
     // (void)(app);
     // Storage* storage = furi_record_open(RECORD_STORAGE);
     // File* file = storage_file_alloc(storage);
@@ -261,7 +277,7 @@ bool save_data(UART_TerminalApp* app) {
     }
 }
 
-bool load_data(UART_TerminalApp* app) {
+bool load_data(GravityApp* app) {
     // uint16_t bufferSize = 1024;
     // char buffer[bufferSize];
     // uint16_t bytesRead;

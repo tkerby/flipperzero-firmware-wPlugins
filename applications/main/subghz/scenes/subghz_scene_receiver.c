@@ -154,21 +154,42 @@ static void subghz_scene_add_to_history_callback(
             subghz_protocol_decoder_base_serialize(decoder_base, subghz->repeater_tx, &preset);
 
             uint32_t tmpTe = 300;
+            uint32_t tmpBits = 1000;
             if(!flipper_format_rewind(subghz->repeater_tx)) {
                 FURI_LOG_E(TAG, "Rewind error");
                 return;
             }
-            if(!flipper_format_read_uint32(subghz->repeater_tx, "TE", (uint32_t*)&tmpTe, 1)) {
+            if(!flipper_format_read_uint32(subghz->repeater_tx, "Bit", (uint32_t*)&tmpBits, 1)) {
+                FURI_LOG_E(TAG, "Missing Bit");
+                return;
+            } else if(!flipper_format_read_uint32(
+                          subghz->repeater_tx, "TE", (uint32_t*)&tmpTe, 1)) {
                 FURI_LOG_E(TAG, "Missing TE");
                 return;
             } else {
                 //Save our TX variables now, start TX on the next tick event so the we arent tangled with the worker.
-                subghz->RepeaterTXLength = tmpTe;
+                subghz->RepeaterTXLength = tmpTe * (tmpBits + 1) / 1000;
                 subghz->state_notifications = SubGhzNotificationStateTx;
                 notification_message(subghz->notifications, &subghz_sequence_repeat);
                 FURI_LOG_I(TAG, "Key Received, Transmitting now.");
             }
         } else {
+            if(subghz->last_settings->delete_old_signals) {
+                if(subghz_history_get_last_index(subghz->history) >= 54) {
+                    subghz->state_notifications = SubGhzNotificationStateRx;
+
+                    subghz_view_receiver_disable_draw_callback(subghz->subghz_receiver);
+
+                    subghz_history_delete_item(subghz->history, 0);
+                    subghz_view_receiver_delete_item(subghz->subghz_receiver, 0);
+                    subghz_view_receiver_enable_draw_callback(subghz->subghz_receiver);
+
+                    subghz_scene_receiver_update_statusbar(subghz);
+                    subghz->idx_menu_chosen =
+                        subghz_view_receiver_get_idx_menu(subghz->subghz_receiver);
+                    idx--;
+                }
+            }
             if(subghz_history_add_to_history(history, decoder_base, &preset)) {
                 furi_string_reset(item_name);
                 furi_string_reset(item_time);
@@ -195,7 +216,7 @@ static void subghz_scene_add_to_history_callback(
         furi_string_free(item_time);
 
     } else {
-        FURI_LOG_I(TAG, "%s protocol ignored", decoder_base->protocol->name);
+        FURI_LOG_D(TAG, "%s protocol ignored", decoder_base->protocol->name);
     }
 }
 
@@ -225,7 +246,6 @@ void subghz_scene_receiver_on_enter(void* context) {
         subghz->idx_menu_chosen = 0;
     }
 
-    subghz_view_receiver_set_lock(subghz->subghz_receiver, subghz_is_locked(subghz));
     subghz_view_receiver_set_mode(subghz->subghz_receiver, SubGhzViewReceiverModeLive);
 
     // Load history to receiver
@@ -289,6 +309,8 @@ void subghz_scene_receiver_on_enter(void* context) {
     }
 
     subghz_scene_receiver_update_statusbar(subghz);
+
+    subghz_view_receiver_set_lock(subghz->subghz_receiver, subghz_is_locked(subghz));
 
     view_dispatcher_switch_to_view(subghz->view_dispatcher, SubGhzViewIdReceiver);
 }
@@ -389,7 +411,9 @@ bool subghz_scene_receiver_on_event(void* context, SceneManagerEvent event) {
             subghz_view_receiver_disable_draw_callback(subghz->subghz_receiver);
 
             subghz_history_delete_item(subghz->history, subghz->idx_menu_chosen);
-            subghz_view_receiver_delete_element_callback(subghz->subghz_receiver);
+            subghz_view_receiver_delete_item(
+                subghz->subghz_receiver,
+                subghz_view_receiver_get_idx_menu(subghz->subghz_receiver));
             subghz_view_receiver_enable_draw_callback(subghz->subghz_receiver);
 
             subghz_scene_receiver_update_statusbar(subghz);
@@ -463,17 +487,11 @@ bool subghz_scene_receiver_on_event(void* context, SceneManagerEvent event) {
                 }
             } else {
                 uint32_t tmp = furi_get_tick() - subghz->RepeaterStartTime;
-                uint8_t RepeatMultiplier = (subghz->repeater == SubGhzRepeaterOnShort) ? 1 :        //No repeats, 1 key Tx
-                                       (subghz->repeater == SubGhzRepeaterOnLong)  ? 7 :        //Long Repeat
-                                                                                     3;         //Normal Repeat
+                uint8_t RepeatMultiplier = (subghz->repeater == SubGhzRepeaterOnShort) ? 2 :        //2 key Tx
+                                       (subghz->repeater == SubGhzRepeaterOnLong)  ? 10 :        //10x Repeat
+                                                                                     5;         //5x Repeat
+
                 if(tmp > furi_ms_to_ticks(subghz->RepeaterTXLength) * RepeatMultiplier) {
-                    /* AAAAARGH! The FLipper cant tell me how long the receive was happening.
-                   I can find the minimum time to transmit a key though, so Ive just doubled it to get the key
-                   to send OK to a receiver. It works on my car, by who knows how it will work on devices that look at TX time1
-                   At least the key is guaranteed to be transmitted up to TWICE! Regardless of Te of a Key
-                    
-                    This is the best repeaterv the flipper can do without diving deeper into the firmware for some big changes!
-                */
                     FURI_LOG_I(TAG, "TXLength: %lu TxTime: %lu", subghz->RepeaterTXLength, tmp);
 
                     subghz_txrx_stop(subghz->txrx);
