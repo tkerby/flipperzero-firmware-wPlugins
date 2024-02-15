@@ -86,6 +86,7 @@ public:
         , nReservedTx(0){};
 
 public:
+    int8_t mcp2518fd_readClearInterruptFlags(REG_CiINTENABLE* flags);
     virtual void enableTxInterrupt(bool enable = true); // enable transmit interrupt
     virtual void reserveTxBuffers(byte nTxBuf = 0) {
         nReservedTx = (nTxBuf < 3 ? nTxBuf : 3 - 1);

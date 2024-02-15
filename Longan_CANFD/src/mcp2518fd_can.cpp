@@ -1041,7 +1041,7 @@ int8_t mcp2518fd::mcp2518fd_BitTimeConfigure(
 
 int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE gpio1) {
     int8_t spiTransferError = 0;
-
+    (void)gpio1;
     // Read
     uint16_t a = cREGADDR_IOCON + 3;
     REG_IOCON iocon;
@@ -1053,8 +1053,9 @@ int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE
     }
 
     // Modify
+    //iocon.bF.INTPinOpenDrain = 1;
     iocon.bF.PinMode0 = gpio0;
-    iocon.bF.PinMode1 = gpio1;
+    iocon.bF.PinMode1 = 0;
 
     // Write
     spiTransferError = mcp2518fd_WriteByte(a, iocon.byte[3]);
@@ -1131,21 +1132,36 @@ int8_t mcp2518fd::mcp2518fd_ModuleEventEnable(CAN_MODULE_EVENT flags) {
     REG_CiINTENABLE intEnables;
     intEnables.word = 0;
 
-    spiTransferError = mcp2518fd_ReadHalfWord(a, &intEnables.word);
+    spiTransferError = mcp2518fd_ReadWord(a, &intEnables.word);
     if(spiTransferError) {
         return -1;
     }
 
     // Modify
-    intEnables.word |= (flags & CAN_ALL_EVENTS);
+    intEnables.word |= ((flags << 16) & CAN_ALL_EVENTS);
 
     // Write
-    spiTransferError = mcp2518fd_WriteHalfWord(a, intEnables.word);
+    spiTransferError = mcp2518fd_WriteWord(a, intEnables.word);
     if(spiTransferError) {
         return -2;
     }
 
     return spiTransferError;
+}
+
+int8_t mcp2518fd::mcp2518fd_readClearInterruptFlags(REG_CiINTENABLE* flags) {
+    int8_t spiTransferError = 0;
+    uint16_t a = 0;
+
+    // Read Interrupt Enables
+    a = cREGADDR_CiINTENABLE;
+    flags->word = 0;
+
+    spiTransferError = mcp2518fd_ReadWord(a, &(flags->word));
+    if(spiTransferError) {
+        return -1;
+    }
+    return 0;
 }
 
 int8_t mcp2518fd::mcp2518fd_OperationModeSelect(CAN_OPERATION_MODE opMode) {
@@ -1920,7 +1936,7 @@ uint8_t mcp2518fd::mcp2518fd_init(uint32_t speedset, const byte clock) {
     mcp2518fd_TransmitChannelEventEnable(APP_TX_FIFO, CAN_TX_FIFO_NOT_FULL_EVENT);
 #endif
     mcp2518fd_ReceiveChannelEventEnable(APP_RX_FIFO, CAN_RX_FIFO_NOT_EMPTY_EVENT);
-    mcp2518fd_ModuleEventEnable((CAN_MODULE_EVENT)(CAN_TX_EVENT | CAN_RX_EVENT));
+    mcp2518fd_ModuleEventEnable((CAN_MODULE_EVENT)(/*CAN_TX_EVENT |*/ CAN_RX_EVENT));
     __setMode(mcpMode);
 
     return 0;

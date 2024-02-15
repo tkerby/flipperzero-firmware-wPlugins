@@ -51,24 +51,9 @@ static const CdcCallbacks cdc_cb = {
 static int32_t usb_can_tx_thread(void* context);
 
 static void usb_can_on_irq_cb(void* context) {
-    int printSize;
-    byte len;
-    unsigned char buf[8];
-
     UsbCanBridge* app = (UsbCanBridge*)context;
-    app->can->readMsgBuf(&len, buf); // You should call readMsgBuff before getCanId
-    unsigned long id = app->can->getCanId();
-    unsigned char ext = app->can->isExtendedFrame();
-    const char msg[] = "[RECV]:GET TYPE %01d FRAME FROM ID: 0X%lX, Len=%01d,data:";
-    char tmp[sizeof(msg) + 4];
-    printSize = snprintf(tmp, sizeof(msg), msg, ext, id, len);
-    furi_stream_buffer_send(app->rx_stream, tmp, printSize, 0);
-
-    for(int i = 0; i < len; i++) {
-        printSize = snprintf(tmp, 8, "%02hhX\t", buf[i]);
-        furi_stream_buffer_send(app->rx_stream, tmp, printSize, 0);
-    }
     furi_thread_flags_set(furi_thread_get_id(app->thread), WorkerEvtRxDone);
+    furi_hal_gpio_disable_int_callback(&gpio_ext_pc3);
 }
 
 static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
@@ -102,13 +87,12 @@ static int32_t usb_can_worker(void* context) {
     uint32_t events = 0;
 
     if(usb_can->state != UsbCanLoopBackTestState) {
-        furi_hal_gpio_init(
-            &gpio_ext_pc3, GpioModeInterruptRiseFall, GpioPullUp, GpioSpeedVeryHigh);
+        furi_hal_gpio_init(&gpio_ext_pc3, GpioModeInterruptFall, GpioPullNo, GpioSpeedVeryHigh);
         furi_hal_gpio_remove_int_callback(&gpio_ext_pc3);
-        furi_hal_gpio_add_int_callback(&gpio_ext_pc3, usb_can_on_irq_cb, NULL);
+        furi_hal_gpio_add_int_callback(&gpio_ext_pc3, usb_can_on_irq_cb, usb_can);
         furi_hal_spi_bus_handle_init(&furi_hal_spi_bus_handle_external);
         usb_can->can = new mcp2518fd(0);
-        usb_can->can->begin(CAN20_500KBPS);
+        usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
         if(usb_can->state == UsbCanPingTestState) {
             const char test_can_msg[] = "CANLIVE";
 
@@ -139,6 +123,7 @@ static int32_t usb_can_worker(void* context) {
             furi_hal_cdc_send(
                 usb_can->cfg.vcp_ch, (uint8_t*)hello_test_usb, sizeof(hello_test_usb));
         }
+        furi_check(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
     }
     furi_thread_start(usb_can->tx_thread);
     //furi_thread_flags_set(furi_thread_get_id(usb_can->tx_thread), WorkerEvtCdcRx);
@@ -148,17 +133,36 @@ static int32_t usb_can_worker(void* context) {
         furi_check(!(events & FuriFlagError));
         if(events & WorkerEvtStop) break;
         if(events & WorkerEvtRxDone) {
-            size_t len = furi_stream_buffer_receive(
-                usb_can->rx_stream, usb_can->rx_buf, USB_CDC_PKT_LEN, 0);
-            if(len > 0) {
-                if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
-                    usb_can->st.rx_cnt += len;
-                    furi_hal_cdc_send(usb_can->cfg.vcp_ch, usb_can->rx_buf, len);
-                } else {
-                    furi_stream_buffer_reset(usb_can->rx_stream);
-                }
+            int printSize;
+            byte len = 0;
+            REG_CiINTENABLE flags;
+            unsigned char buf[256];
+
+            usb_can->can->readMsgBuf(&len, buf); // You should call readMsgBuff before getCanId
+            usb_can->can->mcp2518fd_readClearInterruptFlags(&flags);
+            furi_hal_gpio_enable_int_callback(&gpio_ext_pc3);
+            unsigned long id = usb_can->can->getCanId();
+            unsigned char ext = usb_can->can->isExtendedFrame();
+            (void)id;
+            (void)ext;
+            const char msg[] = "[RECV]:GET TYPE %01d FRAME FROM ID: 0X%lX, Len=%01d,data:";
+            char tmp[sizeof(msg) + 32];
+            printSize = snprintf(tmp, sizeof(msg), msg, ext, id, len);
+            for(int i = 0; i < len; i++) {
+                printSize += snprintf(&tmp[printSize], 3, "%02hhX", buf[i]);
             }
+            printSize += snprintf(&tmp[printSize], 3, "\r\n");
+            if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
+                furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, printSize);
+                furi_check(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
+            }
+
+            //if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
+            usb_can->st.rx_cnt += len;
+            //furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, len);
+            //}
         }
+
         if(events & WorkerEvtCfgChange) {
             if(usb_can->cfg.vcp_ch != usb_can->cfg_new.vcp_ch) {
                 furi_thread_flags_set(furi_thread_get_id(usb_can->tx_thread), WorkerEvtTxStop);
@@ -260,7 +264,7 @@ UsbCanBridge* usb_can_enable(UsbCanApp* app, usbCanState state) {
     app->usb_can_bridge = (UsbCanBridge*)malloc(sizeof(UsbCanBridge));
     app->usb_can_bridge->state = state;
     app->usb_can_bridge->thread =
-        furi_thread_alloc_ex("UsbCanWorker", 1024, usb_can_worker, app->usb_can_bridge);
+        furi_thread_alloc_ex("UsbCanWorker", 2048, usb_can_worker, app->usb_can_bridge);
 
     furi_thread_start(app->usb_can_bridge->thread);
     return app->usb_can_bridge;

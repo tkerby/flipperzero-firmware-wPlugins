@@ -81,7 +81,7 @@ extern "C" {
 #define cREGADDR_CiVEC 0x018
 #define cREGADDR_CiINT 0x01C
 #define cREGADDR_CiINTFLAG cREGADDR_CiINT
-#define cREGADDR_CiINTENABLE (cREGADDR_CiINT + 2)
+#define cREGADDR_CiINTENABLE (cREGADDR_CiINT)
 
 #define cREGADDR_CiRXIF 0x020
 #define cREGADDR_CiTXIF 0x024
@@ -529,7 +529,7 @@ typedef enum {
 
 typedef enum {
     CAN_NO_EVENT = 0,
-    CAN_ALL_EVENTS = 0xFF1F,
+    CAN_ALL_EVENTS = 0xFF1F0000,
     CAN_TX_EVENT = 0x0001,
     CAN_RX_EVENT = 0x0002,
     CAN_TIME_BASE_COUNTER_EVENT = 0x0004,
@@ -1103,8 +1103,8 @@ typedef union _REG_CiINTFLAG {
 
 typedef union _REG_CiINTENABLE {
     CAN_INT_ENABLES IE;
-    uint16_t word;
-    uint8_t byte[2];
+    uint32_t word;
+    uint8_t byte[4];
 } REG_CiINTENABLE;
 
 // *****************************************************************************
