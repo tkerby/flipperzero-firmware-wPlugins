@@ -69,6 +69,13 @@ static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
         cli_session_open(cli, &cli_vcp);
         furi_record_close(RECORD_CLI);
     }*/
+    /*Cli* cli = (Cli*)furi_record_open(RECORD_CLI);
+    cli_session_close(cli);
+    furi_record_close(RECORD_CLI);*/
+    /*Cli* cli = (Cli*)furi_record_open(RECORD_CLI);
+    cli_session_close(cli);*/
+    //furi_check(furi_hal_usb_set_config(&usb_cdc_single, NULL) == true);
+    //furi_record_close(RECORD_CLI);
     furi_hal_cdc_set_callbacks(vcp_ch, (CdcCallbacks*)&cdc_cb, usb_can);
 }
 
@@ -115,7 +122,7 @@ static int32_t usb_can_worker(void* context) {
     usb_can_vcp_init(usb_can, usb_can->cfg.vcp_ch);
     if(furi_mutex_acquire(usb_can->tx_mutex, FuriWaitForever) == FuriStatusOk) {
         if(usb_can->state != UsbCanLoopBackTestState) {
-            const char hello_bridge_usb[] = "USB BRIDGE STARTED";
+            const char hello_bridge_usb[] = "USB BRIDGE STARTED\r\n";
             furi_hal_cdc_send(
                 usb_can->cfg.vcp_ch, (uint8_t*)hello_bridge_usb, sizeof(hello_bridge_usb));
         } else {
@@ -220,11 +227,12 @@ static int32_t usb_can_tx_thread(void* context) {
                 id = __builtin_bswap32(*((uint32_t*)data));
                 usb_can->can->sendMsgBuf(
                     id, (byte)((id & 0x80000000) != 0), (byte)len - 4, &data[4]);
-            } else {
+            } else if((len != 1) || (data[0] != '\r')) {
                 furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
                 const char err_msg[] =
-                    "[err]: invalid input (should be <Identifier:4bytes><payload>)";
+                    "[err]: invalid input (should be <Identifier:4bytes><payload>)\r\n";
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)err_msg, sizeof(err_msg));
+                furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
             }
         }
     }
@@ -234,8 +242,8 @@ static int32_t usb_can_tx_thread(void* context) {
 /* VCP callbacks */
 
 static void vcp_on_cdc_tx_complete(void* context) {
-    UsbCanBridge* usb_can = (UsbCanBridge*)context;
-    furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
+    (void)context;
+    //furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
 }
 
 static void vcp_on_cdc_rx(void* context) {
