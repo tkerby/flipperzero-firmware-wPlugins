@@ -1055,7 +1055,7 @@ int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE
     // Modify
     //iocon.bF.INTPinOpenDrain = 1;
     iocon.bF.PinMode0 = gpio0;
-    iocon.bF.PinMode1 = 0;
+    iocon.bF.PinMode1 = gpio1;
 
     // Write
     spiTransferError = mcp2518fd_WriteByte(a, iocon.byte[3]);
@@ -1931,7 +1931,7 @@ uint8_t mcp2518fd::mcp2518fd_init(uint32_t speedset, const byte clock) {
     mcp2518fd_BitTimeConfigure(speedset, CAN_SSP_MODE_AUTO, CAN_SYSCLK_SPEED(clock));
 
     // Setup Transmit and Receive Interrupts
-    mcp2518fd_GpioModeConfigure(GPIO_MODE_INT, GPIO_MODE_INT);
+    mcp2518fd_GpioModeConfigure(GPIO_MODE_GPIO, GPIO_MODE_INT);
 #ifdef APP_USE_TX_INT
     mcp2518fd_TransmitChannelEventEnable(APP_TX_FIFO, CAN_TX_FIFO_NOT_FULL_EVENT);
 #endif
