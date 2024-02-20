@@ -262,11 +262,10 @@ static int32_t usb_can_tx_thread(void* context) {
                     usb_can_bridge_configure(usb_can, (char*)data, len);
                     break;
                 case 'O':
-                case 'C': {
-                    const char not_applicable[] =
-                        "[err]: just select app with the flipper buttons! \r\n";
-                    usb_can_bridge_error(usb_can, not_applicable);
-                } break;
+                case 'C':
+                    usb_can_bridge_error(
+                        usb_can, "[err]: just select app with the flipper buttons! \r\n");
+                    break;
                 case 's':
                 case 'G':
                 case 'W':
@@ -278,10 +277,10 @@ static int32_t usb_can_tx_thread(void* context) {
                 case 'R':
                 case 'r':
                 case 'F':
-                case 'Z': {
-                    const char not_implemented[] = "[err]: command %cx not implemented yet!\r\n";
-                    usb_can_bridge_error(usb_can, not_implemented, data[0]);
-                } break;
+                case 'Z':
+                    usb_can_bridge_error(
+                        usb_can, "[err]: command %c<x> not implemented yet!\r\n", data[0]);
+                    break;
                 case 'T':
                     usb_can_bridge_send(usb_can, data, len, true);
                     break;
