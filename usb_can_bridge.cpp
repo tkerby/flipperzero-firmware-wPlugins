@@ -12,7 +12,12 @@
 
 #define USB_CDC_BIT_DTR (1 << 0)
 #define USB_CDC_BIT_RTS (1 << 1)
+#define USB_CAN_BRIDGE_MAX_INPUT_LENGTH 28
 
+#define M_USB_CAN_ERROR_INVALID_LENGTH() \
+    usb_can_bridge_error(usb_can, invalid_length, data[0], len)
+#define M_USB_CAN_ERROR_INVALID_COMMAND() \
+    usb_can_bridge_error(usb_can, invalid_command, data[0], data[0])
 typedef enum {
     WorkerEvtStop = (1 << 0),
     WorkerEvtRxDone = (1 << 1),
@@ -37,6 +42,7 @@ static void vcp_on_cdc_rx(void* context);
 static void vcp_state_callback(void* context, uint8_t state);
 static void vcp_on_cdc_control_line(void* context, uint8_t state);
 static void vcp_on_line_config(void* context, struct usb_cdc_line_coding* config);
+static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...);
 
 static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_tx_complete,
@@ -92,6 +98,7 @@ static void usb_can_vcp_deinit(UsbCanBridge* usb_can, uint8_t vcp_ch) {
 static int32_t usb_can_worker(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     uint32_t events = 0;
+    uint32_t tmp_data;
 
     if(usb_can->state != UsbCanLoopBackTestState) {
         furi_hal_gpio_init(&gpio_ext_pc3, GpioModeInterruptFall, GpioPullNo, GpioSpeedVeryHigh);
@@ -99,11 +106,12 @@ static int32_t usb_can_worker(void* context) {
         furi_hal_gpio_add_int_callback(&gpio_ext_pc3, usb_can_on_irq_cb, usb_can);
         furi_hal_spi_bus_handle_init(&furi_hal_spi_bus_handle_external);
         usb_can->can = new mcp2518fd(0);
-        usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
+
         if(usb_can->state == UsbCanPingTestState) {
             const char test_can_msg[] = "CANLIVE";
 
             while(!(events & WorkerEvtStop)) {
+                usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
                 usb_can->can->sendMsgBuf(
                     (uint32_t)0x7E57CA, (byte)1, (byte)8, (const byte*)test_can_msg);
                 events = furi_thread_flags_get();
@@ -117,7 +125,7 @@ static int32_t usb_can_worker(void* context) {
     usb_can->tx_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     usb_can->usb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
-    usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 1024, usb_can_tx_thread, usb_can);
+    usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 2048, usb_can_tx_thread, usb_can);
 
     usb_can_vcp_init(usb_can, usb_can->cfg.vcp_ch);
     if(furi_mutex_acquire(usb_can->tx_mutex, FuriWaitForever) == FuriStatusOk) {
@@ -156,7 +164,8 @@ static int32_t usb_can_worker(void* context) {
             char tmp[sizeof(msg) + 32];
             printSize = snprintf(tmp, sizeof(msg), msg, ext, id, len);
             for(int i = 0; i < len; i++) {
-                printSize += snprintf(&tmp[printSize], 3, "%02hhX", buf[i]);
+                tmp_data = buf[i];
+                printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
             }
             printSize += snprintf(&tmp[printSize], 3, "\r\n");
             if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
@@ -164,10 +173,7 @@ static int32_t usb_can_worker(void* context) {
                 furi_check(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
             }
 
-            //if(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk) {
             usb_can->st.rx_cnt += len;
-            //furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, len);
-            //}
         }
 
         if(events & WorkerEvtCfgChange) {
@@ -205,9 +211,14 @@ static int32_t usb_can_worker(void* context) {
 
 static int32_t usb_can_tx_thread(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
-
+    static bool can_if_initialized;
     uint8_t data[USB_CDC_PKT_LEN];
+    uint8_t data_bin[8];
+    uint32_t expected_len;
     uint32_t id;
+    uint32_t data_tmp;
+    const char invalid_command[] = "[err]: invalid command received %c in ascii (0x%02X)\r\n";
+    const char invalid_length[] = "[err]: invalid command length (command %c) :length = %d\r\n";
     while(1) {
         uint32_t events =
             furi_thread_flags_wait(WORKER_ALL_TX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
@@ -222,21 +233,144 @@ static int32_t usb_can_tx_thread(void* context) {
                 usb_can->st.tx_cnt += len;
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, data, len);
 
-            } else if((len >= 4) && (len <= 12)) {
-                usb_can->st.tx_cnt += len;
-                id = __builtin_bswap32(*((uint32_t*)data));
-                usb_can->can->sendMsgBuf(
-                    id, (byte)((id & 0x80000000) != 0), (byte)len - 4, &data[4]);
-            } else if((len != 1) || (data[0] != '\r')) {
-                furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
-                const char err_msg[] =
-                    "[err]: invalid input (should be <Identifier:4bytes><payload>)\r\n";
-                furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)err_msg, sizeof(err_msg));
-                furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
+            } else {
+                if(len > USB_CAN_BRIDGE_MAX_INPUT_LENGTH) {
+                    M_USB_CAN_ERROR_INVALID_LENGTH();
+                    //invalid input, stop processing
+                    continue;
+                }
+                // set null terminator for scanf
+                data[len] = 0;
+                if((data[len - 1] == '\r') || (data[len - 1] == '\n')) {
+                    // remove carriage line feed (not payload)
+                    len--;
+                    if((data[len - 1] == '\r')) {
+                        // remove carriage return (not payload)
+                        len--;
+                    }
+                }
+
+                switch(data[0]) {
+                case '\n':
+                case '\r':
+                    //ignore carriage return and line feed sent alone (ex. putty)=> this is not considered as an error
+                    if(len) {
+                        M_USB_CAN_ERROR_INVALID_COMMAND();
+                    }
+                    break;
+                case 'S':
+                    if(len != 2) {
+                        M_USB_CAN_ERROR_INVALID_LENGTH();
+                    } else if(data[1] < '0' || data[1] > '9') {
+                        const char invalid_setting[] =
+                            "invalid setting (command S): %c in ascii (character 0x%02X)\r\n";
+                        usb_can_bridge_error(usb_can, invalid_setting, data[1]);
+
+                    } else {
+                        switch(data[1]) {
+                        case '0':
+                            usb_can->can->begin(CAN20_10KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '1':
+                            usb_can->can->begin(CAN20_20KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '2':
+                            usb_can->can->begin(CAN20_50KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '3':
+                            usb_can->can->begin(CAN20_100KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '4':
+                            usb_can->can->begin(CAN20_125KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '5':
+                            usb_can->can->begin(CAN20_250KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '6':
+                            usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '7':
+                            usb_can->can->begin(CAN20_800KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '8':
+                            usb_can->can->begin(CAN20_1000KBPS, CAN_SYSCLK_40M);
+                            break;
+                        case '9':
+                            usb_can->can->begin(CAN_500K_4M, CAN_SYSCLK_40M);
+                            break;
+                        }
+                        can_if_initialized = true;
+                    }
+                    break;
+                case 'O':
+                case 'C': {
+                    const char not_applicable[] =
+                        "[err]: just select app with the flipper buttons! \r\n";
+                    usb_can_bridge_error(usb_can, not_applicable);
+                } break;
+                case 's':
+                case 'G':
+                case 'W':
+                case 'V':
+                case 'v':
+                case 'N':
+                case 'I':
+                case 'L':
+                case 'R':
+                case 'r':
+                case 'F':
+                case 'Z': {
+                    const char not_implemented[] = "[err]: not implemented yet!\r\n";
+                    usb_can_bridge_error(usb_can, not_implemented);
+                } break;
+                case 'T':
+                case 't':
+                    if(!can_if_initialized) {
+                        const char invalid_state[] =
+                            "[err]:  please initialize CAN using Sx command!\r\n";
+                        usb_can_bridge_error(usb_can, invalid_state, sizeof(invalid_state));
+                    } else if(len > 4 && len < 22) {
+                        sscanf(
+                            (const char*)&data[0],
+                            "t%3x%1x",
+                            (unsigned int*)&id,
+                            (unsigned int*)&expected_len);
+                        if(id > 0x7FF) {
+                            const char invalid_identifier[] =
+                                "[err]: invalid can identifier (>7FF): %03X \r\n";
+                            usb_can_bridge_error(usb_can, invalid_identifier, id);
+                        } else if((len - 5) / 2 == expected_len) {
+                            usb_can->st.tx_cnt += expected_len;
+                            for(uint32_t i = 0; i < expected_len; i++) {
+                                sscanf((const char*)&data[5 + 2 * i], "%02lx", &data_tmp);
+                                data_bin[i] = (uint8_t)(data_tmp & 0xFF);
+                            }
+                            usb_can->can->sendMsgBuf(id, 0, expected_len, data_bin);
+                            break;
+                        }
+                    } else {
+                        M_USB_CAN_ERROR_INVALID_LENGTH();
+                    }
+                    break;
+                default:
+                    M_USB_CAN_ERROR_INVALID_COMMAND();
+                    break;
+                }
             }
         }
     }
     return 0;
+}
+
+static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...) {
+    uint32_t printSize;
+    char out_msg[64];
+    va_list args;
+    va_start(args, err_msg_format);
+    furi_assert(furi_mutex_acquire(usb_can->tx_mutex, 500) == FuriStatusOk);
+    printSize = vsprintf(out_msg, err_msg_format, args);
+    furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)out_msg, printSize);
+    furi_assert(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);
 }
 
 /* VCP callbacks */
