@@ -55,7 +55,12 @@ static void vcp_on_cdc_control_line(void* context, uint8_t state);
 static void vcp_on_line_config(void* context, struct usb_cdc_line_coding* config);
 static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...);
 static void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len);
-static void usb_can_bridge_send(UsbCanBridge* usb_can, uint8_t* data, uint32_t len, bool extended);
+static void usb_can_bridge_send(
+    UsbCanBridge* usb_can,
+    uint8_t* data,
+    uint32_t len,
+    bool extended,
+    bool rtr);
 
 static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_tx_complete,
@@ -163,12 +168,14 @@ static int32_t usb_can_worker(void* context) {
             usb_can->can->mcp2518fd_readClearInterruptFlags(&flags);
             furi_hal_gpio_enable_int_callback(&gpio_ext_pc3);
             unsigned long id = usb_can->can->getCanId();
-            unsigned char ext = usb_can->can->isExtendedFrame();
-            (void)id;
-            (void)ext;
-            const char msg[] = "[RECV]:GET TYPE %01d FRAME FROM ID: 0X%lX, Len=%01d,data:";
-            char tmp[sizeof(msg) + 32];
-            printSize = snprintf(tmp, sizeof(msg), msg, ext, id, len);
+            byte ext = usb_can->can->isExtendedFrame();
+            char msg[] = "t%03lX%1d";
+            if(ext) {
+                msg[0] = 'T';
+                msg[2] = '8';
+            }
+            char tmp[32];
+            printSize = snprintf(tmp, sizeof(msg), msg, id, len);
             for(int i = 0; i < len; i++) {
                 tmp_data = buf[i];
                 printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
@@ -274,18 +281,22 @@ static int32_t usb_can_tx_thread(void* context) {
                 case 'N':
                 case 'I':
                 case 'L':
-                case 'R':
-                case 'r':
                 case 'F':
                 case 'Z':
                     usb_can_bridge_error(
                         usb_can, "[err]: command %c<x> not implemented yet!\r\n", data[0]);
                     break;
+                case 'R':
+                    usb_can_bridge_send(usb_can, data, len, true, true);
+                    break;
+                case 'r':
+                    usb_can_bridge_send(usb_can, data, len, false, true);
+                    break;
                 case 'T':
-                    usb_can_bridge_send(usb_can, data, len, true);
+                    usb_can_bridge_send(usb_can, data, len, true, false);
                     break;
                 case 't':
-                    usb_can_bridge_send(usb_can, data, len, false);
+                    usb_can_bridge_send(usb_can, data, len, false, false);
                     break;
                 default:
                     M_USB_CAN_ERROR_INVALID_COMMAND();
@@ -324,27 +335,38 @@ void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
     }
 }
 
-void usb_can_bridge_send(UsbCanBridge* usb_can, uint8_t* data, uint32_t len, bool extended) {
+void usb_can_bridge_send(
+    UsbCanBridge* usb_can,
+    uint8_t* data,
+    uint32_t len,
+    bool extended,
+    bool rtr) {
     uint8_t data_bin[8];
-    uint32_t expected_len;
+    uint32_t expected_len = 0;
     uint32_t id;
     uint32_t data_tmp;
     uint32_t max_identifier;
     uint8_t data_offset;
-    const char* frame_format;
     uint32_t min_length;
     uint32_t max_length;
-    static const char extended_frame_prefix_format[] = "T%8x%1x";
-    static const char standard_frame_prefix_format[] = "t%3x%1x";
+    char frame_format[] = "t%3x%1x";
+    uint32_t dlc;
 
     if(extended) {
         max_identifier = 0x1FFFFFFF;
         data_offset = 10;
-        frame_format = extended_frame_prefix_format;
+        if(rtr) {
+            frame_format[0] = 'R';
+        } else {
+            frame_format[0] = 'T';
+        }
+        frame_format[2] = '8';
     } else {
         max_identifier = 0x7FF;
         data_offset = 5;
-        frame_format = standard_frame_prefix_format;
+        if(rtr) {
+            frame_format[0] = 'r';
+        };
     }
 
     min_length = data_offset;
@@ -353,8 +375,10 @@ void usb_can_bridge_send(UsbCanBridge* usb_can, uint8_t* data, uint32_t len, boo
         const char invalid_state[] = "[err]:  please initialize CAN using Sx command!\r\n";
         usb_can_bridge_error(usb_can, invalid_state, sizeof(invalid_state));
     } else if(len >= min_length && len <= max_length) {
-        sscanf(
-            (const char*)&data[0], frame_format, (unsigned int*)&id, (unsigned int*)&expected_len);
+        sscanf((const char*)&data[0], frame_format, (unsigned int*)&id, (unsigned int*)&dlc);
+        if(!rtr) {
+            expected_len = dlc;
+        }
         if(id > max_identifier) {
             const char invalid_identifier[] = "[err]: invalid can identifier (>%X): %X \r\n";
             usb_can_bridge_error(usb_can, invalid_identifier, max_identifier, id);
@@ -362,10 +386,10 @@ void usb_can_bridge_send(UsbCanBridge* usb_can, uint8_t* data, uint32_t len, boo
             usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_LOW);
             usb_can->st.tx_cnt += expected_len;
             for(uint32_t i = 0; i < expected_len; i++) {
-                sscanf((const char*)&data[5 + 2 * i], "%02lx", &data_tmp);
+                sscanf((const char*)&data[data_offset + 2 * i], "%02lx", &data_tmp);
                 data_bin[i] = (uint8_t)(data_tmp & 0xFF);
             }
-            usb_can->can->sendMsgBuf(id, extended, expected_len, data_bin);
+            usb_can->can->sendMsgBuf(id, extended, rtr, dlc, data_bin);
             usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
         } else {
             usb_can_bridge_error(
