@@ -63,12 +63,13 @@ static void vcp_on_cdc_control_line(void* context, uint8_t state);
 static void vcp_on_line_config(void* context, struct usb_cdc_line_coding* config);
 static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...);
 static void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len);
-static void usb_can_bridge_send(
-    UsbCanBridge* usb_can,
-    uint8_t* data,
-    uint32_t len,
-    bool extended,
-    bool rtr);
+static void
+    usb_can_bridge_send(UsbCanBridge* usb_can, char* data, uint32_t len, bool extended, bool rtr);
+static bool usb_uart_bridge_get_next_command(
+    char** next_command,
+    uint8_t* cmd_length,
+    char* cdc_data,
+    uint8_t cdc_frame_len);
 
 static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_tx_complete,
@@ -81,6 +82,7 @@ static bool can_if_initialized;
 const char invalid_length[] = "[err]: invalid command length (command %c) :length = %d\r\n";
 /* USB UART worker */
 static int32_t usb_can_tx_thread(void* context);
+void usb_can_bridge_clear_led(void* context);
 
 static void usb_can_on_irq_cb(void* context) {
     UsbCanBridge* app = (UsbCanBridge*)context;
@@ -143,6 +145,7 @@ static int32_t usb_can_worker(void* context) {
 
     usb_can->tx_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     usb_can->usb_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    usb_can->timer = furi_timer_alloc(usb_can_bridge_clear_led, FuriTimerTypeOnce, usb_can);
 
     usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 2048, usb_can_tx_thread, usb_can);
 
@@ -187,7 +190,7 @@ static int32_t usb_can_worker(void* context) {
                 tmp_data = buf[i];
                 printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
             }
-            printSize += snprintf(&tmp[printSize], 3, "\r\n");
+            printSize += snprintf(&tmp[printSize], 4, "\r");
             WAIT_CDC();
             furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, printSize);
             usb_can->st.rx_cnt += len;
@@ -229,7 +232,7 @@ static int32_t usb_can_worker(void* context) {
 static int32_t usb_can_tx_thread(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     uint8_t data[USB_CDC_PKT_LEN];
-    const char invalid_command[] = "[err]: invalid command received %c in ascii (0x%02X)\r\n";
+    const char invalid_command[] = "[err]: invalid command received '%c' in ascii (0x%02X)\r\n";
     while(1) {
         uint32_t events =
             furi_thread_flags_wait(WORKER_ALL_TX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
@@ -245,71 +248,93 @@ static int32_t usb_can_tx_thread(void* context) {
                 furi_hal_cdc_send(usb_can->cfg.vcp_ch, data, len);
 
             } else {
-                if(len > USB_CAN_BRIDGE_MAX_INPUT_LENGTH) {
-                    M_USB_CAN_ERROR_INVALID_LENGTH();
-                    //invalid input, stop processing
-                    continue;
-                }
-                // set null terminator for scanf
-                data[len] = 0;
-                if((data[len - 1] == '\r') || (data[len - 1] == '\n')) {
-                    // remove carriage line feed (not payload)
-                    len--;
-                    if((data[len - 1] == '\r')) {
-                        // remove carriage return (not payload)
-                        len--;
+                char* next_command = (char*)NULL;
+                uint8_t cmd_len = 0;
+                while(
+                    usb_uart_bridge_get_next_command(&next_command, &cmd_len, (char*)data, len)) {
+                    if(cmd_len > USB_CAN_BRIDGE_MAX_INPUT_LENGTH) {
+                        M_USB_CAN_ERROR_INVALID_LENGTH();
+                        //invalid input, stop processing
+                        continue;
                     }
-                }
 
-                switch(data[0]) {
-                case '\n':
-                case '\r':
-                    //ignore carriage return and line feed sent alone (ex. putty)=> this is not considered as an error
-                    if(len) {
+                    switch(next_command[0]) {
+                    case '\n':
+                    case '\r':
+                        //ignore carriage return and line feed sent alone (ex. putty)=> this is not considered as an error
+                        if(cmd_len != 1) {
+                            M_USB_CAN_ERROR_INVALID_COMMAND();
+                        }
+                        break;
+                    case 'S':
+                        usb_can_bridge_configure(usb_can, (char*)next_command, cmd_len);
+                        break;
+                    case 'O':
+                    case 'C':
+                        usb_can_bridge_error(
+                            usb_can, "[err]: just select app with the flipper buttons! \r\n");
+                        break;
+                    case 's':
+                    case 'G':
+                    case 'W':
+                    case 'V':
+                    case 'v':
+                    case 'N':
+                    case 'I':
+                    case 'L':
+                    case 'F':
+                    case 'Z':
+                        usb_can_bridge_error(
+                            usb_can,
+                            "[err]: command %c<x> not implemented yet!\r\n",
+                            next_command[0]);
+                        break;
+                    case 'R':
+                        usb_can_bridge_send(usb_can, next_command, cmd_len, true, true);
+                        break;
+                    case 'r':
+                        usb_can_bridge_send(usb_can, next_command, cmd_len, false, true);
+                        break;
+                    case 'T':
+                        usb_can_bridge_send(usb_can, next_command, cmd_len, true, false);
+                        break;
+                    case 't':
+                        usb_can_bridge_send(usb_can, next_command, cmd_len, false, false);
+                        break;
+                    default:
                         M_USB_CAN_ERROR_INVALID_COMMAND();
+                        break;
                     }
-                    break;
-                case 'S':
-                    usb_can_bridge_configure(usb_can, (char*)data, len);
-                    break;
-                case 'O':
-                case 'C':
-                    usb_can_bridge_error(
-                        usb_can, "[err]: just select app with the flipper buttons! \r\n");
-                    break;
-                case 's':
-                case 'G':
-                case 'W':
-                case 'V':
-                case 'v':
-                case 'N':
-                case 'I':
-                case 'L':
-                case 'F':
-                case 'Z':
-                    usb_can_bridge_error(
-                        usb_can, "[err]: command %c<x> not implemented yet!\r\n", data[0]);
-                    break;
-                case 'R':
-                    usb_can_bridge_send(usb_can, data, len, true, true);
-                    break;
-                case 'r':
-                    usb_can_bridge_send(usb_can, data, len, false, true);
-                    break;
-                case 'T':
-                    usb_can_bridge_send(usb_can, data, len, true, false);
-                    break;
-                case 't':
-                    usb_can_bridge_send(usb_can, data, len, false, false);
-                    break;
-                default:
-                    M_USB_CAN_ERROR_INVALID_COMMAND();
-                    break;
                 }
             }
         }
     }
     return 0;
+}
+
+#define IS_LAST_CMD() (&((*next_command)[(*cmd_length)]) == &cdc_data[cdc_frame_len])
+static bool usb_uart_bridge_get_next_command(
+    char** next_command,
+    uint8_t* cmd_length,
+    char* cdc_data,
+    uint8_t cdc_frame_len) {
+    if(*next_command == NULL) {
+        *next_command = cdc_data;
+    } else {
+        //This is not first command : update command pointer
+        *next_command = &((*next_command)[*cmd_length]);
+    }
+    *cmd_length = 0;
+    while(((*next_command)[(*cmd_length)] != '\r') && ((*next_command)[(*cmd_length)] != '\n') &&
+          (!IS_LAST_CMD())) {
+        (*cmd_length)++;
+    }
+    if(IS_LAST_CMD()) {
+        return false;
+    } else {
+        (*cmd_length)++;
+    }
+    return true;
 }
 
 void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
@@ -327,7 +352,7 @@ void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
 
     uint32_t idx;
 
-    if(len != 2) {
+    if(len != 3) {
         M_USB_CAN_ERROR_INVALID_LENGTH();
     } else if(data[1] < '0' || data[1] > '9') {
         usb_can_bridge_error(
@@ -339,12 +364,7 @@ void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
     }
 }
 
-void usb_can_bridge_send(
-    UsbCanBridge* usb_can,
-    uint8_t* data,
-    uint32_t len,
-    bool extended,
-    bool rtr) {
+void usb_can_bridge_send(UsbCanBridge* usb_can, char* data, uint32_t len, bool extended, bool rtr) {
     uint8_t data_bin[8];
     uint32_t expected_len = 0;
     uint32_t id;
@@ -374,7 +394,7 @@ void usb_can_bridge_send(
     }
 
     min_length = data_offset;
-    max_length = min_length + 16;
+    max_length = min_length + 17;
     if(!can_if_initialized) {
         const char invalid_state[] = "[err]:  please initialize CAN using Sx command!\r\n";
         usb_can_bridge_error(usb_can, invalid_state, sizeof(invalid_state));
@@ -394,7 +414,8 @@ void usb_can_bridge_send(
                 data_bin[i] = (uint8_t)(data_tmp & 0xFF);
             }
             usb_can->can->sendMsgBuf(id, extended, rtr, dlc, data_bin);
-            usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
+
+            furi_timer_start(usb_can->timer, furi_kernel_get_tick_frequency() / 100);
         } else {
             usb_can_bridge_error(
                 usb_can,
@@ -405,6 +426,12 @@ void usb_can_bridge_send(
     } else {
         M_USB_CAN_ERROR_INVALID_LENGTH();
     }
+}
+
+void usb_can_bridge_clear_led(void* context) {
+    (void)context;
+    UsbCanBridge* usb_can = (UsbCanBridge*)context;
+    usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
 }
 
 static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...) {

@@ -1063,6 +1063,12 @@ int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE
         return -2;
     }
 
+    //configure GPIOs as output
+    spiTransferError = mcp2518fd_WriteByte(cREGADDR_IOCON, 0);
+    if(spiTransferError) {
+        return -3;
+    }
+
     return spiTransferError;
 }
 

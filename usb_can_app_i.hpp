@@ -55,6 +55,7 @@ typedef struct {
     UsbCanStatus st;
 
     FuriApiLock cfg_lock;
+    FuriTimer* timer;
 
     uint8_t rx_buf[USB_CDC_PKT_LEN];
 } UsbCanBridge;
