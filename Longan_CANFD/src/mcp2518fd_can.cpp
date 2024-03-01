@@ -1053,7 +1053,7 @@ int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE
     }
 
     // Modify
-    //iocon.bF.INTPinOpenDrain = 1;
+    iocon.bF.INTPinOpenDrain = 1;
     iocon.bF.PinMode0 = gpio0;
     iocon.bF.PinMode1 = gpio1;
 
@@ -1068,6 +1068,7 @@ int8_t mcp2518fd::mcp2518fd_GpioModeConfigure(GPIO_PIN_MODE gpio0, GPIO_PIN_MODE
     if(spiTransferError) {
         return -3;
     }
+    mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
 
     return spiTransferError;
 }

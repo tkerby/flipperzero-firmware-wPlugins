@@ -122,7 +122,7 @@ static int32_t usb_can_worker(void* context) {
     uint32_t tmp_data;
 
     if(usb_can->state != UsbCanLoopBackTestState) {
-        furi_hal_gpio_init(&gpio_ext_pc3, GpioModeInterruptFall, GpioPullNo, GpioSpeedVeryHigh);
+        furi_hal_gpio_init(&gpio_ext_pc3, GpioModeInterruptFall, GpioPullUp, GpioSpeedVeryHigh);
         furi_hal_gpio_remove_int_callback(&gpio_ext_pc3);
         furi_hal_gpio_add_int_callback(&gpio_ext_pc3, usb_can_on_irq_cb, usb_can);
         furi_hal_spi_bus_handle_init(&furi_hal_spi_bus_handle_external);

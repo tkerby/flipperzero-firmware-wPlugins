@@ -648,7 +648,7 @@ typedef enum { GPIO_PIN_0, GPIO_PIN_1 } GPIO_PIN_POS;
 
 //! GPIO Pin Modes
 
-typedef enum { GPIO_MODE_GPIO, GPIO_MODE_INT } GPIO_PIN_MODE;
+typedef enum { GPIO_MODE_INT, GPIO_MODE_GPIO } GPIO_PIN_MODE;
 
 //! GPIO Pin Directions
 
