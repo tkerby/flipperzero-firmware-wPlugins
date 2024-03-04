@@ -439,7 +439,7 @@ static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_form
     char out_msg[64];
     va_list args;
     va_start(args, err_msg_format);
-    printSize = vsprintf(out_msg, err_msg_format, args);
+    printSize = vsnprintf(out_msg, 64, err_msg_format, args);
     WAIT_CDC();
     furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)out_msg, printSize);
 }
