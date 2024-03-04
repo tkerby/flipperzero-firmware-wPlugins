@@ -2,91 +2,59 @@
 
 
 
-## Getting started
+## Introduction
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlabs3.serma.com/serma_s3_iec/produits-s3/flipperzero/Flipper-Zero-CAN-FD-HS-SW.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlabs3.serma.com/serma_s3_iec/produits-s3/flipperzero/Flipper-Zero-CAN-FD-HS-SW/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+This software implements an USB to CAN bridge compatible with linux [can-utils](https://github.com/linux-can/can-utils) and slcan driver. This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports.
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+When entering the application (by selecting can-fd-hs) from main menu or by selecting Apps/USB-CAN, a list appears with 3 choices which represent the 3 modes of the application detailled in next sections :
+- USB-CAN Bridge : This is the main mode which is used as a bridge between can-utils and a CAN device under test. 
+- TEST USB LOOPBACK : This mode is used to test connectivity between host computer and flipper zero.
+- CAN TEST : This mode is used to test CAN connectivity. This send "CANALIVE" through CAN.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### USB-CAN Bridge
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+This mode have to be entered before issuing any configuration command `slcand -s\<X\> \<options\> ttyACM\<Y\> can\<Z\>`.<br>
+You can then operate normally your can interface by using cansend `can\<X\> \<iii\>#\<dddddddd\>` and `candump can\<X\>`commands after enabling your network interface by calling `ifconfig can\<X\> up`.<br>Please refer to can utils for more details.<br>
+If issues are encountered, you can get more informations by connecting directly to vcp with tool like putty (serial mode/9600 bauds/8 data bits/no parity/ no hardware control flow). You can see the following screenshot for more informations.
+This mode can also be used to configure connection in flexible datarate ("S9" command).<br>
+**NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
+**NB2 : for compatibility reason (with can-utils)  newline character is not appended after CAN RX frames.As a consequence display of these frames is impacted.** <br>
+**NB3 : beware of usb cdc buffer length. Max size is 64. So command number that can be sent in one frame is limited.** <br>
+### TEST USB LOOPBACK
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+This mode is used to test VCP (USB cdc) connectivity. To use this mode, you have to connect to the VCP with any VCP tool like putty (serial mode/9600 bauds/8 data bits/no parity/ no hardware control flow). Once the connection is established message USB loopback is displayed, the user can test connection by sending characters on serial line and checking the content sent is sent back on serial line by the flipper device.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### TEST CAN
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+This mode is used to test CAN connection (to verify wiring between CAN device under test and flipper zero board).
+No user action is required before using this mode (except the obvious wiring step).
+The frame sent shall by the device shall be the following 007E5TCA:43414E4C49564500 (IIIIIIII:DDDDDDDDDDDDDDDD with \<III..\> the extended identifier "TESTCA" and \<DDD..\> the data "CANLIVE"). Note received and sent bytes count (on the flipper screen) is not functionnal.
 
-## License
-For open source projects, say how it is licensed.
+## Development
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+To generate documentation you have to run `Doxygen Doxyfile`.
+This application is based on:
+- XTREME firmware USB-UART bridge application
+- Longan Labs [Longan_CANFD](https://github.com/Longan-Labs/Longan_CANFD) library
+
+Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.
+
+### Test status
+Applications has been tested with a MCP2515 evaluation board. As a consequence, only the following datarates are tested :
+- 125 Kbaud
+- 250 Kbaud
+- 500 Kbaud
+- 1 MBaud
+
+**Note the flexible datarate is not tested yet.**
+
+### Next steps
+
+Enhance VCP datarate to permit efficient fuzzing.
+
+### Known bugs
+
+Multiple exit and enters in application and its submode produce instable behaviour.
+
