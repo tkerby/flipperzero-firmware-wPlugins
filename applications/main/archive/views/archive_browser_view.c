@@ -32,9 +32,11 @@ static const Icon* ArchiveItemIcons[] = {
     [ArchiveFileTypeLFRFID] = &I_125_10px,
     [ArchiveFileTypeInfrared] = &I_ir_10px,
     [ArchiveFileTypeBadUsb] = &I_badusb_10px,
+    [ArchiveFileTypeMag] = &I_mag_card_10px,
     [ArchiveFileTypeU2f] = &I_u2f_10px,
     [ArchiveFileTypeApplication] = &I_Apps_10px,
     [ArchiveFileTypeUpdateManifest] = &I_update_10px,
+    [ArchiveFileTypeDiskImage] = &I_floppydisk_10px,
     [ArchiveFileTypeFolder] = &I_dir_10px,
     [ArchiveFileTypeUnknown] = &I_unknown_10px,
     [ArchiveFileTypeLoading] = &I_loading_10px,
@@ -698,7 +700,7 @@ static void browser_view_exit(void* context) {
     furi_timer_stop(browser->scroll_timer);
 }
 
-ArchiveBrowserView* browser_alloc() {
+ArchiveBrowserView* browser_alloc(void) {
     ArchiveBrowserView* browser = malloc(sizeof(ArchiveBrowserView));
     browser->view = view_alloc();
     view_allocate_model(browser->view, ViewModelTypeLocking, sizeof(ArchiveBrowserViewModel));

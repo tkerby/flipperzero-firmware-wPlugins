@@ -17,14 +17,14 @@
 #define T5577_BLOCKS_IN_PAGE_0 8
 #define T5577_BLOCKS_IN_PAGE_1 4
 
-static void t5577_start() {
+static void t5577_start(void) {
     furi_hal_rfid_tim_read_start(125000, 0.5);
 
     // do not ground the antenna
     furi_hal_rfid_pin_pull_release();
 }
 
-static void t5577_stop() {
+static void t5577_stop(void) {
     furi_hal_rfid_tim_read_stop();
     furi_hal_rfid_pins_reset();
 }
@@ -49,7 +49,7 @@ static void t5577_write_opcode(uint8_t value) {
     t5577_write_bit((value >> 0) & 1);
 }
 
-static void t5577_write_reset() {
+static void t5577_write_reset(void) {
     t5577_write_gap(T5577_TIMING_START_GAP);
     t5577_write_bit(1);
     t5577_write_bit(0);
@@ -122,6 +122,71 @@ void t5577_write_with_pass(LFRFIDT5577* data, uint32_t password) {
     t5577_stop();
 }
 
+void t5577_write_page_block_pass(
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data,
+    bool with_pass,
+    uint32_t password/*,
+    bool testmode*/) {
+    furi_delay_us(T5577_TIMING_WAIT_TIME * 8);
+
+    // start gap
+    t5577_write_gap(T5577_TIMING_START_GAP);
+
+    // opcode for test mode access!
+    //if(testmode)
+    //	t5577_write_opcode(T5577_OPCODE_TESTMODE);
+    //else
+    // opcode for page 0 or 1
+    if(!page)
+        t5577_write_opcode(T5577_OPCODE_PAGE_0);
+    else
+        t5577_write_opcode(T5577_OPCODE_PAGE_1);
+
+    // password
+    if(with_pass) {
+        for(uint8_t i = 0; i < 32; i++) {
+            t5577_write_bit((password >> (31 - i)) & 1);
+        }
+    }
+
+    // lock bit
+    t5577_write_bit(lock_bit);
+
+    // data
+    for(uint8_t i = 0; i < 32; i++) {
+        t5577_write_bit((data >> (31 - i)) & 1);
+    }
+
+    // block address
+    t5577_write_bit((block >> 2) & 1);
+    t5577_write_bit((block >> 1) & 1);
+    t5577_write_bit((block >> 0) & 1);
+
+    furi_delay_us(T5577_TIMING_PROGRAM * 8);
+
+    furi_delay_us(T5577_TIMING_WAIT_TIME * 8);
+    t5577_write_reset();
+}
+
+void t5577_write_page_block_pass_with_start_and_stop(
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data,
+    bool with_pass,
+    uint32_t password/*,
+    bool testmode*/) {
+    t5577_start();
+    FURI_CRITICAL_ENTER();
+    t5577_write_page_block_pass(page, block, lock_bit, data, with_pass, password /*, testmode*/);
+    t5577_write_reset();
+    FURI_CRITICAL_EXIT();
+    t5577_stop();
+}
+
 void t5577_write_with_mask(LFRFIDT5577* data, uint8_t page, bool with_pass, uint32_t password) {
     t5577_start();
     FURI_CRITICAL_ENTER();
@@ -136,6 +201,20 @@ void t5577_write_with_mask(LFRFIDT5577* data, uint8_t page, bool with_pass, uint
         if(!need_to_write) continue;
         t5577_write_block_pass(page, i, false, data->block[i], with_pass, password);
     }
+    t5577_write_reset();
+    FURI_CRITICAL_EXIT();
+    t5577_stop();
+}
+
+void t5577_write_page_block_simple_with_start_and_stop(
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data/*,
+    bool testmode*/) {
+    t5577_start();
+    FURI_CRITICAL_ENTER();
+    t5577_write_page_block_pass(page, block, lock_bit, data, false, 0 /*, testmode*/);
     t5577_write_reset();
     FURI_CRITICAL_EXIT();
     t5577_stop();

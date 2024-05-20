@@ -4,7 +4,7 @@
 #include <lib/toolbox/args.h>
 #include "loader.h"
 
-static void loader_cli_print_usage() {
+static void loader_cli_print_usage(void) {
     printf("Usage:\r\n");
     printf("loader <cmd> <args>\r\n");
     printf("Cmd list:\r\n");
@@ -14,7 +14,7 @@ static void loader_cli_print_usage() {
     printf("\tinfo\t - Show loader state\r\n");
 }
 
-static void loader_cli_list() {
+static void loader_cli_list(void) {
     printf("Apps:\r\n");
     for(size_t i = 0; i < FLIPPER_APPS_COUNT; i++) {
         printf("\t%s\r\n", FLIPPER_APPS[i].name);
@@ -109,12 +109,14 @@ static void loader_cli(Cli* cli, FuriString* args, void* context) {
     furi_record_close(RECORD_LOADER);
 }
 
-void loader_on_system_start() {
-#ifdef SRV_CLI
-    Cli* cli = furi_record_open(RECORD_CLI);
-    cli_add_command(cli, RECORD_LOADER, CliCommandFlagParallelSafe, loader_cli, NULL);
-    furi_record_close(RECORD_CLI);
-#else
-    UNUSED(loader_cli);
-#endif
+#include <flipper_application/flipper_application.h>
+
+static const FlipperAppPluginDescriptor plugin_descriptor = {
+    .appid = "loader_cli",
+    .ep_api_version = 1,
+    .entry_point = &loader_cli,
+};
+
+const FlipperAppPluginDescriptor* loader_cli_plugin_ep() {
+    return &plugin_descriptor;
 }

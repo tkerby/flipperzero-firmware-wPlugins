@@ -3,6 +3,7 @@
 #include <notification/notification_messages.h>
 #include "application_assets.h"
 #include <loader/firmware_api/firmware_api.h>
+#include <storage/storage_processing.h>
 
 #include <m-list.h>
 
@@ -24,7 +25,7 @@ FlipperApplicationList_t flipper_application_loaded_app_list = {0};
 static bool flipper_application_loaded_app_list_initialized = false;
 
 static void flipper_application_list_add_app(const FlipperApplication* app) {
-    furi_assert(app);
+    furi_check(app);
 
     if(!flipper_application_loaded_app_list_initialized) {
         FlipperApplicationList_init(flipper_application_loaded_app_list);
@@ -34,8 +35,8 @@ static void flipper_application_list_add_app(const FlipperApplication* app) {
 }
 
 static void flipper_application_list_remove_app(const FlipperApplication* app) {
-    furi_assert(flipper_application_loaded_app_list_initialized);
-    furi_assert(app);
+    furi_check(flipper_application_loaded_app_list_initialized);
+    furi_check(app);
 
     FlipperApplicationList_it_t it;
     for(FlipperApplicationList_it(it, flipper_application_loaded_app_list);
@@ -52,19 +53,24 @@ static void flipper_application_list_remove_app(const FlipperApplication* app) {
 
 FlipperApplication*
     flipper_application_alloc(Storage* storage, const ElfApiInterface* api_interface) {
+    furi_check(storage);
+    furi_check(api_interface);
+
     FlipperApplication* app = malloc(sizeof(FlipperApplication));
     app->elf = elf_file_alloc(storage, api_interface);
     app->thread = NULL;
     app->ep_thread_args = NULL;
+
     return app;
 }
 
 bool flipper_application_is_plugin(FlipperApplication* app) {
+    furi_check(app);
     return app->manifest.stack_size == 0;
 }
 
 void flipper_application_free(FlipperApplication* app) {
-    furi_assert(app);
+    furi_check(app);
 
     if(app->thread) {
         furi_thread_join(app->thread);
@@ -184,20 +190,29 @@ static FlipperApplicationPreloadStatus
 /* Parse headers, load manifest */
 FlipperApplicationPreloadStatus
     flipper_application_preload_manifest(FlipperApplication* app, const char* path) {
+    furi_check(app);
+    furi_check(path);
+
     return flipper_application_load(app, path, false);
 }
 
 /* Parse headers, load full file */
 FlipperApplicationPreloadStatus
     flipper_application_preload(FlipperApplication* app, const char* path) {
+    furi_check(app);
+    furi_check(path);
+
     return flipper_application_load(app, path, true);
 }
 
 const FlipperApplicationManifest* flipper_application_get_manifest(FlipperApplication* app) {
+    furi_check(app);
     return &app->manifest;
 }
 
 FlipperApplicationLoadStatus flipper_application_map_to_memory(FlipperApplication* app) {
+    furi_check(app);
+
     ELFFileLoadStatus status = elf_file_load_sections(app->elf);
 
     switch(status) {
@@ -215,7 +230,7 @@ FlipperApplicationLoadStatus flipper_application_map_to_memory(FlipperApplicatio
 }
 
 static int32_t flipper_application_thread(void* context) {
-    furi_assert(context);
+    furi_check(context);
     FlipperApplication* app = (FlipperApplication*)context;
 
     elf_file_call_init(app->elf);
@@ -237,6 +252,7 @@ static int32_t flipper_application_thread(void* context) {
 }
 
 FuriThread* flipper_application_alloc_thread(FlipperApplication* app, const char* args) {
+    furi_check(app);
     furi_check(app->thread == NULL);
     furi_check(!flipper_application_is_plugin(app));
 
@@ -262,8 +278,10 @@ static const char* preload_status_strings[] = {
     [FlipperApplicationPreloadStatusUnspecifiedError] = "Unknown error",
     [FlipperApplicationPreloadStatusInvalidFile] = "Invalid file",
     [FlipperApplicationPreloadStatusInvalidManifest] = "Invalid file manifest",
-    [FlipperApplicationPreloadStatusApiTooOld] = "Update Application to use with this Firmware (ApiTooOld)",
-    [FlipperApplicationPreloadStatusApiTooNew] = "Update Firmware to use with this Application (ApiTooNew)",
+    [FlipperApplicationPreloadStatusApiTooOld] =
+        "Update Application to use with this Firmware (ApiTooOld)",
+    [FlipperApplicationPreloadStatusApiTooNew] =
+        "Update Firmware to use with this Application (ApiTooNew)",
     [FlipperApplicationPreloadStatusTargetMismatch] = "Hardware target mismatch",
 };
 
@@ -271,7 +289,8 @@ static const char* load_status_strings[] = {
     [FlipperApplicationLoadStatusSuccess] = "Success",
     [FlipperApplicationLoadStatusUnspecifiedError] = "Unknown error",
     [FlipperApplicationLoadStatusNoFreeMemory] = "Out of memory",
-    [FlipperApplicationLoadStatusMissingImports] = "Update Application/Firmware to use this (MissingImports)",
+    [FlipperApplicationLoadStatusMissingImports] =
+        "Update Application/Firmware to use this (MissingImports)",
 };
 
 const char* flipper_application_preload_status_to_string(FlipperApplicationPreloadStatus status) {
@@ -290,6 +309,8 @@ const char* flipper_application_load_status_to_string(FlipperApplicationLoadStat
 
 const FlipperAppPluginDescriptor*
     flipper_application_plugin_get_descriptor(FlipperApplication* app) {
+    furi_check(app);
+
     if(!flipper_application_is_plugin(app)) {
         return NULL;
     }
@@ -318,25 +339,52 @@ bool flipper_application_load_name_and_icon(
     Storage* storage,
     uint8_t** icon_ptr,
     FuriString* item_name) {
-    FlipperApplication* app = flipper_application_alloc(storage, firmware_api_interface);
+    furi_check(path);
+    furi_check(storage);
+    furi_check(icon_ptr);
+    furi_check(item_name);
 
-    FlipperApplicationPreloadStatus preload_res =
-        flipper_application_preload_manifest(app, furi_string_get_cstr(path));
+    bool load_success = true;
 
-    bool load_success = false;
-
-    if(preload_res == FlipperApplicationPreloadStatusSuccess) {
-        const FlipperApplicationManifest* manifest = flipper_application_get_manifest(app);
-        if(manifest->has_icon) {
-            memcpy(*icon_ptr, manifest->icon, FAP_MANIFEST_MAX_ICON_SIZE);
-        }
-        furi_string_set(item_name, manifest->name);
-        load_success = true;
-    } else {
-        FURI_LOG_E(TAG, "Failed to preload %s", furi_string_get_cstr(path));
+    StorageData* storage_data;
+    if(storage_get_data(storage, path, &storage_data) == FSE_OK &&
+       storage_path_already_open(path, storage_data)) {
         load_success = false;
     }
 
-    flipper_application_free(app);
+    if(load_success) {
+        load_success = false;
+
+        FlipperApplication* app = flipper_application_alloc(storage, firmware_api_interface);
+
+        FlipperApplicationPreloadStatus preload_res =
+            flipper_application_preload_manifest(app, furi_string_get_cstr(path));
+
+        if(preload_res == FlipperApplicationPreloadStatusSuccess ||
+           preload_res == FlipperApplicationPreloadStatusApiTooOld ||
+           preload_res == FlipperApplicationPreloadStatusApiTooNew) {
+            const FlipperApplicationManifest* manifest = flipper_application_get_manifest(app);
+            if(manifest->has_icon) {
+                memcpy(*icon_ptr, manifest->icon, FAP_MANIFEST_MAX_ICON_SIZE);
+            }
+            furi_string_set(item_name, manifest->name);
+            load_success = true;
+        } else {
+            FURI_LOG_E(TAG, "Failed to preload %s", furi_string_get_cstr(path));
+            load_success = false;
+        }
+
+        flipper_application_free(app);
+    }
+
+    if(!load_success) {
+        size_t offset = furi_string_search_rchar(path, '/');
+        if(offset != FURI_STRING_FAILURE) {
+            furi_string_set_n(item_name, path, offset + 1, furi_string_size(path) - offset - 1);
+        } else {
+            furi_string_set(item_name, path);
+        }
+    }
+
     return load_success;
 }

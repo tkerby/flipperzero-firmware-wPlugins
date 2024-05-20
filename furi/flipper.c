@@ -44,7 +44,7 @@ void flipper_start_service(const FlipperInternalApplication* service) {
     furi_thread_start(thread);
 }
 
-void flipper_init() {
+void flipper_init(void) {
     flipper_print_version("Firmware", furi_hal_version_get_firmware_version());
     FURI_LOG_I(TAG, "Boot mode %d, starting services", furi_hal_rtc_get_boot_mode());
 
@@ -52,7 +52,7 @@ void flipper_init() {
         flipper_start_service(&FLIPPER_SERVICES[i]);
     }
     if(furi_hal_is_normal_boot()) {
-        CFW_SETTINGS_LOAD();
+        cfw_settings_load();
     } else {
         FURI_LOG_I(TAG, "Special boot, skipping optional components");
     }
@@ -60,12 +60,17 @@ void flipper_init() {
     FURI_LOG_I(TAG, "Startup complete");
 }
 
+PLACE_IN_SECTION("MB_MEM2") static StaticTask_t idle_task_tcb;
+PLACE_IN_SECTION("MB_MEM2") static StackType_t idle_task_stack[configIDLE_TASK_STACK_DEPTH];
+PLACE_IN_SECTION("MB_MEM2") static StaticTask_t timer_task_tcb;
+PLACE_IN_SECTION("MB_MEM2") static StackType_t timer_task_stack[configTIMER_TASK_STACK_DEPTH];
+
 void vApplicationGetIdleTaskMemory(
     StaticTask_t** tcb_ptr,
     StackType_t** stack_ptr,
     uint32_t* stack_size) {
-    *tcb_ptr = memmgr_alloc_from_pool(sizeof(StaticTask_t));
-    *stack_ptr = memmgr_alloc_from_pool(sizeof(StackType_t) * configIDLE_TASK_STACK_DEPTH);
+    *tcb_ptr = &idle_task_tcb;
+    *stack_ptr = idle_task_stack;
     *stack_size = configIDLE_TASK_STACK_DEPTH;
 }
 
@@ -73,7 +78,7 @@ void vApplicationGetTimerTaskMemory(
     StaticTask_t** tcb_ptr,
     StackType_t** stack_ptr,
     uint32_t* stack_size) {
-    *tcb_ptr = memmgr_alloc_from_pool(sizeof(StaticTask_t));
-    *stack_ptr = memmgr_alloc_from_pool(sizeof(StackType_t) * configTIMER_TASK_STACK_DEPTH);
+    *tcb_ptr = &timer_task_tcb;
+    *stack_ptr = timer_task_stack;
     *stack_size = configTIMER_TASK_STACK_DEPTH;
 }

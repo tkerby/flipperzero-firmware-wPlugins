@@ -67,7 +67,7 @@
   Use 16 Bit mode for any display with more than 240 pixel in one 
   direction.
 */
-//#define U8G2_16BIT
+#define U8G2_16BIT
 
 /*
   The following macro switches the library into dynamic display buffer allocation mode.
@@ -5813,7 +5813,6 @@ extern const uint8_t u8g2_font_px437wyse700b_tn[] U8G2_FONT_SECTION("u8g2_font_p
 extern const uint8_t u8g2_font_px437wyse700b_mf[] U8G2_FONT_SECTION("u8g2_font_px437wyse700b_mf");
 extern const uint8_t u8g2_font_px437wyse700b_mr[] U8G2_FONT_SECTION("u8g2_font_px437wyse700b_mr");
 extern const uint8_t u8g2_font_px437wyse700b_mn[] U8G2_FONT_SECTION("u8g2_font_px437wyse700b_mn");
-extern const uint8_t u8g2_font_eurocorp_tr[] U8G2_FONT_SECTION("u8g2_font_eurocorp_tr");
 
 /* end font list */
 

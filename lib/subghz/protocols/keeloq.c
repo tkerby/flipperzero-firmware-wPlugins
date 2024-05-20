@@ -61,10 +61,12 @@ const SubGhzProtocolDecoder subghz_protocol_keeloq_decoder = {
     .feed = subghz_protocol_decoder_keeloq_feed,
     .reset = subghz_protocol_decoder_keeloq_reset,
 
-    .get_hash_data = subghz_protocol_decoder_keeloq_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_keeloq_get_hash_data,
     .serialize = subghz_protocol_decoder_keeloq_serialize,
     .deserialize = subghz_protocol_decoder_keeloq_deserialize,
     .get_string = subghz_protocol_decoder_keeloq_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_keeloq_encoder = {
@@ -346,7 +348,7 @@ bool subghz_protocol_keeloq_create_data(
     uint16_t cnt,
     const char* manufacture_name,
     SubGhzRadioPreset* preset) {
-    furi_assert(context);
+    furi_check(context);
     SubGhzProtocolEncoderKeeloq* instance = context;
     instance->generic.serial = serial;
     instance->generic.cnt = cnt;
@@ -426,6 +428,9 @@ static bool
        (strcmp(instance->manufacture_name, "Aprimatic") == 0) ||
        (strcmp(instance->manufacture_name, "Dea_Mio") == 0)) {
         klq_last_custom_btn = 0xF;
+    }
+    if((strcmp(instance->manufacture_name, "FAAC_RC,XT") == 0)) {
+        klq_last_custom_btn = 0xB;
     }
 
     btn = subghz_protocol_keeloq_get_btn_code(klq_last_custom_btn);

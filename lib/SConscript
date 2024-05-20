@@ -13,6 +13,7 @@ env.Append(
 
 libs = env.BuildModules(
     [
+        "tlsf",
         "mlib",
         "stm32wb",
         "freertos",
@@ -38,6 +39,7 @@ libs = env.BuildModules(
         "lfrfid",
         "flipper_application",
         "music_worker",
+        "uzlib",
         "mjs",
         "nanopb",
         "update_util",

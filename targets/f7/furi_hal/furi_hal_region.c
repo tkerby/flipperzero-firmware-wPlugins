@@ -1,6 +1,7 @@
 #include <furi_hal_region.h>
-#include <furi_hal_subghz.h>
 #include <furi_hal_version.h>
+#include <furi_hal_subghz.h>
+#include <furi.h>
 
 const FuriHalRegion furi_hal_region_zero = {
     .country_code = "00",
@@ -73,7 +74,7 @@ const FuriHalRegion furi_hal_region_jp = {
 
 static const FuriHalRegion* furi_hal_region = NULL;
 
-void furi_hal_region_init() {
+void furi_hal_region_init(void) {
     FuriHalVersionRegion region = furi_hal_version_get_hw_region();
 
     if(region == FuriHalVersionRegionUnknown) {
@@ -87,19 +88,21 @@ void furi_hal_region_init() {
     }
 }
 
-const FuriHalRegion* furi_hal_region_get() {
+const FuriHalRegion* furi_hal_region_get(void) {
     return furi_hal_region;
 }
 
 void furi_hal_region_set(FuriHalRegion* region) {
+    furi_check(region);
+
     furi_hal_region = region;
 }
 
-bool furi_hal_region_is_provisioned() {
+bool furi_hal_region_is_provisioned(void) {
     return furi_hal_region != NULL;
 }
 
-const char* furi_hal_region_get_name() {
+const char* furi_hal_region_get_name(void) {
     if(furi_hal_region) {
         return furi_hal_region->country_code;
     } else {
@@ -107,19 +110,22 @@ const char* furi_hal_region_get_name() {
     }
 }
 
-bool furi_hal_region_is_frequency_allowed(uint32_t frequency) {
-    bool isAllowed = true;
+bool _furi_hal_region_is_frequency_allowed(uint32_t frequency) {
     if(!furi_hal_region) {
-        isAllowed = false;
+        return false;
     }
+
     const FuriHalRegionBand* band = furi_hal_region_get_band(frequency);
     if(!band) {
-        isAllowed = false;
+        return false;
     }
-    if(!isAllowed) {
-        isAllowed = furi_hal_subghz_is_tx_allowed(frequency);
-    }
-    return isAllowed;
+
+    return true;
+}
+
+// Check furi_hal_subghz settings for region bypass, if not it uses function above
+bool furi_hal_region_is_frequency_allowed(uint32_t frequency) {
+    return furi_hal_subghz_is_tx_allowed(frequency);
 }
 
 const FuriHalRegionBand* furi_hal_region_get_band(uint32_t frequency) {

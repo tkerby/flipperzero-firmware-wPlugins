@@ -55,15 +55,6 @@ static void menu_short_name(MenuItem* item, FuriString* name) {
     }
 }
 
-static void menu_string_to_upper_case(FuriString* str) {
-    for(size_t i = 0; i < furi_string_size(str); i++) {
-        char c = furi_string_get_char(str, i);
-        if(c >= 'a' && c <= 'z') {
-            furi_string_set_char(str, i, c - 'a' + 'A');
-        }
-    }
-}
-
 static void menu_centered_icon(
     Canvas* canvas,
     MenuItem* item,
@@ -330,36 +321,6 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
 
             break;
         }
-        case MenuStyleEurocorp: {
-#ifdef CANVAS_HAS_FONT_EUROCORP
-            canvas_set_font(canvas, FontEurocorp);
-#else
-            canvas_set_font(canvas, FontPrimary);
-#endif
-            for(uint8_t i = 0; i < 3; i++) {
-                canvas_set_color(canvas, ColorBlack);
-                shift_position = (position + items_count + i - 1) % items_count;
-                item = MenuItemArray_get(model->items, shift_position);
-                menu_short_name(item, name);
-                menu_string_to_upper_case(name);
-                size_t scroll_counter = menu_scroll_counter(model, i == 1);
-                if(i == 1) {
-                    canvas_draw_box(canvas, 0, 22, 128, 22);
-                    canvas_set_color(canvas, ColorWhite);
-                    // Clip corner
-                    for(uint8_t i = 0; i < 6; i++) {
-                        for(uint8_t j = 0; j < 6; j++) {
-                            if(j - i >= 0) {
-                                canvas_draw_dot(canvas, 128 - i, 22 + j - i);
-                            }
-                        }
-                    }
-                }
-                elements_scrollable_text_line(
-                    canvas, 2, 19 + 22 * i, 128 - 3, name, scroll_counter, false, false);
-            }
-            break;
-        }
         case MenuStyleCompact: {
             size_t index;
             size_t y_off, x_off;
@@ -462,7 +423,7 @@ static bool menu_input_callback(InputEvent* event, void* context) {
         }
     }
 
-    if(event->type == InputTypeShort) {
+    if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
         switch(event->key) {
         case InputKeyUp:
             menu_process_up(menu);
@@ -477,25 +438,9 @@ static bool menu_input_callback(InputEvent* event, void* context) {
             menu_process_right(menu);
             break;
         case InputKeyOk:
-            menu_process_ok(menu);
-            break;
-        default:
-            consumed = false;
-            break;
-        }
-    } else if(event->type == InputTypeRepeat) {
-        switch(event->key) {
-        case InputKeyUp:
-            menu_process_up(menu);
-            break;
-        case InputKeyDown:
-            menu_process_down(menu);
-            break;
-        case InputKeyLeft:
-            menu_process_left(menu);
-            break;
-        case InputKeyRight:
-            menu_process_right(menu);
+            if(event->type != InputTypeRepeat) {
+                menu_process_ok(menu);
+            }
             break;
         default:
             consumed = false;
@@ -536,22 +481,27 @@ static void menu_exit(void* context) {
         menu->view,
         MenuModel * model,
         {
-            MenuItem* item = MenuItemArray_get(model->items, model->position);
-            if(item && item->icon) {
-                icon_animation_stop(item->icon);
+            // If menu_reset() is called before view exit, model->items is reset
+            // But for some reason, even with size 0, array get() returns a non-null pointer?
+            // MLIB docs have no mention of out of bounds condition, seems weird
+            if(model->position < MenuItemArray_size(model->items)) {
+                MenuItem* item = MenuItemArray_get(model->items, model->position);
+                if(item && item->icon) {
+                    icon_animation_stop(item->icon);
+                }
             }
         },
         false);
     furi_timer_stop(menu->scroll_timer);
 }
 
-Menu* menu_alloc() {
+Menu* menu_alloc(void) {
     return menu_pos_alloc(0, 0);
 }
 
 Menu* menu_pos_alloc(size_t pos, bool gamemode) {
     Menu* menu = malloc(sizeof(Menu));
-    menu->view = view_alloc(menu->view);
+    menu->view = view_alloc();
     view_set_context(menu->view, menu);
     view_allocate_model(menu->view, ViewModelTypeLocking, sizeof(MenuModel));
     view_set_draw_callback(menu->view, menu_draw_callback);
@@ -584,17 +534,18 @@ Menu* menu_pos_alloc(size_t pos, bool gamemode) {
 }
 
 void menu_free(Menu* menu) {
-    furi_assert(menu);
+    furi_check(menu);
+
     menu_reset(menu);
     with_view_model(
         menu->view, MenuModel * model, { MenuItemArray_clear(model->items); }, false);
     view_free(menu->view);
-    furi_timer_free(menu->scroll_timer);
+
     free(menu);
 }
 
 View* menu_get_view(Menu* menu) {
-    furi_assert(menu);
+    furi_check(menu);
     return (menu->view);
 }
 
@@ -605,8 +556,8 @@ void menu_add_item(
     uint32_t index,
     MenuItemCallback callback,
     void* context) {
-    furi_assert(menu);
-    furi_assert(label);
+    furi_check(menu);
+    furi_check(label);
 
     MenuItem* item = NULL;
     with_view_model(
@@ -625,7 +576,7 @@ void menu_add_item(
 }
 
 void menu_reset(Menu* menu) {
-    furi_assert(menu);
+    furi_check(menu);
     with_view_model(
         menu->view,
         MenuModel * model,
@@ -643,6 +594,8 @@ void menu_reset(Menu* menu) {
 }
 
 void menu_set_selected_item(Menu* menu, uint32_t index) {
+    furi_check(menu);
+
     with_view_model(
         menu->view,
         MenuModel * model,
@@ -679,7 +632,6 @@ static void menu_process_up(Menu* menu) {
 
             switch(my_menu_style) {
             case MenuStyleList:
-            case MenuStyleEurocorp:
             case MenuStyleTerminal:
                 if(position > 0) {
                     position--;
@@ -731,7 +683,6 @@ static void menu_process_down(Menu* menu) {
 
             switch(my_menu_style) {
             case MenuStyleList:
-            case MenuStyleEurocorp:
             case MenuStyleTerminal:
                 if(position < count - 1) {
                     position++;

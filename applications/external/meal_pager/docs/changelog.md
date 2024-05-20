@@ -1,3 +1,12 @@
+## v1.6
+- Fix crashes on exit on fw 0.100.3
+
+## v1.5
+- Support for ufbt compilation (assets fixed)
+
+## v1.4
+- Fixed some restrictions that prevented build under 0.99.1
+
 ## v1.3
 - Fixed some memory leaks
 - Changed Subghz Protocol Registry to Fipper API conform variant

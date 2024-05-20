@@ -13,6 +13,7 @@
 #include "pokemon_stats.h"
 #include "pokemon_shiny.h"
 #include "pokemon_gender.h"
+#include "pokemon_pokerus.h"
 #include "pokemon_trade.h"
 #include "pokemon_pins.h"
 #include "pokemon_exit_confirm.h"
@@ -20,13 +21,8 @@
 static void scene_change_from_main_cb(void* context, uint32_t index) {
     PokemonFap* pokemon_fap = (PokemonFap*)context;
 
-    /* XXX: This is wrong? */
-    /* Bit of a hack, encode the generation in the upper 16 bits of the Gen
-     * scene state. This gets cleared on first entry by the gen scene and
-     * shouldn't be an issue. It's the easiest way to communicat what generation
-     * to use without making another variable somewhere else.
-     * No matter the gen, we write it to GenI scene as any further Gen scene numbers
-     * are just used as markers
+    /* The same trade scene is used for both gen i and ii. Set the real index to
+     * scene's state.
      */
     scene_manager_set_scene_state(pokemon_fap->scene_manager, GenITradeScene, index);
 
@@ -111,6 +107,7 @@ void (*const pokemon_scene_on_enter_handlers[])(void*) = {
     select_stats_scene_on_enter, //SelectStatsScene,
     select_shiny_scene_on_enter, //SelectShinyScene,
     select_gender_scene_on_enter, //SelectGenderScene,
+    select_pokerus_scene_on_enter, //SelectPokerusScene,
     select_name_scene_on_enter, //SelectUnownFormScene,
     select_number_scene_on_enter, //SelectOTIDScene,
     select_name_scene_on_enter, //SelectOTNameScene,
@@ -135,6 +132,7 @@ void (*const pokemon_scene_on_exit_handlers[])(void*) = {
     null_scene_on_exit, //SelectStatsScene,
     null_scene_on_exit, //SelectShinyScene,
     null_scene_on_exit, //SelectGenderScene,
+    generic_scene_on_exit, //SelectPokerusScene,
     generic_scene_on_exit, //SelectUnownFormScene,
     generic_scene_on_exit, //SelectOTIDScene,
     generic_scene_on_exit, //SelectOTNameScene,
@@ -159,6 +157,7 @@ bool (*const pokemon_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     null_scene_on_event, //SelectStatsScene,
     null_scene_on_event, //SelectShinyScene,
     null_scene_on_event, //SelectGenderScene,
+    null_scene_on_event, //SelectPokerusScene,
     null_scene_on_event, //SelectUnownFormScene,
     null_scene_on_event, //SelectOTIDScene,
     null_scene_on_event, //SelectOTNameScene,

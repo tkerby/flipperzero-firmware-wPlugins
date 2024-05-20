@@ -286,9 +286,11 @@ static void power_loader_callback(const void* message, void* context) {
     Power* power = context;
     const LoaderEvent* event = message;
 
-    if(event->type == LoaderEventTypeApplicationStarted) {
+    if(event->type == LoaderEventTypeApplicationBeforeLoad) {
         power_auto_shutdown_inhibit(power);
-    } else if(event->type == LoaderEventTypeApplicationStopped) {
+    } else if(
+        event->type == LoaderEventTypeApplicationLoadFailed ||
+        event->type == LoaderEventTypeApplicationStopped) {
         power_auto_shutdown_arm(power);
     }
 }
@@ -312,7 +314,7 @@ static void power_shutdown_time_changed_callback(const void* event, void* contex
     }
 }
 
-Power* power_alloc() {
+Power* power_alloc(void) {
     Power* power = malloc(sizeof(Power));
 
     // Records

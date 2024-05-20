@@ -53,10 +53,12 @@ const SubGhzProtocolDecoder subghz_protocol_holtek_decoder = {
     .feed = subghz_protocol_decoder_holtek_feed,
     .reset = subghz_protocol_decoder_holtek_reset,
 
-    .get_hash_data = subghz_protocol_decoder_holtek_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_holtek_get_hash_data,
     .serialize = subghz_protocol_decoder_holtek_serialize,
     .deserialize = subghz_protocol_decoder_holtek_deserialize,
     .get_string = subghz_protocol_decoder_holtek_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_holtek_encoder = {

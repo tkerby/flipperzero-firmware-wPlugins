@@ -61,10 +61,14 @@ static const CanvasOrientation view_port_orientation_mapping[ViewPortOrientation
 
 // Remaps directional pad buttons on Flipper based on ViewPort orientation
 static void view_port_map_input(InputEvent* event, ViewPortOrientation orientation) {
-    furi_assert(orientation < ViewPortOrientationMAX && event->key < InputKeyMAX);
+    furi_check(orientation < ViewPortOrientationMAX && event->key < InputKeyMAX);
 
     if(event->sequence_source != INPUT_SEQUENCE_SOURCE_HARDWARE) {
         return;
+    }
+
+    if(furi_hal_rtc_is_flag_set(FuriHalRtcFlagHandOrient)) {
+        orientation = 1;
     }
 
     if(orientation == ViewPortOrientationHorizontal ||
@@ -90,7 +94,7 @@ static void view_port_setup_canvas_orientation(const ViewPort* view_port, Canvas
     canvas_set_orientation(canvas, orientation);
 }
 
-ViewPort* view_port_alloc() {
+ViewPort* view_port_alloc(void) {
     ViewPort* view_port = malloc(sizeof(ViewPort));
     view_port->orientation = ViewPortOrientationHorizontal;
     view_port->is_enabled = true;
@@ -99,7 +103,7 @@ ViewPort* view_port_alloc() {
 }
 
 void view_port_free(ViewPort* view_port) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     furi_check(view_port->gui == NULL);
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
@@ -108,14 +112,14 @@ void view_port_free(ViewPort* view_port) {
 }
 
 void view_port_set_width(ViewPort* view_port, uint8_t width) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->width = width;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
 }
 
 uint8_t view_port_get_width(const ViewPort* view_port) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     uint8_t width = view_port->width;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
@@ -123,14 +127,14 @@ uint8_t view_port_get_width(const ViewPort* view_port) {
 }
 
 void view_port_set_height(ViewPort* view_port, uint8_t height) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->height = height;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
 }
 
 uint8_t view_port_get_height(const ViewPort* view_port) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     uint8_t height = view_port->height;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
@@ -138,7 +142,7 @@ uint8_t view_port_get_height(const ViewPort* view_port) {
 }
 
 void view_port_enabled_set(ViewPort* view_port, bool enabled) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     if(view_port->is_enabled != enabled) {
         view_port->is_enabled = enabled;
@@ -148,7 +152,7 @@ void view_port_enabled_set(ViewPort* view_port, bool enabled) {
 }
 
 bool view_port_is_enabled(const ViewPort* view_port) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     bool is_enabled = view_port->is_enabled;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
@@ -156,7 +160,7 @@ bool view_port_is_enabled(const ViewPort* view_port) {
 }
 
 void view_port_draw_callback_set(ViewPort* view_port, ViewPortDrawCallback callback, void* context) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->draw_callback = callback;
     view_port->draw_callback_context = context;
@@ -167,7 +171,7 @@ void view_port_input_callback_set(
     ViewPort* view_port,
     ViewPortInputCallback callback,
     void* context) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->input_callback = callback;
     view_port->input_callback_context = context;
@@ -175,7 +179,7 @@ void view_port_input_callback_set(
 }
 
 void view_port_update(ViewPort* view_port) {
-    furi_assert(view_port);
+    furi_check(view_port);
 
     // We are not going to lockup system, but will notify you instead
     // Make sure that you don't call viewport methods inside of another mutex, especially one that is used in draw call
@@ -188,15 +192,15 @@ void view_port_update(ViewPort* view_port) {
 }
 
 void view_port_gui_set(ViewPort* view_port, Gui* gui) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->gui = gui;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);
 }
 
 void view_port_draw(ViewPort* view_port, Canvas* canvas) {
-    furi_assert(view_port);
-    furi_assert(canvas);
+    furi_check(view_port);
+    furi_check(canvas);
 
     // We are not going to lockup system, but will notify you instead
     // Make sure that you don't call viewport methods inside of another mutex, especially one that is used in draw call
@@ -215,8 +219,8 @@ void view_port_draw(ViewPort* view_port, Canvas* canvas) {
 }
 
 void view_port_input(ViewPort* view_port, InputEvent* event) {
-    furi_assert(view_port);
-    furi_assert(event);
+    furi_check(view_port);
+    furi_check(event);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     furi_check(view_port->gui);
 
@@ -229,7 +233,7 @@ void view_port_input(ViewPort* view_port, InputEvent* event) {
 }
 
 void view_port_set_orientation(ViewPort* view_port, ViewPortOrientation orientation) {
-    furi_assert(view_port);
+    furi_check(view_port);
     furi_check(furi_mutex_acquire(view_port->mutex, FuriWaitForever) == FuriStatusOk);
     view_port->orientation = orientation;
     furi_check(furi_mutex_release(view_port->mutex) == FuriStatusOk);

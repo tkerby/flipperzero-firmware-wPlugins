@@ -3,9 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <furi_hal_serial_types.h>
+#include <furi_hal_version.h>
 #include <toolbox/colors.h>
-// #include <gui/icon_i.h>
-// #include <power/power_service/power.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +25,6 @@ typedef enum {
     MenuStylePs4,
     MenuStyleVertical,
     MenuStyleC64,
-    MenuStyleEurocorp,
     MenuStyleCompact,
     MenuStyleTerminal,
     MenuStyleCount,
@@ -54,9 +52,11 @@ typedef struct {
     uint32_t game_start_point;
     bool lock_menu_type;
     bool sort_dirs_first;
+    bool show_hidden_files;
+    bool show_internal_tab;
+    uint32_t favorite_timeout;
     bool dark_mode;
     uint32_t charge_cap;
-    uint32_t favorite_timeout;
     SpiHandle spi_cc1101_handle;
     SpiHandle spi_nrf24_handle;
     FuriHalSerialId uart_esp_channel;
@@ -66,9 +66,10 @@ typedef struct {
     Rgb565Color vgm_color_bg;
     bool rgb_backlight;
     uint32_t lcd_style;
+    FuriHalVersionColor spoof_color;
 } CfwSettings;
 
-void CFW_SETTINGS_SAVE();
+void cfw_settings_save(void);
 extern CfwSettings cfw_settings;
 
 #ifdef __cplusplus

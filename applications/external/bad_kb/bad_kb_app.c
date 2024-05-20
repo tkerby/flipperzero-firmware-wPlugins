@@ -28,7 +28,7 @@ static void bad_kb_app_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
-static void bad_kb_load_settings(BadKbApp* app) {
+void bad_kb_load_settings(BadKbApp* app) {
     furi_string_reset(app->keyboard_layout);
     BadKbConfig* cfg = &app->config;
 
@@ -36,41 +36,66 @@ static void bad_kb_load_settings(BadKbApp* app) {
     FlipperFormat* file = flipper_format_file_alloc(storage);
     if(flipper_format_file_open_existing(file, BAD_KB_SETTINGS_PATH)) {
         FuriString* tmp_str = furi_string_alloc();
+        uint32_t tmp_uint = 0;
+
         if(!flipper_format_read_string(file, "Keyboard_Layout", app->keyboard_layout)) {
             furi_string_reset(app->keyboard_layout);
+            flipper_format_rewind(file);
         }
-        if(!flipper_format_read_bool(file, "Is_BT", &(app->is_bt), 1)) {
+
+        if(!flipper_format_read_bool(file, "Is_Bt", &app->is_bt, 1)) {
             app->is_bt = false;
+            flipper_format_rewind(file);
         }
-        if(!flipper_format_read_bool(file, "BT_Remember", &(app->bt_remember), 1)) {
-            app->bt_remember = false;
+
+        if(!flipper_format_read_bool(file, "Bt_Remember", &cfg->ble.bonding, 1)) {
+            cfg->ble.bonding = false;
+            flipper_format_rewind(file);
         }
-        if(flipper_format_read_string(file, "Bt_Name", tmp_str) && !furi_string_empty(tmp_str)) {
+
+        if(!flipper_format_read_uint32(file, "Bt_Pairing", &tmp_uint, 1)) {
+            tmp_uint = GapPairingNone;
+            flipper_format_rewind(file);
+        }
+        cfg->ble.pairing = tmp_uint;
+
+        if(flipper_format_read_string(file, "Bt_Name", tmp_str)) {
             strlcpy(cfg->ble.name, furi_string_get_cstr(tmp_str), sizeof(cfg->ble.name));
         } else {
-            strcpy(cfg->ble.name, "");
+            cfg->ble.name[0] = '\0';
+            flipper_format_rewind(file);
         }
+
         if(!flipper_format_read_hex(
                file, "Bt_Mac", (uint8_t*)&cfg->ble.mac, sizeof(cfg->ble.mac))) {
             memset(cfg->ble.mac, 0, sizeof(cfg->ble.mac));
+            flipper_format_rewind(file);
         }
-        if(flipper_format_read_string(file, "Usb_Manuf", tmp_str) && !furi_string_empty(tmp_str)) {
+
+        if(flipper_format_read_string(file, "Usb_Manuf", tmp_str)) {
             strlcpy(cfg->usb.manuf, furi_string_get_cstr(tmp_str), sizeof(cfg->usb.manuf));
         } else {
-            strcpy(cfg->usb.manuf, "");
+            cfg->usb.manuf[0] = '\0';
+            flipper_format_rewind(file);
         }
-        if(flipper_format_read_string(file, "Usb_Product", tmp_str) &&
-           !furi_string_empty(tmp_str)) {
+
+        if(flipper_format_read_string(file, "Usb_Product", tmp_str)) {
             strlcpy(cfg->usb.product, furi_string_get_cstr(tmp_str), sizeof(cfg->usb.product));
         } else {
-            strcpy(cfg->usb.product, "");
+            cfg->usb.product[0] = '\0';
+            flipper_format_rewind(file);
         }
+
         if(!flipper_format_read_uint32(file, "Usb_Vid", &cfg->usb.vid, 1)) {
             cfg->usb.vid = 0;
+            flipper_format_rewind(file);
         }
+
         if(!flipper_format_read_uint32(file, "Usb_Pid", &cfg->usb.pid, 1)) {
             cfg->usb.pid = 0;
+            flipper_format_rewind(file);
         }
+
         furi_string_free(tmp_str);
         flipper_format_file_close(file);
     }
@@ -97,9 +122,12 @@ static void bad_kb_save_settings(BadKbApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* file = flipper_format_file_alloc(storage);
     if(flipper_format_file_open_always(file, BAD_KB_SETTINGS_PATH)) {
+        uint32_t tmp_uint = 0;
         flipper_format_write_string(file, "Keyboard_Layout", app->keyboard_layout);
-        flipper_format_write_bool(file, "Is_BT", &(app->is_bt), 1);
-        flipper_format_write_bool(file, "BT_Remember", &(app->bt_remember), 1);
+        flipper_format_write_bool(file, "Is_Bt", &app->is_bt, 1);
+        flipper_format_write_bool(file, "Bt_Remember", &cfg->ble.bonding, 1);
+        tmp_uint = cfg->ble.pairing;
+        flipper_format_write_uint32(file, "Bt_Pairing", &tmp_uint, 1);
         flipper_format_write_string_cstr(file, "Bt_Name", cfg->ble.name);
         flipper_format_write_hex(file, "Bt_Mac", (uint8_t*)&cfg->ble.mac, sizeof(cfg->ble.mac));
         flipper_format_write_string_cstr(file, "Usb_Manuf", cfg->usb.manuf);
@@ -125,21 +153,20 @@ void bad_kb_app_show_loading_popup(BadKbApp* app, bool show) {
 
 int32_t bad_kb_conn_apply(BadKbApp* app) {
     if(app->is_bt) {
+        // Setup profile config
+        BadKbConfig* cfg = app->set_bt_id ? &app->id_config : &app->config;
+        memcpy(&app->cur_ble_cfg, &cfg->ble, sizeof(cfg->ble));
+        if(app->cur_ble_cfg.bonding) {
+            // Hardcode mac for remember mode
+            // Change in config copy to preserve user choice for non-remember mode
+            memcpy(app->cur_ble_cfg.mac, BAD_KB_BOUND_MAC, sizeof(BAD_KB_BOUND_MAC));
+        }
+
+        // Prepare for new profile
         bt_timeout = bt_hid_delays[LevelRssi39_0];
         bt_disconnect(app->bt);
         furi_delay_ms(200);
         bt_keys_storage_set_storage_path(app->bt, BAD_KB_KEYS_PATH);
-
-        // Setup new config
-        BadKbConfig* cfg = app->set_bt_id ? &app->id_config : &app->config;
-        memcpy(&app->cur_ble_cfg, &cfg->ble, sizeof(cfg->ble));
-        app->cur_ble_cfg.bonding = app->bt_remember;
-        if(app->bt_remember) {
-            app->cur_ble_cfg.pairing = GapPairingPinCodeVerifyYesNo;
-        } else {
-            app->cur_ble_cfg.pairing = GapPairingNone;
-            memcpy(app->cur_ble_cfg.mac, BAD_KB_BOUND_MAC, sizeof(BAD_KB_BOUND_MAC));
-        }
 
         // Set profile
         app->ble_hid = bt_profile_start(app->bt, ble_profile_hid, &app->cur_ble_cfg);
@@ -228,7 +255,8 @@ void bad_kb_config_refresh(BadKbApp* app) {
             bad_kb_conn_reset(app);
         } else {
             BleProfileHidParams* cur = &app->cur_ble_cfg;
-            apply = apply || cfg->ble.bonding != app->bt_remember;
+            apply = apply || cfg->ble.bonding != cur->bonding;
+            apply = apply || cfg->ble.pairing != cur->pairing;
             apply = apply || strncmp(cfg->ble.name, cur->name, sizeof(cfg->ble.name));
             apply = apply || memcmp(cfg->ble.mac, cur->mac, sizeof(cfg->ble.mac));
         }
@@ -311,10 +339,6 @@ BadKbApp* bad_kb_app_alloc(char* arg) {
 
     // Save prev config
     app->prev_usb_mode = furi_hal_usb_get_config();
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    storage_simply_mkdir(storage, BAD_KB_APP_BASE_FOLDER);
-    storage_simply_mkdir(storage, BAD_KB_APP_BASE_CONFIG_FOLDER);
-    furi_record_close(RECORD_STORAGE);
 
     // Adjust BT remember MAC to be serial MAC +2
     memcpy(BAD_KB_BOUND_MAC, furi_hal_version_get_ble_mac(), sizeof(BAD_KB_BOUND_MAC));
@@ -331,9 +355,9 @@ BadKbApp* bad_kb_app_alloc(char* arg) {
         BadKbAppViewVarItemList,
         variable_item_list_get_view(app->var_item_list));
 
-    app->bad_kb_view = bad_kb_alloc();
+    app->bad_kb_view = bad_kb_view_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, BadKbAppViewWork, bad_kb_get_view(app->bad_kb_view));
+        app->view_dispatcher, BadKbAppViewWork, bad_kb_view_get_view(app->bad_kb_view));
 
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
@@ -375,7 +399,7 @@ void bad_kb_app_free(BadKbApp* app) {
 
     // Views
     view_dispatcher_remove_view(app->view_dispatcher, BadKbAppViewWork);
-    bad_kb_free(app->bad_kb_view);
+    bad_kb_view_free(app->bad_kb_view);
 
     // Custom Widget
     view_dispatcher_remove_view(app->view_dispatcher, BadKbAppViewWidget);

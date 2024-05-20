@@ -8,6 +8,7 @@
 struct select_model {
     uint8_t curr_pokemon;
     const void* pokemon_table;
+    PokemonData* pdata;
 };
 
 /* Anonymous struct */
@@ -23,7 +24,17 @@ static void select_pokemon_render_callback(Canvas* canvas, void* model) {
     char pokedex_num[5];
 
     snprintf(pokedex_num, sizeof(pokedex_num), "#%03d", curr_pokemon + 1);
-    canvas_draw_icon(canvas, 0, 0, table_icon_get(view_model->pokemon_table, curr_pokemon));
+
+    /* Update the bitmap in pdata if needed */
+    pokemon_icon_get(view_model->pdata, curr_pokemon + 1);
+    canvas_draw_xbm(
+        canvas,
+        0,
+        0,
+        view_model->pdata->bitmap->width,
+        view_model->pdata->bitmap->height,
+        view_model->pdata->bitmap->data);
+
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(
         canvas,
@@ -36,11 +47,9 @@ static void select_pokemon_render_callback(Canvas* canvas, void* model) {
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 58, 38, AlignLeft, AlignTop, pokedex_num);
     elements_frame(canvas, 55, 0, 71, 18);
-    //canvas_draw_icon(canvas, 128 - 80, 0, &I_Space_80x18);
     canvas_draw_str_aligned(canvas, 90, 5, AlignCenter, AlignTop, "Select Pokemon");
 
     canvas_set_font(canvas, FontPrimary);
-    /* XXX: Need to remake this and have it more on the right side */
     elements_button_center(canvas, "OK");
 }
 
@@ -131,6 +140,7 @@ void select_pokemon_enter_callback(void* context) {
         {
             model->curr_pokemon = pokemon_stat_get(select->pdata, STAT_NUM, NONE);
             model->pokemon_table = select->pdata->pokemon_table;
+            model->pdata = select->pdata;
         },
         true);
 }
@@ -147,6 +157,7 @@ void* select_pokemon_alloc(
     select->view = view_alloc();
     select->pdata = pdata;
     select->scene_manager = scene_manager;
+    select->pdata = pdata;
 
     view_set_context(select->view, select);
     view_allocate_model(select->view, ViewModelTypeLockFree, sizeof(struct select_model));
@@ -165,7 +176,6 @@ void select_pokemon_free(ViewDispatcher* view_dispatcher, uint32_t viewid, void*
 
     view_dispatcher_remove_view(view_dispatcher, viewid);
 
-    view_free_model(select->view);
     view_free(select->view);
     free(select);
 }

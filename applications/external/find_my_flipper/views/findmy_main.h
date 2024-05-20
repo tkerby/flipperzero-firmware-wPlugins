@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../findmy.h"
+#include "../findmy_state.h"
 #include <gui/view.h>
 
 typedef enum {
@@ -26,4 +27,6 @@ void findmy_main_set_callback(FindMyMain* findmy_main, FindMyMainCallback callba
 // To redraw when info changes
 void findmy_main_update_active(FindMyMain* findmy_main, bool active);
 void findmy_main_update_interval(FindMyMain* findmy_main, uint8_t interval);
+void findmy_main_toggle_mac(FindMyMain* findmy_main, bool show_mac);
+void findmy_main_update_mac(FindMyMain* findmy_main, uint8_t* mac);
 void findmy_main_update_type(FindMyMain* findmy_main, FindMyType type);

@@ -34,7 +34,7 @@ static void storage_app_sd_icon_draw_callback(Canvas* canvas, void* context) {
 }
 */
 
-Storage* storage_app_alloc() {
+Storage* storage_app_alloc(void) {
     Storage* app = malloc(sizeof(Storage));
     app->message_queue = furi_message_queue_alloc(8, sizeof(StorageMessage));
     app->pubsub = furi_pubsub_alloc();
@@ -45,10 +45,12 @@ Storage* storage_app_alloc() {
     }
 
 #ifndef FURI_RAM_EXEC
-    storage_mnt_init(&app->storage[ST_MNT]);
     storage_int_init(&app->storage[ST_INT]);
 #endif
     storage_ext_init(&app->storage[ST_EXT]);
+#ifndef FURI_RAM_EXEC
+    storage_mnt_init(&app->storage[ST_MNT]);
+#endif
 
     // sd icon gui
     app->sd_gui.enabled = false;

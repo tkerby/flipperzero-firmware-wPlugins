@@ -1,47 +1,70 @@
 // Methods for IR transmission
 
-#include <infrared.h>
-#include <infrared/encoder_decoder/infrared.h>
-#include <applications/services/cli/cli.h>
-
-#include "action_i.h"
 #include "quac.h"
+#include "action_i.h"
+#include "action_ir_utils.h"
 
-typedef struct {
-    size_t timings_size; /**< Number of elements in the timings array. */
-    uint32_t* timings; /**< Pointer to an array of timings describing the signal. */
-    uint32_t frequency; /**< Carrier frequency of the signal. */
-    float duty_cycle; /**< Duty cycle of the signal. */
-} InfraredRawSignal;
-
-typedef struct InfraredSignal {
-    bool is_raw;
-    union {
-        InfraredMessage message;
-        InfraredRawSignal raw;
-    } payload;
-} InfraredSignal;
-
-InfraredSignal* infrared_signal_alloc() {
-    InfraredSignal* signal = malloc(sizeof(InfraredSignal));
-    signal->is_raw = false;
-    signal->payload.message.protocol = InfraredProtocolUnknown;
-    return signal;
-}
-
-void action_ir_tx(void* context, FuriString* action_path, FuriString* error) {
-    UNUSED(action_path);
+void action_ir_tx(void* context, const FuriString* action_path, FuriString* error) {
     UNUSED(error);
-    UNUSED(context);
-    // App* app = context;
+    App* app = context;
+    const char* file_name = furi_string_get_cstr(action_path);
+    InfraredSignal* signal = infrared_utils_signal_alloc();
 
-    // InfraredSignal* signal = infrared_signal_alloc();
-    // const char* ir_file = furi_string_get_cstr(action_path);
-    // bool success = infrared_parse_message(ir_file, signal) || infrared_parse_raw(ir_file, signal);
-    // if(success) {
-    //     infrared_signal_transmit(signal);
-    // } else {
-    //     ACTION_SET_ERROR("IR: Error sending signal");
-    // }
-    // infrared_signal_free(signal);
+    FlipperFormat* fff_data_file = flipper_format_file_alloc(app->storage);
+    FuriString* temp_str;
+    temp_str = furi_string_alloc();
+    // uint32_t temp_data32;
+
+    // https://developer.flipper.net/flipperzero/doxygen/infrared_file_format.html
+    // TODO: Right now we only read the first signal found in the file. Add support
+    // for reading any signal by 'name'?
+    do {
+        if(!flipper_format_file_open_existing(fff_data_file, file_name)) {
+            ACTION_SET_ERROR("IR: Error opening %s", file_name);
+            break;
+        }
+        uint32_t index = 0;
+        if(!infrared_utils_read_signal_at_index(fff_data_file, index, signal, temp_str)) {
+            ACTION_SET_ERROR("IR: Failed to read from file");
+            break;
+        }
+
+        if(signal->is_raw) {
+            // raw
+            FURI_LOG_I(
+                TAG,
+                "IR: Sending (%s) type=raw => %d timings, %lu Hz, %f",
+                file_name,
+                signal->payload.raw.timings_size,
+                signal->payload.raw.frequency,
+                (double)signal->payload.raw.duty_cycle);
+
+            infrared_send_raw_ext(
+                signal->payload.raw.timings,
+                signal->payload.raw.timings_size,
+                true,
+                signal->payload.raw.frequency,
+                signal->payload.raw.duty_cycle);
+
+            FURI_LOG_I(TAG, "IR: Send complete");
+        } else {
+            //parsed
+            FURI_LOG_I(
+                TAG,
+                "IR: Sending (%s) type=parsed => %s %lu %lu",
+                file_name,
+                infrared_get_protocol_name(signal->payload.message.protocol),
+                signal->payload.message.address,
+                signal->payload.message.command);
+
+            infrared_send(&signal->payload.message, 1);
+
+            FURI_LOG_I(TAG, "IR: Send complete");
+        }
+
+    } while(false);
+
+    furi_string_free(temp_str);
+    flipper_format_free(fff_data_file);
+    infrared_utils_signal_free(signal);
 }

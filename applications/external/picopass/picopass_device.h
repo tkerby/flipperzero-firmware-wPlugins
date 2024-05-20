@@ -68,11 +68,20 @@ typedef enum {
 } PicopassEncryption;
 
 typedef enum {
-    PicopassDeviceSaveFormatHF,
+    PicopassDeviceSaveFormatOriginal,
+    PicopassDeviceSaveFormatLegacy,
     PicopassDeviceSaveFormatLF,
     PicopassDeviceSaveFormatSeader,
     PicopassDeviceSaveFormatPartial,
 } PicopassDeviceSaveFormat;
+
+typedef enum {
+    PicopassDeviceAuthMethodUnset,
+    PicopassDeviceAuthMethodNone, // unsecured picopass
+    PicopassDeviceAuthMethodKey,
+    PicopassDeviceAuthMethodNrMac,
+    PicopassDeviceAuthMethodFailed,
+} PicopassDeviceAuthMethod;
 
 typedef enum {
     PicopassEmulatorStateHalt,
@@ -105,6 +114,7 @@ typedef struct {
 typedef struct {
     PicopassBlock card_data[PICOPASS_MAX_APP_LIMIT];
     PicopassPacs pacs;
+    PicopassDeviceAuthMethod auth;
 } PicopassDeviceData;
 
 typedef struct {
@@ -150,5 +160,5 @@ void picopass_device_set_loading_callback(
     void* context);
 
 void picopass_device_parse_credential(PicopassBlock* card_data, PicopassPacs* pacs);
-void picopass_device_parse_wiegand(uint8_t* credential, PicopassPacs* pacs);
+void picopass_device_parse_wiegand(PicopassPacs* pacs);
 bool picopass_device_hid_csn(PicopassDevice* dev);

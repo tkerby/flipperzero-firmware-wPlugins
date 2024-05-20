@@ -1,7 +1,9 @@
 #include "nfc_supported_card_plugin.h"
-#include <bit_lib/bit_lib.h>
+
 #include <flipper_application/flipper_application.h>
+
 #include <nfc/nfc_device.h>
+#include <bit_lib/bit_lib.h>
 #include <nfc/protocols/mf_classic/mf_classic_poller_sync.h>
 
 #define TAG "Skylanders"
@@ -23,7 +25,7 @@ bool skylanders_verify(Nfc* nfc) {
         MfClassicError error =
             mf_classic_poller_sync_auth(nfc, block_num, &key, MfClassicKeyTypeA, &auth_ctx);
 
-        if(error == MfClassicErrorNotPresent) {
+        if(error != MfClassicErrorNone) {
             FURI_LOG_D(TAG, "Failed to read block %u: %d", block_num, error);
             break;
         }
@@ -46,7 +48,7 @@ static bool skylanders_read(Nfc* nfc, NfcDevice* device) {
     do {
         MfClassicType type = MfClassicType1k;
         MfClassicError error = mf_classic_poller_sync_detect_type(nfc, &type);
-        if(error == MfClassicErrorNotPresent) break;
+        if(error != MfClassicErrorNone) break;
 
         data->type = type;
         MfClassicDeviceKeys keys = {};
@@ -58,7 +60,7 @@ static bool skylanders_read(Nfc* nfc, NfcDevice* device) {
         }
 
         error = mf_classic_poller_sync_read(nfc, &keys, data);
-        if(error == MfClassicErrorNotPresent) {
+        if(error != MfClassicErrorNone) {
             FURI_LOG_W(TAG, "Failed to read data");
             break;
         }
@@ -90,6 +92,7 @@ static uint8_t fill_name(const uint16_t id, FuriString* name) {
         furi_string_cat_printf(name, "Lightning Rod");
         break;
     case 0x0004:
+    case 0x0194:
         furi_string_cat_printf(name, "Bash");
         break;
     case 0x0005:
@@ -126,6 +129,7 @@ static uint8_t fill_name(const uint16_t id, FuriString* name) {
         furi_string_cat_printf(name, "Slam Bam");
         break;
     case 0x0010:
+    case 0x01A0:
         furi_string_cat_printf(name, "Spyro");
         break;
     case 0x0011:
@@ -135,6 +139,7 @@ static uint8_t fill_name(const uint16_t id, FuriString* name) {
         furi_string_cat_printf(name, "Double Trouble");
         break;
     case 0x0013:
+    case 0x01A3:
         furi_string_cat_printf(name, "Trigger Happy");
         break;
     case 0x0014:
@@ -168,6 +173,7 @@ static uint8_t fill_name(const uint16_t id, FuriString* name) {
         furi_string_cat_printf(name, "Hex");
         break;
     case 0x001E:
+    case 0x01AE:
         furi_string_cat_printf(name, "Chop Chop");
         break;
     case 0x001F:
@@ -328,18 +334,6 @@ static uint8_t fill_name(const uint16_t id, FuriString* name) {
         break;
     case 0x0134:
         furi_string_cat_printf(name, "Midnight Museum");
-        break;
-    case 0x0194:
-        furi_string_cat_printf(name, "Bash");
-        break;
-    case 0x01A0:
-        furi_string_cat_printf(name, "Spyro");
-        break;
-    case 0x01A3:
-        furi_string_cat_printf(name, "Trigger Happy");
-        break;
-    case 0x01AE:
-        furi_string_cat_printf(name, "Chop Chop");
         break;
     case 0x01C2:
         furi_string_cat_printf(name, "Gusto");
@@ -866,6 +860,6 @@ static const FlipperAppPluginDescriptor skylanders_plugin_descriptor = {
 };
 
 /* Plugin entry point - must return a pointer to const descriptor  */
-const FlipperAppPluginDescriptor* skylanders_plugin_ep() {
+const FlipperAppPluginDescriptor* skylanders_plugin_ep(void) {
     return &skylanders_plugin_descriptor;
 }

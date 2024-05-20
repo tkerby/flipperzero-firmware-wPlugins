@@ -8,8 +8,6 @@ void subghz_block_generic_get_preset_name(const char* preset_name, FuriString* p
     const char* preset_name_temp;
     if(!strcmp(preset_name, "AM270")) {
         preset_name_temp = "FuriHalSubGhzPresetOok270Async";
-    } else if(!strcmp(preset_name, "AM_Q")) {
-        preset_name_temp = "FuriHalSubGhzPresetOok650Async_q";
     } else if(!strcmp(preset_name, "AM650")) {
         preset_name_temp = "FuriHalSubGhzPresetOok650Async";
     } else if(!strcmp(preset_name, "FM238")) {
@@ -26,7 +24,7 @@ SubGhzProtocolStatus subghz_block_generic_serialize(
     SubGhzBlockGeneric* instance,
     FlipperFormat* flipper_format,
     SubGhzRadioPreset* preset) {
-    furi_assert(instance);
+    furi_check(instance);
     SubGhzProtocolStatus res = SubGhzProtocolStatusError;
     FuriString* temp_str;
     temp_str = furi_string_alloc();
@@ -116,7 +114,8 @@ SubGhzProtocolStatus subghz_block_generic_serialize(
 
 SubGhzProtocolStatus
     subghz_block_generic_deserialize(SubGhzBlockGeneric* instance, FlipperFormat* flipper_format) {
-    furi_assert(instance);
+    furi_check(instance);
+
     SubGhzProtocolStatus res = SubGhzProtocolStatusError;
     FuriString* temp_str;
     temp_str = furi_string_alloc();
@@ -157,6 +156,7 @@ SubGhzProtocolStatus subghz_block_generic_deserialize_check_count_bit(
     SubGhzBlockGeneric* instance,
     FlipperFormat* flipper_format,
     uint16_t count_bit) {
+    furi_check(instance);
     SubGhzProtocolStatus ret = SubGhzProtocolStatusError;
     do {
         ret = subghz_block_generic_deserialize(instance, flipper_format);

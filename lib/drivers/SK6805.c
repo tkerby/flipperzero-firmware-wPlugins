@@ -24,7 +24,7 @@
 /* Настройки */
 #define SK6805_LED_PIN &led_pin // LED connection port
 
-#ifdef FURI_DEBUG
+#if false
 #define DEBUG_PIN &gpio_ext_pa7
 #define DEBUG_INIT() \
     furi_hal_gpio_init(DEBUG_PIN, GpioModeOutputPushPull, GpioPullNo, GpioSpeedVeryHigh)
@@ -39,13 +39,13 @@
 static const GpioPin led_pin = {.port = GPIOA, .pin = LL_GPIO_PIN_8};
 static uint8_t led_buffer[SK6805_LED_COUNT][3];
 
-void SK6805_init() {
+void SK6805_init(void) {
     DEBUG_INIT();
     furi_hal_gpio_write(SK6805_LED_PIN, false);
     furi_hal_gpio_init(SK6805_LED_PIN, GpioModeOutputPushPull, GpioPullNo, GpioSpeedVeryHigh);
 }
 
-uint8_t SK6805_get_led_count() {
+uint8_t SK6805_get_led_count(void) {
     return (const uint8_t)SK6805_LED_COUNT;
 }
 void SK6805_set_led_color(uint8_t led_index, uint8_t r, uint8_t g, uint8_t b) {
@@ -57,7 +57,7 @@ void SK6805_set_led_color(uint8_t led_index, uint8_t r, uint8_t g, uint8_t b) {
     led_buffer[led_index][2] = b;
 }
 
-void SK6805_update() {
+void SK6805_update(void) {
     FURI_LOG_T(TAG, "update");
     SK6805_init();
     FURI_CRITICAL_ENTER();

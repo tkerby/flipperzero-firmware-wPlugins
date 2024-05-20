@@ -344,6 +344,10 @@ static bool ducky_set_bt_id(BadKbScript* bad_kb, const char* line) {
 
     strlcpy(cfg->ble.name, line + mac_len, sizeof(cfg->ble.name));
     FURI_LOG_D(WORKER_TAG, "set bt id: %s", line);
+
+    // Can't set bonding and pairing via BT_ID, sync with user choice instead
+    cfg->ble.bonding = bad_kb->app->config.ble.bonding;
+    cfg->ble.pairing = bad_kb->app->config.ble.pairing;
     return true;
 }
 
@@ -382,11 +386,12 @@ static void ducky_script_preload(BadKbScript* bad_kb, File* script_file) {
     app->has_usb_id = strncmp(line_tmp, ducky_cmd_id, strlen(ducky_cmd_id)) == 0;
     app->has_bt_id = strncmp(line_tmp, ducky_cmd_bt_id, strlen(ducky_cmd_bt_id)) == 0;
 
+    // Auto-switch to mode chosen with ID/BT_ID, can override manually in config screen
     if(app->has_usb_id) {
-        //app->is_bt = false;
+        app->is_bt = false;
         app->set_usb_id = ducky_set_usb_id(bad_kb, &line_tmp[strlen(ducky_cmd_id) + 1]);
     } else if(app->has_bt_id) {
-        //app->is_bt = true;
+        app->is_bt = true;
         app->set_bt_id = ducky_set_bt_id(bad_kb, &line_tmp[strlen(ducky_cmd_bt_id) + 1]);
     }
 
@@ -575,6 +580,7 @@ static int32_t bad_kb_worker(void* context) {
                 bad_kb->st.line_cur = 0;
                 bad_kb->defdelay = 0;
                 bad_kb->stringdelay = 0;
+                bad_kb->defstringdelay = 0;
                 bad_kb->repeat_cnt = 0;
                 bad_kb->key_hold_nb = 0;
                 bad_kb->file_end = false;
@@ -604,6 +610,7 @@ static int32_t bad_kb_worker(void* context) {
                 bad_kb->st.line_cur = 0;
                 bad_kb->defdelay = 0;
                 bad_kb->stringdelay = 0;
+                bad_kb->defstringdelay = 0;
                 bad_kb->repeat_cnt = 0;
                 bad_kb->file_end = false;
                 storage_file_seek(script_file, 0, true);
@@ -779,10 +786,12 @@ static int32_t bad_kb_worker(void* context) {
             }
         } else if(worker_state == BadKbStateStringDelay) { // State: print string with delays
             FURI_LOG_D(WORKER_TAG, "delay wait");
+            uint32_t delay = (bad_kb->stringdelay == 0) ? bad_kb->defstringdelay :
+                                                          bad_kb->stringdelay;
             uint32_t flags = bad_kb_flags_get(
                 WorkerEvtEnd | WorkerEvtStartStop | WorkerEvtPauseResume | WorkerEvtConnect |
                     WorkerEvtDisconnect,
-                bad_kb->stringdelay);
+                delay);
             FURI_LOG_D(WORKER_TAG, "delay flags: %lu", flags);
 
             if(!(flags & FuriFlagError)) {

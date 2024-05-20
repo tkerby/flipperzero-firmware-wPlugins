@@ -19,9 +19,9 @@ typedef struct {
 
 static JsBlebeaconInst* get_this_ctx(struct mjs* mjs) {
     mjs_val_t obj_inst = mjs_get(mjs, mjs_get_this(mjs), INST_PROP_NAME, ~0);
-    JsBlebeaconInst* storage = mjs_get_ptr(mjs, obj_inst);
-    furi_assert(storage);
-    return storage;
+    JsBlebeaconInst* blebeacon = mjs_get_ptr(mjs, obj_inst);
+    furi_assert(blebeacon);
+    return blebeacon;
 }
 
 static void ret_bad_args(struct mjs* mjs, const char* error) {
@@ -40,16 +40,6 @@ static bool check_arg_count(struct mjs* mjs, size_t count) {
         ret_bad_args(mjs, "Wrong argument count");
         return false;
     }
-    return true;
-}
-
-static bool get_int_arg(struct mjs* mjs, size_t index, uint8_t* value, bool error) {
-    mjs_val_t int_obj = mjs_arg(mjs, index);
-    if(!mjs_is_number(int_obj)) {
-        if(error) ret_bad_args(mjs, "Argument must be a number");
-        return false;
-    }
-    *value = mjs_get_int(mjs, int_obj);
     return true;
 }
 
@@ -83,15 +73,24 @@ static void js_blebeacon_set_config(struct mjs* mjs) {
     }
 
     uint8_t power = GapAdvPowerLevel_0dBm;
-    get_int_arg(mjs, 1, &power, false);
+    mjs_val_t power_arg = mjs_arg(mjs, 1);
+    if(mjs_is_number(power_arg)) {
+        power = mjs_get_int32(mjs, power_arg);
+    }
     power = CLAMP(power, GapAdvPowerLevel_6dBm, GapAdvPowerLevel_Neg40dBm);
 
     uint8_t intv_min = 50;
-    get_int_arg(mjs, 2, &intv_min, false);
+    mjs_val_t intv_min_arg = mjs_arg(mjs, 2);
+    if(mjs_is_number(intv_min_arg)) {
+        intv_min = mjs_get_int32(mjs, intv_min_arg);
+    }
     intv_min = MAX(intv_min, 20);
 
     uint8_t intv_max = 150;
-    get_int_arg(mjs, 3, &intv_max, false);
+    mjs_val_t intv_max_arg = mjs_arg(mjs, 3);
+    if(mjs_is_number(intv_max_arg)) {
+        intv_max = mjs_get_int32(mjs, intv_max_arg);
+    }
     intv_max = MAX(intv_max, intv_min);
 
     GapExtraBeaconConfig config = {

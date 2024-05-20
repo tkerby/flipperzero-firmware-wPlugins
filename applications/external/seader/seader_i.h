@@ -18,15 +18,13 @@
 #include <gui/modules/popup.h>
 #include <gui/modules/loading.h>
 #include <gui/modules/text_input.h>
+#include <gui/modules/text_box.h>
 #include <gui/modules/widget.h>
 
 #include <input/input.h>
 
 #include <lib/nfc/nfc.h>
-#include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h>
-
 #include <nfc/nfc_poller.h>
-
 #include <nfc/nfc_device.h>
 #include <nfc/helpers/nfc_data_generator.h>
 
@@ -39,6 +37,11 @@
 
 #include <Payload.h>
 #include <FrameProtocol.h>
+
+#include "plugin/interface.h"
+#include <flipper_application/flipper_application.h>
+#include <flipper_application/plugins/plugin_manager.h>
+#include <loader/firmware_api/firmware_api.h>
 
 #include "protocol/picopass_poller.h"
 #include "scenes/seader_scene.h"
@@ -93,6 +96,7 @@ struct Seader {
     SceneManager* scene_manager;
     SeaderUartBridge* uart;
     SeaderCredential* credential;
+    SamCommand_PR samCommand;
 
     char text_store[SEADER_TEXT_STORE_SIZE + 1];
     FuriString* text_box_store;
@@ -102,6 +106,7 @@ struct Seader {
     Popup* popup;
     Loading* loading;
     TextInput* text_input;
+    TextBox* text_box;
     Widget* widget;
 
     Nfc* nfc;
@@ -109,10 +114,14 @@ struct Seader {
     PicopassPoller* picopass_poller;
 
     NfcDevice* nfc_device;
+
+    PluginManager* plugin_manager;
+    PluginWiegand* plugin_wiegand;
 };
 
 struct SeaderPollerContainer {
     Iso14443_4aPoller* iso14443_4a_poller;
+    MfClassicPoller* mfc_poller;
     PicopassPoller* picopass_poller;
 };
 
@@ -121,6 +130,7 @@ typedef enum {
     SeaderViewPopup,
     SeaderViewLoading,
     SeaderViewTextInput,
+    SeaderViewTextBox,
     SeaderViewWidget,
     SeaderViewUart,
 } SeaderView;

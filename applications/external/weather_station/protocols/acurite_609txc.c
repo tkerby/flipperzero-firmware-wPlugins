@@ -51,10 +51,12 @@ const SubGhzProtocolDecoder ws_protocol_acurite_609txc_decoder = {
     .feed = ws_protocol_decoder_acurite_609txc_feed,
     .reset = ws_protocol_decoder_acurite_609txc_reset,
 
-    .get_hash_data = ws_protocol_decoder_acurite_609txc_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = ws_protocol_decoder_acurite_609txc_get_hash_data,
     .serialize = ws_protocol_decoder_acurite_609txc_serialize,
     .deserialize = ws_protocol_decoder_acurite_609txc_deserialize,
     .get_string = ws_protocol_decoder_acurite_609txc_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder ws_protocol_acurite_609txc_encoder = {

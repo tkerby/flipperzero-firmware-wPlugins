@@ -96,10 +96,12 @@ const SubGhzProtocolDecoder subghz_protocol_bin_raw_decoder = {
     .feed = subghz_protocol_decoder_bin_raw_feed,
     .reset = subghz_protocol_decoder_bin_raw_reset,
 
-    .get_hash_data = subghz_protocol_decoder_bin_raw_get_hash_data,
+    .get_hash_data = NULL,
+    .get_hash_data_long = subghz_protocol_decoder_bin_raw_get_hash_data,
     .serialize = subghz_protocol_decoder_bin_raw_serialize,
     .deserialize = subghz_protocol_decoder_bin_raw_deserialize,
     .get_string = subghz_protocol_decoder_bin_raw_get_string,
+    .get_string_brief = NULL,
 };
 
 const SubGhzProtocolEncoder subghz_protocol_bin_raw_encoder = {
@@ -882,7 +884,7 @@ static bool
 void subghz_protocol_decoder_bin_raw_data_input_rssi(
     SubGhzProtocolDecoderBinRAW* instance,
     float rssi) {
-    furi_assert(instance);
+    furi_check(instance);
     switch(instance->decoder.parser_step) {
     case BinRAWDecoderStepReset:
 

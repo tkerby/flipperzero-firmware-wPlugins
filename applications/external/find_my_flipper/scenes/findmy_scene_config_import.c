@@ -3,6 +3,7 @@
 enum VarItemListIndex {
     VarItemListIndexNrfConnect,
     VarItemListIndexOpenHaystack,
+    VarItemListIndexRegisterTagManually,
 };
 
 static const char* parse_nrf_connect(FindMy* app, const char* path) {
@@ -42,10 +43,15 @@ static const char* parse_nrf_connect(FindMy* app, const char* path) {
         furi_string_trim(line);
 
         error = "Wrong payload size";
-        uint8_t data[EXTRA_BEACON_MAX_DATA_SIZE];
-        if(furi_string_size(line) != sizeof(data) * 2) break;
+        size_t line_size = furi_string_size(line);
+        uint8_t data_size = findmy_state_data_size(app->state.tag_type);
+        FURI_LOG_I("ImportPayload", "Line Size: %d", line_size);
+        FURI_LOG_I("ImportPayload", "Data Size: %d", data_size * 2);
+        if(line_size != data_size * 2) break;
+        // Initialize full data to 0's, then fill only first data_size bytes
+        uint8_t data[EXTRA_BEACON_MAX_DATA_SIZE] = {0};
         error = NULL;
-        for(size_t i = 0; i < sizeof(data); i++) {
+        for(size_t i = 0; i < data_size; i++) {
             char a = furi_string_get_char(line, i * 2);
             char b = furi_string_get_char(line, i * 2 + 1);
             if((a < 'A' && a > 'F') || (a < '0' && a > '9') || (b < 'A' && b > 'F') ||
@@ -58,8 +64,7 @@ static const char* parse_nrf_connect(FindMy* app, const char* path) {
 
         memcpy(app->state.mac, mac, sizeof(app->state.mac));
         memcpy(app->state.data, data, sizeof(app->state.data));
-        findmy_state_sync_config(&app->state);
-        findmy_state_save(&app->state);
+        findmy_state_save_and_apply(&app->state);
 
         error = NULL;
 
@@ -120,8 +125,7 @@ static const char* parse_open_haystack(FindMy* app, const char* path) {
         memcpy(app->state.data, advertisement_template, sizeof(app->state.data));
         memcpy(&app->state.data[7], &public_key[6], decoded_len - 6);
         app->state.data[29] = public_key[0] >> 6;
-        findmy_state_sync_config(&app->state);
-        findmy_state_save(&app->state);
+        findmy_state_save_and_apply(&app->state);
 
         free(public_key);
         error = NULL;
@@ -151,6 +155,8 @@ void findmy_scene_config_import_on_enter(void* context) {
 
     item = variable_item_list_add(var_item_list, "OpenHaystack (.keys)", 0, NULL, NULL);
 
+    item = variable_item_list_add(var_item_list, "Register Tag Manually", 0, NULL, NULL);
+
     // This scene acts more like a submenu than a var item list tbh
     UNUSED(item);
 
@@ -177,6 +183,9 @@ bool findmy_scene_config_import_on_event(void* context, SceneManagerEvent event)
             break;
         case VarItemListIndexOpenHaystack:
             extension = ".keys";
+            break;
+        case VarItemListIndexRegisterTagManually:
+            scene_manager_next_scene(app->scene_manager, FindMySceneConfigMac);
             break;
         default:
             break;

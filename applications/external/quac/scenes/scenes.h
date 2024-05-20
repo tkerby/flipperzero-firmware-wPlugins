@@ -1,15 +1,29 @@
 #pragma once
 
-typedef enum { SR_Scene_Items, SR_Scene_count } appScenes;
+typedef enum {
+    QScene_Items,
+    QScene_Settings,
+    QScene_ActionSettings,
+    QScene_ActionRename,
+    QScene_ActionCreateGroup,
+    QScene_ActionIRList,
+    QScene_About,
+    QScene_count
+} appScenes;
 
 typedef enum {
-    SR_ButtonMenu, // used on selected device, to show buttons/groups
-    SR_Dialog, // shows errors
-    SR_FileBrowser, // TODO: UNUSED!
-    SR_TextInput // TODO: UNUSED
+    QView_ActionMenu, // main UI
+    QView_Settings, // Variable Item List for App Settings
+    QView_SubMenu, // Action: Rename, Delete, Import, IR List
+    QView_TextInput, // Action: Rename, Create Group
+    QView_Popup, // About screen
 } appView;
 
-typedef enum { Event_DeviceSelected, Event_ButtonPressed } AppCustomEvents;
+typedef enum {
+    Event_DeviceSelected,
+    Event_ButtonPressed,
+    Event_ButtonPressedLong
+} AppCustomEvents;
 
 extern void (*const app_on_enter_handlers[])(void*);
 extern bool (*const app_on_event_handlers[])(void*, SceneManagerEvent);

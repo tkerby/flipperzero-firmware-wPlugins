@@ -8,40 +8,16 @@
 #include <furi.h>
 
 const char* const name_generator_left[] = {
-    "super",
-    "big",
-    "little",
-    "liquid",
-    "unknown",
-    "thin",
-    "thick",
-    "great",
-    "my",
-    "mini",
-    "ultra",
-    "haupt",
-    "small",
-    "random",
-    "strange",
+    "big",    "cheeky",      "feral",   "great", "liquid", "little", "mini",    "oh_my",
+    "oh_no",  "promiscuous", "quantum", "quick", "random", "silly",  "small",   "smart",
+    "sneaky", "strange",     "super",   "thick", "tricky", "ultra",  "unknown", "whois",
 };
 
 const char* const name_generator_right[] = {
-    "maslina",
-    "sus",
-    "anomalija",
-    "artefact",
-    "monolit",
-    "burer",
-    "sidorovich",
-    "habar",
-    "radar",
-    "borov",
-    "pda",
-    "konserva",
-    "aptechka",
-    "door",
-    "thing",
-    "stuff",
+    "abyss",      "alarm",   "artefact", "basement", "bidet",    "bunker",   "cellar",  "crawlway",
+    "den",        "door",    "fed",      "fortress", "foxhole",  "gate",     "gateway", "grotto",
+    "hatch",      "kit",     "lair",     "lattice",  "network",  "overlook", "pingwin", "portal",
+    "portcullis", "shelter", "stalker",  "sus",      "trapdoor", "tunnel",   "vault",   "yapper",
 };
 
 void name_generator_make_auto_datetime(
@@ -60,9 +36,17 @@ void name_generator_make_auto(char* name, size_t max_name_size, const char* pref
     name_generator_make_auto_datetime(name, max_name_size, prefix, NULL);
 }
 
+void name_generator_make_auto_basic(char* name, size_t max_name_size, const char* prefix) {
+    if(!furi_hal_rtc_is_flag_set(FuriHalRtcFlagRandomFilename)) {
+        name_generator_make_detailed_datetime(name, max_name_size, prefix, NULL);
+    } else {
+        name_generator_make_random(name, max_name_size);
+    }
+}
+
 void name_generator_make_random_prefixed(char* name, size_t max_name_size, const char* prefix) {
-    furi_assert(name);
-    furi_assert(max_name_size);
+    furi_check(name);
+    furi_check(max_name_size);
 
     uint8_t name_generator_left_i = rand() % COUNT_OF(name_generator_left);
     uint8_t name_generator_right_i = rand() % COUNT_OF(name_generator_right);
@@ -70,7 +54,7 @@ void name_generator_make_random_prefixed(char* name, size_t max_name_size, const
     snprintf(
         name,
         max_name_size,
-        "%s%s%s_%s",
+        "%s%s%s-%s",
         prefix ? prefix : "",
         prefix ? "_" : "",
         name_generator_left[name_generator_left_i],
@@ -89,9 +73,8 @@ void name_generator_make_detailed_datetime(
     size_t max_name_size,
     const char* prefix,
     DateTime* custom_time) {
-    furi_assert(name);
-    furi_assert(max_name_size);
-    furi_assert(prefix);
+    furi_check(name);
+    furi_check(max_name_size);
 
     DateTime dateTime;
     if(custom_time) {
@@ -99,7 +82,6 @@ void name_generator_make_detailed_datetime(
     } else {
         furi_hal_rtc_get_datetime(&dateTime);
     }
-
     snprintf(
         name,
         max_name_size,

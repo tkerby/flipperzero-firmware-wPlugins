@@ -51,9 +51,11 @@ static FindMy* findmy_app_alloc() {
     findmy_state_load(&app->state);
     findmy_state_apply(&app->state);
 
-    findmy_main_update_active(app->findmy_main, furi_hal_bt_extra_beacon_is_active());
+    findmy_main_update_active(app->findmy_main, app->state.beacon_active);
     findmy_main_update_interval(app->findmy_main, app->state.broadcast_interval);
-    findmy_main_update_type(app->findmy_main, findmy_data_get_type(app->state.data));
+    findmy_main_toggle_mac(app->findmy_main, app->state.show_mac);
+    findmy_main_update_mac(app->findmy_main, app->state.mac);
+    findmy_main_update_type(app->findmy_main, app->state.tag_type);
 
     return app;
 }
@@ -100,17 +102,8 @@ void findmy_change_broadcast_interval(FindMy* app, uint8_t value) {
         return;
     }
     app->state.broadcast_interval = value;
-    findmy_state_sync_config(&app->state);
-    findmy_state_save(&app->state);
     findmy_main_update_interval(app->findmy_main, app->state.broadcast_interval);
-    if(furi_hal_bt_extra_beacon_is_active()) {
-        // Always check if beacon is active before changing config
-        furi_check(furi_hal_bt_extra_beacon_stop());
-    }
-    furi_check(furi_hal_bt_extra_beacon_set_config(&app->state.config));
-    if(app->state.beacon_active) {
-        furi_check(furi_hal_bt_extra_beacon_start());
-    }
+    findmy_state_save_and_apply(&app->state);
 }
 
 void findmy_change_transmit_power(FindMy* app, uint8_t value) {
@@ -118,44 +111,27 @@ void findmy_change_transmit_power(FindMy* app, uint8_t value) {
         return;
     }
     app->state.transmit_power = value;
-    findmy_state_sync_config(&app->state);
-    findmy_state_save(&app->state);
-    if(furi_hal_bt_extra_beacon_is_active()) {
-        furi_check(furi_hal_bt_extra_beacon_stop());
-    }
-    furi_check(furi_hal_bt_extra_beacon_set_config(&app->state.config));
-    if(app->state.beacon_active) {
-        furi_check(furi_hal_bt_extra_beacon_start());
-    }
+    findmy_state_save_and_apply(&app->state);
+}
+
+void findmy_toggle_show_mac(FindMy* app, bool show_mac) {
+    app->state.show_mac = show_mac;
+    findmy_main_toggle_mac(app->findmy_main, app->state.show_mac);
+    findmy_state_save_and_apply(&app->state);
 }
 
 void findmy_toggle_beacon(FindMy* app) {
     app->state.beacon_active = !app->state.beacon_active;
-    findmy_state_save(&app->state);
-    if(furi_hal_bt_extra_beacon_is_active()) {
-        furi_check(furi_hal_bt_extra_beacon_stop());
-    }
-    if(app->state.beacon_active) {
-        furi_check(furi_hal_bt_extra_beacon_start());
-    }
-    findmy_main_update_active(app->findmy_main, furi_hal_bt_extra_beacon_is_active());
+    findmy_state_save_and_apply(&app->state);
+    findmy_main_update_active(app->findmy_main, app->state.beacon_active);
 }
 
-FindMyType findmy_data_get_type(uint8_t data[EXTRA_BEACON_MAX_DATA_SIZE]) {
-    if(data[0] == 0x1E && // Length
-       data[1] == 0xFF && // Manufacturer Specific Data
-       data[2] == 0x4C && // Company ID (Apple, Inc.)
-       data[3] == 0x00 && // ...
-       data[4] == 0x12 && // Type (FindMy)
-       data[5] == 0x19 // Length
-    ) {
-        return FindMyTypeApple;
-    } else {
-        return FindMyTypeSamsung;
-    }
+void findmy_set_tag_type(FindMy* app, FindMyType type) {
+    app->state.tag_type = type;
+    findmy_state_save_and_apply(&app->state);
+    findmy_main_update_type(app->findmy_main, type);
 }
 
-#if FW_ORIGIN_Official
 void furi_hal_bt_reverse_mac_addr(uint8_t mac_addr[GAP_MAC_ADDR_SIZE]) {
     uint8_t tmp;
     for(size_t i = 0; i < GAP_MAC_ADDR_SIZE / 2; i++) {
@@ -164,4 +140,3 @@ void furi_hal_bt_reverse_mac_addr(uint8_t mac_addr[GAP_MAC_ADDR_SIZE]) {
         mac_addr[GAP_MAC_ADDR_SIZE - 1 - i] = tmp;
     }
 }
-#endif

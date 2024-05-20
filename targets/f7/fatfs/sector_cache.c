@@ -17,9 +17,9 @@ typedef struct {
 
 static SectorCache* cache = NULL;
 
-void sector_cache_init() {
+void sector_cache_init(void) {
     if(cache == NULL) {
-        cache = memmgr_alloc_from_pool(sizeof(SectorCache));
+        cache = memmgr_aux_pool_alloc(sizeof(SectorCache));
     }
 
     if(cache != NULL) {
