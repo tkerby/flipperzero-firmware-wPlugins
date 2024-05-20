@@ -23,9 +23,18 @@ extern "C" {
 #define FURI_NORETURN noreturn
 #endif
 
+#if !defined(FURI_RAM_EXEC) && !defined(FURI_DEBUG)
+#define __FURI_TRACE
+#endif
+
 // Flags instead of pointers will save ~4 bytes on furi_assert and furi_check calls.
+#ifndef __FURI_TRACE
 #define __FURI_ASSERT_MESSAGE_FLAG (0x01)
 #define __FURI_CHECK_MESSAGE_FLAG (0x02)
+#else
+#define __FURI_ASSERT_MESSAGE_FLAG __FILE__
+#define __FURI_CHECK_MESSAGE_FLAG __FILE__
+#endif
 
 /** Crash system */
 FURI_NORETURN void __furi_crash_implementation();
@@ -43,7 +52,7 @@ FURI_NORETURN void __furi_halt_implementation();
 
 /** Crash system
  *
- * @param      optional  message (const char*)
+ * @param      ... optional  message (const char*)
  */
 #define furi_crash(...) M_APPLY(__furi_crash, M_IF_EMPTY(__VA_ARGS__)((NULL), (__VA_ARGS__)))
 
@@ -57,7 +66,7 @@ FURI_NORETURN void __furi_halt_implementation();
 
 /** Halt system
  *
- * @param      optional  message (const char*)
+ * @param      ... optional  message (const char*)
  */
 #define furi_halt(...) M_APPLY(__furi_halt, M_IF_EMPTY(__VA_ARGS__)((NULL), (__VA_ARGS__)))
 
@@ -71,8 +80,7 @@ FURI_NORETURN void __furi_halt_implementation();
 
 /** Check condition and crash if failed
  *
- * @param      condition to check
- * @param      optional  message (const char*)
+ * @param      ... condition to check and optional  message (const char*)
  */
 #define furi_check(...) \
     M_APPLY(__furi_check, M_DEFAULT_ARGS(2, (__FURI_CHECK_MESSAGE_FLAG), __VA_ARGS__))
@@ -97,8 +105,7 @@ FURI_NORETURN void __furi_halt_implementation();
  *
  * @warning    only will do check if firmware compiled in debug mode
  *
- * @param      condition to check
- * @param      optional  message (const char*)
+ * @param      ... condition to check and optional  message (const char*)
  */
 #define furi_assert(...) \
     M_APPLY(__furi_assert, M_DEFAULT_ARGS(2, (__FURI_ASSERT_MESSAGE_FLAG), __VA_ARGS__))

@@ -157,8 +157,6 @@ void passport_alloc(Passport* passport) {
 
     //set first page shown
     passport->page = Main;
-
-    free(stats);
 }
 
 static void render_callback(Canvas* const canvas, void* ctx) {
@@ -175,20 +173,29 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         switch(passport->settings.background) {
         case BG_NONE:
             break;
+        case BG_ADPOLICE:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_ADPolice);
+            break;
         case BG_DB:
             canvas_draw_icon(canvas, 0, 0, &I_passport_dragonball);
             break;
+        case BG_DEDSEC:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_dedsec);
+            break;
         case BG_CIRCUIT:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Circuit_v1);
-            break;
-        case BG_STOCK:
-            canvas_draw_icon(canvas, 0, 0, &I_passport_FlipperClassic);
             break;
         case BG_FURI:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Furipass);
             break;
         case BG_MARIO:
             canvas_draw_icon(canvas, 0, 0, &I_passport_mario);
+            break;
+        case BG_MEDIEVAL:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_Medieval);
+            break;
+        case BG_MEMCHIP:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_MemChip);
             break;
         case BG_MOUNTAINS:
             canvas_draw_icon(canvas, 0, 0, &I_passport_Mountains);
@@ -202,14 +209,8 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case BG_SLUT:
             canvas_draw_icon(canvas, 0, 0, &I_passport_SlutPass);
             break;
-        case BG_ADPOLICE:
-            canvas_draw_icon(canvas, 0, 0, &I_passport_ADPolice);
-            break;
-        case BG_DEDSEC:
-            canvas_draw_icon(canvas, 0, 0, &I_passport_dedsec);
-            break;
-        case BG_MEDIEVAL:
-            canvas_draw_icon(canvas, 0, 0, &I_passport_Medieval);
+        case BG_STOCK:
+            canvas_draw_icon(canvas, 0, 0, &I_passport_FlipperClassic);
             break;
         }
 
@@ -280,6 +281,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_PIKASLEEPY:
             canvas_draw_icon(canvas, 11, 2, &I_PikaSleepy);
             break;
+        case PIMG_PIRATE:
+            canvas_draw_icon(canvas, 11, 2, &I_pirate);
+            break;
         case PIMG_RABBIT:
             canvas_draw_icon_animation(canvas, 11, 2, animations[AniRabbit]);
             break;
@@ -331,22 +335,22 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         canvas_set_font(canvas, FontSecondary);
         //name
         if(passport->settings.name) {
-            canvas_draw_str(canvas, 58, 10, passport->my_name);
+            canvas_draw_str(canvas, 59, 10, passport->my_name);
         }
         //mood
         if(passport->settings.mood_set != 0) {
-            canvas_draw_str(canvas, 58, 22, passport->mood_str);
+            canvas_draw_str(canvas, 59, 22, passport->mood_str);
         }
         //level
         if(passport->settings.level) {
-            canvas_draw_str(canvas, 58, 34, passport->level_str);
+            canvas_draw_str(canvas, 59, 34, passport->level_str);
         }
 
         canvas_set_font(canvas, FontBatteryPercent);
 
         //xp stats
         if(passport->settings.xp_text) {
-            canvas_draw_str(canvas, 58, 42, passport->xp_str);
+            canvas_draw_str(canvas, 59, 42, passport->xp_str);
         }
 
         canvas_set_font(canvas, FontSecondary);

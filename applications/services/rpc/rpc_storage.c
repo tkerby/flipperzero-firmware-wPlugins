@@ -1,21 +1,21 @@
-#include "flipper.pb.h"
 #include <core/common_defines.h>
 #include <core/memmgr.h>
 #include <core/record.h>
-#include "pb_decode.h"
-#include "rpc/rpc.h"
-#include "rpc_i.h"
-#include "storage.pb.h"
-#include "storage/filesystem_api_defines.h"
-#include "storage/storage.h"
-#include <stdint.h>
+#include <rpc/rpc.h>
+#include <rpc/rpc_i.h>
+#include <storage/filesystem_api_defines.h>
+#include <storage/storage.h>
 #include <lib/toolbox/md5_calc.h>
 #include <lib/toolbox/path.h>
 #include <update_util/lfs_backup.h>
 
+#include <pb_decode.h>
+#include <storage.pb.h>
+#include <flipper.pb.h>
+
 #define TAG "RpcStorage"
 
-#define MAX_NAME_LENGTH 255
+#define MAX_NAME_LENGTH 254
 
 static const size_t MAX_DATA_SIZE = 512;
 
@@ -306,7 +306,7 @@ static void rpc_system_storage_list_process(const PB_Main* request, void* contex
 
     while(!finish) {
         FileInfo fileinfo;
-        char* name = malloc(MAX_NAME_LENGTH + 1);
+        char* name = malloc(MAX_NAME_LENGTH);
         if(storage_dir_read(dir, &fileinfo, name, MAX_NAME_LENGTH)) {
             if(rpc_system_storage_list_filter(list_request, &fileinfo, name)) {
                 if(i == COUNT_OF(list->file)) {
@@ -395,9 +395,12 @@ static void rpc_system_storage_read_process(const PB_Main* request, void* contex
 
                 response->has_next = fs_operation_success && (size_left > 0);
             } else {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
                 response->content.storage_read_response.file.data =
                     malloc(PB_BYTES_ARRAY_T_ALLOCSIZE(0));
                 response->content.storage_read_response.file.data->size = 0;
+#pragma GCC diagnostic pop
                 response->content.storage_read_response.has_file = true;
                 response->has_next = false;
                 fs_operation_success = true;
@@ -466,7 +469,7 @@ static void rpc_system_storage_write_process(const PB_Main* request, void* conte
            request->content.storage_write_request.file.data->size) {
             uint8_t* buffer = request->content.storage_write_request.file.data->bytes;
             size_t buffer_size = request->content.storage_write_request.file.data->size;
-            uint16_t written_size = storage_file_write(file, buffer, buffer_size);
+            size_t written_size = storage_file_write(file, buffer, buffer_size);
             fs_operation_success = (written_size == buffer_size);
         }
 

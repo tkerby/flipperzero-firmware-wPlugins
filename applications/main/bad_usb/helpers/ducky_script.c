@@ -77,6 +77,7 @@ void ducky_numlock_on() {
         furi_hal_hid_kb_release(HID_KEYBOARD_LOCK_NUM_LOCK);
     }
 }
+
 bool ducky_numpad_press(const char num) {
     if((num < '0') || (num > '9')) return false;
 
@@ -436,6 +437,7 @@ static int32_t bad_usb_worker(void* context) {
                 bad_usb->st.line_cur = 0;
                 bad_usb->defdelay = 0;
                 bad_usb->stringdelay = 0;
+                bad_usb->defstringdelay = 0;
                 bad_usb->repeat_cnt = 0;
                 bad_usb->key_hold_nb = 0;
                 bad_usb->file_end = false;
@@ -459,6 +461,7 @@ static int32_t bad_usb_worker(void* context) {
                 bad_usb->st.line_cur = 0;
                 bad_usb->defdelay = 0;
                 bad_usb->stringdelay = 0;
+                bad_usb->defstringdelay = 0;
                 bad_usb->repeat_cnt = 0;
                 bad_usb->file_end = false;
                 storage_file_seek(script_file, 0, true);
@@ -493,9 +496,11 @@ static int32_t bad_usb_worker(void* context) {
                 } else if(flags & WorkerEvtStartStop) {
                     worker_state = BadUsbStateIdle; // Stop executing script
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtDisconnect) {
                     worker_state = BadUsbStateNotConnected; // USB disconnected
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtPauseResume) {
                     pause_state = BadUsbStateRunning;
                     worker_state = BadUsbStatePaused; // Pause
@@ -516,11 +521,13 @@ static int32_t bad_usb_worker(void* context) {
                     worker_state = BadUsbStateScriptError;
                     bad_usb->st.state = worker_state;
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(delay_val == SCRIPT_STATE_END) { // End of script
                     delay_val = 0;
                     worker_state = BadUsbStateIdle;
                     bad_usb->st.state = BadUsbStateDone;
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                     continue;
                 } else if(delay_val == SCRIPT_STATE_STRING_START) { // Start printing string with delays
                     delay_val = bad_usb->defdelay;
@@ -549,6 +556,7 @@ static int32_t bad_usb_worker(void* context) {
                 } else if(flags & WorkerEvtDisconnect) {
                     worker_state = BadUsbStateNotConnected; // USB disconnected
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 }
                 bad_usb->st.state = worker_state;
                 continue;
@@ -564,10 +572,12 @@ static int32_t bad_usb_worker(void* context) {
                     worker_state = BadUsbStateIdle; // Stop executing script
                     bad_usb->st.state = worker_state;
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtDisconnect) {
                     worker_state = BadUsbStateNotConnected; // USB disconnected
                     bad_usb->st.state = worker_state;
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtPauseResume) {
                     if(pause_state == BadUsbStateRunning) {
                         if(delay_val > 0) {
@@ -586,9 +596,11 @@ static int32_t bad_usb_worker(void* context) {
                 continue;
             }
         } else if(worker_state == BadUsbStateStringDelay) { // State: print string with delays
+            uint32_t delay = (bad_usb->stringdelay == 0) ? bad_usb->defstringdelay :
+                                                           bad_usb->stringdelay;
             uint32_t flags = bad_usb_flags_get(
                 WorkerEvtEnd | WorkerEvtStartStop | WorkerEvtPauseResume | WorkerEvtDisconnect,
-                bad_usb->stringdelay);
+                delay);
 
             if(!(flags & FuriFlagError)) {
                 if(flags & WorkerEvtEnd) {
@@ -596,9 +608,11 @@ static int32_t bad_usb_worker(void* context) {
                 } else if(flags & WorkerEvtStartStop) {
                     worker_state = BadUsbStateIdle; // Stop executing script
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtDisconnect) {
                     worker_state = BadUsbStateNotConnected; // USB disconnected
                     furi_hal_hid_kb_release_all();
+                    furi_hal_hid_consumer_key_release_all();
                 } else if(flags & WorkerEvtPauseResume) {
                     pause_state = BadUsbStateStringDelay;
                     worker_state = BadUsbStatePaused; // Pause

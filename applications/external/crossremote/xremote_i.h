@@ -49,10 +49,11 @@
 #define XREMOTE_APP_EXTENSION ".xr"
 #define XREMOTE_FILE_TYPE "Cross Remote File"
 #define XREMOTE_FILE_VERSION 1
-#define XREMOTE_TEXT_STORE_NUM 2
+#define XREMOTE_TEXT_STORE_NUM 3
 #define XREMOTE_TEXT_STORE_SIZE 128
 #define XREMOTE_MAX_ITEM_NAME_LENGTH 22
 #define XREMOTE_MAX_REMOTE_NAME_LENGTH 22
+#define XREMOTE_VERSION "2.4"
 
 #define INFRARED_APP_EXTENSION ".ir"
 #define INFRARED_APP_FOLDER ANY_PATH("infrared")
@@ -87,6 +88,7 @@ typedef enum {
     XRemoteTransmittingIdle,
     XRemoteTransmittingStart,
     XRemoteTransmittingStop,
+    XRemoteTransmittingStopSubghz,
 } XRemoteRemoteTransmissionStatus;
 
 struct InfraredSignal {
@@ -99,10 +101,11 @@ struct InfraredSignal {
 
 struct CrossRemoteItem {
     FuriString* name;
+    FuriString* filename;
     InfraredSignal* ir_signal;
     SubGhzRemote* sg_signal;
     int16_t type;
-    int32_t time;
+    uint32_t time;
 };
 
 typedef struct CrossRemote CrossRemote;
@@ -110,9 +113,3 @@ typedef struct CrossRemoteItem CrossRemoteItem;
 
 typedef struct XRemoteTransmit XRemoteTransmit;
 typedef struct XRemotePauseSet XRemotePauseSet;
-//typedef struct XRemoteInfoscreen XRemoteInfoscreen;
-
-//typedef struct InfraredRemote InfraredRemote;
-//typedef struct InfraredRemoteButton InfraredRemoteButton;
-//typedef struct InfraredSignal InfraredSignal;
-//typedef struct InfraredRawSignal InfraredRawSignal;

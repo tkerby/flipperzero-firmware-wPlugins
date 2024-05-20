@@ -1,8 +1,11 @@
 #include "../subghz_i.h"
 #include "../views/transmitter.h"
 #include <dolphin/dolphin.h>
+#include <cfw/cfw.h>
 
 #include <lib/subghz/blocks/custom_btn.h>
+
+#define TAG "SubGhzSceneTransmitter"
 
 void subghz_scene_transmitter_callback(SubGhzCustomEvent event, void* context) {
     furi_assert(context);
@@ -43,6 +46,12 @@ bool subghz_scene_transmitter_update_data_show(void* context) {
     return ret;
 }
 
+void fav_timer_callback(void* context) {
+    SubGhz* subghz = context;
+    scene_manager_handle_custom_event(
+        subghz->scene_manager, SubGhzCustomEventViewTransmitterSendStop);
+}
+
 void subghz_scene_transmitter_on_enter(void* context) {
     SubGhz* subghz = context;
 
@@ -56,11 +65,18 @@ void subghz_scene_transmitter_on_enter(void* context) {
     subghz_view_transmitter_set_callback(
         subghz->subghz_transmitter, subghz_scene_transmitter_callback, subghz);
 
-    //Put the Listen after TX back to what the user selected..
-    //subghz->ListenAfterTX = subghz->last_settings->enable_listen_after_tx;
-
     subghz->state_notifications = SubGhzNotificationStateIDLE;
     view_dispatcher_switch_to_view(subghz->view_dispatcher, SubGhzViewIdTransmitter);
+
+    // Auto send and exit with favorites
+    if(subghz->fav_timeout) {
+        furi_check(!subghz->timer, "SubGhz fav timer exists");
+        subghz->timer = furi_timer_alloc(fav_timer_callback, FuriTimerTypeOnce, subghz);
+        scene_manager_handle_custom_event(
+            subghz->scene_manager, SubGhzCustomEventViewTransmitterSendStart);
+        furi_timer_start(
+            subghz->timer, cfw_settings.favorite_timeout * furi_kernel_get_tick_frequency());
+    }
 }
 
 bool subghz_scene_transmitter_on_event(void* context, SceneManagerEvent event) {
@@ -91,19 +107,11 @@ bool subghz_scene_transmitter_on_event(void* context, SceneManagerEvent event) {
                 subghz_txrx_stop(subghz->txrx);
                 furi_hal_subghz_set_rolling_counter_mult(tmp_counter);
             }
-
-            //Go back to the Scan/Repeater if the Listen After TX flag is on.
-            if(subghz->ListenAfterTX) {
-                if(scene_manager_has_previous_scene(subghz->scene_manager, SubGhzSceneReceiver)) {
-                    //Scene exists, go back to it
-                    scene_manager_search_and_switch_to_previous_scene(
-                        subghz->scene_manager, SubGhzSceneReceiver);
-                } else {
-                    //Scene not started, start it now.
-                    scene_manager_next_scene(subghz->scene_manager, SubGhzSceneReceiver);
-                }
-            };
-
+            if(subghz->fav_timeout) {
+                while(scene_manager_handle_back_event(subghz->scene_manager))
+                    ;
+                view_dispatcher_stop(subghz->view_dispatcher);
+            }
             return true;
         } else if(event.event == SubGhzCustomEventViewTransmitterBack) {
             subghz->state_notifications = SubGhzNotificationStateIDLE;

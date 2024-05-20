@@ -5,7 +5,7 @@
 #include <core/dangerous_defines.h>
 #include <storage/storage.h>
 #include <gui/icon_i.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 
 #include "animation_manager.h"
 #include "animation_storage.h"
@@ -36,7 +36,7 @@ static bool animation_storage_load_single_manifest_info(
 
     FuriString* anim_manifest;
     anim_manifest = furi_string_alloc();
-    char* my_manifest_name = CFW_SETTINGS()->manifest_name;
+    char* my_manifest_name = cfw_settings.manifest_name;
 
     //Get the filename to process.
     furi_string_printf(anim_manifest, "%s/%s", EXT_PATH("dolphin"), my_manifest_name);
@@ -99,11 +99,10 @@ void animation_storage_fill_animation_list(StorageAnimationList_t* animation_lis
     flipper_format_set_strict_mode(file, true);
     FuriString* read_string;
     read_string = furi_string_alloc();
-    CfwSettings* cfw_settings = CFW_SETTINGS();
 
     FuriString* anim_manifest;
     anim_manifest = furi_string_alloc();
-    char* my_manifest_name = cfw_settings->manifest_name;
+    char* my_manifest_name = cfw_settings.manifest_name;
 
     //Get the filename to process.
     furi_string_printf(anim_manifest, "%s/%s", EXT_PATH("dolphin"), my_manifest_name);
@@ -326,7 +325,7 @@ static bool animation_storage_load_frames(
         if(file_info.size > max_filesize) {
             FURI_LOG_E(
                 TAG,
-                "Filesize %lld, max: %d (width %d, height %d)",
+                "Filesize %llu, max: %zu (width %u, height %u)",
                 file_info.size,
                 max_filesize,
                 width,
@@ -351,7 +350,7 @@ static bool animation_storage_load_frames(
     if(!frames_ok) {
         FURI_LOG_E(
             TAG,
-            "Load \'%s\' failed, %dx%d, size: %lld",
+            "Load \'%s\' failed, %ux%u, size: %llu",
             furi_string_get_cstr(filename),
             width,
             height,

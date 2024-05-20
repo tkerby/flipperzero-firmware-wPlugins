@@ -1,18 +1,20 @@
 #pragma once
 
-#include <math.h>
+#include <datetime/datetime.h>
+#include <dolphin/dolphin.h>
 #include <furi.h>
 #include <furi_hal.h>
-#include <gui/gui.h>
 #include <gui/elements.h>
-// #include <gui/view.h>
-// #include <gui/view_dispatcher.h>
+#include <gui/gui.h>
 #include <input/input.h>
 #include <locale/locale.h>
-#include <dolphin/dolphin.h>
+#include <math.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
+
+#if __has_include(<cfw/cfw.h>)
 #include "applications/settings/desktop_settings/desktop_settings_app.h"
+#endif
 
 #define DAB_TIMER_ISO_DATE_FORMAT "%.4d-%.2d-%.2d"
 #define DAB_TIMER_RFC_DATE_FORMAT "%.2d-%.2d-%.4d"
@@ -67,8 +69,9 @@ typedef enum {
 typedef struct {
     FuriMutex* mutex;
     FuriMessageQueue* event_queue;
-    FuriHalRtcDateTime datetime;
+#if __has_include(<cfw/cfw.h>)
     DesktopSettings* desktop_settings;
+#endif
     LocaleDateFormat date_format;
     LocaleTimeFormat time_format;
     // ViewDispatcher* view_dispatcher;

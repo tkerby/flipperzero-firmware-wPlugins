@@ -1,4 +1,5 @@
 #include "config.h"
+#include <datetime/datetime.h>
 #include <stdlib.h>
 #include <string.h>
 #include <flipper_format/flipper_format.h>
@@ -71,7 +72,7 @@ static char* totp_config_file_backup_i(Storage* storage) {
         return NULL;
     }
 
-    FuriHalRtcDateTime current_datetime;
+    DateTime current_datetime;
     furi_hal_rtc_get_datetime(&current_datetime);
 
     uint8_t backup_path_size = sizeof(CONFIG_FILE_BACKUP_BASE_PATH) + 14;

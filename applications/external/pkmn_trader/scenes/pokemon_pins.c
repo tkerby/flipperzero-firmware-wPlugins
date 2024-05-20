@@ -9,6 +9,7 @@ struct named_pins {
     const GpioPin* pin;
 };
 
+/* XXX: These exist already in Flipper API */
 static const struct named_pins named_pins[] = {
     {"PA7", &gpio_ext_pa7},
     {"PA6", &gpio_ext_pa6},
@@ -116,9 +117,6 @@ static void select_pins_rebuild_list(PokemonFap* pokemon_fap) {
         break;
     }
 
-    /* HACK: */
-    pokemon_fap->malveke_detected = builder.named_index;
-
     select_pins_set(pokemon_fap);
 
     variable_item_list_reset(pokemon_fap->variable_item_list);
@@ -145,19 +143,8 @@ static void select_pins_rebuild_list(PokemonFap* pokemon_fap) {
     variable_item_set_current_value_text(builder.clk, named_pins[builder.clk_index].text);
 }
 
-void select_pins_scene_on_exit(void* context) {
-    PokemonFap* pokemon_fap = (PokemonFap*)context;
-
-    view_dispatcher_switch_to_view(pokemon_fap->view_dispatcher, AppViewMainMenu);
-    view_dispatcher_remove_view(pokemon_fap->view_dispatcher, AppViewOpts);
-}
-
 void select_pins_scene_on_enter(void* context) {
     PokemonFap* pokemon_fap = (PokemonFap*)context;
-
-    /* TODO: Figure out what defaults we should use for pins based on attached board! */
-    /* HACK: */
-    if(builder.named_index < 2) builder.named_index = pokemon_fap->malveke_detected;
 
     select_pins_rebuild_list(pokemon_fap);
 

@@ -280,7 +280,8 @@ bool gb_cartridge_scene_3_input(InputEvent* event, void* context) {
                            FSAM_WRITE,
                            FSOM_CREATE_ALWAYS)) {
                         const char gbcartridge_command[] = "gbcartridge -d -a\n";
-                        uart_tx((uint8_t*)gbcartridge_command, strlen(gbcartridge_command));
+                        uart_tx(
+                            app->uart, (uint8_t*)gbcartridge_command, strlen(gbcartridge_command));
                     } else {
                         dialog_message_show_storage_error(app->dialogs, "Cannot open dump file");
                     }
@@ -298,10 +299,6 @@ bool gb_cartridge_scene_3_input(InputEvent* event, void* context) {
 void gb_cartridge_scene_3_exit(void* context) {
     furi_assert(context);
     GBCartridge* app = context;
-    // Automatically stop the scan when exiting view
-    // uart_tx((uint8_t*)("stopscan\n"), strlen("stopscan\n"));
-    // furi_delay_ms(50);
-
     gb_cartridge_stop_all_sound(app);
 }
 

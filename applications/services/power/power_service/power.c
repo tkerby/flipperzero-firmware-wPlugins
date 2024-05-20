@@ -3,7 +3,7 @@
 
 #include <furi.h>
 #include <furi_hal.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 
 #define POWER_OFF_TIMEOUT 90
 #define TAG "Power"
@@ -520,7 +520,7 @@ static void power_check_battery_level_change(Power* power) {
 }
 
 static void power_check_charge_cap(Power* power) {
-    if(power->info.charge >= CFW_SETTINGS()->charge_cap) {
+    if(power->info.charge >= cfw_settings.charge_cap) {
         if(!power->info.is_charge_capped) { // Suppress charging if charge reaches custom cap
             power->info.is_charge_capped = true;
             furi_hal_power_suppress_charge_enter();

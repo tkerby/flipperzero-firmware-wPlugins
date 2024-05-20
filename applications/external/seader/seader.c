@@ -1,4 +1,5 @@
 #include "seader_i.h"
+#include <expansion/expansion.h>
 
 #define TAG "Seader"
 
@@ -45,6 +46,12 @@ Seader* seader_alloc() {
 
     seader->credential = seader_credential_alloc();
 
+    seader->nfc = nfc_alloc();
+
+    // Nfc device
+    seader->nfc_device = nfc_device_alloc();
+    nfc_device_set_loading_callback(seader->nfc_device, seader_show_loading_popup, seader);
+
     // Open GUI record
     seader->gui = furi_record_open(RECORD_GUI);
     view_dispatcher_attach_to_gui(
@@ -78,12 +85,6 @@ Seader* seader_alloc() {
     view_dispatcher_add_view(
         seader->view_dispatcher, SeaderViewWidget, widget_get_view(seader->widget));
 
-    seader->seader_uart_view = seader_uart_view_alloc();
-    view_dispatcher_add_view(
-        seader->view_dispatcher,
-        SeaderViewUart,
-        seader_uart_view_get_view(seader->seader_uart_view));
-
     return seader;
 }
 
@@ -99,6 +100,11 @@ void seader_free(Seader* seader) {
 
     seader_credential_free(seader->credential);
     seader->credential = NULL;
+
+    nfc_free(seader->nfc);
+
+    // Nfc device
+    nfc_device_free(seader->nfc_device);
 
     // Submenu
     view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewMenu);
@@ -119,9 +125,6 @@ void seader_free(Seader* seader) {
     // Custom Widget
     view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewWidget);
     widget_free(seader->widget);
-
-    view_dispatcher_remove_view(seader->view_dispatcher, SeaderViewUart);
-    seader_uart_view_free(seader->seader_uart_view);
 
     // Worker
     seader_worker_stop(seader->worker);
@@ -179,20 +182,24 @@ void seader_blink_stop(Seader* seader) {
 
 void seader_show_loading_popup(void* context, bool show) {
     Seader* seader = context;
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
 
     if(show) {
         // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
         view_dispatcher_switch_to_view(seader->view_dispatcher, SeaderViewLoading);
     } else {
         // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     }
 }
 
 int32_t seader_app(void* p) {
     UNUSED(p);
+
+    // Disable expansion protocol to avoid interference with UART Handle
+    Expansion* expansion = furi_record_open(RECORD_EXPANSION);
+    expansion_disable(expansion);
+
     Seader* seader = seader_alloc();
 
     scene_manager_next_scene(seader->scene_manager, SeaderSceneStart);
@@ -200,6 +207,10 @@ int32_t seader_app(void* p) {
     view_dispatcher_run(seader->view_dispatcher);
 
     seader_free(seader);
+
+    // Return previous state of expansion
+    expansion_enable(expansion);
+    furi_record_close(RECORD_EXPANSION);
 
     return 0;
 }

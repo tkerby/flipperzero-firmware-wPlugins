@@ -15,29 +15,29 @@
 #include <gui/modules/loading.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/dialog_ex.h>
+#include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/button_menu.h>
 #include <gui/modules/button_panel.h>
-#include <gui/modules/variable_item_list.h>
 
+#include <rpc/rpc_app.h>
 #include <storage/storage.h>
 #include <dialogs/dialogs.h>
 
 #include <notification/notification_messages.h>
 
-#include <infrared_worker.h>
+#include <infrared/worker/infrared_worker.h>
 
 #include "infrared_app.h"
 #include "infrared_remote.h"
 #include "infrared_brute_force.h"
 #include "infrared_custom_event.h"
+#include "infrared_last_settings.h"
 
 #include "scenes/infrared_scene.h"
 #include "views/infrared_progress_view.h"
 #include "views/infrared_debug_view.h"
 #include "views/infrared_move_view.h"
-
-#include "rpc/rpc_app.h"
 
 #define INFRARED_FILE_NAME_SIZE 100
 #define INFRARED_TEXT_STORE_NUM 2
@@ -109,10 +109,10 @@ struct InfraredApp {
 
     Submenu* submenu; /**< Standard view for displaying application menus. */
     TextInput* text_input; /**< Standard view for receiving user text input. */
-    VariableItemList* variable_item_list;
     DialogEx* dialog_ex; /**< Standard view for displaying dialogs. */
     ButtonMenu* button_menu; /**< Custom view for interacting with IR remotes. */
     Popup* popup; /**< Standard view for displaying messages. */
+    VariableItemList* variable_item_list;
 
     ViewStack* view_stack; /**< Standard view for displaying stacked interfaces. */
     InfraredDebugView* debug_view; /**< Custom view for displaying debug information. */
@@ -122,10 +122,13 @@ struct InfraredApp {
     Loading* loading; /**< Standard view for informing about long operations. */
     InfraredProgressView* progress; /**< Custom view for showing brute force progress. */
 
+    FuriThread* task_thread; /**< Pointer to a FuriThread instance for concurrent tasks. */
     FuriString* file_path; /**< Full path to the currently loaded file. */
+    FuriString* button_name; /**< Name of the button requested in RPC mode. */
     /** Arbitrary text storage for various inputs. */
     char text_store[INFRARED_TEXT_STORE_NUM][INFRARED_TEXT_STORE_SIZE + 1];
     InfraredAppState app_state; /**< Application state. */
+    InfraredLastSettings* last_settings; /**< Last settings. */
 
     void* rpc_ctx; /**< Pointer to the RPC context object. */
 };
@@ -136,13 +139,13 @@ struct InfraredApp {
 typedef enum {
     InfraredViewSubmenu,
     InfraredViewTextInput,
-    InfraredViewVariableItemList,
     InfraredViewDialogEx,
     InfraredViewButtonMenu,
     InfraredViewPopup,
     InfraredViewStack,
     InfraredViewDebugView,
     InfraredViewMove,
+    InfraredViewVariableItemList,
 } InfraredView;
 
 /**
@@ -213,6 +216,28 @@ void infrared_tx_start_button_index(InfraredApp* infrared, size_t button_index);
 void infrared_tx_stop(InfraredApp* infrared);
 
 /**
+ * @brief Start a blocking task in a separate thread.
+ *
+ * If a ViewStack is currently on screen, a busy "Hourglass" animation
+ * will be shown and no input will be accepted until completion.
+ *
+ * @param[in,out] infrared pointer to the application instance.
+ * @param[in] callback pointer to the function to be run in the thread.
+ */
+void infrared_blocking_task_start(InfraredApp* infrared, FuriThreadCallback callback);
+
+/**
+ * @brief Wait for a blocking task to finish and receive the result.
+ *
+ * Upon the completion of a blocking task, the busy animation will be hidden
+ * and input will be accepted again.
+ *
+ * @param[in,out] infrared pointer to the application instance.
+ * @return true if the blocking task finished successfully, false otherwise.
+ */
+bool infrared_blocking_task_finalize(InfraredApp* infrared);
+
+/**
  * @brief Set the internal text store with formatted text.
  *
  * @param[in,out] infrared pointer to the application instance.
@@ -240,17 +265,6 @@ void infrared_text_store_clear(InfraredApp* infrared, uint32_t bank);
 void infrared_play_notification_message(
     const InfraredApp* infrared,
     InfraredNotificationMessage message);
-
-/**
- * @brief Show a loading pop-up screen.
- *
- * In order for this to work, a Stack view must be currently active and
- * the main view must be added to it.
- *
- * @param[in] infrared pointer to the application instance.
- * @param[in] show whether to show or hide the pop-up.
- */
-void infrared_show_loading_popup(const InfraredApp* infrared, bool show);
 
 /**
  * @brief Show a formatted error messsage.

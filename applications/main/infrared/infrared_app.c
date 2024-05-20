@@ -6,7 +6,8 @@
 
 #define TAG "InfraredApp"
 
-#define INFRARED_TX_MIN_INTERVAL_MS 50U
+#define INFRARED_TX_MIN_INTERVAL_MS (50U)
+#define INFRARED_TASK_STACK_SIZE (2048UL)
 
 static const NotificationSequence*
     infrared_notification_sequences[InfraredNotificationMessageCount] = {
@@ -44,30 +45,42 @@ static void infrared_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(infrared->scene_manager);
 }
 
-static void infrared_rpc_command_callback(RpcAppSystemEvent event, void* context) {
+static void infrared_rpc_command_callback(const RpcAppSystemEvent* event, void* context) {
     furi_assert(context);
     InfraredApp* infrared = context;
     furi_assert(infrared->rpc_ctx);
 
-    if(event == RpcAppEventSessionClose) {
+    if(event->type == RpcAppEventTypeSessionClose) {
         view_dispatcher_send_custom_event(
             infrared->view_dispatcher, InfraredCustomEventTypeRpcSessionClose);
         rpc_system_app_set_callback(infrared->rpc_ctx, NULL, NULL);
         infrared->rpc_ctx = NULL;
-    } else if(event == RpcAppEventAppExit) {
+    } else if(event->type == RpcAppEventTypeAppExit) {
         view_dispatcher_send_custom_event(
             infrared->view_dispatcher, InfraredCustomEventTypeRpcExit);
-    } else if(event == RpcAppEventLoadFile) {
+    } else if(event->type == RpcAppEventTypeLoadFile) {
+        furi_assert(event->data.type == RpcAppSystemEventDataTypeString);
+        furi_string_set(infrared->file_path, event->data.string);
         view_dispatcher_send_custom_event(
-            infrared->view_dispatcher, InfraredCustomEventTypeRpcLoad);
-    } else if(event == RpcAppEventButtonPress) {
-        view_dispatcher_send_custom_event(
-            infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPress);
-    } else if(event == RpcAppEventButtonRelease) {
+            infrared->view_dispatcher, InfraredCustomEventTypeRpcLoadFile);
+    } else if(event->type == RpcAppEventTypeButtonPress) {
+        furi_assert(
+            event->data.type == RpcAppSystemEventDataTypeString ||
+            event->data.type == RpcAppSystemEventDataTypeInt32);
+        if(event->data.type == RpcAppSystemEventDataTypeString) {
+            furi_string_set(infrared->button_name, event->data.string);
+            view_dispatcher_send_custom_event(
+                infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPressName);
+        } else {
+            infrared->app_state.current_button_index = event->data.i32;
+            view_dispatcher_send_custom_event(
+                infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPressIndex);
+        }
+    } else if(event->type == RpcAppEventTypeButtonRelease) {
         view_dispatcher_send_custom_event(
             infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonRelease);
     } else {
-        rpc_system_app_confirm(infrared->rpc_ctx, event, false);
+        rpc_system_app_confirm(infrared->rpc_ctx, false);
     }
 }
 
@@ -116,7 +129,10 @@ static void infrared_find_vacant_remote_name(FuriString* name, const char* path)
 static InfraredApp* infrared_alloc() {
     InfraredApp* infrared = malloc(sizeof(InfraredApp));
 
+    infrared->task_thread =
+        furi_thread_alloc_ex("InfraredTask", INFRARED_TASK_STACK_SIZE, NULL, infrared);
     infrared->file_path = furi_string_alloc();
+    infrared->button_name = furi_string_alloc();
 
     InfraredAppState* app_state = &infrared->app_state;
     app_state->is_learning_new_remote = false;
@@ -154,15 +170,15 @@ static InfraredApp* infrared_alloc() {
     view_dispatcher_add_view(
         view_dispatcher, InfraredViewTextInput, text_input_get_view(infrared->text_input));
 
+    infrared->dialog_ex = dialog_ex_alloc();
+    view_dispatcher_add_view(
+        view_dispatcher, InfraredViewDialogEx, dialog_ex_get_view(infrared->dialog_ex));
+
     infrared->variable_item_list = variable_item_list_alloc();
     view_dispatcher_add_view(
         infrared->view_dispatcher,
         InfraredViewVariableItemList,
         variable_item_list_get_view(infrared->variable_item_list));
-
-    infrared->dialog_ex = dialog_ex_alloc();
-    view_dispatcher_add_view(
-        view_dispatcher, InfraredViewDialogEx, dialog_ex_get_view(infrared->dialog_ex));
 
     infrared->button_menu = button_menu_alloc();
     view_dispatcher_add_view(
@@ -189,11 +205,19 @@ static InfraredApp* infrared_alloc() {
     infrared->loading = loading_alloc();
     infrared->progress = infrared_progress_view_alloc();
 
+    infrared->last_settings = infrared_last_settings_alloc();
+    infrared_last_settings_load(infrared->last_settings);
+    infrared_last_settings_apply(infrared->last_settings);
+
     return infrared;
 }
 
 static void infrared_free(InfraredApp* infrared) {
     furi_assert(infrared);
+
+    furi_thread_join(infrared->task_thread);
+    furi_thread_free(infrared->task_thread);
+
     ViewDispatcher* view_dispatcher = infrared->view_dispatcher;
     InfraredAppState* app_state = &infrared->app_state;
 
@@ -209,11 +233,11 @@ static void infrared_free(InfraredApp* infrared) {
     view_dispatcher_remove_view(view_dispatcher, InfraredViewTextInput);
     text_input_free(infrared->text_input);
 
-    view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewVariableItemList);
-    variable_item_list_free(infrared->variable_item_list);
-
     view_dispatcher_remove_view(view_dispatcher, InfraredViewDialogEx);
     dialog_ex_free(infrared->dialog_ex);
+
+    view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewVariableItemList);
+    variable_item_list_free(infrared->variable_item_list);
 
     view_dispatcher_remove_view(view_dispatcher, InfraredViewButtonMenu);
     button_menu_free(infrared->button_menu);
@@ -252,12 +276,12 @@ static void infrared_free(InfraredApp* infrared) {
     infrared->gui = NULL;
 
     furi_string_free(infrared->file_path);
+    furi_string_free(infrared->button_name);
 
-    // Disable 5v power if was enabled for external module
-    if(furi_hal_power_is_otg_enabled()) {
-        furi_hal_power_disable_otg();
-    }
+    infrared_last_settings_reset(infrared->last_settings);
+    infrared_last_settings_free(infrared->last_settings);
 
+    UNUSED(app_state);
     free(infrared);
 }
 
@@ -373,6 +397,18 @@ void infrared_tx_stop(InfraredApp* infrared) {
     infrared->app_state.last_transmit_time = furi_get_tick();
 }
 
+void infrared_blocking_task_start(InfraredApp* infrared, FuriThreadCallback callback) {
+    view_stack_add_view(infrared->view_stack, loading_get_view(infrared->loading));
+    furi_thread_set_callback(infrared->task_thread, callback);
+    furi_thread_start(infrared->task_thread);
+}
+
+bool infrared_blocking_task_finalize(InfraredApp* infrared) {
+    furi_thread_join(infrared->task_thread);
+    view_stack_remove_view(infrared->view_stack, loading_get_view(infrared->loading));
+    return furi_thread_get_return_code(infrared->task_thread);
+}
+
 void infrared_text_store_set(InfraredApp* infrared, uint32_t bank, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -391,22 +427,6 @@ void infrared_play_notification_message(
     InfraredNotificationMessage message) {
     furi_assert(message < InfraredNotificationMessageCount);
     notification_message(infrared->notifications, infrared_notification_sequences[message]);
-}
-
-void infrared_show_loading_popup(const InfraredApp* infrared, bool show) {
-    TaskHandle_t timer_task = xTaskGetHandle(configTIMER_SERVICE_TASK_NAME);
-    ViewStack* view_stack = infrared->view_stack;
-    Loading* loading = infrared->loading;
-
-    if(show) {
-        // Raise timer priority so that animations can play
-        vTaskPrioritySet(timer_task, configMAX_PRIORITIES - 1);
-        view_stack_add_view(view_stack, loading_get_view(loading));
-    } else {
-        view_stack_remove_view(view_stack, loading_get_view(loading));
-        // Restore default timer priority
-        vTaskPrioritySet(timer_task, configTIMER_TASK_PRIORITY);
-    }
 }
 
 void infrared_show_error_message(const InfraredApp* infrared, const char* fmt, ...) {
@@ -457,7 +477,7 @@ void infrared_popup_closed_callback(void* context) {
         infrared->view_dispatcher, InfraredCustomEventTypePopupClosed);
 }
 
-int32_t infrared_app(void* p) {
+int32_t infrared_app(char* p) {
     InfraredApp* infrared = infrared_alloc();
 
     infrared_make_app_folder(infrared);

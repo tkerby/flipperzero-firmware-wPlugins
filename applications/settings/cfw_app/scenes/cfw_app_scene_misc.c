@@ -2,6 +2,7 @@
 
 enum VarItemListIndex {
     VarItemListIndexScreen,
+    VarItemListIndexVgm,
     VarItemListIndexChangeDeviceName,
     VarItemListIndexChargeCap,
 };
@@ -18,23 +19,26 @@ static void cfw_app_scene_misc_charge_cap_changed(VariableItem* item) {
     uint32_t value = (variable_item_get_current_value_index(item) + 1) * CHARGE_CAP_INTV;
     snprintf(cap_str, 6, "%lu%%", value);
     variable_item_set_current_value_text(item, cap_str);
-    CFW_SETTINGS()->charge_cap = value;
+    cfw_settings.charge_cap = value;
     app->save_settings = true;
 }
 
 void cfw_app_scene_misc_on_enter(void* context) {
     CfwApp* app = context;
-    CfwSettings* cfw_settings = CFW_SETTINGS();
     VariableItemList* var_item_list = app->var_item_list;
     VariableItem* item;
     uint8_t value_index;
 
-    variable_item_list_add(var_item_list, "Screen", 0, NULL, app);
+    item = variable_item_list_add(var_item_list, "Screen", 0, NULL, app);
+    variable_item_set_current_value_text(item, ">");
+
+    item = variable_item_list_add(var_item_list, "VGM Options", 0, NULL, app);
+    variable_item_set_current_value_text(item, ">");
 
     variable_item_list_add(var_item_list, "Change Device Name", 0, NULL, app);
 
     char cap_str[6];
-    value_index = cfw_settings->charge_cap / CHARGE_CAP_INTV;
+    value_index = cfw_settings.charge_cap / CHARGE_CAP_INTV;
     snprintf(cap_str, 6, "%lu%%", (uint32_t)value_index * CHARGE_CAP_INTV);
     item = variable_item_list_add(
         var_item_list,
@@ -65,6 +69,10 @@ bool cfw_app_scene_misc_on_event(void* context, SceneManagerEvent event) {
         case VarItemListIndexScreen:
             scene_manager_set_scene_state(app->scene_manager, CfwAppSceneMiscScreen, 0);
             scene_manager_next_scene(app->scene_manager, CfwAppSceneMiscScreen);
+            break;
+        case VarItemListIndexVgm:
+            scene_manager_set_scene_state(app->scene_manager, CfwAppSceneMiscVgm, 0);
+            scene_manager_next_scene(app->scene_manager, CfwAppSceneMiscVgm);
             break;
         case VarItemListIndexChangeDeviceName:
             scene_manager_set_scene_state(app->scene_manager, CfwAppSceneMiscRename, 0);

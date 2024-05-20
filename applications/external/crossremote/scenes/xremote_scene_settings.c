@@ -1,29 +1,29 @@
 #include "../xremote.h"
 #include <lib/toolbox/value_index.h>
-
+/*
 enum SettingsIndex {
     SettingsIndexHaptic = 10,
     SettingsIndexValue1,
     SettingsIndexValue2,
-};
+};*/
 
-const char* const haptic_text[2] = {
+/*const char* const haptic_text[2] = {
     "OFF",
     "ON",
 };
 const uint32_t haptic_value[2] = {
     XRemoteHapticOff,
     XRemoteHapticOn,
-};
+};*/
 
-const char* const speaker_text[2] = {
+/*const char* const speaker_text[2] = {
     "OFF",
     "ON",
 };
 const uint32_t speaker_value[2] = {
     XRemoteSpeakerOff,
     XRemoteSpeakerOn,
-};
+};*/
 
 const char* const led_text[2] = {
     "OFF",
@@ -43,20 +43,20 @@ const uint32_t settings_value[2] = {
     XRemoteSettingsOn,
 };
 
-static void xremote_scene_settings_set_haptic(VariableItem* item) {
+/*static void xremote_scene_settings_set_haptic(VariableItem* item) {
     XRemote* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
 
     variable_item_set_current_value_text(item, haptic_text[index]);
     app->haptic = haptic_value[index];
-}
+}*/
 
-static void xremote_scene_settings_set_speaker(VariableItem* item) {
+/*static void xremote_scene_settings_set_speaker(VariableItem* item) {
     XRemote* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, speaker_text[index]);
     app->speaker = speaker_value[index];
-}
+}*/
 
 static void xremote_scene_settings_set_led(VariableItem* item) {
     XRemote* app = variable_item_get_context(item);
@@ -81,6 +81,15 @@ static void xremote_scene_settings_set_ir_timing(VariableItem* item) {
     app->ir_timing = (index * 100);
 }
 
+static void xremote_scene_settings_set_sg_timing(VariableItem* item) {
+    XRemote* app = variable_item_get_context(item);
+    uint32_t index = variable_item_get_current_value_index(item);
+
+    snprintf(app->sg_timing_char, 20, "%lu", (index * 100));
+    variable_item_set_current_value_text(item, app->sg_timing_char);
+    app->sg_timing = (index * 100);
+}
+
 void xremote_scene_settings_submenu_callback(void* context, uint32_t index) {
     XRemote* app = context;
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
@@ -92,18 +101,18 @@ void xremote_scene_settings_on_enter(void* context) {
     uint8_t value_index;
 
     // Vibro on/off
-    item = variable_item_list_add(
+    /*    item = variable_item_list_add(
         app->variable_item_list, "Vibro/Haptic:", 2, xremote_scene_settings_set_haptic, app);
     value_index = value_index_uint32(app->haptic, haptic_value, 2);
     variable_item_set_current_value_index(item, value_index);
-    variable_item_set_current_value_text(item, haptic_text[value_index]);
+    variable_item_set_current_value_text(item, haptic_text[value_index]);*/
 
     // Sound on/off
-    item = variable_item_list_add(
+    /*   item = variable_item_list_add(
         app->variable_item_list, "Sound:", 2, xremote_scene_settings_set_speaker, app);
     value_index = value_index_uint32(app->speaker, speaker_value, 2);
     variable_item_set_current_value_index(item, value_index);
-    variable_item_set_current_value_text(item, speaker_text[value_index]);
+    variable_item_set_current_value_text(item, speaker_text[value_index]);*/
 
     // LED Effects on/off
     item = variable_item_list_add(
@@ -121,11 +130,19 @@ void xremote_scene_settings_on_enter(void* context) {
 
     // Set Infrared Timer
     item = variable_item_list_add(
-        app->variable_item_list, "IR Timing in ms:", 30, xremote_scene_settings_set_ir_timing, app);
+        app->variable_item_list, "IR Time ms", 30, xremote_scene_settings_set_ir_timing, app);
 
     variable_item_set_current_value_index(item, (uint8_t)(app->ir_timing / 100));
     snprintf(app->ir_timing_char, 20, "%lu", app->ir_timing);
     variable_item_set_current_value_text(item, app->ir_timing_char);
+
+    // Set SubGhz Timer
+    item = variable_item_list_add(
+        app->variable_item_list, "SubG. Time ms", 30, xremote_scene_settings_set_sg_timing, app);
+
+    variable_item_set_current_value_index(item, (uint8_t)(app->sg_timing / 100));
+    snprintf(app->sg_timing_char, 20, "%lu", app->sg_timing);
+    variable_item_set_current_value_text(item, app->sg_timing_char);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, XRemoteViewIdSettings);
 }

@@ -1,12 +1,16 @@
+#include <datetime/datetime.h>
+#include <dolphin/dolphin.h>
 #include <furi.h>
 #include <furi_hal.h>
 #include "furi_hal_random.h"
 #include <gui/elements.h>
 #include <gui/gui.h>
 #include <input/input.h>
-#include <dolphin/dolphin.h>
-#include "dice_icons.h"
+#include "dice_rm_icons.h"
+
+#if __has_include(<cfw/cfw.h>)
 #include "applications/settings/desktop_settings/desktop_settings_app.h"
+#endif
 
 #define TAG "Dice Roller"
 
@@ -23,8 +27,10 @@ typedef struct {
 typedef struct {
     FuriMutex* mutex;
     FuriMessageQueue* event_queue;
+#if __has_include(<cfw/cfw.h>)
     DesktopSettings* desktop_settings;
-    FuriHalRtcDateTime datetime;
+#endif
+    DateTime datetime;
     uint8_t diceSelect;
     uint8_t diceQty;
     uint16_t diceRoll;
@@ -136,16 +142,16 @@ static void dice_render_callback(Canvas* const canvas, void* ctx) {
                 "What are you waiting for?",
                 "You could do worse things.",
                 "Sure, I won't tell.",
-                "Yeah, you got this. Would I lie to you?",
+                "Yeah, u got this. Would I lie?",
                 "Looks like fun to me. ",
                 "Yeah, sure, why not?",
                 "DO IT!!!",
                 "Who's it gonna hurt?",
                 "Can you blame someone else?",
                 "Ask me again later.",
-                "Maybe, maybe not, I can't tell right now. ",
+                "I can't tell right now.",
                 "Are you the betting type? ",
-                "Don't blame me if you get caught.",
+                "Don't blame me if you caught.",
                 "What have you got to lose?",
                 "I wouldn't if I were you.",
                 "My money's on the snowball.",
@@ -319,9 +325,17 @@ static void dice_render_callback(Canvas* const canvas, void* ctx) {
                 state->diceType[0],
                 state->rollTime[0]);
             if(state->diceSelect >= 20 && state->diceRoll == state->diceSelect)
+#if __has_include(<cfw/cfw.h>)
                 dolphin_deed(getRandomDeed());
+#else
+                dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
             if(state->diceSelect >= 20 && state->diceRoll == state->diceSelect - 1)
+#if __has_include(<cfw/cfw.h>)
                 dolphin_deed(getRandomDeed());
+#else
+                dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
             if(state->diceQty == 1) {
                 snprintf(state->strings[1], sizeof(state->strings[1]), "%d", state->diceRoll);
             } else if(state->diceQty == 2) {
@@ -388,7 +402,11 @@ static void dice_render_callback(Canvas* const canvas, void* ctx) {
             canvas_draw_str_aligned(canvas, 64, 26, AlignCenter, AlignCenter, state->strings[2]);
             canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, state->strings[3]);
         } else if(state->diceSelect == 228 || state->diceSelect == 229) {
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             canvas_set_font(canvas, FontBatteryPercent);
+#else
+            canvas_set_font(canvas, FontSecondary);
+#endif
             canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, state->strings[1]);
             canvas_set_font(canvas, FontSecondary);
             canvas_draw_str_aligned(canvas, 64, 8, AlignCenter, AlignCenter, state->strings[0]);
@@ -463,7 +481,9 @@ static void dice_state_init(DiceState* const state) {
     state->playerOneScore = 0;
     state->playerTwoScore = 0;
     state->letsRoll = false;
+#if __has_include(<cfw/cfw.h>)
     state->desktop_settings = malloc(sizeof(DesktopSettings));
+#endif
 }
 
 static void dice_tick(void* ctx) {
@@ -503,7 +523,9 @@ int32_t dice_app(void* p) {
         return 255;
     }
 
+#if __has_include(<cfw/cfw.h>)
     DESKTOP_SETTINGS_LOAD(plugin_state->desktop_settings);
+#endif
 
     ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, dice_render_callback, plugin_state);
@@ -543,11 +565,15 @@ int32_t dice_app(void* p) {
                         } else if(plugin_state->diceSelect == 20) {
                             plugin_state->diceSelect = 100;
                         } else if(plugin_state->diceSelect == 100) {
+#if __has_include(<cfw/cfw.h>)
                             if(plugin_state->desktop_settings->is_dumbmode) {
                                 plugin_state->diceSelect = 231;
                             } else {
+#endif
                                 plugin_state->diceSelect = 230;
+#if __has_include(<cfw/cfw.h>)
                             }
+#endif
                         } else if(plugin_state->diceSelect == 230) {
                             plugin_state->playerOneScore = 0;
                             plugin_state->playerTwoScore = 0;
@@ -557,11 +583,15 @@ int32_t dice_app(void* p) {
                         } else if(plugin_state->diceSelect == 229) {
                             plugin_state->diceSelect = 228;
                         } else if(plugin_state->diceSelect == 228) {
+#if __has_include(<cfw/cfw.h>)
                             if(plugin_state->desktop_settings->is_dumbmode) {
                                 plugin_state->diceSelect = 59;
                             } else {
+#endif
                                 plugin_state->diceSelect = 232;
+#if __has_include(<cfw/cfw.h>)
                             }
+#endif
                         } else if(plugin_state->diceSelect == 232) {
                             plugin_state->diceSelect = 233;
                         } else if(plugin_state->diceSelect == 233) {
@@ -594,8 +624,6 @@ int32_t dice_app(void* p) {
             }
             furi_mutex_release(plugin_state->mutex);
             view_port_update(view_port);
-        } else {
-            // FURI_LOG_D(TAG, "osMessageQueue: event timeout");
         }
     }
     // Cleanup
@@ -606,7 +634,9 @@ int32_t dice_app(void* p) {
     view_port_free(view_port);
     furi_message_queue_free(plugin_state->event_queue);
     furi_mutex_free(plugin_state->mutex);
+#if __has_include(<cfw/cfw.h>)
     free(plugin_state->desktop_settings);
+#endif
     free(plugin_state);
     return 0;
 }

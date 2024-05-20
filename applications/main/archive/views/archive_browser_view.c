@@ -38,6 +38,8 @@ static const Icon* ArchiveItemIcons[] = {
     [ArchiveFileTypeFolder] = &I_dir_10px,
     [ArchiveFileTypeUnknown] = &I_unknown_10px,
     [ArchiveFileTypeLoading] = &I_loading_10px,
+    [ArchiveFileTypeJS] = &I_js_script_10px,
+    [ArchiveFileTypeAppOrJs] = &I_unknown_10px,
 };
 
 void archive_browser_set_callback(
@@ -595,6 +597,10 @@ static bool archive_view_input(InputEvent* event, void* context) {
                             model->item_idx =
                                 ((model->item_idx - scroll_speed) + model->item_cnt) %
                                 model->item_cnt;
+                        }
+                        // Fix for empty folders, we can't select -1 item
+                        if(model->item_idx < 0) {
+                            model->item_idx = 0;
                         }
                         if(is_file_list_load_required(model)) {
                             model->list_loading = true;

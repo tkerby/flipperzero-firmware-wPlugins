@@ -23,7 +23,6 @@ const GpioPin SWC_10 = {.pin = LL_GPIO_PIN_14, .port = GPIOA};
 const GpioPin SIO_12 = {.pin = LL_GPIO_PIN_13, .port = GPIOA};
 const GpioPin TX_13 = {.pin = LL_GPIO_PIN_6, .port = GPIOB};
 const GpioPin RX_14 = {.pin = LL_GPIO_PIN_7, .port = GPIOB};
-const GpioPin ibutton_gpio = {.pin = LL_GPIO_PIN_14, .port = GPIOB};
 
 //Количество доступных портов ввода/вывода
 #define GPIO_ITEMS (sizeof(GPIOList) / sizeof(GPIO))
@@ -151,8 +150,7 @@ uint8_t unitemp_gpio_getAviablePortsCount(const Interface* interface, const GPIO
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
-                (i != 12)) || //Почему-то не работает на 17 порте
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 aviable_ports_count++;
             }
@@ -210,9 +208,7 @@ const GPIO*
     for(uint8_t i = 0; i < GPIO_ITEMS; i++) {
         //Проверка для one wire
         if(interface == &ONE_WIRE) {
-            //Почему-то не работает на 17 порте
-            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE) &&
-                (i != 12)) || //Почему-то не работает на 17 порте
+            if(((gpio_interfaces_list[i] == NULL || gpio_interfaces_list[i] == &ONE_WIRE)) ||
                (unitemp_gpio_getFromIndex(i) == extraport)) {
                 if(aviable_index == index) {
                     return unitemp_gpio_getFromIndex(i);
@@ -497,14 +493,14 @@ Sensor* unitemp_sensor_alloc(char* name, const SensorType* type, char* args) {
     Sensor* sensor = malloc(sizeof(Sensor));
     if(sensor == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s allocation error", name);
-        return false;
+        return NULL;
     }
 
     //Выделение памяти под имя
     sensor->name = malloc(11);
     if(sensor->name == NULL) {
         FURI_LOG_E(APP_NAME, "Sensor %s name allocation error", name);
-        return false;
+        return NULL;
     }
     //Запись имени датчка
     strcpy(sensor->name, name);
@@ -636,6 +632,16 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
         UNITEMP_DEBUG("Sensor %s update status %d", sensor->name, sensor->status);
     }
 
+    if(app->settings.humidity_unit == UT_HUMIDITY_DEWPOINT &&
+       app->settings.temp_unit == UT_TEMP_CELSIUS && sensor->status == UT_SENSORSTATUS_OK) {
+        unitemp_rhToDewpointC(sensor);
+    }
+
+    if(app->settings.humidity_unit == UT_HUMIDITY_DEWPOINT &&
+       app->settings.temp_unit == UT_TEMP_FAHRENHEIT && sensor->status == UT_SENSORSTATUS_OK) {
+        unitemp_rhToDewpointF(sensor);
+    }
+
     if(sensor->status == UT_SENSORSTATUS_OK) {
         if(app->settings.heat_index &&
            ((sensor->type->datatype & (UT_TEMPERATURE | UT_HUMIDITY)) ==
@@ -643,7 +649,7 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
             unitemp_calculate_heat_index(sensor);
         }
         if(app->settings.temp_unit == UT_TEMP_FAHRENHEIT) {
-            uintemp_celsiumToFarengate(sensor);
+            unitemp_celsiusToFahrenheit(sensor);
         }
 
         sensor->temp += sensor->temp_offset / 10.f;
@@ -653,6 +659,8 @@ UnitempStatus unitemp_sensor_updateData(Sensor* sensor) {
             unitemp_pascalToInHg(sensor);
         } else if(app->settings.pressure_unit == UT_PRESSURE_KPA) {
             unitemp_pascalToKPa(sensor);
+        } else if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+            unitemp_pascalToHPa(sensor);
         }
     }
     return sensor->status;

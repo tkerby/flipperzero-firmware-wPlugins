@@ -1,0 +1,124 @@
+App(
+    appid="js_app",
+    name="JS Runner",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="js_app",
+    sources=[
+        "*.c*",
+        "!modules",
+        "modules/js_flipper.c",
+    ],
+    stack_size=2 * 1024,
+    resources="examples",
+    order=0,
+    fap_icon="icon.png",
+    fap_category="Main",
+    fap_icon_assets="assets",
+    fap_author="nminaylov & DrZlo13",
+    fap_weburl="https://github.com/flipperdevices/flipperzero-firmware/pull/3286",
+    fap_version=(1, 0),
+    fap_description="JS scripting engine based on MJS lib",
+    #  [Added ble beacon, math and keyboard to JavaScript API (By Spooks4576)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/41bb09492400026be66ef5f8b78f506f21361f1d)
+    #  [Many improvements (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9b00d0e37b304784cf8e0ac0bdabe6aa543a780e)
+    #  [Added Submenu support (By Spooks4576)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/6335d14c7498ab4b2e4b28fa707fe7f68d3843b5)
+    #  [Some SubGHz support and Radio Device Loader module (By Sil333033) + Also BLE Beacon Improvements (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed2716fb48f37a62cc3baf5c7fc8ee9a2864badc)
+    #  [JS Script: BadUSB_Win_Exfil-GSHD.js (By Gas Station Hot Dog)](https://github.com/User84User/User84PublicUser/blob/main/Windows_Exfil-GSHD.js)
+    #  [JS: added GPIO module (By Sil333033)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/46a761605f0f7466551e8baa127dcc1b1a359a37)
+    #  [Updates to GPIO & Storage Append (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/0cb1a859e7c67fc0ca0afa35320c2c823c164f4f)
+)
+
+App(
+    appid="js_dialog",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_dialog_ep",
+    requires=["js_app"],
+    sources=["modules/js_dialog.c"],
+)
+
+App(
+    appid="js_notification",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_notification_ep",
+    requires=["js_app"],
+    sources=["modules/js_notification.c"],
+)
+
+App(
+    appid="js_badusb",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_badusb_ep",
+    requires=["js_app"],
+    sources=["modules/js_badusb.c"],
+)
+
+App(
+    appid="js_serial",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_serial_ep",
+    requires=["js_app"],
+    sources=["modules/js_serial.c"],
+)
+
+App(
+    appid="js_storage",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_storage_ep",
+    requires=["js_app"],
+    sources=["modules/js_storage.c"],
+)
+
+App(
+    appid="js_usbdisk",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_usbdisk_ep",
+    requires=["js_app"],
+    sources=["modules/js_usbdisk/*.c"],
+)
+
+App(
+    appid="js_submenu",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_submenu_ep",
+    requires=["js_app"],
+    sources=["modules/js_submenu.c"],
+)
+
+App(
+    appid="js_blebeacon",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_blebeacon_ep",
+    requires=["js_app"],
+    sources=["modules/js_blebeacon.c"],
+)
+
+App(
+    appid="js_math",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_math_ep",
+    requires=["js_app"],
+    sources=["modules/js_math.c"],
+)
+
+App(
+    appid="js_keyboard",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_keyboard_ep",
+    requires=["js_app"],
+    sources=["modules/js_keyboard.c"],
+)
+
+App(
+    appid="js_subghz",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_subghz_ep",
+    requires=["js_app"],
+    sources=["modules/js_subghz/*.c"],
+)
+
+App(
+    appid="js_gpio",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="js_gpio_ep",
+    requires=["js_app"],
+    sources=["modules/js_gpio.c"],
+)

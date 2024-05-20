@@ -25,7 +25,7 @@ extern "C" {
 #define MOOD_SET_REGULAR 1
 #define MOOD_SET_420 2
 
-#define PASSPORT_BG_COUNT 13
+#define PASSPORT_BG_COUNT 14
 
 #define BG_NONE 0
 #define BG_ADPOLICE 1
@@ -36,12 +36,13 @@ extern "C" {
 #define BG_FURI 6
 #define BG_MARIO 7
 #define BG_MEDIEVAL 8
-#define BG_MOUNTAINS 9
-#define BG_MULTI 10
-#define BG_SCROLL 11
-#define BG_SLUT 12
+#define BG_MEMCHIP 9
+#define BG_MOUNTAINS 10
+#define BG_MULTI 11
+#define BG_SCROLL 12
+#define BG_SLUT 13
 
-#define PROFILE_IMG_COUNT 37
+#define PROFILE_IMG_COUNT 38
 
 #define PIMG_NONE 0
 #define PIMG_ADPOLICE 1
@@ -68,18 +69,19 @@ extern "C" {
 #define PIMG_MORELEELLOO 22
 #define PIMG_NEUROMANCER 23
 #define PIMG_PIKASLEEPY 24
-#define PIMG_RABBIT 25
-#define PIMG_SHINKAI 26
-#define PIMG_SKULL 27
-#define PIMG_SLIME 28
-#define PIMG_SONIC 29
-#define PIMG_SPIDER 30
-#define PIMG_TANKGIRL 31
-#define PIMG_TOTORO 32
-#define PIMG_WAIFU1 33
-#define PIMG_WAIFU2 34
-#define PIMG_WAIFU3 35
-#define PIMG_WRENCH 36
+#define PIMG_PIRATE 25 // Pirate Profile Pic (By cyberartemio)
+#define PIMG_RABBIT 26
+#define PIMG_SHINKAI 27
+#define PIMG_SKULL 28
+#define PIMG_SLIME 29
+#define PIMG_SONIC 30
+#define PIMG_SPIDER 31
+#define PIMG_TANKGIRL 32
+#define PIMG_TOTORO 33
+#define PIMG_WAIFU1 34
+#define PIMG_WAIFU2 35
+#define PIMG_WAIFU3 36
+#define PIMG_WRENCH 37
 
 typedef struct {
     uint8_t background;

@@ -1,6 +1,6 @@
 /**
- * @file furi_hal_subghz.h
- * SubGhz HAL API
+ * @file cc1101_ext.h
+ * @brief External CC1101 transceiver access API.
  */
 
 #pragma once
@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <toolbox/level_duration.h>
 #include <furi_hal_gpio.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 
 #ifdef __cplusplus
 extern "C" {

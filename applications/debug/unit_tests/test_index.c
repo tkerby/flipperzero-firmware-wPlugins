@@ -26,6 +26,7 @@ int run_minunit_test_protocol_dict();
 int run_minunit_test_lfrfid_protocols();
 int run_minunit_test_nfc();
 int run_minunit_test_bit_lib();
+int run_minunit_test_datetime();
 int run_minunit_test_float_tools();
 int run_minunit_test_bt();
 int run_minunit_test_dialogs_file_browser_options();
@@ -56,6 +57,7 @@ const UnitTest unit_tests[] = {
     {.name = "protocol_dict", .entry = run_minunit_test_protocol_dict},
     {.name = "lfrfid", .entry = run_minunit_test_lfrfid_protocols},
     {.name = "bit_lib", .entry = run_minunit_test_bit_lib},
+    {.name = "datetime", .entry = run_minunit_test_datetime},
     {.name = "float_tools", .entry = run_minunit_test_float_tools},
     {.name = "bt", .entry = run_minunit_test_bt},
     {.name = "dialogs_file_browser_options",
@@ -65,8 +67,8 @@ const UnitTest unit_tests[] = {
 void minunit_print_progress() {
     static const char progress[] = {'\\', '|', '/', '-'};
     static uint8_t progress_counter = 0;
-    static TickType_t last_tick = 0;
-    TickType_t current_tick = xTaskGetTickCount();
+    static uint32_t last_tick = 0;
+    uint32_t current_tick = furi_get_tick();
     if(current_tick - last_tick > 20) {
         last_tick = current_tick;
         printf("[%c]\033[3D", progress[++progress_counter % COUNT_OF(progress)]);
@@ -76,6 +78,16 @@ void minunit_print_progress() {
 
 void minunit_print_fail(const char* str) {
     printf(_FURI_LOG_CLR_E "%s\r\n" _FURI_LOG_CLR_RESET, str);
+}
+
+void minunit_printf_warning(const char* format, ...) {
+    FuriString* str = furi_string_alloc();
+    va_list args;
+    va_start(args, format);
+    furi_string_vprintf(str, format, args);
+    va_end(args);
+    printf(_FURI_LOG_CLR_W "%s\r\n" _FURI_LOG_CLR_RESET, furi_string_get_cstr(str));
+    furi_string_free(str);
 }
 
 void unit_tests_cli(Cli* cli, FuriString* args, void* context) {

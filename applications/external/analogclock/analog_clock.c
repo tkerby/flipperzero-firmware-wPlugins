@@ -4,6 +4,7 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <locale/locale.h>
+#include <datetime/datetime.h>
 
 #define PI 3.14
 
@@ -24,7 +25,7 @@ typedef struct {
 
 typedef struct {
     FuriMutex* mutex;
-    FuriHalRtcDateTime date_time;
+    DateTime date_time;
 } ClockApp;
 
 static Vector2 angle_to_vector2(float angle_in_degrees, uint8_t distance, Vector2 center) {

@@ -1,4 +1,5 @@
 #pragma once
+#include <datetime/datetime.h>
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -42,7 +43,7 @@ typedef struct {
     char* bssid;
     int8_t rssi;
     uint8_t channel;
-    FuriHalRtcDateTime datetime;
+    DateTime datetime;
     uint16_t packetRxCount;
     uint16_t packetTxCount;
     float latitude;
@@ -66,10 +67,12 @@ typedef struct {
     FuriThread* thread_esp;
     FuriStreamBuffer* rx_stream_esp;
     uint8_t rx_buf_esp[2048];
+    FuriHalSerialHandle* serial_handle_esp;
 
     FuriThread* thread_gps;
     FuriStreamBuffer* rx_stream_gps;
     uint8_t rx_buf_gps[2048];
+    FuriHalSerialHandle* serial_handle_gps;
 
     uint16_t access_points_count;
     AccessPoint access_points[MAX_ACCESS_POINTS];

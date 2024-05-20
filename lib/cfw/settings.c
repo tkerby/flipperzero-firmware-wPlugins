@@ -16,13 +16,16 @@ CfwSettings cfw_settings = {
     .sort_dirs_first = true, // ON
     .dark_mode = false, // OFF
     .charge_cap = 100, // 100%
+    .favorite_timeout = 0, // OFF
     .spi_cc1101_handle = SpiDefault, // &furi_hal_spi_bus_handle_external
     .spi_nrf24_handle = SpiDefault, // &furi_hal_spi_bus_handle_external
-    .uart_esp_channel = UARTDefault, // pin 13,14
-    .uart_nmea_channel = UARTDefault, // pin 13,14
-    .uart_general_channel = UARTDefault, // pin 13,14
+    .uart_esp_channel = FuriHalSerialIdUsart, // pin 13,14
+    .uart_nmea_channel = FuriHalSerialIdUsart, // pin 13,14
     .rgb_backlight = false, // OFF
     .lcd_style = 0, // Static
+    .vgm_color_mode = VgmColorModeDefault, // Default
+    .vgm_color_fg.value = 0x0000, // Default Black
+    .vgm_color_bg.value = 0xFC00, // Default Orange
 };
 
 void CFW_SETTINGS_LOAD() {
@@ -54,6 +57,8 @@ void CFW_SETTINGS_LOAD() {
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "charge_cap", &x->charge_cap, 1);
         flipper_format_rewind(file);
+        flipper_format_read_uint32(file, "favorite_timeout", &x->favorite_timeout, 1);
+        flipper_format_rewind(file);
         flipper_format_read_uint32(file, "spi_cc1101_handle", (uint32_t*)&x->spi_cc1101_handle, 1);
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "spi_nrf24_handle", (uint32_t*)&x->spi_nrf24_handle, 1);
@@ -62,8 +67,13 @@ void CFW_SETTINGS_LOAD() {
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "uart_nmea_channel", (uint32_t*)&x->uart_nmea_channel, 1);
         flipper_format_rewind(file);
+        flipper_format_read_uint32(file, "vgm_color_mode", (uint32_t*)&x->vgm_color_mode, 1);
+        flipper_format_rewind(file);
         flipper_format_read_uint32(
-            file, "uart_general_channel", (uint32_t*)&x->uart_general_channel, 1);
+            file, "vgm_color_fg.value", (uint32_t*)&x->vgm_color_fg.value, 1);
+        flipper_format_rewind(file);
+        flipper_format_read_uint32(
+            file, "vgm_color_bg.value", (uint32_t*)&x->vgm_color_bg.value, 1);
         flipper_format_rewind(file);
         flipper_format_read_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
         flipper_format_rewind(file);
@@ -99,22 +109,17 @@ void CFW_SETTINGS_SAVE() {
         flipper_format_write_bool(file, "sort_dirs_first", &x->sort_dirs_first, 1);
         flipper_format_write_bool(file, "dark_mode", &x->dark_mode, 1);
         flipper_format_write_uint32(file, "charge_cap", &x->charge_cap, 1);
+        flipper_format_write_uint32(file, "favorite_timeout", &x->favorite_timeout, 1);
         flipper_format_write_uint32(
             file, "spi_cc1101_handle", (uint32_t*)&x->spi_cc1101_handle, 1);
         flipper_format_write_uint32(file, "spi_nrf24_handle", (uint32_t*)&x->spi_nrf24_handle, 1);
         flipper_format_write_uint32(file, "uart_esp_channel", (uint32_t*)&x->uart_esp_channel, 1);
         flipper_format_write_uint32(
             file, "uart_nmea_channel", (uint32_t*)&x->uart_nmea_channel, 1);
-        flipper_format_write_uint32(
-            file, "uart_general_channel", (uint32_t*)&x->uart_general_channel, 1);
         flipper_format_write_bool(file, "rgb_backlight", &x->rgb_backlight, 1);
         flipper_format_write_uint32(file, "lcd_style", (uint32_t*)&x->lcd_style, 1);
         furi_string_free(manifest_name);
     }
     flipper_format_free(file);
     furi_record_close(RECORD_STORAGE);
-}
-
-CfwSettings* CFW_SETTINGS() {
-    return &cfw_settings;
 }

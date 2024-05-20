@@ -233,7 +233,10 @@ bool gba_cartridge_scene_1_input(InputEvent* event, void* context) {
                         ((GBACartridge*)instance->app)->uart,
                         gameboy_information_handle_rx_data_cb); // setup callback for general log rx thread
                     const char GBACartridge_command[] = "gbacartridge -i\n";
-                    uart_tx((uint8_t*)GBACartridge_command, strlen(GBACartridge_command));
+                    uart_tx(
+                        ((GBACartridge*)instance->app)->uart,
+                        (uint8_t*)GBACartridge_command,
+                        strlen(GBACartridge_command));
                 },
                 true);
             consumed = true;
@@ -272,7 +275,10 @@ void gba_cartridge_scene_1_enter(void* context) {
         ((GBACartridge*)instance->app)->uart,
         gameboy_information_handle_rx_data_cb); // setup callback for general log rx thread
     const char GBACartridge_command[] = "gbacartridge -i\n";
-    uart_tx((uint8_t*)GBACartridge_command, strlen(GBACartridge_command));
+    uart_tx(
+        ((GBACartridge*)instance->app)->uart,
+        (uint8_t*)GBACartridge_command,
+        strlen(GBACartridge_command));
 }
 
 GBACartridgeScene1* gba_cartridge_scene_1_alloc() {

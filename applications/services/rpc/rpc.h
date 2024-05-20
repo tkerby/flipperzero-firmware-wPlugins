@@ -35,6 +35,7 @@ typedef enum {
     RpcOwnerUnknown = 0,
     RpcOwnerBle,
     RpcOwnerUsb,
+    RpcOwnerUart,
     RpcOwnerCount,
 } RpcOwner;
 
@@ -59,7 +60,7 @@ RpcOwner rpc_session_get_owner(RpcSession* session);
  *
  *
  * @param   rpc     instance
- * @param owner owner of session
+ * @param   owner   owner of session
  * @return          pointer to RpcSession descriptor, or
  *                  NULL if RPC is busy and can't open session now
  */
@@ -93,6 +94,7 @@ void rpc_session_set_send_bytes_callback(RpcSession* session, RpcSendBytesCallba
  *
  * @param   session     pointer to RpcSession descriptor
  * @param   callback    callback to notify client that buffer is empty (can be NULL)
+ * @param   context     context to pass to callback
  */
 void rpc_session_set_buffer_is_empty_callback(
     RpcSession* session,
@@ -124,7 +126,7 @@ void rpc_session_set_terminated_callback(
  *
  * @return              actually consumed bytes
  */
-size_t rpc_session_feed(RpcSession* session, uint8_t* buffer, size_t size, TickType_t timeout);
+size_t rpc_session_feed(RpcSession* session, const uint8_t* buffer, size_t size, uint32_t timeout);
 
 /** Get available size of RPC buffer
  *
@@ -133,6 +135,13 @@ size_t rpc_session_feed(RpcSession* session, uint8_t* buffer, size_t size, TickT
  * @return              bytes available in buffer
  */
 size_t rpc_session_get_available_size(RpcSession* session);
+
+/** Get number of open RPC sessions
+ *
+ * @param   rpc     instance
+ * @return          sessions count
+ */
+size_t rpc_get_sessions_count(Rpc* rpc);
 
 #ifdef __cplusplus
 }

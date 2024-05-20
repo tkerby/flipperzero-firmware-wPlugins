@@ -22,6 +22,14 @@
 
 #include <input/input.h>
 
+#include <lib/nfc/nfc.h>
+#include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h>
+
+#include <nfc/nfc_poller.h>
+
+#include <nfc/nfc_device.h>
+#include <nfc/helpers/nfc_data_generator.h>
+
 // ASN1
 #include <asn_system.h>
 #include <asn_internal.h>
@@ -32,20 +40,19 @@
 #include <Payload.h>
 #include <FrameProtocol.h>
 
+#include "protocol/picopass_poller.h"
 #include "scenes/seader_scene.h"
-#include "views/seader_uart_view.h"
 
 #include "seader_bridge.h"
 #include "seader.h"
 #include "ccid.h"
 #include "uart.h"
-#include "rfal_picopass.h"
 #include "seader_worker.h"
 #include "seader_credential.h"
 
 #define WORKER_ALL_RX_EVENTS                                                      \
     (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange | WorkerEvtLineCfgSet | \
-     WorkerEvtCtrlLineSet)
+     WorkerEvtCtrlLineSet | WorkerEvtSamTxComplete)
 #define WORKER_ALL_TX_EVENTS (WorkerEvtTxStop | WorkerEvtSamRx)
 
 #define SEADER_TEXT_STORE_SIZE 128
@@ -58,6 +65,8 @@ enum SeaderCustomEvent {
     SeaderCustomEventWorkerExit,
     SeaderCustomEventByteInputDone,
     SeaderCustomEventTextInputDone,
+
+    SeaderCustomEventPollerSuccess,
 };
 
 typedef enum {
@@ -66,12 +75,12 @@ typedef enum {
 
     WorkerEvtTxStop = (1 << 2),
     WorkerEvtSamRx = (1 << 3),
+    WorkerEvtSamTxComplete = (1 << 4),
 
-    WorkerEvtCfgChange = (1 << 4),
+    WorkerEvtCfgChange = (1 << 5),
 
-    WorkerEvtLineCfgSet = (1 << 5),
-    WorkerEvtCtrlLineSet = (1 << 6),
-
+    WorkerEvtLineCfgSet = (1 << 6),
+    WorkerEvtCtrlLineSet = (1 << 7),
 } WorkerEvtFlags;
 
 struct Seader {
@@ -95,8 +104,16 @@ struct Seader {
     TextInput* text_input;
     Widget* widget;
 
-    //Custom views
-    SeaderUartView* seader_uart_view;
+    Nfc* nfc;
+    NfcPoller* poller;
+    PicopassPoller* picopass_poller;
+
+    NfcDevice* nfc_device;
+};
+
+struct SeaderPollerContainer {
+    Iso14443_4aPoller* iso14443_4a_poller;
+    PicopassPoller* picopass_poller;
 };
 
 typedef enum {

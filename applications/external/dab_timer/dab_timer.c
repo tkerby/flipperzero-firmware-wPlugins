@@ -14,10 +14,12 @@ static Vector2 angle_to_vector2(float angle_in_degrees, uint8_t distance, Vector
     return vec;
 }
 
+#if __has_include(<cfw/cfw.h>)
 static void dab_timer_dumbmode_changed(DesktopSettings* settings) {
     settings->is_dumbmode = !settings->is_dumbmode;
     DESKTOP_SETTINGS_SAVE(settings);
 }
+#endif
 
 void dab_timer_render_binary_face(
     Canvas* const canvas,
@@ -83,9 +85,9 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
         furi_message_queue_put(plugin_state->event_queue, &event, 0);
         return;
     }
-    FuriHalRtcDateTime curr_dt;
+    DateTime curr_dt;
     furi_hal_rtc_get_datetime(&curr_dt);
-    uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+    uint32_t curr_ts = furi_hal_rtc_get_timestamp();
     char time_string[TIME_LEN];
     char date_string[DATE_LEN];
     char meridian_string[MERIDIAN_LEN];
@@ -200,13 +202,19 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
         } else {
             canvas_draw_icon(canvas, 1, 32, &I_cool_flipagotchi);
         }
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
         canvas_set_font(canvas, FontBatteryPercent);
         canvas_draw_str_aligned(canvas, 117, 11, AlignCenter, AlignCenter, alertTime);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_set_font(canvas, FontBatteryPercent);
         if(plugin_state->time_format == LocaleTimeFormat12h)
             canvas_draw_str_aligned(canvas, 117, 4, AlignCenter, AlignCenter, meridian_string);
         canvas_draw_str_aligned(canvas, 96, 20, AlignCenter, AlignTop, date_string); // DRAW DATE
+#else
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 118, 12, AlignCenter, AlignCenter, alertTime);
+        if(plugin_state->time_format == LocaleTimeFormat12h)
+            canvas_draw_str_aligned(canvas, 118, 4, AlignCenter, AlignCenter, meridian_string);
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignTop, date_string); // DRAW DATE
+#endif
     } else if(
         plugin_state->faceType == FaceStyleOriginal ||
         plugin_state->faceType == FaceStyleOriginalInverted) {
@@ -237,15 +245,28 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
                 canvas, 64, 8, AlignCenter, AlignCenter, time_string); // DRAW TIME
             canvas_draw_str_aligned(
                 canvas, 64, 32, AlignCenter, AlignTop, timer_string); // DRAW TIMER
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             canvas_set_font(canvas, FontBatteryPercent);
             if(plugin_state->time_format == LocaleTimeFormat12h)
                 canvas_draw_str_aligned(canvas, 117, 4, AlignCenter, AlignCenter, meridian_string);
             canvas_draw_str_aligned(canvas, 117, 11, AlignCenter, AlignCenter, alertTime);
+#else
+            canvas_set_font(canvas, FontSecondary);
+            if(plugin_state->time_format == LocaleTimeFormat12h)
+                canvas_draw_str_aligned(canvas, 118, 4, AlignCenter, AlignCenter, meridian_string);
+            canvas_draw_str_aligned(canvas, 118, 12, AlignCenter, AlignCenter, alertTime);
+#endif
             canvas_draw_str_aligned(
                 canvas, 64, 20, AlignCenter, AlignTop, date_string); // DRAW DATE
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             canvas_set_font(canvas, FontSecondary);
+#endif
         } else {
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             if(plugin_state->w_test) canvas_set_font(canvas, FontBatteryPercent);
+#else
+            if(plugin_state->w_test) canvas_set_font(canvas, FontSecondary);
+#endif
             if(plugin_state->w_test && timer_start_timestamp != 0) {
                 uint32_t elapsed_secs = timer_running ? (curr_ts - timer_start_timestamp) :
                                                         timer_stopped_seconds;
@@ -261,6 +282,7 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
                     &I_EviSmile2_18x21};
                 static const Icon* const count_anim3[4] = {
                     &I_frame_01, &I_frame_02, &I_frame_03, &I_frame_02};
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
                 canvas_draw_icon(canvas, -5, 15, count_anim[elapsed_secs_img]);
                 canvas_draw_icon(canvas, 90, 0, count_anim2[elapsed_secs_img2]);
                 canvas_draw_icon(canvas, 110, 5, count_anim3[elapsed_secs_img2]);
@@ -272,10 +294,32 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
             canvas_set_font(canvas, FontBatteryPercent);
             if(plugin_state->time_format == LocaleTimeFormat12h)
                 canvas_draw_str_aligned(canvas, 69, 15, AlignCenter, AlignCenter, meridian_string);
+#else
+                canvas_draw_icon(canvas, -6, 14, count_anim[elapsed_secs_img]);
+                canvas_draw_icon(canvas, 55, -2, count_anim2[elapsed_secs_img2]);
+                canvas_draw_icon(canvas, 40, 4, count_anim3[elapsed_secs_img2]);
+                canvas_draw_str_aligned(
+                    canvas, 97, 38, AlignCenter, AlignCenter, timer_string); // DRAW TIMER
+                canvas_draw_str_aligned(
+                    canvas, 97, 26, AlignCenter, AlignCenter, time_string); // DRAW TIME
+                if(plugin_state->time_format == LocaleTimeFormat12h)
+                    canvas_draw_str_aligned(
+                        canvas, 97, 14, AlignCenter, AlignCenter, meridian_string);
+            } else {
+                canvas_draw_str_aligned(
+                    canvas, 64, 26, AlignCenter, AlignCenter, time_string); // DRAW TIME
+                canvas_set_font(canvas, FontSecondary);
+                if(plugin_state->time_format == LocaleTimeFormat12h)
+                    canvas_draw_str_aligned(
+                        canvas, 100, 14, AlignCenter, AlignCenter, meridian_string);
+            }
+#endif
             if(!plugin_state->w_test)
                 canvas_draw_str_aligned(
                     canvas, 64, 38, AlignCenter, AlignTop, date_string); // DRAW DATE
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             canvas_set_font(canvas, FontSecondary);
+#endif
         }
     } else if(
         plugin_state->faceType == FaceStyleOriginalSmall ||
@@ -297,7 +341,11 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
             }
             canvas_set_color(canvas, ColorBlack);
         }
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
         canvas_set_font(canvas, FontBatteryPercent);
+#else
+        canvas_set_font(canvas, FontSecondary);
+#endif
         if(timer_start_timestamp != 0) {
             int32_t elapsed_secs = timer_running ? (curr_ts - timer_start_timestamp) :
                                                    timer_stopped_seconds;
@@ -306,6 +354,7 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
                 canvas, 64, 31, AlignCenter, AlignTop, timer_string); // DRAW TIMER
         }
         canvas_draw_str_aligned(
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
             canvas, 64, 26, AlignCenter, AlignCenter, time_string); // DRAW TIME
         canvas_set_font(canvas, FontBatteryPercent);
         if(plugin_state->time_format == LocaleTimeFormat12h)
@@ -314,6 +363,14 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
             canvas_draw_str_aligned(
                 canvas, 64, 38, AlignCenter, AlignTop, date_string); // DRAW DATE
         canvas_set_font(canvas, FontSecondary);
+#else
+            canvas, 64, 24, AlignCenter, AlignCenter, time_string); // DRAW TIME
+        if(plugin_state->time_format == LocaleTimeFormat12h)
+            canvas_draw_str_aligned(canvas, 94, 24, AlignCenter, AlignCenter, meridian_string);
+        if(!plugin_state->w_test)
+            canvas_draw_str_aligned(
+                canvas, 64, 40, AlignCenter, AlignTop, date_string); // DRAW DATE
+#endif
     } else if(
         plugin_state->faceType == FaceStyleCircle ||
         plugin_state->faceType == FaceStyleCircleInverted) {
@@ -330,10 +387,10 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
             }
             canvas_set_color(canvas, ColorBlack);
         }
-        int8_t width = canvas_width(canvas);
-        int8_t height = canvas_height(canvas);
+        int8_t width = 124;
+        int8_t height = 64;
         Vector2 clock_center = {
-            .x = 28 + width / 2,
+            .x = 30 + width / 2,
             .y = height / 2,
         };
         uint8_t radius = MIN(width, height) / 2 - 2;
@@ -383,7 +440,9 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
             }
             canvas_set_color(canvas, ColorBlack);
         }
+#ifdef CANVAS_HAS_FONT_BATTERYPERCENT
         canvas_set_font(canvas, FontBatteryPercent);
+#endif
         if(timer_start_timestamp != 0) {
             uint32_t elapsed_secs = timer_running ? (curr_ts - timer_start_timestamp) :
                                                     timer_stopped_seconds;
@@ -415,7 +474,11 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
     if(plugin_state->faceType != FaceStyleCircle && plugin_state->faceType != FaceStyleBinary &&
        plugin_state->faceType != FaceStyleCircleInverted &&
        plugin_state->faceType != FaceStyleBinaryInverted) {
+#if __has_include(<cfw/cfw.h>)
         if(!plugin_state->desktop_settings->is_dumbmode && !plugin_state->w_test) {
+#else
+        if(!plugin_state->w_test) {
+#endif
             if(timer_running) {
                 elements_button_center(canvas, "Stop");
             } else {
@@ -435,7 +498,11 @@ static void dab_timer_render_callback(Canvas* const canvas, void* ctx) {
                 elements_button_right(canvas, "S:Cont");
             }
         }
+#if __has_include(<cfw/cfw.h>)
         if(plugin_state->w_test && plugin_state->desktop_settings->is_dumbmode) {
+#else
+        if(plugin_state->w_test) {
+#endif
             canvas_draw_icon(canvas, 0, 0, &I_GameModeIcon_11x8);
         }
     }
@@ -445,7 +512,9 @@ static void dab_timer_state_init(DabTimerState* const plugin_state) {
     memset(plugin_state, 0, sizeof(DabTimerState));
     plugin_state->alert_time = 80;
     plugin_state->date_format = locale_get_date_format();
+#if __has_include(<cfw/cfw.h>)
     plugin_state->desktop_settings = malloc(sizeof(DesktopSettings));
+#endif
     plugin_state->curEmotiveFace = 0;
     plugin_state->codeSequence = 0;
     plugin_state->faceType = FaceStylePwn;
@@ -461,7 +530,9 @@ static void dab_timer_state_init(DabTimerState* const plugin_state) {
 void dab_timer_free(DabTimerState* plugin_state) {
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
+#if __has_include(<cfw/cfw.h>)
     free(plugin_state->desktop_settings);
+#endif
     furi_message_queue_free(plugin_state->event_queue);
     furi_mutex_free(plugin_state->mutex);
     free(plugin_state);
@@ -502,7 +573,9 @@ int32_t dab_timer_app(void* p) {
         free(plugin_state);
         return 255;
     }
+#if __has_include(<cfw/cfw.h>)
     DESKTOP_SETTINGS_LOAD(plugin_state->desktop_settings);
+#endif
     // Set system callbacks
     ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, dab_timer_render_callback, plugin_state);
@@ -548,7 +621,9 @@ int32_t dab_timer_app(void* p) {
                         if(plugin_state->codeSequence == 5 || plugin_state->codeSequence == 7) {
                             plugin_state->codeSequence++;
                             if(plugin_state->codeSequence == 8) {
+#if __has_include(<cfw/cfw.h>)
                                 dab_timer_dumbmode_changed(plugin_state->desktop_settings);
+#endif
                                 plugin_state->w_test = true; // OH HEY NOW LETS GAIN EXP & MORE FUN
                             }
                         } else {
@@ -566,9 +641,7 @@ int32_t dab_timer_app(void* p) {
                         } else {
                             plugin_state->codeSequence = 0;
                             if(plugin_state->timer_start_timestamp != 0) {
-                                FuriHalRtcDateTime curr_dt;
-                                furi_hal_rtc_get_datetime(&curr_dt);
-                                uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+                                uint32_t curr_ts = furi_hal_rtc_get_timestamp();
                                 plugin_state->timer_start_timestamp = curr_ts;
                                 plugin_state->timer_stopped_seconds = 0;
                                 plugin_state->timerSecs = 0;
@@ -586,7 +659,9 @@ int32_t dab_timer_app(void* p) {
                             plugin_state->codeSequence++;
                         } else {
                             plugin_state->codeSequence = 0;
+#if __has_include(<cfw/cfw.h>)
                             if(!plugin_state->desktop_settings->is_dumbmode) {
+#endif
                                 if(plugin_state->songSelect == SoundAlertMario ||
                                    plugin_state->songSelect == SoundAlertGoGoPoRa ||
                                    plugin_state->songSelect == SoundAlertCont ||
@@ -594,9 +669,7 @@ int32_t dab_timer_app(void* p) {
                                     notification_message(notification, &dab_timer_alert_startStop);
                                 }
                                 // START/STOP TIMER
-                                FuriHalRtcDateTime curr_dt;
-                                furi_hal_rtc_get_datetime(&curr_dt);
-                                uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+                                uint32_t curr_ts = furi_hal_rtc_get_timestamp();
                                 if(plugin_state->timer_running) {
                                     // Update stopped seconds
                                     plugin_state->timer_stopped_seconds =
@@ -613,7 +686,9 @@ int32_t dab_timer_app(void* p) {
                                     }
                                 }
                                 plugin_state->timer_running = !plugin_state->timer_running;
+#if __has_include(<cfw/cfw.h>)
                             }
+#endif
                         }
                         break;
                     case InputKeyBack:
@@ -631,9 +706,11 @@ int32_t dab_timer_app(void* p) {
                     }
                     if(plugin_state->codeSequence == 10) {
                         plugin_state->codeSequence = 0;
+#if __has_include(<cfw/cfw.h>)
                         plugin_state->desktop_settings->is_dumbmode =
                             true; // MAKE SURE IT'S ON SO IT GETS TURNED OFF
                         dab_timer_dumbmode_changed(plugin_state->desktop_settings);
+#endif
                         if(plugin_state->songSelect == SoundAlertMario ||
                            plugin_state->songSelect == SoundAlertGoGoPoRa ||
                            plugin_state->songSelect == SoundAlertCont ||
@@ -642,7 +719,11 @@ int32_t dab_timer_app(void* p) {
                             notification_message(notification, &sequence_rainbow);
                             notification_message(notification, &sequence_rainbow);
                         }
+#if __has_include(<cfw/cfw.h>)
                         dolphin_deed(getRandomDeed());
+#else
+                        dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
                     }
                 } else if(event.input.type == InputTypeLong) {
                     if(event.input.key == InputKeyLeft) {
@@ -675,13 +756,15 @@ int32_t dab_timer_app(void* p) {
                     }
                     if(plugin_state->songSelect == SoundAlertGoGoPoRa) {
                         if(plugin_state->timerSecs == plugin_state->alert_time) {
-                            FuriHalRtcDateTime curr_dt;
-                            furi_hal_rtc_get_datetime(&curr_dt);
-                            uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+                            uint32_t curr_ts = furi_hal_rtc_get_timestamp();
                             if(plugin_state->lastexp_timestamp + 10 <= curr_ts &&
                                plugin_state->w_test) {
                                 plugin_state->lastexp_timestamp = curr_ts;
+#if __has_include(<cfw/cfw.h>)
                                 dolphin_deed(getRandomDeed());
+#else
+                                dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
                             }
                             notification_message(notification, &dab_timer_alert_pr1);
                         }
@@ -699,13 +782,15 @@ int32_t dab_timer_app(void* p) {
                         }
                     } else if(plugin_state->songSelect == SoundAlertMario) {
                         if(plugin_state->timerSecs == plugin_state->alert_time) {
-                            FuriHalRtcDateTime curr_dt;
-                            furi_hal_rtc_get_datetime(&curr_dt);
-                            uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+                            uint32_t curr_ts = furi_hal_rtc_get_timestamp();
                             if(plugin_state->lastexp_timestamp + 10 <= curr_ts &&
                                plugin_state->w_test) {
                                 plugin_state->lastexp_timestamp = curr_ts;
+#if __has_include(<cfw/cfw.h>)
                                 dolphin_deed(getRandomDeed());
+#else
+                                dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
                             }
                             notification_message(notification, &dab_timer_alert_mario1);
                         }
@@ -719,13 +804,15 @@ int32_t dab_timer_app(void* p) {
                         }
                     } else {
                         if(plugin_state->timerSecs == plugin_state->alert_time) {
-                            FuriHalRtcDateTime curr_dt;
-                            furi_hal_rtc_get_datetime(&curr_dt);
-                            uint32_t curr_ts = furi_hal_rtc_datetime_to_timestamp(&curr_dt);
+                            uint32_t curr_ts = furi_hal_rtc_get_timestamp();
                             if(plugin_state->lastexp_timestamp + 10 <= curr_ts &&
                                plugin_state->w_test) {
                                 plugin_state->lastexp_timestamp = curr_ts;
+#if __has_include(<cfw/cfw.h>)
                                 dolphin_deed(getRandomDeed());
+#else
+                                dolphin_deed(DolphinDeedBadUsbPlayScript);
+#endif
                             }
                             notification_message(notification, &dab_timer_alert_silent);
                             notification_message(notification, &sequence_rainbow);

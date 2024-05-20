@@ -15,13 +15,17 @@
 #include <gui/view_dispatcher.h>
 #include <gui/view_stack.h>
 #include <dialogs/dialogs.h>
-#include <cfw.h>
+
+#if __has_include(<cfw/cfw.h>)
+#include <cfw/cfw.h>
+#define UART_CH (cfw_settings.uart_esp_channel)
+#else
+#define UART_CH (FuriHalSerialIdUsart)
+#endif
 
 #define NUM_MENU_ITEMS (6)
 
 #define EVIL_PORTAL_TEXT_BOX_STORE_SIZE (4096)
-#define UART_CH \
-    (CFW_SETTINGS()->uart_esp_channel == UARTDefault ? FuriHalUartIdUSART1 : FuriHalUartIdLPUART1)
 
 #define SET_HTML_CMD "sethtml"
 #define SET_AP_CMD "setap"
@@ -44,8 +48,6 @@ struct Evil_PortalApp {
     TextInput* text_input;
     DialogsApp* dialogs;
     FuriString* file_path;
-    Loading* loading;
-    ViewStack* view_stack;
 
     int selected_menu_index;
     int selected_option_index[NUM_MENU_ITEMS];

@@ -6,14 +6,20 @@
 #include "views/xremote_pause_set.h"
 #include "helpers/xremote_storage.h"
 #include "models/infrared/xremote_ir_remote.h"
-#include "models/cross/xremote_remote.h"
+#include "models/cross/xremote_cross_remote.h"
+#include "helpers/subghz/subghz_types.h"
+#include "helpers/subghz/subghz.h"
+#include "helpers/gui/int_input.h"
 #include "xremote_i.h"
+
+typedef struct SubGhz SubGhz;
 
 typedef struct {
     Gui* gui;
     DialogsApp* dialogs;
     FuriString* file_path;
     NotificationApp* notification;
+    SubGhzNotificationState state_notifications;
     ViewDispatcher* view_dispatcher;
     Submenu* submenu;
     Submenu* editmenu;
@@ -40,8 +46,13 @@ typedef struct {
     uint32_t edit_item;
     uint32_t ir_timing;
     char* ir_timing_char;
+    uint32_t sg_timing;
+    char* sg_timing_char;
     bool transmitting;
+    bool stop_transmit;
     char text_store[XREMOTE_TEXT_STORE_NUM][XREMOTE_TEXT_STORE_SIZE + 1];
+    SubGhz* subghz;
+    IntInput* int_input;
 } XRemote;
 
 typedef enum {
@@ -55,6 +66,7 @@ typedef enum {
     XRemoteViewIdIrRemote,
     XRemoteViewIdStack,
     XRemoteViewIdTextInput,
+    XRemoteViewIdIntInput,
     XRemoteViewIdTransmit,
     XRemoteViewIdPauseSet,
 } XRemoteViewId;

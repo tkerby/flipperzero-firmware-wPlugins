@@ -32,9 +32,10 @@
 #define WIFI_MARAUDER_TEXT_BOX_STORE_SIZE (4096)
 #define WIFI_MARAUDER_TEXT_INPUT_STORE_SIZE (512)
 
-#define MARAUDER_APP_FOLDER_USER "apps_data/marauder"
-#define MARAUDER_APP_FOLDER EXT_PATH(MARAUDER_APP_FOLDER_USER)
-#define MARAUDER_APP_FOLDER_HTML MARAUDER_APP_FOLDER "/html"
+#define MARAUDER_APP_FOLDER_USER APP_ASSETS_PATH("")
+#define MARAUDER_APP_FOLDER APP_ASSETS_PATH("")
+#define MARAUDER_APP_FOLDER_EVILPORTAL EXT_PATH("apps_assets/evil_portal")
+#define MARAUDER_APP_FOLDER_HTML EXT_PATH("apps_assets/evil_portal/html")
 #define MARAUDER_APP_FOLDER_PCAPS MARAUDER_APP_FOLDER "/pcaps"
 #define MARAUDER_APP_FOLDER_LOGS MARAUDER_APP_FOLDER "/logs"
 #define MARAUDER_APP_FOLDER_USER_PCAPS MARAUDER_APP_FOLDER_USER "/pcaps"
@@ -80,7 +81,6 @@ struct WifiMarauderApp {
     int open_log_file_num_pages;
 
     WifiMarauderUart* uart;
-    WifiMarauderUart* lp_uart;
     int selected_menu_index;
     int selected_option_index[NUM_MENU_ITEMS];
     const char* selected_tx_string;

@@ -1,11 +1,12 @@
 #include "../lfrfid_i.h"
+#include <lfrfid_icons.h>
 
 void lfrfid_scene_rpc_on_enter(void* context) {
     LfRfid* app = context;
     Popup* popup = app->popup;
 
-    popup_set_header(popup, "LF RFID", 102, 10, AlignCenter, AlignBottom);
-    popup_set_text(popup, "RPC mode", 92, 23, AlignCenter, AlignTop);
+    popup_set_header(popup, "LF RFID", 89, 42, AlignCenter, AlignBottom);
+    popup_set_text(popup, "RPC mode", 89, 44, AlignCenter, AlignTop);
     popup_set_icon(popup, 0, 12, &I_RFIDDolphinSend_97x61);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, LfRfidViewPopup);
@@ -24,17 +25,15 @@ bool lfrfid_scene_rpc_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         consumed = true;
         if(event.event == LfRfidEventExit) {
-            rpc_system_app_confirm(app->rpc_ctx, RpcAppEventAppExit, true);
+            rpc_system_app_confirm(app->rpc_ctx, true);
             scene_manager_stop(app->scene_manager);
             view_dispatcher_stop(app->view_dispatcher);
         } else if(event.event == LfRfidEventRpcSessionClose) {
             scene_manager_stop(app->scene_manager);
             view_dispatcher_stop(app->view_dispatcher);
         } else if(event.event == LfRfidEventRpcLoadFile) {
-            const char* arg = rpc_system_app_get_data(app->rpc_ctx);
             bool result = false;
-            if(arg && (app->rpc_state == LfRfidRpcStateIdle)) {
-                furi_string_set(app->file_path, arg);
+            if(app->rpc_state == LfRfidRpcStateIdle) {
                 if(lfrfid_load_key_data(app, app->file_path, false)) {
                     lfrfid_worker_start_thread(app->lfworker);
                     lfrfid_worker_emulate_start(app->lfworker, (LFRFIDProtocol)app->protocol_id);
@@ -48,7 +47,7 @@ bool lfrfid_scene_rpc_on_event(void* context, SceneManagerEvent event) {
                     result = true;
                 }
             }
-            rpc_system_app_confirm(app->rpc_ctx, RpcAppEventLoadFile, result);
+            rpc_system_app_confirm(app->rpc_ctx, result);
         }
     }
     return consumed;

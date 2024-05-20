@@ -40,6 +40,9 @@ static void wiegand_start_scan(void* context) {
     UNUSED(context);
     data_saved = false;
     bit_count = 0;
+    if(!furi_hal_power_is_otg_enabled()) {
+        furi_hal_power_enable_otg();
+    }
     furi_hal_gpio_init_simple(pinD0, GpioModeInterruptRiseFall);
     furi_hal_gpio_init_simple(pinD1, GpioModeInterruptRiseFall);
     furi_hal_gpio_add_int_callback(pinD0, wiegand_scan_isr_d0, NULL);
@@ -59,7 +62,7 @@ static void wiegand_stop_scan(void* context) {
 static void wiegand_scan_found(void* context) {
     App* app = context;
 
-    FuriHalRtcDateTime datetime;
+    DateTime datetime;
     furi_hal_rtc_get_datetime(&datetime);
     snprintf(
         app->file_name,

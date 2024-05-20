@@ -10,6 +10,7 @@
 
 #include <gui/gui.h>
 #include <input/input.h>
+#include <power/power_service/power.h>
 
 #include <flipper_format/flipper_format.h>
 
@@ -225,6 +226,10 @@ int32_t extend_range_app(void* p) {
     while(furi_message_queue_get(event_queue, &event, FuriWaitForever) == FuriStatusOk) {
         if(event.type == InputTypeShort && event.key == InputKeyBack) break;
         handle_key(&event);
+        if(global_ret_val == 0) {
+            furi_delay_ms(1000);
+            power_reboot(PowerBootModeNormal);
+        }
     }
 
     gui_remove_view_port(gui, view_port);

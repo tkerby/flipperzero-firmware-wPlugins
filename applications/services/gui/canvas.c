@@ -1,12 +1,11 @@
 #include "canvas_i.h"
-#include "icon_i.h"
 #include "icon_animation_i.h"
 
 #include <furi.h>
 #include <furi_hal.h>
 #include <stdint.h>
 #include <u8g2_glue.h>
-#include <cfw.h>
+#include <cfw/cfw.h>
 
 const CanvasFontParameters canvas_font_params[FontTotalNumber] = {
     [FontPrimary] = {.leading_default = 12, .leading_min = 11, .height = 8, .descender = 2},
@@ -14,15 +13,18 @@ const CanvasFontParameters canvas_font_params[FontTotalNumber] = {
     [FontKeyboard] = {.leading_default = 11, .leading_min = 9, .height = 7, .descender = 2},
     [FontBigNumbers] = {.leading_default = 18, .leading_min = 16, .height = 15, .descender = 0},
     [FontBatteryPercent] = {.leading_default = 11, .leading_min = 9, .height = 6, .descender = 0},
-    [FontScummRomanOutline] =
-        {.leading_default = 12, .leading_min = 11, .height = 12, .descender = 2},
-    [FontScummRoman] = {.leading_default = 12, .leading_min = 11, .height = 10, .descender = 2},
     [FontEurocorp] = {.leading_default = 12, .leading_min = 11, .height = 16, .descender = 2},
 };
 
 Canvas* canvas_init() {
     Canvas* canvas = malloc(sizeof(Canvas));
     canvas->compress_icon = compress_icon_alloc();
+
+    // Initialize mutex
+    canvas->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+
+    // Initialize callback array
+    CanvasCallbackPairArray_init(canvas->canvas_callback_pair);
 
     // Setup u8g2
     u8g2_Setup_st756x_flipper(&canvas->fb, U8G2_R0, u8x8_hw_spi_stm32, u8g2_gpio_and_delay_stm32);
@@ -42,7 +44,19 @@ Canvas* canvas_init() {
 void canvas_free(Canvas* canvas) {
     furi_assert(canvas);
     compress_icon_free(canvas->compress_icon);
+    CanvasCallbackPairArray_clear(canvas->canvas_callback_pair);
+    furi_mutex_free(canvas->mutex);
     free(canvas);
+}
+
+static void canvas_lock(Canvas* canvas) {
+    furi_assert(canvas);
+    furi_check(furi_mutex_acquire(canvas->mutex, FuriWaitForever) == FuriStatusOk);
+}
+
+static void canvas_unlock(Canvas* canvas) {
+    furi_assert(canvas);
+    furi_check(furi_mutex_release(canvas->mutex) == FuriStatusOk);
 }
 
 void canvas_reset(Canvas* canvas) {
@@ -58,6 +72,18 @@ void canvas_reset(Canvas* canvas) {
 void canvas_commit(Canvas* canvas) {
     furi_assert(canvas);
     u8g2_SendBuffer(&canvas->fb);
+
+    // Iterate over callbacks
+    canvas_lock(canvas);
+    for
+        M_EACH(p, canvas->canvas_callback_pair, CanvasCallbackPairArray_t) {
+            p->callback(
+                canvas_get_buffer(canvas),
+                canvas_get_buffer_size(canvas),
+                canvas_get_orientation(canvas),
+                p->context);
+        }
+    canvas_unlock(canvas);
 }
 
 uint8_t* canvas_get_buffer(Canvas* canvas) {
@@ -117,7 +143,7 @@ const CanvasFontParameters* canvas_get_font_params(const Canvas* canvas, Font fo
 
 void canvas_clear(Canvas* canvas) {
     furi_assert(canvas);
-    if(CFW_SETTINGS()->dark_mode) {
+    if(cfw_settings.dark_mode) {
         u8g2_FillBuffer(&canvas->fb);
     } else {
         u8g2_ClearBuffer(&canvas->fb);
@@ -126,7 +152,7 @@ void canvas_clear(Canvas* canvas) {
 
 void canvas_set_color(Canvas* canvas, Color color) {
     furi_assert(canvas);
-    if(CFW_SETTINGS()->dark_mode) {
+    if(cfw_settings.dark_mode) {
         if(color == ColorBlack) {
             color = ColorWhite;
         } else if(color == ColorWhite) {
@@ -163,12 +189,6 @@ void canvas_set_font(Canvas* canvas, Font font) {
         break;
     case FontBatteryPercent:
         u8g2_SetFont(&canvas->fb, u8g2_font_5x7_tf); //u8g2_font_micro_tr);
-        break;
-    case FontScummRomanOutline:
-        u8g2_SetFont(&canvas->fb, u8g2_font_lucasarts_scumm_subtitle_o_tr);
-        break;
-    case FontScummRoman:
-        u8g2_SetFont(&canvas->fb, u8g2_font_lucasarts_scumm_subtitle_r_tr);
         break;
     case FontEurocorp:
         u8g2_SetFont(&canvas->fb, u8g2_font_eurocorp_tr);
@@ -598,4 +618,29 @@ void canvas_set_orientation(Canvas* canvas, CanvasOrientation orientation) {
 
 CanvasOrientation canvas_get_orientation(const Canvas* canvas) {
     return canvas->orientation;
+}
+
+void canvas_add_framebuffer_callback(Canvas* canvas, CanvasCommitCallback callback, void* context) {
+    furi_assert(canvas);
+
+    const CanvasCallbackPair p = {callback, context};
+
+    canvas_lock(canvas);
+    furi_assert(!CanvasCallbackPairArray_count(canvas->canvas_callback_pair, p));
+    CanvasCallbackPairArray_push_back(canvas->canvas_callback_pair, p);
+    canvas_unlock(canvas);
+}
+
+void canvas_remove_framebuffer_callback(
+    Canvas* canvas,
+    CanvasCommitCallback callback,
+    void* context) {
+    furi_assert(canvas);
+
+    const CanvasCallbackPair p = {callback, context};
+
+    canvas_lock(canvas);
+    furi_assert(CanvasCallbackPairArray_count(canvas->canvas_callback_pair, p) == 1);
+    CanvasCallbackPairArray_remove_val(canvas->canvas_callback_pair, p);
+    canvas_unlock(canvas);
 }

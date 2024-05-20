@@ -1,5 +1,6 @@
 #pragma once
 
+#include <datetime/datetime.h>
 #include <input/input.h>
 #include <locale/locale.h>
 
@@ -30,7 +31,7 @@ typedef struct {
 typedef struct {
     LocaleDateFormat date_format;
     LocaleTimeFormat time_format;
-    FuriHalRtcDateTime datetime;
+    DateTime datetime;
     FuriMutex* mutex;
     FuriMessageQueue* event_queue;
     uint32_t timer_start_timestamp;
