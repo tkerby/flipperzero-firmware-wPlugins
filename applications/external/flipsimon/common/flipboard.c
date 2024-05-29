@@ -1,13 +1,25 @@
 #include "flipboard_i.h"
 
 /**
+ * @brief Callback to load the model of a Flipboard application.
+ * @details This callback is used to load the model of a Flipboard application. 
+ * We use this callback to load the model while the splash screen is displayed.
+ * @param context The context of the callback.
+ * @return Whether the model was loaded successfully.
+ */
+static bool flipboard_cb_model_load(void* context) {
+    FlipboardModel* model = (FlipboardModel*)context;
+    return flipboard_model_load(model);
+}
+
+/**
  * @brief Allocates a new Flipboard application.
  * @param app_name The name of the application.
  * @param qr_icon The icon to display in the qr view.
  * @param about_text The text to display in the about view.
  * @param fields The fields to display in the button model.
+ * @param set_defaults Callback to set the defaults of the application.
  * @param single_mode_button Whether to display the button model in single mode.
- * @param attach_keyboard Whether to attach the keyboard to the application.
  * @param keys The keys to display in the keystroke selector.
  * @param shift_keys The shift keys to display in the keystroke selector.
  * @param rows The number of rows to display in the keystroke selector.
@@ -19,17 +31,15 @@ Flipboard* flipboard_alloc(
     const Icon* qr_icon,
     char* about_text,
     ActionModelFields fields,
+    FlipboardModelSetDefaults set_defaults,
     bool single_mode_button,
-    bool attach_keyboard,
     KeystrokeSelectorKey* keys,
     KeystrokeSelectorKey* shift_keys,
     uint8_t rows,
     GetPrimaryView get_primary_view) {
     Flipboard* app = (Flipboard*)malloc(sizeof(Flipboard));
     app->model = flipboard_model_alloc(app_name, single_mode_button, fields);
-    if(attach_keyboard) {
-        flipboard_keyboard_attach(flipboard_model_get_keyboard(app->model));
-    }
+    flipboard_model_set_defaults_callback(app->model, set_defaults);
 
     Gui* gui = furi_record_open(RECORD_GUI);
 
@@ -70,6 +80,8 @@ Flipboard* flipboard_alloc(
         app->widget_qr, 70, 5, 128, 64, "Scan this\nQR code\nto access\nGitHub\ninstructions.");
     app_menu_add_item(
         app->app_menu, "Instructions QR Code", widget_get_view(app->widget_qr), FlipboardViewQRId);
+
+    app_menu_set_callback(app->app_menu, flipboard_cb_model_load, app->model);
 
     app_menu_show(app->app_menu);
     flipboard_leds_update(flipboard_model_get_leds(app->model));

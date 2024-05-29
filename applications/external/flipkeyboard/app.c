@@ -84,6 +84,7 @@ void flipboard_debounced_switch(void* context, uint8_t old_button, uint8_t new_b
  */
 void flipboard_enter_callback(void* context) {
     FlipboardModel* fm = flipboard_get_model((Flipboard*)context);
+    flipboard_keyboard_attach(flipboard_model_get_keyboard(fm));
     flipboard_model_set_button_monitor(fm, flipboard_debounced_switch, (Flipboard*)context);
     flipboard_model_set_colors(fm, NULL, 0x0);
     flipboard_model_set_gui_refresh_speed_ms(fm, 0);
@@ -95,6 +96,7 @@ void flipboard_enter_callback(void* context) {
  */
 void flipboard_exit_callback(void* context) {
     FlipboardModel* fm = flipboard_get_model((Flipboard*)context);
+    flipboard_keyboard_detatch(flipboard_model_get_keyboard(fm));
     flipboard_model_set_colors(fm, NULL, 0x0);
     flipboard_model_set_button_monitor(fm, NULL, NULL);
     flipboard_model_set_gui_refresh_speed_ms(fm, 0);
@@ -169,6 +171,42 @@ static bool custom_event_handler(void* context, uint32_t event) {
     return true;
 }
 
+static void flipboard_defaults(FlipboardModel* model) {
+    ActionModel* action_model;
+    action_model = action_model_alloc(1);
+    action_model_set_color_up(action_model, LedColorBlue);
+    action_model_set_color_down(action_model, LedColorCyan);
+    action_model_set_frequency(action_model, 164.814);
+    action_model_append_keystroke(action_model, 0xF1, 1); // Msg 1
+    action_model_set_message(action_model, "Welcome to FlipKeyboard!", 0);
+    flipboard_model_set_action_model(
+        model, action_model_get_action_id(action_model), action_model);
+    action_model = action_model_alloc(2);
+    action_model_set_color_up(action_model, LedColorRed);
+    action_model_set_color_down(action_model, LedColorMagenta);
+    action_model_set_frequency(action_model, 220);
+    action_model_append_keystroke(action_model, 0xF1, 1); // Msg 1
+    action_model_set_message(action_model, "https://discord.com/invite/NsjCvqwPAd", 0);
+    flipboard_model_set_action_model(
+        model, action_model_get_action_id(action_model), action_model);
+    action_model = action_model_alloc(4);
+    action_model_set_color_up(action_model, LedColorGreen);
+    action_model_set_color_down(action_model, LedColorViolet);
+    action_model_set_frequency(action_model, 277.183);
+    action_model_append_keystroke(action_model, 0xF1, 1); // Msg 1
+    action_model_set_message(action_model, "https://youtube.com/@MrDerekJamison", 0);
+    flipboard_model_set_action_model(
+        model, action_model_get_action_id(action_model), action_model);
+    action_model = action_model_alloc(8);
+    action_model_set_color_up(action_model, LedColorOrange);
+    action_model_set_color_down(action_model, LedColorYellow);
+    action_model_set_frequency(action_model, 329.628);
+    action_model_append_keystroke(action_model, 0xF1, 1); // Msg 1
+    action_model_set_message(action_model, "https://youtube.com/@MakeItHackin", 0);
+    flipboard_model_set_action_model(
+        model, action_model_get_action_id(action_model), action_model);
+}
+
 /**
  * @brief This method is invoked when the FlipboardKeyboard app is launched.
  * @param p Unused.
@@ -179,16 +217,14 @@ int32_t flipboard_keyboard_app(void* p) {
 
     ActionModelFields fields = ActionModelFieldAll;
     bool single_mode_button = false;
-    bool attach_keyboard = true;
-    // attach_keyboard = false;
 
     Flipboard* app = flipboard_alloc(
         FLIPBOARD_APP_NAME,
         &I_qr_github,
         ABOUT_TEXT,
         fields,
+        flipboard_defaults,
         single_mode_button,
-        attach_keyboard,
         keys,
         shift_keys,
         COUNT_OF(keys) / 12,
