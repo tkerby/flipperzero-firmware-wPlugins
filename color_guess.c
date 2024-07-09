@@ -24,8 +24,7 @@ ColorGuess* color_guess_app_alloc() {
     ColorGuess* app = malloc(sizeof(ColorGuess));
     app->gui = furi_record_open(RECORD_GUI);
     app->notification = furi_record_open(RECORD_NOTIFICATION);
-    app->error = false;
-
+    
     // Set Defaults if no config exists
     app->haptic = 1;
     app->led = 1;
@@ -87,6 +86,7 @@ void color_guess_app_free(ColorGuess* app) {
     // View Dispatcher
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdStartscreen);
     color_guess_startscreen_free(app->color_guess_startscreen);
+    dialog_ex_free(app->dialog_ex);
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdMenu);
     submenu_free(app->submenu);
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdPlay);
@@ -111,10 +111,7 @@ void color_guess_app_free(ColorGuess* app) {
 int32_t color_guess_app(void* p) {
     UNUSED(p);
     ColorGuess* app = color_guess_app_alloc();
-    if(app->error) {
-        return 255;
-    }
-
+    
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     scene_manager_next_scene(app->scene_manager, ColorGuessSceneStartscreen);

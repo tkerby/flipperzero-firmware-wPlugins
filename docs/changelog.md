@@ -1,3 +1,6 @@
+## 1.6
+- Reducing code
+
 ## 1.5
 - Additional Memory Management fixes by Willy-JL
 - Redraw Issue fixed by Willy-JL
