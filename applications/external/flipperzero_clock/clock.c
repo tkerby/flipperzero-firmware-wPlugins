@@ -2,17 +2,17 @@
 
 #include "clock.h"
 
-#define OFS_LEFT_X 31
-#define OFS_MID_X 63
+#define OFS_LEFT_X  31
+#define OFS_MID_X   63
 #define OFS_RIGHT_X 96
-#define OFS_Y 31
+#define OFS_Y       31
 
-#define H_RAD 17
-#define M_RAD 26
-#define S_RAD 29
+#define H_RAD   17
+#define M_RAD   26
+#define S_RAD   29
 #define HMS_OFS 8
 
-#define FACE_RADIUS 31
+#define FACE_RADIUS        31
 #define FACE_DEFAULT_WIDTH 54
 
 const char* WEEKDAYS[] =
@@ -177,7 +177,8 @@ void draw_analog_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t 
             draw_line(canvas, cfg->ofs_x, m, CopyBoth);
         }
     }
-    for(; i < 14; i++, m++) draw_line(canvas, cfg->ofs_x, m, CopyBoth);
+    for(; i < 14; i++, m++)
+        draw_line(canvas, cfg->ofs_x, m, CopyBoth);
     draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[0], CopyVer);
     draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[15], CopyHor);
     float s_ang = M_TWOPI / 60.0 * dt->second + M_TWOPI / 60000.0 * ms;

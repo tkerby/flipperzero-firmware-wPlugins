@@ -1,13 +1,12 @@
 /***
  * Noptel LRF rangefinder sampler for the Flipper Zero
- * Version: 1.8
+ * Version: 1.9
  *
  * Submenu
 ***/
 
 /** Views **/
 typedef enum {
-
     /* Submenu */
     view_submenu,
 

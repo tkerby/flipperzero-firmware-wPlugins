@@ -1,6 +1,5 @@
 #include "../archive_i.h"
 #include "../helpers/archive_files.h"
-#include "../helpers/archive_apps.h"
 #include "../helpers/archive_favorites.h"
 #include "../helpers/archive_browser.h"
 #include "../helpers/archive_helpers_ext.h"
@@ -9,7 +8,7 @@
 
 #define TAG "ArchiveSceneBrowser"
 
-#define SCENE_STATE_DEFAULT (0)
+#define SCENE_STATE_DEFAULT      (0)
 #define SCENE_STATE_NEED_REFRESH (1)
 
 const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
@@ -31,7 +30,7 @@ const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
     case ArchiveFileTypeInfraredRemote:
         return EXT_PATH("apps/Infrared/ir_remote.fap");
     case ArchiveFileTypeBadKb:
-        return "Bad KB";
+        return EXT_PATH("apps/USB/bad_kb.fap");
     case ArchiveFileTypeWAV:
         return EXT_PATH("apps/Media/wav_player.fap");
     case ArchiveFileTypeMag:

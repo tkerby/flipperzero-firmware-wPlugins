@@ -203,9 +203,11 @@ static void subghz_scene_add_to_history_callback(
             if(decoder_base->protocol->flag & SubGhzProtocolFlag_Save &&
                subghz->last_settings->autosave) {
                 // File name
+                FuriString* fileName = furi_string_alloc_set(item_name);
+                furi_string_replace_all(fileName, " ", "_");
                 char file[SUBGHZ_MAX_LEN_NAME] = {0};
                 const char* suf = subghz->last_settings->protocol_file_names ?
-                                      decoder_base->protocol->name :
+                                      furi_string_get_cstr(fileName) :
                                       SUBGHZ_APP_FILENAME_PREFIX;
                 DateTime time = subghz_history_get_datetime(history, idx);
                 name_generator_make_detailed_datetime(file, sizeof(file), suf, &time);
@@ -224,6 +226,7 @@ static void subghz_scene_add_to_history_callback(
                 subghz_save_protocol_to_file(
                     subghz, subghz_history_get_raw_data(history, idx), furi_string_get_cstr(path));
                 furi_string_free(path);
+                furi_string_free(fileName);
             }
 
             subghz_scene_receiver_update_statusbar(subghz);
@@ -234,12 +237,14 @@ static void subghz_scene_add_to_history_callback(
             } else {
                 subghz->state_notifications = SubGhzNotificationStateRxDone;
             }
+            subghz_rx_key_state_set(subghz, SubGhzRxKeyStateAddKey);
         }
+    } else {
+        FURI_LOG_D(TAG, "%s protocol ignored", decoder_base->protocol->name);
     }
     subghz_receiver_reset(receiver);
     furi_string_free(item_name);
     furi_string_free(item_time);
-    subghz_rx_key_state_set(subghz, SubGhzRxKeyStateAddKey);
 }
 
 void subghz_scene_receiver_on_enter(void* context) {
@@ -478,7 +483,7 @@ bool subghz_scene_receiver_on_event(void* context, SceneManagerEvent event) {
     } else if(event.type == SceneManagerEventTypeTick) {
         if(subghz_rx_key_state_get(subghz) != SubGhzRxKeyStateTX) {
             if(subghz_txrx_hopper_get_state(subghz->txrx) != SubGhzHopperStateOFF) {
-                subghz_txrx_hopper_update(subghz->txrx);
+                subghz_txrx_hopper_update(subghz->txrx, subghz->last_settings->hopping_threshold);
                 subghz_scene_receiver_update_statusbar(subghz);
             }
 

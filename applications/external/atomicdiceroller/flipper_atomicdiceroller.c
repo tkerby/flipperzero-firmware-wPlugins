@@ -186,9 +186,14 @@ int32_t flipper_atomicdiceroller_app() {
     view_port_draw_callback_set(view_port, draw_callback, &mutexVal.mutex);
     view_port_input_callback_set(view_port, input_callback, event_queue);
 
+    // DISABLE & REMOVE INITIAL CALLBACK (FIRMWARE BUG ?)
+    furi_hal_gpio_disable_int_callback(&gpio_ext_pa7);
+    furi_hal_gpio_remove_int_callback(&gpio_ext_pa7);
+
+    // NEW CALLBACK
+    furi_hal_gpio_init(&gpio_ext_pa7, GpioModeInterruptFall, GpioPullUp, GpioSpeedVeryHigh);
     furi_hal_gpio_add_int_callback(&gpio_ext_pa7, gpiocallback, event_queue);
     furi_hal_gpio_enable_int_callback(&gpio_ext_pa7);
-    furi_hal_gpio_init(&gpio_ext_pa7, GpioModeInterruptFall, GpioPullUp, GpioSpeedVeryHigh);
 
     Gui* gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
@@ -207,7 +212,8 @@ int32_t flipper_atomicdiceroller_app() {
     }
 
     uint8_t diceBuffer[64];
-    for(uint8_t i = 0; i < 64; i++) diceBuffer[i] = 0;
+    for(uint8_t i = 0; i < 64; i++)
+        diceBuffer[i] = 0;
 
     uint8_t diceBufferCounter = 0;
     uint8_t diceBufferPositionWrite = 0;

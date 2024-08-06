@@ -11,9 +11,9 @@
 
 #define SCREEN_SIZE_X 128
 #define SCREEN_SIZE_Y 64
-#define DCF77_FREQ 77500
-#define DCF77_OFFSET 60
-#define SYNC_DELAY 50
+#define DCF77_FREQ    77500
+#define DCF77_OFFSET  60
+#define SYNC_DELAY    50
 
 char* WEEKDAYS[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
 
@@ -116,7 +116,8 @@ int dcf77_clock_sync_app_main(void* p) {
     while(!exit) {
         int silence_ms = 0;
         // wait next second
-        while(app->dt.second == sec) furi_hal_rtc_get_datetime(&app->dt);
+        while(app->dt.second == sec)
+            furi_hal_rtc_get_datetime(&app->dt);
 
         if(app->dt.second < 59) {
             if(running) {

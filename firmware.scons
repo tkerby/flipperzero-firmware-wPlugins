@@ -20,6 +20,7 @@ env = ENV.Clone(
         "fbt_resources",
     ],
     COMPILATIONDB_USE_ABSPATH=False,
+    COMPILATIONDB_USE_BINARY_ABSPATH=True,
     BUILD_DIR=fw_build_meta["build_dir"],
     IS_BASE_FIRMWARE=fw_build_meta["type"] == "firmware",
     FW_FLAVOR=fw_build_meta["flavor"],
@@ -41,15 +42,19 @@ env = ENV.Clone(
     FW_LIB_OPTS={
         "Default": {
             "CCFLAGS": [
-                "-Og"
-                if ENV["LIB_DEBUG"] and fw_build_meta["type"] == "firmware"
-                else "-Os",
+                (
+                    "-Og"
+                    if ENV["LIB_DEBUG"] and fw_build_meta["type"] == "firmware"
+                    else "-Os"
+                ),
             ],
             "CPPDEFINES": [
                 "NDEBUG",
-                "FURI_DEBUG"
-                if ENV["LIB_DEBUG"] and fw_build_meta["type"] == "firmware"
-                else "FURI_NDEBUG",
+                (
+                    "FURI_DEBUG"
+                    if ENV["LIB_DEBUG"] and fw_build_meta["type"] == "firmware"
+                    else "FURI_NDEBUG"
+                ),
             ],
             # You can add other entries named after libraries
             # If they are present, they have precedence over Default
@@ -61,9 +66,11 @@ env = ENV.Clone(
             ],
             "CPPDEFINES": [
                 "NDEBUG",
-                "FURI_DEBUG"
-                if ENV["DEBUG"] and fw_build_meta["type"] == "firmware"
-                else "FURI_NDEBUG",
+                (
+                    "FURI_DEBUG"
+                    if ENV["DEBUG"] and fw_build_meta["type"] == "firmware"
+                    else "FURI_NDEBUG"
+                ),
             ],
         },
         "flipper_application": {
@@ -72,9 +79,11 @@ env = ENV.Clone(
             ],
             "CPPDEFINES": [
                 "NDEBUG",
-                "FURI_DEBUG"
-                if ENV["DEBUG"] and fw_build_meta["type"] == "firmware"
-                else "FURI_NDEBUG",
+                (
+                    "FURI_DEBUG"
+                    if ENV["DEBUG"] and fw_build_meta["type"] == "firmware"
+                    else "FURI_NDEBUG"
+                ),
             ],
         },
     },

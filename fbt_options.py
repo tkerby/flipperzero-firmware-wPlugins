@@ -22,7 +22,7 @@ DIST_SUFFIX = "RM420FAP"
 COPRO_OB_DATA = "scripts/ob.data"
 
 # Must match lib/stm32wb_copro version
-COPRO_CUBE_VERSION = "1.19.0"
+COPRO_CUBE_VERSION = "1.20.0"
 
 COPRO_CUBE_DIR = "lib/stm32wb_copro"
 
@@ -71,6 +71,17 @@ FIRMWARE_APPS = {
         "settings_apps",
     ],
     "unit_tests": [
+        # Svc
+        "basic_services",
+        # Apps
+        "main_apps",
+        "system_apps",
+        # Settings
+        "settings_apps",
+        # Tests
+        "unit_tests",
+    ],
+    "unit_tests_min": [
         "basic_services",
         "updater_app",
         "radio_device_cc1101_ext",

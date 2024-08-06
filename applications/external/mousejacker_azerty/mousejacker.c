@@ -13,14 +13,14 @@
 #include <dolphin/dolphin.h>
 #include "nrf24_azerty_mouse_jacker_icons.h"
 
-#define TAG "mousejacker"
-#define LOGITECH_MAX_CHANNEL 85
-#define NRFSNIFF_APP_PATH_FOLDER "/ext/apps_data/nrfsniff"
-#define NRFSNIFF_APP_PATH_EXTENSION ".txt"
-#define NRFSNIFF_APP_FILENAME "addresses.txt"
-#define LOCAL_BADUSB_FOLDER EXT_PATH("badusb")
+#define TAG                            "mousejacker"
+#define LOGITECH_MAX_CHANNEL           85
+#define NRFSNIFF_APP_PATH_FOLDER       "/ext/apps_data/nrfsniff"
+#define NRFSNIFF_APP_PATH_EXTENSION    ".txt"
+#define NRFSNIFF_APP_FILENAME          "addresses.txt"
+#define LOCAL_BADUSB_FOLDER            EXT_PATH("badusb")
 #define MOUSEJACKER_APP_PATH_EXTENSION ".txt"
-#define MAX_ADDRS 100
+#define MAX_ADDRS                      100
 
 typedef enum {
     EventTypeTick,
@@ -86,8 +86,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(plugin_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);

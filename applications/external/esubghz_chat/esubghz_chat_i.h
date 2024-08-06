@@ -19,6 +19,8 @@
 
 #include "esubghz_chat_icons.h"
 
+#include <lib/nfclegacy/nfc_worker.h>
+
 #define APPLICATION_NAME "ESubGhzChat"
 
 #define DEFAULT_FREQ 433920000
@@ -27,9 +29,9 @@
 
 #define RX_TX_BUFFER_SIZE 1024
 
-#define CHAT_BOX_STORE_SIZE 4096
+#define CHAT_BOX_STORE_SIZE   4096
 #define TEXT_INPUT_STORE_SIZE 256
-#define MSG_PREVIEW_SIZE 32
+#define MSG_PREVIEW_SIZE      32
 
 #define KEY_HEX_STR_SIZE ((KEY_BITS / 8) * 3)
 
@@ -56,8 +58,8 @@ typedef struct {
     const SubGhzDevice* subghz_device;
 
     // for NFC
-    // NfcWorker* nfc_worker;
-    // NfcDeviceData* nfc_dev_data;
+    NfcWorker* nfc_worker;
+    NfcDeviceData* nfc_dev_data;
 
     // message assembly before TX
     FuriString* name_prefix;
@@ -98,7 +100,7 @@ typedef enum {
     ESubGhzChatEvent_KeyMenuPassword,
     ESubGhzChatEvent_KeyMenuHexKey,
     ESubGhzChatEvent_KeyMenuGenKey,
-    // ESubGhzChatEvent_KeyMenuReadKeyFromNfc,
+    ESubGhzChatEvent_KeyMenuReadKeyFromNfc,
     ESubGhzChatEvent_KeyReadPopupFailed,
     ESubGhzChatEvent_KeyReadPopupSucceeded,
     ESubGhzChatEvent_PassEntered,

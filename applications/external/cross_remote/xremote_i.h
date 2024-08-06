@@ -23,9 +23,6 @@
 #include <gui/modules/button_menu.h>
 #include <gui/modules/button_panel.h>
 #include <gui/modules/variable_item_list.h>
-
-//#include <lib/subghz/protocols/protocol_items.h> //Not found
-
 #include <input/input.h>
 #include <notification/notification_messages.h>
 
@@ -44,22 +41,21 @@
 #include "xremote_icons.h"
 #include "models/subghz/xremote_sg_remote.h"
 
-#define XREMOTE_APP_FOLDER EXT_PATH("apps_data/xremote")
-#define XREMOTE_DEFAULT_REMOTE_NAME "remote"
-#define XREMOTE_APP_EXTENSION ".xr"
-#define XREMOTE_FILE_TYPE "Cross Remote File"
-#define XREMOTE_FILE_VERSION 1
-#define XREMOTE_TEXT_STORE_NUM 3
-#define XREMOTE_TEXT_STORE_SIZE 128
-#define XREMOTE_MAX_ITEM_NAME_LENGTH 22
+#define XREMOTE_APP_FOLDER             EXT_PATH("apps_data/xremote")
+#define XREMOTE_DEFAULT_REMOTE_NAME    "remote"
+#define XREMOTE_APP_EXTENSION          ".xr"
+#define XREMOTE_FILE_TYPE              "Cross Remote File"
+#define XREMOTE_FILE_VERSION           1
+#define XREMOTE_TEXT_STORE_NUM         3
+#define XREMOTE_TEXT_STORE_SIZE        128
+#define XREMOTE_MAX_ITEM_NAME_LENGTH   22
 #define XREMOTE_MAX_REMOTE_NAME_LENGTH 22
-#define XREMOTE_VERSION FAP_VERSION
+#define XREMOTE_VERSION                FAP_VERSION
 
 #define INFRARED_APP_EXTENSION ".ir"
-#define INFRARED_APP_FOLDER ANY_PATH("infrared")
+#define INFRARED_APP_FOLDER    ANY_PATH("infrared")
 
 #define SUBGHZ_APP_EXTENSION ".sub"
-#define SUBGHZ_APP_FOLDER ANY_PATH("subghz")
 
 #define TAG "XRemote"
 

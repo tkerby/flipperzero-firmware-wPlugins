@@ -11,7 +11,13 @@ typedef enum {
     DigitalRound,
 } FaceType;
 
-typedef enum { Normal = 0, CopyHor, CopyVer, CopyBoth, Thick } LineType;
+typedef enum {
+    Normal = 0,
+    CopyHor,
+    CopyVer,
+    CopyBoth,
+    Thick
+} LineType;
 
 typedef struct {
     int8_t x;
@@ -28,7 +34,7 @@ typedef struct {
     Point hours[12];
 } ClockFace;
 
-#define CONFIG_VERSION 1
+#define CONFIG_VERSION 2
 typedef struct {
     uint8_t version;
     bool split;

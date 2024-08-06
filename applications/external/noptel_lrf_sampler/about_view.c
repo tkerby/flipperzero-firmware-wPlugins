@@ -1,6 +1,6 @@
 /***
  * Noptel LRF rangefinder sampler for the Flipper Zero
- * Version: 1.8
+ * Version: 1.9
  *
  * About view
 ***/
@@ -136,8 +136,7 @@ bool about_view_input_callback(InputEvent* evt, void* ctx) {
     if(!evt_handled) return false;
 
     /* Trigger an about view redraw */
-    with_view_model(
-        app->about_view, AboutModel * _model, { UNUSED(_model); }, true);
+    with_view_model(app->about_view, AboutModel * _model, { UNUSED(_model); }, true);
 
     /* We handled the event */
     return true;

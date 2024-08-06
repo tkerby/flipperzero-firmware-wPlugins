@@ -2,21 +2,21 @@
 
 #include <furi.h>
 
-#define ISO14443_4_BLOCK_PCB (1U << 1)
+#define ISO14443_4_BLOCK_PCB   (1U << 1)
 #define ISO14443_4_BLOCK_PCB_I (0U)
 #define ISO14443_4_BLOCK_PCB_R (5U << 5)
 #define ISO14443_4_BLOCK_PCB_S (3U << 6)
 
-#define ISO14443_4_BLOCK_PCB_I_ (0U << 6)
-#define ISO14443_4_BLOCK_PCB_R_ (2U << 6)
+#define ISO14443_4_BLOCK_PCB_I_        (0U << 6)
+#define ISO14443_4_BLOCK_PCB_R_        (2U << 6)
 #define ISO14443_4_BLOCK_PCB_TYPE_MASK (3U << 6)
 
-#define ISO14443_4_BLOCK_PCB_S_DESELECT (0U << 4)
-#define ISO14443_4_BLOCK_PCB_S_WTX (3U << 4)
+#define ISO14443_4_BLOCK_PCB_S_DESELECT   (0U << 4)
+#define ISO14443_4_BLOCK_PCB_S_WTX        (3U << 4)
 #define ISO14443_4_BLOCK_PCB_BLOCK_NUMBER (1U << 0)
 
-#define ISO14443_4_BLOCK_PCB_NAD (1U << 2)
-#define ISO14443_4_BLOCK_PCB_CID (1U << 3)
+#define ISO14443_4_BLOCK_PCB_NAD      (1U << 2)
+#define ISO14443_4_BLOCK_PCB_CID      (1U << 3)
 #define ISO14443_4_BLOCK_PCB_CHAINING (1U << 4)
 
 struct Iso14443_4Layer {
@@ -68,7 +68,9 @@ bool iso14443_4_layer_decode_block(
 
     // TODO: Fix properly! this is a very big kostyl na velosipede
     // (bit_buffer_copy_right are called to copy bigger buffer into smaller buffer causing crash on furi check) issue comes iso14443_4a_poller_send_block at line 109
-    if(bit_buffer_get_size_bytes(output_data) < bit_buffer_get_size_bytes(output_data) - 1)
+    // Mimicks furi_check()s in bit_buffer_copy_right(): buf=output_data other=block_data start_index=1
+    if(!(bit_buffer_get_size_bytes(block_data) > 1)) return ret;
+    if(!(bit_buffer_get_capacity_bytes(output_data) >= bit_buffer_get_size_bytes(block_data) - 1))
         return ret;
 
     do {

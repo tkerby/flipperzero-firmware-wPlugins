@@ -109,11 +109,11 @@ int32_t gunzip_seek(Gunzip* gunzip, size_t pos) {
     return (pos == gunzip->dest_pos) ? 0 : -1;
 }
 
-#define TAG "TarArch"
-#define MAX_NAME_LEN 254
-#define FILE_BLOCK_SIZE 512
+#define TAG             "TarArch"
+#define MAX_NAME_LEN    254
+#define FILE_BLOCK_SIZE (10 * 1024)
 
-#define FILE_OPEN_NTRIES 10
+#define FILE_OPEN_NTRIES      10
 #define FILE_OPEN_RETRY_DELAY 25
 
 typedef struct TarArchive {
@@ -408,6 +408,11 @@ static int archive_extract_foreach_cb(mtar_t* tar, const mtar_header_t* header, 
 
     FuriString* full_extracted_fname;
     if(header->type == MTAR_TDIR) {
+        // Skip "/" entry since concat would leave it dangling, also want caller to mkdir destination
+        if(strcmp(header->name, "/") == 0) {
+            return 0;
+        }
+
         full_extracted_fname = furi_string_alloc();
         path_concat(op_params->work_dir, header->name, full_extracted_fname);
 
@@ -454,7 +459,7 @@ bool tar_archive_unpack_to(
     FURI_LOG_I(TAG, "Restoring '%s'", destination);
 
     return (mtar_foreach(&archive->tar, archive_extract_foreach_cb, &param) == MTAR_ESUCCESS);
-};
+}
 
 bool tar_archive_add_file(
     TarArchive* archive,

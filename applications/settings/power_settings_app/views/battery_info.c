@@ -4,7 +4,7 @@
 #include <assets_icons.h>
 #include <locale/locale.h>
 
-#define LOW_CHARGE_THRESHOLD (10)
+#define LOW_CHARGE_THRESHOLD         (10)
 #define HIGH_DRAIN_CURRENT_THRESHOLD (-100)
 
 static void draw_stat(Canvas* canvas, int x, int y, const Icon* icon, char* val) {
@@ -64,7 +64,7 @@ static void draw_battery(Canvas* canvas, BatteryInfoModel* data, int x, int y) {
             ABS(current),
             current < HIGH_DRAIN_CURRENT_THRESHOLD ? "mA!" : "mA");
     } else if(data->vbus_voltage > 0) {
-        if(data->charge_voltage_limit < 4.2) {
+        if(data->charge_voltage_limit < 4.2f) {
             // Non-default battery charging limit, mention it
             snprintf(emote, sizeof(emote), "Charged!");
             snprintf(header, sizeof(header), "Limited to");

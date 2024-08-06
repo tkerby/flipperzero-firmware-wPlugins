@@ -40,12 +40,12 @@
 #define MARGIN_OFFSET 3
 
 #define BLOCK_HEIGHT 6
-#define BLOCK_WIDTH 6
+#define BLOCK_WIDTH  6
 
 #define SMALL_BLOCK_HEIGHT 4
-#define SMALL_BLOCK_WIDTH 4
+#define SMALL_BLOCK_WIDTH  4
 
-#define FIELD_WIDTH 10
+#define FIELD_WIDTH  10
 #define FIELD_HEIGHT 22
 
 #define FIELD_X_OFFSET 3
@@ -59,9 +59,16 @@ typedef struct Point {
     int8_t x, y;
 } Point;
 
-typedef enum { OffsetTypeCommon, OffsetTypeI, OffsetTypeO } OffsetType;
+typedef enum {
+    OffsetTypeCommon,
+    OffsetTypeI,
+    OffsetTypeO
+} OffsetType;
 
-typedef enum { Clockwise, Counter_clockwise } RotationType;
+typedef enum {
+    Clockwise,
+    Counter_clockwise
+} RotationType;
 
 static const Point SRS_kick_table[4][3][5] = {
     // SRS kick table. Changed the order since [desired][current] was so confusing
@@ -164,7 +171,11 @@ typedef enum {
     hold_empty_value
 } Piece_name;
 
-typedef enum { GameStatePlaying, GameStateGameOver, GameStatePaused } GameState;
+typedef enum {
+    GameStatePlaying,
+    GameStateGameOver,
+    GameStatePaused
+} GameState;
 
 static Piece shapes[] = {
     // Shapes @ spawn locations, rotation point first
@@ -531,8 +542,9 @@ static void tetris_game_render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(tetris_state->mutex);
 }
 
-static void tetris_game_input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void tetris_game_input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     TetrisEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
@@ -1121,8 +1133,9 @@ static void
     tetris_game_render_curr_piece(tetris_state);
 }
 
-static void tetris_game_update_timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void tetris_game_update_timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     TetrisEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);

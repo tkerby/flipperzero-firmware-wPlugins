@@ -16,36 +16,36 @@
 #include <storage/storage.h>
 #include <dialogs/dialogs.h>
 
-#define PATHAPP "apps_data/modbus"
+#define PATHAPP    "apps_data/modbus"
 #define PATHAPPEXT EXT_PATH(PATHAPP)
-#define PATHLOGS PATHAPPEXT "/logs"
+#define PATHLOGS   PATHAPPEXT "/logs"
 
-#define BR_VALUES 12
-#define DATAWIDTH_VALUES 3
-#define STOPBITS_VALUES 4
-#define PARITY_VALUES 3
-#define TIMEOUT_VALUES 255
+#define BR_VALUES            12
+#define DATAWIDTH_VALUES     3
+#define STOPBITS_VALUES      4
+#define PARITY_VALUES        3
+#define TIMEOUT_VALUES       255
 #define DIGITALFORMAT_VALUES 2
-#define ANALOGFORMAT_VALUES 2
-#define SAVE_LOG_VALUES 2
+#define ANALOGFORMAT_VALUES  2
+#define SAVE_LOG_VALUES      2
 
-#define RX_BUF_SIZE 255
-#define UART_CH FuriHalSerialIdUsart
-#define TEXT_BOX_LEN 4096
+#define RX_BUF_SIZE                        255
+#define UART_CH                            FuriHalSerialIdUsart
+#define TEXT_BOX_LEN                       4096
 #define FURI_HAL_SERIAL_USART_OVERSAMPLING 0x00000000U
-#define TIMEOUT_SCALER 50
+#define TIMEOUT_SCALER                     50
 
 #define FixedModbusSize 4
 #define FixedPaket \
     ((!app->modbus->slave && FUNCTION <= 0x06) || (app->modbus->slave && FUNCTION >= 0x0F))
-#define SLAVE buf[0]
-#define FUNCTION buf[1]
-#define EXCEPTION buf[2] - 1
+#define SLAVE        buf[0]
+#define FUNCTION     buf[1]
+#define EXCEPTION    buf[2] - 1
 #define STARTADDRESS (buf[2] << 8 | buf[3])
-#define QUANTITY (buf[4] << 8 | buf[5])
-#define BYTECOUNT buf[6]
-#define CRCH buf[len - 2]
-#define CRCL buf[len - 1]
+#define QUANTITY     (buf[4] << 8 | buf[5])
+#define BYTECOUNT    buf[6]
+#define CRCH         buf[len - 2]
+#define CRCL         buf[len - 1]
 
 //////////////////////////   Defining Structs  //////////////////////////
 typedef enum {
@@ -58,7 +58,12 @@ typedef enum {
     MSGsBuffer_Scene,
     Scene_Num
 } Scenes;
-typedef enum { Submenu_View, VarList_View, TextBox_View, ByteInput_View } Views;
+typedef enum {
+    Submenu_View,
+    VarList_View,
+    TextBox_View,
+    ByteInput_View
+} Views;
 typedef enum {
     Settings_Option,
     Sniffer_Option,
@@ -136,7 +141,9 @@ typedef enum {
     SaveLOG_Option
 } Settings_Options;
 
-typedef enum { Refresh = 0 } UartEvents;
+typedef enum {
+    Refresh = 0
+} UartEvents;
 
 void BuildSender(App* app, uint8_t* buf);
 
@@ -320,7 +327,8 @@ RingBuffer* ring_buffer_alloc() {
     RingBuffer* buffer = malloc(sizeof(RingBuffer));
     buffer->writeIdx = 0;
     buffer->delimiterIdx = 0;
-    for(uint8_t i = 0; i < 32; i++) buffer->delimiters[i] = 255;
+    for(uint8_t i = 0; i < 32; i++)
+        buffer->delimiters[i] = 255;
     return buffer;
 }
 void ring_buffer_free(RingBuffer* buffer) {
@@ -381,23 +389,31 @@ void discreteValuesParser(void* context, uint8_t* buff, size_t len, FuriString* 
         len--;
     }
 }
+
 void analogValuesParser(void* context, uint8_t* buff, size_t len, FuriString* data) {
     App* app = context;
     uint16_t value = 0;
-    uint8_t offset = 0;
-    while(len) {
-        memcpy(&value + 8, buff + offset, 1);
-        offset++;
-        memcpy(&value, buff + offset, 1);
-        offset++;
+    size_t offset = 0;
+
+    while(offset < len) {
+        value = 0;
+        if(offset + 1 < len) {
+            memcpy(((uint8_t*)&value) + 1, buff + offset, sizeof(uint8_t));
+            memcpy((uint8_t*)&value, buff + offset + 1, sizeof(uint8_t));
+        } else if(offset < len) {
+            memcpy(((uint8_t*)&value) + 1, buff + offset, sizeof(uint8_t));
+        }
+
         furi_string_cat_printf(
             data,
             app->uart->cfg->hexOutput ? "\n->Reg%d: 0x%04X" : "\n->Reg%d: %d",
             offset / 2,
             value);
-        len--;
+
+        offset += 2;
     }
 }
+
 void pduParser(void* context, bool slave, uint8_t* buf, size_t len, FuriString* data) {
     App* app = context;
     size_t offset = 2;
@@ -444,7 +460,7 @@ void pduParser(void* context, bool slave, uint8_t* buf, size_t len, FuriString* 
     } else if(FUNCTION <= 0x02)
         discreteValuesParser(app, buf + offset, bCount, data);
     else
-        analogValuesParser(app, buf + offset, bCount / 2, data);
+        analogValuesParser(app, buf + offset, bCount, data);
 
     if(FUNCTION >= 0x0F && !slave) {
         memcpy(&bCount, buf + offset, 1);
@@ -454,31 +470,35 @@ void pduParser(void* context, bool slave, uint8_t* buf, size_t len, FuriString* 
         if(FUNCTION == 0x0F)
             discreteValuesParser(app, buf + offset, bCount, data);
         else
-            analogValuesParser(app, buf + offset, bCount / 2, data);
+            analogValuesParser(app, buf + offset, bCount, data);
     }
     furi_string_cat_printf(data, "\nCRC: 0x%02X", CRCL | CRCH << 8);
 }
 void ErrParser(uint8_t* buf, size_t len, FuriString* data) {
     furi_string_cat_printf(
         data, "\nException code (%02X):\n%s\n", FUNCTION, exceptionCodes[EXCEPTION]);
-    for(size_t i = 0; i < len; i++) furi_string_cat_printf(data, "%02X", buf[i]);
+    for(size_t i = 0; i < len; i++)
+        furi_string_cat_printf(data, "%02X", buf[i]);
 }
 void ModbusParser(uint8_t* buf, size_t len, App* app, FuriString* data) {
     if(FUNCTION > 0x80) {
         ErrParser(buf, len, data);
     } else if((FUNCTION > 0x06 && FUNCTION < 0x0F) || FUNCTION > 0x10) {
         furi_string_cat_printf(data, "\nUNSUPPORTED!!!\nFUNCTION(0x%02X)\n", FUNCTION);
-        for(size_t i = 0; i < len; i++) furi_string_cat_printf(data, "%02X", buf[i]);
+        for(size_t i = 0; i < len; i++)
+            furi_string_cat_printf(data, "%02X", buf[i]);
     } else if(FixedPaket && len - 4 != FixedModbusSize) {
         furi_string_cat_str(data, "\nLength-Type MissMatch!!!\n");
-        for(size_t i = 0; i < len; i++) furi_string_cat_printf(data, "%02X", buf[i]);
+        for(size_t i = 0; i < len; i++)
+            furi_string_cat_printf(data, "%02X", buf[i]);
         furi_string_cat_printf(
             data,
             "\nCheck Reponse TimeOut!!!\nCurrent: %dms",
             app->uart->cfg->timeout * TIMEOUT_SCALER);
     } else {
         if(!app->modbus->slave) {
-            for(size_t i = 0; i < len; i++) app->msgBuf[i] = buf[i];
+            for(size_t i = 0; i < len; i++)
+                app->msgBuf[i] = buf[i];
             writeRingBuffer(app->ringBuffer, buf, len);
             app->msgLen = len;
         }
@@ -498,7 +518,8 @@ void handle_rx_data_cb(uint8_t* buf, size_t len, void* context) {
         ModbusParser(buf, len, app, data);
     } else {
         furi_string_cat_str(data, "\nCRC check Failed:\n");
-        for(size_t i = 0; i < len; i++) furi_string_cat_printf(data, "%02X", buf[i]);
+        for(size_t i = 0; i < len; i++)
+            furi_string_cat_printf(data, "%02X", buf[i]);
         furi_string_cat_str(data, "\nPlease check UART Settings!!!");
     }
     //*/
@@ -601,8 +622,8 @@ static int32_t uart_worker(void* context) {
         }
     }
 
-    furi_stream_buffer_free(app->uart->rxBuff);
-    furi_stream_buffer_free(app->msgBuf);
+    // furi_stream_buffer_free(app->uart->rxBuff);
+    // furi_stream_buffer_free(app->msgBuf);
 
     return 0;
 }

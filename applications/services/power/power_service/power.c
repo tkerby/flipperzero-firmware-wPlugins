@@ -6,7 +6,7 @@
 #include <cfw/cfw.h>
 
 #define POWER_OFF_TIMEOUT 90
-#define TAG "Power"
+#define TAG               "Power"
 
 void power_draw_battery_callback(Canvas* canvas, void* context) {
     furi_assert(context);
@@ -539,6 +539,8 @@ int32_t power_srv(void* p) {
 
     if(!furi_hal_is_normal_boot()) {
         FURI_LOG_W(TAG, "Skipping start in special boot mode");
+
+        furi_thread_suspend(furi_thread_get_current_id());
         return 0;
     }
 

@@ -5,7 +5,7 @@ App(
     targets=["f7"],
     entry_point="nfc_app",
     icon="A_NFC_14",
-    stack_size=5 * 1024,
+    stack_size=6 * 1024,
     order=30,
     resources="resources",
     sources=[
@@ -280,6 +280,15 @@ App(
     targets=["f7"],
     requires=["nfc"],
     sources=["plugins/supported_cards/emv.c", "helpers/nfc_emv_parser.c"],
+)
+
+App(
+    appid="csc_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="csc_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/csc.c"],
 )
 
 App(

@@ -11,10 +11,10 @@
 
 #include "assets.h"
 
-#define PLAYFIELD_WIDTH 16
+#define PLAYFIELD_WIDTH  16
 #define PLAYFIELD_HEIGHT 7
-#define TILE_WIDTH 8
-#define TILE_HEIGHT 8
+#define TILE_WIDTH       8
+#define TILE_HEIGHT      8
 
 #define MINECOUNT 20
 
@@ -44,7 +44,10 @@ typedef enum {
     TileTypeMine
 } TileType;
 
-typedef enum { FieldEmpty, FieldMine } Field;
+typedef enum {
+    FieldEmpty,
+    FieldMine
+} Field;
 
 typedef struct {
     Field minefield[PLAYFIELD_WIDTH][PLAYFIELD_HEIGHT];
@@ -67,8 +70,9 @@ static void timer_callback(void* ctx) {
     furi_record_close(RECORD_NOTIFICATION);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);

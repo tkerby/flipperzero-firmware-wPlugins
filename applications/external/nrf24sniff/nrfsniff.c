@@ -11,14 +11,14 @@
 #include <toolbox/stream/file_stream.h>
 
 #define LOGITECH_MAX_CHANNEL 85
-#define COUNT_THRESHOLD 2
-#define DEFAULT_SAMPLE_TIME 4000
-#define MAX_ADDRS 100
-#define MAX_CONFIRMED 32
+#define COUNT_THRESHOLD      2
+#define DEFAULT_SAMPLE_TIME  4000
+#define MAX_ADDRS            100
+#define MAX_CONFIRMED        32
 
 #define NRFSNIFF_APP_PATH_FOLDER EXT_PATH("apps_data/nrfsniff")
-#define NRFSNIFF_APP_FILENAME "addresses.txt"
-#define TAG "nrfsniff"
+#define NRFSNIFF_APP_FILENAME    "addresses.txt"
+#define TAG                      "nrfsniff"
 
 typedef enum {
     EventTypeTick,
@@ -130,8 +130,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(plugin_state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
@@ -224,7 +225,8 @@ void alt_address(uint8_t* addr, uint8_t* altaddr) {
     uint8_t tmpaddr[5];
 
     // swap bytes
-    for(int i = 0; i < 5; i++) tmpaddr[i] = addr[4 - i];
+    for(int i = 0; i < 5; i++)
+        tmpaddr[i] = addr[4 - i];
 
     // get address into 32-bit and 8-bit variables
     memcpy(macmess_hi_b, tmpaddr, 4);
@@ -242,7 +244,8 @@ void alt_address(uint8_t* addr, uint8_t* altaddr) {
     tmpaddr[4] = macmess_lo;
 
     // swap bytes back
-    for(int i = 0; i < 5; i++) altaddr[i] = tmpaddr[4 - i];
+    for(int i = 0; i < 5; i++)
+        altaddr[i] = tmpaddr[4 - i];
 }
 
 static bool previously_confirmed(uint8_t* addr) {

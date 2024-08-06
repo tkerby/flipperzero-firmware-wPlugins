@@ -1,6 +1,6 @@
 /***
  * Noptel LRF rangefinder sampler for the Flipper Zero
- * Version: 1.8
+ * Version: 1.9
  *
  * Test pointer view
 ***/
@@ -108,8 +108,7 @@ void testpointer_view_enter_callback(void* ctx) {
     /* Set the backlight on all the time */
     set_backlight(&app->backlight_control, BL_ON);
 
-    with_view_model(
-        app->testpointer_view, TestPointerModel * _model, { UNUSED(_model); }, false);
+    with_view_model(app->testpointer_view, TestPointerModel * _model, { UNUSED(_model); }, false);
 }
 
 /** Test pointer view exit callback **/

@@ -1,4 +1,4 @@
-#include "../test.h"
+#include "../test.h" // IWYU pragma: keep
 #include <furi.h>
 #include <storage/storage.h>
 
@@ -9,7 +9,7 @@
 #define UNIT_TESTS_PATH(path) EXT_PATH("unit_tests/" path)
 
 #define STORAGE_LOCKED_FILE EXT_PATH("locked_file.test")
-#define STORAGE_LOCKED_DIR STORAGE_INT_PATH_PREFIX
+#define STORAGE_LOCKED_DIR  STORAGE_INT_PATH_PREFIX
 
 #define STORAGE_TEST_DIR UNIT_TESTS_PATH("test_dir")
 

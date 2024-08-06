@@ -7,7 +7,8 @@ char* strcat(char* dest, const char* src) {
     size_t i, j;
     for(i = 0; dest[i] != '\0'; i++)
         ;
-    for(j = 0; src[j] != '\0'; j++) dest[i + j] = src[j];
+    for(j = 0; src[j] != '\0'; j++)
+        dest[i + j] = src[j];
     dest[i + j] = '\0';
     return dest;
 }
@@ -56,8 +57,8 @@ static const uint8_t keyboard_origin_y = 29;
 static const uint8_t keyboard_row_count = 3;
 static const uint8_t keyboard_count = 2;
 
-#define ENTER_KEY '\r'
-#define BACKSPACE_KEY '\b'
+#define ENTER_KEY           '\r'
+#define BACKSPACE_KEY       '\b'
 #define SWITCH_KEYBOARD_KEY '\t'
 
 static const TextInputKey keyboard_keys_row_1[] = {
@@ -760,6 +761,5 @@ void* text_input_get_validator_callback_context(TextInput* text_input) {
 
 void text_input_set_header_text(TextInput* text_input, const char* text) {
     furi_check(text_input);
-    with_view_model(
-        text_input->view, TextInputModel * model, { model->header = text; }, true);
+    with_view_model(text_input->view, TextInputModel * model, { model->header = text; }, true);
 }

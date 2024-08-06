@@ -143,7 +143,7 @@ void ibutton_cli_write(Cli* cli, FuriString* args) {
         }
 
         if(!(ibutton_protocols_get_features(protocols, ibutton_key_get_protocol_id(key)) &
-             iButtonProtocolFeatureWriteBlank)) {
+             iButtonProtocolFeatureWriteId)) {
             ibutton_cli_print_usage();
             break;
         }
@@ -152,7 +152,7 @@ void ibutton_cli_write(Cli* cli, FuriString* args) {
         ibutton_cli_print_key(protocols, key);
         printf("Press Ctrl+C to abort\r\n");
 
-        ibutton_worker_write_blank_start(worker, key);
+        ibutton_worker_write_id_start(worker, key);
         while(true) {
             uint32_t flags = furi_event_flag_wait(
                 write_context.event, EVENT_FLAG_IBUTTON_COMPLETE, FuriFlagWaitAny, 100);
@@ -241,10 +241,11 @@ void ibutton_cli(Cli* cli, FuriString* args, void* context) {
 }
 
 #include <flipper_application/flipper_application.h>
+#include <cli/cli_i.h>
 
 static const FlipperAppPluginDescriptor plugin_descriptor = {
-    .appid = "ibutton_cli",
-    .ep_api_version = 1,
+    .appid = CLI_PLUGIN_APP_ID,
+    .ep_api_version = CLI_PLUGIN_API_VERSION,
     .entry_point = &ibutton_cli,
 };
 

@@ -11,16 +11,16 @@
 
 #include "flippy_road_icons.h"
 
-#define TAG "Flippy Road"
+#define TAG       "Flippy Road"
 #define SAVE_FILE APP_DATA_PATH("flippy_road.save")
 
-#define WIDTH 128
-#define HEIGHT 64
-#define GRID_UNIT 8
-#define ROWS (HEIGHT / GRID_UNIT)
-#define COLS (WIDTH / GRID_UNIT)
+#define WIDTH         128
+#define HEIGHT        64
+#define GRID_UNIT     8
+#define ROWS          (HEIGHT / GRID_UNIT)
+#define COLS          (WIDTH / GRID_UNIT)
 #define MAX_OBSTACLES 3
-#define LOG_LENGTH 3
+#define LOG_LENGTH    3
 
 typedef enum {
     TickEvent,
@@ -216,14 +216,16 @@ static void draw_callback(Canvas* canvas, void* model) {
     furi_mutex_release(state->mutex);
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     Event event = {.type = KeyEvent, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     Event event = {.type = TickEvent};
     furi_message_queue_put(event_queue, &event, 0);
 }

@@ -47,7 +47,7 @@
 // OS Callback : Timer tick
 // We register this function to be called when the OS signals a timer 'tick' event
 //
-static void cbTimer(FuriMessageQueue* queue) {
+static void cbTimer(void* ctx) {
     // Every function has an ENTER at the top, and a LEAVE before it returns
     // ...these generate code flow messages if TRACE level messaging is enabled
     ENTER;
@@ -56,7 +56,8 @@ static void cbTimer(FuriMessageQueue* queue) {
     // ...furi_assert() is removed at /compile-time/ unless FURI_DEBUG is specified
     // ...if you want checks to be performed on release code, use: furi_check()
     // --> furi/core/check.h
-    furi_assert(queue);
+    furi_assert(ctx);
+    FuriMessageQueue* queue = ctx;
 
     // Put a "tick" event message on the message queue
     // furi_message_queue_put  |  furi/core/message_queue.*
@@ -71,9 +72,10 @@ static void cbTimer(FuriMessageQueue* queue) {
 // OS Callback : Keypress
 // We register this function to be called when the OS detects a keypress
 //
-static void cbInput(InputEvent* event, FuriMessageQueue* queue) {
+static void cbInput(InputEvent* event, void* ctx) {
     ENTER;
-    furi_assert(queue);
+    furi_assert(ctx);
+    FuriMessageQueue* queue = ctx;
     furi_assert(event);
 
     // Put an "input" event message on the message queue

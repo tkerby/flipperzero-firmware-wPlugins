@@ -184,8 +184,8 @@ static struct flipvalo_trigger* flipvalo_get_trigger(enum flipvalo_trigger_varia
     return NULL;
 }
 
-#define ITEM_H 64 / 3
-#define ITEM_W 128
+#define ITEM_H  64 / 3
+#define ITEM_W  128
 #define VALUE_X 100
 #define VALUE_W 45
 static void flipvalo_config_edit_draw(Canvas* canvas, struct flipvalo_config_edit_view* view) {
@@ -478,8 +478,9 @@ static void flipvalo_run_state_init(struct flipvalo_run_state* fv_run_state) {
     fv_run_state->tick_cur = 0;
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     struct plugin_event event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }

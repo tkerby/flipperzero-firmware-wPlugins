@@ -25,6 +25,7 @@
 #include <storage/storage.h>
 #include <dialogs/dialogs.h>
 #include <lib/toolbox/path.h>
+#include <dolphin/dolphin.h>
 
 #include "nfc_magic_icons.h"
 
@@ -41,13 +42,17 @@
 
 #include "lib/nfc/protocols/mf_classic/mf_classic_poller.h"
 
-#define NFC_APP_FOLDER ANY_PATH("nfc")
-#define NFC_APP_EXTENSION ".nfc"
+#define NFC_APP_FOLDER           EXT_PATH("nfc")
+#define NFC_APP_EXTENSION        ".nfc"
 #define NFC_APP_SHADOW_EXTENSION ".shd"
 
-#define NFC_APP_MF_CLASSIC_DICT_USER_PATH (NFC_APP_FOLDER "/assets/mf_classic_dict_user.nfc")
+#define NFC_APP_MF_CLASSIC_DICT_USER_PATH   (NFC_APP_FOLDER "/assets/mf_classic_dict_user.nfc")
 #define NFC_APP_MF_CLASSIC_DICT_SYSTEM_PATH (NFC_APP_FOLDER "/assets/mf_classic_dict.nfc")
 
+#define NFC_MAGIC_APP_NAME_SIZE             22
+#define NFC_MAGIC_APP_TEXT_STORE_SIZE       128
+#define NFC_MAGIC_APP_EXTENSION             ".nfc"
+#define NFC_MAGIC_APP_FILENAME_PREFIX       "NFC"
 #define NFC_MAGIC_APP_BYTE_INPUT_STORE_SIZE (4)
 
 enum NfcMagicAppCustomEvent {
@@ -63,6 +68,7 @@ enum NfcMagicAppCustomEvent {
     NfcMagicAppCustomEventDictAttackDataUpdate,
     NfcMagicAppCustomEventDictAttackComplete,
     NfcMagicAppCustomEventDictAttackSkip,
+    NfcMagicCustomEventTextInputDone,
 };
 
 typedef struct {
@@ -95,8 +101,10 @@ struct NfcMagicApp {
     SceneManager* scene_manager;
     NfcDevice* source_dev;
     NfcDevice* target_dev;
+    char text_store[NFC_MAGIC_APP_TEXT_STORE_SIZE + 1];
     FuriString* file_name;
     FuriString* file_path;
+    MfClassicData* dump_data;
 
     Nfc* nfc;
     NfcMagicProtocol protocol;

@@ -167,7 +167,14 @@ void canvas_set_font_direction(Canvas* canvas, CanvasDirection dir) {
 }
 
 void canvas_invert_color(Canvas* canvas) {
-    canvas->fb.draw_color = !canvas->fb.draw_color;
+    if(canvas->fb.draw_color == ColorXOR && cfw_settings.dark_mode) {
+        // XOR is 0x02, invert changes it to 0x00 which is White
+        // Basically like resetting to background color
+        // In Dark Mode, background color is Black instead
+        canvas->fb.draw_color = ColorBlack;
+    } else {
+        canvas->fb.draw_color = !canvas->fb.draw_color;
+    }
 }
 
 void canvas_set_font(Canvas* canvas, Font font) {
@@ -549,6 +556,22 @@ void canvas_draw_glyph(Canvas* canvas, int32_t x, int32_t y, uint16_t ch) {
     x += canvas->offset_x;
     y += canvas->offset_y;
     u8g2_DrawGlyph(&canvas->fb, x, y, ch);
+}
+
+void canvas_draw_icon_bitmap(
+    Canvas* canvas,
+    uint8_t x,
+    uint8_t y,
+    int16_t w,
+    int16_t h,
+    const Icon* icon) {
+    furi_assert(canvas);
+    furi_assert(icon);
+    x += canvas->offset_x;
+    y += canvas->offset_y;
+    uint8_t* icon_data = NULL;
+    compress_icon_decode(canvas->compress_icon, icon_get_frame_data(icon, 0), &icon_data);
+    u8g2_DrawXBM(&canvas->fb, x, y, w, h, icon_data);
 }
 
 void canvas_set_bitmap_mode(Canvas* canvas, bool alpha) {

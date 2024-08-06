@@ -1,18 +1,18 @@
 #include "receiver.h"
 #include "../subghz_i.h"
-#include <math.h>
 
+#include "types.h"
 #include <input/input.h>
 #include <gui/elements.h>
 #include <assets_icons.h>
 #include <m-array.h>
 
-#define FRAME_HEIGHT 12
-#define MAX_LEN_PX 111
-#define MENU_ITEMS 4u
-#define UNLOCK_CNT 3
+#include "subghz_read_raw.h"
 
-// #define SUBGHZ_RAW_THRESHOLD_MIN (-90.0f)
+#define FRAME_HEIGHT 12
+#define MAX_LEN_PX   111
+#define MENU_ITEMS   4u
+#define UNLOCK_CNT   3
 
 #define FLIP_TIMEOUT (500)
 
@@ -536,6 +536,9 @@ bool subghz_view_receiver_input(InputEvent* event, void* context) {
         consumed = true;
     } else if(event->key == InputKeyLeft && event->type == InputTypeShort) {
         subghz_receiver->callback(SubGhzCustomEventViewReceiverConfig, subghz_receiver->context);
+        consumed = true;
+    } else if(event->key == InputKeyUp && event->type == InputTypeLong) {
+        subghz_view_receiver_set_lock(subghz_receiver, true);
         consumed = true;
     } else if(event->key == InputKeyRight && event->type == InputTypeLong) {
         with_view_model(

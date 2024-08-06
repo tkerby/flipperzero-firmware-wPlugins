@@ -1,6 +1,6 @@
 /***
  * Noptel LRF rangefinder sampler for the Flipper Zero
- * Version: 1.8
+ * Version: 1.9
  *
  * USB serial passthrough view
 ***/
@@ -28,7 +28,11 @@ static CdcCallbacks cdc_callbacks =
     {vcp_on_cdc_tx_complete, vcp_on_cdc_rx, vcp_on_state_change, NULL, vcp_on_line_config};
 
 /*** Virtual COM port RX/TX thread events ***/
-typedef enum { stop = 1, data_avail = 2, data_to_send = 4 } vcp_rx_tx_thread_evts;
+typedef enum {
+    stop = 1,
+    data_avail = 2,
+    data_to_send = 4
+} vcp_rx_tx_thread_evts;
 
 /*** Hexadecimal digit icons ***/
 static const Icon* hex_icons[] = {
@@ -183,12 +187,12 @@ static void vcp_on_state_change(void* ctx, uint8_t state) {
 }
 
 /** Virtual COM port callback for when the port's configuration changes */
-static void vcp_on_line_config(void* ctx, struct usb_cdc_line_coding* vpc_cfg) {
+static void vcp_on_line_config(void* ctx, struct usb_cdc_line_coding* vcp_cfg) {
     App* app = (App*)ctx;
     PassthruModel* passthru_model = view_get_model(app->passthru_view);
 
     /* Get the new virtual COM port configuration */
-    passthru_model->vcp_config = vpc_cfg;
+    passthru_model->vcp_config = vcp_cfg;
 
     /* Mirror the virtual COM port on the UART */
     mirror_vcp_on_uart(app, passthru_model);
@@ -257,8 +261,7 @@ static int32_t vcp_rx_tx_thread(void* ctx) {
     uint32_t now_ms;
 
     /* Trigger the first passthrough view redraw */
-    with_view_model(
-        app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
+    with_view_model(app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
     passthru_model->last_display_update_tstamp = furi_get_tick();
     passthru_model->update_display = false;
 
@@ -278,8 +281,7 @@ static int32_t vcp_rx_tx_thread(void* ctx) {
            ms_tick_time_diff_ms(now_ms, passthru_model->last_display_update_tstamp) >=
                passthru_view_update_every) {
             /* Trigger a passthrough view redraw */
-            with_view_model(
-                app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
+            with_view_model(app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
             passthru_model->last_display_update_tstamp = now_ms;
             passthru_model->update_display = false;
         }
@@ -293,8 +295,7 @@ static int32_t vcp_rx_tx_thread(void* ctx) {
          stopping, so it doesn't show up briefly before being reset when the
          user reenters the view */
             passthru_model->show_serial_traffic = false;
-            with_view_model(
-                app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
+            with_view_model(app->passthru_view, PassthruModel * _model, { UNUSED(_model); }, true);
 
             break;
         }
@@ -588,7 +589,7 @@ void passthru_view_exit_callback(void* ctx) {
 /** Draw callback for the USB serial passthrough view **/
 void passthru_view_draw_callback(Canvas* canvas, void* model) {
     PassthruModel* passthru_model = (PassthruModel*)model;
-    uint8_t x, y;
+    int16_t x, y;
     uint8_t i, j;
     bool is_byte_sent;
     bool was_byte_sent;

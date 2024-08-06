@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include "multi_counter_icons.h"
 
-#define MAX_COUNT 99
-#define BOXTIME 2
-#define BOXWIDTH 26
+#define MAX_COUNT    99
+#define BOXTIME      2
+#define BOXWIDTH     26
 #define BOXWIDTH_BIG 42
-#define BOXHEIGHT 26
-#define MIDDLE_X 64 - BOXWIDTH / 2
+#define BOXHEIGHT    26
+#define MIDDLE_X     64 - BOXWIDTH / 2
 #define MIDDLE_X_BIG 64 - BOXWIDTH_BIG / 2
-#define MIDDLE_Y 32 - BOXHEIGHT / 2
-#define OFFSET_Y 9
+#define MIDDLE_Y     32 - BOXHEIGHT / 2
+#define OFFSET_Y     9
 
 static const Icon* UP = &I_UP;
 static const Icon* DOWN = &I_DOWN;
@@ -26,7 +26,7 @@ typedef struct {
     ViewPort* view_port;
     Gui* gui;
     NotificationApp* notification;
-    FuriMutex** mutex;
+    FuriMutex* mutex;
 
     bool togglelight;
     int count;

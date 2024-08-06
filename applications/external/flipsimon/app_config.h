@@ -1,5 +1,5 @@
-#define TAG "FlipBoardSimon"
-#define FLIPBOARD_APP_NAME "simon"
+#define TAG                         "FlipBoardSimon"
+#define FLIPBOARD_APP_NAME          "simon"
 #define FLIPBOARD_PRIMARY_ITEM_NAME "Play Simon"
 
 // Uncomment the next line to use the LED driver, or comment to use bit-banging the WS2812B LEDs.
@@ -7,7 +7,7 @@
 
 #define ABOUT_TEXT                             \
     "Welcome to the Flipboard\n"               \
-    "Simon v1.7!\n\n"                          \
+    "Simon v1.10!\n\n"                         \
     "Optimized for FlipBoard \n"               \
     "hardware --\n"                            \
     "see link below to order!\n"               \

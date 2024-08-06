@@ -13,13 +13,6 @@ void furi_hal_set_is_normal_boot(bool value) {
 }
 
 bool furi_hal_is_normal_boot(void) {
-    if((normal_boot != false) && (normal_boot != true)) {
-        normal_boot = false;
-    }
-
-    if(furi_hal_rtc_get_boot_mode() == FuriHalRtcBootModeNormal) {
-        normal_boot = true;
-    }
     return normal_boot;
 }
 
@@ -80,10 +73,11 @@ void furi_hal_init(void) {
 
 void furi_hal_switch(void* address) {
     __set_BASEPRI(0);
-    asm volatile("ldr    r3, [%0]    \n"
-                 "msr    msp, r3     \n"
-                 "ldr    r3, [%1]    \n"
-                 "mov    pc, r3      \n"
+    // This code emulates system reset: sets MSP and calls Reset ISR
+    asm volatile("ldr    r3, [%0]    \n" // Load SP from new vector to r3
+                 "msr    msp, r3     \n" // Set MSP from r3
+                 "ldr    r3, [%1]    \n" // Load Reset Handler address to r3
+                 "mov    pc, r3      \n" // Set PC from r3 (jump to Reset ISR)
                  :
                  : "r"(address), "r"(address + 0x4)
                  : "r3");

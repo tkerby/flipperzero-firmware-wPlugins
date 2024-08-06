@@ -30,11 +30,11 @@ static uint8_t MICROSOFT_HID_TEMPLATE[] = {
 uint8_t prev_hid = 0;
 uint8_t sequence_num = 0;
 
-#define RT_THRESHOLD 50
-#define MICROSOFT_MIN_CHANNEL 2
-#define MICROSOFT_MAX_CHANNEL 83
+#define RT_THRESHOLD                50
+#define MICROSOFT_MIN_CHANNEL       2
+#define MICROSOFT_MAX_CHANNEL       83
 #define MICROSOFT_HID_TEMPLATE_SIZE 19
-#define TAG "mousejacker_ducky"
+#define TAG                         "mousejacker_ducky"
 
 MJDuckyKey mj_ducky_keys[] = {{" ", 44, 0},         {"!", 30, 2},         {"\"", 52, 2},
                               {"#", 32, 2},         {"$", 33, 2},         {"%", 34, 2},
@@ -117,7 +117,8 @@ static bool mj_get_ducky_key(char* key, size_t keylen, MJDuckyKey* dk) {
 static void checksum(uint8_t* payload, size_t len) {
     // MS checksum algorithm - as per KeyKeriki paper
     payload[len - 1] = 0x00;
-    for(size_t n = 0; n < len - 2; n++) payload[len - 1] ^= payload[n];
+    for(size_t n = 0; n < len - 2; n++)
+        payload[len - 1] ^= payload[n];
     payload[len - 1] = ~payload[len - 1] & 0xff;
 }
 

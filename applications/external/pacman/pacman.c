@@ -18,7 +18,7 @@
 
 #define MAP_SIZE_W 30
 #define MAP_SIZE_H 37
-#define WALL_SIZE 2
+#define WALL_SIZE  2
 
 // Change this to BACKLIGHT_AUTO if you don't want the backlight to be continuously on.
 #define BACKLIGHT_ON 1
@@ -97,7 +97,11 @@ typedef struct {
     bool is_in_base;
 } Character;
 
-typedef enum { GhostsModeScatter, GhostsModeChase, GhostsModeFrightened } GhostsMode;
+typedef enum {
+    GhostsModeScatter,
+    GhostsModeChase,
+    GhostsModeFrightened
+} GhostsMode;
 
 typedef struct {
     uint8_t x;
@@ -243,7 +247,8 @@ static StartPositions* start_positions_alloc() {
     positions->pinky = (Point*)malloc(sizeof(Point));
     positions->clyde = (Point*)malloc(sizeof(Point));
     positions->teleports = (Point**)malloc(sizeof(Point*) * 2);
-    for(int i = 0; i < 2; i++) positions->teleports[i] = (Point*)malloc(sizeof(Point));
+    for(int i = 0; i < 2; i++)
+        positions->teleports[i] = (Point*)malloc(sizeof(Point));
     return positions;
 }
 
@@ -808,8 +813,7 @@ static bool pacman_view_game_custom_event_callback(uint32_t event, void* context
         // Redraw screen by passing true to last parameter of with_view_model.
         {
             bool redraw = true;
-            with_view_model(
-                app->view_game, PacmanGameModel * _model, { UNUSED(_model); }, redraw);
+            with_view_model(app->view_game, PacmanGameModel * _model, { UNUSED(_model); }, redraw);
             return true;
         }
     case PacmanEventIdOkPressed:

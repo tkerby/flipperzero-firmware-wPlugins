@@ -109,45 +109,45 @@
 //#define GRAPHICS_TESTING
 
 #define DELAY_MICROSECONDS 15
-#define PKMN_BLANK 0x00
+#define PKMN_BLANK         0x00
 
 #define ITEM_1_HIGHLIGHTED 0xD0
 #define ITEM_2_HIGHLIGHTED 0xD1
 #define ITEM_3_HIGHLIGHTED 0xD2
-#define ITEM_1_SELECTED 0xD4
-#define ITEM_2_SELECTED 0xD5
-#define ITEM_3_SELECTED 0xD6
+#define ITEM_1_SELECTED    0xD4
+#define ITEM_2_SELECTED    0xD5
+#define ITEM_3_SELECTED    0xD6
 
 #define SERIAL_PREAMBLE_BYTE 0xFD
 
-#define SERIAL_PREAMBLE_LENGTH 6
-#define SERIAL_RN_PREAMBLE_LENGTH 7
-#define SERIAL_TRADE_PREAMBLE_LENGTH 9
-#define SERIAL_RNS_LENGTH 10
+#define SERIAL_PREAMBLE_LENGTH            6
+#define SERIAL_RN_PREAMBLE_LENGTH         7
+#define SERIAL_TRADE_PREAMBLE_LENGTH      9
+#define SERIAL_RNS_LENGTH                 10
 #define SERIAL_PATCH_LIST_PART_TERMINATOR 0xFF
-#define SERIAL_NO_DATA_BYTE 0xFE
+#define SERIAL_NO_DATA_BYTE               0xFE
 
 #define PKMN_MASTER 0x01
-#define PKMN_SLAVE 0x02
+#define PKMN_SLAVE  0x02
 
-#define PKMN_CONNECTED 0x60
-#define PKMN_CONNECTED_II 0x61
-#define PKMN_TRADE_ACCEPT_GEN_I 0x62
+#define PKMN_CONNECTED           0x60
+#define PKMN_CONNECTED_II        0x61
+#define PKMN_TRADE_ACCEPT_GEN_I  0x62
 #define PKMN_TRADE_ACCEPT_GEN_II 0x72
-#define PKMN_TRADE_REJECT_GEN_I 0x61
+#define PKMN_TRADE_REJECT_GEN_I  0x61
 #define PKMN_TRADE_REJECT_GEN_II 0x71
-#define PKMN_TABLE_LEAVE_GEN_I 0x6f
-#define PKMN_TABLE_LEAVE_GEN_II 0x7f
-#define PKMN_SEL_NUM_MASK_GEN_I 0x60
+#define PKMN_TABLE_LEAVE_GEN_I   0x6f
+#define PKMN_TABLE_LEAVE_GEN_II  0x7f
+#define PKMN_SEL_NUM_MASK_GEN_I  0x60
 #define PKMN_SEL_NUM_MASK_GEN_II 0x70
-#define PKMN_SEL_NUM_ONE_GEN_I 0x60
-#define PKMN_SEL_NUM_ONE_GEN_II 0x70
+#define PKMN_SEL_NUM_ONE_GEN_I   0x60
+#define PKMN_SEL_NUM_ONE_GEN_II  0x70
 
 #define PKMN_ACTION 0x60
 
 #define PKMN_TRADE_CENTRE ITEM_1_SELECTED
-#define PKMN_COLOSSEUM ITEM_2_SELECTED
-#define PKMN_BREAK_LINK ITEM_3_SELECTED
+#define PKMN_COLOSSEUM    ITEM_2_SELECTED
+#define PKMN_BREAK_LINK   ITEM_3_SELECTED
 
 struct important_bytes {
     const uint8_t connected;
@@ -417,8 +417,7 @@ static void trade_draw_timer_callback(void* context) {
 
     struct trade_ctx* trade = (struct trade_ctx*)context;
 
-    with_view_model(
-        trade->view, struct trade_model * model, { model->ledon ^= 1; }, true);
+    with_view_model(trade->view, struct trade_model * model, { model->ledon ^= 1; }, true);
 }
 
 static void trade_draw_callback(Canvas* canvas, void* view_model) {
@@ -939,8 +938,7 @@ void* trade_alloc(
 
     view_set_context(trade->view, trade);
     view_allocate_model(trade->view, ViewModelTypeLockFree, sizeof(struct trade_model));
-    with_view_model(
-        trade->view, struct trade_model * model, { model->pdata = pdata; }, false);
+    with_view_model(trade->view, struct trade_model * model, { model->pdata = pdata; }, false);
 
     view_set_draw_callback(trade->view, trade_draw_callback);
     view_set_input_callback(trade->view, trade_input_callback);

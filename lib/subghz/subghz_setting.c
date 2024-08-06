@@ -1,6 +1,5 @@
 #include "subghz_setting.h"
-#include "types.h"
-//#include "subghz_i.h"
+#include "types.h" // IWYU pragma: keep
 
 #include <furi.h>
 #include <lib/subghz/devices/cc1101_configs.h>
@@ -8,7 +7,7 @@
 #define TAG "SubGhzSetting"
 
 #define FREQUENCY_FLAG_DEFAULT (1 << 31)
-#define FREQUENCY_MASK (0xFFFFFFFF ^ FREQUENCY_FLAG_DEFAULT)
+#define FREQUENCY_MASK         (0xFFFFFFFF ^ FREQUENCY_FLAG_DEFAULT)
 
 /* Default */
 static const uint32_t subghz_frequency_list[] = {

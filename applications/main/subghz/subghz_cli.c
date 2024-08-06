@@ -343,7 +343,6 @@ void subghz_cli_command_rx(Cli* cli, FuriString* args, void* context) {
     SubGhzCliCommandRx* instance = malloc(sizeof(SubGhzCliCommandRx));
     instance->stream =
         furi_stream_buffer_alloc(sizeof(LevelDuration) * 1024, sizeof(LevelDuration));
-    furi_check(instance->stream);
 
     SubGhzEnvironment* environment = subghz_cli_environment_init();
 
@@ -424,7 +423,6 @@ void subghz_cli_command_rx_raw(Cli* cli, FuriString* args, void* context) {
     SubGhzCliCommandRx* instance = malloc(sizeof(SubGhzCliCommandRx));
     instance->stream =
         furi_stream_buffer_alloc(sizeof(LevelDuration) * 1024, sizeof(LevelDuration));
-    furi_check(instance->stream);
 
     // Configure radio
     furi_hal_subghz_reset();
@@ -480,7 +478,7 @@ void subghz_cli_command_rx_raw(Cli* cli, FuriString* args, void* context) {
 void subghz_cli_command_decode_raw(Cli* cli, FuriString* args, void* context) {
     UNUSED(context);
     FuriString* file_name = furi_string_alloc();
-    furi_string_set(file_name, ANY_PATH("subghz/test.sub"));
+    furi_string_set(file_name, EXT_PATH("subghz/test.sub"));
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* fff_data_file = flipper_format_file_alloc(storage);
@@ -1193,10 +1191,11 @@ static void subghz_cli_command(Cli* cli, FuriString* args, void* context) {
 }
 
 #include <flipper_application/flipper_application.h>
+#include <cli/cli_i.h>
 
 static const FlipperAppPluginDescriptor plugin_descriptor = {
-    .appid = "subghz_cli",
-    .ep_api_version = 1,
+    .appid = CLI_PLUGIN_APP_ID,
+    .ep_api_version = CLI_PLUGIN_API_VERSION,
     .entry_point = &subghz_cli_command,
 };
 

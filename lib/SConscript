@@ -4,7 +4,7 @@ Import("env")
 env.Append(
     CPPPATH=[
         "#/",
-        "#/lib",  # TODO FL-3553: remove!
+        "#/lib",
         # Ugly hack
         Dir("../assets/compiled"),
     ],
@@ -13,7 +13,6 @@ env.Append(
 
 libs = env.BuildModules(
     [
-        "tlsf",
         "mlib",
         "stm32wb",
         "freertos",

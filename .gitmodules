@@ -23,9 +23,6 @@
 [submodule "lib/mbedtls"]
 	path = lib/mbedtls
 	url = https://github.com/Mbed-TLS/mbedtls.git
-[submodule "lib/cxxheaderparser"]
-	path = lib/cxxheaderparser
-	url = https://github.com/robotpy/cxxheaderparser.git
 [submodule "applications/external/dap_link/lib/free-dap"]
 	path = applications/external/dap_link/lib/free-dap
 	url = https://github.com/ataradov/free-dap.git
@@ -44,6 +41,3 @@
 [submodule "lib/uzlib"]
 	path = lib/uzlib
 	url = https://github.com/pfalcon/uzlib.git
-[submodule "lib/tlsf"]
-	path = lib/tlsf
-	url = https://github.com/espressif/tlsf

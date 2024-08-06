@@ -133,9 +133,9 @@ static void game_2048_render_callback(Canvas* const canvas, void* ctx) {
     furi_mutex_release(game_state->mutex);
 }
 
-static void
-    game_2048_input_callback(const InputEvent* const input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void game_2048_input_callback(const InputEvent* const input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
 
     furi_message_queue_put(event_queue, input_event, FuriWaitForever);
 }

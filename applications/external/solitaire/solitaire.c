@@ -446,20 +446,23 @@ void init(GameState* game_state) {
 
 void init_start(GameState* game_state) {
     game_state->input = InputKeyMAX;
-    for(uint8_t i = 0; i < 7; i++) init_hand(&(game_state->bottom_columns[i]), 21);
+    for(uint8_t i = 0; i < 7; i++)
+        init_hand(&(game_state->bottom_columns[i]), 21);
 
     init_hand(&(game_state->dragging_hand), 13);
     game_state->animation.buffer = make_buffer();
 }
 
-static void input_callback(InputEvent* input_event, FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     AppEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
-static void update_timer_callback(FuriMessageQueue* event_queue) {
-    furi_assert(event_queue);
+static void update_timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
     AppEvent event = {.type = EventTypeTick};
     furi_message_queue_put(event_queue, &event, 0);
 }
@@ -565,7 +568,8 @@ int32_t solitaire_app(void* p) {
 free_and_exit:
     free(game_state->animation.buffer);
     ui_cleanup();
-    for(uint8_t i = 0; i < 7; i++) free_hand(&(game_state->bottom_columns[i]));
+    for(uint8_t i = 0; i < 7; i++)
+        free_hand(&(game_state->bottom_columns[i]));
 
     free(game_state->deck.cards);
     free(game_state);

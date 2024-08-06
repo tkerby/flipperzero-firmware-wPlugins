@@ -151,12 +151,11 @@ static void nfc_protocol_support_scene_read_on_enter(NfcApp* instance) {
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcViewPopup);
 
-    const NfcProtocol protocol =
-        instance->protocols_detected[instance->protocols_detected_selected_idx];
+    const NfcProtocol protocol = nfc_detected_protocols_get_selected(instance->detected_protocols);
     instance->poller = nfc_poller_alloc(instance->nfc, protocol);
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcViewPopup);
-    nfc_supported_cards_load_cache(instance->nfc_supported_cards);
+    //nfc_supported_cards_load_cache(instance->nfc_supported_cards);
 
     // Start poller with the appropriate callback
     nfc_protocol_support[protocol]->scene_read.on_enter(instance);
@@ -187,7 +186,7 @@ static bool nfc_protocol_support_scene_read_on_event(NfcApp* instance, SceneMana
                 consumed = true;
             } else {
                 const NfcProtocol protocol =
-                    instance->protocols_detected[instance->protocols_detected_selected_idx];
+                    nfc_detected_protocols_get_selected(instance->detected_protocols);
                 consumed = nfc_protocol_support[protocol]->scene_read.on_event(instance, event);
             }
         } else if(event.event == NfcCustomEventPollerFailure) {
@@ -200,7 +199,7 @@ static bool nfc_protocol_support_scene_read_on_event(NfcApp* instance, SceneMana
             consumed = true;
         } else if(event.event == NfcCustomEventCardDetected) {
             const NfcProtocol protocol =
-                instance->protocols_detected[instance->protocols_detected_selected_idx];
+                nfc_detected_protocols_get_selected(instance->detected_protocols);
             consumed = nfc_protocol_support[protocol]->scene_read.on_event(instance, event);
         }
     } else if(event.type == SceneManagerEventTypeBack) {
@@ -482,8 +481,18 @@ static void nfc_protocol_support_scene_save_name_on_enter(NfcApp* instance) {
     bool name_is_empty = furi_string_empty(instance->file_name);
     if(name_is_empty) {
         furi_string_set(instance->file_path, NFC_APP_FOLDER);
+        FuriString* prefix = furi_string_alloc();
+        furi_string_set(prefix, nfc_device_get_name(instance->nfc_device, NfcDeviceNameTypeFull));
+        furi_string_replace(prefix, "Mifare", "MF");
+        furi_string_replace(prefix, " Classic", "C"); // MFC
+        furi_string_replace(prefix, "Desfire", "Des"); // MF Des
+        furi_string_replace(prefix, "Ultralight", "UL"); // MF UL
+        furi_string_replace(prefix, " Plus", "+"); // NTAG I2C+
+        furi_string_replace(prefix, " (Unknown)", "");
+        furi_string_replace_all(prefix, " ", "_");
         name_generator_make_auto_basic(
-            instance->text_store, NFC_TEXT_STORE_SIZE, NFC_APP_FILENAME_PREFIX);
+            instance->text_store, NFC_TEXT_STORE_SIZE, furi_string_get_cstr(prefix));
+        furi_string_free(prefix);
         furi_string_set(folder_path, NFC_APP_FOLDER);
     } else {
         nfc_text_store_set(instance, "%s", furi_string_get_cstr(instance->file_name));

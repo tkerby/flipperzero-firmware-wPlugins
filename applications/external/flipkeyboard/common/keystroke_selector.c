@@ -112,7 +112,6 @@ void keystroke_selector_free(KeystrokeSelector* keystroke_selector) {
         {
             for(size_t i = 0; i < model->rows * KEYSTROKE_SELECTOR_COLS; i++) {
                 if(model->keys[i].shift) {
-                    free(model->keys[i].shift);
                     model->keys[i].shift = NULL;
                 }
             }
@@ -354,7 +353,7 @@ static void keystroke_selector_draw_callback(Canvas* canvas, void* context) {
                 canvas_set_color(canvas, ColorBlack);
             }
 
-            uint8_t gy = y * KEYSTROKE_SELECTOR_DISPLAYED_HEIGHT;
+            int8_t gy = y * KEYSTROKE_SELECTOR_DISPLAYED_HEIGHT;
             if(is_hanging_char(result.ch)) {
                 gy--;
             }

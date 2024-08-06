@@ -1,13 +1,12 @@
 /***
  * Noptel LRF rangefinder sampler for the Flipper Zero
- * Version: 1.8
+ * Version: 1.9
  *
  * LRF Serial communication app
 ***/
 
 /*** Includes ***/
 #include <furi_hal.h>
-#include <furi_hal_usb_cdc.h>
 #include <expansion/expansion.h>
 
 #include "lrf_serial_comm.h"
@@ -18,8 +17,8 @@
 
 #define UART_RX_STREAM_BUF_SIZE 1024
 
-#define CR 13
-#define LF 10
+#define CR    13
+#define LF    10
 #define SLASH 47
 
 /*** Parameters ***/
@@ -222,7 +221,8 @@ static void on_uart_irq_callback(FuriHalSerialHandle* hndl, FuriHalSerialRxEvent
 void strcpy_rstrip(char* dst, uint8_t* src) {
     uint8_t i;
 
-    for(i = 0; src[i] > 32 && src[i] < 127; i++) dst[i] = src[i];
+    for(i = 0; src[i] > 32 && src[i] < 127; i++)
+        dst[i] = src[i];
     dst[i] = 0;
 }
 
@@ -231,7 +231,8 @@ static uint8_t checkbyte(uint8_t* data, uint16_t len) {
     uint8_t checksum = 0;
     uint16_t i;
 
-    for(i = 0; i < len; i++) checksum += data[i];
+    for(i = 0; i < len; i++)
+        checksum += data[i];
 
     checksum ^= 0x50;
 
@@ -907,9 +908,6 @@ static int32_t uart_rx_thread(void* ctx) {
         }
     }
 
-    /* Free the UART receive stream buffer */
-    furi_stream_buffer_free(app->rx_stream);
-
     return 0;
 }
 
@@ -1035,6 +1033,9 @@ void lrf_serial_comm_app_free(LRFSerialCommApp* app) {
     furi_thread_flags_set(furi_thread_get_id(app->rx_thread), stop);
     furi_thread_join(app->rx_thread);
     furi_thread_free(app->rx_thread);
+
+    /* Free the UART receive stream buffer */
+    furi_stream_buffer_free(app->rx_stream);
 
     /* Re-enable support for expansion modules */
     expansion_enable(furi_record_open(RECORD_EXPANSION));
