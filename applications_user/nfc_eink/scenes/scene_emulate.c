@@ -6,7 +6,9 @@
 #include <lib/nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
 #include <lib/nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
 
-enum CustomEvents { CustomEventEmulationDone };
+enum CustomEvents {
+    CustomEventEmulationDone
+};
 /* 
 static void nfc_eink_scene_start_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
@@ -132,6 +134,15 @@ typedef struct {
 } NfcEinkScreenResponse;
 #pragma pack(pop)
 
+/* static uint8_t nfc_eink_screen_command_D4(const APDU_Command* command, APDU_Response* resp) {
+    UNUSED(command);
+    UNUSED(resp);
+
+    //resp->status = __builtin_bswap16(0x9000);
+    return 2;
+} */
+
+/*
 static void nfc_eink_screen_command_A4(const APDU_Command_Select* command, APDU_Response* resp) {
     bool equal = false;
     if(command->data_length == 0x07) {
@@ -202,7 +213,7 @@ static uint8_t nfc_eink_screen_command_DB(const APDU_Command* command, APDU_Resp
 }
 
 static uint8_t nfc_eink_screen_command_D2(
-    NfcEinkScreen* screen,
+    NfcEinkScreenData* screen,
     const APDU_Command* command,
     APDU_Response* resp) {
     //UNUSED(command);
@@ -223,15 +234,9 @@ static uint8_t nfc_eink_screen_command_FF(const APDU_Command* command, APDU_Resp
     return 2;
 }
 
-/* static uint8_t nfc_eink_screen_command_D4(const APDU_Command* command, APDU_Response* resp) {
-    UNUSED(command);
-    UNUSED(resp);
 
-    //resp->status = __builtin_bswap16(0x9000);
-    return 2;
-} */
 
-NfcCommand nfc_eink_listener_callback(NfcGenericEvent event, void* context) {
+NfcCommand nfc_eink_listener_callback11(NfcGenericEvent event, void* context) {
     NfcCommand command = NfcCommandContinue;
     NfcEinkApp* instance = context;
     Iso14443_4aListenerEvent* Iso14443_4a_event = event.event_data;
@@ -274,7 +279,9 @@ NfcCommand nfc_eink_listener_callback(NfcGenericEvent event, void* context) {
             if(apdu->CLA_byte == 0xF0 && apdu->CMD_code == 0xD2) {
                 instance->was_update = true;
                 response_length = nfc_eink_screen_command_D2(
-                    instance->screen, (APDU_Command*)apdu, &response->apdu_resp.apdu_response);
+                    instance->screen->data,
+                    (APDU_Command*)apdu,
+                    &response->apdu_resp.apdu_response);
             }
             response->response_code = 0xA3;
         } else if(cmd->command_code == 0xF2) {
@@ -319,10 +326,11 @@ NfcCommand nfc_eink_listener_callback(NfcGenericEvent event, void* context) {
                 response_length = 2;
                 instance->update_cnt = 0;
             } else {
-                uint8_t* data = instance->screen->image_data + instance->screen->received_data;
+                uint8_t* data =
+                    instance->screen->data->image_data + instance->screen->data->received_data;
 
                 memcpy(data, cmd->command_data, 2);
-                instance->screen->received_data += 2;
+                instance->screen->data->received_data += 2;
 
                 response_length = 3;
                 response->response_code = 0x02;
@@ -340,6 +348,12 @@ NfcCommand nfc_eink_listener_callback(NfcGenericEvent event, void* context) {
         nfc_listener_tx(event.instance, instance->tx_buf);
     }
     return command;
+} */
+static void nfc_eink_emulation_done_callback(void* context) {
+    furi_assert(context);
+    NfcEinkApp* instance = context;
+    view_dispatcher_send_custom_event(instance->view_dispatcher, CustomEventEmulationDone);
+    FURI_LOG_D(TAG, "Done!");
 }
 
 void nfc_eink_scene_emulate_on_enter(void* context) {
@@ -357,11 +371,18 @@ void nfc_eink_scene_emulate_on_enter(void* context) {
         nfc_device_get_data(instance->screen->nfc_device, NfcProtocolIso14443_3a); */
     //instance->listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_3a, data);
 
-    const Iso14443_4aData* data =
+    /* const Iso14443_4aData* data =
         nfc_device_get_data(instance->screen->nfc_device, NfcProtocolIso14443_4a);
-    instance->listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_4a, data);
+    instance->listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_4a, data); */
+    //nfc_listener_start(instance->listener, nfc_eink_listener_callback, instance);
+    const NfcEinkScreen* screen = instance->screen;
+    nfc_eink_screen_set_done_callback(
+        instance->screen, nfc_eink_emulation_done_callback, instance);
 
-    nfc_listener_start(instance->listener, nfc_eink_listener_callback, instance);
+    NfcProtocol protocol = nfc_device_get_protocol(screen->nfc_device);
+    const NfcDeviceData* data = nfc_device_get_data(screen->nfc_device, protocol);
+    instance->listener = nfc_listener_alloc(instance->nfc, protocol, data);
+    nfc_listener_start(instance->listener, screen->handlers->listener_callback, instance->screen);
 
     nfc_blink_emulate_start(instance);
 }

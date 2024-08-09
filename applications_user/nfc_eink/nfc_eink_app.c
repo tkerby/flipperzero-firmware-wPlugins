@@ -70,7 +70,7 @@ static NfcEinkApp* nfc_eink_app_alloc() {
 
     view_dispatcher_attach_to_gui(
         instance->view_dispatcher, instance->gui, ViewDispatcherTypeFullscreen);
-    view_dispatcher_enable_queue(instance->view_dispatcher);
+    //view_dispatcher_enable_queue(instance->view_dispatcher);
 
     // Submenu
     instance->submenu = submenu_alloc();
@@ -211,7 +211,8 @@ static void nfc_eink_make_app_folders(const NfcEinkApp* instance) {
         dialog_message_show_storage_error(instance->dialogs, "Cannot create\napp folder");
     }
 }
-
+/* 
+///TODO: Think of moving this to eink_screen code namespace
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
     furi_assert(screen);
     furi_assert(file_path);
@@ -228,14 +229,17 @@ bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
         NfcEinkScreen* scr = nfc_eink_screen_alloc(buf);
 
         if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_DATA_READ_KEY, &buf, 1)) break;
-        scr->received_data = buf;
+        scr->data->received_data = buf;
 
         FuriString* temp_str = furi_string_alloc();
         bool block_loaded = false;
-        for(uint16_t i = 0; i < scr->received_data; i += scr->base.data_block_size) {
+        for(uint16_t i = 0; i < scr->data->received_data; i += scr->data->base.data_block_size) {
             furi_string_printf(temp_str, "%s %d", NFC_EINK_SCREEN_BLOCK_DATA_KEY, i);
             block_loaded = flipper_format_read_hex(
-                ff, furi_string_get_cstr(temp_str), &scr->image_data[i], scr->base.data_block_size);
+                ff,
+                furi_string_get_cstr(temp_str),
+                &scr->data->image_data[i],
+                scr->data->base.data_block_size);
             if(!block_loaded) break;
         }
         furi_string_free(temp_str);
@@ -248,6 +252,7 @@ bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
     return loaded;
 }
 
+///TODO: Think of moving this to eink_screen code namespace
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
     furi_assert(screen);
     furi_assert(file_path);
@@ -281,19 +286,19 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
         if(!flipper_format_write_hex(ff, NFC_EINK_DEVICE_UID_KEY, uid, uid_len)) break;
 
         // Write screen type
-        uint32_t buf = screen->base.screen_type;
+        uint32_t buf = screen->data->base.screen_type;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &buf, 1)) break;
 
         // Write screen name
-        if(!flipper_format_write_string_cstr(ff, NFC_EINK_SCREEN_NAME_KEY, screen->base.name))
+        if(!flipper_format_write_string_cstr(ff, NFC_EINK_SCREEN_NAME_KEY, screen->data->base.name))
             break;
 
         // Write screen width
-        buf = screen->base.width;
+        buf = screen->data->base.width;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_WIDTH_KEY, &buf, 1)) break;
 
         // Write screen height
-        buf = screen->base.height;
+        buf = screen->data->base.height;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_HEIGHT_KEY, &buf, 1)) break;
 
         // Write data block size
@@ -303,15 +308,15 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
             NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY);
         if(!flipper_format_write_comment(ff, temp_str)) break;
 
-        buf = screen->base.data_block_size;
+        buf = screen->data->base.data_block_size;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY, &buf, 1)) break;
 
         // Write image total size
-        buf = screen->image_size;
+        buf = screen->data->image_size;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_DATA_TOTAL_KEY, &buf, 1)) break;
 
         // Write image read size
-        buf = screen->received_data;
+        buf = screen->data->received_data;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_DATA_READ_KEY, &buf, 1)) break;
 
         // Write image data
@@ -319,13 +324,14 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
         if(!flipper_format_write_comment(ff, temp_str)) break;
 
         bool block_saved = false;
-        for(uint16_t i = 0; i < screen->received_data; i += screen->base.data_block_size) {
+        for(uint16_t i = 0; i < screen->data->received_data;
+            i += screen->data->base.data_block_size) {
             furi_string_printf(temp_str, "%s %d", NFC_EINK_SCREEN_BLOCK_DATA_KEY, i);
             block_saved = flipper_format_write_hex(
                 ff,
                 furi_string_get_cstr(temp_str),
-                &screen->image_data[i],
-                screen->base.data_block_size);
+                &screen->data->image_data[i],
+                screen->data->base.data_block_size);
 
             if(!block_saved) break;
         }
@@ -337,7 +343,7 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
     furi_record_close(RECORD_STORAGE);
 
     return saved;
-}
+} */
 
 bool nfc_eink_screen_delete(const char* file_path) {
     furi_assert(file_path);

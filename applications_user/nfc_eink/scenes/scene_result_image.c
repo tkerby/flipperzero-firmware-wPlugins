@@ -21,7 +21,7 @@ void nfc_eink_scene_result_image_on_enter(void* context) {
     view_set_draw_callback(instance->view_image, empty_view_draw_callback);
 
     // TODO: unblock after eink_screen struct will be used
-    const NfcEinkScreen* screen = instance->screen;
+    const NfcEinkScreenData* screen = instance->screen->data;
     view_allocate_model(instance->view_image, ViewModelTypeLockFree, screen->received_data);
     uint8_t* model_ptr = view_get_model(instance->view_image);
     for(uint16_t i = 0; i < screen->received_data; i += screen->base.data_block_size)

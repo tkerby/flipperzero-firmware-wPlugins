@@ -35,27 +35,28 @@
 
 #include "nfc_eink_screen/nfc_eink_screen.h"
 #include "scenes/scenes.h"
+#include "nfc_eink_tag.h"
 
-#define TAG "NfcEink"
+//#define TAG "NfcEink"
 
-#define NFC_EINK_NAME_SIZE 22
+#define NFC_EINK_NAME_SIZE     22
 #define NFC_EINK_APP_EXTENSION ".eink"
 
 #define NFC_EINK_APP_FOLDER ANY_PATH(TAG)
 
 ///TODO: possibly move this closer to save/load functions
-#define NFC_EINK_FORMAT_VERSION (1)
-#define NFC_EINK_FILE_HEADER "Flipper NFC Eink screen"
-#define NFC_EINK_DEVICE_UID_KEY "UID"
-#define NFC_EINK_DEVICE_TYPE_KEY "NFC type"
-#define NFC_EINK_SCREEN_TYPE_KEY "Screen type"
-#define NFC_EINK_SCREEN_NAME_KEY "Screen name"
-#define NFC_EINK_SCREEN_WIDTH_KEY "Width"
-#define NFC_EINK_SCREEN_HEIGHT_KEY "Height"
+#define NFC_EINK_FORMAT_VERSION             (1)
+#define NFC_EINK_FILE_HEADER                "Flipper NFC Eink screen"
+#define NFC_EINK_DEVICE_UID_KEY             "UID"
+#define NFC_EINK_DEVICE_TYPE_KEY            "NFC type"
+#define NFC_EINK_SCREEN_TYPE_KEY            "Screen type"
+#define NFC_EINK_SCREEN_NAME_KEY            "Screen name"
+#define NFC_EINK_SCREEN_WIDTH_KEY           "Width"
+#define NFC_EINK_SCREEN_HEIGHT_KEY          "Height"
 #define NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY "Data block size"
-#define NFC_EINK_SCREEN_DATA_TOTAL_KEY "Data total"
-#define NFC_EINK_SCREEN_DATA_READ_KEY "Data read"
-#define NFC_EINK_SCREEN_BLOCK_DATA_KEY "Block"
+#define NFC_EINK_SCREEN_DATA_TOTAL_KEY      "Data total"
+#define NFC_EINK_SCREEN_DATA_READ_KEY       "Data read"
+#define NFC_EINK_SCREEN_BLOCK_DATA_KEY      "Block"
 
 typedef enum {
     NfcEinkCustomEventReserved = 100,
@@ -114,5 +115,5 @@ typedef struct {
 
 ///TODO: Move this to private _i.h file
 bool nfc_eink_screen_delete(const char* file_path);
-bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
-bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
+//bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
+//bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
