@@ -14,18 +14,19 @@ typedef enum {
 } NfcEinkManufacturer;
 
 typedef enum {
-    NfcEinkTypeWaveshare2n13inch,
-    NfcEinkTypeWaveshare2n9inch,
-    //NfcEinkTypeWaveshare4n2inch,
-
-    NfcEinkTypeNum
+    NfcEinkTypeUnknown
 } NfcEinkType;
+
+typedef enum {
+    NfcEinkScreenEventTypeConfigurationReceived,
+    NfcEinkScreenEventTypeDone,
+} NfcEinkScreenEventType;
 
 typedef struct {
     uint16_t width;
     uint16_t height;
     uint8_t data_block_size;
-    NfcEinkType screen_type;
+    uint8_t screen_type;
     NfcEinkManufacturer screen_manufacturer;
     const char* name;
 } NfcEinkScreenDescriptor; //TODO:NfcEinkScreenBase
@@ -39,17 +40,24 @@ typedef struct {
 
 typedef NfcDevice* (*EinkScreenAllocCallback)();
 typedef void (*EinkScreenFreeCallback)(NfcDevice* instance);
-typedef bool (*EinkScreenInitCallback)(NfcEinkScreenData* screen);
+typedef void (*EinkScreenInitCallback)(NfcEinkScreenDescriptor* descriptor, NfcEinkType type);
 
 typedef void (*NfcEinkScreenDoneCallback)(void* context);
+typedef void (*NfcEinkScreenEventCallback)(NfcEinkScreenEventType type, void* context);
 
 typedef struct {
     NfcEinkScreenDoneCallback done_callback;
     void* context;
 } NfcEinkScreenDoneEvent;
 
+/* typedef struct {
+    //NfcEinkScreenEventType type;
+    NfcEinkScreenEventCallback callback;
+    void* context;
+} NfcEinkScreenInternalEvent; */
+
 typedef struct {
-    EinkScreenAllocCallback alloc;
+    EinkScreenAllocCallback alloc_nfc_device;
     EinkScreenFreeCallback free;
     EinkScreenInitCallback init;
     NfcGenericCallback listener_callback;
@@ -62,4 +70,7 @@ typedef struct {
     BitBuffer* tx_buf;
     const NfcEinkScreenHandlers* handlers;
     NfcEinkScreenDoneEvent done_event;
+
+    NfcEinkScreenEventCallback internal_event_callback;
+    //NfcEinkScreenInternalEvent internal_event;
 } NfcEinkScreen;

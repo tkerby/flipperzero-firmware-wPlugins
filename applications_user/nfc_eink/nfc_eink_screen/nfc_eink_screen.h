@@ -4,6 +4,8 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc_common.h>
 #include <nfc/nfc_device.h>
+
+#include "../nfc_eink_tag.h"
 #include "nfc_eink_types.h"
 /* typedef enum {
     NfcEinkTypeWaveshare2n13inch,
@@ -30,8 +32,11 @@ typedef struct {
     NfcEinkScreenDescriptor base;
 } NfcEinkScreen; */
 
-const char* nfc_eink_screen_get_name(NfcEinkType type);
-NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkType type);
+//const char* nfc_eink_screen_get_name(NfcEinkType type); ///TODO: move to
+const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer type);
+
+NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer);
+void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type);
 void nfc_eink_screen_free(NfcEinkScreen* screen);
 
 ///TODO: maybe this function can be moved to nfc_eink_screen_alloc as a number of parameters

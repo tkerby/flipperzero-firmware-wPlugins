@@ -7,16 +7,38 @@
 
 extern const NfcEinkScreenHandlers waveshare_handlers;
 
-static const NfcEinkScreenHandlers* handlers[NfcEinkManufacturerNum] = {
+typedef struct {
+    const NfcEinkScreenHandlers* handlers;
+    const char* name;
+} NfcEinkScreenManufacturerDescriptor;
+
+/* static const NfcEinkScreenHandlers* handlers[NfcEinkManufacturerNum] = {
     [NfcEinkManufacturerWaveshare] = &waveshare_handlers,
     [NfcEinkManufacturerGoodisplay] = &waveshare_handlers,
 };
 
+static const char* manufacturer_names[NfcEinkManufacturerNum] = {
+    [NfcEinkManufacturerWaveshare] = "Waveshare",
+    [NfcEinkManufacturerGoodisplay] = "Goodisplay",
+}; */
+
+static const NfcEinkScreenManufacturerDescriptor manufacturers[NfcEinkManufacturerNum] = {
+    [NfcEinkManufacturerWaveshare] =
+        {
+            .handlers = &waveshare_handlers,
+            .name = "Waveshare",
+        },
+    [NfcEinkManufacturerGoodisplay] =
+        {
+            .handlers = &waveshare_handlers,
+            .name = "Goodisplay",
+        },
+};
 /// TODO: maybe this can be separated for each eink manufacturer
 /// and moved to a dedicated file. After that we can use this array
 /// inside of .init function callback in order to fully initialize
 /// screen data instance. Also think of protecting this as protected so there will be no opened callback functions
-static const NfcEinkScreenDescriptor screens[NfcEinkTypeNum] = {
+/* static const NfcEinkScreenDescriptor screens[NfcEinkTypeNum] = {
     [NfcEinkTypeWaveshare2n13inch] =
         {
             .name = "Waveshare 2.13 inch",
@@ -35,15 +57,7 @@ static const NfcEinkScreenDescriptor screens[NfcEinkTypeNum] = {
             .screen_type = NfcEinkTypeWaveshare2n9inch,
             .data_block_size = 16,
         },
-    /*     [NfcEinkTypeWaveshare4n2inch] =
-        {
-            .name = "Waveshare 4.2 inch",
-            .width = 296,
-            .height = 128,
-            .screen_type = NfcEinkTypeWaveshare4n2inch,
-            .data_block_size = 16,
-        }, */
-};
+}; */
 
 /* static NfcDevice* nfc_eink_screen_nfc_device_alloc() {
     //TODO:this may differ for other screen types
@@ -102,12 +116,12 @@ static const NfcEinkScreenDescriptor screens[NfcEinkTypeNum] = {
     return nfc_device;
 } */
 
-const char* nfc_eink_screen_get_name(NfcEinkType type) {
-    furi_check(type < NfcEinkTypeNum);
-    return screens[type].name;
+const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer manufacturer) {
+    furi_assert(manufacturer < NfcEinkManufacturerNum);
+    return manufacturers[manufacturer].name;
 }
 
-static bool eink_waveshare_init(NfcEinkScreenData* screen) {
+/* static bool eink_waveshare_init(NfcEinkScreenData* screen) {
     furi_assert(screen);
     screen->image_size =
         screen->base.width *
@@ -115,25 +129,53 @@ static bool eink_waveshare_init(NfcEinkScreenData* screen) {
     screen->image_data = malloc(screen->image_size);
 
     return false;
+} */
+
+static void nfc_eink_screen_event_callback(NfcEinkScreenEventType type, void* context) {
+    furi_assert(context);
+    NfcEinkScreen* screen = context;
+    if(type == NfcEinkScreenEventTypeDone) {
+        NfcEinkScreenDoneEvent event = screen->done_event;
+        if(event.done_callback != NULL) event.done_callback(event.context);
+    } else if(type == NfcEinkScreenEventTypeConfigurationReceived) {
+        FURI_LOG_D(TAG, "Config received");
+        nfc_eink_screen_init(screen, screen->data->base.screen_type);
+    }
 }
 
-NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkType type) {
-    furi_check(type < NfcEinkTypeNum);
+NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
+    furi_check(manufacturer < NfcEinkManufacturerNum);
 
     NfcEinkScreen* screen = malloc(sizeof(NfcEinkScreen));
-    screen->handlers = handlers[0];
+    screen->handlers = manufacturers[manufacturer].handlers;
 
     screen->nfc_device = screen->handlers->alloc_nfc_device();
+    screen->internal_event_callback = nfc_eink_screen_event_callback;
+    //screen->internal_event.callback = nfc_eink_screen_event_callback;
 
+    //Set NfcEinkScreenEvent callback
+    //screen->handlers->set_event_callback();
     screen->data = malloc(sizeof(NfcEinkScreenData));
 
-    screen->data->base = screens[0];
-    eink_waveshare_init(screen->data);
-    //screen->handlers->init(screen->data);
+    //screen->data->base = screens[0];
+    //eink_waveshare_init(screen->data);
 
     screen->tx_buf = bit_buffer_alloc(50);
 
     return screen;
+}
+
+void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type) {
+    UNUSED(type);
+    if(screen->data->base.screen_type == NfcEinkTypeUnknown) {
+        screen->handlers->init(&screen->data->base, type);
+    }
+
+    NfcEinkScreenData* data = screen->data;
+    data->image_size =
+        data->base.width *
+        (data->base.height % 8 == 0 ? (data->base.height / 8) : (data->base.height / 8 + 1));
+    data->image_data = malloc(data->image_size);
 }
 
 void nfc_eink_screen_free(NfcEinkScreen* screen) {
@@ -141,9 +183,12 @@ void nfc_eink_screen_free(NfcEinkScreen* screen) {
     screen->handlers->free(screen->nfc_device);
 
     //TODO: remember to free screen->data->image_data
-    free(screen->data);
+    NfcEinkScreenData* data = screen->data;
+    free(data->image_data);
+    free(data);
     bit_buffer_free(screen->tx_buf);
     screen->handlers = NULL;
+    free(screen);
 }
 
 void nfc_eink_screen_set_done_callback(
