@@ -30,8 +30,9 @@ bool nfc_eink_scene_choose_type_on_event(void* context, SceneManagerEvent event)
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        //const NfcEinkType screen_type = (NfcEinkType)event.event;
-        instance->screen = nfc_eink_screen_alloc(/* screen_type */ NfcEinkManufacturerWaveshare);
+        const NfcEinkManufacturer screen_manufacturer = event.event;
+        instance->screen =
+            nfc_eink_screen_alloc(screen_manufacturer /* NfcEinkManufacturerWaveshare */);
         consumed = true;
         scene_manager_next_scene(scene_manager, NfcEinkAppSceneEmulate);
     }

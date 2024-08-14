@@ -2,9 +2,9 @@
 
 #include <lib/nfc/nfc.h>
 #include <lib/nfc/protocols/nfc_protocol.h>
-#include <lib/nfc/helpers/iso14443_crc.h>
-#include <lib/nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
-#include <lib/nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
+//#include <lib/nfc/helpers/iso14443_crc.h>
+//#include <lib/nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
+//#include <lib/nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
 
 enum CustomEvents {
     CustomEventEmulationDone
@@ -352,8 +352,8 @@ NfcCommand nfc_eink_listener_callback11(NfcGenericEvent event, void* context) {
 static void nfc_eink_emulation_done_callback(void* context) {
     furi_assert(context);
     NfcEinkApp* instance = context;
-    view_dispatcher_send_custom_event(instance->view_dispatcher, CustomEventEmulationDone);
-    FURI_LOG_D(TAG, "Done!");
+    furi_timer_start(instance->timer, furi_ms_to_ticks(500));
+    //view_dispatcher_send_custom_event(instance->view_dispatcher, CustomEventEmulationDone);
 }
 
 void nfc_eink_scene_emulate_on_enter(void* context) {

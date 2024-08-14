@@ -72,5 +72,7 @@ typedef struct {
     NfcEinkScreenDoneEvent done_event;
 
     NfcEinkScreenEventCallback internal_event_callback;
+    bool was_update; ///TODO: Candidates to move
+    uint8_t update_cnt; //to protocol specific instance
     //NfcEinkScreenInternalEvent internal_event;
 } NfcEinkScreen;

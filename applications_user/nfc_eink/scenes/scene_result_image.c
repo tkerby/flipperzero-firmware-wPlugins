@@ -24,7 +24,7 @@ void nfc_eink_scene_result_image_on_enter(void* context) {
     const NfcEinkScreenData* screen = instance->screen->data;
     view_allocate_model(instance->view_image, ViewModelTypeLockFree, screen->received_data);
     uint8_t* model_ptr = view_get_model(instance->view_image);
-    for(uint16_t i = 0; i < screen->received_data; i += screen->base.data_block_size)
+    for(uint16_t i = 0; i < screen->received_data; i += /* screen->base.data_block_size */ 16)
         reverse_copy_block(screen->image_data + i, model_ptr + i);
 
     view_commit_model(instance->view_image, true);

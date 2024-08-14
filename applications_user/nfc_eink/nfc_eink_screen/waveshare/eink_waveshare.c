@@ -1,6 +1,6 @@
 #include "eink_waveshare.h"
 #include "eink_waveshare_i.h"
-#include <nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
+#include <nfc/helpers/iso14443_crc.h>
 
 /// TODO: maybe this can be separated for each eink manufacturer
 /// and moved to a dedicated file. After that we can use this array
@@ -37,8 +37,11 @@ static const NfcEinkScreenDescriptor waveshare_screens[NfcEinkScreenTypeWaveshar
 
 };
 
+static uint8_t blocks[16 * 4];
+
 static NfcDevice* eink_waveshare_alloc() {
-    const uint8_t uid[] = {0x57, 0x53, 0x44, 0x5A, 0x31, 0x30, 0x6D};
+    //const uint8_t uid[] = {0x46, 0x53, 0x54, 0x5E, 0x31, 0x30, 0x6D}; //FSTN10m
+    const uint8_t uid[] = {0x57, 0x53, 0x44, 0x5A, 0x31, 0x30, 0x6D}; //WSDZ10m
     const uint8_t atqa[] = {0x44, 0x00};
 
     Iso14443_3aData* iso14443_3a_edit_data = iso14443_3a_alloc();
@@ -50,6 +53,31 @@ static NfcDevice* eink_waveshare_alloc() {
     nfc_device_set_data(nfc_device, NfcProtocolIso14443_3a, iso14443_3a_edit_data);
 
     iso14443_3a_free(iso14443_3a_edit_data);
+
+    const uint8_t block03[] = {
+        0x57,
+        0x53,
+        0x44,
+        0xC8,
+        0x5A,
+        0x31,
+        0x30,
+        0x6D,
+        0x36,
+        0,
+        0,
+        0,
+        0x00,
+        0x00,
+        0x00,
+        0x00, //0xE1,
+        //0x10,
+        //0x6D,
+        //0x00,
+    };
+    memset(blocks, 0, 16 * 4);
+    memcpy(&blocks[0], block03, sizeof(block03));
+
     return nfc_device;
 }
 
@@ -85,7 +113,7 @@ static void
     UNUSED(data_length);
     NfcEinkScreenTypeWaveshare waveshare_type = NfcEinkScreenTypeWaveshareUnknown;
     uint8_t protocol_type = data[0];
-    if(protocol_type == 4) {
+    if(protocol_type == 4 || protocol_type == 2) {
         waveshare_type = NfcEinkScreenTypeWaveshare2n13inch;
     } else if(protocol_type == 7) {
         waveshare_type = NfcEinkScreenTypeWaveshare2n9inch;
@@ -104,7 +132,7 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
         FURI_LOG_D(TAG, "ReceivedData");
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeFieldOff) {
         FURI_LOG_D(TAG, "FieldOff");
-        eink_waveshare_on_done(instance);
+        //eink_waveshare_on_done(instance);
         command = NfcCommandStop;
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeHalted) {
         FURI_LOG_D(TAG, "Halted");
@@ -114,23 +142,56 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
         const uint8_t* data = bit_buffer_get_data(buffer);
         FURI_LOG_D(TAG, "0x%02X, 0x%02X", data[0], data[1]);
 
-        //TODO: move this to process function
-        //NfcEinkScreen* const screen = instance->screen;
-        NfcEinkScreenData* const screen_data = instance->data;
-        if(data[1] == 0x00) {
-            eink_waveshare_parse_config(instance, data + 2, 1);
-        } else if(data[1] == 0x08) {
-            memcpy(screen_data->image_data + screen_data->received_data, &data[3], data[2]);
-            screen_data->received_data += data[2];
-
-            uint16_t last = screen_data->received_data - 1;
-            screen_data->image_data[last] &= 0xC0;
-        }
-
+        ///TODO: move this to process function
         bit_buffer_reset(instance->tx_buf);
-        bit_buffer_append_byte(instance->tx_buf, (data[1] == 0x0A) ? 0xFF : 0x00);
-        bit_buffer_append_byte(instance->tx_buf, 0x00);
-        nfc_listener_tx(event.instance, instance->tx_buf);
+        NfcEinkScreenData* const screen_data = instance->data;
+        if(data[0] == 0xFF && data[1] == 0xFE) {
+            bit_buffer_append_byte(instance->tx_buf, 0xEE);
+            bit_buffer_append_byte(instance->tx_buf, 0xFF);
+            iso14443_crc_append(Iso14443CrcTypeA, instance->tx_buf);
+        } else if(data[0] == 0x30) {
+            uint8_t index = data[1];
+            bit_buffer_append_bytes(instance->tx_buf, &blocks[index * 4], 4 * 4);
+            iso14443_crc_append(Iso14443CrcTypeA, instance->tx_buf);
+        } else if(data[0] == 0xA2) {
+            uint8_t index = data[1];
+            memcpy(&blocks[index * 4], &data[2], 4);
+            bit_buffer_append_byte(instance->tx_buf, 0x0A);
+            iso14443_crc_append(Iso14443CrcTypeA, instance->tx_buf);
+        } else if(data[0] == 0xCD) {
+            if(data[1] == 0x00) {
+                eink_waveshare_parse_config(instance, data + 2, 1);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            } else if(data[1] == 0x04) {
+                eink_waveshare_on_done(instance);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            } else if(data[1] == 0x0D) {
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+                //bit_buffer_append_byte(instance->tx_buf, 0x02); //Some kind of busy status
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            } else if(data[1] == 0x08) {
+                memcpy(screen_data->image_data + screen_data->received_data, &data[3], data[2]);
+                screen_data->received_data += data[2];
+
+                uint16_t last = screen_data->received_data - 1;
+                screen_data->image_data[last] &= 0xC0;
+
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            } else if(data[1] == 0x0A) {
+                bit_buffer_append_byte(instance->tx_buf, 0xFF);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            } else {
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+                bit_buffer_append_byte(instance->tx_buf, 0x00);
+            }
+
+            iso14443_crc_append(Iso14443CrcTypeA, instance->tx_buf);
+        }
+        if(bit_buffer_get_size_bytes(instance->tx_buf) > 0)
+            nfc_listener_tx(event.instance, instance->tx_buf);
     }
 
     return command;
