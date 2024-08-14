@@ -1,4 +1,5 @@
 #include "../nfc_eink_app.h"
+#include "../nfc_eink_screen/nfc_eink_screen.h"
 #include <path.h>
 
 static void nfc_eink_text_input_callback(void* context) {
@@ -57,15 +58,15 @@ bool nfc_eink_scene_save_name_on_event(void* context, SceneManagerEvent event) {
             path_append(instance->file_path, instance->text_store);
             //furi_string_set(instance->file_name, instance->text_store);
 
-            /*if(nfc_eink_screen_save(instance->screen, furi_string_get_cstr(instance->file_path))) {
+            if(nfc_eink_screen_save(instance->screen, furi_string_get_cstr(instance->file_path))) {
                 scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneSaveSuccess);
 
                 dolphin_deed(DolphinDeedNfcSave);
-                 //dolphin_deed(
-                 //   scene_manager_has_previous_scene(instance->scene_manager, NfcSceneSetType) ?
-                 //       DolphinDeedNfcAddSave :
-                 //       DolphinDeedNfcSave); 
-            }*/
+                //dolphin_deed(
+                //   scene_manager_has_previous_scene(instance->scene_manager, NfcSceneSetType) ?
+                //       DolphinDeedNfcAddSave :
+                //       DolphinDeedNfcSave);
+            }
             consumed = true;
         }
     }

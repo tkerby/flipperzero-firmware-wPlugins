@@ -44,3 +44,7 @@ void nfc_eink_screen_set_done_callback(
     NfcEinkScreen* screen,
     NfcEinkScreenDoneCallback eink_screen_done_callback,
     void* context);
+
+bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
+bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
+//bool nfc_eink_screen_load_descriptor(const char* file_path, NfcEinkScreenDescriptor** screen);

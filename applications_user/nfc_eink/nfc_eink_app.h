@@ -23,7 +23,7 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/widget.h>
 #include <dialogs/dialogs.h>
-#include <storage/storage.h>
+#include <storage/storage.h> ///TODO: remove this when eink_app.c will be free of STORAGE defines
 //#include <application/services/dolphin/helpers/dolphin_deed.h>
 
 /* #include <lib/nfc/nfc.h>
@@ -44,7 +44,7 @@
 
 #define NFC_EINK_APP_FOLDER ANY_PATH(TAG)
 
-///TODO: possibly move this closer to save/load functions
+/* ///TODO: possibly move this closer to save/load functions
 #define NFC_EINK_FORMAT_VERSION             (1)
 #define NFC_EINK_FILE_HEADER                "Flipper NFC Eink screen"
 #define NFC_EINK_DEVICE_UID_KEY             "UID"
@@ -56,7 +56,7 @@
 #define NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY "Data block size"
 #define NFC_EINK_SCREEN_DATA_TOTAL_KEY      "Data total"
 #define NFC_EINK_SCREEN_DATA_READ_KEY       "Data read"
-#define NFC_EINK_SCREEN_BLOCK_DATA_KEY      "Block"
+#define NFC_EINK_SCREEN_BLOCK_DATA_KEY      "Block" */
 
 typedef enum {
     NfcEinkCustomEventReserved = 100,

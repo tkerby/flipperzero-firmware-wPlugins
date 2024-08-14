@@ -7,6 +7,7 @@
 #include <nfc/nfc_device.h>
 
 typedef enum {
+    //NfcEinkManufacturerGeneric,
     NfcEinkManufacturerWaveshare,
     NfcEinkManufacturerGoodisplay,
 
