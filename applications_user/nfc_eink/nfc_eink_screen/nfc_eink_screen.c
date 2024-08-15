@@ -87,7 +87,7 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     //eink_waveshare_init(screen->data);
 
     screen->tx_buf = bit_buffer_alloc(50);
-
+    screen->rx_buf = bit_buffer_alloc(50);
     return screen;
 }
 
@@ -113,6 +113,7 @@ void nfc_eink_screen_free(NfcEinkScreen* screen) {
 
     screen->handlers->free(screen->nfc_device);
     bit_buffer_free(screen->tx_buf);
+    bit_buffer_free(screen->rx_buf);
     screen->handlers = NULL;
     free(screen);
 }

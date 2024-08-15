@@ -69,6 +69,7 @@ typedef struct {
     NfcDevice* nfc_device;
     NfcEinkScreenData* data;
     BitBuffer* tx_buf;
+    BitBuffer* rx_buf;
     const NfcEinkScreenHandlers* handlers;
     NfcEinkScreenDoneEvent done_event;
 
