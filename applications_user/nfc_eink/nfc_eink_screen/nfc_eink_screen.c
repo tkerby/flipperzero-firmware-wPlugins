@@ -278,3 +278,11 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
 
     return saved;
 }
+
+bool nfc_eink_screen_delete(const char* file_path) {
+    furi_assert(file_path);
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    bool deleted = storage_simply_remove(storage, file_path);
+    furi_record_close(RECORD_STORAGE);
+    return deleted;
+}

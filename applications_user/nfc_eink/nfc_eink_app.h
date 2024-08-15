@@ -3,27 +3,29 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#include <applications/services/gui/gui.h>
 #include <applications/services/dolphin/dolphin.h>
 #include <applications/services/dolphin/helpers/dolphin_deed.h>
 
-#include <gui/view.h>
 #include <assets_icons.h>
-#include <gui/view_dispatcher.h>
-#include <gui/scene_manager.h>
-#include <notification/notification_messages.h>
 
-#include <gui/modules/submenu.h>
-#include <gui/modules/empty_screen.h>
-#include <gui/modules/dialog_ex.h>
-#include <gui/modules/popup.h>
-#include <gui/modules/loading.h>
-#include <gui/modules/text_input.h>
-#include <gui/modules/byte_input.h>
-#include <gui/modules/text_box.h>
-#include <gui/modules/widget.h>
-#include <dialogs/dialogs.h>
-#include <storage/storage.h> ///TODO: remove this when eink_app.c will be free of STORAGE defines
+#include <../applications/services/notification/notification_messages.h>
+
+#include <../applications/services/gui/gui.h>
+#include <../applications/services/gui/view.h>
+#include <../applications/services/gui/view_dispatcher.h>
+#include <../applications/services/gui/scene_manager.h>
+#include <../applications/services/gui/modules/submenu.h>
+#include <../applications/services/gui/modules/empty_screen.h>
+#include <../applications/services/gui/modules/dialog_ex.h>
+#include <../applications/services/gui/modules/popup.h>
+#include <../applications/services/gui/modules/loading.h>
+#include <../applications/services/gui/modules/text_input.h>
+#include <../applications/services/gui/modules/byte_input.h>
+#include <../applications/services/gui/modules/text_box.h>
+#include <../applications/services/gui/modules/widget.h>
+
+#include <../applications/services/dialogs/dialogs.h>
+#include <../applications/services/storage/storage.h>
 //#include <application/services/dolphin/helpers/dolphin_deed.h>
 
 /* #include <lib/nfc/nfc.h>
@@ -32,6 +34,7 @@
 #include <lib/nfc/nfc_listener.h>
 #include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h> */
 #include <nfc/nfc_listener.h>
+#include <nfc/nfc_poller.h>
 
 #include "nfc_eink_screen/nfc_eink_screen.h"
 #include "scenes/scenes.h"
@@ -58,6 +61,8 @@
 #define NFC_EINK_SCREEN_DATA_READ_KEY       "Data read"
 #define NFC_EINK_SCREEN_BLOCK_DATA_KEY      "Block" */
 
+///TODO: remove all this shit below to _i.h file
+
 typedef enum {
     NfcEinkCustomEventReserved = 100,
 
@@ -79,7 +84,6 @@ typedef enum {
 } NfcEinkView;
 
 typedef struct {
-    Storage* storage;
     Gui* gui;
     DialogsApp* dialogs;
     NotificationApp* notifications;
@@ -102,18 +106,17 @@ typedef struct {
     Nfc* nfc;
 
     NfcListener* listener;
+    NfcPoller* poller;
     NfcEinkScreen* screen;
 
     BitBuffer* tx_buf;
     char text_store[50 + 1];
     FuriString* file_path;
     FuriString* file_name;
-    bool was_update;
-    uint8_t update_cnt;
     FuriTimer* timer;
 } NfcEinkApp;
 
-///TODO: Move this to private _i.h file
-bool nfc_eink_screen_delete(const char* file_path);
-//bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
-//bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
+bool nfc_eink_load_from_file_select(NfcEinkApp* instance);
+void nfc_eink_blink_emulate_start(NfcEinkApp* app);
+void nfc_eink_blink_write_start(NfcEinkApp* app);
+void nfc_eink_blink_stop(NfcEinkApp* app);

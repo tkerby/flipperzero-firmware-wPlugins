@@ -50,9 +50,6 @@ static NfcEinkApp* nfc_eink_app_alloc() {
     // Open GUI record
     instance->gui = furi_record_open(RECORD_GUI);
 
-    // Open Storage record
-    instance->storage = furi_record_open(RECORD_STORAGE);
-
     // Open Dialogs record
     instance->dialogs = furi_record_open(RECORD_DIALOGS);
 
@@ -189,7 +186,6 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     view_dispatcher_free(instance->view_dispatcher);
 
     furi_record_close(RECORD_DIALOGS);
-    furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_GUI);
 
@@ -198,7 +194,6 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
 
     instance->dialogs = NULL;
     instance->gui = NULL;
-    instance->storage = NULL;
     instance->notifications = NULL;
     furi_timer_free(instance->timer);
     free(instance);
@@ -207,58 +202,46 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
 static void nfc_eink_make_app_folders(const NfcEinkApp* instance) {
     furi_assert(instance);
 
-    if(!storage_simply_mkdir(instance->storage, NFC_EINK_APP_FOLDER)) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage_simply_mkdir(storage, NFC_EINK_APP_FOLDER)) {
         dialog_message_show_storage_error(instance->dialogs, "Cannot create\napp folder");
     }
+    furi_record_close(RECORD_STORAGE);
 }
-/* 
-///TODO: Think of moving this to eink_screen code namespace
-bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
-    furi_assert(screen);
-    furi_assert(file_path);
 
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
+bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
+    furi_assert(instance);
 
-    bool loaded = false;
+    DialogsFileBrowserOptions browser_options;
+    dialog_file_browser_set_basic_options(&browser_options, NFC_EINK_APP_EXTENSION, &I_Nfc_10px);
+    browser_options.base_path = NFC_EINK_APP_FOLDER;
+    browser_options.hide_dot_files = true;
+
+    bool success = false;
     do {
-        if(!flipper_format_buffered_file_open_existing(ff, file_path)) break;
+        // Input events and views are managed by file_browser
+        if(!dialog_file_browser_show(
+               instance->dialogs, instance->file_path, instance->file_path, &browser_options))
+            break;
 
-        uint32_t buf = 0;
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &buf, 1)) break;
-        NfcEinkScreen* scr = nfc_eink_screen_alloc(buf);
+        success =
+            nfc_eink_screen_load(furi_string_get_cstr(instance->file_path), &instance->screen);
+        //success = nfc_eink_screen_load(instance, instance->file_path, true);
+    } while(!success);
 
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_DATA_READ_KEY, &buf, 1)) break;
-        scr->data->received_data = buf;
-
-        FuriString* temp_str = furi_string_alloc();
-        bool block_loaded = false;
-        for(uint16_t i = 0; i < scr->data->received_data; i += scr->data->base.data_block_size) {
-            furi_string_printf(temp_str, "%s %d", NFC_EINK_SCREEN_BLOCK_DATA_KEY, i);
-            block_loaded = flipper_format_read_hex(
-                ff,
-                furi_string_get_cstr(temp_str),
-                &scr->data->image_data[i],
-                scr->data->base.data_block_size);
-            if(!block_loaded) break;
-        }
-        furi_string_free(temp_str);
-
-        loaded = block_loaded;
-    } while(false);
-
-    flipper_format_free(ff);
-    furi_record_close(RECORD_STORAGE);
-    return loaded;
+    return success;
 }
-*/
 
-bool nfc_eink_screen_delete(const char* file_path) {
-    furi_assert(file_path);
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    bool deleted = storage_simply_remove(storage, file_path);
-    furi_record_close(RECORD_STORAGE);
-    return deleted;
+void nfc_eink_blink_emulate_start(NfcEinkApp* app) {
+    notification_message(app->notifications, &sequence_blink_start_magenta);
+}
+
+void nfc_eink_blink_write_start(NfcEinkApp* app) {
+    notification_message(app->notifications, &sequence_blink_start_cyan);
+}
+
+void nfc_eink_blink_stop(NfcEinkApp* app) {
+    notification_message(app->notifications, &sequence_blink_stop);
 }
 
 int32_t nfc_eink(/* void* p */) {
