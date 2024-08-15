@@ -41,7 +41,7 @@ bool nfc_eink_scene_start_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseType);
             consumed = true;
         } else if(submenu_index == SubmenuIndexWrite) {
-            //scene_manager_next_scene(scene_manager, );
+            scene_manager_next_scene(scene_manager, NfcEinkAppSceneFileSelect);
             consumed = true;
         } else if(submenu_index == SubmenuIndexRead) {
             //scene_manager_next_scene(scene_manager, );

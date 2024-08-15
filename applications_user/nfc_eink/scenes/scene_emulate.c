@@ -15,18 +15,6 @@ static void nfc_eink_scene_start_submenu_callback(void* context, uint32_t index)
     view_dispatcher_send_custom_event(instance->view_dispatcher, index);
 } */
 
-void nfc_blink_emulate_start(NfcEinkApp* app) {
-    notification_message(app->notifications, &sequence_blink_start_magenta);
-}
-
-/* void nfc_blink_detect_start(NfcApp* nfc) {
-    notification_message(nfc->notifications, &sequence_blink_start_cyan);
-} */
-
-void nfc_blink_stop(NfcEinkApp* app) {
-    notification_message(app->notifications, &sequence_blink_stop);
-}
-
 /* NfcCommand nfc_eink_listener_callback(NfcGenericEvent event, void* context) {
     NfcCommand command = NfcCommandContinue;
     NfcEinkApp* instance = context;
@@ -384,7 +372,7 @@ void nfc_eink_scene_emulate_on_enter(void* context) {
     instance->listener = nfc_listener_alloc(instance->nfc, protocol, data);
     nfc_listener_start(instance->listener, screen->handlers->listener_callback, instance->screen);
 
-    nfc_blink_emulate_start(instance);
+    nfc_eink_blink_emulate_start(instance);
 }
 
 bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
@@ -420,7 +408,7 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
 
 void nfc_eink_scene_emulate_on_exit(void* context) {
     NfcEinkApp* instance = context;
-    nfc_blink_stop(instance);
     nfc_listener_stop(instance->listener);
+    nfc_eink_blink_stop(instance);
     widget_reset(instance->widget);
 }
