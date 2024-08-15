@@ -94,12 +94,6 @@ void eink_goodisplay_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventTyp
     return 2;
 } */
 
-static NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context) {
-    furi_assert(context);
-    UNUSED(event);
-    return NfcCommandContinue;
-}
-
 const NfcEinkScreenHandlers goodisplay_handlers = {
     .alloc_nfc_device = eink_goodisplay_nfc_device_4a_alloc,
     .free = eink_goodisplay_free,

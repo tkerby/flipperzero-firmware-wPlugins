@@ -93,3 +93,4 @@ typedef struct {
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length);
 void eink_goodisplay_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type);
 NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* context);
+NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context);
