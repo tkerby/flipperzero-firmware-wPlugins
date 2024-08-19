@@ -86,18 +86,19 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     //screen->data->base = screens[0];
     //eink_waveshare_init(screen->data);
 
-    screen->tx_buf = bit_buffer_alloc(50);
+    screen->tx_buf = bit_buffer_alloc(300);
     screen->rx_buf = bit_buffer_alloc(50);
     return screen;
 }
 
 void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type) {
     UNUSED(type);
+    NfcEinkScreenData* data = screen->data;
+
     if(screen->data->base.screen_type == NfcEinkTypeUnknown) {
-        screen->handlers->init(&screen->data->base, type);
+        screen->handlers->init(data, type);
     }
 
-    NfcEinkScreenData* data = screen->data;
     data->image_size =
         data->base.width *
         (data->base.height % 8 == 0 ? (data->base.height / 8) : (data->base.height / 8 + 1));
@@ -109,8 +110,9 @@ void nfc_eink_screen_free(NfcEinkScreen* screen) {
 
     NfcEinkScreenData* data = screen->data;
     free(data->image_data);
-    free(data);
+    free(screen->data->screen_context);
 
+    free(data);
     screen->handlers->free(screen->nfc_device);
     bit_buffer_free(screen->tx_buf);
     bit_buffer_free(screen->rx_buf);

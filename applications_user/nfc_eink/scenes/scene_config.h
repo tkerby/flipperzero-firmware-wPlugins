@@ -8,3 +8,4 @@ ADD_SCENE(nfc_eink, save_success, SaveSuccess)
 ADD_SCENE(nfc_eink, file_select, FileSelect)
 ADD_SCENE(nfc_eink, saved_menu, SavedMenu) ///TODO: think of a better scene name
 ADD_SCENE(nfc_eink, write, Write)
+ADD_SCENE(nfc_eink, write_done, WriteDone)

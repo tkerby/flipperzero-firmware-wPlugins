@@ -1,5 +1,11 @@
 #include "../nfc_eink_app.h"
 
+static void nfc_eink_write_done_callback(void* context) {
+    furi_assert(context);
+    NfcEinkApp* instance = context;
+    furi_timer_start(instance->timer, furi_ms_to_ticks(500));
+}
+
 void nfc_eink_scene_write_on_enter(void* context) {
     NfcEinkApp* instance = context;
 
@@ -12,6 +18,7 @@ void nfc_eink_scene_write_on_enter(void* context) {
 
     NfcEinkScreen* screen = instance->screen;
 
+    nfc_eink_screen_set_done_callback(instance->screen, nfc_eink_write_done_callback, instance);
     const NfcProtocol protocol = nfc_device_get_protocol(screen->nfc_device);
     instance->poller = nfc_poller_alloc(instance->nfc, protocol);
 
@@ -22,13 +29,25 @@ void nfc_eink_scene_write_on_enter(void* context) {
 
 bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
     NfcEinkApp* instance = context;
-    UNUSED(instance);
-    UNUSED(event);
-    return false;
+    SceneManager* scene_manager = instance->scene_manager;
+
+    bool consumed = false;
+
+    if(event.type == SceneManagerEventTypeCustom && event.event == 0) {
+        scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneWriteDone);
+        notification_message(instance->notifications, &sequence_success);
+        consumed = true;
+    } else if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_previous_scene(scene_manager);
+        consumed = true;
+    }
+
+    return consumed;
 }
 
 void nfc_eink_scene_write_on_exit(void* context) {
     NfcEinkApp* instance = context;
     nfc_poller_stop(instance->poller);
     nfc_eink_blink_stop(instance);
+    popup_reset(instance->popup);
 }

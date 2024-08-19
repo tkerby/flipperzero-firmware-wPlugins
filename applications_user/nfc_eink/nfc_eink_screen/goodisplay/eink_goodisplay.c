@@ -60,13 +60,18 @@ static void eink_goodisplay_free(NfcDevice* instance) {
     nfc_device_free(instance);
 }
 
-static void eink_goodisplay_init(NfcEinkScreenDescriptor* descriptor, NfcEinkType generic_type) {
-    furi_assert(descriptor);
+static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkType generic_type) {
+    furi_assert(data);
+
     NfcEinkScreenTypeGoodisplay goodisplay_type = (NfcEinkScreenTypeGoodisplay)generic_type;
     furi_assert(goodisplay_type != NfcEinkScreenTypeGoodisplayUnknown);
     furi_assert(goodisplay_type < NfcEinkScreenTypeGoodisplayNum);
 
-    *descriptor = goodisplay_screens[goodisplay_type];
+    data->base = goodisplay_screens[goodisplay_type];
+    NfcEinkScreenSpecificGoodisplayContext* context =
+        malloc(sizeof(NfcEinkScreenSpecificGoodisplayContext));
+    context->state = SendC2Cmd;
+    data->screen_context = context;
 }
 
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
@@ -75,7 +80,7 @@ void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, ui
     NfcEinkScreenTypeGoodisplay goodisplay_type = NfcEinkScreenTypeGoodisplayUnknown;
     goodisplay_type = NfcEinkScreenTypeGoodisplay2n13inch;
 
-    eink_goodisplay_init(&screen->data->base, (NfcEinkType)goodisplay_type);
+    eink_goodisplay_init(screen->data, (NfcEinkType)goodisplay_type);
     eink_goodisplay_on_config_received(screen);
 }
 

@@ -90,6 +90,30 @@ typedef struct {
 } NfcEinkScreenResponse;
 #pragma pack(pop)
 
+/// Some Poller shit
+typedef enum {
+    //Idle,
+    SendC2Cmd,
+    SelectNDEFTagApplication,
+    SelectNDEFFile,
+    ReadFIDFileData,
+    Select0xE104File,
+    Read0xE104FileData,
+    SendConfigCmd,
+    DuplicateC2Cmd,
+    SendDataCmd,
+    UpdateDisplay,
+    SendDataDone,
+
+    NfcEinkScreenGoodisplayPollerStateError,
+    NfcEinkScreenGoodisplayPollerStateNum
+} NfcEinkScreenGoodisplayPollerState;
+
+/// -----------------------
+typedef struct {
+    NfcEinkScreenGoodisplayPollerState state;
+} NfcEinkScreenSpecificGoodisplayContext;
+
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length);
 void eink_goodisplay_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type);
 NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* context);

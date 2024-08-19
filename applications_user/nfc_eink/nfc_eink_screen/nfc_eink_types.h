@@ -32,16 +32,20 @@ typedef struct {
     const char* name;
 } NfcEinkScreenDescriptor; //TODO:NfcEinkScreenBase
 
+typedef void NfcEinkScreenSpecificContext;
+
 typedef struct {
     uint8_t* image_data;
     uint16_t image_size;
     uint16_t received_data;
     NfcEinkScreenDescriptor base;
+    NfcEinkScreenSpecificContext* screen_context;
 } NfcEinkScreenData;
 
 typedef NfcDevice* (*EinkScreenAllocCallback)();
 typedef void (*EinkScreenFreeCallback)(NfcDevice* instance);
-typedef void (*EinkScreenInitCallback)(NfcEinkScreenDescriptor* descriptor, NfcEinkType type);
+//typedef void (*EinkScreenInitCallback)(NfcEinkScreenDescriptor* descriptor, NfcEinkType type);
+typedef void (*EinkScreenInitCallback)(NfcEinkScreenData* data, NfcEinkType type);
 
 typedef void (*NfcEinkScreenDoneCallback)(void* context);
 typedef void (*NfcEinkScreenEventCallback)(NfcEinkScreenEventType type, void* context);

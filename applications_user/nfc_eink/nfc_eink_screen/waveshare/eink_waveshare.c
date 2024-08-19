@@ -86,13 +86,14 @@ static void eink_waveshare_free(NfcDevice* instance) {
     nfc_device_free(instance);
 }
 
-static void eink_waveshare_init(NfcEinkScreenDescriptor* descriptor, NfcEinkType generic_type) {
-    furi_assert(descriptor);
+static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkType generic_type) {
+    furi_assert(data);
     NfcEinkScreenTypeWaveshare waveshare_type = (NfcEinkScreenTypeWaveshare)generic_type;
     furi_assert(waveshare_type != NfcEinkScreenTypeWaveshareUnknown);
     furi_assert(waveshare_type < NfcEinkScreenTypeWaveshareNum);
 
-    *descriptor = waveshare_screens[waveshare_type];
+    data->base = waveshare_screens[waveshare_type];
+    ///TODO: Add here context specific initialization
 }
 
 static void eink_waveshare_on_done(NfcEinkScreen* instance) {
@@ -119,7 +120,7 @@ static void
         waveshare_type = NfcEinkScreenTypeWaveshare2n9inch;
     }
 
-    eink_waveshare_init(&screen->data->base, (NfcEinkType)waveshare_type);
+    eink_waveshare_init(screen->data, (NfcEinkType)waveshare_type);
     eink_waveshare_on_config_received(screen);
 }
 
