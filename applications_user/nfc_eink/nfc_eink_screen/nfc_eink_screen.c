@@ -57,18 +57,6 @@ const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer manufactur
     return manufacturers[manufacturer].name;
 }
 
-static void nfc_eink_screen_event_callback(NfcEinkScreenEventType type, void* context) {
-    furi_assert(context);
-    NfcEinkScreen* screen = context;
-    if(type == NfcEinkScreenEventTypeDone) {
-        NfcEinkScreenDoneEvent event = screen->done_event;
-        if(event.done_callback != NULL) event.done_callback(event.context);
-    } else if(type == NfcEinkScreenEventTypeConfigurationReceived) {
-        FURI_LOG_D(TAG, "Config received");
-        nfc_eink_screen_init(screen, screen->data->base.screen_type);
-    }
-}
-
 NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     furi_check(manufacturer < NfcEinkManufacturerNum);
 
@@ -76,7 +64,7 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     screen->handlers = manufacturers[manufacturer].handlers;
 
     screen->nfc_device = screen->handlers->alloc_nfc_device();
-    screen->internal_event_callback = nfc_eink_screen_event_callback;
+    // screen->internal_event_callback = nfc_eink_screen_event_callback;
     //screen->internal_event.callback = nfc_eink_screen_event_callback;
 
     //Set NfcEinkScreenEvent callback
@@ -288,3 +276,23 @@ bool nfc_eink_screen_delete(const char* file_path) {
     furi_record_close(RECORD_STORAGE);
     return deleted;
 }
+
+void nfc_eink_screen_event_callback(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
+    furi_assert(instance);
+    if(type == NfcEinkScreenEventTypeDone) {
+        NfcEinkScreenDoneEvent event = instance->done_event;
+        ///TODO: replace this with pattern below
+        if(event.done_callback != NULL) {
+            event.done_callback(event.context);
+        }
+    } else if(type == NfcEinkScreenEventTypeConfigurationReceived) {
+        FURI_LOG_D(TAG, "Config received");
+        nfc_eink_screen_init(instance, instance->data->base.screen_type);
+    }
+}
+///TODO: this part can be used to provide external even callbacks to scenes for example
+/* void nfc_eink_screen_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
+    furi_assert(instance);
+    if(instance->internal_event_callback != NULL)
+        instance->internal_event_callback(type, instance);
+} */

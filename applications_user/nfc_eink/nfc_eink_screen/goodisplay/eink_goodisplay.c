@@ -84,13 +84,6 @@ void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, ui
     eink_goodisplay_on_config_received(screen);
 }
 
-///TODO: Think of moving this function to eink_screen layer somehow, because it is the same
-///for each display type
-void eink_goodisplay_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
-    furi_assert(instance);
-    if(instance->internal_event_callback != NULL)
-        instance->internal_event_callback(type, instance);
-}
 /* static uint8_t nfc_eink_screen_command_D4(const APDU_Command* command, APDU_Response* resp) {
     UNUSED(command);
     UNUSED(resp);

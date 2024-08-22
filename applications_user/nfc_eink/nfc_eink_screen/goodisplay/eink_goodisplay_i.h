@@ -1,7 +1,8 @@
 #pragma once
 
-#include "nfc_eink_tag.h"
-#include "../nfc_eink_types.h"
+//#include "nfc_eink_tag.h"
+//#include "../nfc_eink_types.h"
+#include "../nfc_eink_screen_i.h"
 #include <nfc/helpers/iso14443_crc.h>
 #include <nfc/protocols/nfc_generic_event.h>
 #include <nfc/nfc_common.h>
@@ -9,10 +10,10 @@
 #include <nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
 
 #define eink_goodisplay_on_done(instance) \
-    eink_goodisplay_event_invoke(instance, NfcEinkScreenEventTypeDone)
+    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeDone)
 
 #define eink_goodisplay_on_config_received(instance) \
-    eink_goodisplay_event_invoke(instance, NfcEinkScreenEventTypeConfigurationReceived)
+    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeConfigurationReceived)
 
 typedef enum {
     NfcEinkScreenTypeGoodisplayUnknown,
@@ -115,6 +116,5 @@ typedef struct {
 } NfcEinkScreenSpecificGoodisplayContext;
 
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length);
-void eink_goodisplay_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type);
 NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* context);
 NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context);

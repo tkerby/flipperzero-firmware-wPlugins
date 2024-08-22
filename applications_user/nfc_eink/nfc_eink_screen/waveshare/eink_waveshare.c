@@ -96,18 +96,6 @@ static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkType generic_typ
     ///TODO: Add here context specific initialization
 }
 
-static void eink_waveshare_on_done(NfcEinkScreen* instance) {
-    furi_assert(instance);
-    if(instance->internal_event_callback != NULL)
-        instance->internal_event_callback(NfcEinkScreenEventTypeDone, instance);
-}
-
-static void eink_waveshare_on_config_received(NfcEinkScreen* instance) {
-    furi_assert(instance);
-    if(instance->internal_event_callback != NULL)
-        instance->internal_event_callback(NfcEinkScreenEventTypeConfigurationReceived, instance);
-}
-
 static void
     eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     UNUSED(screen);
