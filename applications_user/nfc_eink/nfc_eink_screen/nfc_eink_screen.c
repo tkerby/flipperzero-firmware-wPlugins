@@ -76,6 +76,7 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
 
     screen->tx_buf = bit_buffer_alloc(300);
     screen->rx_buf = bit_buffer_alloc(50);
+    screen->response_cnt = 0;
     return screen;
 }
 

@@ -133,9 +133,16 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
         } else if(cmd->command_code == 0xB2) {
             response_length = 1;
             response->response_code = 0xA3;
-            FURI_LOG_D(TAG, "Done B2");
-            eink_goodisplay_on_done(instance);
+
             instance->was_update = false;
+            command = NfcCommandContinue;
+
+            instance->response_cnt++;
+            FURI_LOG_D(TAG, "Done B2: %d", instance->response_cnt);
+            if(instance->response_cnt >= 20) {
+                eink_goodisplay_on_done(instance);
+                command = NfcCommandStop;
+            }
         } else if(cmd->command_code == 0x13) {
             const APDU_Header* apdu = (APDU_Header*)cmd->command_data;
             if(apdu->CLA_byte == 0xF0 && apdu->CMD_code == 0xD2) {

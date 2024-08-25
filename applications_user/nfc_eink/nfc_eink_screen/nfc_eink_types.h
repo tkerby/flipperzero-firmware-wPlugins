@@ -81,5 +81,5 @@ typedef struct {
 
     bool was_update; ///TODO: Candidates to move
     uint8_t update_cnt; //to protocol specific instance
-    //NfcEinkScreenInternalEvent internal_event;
+    uint8_t response_cnt;
 } NfcEinkScreen;
