@@ -2,7 +2,8 @@
 
 void nfc_eink_scene_write_done_popup_callback(void* context) {
     NfcEinkApp* instance = context;
-    view_dispatcher_send_custom_event(instance->view_dispatcher, 0xDEAD);
+    view_dispatcher_send_custom_event(
+        instance->view_dispatcher, NfcEinkAppCustomEventTimerExpired);
 }
 
 void nfc_eink_scene_write_done_on_enter(void* context) {
@@ -24,7 +25,7 @@ bool nfc_eink_scene_write_done_on_event(void* context, SceneManagerEvent event) 
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == 0xDEAD) {
+        if(event.event == NfcEinkAppCustomEventTimerExpired) {
             consumed = scene_manager_search_and_switch_to_previous_scene(
                 instance->scene_manager, NfcEinkAppSceneFileSelect);
             /*  if(nfc_load_file(nfc, nfc->file_path, false)) {

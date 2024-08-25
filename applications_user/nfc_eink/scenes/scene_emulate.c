@@ -6,9 +6,6 @@
 //#include <lib/nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
 //#include <lib/nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
 
-enum CustomEvents {
-    CustomEventEmulationDone
-};
 /* 
 static void nfc_eink_scene_start_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
@@ -337,11 +334,20 @@ NfcCommand nfc_eink_listener_callback11(NfcGenericEvent event, void* context) {
     }
     return command;
 } */
-static void nfc_eink_emulation_done_callback(void* context) {
+static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context) {
     furi_assert(context);
     NfcEinkApp* instance = context;
-    furi_timer_start(instance->timer, furi_ms_to_ticks(500));
-    //view_dispatcher_send_custom_event(instance->view_dispatcher, CustomEventEmulationDone);
+    NfcEinkAppCustomEvents event = NfcEinkAppCustomEventProcessFinish;
+    switch(type) {
+    case NfcEinkScreenEventTypeFinish:
+        event = NfcEinkAppCustomEventProcessFinish;
+        break;
+
+    default:
+        furi_crash("Implement other cases");
+        break;
+    }
+    view_dispatcher_send_custom_event(instance->view_dispatcher, event);
 }
 
 void nfc_eink_scene_emulate_on_enter(void* context) {
@@ -364,8 +370,7 @@ void nfc_eink_scene_emulate_on_enter(void* context) {
     instance->listener = nfc_listener_alloc(instance->nfc, NfcProtocolIso14443_4a, data); */
     //nfc_listener_start(instance->listener, nfc_eink_listener_callback, instance);
     const NfcEinkScreen* screen = instance->screen;
-    nfc_eink_screen_set_done_callback(
-        instance->screen, nfc_eink_emulation_done_callback, instance);
+    nfc_eink_screen_set_callback(instance->screen, nfc_eink_emulate_callback, instance);
 
     NfcProtocol protocol = nfc_device_get_protocol(screen->nfc_device);
     const NfcDeviceData* data = nfc_device_get_data(screen->nfc_device, protocol);
@@ -395,7 +400,8 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
         }
     } */
 
-    if(event.type == SceneManagerEventTypeCustom && event.event == CustomEventEmulationDone) {
+    if(event.type == SceneManagerEventTypeCustom &&
+       event.event == NfcEinkAppCustomEventProcessFinish) {
         scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {

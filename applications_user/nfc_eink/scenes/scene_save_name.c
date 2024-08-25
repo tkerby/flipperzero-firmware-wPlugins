@@ -4,7 +4,8 @@
 
 static void nfc_eink_text_input_callback(void* context) {
     NfcEinkApp* instance = context;
-    view_dispatcher_send_custom_event(instance->view_dispatcher, NfcEinkCustomEventTextInputDone);
+    view_dispatcher_send_custom_event(
+        instance->view_dispatcher, NfcEinkAppCustomEventTextInputDone);
 }
 
 void nfc_eink_scene_save_name_on_enter(void* context) {
@@ -48,7 +49,7 @@ bool nfc_eink_scene_save_name_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == NfcEinkCustomEventTextInputDone) {
+        if(event.event == NfcEinkAppCustomEventTextInputDone) {
             if(!furi_string_empty(instance->file_name)) {
                 nfc_eink_screen_delete(furi_string_get_cstr(instance->file_path));
                 furi_string_set(instance->file_path, NFC_EINK_APP_FOLDER);
