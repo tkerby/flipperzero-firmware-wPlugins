@@ -19,8 +19,15 @@ typedef enum {
 } NfcEinkType;
 
 typedef enum {
+    NfcEinkScreenEventTypeTargetDetected,
+    NfcEinkScreenEventTypeTargetLost,
+
     NfcEinkScreenEventTypeConfigurationReceived,
-    NfcEinkScreenEventTypeDone,
+    NfcEinkScreenEventTypeBlockRxDone,
+    NfcEinkScreenEventTypeBlockTxDone,
+
+    NfcEinkScreenEventTypeFinish,
+    NfcEinkScreenEventTypeFailure,
 } NfcEinkScreenEventType;
 
 typedef struct {
