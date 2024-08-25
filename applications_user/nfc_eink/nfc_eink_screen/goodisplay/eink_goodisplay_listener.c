@@ -170,6 +170,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
                 nfc_eink_screen_command_A4(
                     (APDU_Command_Select*)apdu, &response->apdu_resp.apdu_response);
                 response_length = 3;
+                if(cmd->command_code == 0x02) eink_goodisplay_on_target_detected(instance);
             } else if(apdu->CLA_byte == 0 && apdu->CMD_code == 0xB0) {
                 FURI_LOG_D(TAG, "00 B0");
                 response_length =

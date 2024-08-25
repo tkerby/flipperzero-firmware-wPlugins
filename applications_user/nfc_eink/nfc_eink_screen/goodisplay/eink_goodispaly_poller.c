@@ -82,7 +82,7 @@ static NfcCommand
 
         if(!result) break;
         if(rx[0] != 0x02 || rx[1] != 0x90 || rx[2] != 0x00) break;
-
+        eink_goodisplay_on_target_detected(screen);
         ctx->state = SelectNDEFFile;
     } while(false);
     return NfcCommandContinue;
