@@ -1,30 +1,53 @@
 #include "../nfc_eink_app.h"
 
+typedef enum {
+    NfcEinkAppSceneWriteStateWaitingForTarget,
+    NfcEinkAppSceneWriteStateWritingDataBlocks,
+} NfcEinkAppSceneWriteStates;
+
 static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) {
     furi_assert(context);
     NfcEinkApp* instance = context;
     NfcEinkAppCustomEvents event = NfcEinkAppCustomEventProcessFinish;
     switch(type) {
+    case NfcEinkScreenEventTypeTargetDetected:
+        event = NfcEinkAppCustomEventTargetDetected;
+        FURI_LOG_D(TAG, "Target detected");
+        break;
     case NfcEinkScreenEventTypeFinish:
         event = NfcEinkAppCustomEventProcessFinish;
         break;
 
     default:
-        furi_crash("Implement other cases");
+        FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
+        furi_crash();
         break;
     }
     view_dispatcher_send_custom_event(instance->view_dispatcher, event);
 }
 
+static void nfc_eink_scene_write_show_waiting(const NfcEinkApp* instance) {
+    popup_reset(instance->popup);
+    popup_set_header(instance->popup, "Waiting", 97, 15, AlignCenter, AlignTop);
+    popup_set_text(
+        instance->popup, "Apply eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
+    popup_set_icon(instance->popup, 0, 8, &I_NFC_manual_60x50);
+    view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewPopup);
+}
+
+///TODO: this must be replaced by progress bar view but it needs to be implemented
+static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
+    popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
+    popup_set_text(
+        instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
+}
+
 void nfc_eink_scene_write_on_enter(void* context) {
     NfcEinkApp* instance = context;
 
-    popup_reset(instance->popup);
-    popup_set_header(instance->popup, "Writing", 97, 15, AlignCenter, AlignTop);
-    popup_set_text(
-        instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
-    popup_set_icon(instance->popup, 0, 8, &I_NFC_manual_60x50);
-    view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewPopup);
+    nfc_eink_scene_write_show_waiting(instance);
+    scene_manager_set_scene_state(
+        instance->scene_manager, NfcEinkAppSceneWrite, NfcEinkAppSceneWriteStateWaitingForTarget);
 
     NfcEinkScreen* screen = instance->screen;
 
@@ -47,6 +70,13 @@ bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
         if(event.event == NfcEinkAppCustomEventProcessFinish) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneWriteDone);
             notification_message(instance->notifications, &sequence_success);
+            consumed = true;
+        } else if(event.event == NfcEinkAppCustomEventTargetDetected) {
+            scene_manager_set_scene_state(
+                instance->scene_manager,
+                NfcEinkAppSceneWrite,
+                NfcEinkAppSceneWriteStateWritingDataBlocks);
+            nfc_eink_scene_write_show_writing_data(instance);
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
