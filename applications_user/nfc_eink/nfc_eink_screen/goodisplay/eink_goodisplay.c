@@ -55,9 +55,24 @@ static NfcDevice* eink_goodisplay_nfc_device_4a_alloc() {
     return nfc_device;
 }
 
-static void eink_goodisplay_free(NfcDevice* instance) {
+static NfcEinkScreenDevice* eink_goodisplay_device_alloc() {
+    NfcEinkScreenDevice* device = malloc(sizeof(NfcEinkScreenDevice));
+
+    device->nfc_device = eink_goodisplay_nfc_device_4a_alloc();
+
+    NfcEinkScreenSpecificGoodisplayContext* context =
+        malloc(sizeof(NfcEinkScreenSpecificGoodisplayContext));
+
+    context->state = SendC2Cmd;
+
+    device->screen_context = context;
+    return device;
+}
+
+static void eink_goodisplay_free(NfcEinkScreenDevice* instance) {
     furi_assert(instance);
-    nfc_device_free(instance);
+    nfc_device_free(instance->nfc_device);
+    free(instance->screen_context);
 }
 
 static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkType generic_type) {
@@ -68,10 +83,6 @@ static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkType generic_ty
     furi_assert(goodisplay_type < NfcEinkScreenTypeGoodisplayNum);
 
     data->base = goodisplay_screens[goodisplay_type];
-    NfcEinkScreenSpecificGoodisplayContext* context =
-        malloc(sizeof(NfcEinkScreenSpecificGoodisplayContext));
-    context->state = SendC2Cmd;
-    data->screen_context = context;
 }
 
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
@@ -84,16 +95,8 @@ void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, ui
     eink_goodisplay_on_config_received(screen);
 }
 
-/* static uint8_t nfc_eink_screen_command_D4(const APDU_Command* command, APDU_Response* resp) {
-    UNUSED(command);
-    UNUSED(resp);
-
-    //resp->status = __builtin_bswap16(0x9000);
-    return 2;
-} */
-
 const NfcEinkScreenHandlers goodisplay_handlers = {
-    .alloc_nfc_device = eink_goodisplay_nfc_device_4a_alloc,
+    .alloc = eink_goodisplay_device_alloc,
     .free = eink_goodisplay_free,
     .init = eink_goodisplay_init,
     .listener_callback = eink_goodisplay_listener_callback,

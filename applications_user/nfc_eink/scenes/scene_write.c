@@ -29,7 +29,7 @@ void nfc_eink_scene_write_on_enter(void* context) {
     NfcEinkScreen* screen = instance->screen;
 
     nfc_eink_screen_set_callback(instance->screen, nfc_eink_write_callback, instance);
-    const NfcProtocol protocol = nfc_device_get_protocol(screen->nfc_device);
+    const NfcProtocol protocol = nfc_device_get_protocol(screen->device->nfc_device);
     instance->poller = nfc_poller_alloc(instance->nfc, protocol);
 
     nfc_poller_start(instance->poller, screen->handlers->poller_callback, screen);

@@ -39,7 +39,7 @@ static const NfcEinkScreenDescriptor waveshare_screens[NfcEinkScreenTypeWaveshar
 
 static uint8_t blocks[16 * 4];
 
-static NfcDevice* eink_waveshare_alloc() {
+static NfcDevice* eink_waveshare_nfc_device_alloc() {
     //const uint8_t uid[] = {0x46, 0x53, 0x54, 0x5E, 0x31, 0x30, 0x6D}; //FSTN10m
     const uint8_t uid[] = {0x57, 0x53, 0x44, 0x5A, 0x31, 0x30, 0x6D}; //WSDZ10m
     const uint8_t atqa[] = {0x44, 0x00};
@@ -81,9 +81,18 @@ static NfcDevice* eink_waveshare_alloc() {
     return nfc_device;
 }
 
-static void eink_waveshare_free(NfcDevice* instance) {
+static NfcEinkScreenDevice* eink_waveshare_alloc() {
+    NfcEinkScreenDevice* device = malloc(sizeof(NfcEinkScreenDevice));
+    device->nfc_device = eink_waveshare_nfc_device_alloc();
+    device->screen_context = NULL;
+
+    return device;
+}
+
+static void eink_waveshare_free(NfcEinkScreenDevice* instance) {
     furi_assert(instance);
-    nfc_device_free(instance);
+    nfc_device_free(instance->nfc_device);
+    furi_assert(instance->screen_context == NULL);
 }
 
 static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkType generic_type) {
@@ -192,7 +201,7 @@ static NfcCommand eink_waveshare_poller_callback(NfcGenericEvent event, void* co
 }
 
 const NfcEinkScreenHandlers waveshare_handlers = {
-    .alloc_nfc_device = eink_waveshare_alloc,
+    .alloc = eink_waveshare_alloc,
     .free = eink_waveshare_free,
     .init = eink_waveshare_init,
     .listener_callback = eink_waveshare_listener_callback,

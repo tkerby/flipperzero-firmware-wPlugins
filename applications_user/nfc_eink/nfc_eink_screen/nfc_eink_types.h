@@ -46,11 +46,15 @@ typedef struct {
     uint16_t image_size;
     uint16_t received_data;
     NfcEinkScreenDescriptor base;
-    NfcEinkScreenSpecificContext* screen_context;
 } NfcEinkScreenData;
 
-typedef NfcDevice* (*EinkScreenAllocCallback)();
-typedef void (*EinkScreenFreeCallback)(NfcDevice* instance);
+typedef struct {
+    NfcDevice* nfc_device;
+    NfcEinkScreenSpecificContext* screen_context;
+} NfcEinkScreenDevice;
+
+typedef NfcEinkScreenDevice* (*EinkScreenAllocCallback)();
+typedef void (*EinkScreenFreeCallback)(NfcEinkScreenDevice* instance);
 //typedef void (*EinkScreenInitCallback)(NfcEinkScreenDescriptor* descriptor, NfcEinkType type);
 typedef void (*EinkScreenInitCallback)(NfcEinkScreenData* data, NfcEinkType type);
 
@@ -59,7 +63,7 @@ typedef void (*NfcEinkScreenEventCallback)(NfcEinkScreenEventType type, void* co
 typedef void* NfcEinkScreenEventContext;
 
 typedef struct {
-    EinkScreenAllocCallback alloc_nfc_device;
+    EinkScreenAllocCallback alloc;
     EinkScreenFreeCallback free;
     EinkScreenInitCallback init;
     NfcGenericCallback listener_callback;
@@ -67,12 +71,12 @@ typedef struct {
 } NfcEinkScreenHandlers;
 
 typedef struct {
-    NfcDevice* nfc_device;
     NfcEinkScreenData* data;
+    NfcEinkScreenDevice* device;
     BitBuffer* tx_buf;
     BitBuffer* rx_buf;
     const NfcEinkScreenHandlers* handlers;
-    NfcEinkScreenEventCallback callback;
+    NfcEinkScreenEventCallback event_callback;
     NfcEinkScreenEventContext event_context;
 
     bool was_update; ///TODO: Candidates to move

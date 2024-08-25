@@ -63,16 +63,9 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     NfcEinkScreen* screen = malloc(sizeof(NfcEinkScreen));
     screen->handlers = manufacturers[manufacturer].handlers;
 
-    screen->nfc_device = screen->handlers->alloc_nfc_device();
-    // screen->internal_event_callback = nfc_eink_screen_event_callback;
-    //screen->internal_event.callback = nfc_eink_screen_event_callback;
+    screen->device = screen->handlers->alloc();
 
-    //Set NfcEinkScreenEvent callback
-    //screen->handlers->set_event_callback();
     screen->data = malloc(sizeof(NfcEinkScreenData));
-
-    //screen->data->base = screens[0];
-    //eink_waveshare_init(screen->data);
 
     screen->tx_buf = bit_buffer_alloc(300);
     screen->rx_buf = bit_buffer_alloc(50);
@@ -97,12 +90,12 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type) {
 void nfc_eink_screen_free(NfcEinkScreen* screen) {
     furi_check(screen);
 
+    screen->handlers->free(screen->device);
+
     NfcEinkScreenData* data = screen->data;
     free(data->image_data);
-    free(screen->data->screen_context);
-
     free(data);
-    screen->handlers->free(screen->nfc_device);
+
     bit_buffer_free(screen->tx_buf);
     bit_buffer_free(screen->rx_buf);
     screen->handlers = NULL;
@@ -188,7 +181,7 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
             break;
 
         // Write device type
-        NfcProtocol protocol = nfc_device_get_protocol(screen->nfc_device);
+        NfcProtocol protocol = nfc_device_get_protocol(screen->device->nfc_device);
         if(!flipper_format_write_string_cstr(
                ff, NFC_EINK_DEVICE_TYPE_KEY, nfc_device_get_protocol_name(protocol)))
             break;
@@ -199,7 +192,7 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
         if(!flipper_format_write_comment(ff, temp_str)) break;
 
         size_t uid_len;
-        const uint8_t* uid = nfc_device_get_uid(screen->nfc_device, &uid_len);
+        const uint8_t* uid = nfc_device_get_uid(screen->device->nfc_device, &uid_len);
         if(!flipper_format_write_hex(ff, NFC_EINK_DEVICE_UID_KEY, uid, uid_len)) break;
 
         // Write manufacturer type

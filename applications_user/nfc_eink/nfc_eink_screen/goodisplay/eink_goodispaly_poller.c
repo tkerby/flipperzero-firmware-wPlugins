@@ -8,8 +8,6 @@
 typedef NfcCommand (
     *NfcEinkGoodisplayStateHandler)(Iso14443_3aPoller* poller, NfcEinkScreen* screen);
 
-//static NfcEinkScreenGoodisplayPollerState state = SendC2Cmd;
-
 static bool eink_goodisplay_send_data(
     Iso14443_3aPoller* poller,
     const NfcEinkScreen* screen,
@@ -49,7 +47,7 @@ static bool eink_goodisplay_send_data(
 static NfcCommand eink_goodisplay_C2(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     FURI_LOG_D(TAG, "Send 0xC2");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {0xC2};
@@ -73,7 +71,7 @@ static NfcCommand
     UNUSED(screen);
     FURI_LOG_D(TAG, "Select NDEF APP");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {
@@ -96,7 +94,7 @@ static NfcCommand
     UNUSED(screen);
     FURI_LOG_D(TAG, "Select NDEF File");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {0x03, 0x00, 0xa4, 0x00, 0x0c, 0x02, 0xe1, 0x03};
@@ -118,7 +116,7 @@ static NfcCommand eink_goodisplay_read_fid_file(Iso14443_3aPoller* poller, NfcEi
     UNUSED(screen);
     FURI_LOG_D(TAG, "Read FID");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {0x02, 0x00, 0xb0, 0x00, 0x00, 0x0f};
@@ -143,7 +141,7 @@ static NfcCommand
     eink_goodisplay_select_E104_file(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     FURI_LOG_D(TAG, "Select 0xE104");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {0x03, 0x00, 0xa4, 0x00, 0x0c, 0x02, 0xe1, 0x04};
@@ -165,7 +163,7 @@ static NfcCommand
     UNUSED(screen);
     FURI_LOG_D(TAG, "Read 0xE104");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t data[] = {0x02, 0x00, 0xb0, 0x00, 0x00, 0x02};
@@ -189,7 +187,7 @@ static NfcCommand
 static NfcCommand eink_goodisplay_duplicate_C2(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     NfcCommand cmd = eink_goodisplay_C2(poller, screen);
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = DuplicateC2Cmd;
 
     static uint8_t cnt = 0;
@@ -206,7 +204,7 @@ static NfcCommand
     eink_goodisplay_send_config_cmd(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     FURI_LOG_D(TAG, "Send config");
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
     do {
         const uint8_t config1[] = {0x02, 0xf0, 0xdb, 0x02, 0x00, 0x00};
@@ -336,7 +334,7 @@ static NfcCommand
         if(!status) break;
     }
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = status ? UpdateDisplay : NfcEinkScreenGoodisplayPollerStateError;
     return NfcCommandContinue;
 }
@@ -346,7 +344,7 @@ static NfcCommand
     UNUSED(poller);
     UNUSED(screen);
 
-    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->state = NfcEinkScreenGoodisplayPollerStateError;
 
     const uint8_t apply[] = {0x03, 0xf0, 0xd4, 0x05, 0x80, 0x00};
@@ -434,7 +432,7 @@ NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context)
         bit_buffer_reset(screen->tx_buf);
         bit_buffer_reset(screen->rx_buf);
 
-        NfcEinkScreenSpecificGoodisplayContext* ctx = screen->data->screen_context;
+        NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
         command = handlers[ctx->state](poller->iso14443_3a_poller, screen);
     }
     if(command == NfcCommandReset) iso14443_4a_poller_halt(poller);
