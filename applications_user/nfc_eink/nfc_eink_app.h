@@ -64,12 +64,13 @@
 ///TODO: remove all this shit below to _i.h file
 
 typedef enum {
-    NfcEinkCustomEventReserved = 100,
+    NfcEinkAppCustomEventReserved = 100,
 
-    NfcEinkCustomEventTextInputDone,
-    NfcEinkCustomEventTimerExpired,
+    NfcEinkAppCustomEventTextInputDone,
+    NfcEinkAppCustomEventTimerExpired, ///TODO: remove this
+    NfcEinkAppCustomEventProcessFinish,
 
-} NfcEinkCustomEvents;
+} NfcEinkAppCustomEvents;
 
 typedef enum {
     NfcEinkViewMenu,
