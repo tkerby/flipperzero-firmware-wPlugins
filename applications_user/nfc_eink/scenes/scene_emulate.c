@@ -339,12 +339,17 @@ static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context
     NfcEinkApp* instance = context;
     NfcEinkAppCustomEvents event = NfcEinkAppCustomEventProcessFinish;
     switch(type) {
+    case NfcEinkScreenEventTypeTargetDetected:
+        event = NfcEinkAppCustomEventTargetDetected;
+        FURI_LOG_D(TAG, "Target detected");
+        break;
     case NfcEinkScreenEventTypeFinish:
         event = NfcEinkAppCustomEventProcessFinish;
         break;
 
     default:
-        furi_crash("Implement other cases");
+        FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
+        furi_crash();
         break;
     }
     view_dispatcher_send_custom_event(instance->view_dispatcher, event);
