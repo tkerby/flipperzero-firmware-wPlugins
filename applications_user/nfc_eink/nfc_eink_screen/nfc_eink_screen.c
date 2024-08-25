@@ -112,14 +112,11 @@ void nfc_eink_screen_free(NfcEinkScreen* screen) {
 void nfc_eink_screen_set_callback(
     NfcEinkScreen* screen,
     NfcEinkScreenEventCallback event_callback,
-    void* context) {
+    NfcEinkScreenEventContext event_context) {
     furi_assert(screen);
     furi_assert(event_callback);
-    screen->callback = event_callback;
-    screen->event.context = context;
-    //screen->done_event.done_callback = event_callback;
-    //screen->done_event.context = context;
-    //screen->done_callback = eink_screen_done_callback;
+    screen->event_callback = event_callback;
+    screen->event_context = event_context;
 }
 
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
@@ -282,9 +279,9 @@ bool nfc_eink_screen_delete(const char* file_path) {
 
 static void nfc_eink_screen_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
     furi_assert(instance);
-    instance->event.type = type;
-    if(instance->callback != NULL)
-        instance->callback(instance->event.type, instance->event.context);
+    if(instance->event_callback != NULL) {
+        instance->event_callback(type, instance->event_context);
+    }
 }
 
 void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEventType type) {

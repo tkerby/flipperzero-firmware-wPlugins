@@ -43,7 +43,7 @@ void nfc_eink_screen_free(NfcEinkScreen* screen);
 void nfc_eink_screen_set_callback(
     NfcEinkScreen* screen,
     NfcEinkScreenEventCallback event_callback,
-    void* context);
+    NfcEinkScreenEventContext event_context);
 
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
