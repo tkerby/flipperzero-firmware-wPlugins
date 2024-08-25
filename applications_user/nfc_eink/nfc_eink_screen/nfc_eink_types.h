@@ -54,19 +54,13 @@ typedef void (*EinkScreenFreeCallback)(NfcDevice* instance);
 //typedef void (*EinkScreenInitCallback)(NfcEinkScreenDescriptor* descriptor, NfcEinkType type);
 typedef void (*EinkScreenInitCallback)(NfcEinkScreenData* data, NfcEinkType type);
 
-typedef void (*NfcEinkScreenDoneCallback)(void* context);
 typedef void (*NfcEinkScreenEventCallback)(NfcEinkScreenEventType type, void* context);
 
-typedef struct {
-    NfcEinkScreenDoneCallback done_callback;
-    void* context;
-} NfcEinkScreenDoneEvent;
-
-/* typedef struct {
-    //NfcEinkScreenEventType type;
-    NfcEinkScreenEventCallback callback;
-    void* context;
-} NfcEinkScreenInternalEvent; */
+typedef struct { ///TODO: It seems that we can discard this structure and just store void*context in the NfcEinkScreen structure
+    NfcEinkScreenEventType
+        type; //with name void* callback_context. In this we just provide a type and a context without storing type
+    void* context; //in this structure.
+} NfcEinkScreenEvent;
 
 typedef struct {
     EinkScreenAllocCallback alloc_nfc_device;
@@ -82,9 +76,9 @@ typedef struct {
     BitBuffer* tx_buf;
     BitBuffer* rx_buf;
     const NfcEinkScreenHandlers* handlers;
-    NfcEinkScreenDoneEvent done_event;
+    NfcEinkScreenEventCallback callback;
+    NfcEinkScreenEvent event;
 
-    // NfcEinkScreenEventCallback internal_event_callback;
     bool was_update; ///TODO: Candidates to move
     uint8_t update_cnt; //to protocol specific instance
     //NfcEinkScreenInternalEvent internal_event;

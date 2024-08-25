@@ -40,9 +40,9 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type);
 void nfc_eink_screen_free(NfcEinkScreen* screen);
 
 ///TODO: maybe this function can be moved to nfc_eink_screen_alloc as a number of parameters
-void nfc_eink_screen_set_done_callback(
+void nfc_eink_screen_set_callback(
     NfcEinkScreen* screen,
-    NfcEinkScreenDoneCallback eink_screen_done_callback,
+    NfcEinkScreenEventCallback event_callback,
     void* context);
 
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);

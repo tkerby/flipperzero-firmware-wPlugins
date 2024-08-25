@@ -13,7 +13,7 @@ typedef enum {
 } NfcEinkScreenTypeWaveshare;
 
 #define eink_waveshare_on_done(instance) \
-    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeDone)
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFinish)
 
 #define eink_waveshare_on_config_received(instance) \
-    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeConfigurationReceived)
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeConfigurationReceived)

@@ -10,10 +10,10 @@
 #include <nfc/protocols/iso14443_4a/iso14443_4a_listener.h>
 
 #define eink_goodisplay_on_done(instance) \
-    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeDone)
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFinish)
 
 #define eink_goodisplay_on_config_received(instance) \
-    nfc_eink_screen_event_callback(instance, NfcEinkScreenEventTypeConfigurationReceived)
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeConfigurationReceived)
 
 typedef enum {
     NfcEinkScreenTypeGoodisplayUnknown,
