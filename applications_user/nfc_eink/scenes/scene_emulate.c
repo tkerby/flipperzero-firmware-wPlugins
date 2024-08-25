@@ -403,6 +403,7 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom &&
        event.event == NfcEinkAppCustomEventProcessFinish) {
         scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
+        notification_message(instance->notifications, &sequence_success);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_previous_scene(scene_manager);
