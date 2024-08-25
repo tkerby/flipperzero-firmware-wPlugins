@@ -121,7 +121,7 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
         FURI_LOG_D(TAG, "ReceivedData");
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeFieldOff) {
         FURI_LOG_D(TAG, "FieldOff");
-        //eink_waveshare_on_done(instance);
+        eink_waveshare_on_done(instance);
         command = NfcCommandStop;
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeHalted) {
         FURI_LOG_D(TAG, "Halted");
@@ -153,7 +153,6 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
             } else if(data[1] == 0x04) {
-                eink_waveshare_on_done(instance);
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
             } else if(data[1] == 0x0D) {
