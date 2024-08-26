@@ -40,6 +40,7 @@
 #include "scenes/scenes.h"
 #include "nfc_eink_tag.h"
 
+#include "views/eink_progress.h"
 //#define TAG "NfcEink"
 
 #define NFC_EINK_NAME_SIZE     22
@@ -82,6 +83,7 @@ typedef enum {
     NfcEinkViewByteInput,
     NfcEinkViewTextBox,
     NfcEinkViewWidget,
+    NfcEinkViewProgress,
     NfcEinkViewEmptyScreen,
 } NfcEinkView;
 
@@ -103,6 +105,7 @@ typedef struct {
     TextBox* text_box;
     Widget* widget;
     EmptyScreen* empty_screen;
+    EinkProgress* eink_progress;
     View* view_image;
 
     Nfc* nfc;

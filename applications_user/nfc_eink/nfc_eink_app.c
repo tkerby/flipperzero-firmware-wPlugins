@@ -79,6 +79,12 @@ static NfcEinkApp* nfc_eink_app_alloc() {
     view_dispatcher_add_view(
         instance->view_dispatcher, NfcEinkViewPopup, popup_get_view(instance->popup));
 
+    // progress bar
+    instance->eink_progress = eink_progress_alloc();
+    view_dispatcher_add_view(
+        instance->view_dispatcher,
+        NfcEinkViewProgress,
+        eink_progress_get_view(instance->eink_progress));
     /*     // Dialog
     instance->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
@@ -160,6 +166,9 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewTextInput);
     text_input_free(instance->text_input);
 
+    // Progress
+    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewProgress);
+    eink_progress_free(instance->eink_progress);
     /*
     // ByteInput
     view_dispatcher_remove_view(instance->view_dispatcher, NfcViewByteInput);
