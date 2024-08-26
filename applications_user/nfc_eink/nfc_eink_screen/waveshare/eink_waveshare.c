@@ -168,6 +168,7 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
                 //bit_buffer_append_byte(instance->tx_buf, 0x02); //Some kind of busy status
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
+                eink_waveshare_on_target_detected(instance);
             } else if(data[1] == 0x08) {
                 memcpy(screen_data->image_data + screen_data->received_data, &data[3], data[2]);
                 screen_data->received_data += data[2];
