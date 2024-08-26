@@ -37,9 +37,10 @@ static void nfc_eink_scene_write_show_waiting(const NfcEinkApp* instance) {
 
 ///TODO: this must be replaced by progress bar view but it needs to be implemented
 static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
-    popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
-    popup_set_text(
-        instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
+    //popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
+    //popup_set_text(
+    //   instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
+    view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewProgress);
 }
 
 void nfc_eink_scene_write_on_enter(void* context) {
