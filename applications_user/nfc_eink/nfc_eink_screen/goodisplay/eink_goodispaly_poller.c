@@ -380,6 +380,7 @@ static NfcCommand
 
             if(rx[0] == 0xf2 && rx[1] == 0x01) {
                 FURI_LOG_D(TAG, "Updating...");
+                eink_goodisplay_on_updating(screen);
             } else if(rx[0] == 0x03 && rx[1] == 0x90 && rx[2] == 0x00) {
                 furi_delay_ms(1000);
                 //furi_delay_ms(500);

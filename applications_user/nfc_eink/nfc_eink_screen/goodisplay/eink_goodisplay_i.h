@@ -24,6 +24,9 @@
 #define eink_goodisplay_on_block_processed(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeBlockProcessed)
 
+#define eink_goodisplay_on_updating(instance) \
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeUpdating)
+
 #define eink_goodisplay_on_error(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFailure)
 
