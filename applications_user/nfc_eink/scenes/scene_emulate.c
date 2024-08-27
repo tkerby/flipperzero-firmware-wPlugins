@@ -338,6 +338,7 @@ static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context
     furi_assert(context);
     NfcEinkApp* instance = context;
     NfcEinkAppCustomEvents event = NfcEinkAppCustomEventProcessFinish;
+
     switch(type) {
     case NfcEinkScreenEventTypeTargetDetected:
         event = NfcEinkAppCustomEventTargetDetected;
@@ -346,12 +347,15 @@ static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context
     case NfcEinkScreenEventTypeFinish:
         event = NfcEinkAppCustomEventProcessFinish;
         break;
-
+    case NfcEinkScreenEventTypeTargetLost:
+        event = NfcEinkAppCustomEventTargetLost;
+        break;
     default:
         FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
         furi_crash();
         break;
     }
+
     view_dispatcher_send_custom_event(instance->view_dispatcher, event);
 }
 
@@ -392,24 +396,14 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
 
     bool consumed = false;
 
-    /*   if(event.type == SceneManagerEventTypeCustom) {
-        const uint32_t submenu_index = event.event;
-        if(submenu_index == SubmenuIndexEmulate) {
-            scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseType);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexWrite) {
-            //scene_manager_next_scene(scene_manager, );
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexRead) {
-            //scene_manager_next_scene(scene_manager, );
-            consumed = true;
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == NfcEinkAppCustomEventProcessFinish) {
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
+            notification_message(instance->notifications, &sequence_success);
+        } else if(event.event == NfcEinkAppCustomEventTargetLost) {
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
+            notification_message(instance->notifications, &sequence_error);
         }
-    } */
-
-    if(event.type == SceneManagerEventTypeCustom &&
-       event.event == NfcEinkAppCustomEventProcessFinish) {
-        scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
-        notification_message(instance->notifications, &sequence_success);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_previous_scene(scene_manager);
