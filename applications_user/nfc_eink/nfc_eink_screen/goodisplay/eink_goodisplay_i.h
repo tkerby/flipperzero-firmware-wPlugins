@@ -127,6 +127,8 @@ typedef enum {
 typedef struct {
     NfcEinkScreenGoodisplayPollerState state;
     NfcEinkScreenGoodisplayListenerState listener_state;
+    uint8_t block_number;
+    size_t data_index;
 } NfcEinkScreenSpecificGoodisplayContext;
 
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length);

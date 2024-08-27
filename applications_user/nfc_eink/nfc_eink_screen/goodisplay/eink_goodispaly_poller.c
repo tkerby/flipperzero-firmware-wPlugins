@@ -316,26 +316,46 @@ static NfcCommand
     eink_goodisplay_send_image_data(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     UNUSED(poller);
     UNUSED(screen);
-    FURI_LOG_D(TAG, "Send data");
 
     const NfcEinkScreenData* data = screen->data;
-    bool status = true;
-    uint8_t block_number = 0;
-    for(size_t i = 0; i < data->received_data; block_number++) {
-        status &= eink_goodisplay_send_image_data_p1(
-            poller, screen, block_number, &data->image_data[i], data->base.data_block_size - 2);
-        i += data->base.data_block_size - 2;
-
-        if(!status) break;
-
-        status &= eink_goodisplay_send_image_data_p2(poller, screen, &data->image_data[i], 2);
-        i += 2;
-
-        if(!status) break;
-    }
-
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
-    ctx->state = status ? UpdateDisplay : NfcEinkScreenGoodisplayPollerStateError;
+
+    bool status = true;
+    //  uint8_t block_number = 0;
+    //for(size_t i = 0; i < data->received_data; block_number++) {
+    do {
+        FURI_LOG_D(TAG, "Send data: %d", ctx->block_number);
+
+        status &= eink_goodisplay_send_image_data_p1(
+            poller,
+            screen,
+            ctx->block_number,
+            &data->image_data[ctx->data_index],
+            data->base.data_block_size - 2);
+
+        ctx->data_index += data->base.data_block_size - 2;
+        //i += data->base.data_block_size - 2;
+
+        if(!status) {
+            ctx->state = NfcEinkScreenGoodisplayPollerStateError;
+            break;
+        }
+
+        status &= eink_goodisplay_send_image_data_p2(
+            poller, screen, &data->image_data[ctx->data_index], 2);
+        ctx->data_index += 2;
+        //i += 2;
+
+        if(!status) {
+            ctx->state = NfcEinkScreenGoodisplayPollerStateError;
+            break;
+        }
+
+        ctx->block_number++;
+        ctx->state = (ctx->data_index == data->image_size) ? UpdateDisplay : SendDataCmd;
+    } while(false);
+    //}
+
     return NfcCommandContinue;
 }
 
