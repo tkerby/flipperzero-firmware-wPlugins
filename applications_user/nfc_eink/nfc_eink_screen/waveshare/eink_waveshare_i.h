@@ -32,3 +32,6 @@ typedef struct {
 
 #define eink_waveshare_on_target_detected(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeTargetDetected)
+
+#define eink_waveshare_on_target_lost(instance) \
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeTargetLost)
