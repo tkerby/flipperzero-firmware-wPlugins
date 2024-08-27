@@ -3,6 +3,7 @@
 typedef enum {
     NfcEinkAppSceneWriteStateWaitingForTarget,
     NfcEinkAppSceneWriteStateWritingDataBlocks,
+    NfcEinkAppSceneWriteStateUpdatingScreen,
 } NfcEinkAppSceneWriteStates;
 
 static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) {
@@ -28,8 +29,11 @@ static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) 
         event = NfcEinkAppCustomEventUnknownError;
         break;
 
+    case NfcEinkScreenEventTypeUpdating:
+        event = NfcEinkAppCustomEventUpdating;
+        break;
     default:
-        FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
+        FURI_LOG_E(TAG, "Event: %02X not implemented", type);
         furi_crash();
         break;
     }
@@ -45,7 +49,6 @@ static void nfc_eink_scene_write_show_waiting(const NfcEinkApp* instance) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewPopup);
 }
 
-///TODO: this must be replaced by progress bar view but it needs to be implemented
 static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
     //popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
     //popup_set_text(
@@ -57,6 +60,23 @@ static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
         instance->screen->device->block_current,
         instance->screen->device->block_total);
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewProgress);
+}
+
+static void nfc_eink_scene_write_show_updating(const NfcEinkApp* instance) {
+    NfcEinkAppSceneWriteStates state = (NfcEinkAppSceneWriteStates)scene_manager_get_scene_state(
+        instance->scene_manager, NfcEinkAppSceneWrite);
+
+    if(state != NfcEinkAppSceneWriteStateUpdatingScreen) {
+        popup_reset(instance->popup);
+        popup_set_header(instance->popup, "Updating...", 80, 15, AlignCenter, AlignTop);
+        popup_set_text(
+            instance->popup, "Wait until\nupdate complete", 75, 30, AlignCenter, AlignTop);
+        popup_set_icon(instance->popup, 5, 11, &I_ArrowC_1_36x36);
+        view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewPopup);
+    }
+
+    scene_manager_set_scene_state(
+        instance->scene_manager, NfcEinkAppSceneWrite, NfcEinkAppSceneWriteStateUpdatingScreen);
 }
 
 void nfc_eink_scene_write_on_enter(void* context) {
@@ -87,25 +107,24 @@ bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
         if(event.event == NfcEinkAppCustomEventProcessFinish) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneWriteDone);
             notification_message(instance->notifications, &sequence_success);
-            consumed = true;
         } else if(event.event == NfcEinkAppCustomEventTargetDetected) {
             scene_manager_set_scene_state(
                 instance->scene_manager,
                 NfcEinkAppSceneWrite,
                 NfcEinkAppSceneWriteStateWritingDataBlocks);
             nfc_eink_scene_write_show_writing_data(instance);
-            consumed = true;
         } else if(event.event == NfcEinkAppCustomEventUnknownError) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
             notification_message(instance->notifications, &sequence_error);
-            consumed = true;
         } else if(event.event == NfcEinkAppCustomEventBlockProcessed) {
             eink_progress_set_value(
                 instance->eink_progress,
                 instance->screen->device->block_current,
                 instance->screen->device->block_total);
-            consumed = true;
+        } else if(event.event == NfcEinkAppCustomEventUpdating) {
+            nfc_eink_scene_write_show_updating(instance);
         }
+        consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_previous_scene(scene_manager);
         consumed = true;
@@ -119,4 +138,5 @@ void nfc_eink_scene_write_on_exit(void* context) {
     nfc_poller_stop(instance->poller);
     nfc_eink_blink_stop(instance);
     popup_reset(instance->popup);
+    eink_progress_reset(instance->eink_progress);
 }
