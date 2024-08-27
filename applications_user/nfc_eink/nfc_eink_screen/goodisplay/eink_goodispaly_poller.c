@@ -421,6 +421,8 @@ static NfcCommand eink_goodisplay_error_handler(Iso14443_3aPoller* poller, NfcEi
     UNUSED(poller);
     UNUSED(screen);
     FURI_LOG_E(TAG, "ERROR!");
+    eink_goodisplay_on_error(screen);
+    iso14443_3a_poller_halt(poller);
     return NfcCommandStop;
 }
 
