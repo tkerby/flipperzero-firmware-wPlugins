@@ -73,6 +73,7 @@ typedef enum {
     NfcEinkAppCustomEventProcessFinish,
     NfcEinkAppCustomEventTargetDetected,
     NfcEinkAppCustomEventTargetLost,
+    NfcEinkAppCustomEventUnknownError,
 } NfcEinkAppCustomEvents;
 
 typedef enum {
