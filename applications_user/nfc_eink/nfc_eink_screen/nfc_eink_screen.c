@@ -279,12 +279,11 @@ static void nfc_eink_screen_event_invoke(NfcEinkScreen* instance, NfcEinkScreenE
 
 void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
     furi_assert(instance);
-    if(type == NfcEinkScreenEventTypeFinish) {
-        nfc_eink_screen_event_invoke(instance, type);
-    } else if(type == NfcEinkScreenEventTypeTargetDetected) {
-        nfc_eink_screen_event_invoke(instance, type);
-    } else if(type == NfcEinkScreenEventTypeConfigurationReceived) {
+
+    if(type == NfcEinkScreenEventTypeConfigurationReceived) {
+        ///TODO: think of throwing this event outside also
         FURI_LOG_D(TAG, "Config received");
         nfc_eink_screen_init(instance, instance->data->base.screen_type);
-    }
+    } else
+        nfc_eink_screen_event_invoke(instance, type);
 }
