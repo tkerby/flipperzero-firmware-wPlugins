@@ -38,3 +38,6 @@ typedef struct {
 
 #define eink_waveshare_on_block_processed(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeBlockProcessed)
+
+#define eink_waveshare_on_error(instance) \
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFailure)
