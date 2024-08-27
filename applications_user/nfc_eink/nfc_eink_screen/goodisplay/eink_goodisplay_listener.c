@@ -110,10 +110,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
         //FURI_LOG_D(TAG, "ReceivedData");
         BitBuffer* buffer = Iso14443_4a_event->data->buffer;
 
-        //const uint8_t rx_length = bit_buffer_get_size_bytes(buffer);
         const NfcEinkScreenCommand* cmd = (NfcEinkScreenCommand*)bit_buffer_get_data(buffer);
-        //NfcEinkScreenCommand cmd = {0};
-        //cmd.command_code = data[0];
 
         NfcEinkScreenResponse* response = malloc(250);
         uint8_t response_length = 0;
@@ -122,12 +119,6 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
             response_length = 1;
             response->response_code = 0xC2;
             command = NfcCommandSleep;
-            if(!instance->was_update)
-                command = NfcCommandSleep;
-            else {
-                FURI_LOG_D(TAG, "Done C2");
-                eink_goodisplay_on_done(instance);
-            }
         } else if(cmd->command_code == 0xB3) {
             response_length = 1;
             response->response_code = 0xA2;
@@ -214,6 +205,13 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
                 response->response_code = 0x02;
                 response->apdu_resp.apdu_response.status = __builtin_bswap16(0x9000);
             }
+        } else {
+            ///TODO: throw this error in some other places, because real reader can
+            ///send some other commands which are not mentioned here, therefore this will
+            ///result into permanent errors
+
+            //ctx->listener_state = NfcEinkScreenGoodisplayListenerStateIdle;
+            //eink_goodisplay_on_error(instance);
         }
 
         bit_buffer_reset(instance->tx_buf);
