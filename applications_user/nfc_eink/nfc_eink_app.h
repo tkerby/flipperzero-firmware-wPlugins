@@ -70,6 +70,7 @@ typedef enum {
     NfcEinkAppCustomEventTextInputDone,
     NfcEinkAppCustomEventTimerExpired, ///TODO: remove this
     NfcEinkAppCustomEventBlockProcessed,
+    NfcEinkAppCustomEventUpdating,
     NfcEinkAppCustomEventProcessFinish,
     NfcEinkAppCustomEventTargetDetected,
     NfcEinkAppCustomEventTargetLost,
