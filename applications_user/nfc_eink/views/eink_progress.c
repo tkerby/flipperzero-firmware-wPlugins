@@ -18,8 +18,11 @@ static void eink_progress_draw_callback(Canvas* canvas, void* model) {
 
     FuriString* str = furi_string_alloc_printf("%d / %d", m->blocks_current, m->blocks_total);
     elements_text_box(
-        canvas, 60, 30, 60, 20, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
-    elements_progress_bar_with_text(canvas, 0, 48, 127, 0.5, furi_string_get_cstr(str));
+        canvas, 24, 30, 80, 20, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
+
+    float value = (m->blocks_total == 0) ? 0 :
+                                           ((float)(m->blocks_current) / (float)(m->blocks_total));
+    elements_progress_bar_with_text(canvas, 0, 48, 127, value, furi_string_get_cstr(str));
     furi_string_free(str);
 }
 
@@ -40,14 +43,49 @@ EinkProgress* eink_progress_alloc(void) {
         EinkProgressViewModel * model,
         {
             model->header = furi_string_alloc();
-            furi_string_printf(model->header, "Dummy EInk");
-            model->blocks_current = 20;
-            model->blocks_total = 200;
+            model->blocks_current = 0;
+            model->blocks_total = 0;
         },
         false);
 
     return instance;
 }
+
+void eink_progress_set_header(EinkProgress* instance, const char* header) {
+    with_view_model(
+        instance->view,
+        EinkProgressViewModel * model,
+        { furi_string_set_str(model->header, header); },
+        true);
+}
+
+void eink_progress_set_value(EinkProgress* instance, size_t value, size_t total) {
+    with_view_model(
+        instance->view,
+        EinkProgressViewModel * model,
+        {
+            model->blocks_current = value;
+            model->blocks_total = total;
+        },
+        true);
+}
+
+void eink_progress_reset(EinkProgress* instance) {
+    with_view_model(
+        instance->view,
+        EinkProgressViewModel * model,
+        {
+            furi_string_reset(model->header);
+            model->blocks_current = 0;
+            model->blocks_total = 0;
+        },
+        false);
+}
+
+/* void eink_progress_set_value_total(EinkProgress* instance, size_t total) {
+    with_view_model(
+        instance->view, EinkProgressViewModel * model, { model->blocks_total = total; }, false);
+} */
 
 void eink_progress_free(EinkProgress* instance) {
     furi_assert(instance);
