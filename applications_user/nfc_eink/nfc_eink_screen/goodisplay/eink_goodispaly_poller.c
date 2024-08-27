@@ -355,6 +355,8 @@ static NfcCommand
         ctx->state = (ctx->data_index == data->image_size) ? UpdateDisplay : SendDataCmd;
     } while(false);
     //}
+    eink_goodisplay_on_block_processed(screen);
+    screen->device->block_current = ctx->block_number;
 
     return NfcCommandContinue;
 }
@@ -444,6 +446,9 @@ NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context)
     NfcEinkScreen* screen = context;
 
     NfcCommand command = NfcCommandContinue;
+
+    ///TODO: this should be solved in another way, by adjusting struct hierarchy
+    screen->device->block_total = screen->data->image_size / screen->data->base.data_block_size;
 
     Iso14443_4aPollerEvent* Iso14443_4a_event = event.event_data;
     Iso14443_4aPoller* poller = event.instance;

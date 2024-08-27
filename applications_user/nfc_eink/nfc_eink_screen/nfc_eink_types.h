@@ -49,6 +49,8 @@ typedef struct {
 
 typedef struct {
     NfcDevice* nfc_device;
+    uint16_t block_total;
+    uint16_t block_current;
     NfcEinkScreenSpecificContext* screen_context;
 } NfcEinkScreenDevice;
 
