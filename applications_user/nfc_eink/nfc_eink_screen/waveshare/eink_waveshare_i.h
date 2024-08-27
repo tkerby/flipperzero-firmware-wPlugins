@@ -12,6 +12,18 @@ typedef enum {
     NfcEinkScreenTypeWaveshareNum
 } NfcEinkScreenTypeWaveshare;
 
+typedef enum {
+    NfcEinkWaveshareListenerStateIdle,
+    NfcEinkWaveshareListenerStateWaitingForConfig,
+    NfcEinkWaveshareListenerStateReadingBlocks,
+    NfcEinkWaveshareListenerStateUpdatedSuccefully,
+} NfcEinkWaveshareListenerStates;
+
+typedef struct {
+    NfcEinkWaveshareListenerStates listener_state;
+
+} NfcEinkWaveshareSpecificContext;
+
 #define eink_waveshare_on_done(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFinish)
 
