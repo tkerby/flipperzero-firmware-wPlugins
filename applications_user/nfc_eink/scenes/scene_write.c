@@ -18,6 +18,13 @@ static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) 
         event = NfcEinkAppCustomEventProcessFinish;
         break;
 
+    case NfcEinkScreenEventTypeBlockProcessed:
+        NfcEinkScreenDevice* device = instance->screen->device;
+
+        FURI_LOG_D(TAG, "%d, %d", device->block_current, device->block_total);
+        event = NfcEinkAppCustomEventBlockProcessed;
+        break;
+
     default:
         FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
         furi_crash();
@@ -40,6 +47,12 @@ static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
     //popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
     //popup_set_text(
     //   instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
+    eink_progress_reset(instance->eink_progress);
+    eink_progress_set_header(instance->eink_progress, instance->screen->data->base.name);
+    eink_progress_set_value(
+        instance->eink_progress,
+        instance->screen->device->block_current,
+        instance->screen->device->block_total);
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewProgress);
 }
 
@@ -78,6 +91,16 @@ bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
                 NfcEinkAppSceneWrite,
                 NfcEinkAppSceneWriteStateWritingDataBlocks);
             nfc_eink_scene_write_show_writing_data(instance);
+            consumed = true;
+        } else if(event.event == NfcEinkAppCustomEventUnknownError) {
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
+            notification_message(instance->notifications, &sequence_error);
+            consumed = true;
+        } else if(event.event == NfcEinkAppCustomEventBlockProcessed) {
+            eink_progress_set_value(
+                instance->eink_progress,
+                instance->screen->device->block_current,
+                instance->screen->device->block_total);
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
