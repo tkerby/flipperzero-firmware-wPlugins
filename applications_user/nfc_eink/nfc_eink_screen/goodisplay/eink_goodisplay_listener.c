@@ -101,6 +101,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
     //NfcEinkApp* instance = context;
     NfcEinkScreen* instance = context;
     Iso14443_4aListenerEvent* Iso14443_4a_event = event.event_data;
+    NfcEinkScreenSpecificGoodisplayContext* ctx = instance->device->screen_context;
 
     if(Iso14443_4a_event->type == Iso14443_4aListenerEventTypeReceivedData) {
         //FURI_LOG_D(TAG, "ReceivedData");
@@ -123,9 +124,6 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
             else {
                 FURI_LOG_D(TAG, "Done C2");
                 eink_goodisplay_on_done(instance);
-                /*   furi_timer_start(instance->timer, furi_ms_to_ticks(5000));
-                command = NfcCommandStop;
-                instance->was_update = false; */
             }
         } else if(cmd->command_code == 0xB3) {
             response_length = 1;
@@ -140,6 +138,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
             instance->response_cnt++;
             FURI_LOG_D(TAG, "Done B2: %d", instance->response_cnt);
             if(instance->response_cnt >= 20) {
+                ctx->listener_state = NfcEinkScreenGoodisplayListenerStateUpdatedSuccefully;
                 eink_goodisplay_on_done(instance);
                 command = NfcCommandStop;
             }
@@ -170,7 +169,10 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
                 nfc_eink_screen_command_A4(
                     (APDU_Command_Select*)apdu, &response->apdu_resp.apdu_response);
                 response_length = 3;
-                if(cmd->command_code == 0x02) eink_goodisplay_on_target_detected(instance);
+                if(cmd->command_code == 0x02) {
+                    ctx->listener_state = NfcEinkScreenGoodisplayListenerStateWaitingForConfig;
+                    eink_goodisplay_on_target_detected(instance);
+                }
             } else if(apdu->CLA_byte == 0 && apdu->CMD_code == 0xB0) {
                 FURI_LOG_D(TAG, "00 B0");
                 response_length =
@@ -201,7 +203,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
                 instance->update_cnt = 0;
             } else {
                 uint8_t* data = instance->data->image_data + instance->data->received_data;
-
+                ctx->listener_state = NfcEinkScreenGoodisplayListenerStateReadingBlocks;
                 memcpy(data, cmd->command_data, 2);
                 instance->data->received_data += 2;
                 FURI_LOG_D(TAG, "Data: %d", instance->data->received_data);
