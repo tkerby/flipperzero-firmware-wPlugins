@@ -23,8 +23,7 @@ typedef enum {
     NfcEinkScreenEventTypeTargetLost,
 
     NfcEinkScreenEventTypeConfigurationReceived,
-    NfcEinkScreenEventTypeBlockRxDone,
-    NfcEinkScreenEventTypeBlockTxDone,
+    NfcEinkScreenEventTypeBlockProcessed,
 
     NfcEinkScreenEventTypeFinish,
     NfcEinkScreenEventTypeFailure,

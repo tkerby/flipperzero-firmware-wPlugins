@@ -21,6 +21,9 @@
 #define eink_goodisplay_on_target_lost(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeTargetLost)
 
+#define eink_goodisplay_on_block_processed(instance) \
+    nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeBlockProcessed)
+
 typedef enum {
     NfcEinkScreenTypeGoodisplayUnknown,
     NfcEinkScreenTypeGoodisplay2n13inch,
