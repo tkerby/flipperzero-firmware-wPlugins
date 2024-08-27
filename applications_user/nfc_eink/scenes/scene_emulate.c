@@ -19,8 +19,11 @@ static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context
     case NfcEinkScreenEventTypeTargetLost:
         event = NfcEinkAppCustomEventTargetLost;
         break;
+    case NfcEinkScreenEventTypeFailure:
+        event = NfcEinkAppCustomEventUnknownError;
+        break;
     default:
-        FURI_LOG_E(TAG, "Event: %02X nor implemented", type);
+        FURI_LOG_E(TAG, "Event: %02X not implemented", type);
         furi_crash();
         break;
     }
@@ -61,6 +64,9 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
             notification_message(instance->notifications, &sequence_success);
         } else if(event.event == NfcEinkAppCustomEventTargetLost) {
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
+            notification_message(instance->notifications, &sequence_error);
+        } else if(event.event == NfcEinkAppCustomEventUnknownError) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
             notification_message(instance->notifications, &sequence_error);
         }
