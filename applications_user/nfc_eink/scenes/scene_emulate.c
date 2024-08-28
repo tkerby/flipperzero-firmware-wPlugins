@@ -44,11 +44,12 @@ void nfc_eink_scene_emulate_on_enter(void* context) {
     const NfcEinkScreen* screen = instance->screen;
     nfc_eink_screen_set_callback(instance->screen, nfc_eink_emulate_callback, instance);
 
-    NfcDevice* nfc_device = screen->device->nfc_device;
+    NfcDevice* nfc_device = nfc_eink_screen_get_nfc_device(screen);
     NfcProtocol protocol = nfc_device_get_protocol(nfc_device);
     const NfcDeviceData* data = nfc_device_get_data(nfc_device, protocol);
     instance->listener = nfc_listener_alloc(instance->nfc, protocol, data);
-    nfc_listener_start(instance->listener, screen->handlers->listener_callback, instance->screen);
+    NfcGenericCallback cb = nfc_eink_screen_get_nfc_callback(screen, NfcModeListener);
+    nfc_listener_start(instance->listener, cb, instance->screen);
 
     nfc_eink_blink_emulate_start(instance);
 }

@@ -20,8 +20,8 @@ static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) 
         break;
 
     case NfcEinkScreenEventTypeBlockProcessed:
-        NfcEinkScreenDevice* device = instance->screen->device;
-        FURI_LOG_D(TAG, "%d, %d", device->block_current, device->block_total);
+        //NfcEinkScreenDevice* device = instance->screen->device;
+        //FURI_LOG_D(TAG, "%d, %d", device->block_current, device->block_total);
         event = NfcEinkAppCustomEventBlockProcessed;
         break;
 
@@ -54,11 +54,12 @@ static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
     //popup_set_text(
     //   instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
     eink_progress_reset(instance->eink_progress);
-    eink_progress_set_header(instance->eink_progress, instance->screen->data->base.name);
-    eink_progress_set_value(
-        instance->eink_progress,
-        instance->screen->device->block_current,
-        instance->screen->device->block_total);
+    eink_progress_set_header(instance->eink_progress, nfc_eink_screen_get_name(instance->screen));
+
+    size_t total = 0, current = 0;
+    nfc_eink_screen_get_progress(instance->screen, &current, &total);
+
+    eink_progress_set_value(instance->eink_progress, current, total);
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewProgress);
 }
 
@@ -89,10 +90,11 @@ void nfc_eink_scene_write_on_enter(void* context) {
     NfcEinkScreen* screen = instance->screen;
 
     nfc_eink_screen_set_callback(instance->screen, nfc_eink_write_callback, instance);
-    const NfcProtocol protocol = nfc_device_get_protocol(screen->device->nfc_device);
+    const NfcProtocol protocol = nfc_device_get_protocol(nfc_eink_screen_get_nfc_device(screen));
     instance->poller = nfc_poller_alloc(instance->nfc, protocol);
 
-    nfc_poller_start(instance->poller, screen->handlers->poller_callback, screen);
+    NfcGenericCallback cb = nfc_eink_screen_get_nfc_callback(screen, NfcModePoller);
+    nfc_poller_start(instance->poller, cb, screen);
 
     nfc_eink_blink_write_start(instance);
 }
@@ -117,10 +119,9 @@ bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
             notification_message(instance->notifications, &sequence_error);
         } else if(event.event == NfcEinkAppCustomEventBlockProcessed) {
-            eink_progress_set_value(
-                instance->eink_progress,
-                instance->screen->device->block_current,
-                instance->screen->device->block_total);
+            size_t total = 0, current = 0;
+            nfc_eink_screen_get_progress(instance->screen, &current, &total);
+            eink_progress_set_value(instance->eink_progress, current, total);
         } else if(event.event == NfcEinkAppCustomEventUpdating) {
             nfc_eink_scene_write_show_updating(instance);
         }
