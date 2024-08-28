@@ -10,7 +10,6 @@
 
 typedef struct NfcEinkScreen NfcEinkScreen;
 
-//const char* nfc_eink_screen_get_name(NfcEinkType type); ///TODO: move to
 const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer type);
 
 NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer);
@@ -25,6 +24,7 @@ void nfc_eink_screen_set_callback(
 
 NfcDevice* nfc_eink_screen_get_nfc_device(const NfcEinkScreen* screen);
 NfcGenericCallback nfc_eink_screen_get_nfc_callback(const NfcEinkScreen* screen, NfcMode mode);
+
 const uint8_t* nfc_eink_screen_get_image_data(const NfcEinkScreen* screen);
 uint16_t nfc_eink_screen_get_image_size(const NfcEinkScreen* screen);
 uint16_t nfc_eink_screen_get_received_size(const NfcEinkScreen* screen);
