@@ -8,6 +8,8 @@
 #include "../nfc_eink_tag.h"
 #include "nfc_eink_types.h"
 
+typedef struct NfcEinkScreen NfcEinkScreen;
+
 //const char* nfc_eink_screen_get_name(NfcEinkType type); ///TODO: move to
 const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer type);
 
@@ -20,6 +22,15 @@ void nfc_eink_screen_set_callback(
     NfcEinkScreen* screen,
     NfcEinkScreenEventCallback event_callback,
     NfcEinkScreenEventContext event_context);
+
+NfcDevice* nfc_eink_screen_get_nfc_device(const NfcEinkScreen* screen);
+NfcGenericCallback nfc_eink_screen_get_nfc_callback(const NfcEinkScreen* screen, NfcMode mode);
+const uint8_t* nfc_eink_screen_get_image_data(const NfcEinkScreen* screen);
+uint16_t nfc_eink_screen_get_image_size(const NfcEinkScreen* screen);
+uint16_t nfc_eink_screen_get_received_size(const NfcEinkScreen* screen);
+
+void nfc_eink_screen_get_progress(const NfcEinkScreen* screen, size_t* current, size_t* total);
+const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen);
 
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);

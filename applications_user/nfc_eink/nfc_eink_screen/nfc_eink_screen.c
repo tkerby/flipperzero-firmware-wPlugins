@@ -1,4 +1,4 @@
-#include "nfc_eink_screen.h"
+#include "nfc_eink_screen_i.h"
 
 #include <../lib/flipper_format/flipper_format.h>
 #include <../applications/services/storage/storage.h>
@@ -110,6 +110,50 @@ void nfc_eink_screen_set_callback(
     furi_assert(event_callback);
     screen->event_callback = event_callback;
     screen->event_context = event_context;
+}
+
+NfcDevice* nfc_eink_screen_get_nfc_device(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return screen->device->nfc_device;
+}
+
+const uint8_t* nfc_eink_screen_get_image_data(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return screen->data->image_data;
+}
+
+uint16_t nfc_eink_screen_get_image_size(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return screen->data->image_size;
+}
+
+uint16_t nfc_eink_screen_get_received_size(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return screen->data->received_data;
+}
+
+//uint16_t nfc_eink_screen_get_rece
+
+NfcGenericCallback nfc_eink_screen_get_nfc_callback(const NfcEinkScreen* screen, NfcMode mode) {
+    furi_assert(screen);
+    furi_assert(mode < NfcModeNum);
+
+    const NfcEinkScreenHandlers* handlers = screen->handlers;
+    return (mode == NfcModeListener) ? handlers->listener_callback : handlers->poller_callback;
+}
+
+void nfc_eink_screen_get_progress(const NfcEinkScreen* screen, size_t* current, size_t* total) {
+    furi_assert(screen);
+    furi_assert(current);
+    furi_assert(total);
+
+    *current = screen->device->block_current;
+    *total = screen->device->block_total;
+}
+
+const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return screen->data->base.name;
 }
 
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
