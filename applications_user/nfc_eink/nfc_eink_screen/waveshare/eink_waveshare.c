@@ -2,41 +2,6 @@
 #include "eink_waveshare_i.h"
 #include <nfc/helpers/iso14443_crc.h>
 
-/// TODO: maybe this can be separated for each eink manufacturer
-/// and moved to a dedicated file. After that we can use this array
-/// inside of .init function callback in order to fully initialize
-/// screen data instance. Also think of protecting this as protected so there will be no opened callback functions
-static const NfcEinkScreenDescriptor waveshare_screens[NfcEinkScreenTypeWaveshareNum] = {
-    [NfcEinkScreenTypeWaveshareUnknown] =
-        {
-            .name = "Waveshare Unknown",
-            .width = 0,
-            .height = 0,
-            .screen_manufacturer = NfcEinkManufacturerWaveshare,
-            .screen_type = NfcEinkScreenTypeWaveshareUnknown,
-            .data_block_size = 0,
-        },
-    [NfcEinkScreenTypeWaveshare2n13inch] =
-        {
-            .name = "Waveshare 2.13 inch",
-            .width = 250,
-            .height = 122,
-            .screen_manufacturer = NfcEinkManufacturerWaveshare,
-            .screen_type = NfcEinkScreenTypeWaveshare2n13inch,
-            .data_block_size = 16,
-        },
-    [NfcEinkScreenTypeWaveshare2n9inch] =
-        {
-            .name = "Waveshare 2.9 inch",
-            .width = 296,
-            .height = 128,
-            .screen_manufacturer = NfcEinkManufacturerWaveshare,
-            .screen_type = NfcEinkScreenTypeWaveshare2n9inch,
-            .data_block_size = 16,
-        },
-
-};
-
 static uint8_t blocks[16 * 4];
 
 static NfcDevice* eink_waveshare_nfc_device_alloc() {

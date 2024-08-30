@@ -6,17 +6,7 @@
 #include <nfc/nfc_common.h>
 #include <nfc/nfc_device.h>
 
-typedef enum {
-    //NfcEinkManufacturerGeneric,
-    NfcEinkManufacturerWaveshare,
-    NfcEinkManufacturerGoodisplay,
-
-    NfcEinkManufacturerNum
-} NfcEinkManufacturer;
-
-typedef enum {
-    NfcEinkTypeUnknown
-} NfcEinkType;
+#include "nfc_eink_screen_descriptors.h"
 
 typedef enum {
     NfcEinkScreenEventTypeTargetDetected,

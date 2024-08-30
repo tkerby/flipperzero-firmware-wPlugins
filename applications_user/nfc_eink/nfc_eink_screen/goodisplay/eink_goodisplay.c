@@ -2,28 +2,6 @@
 #include "eink_goodisplay_i.h"
 #include <simple_array.h>
 
-static const NfcEinkScreenDescriptor goodisplay_screens[NfcEinkScreenTypeGoodisplayNum] = {
-    [NfcEinkScreenTypeGoodisplayUnknown] =
-        {
-            .name = "Goodisplay Unknown",
-            .width = 0,
-            .height = 0,
-            .screen_manufacturer = NfcEinkManufacturerGoodisplay,
-            .screen_type = NfcEinkScreenTypeGoodisplayUnknown,
-            .data_block_size = 0,
-        },
-    [NfcEinkScreenTypeGoodisplay2n13inch] =
-        {
-            .name = "GDEY0213B74",
-            .width = 250,
-            .height = 122,
-            .screen_manufacturer = NfcEinkManufacturerGoodisplay,
-            .screen_type = NfcEinkScreenTypeGoodisplay2n13inch,
-            .data_block_size =
-                0xFA, ///TODO: remove this or think of more eficient algorithm of displaying
-        },
-};
-
 static NfcDevice* eink_goodisplay_nfc_device_4a_alloc() {
     const uint8_t uid[] = {0xC0, 0xC9, 0x06, 0x7F};
     const uint8_t atqa[] = {0x04, 0x00};

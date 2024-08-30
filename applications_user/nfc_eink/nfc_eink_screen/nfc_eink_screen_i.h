@@ -2,15 +2,6 @@
 #include "nfc_eink_tag.h"
 
 typedef struct {
-    uint16_t width;
-    uint16_t height;
-    uint8_t data_block_size;
-    uint8_t screen_type;
-    NfcEinkManufacturer screen_manufacturer;
-    const char* name;
-} NfcEinkScreenDescriptor; //TODO:NfcEinkScreenBase
-
-typedef struct {
     uint8_t* image_data;
     uint16_t image_size;
     uint16_t received_data;

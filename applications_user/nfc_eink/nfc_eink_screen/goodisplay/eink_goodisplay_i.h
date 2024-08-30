@@ -30,15 +30,6 @@
 #define eink_goodisplay_on_error(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFailure)
 
-typedef enum {
-    NfcEinkScreenTypeGoodisplayUnknown,
-    NfcEinkScreenTypeGoodisplay2n13inch,
-    NfcEinkScreenTypeGoodisplay2n9inch,
-    //NfcEinkTypeGoodisplay4n2inch,
-
-    NfcEinkScreenTypeGoodisplayNum
-} NfcEinkScreenTypeGoodisplay;
-
 #pragma pack(push, 1)
 typedef struct {
     uint8_t CLA_byte;
