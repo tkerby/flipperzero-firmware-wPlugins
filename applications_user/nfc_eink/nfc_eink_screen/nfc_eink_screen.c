@@ -73,13 +73,13 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     return screen;
 }
 
-void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type) {
-    UNUSED(type);
+void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
+    furi_assert(type != NfcEinkScreenTypeUnknown);
+    furi_assert(type < NfcEinkScreenTypeNum);
+
     NfcEinkScreenData* data = screen->data;
 
-    if(screen->data->base.screen_type == NfcEinkTypeUnknown) {
-        screen->handlers->init(data, type);
-    }
+    memcpy(&data->base, nfc_eink_descriptor_get_by_type(type), sizeof(NfcEinkScreenDescriptor));
 
     data->image_size =
         data->base.width *
@@ -327,7 +327,7 @@ void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEvent
     if(type == NfcEinkScreenEventTypeConfigurationReceived) {
         ///TODO: think of throwing this event outside also
         FURI_LOG_D(TAG, "Config received");
-        nfc_eink_screen_init(instance, instance->data->base.screen_type);
+        nfc_eink_screen_init(instance, instance->device->screen_type);
     } else
         nfc_eink_screen_event_invoke(instance, type);
 }

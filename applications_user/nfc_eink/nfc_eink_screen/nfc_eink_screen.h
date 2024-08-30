@@ -13,7 +13,7 @@ typedef struct NfcEinkScreen NfcEinkScreen;
 const char* nfc_eink_screen_get_manufacturer_name(NfcEinkManufacturer type);
 
 NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer);
-void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkType type);
+void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type);
 void nfc_eink_screen_free(NfcEinkScreen* screen);
 
 ///TODO: maybe this function can be moved to nfc_eink_screen_alloc as a number of parameters

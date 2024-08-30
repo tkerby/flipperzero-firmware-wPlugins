@@ -63,28 +63,35 @@ static void eink_waveshare_free(NfcEinkScreenDevice* instance) {
     free(instance->screen_context);
 }
 
-static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkType generic_type) {
-    furi_assert(data);
+/// TODO: this can be removed
+static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkScreenType generic_type) {
+    UNUSED(data);
+    UNUSED(generic_type);
+    /*     furi_assert(data);
     NfcEinkScreenTypeWaveshare waveshare_type = (NfcEinkScreenTypeWaveshare)generic_type;
     furi_assert(waveshare_type != NfcEinkScreenTypeWaveshareUnknown);
-    furi_assert(waveshare_type < NfcEinkScreenTypeWaveshareNum);
+    furi_assert(waveshare_type < NfcEinkScreenTypeWaveshareNum); 
 
     data->base = waveshare_screens[waveshare_type];
+    */
 }
 
 static void
     eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
-    UNUSED(screen);
+    //UNUSED(screen);
     UNUSED(data_length);
-    NfcEinkScreenTypeWaveshare waveshare_type = NfcEinkScreenTypeWaveshareUnknown;
+    //UNUSED(data);
+
+    NfcEinkScreenType type = NfcEinkScreenTypeUnknown;
     uint8_t protocol_type = data[0];
+
     if(protocol_type == 4 || protocol_type == 2) {
-        waveshare_type = NfcEinkScreenTypeWaveshare2n13inch;
+        type = NfcEinkScreenTypeWaveshare2n13inch;
     } else if(protocol_type == 7) {
-        waveshare_type = NfcEinkScreenTypeWaveshare2n9inch;
+        type = NfcEinkScreenTypeWaveshare2n9inch;
     }
 
-    eink_waveshare_init(screen->data, (NfcEinkType)waveshare_type);
+    screen->device->screen_type = type;
     eink_waveshare_on_config_received(screen);
 }
 
