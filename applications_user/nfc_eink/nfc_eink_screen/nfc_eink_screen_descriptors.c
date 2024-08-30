@@ -1,5 +1,9 @@
 #include "nfc_eink_screen_descriptors.h"
 
+typedef bool (*NfcEinkDescriptorCompareDelegate)(
+    const NfcEinkScreenDescriptor* const a,
+    const NfcEinkScreenDescriptor* const b);
+
 static const NfcEinkScreenDescriptor screen_descriptors[] = {
     {
         .name = "Unknown",
@@ -56,6 +60,32 @@ const NfcEinkScreenDescriptor* nfc_eink_descriptor_get_by_type(const NfcEinkScre
     return item;
 }
 
+static uint8_t nfc_eink_descriptor_filter_by(
+    EinkScreenDescriptorArray_t result,
+    const NfcEinkScreenDescriptor* sample,
+    NfcEinkDescriptorCompareDelegate compare) {
+    uint8_t count = 0;
+    for(uint8_t i = 0; i < DESCRIPTOR_ARRAY_SIZE; i++) {
+        if(compare(&screen_descriptors[i], sample)) {
+            EinkScreenDescriptorArray_push_back(result, &screen_descriptors[i]);
+            count++;
+        }
+    }
+    return count;
+}
+
+static inline bool nfc_eink_descriptor_compare_by_manufacturer(
+    const NfcEinkScreenDescriptor* const a,
+    const NfcEinkScreenDescriptor* const b) {
+    return a->screen_manufacturer == b->screen_manufacturer;
+}
+
+static inline bool nfc_eink_descriptor_compare_by_screen_size(
+    const NfcEinkScreenDescriptor* const a,
+    const NfcEinkScreenDescriptor* const b) {
+    return a->screen_size == b->screen_size;
+}
+
 uint8_t nfc_eink_descriptor_filter_by_manufacturer(
     EinkScreenDescriptorArray_t result,
     NfcEinkManufacturer manufacturer) {
@@ -63,14 +93,9 @@ uint8_t nfc_eink_descriptor_filter_by_manufacturer(
     furi_assert(manufacturer < NfcEinkManufacturerNum);
     furi_assert(manufacturer != NfcEinkManufacturerUnknown);
 
-    uint8_t count = 0;
-    for(uint8_t i = 0; i < DESCRIPTOR_ARRAY_SIZE; i++) {
-        if(screen_descriptors[i].screen_manufacturer == manufacturer) {
-            EinkScreenDescriptorArray_push_back(result, &screen_descriptors[i]);
-            count++;
-        }
-    }
-    return count;
+    NfcEinkScreenDescriptor dummy = {.screen_manufacturer = manufacturer};
+    return nfc_eink_descriptor_filter_by(
+        result, &dummy, nfc_eink_descriptor_compare_by_manufacturer);
 }
 
 uint8_t nfc_eink_descriptor_filter_by_screen_size(
@@ -80,12 +105,7 @@ uint8_t nfc_eink_descriptor_filter_by_screen_size(
     furi_assert(screen_size != NfcEinkScreenSizeUnknown);
     furi_assert(screen_size < NfcEinkScreenSizeNum);
 
-    uint8_t count = 0;
-    for(uint8_t i = 0; i < DESCRIPTOR_ARRAY_SIZE; i++) {
-        if(screen_descriptors[i].screen_size == screen_size) {
-            EinkScreenDescriptorArray_push_back(result, &screen_descriptors[i]);
-            count++;
-        }
-    }
-    return count;
+    NfcEinkScreenDescriptor dummy = {.screen_size = screen_size};
+    return nfc_eink_descriptor_filter_by(
+        result, &dummy, nfc_eink_descriptor_compare_by_screen_size);
 }
