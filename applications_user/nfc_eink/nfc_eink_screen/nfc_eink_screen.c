@@ -29,16 +29,6 @@ typedef struct {
     const char* name;
 } NfcEinkScreenManufacturerDescriptor;
 
-/* static const NfcEinkScreenHandlers* handlers[NfcEinkManufacturerNum] = {
-    [NfcEinkManufacturerWaveshare] = &waveshare_handlers,
-    [NfcEinkManufacturerGoodisplay] = &waveshare_handlers,
-};
-
-static const char* manufacturer_names[NfcEinkManufacturerNum] = {
-    [NfcEinkManufacturerWaveshare] = "Waveshare",
-    [NfcEinkManufacturerGoodisplay] = "Goodisplay",
-}; */
-
 static const NfcEinkScreenManufacturerDescriptor manufacturers[NfcEinkManufacturerNum] = {
     [NfcEinkManufacturerWaveshare] =
         {
@@ -131,8 +121,6 @@ uint16_t nfc_eink_screen_get_received_size(const NfcEinkScreen* screen) {
     furi_assert(screen);
     return screen->data->received_data;
 }
-
-//uint16_t nfc_eink_screen_get_rece
 
 NfcGenericCallback nfc_eink_screen_get_nfc_callback(const NfcEinkScreen* screen, NfcMode mode) {
     furi_assert(screen);

@@ -15,7 +15,7 @@ void nfc_eink_scene_saved_menu_on_enter(void* context) {
     FURI_LOG_W(TAG, "Array size: %d", EinkScreenDescriptorArray_size(arr));
 
     uint8_t cnt = nfc_eink_descriptor_filter_by_screen_size(arr, NfcEinkScreenSize2n13inch);
-    //nfc_eink_descriptor_filter_by_manufacturer(arr, NfcEinkManufacturerWaveshare);
+    //uint8_t cnt = nfc_eink_descriptor_filter_by_manufacturer(arr, NfcEinkManufacturerWaveshare);
     FURI_LOG_W(TAG, "Array size: %d", EinkScreenDescriptorArray_size(arr));
 
     for(uint8_t i = 0; i < cnt; i++) {
