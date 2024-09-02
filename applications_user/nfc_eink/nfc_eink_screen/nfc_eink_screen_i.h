@@ -38,10 +38,6 @@ struct NfcEinkScreen {
     const NfcEinkScreenHandlers* handlers;
     NfcEinkScreenEventCallback event_callback;
     NfcEinkScreenEventContext event_context;
-
-    bool was_update; ///TODO: Candidates to move
-    uint8_t update_cnt; //to protocol specific instance
-    uint8_t response_cnt;
 };
 
 void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEventType type);

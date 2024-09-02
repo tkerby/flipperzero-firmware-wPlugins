@@ -36,11 +36,11 @@ typedef struct {
     uint16_t width;
     uint16_t height;
     uint8_t data_block_size;
-    NfcEinkScreenType screen_type; ///TODO: possibly remove
+    NfcEinkScreenType screen_type;
     NfcEinkScreenSize screen_size;
     NfcEinkManufacturer screen_manufacturer;
     const char* name;
-} NfcEinkScreenDescriptor;
+} NfcEinkScreenDescriptor; ///TODO: Rename to NfcEinkScreenInfo
 
 #define M_ARRAY_SIZE (sizeof(NfcEinkScreenDescriptor*) * NfcEinkScreenTypeNum)
 #define M_INIT(a)    ((a) = malloc(M_ARRAY_SIZE))
