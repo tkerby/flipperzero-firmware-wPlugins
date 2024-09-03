@@ -75,15 +75,15 @@ static uint8_t nfc_eink_screen_command_DB(
 }
 
 static uint8_t nfc_eink_screen_command_D2(
-    NfcEinkScreenData* screen,
+    NfcEinkScreen* screen,
     const APDU_Command* command,
     APDU_Response* resp) {
     //UNUSED(command);
     UNUSED(resp);
     FURI_LOG_D(TAG, "F0 D2: %d", command->data_length);
-    uint8_t* data = screen->image_data + screen->received_data;
+    uint8_t* data = screen->data->image_data + screen->device->received_data;
     memcpy(data, command->data, command->data_length - 2);
-    screen->received_data += command->data_length - 2;
+    screen->device->received_data += command->data_length - 2;
 
     return 1;
 }
@@ -141,7 +141,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
             if(apdu->CLA_byte == 0xF0 && apdu->CMD_code == 0xD2) {
                 ctx->was_update = true;
                 response_length = nfc_eink_screen_command_D2(
-                    instance->data, (APDU_Command*)apdu, &response->apdu_resp.apdu_response);
+                    instance, (APDU_Command*)apdu, &response->apdu_resp.apdu_response);
             }
             response->response_code = 0xA3;
         } else if(cmd->command_code == 0xF2) {
@@ -196,11 +196,11 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
                 response_length = 2;
                 ctx->update_cnt = 0;
             } else {
-                uint8_t* data = instance->data->image_data + instance->data->received_data;
+                uint8_t* data = instance->data->image_data + instance->device->received_data;
                 ctx->listener_state = NfcEinkScreenGoodisplayListenerStateReadingBlocks;
                 memcpy(data, cmd->command_data, 2);
-                instance->data->received_data += 2;
-                FURI_LOG_D(TAG, "Data: %d", instance->data->received_data);
+                instance->device->received_data += 2;
+                FURI_LOG_D(TAG, "Data: %d", instance->device->received_data);
                 response_length = 3;
                 response->response_code = 0x02;
                 response->apdu_resp.apdu_response.status = __builtin_bswap16(0x9000);

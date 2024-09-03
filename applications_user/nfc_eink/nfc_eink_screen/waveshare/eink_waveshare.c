@@ -122,6 +122,7 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
         ///TODO: move this to process function
         bit_buffer_reset(instance->tx_buf);
         NfcEinkScreenData* const screen_data = instance->data;
+        NfcEinkScreenDevice* const screen_device = instance->device;
         if(data[0] == 0xFF && data[1] == 0xFE) {
             bit_buffer_append_byte(instance->tx_buf, 0xEE);
             bit_buffer_append_byte(instance->tx_buf, 0xFF);
@@ -151,10 +152,10 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
                 ctx->listener_state = NfcEinkWaveshareListenerStateWaitingForConfig;
                 eink_waveshare_on_target_detected(instance);
             } else if(data[1] == 0x08) {
-                memcpy(screen_data->image_data + screen_data->received_data, &data[3], data[2]);
-                screen_data->received_data += data[2];
+                memcpy(screen_data->image_data + screen_device->received_data, &data[3], data[2]);
+                screen_device->received_data += data[2];
 
-                uint16_t last = screen_data->received_data - 1;
+                uint16_t last = screen_device->received_data - 1;
                 screen_data->image_data[last] &= 0xC0;
 
                 bit_buffer_append_byte(instance->tx_buf, 0x00);
