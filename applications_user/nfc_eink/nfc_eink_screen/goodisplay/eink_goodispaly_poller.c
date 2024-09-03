@@ -450,9 +450,6 @@ NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context)
 
     NfcCommand command = NfcCommandContinue;
 
-    ///TODO: this should be solved in another way, by adjusting struct hierarchy
-    screen->device->block_total = screen->data->image_size / screen->data->base.data_block_size;
-
     Iso14443_4aPollerEvent* Iso14443_4a_event = event.event_data;
     Iso14443_4aPoller* poller = event.instance;
 

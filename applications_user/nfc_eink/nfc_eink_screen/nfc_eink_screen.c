@@ -67,12 +67,15 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
     furi_assert(type < NfcEinkScreenTypeNum);
 
     NfcEinkScreenData* data = screen->data;
+    NfcEinkScreenDevice* device = screen->device;
 
-    memcpy(&data->base, nfc_eink_descriptor_get_by_type(type), sizeof(NfcEinkScreenDescriptor));
+    const NfcEinkScreenDescriptor* info = nfc_eink_descriptor_get_by_type(type);
+    memcpy(&data->base, info, sizeof(NfcEinkScreenDescriptor));
 
     data->image_size =
-        data->base.width *
-        (data->base.height % 8 == 0 ? (data->base.height / 8) : (data->base.height / 8 + 1));
+        info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1));
+
+    device->block_total = data->image_size / info->data_block_size;
     data->image_data = malloc(data->image_size);
 }
 
