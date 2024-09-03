@@ -6,7 +6,7 @@
 #include <nfc/nfc_common.h>
 #include <nfc/nfc_device.h>
 
-#include "nfc_eink_screen_descriptors.h"
+#include "nfc_eink_screen_infos.h"
 
 typedef enum {
     NfcEinkScreenEventTypeTargetDetected,

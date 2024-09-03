@@ -5,7 +5,7 @@ typedef struct {
     uint8_t* image_data;
     uint16_t image_size;
     //uint16_t received_data;
-    NfcEinkScreenDescriptor base;
+    NfcEinkScreenInfo base;
 } NfcEinkScreenData;
 
 typedef void NfcEinkScreenSpecificContext;

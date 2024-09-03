@@ -67,8 +67,8 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
     NfcEinkScreenData* data = screen->data;
     NfcEinkScreenDevice* device = screen->device;
 
-    const NfcEinkScreenDescriptor* info = nfc_eink_descriptor_get_by_type(type);
-    memcpy(&data->base, info, sizeof(NfcEinkScreenDescriptor));
+    const NfcEinkScreenInfo* info = nfc_eink_descriptor_get_by_type(type);
+    memcpy(&data->base, info, sizeof(NfcEinkScreenInfo));
 
     data->image_size =
         info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1));

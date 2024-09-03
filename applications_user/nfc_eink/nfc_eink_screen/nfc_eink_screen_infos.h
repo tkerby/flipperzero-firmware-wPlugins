@@ -40,9 +40,9 @@ typedef struct {
     NfcEinkScreenSize screen_size;
     NfcEinkManufacturer screen_manufacturer;
     const char* name;
-} NfcEinkScreenDescriptor; ///TODO: Rename to NfcEinkScreenInfo
+} NfcEinkScreenInfo;
 
-#define M_ARRAY_SIZE (sizeof(NfcEinkScreenDescriptor*) * NfcEinkScreenTypeNum)
+#define M_ARRAY_SIZE (sizeof(NfcEinkScreenInfo*) * NfcEinkScreenTypeNum)
 #define M_INIT(a)    ((a) = malloc(M_ARRAY_SIZE))
 
 #define M_INIT_SET(new, old)                          \
@@ -55,16 +55,16 @@ typedef struct {
 #define M_CLEAR(a) (free((void*)a))
 
 #define M_DESCRIPTOR_ARRAY_OPLIST \
-    (INIT(M_INIT), INIT_SET(M_INIT_SET), CLEAR(M_CLEAR), TYPE(const NfcEinkScreenDescriptor*))
+    (INIT(M_INIT), INIT_SET(M_INIT_SET), CLEAR(M_CLEAR), TYPE(const NfcEinkScreenInfo*))
 
-ARRAY_DEF(EinkScreenDescriptorArray, const NfcEinkScreenDescriptor*, M_DESCRIPTOR_ARRAY_OPLIST);
+ARRAY_DEF(EinkScreenInfoArray, const NfcEinkScreenInfo*, M_DESCRIPTOR_ARRAY_OPLIST);
 
-const NfcEinkScreenDescriptor* nfc_eink_descriptor_get_by_type(NfcEinkScreenType type);
+const NfcEinkScreenInfo* nfc_eink_descriptor_get_by_type(NfcEinkScreenType type);
 
 uint8_t nfc_eink_descriptor_filter_by_manufacturer(
-    EinkScreenDescriptorArray_t result,
+    EinkScreenInfoArray_t result,
     NfcEinkManufacturer manufacturer);
 
 uint8_t nfc_eink_descriptor_filter_by_screen_size(
-    EinkScreenDescriptorArray_t result,
+    EinkScreenInfoArray_t result,
     NfcEinkScreenSize screen_size);

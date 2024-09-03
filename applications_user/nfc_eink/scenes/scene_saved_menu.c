@@ -10,20 +10,20 @@ void nfc_eink_scene_saved_menu_on_enter(void* context) {
     Submenu* submenu = instance->submenu;
 
     ///TODO: this is test code, remove after testing filtering
-    EinkScreenDescriptorArray_t arr;
-    EinkScreenDescriptorArray_init(arr);
-    FURI_LOG_W(TAG, "Array size: %d", EinkScreenDescriptorArray_size(arr));
+    EinkScreenInfoArray_t arr;
+    EinkScreenInfoArray_init(arr);
+    FURI_LOG_W(TAG, "Array size: %d", EinkScreenInfoArray_size(arr));
 
     uint8_t cnt = nfc_eink_descriptor_filter_by_screen_size(arr, NfcEinkScreenSize2n13inch);
     //uint8_t cnt = nfc_eink_descriptor_filter_by_manufacturer(arr, NfcEinkManufacturerWaveshare);
-    FURI_LOG_W(TAG, "Array size: %d", EinkScreenDescriptorArray_size(arr));
+    FURI_LOG_W(TAG, "Array size: %d", EinkScreenInfoArray_size(arr));
 
     for(uint8_t i = 0; i < cnt; i++) {
-        const NfcEinkScreenDescriptor* item = *EinkScreenDescriptorArray_get(arr, i);
+        const NfcEinkScreenInfo* item = *EinkScreenInfoArray_get(arr, i);
         FURI_LOG_W(TAG, "Item: %s, width: %d, height: %d", item->name, item->width, item->height);
     }
 
-    EinkScreenDescriptorArray_clear(arr);
+    EinkScreenInfoArray_clear(arr);
 
     submenu_set_header(submenu, "Choose Screen Type");
     submenu_add_item(
