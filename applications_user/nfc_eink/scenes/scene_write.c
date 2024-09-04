@@ -136,8 +136,11 @@ bool nfc_eink_scene_write_on_event(void* context, SceneManagerEvent event) {
 
 void nfc_eink_scene_write_on_exit(void* context) {
     NfcEinkApp* instance = context;
-    nfc_poller_stop(instance->poller);
     nfc_eink_blink_stop(instance);
     popup_reset(instance->popup);
     eink_progress_reset(instance->eink_progress);
+
+    nfc_poller_stop(instance->poller);
+    nfc_poller_free(instance->poller);
+    nfc_eink_screen_free(instance->screen);
 }

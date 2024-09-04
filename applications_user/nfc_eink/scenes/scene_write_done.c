@@ -44,5 +44,4 @@ void nfc_eink_scene_write_done_on_exit(void* context) {
     NfcEinkApp* instance = context;
     // Clear view
     popup_reset(instance->popup);
-    nfc_eink_screen_free(instance->screen);
 }
