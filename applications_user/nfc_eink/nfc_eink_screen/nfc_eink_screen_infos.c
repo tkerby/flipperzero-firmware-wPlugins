@@ -41,7 +41,15 @@ static const NfcEinkScreenInfo screen_descriptors[] = {
         .screen_type = NfcEinkScreenTypeGoodisplay2n13inch,
         .data_block_size = 0xFA,
     },
-
+    {
+        .name = "GDEY029T94",
+        .width = 296,
+        .height = 128,
+        .screen_size = NfcEinkScreenSize2n9inch,
+        .screen_manufacturer = NfcEinkManufacturerGoodisplay,
+        .screen_type = NfcEinkScreenTypeGoodisplay2n9inch,
+        .data_block_size = 0xFA,
+    },
 };
 
 const NfcEinkScreenInfo* nfc_eink_descriptor_get_by_type(const NfcEinkScreenType type) {

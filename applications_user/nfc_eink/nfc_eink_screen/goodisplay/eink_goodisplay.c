@@ -67,7 +67,12 @@ static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkScreenType gene
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     UNUSED(data_length);
     UNUSED(data);
-    screen->device->screen_type = NfcEinkScreenTypeGoodisplay2n13inch;
+    if(data[2] == 0)
+        screen->device->screen_type = NfcEinkScreenTypeGoodisplay2n13inch;
+    else if(data[2] == 1)
+        screen->device->screen_type = NfcEinkScreenTypeGoodisplay2n9inch;
+    else
+        screen->device->screen_type = NfcEinkScreenTypeUnknown;
 
     eink_goodisplay_on_config_received(screen);
 }
