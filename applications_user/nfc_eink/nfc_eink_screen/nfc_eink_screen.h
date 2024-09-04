@@ -35,4 +35,8 @@ const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen);
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
 bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
 bool nfc_eink_screen_delete(const char* file_path);
-//bool nfc_eink_screen_load_descriptor(const char* file_path, NfcEinkScreenDescriptor** screen);
+bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** info);
+bool nfc_eink_screen_load_data(
+    const char* file_path,
+    NfcEinkScreen* destination,
+    const NfcEinkScreenInfo* source_info);

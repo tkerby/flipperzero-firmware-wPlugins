@@ -68,3 +68,7 @@ uint8_t nfc_eink_descriptor_filter_by_manufacturer(
 uint8_t nfc_eink_descriptor_filter_by_screen_size(
     EinkScreenInfoArray_t result,
     NfcEinkScreenSize screen_size);
+
+uint8_t nfc_eink_descriptor_filter_by_screen_type(
+    EinkScreenInfoArray_t result,
+    NfcEinkScreenType screen_type);

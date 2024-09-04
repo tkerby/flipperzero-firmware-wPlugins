@@ -116,6 +116,8 @@ typedef struct {
     NfcListener* listener;
     NfcPoller* poller;
     NfcEinkScreen* screen;
+    const NfcEinkScreenInfo* info_temp;
+    EinkScreenInfoArray_t arr;
 
     BitBuffer* tx_buf;
     char text_store[50 + 1];

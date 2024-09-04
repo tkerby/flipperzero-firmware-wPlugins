@@ -233,9 +233,10 @@ bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
                instance->dialogs, instance->file_path, instance->file_path, &browser_options))
             break;
 
-        success =
-            nfc_eink_screen_load(furi_string_get_cstr(instance->file_path), &instance->screen);
-        //success = nfc_eink_screen_load(instance, instance->file_path, true);
+        /* success =
+            nfc_eink_screen_load(furi_string_get_cstr(instance->file_path), &instance->screen); */
+        success = nfc_eink_screen_load_info(
+            furi_string_get_cstr(instance->file_path), &instance->info_temp);
     } while(!success);
 
     return success;

@@ -60,6 +60,11 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     return screen;
 }
 
+static inline uint16_t nfc_eink_screen_calculate_image_size(const NfcEinkScreenInfo* const info) {
+    furi_assert(info);
+    return info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1));
+}
+
 void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
     furi_assert(type != NfcEinkScreenTypeUnknown);
     furi_assert(type < NfcEinkScreenTypeNum);
@@ -70,8 +75,8 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
     const NfcEinkScreenInfo* info = nfc_eink_descriptor_get_by_type(type);
     memcpy(&data->base, info, sizeof(NfcEinkScreenInfo));
 
-    data->image_size =
-        info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1));
+    data->image_size = nfc_eink_screen_calculate_image_size(info);
+    /* info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1)); */
 
     device->block_total = data->image_size / info->data_block_size;
     data->image_data = malloc(data->image_size);
@@ -192,6 +197,108 @@ bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
         nfc_eink_screen_free(scr);
         *screen = NULL;
     }
+    return loaded;
+}
+
+bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** info) {
+    furi_assert(info);
+    furi_assert(file_path);
+    bool loaded = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
+
+    do {
+        if(!flipper_format_buffered_file_open_existing(ff, file_path)) break;
+
+        uint32_t tmp = 0;
+        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_MANUFACTURER_TYPE_KEY, &tmp, 1)) break;
+        NfcEinkManufacturer manufacturer = tmp;
+
+        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &tmp, 1)) break;
+        NfcEinkScreenType screen_type = tmp;
+        if(screen_type == NfcEinkScreenTypeUnknown || screen_type == NfcEinkScreenTypeNum) {
+            FURI_LOG_E(TAG, "Loaded screen type is invalid");
+            break;
+        }
+
+        uint32_t width = 0;
+        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_WIDTH_KEY, &width, 1)) break;
+
+        uint32_t height = 0;
+        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_HEIGHT_KEY, &height, 1)) break;
+
+        uint32_t block_data_size = 0;
+        if(!flipper_format_read_uint32(
+               ff, NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY, &block_data_size, 1))
+            break;
+
+        const NfcEinkScreenInfo* inf_tmp = nfc_eink_descriptor_get_by_type(screen_type);
+
+        if(inf_tmp->screen_manufacturer != manufacturer) {
+            FURI_LOG_E(TAG, "Loaded manufacturer doesn't match with info field");
+            break;
+        }
+
+        if(inf_tmp->width != width || inf_tmp->height != height) {
+            FURI_LOG_E(TAG, "Loaded screen size doesn't match with info field");
+            break;
+        }
+
+        if(inf_tmp->data_block_size != block_data_size) {
+            FURI_LOG_E(TAG, "Loaded block_data_size doesn't match with info field");
+            break;
+        }
+
+        *info = inf_tmp;
+        loaded = true;
+    } while(false);
+
+    flipper_format_free(ff);
+    furi_record_close(RECORD_STORAGE);
+
+    return loaded;
+}
+
+bool nfc_eink_screen_load_data(
+    const char* file_path,
+    NfcEinkScreen* destination,
+    const NfcEinkScreenInfo* source_info) {
+    furi_assert(destination);
+    furi_assert(source_info);
+    bool loaded = false;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
+
+    do {
+        if(!flipper_format_buffered_file_open_existing(ff, file_path)) break;
+
+        NfcEinkScreenData* data = destination->data;
+
+        FuriString* temp_str = furi_string_alloc();
+        const uint16_t src_img_size = nfc_eink_screen_calculate_image_size(source_info);
+        /*  source_info->width * (source_info->height % 8 == 0 ?
+                                                                (source_info->height / 8) :
+                                                                (source_info->height / 8 + 1)); */
+        const uint16_t image_size = MIN(data->image_size, src_img_size);
+
+        bool block_loaded = false;
+        for(uint16_t i = 0; i < image_size; i += source_info->data_block_size) {
+            furi_string_printf(temp_str, "%s %d", NFC_EINK_SCREEN_BLOCK_DATA_KEY, i);
+            block_loaded = flipper_format_read_hex(
+                ff,
+                furi_string_get_cstr(temp_str),
+                &data->image_data[i],
+                source_info->data_block_size);
+            if(!block_loaded) break;
+        }
+        furi_string_free(temp_str);
+
+        loaded = block_loaded;
+    } while(false);
+
+    flipper_format_free(ff);
+    furi_record_close(RECORD_STORAGE);
+
     return loaded;
 }
 

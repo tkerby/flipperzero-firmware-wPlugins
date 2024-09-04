@@ -41,6 +41,7 @@ static const NfcEinkScreenInfo screen_descriptors[] = {
         .screen_type = NfcEinkScreenTypeGoodisplay2n13inch,
         .data_block_size = 0xFA,
     },
+
 };
 
 const NfcEinkScreenInfo* nfc_eink_descriptor_get_by_type(const NfcEinkScreenType type) {
@@ -105,4 +106,15 @@ uint8_t nfc_eink_descriptor_filter_by_screen_size(
     NfcEinkScreenInfo dummy = {.screen_size = screen_size};
     return nfc_eink_descriptor_filter_by(
         result, &dummy, nfc_eink_descriptor_compare_by_screen_size);
+}
+
+uint8_t nfc_eink_descriptor_filter_by_screen_type(
+    EinkScreenInfoArray_t result,
+    NfcEinkScreenType screen_type) {
+    furi_assert(result);
+    furi_assert(screen_type != NfcEinkScreenTypeUnknown);
+    furi_assert(screen_type < NfcEinkScreenTypeNum);
+
+    EinkScreenInfoArray_push_back(result, nfc_eink_descriptor_get_by_type(screen_type));
+    return 1;
 }
