@@ -48,7 +48,6 @@ bool nfc_eink_scene_saved_menu_on_event(void* context, SceneManagerEvent event) 
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneWrite);
         else {
             FURI_LOG_E(TAG, "Unable to load image data");
-            furi_crash();
         }
 
         consumed = true;
