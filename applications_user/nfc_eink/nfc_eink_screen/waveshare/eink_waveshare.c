@@ -106,7 +106,9 @@ static NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* 
         FURI_LOG_D(TAG, "ReceivedData");
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeFieldOff) {
         FURI_LOG_D(TAG, "FieldOff");
-        if(ctx->listener_state != NfcEinkWaveshareListenerStateIdle)
+        if(ctx->listener_state == NfcEinkWaveshareListenerStateUpdatedSuccefully)
+            eink_waveshare_on_done(instance);
+        else if(ctx->listener_state != NfcEinkWaveshareListenerStateIdle)
             eink_waveshare_on_target_lost(instance);
         command = NfcCommandStop;
     } else if(Iso14443_3a_event->type == Iso14443_3aListenerEventTypeHalted) {
