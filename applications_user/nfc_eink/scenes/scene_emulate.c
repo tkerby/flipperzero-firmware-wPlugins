@@ -83,6 +83,7 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
 void nfc_eink_scene_emulate_on_exit(void* context) {
     NfcEinkApp* instance = context;
     nfc_listener_stop(instance->listener);
+    nfc_listener_free(instance->listener);
     nfc_eink_blink_stop(instance);
     widget_reset(instance->widget);
 }
