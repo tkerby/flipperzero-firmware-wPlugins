@@ -86,6 +86,7 @@ void nfc_eink_screen_free(NfcEinkScreen* screen) {
     furi_check(screen);
 
     screen->handlers->free(screen->device);
+    free(screen->device);
 
     NfcEinkScreenData* data = screen->data;
     free(data->image_data);
