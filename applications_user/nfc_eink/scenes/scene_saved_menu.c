@@ -8,17 +8,14 @@ static void nfc_eink_scene_choose_screen_submenu_callback(void* context, uint32_
 void nfc_eink_scene_saved_menu_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
-
     EinkScreenInfoArray_init(instance->arr);
-    FURI_LOG_W(TAG, "Array size: %d", EinkScreenInfoArray_size(instance->arr));
-
+    uint8_t cnt = nfc_eink_descriptor_get_all_usable(instance->arr);
     /* uint8_t cnt =
         nfc_eink_descriptor_filter_by_screen_type(instance->arr, instance->info_temp->screen_type); */
-    uint8_t cnt =
-        nfc_eink_descriptor_filter_by_screen_size(instance->arr, instance->info_temp->screen_size);
+    /*  uint8_t cnt =
+        nfc_eink_descriptor_filter_by_screen_size(instance->arr, instance->info_temp->screen_size); */
     /*     uint8_t cnt = nfc_eink_descriptor_filter_by_manufacturer(
         instance->arr, instance->info_temp->screen_manufacturer); */
-    FURI_LOG_W(TAG, "Array size: %d", EinkScreenInfoArray_size(instance->arr));
 
     submenu_set_header(submenu, "Choose Screen Type");
 
@@ -40,7 +37,6 @@ bool nfc_eink_scene_saved_menu_on_event(void* context, SceneManagerEvent event) 
     if(event.type == SceneManagerEventTypeCustom) {
         const uint32_t index = event.event;
         const NfcEinkScreenInfo* item = *EinkScreenInfoArray_get(instance->arr, index);
-
         instance->screen = nfc_eink_screen_alloc(item->screen_manufacturer);
         nfc_eink_screen_init(instance->screen, item->screen_type);
         if(nfc_eink_screen_load_data(
