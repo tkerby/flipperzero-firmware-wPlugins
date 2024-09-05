@@ -226,11 +226,15 @@ bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
     browser_options.base_path = NFC_EINK_APP_FOLDER;
     browser_options.hide_dot_files = true;
 
+    FuriString* tmp = furi_string_alloc();
+    furi_string_reset(instance->file_path);
+
     bool success = false;
     do {
         // Input events and views are managed by file_browser
-        if(!dialog_file_browser_show(
-               instance->dialogs, instance->file_path, instance->file_path, &browser_options))
+        furi_string_printf(tmp, NFC_EINK_APP_FOLDER);
+
+        if(!dialog_file_browser_show(instance->dialogs, instance->file_path, tmp, &browser_options))
             break;
 
         /* success =
@@ -238,6 +242,8 @@ bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
         success = nfc_eink_screen_load_info(
             furi_string_get_cstr(instance->file_path), &instance->info_temp);
     } while(!success);
+
+    furi_string_free(tmp);
 
     return success;
 }
