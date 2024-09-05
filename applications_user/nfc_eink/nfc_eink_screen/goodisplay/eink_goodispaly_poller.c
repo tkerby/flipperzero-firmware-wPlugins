@@ -329,8 +329,6 @@ static NfcCommand
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
 
     bool status = true;
-    //  uint8_t block_number = 0;
-    //for(size_t i = 0; i < data->received_data; block_number++) {
     do {
         FURI_LOG_D(TAG, "Send data: %d", ctx->block_number);
 
@@ -342,7 +340,6 @@ static NfcCommand
             data->base.data_block_size - 2);
 
         ctx->data_index += data->base.data_block_size - 2;
-        //i += data->base.data_block_size - 2;
 
         if(!status) {
             ctx->state = NfcEinkScreenGoodisplayPollerStateError;
@@ -360,11 +357,9 @@ static NfcCommand
         }
 
         ctx->block_number++;
-        /* ctx->data_index == data->image_size */
         ctx->state = (ctx->block_number == screen->device->block_total) ? UpdateDisplay :
                                                                           SendDataCmd;
     } while(false);
-    //}
     eink_goodisplay_on_block_processed(screen);
     screen->device->block_current = ctx->block_number;
 
