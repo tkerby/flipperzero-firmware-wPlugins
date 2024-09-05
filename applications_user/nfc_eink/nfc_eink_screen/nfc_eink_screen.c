@@ -264,7 +264,9 @@ bool nfc_eink_screen_load_data(
     NfcEinkScreen* destination,
     const NfcEinkScreenInfo* source_info) {
     furi_assert(destination);
+    furi_assert(destination->data->image_data);
     furi_assert(source_info);
+
     bool loaded = false;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
@@ -276,9 +278,7 @@ bool nfc_eink_screen_load_data(
 
         FuriString* temp_str = furi_string_alloc();
         const uint16_t src_img_size = nfc_eink_screen_calculate_image_size(source_info);
-        /*  source_info->width * (source_info->height % 8 == 0 ?
-                                                                (source_info->height / 8) :
-                                                                (source_info->height / 8 + 1)); */
+
         const uint16_t image_size = MIN(data->image_size, src_img_size);
 
         bool block_loaded = false;
