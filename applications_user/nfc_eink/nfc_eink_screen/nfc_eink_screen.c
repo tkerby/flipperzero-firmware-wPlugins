@@ -76,10 +76,14 @@ void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type) {
     memcpy(&data->base, info, sizeof(NfcEinkScreenInfo));
 
     data->image_size = nfc_eink_screen_calculate_image_size(info);
-    /* info->width * (info->height % 8 == 0 ? (info->height / 8) : (info->height / 8 + 1)); */
 
     device->block_total = data->image_size / info->data_block_size;
-    data->image_data = malloc(data->image_size);
+    if(data->image_size % info->data_block_size != 0) device->block_total += 1;
+    size_t memory_size = device->block_total * data->base.data_block_size;
+
+    data->image_data = malloc(memory_size);
+    ///TODO: this can be used as a config option, which will define the initial color of the screen
+    // memset(data->image_data, 0xFF, data->image_size);
 }
 
 void nfc_eink_screen_free(NfcEinkScreen* screen) {
