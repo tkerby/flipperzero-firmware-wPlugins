@@ -126,3 +126,14 @@ uint8_t nfc_eink_descriptor_filter_by_screen_type(
     EinkScreenInfoArray_push_back(result, nfc_eink_descriptor_get_by_type(screen_type));
     return 1;
 }
+
+uint8_t nfc_eink_descriptor_get_all_usable(EinkScreenInfoArray_t result) {
+    furi_assert(result);
+    uint8_t count = 0;
+    for(uint8_t i = 0; i < COUNT_OF(screen_descriptors); i++) {
+        if(i == NfcEinkScreenTypeUnknown) continue;
+        EinkScreenInfoArray_push_back(result, &screen_descriptors[i]);
+        count++;
+    }
+    return count;
+}

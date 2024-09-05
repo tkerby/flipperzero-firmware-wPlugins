@@ -61,6 +61,8 @@ ARRAY_DEF(EinkScreenInfoArray, const NfcEinkScreenInfo*, M_DESCRIPTOR_ARRAY_OPLI
 
 const NfcEinkScreenInfo* nfc_eink_descriptor_get_by_type(NfcEinkScreenType type);
 
+uint8_t nfc_eink_descriptor_get_all_usable(EinkScreenInfoArray_t result);
+
 uint8_t nfc_eink_descriptor_filter_by_manufacturer(
     EinkScreenInfoArray_t result,
     NfcEinkManufacturer manufacturer);
