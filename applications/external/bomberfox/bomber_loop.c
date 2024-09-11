@@ -1,6 +1,9 @@
+#include <dolphin/dolphin.h>
+
 #include "bomber_loop.h"
 #include "helpers.h"
 #include "subghz.h"
+#include "levels.h"
 
 #define BOMB_HOT_TIME     furi_ms_to_ticks(2000)
 #define BOMB_PLANTED_TIME furi_ms_to_ticks(2100)
@@ -8,13 +11,6 @@
 #define BOMB_RESET_TIME   furi_ms_to_ticks(2600)
 #define MAX_X             16
 #define MAX_Y             8
-
-// End the game but don't quit the app
-// TODO: Figure out whether this actually needs to be here. What should happen when the player presses Back during gameplay?
-static void bomber_app_stop_playing(BomberAppState* state) {
-    FURI_LOG_I(TAG, "Stop playing");
-    bomber_app_set_mode(state, BomberAppMode_Finished);
-}
 
 // Quit the app
 static void bomber_app_quit(BomberAppState* state) {
@@ -28,10 +24,64 @@ static void bomber_app_error(BomberAppState* state) {
     bomber_app_set_mode(state, BomberAppMode_Error);
 }
 
+static void bomber_app_wait(BomberAppState* state) {
+    FURI_LOG_E(TAG, "Waiting for P1 to select level");
+    state->rxMode = RxMode_LevelData;
+    bomber_app_set_mode(state, BomberAppMode_Waiting);
+}
+
 // Start playing
 static void bomber_app_start(BomberAppState* state) {
     FURI_LOG_I(TAG, "Start playing");
+
+    dolphin_deed(DolphinDeedPluginGameStart);
+
+    // Figure out player starting positions from level data
+    state->fox = bomber_app_get_block(state->level, BlockType_Fox);
+    state->level[ix(state->fox.x, state->fox.y)] = (uint8_t)BlockType_Empty;
+    state->wolf = bomber_app_get_block(state->level, BlockType_Wolf);
+    state->level[ix(state->wolf.x, state->wolf.y)] = (uint8_t)BlockType_Empty;
+
     bomber_app_set_mode(state, BomberAppMode_Playing);
+}
+
+static void bomber_app_setup_level(BomberAppState* state) {
+    state->level = all_levels[state->selectedLevel];
+    uint8_t wall_count = count_walls(state->level);
+    uint8_t powerup_bomb_count = (uint8_t)round((POWERUP_EXTRABOMB_RATIO * wall_count));
+    uint8_t powerup_power_count = (uint8_t)round((POWERUP_BOMBPOWER_RATIO * wall_count));
+    FURI_LOG_D(
+        TAG,
+        "Walls: %d, Extra Bombs: %d, Bomb Power: %d",
+        wall_count,
+        powerup_bomb_count,
+        powerup_power_count);
+
+    uint8_t* bomb_powerups = malloc(sizeof(uint8_t) * powerup_bomb_count);
+    uint8_t* power_powerups = malloc(sizeof(uint8_t) * powerup_power_count);
+
+    get_random_powerup_locations(state->level, powerup_bomb_count, bomb_powerups);
+    get_random_powerup_locations(state->level, powerup_power_count, power_powerups);
+
+    for(uint8_t i = 0; i < powerup_bomb_count; i++) {
+        state->level[bomb_powerups[i]] = BlockType_PuExtraBomb_Hidden;
+    }
+    for(uint8_t i = 0; i < powerup_power_count; i++) {
+        state->level[power_powerups[i]] = BlockType_PuBombStrength_Hidden;
+    }
+
+    free(bomb_powerups);
+    free(power_powerups);
+
+    // Tx level data
+    subghz_tx_level_data(state, state->level);
+
+    bomber_app_start(state);
+}
+
+static void bomber_app_select_level(BomberAppState* state) {
+    FURI_LOG_I(TAG, "Select Level");
+    bomber_app_set_mode(state, BomberAppMode_LevelSelect);
 }
 
 // Check if a particular coordingate is occupied by a players active bomb
@@ -93,6 +143,9 @@ static bool handle_game_direction(BomberAppState* state, InputEvent input) {
         state->level[ix(newPoint.x, newPoint.y)] = BlockType_Empty;
     } else if(block == BlockType_PuExtraBomb) {
         player->bomb_count++;
+        if(player->bomb_count == MAX_BOMBS) {
+            player->bomb_count = MAX_BOMBS;
+        }
         state->level[ix(newPoint.x, newPoint.y)] = BlockType_Empty;
     }
 
@@ -108,7 +161,7 @@ static bool handle_game_direction(BomberAppState* state, InputEvent input) {
 // state: Pointer to the application state
 // input: Represents the input event
 // returns: true if the viewport should be updated, else false
-static bool handle_menu_input(BomberAppState* state, InputEvent input) {
+static bool handle_player_select_input(BomberAppState* state, InputEvent input) {
     if(input.type == InputTypeShort) {
         switch(input.key) {
         case InputKeyUp:
@@ -118,13 +171,48 @@ static bool handle_menu_input(BomberAppState* state, InputEvent input) {
             state->isPlayerTwo = !state->isPlayerTwo;
             return true;
         case InputKeyOk:
-            bomber_app_start(state);
+            if(!state->isPlayerTwo) {
+                bomber_app_select_level(state);
+            } else {
+                bomber_app_wait(state);
+            }
             return true;
         default:
             return false;
         }
     }
     return false;
+}
+
+static bool handle_levelselect_input(BomberAppState* state, InputEvent input) {
+    if(input.type == InputTypeShort) {
+        switch(input.key) {
+        case InputKeyOk:
+            bomber_app_setup_level(state);
+            return true;
+        case InputKeyUp:
+            state->selectedLevel -= 2;
+            break;
+        case InputKeyDown:
+            state->selectedLevel += 2;
+            break;
+        case InputKeyLeft:
+            state->selectedLevel -= 1;
+            break;
+        case InputKeyRight:
+            state->selectedLevel += 1;
+            break;
+        default:
+            return false;
+        }
+    }
+
+    uint8_t levelCount = sizeof(all_levels) / sizeof(int);
+    if(state->selectedLevel >= levelCount) {
+        state->selectedLevel = levelCount - 1;
+    }
+
+    return true;
 }
 
 // Handle input while playing the game
@@ -139,16 +227,20 @@ static bool handle_game_input(BomberAppState* state, InputEvent input) {
         case InputKeyOk:
             FURI_LOG_I(TAG, "Drop Bomb");
 
-            Bomb bomb;
-            bomb.x = player->x;
-            bomb.y = player->y;
-            bomb.state = BombState_Planted;
-            bomb.planted = furi_get_tick();
-            player->bombs[player->bomb_ix] = bomb;
+            for(int i = 0; i < player->bomb_count; i++) {
+                if(player->bombs[i].state == BombState_None) {
+                    Bomb bomb;
+                    bomb.x = player->x;
+                    bomb.y = player->y;
+                    bomb.state = BombState_Planted;
+                    bomb.planted = furi_get_tick();
 
-            player->bomb_ix = (player->bomb_ix + 1) % 10;
+                    player->bombs[i] = bomb;
 
-            tx_bomb_placement(state, bomb.x, bomb.y);
+                    tx_bomb_placement(state, bomb.x, bomb.y);
+                    break;
+                }
+            }
 
             return true;
         case InputKeyUp:
@@ -156,12 +248,6 @@ static bool handle_game_input(BomberAppState* state, InputEvent input) {
         case InputKeyLeft:
         case InputKeyRight:
             return handle_game_direction(state, input);
-        case InputKeyBack:
-            if(state->mode == BomberAppMode_Playing) {
-                bomber_app_stop_playing(state);
-                return true;
-            }
-            break;
         default:
             break;
         }
@@ -175,7 +261,7 @@ static bool handle_game_input(BomberAppState* state, InputEvent input) {
 // input: Represents the input event
 // returns: true if the viewport should be updated, else false
 static bool bomber_app_handle_input(BomberAppState* state, InputEvent input) {
-    if(input.type == InputTypeLong && input.key == InputKeyBack) {
+    if(input.key == InputKeyBack) {
         bomber_app_quit(state);
         return false; // don't try to update the UI while quitting
     }
@@ -183,8 +269,10 @@ static bool bomber_app_handle_input(BomberAppState* state, InputEvent input) {
     switch(state->mode) {
     case BomberAppMode_Playing:
         return handle_game_input(state, input);
-    case BomberAppMode_Menu:
-        return handle_menu_input(state, input);
+    case BomberAppMode_PlayerSelect:
+        return handle_player_select_input(state, input);
+    case BomberAppMode_LevelSelect:
+        return handle_levelselect_input(state, input);
     default:
         break;
     }
@@ -203,7 +291,14 @@ void bomber_main_loop(BomberAppState* state) {
     state->running = true;
 
     while(state->running) {
-        subghz_check_incoming(state);
+        switch(state->rxMode) {
+        case RxMode_Command:
+            subghz_check_incoming(state);
+            break;
+        case RxMode_LevelData:
+            subghz_check_incoming_leveldata(state);
+            break;
+        }
 
         switch(furi_message_queue_get(state->queue, &event, LOOP_MESSAGE_TIMEOUT_ms)) {
         case FuriStatusOk:
@@ -220,6 +315,13 @@ void bomber_main_loop(BomberAppState* state) {
             case BomberEventType_SubGhz:
                 FURI_LOG_I(TAG, "SubGhz Event from queue");
                 bomber_game_post_rx(state, event.subGhzIncomingSize);
+                updated = true;
+                break;
+            case BomberEventType_HaveLevelData:
+                FURI_LOG_I(TAG, "Level data event from queue");
+                state->level = state->levelData;
+                state->rxMode = RxMode_Command;
+                bomber_app_start(state);
                 updated = true;
                 break;
             default:
@@ -247,7 +349,7 @@ void bomber_main_loop(BomberAppState* state) {
     }
 }
 
-static bool handle_explosion(BomberAppState* state, uint8_t x, uint8_t y) {
+static bool handle_explosion(BomberAppState* state, uint8_t x, uint8_t y, bool ownBombs) {
     // Out of bounds.
     // No need to check negatives as uint8_t is unsigned and will underflow, resulting in a value way over MAX_X and MAX_Y.
     if(x >= MAX_X || y >= MAX_Y) {
@@ -258,12 +360,9 @@ static bool handle_explosion(BomberAppState* state, uint8_t x, uint8_t y) {
 
     if(player->x == x && player->y == y) {
         tx_death(state);
+        state->isDead = true;
+        state->suicide = ownBombs;
         bomber_app_set_mode(state, BomberAppMode_GameOver);
-        if(state->isPlayerTwo) {
-            state->dead = WhoDied_Wolf;
-        } else {
-            state->dead = WhoDied_Fox;
-        }
     }
 
     switch(state->level[ix(x, y)]) {
@@ -281,7 +380,7 @@ static bool handle_explosion(BomberAppState* state, uint8_t x, uint8_t y) {
     }
 }
 
-static bool update_bombs(Player* player, BomberAppState* state) {
+static bool update_bombs(Player* player, BomberAppState* state, bool ownBombs) {
     bool changed = false;
 
     for(uint8_t i = 0; i < MAX_BOMBS; i++) {
@@ -299,10 +398,10 @@ static bool update_bombs(Player* player, BomberAppState* state) {
                 bomb->state = BombState_Explode;
 
                 for(uint8_t j = 0; j < player->bomb_power + 1; j++) {
-                    changed &= handle_explosion(state, bomb->x - j, bomb->y);
-                    changed &= handle_explosion(state, bomb->x + j, bomb->y);
-                    changed &= handle_explosion(state, bomb->x, bomb->y + j);
-                    changed &= handle_explosion(state, bomb->x, bomb->y - j);
+                    changed &= handle_explosion(state, bomb->x - j, bomb->y, ownBombs);
+                    changed &= handle_explosion(state, bomb->x + j, bomb->y, ownBombs);
+                    changed &= handle_explosion(state, bomb->x, bomb->y + j, ownBombs);
+                    changed &= handle_explosion(state, bomb->x, bomb->y - j, ownBombs);
                 }
 
                 continue;
@@ -321,8 +420,8 @@ static bool update_bombs(Player* player, BomberAppState* state) {
 
 bool bomber_game_tick(BomberAppState* state) {
     bool changed = false;
-    changed &= update_bombs(&state->fox, state);
-    changed &= update_bombs(&state->wolf, state);
+    changed &= update_bombs(&state->fox, state, !state->isPlayerTwo);
+    changed &= update_bombs(&state->wolf, state, state->isPlayerTwo);
 
     return changed;
 }

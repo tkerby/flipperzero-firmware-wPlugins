@@ -126,9 +126,9 @@ void subbrute_main_view_draw_is_byte_selected(Canvas* canvas, SubBruteMainViewMo
 
     // Switch to another mode
     if(model->two_bytes) {
-        elements_button_top_left(canvas, "One byte");
-    } else {
         elements_button_top_left(canvas, "Two bytes");
+    } else {
+        elements_button_top_left(canvas, "One byte");
     }
 }
 
@@ -140,7 +140,7 @@ void subbrute_main_view_draw_is_ordinary_selected(Canvas* canvas, SubBruteMainVi
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_box(canvas, 0, 0, canvas_width(canvas), STATUS_BAR_Y_SHIFT);
     canvas_invert_color(canvas);
-    canvas_draw_str_aligned(canvas, 64, 3, AlignCenter, AlignTop, SUBBRUTEFORCER_VER);
+    canvas_draw_str_aligned(canvas, 64, 3, AlignCenter, AlignTop, SUB_BRUTE_FORCER_VERSION);
     canvas_invert_color(canvas);
 
     // Menu

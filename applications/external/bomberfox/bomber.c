@@ -8,7 +8,6 @@
 #include "radio_device_loader.h"
 #include "types.h"
 #include "subghz.h"
-//#include <dolphin/dolphin.h>
 
 static BomberAppState* state;
 
@@ -166,41 +165,13 @@ int32_t bomber_main(void* p) {
         return 1;
     }
 
-    bomber_app_set_mode(state, BomberAppMode_Menu);
+    state->selectedLevel = 0;
+    state->rxMode = RxMode_Command;
 
-    // TODO: This should be moved to after the menu
-    state->level = level1;
-    uint8_t wall_count = count_walls(state->level);
-    uint8_t powerup_bomb_count = (uint8_t)round((POWERUP_EXTRABOMB_RATIO * wall_count));
-    uint8_t powerup_power_count = (uint8_t)round((POWERUP_BOMBPOWER_RATIO * wall_count));
-    FURI_LOG_D(
-        TAG,
-        "Walls: %d, Extra Bombs: %d, Bomb Power: %d",
-        wall_count,
-        powerup_bomb_count,
-        powerup_power_count);
+    state->isDead = false;
+    state->suicide = false;
 
-    uint8_t* bomb_powerups = malloc(sizeof(uint8_t) * powerup_bomb_count);
-    uint8_t* power_powerups = malloc(sizeof(uint8_t) * powerup_power_count);
-
-    get_random_powerup_locations(state->level, powerup_bomb_count, bomb_powerups);
-    get_random_powerup_locations(state->level, powerup_power_count, power_powerups);
-
-    for(uint8_t i = 0; i < powerup_bomb_count; i++) {
-        state->level[bomb_powerups[i]] = BlockType_PuExtraBomb_Hidden;
-    }
-    for(uint8_t i = 0; i < powerup_power_count; i++) {
-        state->level[power_powerups[i]] = BlockType_PuBombStrength_Hidden;
-    }
-
-    free(bomb_powerups);
-    free(power_powerups);
-
-    // Figure out player starting positions from level data
-    state->fox = bomber_app_get_block(state->level, BlockType_Fox);
-    state->level[ix(state->fox.x, state->fox.y)] = (uint8_t)BlockType_Empty;
-    state->wolf = bomber_app_get_block(state->level, BlockType_Wolf);
-    state->level[ix(state->wolf.x, state->wolf.y)] = (uint8_t)BlockType_Empty;
+    bomber_app_set_mode(state, BomberAppMode_PlayerSelect);
 
     bomber_main_loop(state);
 

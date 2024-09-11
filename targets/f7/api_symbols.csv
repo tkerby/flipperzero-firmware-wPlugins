@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,70.0,,
+Version,+,73.1,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/main/archive/helpers/archive_helpers_ext.h,,
 Header,+,applications/main/subghz/subghz_fap.h,,
@@ -28,6 +28,7 @@ Header,+,applications/services/gui/modules/file_browser.h,,
 Header,+,applications/services/gui/modules/file_browser_worker.h,,
 Header,+,applications/services/gui/modules/loading.h,,
 Header,+,applications/services/gui/modules/menu.h,,
+Header,+,applications/services/gui/modules/number_input.h,,
 Header,+,applications/services/gui/modules/popup.h,,
 Header,+,applications/services/gui/modules/submenu.h,,
 Header,+,applications/services/gui/modules/text_box.h,,
@@ -926,6 +927,7 @@ Function,+,datetime_get_days_per_year,uint16_t,uint16_t
 Function,+,datetime_is_leap_year,_Bool,uint16_t
 Function,+,datetime_timestamp_to_datetime,void,"uint32_t, DateTime*"
 Function,+,datetime_validate_datetime,_Bool,DateTime*
+Function,+,decrypt_nt_enc,uint32_t,"uint32_t, uint32_t, MfClassicKey"
 Function,+,dialog_ex_alloc,DialogEx*,
 Function,+,dialog_ex_disable_extended_events,void,DialogEx*
 Function,+,dialog_ex_enable_extended_events,void,DialogEx*
@@ -1005,8 +1007,10 @@ Function,+,elements_bold_rounded_frame,void,"Canvas*, int32_t, int32_t, size_t, 
 Function,+,elements_bubble,void,"Canvas*, int32_t, int32_t, size_t, size_t"
 Function,+,elements_bubble_str,void,"Canvas*, int32_t, int32_t, const char*, Align, Align"
 Function,+,elements_button_center,void,"Canvas*, const char*"
+Function,+,elements_button_down,void,"Canvas*, const char*"
 Function,+,elements_button_left,void,"Canvas*, const char*"
 Function,+,elements_button_right,void,"Canvas*, const char*"
+Function,+,elements_button_up,void,"Canvas*, const char*"
 Function,+,elements_frame,void,"Canvas*, int32_t, int32_t, size_t, size_t"
 Function,+,elements_multiline_text,void,"Canvas*, int32_t, int32_t, const char*"
 Function,+,elements_multiline_text_aligned,void,"Canvas*, int32_t, int32_t, Align, Align, const char*"
@@ -1512,7 +1516,7 @@ Function,+,furi_hal_nfc_abort,FuriHalNfcError,
 Function,+,furi_hal_nfc_acquire,FuriHalNfcError,
 Function,+,furi_hal_nfc_event_start,FuriHalNfcError,
 Function,+,furi_hal_nfc_event_stop,FuriHalNfcError,
-Function,+,furi_hal_nfc_felica_listener_set_sensf_res_data,FuriHalNfcError,"const uint8_t*, const uint8_t, const uint8_t*, const uint8_t"
+Function,+,furi_hal_nfc_felica_listener_set_sensf_res_data,FuriHalNfcError,"const uint8_t*, const uint8_t, const uint8_t*, const uint8_t, const uint16_t"
 Function,+,furi_hal_nfc_field_detect_start,FuriHalNfcError,
 Function,+,furi_hal_nfc_field_detect_stop,FuriHalNfcError,
 Function,+,furi_hal_nfc_field_is_present,_Bool,
@@ -1869,6 +1873,8 @@ Function,+,furi_string_cmpi_str,int,"const FuriString*, const char[]"
 Function,+,furi_string_empty,_Bool,const FuriString*
 Function,+,furi_string_end_with,_Bool,"const FuriString*, const FuriString*"
 Function,+,furi_string_end_with_str,_Bool,"const FuriString*, const char[]"
+Function,+,furi_string_end_withi,_Bool,"const FuriString*, const FuriString*"
+Function,+,furi_string_end_withi_str,_Bool,"const FuriString*, const char[]"
 Function,+,furi_string_equal,_Bool,"const FuriString*, const FuriString*"
 Function,+,furi_string_equal_str,_Bool,"const FuriString*, const char[]"
 Function,+,furi_string_free,void,FuriString*
@@ -2043,8 +2049,8 @@ Function,+,ibutton_protocols_render_data,void,"iButtonProtocols*, const iButtonK
 Function,+,ibutton_protocols_render_error,void,"iButtonProtocols*, const iButtonKey*, FuriString*"
 Function,+,ibutton_protocols_render_uid,void,"iButtonProtocols*, const iButtonKey*, FuriString*"
 Function,+,ibutton_protocols_save,_Bool,"iButtonProtocols*, const iButtonKey*, const char*"
-Function,+,ibutton_protocols_write_id,_Bool,"iButtonProtocols*, iButtonKey*"
 Function,+,ibutton_protocols_write_copy,_Bool,"iButtonProtocols*, iButtonKey*"
+Function,+,ibutton_protocols_write_id,_Bool,"iButtonProtocols*, iButtonKey*"
 Function,+,ibutton_worker_alloc,iButtonWorker*,iButtonProtocols*
 Function,+,ibutton_worker_emulate_set_callback,void,"iButtonWorker*, iButtonWorkerEmulateCallback, void*"
 Function,+,ibutton_worker_emulate_start,void,"iButtonWorker*, iButtonKey*"
@@ -2054,8 +2060,8 @@ Function,+,ibutton_worker_read_start,void,"iButtonWorker*, iButtonKey*"
 Function,+,ibutton_worker_start_thread,void,iButtonWorker*
 Function,+,ibutton_worker_stop,void,iButtonWorker*
 Function,+,ibutton_worker_stop_thread,void,iButtonWorker*
-Function,+,ibutton_worker_write_id_start,void,"iButtonWorker*, iButtonKey*"
 Function,+,ibutton_worker_write_copy_start,void,"iButtonWorker*, iButtonKey*"
+Function,+,ibutton_worker_write_id_start,void,"iButtonWorker*, iButtonKey*"
 Function,+,ibutton_worker_write_set_callback,void,"iButtonWorker*, iButtonWorkerWriteCallback, void*"
 Function,+,icon_animation_alloc,IconAnimation*,const Icon*
 Function,+,icon_animation_free,void,IconAnimation*
@@ -2117,6 +2123,7 @@ Function,-,initstate,char*,"unsigned, char*, size_t"
 Function,+,input_get_key_name,const char*,InputKey
 Function,+,input_get_type_name,const char*,InputType
 Function,-,iprintf,int,"const char*, ..."
+Function,+,is_weak_prng_nonce,_Bool,uint32_t
 Function,-,isalnum,int,int
 Function,-,isalnum_l,int,"int, locale_t"
 Function,-,isalpha,int,int
@@ -2302,6 +2309,7 @@ Function,+,lfrfid_worker_stop,void,LFRFIDWorker*
 Function,+,lfrfid_worker_stop_thread,void,LFRFIDWorker*
 Function,+,lfrfid_worker_write_and_set_pass_start,void,"LFRFIDWorker*, LFRFIDProtocol, LFRFIDWorkerWriteCallback, void*"
 Function,+,lfrfid_worker_write_start,void,"LFRFIDWorker*, LFRFIDProtocol, LFRFIDWorkerWriteCallback, void*"
+Function,+,lfsr_rollback_word,uint32_t,"Crypto1*, uint32_t, int"
 Function,-,lgamma,double,double
 Function,-,lgamma_r,double,"double, int*"
 Function,-,lgammaf,float,float
@@ -2600,10 +2608,10 @@ Function,+,mf_classic_is_sector_read,_Bool,"const MfClassicData*, uint8_t"
 Function,+,mf_classic_is_sector_trailer,_Bool,uint8_t
 Function,+,mf_classic_is_value_block,_Bool,"MfClassicSectorTrailer*, uint8_t"
 Function,+,mf_classic_load,_Bool,"MfClassicData*, FlipperFormat*, uint32_t"
-Function,+,mf_classic_poller_auth,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*"
-Function,+,mf_classic_poller_auth_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*"
-Function,+,mf_classic_poller_get_nt,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*"
-Function,+,mf_classic_poller_get_nt_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*"
+Function,+,mf_classic_poller_auth,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*, _Bool"
+Function,+,mf_classic_poller_auth_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*, _Bool, _Bool"
+Function,+,mf_classic_poller_get_nt,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*, _Bool"
+Function,+,mf_classic_poller_get_nt_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*, _Bool"
 Function,+,mf_classic_poller_halt,MfClassicError,MfClassicPoller*
 Function,+,mf_classic_poller_read_block,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicBlock*"
 Function,+,mf_classic_poller_send_custom_parity_frame,MfClassicError,"MfClassicPoller*, const BitBuffer*, BitBuffer*, uint32_t"
@@ -2865,7 +2873,7 @@ Function,+,nfc_device_save,_Bool,"NfcDevice*, const char*"
 Function,+,nfc_device_set_data,void,"NfcDevice*, NfcProtocol, const NfcDeviceData*"
 Function,+,nfc_device_set_loading_callback,void,"NfcDevice*, NfcLoadingCallback, void*"
 Function,+,nfc_device_set_uid,_Bool,"NfcDevice*, const uint8_t*, size_t"
-Function,+,nfc_felica_listener_set_sensf_res_data,NfcError,"Nfc*, const uint8_t*, const uint8_t, const uint8_t*, const uint8_t"
+Function,+,nfc_felica_listener_set_sensf_res_data,NfcError,"Nfc*, const uint8_t*, const uint8_t, const uint8_t*, const uint8_t, const uint16_t"
 Function,+,nfc_free,void,Nfc*
 Function,+,nfc_iso14443a_listener_set_col_res_data,NfcError,"Nfc*, uint8_t*, uint8_t, uint8_t*, uint8_t"
 Function,+,nfc_iso14443a_listener_tx_custom_parity,NfcError,"Nfc*, const BitBuffer*"
@@ -2903,14 +2911,21 @@ Function,+,nfc_set_mask_receive_time_fc,void,"Nfc*, uint32_t"
 Function,+,nfc_start,void,"Nfc*, NfcEventCallback, void*"
 Function,+,nfc_stop,void,Nfc*
 Function,+,nfc_util_even_parity32,uint8_t,uint32_t
+Function,+,nfc_util_even_parity8,uint8_t,uint8_t
 Function,+,nfc_util_odd_parity,void,"const uint8_t*, uint8_t*, uint8_t"
 Function,+,nfc_util_odd_parity8,uint8_t,uint8_t
+Function,+,nonce_matches_encrypted_parity_bits,_Bool,"uint32_t, uint32_t, uint8_t"
 Function,+,notification_internal_message,void,"NotificationApp*, const NotificationSequence*"
 Function,+,notification_internal_message_block,void,"NotificationApp*, const NotificationSequence*"
 Function,+,notification_message,void,"NotificationApp*, const NotificationSequence*"
 Function,+,notification_message_block,void,"NotificationApp*, const NotificationSequence*"
 Function,+,notification_message_save_settings,void,NotificationApp*
 Function,-,nrand48,long,unsigned short[3]
+Function,+,number_input_alloc,NumberInput*,
+Function,+,number_input_free,void,NumberInput*
+Function,+,number_input_get_view,View*,NumberInput*
+Function,+,number_input_set_header_text,void,"NumberInput*, const char*"
+Function,+,number_input_set_result_callback,void,"NumberInput*, NumberInputCallback, void*, int32_t, int32_t, int32_t"
 Function,-,on_exit,int,"void (*)(int, void*), void*"
 Function,+,onewire_host_alloc,OneWireHost*,const GpioPin*
 Function,+,onewire_host_free,void,OneWireHost*
@@ -3742,7 +3757,7 @@ Function,+,view_dispatcher_alloc,ViewDispatcher*,
 Function,+,view_dispatcher_attach_to_gui,void,"ViewDispatcher*, Gui*, ViewDispatcherType"
 Function,+,view_dispatcher_enable_queue,void,ViewDispatcher*
 Function,+,view_dispatcher_free,void,ViewDispatcher*
-Function,-,view_dispatcher_get_event_loop,FuriEventLoop*,ViewDispatcher*
+Function,+,view_dispatcher_get_event_loop,FuriEventLoop*,ViewDispatcher*
 Function,+,view_dispatcher_remove_view,void,"ViewDispatcher*, uint32_t"
 Function,+,view_dispatcher_run,void,ViewDispatcher*
 Function,+,view_dispatcher_send_custom_event,void,"ViewDispatcher*, uint32_t"

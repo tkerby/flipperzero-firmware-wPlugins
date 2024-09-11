@@ -1,3 +1,5 @@
+#include <dolphin/dolphin.h>
+
 #include "subghz.h"
 #include "types.h"
 #include "helpers.h"
@@ -7,6 +9,10 @@
 #define ACTION_DEATH 0x03
 
 #define PLAYER_TWO 0x10
+
+void subghz_tx_level_data(BomberAppState* state, uint8_t* data) {
+    subghz_tx_rx_worker_write(state->subghz_worker, data, 128);
+}
 
 // Transmit player position to other flipper
 // player: Pointer to the current player structure
@@ -53,7 +59,11 @@ void tx_death(BomberAppState* state) {
     }
 
     state->tx_buffer[0] = action;
-    state->tx_buffer[1] = 0x00;
+    if(state->suicide) {
+        state->tx_buffer[1] = 0x01;
+    } else {
+        state->tx_buffer[1] = 0x00;
+    }
     state->tx_buffer[2] = 0x00;
 
     FURI_LOG_I(TAG, "Transmitting death: action=0x%02X", action);
@@ -72,7 +82,6 @@ void bomber_game_post_rx(BomberAppState* state, size_t rx_size) {
         return;
     }
 
-    // Ensure received size is within buffer limits
     furi_check(rx_size <= RX_TX_BUFFER_SIZE);
     FURI_LOG_T(TAG, "Received data size: %zu", rx_size);
     FURI_LOG_D(
@@ -92,6 +101,19 @@ void bomber_game_post_rx(BomberAppState* state, size_t rx_size) {
     case ACTION_MOVE:
         player->x = state->rx_buffer[1];
         player->y = state->rx_buffer[2];
+
+        BlockType block = (BlockType)(state->level)[ix(player->x, player->y)];
+        if(block == BlockType_PuBombStrength) {
+            player->bomb_power++;
+            state->level[ix(player->x, player->y)] = BlockType_Empty;
+        } else if(block == BlockType_PuExtraBomb) {
+            player->bomb_count++;
+            if(player->bomb_count == MAX_BOMBS) {
+                player->bomb_count = MAX_BOMBS;
+            }
+            state->level[ix(player->x, player->y)] = BlockType_Empty;
+        }
+
         break;
     case ACTION_BOMB:
         FURI_LOG_T(TAG, "Hostile bomb at index %zu", player->bomb_ix);
@@ -105,11 +127,10 @@ void bomber_game_post_rx(BomberAppState* state, size_t rx_size) {
         break;
     case ACTION_DEATH:
         bomber_app_set_mode(state, BomberAppMode_GameOver);
-        if(state->isPlayerTwo) {
-            state->dead = WhoDied_Fox;
-        } else {
-            state->dead = WhoDied_Wolf;
+        if(state->rx_buffer[1] == 0x01) {
+            state->suicide = true;
         }
+        dolphin_deed(DolphinDeedPluginGameWin);
         break;
     }
 }
@@ -134,7 +155,30 @@ void subghz_check_incoming(BomberAppState* state) {
         BomberEvent event = {.type = BomberEventType_SubGhz, .subGhzIncomingSize = rx_size};
 
         if(furi_message_queue_put(state->queue, &event, FuriWaitForever) != FuriStatusOk) {
-            FURI_LOG_W(TAG, "Failed to put timer event in message queue");
+            FURI_LOG_W(TAG, "Failed to put subghz event in message queue");
+        }
+    }
+}
+
+void subghz_check_incoming_leveldata(BomberAppState* state) {
+    FURI_LOG_T(TAG, "subghz_check_incoming_leveldata");
+
+    size_t avail = 0;
+    while((avail = subghz_tx_rx_worker_available(state->subghz_worker)) > 0) {
+        FURI_LOG_D(TAG, "Received level data size: %zu", avail);
+
+        uint32_t since_last_rx = furi_get_tick() - state->last_time_rx_data;
+        if(avail < 128 && since_last_rx < MESSAGE_COMPLETION_TIMEOUT) {
+            break;
+        }
+
+        size_t rx_size = subghz_tx_rx_worker_read(state->subghz_worker, state->levelData, 128);
+        furi_assert(rx_size);
+
+        BomberEvent event = {.type = BomberEventType_HaveLevelData};
+
+        if(furi_message_queue_put(state->queue, &event, FuriWaitForever) != FuriStatusOk) {
+            FURI_LOG_W(TAG, "Failed to put level data event in message queue");
         }
     }
 }

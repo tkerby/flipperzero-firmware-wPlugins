@@ -49,6 +49,8 @@ const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_x10,
     &subghz_protocol_hormann_bisecur,
     &subghz_protocol_legrand,
+    &subghz_protocol_dickert_mahs,
+    &subghz_protocol_marantec24,
 };
 
 const SubGhzProtocolRegistry subghz_protocol_registry = {
