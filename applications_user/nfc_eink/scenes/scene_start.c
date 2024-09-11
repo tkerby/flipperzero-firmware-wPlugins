@@ -3,7 +3,7 @@
 enum SubmenuIndex {
     SubmenuIndexEmulate,
     SubmenuIndexWrite,
-    SubmenuIndexRead,
+    SubmenuIndexSettings,
 };
 
 static void nfc_eink_scene_start_submenu_callback(void* context, uint32_t index) {
@@ -24,7 +24,7 @@ void nfc_eink_scene_start_on_enter(void* context) {
         nfc_eink_scene_start_submenu_callback,
         instance);
     submenu_add_item(
-        submenu, "Read Eink", SubmenuIndexWrite, nfc_eink_scene_start_submenu_callback, instance);
+        submenu, "Settings", SubmenuIndexSettings, nfc_eink_scene_start_submenu_callback, instance);
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
@@ -43,8 +43,8 @@ bool nfc_eink_scene_start_on_event(void* context, SceneManagerEvent event) {
         } else if(submenu_index == SubmenuIndexWrite) {
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneFileSelect);
             consumed = true;
-        } else if(submenu_index == SubmenuIndexRead) {
-            //scene_manager_next_scene(scene_manager, );
+        } else if(submenu_index == SubmenuIndexSettings) {
+            scene_manager_next_scene(scene_manager, NfcEinkAppSceneSettings);
             consumed = true;
         }
     }
