@@ -23,6 +23,7 @@
 #include <../applications/services/gui/modules/byte_input.h>
 #include <../applications/services/gui/modules/text_box.h>
 #include <../applications/services/gui/modules/widget.h>
+#include <../applications/services/gui/modules/variable_item_list.h>
 
 #include <../applications/services/dialogs/dialogs.h>
 #include <../applications/services/storage/storage.h>
@@ -86,9 +87,17 @@ typedef enum {
     NfcEinkViewByteInput,
     NfcEinkViewTextBox,
     NfcEinkViewWidget,
+    NfcEinkViewVarItemList,
     NfcEinkViewProgress,
     NfcEinkViewEmptyScreen,
 } NfcEinkView;
+
+typedef enum {
+    NfcEinkWriteModeStrict,
+    NfcEinkWriteModeResolution,
+    NfcEinkWriteModeManufacturer,
+    NfcEinkWriteModeFree
+} NfcEinkWriteMode;
 
 typedef struct {
     Gui* gui;
@@ -108,6 +117,7 @@ typedef struct {
     TextBox* text_box;
     Widget* widget;
     EmptyScreen* empty_screen;
+    VariableItemList* var_item_list;
     EinkProgress* eink_progress;
     View* view_image;
 
@@ -118,6 +128,8 @@ typedef struct {
     NfcEinkScreen* screen;
     const NfcEinkScreenInfo* info_temp;
     EinkScreenInfoArray_t arr;
+    NfcEinkWriteMode write_mode;
+    bool invert_image;
 
     BitBuffer* tx_buf;
     char text_store[50 + 1];

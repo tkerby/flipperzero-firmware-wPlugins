@@ -120,6 +120,13 @@ static NfcEinkApp* nfc_eink_app_alloc() {
     view_dispatcher_add_view(
         instance->view_dispatcher, NfcEinkViewWidget, widget_get_view(instance->widget));
 
+    // Variable item list
+    instance->var_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        instance->view_dispatcher,
+        NfcEinkViewVarItemList,
+        variable_item_list_get_view(instance->var_item_list));
+
     // Empty Screen
     /*     instance->empty_screen = empty_screen_alloc();
     view_dispatcher_add_view(
@@ -186,6 +193,9 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewWidget);
     widget_free(instance->widget);
 
+    // Var Item List
+    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewVarItemList);
+    variable_item_list_free(instance->var_item_list);
     /*     // Empty Screen
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewEmptyScreen);
     empty_screen_free(instance->empty_screen);
