@@ -9,7 +9,12 @@ void nfc_eink_scene_choose_type_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
 
-    submenu_set_header(submenu, "Choose Manufacturer Type");
+    if(instance->screen != NULL) {
+        nfc_eink_screen_free(instance->screen);
+        instance->screen = NULL;
+    }
+
+    submenu_set_header(submenu, "Choose Manufacturer");
     for(uint8_t type = 0; type < NfcEinkManufacturerNum /* NfcEinkTypeNum */; type++) {
         submenu_add_item(
             submenu,
