@@ -85,10 +85,11 @@ static NfcEinkApp* nfc_eink_app_alloc() {
         instance->view_dispatcher,
         NfcEinkViewProgress,
         eink_progress_get_view(instance->eink_progress));
-    /*     // Dialog
+    // Dialog
     instance->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
-        instance->view_dispatcher, NfcViewDialogEx, dialog_ex_get_view(instance->dialog_ex));
+        instance->view_dispatcher, NfcEinkViewDialogEx, dialog_ex_get_view(instance->dialog_ex));
+    /*
     // Loading
     instance->loading = loading_alloc();
     view_dispatcher_add_view(
@@ -149,10 +150,10 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewMenu);
     submenu_free(instance->submenu);
 
-    /*     // DialogEx
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcViewDialogEx);
+    // DialogEx
+    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewDialogEx);
     dialog_ex_free(instance->dialog_ex);
-
+    /*
     // Loading
     view_dispatcher_remove_view(instance->view_dispatcher, NfcViewLoading);
     loading_free(instance->loading);
