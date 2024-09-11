@@ -1,11 +1,11 @@
 #include "../nfc_eink_app.h"
 
-static void reverse_copy_block(const uint8_t* array, uint8_t* reverse_array) {
+static void reverse_copy_block(const uint8_t* array, uint8_t* reverse_array, bool invert_image) {
     furi_assert(array);
     furi_assert(reverse_array);
 
     for(int i = 0; i < 16; i++) {
-        reverse_array[i] = array[15 - i];
+        reverse_array[i] = invert_image ? ~array[15 - i] : array[15 - i];
     }
 }
 
@@ -30,7 +30,7 @@ void nfc_eink_scene_result_image_on_enter(void* context) {
 
     uint8_t* model_ptr = view_get_model(instance->view_image);
     for(uint16_t i = 0; i < received_size; i += /* screen->base.data_block_size */ 16)
-        reverse_copy_block(data + i, model_ptr + i);
+        reverse_copy_block(data + i, model_ptr + i, instance->invert_image);
 
     view_commit_model(instance->view_image, true);
     view_set_orientation(instance->view_image, ViewOrientationHorizontalFlip);
