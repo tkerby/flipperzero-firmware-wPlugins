@@ -44,6 +44,9 @@ bool nfc_eink_scene_result_menu_on_event(void* context, SceneManagerEvent event)
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneSaveName);
             consumed = true;
         }
+    } else if(event.type == SceneManagerEventTypeBack) {
+        scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneExitConfirm);
+        consumed = true;
     }
 
     return consumed;
