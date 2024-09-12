@@ -36,6 +36,7 @@
 #include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h> */
 #include <nfc/nfc_listener.h>
 #include <nfc/nfc_poller.h>
+#include <toolbox/saved_struct.h>
 
 #include "nfc_eink_screen/nfc_eink_screen.h"
 #include "scenes/scenes.h"
@@ -146,3 +147,4 @@ bool nfc_eink_load_from_file_select(NfcEinkApp* instance);
 void nfc_eink_blink_emulate_start(NfcEinkApp* app);
 void nfc_eink_blink_write_start(NfcEinkApp* app);
 void nfc_eink_blink_stop(NfcEinkApp* app);
+void nfc_eink_save_settings(NfcEinkApp* instance);

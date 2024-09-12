@@ -1,6 +1,10 @@
 #include "nfc_eink_app.h"
 #include <flipper_format/flipper_format.h>
 
+#define NFC_EINK_SETTINGS_PATH    NFC_EINK_APP_FOLDER "/.eink.settings"
+#define NFC_EINK_SETTINGS_VERSION (1)
+#define NFC_EINK_SETTINGS_MAGIC   (0x1B)
+
 ///TODO: make this function to point to my repo (maybe?)
 static bool nfc_is_hal_ready(void) {
     if(furi_hal_nfc_is_hal_ready() != FuriHalNfcErrorNone) {
@@ -230,6 +234,39 @@ static void nfc_eink_make_app_folders(const NfcEinkApp* instance) {
     furi_record_close(RECORD_STORAGE);
 }
 
+static void nfc_eink_load_settings(NfcEinkApp* instance) {
+    NfcEinkSettings settings = {0};
+
+    if(!saved_struct_load(
+           NFC_EINK_SETTINGS_PATH,
+           &settings,
+           sizeof(NfcEinkSettings),
+           NFC_EINK_SETTINGS_MAGIC,
+           NFC_EINK_SETTINGS_VERSION)) {
+        FURI_LOG_D(TAG, "Failed to load settings, using defaults");
+        nfc_eink_save_settings(instance);
+    }
+
+    instance->settings.invert_image = settings.invert_image;
+    instance->settings.write_mode = settings.write_mode;
+}
+
+void nfc_eink_save_settings(NfcEinkApp* instance) {
+    NfcEinkSettings settings = {
+        .invert_image = instance->settings.invert_image,
+        .write_mode = instance->settings.write_mode,
+    };
+
+    if(!saved_struct_save(
+           NFC_EINK_SETTINGS_PATH,
+           &settings,
+           sizeof(NfcEinkSettings),
+           NFC_EINK_SETTINGS_MAGIC,
+           NFC_EINK_SETTINGS_VERSION)) {
+        FURI_LOG_E(TAG, "Failed to save settings");
+    }
+}
+
 bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
     furi_assert(instance);
 
@@ -278,6 +315,7 @@ int32_t nfc_eink(/* void* p */) {
     NfcEinkApp* app = nfc_eink_app_alloc();
 
     nfc_eink_make_app_folders(app);
+    nfc_eink_load_settings(app);
     scene_manager_next_scene(app->scene_manager, NfcEinkAppSceneStart);
 
     view_dispatcher_run(app->view_dispatcher);
