@@ -34,8 +34,9 @@ bool nfc_eink_scene_save_success_on_event(void* context, SceneManagerEvent event
 }
 
 void nfc_eink_scene_save_success_on_exit(void* context) {
-    NfcEinkApp* nfc = context;
-    nfc_eink_screen_free(nfc->screen);
+    NfcEinkApp* instance = context;
+    nfc_eink_screen_free(instance->screen);
+    instance->screen_loaded = false;
     // Clear view
-    popup_reset(nfc->popup);
+    popup_reset(instance->popup);
 }

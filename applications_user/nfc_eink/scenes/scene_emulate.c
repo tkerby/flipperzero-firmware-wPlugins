@@ -7,7 +7,10 @@ static void nfc_eink_stop_emulation(NfcEinkApp* instance, bool free_screen) {
     furi_assert(instance);
     nfc_listener_stop(instance->listener);
     nfc_listener_free(instance->listener);
-    if(free_screen) nfc_eink_screen_free(instance->screen);
+    if(free_screen) {
+        nfc_eink_screen_free(instance->screen);
+        instance->screen_loaded = false;
+    }
 }
 
 static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context) {
