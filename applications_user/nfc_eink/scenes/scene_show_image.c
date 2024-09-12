@@ -15,7 +15,7 @@ void empty_view_draw_callback(Canvas* canvas, void* model) {
     canvas_draw_raw_bitmap(canvas, 0, 0, 128, 64, model);
 }
 
-void nfc_eink_scene_result_image_on_enter(void* context) {
+void nfc_eink_scene_show_image_on_enter(void* context) {
     NfcEinkApp* instance = context;
 
     view_set_draw_callback(instance->view_image, empty_view_draw_callback);
@@ -37,7 +37,7 @@ void nfc_eink_scene_result_image_on_enter(void* context) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewEmptyScreen);
 }
 
-bool nfc_eink_scene_result_image_on_event(void* context, SceneManagerEvent event) {
+bool nfc_eink_scene_show_image_on_event(void* context, SceneManagerEvent event) {
     //NfcEinkApp* instance = context;
     //SceneManager* scene_manager = instance->scene_manager;
     UNUSED(context);
@@ -62,7 +62,7 @@ bool nfc_eink_scene_result_image_on_event(void* context, SceneManagerEvent event
     return consumed;
 }
 
-void nfc_eink_scene_result_image_on_exit(void* context) {
+void nfc_eink_scene_show_image_on_exit(void* context) {
     NfcEinkApp* instance = context;
     UNUSED(instance);
 
