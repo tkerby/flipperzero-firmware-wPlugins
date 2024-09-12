@@ -3,6 +3,13 @@
 #include <lib/nfc/nfc.h>
 #include <lib/nfc/protocols/nfc_protocol.h>
 
+static void nfc_eink_stop_emulation(NfcEinkApp* instance, bool free_screen) {
+    furi_assert(instance);
+    nfc_listener_stop(instance->listener);
+    nfc_listener_free(instance->listener);
+    if(free_screen) nfc_eink_screen_free(instance->screen);
+}
+
 static void nfc_eink_emulate_callback(NfcEinkScreenEventType type, void* context) {
     furi_assert(context);
     NfcEinkApp* instance = context;
@@ -62,17 +69,21 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == NfcEinkAppCustomEventProcessFinish) {
+            nfc_eink_stop_emulation(instance, false);
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
             notification_message(instance->notifications, &sequence_success);
         } else if(event.event == NfcEinkAppCustomEventTargetLost) {
+            nfc_eink_stop_emulation(instance, true);
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
             notification_message(instance->notifications, &sequence_error);
         } else if(event.event == NfcEinkAppCustomEventUnknownError) {
+            nfc_eink_stop_emulation(instance, true);
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneError);
             notification_message(instance->notifications, &sequence_error);
         }
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
+        nfc_eink_stop_emulation(instance, true);
         scene_manager_previous_scene(scene_manager);
         consumed = true;
     }
@@ -82,8 +93,6 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
 
 void nfc_eink_scene_emulate_on_exit(void* context) {
     NfcEinkApp* instance = context;
-    nfc_listener_stop(instance->listener);
-    nfc_listener_free(instance->listener);
     nfc_eink_blink_stop(instance);
     widget_reset(instance->widget);
 }
