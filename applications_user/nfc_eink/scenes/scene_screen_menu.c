@@ -1,11 +1,11 @@
 #include "../nfc_eink_app.h"
 
-enum SubmenuIndex {
+typedef enum {
     SubmenuIndexShow,
     SubmenuIndexSave,
     SubmenuIndexWrite,
     SubmenuIndexInfo,
-};
+} SubmenuIndex;
 
 static void nfc_eink_scene_screen_menu_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
@@ -41,6 +41,23 @@ void nfc_eink_scene_screen_menu_on_enter(void* context) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
 
+static NfcEinkAppScene nfc_eink_scene_get_next_by_submenu_index(SubmenuIndex index) {
+    switch(index) {
+    case SubmenuIndexShow:
+        return NfcEinkAppSceneShowImage;
+    case SubmenuIndexSave:
+        return NfcEinkAppSceneSaveName;
+    case SubmenuIndexWrite:
+        return NfcEinkAppSceneChooseScreen;
+    case SubmenuIndexInfo:
+        FURI_LOG_E(TAG, "Scene %d not implemented", index);
+        furi_crash();
+    default:
+        FURI_LOG_E(TAG, "Unknown scene index %d", index);
+        furi_crash();
+    }
+}
+
 bool nfc_eink_scene_screen_menu_on_event(void* context, SceneManagerEvent event) {
     NfcEinkApp* instance = context;
     SceneManager* scene_manager = instance->scene_manager;
@@ -49,18 +66,9 @@ bool nfc_eink_scene_screen_menu_on_event(void* context, SceneManagerEvent event)
 
     if(event.type == SceneManagerEventTypeCustom) {
         const uint32_t submenu_index = event.event;
-        if(submenu_index == SubmenuIndexShow) {
-            scene_manager_next_scene(scene_manager, NfcEinkAppSceneResultImage);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexSave) {
-            scene_manager_next_scene(scene_manager, NfcEinkAppSceneSaveName);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexWrite) {
-            scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseScreen);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexInfo) {
-            consumed = true;
-        }
+        NfcEinkAppScene scene = nfc_eink_scene_get_next_by_submenu_index(submenu_index);
+        scene_manager_next_scene(scene_manager, scene);
+        consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
         if(scene_manager_has_previous_scene(instance->scene_manager, NfcEinkAppSceneEmulate))
             scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneExitConfirm);
