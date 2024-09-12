@@ -140,7 +140,6 @@ static NfcEinkApp* nfc_eink_app_alloc() {
     view_dispatcher_add_view(
         instance->view_dispatcher, NfcEinkViewEmptyScreen, instance->view_image);
 
-    instance->screen = NULL;
     instance->scene_manager = scene_manager_alloc(&nfc_eink_scene_handlers, instance);
     instance->tx_buf = bit_buffer_alloc(50);
     instance->nfc = nfc_alloc();
