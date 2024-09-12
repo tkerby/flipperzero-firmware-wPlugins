@@ -45,24 +45,11 @@
 #include "views/eink_progress.h"
 //#define TAG "NfcEink"
 
-#define NFC_EINK_NAME_SIZE     22
-#define NFC_EINK_APP_EXTENSION ".eink"
+#define NFC_EINK_NAME_SIZE       22
+#define NFC_EINK_APP_EXTENSION   ".eink"
+#define NFC_EINK_APP_FOLDER_NAME "nfc_eink"
 
-#define NFC_EINK_APP_FOLDER ANY_PATH(TAG)
-
-/* ///TODO: possibly move this closer to save/load functions
-#define NFC_EINK_FORMAT_VERSION             (1)
-#define NFC_EINK_FILE_HEADER                "Flipper NFC Eink screen"
-#define NFC_EINK_DEVICE_UID_KEY             "UID"
-#define NFC_EINK_DEVICE_TYPE_KEY            "NFC type"
-#define NFC_EINK_SCREEN_TYPE_KEY            "Screen type"
-#define NFC_EINK_SCREEN_NAME_KEY            "Screen name"
-#define NFC_EINK_SCREEN_WIDTH_KEY           "Width"
-#define NFC_EINK_SCREEN_HEIGHT_KEY          "Height"
-#define NFC_EINK_SCREEN_DATA_BLOCK_SIZE_KEY "Data block size"
-#define NFC_EINK_SCREEN_DATA_TOTAL_KEY      "Data total"
-#define NFC_EINK_SCREEN_DATA_READ_KEY       "Data read"
-#define NFC_EINK_SCREEN_BLOCK_DATA_KEY      "Block" */
+#define NFC_EINK_APP_FOLDER EXT_PATH(NFC_EINK_APP_FOLDER_NAME)
 
 ///TODO: remove all this shit below to _i.h file
 
