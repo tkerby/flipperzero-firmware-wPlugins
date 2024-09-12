@@ -16,7 +16,7 @@ static void nfc_eink_scene_settings_write_mode_change_callback(VariableItem* ite
     NfcEinkApp* instance = variable_item_get_context(item);
     const uint8_t index = variable_item_get_current_value_index(item);
 
-    instance->write_mode = (NfcEinkWriteMode)index;
+    instance->settings.write_mode = (NfcEinkWriteMode)index;
 
     variable_item_set_current_value_text(item, nfc_eink_scene_settings_write_mode[index]);
 }
@@ -25,7 +25,7 @@ static void nfc_eink_scene_settings_invert_image_change_callback(VariableItem* i
     NfcEinkApp* instance = variable_item_get_context(item);
     const uint8_t index = variable_item_get_current_value_index(item);
 
-    instance->invert_image = (index == 1);
+    instance->settings.invert_image = (index == 1);
 
     variable_item_set_current_value_text(item, nfc_eink_scene_settings_invert_image[index]);
 }
@@ -44,7 +44,7 @@ void nfc_eink_scene_settings_on_enter(void* context) {
         nfc_eink_scene_settings_write_mode_change_callback,
         instance);
 
-    value_index = instance->write_mode;
+    value_index = instance->settings.write_mode;
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, nfc_eink_scene_settings_write_mode[value_index]);
 
@@ -54,7 +54,7 @@ void nfc_eink_scene_settings_on_enter(void* context) {
         COUNT_OF(nfc_eink_scene_settings_invert_image),
         nfc_eink_scene_settings_invert_image_change_callback,
         instance);
-    value_index = instance->invert_image ? 1 : 0;
+    value_index = instance->settings.invert_image ? 1 : 0;
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, nfc_eink_scene_settings_invert_image[value_index]);
 
@@ -72,5 +72,5 @@ void nfc_eink_scene_settings_on_exit(void* context) {
     NfcEinkApp* instance = context;
 
     variable_item_list_reset(instance->var_item_list);
-    //nfc_eink_save_settings(infrared);
+    nfc_eink_save_settings(instance);
 }

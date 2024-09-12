@@ -7,7 +7,7 @@ static void nfc_eink_scene_choose_screen_submenu_callback(void* context, uint32_
 
 static uint8_t nfc_eink_screen_info_filter_by_mode(NfcEinkApp* instance) {
     uint8_t cnt = 0;
-    switch(instance->write_mode) {
+    switch(instance->settings.write_mode) {
     case NfcEinkWriteModeStrict:
         cnt = nfc_eink_descriptor_filter_by_screen_type(
             instance->arr, instance->info_temp->screen_type);

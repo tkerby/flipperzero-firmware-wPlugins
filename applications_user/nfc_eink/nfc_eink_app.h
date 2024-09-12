@@ -100,6 +100,11 @@ typedef enum {
 } NfcEinkWriteMode;
 
 typedef struct {
+    NfcEinkWriteMode write_mode;
+    bool invert_image;
+} NfcEinkSettings;
+
+typedef struct {
     Gui* gui;
     DialogsApp* dialogs;
     NotificationApp* notifications;
@@ -128,8 +133,7 @@ typedef struct {
     NfcEinkScreen* screen;
     const NfcEinkScreenInfo* info_temp;
     EinkScreenInfoArray_t arr;
-    NfcEinkWriteMode write_mode;
-    bool invert_image;
+    NfcEinkSettings settings;
 
     BitBuffer* tx_buf;
     char text_store[50 + 1];

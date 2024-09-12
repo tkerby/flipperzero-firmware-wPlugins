@@ -30,7 +30,7 @@ void nfc_eink_scene_result_image_on_enter(void* context) {
 
     uint8_t* model_ptr = view_get_model(instance->view_image);
     for(uint16_t i = 0; i < received_size; i += /* screen->base.data_block_size */ 16)
-        reverse_copy_block(data + i, model_ptr + i, instance->invert_image);
+        reverse_copy_block(data + i, model_ptr + i, instance->settings.invert_image);
 
     view_commit_model(instance->view_image, true);
     view_set_orientation(instance->view_image, ViewOrientationHorizontalFlip);
