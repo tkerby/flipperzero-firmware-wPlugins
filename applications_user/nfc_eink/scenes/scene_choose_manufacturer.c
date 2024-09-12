@@ -1,11 +1,11 @@
 #include "../nfc_eink_app.h"
 
-static void nfc_eink_scene_choose_type_submenu_callback(void* context, uint32_t index) {
+static void nfc_eink_scene_choose_manufacturer_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
     view_dispatcher_send_custom_event(instance->view_dispatcher, index);
 }
 
-void nfc_eink_scene_choose_type_on_enter(void* context) {
+void nfc_eink_scene_choose_manufacturer_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
 
@@ -15,14 +15,14 @@ void nfc_eink_scene_choose_type_on_enter(void* context) {
             submenu,
             nfc_eink_screen_get_manufacturer_name(type),
             type,
-            nfc_eink_scene_choose_type_submenu_callback,
+            nfc_eink_scene_choose_manufacturer_submenu_callback,
             instance);
     }
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
 
-bool nfc_eink_scene_choose_type_on_event(void* context, SceneManagerEvent event) {
+bool nfc_eink_scene_choose_manufacturer_on_event(void* context, SceneManagerEvent event) {
     NfcEinkApp* instance = context;
     SceneManager* scene_manager = instance->scene_manager;
     bool consumed = false;
@@ -38,7 +38,7 @@ bool nfc_eink_scene_choose_type_on_event(void* context, SceneManagerEvent event)
     return consumed;
 }
 
-void nfc_eink_scene_choose_type_on_exit(void* context) {
+void nfc_eink_scene_choose_manufacturer_on_exit(void* context) {
     NfcEinkApp* instance = context;
     submenu_reset(instance->submenu);
 }

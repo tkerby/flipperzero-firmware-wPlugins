@@ -70,7 +70,7 @@ bool nfc_eink_scene_emulate_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == NfcEinkAppCustomEventProcessFinish) {
             nfc_eink_stop_emulation(instance, false);
-            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneResultMenu);
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneScreenMenu);
             notification_message(instance->notifications, &sequence_success);
         } else if(event.event == NfcEinkAppCustomEventTargetLost) {
             nfc_eink_stop_emulation(instance, true);

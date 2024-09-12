@@ -6,30 +6,30 @@ enum SubmenuIndex {
     //SubmenuIndexRead,
 };
 
-static void nfc_eink_scene_result_menu_submenu_callback(void* context, uint32_t index) {
+static void nfc_eink_scene_screen_menu_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
     view_dispatcher_send_custom_event(instance->view_dispatcher, index);
 }
 
-void nfc_eink_scene_result_menu_on_enter(void* context) {
+void nfc_eink_scene_screen_menu_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
 
     submenu_add_item(
-        submenu, "Show", SubmenuIndexShow, nfc_eink_scene_result_menu_submenu_callback, instance);
+        submenu, "Show", SubmenuIndexShow, nfc_eink_scene_screen_menu_submenu_callback, instance);
     submenu_add_item(
-        submenu, "Save", SubmenuIndexSave, nfc_eink_scene_result_menu_submenu_callback, instance);
+        submenu, "Save", SubmenuIndexSave, nfc_eink_scene_screen_menu_submenu_callback, instance);
     /*  submenu_add_item(
         submenu,
         "Read Eink",
         SubmenuIndexWrite,
-        nfc_eink_scene_result_menu_submenu_callback,
+        nfc_eink_scene_screen_menu_submenu_callback,
         instance); */
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
 
-bool nfc_eink_scene_result_menu_on_event(void* context, SceneManagerEvent event) {
+bool nfc_eink_scene_screen_menu_on_event(void* context, SceneManagerEvent event) {
     NfcEinkApp* instance = context;
     SceneManager* scene_manager = instance->scene_manager;
 
@@ -52,7 +52,7 @@ bool nfc_eink_scene_result_menu_on_event(void* context, SceneManagerEvent event)
     return consumed;
 }
 
-void nfc_eink_scene_result_menu_on_exit(void* context) {
+void nfc_eink_scene_screen_menu_on_exit(void* context) {
     NfcEinkApp* instance = context;
     submenu_reset(instance->submenu);
 }

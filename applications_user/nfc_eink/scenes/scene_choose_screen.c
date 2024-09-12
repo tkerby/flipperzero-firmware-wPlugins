@@ -28,7 +28,7 @@ static uint8_t nfc_eink_screen_info_filter_by_mode(NfcEinkApp* instance) {
     return cnt;
 }
 
-void nfc_eink_scene_saved_menu_on_enter(void* context) {
+void nfc_eink_scene_choose_screen_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
 
@@ -47,7 +47,7 @@ void nfc_eink_scene_saved_menu_on_enter(void* context) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
 
-bool nfc_eink_scene_saved_menu_on_event(void* context, SceneManagerEvent event) {
+bool nfc_eink_scene_choose_screen_on_event(void* context, SceneManagerEvent event) {
     NfcEinkApp* instance = context;
     SceneManager* scene_manager = instance->scene_manager;
     bool consumed = false;
@@ -69,7 +69,7 @@ bool nfc_eink_scene_saved_menu_on_event(void* context, SceneManagerEvent event) 
     return consumed;
 }
 
-void nfc_eink_scene_saved_menu_on_exit(void* context) {
+void nfc_eink_scene_choose_screen_on_exit(void* context) {
     NfcEinkApp* instance = context;
     submenu_reset(instance->submenu);
     EinkScreenInfoArray_clear(instance->arr);

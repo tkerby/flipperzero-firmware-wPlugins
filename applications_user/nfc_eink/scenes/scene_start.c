@@ -38,7 +38,7 @@ bool nfc_eink_scene_start_on_event(void* context, SceneManagerEvent event) {
     if(event.type == SceneManagerEventTypeCustom) {
         const uint32_t submenu_index = event.event;
         if(submenu_index == SubmenuIndexEmulate) {
-            scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseType);
+            scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseManufacturer);
             consumed = true;
         } else if(submenu_index == SubmenuIndexWrite) {
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneFileSelect);

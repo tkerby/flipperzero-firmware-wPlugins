@@ -28,7 +28,7 @@ bool nfc_eink_scene_write_done_on_event(void* context, SceneManagerEvent event) 
         if(event.event == NfcEinkAppCustomEventTimerExpired) {
             ///TODO: Move back to screen menu instead of saved and file select
             consumed = scene_manager_search_and_switch_to_previous_scene(
-                instance->scene_manager, NfcEinkAppSceneSavedMenu);
+                instance->scene_manager, NfcEinkAppSceneChooseScreen);
         }
     }
     return consumed;
