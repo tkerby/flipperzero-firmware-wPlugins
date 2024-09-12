@@ -57,10 +57,12 @@ bool nfc_eink_scene_choose_screen_on_event(void* context, SceneManagerEvent even
         const NfcEinkScreenInfo* item = *EinkScreenInfoArray_get(instance->arr, index);
         instance->screen = nfc_eink_screen_alloc(item->screen_manufacturer);
         nfc_eink_screen_init(instance->screen, item->screen_type);
-        if(nfc_eink_screen_load_data(
-               furi_string_get_cstr(instance->file_path), instance->screen, instance->info_temp))
+
+        instance->screen_loaded = nfc_eink_screen_load_data(
+            furi_string_get_cstr(instance->file_path), instance->screen, instance->info_temp);
+        if(instance->screen_loaded) {
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneWrite);
-        else {
+        } else {
             FURI_LOG_E(TAG, "Unable to load image data");
         }
         consumed = true;

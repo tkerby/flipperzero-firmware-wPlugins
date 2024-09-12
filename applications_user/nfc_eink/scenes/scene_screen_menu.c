@@ -3,7 +3,8 @@
 enum SubmenuIndex {
     SubmenuIndexShow,
     SubmenuIndexSave,
-    //SubmenuIndexRead,
+    SubmenuIndexWrite,
+    SubmenuIndexInfo,
 };
 
 static void nfc_eink_scene_screen_menu_submenu_callback(void* context, uint32_t index) {
@@ -15,16 +16,27 @@ void nfc_eink_scene_screen_menu_on_enter(void* context) {
     NfcEinkApp* instance = context;
     Submenu* submenu = instance->submenu;
 
+    bool after_emulation =
+        scene_manager_has_previous_scene(instance->scene_manager, NfcEinkAppSceneEmulate);
+    if(!after_emulation)
+        submenu_add_item(
+            submenu,
+            "Write",
+            SubmenuIndexWrite,
+            nfc_eink_scene_screen_menu_submenu_callback,
+            instance);
+    else {
+        submenu_add_item(
+            submenu,
+            "Save",
+            SubmenuIndexSave,
+            nfc_eink_scene_screen_menu_submenu_callback,
+            instance);
+    }
     submenu_add_item(
         submenu, "Show", SubmenuIndexShow, nfc_eink_scene_screen_menu_submenu_callback, instance);
     submenu_add_item(
-        submenu, "Save", SubmenuIndexSave, nfc_eink_scene_screen_menu_submenu_callback, instance);
-    /*  submenu_add_item(
-        submenu,
-        "Read Eink",
-        SubmenuIndexWrite,
-        nfc_eink_scene_screen_menu_submenu_callback,
-        instance); */
+        submenu, "Info", SubmenuIndexInfo, nfc_eink_scene_screen_menu_submenu_callback, instance);
 
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewMenu);
 }
@@ -43,9 +55,17 @@ bool nfc_eink_scene_screen_menu_on_event(void* context, SceneManagerEvent event)
         } else if(submenu_index == SubmenuIndexSave) {
             scene_manager_next_scene(scene_manager, NfcEinkAppSceneSaveName);
             consumed = true;
+        } else if(submenu_index == SubmenuIndexWrite) {
+            scene_manager_next_scene(scene_manager, NfcEinkAppSceneChooseScreen);
+            consumed = true;
+        } else if(submenu_index == SubmenuIndexInfo) {
+            consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneExitConfirm);
+        if(scene_manager_has_previous_scene(instance->scene_manager, NfcEinkAppSceneEmulate))
+            scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneExitConfirm);
+        else
+            scene_manager_previous_scene(instance->scene_manager);
         consumed = true;
     }
 

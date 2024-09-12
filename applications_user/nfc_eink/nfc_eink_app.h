@@ -123,6 +123,7 @@ typedef struct {
     EinkScreenInfoArray_t arr;
     NfcEinkSettings settings;
 
+    bool screen_loaded;
     BitBuffer* tx_buf;
     char text_store[50 + 1];
     FuriString* file_path;

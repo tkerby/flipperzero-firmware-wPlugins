@@ -143,4 +143,5 @@ void nfc_eink_scene_write_on_exit(void* context) {
     nfc_poller_stop(instance->poller);
     nfc_poller_free(instance->poller);
     nfc_eink_screen_free(instance->screen);
+    instance->screen_loaded = false;
 }
