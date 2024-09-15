@@ -117,6 +117,11 @@ NfcDevice* nfc_eink_screen_get_nfc_device(const NfcEinkScreen* screen) {
     return screen->device->nfc_device;
 }
 
+const NfcEinkScreenInfo* nfc_eink_screen_get_image_info(const NfcEinkScreen* screen) {
+    furi_assert(screen);
+    return &screen->data->base;
+}
+
 const uint8_t* nfc_eink_screen_get_image_data(const NfcEinkScreen* screen) {
     furi_assert(screen);
     return screen->data->image_data;

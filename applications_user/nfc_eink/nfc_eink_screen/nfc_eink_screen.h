@@ -25,6 +25,7 @@ void nfc_eink_screen_set_callback(
 NfcDevice* nfc_eink_screen_get_nfc_device(const NfcEinkScreen* screen);
 NfcGenericCallback nfc_eink_screen_get_nfc_callback(const NfcEinkScreen* screen, NfcMode mode);
 
+const NfcEinkScreenInfo* nfc_eink_screen_get_image_info(const NfcEinkScreen* screen);
 const uint8_t* nfc_eink_screen_get_image_data(const NfcEinkScreen* screen);
 uint16_t nfc_eink_screen_get_image_size(const NfcEinkScreen* screen);
 uint16_t nfc_eink_screen_get_received_size(const NfcEinkScreen* screen);
