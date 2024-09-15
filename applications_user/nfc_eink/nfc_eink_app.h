@@ -43,7 +43,7 @@
 #include "nfc_eink_tag.h"
 
 #include "views/eink_progress.h"
-//#define TAG "NfcEink"
+#include "views/image_scroll.h"
 
 #define NFC_EINK_NAME_SIZE       22
 #define NFC_EINK_APP_EXTENSION   ".eink"
@@ -77,7 +77,7 @@ typedef enum {
     NfcEinkViewWidget,
     NfcEinkViewVarItemList,
     NfcEinkViewProgress,
-    NfcEinkViewEmptyScreen,
+    NfcEinkViewImageScroll,
 } NfcEinkView;
 
 typedef enum {
@@ -109,10 +109,9 @@ typedef struct {
     ByteInput* byte_input;
     TextBox* text_box;
     Widget* widget;
-    EmptyScreen* empty_screen;
     VariableItemList* var_item_list;
     EinkProgress* eink_progress;
-    View* view_image;
+    ImageScroll* image_scroll;
 
     Nfc* nfc;
 

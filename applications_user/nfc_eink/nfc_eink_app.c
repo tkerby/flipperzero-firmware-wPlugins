@@ -131,14 +131,12 @@ static NfcEinkApp* nfc_eink_app_alloc() {
         NfcEinkViewVarItemList,
         variable_item_list_get_view(instance->var_item_list));
 
-    // Empty Screen
-    /*     instance->empty_screen = empty_screen_alloc();
+    // Image scroll
+    instance->image_scroll = image_scroll_alloc();
     view_dispatcher_add_view(
-        instance->view_dispatcher, NfcEinkViewEmptyScreen, widget_get_view(instance->widget));
- */
-    instance->view_image = view_alloc();
-    view_dispatcher_add_view(
-        instance->view_dispatcher, NfcEinkViewEmptyScreen, instance->view_image);
+        instance->view_dispatcher,
+        NfcEinkViewImageScroll,
+        image_scroll_get_view(instance->image_scroll));
 
     instance->scene_manager = scene_manager_alloc(&nfc_eink_scene_handlers, instance);
     instance->tx_buf = bit_buffer_alloc(50);
@@ -199,13 +197,9 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     // Var Item List
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewVarItemList);
     variable_item_list_free(instance->var_item_list);
-    /*     // Empty Screen
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewEmptyScreen);
-    empty_screen_free(instance->empty_screen);
- */
 
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewEmptyScreen);
-    view_free(instance->view_image);
+    view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewImageScroll);
+    image_scroll_free(instance->image_scroll);
 
     view_dispatcher_free(instance->view_dispatcher);
 
