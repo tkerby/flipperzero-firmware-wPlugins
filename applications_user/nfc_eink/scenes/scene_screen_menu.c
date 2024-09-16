@@ -52,8 +52,7 @@ static NfcEinkAppScene nfc_eink_scene_get_next_by_submenu_index(SubmenuIndex ind
     case SubmenuIndexWrite:
         return NfcEinkAppSceneChooseScreen;
     case SubmenuIndexInfo:
-        FURI_LOG_E(TAG, "Scene %d not implemented", index);
-        furi_crash();
+        return NfcEinkAppSceneInfo;
     default:
         FURI_LOG_E(TAG, "Unknown scene index %d", index);
         furi_crash();
