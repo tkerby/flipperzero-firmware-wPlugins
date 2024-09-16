@@ -52,16 +52,17 @@ static void nfc_eink_scene_write_show_waiting(const NfcEinkApp* instance) {
 }
 
 static void nfc_eink_scene_write_show_writing_data(const NfcEinkApp* instance) {
-    //popup_set_header(instance->popup, "Writting", 97, 15, AlignCenter, AlignTop);
-    //popup_set_text(
-    //   instance->popup, "Hold eink next\nto Flipper's back", 94, 27, AlignCenter, AlignTop);
     eink_progress_reset(instance->eink_progress);
-    eink_progress_set_header(instance->eink_progress, nfc_eink_screen_get_name(instance->screen));
+    FuriString* str = furi_string_alloc_printf(
+        "\e#Writting...\n\e#%s", nfc_eink_screen_get_name(instance->screen));
+
+    eink_progress_set_header(instance->eink_progress, furi_string_get_cstr(str));
 
     size_t total = 0, current = 0;
     nfc_eink_screen_get_progress(instance->screen, &current, &total);
 
     eink_progress_set_value(instance->eink_progress, current, total);
+    furi_string_free(str);
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewProgress);
 }
 

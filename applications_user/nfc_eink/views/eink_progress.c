@@ -18,11 +18,11 @@ static void eink_progress_draw_callback(Canvas* canvas, void* model) {
 
     FuriString* str = furi_string_alloc_printf("%d / %d", m->blocks_current, m->blocks_total);
     elements_text_box(
-        canvas, 24, 30, 80, 20, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
+        canvas, 24, 5, 80, 40, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
 
     float value = (m->blocks_total == 0) ? 0 :
                                            ((float)(m->blocks_current) / (float)(m->blocks_total));
-    elements_progress_bar_with_text(canvas, 0, 48, 127, value, furi_string_get_cstr(str));
+    elements_progress_bar_with_text(canvas, 0, 37, 127, value, furi_string_get_cstr(str));
     furi_string_free(str);
 }
 
@@ -81,11 +81,6 @@ void eink_progress_reset(EinkProgress* instance) {
         },
         false);
 }
-
-/* void eink_progress_set_value_total(EinkProgress* instance, size_t total) {
-    with_view_model(
-        instance->view, EinkProgressViewModel * model, { model->blocks_total = total; }, false);
-} */
 
 void eink_progress_free(EinkProgress* instance) {
     furi_assert(instance);
