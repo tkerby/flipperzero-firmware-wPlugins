@@ -1,5 +1,7 @@
 #include "../nfc_eink_app.h"
 
+#define TAG "NfcEinkSceneScreenMenu"
+
 typedef enum {
     SubmenuIndexShow,
     SubmenuIndexSave,

@@ -1,5 +1,7 @@
 #include "../nfc_eink_app.h"
 
+#define TAG "NfcEinkSceneChooseScreen"
+
 static void nfc_eink_scene_choose_screen_submenu_callback(void* context, uint32_t index) {
     NfcEinkApp* instance = context;
     view_dispatcher_send_custom_event(instance->view_dispatcher, index);

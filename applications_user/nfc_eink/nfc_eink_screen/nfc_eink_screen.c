@@ -3,6 +3,8 @@
 #include <../lib/flipper_format/flipper_format.h>
 #include <../applications/services/storage/storage.h>
 
+#define TAG "NfcEinkScreen"
+
 ///TODO: possibly move this closer to save/load functions
 #define NFC_EINK_FORMAT_VERSION               (1)
 #define NFC_EINK_FILE_HEADER                  "Flipper NFC Eink screen"

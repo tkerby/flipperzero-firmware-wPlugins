@@ -40,7 +40,6 @@
 
 #include "nfc_eink_screen/nfc_eink_screen.h"
 #include "scenes/scenes.h"
-#include "nfc_eink_tag.h"
 
 #include "views/eink_progress.h"
 #include "views/image_scroll.h"

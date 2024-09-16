@@ -1,6 +1,8 @@
 #include "nfc_eink_app.h"
 #include <flipper_format/flipper_format.h>
 
+#define TAG "NfcEinkApp"
+
 #define NFC_EINK_SETTINGS_PATH    NFC_EINK_APP_FOLDER "/.eink.settings"
 #define NFC_EINK_SETTINGS_VERSION (1)
 #define NFC_EINK_SETTINGS_MAGIC   (0x1B)

@@ -3,6 +3,8 @@
 #include <lib/nfc/nfc.h>
 #include <lib/nfc/protocols/nfc_protocol.h>
 
+#define TAG "NfcEinkSceneEmulate"
+
 static void nfc_eink_stop_emulation(NfcEinkApp* instance, bool free_screen) {
     furi_assert(instance);
     nfc_listener_stop(instance->listener);

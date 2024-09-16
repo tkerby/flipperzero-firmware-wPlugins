@@ -2,6 +2,9 @@
 #include "eink_waveshare_i.h"
 #include <nfc/helpers/iso14443_crc.h>
 
+#define TAG "WSH_Listener"
+
+/// TODO: Move this to waveshare context
 static uint8_t blocks[16 * 4];
 
 static NfcDevice* eink_waveshare_nfc_device_alloc() {

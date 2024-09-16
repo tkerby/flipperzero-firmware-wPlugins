@@ -5,6 +5,8 @@
 
 #define EINK_SCREEN_ISO14443_POLLER_FWT_FC (60000) //(90000)
 
+#define TAG "GD_Poller"
+
 typedef NfcCommand (
     *NfcEinkGoodisplayStateHandler)(Iso14443_3aPoller* poller, NfcEinkScreen* screen);
 

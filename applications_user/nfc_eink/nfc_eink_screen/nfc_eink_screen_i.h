@@ -1,5 +1,4 @@
 #include "nfc_eink_screen.h"
-#include "nfc_eink_tag.h"
 
 typedef struct {
     uint8_t* image_data;

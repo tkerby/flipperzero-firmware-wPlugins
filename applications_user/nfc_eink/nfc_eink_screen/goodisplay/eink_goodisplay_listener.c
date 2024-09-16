@@ -1,6 +1,8 @@
 
 #include "eink_goodisplay_i.h"
 
+#define TAG "GD_Listener"
+
 static void nfc_eink_screen_command_A4(const APDU_Command_Select* command, APDU_Response* resp) {
     bool equal = false;
     if(command->data_length == 0x07) {

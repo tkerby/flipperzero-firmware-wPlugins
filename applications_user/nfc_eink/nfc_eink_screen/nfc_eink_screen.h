@@ -5,7 +5,6 @@
 #include <nfc/nfc_common.h>
 #include <nfc/nfc_device.h>
 
-#include "../nfc_eink_tag.h"
 #include "nfc_eink_types.h"
 
 typedef struct NfcEinkScreen NfcEinkScreen;
