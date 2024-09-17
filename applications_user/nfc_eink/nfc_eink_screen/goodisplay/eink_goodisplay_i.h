@@ -54,7 +54,6 @@ typedef struct {
 typedef struct {
     uint8_t command_code;
     uint8_t command_data[];
-    //APDU_Command* apdu_command;
 } NfcEinkScreenCommand;
 
 typedef struct {
@@ -94,7 +93,7 @@ typedef struct {
         APDU_Response apdu_response;
         APDU_Response_Read apdu_response_read;
     } apdu_resp;
-} NfcEinkScreenResponse;
+} NfcEinkGoodisplayScreenResponse;
 #pragma pack(pop)
 
 /// Some Poller shit
