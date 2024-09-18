@@ -50,9 +50,10 @@ static void
 
 static void image_scroll_copy_to_window(ImageScrollViewModel* model) {
     uint16_t image_offset = model->pos_y * model->row_size_bytes + model->pos_x;
-    for(uint16_t i = 0; i < IMAGE_WINDOW_SIZE_BYTES; i += IMAGE_WINDOW_BYTES_PER_ROW)
+    for(uint16_t i = 0, j = 0; j < IMAGE_WINDOW_SIZE_BYTES;
+        i += model->row_size_bytes, j += IMAGE_WINDOW_BYTES_PER_ROW)
         image_scroll_reverse_copy_row(
-            model->image + image_offset + i, model->view_image + i, model->invert_image);
+            model->image + image_offset + i, model->view_image + j, model->invert_image);
 }
 
 static void image_scroll_move(ImageScroll* instance, int8_t step_x, int8_t step_y) {
@@ -61,8 +62,8 @@ static void image_scroll_move(ImageScroll* instance, int8_t step_x, int8_t step_
     if(!model->image_set) return;
     UNUSED(step_x);
 
-    model->pos_x =
-        image_scroll_calculate_new_pos(model->pos_x, step_x, model->height - IMAGE_WINDOW_WIDTH);
+    model->pos_x = image_scroll_calculate_new_pos(
+        model->pos_x, step_x, model->row_size_bytes - IMAGE_WINDOW_BYTES_PER_ROW);
     model->pos_y =
         image_scroll_calculate_new_pos(model->pos_y, step_y, model->width - IMAGE_WINDOW_HEIGHT);
 
@@ -83,10 +84,10 @@ static bool scroll_input_callback(InputEvent* event, void* context) {
         y = -1;
         consumed = true;
     } else if(event->key == InputKeyLeft) {
-        x = -1;
+        x = 1;
         consumed = true;
     } else if(event->key == InputKeyRight) {
-        x = 1;
+        x = -1;
         consumed = true;
     }
 
