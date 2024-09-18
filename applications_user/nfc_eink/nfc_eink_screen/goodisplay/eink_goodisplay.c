@@ -80,6 +80,8 @@ void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, ui
         device->screen_type = NfcEinkScreenTypeGoodisplay2n9inch;
     } else if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution1n54inch) {
         device->screen_type = NfcEinkScreenTypeGoodisplay1n54inch;
+    } else if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution3n71inch) {
+        device->screen_type = NfcEinkScreenTypeGoodisplay3n71inch;
     } else
         screen->device->screen_type = NfcEinkScreenTypeUnknown;
 

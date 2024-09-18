@@ -96,6 +96,7 @@ typedef enum {
     NfcEinkGoodisplayScreenResolution2n13inch = 0x00,
     NfcEinkGoodisplayScreenResolution2n9inch = 0x01,
     NfcEinkGoodisplayScreenResolution1n54inch = 0x12,
+    NfcEinkGoodisplayScreenResolution3n71inch = 0x51,
 } NfcEinkGoodisplayScreenResolution;
 
 typedef enum {
