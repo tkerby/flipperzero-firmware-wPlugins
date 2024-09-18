@@ -1,7 +1,5 @@
 #pragma once
 
-//#include "nfc_eink_tag.h"
-//#include "../nfc_eink_types.h"
 #include "../nfc_eink_screen_i.h"
 #include <nfc/helpers/iso14443_crc.h>
 #include <nfc/protocols/nfc_generic_event.h>
@@ -30,45 +28,44 @@
 #define eink_goodisplay_on_error(instance) \
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFailure)
 
-#pragma pack(push, 1)
 typedef struct {
     uint8_t CLA_byte;
     uint8_t CMD_code;
     uint8_t P1;
     uint8_t P2;
-} APDU_Header;
+} FURI_PACKED APDU_Header;
 
 typedef struct {
     APDU_Header header;
     uint8_t data_length;
     uint8_t data[];
-} APDU_Command;
+} FURI_PACKED APDU_Command;
 
 typedef APDU_Command APDU_Command_Select;
 
 typedef struct {
     APDU_Header header;
     uint8_t expected_length;
-} APDU_Command_Read;
+} FURI_PACKED APDU_Command_Read;
 
 typedef struct {
     uint8_t command_code;
     uint8_t command_data[];
-} NfcEinkScreenCommand;
+} FURI_PACKED NfcEinkScreenCommand;
 
 typedef struct {
     uint16_t status;
-} APDU_Response;
+} FURI_PACKED APDU_Response;
 
 typedef struct {
     uint16_t data_length; ///TODO: remove this to CC_File struct
     uint8_t data[];
-} APDU_Response_Read;
+} FURI_PACKED APDU_Response_Read;
 
 typedef struct {
     uint16_t length;
     uint8_t ndef_message[];
-} NDEF_File;
+} FURI_PACKED NDEF_File;
 
 typedef struct {
     uint8_t type;
@@ -77,7 +74,7 @@ typedef struct {
     uint16_t file_size;
     uint8_t read_access_flags;
     uint8_t write_access_flags;
-} NDEF_File_Ctrl_TLV;
+} FURI_PACKED NDEF_File_Ctrl_TLV;
 
 typedef struct {
     ///TODO: uint16_t data_length; //maybe this should be here instead of APDU_Response_Read
@@ -85,7 +82,7 @@ typedef struct {
     uint16_t r_apdu_max_size;
     uint16_t c_apdu_max_size;
     NDEF_File_Ctrl_TLV ctrl_file;
-} CC_File;
+} FURI_PACKED CC_File;
 
 typedef struct {
     uint8_t response_code;
@@ -93,12 +90,9 @@ typedef struct {
         APDU_Response apdu_response;
         APDU_Response_Read apdu_response_read;
     } apdu_resp;
-} NfcEinkGoodisplayScreenResponse;
-#pragma pack(pop)
+} FURI_PACKED NfcEinkGoodisplayScreenResponse;
 
-/// Some Poller shit
 typedef enum {
-    //Idle,
     SendC2Cmd,
     SelectNDEFTagApplication,
     SelectNDEFFile,
