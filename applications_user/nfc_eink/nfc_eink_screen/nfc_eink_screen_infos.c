@@ -33,6 +33,15 @@ static const NfcEinkScreenInfo screen_descriptors[] = {
         .data_block_size = 16,
     },
     {
+        .name = "GDEY0154D67",
+        .width = 200,
+        .height = 200,
+        .screen_size = NfcEinkScreenSize1n54inch,
+        .screen_manufacturer = NfcEinkManufacturerGoodisplay,
+        .screen_type = NfcEinkScreenTypeGoodisplay1n54inch,
+        .data_block_size = 0xFA,
+    },
+    {
         .name = "GDEY0213B74",
         .width = 250,
         .height = 122,
@@ -48,6 +57,15 @@ static const NfcEinkScreenInfo screen_descriptors[] = {
         .screen_size = NfcEinkScreenSize2n9inch,
         .screen_manufacturer = NfcEinkManufacturerGoodisplay,
         .screen_type = NfcEinkScreenTypeGoodisplay2n9inch,
+        .data_block_size = 0xFA,
+    },
+    {
+        .name = "GDEY037T03",
+        .width = 416,
+        .height = 240,
+        .screen_size = NfcEinkScreenSize3n71nch,
+        .screen_manufacturer = NfcEinkManufacturerGoodisplay,
+        .screen_type = NfcEinkScreenTypeGoodisplay3n71inch,
         .data_block_size = 0xFA,
     },
 };

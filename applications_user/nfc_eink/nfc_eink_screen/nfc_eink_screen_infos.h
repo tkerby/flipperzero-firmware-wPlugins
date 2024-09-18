@@ -6,6 +6,8 @@ typedef enum {
     NfcEinkScreenSizeUnknown,
     NfcEinkScreenSize2n13inch,
     NfcEinkScreenSize2n9inch,
+    NfcEinkScreenSize1n54inch,
+    NfcEinkScreenSize3n71nch,
 
     NfcEinkScreenSizeNum
 } NfcEinkScreenSize;
@@ -19,14 +21,18 @@ typedef enum {
     NfcEinkManufacturerUnknown
 } NfcEinkManufacturer;
 
+/// TODO: Align all screens here by manufacturers before release
 typedef enum {
     NfcEinkScreenTypeUnknown,
     NfcEinkScreenTypeGoodisplay2n13inch,
     NfcEinkScreenTypeGoodisplay2n9inch,
+
     //NfcEinkTypeGoodisplay4n2inch,
 
     NfcEinkScreenTypeWaveshare2n13inch,
     NfcEinkScreenTypeWaveshare2n9inch,
+    NfcEinkScreenTypeGoodisplay1n54inch,
+    NfcEinkScreenTypeGoodisplay3n71inch,
     //NfcEinkTypeWaveshare4n2inch,
 
     NfcEinkScreenTypeNum
