@@ -129,16 +129,16 @@ typedef enum {
 } NfcEinkScreenGoodisplayPollerState;
 
 typedef enum {
-    NfcEinkScreenGoodisplayListenerStateIdle,
-    NfcEinkScreenGoodisplayListenerStateWaitingForConfig,
-    NfcEinkScreenGoodisplayListenerStateReadingBlocks,
-    NfcEinkScreenGoodisplayListenerStateUpdatedSuccefully,
-} NfcEinkScreenGoodisplayListenerState;
+    EinkGoodisplayListenerStateIdle,
+    EinkGoodisplayListenerStateWaitingForConfig,
+    EinkGoodisplayListenerStateReadingBlocks,
+    EinkGoodisplayListenerStateUpdatedSuccefully,
+} EinkGoodisplayListenerState;
 
 /// -----------------------
 typedef struct {
     NfcEinkScreenGoodisplayPollerState state;
-    NfcEinkScreenGoodisplayListenerState listener_state;
+    EinkGoodisplayListenerState listener_state;
     bool was_update;
     uint8_t update_cnt;
     uint8_t response_cnt;

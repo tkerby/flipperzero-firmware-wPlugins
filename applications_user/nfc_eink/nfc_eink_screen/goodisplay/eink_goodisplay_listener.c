@@ -25,7 +25,7 @@ static inline uint8_t nfc_eink_screen_apdu_command_A4(
         equal = memcmp(command->data, app_select_data, 0x07) == 0;
 
         NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
-        ctx->listener_state = NfcEinkScreenGoodisplayListenerStateWaitingForConfig;
+        ctx->listener_state = EinkGoodisplayListenerStateWaitingForConfig;
         eink_goodisplay_on_target_detected(screen);
     } else if(command->data_length == 0x02 && command->data[0] == 0xE1) {
         equal = command->data[1] == 0x03 || command->data[1] == 0x04;
@@ -184,7 +184,7 @@ static NfcCommand nfc_eink_goodisplay_command_handler_B2(
 
     FURI_LOG_D(TAG, "Done B2: %d", ctx->response_cnt);
     if(ctx->response_cnt >= 20) {
-        ctx->listener_state = NfcEinkScreenGoodisplayListenerStateUpdatedSuccefully;
+        ctx->listener_state = EinkGoodisplayListenerStateUpdatedSuccefully;
         eink_goodisplay_on_done(screen);
         command = NfcCommandStop;
     }
@@ -264,7 +264,7 @@ static NfcCommand nfc_eink_goodisplay_command_handler_02(
     } else {
         if(screen->device->block_current < screen->device->block_total) {
             uint8_t* data = screen->data->image_data + screen->device->received_data;
-            ctx->listener_state = NfcEinkScreenGoodisplayListenerStateReadingBlocks;
+            ctx->listener_state = EinkGoodisplayListenerStateReadingBlocks;
             memcpy(data, (uint8_t*)apdu, 2);
             screen->device->received_data += 2;
             screen->device->block_current++;
@@ -343,7 +343,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
 
     if(Iso14443_4a_event->type == Iso14443_4aListenerEventTypeFieldOff) {
-        if(ctx->listener_state != NfcEinkScreenGoodisplayListenerStateIdle)
+        if(ctx->listener_state != EinkGoodisplayListenerStateIdle)
             eink_goodisplay_on_target_lost(screen);
     } else if(Iso14443_4a_event->type == Iso14443_4aListenerEventTypeReceivedData) {
         BitBuffer* buffer = Iso14443_4a_event->data->buffer;
