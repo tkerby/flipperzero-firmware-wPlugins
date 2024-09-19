@@ -55,6 +55,7 @@ typedef struct {
     do {                                              \
         M_INIT(new);                                  \
         memcpy((void*)new, (void*)old, M_ARRAY_SIZE); \
+        free((void*)old);                             \
     } while(false)
 
 //#define M_SET(a, b) (M_INIT(a); memcpy(a, b, M_ARRAY_SIZE))
