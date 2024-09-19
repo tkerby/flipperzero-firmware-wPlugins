@@ -122,11 +122,9 @@ typedef struct {
     NfcEinkSettings settings;
 
     bool screen_loaded;
-    BitBuffer* tx_buf;
     char text_store[50 + 1];
     FuriString* file_path;
     FuriString* file_name;
-    FuriTimer* timer;
 } NfcEinkApp;
 
 bool nfc_eink_load_from_file_select(NfcEinkApp* instance);

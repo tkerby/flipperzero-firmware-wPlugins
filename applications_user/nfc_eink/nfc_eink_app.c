@@ -44,12 +44,6 @@ static void nfc_eink_app_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
-static void timer_callback(void* context) {
-    furi_assert(context);
-    NfcEinkApp* instance = context;
-    view_dispatcher_send_custom_event(instance->view_dispatcher, /* CustomEventEmulationDone */ 0);
-}
-
 static NfcEinkApp* nfc_eink_app_alloc() {
     NfcEinkApp* instance = malloc(sizeof(NfcEinkApp));
 
@@ -141,19 +135,15 @@ static NfcEinkApp* nfc_eink_app_alloc() {
         image_scroll_get_view(instance->image_scroll));
 
     instance->scene_manager = scene_manager_alloc(&nfc_eink_scene_handlers, instance);
-    instance->tx_buf = bit_buffer_alloc(50);
     instance->nfc = nfc_alloc();
     instance->file_path = furi_string_alloc();
     instance->file_name = furi_string_alloc();
-    instance->timer = furi_timer_alloc(timer_callback, FuriTimerTypeOnce, instance);
     return instance;
 }
 
 static void nfc_eink_app_free(NfcEinkApp* instance) {
     furi_assert(instance);
 
-    //free(instance->image_data);
-    bit_buffer_free(instance->tx_buf);
     nfc_free(instance->nfc);
     scene_manager_free(instance->scene_manager);
 
@@ -215,7 +205,6 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     instance->dialogs = NULL;
     instance->gui = NULL;
     instance->notifications = NULL;
-    furi_timer_free(instance->timer);
     free(instance);
 }
 
