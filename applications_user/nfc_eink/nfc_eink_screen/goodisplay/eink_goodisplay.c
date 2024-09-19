@@ -41,7 +41,7 @@ static NfcEinkScreenDevice* eink_goodisplay_device_alloc() {
     NfcEinkScreenSpecificGoodisplayContext* context =
         malloc(sizeof(NfcEinkScreenSpecificGoodisplayContext));
 
-    context->state = SendC2Cmd;
+    context->poller_state = EinkGoodisplayPollerStateSendC2Cmd;
 
     device->screen_context = context;
     return device;

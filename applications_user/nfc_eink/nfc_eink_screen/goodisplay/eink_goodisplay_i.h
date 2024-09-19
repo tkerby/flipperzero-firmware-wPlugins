@@ -112,21 +112,21 @@ typedef struct {
 } FURI_PACKED NfcEinkGoodisplayScreenTypeData;
 
 typedef enum {
-    SendC2Cmd,
-    SelectNDEFTagApplication,
-    SelectNDEFFile,
-    ReadFIDFileData,
-    Select0xE104File,
-    Read0xE104FileData,
-    SendConfigCmd,
-    DuplicateC2Cmd,
-    SendDataCmd,
-    UpdateDisplay,
-    SendDataDone,
+    EinkGoodisplayPollerStateSendC2Cmd,
+    EinkGoodisplayPollerStateSelectNDEFTagApp,
+    EinkGoodisplayPollerStateSelectNDEFFile,
+    EinkGoodisplayPollerStateReadFIDFileData,
+    EinkGoodisplayPollerStateSelect0xE104File,
+    EinkGoodisplayPollerStateRead0xE104FileData,
+    EinkGoodisplayPollerStateSendConfigCmd,
+    EinkGoodisplayPollerStateDuplicateC2Cmd,
+    EinkGoodisplayPollerStateSendDataCmd,
+    EinkGoodisplayPollerStateUpdateDisplay,
+    EinkGoodisplayPollerStateSendDataDone,
 
-    NfcEinkScreenGoodisplayPollerStateError,
-    NfcEinkScreenGoodisplayPollerStateNum
-} NfcEinkScreenGoodisplayPollerState;
+    EinkGoodisplayPollerStateError,
+    EinkGoodisplayPollerStateNum
+} EinkGoodisplayPollerState;
 
 typedef enum {
     EinkGoodisplayListenerStateIdle,
@@ -137,7 +137,7 @@ typedef enum {
 
 /// -----------------------
 typedef struct {
-    NfcEinkScreenGoodisplayPollerState state;
+    EinkGoodisplayPollerState poller_state;
     EinkGoodisplayListenerState listener_state;
     bool was_update;
     uint8_t update_cnt;
