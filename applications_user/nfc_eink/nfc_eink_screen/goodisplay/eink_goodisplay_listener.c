@@ -117,10 +117,11 @@ static inline uint8_t nfc_eink_screen_apdu_command_D2(
     UNUSED(resp);
 
     FURI_LOG_D(TAG, "F0 D2: %d", command->data_length);
-    uint8_t* data = screen->data->image_data + screen->device->received_data;
-    memcpy(data, command->data, command->data_length - 2);
-    screen->device->received_data += command->data_length - 2;
-
+    if(screen->device->block_current < screen->device->block_total) {
+        uint8_t* data = screen->data->image_data + screen->device->received_data;
+        memcpy(data, command->data, command->data_length - 2);
+        screen->device->received_data += command->data_length - 2;
+    }
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
     ctx->was_update = true;
 
@@ -222,6 +223,7 @@ static NfcCommand nfc_eink_goodisplay_command_handler_13(
 
     *response_length = nfc_eink_goodisplay_command_handler_process_apdu(
         screen, apdu, &response->apdu_resp.apdu_response);
+
     response->response_code = 0xA3;
     return NfcCommandContinue;
 }
@@ -260,10 +262,13 @@ static NfcCommand nfc_eink_goodisplay_command_handler_02(
         *response_length = nfc_eink_goodisplay_command_handler_process_apdu(
             screen, apdu, &response->apdu_resp.apdu_response);
     } else {
-        uint8_t* data = screen->data->image_data + screen->device->received_data;
-        ctx->listener_state = NfcEinkScreenGoodisplayListenerStateReadingBlocks;
-        memcpy(data, (uint8_t*)apdu, 2);
-        screen->device->received_data += 2;
+        if(screen->device->block_current < screen->device->block_total) {
+            uint8_t* data = screen->data->image_data + screen->device->received_data;
+            ctx->listener_state = NfcEinkScreenGoodisplayListenerStateReadingBlocks;
+            memcpy(data, (uint8_t*)apdu, 2);
+            screen->device->received_data += 2;
+            screen->device->block_current++;
+        }
         FURI_LOG_D(TAG, "Data: %d", screen->device->received_data);
         *response_length = 3;
         response->response_code = 0x02;
