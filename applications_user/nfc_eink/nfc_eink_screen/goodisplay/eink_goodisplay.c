@@ -1,5 +1,6 @@
 #include "eink_goodisplay.h"
 #include "eink_goodisplay_i.h"
+#include "eink_goodisplay_poller_config.h"
 #include <simple_array.h>
 
 static NfcDevice* eink_goodisplay_nfc_device_4a_alloc() {
@@ -66,26 +67,7 @@ static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkScreenType gene
 }
 
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
-    UNUSED(data_length);
-    const NfcEinkGoodisplayScreenTypeData* screen_config =
-        (NfcEinkGoodisplayScreenTypeData*)(data + 2);
-
-    NfcEinkScreenDevice* device = screen->device;
-    if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution2n13inch) {
-        /*  screen->device->screen_type = screen_config->screen_channel ==
-                                              NfcEinkGoodisplayScreenChannelBlackWhite ?
-                                          NfcEinkScreenTypeGoodisplay2n13inch :
-                                          NfcEinkScreenTypeUnknown; */
-        device->screen_type = NfcEinkScreenTypeGoodisplay2n13inch;
-    } else if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution2n9inch) {
-        device->screen_type = NfcEinkScreenTypeGoodisplay2n9inch;
-    } else if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution1n54inch) {
-        device->screen_type = NfcEinkScreenTypeGoodisplay1n54inch;
-    } else if(screen_config->screen_resolution == NfcEinkGoodisplayScreenResolution3n71inch) {
-        device->screen_type = NfcEinkScreenTypeGoodisplay3n71inch;
-    } else
-        screen->device->screen_type = NfcEinkScreenTypeUnknown;
-
+    screen->device->screen_type = eink_goodisplay_config_get_screen_type(data, data_length);
     eink_goodisplay_on_config_received(screen);
 }
 
