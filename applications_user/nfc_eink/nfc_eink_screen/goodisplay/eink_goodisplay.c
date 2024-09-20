@@ -1,6 +1,6 @@
 #include "eink_goodisplay.h"
 #include "eink_goodisplay_i.h"
-#include "eink_goodisplay_poller_config.h"
+#include "eink_goodisplay_config.h"
 #include <simple_array.h>
 
 static NfcDevice* eink_goodisplay_nfc_device_4a_alloc() {
