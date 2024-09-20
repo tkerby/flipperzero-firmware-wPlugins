@@ -1,6 +1,24 @@
 #pragma once
-
 #include "eink_goodisplay_i.h"
+
+typedef enum {
+    NfcEinkGoodisplayScreenResolution2n13inch = 0x00,
+    NfcEinkGoodisplayScreenResolution2n9inch = 0x01,
+    NfcEinkGoodisplayScreenResolution1n54inch = 0x12,
+    NfcEinkGoodisplayScreenResolution3n71inch = 0x51,
+} NfcEinkGoodisplayScreenResolution;
+
+typedef enum {
+    NfcEinkGoodisplayScreenChannelBlackWhite = 0x20,
+    NfcEinkGoodisplayScreenChannelBlackWhiteRed = 0x30,
+} NfcEinkGoodisplayScreenChannel;
+
+typedef struct {
+    NfcEinkGoodisplayScreenResolution screen_resolution;
+    NfcEinkGoodisplayScreenChannel screen_channel;
+    uint16_t height;
+    uint16_t width;
+} FURI_PACKED NfcEinkGoodisplayScreenTypeData;
 
 typedef struct {
     uint8_t inner_cmd_code;
