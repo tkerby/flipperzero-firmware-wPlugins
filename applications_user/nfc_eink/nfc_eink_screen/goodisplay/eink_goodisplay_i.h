@@ -121,7 +121,8 @@ typedef enum {
     EinkGoodisplayPollerStateSendConfigCmd,
     EinkGoodisplayPollerStateDuplicateC2Cmd,
     EinkGoodisplayPollerStateSendDataCmd,
-    EinkGoodisplayPollerStateUpdateDisplay,
+    EinkGoodisplayPollerStateApplyImage,
+    EinkGoodisplayPollerStateWaitUpdateDone,
     EinkGoodisplayPollerStateSendDataDone,
 
     EinkGoodisplayPollerStateError,
