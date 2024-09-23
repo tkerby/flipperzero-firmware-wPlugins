@@ -25,6 +25,10 @@ static NfcEinkScreenDevice* eink_waveshare_alloc() {
     NfcEinkWaveshareSpecificContext* ctx = malloc(sizeof(NfcEinkWaveshareSpecificContext));
     ctx->listener_state = NfcEinkWaveshareListenerStateIdle;
 
+    const uint8_t block0_3[] = {
+        0x57, 0x53, 0x44, 0xC8, 0x5A, 0x31, 0x30, 0x6D, 0x36, 0, 0, 0, 0x00, 0x00, 0x00, 0x00};
+    memcpy(ctx->buf, block0_3, sizeof(block0_3));
+
     device->screen_context = ctx;
     return device;
 }
