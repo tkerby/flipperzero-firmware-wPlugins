@@ -52,6 +52,15 @@ static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkScreenType gener
     */
 }
 
+typedef enum {
+    EinkScreenTypeWaveshare2n13inch = 4,
+    EinkScreenTypeWaveshare2n7inch = 16,
+    EinkScreenTypeWaveshare2n9inch = 7,
+    EinkScreenTypeWaveshare4n2inch = 10,
+    EinkScreenTypeWaveshare7n5inch = 12,
+    EinkScreenTypeWaveshare7n5inchV2 = 14,
+} EinkScreenTypeWaveshare;
+
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     //UNUSED(screen);
     UNUSED(data_length);
@@ -60,10 +69,18 @@ void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uin
     NfcEinkScreenType type = NfcEinkScreenTypeUnknown;
     uint8_t protocol_type = data[0];
 
-    if(protocol_type == 4 || protocol_type == 2) {
+    if(protocol_type == EinkScreenTypeWaveshare2n13inch) {
         type = NfcEinkScreenTypeWaveshare2n13inch;
-    } else if(protocol_type == 7) {
+    } else if(protocol_type == EinkScreenTypeWaveshare2n9inch) {
         type = NfcEinkScreenTypeWaveshare2n9inch;
+    } else if(protocol_type == EinkScreenTypeWaveshare2n7inch) {
+        type = NfcEinkScreenTypeWaveshare2n7inch;
+    } else if(protocol_type == EinkScreenTypeWaveshare4n2inch) {
+        type = NfcEinkScreenTypeWaveshare4n2inch;
+    } else if(
+        protocol_type == EinkScreenTypeWaveshare7n5inch ||
+        protocol_type == EinkScreenTypeWaveshare7n5inchV2) {
+        type = NfcEinkScreenTypeWaveshare7n5inch;
     }
 
     screen->device->screen_type = type;

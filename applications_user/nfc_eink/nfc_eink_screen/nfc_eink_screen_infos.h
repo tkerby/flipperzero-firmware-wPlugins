@@ -7,7 +7,10 @@ typedef enum {
     NfcEinkScreenSize2n13inch,
     NfcEinkScreenSize2n9inch,
     NfcEinkScreenSize1n54inch,
-    NfcEinkScreenSize3n71nch,
+    NfcEinkScreenSize3n71inch,
+    NfcEinkScreenSize2n7inch,
+    NfcEinkScreenSize4n2inch,
+    NfcEinkScreenSize7n5inch,
 
     NfcEinkScreenSizeNum
 } NfcEinkScreenSize;
@@ -33,7 +36,10 @@ typedef enum {
     NfcEinkScreenTypeWaveshare2n9inch,
     NfcEinkScreenTypeGoodisplay1n54inch,
     NfcEinkScreenTypeGoodisplay3n71inch,
-    //NfcEinkTypeWaveshare4n2inch,
+
+    NfcEinkScreenTypeWaveshare2n7inch,
+    NfcEinkScreenTypeWaveshare4n2inch,
+    NfcEinkScreenTypeWaveshare7n5inch,
 
     NfcEinkScreenTypeNum
 } NfcEinkScreenType;
