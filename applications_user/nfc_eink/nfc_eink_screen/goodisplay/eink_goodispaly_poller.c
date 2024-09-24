@@ -414,7 +414,7 @@ static NfcCommand eink_goodisplay_error_handler(Iso14443_3aPoller* poller, NfcEi
     return NfcCommandStop;
 }
 
-static EinkGoodisplayStateHandler handlers[EinkGoodisplayPollerStateNum] = {
+static const EinkGoodisplayStateHandler handlers[EinkGoodisplayPollerStateNum] = {
     [EinkGoodisplayPollerStateSendC2Cmd] = eink_goodisplay_C2,
     [EinkGoodisplayPollerStateSelectNDEFTagApp] = eink_goodisplay_select_application,
     [EinkGoodisplayPollerStateSelectNDEFFile] = eink_goodisplay_select_ndef_file,
@@ -440,8 +440,8 @@ NfcCommand eink_goodisplay_poller_callback(NfcGenericEvent event, void* context)
     Iso14443_4aPoller* poller = event.instance;
 
     if(Iso14443_4a_event->type == Iso14443_4aPollerEventTypeReady) {
-        bit_buffer_reset(screen->tx_buf);
-        bit_buffer_reset(screen->rx_buf);
+        //bit_buffer_reset(screen->tx_buf);
+        //bit_buffer_reset(screen->rx_buf);
 
         NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
         command = handlers[ctx->poller_state](poller->iso14443_3a_poller, screen);
