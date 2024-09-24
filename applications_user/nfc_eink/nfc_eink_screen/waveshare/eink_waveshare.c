@@ -24,6 +24,7 @@ static NfcEinkScreenDevice* eink_waveshare_alloc() {
 
     NfcEinkWaveshareSpecificContext* ctx = malloc(sizeof(NfcEinkWaveshareSpecificContext));
     ctx->listener_state = NfcEinkWaveshareListenerStateIdle;
+    ctx->poller_state = EinkWavesharePollerStateInit;
 
     const uint8_t block0_3[] = {
         0x57, 0x53, 0x44, 0xC8, 0x5A, 0x31, 0x30, 0x6D, 0x36, 0, 0, 0, 0x00, 0x00, 0x00, 0x00};
@@ -85,12 +86,6 @@ void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uin
 
     screen->device->screen_type = type;
     eink_waveshare_on_config_received(screen);
-}
-
-static NfcCommand eink_waveshare_poller_callback(NfcGenericEvent event, void* context) {
-    furi_assert(context);
-    UNUSED(event);
-    return NfcCommandContinue;
 }
 
 const NfcEinkScreenHandlers waveshare_handlers = {

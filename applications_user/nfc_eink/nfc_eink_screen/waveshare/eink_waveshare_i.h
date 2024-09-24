@@ -2,6 +2,7 @@
 #include "../nfc_eink_screen_i.h"
 #include <nfc/protocols/iso14443_3a/iso14443_3a.h>
 #include <nfc/protocols/iso14443_3a/iso14443_3a_listener.h>
+#include <nfc/protocols/iso14443_3a/iso14443_3a_poller.h>
 #include <nfc/helpers/iso14443_crc.h>
 
 #define EINK_WAVESHARE_COMMAND_SPECIFIC       0xCD
@@ -30,8 +31,29 @@ typedef enum {
     NfcEinkWaveshareListenerStateUpdatedSuccefully,
 } NfcEinkWaveshareListenerStates;
 
+typedef enum {
+    EinkWavesharePollerStateInit,
+    EinkWavesharePollerStateSelectType,
+    EinkWavesharePollerStateSetNormalMode,
+    EinkWavesharePollerStateSetConfig1,
+    EinkWavesharePollerStatePowerOn,
+    EinkWavesharePollerStateSetConfig2,
+    EinkWavesharePollerStateLoadToMain,
+    EinkWavesharePollerStatePrepareData,
+    EinkWavesharePollerStateSendImageData,
+    EinkWavesharePollerStatePowerOnV2,
+    EinkWavesharePollerStateRefresh,
+    EinkWavesharePollerStateWaitReady,
+    EinkWavesharePollerStateFinish,
+    EinkWavesharePollerStateError,
+    EinkWavesharePollerStateNum
+} EinkWavesharePollerState;
+
 typedef struct {
     NfcEinkWaveshareListenerStates listener_state;
+    EinkWavesharePollerState poller_state;
+    size_t data_index;
+    uint16_t block_number; // TODO: try to remove this
     uint8_t buf[16 * 4];
 } NfcEinkWaveshareSpecificContext;
 
@@ -57,5 +79,6 @@ typedef struct {
     nfc_eink_screen_vendor_callback(instance, NfcEinkScreenEventTypeFailure)
 
 NfcCommand eink_waveshare_listener_callback(NfcGenericEvent event, void* context);
+NfcCommand eink_waveshare_poller_callback(NfcGenericEvent event, void* context);
 
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length);
