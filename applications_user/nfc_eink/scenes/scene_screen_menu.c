@@ -6,6 +6,7 @@ typedef enum {
     SubmenuIndexShow,
     SubmenuIndexSave,
     SubmenuIndexWrite,
+    SubmenuIndexDelete,
     SubmenuIndexInfo,
 } SubmenuIndex;
 
@@ -20,14 +21,20 @@ void nfc_eink_scene_screen_menu_on_enter(void* context) {
 
     bool after_emulation =
         scene_manager_has_previous_scene(instance->scene_manager, NfcEinkAppSceneEmulate);
-    if(!after_emulation)
+    if(!after_emulation) {
         submenu_add_item(
             submenu,
             "Write",
             SubmenuIndexWrite,
             nfc_eink_scene_screen_menu_submenu_callback,
             instance);
-    else {
+        submenu_add_item(
+            submenu,
+            "Delete",
+            SubmenuIndexDelete,
+            nfc_eink_scene_screen_menu_submenu_callback,
+            instance);
+    } else {
         submenu_add_item(
             submenu,
             "Save",
@@ -53,6 +60,8 @@ static NfcEinkAppScene nfc_eink_scene_get_next_by_submenu_index(SubmenuIndex ind
         return NfcEinkAppSceneChooseScreen;
     case SubmenuIndexInfo:
         return NfcEinkAppSceneInfo;
+    case SubmenuIndexDelete:
+        return NfcEinkAppSceneDelete;
     default:
         FURI_LOG_E(TAG, "Unknown scene index %d", index);
         furi_crash();

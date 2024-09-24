@@ -1,5 +1,6 @@
 #include "nfc_eink_app.h"
 #include <flipper_format/flipper_format.h>
+#include <path.h>
 
 #define TAG "NfcEinkApp"
 
@@ -270,10 +271,9 @@ bool nfc_eink_load_from_file_select(NfcEinkApp* instance) {
         if(!dialog_file_browser_show(instance->dialogs, instance->file_path, tmp, &browser_options))
             break;
 
-        /* success =
-            nfc_eink_screen_load(furi_string_get_cstr(instance->file_path), &instance->screen); */
         success = nfc_eink_screen_load_info(
             furi_string_get_cstr(instance->file_path), &instance->info_temp);
+        path_extract_filename(instance->file_path, instance->file_name, false);
     } while(!success);
 
     furi_string_free(tmp);

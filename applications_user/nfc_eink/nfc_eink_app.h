@@ -56,13 +56,14 @@ typedef enum {
     NfcEinkAppCustomEventReserved = 100,
 
     NfcEinkAppCustomEventTextInputDone,
-    NfcEinkAppCustomEventTimerExpired, ///TODO: remove this
+    NfcEinkAppCustomEventTimerExpired,
     NfcEinkAppCustomEventBlockProcessed,
     NfcEinkAppCustomEventUpdating,
     NfcEinkAppCustomEventProcessFinish,
     NfcEinkAppCustomEventTargetDetected,
     NfcEinkAppCustomEventTargetLost,
     NfcEinkAppCustomEventUnknownError,
+    NfcEinkAppCustomEventExit,
 } NfcEinkAppCustomEvents;
 
 typedef enum {
