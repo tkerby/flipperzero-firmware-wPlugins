@@ -343,7 +343,7 @@ NfcCommand eink_goodisplay_listener_callback(NfcGenericEvent event, void* contex
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
 
     if(Iso14443_4a_event->type == Iso14443_4aListenerEventTypeFieldOff) {
-        if(ctx->listener_state != EinkGoodisplayListenerStateIdle)
+        if(ctx->listener_state == EinkGoodisplayListenerStateReadingBlocks)
             eink_goodisplay_on_target_lost(screen);
     } else if(Iso14443_4a_event->type == Iso14443_4aListenerEventTypeReceivedData) {
         BitBuffer* buffer = Iso14443_4a_event->data->buffer;
