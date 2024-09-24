@@ -25,6 +25,15 @@
 #define EINK_WAVESHARE_COMMAND_WAIT_FOR_READY 0x0A
 
 typedef enum {
+    EinkScreenTypeWaveshare2n13inch = 4,
+    EinkScreenTypeWaveshare2n7inch = 16,
+    EinkScreenTypeWaveshare2n9inch = 7,
+    EinkScreenTypeWaveshare4n2inch = 10,
+    EinkScreenTypeWaveshare7n5inch = 12,
+    EinkScreenTypeWaveshare7n5inchV2 = 14,
+} EinkScreenTypeWaveshare;
+
+typedef enum {
     NfcEinkWaveshareListenerStateIdle,
     NfcEinkWaveshareListenerStateWaitingForConfig,
     NfcEinkWaveshareListenerStateReadingBlocks,

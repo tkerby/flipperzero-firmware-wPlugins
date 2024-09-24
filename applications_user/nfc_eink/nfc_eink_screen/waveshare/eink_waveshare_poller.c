@@ -93,7 +93,7 @@ static NfcCommand
 
     do {
         ///TODO: take type from NfcScreen instance then put it to command data
-        uint8_t screen_type = 4;
+        uint8_t screen_type = EinkScreenTypeWaveshare2n13inch;
         bool result = eink_waveshare_send_command(
             poller, screen, EINK_WAVESHARE_COMMAND_SELECT_TYPE, &screen_type, sizeof(screen_type));
         if(!result) break;

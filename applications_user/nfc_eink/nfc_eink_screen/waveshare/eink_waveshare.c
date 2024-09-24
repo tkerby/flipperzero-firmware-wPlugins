@@ -53,15 +53,6 @@ static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkScreenType gener
     */
 }
 
-typedef enum {
-    EinkScreenTypeWaveshare2n13inch = 4,
-    EinkScreenTypeWaveshare2n7inch = 16,
-    EinkScreenTypeWaveshare2n9inch = 7,
-    EinkScreenTypeWaveshare4n2inch = 10,
-    EinkScreenTypeWaveshare7n5inch = 12,
-    EinkScreenTypeWaveshare7n5inchV2 = 14,
-} EinkScreenTypeWaveshare;
-
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     //UNUSED(screen);
     UNUSED(data_length);
