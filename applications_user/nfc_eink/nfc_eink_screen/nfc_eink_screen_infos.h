@@ -16,7 +16,6 @@ typedef enum {
 } NfcEinkScreenSize;
 
 typedef enum {
-    //NfcEinkManufacturerGeneric,
     NfcEinkManufacturerWaveshare,
     NfcEinkManufacturerGoodisplay,
 

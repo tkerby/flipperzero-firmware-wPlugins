@@ -19,12 +19,10 @@ typedef struct {
 
 typedef NfcEinkScreenDevice* (*EinkScreenAllocCallback)();
 typedef void (*EinkScreenFreeCallback)(NfcEinkScreenDevice* instance);
-typedef void (*EinkScreenInitCallback)(NfcEinkScreenData* data, NfcEinkScreenType type);
 
 typedef struct {
     EinkScreenAllocCallback alloc;
     EinkScreenFreeCallback free;
-    EinkScreenInitCallback init; ///TODO: this can be removed as it is no longer used
     NfcGenericCallback listener_callback;
     NfcGenericCallback poller_callback;
 } NfcEinkScreenHandlers;

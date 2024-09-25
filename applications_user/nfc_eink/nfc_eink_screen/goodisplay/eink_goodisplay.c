@@ -55,17 +55,6 @@ static void eink_goodisplay_free(NfcEinkScreenDevice* instance) {
     free(instance->screen_context);
 }
 
-///TODO: this can be removed
-static void eink_goodisplay_init(NfcEinkScreenData* data, NfcEinkScreenType generic_type) {
-    furi_assert(data);
-    UNUSED(generic_type);
-    /*     NfcEinkScreenTypeGoodisplay goodisplay_type = (NfcEinkScreenTypeGoodisplay)generic_type;
-    furi_assert(goodisplay_type != NfcEinkScreenTypeGoodisplayUnknown);
-    furi_assert(goodisplay_type < NfcEinkScreenTypeGoodisplayNum);
-
-    data->base = goodisplay_screens[goodisplay_type]; */
-}
-
 void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     screen->device->screen_type = eink_goodisplay_config_get_screen_type(data, data_length);
     eink_goodisplay_on_config_received(screen);
@@ -74,7 +63,6 @@ void eink_goodisplay_parse_config(NfcEinkScreen* screen, const uint8_t* data, ui
 const NfcEinkScreenHandlers goodisplay_handlers = {
     .alloc = eink_goodisplay_device_alloc,
     .free = eink_goodisplay_free,
-    .init = eink_goodisplay_init,
     .listener_callback = eink_goodisplay_listener_callback,
     .poller_callback = eink_goodisplay_poller_callback,
 };

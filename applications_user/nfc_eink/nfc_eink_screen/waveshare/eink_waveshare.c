@@ -41,19 +41,6 @@ static void eink_waveshare_free(NfcEinkScreenDevice* instance) {
     free(instance->screen_context);
 }
 
-/// TODO: this can be removed
-static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkScreenType generic_type) {
-    UNUSED(data);
-    UNUSED(generic_type);
-    /*     furi_assert(data);
-    NfcEinkScreenTypeWaveshare waveshare_type = (NfcEinkScreenTypeWaveshare)generic_type;
-    furi_assert(waveshare_type != NfcEinkScreenTypeWaveshareUnknown);
-    furi_assert(waveshare_type < NfcEinkScreenTypeWaveshareNum); 
-
-    data->base = waveshare_screens[waveshare_type];
-    */
-}
-
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     UNUSED(data_length);
 
@@ -67,7 +54,6 @@ void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uin
 const NfcEinkScreenHandlers waveshare_handlers = {
     .alloc = eink_waveshare_alloc,
     .free = eink_waveshare_free,
-    .init = eink_waveshare_init,
     .listener_callback = eink_waveshare_listener_callback,
     .poller_callback = eink_waveshare_poller_callback,
 };
