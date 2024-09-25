@@ -15,12 +15,9 @@ void nfc_eink_scene_save_name_on_enter(void* context) {
 
     bool name_is_empty = furi_string_empty(instance->file_name);
     if(name_is_empty) {
-        /*  name_generator_make_auto(
-            instance->text_store, NFC_EINK_TEXT_STORE_SIZE, NFC_APP_FILENAME_PREFIX); */
         furi_string_set(folder_path, NFC_EINK_APP_FOLDER);
         furi_string_set(instance->file_path, NFC_EINK_APP_FOLDER);
     } else {
-        // nfc_text_store_set(instance, "%s", furi_string_get_cstr(instance->file_path));
         path_extract_dirname(furi_string_get_cstr(instance->file_path), folder_path);
     }
 
@@ -57,16 +54,10 @@ bool nfc_eink_scene_save_name_on_event(void* context, SceneManagerEvent event) {
 
             strcat(instance->text_store, NFC_EINK_APP_EXTENSION);
             path_append(instance->file_path, instance->text_store);
-            //furi_string_set(instance->file_name, instance->text_store);
 
             if(nfc_eink_screen_save(instance->screen, furi_string_get_cstr(instance->file_path))) {
                 scene_manager_next_scene(instance->scene_manager, NfcEinkAppSceneSaveSuccess);
-
                 dolphin_deed(DolphinDeedNfcSave);
-                //dolphin_deed(
-                //   scene_manager_has_previous_scene(instance->scene_manager, NfcSceneSetType) ?
-                //       DolphinDeedNfcAddSave :
-                //       DolphinDeedNfcSave);
             }
             consumed = true;
         }

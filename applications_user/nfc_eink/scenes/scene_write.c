@@ -22,8 +22,6 @@ static void nfc_eink_write_callback(NfcEinkScreenEventType type, void* context) 
         break;
 
     case NfcEinkScreenEventTypeBlockProcessed:
-        //NfcEinkScreenDevice* device = instance->screen->device;
-        //FURI_LOG_D(TAG, "%d, %d", device->block_current, device->block_total);
         event = NfcEinkAppCustomEventBlockProcessed;
         break;
 

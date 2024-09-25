@@ -22,21 +22,6 @@ void nfc_eink_scene_delete_on_enter(void* context) {
     widget_add_button_element(
         app->widget, GuiButtonTypeRight, "Delete", nfc_eink_scene_delete_widget_callback, app);
 
-    /*    size_t uid_len;
-    const uint8_t* uid = nfc_eink_device_get_uid(nfc->nfc_device, &uid_len);
-
-    furi_string_set(temp_str, "UID:");
-    for(size_t i = 0; i < uid_len; i++) {
-        furi_string_cat_printf(temp_str, " %02X", uid[i]);
-    }
-    widget_add_string_element(
-        nfc->widget, 64, 24, AlignCenter, AlignTop, FontSecondary, furi_string_get_cstr(temp_str));
-
-    furi_string_set_str(temp_str, nfc_device_get_name(nfc->nfc_device, NfcDeviceNameTypeFull));
-    widget_add_string_element(
-        nfc->widget, 64, 34, AlignCenter, AlignTop, FontSecondary, furi_string_get_cstr(temp_str));
-    furi_string_free(temp_str); */
-
     view_dispatcher_switch_to_view(app->view_dispatcher, NfcEinkViewWidget);
 }
 

@@ -18,7 +18,7 @@ static void eink_progress_draw_callback(Canvas* canvas, void* model) {
 
     FuriString* str = furi_string_alloc_printf("%d / %d", m->blocks_current, m->blocks_total);
     elements_text_box(
-        canvas, 24, 5, 80, 40, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
+        canvas, 24, 5, 90, 40, AlignCenter, AlignCenter, furi_string_get_cstr(m->header), false);
 
     float value = (m->blocks_total == 0) ? 0 :
                                            ((float)(m->blocks_current) / (float)(m->blocks_total));

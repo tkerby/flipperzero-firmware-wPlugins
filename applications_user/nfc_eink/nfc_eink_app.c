@@ -8,7 +8,6 @@
 #define NFC_EINK_SETTINGS_VERSION (1)
 #define NFC_EINK_SETTINGS_MAGIC   (0x1B)
 
-///TODO: make this function to point to my repo (maybe?)
 static bool nfc_is_hal_ready(void) {
     if(furi_hal_nfc_is_hal_ready() != FuriHalNfcErrorNone) {
         // No connection to the chip, show an error screen
@@ -68,7 +67,6 @@ static NfcEinkApp* nfc_eink_app_alloc() {
 
     view_dispatcher_attach_to_gui(
         instance->view_dispatcher, instance->gui, ViewDispatcherTypeFullscreen);
-    //view_dispatcher_enable_queue(instance->view_dispatcher);
 
     // Submenu
     instance->submenu = submenu_alloc();
@@ -80,22 +78,17 @@ static NfcEinkApp* nfc_eink_app_alloc() {
     view_dispatcher_add_view(
         instance->view_dispatcher, NfcEinkViewPopup, popup_get_view(instance->popup));
 
-    // progress bar
+    // Progress bar
     instance->eink_progress = eink_progress_alloc();
     view_dispatcher_add_view(
         instance->view_dispatcher,
         NfcEinkViewProgress,
         eink_progress_get_view(instance->eink_progress));
+
     // Dialog
     instance->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
         instance->view_dispatcher, NfcEinkViewDialogEx, dialog_ex_get_view(instance->dialog_ex));
-    /*
-    // Loading
-    instance->loading = loading_alloc();
-    view_dispatcher_add_view(
-        instance->view_dispatcher, NfcViewLoading, loading_get_view(instance->loading));
-    */
 
     // Text Input
     instance->text_input = text_input_alloc();
@@ -103,18 +96,6 @@ static NfcEinkApp* nfc_eink_app_alloc() {
         instance->view_dispatcher,
         NfcEinkViewTextInput,
         text_input_get_view(instance->text_input));
-
-    /*
-    // Byte Input
-    instance->byte_input = byte_input_alloc();
-    view_dispatcher_add_view(
-        instance->view_dispatcher, NfcViewByteInput, byte_input_get_view(instance->byte_input));
-
-    // TextBox
-    instance->text_box = text_box_alloc();
-    view_dispatcher_add_view(
-        instance->view_dispatcher, NfcViewTextBox, text_box_get_view(instance->text_box));
-    instance->text_box_store = furi_string_alloc();*/
 
     // Custom Widget
     instance->widget = widget_alloc();
@@ -155,11 +136,6 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     // DialogEx
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewDialogEx);
     dialog_ex_free(instance->dialog_ex);
-    /*
-    // Loading
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcViewLoading);
-    loading_free(instance->loading);
-    */
 
     // Popup
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewPopup);
@@ -172,16 +148,6 @@ static void nfc_eink_app_free(NfcEinkApp* instance) {
     // Progress
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewProgress);
     eink_progress_free(instance->eink_progress);
-    /*
-    // ByteInput
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcViewByteInput);
-    byte_input_free(instance->byte_input);
-
-    // TextBox
-    view_dispatcher_remove_view(instance->view_dispatcher, NfcViewTextBox);
-    text_box_free(instance->text_box);
-    furi_string_free(instance->text_box_store);
-    */
 
     // Custom Widget
     view_dispatcher_remove_view(instance->view_dispatcher, NfcEinkViewWidget);

@@ -27,13 +27,7 @@
 
 #include <../applications/services/dialogs/dialogs.h>
 #include <../applications/services/storage/storage.h>
-//#include <application/services/dolphin/helpers/dolphin_deed.h>
 
-/* #include <lib/nfc/nfc.h>
-#include <lib/nfc/nfc_common.h>
-#include <lib/nfc/nfc_device.h>
-#include <lib/nfc/nfc_listener.h>
-#include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h> */
 #include <nfc/nfc_listener.h>
 #include <nfc/nfc_poller.h>
 #include <toolbox/saved_struct.h>
