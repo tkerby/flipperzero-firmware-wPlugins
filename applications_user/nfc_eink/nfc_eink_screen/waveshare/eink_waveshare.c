@@ -1,5 +1,6 @@
 #include "eink_waveshare.h"
 #include "eink_waveshare_i.h"
+#include "eink_waveshare_config.h"
 
 static NfcDevice* eink_waveshare_nfc_device_alloc() {
     //const uint8_t uid[] = {0x46, 0x53, 0x54, 0x5E, 0x31, 0x30, 0x6D}; //FSTN10m
@@ -54,28 +55,12 @@ static void eink_waveshare_init(NfcEinkScreenData* data, NfcEinkScreenType gener
 }
 
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
-    //UNUSED(screen);
     UNUSED(data_length);
-    //UNUSED(data);
 
-    NfcEinkScreenType type = NfcEinkScreenTypeUnknown;
     uint8_t protocol_type = data[0];
 
-    if(protocol_type == EinkScreenTypeWaveshare2n13inch) {
-        type = NfcEinkScreenTypeWaveshare2n13inch;
-    } else if(protocol_type == EinkScreenTypeWaveshare2n9inch) {
-        type = NfcEinkScreenTypeWaveshare2n9inch;
-    } else if(protocol_type == EinkScreenTypeWaveshare2n7inch) {
-        type = NfcEinkScreenTypeWaveshare2n7inch;
-    } else if(protocol_type == EinkScreenTypeWaveshare4n2inch) {
-        type = NfcEinkScreenTypeWaveshare4n2inch;
-    } else if(
-        protocol_type == EinkScreenTypeWaveshare7n5inch ||
-        protocol_type == EinkScreenTypeWaveshare7n5inchV2) {
-        type = NfcEinkScreenTypeWaveshare7n5inch;
-    }
-
-    screen->device->screen_type = type;
+    screen->device->screen_type =
+        eink_waveshare_config_translate_protocol_to_screen_type(protocol_type);
     eink_waveshare_on_config_received(screen);
 }
 

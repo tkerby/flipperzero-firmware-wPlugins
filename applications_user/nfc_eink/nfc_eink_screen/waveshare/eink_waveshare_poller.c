@@ -1,4 +1,5 @@
 #include "eink_waveshare_i.h"
+#include "eink_waveshare_config.h"
 
 #define TAG "WSH_Poller"
 
@@ -92,8 +93,9 @@ static NfcCommand
     ctx->poller_state = EinkWavesharePollerStateError;
 
     do {
-        ///TODO: take type from NfcScreen instance then put it to command data
-        uint8_t screen_type = EinkScreenTypeWaveshare2n13inch;
+        EinkScreenTypeWaveshare screen_type =
+            eink_waveshare_config_translate_screen_type_to_protocol(
+                screen->data->base.screen_type);
         bool result = eink_waveshare_send_command(
             poller, screen, EINK_WAVESHARE_COMMAND_SELECT_TYPE, &screen_type, sizeof(screen_type));
         if(!result) break;
