@@ -254,11 +254,15 @@ static NfcCommand
             config_length,
             eink_goodisplay_validate_0x03_cmd_response);
 
+        NfcEinkGoodisplayScreenResolution resolution =
+            config->eink_size_config.screen_data.screen_resolution;
+        NfcEinkGoodisplayScreenChannel channel =
+            config->eink_size_config.screen_data.screen_channel;
         eink_goodisplay_config_pack_free(config);
 
         if(!result) break;
 
-        const uint8_t config3[] = {0x02, 0xf0, 0xda, 0x00, 0x00, 0x03, 0xf0, 0x00, 0x20};
+        uint8_t config3[] = {0x02, 0xf0, 0xda, 0x00, 0x00, 0x03, 0xf0, resolution, channel};
 
         result = eink_goodisplay_send_data(
             poller, screen, config3, sizeof(config3), eink_goodisplay_validate_0x02_cmd_response);
@@ -409,6 +413,7 @@ static NfcCommand
 }
 
 static NfcCommand eink_goodisplay_error_handler(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
+    FURI_LOG_E(TAG, "Error!");
     eink_goodisplay_on_error(screen);
     iso14443_3a_poller_halt(poller);
     return NfcCommandStop;

@@ -1,5 +1,7 @@
 #include "eink_goodisplay_config.h"
 
+#define TAG "GD_Config"
+
 const uint8_t default_config[] = {
     0x03, 0xf0, 0xdb, 0x00, 0x00, 0x67, 0xa0, 0x06, 0x00, 0x20, 0x00, 128,  0x01, 0x28, 0xa4, 0x01,
     0x0c, 0xa5, 0x02, 0x00, 0x0a, 0xa4, 0x01, 0x08, 0xa5, 0x02, 0x00, 0x0a, 0xa4, 0x01, 0x0c, 0xa5,
@@ -26,6 +28,23 @@ void eink_goodisplay_config_pack_free(EinkGoodisplayConfigPack* pack) {
     free(pack);
 }
 
+static NfcEinkGoodisplayScreenResolution
+    eink_goodisplay_config_get_resolution(NfcEinkScreenSize screen_size) {
+    switch(screen_size) {
+    case NfcEinkScreenSize1n54inch:
+        return NfcEinkGoodisplayScreenResolution1n54inch;
+    case NfcEinkScreenSize2n13inch:
+        return NfcEinkGoodisplayScreenResolution2n13inch;
+    case NfcEinkScreenSize2n9inch:
+        return NfcEinkGoodisplayScreenResolution2n9inch;
+    case NfcEinkScreenSize3n71inch:
+        return NfcEinkGoodisplayScreenResolution3n71inch;
+    default:
+        FURI_LOG_E(TAG, "Resolution %02X is not supported", screen_size);
+        furi_crash();
+    }
+}
+
 void eink_goodisplay_config_pack_set_by_screen_info(
     EinkGoodisplayConfigPack* pack,
     const NfcEinkScreenInfo* info) {
@@ -33,6 +52,8 @@ void eink_goodisplay_config_pack_set_by_screen_info(
     furi_assert(info);
     pack->eink_size_config.screen_data.height = __builtin_bswap16(info->height);
     pack->eink_size_config.screen_data.width = __builtin_bswap16(info->width);
+    pack->eink_size_config.screen_data.screen_resolution =
+        eink_goodisplay_config_get_resolution(info->screen_size);
     /*Additional goodisplay screen configs can be done here*/
     //pack->update_ctrl1.ram_bypass_inverse_option = 0x08;
 }
