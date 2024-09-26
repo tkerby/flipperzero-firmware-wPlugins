@@ -33,7 +33,6 @@ void nfc_eink_screen_get_progress(const NfcEinkScreen* screen, size_t* current, 
 const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen);
 
 bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path);
-bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen);
 bool nfc_eink_screen_delete(const char* file_path);
 bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** info);
 bool nfc_eink_screen_load_data(

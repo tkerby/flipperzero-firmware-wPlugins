@@ -161,57 +161,6 @@ const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen) {
     return screen->data->base.name;
 }
 
-bool nfc_eink_screen_load(const char* file_path, NfcEinkScreen** screen) {
-    furi_assert(screen);
-    furi_assert(file_path);
-
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
-
-    bool loaded = false;
-    NfcEinkScreen* scr = NULL;
-    do {
-        if(!flipper_format_buffered_file_open_existing(ff, file_path)) break;
-
-        uint32_t manufacturer = 0;
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_MANUFACTURER_TYPE_KEY, &manufacturer, 1))
-            break;
-        scr = nfc_eink_screen_alloc(manufacturer);
-
-        uint32_t screen_type = 0;
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &screen_type, 1)) break;
-        nfc_eink_screen_init(scr, screen_type);
-
-        uint32_t buf = 0;
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_DATA_TOTAL_KEY, &buf, 1)) break;
-        scr->data->image_size = buf;
-
-        FuriString* temp_str = furi_string_alloc();
-        bool block_loaded = false;
-        for(uint16_t i = 0; i < scr->data->image_size; i += scr->data->base.data_block_size) {
-            furi_string_printf(temp_str, "%s %d", NFC_EINK_SCREEN_BLOCK_DATA_KEY, i);
-            block_loaded = flipper_format_read_hex(
-                ff,
-                furi_string_get_cstr(temp_str),
-                &scr->data->image_data[i],
-                scr->data->base.data_block_size);
-            if(!block_loaded) break;
-        }
-        furi_string_free(temp_str);
-
-        loaded = block_loaded;
-        *screen = scr;
-    } while(false);
-
-    flipper_format_free(ff);
-    furi_record_close(RECORD_STORAGE);
-    if(!loaded) {
-        nfc_eink_screen_free(scr);
-        *screen = NULL;
-    }
-    return loaded;
-}
-
 bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** info) {
     furi_assert(info);
     furi_assert(file_path);
