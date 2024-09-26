@@ -20,13 +20,14 @@ void nfc_eink_scene_show_image_on_enter(void* context) {
     ImageScroll* scroll = instance->image_scroll;
     const NfcEinkScreenInfo* info = nfc_eink_screen_get_image_info(instance->screen);
 
-    image_scroll_set_image(
-        scroll,
-        info->width,
-        info->height,
-        nfc_eink_screen_get_image_data(instance->screen),
-        instance->settings.invert_image);
-
+    if(instance->screen_loaded) {
+        image_scroll_set_image(
+            scroll,
+            info->width,
+            info->height,
+            nfc_eink_screen_get_image_data(instance->screen),
+            instance->settings.invert_image);
+    }
     view_dispatcher_switch_to_view(instance->view_dispatcher, NfcEinkViewImageScroll);
 }
 
