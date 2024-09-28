@@ -1,7 +1,6 @@
 #include "eink_goodisplay_i.h"
 #include "eink_goodisplay_config.h"
 #include <nfc/protocols/iso14443_3a/iso14443_3a_poller.h>
-#include <nfc/protocols/iso14443_4a/iso14443_4a_poller_i.h>
 #include <nfc/protocols/iso14443_4a/iso14443_4a_poller.h>
 
 #define TAG "GD_Poller"
