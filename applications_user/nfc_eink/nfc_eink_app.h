@@ -5,9 +5,6 @@
 
 #include <applications/services/dolphin/dolphin.h>
 #include <applications/services/dolphin/helpers/dolphin_deed.h>
-
-#include <assets_icons.h>
-
 #include <../applications/services/notification/notification_messages.h>
 
 #include <../applications/services/gui/gui.h>
@@ -31,6 +28,8 @@
 #include <nfc/nfc_listener.h>
 #include <nfc/nfc_poller.h>
 #include <toolbox/saved_struct.h>
+
+#include "nfc_eink_icons.h"
 
 #include "nfc_eink_screen/nfc_eink_screen.h"
 #include "scenes/scenes.h"
