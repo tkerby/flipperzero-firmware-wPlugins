@@ -1,4 +1,4 @@
-#include "../nfc_eink_app.h"
+#include "../nfc_eink_app_i.h"
 #include "../nfc_eink_screen/nfc_eink_screen.h"
 #include <path.h>
 
