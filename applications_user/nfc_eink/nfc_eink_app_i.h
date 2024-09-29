@@ -38,11 +38,12 @@
 #include "views/eink_progress.h"
 #include "views/image_scroll.h"
 
-#define NFC_EINK_NAME_SIZE       22
+#define NFC_EINK_NAME_SIZE       (50)
 #define NFC_EINK_APP_EXTENSION   ".eink"
 #define NFC_EINK_APP_FOLDER_NAME "nfc_eink"
 
-#define NFC_EINK_APP_FOLDER EXT_PATH(NFC_EINK_APP_FOLDER_NAME)
+#define NFC_EINK_APP_FOLDER          EXT_PATH(NFC_EINK_APP_FOLDER_NAME)
+#define NFC_EINK_APP_TEXT_STORE_SIZE (100)
 
 typedef enum {
     NfcEinkAppCustomEventReserved = 100,
@@ -115,7 +116,7 @@ struct NfcEinkApp {
     NfcEinkSettings settings;
 
     bool screen_loaded;
-    char text_store[50 + 1];
+    char text_store[NFC_EINK_APP_TEXT_STORE_SIZE];
     FuriString* file_path;
     FuriString* file_name;
 };
