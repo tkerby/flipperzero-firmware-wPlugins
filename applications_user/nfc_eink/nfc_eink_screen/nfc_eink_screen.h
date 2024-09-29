@@ -14,7 +14,6 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer);
 void nfc_eink_screen_init(NfcEinkScreen* screen, NfcEinkScreenType type);
 void nfc_eink_screen_free(NfcEinkScreen* screen);
 
-///TODO: maybe this function can be moved to nfc_eink_screen_alloc as a number of parameters
 void nfc_eink_screen_set_callback(
     NfcEinkScreen* screen,
     NfcEinkScreenEventCallback event_callback,

@@ -67,19 +67,14 @@ NfcEinkScreenType
     const EinkGoodisplaySizeConfigPack* config = (EinkGoodisplaySizeConfigPack*)(data);
 
     if(config->screen_data.screen_resolution == NfcEinkGoodisplayScreenResolution2n13inch) {
-        /*  screen_type = screen_config->screen_channel ==
-                                              NfcEinkGoodisplayScreenChannelBlackWhite ?
-                                          NfcEinkScreenTypeGoodisplay2n13inch :
-                                          NfcEinkScreenTypeUnknown; */
-        screen_type = NfcEinkScreenTypeGoodisplay2n13inch;
+        screen_type = NfcEinkScreenTypeGoodisplayEY2Color2n13inch;
     } else if(config->screen_data.screen_resolution == NfcEinkGoodisplayScreenResolution2n9inch) {
-        screen_type = NfcEinkScreenTypeGoodisplay2n9inch;
+        screen_type = NfcEinkScreenTypeGoodisplayEY2Color2n9inch;
     } else if(config->screen_data.screen_resolution == NfcEinkGoodisplayScreenResolution1n54inch) {
-        screen_type = NfcEinkScreenTypeGoodisplay1n54inch;
+        screen_type = NfcEinkScreenTypeGoodisplayEY2Color1n54inch;
     } else if(config->screen_data.screen_resolution == NfcEinkGoodisplayScreenResolution3n71inch) {
-        screen_type = NfcEinkScreenTypeGoodisplay3n71inch;
-    } else
-        screen_type = NfcEinkScreenTypeUnknown;
+        screen_type = NfcEinkScreenTypeGoodisplayEY2Color3n71inch;
+    }
 
     return screen_type;
 }
