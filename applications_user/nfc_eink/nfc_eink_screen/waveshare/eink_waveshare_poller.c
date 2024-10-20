@@ -3,6 +3,10 @@
 
 #define TAG "WSH_Poller"
 
+#define EINK_WAVESHARE_POLLER_MAX_RETRY_CNT (5)
+#define EINK_WAVESHARE_POLLER_FWT           (60000)
+#define EINK_WAVESHARE_POLLER_FWT_INFINITE  (0)
+
 typedef NfcCommand (
     *EinkWavesharePollerStateHandler)(Iso14443_3aPoller* poller, NfcEinkScreen* screen);
 
@@ -25,7 +29,8 @@ static bool eink_waveshare_send_data(
     const NfcEinkScreen* screen,
     const uint8_t* data,
     const size_t data_len,
-    EinkWavesharePollerResponseValidatorHandler validator) {
+    EinkWavesharePollerResponseValidatorHandler validator,
+    uint32_t timeout) {
     furi_assert(poller);
     furi_assert(screen);
     furi_assert(data);
@@ -38,7 +43,7 @@ static bool eink_waveshare_send_data(
     bit_buffer_append_bytes(screen->tx_buf, data, data_len);
 
     Iso14443_3aError error =
-        iso14443_3a_poller_send_standard_frame(poller, screen->tx_buf, screen->rx_buf, 0);
+        iso14443_3a_poller_send_standard_frame(poller, screen->tx_buf, screen->rx_buf, timeout);
 
     bool result = false;
     if(error == Iso14443_3aErrorNone) {
@@ -59,7 +64,8 @@ static bool eink_waveshare_send_command_ex(
     const uint8_t command,
     const uint8_t* command_data,
     const size_t command_data_length,
-    EinkWavesharePollerResponseValidatorHandler validator) {
+    EinkWavesharePollerResponseValidatorHandler validator,
+    uint32_t timeout) {
     size_t data_len = command_data_length + 2;
     uint8_t* data = malloc(data_len);
 
@@ -71,7 +77,7 @@ static bool eink_waveshare_send_command_ex(
         memcpy(&data[2], command_data, command_data_length);
     }
 
-    bool result = eink_waveshare_send_data(poller, screen, data, data_len, validator);
+    bool result = eink_waveshare_send_data(poller, screen, data, data_len, validator, timeout);
     free(data);
 
     return result;
@@ -89,7 +95,8 @@ static bool eink_waveshare_send_command(
         command,
         command_data,
         command_data_length,
-        eink_waveshare_default_validator);
+        eink_waveshare_default_validator,
+        EINK_WAVESHARE_POLLER_FWT_INFINITE);
 }
 
 static EinkWavesharePollerState eink_waveshare_poller_state_generic_handler(
@@ -214,11 +221,17 @@ static NfcCommand
     data[1] = EINK_WAVESHARE_COMMAND_DATA_WRITE; //or  EINK_WAVESHARE_COMMAND_DATA_WRITE_V2
     data[2] = block_size;
     memcpy(&data[3], &screen->data->image_data[ctx->data_index], block_size);
-    ctx->poller_state = EinkWavesharePollerStateError;
+    ctx->poller_state = EinkWavesharePollerStateRetry;
 
     do {
         bool result = eink_waveshare_send_data(
-            poller, screen, data, data_len, eink_waveshare_default_validator);
+            poller,
+            screen,
+            data,
+            data_len,
+            eink_waveshare_default_validator,
+            EINK_WAVESHARE_POLLER_FWT);
+
         if(!result) break;
 
         ctx->data_index += block_size;
@@ -227,10 +240,9 @@ static NfcCommand
                                 EinkWavesharePollerStatePowerOnV2 :
                                 EinkWavesharePollerStateSendImageData;
 
+        eink_waveshare_on_block_processed(screen);
+        screen->device->block_current = ctx->block_number;
     } while(false);
-
-    eink_waveshare_on_block_processed(screen);
-    screen->device->block_current = ctx->block_number;
 
     free(data);
     furi_delay_ms(10);
@@ -245,6 +257,10 @@ static NfcCommand
     ctx->poller_state = eink_waveshare_poller_state_generic_handler(
         poller, screen, EINK_WAVESHARE_COMMAND_POWER_ON_V2, EinkWavesharePollerStateRefresh);
 
+    if(ctx->poller_state == EinkWavesharePollerStateRefresh) {
+        eink_waveshare_on_updating(screen);
+        furi_delay_ms(200);
+    }
     return NfcCommandContinue;
 }
 
@@ -255,7 +271,7 @@ static NfcCommand
 
     ctx->poller_state = eink_waveshare_poller_state_generic_handler(
         poller, screen, EINK_WAVESHARE_COMMAND_REFRESH, EinkWavesharePollerStateWaitReady);
-    furi_delay_ms(200);
+    furi_delay_ms(500);
 
     return NfcCommandContinue;
 }
@@ -271,13 +287,35 @@ static NfcCommand
            EINK_WAVESHARE_COMMAND_WAIT_FOR_READY,
            NULL,
            0,
-           eink_waveshare_refresh_cmd_validator)) {
+           eink_waveshare_refresh_cmd_validator,
+           EINK_WAVESHARE_POLLER_FWT)) {
         ctx->poller_state = EinkWavesharePollerStateFinish;
     } else {
         ctx->poller_state = EinkWavesharePollerStateWaitReady;
         furi_delay_ms(100);
     }
     return NfcCommandContinue;
+}
+
+static NfcCommand
+    eink_waveshare_poller_state_retry(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
+    UNUSED(poller);
+    NfcEinkWaveshareSpecificContext* ctx = screen->device->screen_context;
+    NfcCommand command = NfcCommandContinue;
+    if(ctx->poller_retry_cnt < EINK_WAVESHARE_POLLER_MAX_RETRY_CNT) {
+        FURI_LOG_E(TAG, "Retrying...");
+        ctx->poller_retry_cnt++;
+        ctx->poller_state = EinkWavesharePollerStateInit;
+        ctx->data_index = 0;
+        ctx->block_number = 0;
+        screen->device->block_current = 0;
+        furi_delay_ms(1000);
+        command = NfcCommandReset;
+    } else {
+        ctx->poller_state = EinkWavesharePollerStateError;
+    }
+
+    return command;
 }
 
 static NfcCommand
@@ -300,9 +338,10 @@ static NfcCommand
 
 static NfcCommand
     eink_waveshare_poller_state_error_handler(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
-    FURI_LOG_E(TAG, "Error!");
     UNUSED(poller);
+    FURI_LOG_E(TAG, "Error during writing!");
     eink_waveshare_on_error(screen);
+
     return NfcCommandStop;
 }
 
@@ -319,6 +358,7 @@ static const EinkWavesharePollerStateHandler handlers[EinkWavesharePollerStateNu
     [EinkWavesharePollerStatePowerOnV2] = eink_waveshare_poller_state_power_on_v2,
     [EinkWavesharePollerStateRefresh] = eink_waveshare_poller_state_refresh,
     [EinkWavesharePollerStateWaitReady] = eink_waveshare_poller_state_wait_ready,
+    [EinkWavesharePollerStateRetry] = eink_waveshare_poller_state_retry,
     [EinkWavesharePollerStateFinish] = eink_waveshare_poller_state_finish,
     [EinkWavesharePollerStateError] = eink_waveshare_poller_state_error_handler,
 };
