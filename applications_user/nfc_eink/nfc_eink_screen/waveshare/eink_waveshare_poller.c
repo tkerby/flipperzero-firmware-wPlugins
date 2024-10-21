@@ -340,7 +340,7 @@ static NfcCommand
     eink_waveshare_poller_state_error_handler(Iso14443_3aPoller* poller, NfcEinkScreen* screen) {
     UNUSED(poller);
     FURI_LOG_E(TAG, "Error during writing!");
-    eink_waveshare_on_error(screen);
+    nfc_eink_screen_set_error(screen, NfcEinkScreenErrorUnableToWrite);
 
     return NfcCommandStop;
 }
