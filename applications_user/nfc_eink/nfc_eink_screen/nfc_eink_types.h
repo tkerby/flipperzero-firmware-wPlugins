@@ -23,7 +23,7 @@ typedef enum {
     NfcEinkScreenEventTypeUpdating,
 
     NfcEinkScreenEventTypeFinish,
-    NfcEinkScreenEventTypeFailure,
+    NfcEinkScreenEventTypeError,
 } NfcEinkScreenEventType;
 
 typedef void (*NfcEinkScreenEventCallback)(NfcEinkScreenEventType type, void* context);

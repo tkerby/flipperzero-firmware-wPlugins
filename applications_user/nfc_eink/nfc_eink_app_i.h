@@ -54,8 +54,7 @@ typedef enum {
     NfcEinkAppCustomEventUpdating,
     NfcEinkAppCustomEventProcessFinish,
     NfcEinkAppCustomEventTargetDetected,
-    NfcEinkAppCustomEventTargetLost,
-    NfcEinkAppCustomEventUnknownError,
+    NfcEinkAppCustomEventError,
     NfcEinkAppCustomEventExit,
 } NfcEinkAppCustomEvents;
 
