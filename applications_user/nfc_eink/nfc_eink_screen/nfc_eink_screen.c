@@ -411,7 +411,11 @@ void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEvent
 
     if(type == NfcEinkScreenEventTypeConfigurationReceived) {
         FURI_LOG_D(TAG, "Config received");
-        nfc_eink_screen_init(instance, instance->device->screen_type);
+
+        if(instance->device->screen_type == NfcEinkScreenTypeUnknown) {
+            nfc_eink_screen_set_error(instance, NfcEinkScreenErrorUnsupportedScreen);
+        } else
+            nfc_eink_screen_init(instance, instance->device->screen_type);
     } else
         nfc_eink_screen_event_invoke(instance, type);
 }
