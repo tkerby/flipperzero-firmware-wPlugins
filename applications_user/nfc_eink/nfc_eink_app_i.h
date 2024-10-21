@@ -111,6 +111,7 @@ struct NfcEinkApp {
     NfcListener* listener;
     NfcPoller* poller;
     NfcEinkScreen* screen;
+    NfcEinkScreenError last_error;
     const NfcEinkScreenInfo* info_temp;
     EinkScreenInfoArray_t arr;
     NfcEinkSettings settings;

@@ -49,6 +49,7 @@ NfcEinkScreen* nfc_eink_screen_alloc(NfcEinkManufacturer manufacturer) {
     furi_check(manufacturer < NfcEinkManufacturerNum);
 
     NfcEinkScreen* screen = malloc(sizeof(NfcEinkScreen));
+    screen->error = NfcEinkScreenErrorNone;
     screen->handlers = manufacturers[manufacturer].handlers;
 
     screen->device = screen->handlers->alloc();
@@ -155,6 +156,22 @@ void nfc_eink_screen_get_progress(const NfcEinkScreen* screen, size_t* current, 
 const char* nfc_eink_screen_get_name(const NfcEinkScreen* screen) {
     furi_assert(screen);
     return screen->data->base.name;
+}
+
+static void nfc_eink_screen_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
+    furi_assert(instance);
+    if(instance->event_callback != NULL) {
+        instance->event_callback(type, instance->event_context);
+    }
+}
+
+NfcEinkScreenError nfc_eink_screen_get_error(const NfcEinkScreen* screen) {
+    return screen->error;
+}
+
+void nfc_eink_screen_set_error(NfcEinkScreen* instance, NfcEinkScreenError error) {
+    instance->error = error;
+    nfc_eink_screen_event_invoke(instance, NfcEinkScreenEventTypeError);
 }
 
 bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** info) {
@@ -387,13 +404,6 @@ bool nfc_eink_screen_delete(const char* file_path) {
     bool deleted = storage_simply_remove(storage, file_path);
     furi_record_close(RECORD_STORAGE);
     return deleted;
-}
-
-static void nfc_eink_screen_event_invoke(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
-    furi_assert(instance);
-    if(instance->event_callback != NULL) {
-        instance->event_callback(type, instance->event_context);
-    }
 }
 
 void nfc_eink_screen_vendor_callback(NfcEinkScreen* instance, NfcEinkScreenEventType type) {
