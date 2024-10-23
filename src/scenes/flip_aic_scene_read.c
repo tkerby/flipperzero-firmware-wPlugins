@@ -69,12 +69,15 @@ bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
             FURI_LOG_I(TAG, "PMm: %s", pmm);
             free(pmm);
 
-            uint8_t spad0[16];
-            aic_access_code_decrypt(data->data.fs.spad[0].data, spad0);
+            AICVendor vendor = aic_vendor(data);
+            FURI_LOG_I(TAG, "Vendor: %s", aic_vendor_name(vendor));
 
-            char access_code[3 * 10];
-            to_hex(access_code, sizeof(access_code), spad0 + 6, 10);
-            FURI_LOG_I(TAG, "Access code: %s", access_code);
+            uint8_t access_code[10];
+            aic_access_code(data, access_code);
+
+            char* access_code_s = to_hex_alloc(access_code, sizeof(access_code));
+            FURI_LOG_I(TAG, "Access code: %s", access_code_s);
+            free(access_code_s);
 
             scene_manager_next_scene(app->scene_manager, FlipAICSceneMenu);
             return true;

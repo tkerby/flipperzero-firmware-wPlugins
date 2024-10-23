@@ -1,6 +1,7 @@
 #pragma once
 
 #include <furi.h>
+#include <lib/nfc/protocols/felica/felica.h>
 
 static uint8_t S_BOX_INV[9][256] = {
     {0x24, 0x3c, 0xba, 0x36, 0xe3, 0x85, 0xa4, 0xd0, 0x93, 0x43, 0x73, 0xb9, 0x70, 0x6e, 0xc9,
@@ -185,9 +186,9 @@ static void rotate_right(uint8_t* data, size_t n_bytes, size_t n_bits) {
 /*
 https://sega.bsnk.me/allnet/amusement_ic/
 
-spad0 and out should be arrays of length FELICA_DATA_BLOCK_SIZE (ie. 16)
+sizeof(out) should be 10
 */
-void aic_access_code_decrypt(const uint8_t* spad0, uint8_t* out) {
+void aic_access_code(const FelicaData* data, uint8_t* out) {
     /*
     out = bytearray(S_BOX_INV[8][i] for i in spad)
 
@@ -203,20 +204,83 @@ void aic_access_code_decrypt(const uint8_t* spad0, uint8_t* out) {
     return out
     */
 
+    uint8_t spad0[16];
     for (size_t i = 0; i < 16; i++) {
-        out[i] = S_BOX_INV[8][spad0[i]];
+        spad0[i] = S_BOX_INV[8][data->data.fs.spad[0].data[i]];
     }
 
-    uint8_t count = (out[15] >> 4) + 7;
-    uint8_t table = out[15] + 5 * count;
+    uint8_t count = (spad0[15] >> 4) + 7;
+    uint8_t table = spad0[15] + 5 * count;
 
     while (count--) {
         table -= 5;
 
-        rotate_right(out, 15, 5);
+        rotate_right(spad0, 15, 5);
 
         for (size_t i = 0; i < 15; i++) {
-            out[i] = S_BOX_INV[table % 8][out[i]];
+            spad0[i] = S_BOX_INV[table % 8][spad0[i]];
         }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        out[i] = spad0[i + 6];
+    }
+}
+
+/*
+00 78 	SEGA (LiteS)
+00 68 	Konami (LiteS)
+00 2A 	Bandai Namco Entertainment (LiteS)
+00 3A 	Bandai Namco Games (Lite)
+00 79 	Nesica
+00 00 	Reserved for testing
+*/
+typedef enum {
+    AICVendorSEGA,
+    AICVendorKonami,
+    AICVendorBandaiNamcoEntertainment,
+    AICVendorBandaiNamcoGames,
+    AICVendorNesica,
+    AICVendorReservedForTesting,
+    AICVendorUnknown,
+} AICVendor;
+
+const char* aic_vendor_name(AICVendor vendor) {
+    switch (vendor) {
+    case AICVendorSEGA:
+        return "SEGA";
+    case AICVendorKonami:
+        return "Konami";
+    case AICVendorBandaiNamcoEntertainment:
+        return "Bandai Namco Entertainment";
+    case AICVendorBandaiNamcoGames:
+        return "Bandai Namco Games";
+    case AICVendorNesica:
+        return "Nesica";
+    case AICVendorReservedForTesting:
+        return "Reserved for testing";
+    default:
+        return "Unknown";
+    }
+}
+
+AICVendor aic_vendor(const FelicaData* data) {
+    const uint8_t* id = data->data.fs.id.data;
+    uint16_t dfc = (id[8] << 8) + id[9];
+    switch (dfc) {
+    case 0x0078:
+        return AICVendorSEGA;
+    case 0x0068:
+        return AICVendorKonami;
+    case 0x002A:
+        return AICVendorBandaiNamcoEntertainment;
+    case 0x003A:
+        return AICVendorBandaiNamcoGames;
+    case 0x0079:
+        return AICVendorNesica;
+    case 0x0000:
+        return AICVendorReservedForTesting;
+    default:
+        return AICVendorUnknown;
     }
 }
