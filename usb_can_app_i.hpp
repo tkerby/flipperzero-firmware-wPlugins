@@ -12,7 +12,7 @@
 #include <gui/modules/widget.h>
 #include <gui/modules/dialog_ex.h>
 #include "usb_can_custom_event.hpp"
-#include "Longan_CANFD/src/mcp2518fd_can.hpp"
+#include "Longan_CANFD/src/mcp2518fd_can.h"
 #include "api_lock.h"
 #include "furi_hal_usb_cdc.h"
 #define USB_CDC_PKT_LEN CDC_DATA_SZ
@@ -22,6 +22,7 @@ typedef struct {
 } UsbCanConfig;
 typedef void (*usbCanViewCallBack_t)(UsbCanCustomEvent event, void* context);
 
+//! pouet
 typedef struct {
     View* view;
     usbCanViewCallBack_t callback;

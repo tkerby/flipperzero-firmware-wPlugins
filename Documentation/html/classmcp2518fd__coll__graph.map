@@ -1,0 +1,7 @@
+<map id="mcp2518fd" name="mcp2518fd">
+<area shape="rect" id="Node000001" title=" " alt="" coords="9,168,103,193"/>
+<area shape="rect" id="Node000002" href="$classMCP__CAN__1.html" title=" " alt="" coords="5,93,107,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="59,133,59,168,53,168,53,133"/>
+<area shape="rect" id="Node000003" href="$classSPIClass.html" title="Arduino&#39;s SPIclass porting. Used for communication with mcp2518." alt="" coords="17,5,95,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="59,45,59,93,53,93,53,45"/>
+</map>

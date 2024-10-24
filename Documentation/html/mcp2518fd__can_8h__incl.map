@@ -1,0 +1,23 @@
+<map id="Longan_CANFD/src/mcp2518fd_can.h" name="Longan_CANFD/src/mcp2518fd_can.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="81,5,303,45"/>
+<area shape="rect" id="Node000002" href="$mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="110,93,274,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="195,46,195,79,189,79,189,46"/>
+<area shape="rect" id="Node000003" href="$Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="19,240,103,265"/>
+<area shape="poly" id="edge11_Node000001_Node000003" title=" " alt="" coords="154,48,125,68,100,95,83,128,72,163,64,227,59,226,67,162,78,126,95,92,121,64,151,43"/>
+<area shape="rect" id="Node000007" href="$SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="338,240,393,265"/>
+<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="228,43,258,65,287,92,312,126,333,162,360,226,355,228,328,165,308,128,283,95,255,69,225,48"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="179,121,126,168,78,230,74,227,122,165,175,117"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="227,240,314,265"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="213,117,239,137,262,165,272,196,275,226,269,226,267,197,258,168,236,141,210,121"/>
+<area shape="rect" id="Node000006" href="$mcp__can__fd_8h.html" title=" " alt="" coords="136,167,248,192"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="195,119,195,153,189,153,189,119"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,313,117,353"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="64,266,64,300,59,300,59,266"/>
+<area shape="poly" id="edge6_Node000006_Node000003" title=" " alt="" coords="172,194,96,236,93,231,170,190"/>
+<area shape="poly" id="edge9_Node000006_Node000005" title=" " alt="" coords="206,190,250,229,246,233,203,194"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="221,190,326,232,324,237,219,194"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="128,240,203,265"/>
+<area shape="poly" id="edge10_Node000006_Node000009" title=" " alt="" coords="190,193,177,228,172,226,185,191"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="330,321,401,346"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="368,266,368,307,363,307,363,266"/>
+</map>

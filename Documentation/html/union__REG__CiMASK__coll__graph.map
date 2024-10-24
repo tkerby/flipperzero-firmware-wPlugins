@@ -1,0 +1,5 @@
+<map id="_REG_CiMASK" name="_REG_CiMASK">
+<area shape="rect" id="Node000001" title="Mask Object Register." alt="" coords="21,93,135,119"/>
+<area shape="rect" id="Node000002" href="$struct__CAN__MASKOBJ__ID.html" title="CAN Mask Object ID." alt="" coords="5,5,151,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="81,45,81,93,75,93,75,45"/>
+</map>

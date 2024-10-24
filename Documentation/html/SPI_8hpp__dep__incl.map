@@ -1,0 +1,25 @@
+<map id="SPI.hpp" name="SPI.hpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="304,5,375,31"/>
+<area shape="rect" id="Node000002" href="$mcp2518fd__can_8hpp.html" title=" " alt="" coords="153,255,376,295"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="295,39,265,56,240,80,220,112,210,140,210,170,219,206,232,231,248,253,244,256,227,234,214,208,205,170,205,139,215,109,236,77,262,52,292,34"/>
+<area shape="rect" id="Node000008" href="$mcp__can__fd_8hpp.html" title=" " alt="" coords="251,79,428,119"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="342,44,342,79,337,79,337,44"/>
+<area shape="rect" id="Node000011" href="$flipper__spi__wrapper_8cpp.html" title="used to replace call to arduino drivers by those of Flipper zero (furi_hal_xx)." alt="" coords="452,86,627,111"/>
+<area shape="poly" id="edge12_Node000001_Node000011" title=" " alt="" coords="382,33,511,83,509,88,380,38"/>
+<area shape="rect" id="Node000003" href="$mcp2518fd__can_8cpp.html" title=" " alt="" coords="5,343,228,383"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="221,304,150,345,148,340,219,299"/>
+<area shape="rect" id="Node000004" href="$usb__can__bridge_8cpp.html" title=" " alt="" coords="172,438,323,463"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="264,309,251,438,246,437,259,308"/>
+<area shape="rect" id="Node000005" href="$usb__can__bridge_8hpp.html" title=" " alt="" coords="336,350,487,375"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="310,299,393,348,390,352,307,304"/>
+<area shape="poly" id="edge7_Node000005_Node000004" title=" " alt="" coords="378,384,271,440,268,435,376,379"/>
+<area shape="rect" id="Node000006" href="$usbCan__scene__config_8cpp.html" title=" " alt="" coords="347,431,511,471"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="419,388,427,430,422,431,414,389"/>
+<area shape="rect" id="Node000007" href="$usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="535,431,699,471"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="452,378,572,428,570,433,450,383"/>
+<area shape="rect" id="Node000009" href="$mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="228,167,451,207"/>
+<area shape="poly" id="edge9_Node000008_Node000009" title=" " alt="" coords="342,133,342,166,337,166,337,133"/>
+<area shape="rect" id="Node000010" href="$mcp__can__fd_8cpp.html" title=" " alt="" coords="475,167,652,207"/>
+<area shape="poly" id="edge11_Node000008_Node000010" title=" " alt="" coords="402,121,515,164,513,169,400,126"/>
+<area shape="poly" id="edge10_Node000009_Node000002" title=" " alt="" coords="316,219,283,256,279,253,312,215"/>
+</map>

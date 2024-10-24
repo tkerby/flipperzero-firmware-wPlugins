@@ -1,0 +1,7 @@
+<map id="views/usb_can_view.hpp" name="views/usb_can_view.hpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="31,5,214,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,93,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="112,33,73,71,69,67,109,29"/>
+<area shape="rect" id="Node000003" href="$usb__can__app__i_8hpp.html" title=" " alt="" coords="117,79,275,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="137,29,176,67,172,71,133,33"/>
+</map>

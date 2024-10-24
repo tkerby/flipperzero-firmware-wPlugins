@@ -1,3 +1,6 @@
+/** @file usb_can_bridge.cpp
+ * @ingroup USB-CAN-MAIN
+*/
 #include "usb_can_bridge.hpp"
 #include "usb_cdc.h"
 #include <cli/cli_vcp.h>
@@ -5,9 +8,15 @@
 #include <toolbox/api_lock.h>
 
 #include <furi_hal_usb_cdc.h>
-#include "./Longan_CANFD/src/mcp2518fd_can.hpp"
 #include "usb_can_app_i.hpp"
 
+/** @brief wait USB CDC driver is available : tx_mutex is used to protect access to shared flag @ref cdc_busy which is updated during interruption.
+ * @details this macro will enter a loop which:
+ * -# acquires tx_mutex to ensure it has exclusive access to @ref cdc_busy.
+ * -# check if @ ref cdc_busy is clear:
+ *     - If it is the case it set cdc_busy and exit loop (end of the the macro).
+ *     - If it is not the case (a VCP transaction is ongoing) it release mutex before trying to reentering the loop.
+*/
 #define WAIT_CDC()                                                                          \
     while(true) {                                                                           \
         furi_check(furi_mutex_acquire(usb_can->tx_mutex, FuriWaitForever) == FuriStatusOk); \
@@ -19,6 +28,7 @@
         furi_check(furi_mutex_release(usb_can->tx_mutex) == FuriStatusOk);                  \
     }
 
+/** Serma banner to be displayed on USB virtual com port (VCP) via @ref usb_can_print_banner() when entering in the APP */
 const char serma_banner[] =
     "\r\n"
     "   ___________  __  ______     _______  ___    ________   _  __  _______ \r\n"
@@ -78,18 +88,30 @@ static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_control_line,
     vcp_on_line_config,
 };
+/** @brief flag used to synchronize cdc (VCP) driver access. 
+ * @details This flag is set when an USB CDC transaction is requested (via @ref WAIT_CDC)
+ * and cleared when USB CDC transaction complete (on @ref vcp_on_cdc_tx_complete() call).
+ * This is used instead of mutex because mutex usage during interruption provoke error.*/
+static volatile bool cdc_busy;
+/** brief flag used to check CAN interface has been initialized before issuing a transaction. If it is not the case an error will be returned.*/
 static bool can_if_initialized;
+/**  message used to signal to user  command length is invalid*/
 const char invalid_length[] = "[err]: invalid command length (command %c) :length = %d\r\n";
-/* USB UART worker */
+
 static int32_t usb_can_tx_thread(void* context);
 void usb_can_bridge_clear_led(void* context);
 
+/** @brief Function called on CAN RX IRQ. It will basically set a flag to signal to rx thread a packet has been received.
+ * @details
+*/
 static void usb_can_on_irq_cb(void* context) {
     UsbCanBridge* app = (UsbCanBridge*)context;
     furi_thread_flags_set(furi_thread_get_id(app->thread), WorkerEvtRxDone);
     furi_hal_gpio_disable_int_callback(&gpio_ext_pc3);
 }
-
+/** 
+ * @brief USB Virtual com port initialization.
+**/
 static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
     furi_hal_usb_unlock();
     furi_hal_cdc_set_callbacks(vcp_ch, (CdcCallbacks*)&cdc_cb, usb_can);
@@ -104,7 +126,7 @@ static void usb_can_vcp_deinit(UsbCanBridge* usb_can, uint8_t vcp_ch) {
         furi_record_close(RECORD_CLI);
     }
 }
-static volatile bool cdc_busy;
+
 static void usb_can_print_banner(UsbCanBridge* usb_can) {
     uint32_t i;
     (void)usb_can;
@@ -190,7 +212,7 @@ static int32_t usb_can_worker(void* context) {
                 tmp_data = buf[i];
                 printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
             }
-            printSize += snprintf(&tmp[printSize], 4, "\r");
+            printSize += snprintf(&tmp[printSize], 2, "\r");
             WAIT_CDC();
             furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, printSize);
             usb_can->st.rx_cnt += len;

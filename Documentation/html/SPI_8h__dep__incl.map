@@ -1,0 +1,16 @@
+<map id="SPI.h" name="SPI.h">
+<area shape="rect" id="Node000001" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="164,5,219,31"/>
+<area shape="rect" id="Node000002" href="$mcp2518fd__can_8h.html" title=" " alt="" coords="5,255,228,295"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="153,36,120,54,92,80,72,112,62,140,62,170,71,206,84,231,100,253,96,256,79,234,66,208,57,170,57,139,67,109,88,77,117,50,150,31"/>
+<area shape="rect" id="Node000004" href="$mcp__can__fd_8h.html" title=" " alt="" coords="103,79,280,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="194,44,194,79,189,79,189,44"/>
+<area shape="rect" id="Node000007" href="$flipper__spi__wrapper_8cpp.html" title="SPIclass method implementation." alt="" coords="304,86,479,111"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="232,33,363,83,361,88,231,37"/>
+<area shape="rect" id="Node000003" href="$mcp2518fd__can_8cpp.html" title=" " alt="" coords="5,343,228,383"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,309,119,342,114,342,114,309"/>
+<area shape="rect" id="Node000005" href="$mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="80,167,303,207"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="194,133,194,166,189,166,189,133"/>
+<area shape="rect" id="Node000006" href="$mcp__can__fd_8cpp.html" title=" " alt="" coords="327,167,504,207"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="254,121,367,164,365,169,252,126"/>
+<area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="168,219,135,256,131,253,164,215"/>
+</map>

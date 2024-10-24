@@ -1,0 +1,29 @@
+<map id="scenes/usbCan_scene_usb_can.cpp" name="scenes/usbCan_scene_usb_can.cpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="651,5,815,45"/>
+<area shape="rect" id="Node000002" href="$usb__can__app__i_8hpp.html" title=" " alt="" coords="593,167,751,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="722,47,694,94,678,153,673,152,690,92,717,44"/>
+<area shape="rect" id="Node000003" href="$usb__can__bridge_8hpp.html" title=" " alt="" coords="345,93,508,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="661,48,486,92,484,87,659,43"/>
+<area shape="rect" id="Node000009" href="$usbCan__scene_8hpp.html" title=" " alt="" coords="923,93,1066,119"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="797,43,944,87,943,92,795,48"/>
+<area shape="rect" id="Node000012" href="$usb__can__view_8hpp.html" title=" " alt="" coords="704,93,899,119"/>
+<area shape="poly" id="edge12_Node000001_Node000012" title=" " alt="" coords="752,44,784,81,780,84,748,47"/>
+<area shape="poly" id="edge8_Node000003_Node000002" title=" " alt="" coords="467,116,620,160,619,165,465,121"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="391,167,462,192"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="429,119,429,153,424,153,424,119"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="487,167,569,192"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="444,116,502,156,499,161,441,121"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,167,93,192"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="364,121,108,169,107,164,363,116"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="117,167,200,192"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="384,121,214,166,213,161,383,116"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="225,167,367,192"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="407,121,330,162,328,158,404,116"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="1109,167,1269,192"/>
+<area shape="poly" id="edge10_Node000009_Node000010" title=" " alt="" coords="1027,116,1146,159,1144,164,1025,121"/>
+<area shape="rect" id="Node000011" href="$usbCan__scene__config_8hpp.html" title=" " alt="" coords="896,167,1085,192"/>
+<area shape="poly" id="edge11_Node000009_Node000011" title=" " alt="" coords="997,119,995,153,989,153,991,119"/>
+<area shape="poly" id="edge14_Node000012_Node000002" title=" " alt="" coords="782,121,707,162,704,157,779,116"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="775,167,863,192"/>
+<area shape="poly" id="edge13_Node000012_Node000013" title=" " alt="" coords="807,118,815,153,810,154,802,120"/>
+</map>

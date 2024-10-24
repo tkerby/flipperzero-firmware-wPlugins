@@ -1,5 +1,5 @@
 /* Most of this code are derived from Microchip MCP2518FD SDK */
-#include "mcp2518fd_can.hpp"
+#include "mcp2518fd_can.h"
 
 static CAN_CONFIG config;
 
@@ -1997,8 +1997,8 @@ typedef struct _CAN_FILTEROBJ_ID {
 } CAN_FILTEROBJ_ID;
 */
 byte mcp2518fd::init_Filt_Mask(byte num, byte ext, unsigned long f, unsigned long m) {
-    int __attribute__((unused))
-    err = mcp2518fd_OperationModeSelect(CAN_CONFIGURATION_MODE); // enter into setting mode
+    int __attribute__((unused)) err =
+        mcp2518fd_OperationModeSelect(CAN_CONFIGURATION_MODE); // enter into setting mode
 
     CANFDSPI_FilterDisable((CAN_FILTER)num);
 
