@@ -22,6 +22,8 @@ void flip_aic_scene_scan_on_enter(void* context) {
 
     FURI_LOG_I(TAG, "Starting scanner");
     nfc_scanner_start(app->nfc_scanner, flip_aic_scene_scan_nfc_scanner_callback, app);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipAICViewLoading);
 }
 
 bool flip_aic_scene_scan_on_event(void* context, SceneManagerEvent event) {

@@ -8,7 +8,7 @@
 
 enum PollerResult {
     PollerResultSuccess,
-    PollerResultFailed,
+    PollerResultFailure,
 };
 
 static NfcCommand flip_aic_scene_read_poller_callback(NfcGenericEvent event, void* context) {
@@ -26,7 +26,7 @@ static NfcCommand flip_aic_scene_read_poller_callback(NfcGenericEvent event, voi
 
     case FelicaPollerEventTypeError:
         FURI_LOG_I(TAG, "Error: %d", poller_event->data->error);
-        view_dispatcher_send_custom_event(app->view_dispatcher, PollerResultFailed);
+        view_dispatcher_send_custom_event(app->view_dispatcher, PollerResultFailure);
         return NfcCommandStop;
 
     case FelicaPollerEventTypeRequestAuthContext:
@@ -50,6 +50,8 @@ void flip_aic_scene_read_on_enter(void* context) {
 
     FURI_LOG_I(TAG, "Starting poller");
     nfc_poller_start(app->nfc_poller, flip_aic_scene_read_poller_callback, app);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipAICViewLoading);
 }
 
 bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
@@ -82,7 +84,7 @@ bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(app->scene_manager, FlipAICSceneMenu);
             return true;
 
-        case PollerResultFailed:
+        case PollerResultFailure:
             scene_manager_next_scene(app->scene_manager, FlipAICSceneMenu);
             return true;
         }

@@ -37,6 +37,20 @@ static FlipAIC* flip_aic_alloc() {
         submenu_get_view(app->submenu)
     );
 
+    app->loading = loading_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlipAICViewLoading,
+        loading_get_view(app->loading)
+    );
+
+    app->dialog_ex = dialog_ex_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlipAICViewDialogEx,
+        dialog_ex_get_view(app->dialog_ex)
+    );
+
     app->nfc = nfc_alloc();
     app->nfc_scanner = nfc_scanner_alloc(app->nfc);
 
@@ -48,6 +62,12 @@ static void flip_aic_free(FlipAIC* app) {
 
     nfc_scanner_free(app->nfc_scanner);
     nfc_free(app->nfc);
+
+    view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewDialogEx);
+    dialog_ex_free(app->dialog_ex);
+
+    view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewLoading);
+    loading_free(app->loading);
 
     view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewSubmenu);
     submenu_free(app->submenu);

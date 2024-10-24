@@ -4,6 +4,8 @@
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/loading.h>
+#include <gui/modules/dialog_ex.h>
 #include <nfc/nfc_scanner.h>
 #include <nfc/nfc_poller.h>
 #include <nfc/nfc_device.h>
@@ -13,14 +15,18 @@
 
 typedef enum {
     FlipAICViewSubmenu,
+    FlipAICViewLoading,
+    FlipAICViewDialogEx,
 } FlipAICView;
 
 typedef struct {
-    Gui* gui;
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
 
+    Gui* gui;
     Submenu* submenu;
+    Loading* loading;
+    DialogEx* dialog_ex;
 
     Nfc* nfc;
 
