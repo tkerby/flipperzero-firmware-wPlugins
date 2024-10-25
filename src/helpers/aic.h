@@ -264,6 +264,24 @@ const char* aic_vendor_name(AICVendor vendor) {
     }
 }
 
+const char* aic_vendor_name_short(AICVendor vendor) {
+    switch (vendor) {
+    case AICVendorSEGA:
+        return "AiMe";
+    case AICVendorKonami:
+        return "e-amusement";
+    case AICVendorBandaiNamcoEntertainment:
+    case AICVendorBandaiNamcoGames:
+        return "Banapass";
+    case AICVendorNesica:
+        return "NESiCA";
+    case AICVendorReservedForTesting:
+        return "Reserved";
+    default:
+        return "Unknown";
+    }
+}
+
 AICVendor aic_vendor(const FelicaData* data) {
     const uint8_t* id = data->data.fs.id.data;
     uint16_t dfc = (id[8] << 8) + id[9];

@@ -53,6 +53,7 @@ static FlipAIC* flip_aic_alloc() {
 
     app->nfc = nfc_alloc();
     app->nfc_scanner = nfc_scanner_alloc(app->nfc);
+    app->nfc_device = nfc_device_alloc();
 
     return app;
 }
@@ -60,6 +61,7 @@ static FlipAIC* flip_aic_alloc() {
 static void flip_aic_free(FlipAIC* app) {
     furi_assert(app);
 
+    nfc_device_free(app->nfc_device);
     nfc_scanner_free(app->nfc_scanner);
     nfc_free(app->nfc);
 

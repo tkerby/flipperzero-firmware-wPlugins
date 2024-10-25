@@ -1,5 +1,3 @@
-#include "../helpers/aic.h"
-#include "../helpers/hex.h"
 #include "../flip_aic.h"
 #include "flip_aic_scene.h"
 
@@ -61,27 +59,12 @@ bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
     if (event.type == SceneManagerEventTypeCustom) {
         switch (event.event) {
         case PollerResultSuccess:
-            const FelicaData* data = nfc_poller_get_data(app->nfc_poller);
-
-            char* idm = to_hex_alloc(data->idm.data, sizeof(data->idm.data));
-            FURI_LOG_I(TAG, "IDm: %s", idm);
-            free(idm);
-
-            char* pmm = to_hex_alloc(data->pmm.data, sizeof(data->pmm.data));
-            FURI_LOG_I(TAG, "PMm: %s", pmm);
-            free(pmm);
-
-            AICVendor vendor = aic_vendor(data);
-            FURI_LOG_I(TAG, "Vendor: %s", aic_vendor_name(vendor));
-
-            uint8_t access_code[10];
-            aic_access_code(data, access_code);
-
-            char* access_code_s = to_hex_alloc(access_code, sizeof(access_code));
-            FURI_LOG_I(TAG, "Access code: %s", access_code_s);
-            free(access_code_s);
-
-            scene_manager_next_scene(app->scene_manager, FlipAICSceneMenu);
+            nfc_device_set_data(
+                app->nfc_device,
+                nfc_poller_get_protocol(app->nfc_poller),
+                nfc_poller_get_data(app->nfc_poller)
+            );
+            scene_manager_next_scene(app->scene_manager, FlipAICSceneDisplay);
             return true;
 
         case PollerResultFailure:

@@ -29,11 +29,9 @@ typedef struct {
     DialogEx* dialog_ex;
 
     Nfc* nfc;
-
     NfcScanner* nfc_scanner;
     NfcProtocol nfc_protocol;
     NfcPoller* nfc_poller;
-
-    // NfcDevice* nfc_device;
+    NfcDevice* nfc_device;
     // NfcListener* nfc_listener;
 } FlipAIC;

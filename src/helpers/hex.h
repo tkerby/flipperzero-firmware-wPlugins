@@ -24,3 +24,18 @@ char* to_hex_alloc(const uint8_t* values, size_t val_len) {
     to_hex(dest, dest_len, values, val_len);
     return dest;
 }
+
+void furi_string_cat_hex(
+    FuriString* string,
+    const uint8_t* data,
+    size_t data_size,
+    const char* separator,
+    size_t interval
+) {
+    for (size_t i = 0; i < data_size; i++) {
+        if (separator && interval && i > 0 && i % interval == 0) {
+            furi_string_cat_str(string, separator);
+        }
+        furi_string_cat_printf(string, "%02X", data[i]);
+    }
+}
