@@ -1,5 +1,7 @@
 #pragma once
 
+#include <furi.h>
+#include <furi_hal_usb.h>
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
@@ -34,4 +36,6 @@ typedef struct {
     NfcPoller* nfc_poller;
     NfcDevice* nfc_device;
     // NfcListener* nfc_listener;
+
+    FuriHalUsbInterface* usb_mode_prev;
 } FlipAIC;

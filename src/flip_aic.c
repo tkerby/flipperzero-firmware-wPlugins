@@ -1,4 +1,5 @@
 #include "flip_aic.h"
+#include "helpers/cardio.h"
 #include "scenes/flip_aic_scene.h"
 
 #include <furi.h>
@@ -55,11 +56,17 @@ static FlipAIC* flip_aic_alloc() {
     app->nfc_scanner = nfc_scanner_alloc(app->nfc);
     app->nfc_device = nfc_device_alloc();
 
+    app->usb_mode_prev = furi_hal_usb_get_config();
+    furi_hal_usb_unlock();
+    furi_check(furi_hal_usb_set_config(&usb_cardio, NULL) == true);
+
     return app;
 }
 
 static void flip_aic_free(FlipAIC* app) {
     furi_assert(app);
+
+    furi_hal_usb_set_config(app->usb_mode_prev, NULL);
 
     nfc_device_free(app->nfc_device);
     nfc_scanner_free(app->nfc_scanner);

@@ -17,7 +17,7 @@ typedef struct {
     CardioPlayerId player_id;
 } CardioUsbHidConfig;
 
-FuriHalUsbInterface usb_cardio;
+extern FuriHalUsbInterface usb_cardio;
 
 bool cardio_is_connected(void);
 bool cardio_send_report(CardioReportId report_id, uint8_t value[8]);

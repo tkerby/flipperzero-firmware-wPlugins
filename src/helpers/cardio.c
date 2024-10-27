@@ -71,10 +71,10 @@ static struct usb_device_descriptor cardio_device_desc = {
     .bLength = sizeof(struct usb_device_descriptor),
     .bDescriptorType = USB_DTYPE_DEVICE,
     .bcdUSB = VERSION_BCD(2, 0, 0),
-    .bDeviceClass = USB_CLASS_MISC,
-    .bDeviceSubClass = USB_SUBCLASS_IAD,
+    .bDeviceClass = USB_CLASS_PER_INTERFACE,
+    .bDeviceSubClass = USB_SUBCLASS_NONE,
     .bDeviceProtocol = USB_PROTO_NONE,
-    .bMaxPacketSize0 = HID_EP_SIZE, // TODO: furi_hal_usb_hid uses 8
+    .bMaxPacketSize0 = USB_EP0_SIZE,
     .idVendor = USB_VID,
     .idProduct = USB_PID,
     .bcdDevice = VERSION_BCD(1, 0, 0),
@@ -144,7 +144,7 @@ FuriHalUsbInterface usb_cardio = {
     .wakeup = cardio_on_wakeup,
     .suspend = cardio_on_suspend,
 
-    .dev_descr = (struct usb_device_descriptor*)&cardio_device_desc,
+    .dev_descr = &cardio_device_desc,
 
     .str_manuf_descr = NULL,
     .str_prod_descr = NULL,
