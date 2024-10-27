@@ -2,7 +2,7 @@
 #include "flip_aic_scene.h"
 
 enum SubmenuIndex {
-    SubmenuIndexScan,
+    SubmenuIndexRead,
     SubmenuIndexSaved,
 };
 
@@ -18,8 +18,8 @@ void flip_aic_scene_menu_on_enter(void* context) {
 
     submenu_add_item(
         app->submenu,
-        "Scan",
-        SubmenuIndexScan,
+        "Read",
+        SubmenuIndexRead,
         flip_aic_scene_menu_submenu_callback,
         app
     );
@@ -46,7 +46,7 @@ bool flip_aic_scene_menu_on_event(void* context, SceneManagerEvent event) {
     if (event.type == SceneManagerEventTypeCustom) {
         scene_manager_set_scene_state(app->scene_manager, FlipAICSceneMenu, event.event);
         switch (event.event) {
-        case SubmenuIndexScan:
+        case SubmenuIndexRead:
             scene_manager_next_scene(app->scene_manager, FlipAICSceneScan);
             return true;
         case SubmenuIndexSaved:
