@@ -39,12 +39,7 @@ void flip_aic_scene_read_on_enter(void* context) {
     furi_assert(context);
     FlipAIC* app = context;
 
-    FURI_LOG_I(
-        TAG,
-        "Allocating poller with protocol: %s",
-        nfc_device_get_protocol_name(app->nfc_protocol)
-    );
-    app->nfc_poller = nfc_poller_alloc(app->nfc, app->nfc_protocol);
+    app->nfc_poller = nfc_poller_alloc(app->nfc, NfcProtocolFelica);
 
     FURI_LOG_I(TAG, "Starting poller");
     nfc_poller_start(app->nfc_poller, flip_aic_scene_read_poller_callback, app);
@@ -61,7 +56,7 @@ bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
         case PollerResultSuccess:
             nfc_device_set_data(
                 app->nfc_device,
-                nfc_poller_get_protocol(app->nfc_poller),
+                NfcProtocolFelica,
                 nfc_poller_get_data(app->nfc_poller)
             );
             scene_manager_next_scene(app->scene_manager, FlipAICSceneDisplay);

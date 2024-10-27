@@ -9,7 +9,6 @@
 #include <gui/modules/loading.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/file_browser.h>
-#include <nfc/nfc_scanner.h>
 #include <nfc/nfc_poller.h>
 #include <nfc/nfc_device.h>
 #include <nfc/nfc_listener.h>
@@ -35,8 +34,6 @@ typedef struct {
     FuriString* file_browser_result_path;
 
     Nfc* nfc;
-    NfcScanner* nfc_scanner;
-    NfcProtocol nfc_protocol;
     NfcPoller* nfc_poller;
     NfcDevice* nfc_device;
     // NfcListener* nfc_listener;

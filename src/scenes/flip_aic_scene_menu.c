@@ -47,7 +47,7 @@ bool flip_aic_scene_menu_on_event(void* context, SceneManagerEvent event) {
         scene_manager_set_scene_state(app->scene_manager, FlipAICSceneMenu, event.event);
         switch (event.event) {
         case SubmenuIndexRead:
-            scene_manager_next_scene(app->scene_manager, FlipAICSceneScan);
+            scene_manager_next_scene(app->scene_manager, FlipAICSceneRead);
             return true;
         case SubmenuIndexSaved:
             scene_manager_next_scene(app->scene_manager, FlipAICSceneSaved);
