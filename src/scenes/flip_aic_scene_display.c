@@ -19,6 +19,13 @@ static void flip_aic_scene_display_dialog_callback(DialogExResult result, void* 
         view_dispatcher_send_custom_event(app->view_dispatcher, FlipAICSceneDisplayEventMenu);
         break;
 
+    case DialogExResultCenter:
+        if (cardio_is_connected()) {
+            const FelicaData* data = nfc_device_get_data(app->nfc_device, NfcProtocolFelica);
+            cardio_send_report(CardioReportIdFeliCa, data->idm.data);
+        }
+        break;
+
     default:
         break;
     }
@@ -52,14 +59,10 @@ void flip_aic_scene_display_on_enter(void* context) {
     furi_string_free(text);
 
     dialog_ex_set_left_button_text(app->dialog_ex, "Menu");
+    dialog_ex_set_center_button_text(app->dialog_ex, "CardIO");
 
     dialog_ex_set_result_callback(app->dialog_ex, flip_aic_scene_display_dialog_callback);
     dialog_ex_set_context(app->dialog_ex, app);
-
-    // TODO: add a button to do this?
-    if (cardio_is_connected()) {
-        cardio_send_report(CardioReportIdFeliCa, data->idm.data);
-    }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipAICViewDialogEx);
 }
