@@ -8,10 +8,18 @@ see also:
 */
 
 #include "cardio.h"
-#include <furi_hal_usb_i.h>
 #include <furi_hal_usb_hid.h>
 #include <usb.h>
 #include <usb_hid.h>
+
+// from furi_hal_usb_i.h
+#define USB_EP0_SIZE 8
+enum UsbDevDescStr {
+    UsbDevLang = 0,
+    UsbDevManuf = 1,
+    UsbDevProduct = 2,
+    UsbDevSerial = 3,
+};
 
 #define USAGE_PAGE 0xFFCA
 
