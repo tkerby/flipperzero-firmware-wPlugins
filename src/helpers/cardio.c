@@ -8,7 +8,6 @@ see also:
 */
 
 #include "cardio.h"
-#include <furi_hal_usb_hid.h>
 #include <usb.h>
 #include <usb_hid.h>
 
@@ -168,6 +167,8 @@ static usbd_respond
 static usbd_device* usb_dev;
 static FuriSemaphore* cardio_semaphore = NULL;
 static bool cardio_connected = false;
+static HidStateCallback callback;
+static void* callback_ctx;
 
 bool cardio_is_connected(void) {
     return cardio_connected;
@@ -188,6 +189,19 @@ bool cardio_send_report(CardioReportId report_id, const uint8_t value[8]) {
     usbd_ep_write(usb_dev, HID_EP_IN, data, sizeof(data));
 
     return true;
+}
+
+void cardio_set_state_callback(HidStateCallback cb, void* ctx) {
+    if (callback != NULL && cardio_connected) {
+        callback(false, callback_ctx);
+    }
+
+    callback = cb;
+    callback_ctx = ctx;
+
+    if (callback != NULL && cardio_connected) {
+        callback(true, callback_ctx);
+    }
 }
 
 static void* set_string_descr(const char* str) {
@@ -247,6 +261,9 @@ static void cardio_on_wakeup(usbd_device* dev) {
     UNUSED(dev);
     if (!cardio_connected) {
         cardio_connected = true;
+        if (callback != NULL) {
+            callback(true, callback_ctx);
+        }
     }
 }
 
@@ -255,6 +272,9 @@ static void cardio_on_suspend(usbd_device* dev) {
     if (cardio_connected) {
         cardio_connected = false;
         furi_semaphore_release(cardio_semaphore);
+        if (callback != NULL) {
+            callback(false, callback_ctx);
+        }
     }
 }
 
