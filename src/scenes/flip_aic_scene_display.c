@@ -1,12 +1,12 @@
 #include "../helpers/aic.h"
 #include "../helpers/hex.h"
+#include "../helpers/cardio.h"
 #include "../flip_aic.h"
 #include "flip_aic_scene.h"
 
 #include <protocols/felica/felica.h>
 
 enum FlipAICSceneDisplayEvent {
-    FlipAICSceneDisplayEventScanAgain,
     FlipAICSceneDisplayEventMenu,
 };
 
@@ -16,10 +16,6 @@ static void flip_aic_scene_display_dialog_callback(DialogExResult result, void* 
 
     switch (result) {
     case DialogExResultLeft:
-        view_dispatcher_send_custom_event(app->view_dispatcher, FlipAICSceneDisplayEventScanAgain);
-        break;
-
-    case DialogExResultRight:
         view_dispatcher_send_custom_event(app->view_dispatcher, FlipAICSceneDisplayEventMenu);
         break;
 
@@ -55,11 +51,15 @@ void flip_aic_scene_display_on_enter(void* context) {
     dialog_ex_set_text(app->dialog_ex, furi_string_get_cstr(text), 0, 12, AlignLeft, AlignTop);
     furi_string_free(text);
 
-    dialog_ex_set_left_button_text(app->dialog_ex, "Re-scan");
-    dialog_ex_set_right_button_text(app->dialog_ex, "Menu");
+    dialog_ex_set_left_button_text(app->dialog_ex, "Menu");
 
     dialog_ex_set_result_callback(app->dialog_ex, flip_aic_scene_display_dialog_callback);
     dialog_ex_set_context(app->dialog_ex, app);
+
+    // TODO: add a button to do this?
+    if (cardio_is_connected()) {
+        cardio_send_report(CardioReportIdFeliCa, data->idm.data);
+    }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipAICViewDialogEx);
 }
@@ -70,12 +70,8 @@ bool flip_aic_scene_display_on_event(void* context, SceneManagerEvent event) {
 
     if (event.type == SceneManagerEventTypeCustom) {
         switch (event.event) {
-        case FlipAICSceneDisplayEventScanAgain:
-            scene_manager_next_scene(app->scene_manager, FlipAICSceneScan);
-            return true;
-
         case FlipAICSceneDisplayEventMenu:
-            scene_manager_next_scene(app->scene_manager, FlipAICSceneMenu);
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, FlipAICSceneMenu);
             return true;
         }
     }

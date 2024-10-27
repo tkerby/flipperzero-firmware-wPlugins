@@ -20,4 +20,4 @@ typedef struct {
 extern FuriHalUsbInterface usb_cardio;
 
 bool cardio_is_connected(void);
-bool cardio_send_report(CardioReportId report_id, uint8_t value[8]);
+bool cardio_send_report(CardioReportId report_id, const uint8_t value[8]);

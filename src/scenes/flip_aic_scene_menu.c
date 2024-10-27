@@ -3,6 +3,7 @@
 
 enum SubmenuIndex {
     SubmenuIndexScan,
+    SubmenuIndexSaved,
 };
 
 static void flip_aic_scene_menu_submenu_callback(void* context, uint32_t index) {
@@ -19,6 +20,13 @@ void flip_aic_scene_menu_on_enter(void* context) {
         app->submenu,
         "Scan",
         SubmenuIndexScan,
+        flip_aic_scene_menu_submenu_callback,
+        app
+    );
+    submenu_add_item(
+        app->submenu,
+        "Saved",
+        SubmenuIndexSaved,
         flip_aic_scene_menu_submenu_callback,
         app
     );
@@ -40,6 +48,9 @@ bool flip_aic_scene_menu_on_event(void* context, SceneManagerEvent event) {
         switch (event.event) {
         case SubmenuIndexScan:
             scene_manager_next_scene(app->scene_manager, FlipAICSceneScan);
+            return true;
+        case SubmenuIndexSaved:
+            scene_manager_next_scene(app->scene_manager, FlipAICSceneSaved);
             return true;
         }
     }

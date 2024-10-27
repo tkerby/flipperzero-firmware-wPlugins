@@ -52,6 +52,15 @@ static FlipAIC* flip_aic_alloc() {
         dialog_ex_get_view(app->dialog_ex)
     );
 
+    app->file_browser_result_path = furi_string_alloc_set_str("/ext/nfc");
+    app->file_browser = file_browser_alloc(app->file_browser_result_path);
+    file_browser_configure(app->file_browser, ".nfc", "/ext/nfc", true, true, NULL, true);
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlipAICViewFileBrowser,
+        file_browser_get_view(app->file_browser)
+    );
+
     app->nfc = nfc_alloc();
     app->nfc_scanner = nfc_scanner_alloc(app->nfc);
     app->nfc_device = nfc_device_alloc();
@@ -71,6 +80,10 @@ static void flip_aic_free(FlipAIC* app) {
     nfc_device_free(app->nfc_device);
     nfc_scanner_free(app->nfc_scanner);
     nfc_free(app->nfc);
+
+    view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewFileBrowser);
+    file_browser_free(app->file_browser);
+    furi_string_free(app->file_browser_result_path);
 
     view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewDialogEx);
     dialog_ex_free(app->dialog_ex);

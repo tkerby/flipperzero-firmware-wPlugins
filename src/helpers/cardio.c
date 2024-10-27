@@ -165,7 +165,7 @@ bool cardio_is_connected(void) {
     return cardio_connected;
 }
 
-bool cardio_send_report(CardioReportId report_id, uint8_t value[8]) {
+bool cardio_send_report(CardioReportId report_id, const uint8_t value[8]) {
     if ((cardio_semaphore == NULL) || !cardio_connected) return false;
 
     FuriStatus status = furi_semaphore_acquire(cardio_semaphore, HID_INTERVAL * 2);

@@ -8,6 +8,7 @@
 #include <gui/modules/submenu.h>
 #include <gui/modules/loading.h>
 #include <gui/modules/dialog_ex.h>
+#include <gui/modules/file_browser.h>
 #include <nfc/nfc_scanner.h>
 #include <nfc/nfc_poller.h>
 #include <nfc/nfc_device.h>
@@ -19,6 +20,7 @@ typedef enum {
     FlipAICViewSubmenu,
     FlipAICViewLoading,
     FlipAICViewDialogEx,
+    FlipAICViewFileBrowser,
 } FlipAICView;
 
 typedef struct {
@@ -29,6 +31,8 @@ typedef struct {
     Submenu* submenu;
     Loading* loading;
     DialogEx* dialog_ex;
+    FileBrowser* file_browser;
+    FuriString* file_browser_result_path;
 
     Nfc* nfc;
     NfcScanner* nfc_scanner;
