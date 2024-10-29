@@ -17,6 +17,9 @@
 
 typedef struct {
     Sprite* sprite;
+    Sprite* sprite_left;
+    Sprite* sprite_right;
+    Sprite* sprite_jump;
 } PlayerContext;
 
 enum EnemyAction {
@@ -66,6 +69,7 @@ struct Enemy enemies[MAX_ENEMIES];
 
 #define MAX_BULLETS 30
 Entity* bullets[MAX_BULLETS];
+bool bulletsDirection[MAX_BULLETS];
 
 Entity* enemyBullets[MAX_BULLETS];
 
@@ -192,7 +196,11 @@ static void player_spawn(Level* level, GameManager* manager) {
     PlayerContext* player_context = entity_context_get(player);
 
     // Load player sprite
-    player_context->sprite = game_manager_sprite_load(manager, "player_right.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
+    player_context->sprite_jump = game_manager_sprite_load(manager, "player_jump.fxbm");
+
+    player_context->sprite = player_context->sprite_right;
 
     gameBeginningTick = furi_get_tick();
 }
@@ -229,7 +237,7 @@ static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition
     player_context->sprite = game_manager_sprite_load(manager, "enemy_left.fxbm");
 }
 
-static void player_jump_handler(Vector* pos, InputState* input) {
+static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
     //Initiate jump process (first jump) if we are on ground (and are not jumping)
     if(input->held & GameKeyUp && !jumping && roundf(pos->y) == WORLD_BORDER_BOTTOM_Y) {
         //Start jumping
@@ -237,6 +245,9 @@ static void player_jump_handler(Vector* pos, InputState* input) {
 
         //Set target Y (based on maximum jump height)
         targetY = CLAMP(pos->y - jumpHeight, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
+
+        //Set player sprite to jumping
+        playerCtx->sprite = playerCtx->sprite_jump;
         return;
     }
 
@@ -256,10 +267,13 @@ static void player_jump_handler(Vector* pos, InputState* input) {
 
 uint32_t lastShotTick;
 
-static void player_shoot_handler(InputState* input, Vector* pos) {
+static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
+    //If we are not facing right or left, we cannot shoot
+    bool canShoot = playerCtx->sprite == playerCtx->sprite_left || playerCtx->sprite == playerCtx->sprite_right;
+
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingRate)) {
+    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingRate) && canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -274,8 +288,10 @@ static void player_shoot_handler(InputState* input, Vector* pos) {
         if(bulletIndex == -1) return;
 
         bullets[bulletIndex] = level_add_entity(gameLevel, &target_desc);
+        bulletsDirection[bulletIndex] = playerCtx->sprite == playerCtx->sprite_right;
+        float deltaX = bulletsDirection[bulletIndex] ? 10 : -10;
         // Set target position
-        Vector bulletPos = (Vector){pos->x + 10, pos->y};
+        Vector bulletPos = (Vector){pos->x + deltaX, pos->y};
         entity_pos_set(bullets[bulletIndex], bulletPos);
     }
 
@@ -283,8 +299,10 @@ static void player_shoot_handler(InputState* input, Vector* pos) {
     for(int i = 0; i < MAX_BULLETS; i++) {
         if(bullets[i] == NULL) continue;
         Vector bulletPos = entity_pos_get(bullets[i]);
-        bulletPos.x = CLAMP(
-            bulletPos.x + bulletMoveSpeed, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
+
+        float deltaX = bulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
+        bulletPos.x =
+            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
         entity_pos_set(bullets[i], bulletPos);
 
         //Once bullet reaches end, destroy it
@@ -405,23 +423,29 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         return;
     }
 
+    PlayerContext* playerCtx = context;
+
     //Movement - Game position starts at TOP LEFT.
     //The higher the Y, the lower we move on the screen
     //The higher the X, the more we move toward the right side.
-
     //Jump Mechanics
-    player_jump_handler(&pos, &input);
+    player_jump_handler(playerCtx, &pos, &input);
 
     //Player Shooting Mechanics
-    player_shoot_handler(&input, &pos);
+    player_shoot_handler(playerCtx, &input, &pos);
 
     if(input.held & GameKeyLeft) {
         targetX -= speed;
         pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+
+        //Switch sprite to left direction
+        playerCtx->sprite = playerCtx->sprite_left;
     }
     if(input.held & GameKeyRight) {
         targetX += speed;
         pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+        //Switch to right direction
+        playerCtx->sprite = playerCtx->sprite_right;
     }
 
     // Clamp player position to screen bounds
