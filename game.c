@@ -10,6 +10,9 @@
 
 #define BULLET_DISTANCE_THRESHOLD 8
 
+#define STARTING_PLAYER_HEALTH 11
+#define STARTING_ENEMY_HEALTH  5
+
 /****** Entities: Player ******/
 
 typedef struct {
@@ -47,8 +50,8 @@ static float jumpSpeed = 0.074f;
 static int ENEMY_LIVES = 30;
 static int health = 100;
 #else
-static int ENEMY_LIVES = 4;
-static int health = 9;
+static int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
+static int health = STARTING_PLAYER_HEALTH;
 #endif
 struct Enemy {
     Entity* instance;
@@ -70,7 +73,10 @@ Entity* globalPlayer = NULL;
 
 //float weights[4] = {-2387.7f, -185.0f, 195.4f, 188.3f};
 //float weights[4] = {-56.5, -0.6f, 7.3f, 17.1f}; //moves close and far, not bad but wont jump
-float weights[4] = {-67.9, -0.4f, 24.7f, 16.9f}; //moves close and far, not bad but wont jump
+
+float weights[4] = {1.5f, -1.0f, 0, -1.0f};
+
+//float weights[4] = {-67.9, -0.4f, 27.4f, 18.6f}; //moves close and far, not bad but wont jump
 float features[4] = {0.0f};
 int rewardValue = 0;
 
@@ -84,6 +90,7 @@ bool tutorialCompleted = false;
 bool startedGame = false;
 bool hasSpawnedFirstMob;
 int firstMobSpawnTicks;
+uint32_t gameBeginningTick;
 
 static float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
@@ -130,12 +137,25 @@ int decide_action(
     float probs[4];
 
     // Simple distance-based feature calculation for each action
-    features[0] = (player_y - 16 - bullet_y <= 5.0F ? 1 : -1); // Move up (independent from player)
+    // Move around, but no jumps
+    /*
+    features[0] =
+        (player_y - bullet_y) *
+        (player_x - bullet_x <= 60.0F ? 0.5F : -0.5F); // Move up (independent from player)
     features[1] =
-        (player_x < bullet_x ? 1 : -1) + (player_x < opponent_x ? -0.5 : 0.5); // Move left
-    features[2] = (player_y < bullet_y ? 1 : -1); // Move down
+        player_x - opponent_x * (player_x - bullet_x > 80.0F ? 0.5F : -0.5F); // Move left
+    features[2] = bullet_y - player_y; // Move down
     features[3] =
-        (player_x > bullet_x ? 1 : -1) + (player_x > opponent_x ? -0.5 : 0.5); // Move right
+        opponent_x - player_x * (player_x - bullet_x < 20.0F ? 0.5F : -0.5F); // Move right
+        */
+    // Simple distance-based feature calculation for each action
+    features[0] = (player_y > bullet_y ? 1 : -1) + (player_y > opponent_y ? -0.5 : 0.5); // Move up
+    features[1] =
+        (player_x > bullet_x ? 1 : -1) + (player_x > opponent_x ? -0.5 : 0.5); // Move left
+    features[2] =
+        (player_y < bullet_y ? 1 : -1) + (player_y < opponent_y ? -0.5 : 0.5); // Move down
+    features[3] =
+        (player_x < bullet_x ? 1 : -1) + (player_x < opponent_x ? -0.5 : 0.5); // Move right
 
     // Calculate scores for each action based on weights and features
     for(int i = 0; i < 4; i++) {
@@ -149,7 +169,7 @@ int decide_action(
     return choose_action(probs);
 }
 
-#define LEARNING_RATE 0.0007f
+#define LEARNING_RATE 0.0001f
 // Update weights based on reward (1 for success, -1 for failure)
 void update_weights(float weights[], float features[], int action, int reward) {
     weights[action] += LEARNING_RATE * reward * features[action];
@@ -173,6 +193,8 @@ static void player_spawn(Level* level, GameManager* manager) {
 
     // Load player sprite
     player_context->sprite = game_manager_sprite_load(manager, "player_right.fxbm");
+
+    gameBeginningTick = furi_get_tick();
 }
 
 static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition) {
@@ -185,7 +207,7 @@ static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
-        enemies[i].lastShot = furi_get_tick();
+        enemies[i].lastShot = furi_get_tick() + 2000;
         break;
     }
 
@@ -280,7 +302,8 @@ static void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
     bool playerSpawning = hasSpawnedFirstMob && furi_get_tick() - firstMobSpawnTicks < 8000;
     float shootingRateFactor = playerSpawning ? 30.0F : 1;
     //Shooting action
-    if(currentTick - *enemyLastShotTick >= (enemyShootingRate * (shootingRateFactor))) {
+    if(currentTick - *enemyLastShotTick >= (enemyShootingRate * (shootingRateFactor)) &&
+       health != 0) {
         *enemyLastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -413,6 +436,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 
     // Control game exit
     if(input.pressed & GameKeyBack) {
+        //Only runs if alive, thus quit game
         game_manager_game_stop(manager);
     }
 
@@ -468,8 +492,8 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 notification_message(notifications, &sequence_single_vibro);
                 furi_delay_ms(2000);
             }
-        } else if(furi_get_tick() - firstKillTick < 8000) {
-            canvas_printf(canvas, 40, 40, "Continue! -->");
+        } else if(!startedGame) {
+            canvas_printf(canvas, 70, 40, "Continue! -->");
             static bool continued;
             if(!continued) {
                 continued = true;
@@ -509,11 +533,10 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 enemy_spawn(
                     gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y});
             }
-
-            if(furi_get_tick() - secondKillTick > 11000) {
-                int tickThousands = (int)roundf((furi_get_tick() - secondKill) / 1000.0F);
-                furi_delay_ms(tickThousands % 2 == 0 ? 10 : 0);
-            }
+        }
+        if(furi_get_tick() - secondKillTick > 8000) {
+            int tickThousands = (int)roundf((furi_get_tick() - secondKill) / 1000.0F);
+            furi_delay_ms(tickThousands % 3 == 0 ? 10 : 0);
         }
     } else if(kills == 4) {
         canvas_printf(canvas, 20, 30, "You've completed the");
@@ -548,9 +571,26 @@ static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, voi
     // Get enemy position
     Vector pos = entity_pos_get(self);
 
+    //Draw enemy health above their head
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(enemies[i].instance != self) continue;
+        canvas_printf(canvas, pos.x + 1, pos.y - 10, "%d", enemies[i].lives);
+        break;
+    }
+
     // Draw enemy sprite
     // We subtract 5 from x and y, because collision box is 16x16, and we want to center sprite in it.
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
+
+    //This must be processed here, as the player object will be deinstantiated
+
+    if(health == STARTING_PLAYER_HEALTH && furi_get_tick() - gameBeginningTick < 5000) {
+        canvas_printf(canvas, 30, 20, "Welcome to the");
+        canvas_printf(canvas, 30, 36, "DEADZONE tutorial!");
+    } else if(health == 0) {
+        canvas_printf(canvas, 30, 10, "You're dead.");
+        canvas_printf(canvas, 20, 20, "Press Back to respawn.");
+    }
 }
 uint32_t lastBehaviorTick;
 
@@ -603,9 +643,9 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
                             weights,
                             features,
                             enemies[i].jumping ? EnemyActionJump : lastAction,
-                            -1000 / abs((int)roundf(
-                                        entity_pos_get(enemies[i].instance).x -
-                                        entity_pos_get(globalPlayer).x)));
+                            -400 / abs((int)roundf(
+                                       entity_pos_get(enemies[i].instance).x -
+                                       entity_pos_get(globalPlayer).x)));
                     }
                 }
 
@@ -624,15 +664,19 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy NPC behavior
 
     uint32_t currentTick = furi_get_tick();
-    if(currentTick - lastBehaviorTick > 300) {
+    if(currentTick - lastBehaviorTick > 200) {
         lastBehaviorTick = currentTick;
         Vector playerPos = entity_pos_get(globalPlayer);
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
         float distYSqToPlayer = (playerPos.y - pos.y) * (playerPos.y - pos.y);
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
 
-        if(roundf(distanceToPlayer) > 100.0f) {
+        if(roundf(distanceToPlayer) > 80.0f) {
             update_weights(weights, features, EnemyActionAttack, -300);
+        } else if(roundf(distanceToPlayer) < 45.0f) {
+            update_weights(weights, features, EnemyActionAttack, -300);
+        } else if(roundf(distanceToPlayer) > 45.0f) {
+            update_weights(weights, features, EnemyActionAttack, 300);
         }
 
         if(roundf(pos.y) == WORLD_BORDER_BOTTOM_Y) {
@@ -667,7 +711,7 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
                 weights,
                 features,
                 jumped ? EnemyActionJump : lastAction,
-                1000 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
+                500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
         }
 
         if(closestBullet.y < pos.y && (pos.y - closestBullet.y) < 1.0f) {
@@ -675,7 +719,7 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
                 weights,
                 features,
                 EnemyActionJump,
-                1000 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
+                500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
         }
 
         enum EnemyAction action = (enum EnemyAction)decide_action(
@@ -748,6 +792,20 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
 
     //Update position of npc
     entity_pos_set(self, pos);
+
+    //Check player input when they're dead, since enemy is alive, processing must proceed here.
+    InputState input = game_manager_input_get(manager);
+    if(input.pressed & GameKeyBack) {
+        if(health == 0) {
+            //If dead, restart game
+            health = STARTING_PLAYER_HEALTH;
+            tutorialCompleted = false;
+            startedGame = false;
+            hasSpawnedFirstMob = false;
+            player_spawn(gameLevel, manager);
+            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
+        }
+    }
 }
 
 static const EntityDescription player_desc = {
