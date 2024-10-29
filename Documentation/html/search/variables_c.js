@@ -10,11 +10,12 @@ var searchData=
   ['ncrcerror_7',['NCRCError',['../union__REG__CiBDIAG1.html#a83d9cba74c7d4c5e8bb2c488a52c89ad',1,'_REG_CiBDIAG1']]],
   ['nform_5ferr_8',['NFORM_ERR',['../struct__CAN__BUS__DIAG__FLAGS.html#a2f58edd26a7decb4cb4a7916ad28f8ac',1,'_CAN_BUS_DIAG_FLAGS']]],
   ['nformerror_9',['NFormError',['../union__REG__CiBDIAG1.html#a519ef56e62831e496065cef94ff9dfba',1,'_REG_CiBDIAG1']]],
-  ['nrec_10',['NREC',['../struct__CAN__BUS__ERROR__COUNT.html#adcd6f0376d1b966046e32386a42ad33e',1,'_CAN_BUS_ERROR_COUNT']]],
-  ['nreservedtx_11',['nReservedTx',['../classmcp2518fd.html#a77a00fcd77d7024f1a1a6e6c473234b1',1,'mcp2518fd']]],
-  ['nrxerrorcount_12',['NRxErrorCount',['../union__REG__CiBDIAG0.html#a6e305544cbe3b2aabad0d10978afcff3',1,'_REG_CiBDIAG0']]],
-  ['nstuff_5ferr_13',['NSTUFF_ERR',['../struct__CAN__BUS__DIAG__FLAGS.html#a157f8820e74e43521647389323ea8767',1,'_CAN_BUS_DIAG_FLAGS']]],
-  ['nstufferror_14',['NStuffError',['../union__REG__CiBDIAG1.html#a2bcb8e662eeaebe41e5dfff3e4792f45',1,'_REG_CiBDIAG1']]],
-  ['ntec_15',['NTEC',['../struct__CAN__BUS__ERROR__COUNT.html#a67b71b0d32acaefba3499bc64ef19a4a',1,'_CAN_BUS_ERROR_COUNT']]],
-  ['ntxerrorcount_16',['NTxErrorCount',['../union__REG__CiBDIAG0.html#a8c864365e2293a2d40a06f8a7668749d',1,'_REG_CiBDIAG0']]]
+  ['notifications_10',['notifications',['../structUsbCanApp.html#a227f32e784a0fdc9fc9617355fc5978d',1,'UsbCanApp']]],
+  ['nrec_11',['NREC',['../struct__CAN__BUS__ERROR__COUNT.html#adcd6f0376d1b966046e32386a42ad33e',1,'_CAN_BUS_ERROR_COUNT']]],
+  ['nreservedtx_12',['nReservedTx',['../classmcp2518fd.html#a77a00fcd77d7024f1a1a6e6c473234b1',1,'mcp2518fd']]],
+  ['nrxerrorcount_13',['NRxErrorCount',['../union__REG__CiBDIAG0.html#a6e305544cbe3b2aabad0d10978afcff3',1,'_REG_CiBDIAG0']]],
+  ['nstuff_5ferr_14',['NSTUFF_ERR',['../struct__CAN__BUS__DIAG__FLAGS.html#a157f8820e74e43521647389323ea8767',1,'_CAN_BUS_DIAG_FLAGS']]],
+  ['nstufferror_15',['NStuffError',['../union__REG__CiBDIAG1.html#a2bcb8e662eeaebe41e5dfff3e4792f45',1,'_REG_CiBDIAG1']]],
+  ['ntec_16',['NTEC',['../struct__CAN__BUS__ERROR__COUNT.html#a67b71b0d32acaefba3499bc64ef19a4a',1,'_CAN_BUS_ERROR_COUNT']]],
+  ['ntxerrorcount_17',['NTxErrorCount',['../union__REG__CiBDIAG0.html#a8c864365e2293a2d40a06f8a7668749d',1,'_REG_CiBDIAG0']]]
 ];

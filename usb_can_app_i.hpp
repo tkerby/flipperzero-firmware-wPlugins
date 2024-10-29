@@ -1,3 +1,7 @@
+/** @file usb_can_app_i.hpp
+ * @brief Application top level header file. It main structures definitions.
+ * @ingroup CONTROLLER
+*/
 #pragma once
 #ifdef __cplusplus
 #include "scenes/usbCan_scene.hpp"
@@ -36,6 +40,7 @@ typedef struct {
 
 typedef enum { UsbCanLoopBackTestState, UsbCanPingTestState, UsbCanNominalState } usbCanState;
 
+/**adzaeda */
 typedef struct {
     UsbCanConfig cfg;
     UsbCanConfig cfg_new;

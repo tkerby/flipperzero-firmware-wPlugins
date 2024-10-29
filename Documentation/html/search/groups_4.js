@@ -1,4 +1,4 @@
-var searchData=
-[
-  ['usb_20can_20main_0',['USB-CAN-MAIN',['../group__USB-CAN-MAIN.html',1,'']]]
-];
+var searchData =
+  [
+    ['usb_20can_20main_0', ['CONTROLLER', ['../group__CONTROLLER.html', 1, '']]]
+  ];

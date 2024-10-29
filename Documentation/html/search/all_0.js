@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['_5f_5fattribute_5f_5f_0',['__attribute__',['../usb__can__app__i_8hpp.html#a7dd725fcb81454c9d70a83539371ddab',1,'__attribute__((used)) usb_can_app(void *p):&#160;usb_can_app_i.hpp'],['../mcp2518fd__can_8cpp.html#a7e938ac91f0241e4f3120ec81b55f4f7',1,'__attribute__:&#160;mcp2518fd_can.cpp']]],
+  ['_5f_5fattribute_5f_5f_0',['__attribute__',['../mcp2518fd__can_8cpp.html#a7e938ac91f0241e4f3120ec81b55f4f7',1,'__attribute__:&#160;mcp2518fd_can.cpp'],['../usb__can__app__i_8hpp.html#a7dd725fcb81454c9d70a83539371ddab',1,'__attribute__((used)) usb_can_app(void *p):&#160;usb_can_app_i.hpp']]],
   ['_5f_5fflgfdf_1',['__flgFDF',['../classmcp2518fd.html#a1a94bf733b8ebff86c51b58bb0aebefc',1,'mcp2518fd']]],
-  ['_5f_5fsetmode_2',['__setmode',['../classMCP__CAN__1.html#a7eacb25add8294a6de504258cac2ec33',1,'MCP_CAN_1::__setMode()'],['../classmcp2518fd.html#af4b85c85b303be9d6deff1006e3a052e',1,'mcp2518fd::__setMode()']]],
+  ['_5f_5fsetmode_2',['__setmode',['../classmcp2518fd.html#af4b85c85b303be9d6deff1006e3a052e',1,'mcp2518fd::__setMode()'],['../classMCP__CAN__1.html#a7eacb25add8294a6de504258cac2ec33',1,'MCP_CAN_1::__setMode()']]],
   ['_5fcan_5fbus_5fdiag_5fflags_3',['_CAN_BUS_DIAG_FLAGS',['../struct__CAN__BUS__DIAG__FLAGS.html',1,'']]],
   ['_5fcan_5fbus_5fdiagnostic_4',['_CAN_BUS_DIAGNOSTIC',['../union__CAN__BUS__DIAGNOSTIC.html',1,'']]],
   ['_5fcan_5fbus_5ferror_5fcount_5',['_CAN_BUS_ERROR_COUNT',['../struct__CAN__BUS__ERROR__COUNT.html',1,'']]],
@@ -51,5 +51,6 @@ var searchData=
   ['_5freg_5feccsta_48',['_REG_ECCSTA',['../union__REG__ECCSTA.html',1,'']]],
   ['_5freg_5fiocon_49',['_REG_IOCON',['../union__REG__IOCON.html',1,'']]],
   ['_5freg_5fosc_50',['_REG_OSC',['../union__REG__OSC.html',1,'']]],
-  ['_5freg_5ft_51',['_REG_t',['../union__REG__t.html',1,'']]]
+  ['_5freg_5ft_51',['_REG_t',['../union__REG__t.html',1,'']]],
+  ['_5fusb_5fuart_5fbridge_5fget_5fnext_5fcommand_52',['_usb_uart_bridge_get_next_command',['../usb__can__bridge_8cpp.html#aa85f35a05bc5e03270a024407408eeac',1,'usb_can_bridge.cpp']]]
 ];

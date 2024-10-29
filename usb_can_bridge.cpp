@@ -1,5 +1,6 @@
 /** @file usb_can_bridge.cpp
- * @ingroup USB-CAN-MAIN
+ * @brief Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vice-versa. 
+ * @ingroup CONTROLLER
 */
 #include "usb_can_bridge.hpp"
 #include "usb_cdc.h"
@@ -61,9 +62,7 @@ typedef enum {
 
 } WorkerEvtFlags;
 
-#define WORKER_ALL_RX_EVENTS                                                      \
-    (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange | WorkerEvtLineCfgSet | \
-     WorkerEvtCtrlLineSet)
+#define WORKER_ALL_RX_EVENTS (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange)
 #define WORKER_ALL_TX_EVENTS (WorkerEvtTxStop | WorkerEvtCdcRx)
 
 static void vcp_on_cdc_tx_complete(void* context);
@@ -75,12 +74,13 @@ static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_form
 static void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len);
 static void
     usb_can_bridge_send(UsbCanBridge* usb_can, char* data, uint32_t len, bool extended, bool rtr);
-static bool usb_uart_bridge_get_next_command(
+static bool _usb_uart_bridge_get_next_command(
     char** next_command,
     uint8_t* cmd_length,
     char* cdc_data,
     uint8_t cdc_frame_len);
 
+/* VCP events callback to be registered in USB CDC stack*/
 static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_tx_complete,
     vcp_on_cdc_rx,
@@ -117,6 +117,12 @@ static void usb_can_vcp_init(UsbCanBridge* usb_can, uint8_t vcp_ch) {
     furi_hal_cdc_set_callbacks(vcp_ch, (CdcCallbacks*)&cdc_cb, usb_can);
 }
 
+/** 
+ * @brief USB Virtual com port close function called after a @ref usb_can_disable() or a @ref usb_can_set_config() call.
+ * @details This function is called either :
+ * - to suspend USB CDC driver usage during reconfiguration (VCP channel change)
+ * - to free USB CDC driver ressources during an @ref usb_can_disable call.
+**/
 static void usb_can_vcp_deinit(UsbCanBridge* usb_can, uint8_t vcp_ch) {
     UNUSED(usb_can);
     furi_hal_cdc_set_callbacks(vcp_ch, NULL, NULL);
@@ -127,6 +133,9 @@ static void usb_can_vcp_deinit(UsbCanBridge* usb_can, uint8_t vcp_ch) {
     }
 }
 
+/**
+ * @brief function printing serma banner on VCP 
+ * @details This function is called when user select USB-loopback or USB-CAN-bridge application mode in can-fd-hs menu (CAN-TEST does not use USB link). */
 static void usb_can_print_banner(UsbCanBridge* usb_can) {
     uint32_t i;
     (void)usb_can;
@@ -138,6 +147,28 @@ static void usb_can_print_banner(UsbCanBridge* usb_can) {
     WAIT_CDC();
     furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)&serma_banner[i], sizeof(serma_banner) - i);
 }
+
+/**
+ * @brief application main thread : receives CAN frames and forward it to host.
+ * @details This thread is started upon application mode selection by user. It perform following actions:
+ * -# if can is enabled (USB loopback test not selected)
+ *     - initialize CAN
+ *     - if CAN test is enabled : enter in an infinite transmit loop (identifier 0x7E57CA, data="CANLIVE")
+ * -# initialize USB Virtual Com port (USB CDC class)
+ * -# display Serma welcome banner on Virtual Com Port (VCP)
+ * -# print application mode (USB loopback or USB-CAN-Bridge)
+ * -# start @ref usb_can_tx_thread() (@ref usb_can->tx_thread) used for CAN transmission.
+ * -# start thread Main loop : This loop will block until either :
+ *      - a packet is received on CAN Link : flag set via @ref usb_can_on_irq_cb(). in this case:
+ *          -# CAN frame data field is read via @ref readMsgBuf()
+ *          -# interrupt flags are cleared to deassert interrupt pin @ref mcp2518fd_readClearInterruptFlags(). This can not be done in interrupt mode because SPI communication is needed.
+ *          -# GPIO used for interrupt is re-enabled @ref furi_hal_gpio_enable_int_callback()
+ *          -# CAN ID is read through @ref getCanId() and interpreted through @ref isExtendedFrame()
+ *          -# CAN frame is formated to SLCAN format (<i> identifier and <d> data):: 
+ *              - for standard frames : tiildddd...=> @ref snprintf() format t%03X%1d%02X%02X... 
+ *              - for extended frames : TIIIIIIIIlddd... @ref snprintf() format T%08X%1d%02X%02X ...
+ *          -# formated SLCAN frame is sent on USB VCP through @ref furi_hal_cdc_send().
+ *      - VCP is configured via flipper buttons via @ref usb_can_set_config()*/
 static int32_t usb_can_worker(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     uint32_t events = 0;
@@ -212,7 +243,7 @@ static int32_t usb_can_worker(void* context) {
                 tmp_data = buf[i];
                 printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
             }
-            printSize += snprintf(&tmp[printSize], 2, "\r");
+            printSize += snprintf(&tmp[printSize], 3, "\r\n");
             WAIT_CDC();
             furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, printSize);
             usb_can->st.rx_cnt += len;
@@ -251,6 +282,20 @@ static int32_t usb_can_worker(void* context) {
     return 0;
 }
 
+/**
+ * @brief CAN TX thread : Process SLCAN commands send by the host.
+ * @details This thread is started by @ref usb_can_worker(). It is composed by aloop which performs the following actions:
+ * -# wait until a frame is received through USB VCP channel
+ * -# If Application is in USB loopback mode it will just send back received frame and wait next USB frame.
+ * -# Otherwise, if application is in USB-CAN-bridge mode it will process SLCAN commands in a loop as follows:     
+ * <ol>
+ *  <li>get next command in USB CDC reception buffer (delimited by next carriage return) by calling @ref _usb_uart_bridge_get_next_command()</li>
+ *  <li>either call :</li>
+ *      - @ref usb_can_bridge_configure() if it is a configuration Command (Sx)
+ *      - @ref usb_can_bridge_send() if it is a transmit command (tiiildddd...., Tiiiiiiiilddddd..., riiil..., Riiiiiiiil.)
+ *      - @ref usb_can_bridge_error() an send  " [err]: command <command>><x> not implemented yet!"" if command is not implemented.
+ *      - @ref M_USB_CAN_ERROR_INVALID_COMMAND otherwise
+ * </ol>*/
 static int32_t usb_can_tx_thread(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     uint8_t data[USB_CDC_PKT_LEN];
@@ -273,7 +318,7 @@ static int32_t usb_can_tx_thread(void* context) {
                 char* next_command = (char*)NULL;
                 uint8_t cmd_len = 0;
                 while(
-                    usb_uart_bridge_get_next_command(&next_command, &cmd_len, (char*)data, len)) {
+                    _usb_uart_bridge_get_next_command(&next_command, &cmd_len, (char*)data, len)) {
                     if(cmd_len > USB_CAN_BRIDGE_MAX_INPUT_LENGTH) {
                         M_USB_CAN_ERROR_INVALID_LENGTH();
                         //invalid input, stop processing
@@ -334,8 +379,32 @@ static int32_t usb_can_tx_thread(void* context) {
     return 0;
 }
 
+/**
+ * @brief Used to check if it remains bytes to read in USB CDC frame.
+ * @details This Macro is called by @ref _usb_uart_bridge_get_next_command() function in
+ * order to determine if it remains bytes to read in USB CDC frame. */
 #define IS_LAST_CMD() (&((*next_command)[(*cmd_length)]) == &cdc_data[cdc_frame_len])
-static bool usb_uart_bridge_get_next_command(
+/**
+ * @brief SLCAN command extraction.
+ * @details This function updates @ref next_command pointer to point at the beggining of next SLCAN command.
+ * This function performs the following actions:
+ * -# if *next_command is null (new CDC frame)
+ *      - set next_command to point the first byte of USB CDC (VCP) frame.
+ * -# Otherwise:
+ *      -  go to next command by updating @ref next_command pointer : it consists to move pointer at the end of previous command by adding @ref cmd_length value ( @ref cmd_length is used like an index).
+ * -# reset cmd_length to 0
+ * -# search next CR or LF USB character (relative to @ref next_command pointer) in CDC frame, incrementing each time @ref cmd_length which is used as an index.
+ * -# if CDC frame last index is reached before finding a CR or an LF character, returns false
+ * -# returns true otherwise after incrementing @ref command_length a last time to include termination character (CR or LF) .
+ * @pre next_command shall be either Null (new CDC frame) or shall be called with: <ul><li>next_command pointer set to the last @ref _usb_uart_bridge_get_next_command() returned value.</li>
+ * <li>cmd_length pointer set to the last @ref _usb_uart_bridge_get_next_command() returned value.</li></ul>
+ * @param[inout] next_command When passed to the function, it correspond to a pointer to last processed USB CDC frame chunk (SLCAN command). At the end of the function it points to next SLCAN command.
+ * @param[inout] cmd_length When passed to the function, it correspond to the length of last processed USB CDC frame chunk (SLCAN command) pointed by @ref next_command. At the end of the function it corresponds to the length of next SLCAN command.
+ * @param[in] cdc_data Pointer to current USB CDC frame to be parsed. The first time this fonction is called (for a new cdc frame), @ref next_command is pointing to the same location than this parameter. Each time a valid command is parsed @ref next_command pointer move to next command location in this frame.
+ * @param[in] cdc_frame_len Length of current CDC frame.
+ * @return True if it remains commands to process in current USB CDC frame, False otherwise (next CDC frame is to be read).  
+**/
+static bool _usb_uart_bridge_get_next_command(
     char** next_command,
     uint8_t* cmd_length,
     char* cdc_data,
@@ -359,6 +428,18 @@ static bool usb_uart_bridge_get_next_command(
     return true;
 }
 
+/**
+ * @brief SLCAN S<X> command processing : CAN bus configuration
+ * @details This function performs the following actions:
+ * -# Check S command length is 3 (S<X>\r). If it is not the case sends an error message on VCP (USB CDC channel) via @ref M_USB_CAN_ERROR_INVALID_LENGTH() before returning.
+ * -# Check <X> is a digit. If it is not, sends an error message on VCP (USB CDC channel) by calling @ref usb_can_bridge_error() before returning.
+ * -# configure CAN bus through @ref mcp2518fd::begin() function. @ref bitrate_table is used to map S<X> command parameter to @ref mcp2518fd::begin() @ref speedset parameter.
+ * -# set @ref can_if_initialized to true, in order to be able to process Tx commands (through @ref usb_can_bridge_send()) normally.
+ * @pre data parameter shall be an S command, or shall begin like an S command (with an 'S') : "Sxxxxxxxxx" 
+ * @param[in] usb_can Application Control logic related data. It is used because it contains can driver instance (@ref mcp2518fd)
+ * @param[in] data SLCAN S command.
+ * @param[in] len command length (data string length).
+**/
 void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
     static const uint32_t bitrate_table[] = {
         CAN20_10KBPS,
@@ -386,6 +467,36 @@ void usb_can_bridge_configure(UsbCanBridge* usb_can, char* data, uint32_t len) {
     }
 }
 
+/**
+ * @brief SLCAN Transmit command processing (txxx,Txxxx,rxxxx,Rxxxx)
+ * @details This function performs the following actions:
+ * -# set header input format to be provided to @ref sscanf pasring function according to SLCAN command processed:
+ *  - t%3x%1x for tiiil command
+ *  - T%8x%1x for Tiiiiiiiil command
+ *  - r%3x%1x for riiil command
+ *  - R%8x%1x for Riiiiiiiil command
+ * -# set max identifier valid value according to the SLCAN command : 1FFFFFFF for extended frames (command Tiiii... and Riii...), 0x7ff otherwise
+ * -# set command length bounds according to the SLCAN command : 5 < length < 22 for standard frames (tiii..,riii...), 10 < length < 27 for extended frames.
+ * -# check @ref can_if_initialized is true, in order to ensure CAN interface have been initialized (via @ref usb_can_bridge_configure). If it is not he case send an error message before returning via @ref usb_can_bridge_error.
+ * -# check SLCAN command length is within the previously defined bounds. If it is not the case transmit error message before returning via @ref M_USB_CAN_ERROR_INVALID_LENGTH.
+ * -# parse command header (from index 0 to min length) in order to get CAN ID and CAN data length code (DLC) through @ref sscanf. The format string computed in step1 is used.
+ * -# determine length of data field : 0 if this is an RTR (riiil,Riiiiiiiil), =DLC for Tx (tiiildddd...,Tiiiiiiiilddddd...)
+ * -# check DLC field value is consistent with SLCAN command length it shall be equal to header length (5 or 10 + data field length)
+ *      - If it is not the case send error message "[err]: can payload length discrepency : expected <X> got <Y>" through @ref usb_can_bridge_error before retruning 
+ * -# check if ID field value is valid (ie. inferior to value computed previously)
+ * -# switch on Tx LED.
+ * -# add previously computed data field length to Tx counter
+ * -# parse and extract SLCAN command data field
+ * -# transmit CAN frame through @ref mcp2518fd::sendMsgBuf() with previously extracted data, CAN ID and dlc fields
+ * -# call timer to schedule Tx LED switch off.  
+ * 
+ * @pre data parameter shall be a Tx command, or shall begin like an Tx command (with a 'T', a 't', an 'R', or an 'r' ) 
+ * @param[in] usb_can Application Control logic related data. It is used because it contains can driver instance.
+ * @param[in] data SLCAN Tx command (riiil,Riiiiiiiil,tiiildddd...,Tiiiiiiiilddddd...)
+ * @param[in] len command length (data string length)
+ * @param[in] extended tell if CAN frame to be sent is an extended frame or not (SLCAN command begins with an uppercase letter)
+ * @param[in] rtr tell if CAN frame to be sent is a standard TX or an RTR (Remote Transmission Request) frame (i.e SLCAN command begins with a 'T/t' or with an 'R/r') 
+**/
 void usb_can_bridge_send(UsbCanBridge* usb_can, char* data, uint32_t len, bool extended, bool rtr) {
     uint8_t data_bin[8];
     uint32_t expected_len = 0;
@@ -450,12 +561,24 @@ void usb_can_bridge_send(UsbCanBridge* usb_can, char* data, uint32_t len, bool e
     }
 }
 
+/** @brief  clear CAN Tx LED 'set MCP2518 GPIO_0 high) through @ref mcp2518fd::mcpDigitalWrite() function.
+ * @details This function recover allocated @ref UsbCanBridge::can (of type @ref mcp2518fd) instance created in @ref usb_can_enable() before calling  mcp2518fd::mcpDigitalWrite().
+ * @param[in] context generic parameter to be passed in flipper callback registration. Here a pointer to application control flow ( @ref UsbCanBridge) logic data is passed, to be recovered in callbacks.*/
 void usb_can_bridge_clear_led(void* context) {
     (void)context;
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
 }
 
+/** @brief function called on error : it is an implementation to printf which prints output on USB CDC channel.
+ * @details This function :
+ * -# parses variadic arguments through @ref va_start
+ * -# create a string according to err_message format and parameters supplied (to print)
+ * -# require USB CDC driver ressource (probably a buffer) through @ref WAIT_CDC()
+ * -# prints the string obtained previously on USB CDC VCP via ( @ref furi_hal_cdc_send())
+ * @param[in] usb_can structure holding VCP channel used by the application (@ref UsbCanBridge::cfg::vcp_ch)
+ * @param[in] err_msg_format string to create format : same format as printf. **Shall correspond to supplied variadic argument list in order to avoid unpredictable behavior.**
+*/
 static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_format, ...) {
     uint32_t printSize;
     char out_msg[64];
@@ -468,33 +591,58 @@ static void usb_can_bridge_error(UsbCanBridge* usb_can, const char* err_msg_form
 
 /* VCP callbacks */
 
+/** @brief This function is a callback registered during USB CDC driver initialization. It permits to synchronize writes on VCP channel.
+ * @details This function simply clear @ref cdc_busy flag to signal USB CDC driver is available for transmission. 
+ * <br> This flag is used @ref CDC_WAIT to synchronize USB CDC transmission requests.
+ * @param[in] context generic parameter to be passed in flipper callback registration. Here it is unused.
+ */
 static void vcp_on_cdc_tx_complete(void* context) {
     (void)context;
     cdc_busy = false;
 }
 
+/** @brief This function is a callback registered during USB CDC driver initialization. It permits to signal to @ref usb_can_tx_thread() data is available in USB CDC VCP.
+ * @details This function simply clear @ref cdc_busy flag to signal USB CDC driver is available for transmission. 
+ * <br> This flag is used @ref CDC_WAIT to synchronize USB CDC transmission requests.
+ * @param[in] context generic parameter to be passed in flipper callback registration. Here it is unused.
+ */
 static void vcp_on_cdc_rx(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     furi_thread_flags_set(furi_thread_get_id(usb_can->tx_thread), WorkerEvtCdcRx);
 }
 
+/** @brief This function is a callback registered during USB CDC driver initialization. It is unused for the moment.
+ * @details This function simply clear @ref cdc_busy flag to signal USB CDC driver is available for transmission. 
+ */
 static void vcp_state_callback(void* context, uint8_t state) {
     UNUSED(context);
     UNUSED(state);
 }
 
+/** @brief Callback registered during USB CDC driver initialization. It is not used here since we do not need virtual UART control signals (CTS, etc...).
+ */
 static void vcp_on_cdc_control_line(void* context, uint8_t state) {
+    UNUSED(context);
     UNUSED(state);
-    UsbCanBridge* usb_can = (UsbCanBridge*)context;
-    furi_thread_flags_set(furi_thread_get_id(usb_can->thread), WorkerEvtCtrlLineSet);
 }
 
+/** @brief Callback registered during USB CDC driver initialization. It is not used here since we use dedicated SLCAN commands to configure CAN link.
+ */
 static void vcp_on_line_config(void* context, struct usb_cdc_line_coding* config) {
+    UNUSED(context);
     UNUSED(config);
-    UsbCanBridge* usb_can = (UsbCanBridge*)context;
-    furi_thread_flags_set(furi_thread_get_id(usb_can->thread), WorkerEvtLineCfgSet);
 }
 
+/** 
+ * @brief Entry point of application's operating mode called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.
+ * @details This function is called via @ref usb_can_scene_usb_can_on_enter() when one of the flipper zero  can-fd-hs applications mode is chosen by the user.
+ * It will:
+ * -# allocate memory to store USB and CAN control logic internal data @ref app->usb_can_bridge ( @ref UsbCanBridge)
+ * -# set application internal state ( @ref app.usb_can_bridge.state) according to application mode chosen by the user
+ * -# start application main thread : @ref usb_can_worker().
+ * @param[inout] app structure holding application related data (model, view, control logic)
+ * @param[in] state application requested state. It correspond to application mode (menu item) chosen by the user.
+**/
 UsbCanBridge* usb_can_enable(UsbCanApp* app, usbCanState state) {
     app->usb_can_bridge = (UsbCanBridge*)malloc(sizeof(UsbCanBridge));
     app->usb_can_bridge->state = state;
@@ -505,6 +653,14 @@ UsbCanBridge* usb_can_enable(UsbCanApp* app, usbCanState state) {
     return app->usb_can_bridge;
 }
 
+/** 
+ * @brief function called to leave application operationnal mode (free memory).
+ * @details this function is called when back button is pressed by the user through @ref usb_can_scene_usb_can_on_exit(). It performs the following actions:
+ * -# sends killing signal to application main thread ( @ref usb_can_worker())
+ * -# wait thread terminates
+ * -# free memory (and ressources) related to application control logic allocated in @ref usb_can_disable()
+ * @param[inout] usb_can memory structure holding application (USB and CAN) control logic to free.
+**/
 void usb_can_disable(UsbCanBridge* usb_can) {
     furi_check(usb_can);
     furi_thread_flags_set(furi_thread_get_id(usb_can->thread), WorkerEvtStop);
@@ -513,6 +669,11 @@ void usb_can_disable(UsbCanBridge* usb_can) {
     free(usb_can);
 }
 
+/** 
+ * @brief configure application used USB CDC VCP channel.
+ * @details this sets a configuration request by setting @ref WorkerEvtCfgChange to signal application main thread (i.e @ref usb_can_worker()) a configuration change is requested.
+ * @param[inout] usb_can memory structure holding application (USB and CAN) control logic to free.
+**/
 void usb_can_set_config(UsbCanBridge* usb_can, UsbCanConfig* cfg) {
     furi_check(usb_can);
     furi_check(cfg);
@@ -522,12 +683,18 @@ void usb_can_set_config(UsbCanBridge* usb_can, UsbCanConfig* cfg) {
     api_lock_wait_unlock_and_free(usb_can->cfg_lock);
 }
 
+/** 
+ * @brief USB VCP channel config (channel number used) getter (cf. @ref UsbCanBridge::cfg_new field) used for display purpose.
+**/
 void usb_can_get_config(UsbCanBridge* usb_can, UsbCanConfig* cfg) {
     furi_check(usb_can);
     furi_check(cfg);
     memcpy(cfg, &(usb_can->cfg_new), sizeof(UsbCanConfig));
 }
 
+/** 
+ * @brief Application mode getter (cf. @ref UsbCanBridge::st field) used for display purpose.
+**/
 void usb_can_get_state(UsbCanBridge* usb_can, UsbCanStatus* st) {
     furi_check(usb_can);
     furi_check(st);

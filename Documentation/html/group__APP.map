@@ -1,0 +1,4 @@
+<map id="APP" name="APP">
+<area shape="rect" id="Node000001" title="Applicative Software : this is an adaptation of Xtreme firmware USB&#45;UART bridge App in order to send ..." alt="" coords="5,5,52,31"/>
+<area shape="rect" id="Node000002" href="$group__CONTROLLER.html" title="Main application files used to operate USB VCP and CAN Link through CAN&#45;DRIVER module." alt="" coords="100,5,209,31"/>
+</map>

@@ -20,6 +20,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
    <div id="projectname">FLIPPER ZERO CAN FD HS SW
    </div>
@@ -75,52 +76,14 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">usbCan_scene.hpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;gui/scene_manager.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="usbCan__scene__config_8hpp_source.html">usbCan_scene_config.hpp</a>&quot;</code><br />
-</div><div class="textblock"><div class="dynheader">
-Include dependency graph for usbCan_scene.hpp:</div>
-<div class="dyncontent">
-<div class="center"><img src="usbCan__scene_8hpp__incl.png" border="0" usemap="#ascenes_2usbCan__scene_8hpp" alt=""/></div>
-<map name="ascenes_2usbCan__scene_8hpp" id="ascenes_2usbCan__scene_8hpp">
-<area shape="rect" title=" " alt="" coords="88,5,280,31"/>
-<area shape="rect" title=" " alt="" coords="5,79,165,104"/>
-<area shape="poly" title=" " alt="" coords="170,33,114,73,111,68,167,29"/>
-<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="189,79,379,104"/>
-<area shape="poly" title=" " alt="" coords="202,29,258,68,255,73,199,33"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
-<div class="dyncontent">
-<div class="center"><img src="usbCan__scene_8hpp__dep__incl.png" border="0" usemap="#ascenes_2usbCan__scene_8hppdep" alt=""/></div>
-<map name="ascenes_2usbCan__scene_8hppdep" id="ascenes_2usbCan__scene_8hppdep">
-<area shape="rect" title=" " alt="" coords="105,5,297,31"/>
-<area shape="rect" href="usbCan__scene_8cpp.html" title=" " alt="" coords="5,86,196,111"/>
-<area shape="poly" title=" " alt="" coords="177,41,117,88,114,84,173,37"/>
-<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="220,79,384,119"/>
-<area shape="poly" title=" " alt="" coords="228,37,279,76,276,81,225,41"/>
-</map>
-</div>
-</div>
+
 <p><a href="usbCan__scene_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;UsbCanScene##id,</td></tr>
-<tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;void prefix##_scene_##name##_on_enter(void*);</td></tr>
-<tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;    bool prefix##_scene_##name##_on_event(void* context, SceneManagerEvent event);</td></tr>
-<tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;void prefix##_scene_##name##_on_exit(void* context);</td></tr>
-<tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a0f499aff7302500ee1069d3b6b044deb" id="r_a0f499aff7302500ee1069d3b6b044deb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044deb">usb_canScene</a> { <a class="el" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a>
@@ -132,151 +95,6 @@ Variables</h2></td></tr>
 <tr class="memitem:a38a42bbbe31579a83b20680bb44448d3" id="r_a38a42bbbe31579a83b20680bb44448d3"><td class="memItemLeft" align="right" valign="top">const SceneManagerHandlers&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8hpp.html#a38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a></td></tr>
 <tr class="separator:a38a42bbbe31579a83b20680bb44448d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a8776d4cf7e872a390c03ef324bfda767" name="a8776d4cf7e872a390c03ef324bfda767"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8776d4cf7e872a390c03ef324bfda767">&#9670;&#160;</a></span>ADD_SCENE <span class="overload">[1/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ADD_SCENE</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">name, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">id&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td>&#160;&#160;&#160;UsbCanScene##id,</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8hpp_source.html#l00006">6</a> of file <a class="el" href="usbCan__scene_8hpp_source.html">usbCan_scene.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a8776d4cf7e872a390c03ef324bfda767" name="a8776d4cf7e872a390c03ef324bfda767"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8776d4cf7e872a390c03ef324bfda767">&#9670;&#160;</a></span>ADD_SCENE <span class="overload">[2/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ADD_SCENE</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">name, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">id&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td>&#160;&#160;&#160;void prefix##_scene_##name##_on_enter(void*);</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8hpp_source.html#l00006">6</a> of file <a class="el" href="usbCan__scene_8hpp_source.html">usbCan_scene.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a8776d4cf7e872a390c03ef324bfda767" name="a8776d4cf7e872a390c03ef324bfda767"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8776d4cf7e872a390c03ef324bfda767">&#9670;&#160;</a></span>ADD_SCENE <span class="overload">[3/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ADD_SCENE</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">name, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">id&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td>&#160;&#160;&#160;    bool prefix##_scene_##name##_on_event(void* context, SceneManagerEvent event);</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8hpp_source.html#l00006">6</a> of file <a class="el" href="usbCan__scene_8hpp_source.html">usbCan_scene.hpp</a>.</p>
-
-</div>
-</div>
-<a id="a8776d4cf7e872a390c03ef324bfda767" name="a8776d4cf7e872a390c03ef324bfda767"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8776d4cf7e872a390c03ef324bfda767">&#9670;&#160;</a></span>ADD_SCENE <span class="overload">[4/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ADD_SCENE</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">name, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">id&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td>&#160;&#160;&#160;void prefix##_scene_##name##_on_exit(void* context);</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8hpp_source.html#l00006">6</a> of file <a class="el" href="usbCan__scene_8hpp_source.html">usbCan_scene.hpp</a>.</p>
-
-</div>
-</div>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="a0f499aff7302500ee1069d3b6b044deb" name="a0f499aff7302500ee1069d3b6b044deb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0f499aff7302500ee1069d3b6b044deb">&#9670;&#160;</a></span>usb_canScene</h2>

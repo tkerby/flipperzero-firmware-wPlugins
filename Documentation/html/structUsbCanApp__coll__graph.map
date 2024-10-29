@@ -1,0 +1,19 @@
+<map id="UsbCanApp" name="UsbCanApp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="125,359,223,384"/>
+<area shape="rect" id="Node000002" href="$structUsbCanAppViews.html" title=" " alt="" coords="33,271,169,296"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="121,305,166,356,162,360,117,308"/>
+<area shape="rect" id="Node000003" href="$structusbCanView.html" title="pouet" alt="" coords="5,168,108,193"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="70,205,98,270,93,272,65,207"/>
+<area shape="rect" id="Node000004" href="$structUsbCanBridge.html" title=" " alt="" coords="215,271,330,296"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="251,307,189,360,186,356,247,303"/>
+<area shape="rect" id="Node000005" href="$structUsbCanConfig.html" title=" " alt="" coords="132,168,245,193"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="204,204,232,245,258,269,255,273,228,248,199,207"/>
+<area shape="rect" id="Node000006" href="$classmcp2518fd.html" title=" " alt="" coords="269,168,364,193"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="308,207,280,272,275,270,304,205"/>
+<area shape="rect" id="Node000007" href="$classMCP__CAN__1.html" title=" " alt="" coords="266,93,367,119"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="319,133,319,168,314,168,314,133"/>
+<area shape="rect" id="Node000008" href="$classSPIClass.html" title="Arduino&#39;s SPIclass porting. Used for communication with mcp2518." alt="" coords="278,5,355,31"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="319,45,319,93,314,93,314,45"/>
+<area shape="rect" id="Node000009" href="$structUsbCanStatus.html" title=" " alt="" coords="388,168,501,193"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="414,203,335,249,294,273,291,268,333,244,412,198"/>
+</map>

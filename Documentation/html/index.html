@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>FLIPPER ZERO CAN FD HS SW: Main Page</title>
+<title>FLIPPER ZERO CAN FD HS SW: FLIPPER ZERO CAN FD HS SW</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -20,6 +20,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
    <div id="projectname">FLIPPER ZERO CAN FD HS SW
    </div>
@@ -69,10 +70,44 @@ $(function() {
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">FLIPPER ZERO CAN FD HS SW Documentation</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">FLIPPER ZERO CAN FD HS SW </div></div>
 </div><!--header-->
 <div class="contents">
+<div class="textblock"><p><a class="anchor" id="md_Documentation_2mainpage"></a> This software implements an USB to CAN bridge compatible with linux <a href="https://github.com/linux-can/can-utils">can-utils</a> and slcan driver. <br  />
+ This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports. <br  />
+</p>
+<div class="image">
+<img src="main_logo.png" alt=""/>
+<div class="caption">
+Flipper zero CAN FD</div></div>
+    <h1><a class="anchor" id="autotoc_md0"></a>
+Architecture overview</h1>
+<p>This application is composed by 2 main components:</p><ul>
+<li><a class="el" href="group__APP.html">APP</a> : This is a version of XTREME firmware <a href="https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/gpio/usb_uart_bridge.c">GPIO USB-UART bridge</a> application modified to send data on CAN (via SPI) and not on UART.</li>
+<li><a class="el" href="group__CAN-DRIVER.html">CAN-DRIVER</a> : Longan Labs <a href="https://github.com/Longan-Labs/Longan_CANFD">Longan_CANFD</a> library driver for the MCP 2518 CAN transceiver ported on flipper zero platform.</li>
+</ul>
+<p>Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.</p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+Test status</h1>
+<p>Applications has been tested with a MCP2515 evaluation board. As a consequence, only the following datarates are tested :</p><ul>
+<li>125 Kbaud</li>
+<li>250 Kbaud</li>
+<li>500 Kbaud</li>
+<li>1 MBaud <br  />
+</li>
+</ul>
+<div class="image">
+<img src="CAN_test.png" alt=""/>
+<div class="caption">
+Flipper zero CAN FD test setup</div></div>
+    <blockquote class="doxtable">
+<p>&zwj;<b>Note :</b> the flexible datarate is not tested yet. </p>
+</blockquote>
+<h1><a class="anchor" id="autotoc_md2"></a>
+Known bugs</h1>
+<p>Multiple exit and enters in application and its submode produce instable behaviour. </p>
+</div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

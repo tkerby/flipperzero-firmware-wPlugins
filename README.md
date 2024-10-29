@@ -1,17 +1,14 @@
 # Flipper Zero CAN FD HS SW
 
-![Flipper zero CAN FD](./Documentation/images/readme.png "Flipper zero CAN FD")
 
-## Introduction
-
-This software implements an USB to CAN bridge compatible with linux [can-utils](https://github.com/linux-can/can-utils) and slcan driver. <br>
-This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports.
-![Flipper zero CAN FD](./Documentation/images/Connection.png "Flipper zero CAN FD")
+This software implements an USB to CAN bridge compatible with **Linux [can-utils](https://github.com/linux-can/can-utils) and slcan driver.** <br>
+This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports.<br>
+![Flipper zero CAN FD](./Documentation/images/main_logo.png "Flipper zero CAN FD")
 
 ## Usage
 
 When entering the application (by selecting can-fd-hs) from main menu or by selecting Apps/USB-CAN, a list appears with 3 choices which represent the 3 modes of the application detailled in next sections :
-- USB-CAN Bridge : This is the main mode which is used as a bridge between can-utils and a CAN device under test. 
+- **USB-CAN Bridge :** This is the **main mode** which is used as a bridge between can-utils and a CAN device under test. 
 - TEST USB LOOPBACK : This mode is used to test connectivity between host computer and flipper zero.
 - CAN TEST : This mode is used to test CAN connectivity. This send "CANALIVE" through CAN.
 
@@ -23,10 +20,9 @@ Then you can :
 2. enable your created network interface `sudo ifconfig can<X> up`.
 3. operate normally your can interface by using `cansend can<X> <iii>#<dddddddd>` and `candump can<X>` commands.
 
-Please refer to [can-utils](https://github.com/linux-can/can-utils) for more details.
+Please refer to [can-utils](https://github.com/linux-can/can-utils) for more details.<br>
 If issues are encountered, you can get more informations by connecting directly to vcp with tool like putty :
 - serial mode
-- 9600 bauds
 - 8 data bits
 - no parity
 - no hardware control flow
@@ -43,7 +39,6 @@ You can see the following screenshot for more informations.
 This mode is used to test VCP (USB cdc) connectivity. To use this mode, you have to :
 1. connect to the VCP with any VCP tool like putty :
     - serial mode
-    - 9600 bauds
     - 8 data bits
     - no parity
     - no hardware control flow
@@ -88,10 +83,6 @@ Applications has been tested with a MCP2515 evaluation board. As a consequence, 
 ![Flipper zero CAN FD test setup](./Documentation/images/CAN_test.png "Flipper zero CAN FD test setup")
 
 **Note the flexible datarate is not tested yet.**
-
-### Next steps
-
-Enhance VCP datarate to permit efficient fuzzing.
 
 ### Known bugs
 

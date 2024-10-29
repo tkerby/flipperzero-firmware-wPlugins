@@ -31,9 +31,10 @@ case $# in
         exit 1;;
 esac
 
-sed -i "s|^INPUT *=.*|INPUT = $SOURCE_DIR|" "$DOXYFILE"
+sed -i "s|^INPUT *=.*|INPUT = $SOURCE_DIR,$SCRIPT_DIR/mainpage.md|" "$DOXYFILE"
 sed -i "s|^HTML_OUTPUT *=.*|HTML_OUTPUT = $DOC_DIR|" "$DOXYFILE"
 sed -i "s|^IMAGE_PATH *=.*|IMAGE_PATH = $IMAGE_DIR|" "$DOXYFILE"
+sed -i "s|^PROJECT_LOGO *=.*|PROJECT_LOGO = $IMAGE_DIR/logo.png|" "$DOXYFILE"
 doxygen $DOXYFILE
 
 

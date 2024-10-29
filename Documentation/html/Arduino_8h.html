@@ -20,6 +20,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
    <div id="projectname">FLIPPER ZERO CAN FD HS SW
    </div>
@@ -70,80 +71,19 @@ $(function() {
 
 </div><!-- top -->
 <div class="header">
-  <div class="summary">
-<a href="#define-members">Macros</a>  </div>
   <div class="headertitle"><div class="title">Arduino.h File Reference<div class="ingroups"><a class="el" href="group__CAN-DRIVER.html">CAN-DRIVER</a> &raquo; <a class="el" href="group__CAN-DRIVER-ADAPTATION.html">CAN-DRIVER-ADAPTATION</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>used to not provoke inclusion error in Longan labs library. <a class="el" href="Arduino_8h.html#a153e9f8c3775faa2d6a0983ca988548b">delay()</a> macro is redefined to call furi delay function.  
+<p>used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi delay function.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;../../../furi/core/kernel.h&quot;</code><br />
-</div><div class="textblock"><div class="dynheader">
-Include dependency graph for Arduino.h:</div>
-<div class="dyncontent">
-<div class="center"><img src="Arduino_8h__incl.png" border="0" usemap="#aArduino_8h" alt=""/></div>
-<map name="aArduino_8h" id="aArduino_8h">
-<area shape="rect" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="19,5,103,31"/>
-<area shape="rect" title=" " alt="" coords="5,79,117,119"/>
-<area shape="poly" title=" " alt="" coords="64,31,64,65,59,65,59,31"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
-<div class="dyncontent">
-<div class="center"><img src="Arduino_8h__dep__incl.png" border="0" usemap="#aArduino_8hdep" alt=""/></div>
-<map name="aArduino_8hdep" id="aArduino_8hdep">
-<area shape="rect" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="100,5,184,31"/>
-<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="5,255,228,295"/>
-<area shape="poly" title=" " alt="" coords="129,43,97,98,82,132,71,167,68,187,71,206,84,231,100,253,96,256,79,234,66,207,62,187,66,166,77,130,93,96,124,41"/>
-<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="80,167,303,207"/>
-<area shape="poly" title=" " alt="" coords="150,44,170,118,186,165,181,167,165,119,145,45"/>
-<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="180,79,357,119"/>
-<area shape="poly" title=" " alt="" coords="174,36,240,76,237,81,171,40"/>
-<area shape="rect" href="mcp2518fd__can_8cpp.html" title=" " alt="" coords="5,343,228,383"/>
-<area shape="poly" title=" " alt="" coords="119,309,119,342,114,342,114,309"/>
-<area shape="poly" title=" " alt="" coords="168,219,135,256,131,253,164,215"/>
-<area shape="poly" title=" " alt="" coords="245,131,210,168,206,165,241,127"/>
-<area shape="rect" href="mcp__can__fd_8cpp.html" title=" " alt="" coords="327,167,504,207"/>
-<area shape="poly" title=" " alt="" coords="314,123,385,164,382,169,312,128"/>
-</map>
-</div>
-</div>
+
 <p><a href="Arduino_8h_source.html">Go to the source code of this file.</a></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a153e9f8c3775faa2d6a0983ca988548b" id="r_a153e9f8c3775faa2d6a0983ca988548b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Arduino_8h.html#a153e9f8c3775faa2d6a0983ca988548b">delay</a>(X)&#160;&#160;&#160;furi_delay_ms(X)</td></tr>
-<tr class="separator:a153e9f8c3775faa2d6a0983ca988548b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>used to not provoke inclusion error in Longan labs library. <a class="el" href="Arduino_8h.html#a153e9f8c3775faa2d6a0983ca988548b">delay()</a> macro is redefined to call furi delay function. </p>
+<div class="textblock"><p>used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi delay function. </p>
 
 <p class="definition">Definition in file <a class="el" href="Arduino_8h_source.html">Arduino.h</a>.</p>
-</div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a153e9f8c3775faa2d6a0983ca988548b" name="a153e9f8c3775faa2d6a0983ca988548b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a153e9f8c3775faa2d6a0983ca988548b">&#9670;&#160;</a></span>delay</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define delay</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">X</td><td>)</td>
-          <td>&#160;&#160;&#160;furi_delay_ms(X)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Arduino <a class="el" href="Arduino_8h.html#a153e9f8c3775faa2d6a0983ca988548b">delay()</a> macro porting </p>
-
-<p class="definition">Definition at line <a class="el" href="Arduino_8h_source.html#l00009">9</a> of file <a class="el" href="Arduino_8h_source.html">Arduino.h</a>.</p>
-
-</div>
-</div>
-</div><!-- contents -->
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8

@@ -20,6 +20,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
    <div id="projectname">FLIPPER ZERO CAN FD HS SW
    </div>
@@ -75,30 +76,7 @@ $(function() {
   <div class="headertitle"><div class="title">usb_can_app.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>&quot;</code><br />
-<code>#include &lt;furi.h&gt;</code><br />
-<code>#include &lt;furi_hal.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="usb__can__view_8hpp_source.html">views/usb_can_view.hpp</a>&quot;</code><br />
-</div><div class="textblock"><div class="dynheader">
-Include dependency graph for usb_can_app.cpp:</div>
-<div class="dyncontent">
-<div class="center"><img src="usb__can__app_8cpp__incl.png" border="0" usemap="#ausb__can__app_8cpp" alt=""/></div>
-<map name="ausb__can__app_8cpp" id="ausb__can__app_8cpp">
-<area shape="rect" title=" " alt="" coords="35,5,169,31"/>
-<area shape="rect" href="usb__can__app__i_8hpp.html" title=" " alt="" coords="5,152,151,177"/>
-<area shape="poly" title=" " alt="" coords="74,33,42,52,28,65,18,80,15,96,21,113,34,128,49,142,46,146,30,132,16,116,9,97,13,78,24,61,39,48,71,28"/>
-<area shape="rect" title=" " alt="" coords="27,79,83,104"/>
-<area shape="poly" title=" " alt="" coords="97,32,73,69,68,66,92,30"/>
-<area shape="rect" title=" " alt="" coords="107,79,190,104"/>
-<area shape="poly" title=" " alt="" coords="112,30,136,66,131,69,107,32"/>
-<area shape="rect" href="usb__can__view_8hpp.html" title=" " alt="" coords="215,79,397,104"/>
-<area shape="poly" title=" " alt="" coords="136,28,261,72,259,77,134,33"/>
-<area shape="poly" title=" " alt="" coords="270,107,129,150,127,145,269,101"/>
-<area shape="rect" title=" " alt="" coords="262,152,350,177"/>
-<area shape="poly" title=" " alt="" coords="309,104,309,138,303,138,303,104"/>
-</map>
-</div>
-</div>
+
 <p><a href="usb__can__app_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -109,9 +87,9 @@ Functions</h2></td></tr>
 <tr class="separator:ab8460cff7975a2f92003db2f9cf7a3a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1ec9791c9083c5b570f83cf8a9c402b" id="r_ad1ec9791c9083c5b570f83cf8a9c402b"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#ad1ec9791c9083c5b570f83cf8a9c402b">usb_can_app_tick_event_callback</a> (void *context)</td></tr>
 <tr class="separator:ad1ec9791c9083c5b570f83cf8a9c402b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2f2875694a49f1a33d4341f0c2348da" id="r_ae2f2875694a49f1a33d4341f0c2348da"><td class="memItemLeft" align="right" valign="top">UsbCanApp *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#ae2f2875694a49f1a33d4341f0c2348da">usb_can_app_alloc</a> ()</td></tr>
+<tr class="memitem:ae2f2875694a49f1a33d4341f0c2348da" id="r_ae2f2875694a49f1a33d4341f0c2348da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanApp.html">UsbCanApp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#ae2f2875694a49f1a33d4341f0c2348da">usb_can_app_alloc</a> ()</td></tr>
 <tr class="separator:ae2f2875694a49f1a33d4341f0c2348da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a084130f97e1e2d64b9782568afb29dd9" id="r_a084130f97e1e2d64b9782568afb29dd9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#a084130f97e1e2d64b9782568afb29dd9">usb_can_app_free</a> (UsbCanApp *app)</td></tr>
+<tr class="memitem:a084130f97e1e2d64b9782568afb29dd9" id="r_a084130f97e1e2d64b9782568afb29dd9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#a084130f97e1e2d64b9782568afb29dd9">usb_can_app_free</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app)</td></tr>
 <tr class="separator:a084130f97e1e2d64b9782568afb29dd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a40865a5abc93dd40c5295c2772096d" id="r_a7a40865a5abc93dd40c5295c2772096d"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app_8cpp.html#a7a40865a5abc93dd40c5295c2772096d">usb_can_app</a> (void *p)</td></tr>
 <tr class="separator:a7a40865a5abc93dd40c5295c2772096d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,7 +122,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">UsbCanApp * usb_can_app_alloc </td>
+          <td class="memname"><a class="el" href="structUsbCanApp.html">UsbCanApp</a> * usb_can_app_alloc </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -231,7 +209,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void usb_can_app_free </td>
           <td>(</td>
-          <td class="paramtype">UsbCanApp *&#160;</td>
+          <td class="paramtype"><a class="el" href="structUsbCanApp.html">UsbCanApp</a> *&#160;</td>
           <td class="paramname"><em>app</em></td><td>)</td>
           <td></td>
         </tr>

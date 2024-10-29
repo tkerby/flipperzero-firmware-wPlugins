@@ -22,5 +22,6 @@ var searchData=
   ['gpio_5fpin_5fmode_19',['GPIO_PIN_MODE',['../mcp2518fd__can__dfs_8h.html#a2a0b759b4b4a727bb3563ec37b94f205',1,'mcp2518fd_can_dfs.h']]],
   ['gpio_5fpin_5fpos_20',['GPIO_PIN_POS',['../mcp2518fd__can__dfs_8h.html#ad7d098ab630e99230e4c4ac44e8f604b',1,'mcp2518fd_can_dfs.h']]],
   ['gpio_5fpin_5fstate_21',['GPIO_PIN_STATE',['../mcp2518fd__can__dfs_8h.html#a4b3dc46130967e6b54616e287e61983b',1,'mcp2518fd_can_dfs.h']]],
-  ['gpio_5fpush_5fpull_22',['GPIO_PUSH_PULL',['../mcp2518fd__can__dfs_8h.html#a5f5bc2e17edcb1e343834df1a40308f8a2ede6e0f1b50e67e840a93701323c775',1,'mcp2518fd_can_dfs.h']]]
+  ['gpio_5fpush_5fpull_22',['GPIO_PUSH_PULL',['../mcp2518fd__can__dfs_8h.html#a5f5bc2e17edcb1e343834df1a40308f8a2ede6e0f1b50e67e840a93701323c775',1,'mcp2518fd_can_dfs.h']]],
+  ['gui_23',['gui',['../structUsbCanAppViews.html#ac6e220dc5a6ecf1b48cb00e9d28dc23a',1,'UsbCanAppViews']]]
 ];

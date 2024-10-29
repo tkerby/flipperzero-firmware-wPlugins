@@ -20,6 +20,7 @@
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
+  <td id="projectlogo"><img alt="Logo" src="logo.png"/></td>
   <td id="projectalign">
    <div id="projectname">FLIPPER ZERO CAN FD HS SW
    </div>
@@ -72,8 +73,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#files">Files</a> &#124;
-<a href="#nested-classes">Data Structures</a> &#124;
-<a href="#define-members">Macros</a> &#124;
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#enumval-members">Enumerator</a> &#124;
@@ -98,7 +98,7 @@ Collaboration diagram for CAN-DRIVER-ADAPTATION:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="files" name="files"></a>
 Files</h2></td></tr>
 <tr class="memitem:Arduino_8h" id="r_Arduino_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Arduino_8h.html">Arduino.h</a></td></tr>
-<tr class="memdesc:Arduino_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">used to not provoke inclusion error in Longan labs library. <a class="el" href="Arduino_8h.html#a153e9f8c3775faa2d6a0983ca988548b">delay()</a> macro is redefined to call furi delay function. <br /></td></tr>
+<tr class="memdesc:Arduino_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi delay function. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:flipper__spi__wrapper_8cpp" id="r_flipper__spi__wrapper_8cpp"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="flipper__spi__wrapper_8cpp.html">flipper_spi_wrapper.cpp</a></td></tr>
 <tr class="memdesc:flipper__spi__wrapper_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">SPIclass method implementation. <br /></td></tr>
@@ -108,26 +108,13 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Data Structures</h2></td></tr>
+Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSPISettings.html">SPISettings</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unused structure passed to @SPI.beginTransaction kept to ensure compatibility with Longan Labs library.  <a href="classSPISettings.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSPIClass.html">SPIClass</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Arduino's SPIclass porting. Used for communication with mcp2518.  <a href="classSPIClass.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:gad5a571d507f71dacafe5c6315c9f8b60" id="r_gad5a571d507f71dacafe5c6315c9f8b60"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gad5a571d507f71dacafe5c6315c9f8b60">pinMode</a>(X,  Y)</td></tr>
-<tr class="separator:gad5a571d507f71dacafe5c6315c9f8b60"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga70f311a90d5db0899063e7fbc4455989" id="r_ga70f311a90d5db0899063e7fbc4455989"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CAN-DRIVER-ADAPTATION.html#ga70f311a90d5db0899063e7fbc4455989">digitalWrite</a>(X,  Y)</td></tr>
-<tr class="separator:ga70f311a90d5db0899063e7fbc4455989"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga54ccd466ea250550206f8766bb874e77" id="r_ga54ccd466ea250550206f8766bb874e77"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CAN-DRIVER-ADAPTATION.html#ga54ccd466ea250550206f8766bb874e77">SPI_HAS_TRANSACTION</a></td></tr>
-<tr class="separator:ga54ccd466ea250550206f8766bb874e77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1c7ef42eff02618bde70868af4944d81" id="r_ga1c7ef42eff02618bde70868af4944d81"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CAN-DRIVER-ADAPTATION.html#ga1c7ef42eff02618bde70868af4944d81">MSBFIRST</a>&#160;&#160;&#160;<a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gga2bf5f470332190b5b526fff787c9af1aa89da3ebae748913c4ea84ed340c20aec">MSB_FIRST</a></td></tr>
-<tr class="separator:ga1c7ef42eff02618bde70868af4944d81"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac9d0bde2b42b2403d00b7a611514b006" id="r_gac9d0bde2b42b2403d00b7a611514b006"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gac9d0bde2b42b2403d00b7a611514b006">SPI_MODE0</a>&#160;&#160;&#160;<a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gga0d69ad4624512a751cb6389420d4c994a152359b11fb4b43ed0c5485eb0ab0673">SPI_MODE_0</a></td></tr>
-<tr class="separator:gac9d0bde2b42b2403d00b7a611514b006"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -177,115 +164,6 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Longan Lab's <a href="https://github.com/Longan-Labs/Longan_CANFD">Longan_CANFD</a> library adaptation files. </p>
-<h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ga70f311a90d5db0899063e7fbc4455989" name="ga70f311a90d5db0899063e7fbc4455989"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga70f311a90d5db0899063e7fbc4455989">&#9670;&#160;</a></span>digitalWrite</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define digitalWrite</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">X, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">Y&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="SPI_8h_source.html#l00020">20</a> of file <a class="el" href="SPI_8h_source.html">SPI.h</a>.</p>
-
-</div>
-</div>
-<a id="ga1c7ef42eff02618bde70868af4944d81" name="ga1c7ef42eff02618bde70868af4944d81"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga1c7ef42eff02618bde70868af4944d81">&#9670;&#160;</a></span>MSBFIRST</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define MSBFIRST&#160;&#160;&#160;<a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gga2bf5f470332190b5b526fff787c9af1aa89da3ebae748913c4ea84ed340c20aec">MSB_FIRST</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="SPI_8h_source.html#l00022">22</a> of file <a class="el" href="SPI_8h_source.html">SPI.h</a>.</p>
-
-</div>
-</div>
-<a id="gad5a571d507f71dacafe5c6315c9f8b60" name="gad5a571d507f71dacafe5c6315c9f8b60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad5a571d507f71dacafe5c6315c9f8b60">&#9670;&#160;</a></span>pinMode</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define pinMode</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">X, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">Y&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="SPI_8h_source.html#l00019">19</a> of file <a class="el" href="SPI_8h_source.html">SPI.h</a>.</p>
-
-</div>
-</div>
-<a id="ga54ccd466ea250550206f8766bb874e77" name="ga54ccd466ea250550206f8766bb874e77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga54ccd466ea250550206f8766bb874e77">&#9670;&#160;</a></span>SPI_HAS_TRANSACTION</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define SPI_HAS_TRANSACTION</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="SPI_8h_source.html#l00021">21</a> of file <a class="el" href="SPI_8h_source.html">SPI.h</a>.</p>
-
-</div>
-</div>
-<a id="gac9d0bde2b42b2403d00b7a611514b006" name="gac9d0bde2b42b2403d00b7a611514b006"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gac9d0bde2b42b2403d00b7a611514b006">&#9670;&#160;</a></span>SPI_MODE0</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define SPI_MODE0&#160;&#160;&#160;<a class="el" href="group__CAN-DRIVER-ADAPTATION.html#gga0d69ad4624512a751cb6389420d4c994a152359b11fb4b43ed0c5485eb0ab0673">SPI_MODE_0</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="SPI_8h_source.html#l00023">23</a> of file <a class="el" href="SPI_8h_source.html">SPI.h</a>.</p>
-
-</div>
-</div>
 <h2 class="groupheader">Typedef Documentation</h2>
 <a id="gab8ef12fab634c171394422d0ee8baf94" name="gab8ef12fab634c171394422d0ee8baf94"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gab8ef12fab634c171394422d0ee8baf94">&#9670;&#160;</a></span>byte</h2>

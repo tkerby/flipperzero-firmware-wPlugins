@@ -1,32 +1,4 @@
 var searchData=
 [
-  ['requestopmode_0',['RequestOpMode',['../union__REG__CiCON.html#a987c57f517ae3271bd9420dbcac4d276',1,'_REG_CiCON']]],
-  ['restrictretxattempts_1',['restrictretxattempts',['../struct__CAN__CONFIG.html#af5303ef67fb1183d43c03a87eaa55910',1,'_CAN_CONFIG::RestrictReTxAttempts'],['../union__REG__CiCON.html#a003a60a6825587875c6c4ad296226183',1,'_REG_CiCON::RestrictReTxAttempts']]],
-  ['rev_2',['REV',['../union__REG__DEVID.html#a2f63330964c1b5aff91bdd7d6798cfb7',1,'_REG_DEVID']]],
-  ['rtr_3',['rtr',['../classMCP__CAN__1.html#ad1117de7380ebe541bce7b90dce278f2',1,'MCP_CAN_1::rtr'],['../struct__CAN__TX__MSGOBJ__CTRL.html#a65f4e5766c1613b7066412f97d374408',1,'_CAN_TX_MSGOBJ_CTRL::RTR'],['../struct__CAN__RX__MSGOBJ__CTRL.html#ac69a4ca1e5d019b3f074ecd0db3ef8ad',1,'_CAN_RX_MSGOBJ_CTRL::RTR']]],
-  ['rtrenable_4',['rtrenable',['../struct__CAN__TX__FIFO__CONFIG.html#a372c75b6a83edc4ccee306473f2a3ed0',1,'_CAN_TX_FIFO_CONFIG::RTREnable'],['../union__REG__CiFIFOCON.html#af3a5c3bac294c24c6e608e6475bbc2b4',1,'_REG_CiFIFOCON::RTREnable']]],
-  ['rx_5factive_5',['rx_active',['../structUsbCanModel.html#abcf02d500ef3f8758db2066b05a6aa60',1,'UsbCanModel']]],
-  ['rx_5fcnt_6',['rx_cnt',['../structUsbCanModel.html#ac8fac26a516ba4c28dde18d3bf68c3ac',1,'UsbCanModel']]],
-  ['rxbf_7',['rxbf',['../union__REG__CiFIFOCON.html#a7869729201c3290cef34c3aa4b3443a8',1,'_REG_CiFIFOCON::rxBF'],['../union__REG__CiFIFOSTA.html#afe433d5bc65a3359f16af979a9c708ff',1,'_REG_CiFIFOSTA::rxBF']]],
-  ['rxcode_8',['RXCODE',['../union__REG__CiVEC.html#a4f8555a1e1153e3ef6727597542c6211',1,'_REG_CiVEC']]],
-  ['rxconfig_9',['rxConfig',['../mcp2518fd__can_8cpp.html#a2edef0e606d4d3d473afd0ca8ecfcb2f',1,'mcp2518fd_can.cpp']]],
-  ['rxd_10',['rxd',['../mcp2518fd__can_8cpp.html#a7ae76c0db69c2a3c75cc1b7087a13c5f',1,'mcp2518fd_can.cpp']]],
-  ['rxerrorcount_11',['RxErrorCount',['../union__REG__CiTREC.html#a55c9f5e0c5c423e10775111e64a863a6',1,'_REG_CiTREC']]],
-  ['rxerrorstatepassive_12',['RxErrorStatePassive',['../union__REG__CiTREC.html#aaf226efd71645e9ccb8acb11f6a2871f',1,'_REG_CiTREC']]],
-  ['rxerrorstatewarning_13',['RxErrorStateWarning',['../union__REG__CiTREC.html#a52b04f41d4300e89c84c01a91c075ec5',1,'_REG_CiTREC']]],
-  ['rxflags_14',['rxFlags',['../mcp2518fd__can_8cpp.html#a219b8712b3bcc0238c97adc6d0722fb9',1,'mcp2518fd_can.cpp']]],
-  ['rxfullie_15',['RxFullIE',['../union__REG__CiFIFOCON.html#a2dcebca025adc705625f160cb1961d0e',1,'_REG_CiFIFOCON']]],
-  ['rxfullif_16',['RxFullIF',['../union__REG__CiFIFOSTA.html#ab8b8bd1cf4bea4202948a52acf2e8073',1,'_REG_CiFIFOSTA']]],
-  ['rxhalffullie_17',['RxHalfFullIE',['../union__REG__CiFIFOCON.html#a030dd2ac2c8bfc03e4228e4bbf755ccd',1,'_REG_CiFIFOCON']]],
-  ['rxhalffullif_18',['RxHalfFullIF',['../union__REG__CiFIFOSTA.html#a0e695895a0212ac43521c172130a9304',1,'_REG_CiFIFOSTA']]],
-  ['rxie_19',['RXIE',['../struct__CAN__INT__ENABLES.html#afa0e32528f8201c776709966467bf587',1,'_CAN_INT_ENABLES']]],
-  ['rxif_20',['RXIF',['../struct__CAN__INT__FLAGS.html#af470571ca54b376172f3d01e8cc2dbba',1,'_CAN_INT_FLAGS']]],
-  ['rxnotemptyie_21',['RxNotEmptyIE',['../union__REG__CiFIFOCON.html#aa0e703b8d5e5be92a91a955bbf2ccb1f',1,'_REG_CiFIFOCON']]],
-  ['rxnotemptyif_22',['RxNotEmptyIF',['../union__REG__CiFIFOSTA.html#aae0de13bf38e1b830c4ea5e4630bc79a',1,'_REG_CiFIFOSTA']]],
-  ['rxobj_23',['rxObj',['../mcp2518fd__can_8cpp.html#a1591c34c4548bbedad1af5f79d80d99b',1,'mcp2518fd_can.cpp']]],
-  ['rxoverflowie_24',['RxOverFlowIE',['../union__REG__CiFIFOCON.html#a41a936575adf7537582242950bb251a8',1,'_REG_CiFIFOCON']]],
-  ['rxoverflowif_25',['RxOverFlowIF',['../union__REG__CiFIFOSTA.html#a78714eb5493937b22422117b343d9e57',1,'_REG_CiFIFOSTA']]],
-  ['rxovie_26',['RXOVIE',['../struct__CAN__INT__ENABLES.html#a46b0d0f23036181e42cb6cdf188c7ea5',1,'_CAN_INT_ENABLES']]],
-  ['rxovif_27',['RXOVIF',['../struct__CAN__INT__FLAGS.html#ac5511282cd16e9ccaf856df71233c954',1,'_CAN_INT_FLAGS']]],
-  ['rxtimestampenable_28',['rxtimestampenable',['../struct__CAN__RX__FIFO__CONFIG.html#a8b34fa76814cf280713d2e31b057fd7c',1,'_CAN_RX_FIFO_CONFIG::RxTimeStampEnable'],['../union__REG__CiFIFOCON.html#a188959436c905d377f45e064bad96733',1,'_REG_CiFIFOCON::RxTimeStampEnable']]]
+  ['quit_5fdialog_0',['quit_dialog',['../structUsbCanAppViews.html#a00a9a937bd77ae4752e0b7262acd01c2',1,'UsbCanAppViews']]]
 ];

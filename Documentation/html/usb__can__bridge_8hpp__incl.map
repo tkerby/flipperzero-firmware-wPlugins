@@ -1,5 +1,5 @@
 <map id="usb_can_bridge.hpp" name="usb_can_bridge.hpp">
-<area shape="rect" id="Node000001" title=" " alt="" coords="231,5,381,31"/>
+<area shape="rect" id="Node000001" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="231,5,381,31"/>
 <area shape="rect" id="Node000002" title=" " alt="" coords="5,79,76,104"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="264,33,90,80,89,74,263,28"/>
 <area shape="rect" id="Node000003" title=" " alt="" coords="101,79,183,104"/>
@@ -10,6 +10,6 @@
 <area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="317,29,346,66,341,69,313,33"/>
 <area shape="rect" id="Node000006" title=" " alt="" coords="427,79,569,104"/>
 <area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="338,28,455,71,453,76,336,33"/>
-<area shape="rect" id="Node000007" href="$usb__can__app__i_8hpp.html" title=" " alt="" coords="593,79,739,104"/>
+<area shape="rect" id="Node000007" href="$usb__can__app__i_8hpp.html" title="Application top level header file. It main structures definitions." alt="" coords="593,79,739,104"/>
 <area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="364,28,595,73,594,79,363,33"/>
 </map>

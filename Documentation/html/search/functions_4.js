@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['enabletxinterrupt_0',['enabletxinterrupt',['../classmcp2518fd.html#ad0e22e9c46de7c0147cbbba84132cfd7',1,'mcp2518fd::enableTxInterrupt()'],['../classMCP__CAN__1.html#a6dd78539ac62640c8b93c425e7c58665',1,'MCP_CAN_1::enableTxInterrupt()']]],
-  ['endtransaction_1',['endTransaction',['../group__CAN-DRIVER-ADAPTATION.html#gaab416c5231b189391e13983fe93041c3',1,'SPIClass']]]
+  ['dlc2len_0',['dlc2len',['../classCANFD.html#acbebd1361e2b0ce1ec5ff49d6123d97e',1,'CANFD']]],
+  ['drv_5fcanfdspi_5fcalculatecrc16_1',['DRV_CANFDSPI_CalculateCRC16',['../mcp2518fd__can_8cpp.html#af6c34b43dad5745ff6ffdd9f5b49496c',1,'mcp2518fd_can.cpp']]],
+  ['drv_5fcanfdspi_5fdlctodatabytes_2',['DRV_CANFDSPI_DlcToDataBytes',['../mcp2518fd__can_8cpp.html#a2617293206c262269efd68045f90d642',1,'mcp2518fd_can.cpp']]]
 ];
