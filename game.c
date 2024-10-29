@@ -510,13 +510,23 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
         }
 
         if(furi_get_tick() - secondKillTick < 5000) {
-            canvas_printf(canvas, 20, 30, "Was that easy?...");
+            canvas_printf(
+                canvas,
+                20,
+                30,
+                health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f)) ? "Was that easy?..." :
+                                                                        "You seem to struggle?");
             for(int i = 5; i > 0; i--) {
                 furi_delay_ms(i);
             }
 
         } else if(furi_get_tick() - secondKillTick > 7000 && furi_get_tick() - secondKillTick < 9000) {
-            canvas_printf(canvas, 0, 30, "Now the final challenge!");
+            if(health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f))) {
+                canvas_printf(canvas, 0, 30, "Now the final challenge!");
+            } else {
+                canvas_printf(canvas, 0, 30, "Well, here's the real challenge!");
+                canvas_printf(canvas, 10, 40, "Good luck?");
+            }
             for(int i = 5; i > 0; i--) {
                 furi_delay_ms(i);
             }
