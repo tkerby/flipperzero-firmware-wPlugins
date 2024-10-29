@@ -2,6 +2,7 @@
 
 SCRIPT_DIR=$(realpath $(dirname $0))
 SOURCE_DIR=$(dirname $SCRIPT_DIR)
+FLIPPER_DIR=$SOURCE_DIR/../../../targets/f7/furi_hal
 DOC_DIR=$SCRIPT_DIR/html
 IMAGE_DIR=$SCRIPT_DIR/images
 DOXYFILE=$SCRIPT_DIR/Doxyfile
@@ -31,7 +32,7 @@ case $# in
         exit 1;;
 esac
 
-sed -i "s|^INPUT *=.*|INPUT = $SOURCE_DIR,$SCRIPT_DIR/mainpage.md|" "$DOXYFILE"
+sed -i "s|^INPUT *=.*|INPUT = $SOURCE_DIR,$FLIPPER_DIR,$SCRIPT_DIR/mainpage.md|" "$DOXYFILE"
 sed -i "s|^HTML_OUTPUT *=.*|HTML_OUTPUT = $DOC_DIR|" "$DOXYFILE"
 sed -i "s|^IMAGE_PATH *=.*|IMAGE_PATH = $IMAGE_DIR|" "$DOXYFILE"
 sed -i "s|^PROJECT_LOGO *=.*|PROJECT_LOGO = $IMAGE_DIR/logo.png|" "$DOXYFILE"

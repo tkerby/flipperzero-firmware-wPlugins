@@ -73,30 +73,119 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">usb_can_bridge.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__CONTROLLER.html">CONTROLLER</a></div></div></div>
+  <div class="headertitle"><div class="title">usb_can_bridge.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__MODEL.html">MODEL</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>contains CAN bus and and USB VCP logic control functions (implemented in <a class="el" href="usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi...">usb_can_bridge.cpp</a>) to be exposed.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &lt;stdint.h&gt;</code><br />
+<code>#include &lt;stdbool.h&gt;</code><br />
+<code>#include &lt;api_lock.h&gt;</code><br />
+<code>#include &lt;furi_hal.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="furi__hal__usb__cdc_8h_source.html">furi_hal_usb_cdc.h</a>&gt;</code><br />
+<code>#include &quot;<a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for usb_can_bridge.hpp:</div>
+<div class="dyncontent">
+<div class="center"><img src="usb__can__bridge_8hpp__incl.png" border="0" usemap="#ausb__can__bridge_8hpp" alt=""/></div>
+<map name="ausb__can__bridge_8hpp" id="ausb__can__bridge_8hpp">
+<area shape="rect" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="645,5,795,31"/>
+<area shape="rect" title=" " alt="" coords="50,467,121,493"/>
+<area shape="poly" title=" " alt="" coords="645,22,467,29,362,37,256,50,160,69,80,95,50,111,27,129,13,149,8,171,8,327,14,365,29,400,48,431,67,455,63,459,44,434,24,402,9,366,3,328,3,170,8,147,23,125,47,107,78,90,158,64,256,45,361,32,467,23,644,17"/>
+<area shape="rect" title=" " alt="" coords="997,79,1080,104"/>
+<area shape="poly" title=" " alt="" coords="772,28,985,75,983,80,771,33"/>
+<area shape="rect" title=" " alt="" coords="211,159,299,185"/>
+<area shape="poly" title=" " alt="" coords="685,33,311,155,303,157,301,152,310,149,684,28"/>
+<area shape="rect" title=" " alt="" coords="1104,79,1187,104"/>
+<area shape="poly" title=" " alt="" coords="796,28,1091,76,1090,81,795,33"/>
+<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="43,159,186,185"/>
+<area shape="poly" title=" " alt="" coords="670,33,465,81,170,158,169,153,463,76,668,28"/>
+<area shape="rect" href="usb__can__app__i_8hpp.html" title="Application top level header file. It main structures definitions." alt="" coords="827,79,973,104"/>
+<area shape="poly" title=" " alt="" coords="750,28,859,71,857,76,748,33"/>
+<area shape="poly" title=" " alt="" coords="116,185,90,454,85,453,111,185"/>
+<area shape="rect" title=" " alt="" coords="123,240,210,265"/>
+<area shape="poly" title=" " alt="" coords="125,183,154,227,149,230,120,186"/>
+<area shape="poly" title=" " alt="" coords="827,97,596,113,453,130,311,155,299,158,298,153,310,149,453,124,595,108,827,92"/>
+<area shape="poly" title=" " alt="" coords="827,98,550,116,375,132,199,155,175,159,174,154,198,149,375,127,550,110,827,93"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="1012,159,1204,185"/>
+<area shape="poly" title=" " alt="" coords="931,102,1066,152,1064,157,929,107"/>
+<area shape="rect" title=" " alt="" coords="895,240,1055,265"/>
+<area shape="poly" title=" " alt="" coords="915,102,935,124,953,151,967,190,975,226,969,227,962,191,948,153,930,127,911,106"/>
+<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="1228,159,1431,185"/>
+<area shape="poly" title=" " alt="" coords="963,101,1254,154,1253,160,962,107"/>
+<area shape="rect" title=" " alt="" coords="1455,159,1534,185"/>
+<area shape="poly" title=" " alt="" coords="973,100,986,101,1115,113,1216,117,1316,126,1443,149,1454,152,1453,157,1442,155,1315,131,1215,123,1114,118,985,107,973,105"/>
+<area shape="rect" title=" " alt="" coords="1559,159,1721,185"/>
+<area shape="poly" title=" " alt="" coords="973,100,986,101,1143,115,1267,122,1390,131,1547,149,1575,154,1574,159,1546,155,1389,136,1266,128,1143,121,985,107,973,105"/>
+<area shape="rect" title=" " alt="" coords="1745,159,1924,185"/>
+<area shape="poly" title=" " alt="" coords="973,100,986,101,1196,117,1360,122,1524,129,1734,149,1767,154,1766,160,1733,155,1523,134,1360,128,1195,122,985,107,973,105"/>
+<area shape="rect" title=" " alt="" coords="1949,152,2121,192"/>
+<area shape="poly" title=" " alt="" coords="973,100,986,101,1129,112,1250,118,1458,121,1667,126,1790,135,1935,149,1934,155,1790,140,1667,132,1458,126,1250,123,1128,118,985,107,973,105"/>
+<area shape="rect" title=" " alt="" coords="2145,152,2303,192"/>
+<area shape="poly" title=" " alt="" coords="973,100,986,101,1159,113,1306,119,1557,119,1679,119,1809,122,1957,131,2131,149,2131,155,1957,137,1809,127,1679,124,1557,124,1306,124,1158,119,985,107,973,105"/>
+<area shape="rect" title=" " alt="" coords="323,159,485,185"/>
+<area shape="poly" title=" " alt="" coords="827,105,498,155,472,159,471,154,497,149,827,100"/>
+<area shape="rect" title=" " alt="" coords="509,159,691,185"/>
+<area shape="poly" title=" " alt="" coords="857,107,657,159,656,153,856,101"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="715,152,938,192"/>
+<area shape="poly" title=" " alt="" coords="891,106,856,144,852,140,887,102"/>
+<area shape="poly" title=" " alt="" coords="1090,187,1007,235,1005,231,1087,183"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="1079,240,1268,265"/>
+<area shape="poly" title=" " alt="" coords="1120,183,1157,227,1153,231,1116,187"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="639,240,803,265"/>
+<area shape="poly" title=" " alt="" coords="803,194,750,234,746,229,800,190"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="793,387,877,412"/>
+<area shape="poly" title=" " alt="" coords="830,192,836,373,831,373,825,192"/>
+<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="503,387,558,412"/>
+<area shape="poly" title=" " alt="" coords="739,195,683,214,629,242,593,274,566,315,551,345,540,374,535,373,546,343,562,312,589,270,627,238,681,209,738,190"/>
+<area shape="poly" title=" " alt="" coords="733,264,819,374,815,378,729,267"/>
+<area shape="rect" title=" " alt="" coords="682,387,769,412"/>
+<area shape="poly" title=" " alt="" coords="724,266,727,373,722,373,719,266"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="576,313,688,339"/>
+<area shape="poly" title=" " alt="" coords="709,267,659,307,656,302,705,263"/>
+<area shape="rect" title=" " alt="" coords="779,460,891,500"/>
+<area shape="poly" title=" " alt="" coords="837,412,837,446,832,446,832,412"/>
+<area shape="poly" title=" " alt="" coords="665,336,790,380,788,385,664,341"/>
+<area shape="poly" title=" " alt="" coords="649,337,701,376,698,380,645,341"/>
+<area shape="poly" title=" " alt="" coords="617,341,560,381,557,376,614,336"/>
+<area shape="rect" title=" " alt="" coords="583,387,657,412"/>
+<area shape="poly" title=" " alt="" coords="633,339,627,374,622,373,627,339"/>
+<area shape="poly" title=" " alt="" coords="504,408,135,473,134,467,503,403"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><img src="usb__can__bridge_8hpp__dep__incl.png" border="0" usemap="#ausb__can__bridge_8hppdep" alt=""/></div>
+<map name="ausb__can__bridge_8hppdep" id="ausb__can__bridge_8hppdep">
+<area shape="rect" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="200,5,351,31"/>
+<area shape="rect" href="usbCan__scene__config_8cpp.html" title=" " alt="" coords="5,79,169,119"/>
+<area shape="poly" title=" " alt="" coords="236,38,134,81,132,76,234,33"/>
+<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="193,79,357,119"/>
+<area shape="poly" title=" " alt="" coords="278,44,278,79,273,79,273,44"/>
+<area shape="rect" href="usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="381,86,532,111"/>
+<area shape="poly" title=" " alt="" coords="315,34,431,84,429,88,313,39"/>
+</map>
+</div>
+</div>
 <p><a href="usb__can__bridge_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga406566144d24b0a1aadf763598a3f739" id="r_ga406566144d24b0a1aadf763598a3f739"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app, <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a> state)</td></tr>
-<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
+<tr class="memitem:ga406566144d24b0a1aadf763598a3f739" id="r_ga406566144d24b0a1aadf763598a3f739"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app, <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a> state)</td></tr>
+<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode (cf. <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a>) called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
 <tr class="separator:ga406566144d24b0a1aadf763598a3f739"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad5baaad7fe3398ff39000f47dd2b87c1" id="r_gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
+<tr class="memitem:gad5baaad7fe3398ff39000f47dd2b87c1" id="r_gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
 <tr class="memdesc:gad5baaad7fe3398ff39000f47dd2b87c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">function called to leave application operationnal mode (free memory).  <br /></td></tr>
 <tr class="separator:gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf0e6786f7908114eb4499a23797a2cdb" id="r_gaf0e6786f7908114eb4499a23797a2cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
+<tr class="memitem:gaf0e6786f7908114eb4499a23797a2cdb" id="r_gaf0e6786f7908114eb4499a23797a2cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
 <tr class="memdesc:gaf0e6786f7908114eb4499a23797a2cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">configure application used USB CDC VCP channel.  <br /></td></tr>
 <tr class="separator:gaf0e6786f7908114eb4499a23797a2cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2c439b66c469ad79339fae3fae05116c" id="r_ga2c439b66c469ad79339fae3fae05116c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga2c439b66c469ad79339fae3fae05116c">usb_can_get_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
+<tr class="memitem:ga2c439b66c469ad79339fae3fae05116c" id="r_ga2c439b66c469ad79339fae3fae05116c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga2c439b66c469ad79339fae3fae05116c">usb_can_get_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
 <tr class="memdesc:ga2c439b66c469ad79339fae3fae05116c"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB VCP channel config (channel number used) getter (cf. <a class="el" href="structUsbCanBridge.html#a8ff6a9bf7158be65ae830ce8c1d7a05b">UsbCanBridge::cfg_new</a> field) used for display purpose.  <br /></td></tr>
 <tr class="separator:ga2c439b66c469ad79339fae3fae05116c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga873f6fac62630397e3828d0e5a809d8b" id="r_ga873f6fac62630397e3828d0e5a809d8b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga873f6fac62630397e3828d0e5a809d8b">usb_can_get_state</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanStatus.html">UsbCanStatus</a> *st)</td></tr>
+<tr class="memitem:ga873f6fac62630397e3828d0e5a809d8b" id="r_ga873f6fac62630397e3828d0e5a809d8b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga873f6fac62630397e3828d0e5a809d8b">usb_can_get_state</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanStatus.html">UsbCanStatus</a> *st)</td></tr>
 <tr class="memdesc:ga873f6fac62630397e3828d0e5a809d8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Application mode getter (cf. <a class="el" href="structUsbCanBridge.html#a4b434670b751d5755a8c94d1525b9aec">UsbCanBridge::st</a> field) used for display purpose.  <br /></td></tr>
 <tr class="separator:ga873f6fac62630397e3828d0e5a809d8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>

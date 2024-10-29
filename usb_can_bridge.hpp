@@ -3,7 +3,7 @@
  * @defgroup APP
  * @brief Applicative Software : this is an adaptation of Xtreme firmware USB-UART bridge App in order to send data on CAN bus instead of UART.
  * @{
-  @defgroup CONTROLLER
+  @defgroup MODEL
   @brief Main application files used to operate USB VCP and CAN Link through @ref CAN-DRIVER module.
   @{
   @file usb_can_bridge.hpp

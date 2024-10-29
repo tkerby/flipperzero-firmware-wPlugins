@@ -1,30 +1,28 @@
 <map id="usb_can_app_i.hpp" name="usb_can_app_i.hpp">
-<area shape="rect" id="Node000001" title="Application top level header file. It main structures definitions." alt="" coords="575,5,720,31"/>
-<area shape="rect" id="Node000002" href="$usbCan__scene__config_8cpp.html" title=" " alt="" coords="5,167,169,207"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="561,25,460,31,348,42,247,58,206,69,177,81,151,100,129,123,99,168,95,165,125,119,148,96,174,76,205,64,246,53,348,37,460,26,561,20"/>
-<area shape="rect" id="Node000003" href="$usbCan__scene__exit__confirm_8cpp.html" title=" " alt="" coords="685,79,849,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="678,36,740,76,737,81,675,41"/>
-<area shape="rect" id="Node000004" href="$usbCan__scene__start_8cpp.html" title=" " alt="" coords="873,79,1037,119"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="706,31,882,76,881,81,705,37"/>
-<area shape="rect" id="Node000005" href="$usbCan__scene__usb__busy_8cpp.html" title=" " alt="" coords="1061,79,1225,119"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="734,28,1050,76,1061,78,1060,83,1050,81,733,33"/>
-<area shape="rect" id="Node000006" href="$usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="193,167,357,207"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="561,27,336,47,239,62,206,71,189,81,183,91,182,102,193,124,216,146,243,164,240,169,213,150,189,127,177,103,178,89,185,77,204,66,238,57,336,42,561,22"/>
-<area shape="rect" id="Node000007" href="$usb__can__app_8cpp.html" title=" " alt="" coords="569,174,702,199"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="648,45,639,174,634,174,643,44"/>
-<area shape="rect" id="Node000008" href="$usb__can__app__start_8c.html" title=" " alt="" coords="1250,86,1405,111"/>
-<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="734,22,963,42,1101,57,1238,76,1278,83,1277,89,1238,81,1100,63,962,47,734,28"/>
-<area shape="rect" id="Node000009" href="$usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="381,174,532,199"/>
-<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="562,33,473,52,438,65,416,80,410,91,409,103,416,129,431,153,447,172,443,175,426,156,411,131,404,103,405,90,412,77,435,60,472,47,561,28"/>
-<area shape="rect" id="Node000010" href="$usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="200,86,351,111"/>
-<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="580,36,330,89,329,83,579,31"/>
-<area shape="rect" id="Node000011" href="$usb__can__view_8cpp.html" title=" " alt="" coords="1429,86,1610,111"/>
-<area shape="poly" id="edge13_Node000001_Node000011" title=" " alt="" coords="734,20,1036,39,1226,55,1417,76,1463,83,1462,89,1416,81,1226,60,1036,44,733,26"/>
-<area shape="rect" id="Node000012" href="$usb__can__view_8hpp.html" title=" " alt="" coords="427,86,609,111"/>
-<area shape="poly" id="edge14_Node000001_Node000012" title=" " alt="" coords="618,40,539,88,536,83,615,36"/>
-<area shape="poly" id="edge10_Node000010_Node000002" title=" " alt="" coords="239,119,130,169,128,164,237,115"/>
-<area shape="poly" id="edge11_Node000010_Node000006" title=" " alt="" coords="278,125,278,166,273,166,273,125"/>
-<area shape="poly" id="edge12_Node000010_Node000009" title=" " alt="" coords="313,115,433,171,431,176,311,120"/>
-<area shape="poly" id="edge15_Node000012_Node000006" title=" " alt="" coords="473,119,330,169,328,164,471,114"/>
-<area shape="poly" id="edge16_Node000012_Node000007" title=" " alt="" coords="546,117,621,172,618,176,543,122"/>
+<area shape="rect" id="Node000001" title="Application top level header file. It main structures definitions." alt="" coords="653,5,799,31"/>
+<area shape="rect" id="Node000002" href="$usbCan__scene__config_8cpp.html" title=" " alt="" coords="159,167,323,207"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="639,23,472,27,277,36,108,54,50,66,31,73,20,80,9,98,11,113,22,126,41,138,96,158,159,172,158,177,95,163,38,143,18,130,6,115,4,97,16,77,29,68,48,61,107,48,276,31,472,21,639,18"/>
+<area shape="rect" id="Node000003" href="$usbCan__scene__exit__confirm_8cpp.html" title=" " alt="" coords="31,79,195,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="640,30,441,50,206,81,195,83,195,78,206,76,441,45,639,24"/>
+<area shape="rect" id="Node000004" href="$usbCan__scene__start_8cpp.html" title=" " alt="" coords="219,79,383,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="647,36,394,81,384,83,383,78,393,76,646,30"/>
+<area shape="rect" id="Node000005" href="$usbCan__scene__usb__busy_8cpp.html" title=" " alt="" coords="407,79,571,119"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="679,37,546,81,545,76,678,32"/>
+<area shape="rect" id="Node000006" href="$usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="769,167,933,207"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="748,39,780,77,841,165,837,168,776,80,744,43"/>
+<area shape="rect" id="Node000007" href="$usb__can__app_8cpp.html" title=" " alt="" coords="1094,174,1227,199"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="813,20,942,27,1087,38,1209,54,1251,64,1274,77,1283,92,1282,107,1274,122,1261,135,1226,159,1190,176,1188,172,1224,154,1258,131,1270,119,1277,106,1278,93,1271,81,1249,69,1208,59,1086,43,942,32,813,25"/>
+<area shape="rect" id="Node000008" href="$usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="595,174,745,199"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="745,41,762,78,764,99,759,120,747,138,731,154,697,176,694,172,727,150,743,135,754,118,759,99,756,80,740,43"/>
+<area shape="rect" id="Node000009" href="$usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="595,86,745,111"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="712,43,680,87,676,84,708,40"/>
+<area shape="rect" id="Node000010" href="$usb__can__view_8cpp.html" title="VIEW part of APP." alt="" coords="1079,86,1261,111"/>
+<area shape="poly" id="edge12_Node000001_Node000010" title=" " alt="" coords="806,30,1068,76,1108,83,1107,89,1067,81,805,36"/>
+<area shape="rect" id="Node000011" href="$usb__can__view_8hpp.html" title=" " alt="" coords="872,86,1055,111"/>
+<area shape="poly" id="edge13_Node000001_Node000011" title=" " alt="" coords="774,32,930,83,928,89,772,37"/>
+<area shape="poly" id="edge9_Node000009_Node000002" title=" " alt="" coords="604,117,582,121,323,172,322,167,581,116,603,112"/>
+<area shape="poly" id="edge10_Node000009_Node000006" title=" " alt="" coords="708,115,812,164,810,169,705,120"/>
+<area shape="poly" id="edge11_Node000009_Node000008" title=" " alt="" coords="673,125,673,173,667,173,667,125"/>
+<area shape="poly" id="edge14_Node000011_Node000006" title=" " alt="" coords="939,122,878,169,874,164,935,118"/>
+<area shape="poly" id="edge15_Node000011_Node000007" title=" " alt="" coords="1003,114,1135,171,1133,176,1001,119"/>
 </map>

@@ -1,4 +1,4 @@
-var searchData =
-  [
-    ['main_0', ['CONTROLLER', ['../group__CONTROLLER.html', 1, '']]]
-  ];
+var searchData=
+[
+  ['model_0',['MODEL',['../group__MODEL.html',1,'']]]
+];

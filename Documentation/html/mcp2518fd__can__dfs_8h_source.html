@@ -76,7 +76,7 @@ $(document).ready(function() { init_codefold(0); });
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_97bb94c315de1e95c694f28397c8225a.html">Longan_CANFD</a></li><li class="navelem"><a class="el" href="dir_84d2d35ba18361eb4593a3ecf284d769.html">src</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_b5606e6bc73789aafce5e6cb3a07d091.html">Longan_CANFD</a></li><li class="navelem"><a class="el" href="dir_b91f560b87482a4a16e4d5bcf1689e48.html">src</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -144,85 +144,89 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment">// *****************************************************************************</span></div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment">/* SPI Instruction Set */</span></div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="preprocessor">#define cINSTRUCTION_RESET 0x00</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="preprocessor">#define cINSTRUCTION_READ 0x03</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#define cINSTRUCTION_READ_CRC 0x0B</span></div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#define cINSTRUCTION_WRITE 0x02</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="preprocessor">#define cINSTRUCTION_WRITE_CRC 0x0A</span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="preprocessor">#define cINSTRUCTION_WRITE_SAFE 0x0C</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aaac38de48c47c51a63898119ce516f25">   62</a></span><span class="preprocessor">#define cINSTRUCTION_RESET 0x00</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#abd17cbab88ae445d7889dfdd48fae6e4">   63</a></span><span class="preprocessor">#define cINSTRUCTION_READ 0x03</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a5b55b339b64bfbcd848c9655cd5e17ff">   64</a></span><span class="preprocessor">#define cINSTRUCTION_READ_CRC 0x0B</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ab4f1907d2f495bbe15e7aeeb3851ee55">   65</a></span><span class="preprocessor">#define cINSTRUCTION_WRITE 0x02</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a1fa13a1a8de8c373fb3f4c3688efc3d3">   66</a></span><span class="preprocessor">#define cINSTRUCTION_WRITE_CRC 0x0A</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aafac3859b74e177e56649236e2d1bfd1">   67</a></span><span class="preprocessor">#define cINSTRUCTION_WRITE_SAFE 0x0C</span></div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment">// *****************************************************************************</span></div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="comment">// *****************************************************************************</span></div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="comment">/* Register Addresses */</span></div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">/* CAN FD Controller */</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#define cREGADDR_CiCON 0x000</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="preprocessor">#define cREGADDR_CiNBTCFG 0x004</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="preprocessor">#define cREGADDR_CiDBTCFG 0x008</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="preprocessor">#define cREGADDR_CiTDC 0x00C</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aada675c01d3f395f4d1af64d3d397d7f">   74</a></span><span class="preprocessor">#define cREGADDR_CiCON 0x000</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a4d870810f7bc11f93ebf176e06210192">   75</a></span><span class="preprocessor">#define cREGADDR_CiNBTCFG 0x004</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#adae347fd51a5c9af67e7c972660f1985">   76</a></span><span class="preprocessor">#define cREGADDR_CiDBTCFG 0x008</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a3799597d23df6dc991a232f0454d93d2">   77</a></span><span class="preprocessor">#define cREGADDR_CiTDC 0x00C</span></div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="preprocessor">#define cREGADDR_CiTBC 0x010</span></div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="preprocessor">#define cREGADDR_CiTSCON 0x014</span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="preprocessor">#define cREGADDR_CiVEC 0x018</span></div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="preprocessor">#define cREGADDR_CiINT 0x01C</span></div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="preprocessor">#define cREGADDR_CiINTFLAG cREGADDR_CiINT</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="preprocessor">#define cREGADDR_CiINTENABLE (cREGADDR_CiINT)</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a899b5443801423f5a467e8fd38f966fd">   79</a></span><span class="preprocessor">#define cREGADDR_CiTBC 0x010</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae0dafd2c4f712136bf45245f3eacd9e1">   80</a></span><span class="preprocessor">#define cREGADDR_CiTSCON 0x014</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae87be9fa0d2c93ef52812a8aba881409">   81</a></span><span class="preprocessor">#define cREGADDR_CiVEC 0x018</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aa567950a327ed60c67b1df9e3be37697">   82</a></span><span class="preprocessor">#define cREGADDR_CiINT 0x01C</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aa579fbcb8df1fd9235a313e6807e97f4">   83</a></span><span class="preprocessor">#define cREGADDR_CiINTFLAG cREGADDR_CiINT</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ad899411cb997670b9767127f41b7b452">   84</a></span><span class="preprocessor">#define cREGADDR_CiINTENABLE (cREGADDR_CiINT)</span></div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="preprocessor">#define cREGADDR_CiRXIF 0x020</span></div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="preprocessor">#define cREGADDR_CiTXIF 0x024</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="preprocessor">#define cREGADDR_CiRXOVIF 0x028</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="preprocessor">#define cREGADDR_CiTXATIF 0x02C</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a08b4b0fd456937a18e8619e7ee2cfa19">   86</a></span><span class="preprocessor">#define cREGADDR_CiRXIF 0x020</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a1d092f3f240d7cc60bbef82c50418d3e">   87</a></span><span class="preprocessor">#define cREGADDR_CiTXIF 0x024</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae3bd410717d4e6a68aac482f3e8e689d">   88</a></span><span class="preprocessor">#define cREGADDR_CiRXOVIF 0x028</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae999167e4c4ace2c94e6c771923ec7af">   89</a></span><span class="preprocessor">#define cREGADDR_CiTXATIF 0x02C</span></div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#define cREGADDR_CiTXREQ 0x030</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#define cREGADDR_CiTREC 0x034</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#define cREGADDR_CiBDIAG0 0x038</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#define cREGADDR_CiBDIAG1 0x03C</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#af592042895f26689a1374c88ef865c60">   91</a></span><span class="preprocessor">#define cREGADDR_CiTXREQ 0x030</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a9cf9dc5c79a1a19db445b5acb2064989">   92</a></span><span class="preprocessor">#define cREGADDR_CiTREC 0x034</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a03e6d23dd298ab01191ee3cca36209a4">   93</a></span><span class="preprocessor">#define cREGADDR_CiBDIAG0 0x038</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a1b136081623e52e78d636aefe7f11ceb">   94</a></span><span class="preprocessor">#define cREGADDR_CiBDIAG1 0x03C</span></div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="preprocessor">#define cREGADDR_CiTEFCON 0x040</span></div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#define cREGADDR_CiTEFSTA 0x044</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="preprocessor">#define cREGADDR_CiTEFUA 0x048</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="preprocessor">#define cREGADDR_CiFIFOBA 0x04C</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a74de5b3e92c0c460c8d06646e1b829f0">   96</a></span><span class="preprocessor">#define cREGADDR_CiTEFCON 0x040</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a63a634196d9d734d9f42957e62c01431">   97</a></span><span class="preprocessor">#define cREGADDR_CiTEFSTA 0x044</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae8b59cd028f1b502d4488778b0288a0b">   98</a></span><span class="preprocessor">#define cREGADDR_CiTEFUA 0x048</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a5b7e7b2f51e0ae2f7110e146f69b2d77">   99</a></span><span class="preprocessor">#define cREGADDR_CiFIFOBA 0x04C</span></div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor">#define cREGADDR_CiFIFOCON 0x050</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="preprocessor">#define cREGADDR_CiFIFOSTA 0x054</span></div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="preprocessor">#define cREGADDR_CiFIFOUA 0x058</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="preprocessor">#define CiFIFO_OFFSET (3 * 4)</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a9c9ba2b45be7ecba923a34ddfb7033b3">  101</a></span><span class="preprocessor">#define cREGADDR_CiFIFOCON 0x050</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a94c69387c36a83aac932d8079bc365d2">  102</a></span><span class="preprocessor">#define cREGADDR_CiFIFOSTA 0x054</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aa4fe64ab449b529cab61ff3f16802653">  103</a></span><span class="preprocessor">#define cREGADDR_CiFIFOUA 0x058</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a83b0c7144b02e666e6acbf543bf02d91">  104</a></span><span class="preprocessor">#define CiFIFO_OFFSET (3 * 4)</span></div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="preprocessor">#define cREGADDR_CiTXQCON 0x050</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="preprocessor">#define cREGADDR_CiTXQSTA 0x054</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="preprocessor">#define cREGADDR_CiTXQUA 0x058</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a4eef2030b086a9a19d9c29f66a6e3631">  106</a></span><span class="preprocessor">#define cREGADDR_CiTXQCON 0x050</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#afd87cb0e75102ded9ffe1425a70ed438">  107</a></span><span class="preprocessor">#define cREGADDR_CiTXQSTA 0x054</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aa9e7a2fb932a108944ebb8d1f396d367">  108</a></span><span class="preprocessor">#define cREGADDR_CiTXQUA 0x058</span></div>
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">// The filters start right after the FIFO control/status registers</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="preprocessor">#define cREGADDR_CiFLTCON \</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a8f5b1518283db2d966715f370ebdab8c">  111</a></span><span class="preprocessor">#define cREGADDR_CiFLTCON \</span></div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="preprocessor">    (cREGADDR_CiFIFOCON + (CiFIFO_OFFSET * CAN_FIFO_TOTAL_CHANNELS)) </span><span class="comment">// 0x50+12*32</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="preprocessor">#define cREGADDR_CiFLTOBJ (cREGADDR_CiFLTCON + CAN_FIFO_TOTAL_CHANNELS)</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="preprocessor">#define cREGADDR_CiMASK (cREGADDR_CiFLTOBJ + 4)</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae8a9aaedfd8b6c518028cb26d8b40921">  113</a></span><span class="preprocessor">#define cREGADDR_CiFLTOBJ (cREGADDR_CiFLTCON + CAN_FIFO_TOTAL_CHANNELS)</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a06956ab25e87fceaf525bbb3a930709a">  114</a></span><span class="preprocessor">#define cREGADDR_CiMASK (cREGADDR_CiFLTOBJ + 4)</span></div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="preprocessor">#define CiFILTER_OFFSET (2 * 4)</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#afcc2d07008d5f70998e7031ba9d490c5">  116</a></span><span class="preprocessor">#define CiFILTER_OFFSET (2 * 4)</span></div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="comment">/* MCP25xxFD Specific */</span></div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="preprocessor">#define cREGADDR_OSC 0xE00</span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="preprocessor">#define cREGADDR_IOCON 0xE04</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor">#define cREGADDR_CRC 0xE08</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="preprocessor">#define cREGADDR_ECCCON 0xE0C</span></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="preprocessor">#define cREGADDR_ECCSTA 0xE10</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae8082776ef18edffd7dac67af1ecf5b6">  119</a></span><span class="preprocessor">#define cREGADDR_OSC 0xE00</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a3f6cd78214501f9b97dec2be0cc4f8a3">  120</a></span><span class="preprocessor">#define cREGADDR_IOCON 0xE04</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#af63971daf3f0503d3197c44a38370dcf">  121</a></span><span class="preprocessor">#define cREGADDR_CRC 0xE08</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ad423c3c9750b4ec7eea004a929e3aad3">  122</a></span><span class="preprocessor">#define cREGADDR_ECCCON 0xE0C</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a34bdf08f22a69672be7bf2fce208aaf5">  123</a></span><span class="preprocessor">#define cREGADDR_ECCSTA 0xE10</span></div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="preprocessor">#ifndef MCP2517FD</span></div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="preprocessor">#define cREGADDR_DEVID 0xE14</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a4b2e03a7aef2893d1ed35bb79c36f0cc">  125</a></span><span class="preprocessor">#define cREGADDR_DEVID 0xE14</span></div>
 <div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="comment">/* RAM addresses */</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor">#define cRAM_SIZE 2048</span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a72a47149a522662e19a9274ed36304c8">  129</a></span><span class="preprocessor">#define cRAM_SIZE 2048</span></div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="preprocessor">#define cRAMADDR_START 0x400</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="preprocessor">#define cRAMADDR_END (cRAMADDR_START + cRAM_SIZE)</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ad28f02e36b9f2dfc3472f3465340a549">  131</a></span><span class="preprocessor">#define cRAMADDR_START 0x400</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a12ac067743ebe13777ef73c2e61670c1">  132</a></span><span class="preprocessor">#define cRAMADDR_END (cRAMADDR_START + cRAM_SIZE)</span></div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
 <div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="comment">/* SPI Chip Select */</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="preprocessor">#define MCP2518fd_SELECT()  \</span></div>
+<div class="foldopen" id="foldopen00135" data-start="" data-end="">
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a8be673bd7c13bcad99c813fcdadd512e">  135</a></span><span class="preprocessor">#define MCP2518fd_SELECT()  \</span></div>
 <div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="preprocessor">    pinMode(SPICS, OUTPUT); \</span></div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="preprocessor">    digitalWrite(SPICS, LOW)</span></div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="preprocessor">#define MCP2518fd_UNSELECT() \</span></div>
+</div>
+<div class="foldopen" id="foldopen00138" data-start="" data-end="">
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ab0cebf9af49a821749fb903a8d5338f7">  138</a></span><span class="preprocessor">#define MCP2518fd_UNSELECT() \</span></div>
 <div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="preprocessor">    pinMode(SPICS, OUTPUT);  \</span></div>
 <div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="preprocessor">    digitalWrite(SPICS, HIGH)</span></div>
+</div>
 <div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
 <div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="comment">// *****************************************************************************</span></div>
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment">// *****************************************************************************</span></div>
@@ -236,13 +240,13 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">// Device selection</span></div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment">//#define MCP2517FD</span></div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="preprocessor">#define MCP2518FD</span></div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a1b0087af6dd9969999d12196bbc13ba7">  154</a></span><span class="preprocessor">#define MCP2518FD</span></div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment">// Maximum Size of TX/RX Object</span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="preprocessor">#define MAX_MSG_SIZE 76</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a17e333794ae761cd55ec6fd6fc0f1bac">  157</a></span><span class="preprocessor">#define MAX_MSG_SIZE 76</span></div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment">// Maximum number of data bytes in message</span></div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="preprocessor">#define MAX_DATA_BYTES 64</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#ae57c9e215ed764e1cd1f5fe392472c39">  160</a></span><span class="preprocessor">#define MAX_DATA_BYTES 64</span></div>
 <div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment">// *****************************************************************************</span></div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="comment">// *****************************************************************************</span></div>
@@ -288,7 +292,7 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
 <div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="comment">// FIFO0 is a special FIFO, the TX Queue</span></div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span><span class="preprocessor">#define CAN_TXQUEUE_CH0 CAN_FIFO_CH0</span></div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#aa5c6a2385e56d27e16162d9976ea40b6">  205</a></span><span class="preprocessor">#define CAN_TXQUEUE_CH0 CAN_FIFO_CH0</span></div>
 <div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
 <div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
 <div class="foldopen" id="foldopen00209" data-start="{" data-end="};">
@@ -505,10 +509,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno"><a class="line" href="struct__CAN__TX__MSGOBJ__CTRL.html#a1c5413d63aab34b4c9dbec6a3e6ec2ef">  408</a></span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a1c5413d63aab34b4c9dbec6a3e6ec2ef">FDF</a> : 1;</div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno"><a class="line" href="struct__CAN__TX__MSGOBJ__CTRL.html#a8cc614310d210bd3ee583acf3ec13624">  409</a></span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a8cc614310d210bd3ee583acf3ec13624">ESI</a> : 1;</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="preprocessor">#ifdef MCP2517FD</span></div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno"><a class="line" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">  411</a></span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">SEQ</a> : 7;</div>
-<div class="line"><a id="l00412" name="l00412"></a><span class="lineno"><a class="line" href="struct__CAN__TX__MSGOBJ__CTRL.html#aa95f3eaa4762bea27d71a7150af9f942">  412</a></span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#aa95f3eaa4762bea27d71a7150af9f942">unimplemented1</a> : 16;</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">SEQ</a> : 7;</div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>    uint32_t unimplemented1 : 16;</div>
 <div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">SEQ</a> : 23;</div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno"><a class="line" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">  414</a></span>    uint32_t <a class="code hl_variable" href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">SEQ</a> : 23;</div>
 <div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00416" name="l00416"></a><span class="lineno"><a class="line" href="mcp2518fd__can__dfs_8h.html#a940f3506e025f3c3c961bb145912f7f5">  416</a></span>} <a class="code hl_typedef" href="mcp2518fd__can__dfs_8h.html#a940f3506e025f3c3c961bb145912f7f5">CAN_TX_MSGOBJ_CTRL</a>;</div>
 </div>
@@ -1527,7 +1531,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01389" name="l01389"></a><span class="lineno"><a class="line" href="union__REG__OSC.html#a58a8e43fb6c901c3fa748b97bed7ec7e"> 1389</a></span>        uint32_t <a class="code hl_variable" href="union__REG__OSC.html#a58a8e43fb6c901c3fa748b97bed7ec7e">unimplemented1</a> : 1;</div>
 <div class="line"><a id="l01390" name="l01390"></a><span class="lineno"><a class="line" href="union__REG__OSC.html#aedf2013db3bca0f9500aa89478cfc9d0"> 1390</a></span>        uint32_t <a class="code hl_variable" href="union__REG__OSC.html#aedf2013db3bca0f9500aa89478cfc9d0">OscDisable</a> : 1;</div>
 <div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span><span class="preprocessor">#ifdef MCP2517FD</span></div>
-<div class="line"><a id="l01392" name="l01392"></a><span class="lineno"><a class="line" href="union__REG__OSC.html#ae33cbc7912afbe9526a6c63c120d9e49"> 1392</a></span>        uint32_t <a class="code hl_variable" href="union__REG__OSC.html#ae33cbc7912afbe9526a6c63c120d9e49">unimplemented2</a> : 1;</div>
+<div class="line"><a id="l01392" name="l01392"></a><span class="lineno"> 1392</span>        uint32_t unimplemented2 : 1;</div>
 <div class="line"><a id="l01393" name="l01393"></a><span class="lineno"> 1393</span><span class="preprocessor">#else</span></div>
 <div class="line"><a id="l01394" name="l01394"></a><span class="lineno"><a class="line" href="union__REG__OSC.html#af8fd994a0f87541dbef5204aba7d5d4c"> 1394</a></span>        uint32_t <a class="code hl_variable" href="union__REG__OSC.html#af8fd994a0f87541dbef5204aba7d5d4c">LowPowerModeEnable</a> : 1;</div>
 <div class="line"><a id="l01395" name="l01395"></a><span class="lineno"> 1395</span><span class="preprocessor">#endif</span></div>
@@ -2312,10 +2316,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a1c5413d63aab34b4c9dbec6a3e6ec2ef"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a1c5413d63aab34b4c9dbec6a3e6ec2ef">_CAN_TX_MSGOBJ_CTRL::FDF</a></div><div class="ttdeci">uint32_t FDF</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00408">mcp2518fd_can_dfs.h:408</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a28390cd6580fba4fa3118e642d0defc1"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a28390cd6580fba4fa3118e642d0defc1">_CAN_TX_MSGOBJ_CTRL::IDE</a></div><div class="ttdeci">uint32_t IDE</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00405">mcp2518fd_can_dfs.h:405</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a65f4e5766c1613b7066412f97d374408"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a65f4e5766c1613b7066412f97d374408">_CAN_TX_MSGOBJ_CTRL::RTR</a></div><div class="ttdeci">uint32_t RTR</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00406">mcp2518fd_can_dfs.h:406</a></div></div>
-<div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a7893be6fa73f2e305cb3da56c27ffa63"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">_CAN_TX_MSGOBJ_CTRL::SEQ</a></div><div class="ttdeci">uint32_t SEQ</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00411">mcp2518fd_can_dfs.h:411</a></div></div>
+<div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a7893be6fa73f2e305cb3da56c27ffa63"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a7893be6fa73f2e305cb3da56c27ffa63">_CAN_TX_MSGOBJ_CTRL::SEQ</a></div><div class="ttdeci">uint32_t SEQ</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00414">mcp2518fd_can_dfs.h:414</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a8cc614310d210bd3ee583acf3ec13624"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a8cc614310d210bd3ee583acf3ec13624">_CAN_TX_MSGOBJ_CTRL::ESI</a></div><div class="ttdeci">uint32_t ESI</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00409">mcp2518fd_can_dfs.h:409</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_a8d9ac765f92c637af575d7b203f697f6"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#a8d9ac765f92c637af575d7b203f697f6">_CAN_TX_MSGOBJ_CTRL::BRS</a></div><div class="ttdeci">uint32_t BRS</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00407">mcp2518fd_can_dfs.h:407</a></div></div>
-<div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_aa95f3eaa4762bea27d71a7150af9f942"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#aa95f3eaa4762bea27d71a7150af9f942">_CAN_TX_MSGOBJ_CTRL::unimplemented1</a></div><div class="ttdeci">uint32_t unimplemented1</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00412">mcp2518fd_can_dfs.h:412</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__MSGOBJ__CTRL_html_abb86736ed5223d1d01254b57d0c2307b"><div class="ttname"><a href="struct__CAN__TX__MSGOBJ__CTRL.html#abb86736ed5223d1d01254b57d0c2307b">_CAN_TX_MSGOBJ_CTRL::DLC</a></div><div class="ttdeci">uint32_t DLC</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00404">mcp2518fd_can_dfs.h:404</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__QUEUE__CONFIG_html"><div class="ttname"><a href="struct__CAN__TX__QUEUE__CONFIG.html">_CAN_TX_QUEUE_CONFIG</a></div><div class="ttdoc">CAN Transmit Queue Configure.</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00347">mcp2518fd_can_dfs.h:347</a></div></div>
 <div class="ttc" id="astruct__CAN__TX__QUEUE__CONFIG_html_a8464931cfc267fb0eaaf89f239abbad1"><div class="ttname"><a href="struct__CAN__TX__QUEUE__CONFIG.html#a8464931cfc267fb0eaaf89f239abbad1">_CAN_TX_QUEUE_CONFIG::PayLoadSize</a></div><div class="ttdeci">uint32_t PayLoadSize</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00351">mcp2518fd_can_dfs.h:351</a></div></div>
@@ -2656,7 +2659,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aunion__REG__OSC_html_acb1676522b325996d3d5c54fb657aa1f"><div class="ttname"><a href="union__REG__OSC.html#acb1676522b325996d3d5c54fb657aa1f">_REG_OSC::SclkReady</a></div><div class="ttdeci">uint32_t SclkReady</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01403">mcp2518fd_can_dfs.h:1403</a></div></div>
 <div class="ttc" id="aunion__REG__OSC_html_ad50d8aaf083b8eefa93d78bac5e24ab6"><div class="ttname"><a href="union__REG__OSC.html#ad50d8aaf083b8eefa93d78bac5e24ab6">_REG_OSC::unimplemented3</a></div><div class="ttdeci">uint32_t unimplemented3</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01398">mcp2518fd_can_dfs.h:1398</a></div></div>
 <div class="ttc" id="aunion__REG__OSC_html_add148738e57370109d0a0bd48a996c54"><div class="ttname"><a href="union__REG__OSC.html#add148738e57370109d0a0bd48a996c54">_REG_OSC::PllReady</a></div><div class="ttdeci">uint32_t PllReady</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01399">mcp2518fd_can_dfs.h:1399</a></div></div>
-<div class="ttc" id="aunion__REG__OSC_html_ae33cbc7912afbe9526a6c63c120d9e49"><div class="ttname"><a href="union__REG__OSC.html#ae33cbc7912afbe9526a6c63c120d9e49">_REG_OSC::unimplemented2</a></div><div class="ttdeci">uint32_t unimplemented2</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01392">mcp2518fd_can_dfs.h:1392</a></div></div>
 <div class="ttc" id="aunion__REG__OSC_html_aedf2013db3bca0f9500aa89478cfc9d0"><div class="ttname"><a href="union__REG__OSC.html#aedf2013db3bca0f9500aa89478cfc9d0">_REG_OSC::OscDisable</a></div><div class="ttdeci">uint32_t OscDisable</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01390">mcp2518fd_can_dfs.h:1390</a></div></div>
 <div class="ttc" id="aunion__REG__OSC_html_af8fd994a0f87541dbef5204aba7d5d4c"><div class="ttname"><a href="union__REG__OSC.html#af8fd994a0f87541dbef5204aba7d5d4c">_REG_OSC::LowPowerModeEnable</a></div><div class="ttdeci">uint32_t LowPowerModeEnable</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l01394">mcp2518fd_can_dfs.h:1394</a></div></div>
 <div class="ttc" id="aunion__REG__t_html"><div class="ttname"><a href="union__REG__t.html">_REG_t</a></div><div class="ttdoc">General 32-bit Register.</div><div class="ttdef"><b>Definition</b> <a href="mcp2518fd__can__dfs_8h_source.html#l00916">mcp2518fd_can_dfs.h:916</a></div></div>

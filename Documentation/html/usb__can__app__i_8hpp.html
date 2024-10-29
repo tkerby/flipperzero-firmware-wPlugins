@@ -73,16 +73,122 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
-<a href="#func-members">Functions</a>  </div>
-  <div class="headertitle"><div class="title">usb_can_app_i.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__CONTROLLER.html">CONTROLLER</a></div></div></div>
+<a href="#enum-members">Enumerations</a>  </div>
+  <div class="headertitle"><div class="title">usb_can_app_i.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__MODEL.html">MODEL</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>Application top level header file. It main structures definitions.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &quot;<a class="el" href="usbCan__scene_8hpp_source.html">scenes/usbCan_scene.hpp</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="usb__can__custom__event_8hpp_source.html">usb_can_custom_event.hpp</a>&quot;</code><br />
+<code>#include &lt;gui/gui.h&gt;</code><br />
+<code>#include &lt;gui/view_dispatcher.h&gt;</code><br />
+<code>#include &lt;gui/scene_manager.h&gt;</code><br />
+<code>#include &lt;gui/modules/submenu.h&gt;</code><br />
+<code>#include &lt;notification/notification_messages.h&gt;</code><br />
+<code>#include &lt;gui/modules/variable_item_list.h&gt;</code><br />
+<code>#include &lt;gui/modules/widget.h&gt;</code><br />
+<code>#include &lt;gui/modules/dialog_ex.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="mcp2518fd__can_8h_source.html">Longan_CANFD/src/mcp2518fd_can.h</a>&quot;</code><br />
+<code>#include &quot;api_lock.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="furi__hal__usb__cdc_8h_source.html">furi_hal_usb_cdc.h</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for usb_can_app_i.hpp:</div>
+<div class="dyncontent">
+<div class="center"><img src="usb__can__app__i_8hpp__incl.png" border="0" usemap="#ausb__can__app__i_8hpp" alt=""/></div>
+<map name="ausb__can__app__i_8hpp" id="ausb__can__app__i_8hpp">
+<area shape="rect" title="Application top level header file. It main structures definitions." alt="" coords="1073,5,1218,31"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="123,86,315,111"/>
+<area shape="poly" title=" " alt="" coords="1072,25,749,43,539,59,327,81,292,86,292,81,326,76,538,54,748,38,1072,20"/>
+<area shape="rect" title=" " alt="" coords="5,167,165,192"/>
+<area shape="poly" title=" " alt="" coords="1073,21,839,21,536,28,389,35,261,46,165,61,132,70,112,81,100,96,92,115,87,153,81,153,87,113,95,93,109,77,130,65,163,56,260,41,388,30,536,23,839,16,1073,16"/>
+<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="339,86,541,111"/>
+<area shape="poly" title=" " alt="" coords="1072,28,841,49,554,81,518,86,517,81,553,76,840,43,1072,23"/>
+<area shape="rect" title=" " alt="" coords="566,86,645,111"/>
+<area shape="poly" title=" " alt="" coords="1073,26,884,43,770,59,658,81,647,84,646,79,657,76,769,54,883,38,1072,20"/>
+<area shape="rect" title=" " alt="" coords="669,86,832,111"/>
+<area shape="poly" title=" " alt="" coords="1088,33,845,81,821,86,820,81,843,76,1086,28"/>
+<area shape="rect" title=" " alt="" coords="856,86,1035,111"/>
+<area shape="poly" title=" " alt="" coords="1117,33,988,83,986,78,1115,28"/>
+<area shape="rect" title=" " alt="" coords="1059,79,1231,119"/>
+<area shape="poly" title=" " alt="" coords="1148,31,1148,65,1143,65,1143,31"/>
+<area shape="rect" title=" " alt="" coords="1255,79,1414,119"/>
+<area shape="poly" title=" " alt="" coords="1174,28,1278,71,1276,76,1172,33"/>
+<area shape="rect" title=" " alt="" coords="1439,86,1601,111"/>
+<area shape="poly" title=" " alt="" coords="1200,28,1453,81,1451,86,1199,33"/>
+<area shape="rect" title=" " alt="" coords="1625,86,1807,111"/>
+<area shape="poly" title=" " alt="" coords="1218,25,1398,46,1614,76,1643,81,1643,86,1613,81,1398,51,1218,30"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="1831,79,2054,119"/>
+<area shape="poly" title=" " alt="" coords="1218,22,1479,42,1818,76,1817,81,1478,47,1218,27"/>
+<area shape="rect" title=" " alt="" coords="2245,86,2333,111"/>
+<area shape="poly" title=" " alt="" coords="1218,18,1732,35,2022,52,2143,63,2234,76,2248,79,2247,85,2233,81,2142,68,2022,57,1731,40,1218,23"/>
+<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="2078,86,2221,111"/>
+<area shape="poly" title=" " alt="" coords="1219,18,1373,22,1583,31,1823,48,2066,76,2091,81,2091,86,2065,81,1823,54,1583,36,1373,27,1218,23"/>
+<area shape="poly" title=" " alt="" coords="200,114,118,162,115,157,198,109"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="189,167,379,192"/>
+<area shape="poly" title=" " alt="" coords="230,110,268,154,263,158,226,113"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="1842,167,2006,192"/>
+<area shape="poly" title=" " alt="" coords="1941,120,1933,154,1927,152,1936,118"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="1738,313,1822,339"/>
+<area shape="poly" title=" " alt="" coords="1895,121,1861,141,1831,168,1812,201,1798,236,1785,300,1780,299,1793,235,1807,198,1827,165,1858,137,1893,117"/>
+<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="2057,313,2111,339"/>
+<area shape="poly" title=" " alt="" coords="1970,117,1996,138,2019,165,2041,199,2058,236,2080,299,2075,301,2053,238,2036,202,2015,168,1992,142,1967,121"/>
+<area shape="poly" title=" " alt="" coords="1914,194,1803,305,1799,301,1910,191"/>
+<area shape="rect" title=" " alt="" coords="1846,313,1933,339"/>
+<area shape="poly" title=" " alt="" coords="1924,193,1898,301,1893,299,1919,192"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="1927,240,2039,265"/>
+<area shape="poly" title=" " alt="" coords="1936,191,1967,228,1963,231,1932,194"/>
+<area shape="rect" title=" " alt="" coords="1724,387,1836,427"/>
+<area shape="poly" title=" " alt="" coords="1783,339,1783,373,1777,373,1777,339"/>
+<area shape="poly" title=" " alt="" coords="1951,268,1826,311,1825,306,1949,263"/>
+<area shape="poly" title=" " alt="" coords="1969,267,1917,307,1914,303,1966,263"/>
+<area shape="poly" title=" " alt="" coords="2000,263,2058,303,2055,307,1997,268"/>
+<area shape="rect" title=" " alt="" coords="1957,313,2032,339"/>
+<area shape="poly" title=" " alt="" coords="1987,265,1993,299,1988,300,1982,266"/>
+<area shape="rect" title=" " alt="" coords="2081,394,2151,419"/>
+<area shape="poly" title=" " alt="" coords="2091,338,2108,380,2104,382,2086,340"/>
+<area shape="poly" title=" " alt="" coords="2151,112,2127,339,2122,380,2116,380,2121,338,2146,111"/>
+<area shape="rect" title=" " alt="" coords="2187,167,2274,192"/>
+<area shape="poly" title=" " alt="" coords="2163,110,2211,155,2207,159,2159,113"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><img src="usb__can__app__i_8hpp__dep__incl.png" border="0" usemap="#ausb__can__app__i_8hppdep" alt=""/></div>
+<map name="ausb__can__app__i_8hppdep" id="ausb__can__app__i_8hppdep">
+<area shape="rect" title="Application top level header file. It main structures definitions." alt="" coords="653,5,799,31"/>
+<area shape="rect" href="usbCan__scene__config_8cpp.html" title=" " alt="" coords="159,167,323,207"/>
+<area shape="poly" title=" " alt="" coords="639,23,472,27,277,36,108,54,50,66,31,73,20,80,9,98,11,113,22,126,41,138,96,158,159,172,158,177,95,163,38,143,18,130,6,115,4,97,16,77,29,68,48,61,107,48,276,31,472,21,639,18"/>
+<area shape="rect" href="usbCan__scene__exit__confirm_8cpp.html" title=" " alt="" coords="31,79,195,119"/>
+<area shape="poly" title=" " alt="" coords="640,30,441,50,206,81,195,83,195,78,206,76,441,45,639,24"/>
+<area shape="rect" href="usbCan__scene__start_8cpp.html" title=" " alt="" coords="219,79,383,119"/>
+<area shape="poly" title=" " alt="" coords="647,36,394,81,384,83,383,78,393,76,646,30"/>
+<area shape="rect" href="usbCan__scene__usb__busy_8cpp.html" title=" " alt="" coords="407,79,571,119"/>
+<area shape="poly" title=" " alt="" coords="679,37,546,81,545,76,678,32"/>
+<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="769,167,933,207"/>
+<area shape="poly" title=" " alt="" coords="748,39,780,77,841,165,837,168,776,80,744,43"/>
+<area shape="rect" href="usb__can__app_8cpp.html" title=" " alt="" coords="1094,174,1227,199"/>
+<area shape="poly" title=" " alt="" coords="813,20,942,27,1087,38,1209,54,1251,64,1274,77,1283,92,1282,107,1274,122,1261,135,1226,159,1190,176,1188,172,1224,154,1258,131,1270,119,1277,106,1278,93,1271,81,1249,69,1208,59,1086,43,942,32,813,25"/>
+<area shape="rect" href="usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="595,174,745,199"/>
+<area shape="poly" title=" " alt="" coords="745,41,762,78,764,99,759,120,747,138,731,154,697,176,694,172,727,150,743,135,754,118,759,99,756,80,740,43"/>
+<area shape="rect" href="usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="595,86,745,111"/>
+<area shape="poly" title=" " alt="" coords="712,43,680,87,676,84,708,40"/>
+<area shape="rect" href="usb__can__view_8cpp.html" title="VIEW part of APP." alt="" coords="1079,86,1261,111"/>
+<area shape="poly" title=" " alt="" coords="806,30,1068,76,1108,83,1107,89,1067,81,805,36"/>
+<area shape="rect" href="usb__can__view_8hpp.html" title=" " alt="" coords="872,86,1055,111"/>
+<area shape="poly" title=" " alt="" coords="774,32,930,83,928,89,772,37"/>
+<area shape="poly" title=" " alt="" coords="604,117,582,121,323,172,322,167,581,116,603,112"/>
+<area shape="poly" title=" " alt="" coords="708,115,812,164,810,169,705,120"/>
+<area shape="poly" title=" " alt="" coords="673,125,673,173,667,173,667,125"/>
+<area shape="poly" title=" " alt="" coords="939,122,878,169,874,164,935,118"/>
+<area shape="poly" title=" " alt="" coords="1003,114,1135,171,1133,176,1001,119"/>
+</map>
+</div>
+</div>
 <p><a href="usb__can__app__i_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
@@ -100,6 +206,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanApp.html">UsbCanApp</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:aede7150dde018d67dc67c52c8ddffee7" id="r_aede7150dde018d67dc67c52c8ddffee7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#aede7150dde018d67dc67c52c8ddffee7">USB_CDC_PKT_LEN</a>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td></tr>
+<tr class="separator:aede7150dde018d67dc67c52c8ddffee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -123,17 +234,29 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:a5ea28af7210165fd74fccaac779aefa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a7dd725fcb81454c9d70a83539371ddab" id="r_a7dd725fcb81454c9d70a83539371ddab"><td class="memItemLeft" align="right" valign="top">EXTERNC int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#a7dd725fcb81454c9d70a83539371ddab">__attribute__</a> ((used)) <a class="el" href="usb__can__app_8cpp.html#a7a40865a5abc93dd40c5295c2772096d">usb_can_app</a>(void *p)</td></tr>
-<tr class="separator:a7dd725fcb81454c9d70a83539371ddab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Application top level header file. It main structures definitions. </p>
 
 <p class="definition">Definition in file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
-</div><h2 class="groupheader">Typedef Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="aede7150dde018d67dc67c52c8ddffee7" name="aede7150dde018d67dc67c52c8ddffee7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aede7150dde018d67dc67c52c8ddffee7">&#9670;&#160;</a></span>USB_CDC_PKT_LEN</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define USB_CDC_PKT_LEN&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00021">21</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
 <a id="ad2a3696f0531e7f87875b5a9e7368809" name="ad2a3696f0531e7f87875b5a9e7368809"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad2a3696f0531e7f87875b5a9e7368809">&#9670;&#160;</a></span>usbCanViewCallBack_t</h2>
 
@@ -146,7 +269,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00027">27</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00026">26</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>
@@ -170,7 +293,7 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631" name="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631"></a>UsbCanAppViewExitConfirm&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00086">86</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00085">85</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>
@@ -191,26 +314,7 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475" name="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475"></a>UsbCanNominalState&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00041">41</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="a7dd725fcb81454c9d70a83539371ddab" name="a7dd725fcb81454c9d70a83539371ddab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7dd725fcb81454c9d70a83539371ddab">&#9670;&#160;</a></span>__attribute__()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">EXTERNC int32_t __attribute__ </td>
-          <td>(</td>
-          <td class="paramtype">(used)&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00040">40</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['usbcanviewcallback_5ft_0',['usbCanViewCallBack_t',['../usb__can__app__i_8hpp.html#ad2a3696f0531e7f87875b5a9e7368809',1,'usb_can_app_i.hpp']]]
+  ['gpioexticallback_0',['GpioExtiCallback',['../furi__hal__gpio_8h.html#a3317252e418468e2f979db586cd4e987',1,'furi_hal_gpio.h']]]
 ];

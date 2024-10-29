@@ -72,18 +72,133 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">usb_can_bridge.cpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__CONTROLLER.html">CONTROLLER</a></div></div></div>
+  <div class="headertitle"><div class="title">usb_can_bridge.cpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__MODEL.html">MODEL</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vice-versa.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &quot;<a class="el" href="usb__can__bridge_8hpp_source.html">usb_can_bridge.hpp</a>&quot;</code><br />
+<code>#include &quot;usb_cdc.h&quot;</code><br />
+<code>#include &lt;cli/cli_vcp.h&gt;</code><br />
+<code>#include &lt;cli/cli.h&gt;</code><br />
+<code>#include &lt;toolbox/api_lock.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="furi__hal__usb__cdc_8h_source.html">furi_hal_usb_cdc.h</a>&gt;</code><br />
+<code>#include &quot;<a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for usb_can_bridge.cpp:</div>
+<div class="dyncontent">
+<div class="center"><img src="usb__can__bridge_8cpp__incl.png" border="0" usemap="#ausb__can__bridge_8cpp" alt=""/></div>
+<map name="ausb__can__bridge_8cpp" id="ausb__can__bridge_8cpp">
+<area shape="rect" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="298,5,449,31"/>
+<area shape="rect" href="usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="185,79,336,104"/>
+<area shape="poly" title=" " alt="" coords="357,33,292,74,289,69,354,28"/>
+<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="122,233,265,258"/>
+<area shape="poly" title=" " alt="" coords="299,25,228,36,151,58,114,75,79,96,49,122,24,153,18,167,19,179,25,190,36,200,69,216,110,228,108,233,67,221,33,204,21,193,14,181,13,166,19,151,45,118,76,92,111,70,149,53,227,31,298,20"/>
+<area shape="rect" title=" " alt="" coords="12,313,98,339"/>
+<area shape="poly" title=" " alt="" coords="299,30,167,50,107,64,66,81,45,96,32,111,14,153,9,193,15,233,28,271,43,300,39,303,24,273,10,235,3,193,8,151,27,108,42,92,63,76,105,59,166,45,298,25"/>
+<area shape="rect" href="usb__can__app__i_8hpp.html" title="Application top level header file. It main structures definitions." alt="" coords="913,152,1058,177"/>
+<area shape="poly" title=" " alt="" coords="376,30,381,67,388,86,401,102,426,113,472,122,606,138,762,150,899,157,899,163,761,155,605,144,471,128,424,118,397,106,383,89,375,68,371,31"/>
+<area shape="rect" title=" " alt="" coords="411,79,510,104"/>
+<area shape="poly" title=" " alt="" coords="389,29,437,68,434,72,386,33"/>
+<area shape="rect" title=" " alt="" coords="534,79,602,104"/>
+<area shape="poly" title=" " alt="" coords="406,28,525,71,523,76,404,33"/>
+<area shape="rect" title=" " alt="" coords="627,79,768,104"/>
+<area shape="poly" title=" " alt="" coords="426,28,633,73,631,78,425,33"/>
+<area shape="rect" title=" " alt="" coords="268,541,338,566"/>
+<area shape="poly" title=" " alt="" coords="267,103,290,194,301,258,306,325,306,401,306,527,300,527,300,401,300,325,296,259,285,195,261,105"/>
+<area shape="rect" title=" " alt="" coords="34,152,116,177"/>
+<area shape="poly" title=" " alt="" coords="232,107,119,149,117,145,230,102"/>
+<area shape="rect" title=" " alt="" coords="340,233,428,258"/>
+<area shape="poly" title=" " alt="" coords="278,102,305,123,332,150,357,186,375,219,371,222,352,188,328,154,301,127,275,106"/>
+<area shape="rect" title=" " alt="" coords="140,152,223,177"/>
+<area shape="poly" title=" " alt="" coords="250,106,206,145,203,141,246,102"/>
+<area shape="poly" title=" " alt="" coords="260,105,252,139,237,178,212,222,208,220,233,176,247,137,255,104"/>
+<area shape="poly" title=" " alt="" coords="336,99,355,101,900,153,899,159,355,107,336,105"/>
+<area shape="poly" title=" " alt="" coords="200,257,297,527,292,528,195,259"/>
+<area shape="poly" title=" " alt="" coords="175,261,89,309,86,304,172,256"/>
+<area shape="poly" title=" " alt="" coords="913,173,703,190,575,206,448,228,432,231,431,226,447,223,574,201,702,185,913,167"/>
+<area shape="poly" title=" " alt="" coords="913,174,655,195,329,228,279,234,279,229,328,223,654,190,912,169"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="503,233,695,258"/>
+<area shape="poly" title=" " alt="" coords="930,180,669,233,668,227,929,175"/>
+<area shape="rect" title=" " alt="" coords="386,313,546,339"/>
+<area shape="poly" title=" " alt="" coords="913,168,804,169,679,178,620,185,566,196,523,210,493,227,481,243,473,261,467,299,462,299,468,260,476,240,489,223,521,205,565,191,619,180,679,172,804,164,913,162"/>
+<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="719,233,922,258"/>
+<area shape="poly" title=" " alt="" coords="963,180,858,229,856,224,961,175"/>
+<area shape="rect" title=" " alt="" coords="946,233,1025,258"/>
+<area shape="poly" title=" " alt="" coords="988,178,988,219,983,219,983,178"/>
+<area shape="rect" title=" " alt="" coords="1050,233,1212,258"/>
+<area shape="poly" title=" " alt="" coords="1008,175,1099,224,1096,228,1006,180"/>
+<area shape="rect" title=" " alt="" coords="1236,233,1415,258"/>
+<area shape="poly" title=" " alt="" coords="1036,175,1264,227,1263,232,1035,180"/>
+<area shape="rect" title=" " alt="" coords="1440,225,1612,265"/>
+<area shape="poly" title=" " alt="" coords="1059,172,1223,193,1427,223,1426,228,1222,198,1058,177"/>
+<area shape="rect" title=" " alt="" coords="1636,225,1794,265"/>
+<area shape="poly" title=" " alt="" coords="1059,167,1305,186,1462,202,1623,223,1622,228,1461,207,1305,191,1059,173"/>
+<area shape="rect" title=" " alt="" coords="1819,233,1982,258"/>
+<area shape="poly" title=" " alt="" coords="1059,166,1384,182,1595,199,1807,223,1837,227,1836,233,1807,228,1594,204,1383,187,1058,171"/>
+<area shape="rect" title=" " alt="" coords="2006,233,2187,258"/>
+<area shape="poly" title=" " alt="" coords="1059,165,1458,179,1724,196,1994,223,2028,228,2027,233,1993,228,1724,202,1458,185,1059,170"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="2212,225,2434,265"/>
+<area shape="poly" title=" " alt="" coords="1058,164,1533,179,1860,196,2198,223,2198,228,1860,201,1533,184,1058,170"/>
+<area shape="poly" title=" " alt="" coords="581,260,498,309,496,304,578,256"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="570,313,759,339"/>
+<area shape="poly" title=" " alt="" coords="611,256,648,301,644,304,607,260"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="2181,313,2345,339"/>
+<area shape="poly" title=" " alt="" coords="2311,267,2282,304,2278,301,2306,264"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="2334,460,2418,485"/>
+<area shape="poly" title=" " alt="" coords="2338,265,2360,313,2375,385,2379,446,2374,447,2369,386,2355,314,2333,267"/>
+<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="2045,460,2100,485"/>
+<area shape="poly" title=" " alt="" coords="2265,268,2217,288,2171,315,2135,347,2108,388,2093,418,2082,448,2077,446,2088,416,2103,385,2131,344,2168,311,2215,283,2263,263"/>
+<area shape="poly" title=" " alt="" coords="2274,337,2361,448,2357,451,2270,341"/>
+<area shape="rect" title=" " alt="" coords="2224,460,2310,485"/>
+<area shape="poly" title=" " alt="" coords="2266,339,2269,446,2264,446,2261,339"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="2118,387,2230,412"/>
+<area shape="poly" title=" " alt="" coords="2250,341,2201,380,2197,376,2247,337"/>
+<area shape="rect" title=" " alt="" coords="2320,533,2432,573"/>
+<area shape="poly" title=" " alt="" coords="2379,486,2379,520,2374,520,2374,486"/>
+<area shape="poly" title=" " alt="" coords="2207,410,2332,453,2330,458,2205,415"/>
+<area shape="poly" title=" " alt="" coords="2190,410,2243,449,2239,454,2187,414"/>
+<area shape="poly" title=" " alt="" coords="2159,414,2102,454,2099,450,2156,410"/>
+<area shape="rect" title=" " alt="" coords="2124,460,2199,485"/>
+<area shape="poly" title=" " alt="" coords="2174,413,2169,447,2163,446,2169,412"/>
+<area shape="poly" title=" " alt="" coords="2045,478,352,553,352,547,2045,473"/>
+</map>
+</div>
+</div>
 <p><a href="usb__can__bridge_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ad9f6012ec8b56f6ea3245b200701b6e4" id="r_ad9f6012ec8b56f6ea3245b200701b6e4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ad9f6012ec8b56f6ea3245b200701b6e4">WAIT_CDC</a>()</td></tr>
+<tr class="memdesc:ad9f6012ec8b56f6ea3245b200701b6e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait USB CDC driver is available : tx_mutex is used to protect access to shared flag <a class="el" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a> which is updated during interruption.  <br /></td></tr>
+<tr class="separator:ad9f6012ec8b56f6ea3245b200701b6e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac47890ec5e0746efef91682fceb115b8" id="r_ac47890ec5e0746efef91682fceb115b8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ac47890ec5e0746efef91682fceb115b8">M_USB_CAN_ERROR_INVALID_LENGTH</a>()&#160;&#160;&#160;    <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>(usb_can, <a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a>, data[0], len)</td></tr>
+<tr class="memdesc:ac47890ec5e0746efef91682fceb115b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro used when SLCAN command length is supperior than expected. It will call <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a> with string <a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a>.  <br /></td></tr>
+<tr class="separator:ac47890ec5e0746efef91682fceb115b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdc128df7b8ee00d1b84c96d7b5f81e5" id="r_abdc128df7b8ee00d1b84c96d7b5f81e5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#abdc128df7b8ee00d1b84c96d7b5f81e5">M_USB_CAN_ERROR_INVALID_COMMAND</a>()&#160;&#160;&#160;    <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>(usb_can, invalid_command, data[0], data[0])</td></tr>
+<tr class="memdesc:abdc128df7b8ee00d1b84c96d7b5f81e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro used when SLCAN command first character is erroneous. It is used in usb_can_tx_thread.It will call <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a> with string invalid_command.  <br /></td></tr>
+<tr class="separator:abdc128df7b8ee00d1b84c96d7b5f81e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7b686726402402722798da84d2d6619" id="r_ad7b686726402402722798da84d2d6619"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ad7b686726402402722798da84d2d6619">WORKER_ALL_RX_EVENTS</a>&#160;&#160;&#160;(<a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba10b57f10590433735494031d0e35845f">WorkerEvtStop</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbafa85abd279e5e93e33ec6ff6cce4118f">WorkerEvtRxDone</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b">WorkerEvtCfgChange</a>)</td></tr>
+<tr class="memdesc:ad7b686726402402722798da84d2d6619"><td class="mdescLeft">&#160;</td><td class="mdescRight">used as condition to exit waiting routine for <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a>  <br /></td></tr>
+<tr class="separator:ad7b686726402402722798da84d2d6619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2e38512ce057317f3666abd6cefd4f5" id="r_ad2e38512ce057317f3666abd6cefd4f5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ad2e38512ce057317f3666abd6cefd4f5">WORKER_ALL_TX_EVENTS</a>&#160;&#160;&#160;(<a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba36d545c2f2bdc2bf28e8985b59286ef2">WorkerEvtTxStop</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a">WorkerEvtCdcRx</a>)</td></tr>
+<tr class="memdesc:ad2e38512ce057317f3666abd6cefd4f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">used as condition to exit waiting routine for <a class="el" href="usb__can__bridge_8cpp.html#adb2e3e79607a61b47b76b310d0afbfe8">usb_can_tx_thread()</a>  <br /></td></tr>
+<tr class="separator:ad2e38512ce057317f3666abd6cefd4f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46665cf4a2a6e14f8b5b29a5ca263a9d" id="r_a46665cf4a2a6e14f8b5b29a5ca263a9d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a46665cf4a2a6e14f8b5b29a5ca263a9d">USB_CAN_RX_BUF_SIZE</a>&#160;&#160;&#160;(<a class="el" href="usb__can__app__i_8hpp.html#aede7150dde018d67dc67c52c8ddffee7">USB_CDC_PKT_LEN</a> * 5)</td></tr>
+<tr class="memdesc:a46665cf4a2a6e14f8b5b29a5ca263a9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">used to allocate space on local USB CDC Rx buffer  <br /></td></tr>
+<tr class="separator:a46665cf4a2a6e14f8b5b29a5ca263a9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8fa301b56494ad1649fbf507723d2a2" id="r_ad8fa301b56494ad1649fbf507723d2a2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ad8fa301b56494ad1649fbf507723d2a2">USB_CAN_BRIDGE_MAX_INPUT_LENGTH</a>&#160;&#160;&#160;28</td></tr>
+<tr class="memdesc:ad8fa301b56494ad1649fbf507723d2a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN command max length.  <br /></td></tr>
+<tr class="separator:ad8fa301b56494ad1649fbf507723d2a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee7ba1f388924f9bf345532394a16339" id="r_aee7ba1f388924f9bf345532394a16339"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#aee7ba1f388924f9bf345532394a16339">IS_LAST_CMD</a>()&#160;&#160;&#160;(&amp;((*next_command)[(*cmd_length)]) == &amp;cdc_data[cdc_frame_len])</td></tr>
+<tr class="memdesc:aee7ba1f388924f9bf345532394a16339"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used to check if it remains bytes to read in USB CDC frame.  <br /></td></tr>
+<tr class="separator:aee7ba1f388924f9bf345532394a16339"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a4d8cfd5bbab11346a2557f1095081bbb" id="r_a4d8cfd5bbab11346a2557f1095081bbb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbb">WorkerEvtFlags</a> { <br />
@@ -93,10 +208,9 @@ Enumerations</h2></td></tr>
 , <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a">WorkerEvtCdcRx</a> = (1 &lt;&lt; 3)
 , <br />
 &#160;&#160;<a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b">WorkerEvtCfgChange</a> = (1 &lt;&lt; 4)
-, <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba608b86cb83a0937999da06797c07f6bc">WorkerEvtLineCfgSet</a> = (1 &lt;&lt; 5)
-, <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba4100833b524ada934d10c4a626befa0f">WorkerEvtCtrlLineSet</a> = (1 &lt;&lt; 6)
 <br />
  }</td></tr>
+<tr class="memdesc:a4d8cfd5bbab11346a2557f1095081bbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thread flags definitions. They are set by interruptions callbacks to signal threads ( <a class="el" href="usb__can__bridge_8cpp.html#adb2e3e79607a61b47b76b310d0afbfe8">usb_can_tx_thread</a> and <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker</a>) an event is to be processed.  <a href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbb">More...</a><br /></td></tr>
 <tr class="separator:a4d8cfd5bbab11346a2557f1095081bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -119,21 +233,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a83be43c814d9c683ea7a6a99111c9cbe" id="r_a83be43c814d9c683ea7a6a99111c9cbe"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, const char *err_msg_format,...)</td></tr>
 <tr class="memdesc:a83be43c814d9c683ea7a6a99111c9cbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">function called on error : it is an implementation to printf which prints output on USB CDC channel.  <br /></td></tr>
 <tr class="separator:a83be43c814d9c683ea7a6a99111c9cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae98fa0803c9a95ffd96bd8ea5c654003" id="r_ae98fa0803c9a95ffd96bd8ea5c654003"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ae98fa0803c9a95ffd96bd8ea5c654003">usb_can_bridge_configure</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, char *data, uint32_t len)</td></tr>
-<tr class="memdesc:ae98fa0803c9a95ffd96bd8ea5c654003"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN S&lt;X&gt; command processing : CAN bus configuration.  <br /></td></tr>
-<tr class="separator:ae98fa0803c9a95ffd96bd8ea5c654003"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bf5949c050b8f6d13eaaf40ff9191cd" id="r_a1bf5949c050b8f6d13eaaf40ff9191cd"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a1bf5949c050b8f6d13eaaf40ff9191cd">usb_can_bridge_send</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, char *data, uint32_t len, bool extended, bool rtr)</td></tr>
-<tr class="memdesc:a1bf5949c050b8f6d13eaaf40ff9191cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN Transmit command processing (txxx,Txxxx,rxxxx,Rxxxx)  <br /></td></tr>
-<tr class="separator:a1bf5949c050b8f6d13eaaf40ff9191cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa897232141b5c43ed6c4ad2fc5b140a5" id="r_aa897232141b5c43ed6c4ad2fc5b140a5"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#aa897232141b5c43ed6c4ad2fc5b140a5">usb_can_bridge_configure</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, char *data, uint32_t len)</td></tr>
+<tr class="memdesc:aa897232141b5c43ed6c4ad2fc5b140a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN S&lt;X&gt; command processing : CAN bus configuration.  <br /></td></tr>
+<tr class="separator:aa897232141b5c43ed6c4ad2fc5b140a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a449c656bc0d7b820c440f5441f373cb7" id="r_a449c656bc0d7b820c440f5441f373cb7"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a449c656bc0d7b820c440f5441f373cb7">usb_can_bridge_send</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, char *data, uint32_t len, bool extended, bool rtr)</td></tr>
+<tr class="memdesc:a449c656bc0d7b820c440f5441f373cb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN Transmit command processing (txxx,Txxxx,rxxxx,Rxxxx)  <br /></td></tr>
+<tr class="separator:a449c656bc0d7b820c440f5441f373cb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa85f35a05bc5e03270a024407408eeac" id="r_aa85f35a05bc5e03270a024407408eeac"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#aa85f35a05bc5e03270a024407408eeac">_usb_uart_bridge_get_next_command</a> (char **next_command, uint8_t *cmd_length, char *cdc_data, uint8_t cdc_frame_len)</td></tr>
 <tr class="memdesc:aa85f35a05bc5e03270a024407408eeac"><td class="mdescLeft">&#160;</td><td class="mdescRight">SLCAN command extraction.  <br /></td></tr>
 <tr class="separator:aa85f35a05bc5e03270a024407408eeac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb2e3e79607a61b47b76b310d0afbfe8" id="r_adb2e3e79607a61b47b76b310d0afbfe8"><td class="memItemLeft" align="right" valign="top">static int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#adb2e3e79607a61b47b76b310d0afbfe8">usb_can_tx_thread</a> (void *context)</td></tr>
 <tr class="memdesc:adb2e3e79607a61b47b76b310d0afbfe8"><td class="mdescLeft">&#160;</td><td class="mdescRight">CAN TX thread : Process SLCAN commands send by the host.  <br /></td></tr>
 <tr class="separator:adb2e3e79607a61b47b76b310d0afbfe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a357ea6130373309cf6e2c82d2b4a7884" id="r_a357ea6130373309cf6e2c82d2b4a7884"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a357ea6130373309cf6e2c82d2b4a7884">usb_can_bridge_clear_led</a> (void *context)</td></tr>
-<tr class="memdesc:a357ea6130373309cf6e2c82d2b4a7884"><td class="mdescLeft">&#160;</td><td class="mdescRight">clear CAN Tx LED 'set MCP2518 GPIO_0 high) through <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a> function.  <br /></td></tr>
-<tr class="separator:a357ea6130373309cf6e2c82d2b4a7884"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b5f6dc81f529b50c209bd4403843150" id="r_a5b5f6dc81f529b50c209bd4403843150"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a5b5f6dc81f529b50c209bd4403843150">usb_can_bridge_clear_led</a> (void *context)</td></tr>
+<tr class="memdesc:a5b5f6dc81f529b50c209bd4403843150"><td class="mdescLeft">&#160;</td><td class="mdescRight">clear CAN Tx LED 'set MCP2518 GPIO_0 high) through <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a> function.  <br /></td></tr>
+<tr class="separator:a5b5f6dc81f529b50c209bd4403843150"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd858c0e2cfe7f3f874d17f6350a41d6" id="r_acd858c0e2cfe7f3f874d17f6350a41d6"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#acd858c0e2cfe7f3f874d17f6350a41d6">usb_can_on_irq_cb</a> (void *context)</td></tr>
 <tr class="memdesc:acd858c0e2cfe7f3f874d17f6350a41d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function called on CAN RX IRQ. It will basically set a flag to signal to rx thread a packet has been received.  <br /></td></tr>
 <tr class="separator:acd858c0e2cfe7f3f874d17f6350a41d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,7 +255,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a0461c692f48bebbdf299f22241951bbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB Virtual com port initialization.  <br /></td></tr>
 <tr class="separator:a0461c692f48bebbdf299f22241951bbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd0a3d9aed4eb67a8f0e2c277664d0ed" id="r_acd0a3d9aed4eb67a8f0e2c277664d0ed"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#acd0a3d9aed4eb67a8f0e2c277664d0ed">usb_can_vcp_deinit</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, uint8_t <a class="el" href="usbCan__scene__config_8cpp.html#a5b1ebd5b640d925075c9bf8873f51ce4">vcp_ch</a>)</td></tr>
-<tr class="memdesc:acd0a3d9aed4eb67a8f0e2c277664d0ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB Virtual com port close function called after a <a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable()</a> or a <a class="el" href="group__CONTROLLER.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> call.  <br /></td></tr>
+<tr class="memdesc:acd0a3d9aed4eb67a8f0e2c277664d0ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB Virtual com port close function called after a <a class="el" href="group__MODEL.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable()</a> or a <a class="el" href="group__MODEL.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> call.  <br /></td></tr>
 <tr class="separator:acd0a3d9aed4eb67a8f0e2c277664d0ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95a17809f29f7bf230506e9cd42f34b2" id="r_a95a17809f29f7bf230506e9cd42f34b2"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a95a17809f29f7bf230506e9cd42f34b2">usb_can_print_banner</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
 <tr class="memdesc:a95a17809f29f7bf230506e9cd42f34b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">function printing serma banner on VCP  <br /></td></tr>
@@ -149,41 +263,221 @@ Functions</h2></td></tr>
 <tr class="memitem:a00d38ba868852b5903768a70a92579f9" id="r_a00d38ba868852b5903768a70a92579f9"><td class="memItemLeft" align="right" valign="top">static int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker</a> (void *context)</td></tr>
 <tr class="memdesc:a00d38ba868852b5903768a70a92579f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">application main thread : receives CAN frames and forward it to host.  <br /></td></tr>
 <tr class="separator:a00d38ba868852b5903768a70a92579f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga406566144d24b0a1aadf763598a3f739" id="r_ga406566144d24b0a1aadf763598a3f739"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app, <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a> state)</td></tr>
-<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
+<tr class="memitem:ga406566144d24b0a1aadf763598a3f739" id="r_ga406566144d24b0a1aadf763598a3f739"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app, <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a> state)</td></tr>
+<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode (cf. <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a>) called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
 <tr class="separator:ga406566144d24b0a1aadf763598a3f739"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad5baaad7fe3398ff39000f47dd2b87c1" id="r_gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
+<tr class="memitem:gad5baaad7fe3398ff39000f47dd2b87c1" id="r_gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
 <tr class="memdesc:gad5baaad7fe3398ff39000f47dd2b87c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">function called to leave application operationnal mode (free memory).  <br /></td></tr>
 <tr class="separator:gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf0e6786f7908114eb4499a23797a2cdb" id="r_gaf0e6786f7908114eb4499a23797a2cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
+<tr class="memitem:gaf0e6786f7908114eb4499a23797a2cdb" id="r_gaf0e6786f7908114eb4499a23797a2cdb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
 <tr class="memdesc:gaf0e6786f7908114eb4499a23797a2cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">configure application used USB CDC VCP channel.  <br /></td></tr>
 <tr class="separator:gaf0e6786f7908114eb4499a23797a2cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2c439b66c469ad79339fae3fae05116c" id="r_ga2c439b66c469ad79339fae3fae05116c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga2c439b66c469ad79339fae3fae05116c">usb_can_get_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
+<tr class="memitem:ga2c439b66c469ad79339fae3fae05116c" id="r_ga2c439b66c469ad79339fae3fae05116c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga2c439b66c469ad79339fae3fae05116c">usb_can_get_config</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanConfig.html">UsbCanConfig</a> *cfg)</td></tr>
 <tr class="memdesc:ga2c439b66c469ad79339fae3fae05116c"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB VCP channel config (channel number used) getter (cf. <a class="el" href="structUsbCanBridge.html#a8ff6a9bf7158be65ae830ce8c1d7a05b">UsbCanBridge::cfg_new</a> field) used for display purpose.  <br /></td></tr>
 <tr class="separator:ga2c439b66c469ad79339fae3fae05116c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga873f6fac62630397e3828d0e5a809d8b" id="r_ga873f6fac62630397e3828d0e5a809d8b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga873f6fac62630397e3828d0e5a809d8b">usb_can_get_state</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanStatus.html">UsbCanStatus</a> *st)</td></tr>
+<tr class="memitem:ga873f6fac62630397e3828d0e5a809d8b" id="r_ga873f6fac62630397e3828d0e5a809d8b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__MODEL.html#ga873f6fac62630397e3828d0e5a809d8b">usb_can_get_state</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can, <a class="el" href="structUsbCanStatus.html">UsbCanStatus</a> *st)</td></tr>
 <tr class="memdesc:ga873f6fac62630397e3828d0e5a809d8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Application mode getter (cf. <a class="el" href="structUsbCanBridge.html#a4b434670b751d5755a8c94d1525b9aec">UsbCanBridge::st</a> field) used for display purpose.  <br /></td></tr>
 <tr class="separator:ga873f6fac62630397e3828d0e5a809d8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:a9bd7619d1980d72e27dd72ea0b304f55" id="r_a9bd7619d1980d72e27dd72ea0b304f55"><td class="memItemLeft" align="right" valign="top">const char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a9bd7619d1980d72e27dd72ea0b304f55">serma_banner</a> []</td></tr>
+<tr class="memdesc:a9bd7619d1980d72e27dd72ea0b304f55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serma banner to be displayed on USB virtual com port (VCP) via <a class="el" href="usb__can__bridge_8cpp.html#a95a17809f29f7bf230506e9cd42f34b2">usb_can_print_banner()</a> when entering in the APP operationnal mode.  <br /></td></tr>
 <tr class="separator:a9bd7619d1980d72e27dd72ea0b304f55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a000e8bbe36a09560d1e120eef9d09627" id="r_a000e8bbe36a09560d1e120eef9d09627"><td class="memItemLeft" align="right" valign="top">static const CdcCallbacks&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a000e8bbe36a09560d1e120eef9d09627">cdc_cb</a></td></tr>
+<tr class="memitem:a2f741d45248ec06a68a75e882be23d89" id="r_a2f741d45248ec06a68a75e882be23d89"><td class="memItemLeft" align="right" valign="top">const char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a> [] = &quot;[err]: invalid command length (command %c) :length = %d\r\n&quot;</td></tr>
+<tr class="memdesc:a2f741d45248ec06a68a75e882be23d89"><td class="mdescLeft">&#160;</td><td class="mdescRight">message used to signal to user that SLCAN command length is invalid  <br /></td></tr>
+<tr class="separator:a2f741d45248ec06a68a75e882be23d89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a000e8bbe36a09560d1e120eef9d09627" id="r_a000e8bbe36a09560d1e120eef9d09627"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="structCdcCallbacks.html">CdcCallbacks</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a000e8bbe36a09560d1e120eef9d09627">cdc_cb</a></td></tr>
+<tr class="memdesc:a000e8bbe36a09560d1e120eef9d09627"><td class="mdescLeft">&#160;</td><td class="mdescRight">VCP events callback to be registered in USB CDC stack through <a class="el" href="usb__can__bridge_8cpp.html#a0461c692f48bebbdf299f22241951bbf">usb_can_vcp_init()</a>  <br /></td></tr>
 <tr class="separator:a000e8bbe36a09560d1e120eef9d09627"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad701fa26d64b53cf69752136a047d6d6" id="r_ad701fa26d64b53cf69752136a047d6d6"><td class="memItemLeft" align="right" valign="top">static volatile bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a></td></tr>
 <tr class="memdesc:ad701fa26d64b53cf69752136a047d6d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">flag used to synchronize cdc (VCP) driver access.  <br /></td></tr>
 <tr class="separator:ad701fa26d64b53cf69752136a047d6d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a41641d689b8f8c49fe3ad394b629f2" id="r_a4a41641d689b8f8c49fe3ad394b629f2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a4a41641d689b8f8c49fe3ad394b629f2">can_if_initialized</a></td></tr>
+<tr class="memdesc:a4a41641d689b8f8c49fe3ad394b629f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">flag used to check CAN interface has been initialized before issuing a transaction. If it is not the case an error will be returned.  <br /></td></tr>
 <tr class="separator:a4a41641d689b8f8c49fe3ad394b629f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f741d45248ec06a68a75e882be23d89" id="r_a2f741d45248ec06a68a75e882be23d89"><td class="memItemLeft" align="right" valign="top">const char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a> [] = &quot;[err]: invalid command length (command %c) :length = %d\r\n&quot;</td></tr>
-<tr class="separator:a2f741d45248ec06a68a75e882be23d89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vice-versa. </p>
 
 <p class="definition">Definition in file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
-</div><h2 class="groupheader">Enumeration Type Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="aee7ba1f388924f9bf345532394a16339" name="aee7ba1f388924f9bf345532394a16339"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee7ba1f388924f9bf345532394a16339">&#9670;&#160;</a></span>IS_LAST_CMD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define IS_LAST_CMD</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;(&amp;((*next_command)[(*cmd_length)]) == &amp;cdc_data[cdc_frame_len])</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Used to check if it remains bytes to read in USB CDC frame. </p>
+<p>This Macro is called by <a class="el" href="usb__can__bridge_8cpp.html#aa85f35a05bc5e03270a024407408eeac">_usb_uart_bridge_get_next_command()</a> function in order to determine if it remains bytes to read in USB CDC frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00398">398</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="abdc128df7b8ee00d1b84c96d7b5f81e5" name="abdc128df7b8ee00d1b84c96d7b5f81e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abdc128df7b8ee00d1b84c96d7b5f81e5">&#9670;&#160;</a></span>M_USB_CAN_ERROR_INVALID_COMMAND</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define M_USB_CAN_ERROR_INVALID_COMMAND</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;    <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>(usb_can, invalid_command, data[0], data[0])</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro used when SLCAN command first character is erroneous. It is used in usb_can_tx_thread.It will call <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a> with string invalid_command. </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00038">38</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ac47890ec5e0746efef91682fceb115b8" name="ac47890ec5e0746efef91682fceb115b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac47890ec5e0746efef91682fceb115b8">&#9670;&#160;</a></span>M_USB_CAN_ERROR_INVALID_LENGTH</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define M_USB_CAN_ERROR_INVALID_LENGTH</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;    <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>(usb_can, <a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a>, data[0], len)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro used when SLCAN command length is supperior than expected. It will call <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a> with string <a class="el" href="usb__can__bridge_8cpp.html#a2f741d45248ec06a68a75e882be23d89">invalid_length</a>. </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00035">35</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ad8fa301b56494ad1649fbf507723d2a2" name="ad8fa301b56494ad1649fbf507723d2a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8fa301b56494ad1649fbf507723d2a2">&#9670;&#160;</a></span>USB_CAN_BRIDGE_MAX_INPUT_LENGTH</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define USB_CAN_BRIDGE_MAX_INPUT_LENGTH&#160;&#160;&#160;28</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SLCAN command max length. </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00060">60</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a46665cf4a2a6e14f8b5b29a5ca263a9d" name="a46665cf4a2a6e14f8b5b29a5ca263a9d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46665cf4a2a6e14f8b5b29a5ca263a9d">&#9670;&#160;</a></span>USB_CAN_RX_BUF_SIZE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define USB_CAN_RX_BUF_SIZE&#160;&#160;&#160;(<a class="el" href="usb__can__app__i_8hpp.html#aede7150dde018d67dc67c52c8ddffee7">USB_CDC_PKT_LEN</a> * 5)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>used to allocate space on local USB CDC Rx buffer </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00058">58</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ad9f6012ec8b56f6ea3245b200701b6e4" name="ad9f6012ec8b56f6ea3245b200701b6e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9f6012ec8b56f6ea3245b200701b6e4">&#9670;&#160;</a></span>WAIT_CDC</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define WAIT_CDC</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    <span class="keywordflow">while</span>(<span class="keyword">true</span>) {                                                                           \</div>
+<div class="line">        furi_check(furi_mutex_acquire(usb_can-&gt;tx_mutex, FuriWaitForever) == FuriStatusOk); \</div>
+<div class="line">        if(!<a class="code hl_variable" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a>) {                                                                     \</div>
+<div class="line">            <a class="code hl_variable" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a> = <span class="keyword">true</span>;                                                                \</div>
+<div class="line">            furi_check(furi_mutex_release(usb_can-&gt;tx_mutex) == FuriStatusOk);              \</div>
+<div class="line">            <span class="keywordflow">break</span>;                                                                          \</div>
+<div class="line">        }                                                                                   \</div>
+<div class="line">        furi_check(furi_mutex_release(usb_can-&gt;tx_mutex) == FuriStatusOk);                  \</div>
+<div class="line">    }</div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_ad701fa26d64b53cf69752136a047d6d6"><div class="ttname"><a href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a></div><div class="ttdeci">static volatile bool cdc_busy</div><div class="ttdoc">flag used to synchronize cdc (VCP) driver access.</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00109">usb_can_bridge.cpp:109</a></div></div>
+</div><!-- fragment -->
+<p>wait USB CDC driver is available : tx_mutex is used to protect access to shared flag <a class="el" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a> which is updated during interruption. </p>
+<p>this macro will enter a loop which:</p><ol type="1">
+<li>acquires tx_mutex to ensure it has exclusive access to <a class="el" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a>.</li>
+<li>check if @ ref cdc_busy is clear:<ul>
+<li>If it is the case it set cdc_busy and exit loop (end of the the macro).</li>
+<li>If it is not the case (a VCP transaction is ongoing) it release mutex before trying to reentering the loop. </li>
+</ul>
+</li>
+</ol>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00024">24</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ad7b686726402402722798da84d2d6619" name="ad7b686726402402722798da84d2d6619"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7b686726402402722798da84d2d6619">&#9670;&#160;</a></span>WORKER_ALL_RX_EVENTS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define WORKER_ALL_RX_EVENTS&#160;&#160;&#160;(<a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba10b57f10590433735494031d0e35845f">WorkerEvtStop</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbafa85abd279e5e93e33ec6ff6cce4118f">WorkerEvtRxDone</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b">WorkerEvtCfgChange</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>used as condition to exit waiting routine for <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a> </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00054">54</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ad2e38512ce057317f3666abd6cefd4f5" name="ad2e38512ce057317f3666abd6cefd4f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2e38512ce057317f3666abd6cefd4f5">&#9670;&#160;</a></span>WORKER_ALL_TX_EVENTS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define WORKER_ALL_TX_EVENTS&#160;&#160;&#160;(<a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba36d545c2f2bdc2bf28e8985b59286ef2">WorkerEvtTxStop</a> | <a class="el" href="usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a">WorkerEvtCdcRx</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>used as condition to exit waiting routine for <a class="el" href="usb__can__bridge_8cpp.html#adb2e3e79607a61b47b76b310d0afbfe8">usb_can_tx_thread()</a> </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00056">56</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="a4d8cfd5bbab11346a2557f1095081bbb" name="a4d8cfd5bbab11346a2557f1095081bbb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4d8cfd5bbab11346a2557f1095081bbb">&#9670;&#160;</a></span>WorkerEvtFlags</h2>
 
@@ -195,17 +489,17 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Thread flags definitions. They are set by interruptions callbacks to signal threads ( <a class="el" href="usb__can__bridge_8cpp.html#adb2e3e79607a61b47b76b310d0afbfe8">usb_can_tx_thread</a> and <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker</a>) an event is to be processed. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbba10b57f10590433735494031d0e35845f" name="a4d8cfd5bbab11346a2557f1095081bbba10b57f10590433735494031d0e35845f"></a>WorkerEvtStop&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbbafa85abd279e5e93e33ec6ff6cce4118f" name="a4d8cfd5bbab11346a2557f1095081bbbafa85abd279e5e93e33ec6ff6cce4118f"></a>WorkerEvtRxDone&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbba36d545c2f2bdc2bf28e8985b59286ef2" name="a4d8cfd5bbab11346a2557f1095081bbba36d545c2f2bdc2bf28e8985b59286ef2"></a>WorkerEvtTxStop&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a" name="a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a"></a>WorkerEvtCdcRx&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b" name="a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b"></a>WorkerEvtCfgChange&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbba608b86cb83a0937999da06797c07f6bc" name="a4d8cfd5bbab11346a2557f1095081bbba608b86cb83a0937999da06797c07f6bc"></a>WorkerEvtLineCfgSet&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a4d8cfd5bbab11346a2557f1095081bbba4100833b524ada934d10c4a626befa0f" name="a4d8cfd5bbab11346a2557f1095081bbba4100833b524ada934d10c4a626befa0f"></a>WorkerEvtCtrlLineSet&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00051">51</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00043">43</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -290,40 +584,12 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00406">406</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00419">419</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a357ea6130373309cf6e2c82d2b4a7884" name="a357ea6130373309cf6e2c82d2b4a7884"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a357ea6130373309cf6e2c82d2b4a7884">&#9670;&#160;</a></span>usb_can_bridge_clear_led()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void usb_can_bridge_clear_led </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>context</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>clear CAN Tx LED 'set MCP2518 GPIO_0 high) through <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a> function. </p>
-<p>This function recover allocated <a class="el" href="structUsbCanBridge.html#ad3c39ae06d842789a031f61780de9558">UsbCanBridge::can</a> (of type <a class="el" href="classmcp2518fd.html">mcp2518fd</a>) instance created in <a class="el" href="group__CONTROLLER.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable()</a> before calling <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>generic parameter to be passed in flipper callback registration. Here a pointer to application control flow ( <a class="el" href="structUsbCanBridge.html">UsbCanBridge</a>) logic data is passed, to be recovered in callbacks. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00566">566</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
-
-</div>
-</div>
-<a id="ae98fa0803c9a95ffd96bd8ea5c654003" name="ae98fa0803c9a95ffd96bd8ea5c654003"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae98fa0803c9a95ffd96bd8ea5c654003">&#9670;&#160;</a></span>usb_can_bridge_configure()</h2>
+<a id="a5b5f6dc81f529b50c209bd4403843150" name="a5b5f6dc81f529b50c209bd4403843150"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b5f6dc81f529b50c209bd4403843150">&#9670;&#160;</a></span>usb_can_bridge_clear_led()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -332,7 +598,43 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void usb_can_bridge_configure </td>
+          <td class="memname">static void usb_can_bridge_clear_led </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>context</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>clear CAN Tx LED 'set MCP2518 GPIO_0 high) through <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a> function. </p>
+<p>This function recover allocated <a class="el" href="structUsbCanBridge.html#ad3c39ae06d842789a031f61780de9558">UsbCanBridge::can</a> (of type <a class="el" href="classmcp2518fd.html">mcp2518fd</a>) instance created in <a class="el" href="group__MODEL.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable()</a> before calling <a class="el" href="classmcp2518fd.html#ad3bdff5f4228fa4deddc793434f52d39">mcp2518fd::mcpDigitalWrite()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">context</td><td>generic parameter to be passed in flipper callback registration. Here a pointer to application control flow ( <a class="el" href="structUsbCanBridge.html">UsbCanBridge</a>) logic data is passed, to be recovered in callbacks. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00580">580</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+
+</div>
+</div>
+<a id="aa897232141b5c43ed6c4ad2fc5b140a5" name="aa897232141b5c43ed6c4ad2fc5b140a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa897232141b5c43ed6c4ad2fc5b140a5">&#9670;&#160;</a></span>usb_can_bridge_configure()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void usb_can_bridge_configure </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td>
           <td class="paramname"><em>usb_can</em>, </td>
@@ -364,10 +666,10 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 
 <p>SLCAN S&lt;X&gt; command processing : CAN bus configuration. </p>
 <p>This function performs the following actions:</p><ol type="1">
-<li>Check S command length is 3 (S&lt;X&gt;\r). If it is not the case sends an error message on VCP (USB CDC channel) via M_USB_CAN_ERROR_INVALID_LENGTH() before returning.</li>
+<li>Check S command length is 3 (S&lt;X&gt;\r). If it is not the case sends an error message on VCP (USB CDC channel) via <a class="el" href="usb__can__bridge_8cpp.html#ac47890ec5e0746efef91682fceb115b8">M_USB_CAN_ERROR_INVALID_LENGTH()</a> before returning.</li>
 <li>Check &lt;X&gt; is a digit. If it is not, sends an error message on VCP (USB CDC channel) by calling <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error()</a> before returning.</li>
 <li>configure CAN bus through <a class="el" href="classmcp2518fd.html#abf5c137d0cba6ab9c5a4109601eb45c4">mcp2518fd::begin()</a> function. bitrate_table is used to map S&lt;X&gt; command parameter to <a class="el" href="classmcp2518fd.html#abf5c137d0cba6ab9c5a4109601eb45c4">mcp2518fd::begin()</a> speedset parameter.</li>
-<li>set <a class="el" href="usb__can__bridge_8cpp.html#a4a41641d689b8f8c49fe3ad394b629f2">can_if_initialized</a> to true, in order to be able to process Tx commands (through <a class="el" href="usb__can__bridge_8cpp.html#a1bf5949c050b8f6d13eaaf40ff9191cd">usb_can_bridge_send()</a>) normally. <dl class="section pre"><dt>Precondition</dt><dd>data parameter shall be an S command, or shall begin like an S command (with an 'S') : "Sxxxxxxxxx" </dd></dl>
+<li>set <a class="el" href="usb__can__bridge_8cpp.html#a4a41641d689b8f8c49fe3ad394b629f2">can_if_initialized</a> to true, in order to be able to process Tx commands (through <a class="el" href="usb__can__bridge_8cpp.html#a449c656bc0d7b820c440f5441f373cb7">usb_can_bridge_send()</a>) normally. <dl class="section pre"><dt>Precondition</dt><dd>data parameter shall be an S command, or shall begin like an S command (with an 'S') : "Sxxxxxxxxx" </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">usb_can</td><td>Application Control logic related data. It is used because it contains can driver instance (<a class="el" href="classmcp2518fd.html">mcp2518fd</a>) </td></tr>
@@ -379,7 +681,7 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00442">442</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00455">455</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -427,8 +729,8 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 <p>This function :</p><ol type="1">
 <li>parses variadic arguments through va_start</li>
 <li>create a string according to err_message format and parameters supplied (to print)</li>
-<li>require USB CDC driver ressource (probably a buffer) through WAIT_CDC()</li>
-<li>prints the string obtained previously on USB CDC VCP via ( furi_hal_cdc_send()) <dl class="params"><dt>Parameters</dt><dd>
+<li>require USB CDC driver ressource (probably a buffer) through <a class="el" href="usb__can__bridge_8cpp.html#ad9f6012ec8b56f6ea3245b200701b6e4">WAIT_CDC()</a></li>
+<li>prints the string obtained previously on USB CDC VCP via ( <a class="el" href="furi__hal__usb__cdc_8c.html#ae664d7a166e79067bbd63dcda33270c7">furi_hal_cdc_send()</a>) <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">usb_can</td><td>structure holding VCP channel used by the application (UsbCanBridge::cfg::vcp_ch) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">err_msg_format</td><td>string to create format : same format as printf. <b>Shall correspond to supplied variadic argument list in order to avoid unpredictable behavior.</b> </td></tr>
@@ -438,12 +740,12 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00581">581</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00595">595</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a1bf5949c050b8f6d13eaaf40ff9191cd" name="a1bf5949c050b8f6d13eaaf40ff9191cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1bf5949c050b8f6d13eaaf40ff9191cd">&#9670;&#160;</a></span>usb_can_bridge_send()</h2>
+<a id="a449c656bc0d7b820c440f5441f373cb7" name="a449c656bc0d7b820c440f5441f373cb7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a449c656bc0d7b820c440f5441f373cb7">&#9670;&#160;</a></span>usb_can_bridge_send()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -452,7 +754,7 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void usb_can_bridge_send </td>
+          <td class="memname">static void usb_can_bridge_send </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td>
           <td class="paramname"><em>usb_can</em>, </td>
@@ -505,8 +807,8 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 </li>
 <li>set max identifier valid value according to the SLCAN command : 1FFFFFFF for extended frames (command Tiiii... and Riii...), 0x7ff otherwise</li>
 <li>set command length bounds according to the SLCAN command : 5 &lt; length &lt; 22 for standard frames (tiii..,riii...), 10 &lt; length &lt; 27 for extended frames.</li>
-<li>check <a class="el" href="usb__can__bridge_8cpp.html#a4a41641d689b8f8c49fe3ad394b629f2">can_if_initialized</a> is true, in order to ensure CAN interface have been initialized (via <a class="el" href="usb__can__bridge_8cpp.html#ae98fa0803c9a95ffd96bd8ea5c654003">usb_can_bridge_configure</a>). If it is not he case send an error message before returning via <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>.</li>
-<li>check SLCAN command length is within the previously defined bounds. If it is not the case transmit error message before returning via M_USB_CAN_ERROR_INVALID_LENGTH.</li>
+<li>check <a class="el" href="usb__can__bridge_8cpp.html#a4a41641d689b8f8c49fe3ad394b629f2">can_if_initialized</a> is true, in order to ensure CAN interface have been initialized (via <a class="el" href="usb__can__bridge_8cpp.html#aa897232141b5c43ed6c4ad2fc5b140a5">usb_can_bridge_configure</a>). If it is not he case send an error message before returning via <a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error</a>.</li>
+<li>check SLCAN command length is within the previously defined bounds. If it is not the case transmit error message before returning via <a class="el" href="usb__can__bridge_8cpp.html#ac47890ec5e0746efef91682fceb115b8">M_USB_CAN_ERROR_INVALID_LENGTH</a>.</li>
 <li>parse command header (from index 0 to min length) in order to get CAN ID and CAN data length code (DLC) through sscanf. The format string computed in step1 is used.</li>
 <li>determine length of data field : 0 if this is an RTR (riiil,Riiiiiiiil), =DLC for Tx (tiiildddd...,Tiiiiiiiilddddd...)</li>
 <li>check DLC field value is consistent with SLCAN command length it shall be equal to header length (5 or 10 + data field length)<ul>
@@ -533,7 +835,7 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00499">499</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00513">513</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -563,7 +865,7 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 
 <p>Function called on CAN RX IRQ. It will basically set a flag to signal to rx thread a packet has been received. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00106">106</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00118">118</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -592,9 +894,9 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 </div><div class="memdoc">
 
 <p>function printing serma banner on VCP </p>
-<p>This function is called when user select USB-loopback or USB-CAN-bridge application mode in can-fd-hs menu (CAN-TEST does not use USB link). </p>
+<p>This function is called by <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a> when user select USB-loopback or USB-CAN-bridge application mode in can-fd-hs menu (CAN-TEST does not use USB link). </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00138">138</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00150">150</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -632,17 +934,18 @@ cmd_length pointer set to the last <a class="el" href="usb__can__bridge_8cpp.htm
 get next command in USB CDC reception buffer (delimited by next carriage return) by calling <a class="el" href="usb__can__bridge_8cpp.html#aa85f35a05bc5e03270a024407408eeac">_usb_uart_bridge_get_next_command()</a> </li>
 <li>
 either call :<ul>
-<li><a class="el" href="usb__can__bridge_8cpp.html#ae98fa0803c9a95ffd96bd8ea5c654003">usb_can_bridge_configure()</a> if it is a configuration Command (Sx)</li>
-<li><a class="el" href="usb__can__bridge_8cpp.html#a1bf5949c050b8f6d13eaaf40ff9191cd">usb_can_bridge_send()</a> if it is a transmit command (tiiildddd...., Tiiiiiiiilddddd..., riiil..., Riiiiiiiil.)</li>
+<li><a class="el" href="usb__can__bridge_8cpp.html#aa897232141b5c43ed6c4ad2fc5b140a5">usb_can_bridge_configure()</a> if it is a configuration Command (Sx)</li>
+<li><a class="el" href="usb__can__bridge_8cpp.html#a449c656bc0d7b820c440f5441f373cb7">usb_can_bridge_send()</a> if it is a transmit command (tiiildddd...., Tiiiiiiiilddddd..., riiil..., Riiiiiiiil.)</li>
 <li><a class="el" href="usb__can__bridge_8cpp.html#a83be43c814d9c683ea7a6a99111c9cbe">usb_can_bridge_error()</a> an send " [err]: command &lt;command&gt;&gt;&lt;x&gt; not implemented yet!"" if command is not implemented.</li>
-<li>M_USB_CAN_ERROR_INVALID_COMMAND otherwise </li>
+<li><a class="el" href="usb__can__bridge_8cpp.html#abdc128df7b8ee00d1b84c96d7b5f81e5">M_USB_CAN_ERROR_INVALID_COMMAND</a> otherwise </li>
 </ul>
 </li>
 </ol>
 </li>
 </ol>
+<p>constant used to signal user SLCAN command is invalid (the first character does not correspond to an SLCAN command)</p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00298">298</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00310">310</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -680,13 +983,13 @@ either call :<ul>
 </table>
 </div><div class="memdoc">
 
-<p>USB Virtual com port close function called after a <a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable()</a> or a <a class="el" href="group__CONTROLLER.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> call. </p>
+<p>USB Virtual com port close function called after a <a class="el" href="group__MODEL.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable()</a> or a <a class="el" href="group__MODEL.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> call. </p>
 <p>This function is called either :</p><ul>
 <li>to suspend USB CDC driver usage during reconfiguration (VCP channel change)</li>
-<li>to free USB CDC driver ressources during an <a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> call. </li>
+<li>to free USB CDC driver ressources during an <a class="el" href="group__MODEL.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> call. </li>
 </ul>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00125">125</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00137">137</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -726,7 +1029,7 @@ either call :<ul>
 
 <p>USB Virtual com port initialization. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00114">114</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00126">126</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -769,22 +1072,22 @@ either call :<ul>
 <li>a packet is received on CAN Link : flag set via <a class="el" href="usb__can__bridge_8cpp.html#acd858c0e2cfe7f3f874d17f6350a41d6">usb_can_on_irq_cb()</a>. in this case:<ol type="a">
 <li>CAN frame data field is read via readMsgBuf()</li>
 <li>interrupt flags are cleared to deassert interrupt pin mcp2518fd_readClearInterruptFlags(). This can not be done in interrupt mode because SPI communication is needed.</li>
-<li>GPIO used for interrupt is re-enabled furi_hal_gpio_enable_int_callback()</li>
+<li>GPIO used for interrupt is re-enabled <a class="el" href="furi__hal__gpio_8c.html#ab3c485f5a5032ca6660c64d1105b5ee8">furi_hal_gpio_enable_int_callback()</a></li>
 <li>CAN ID is read through getCanId() and interpreted through isExtendedFrame()</li>
 <li>CAN frame is formated to SLCAN format (<em> identifier and &lt;d&gt; data)::<ul>
 <li>for standard frames : tiildddd...=&gt; snprintf() format t%03X%1d%02X%02X...</li>
 <li>for extended frames : TIIIIIIIIlddd... snprintf() format T%08X%1d%02X%02X ...</li>
 </ul>
 </em></li>
-<li><em>formated SLCAN frame is sent on USB VCP through furi_hal_cdc_send().</em></li>
+<li><em>formated SLCAN frame is sent on USB VCP through <a class="el" href="furi__hal__usb__cdc_8c.html#ae664d7a166e79067bbd63dcda33270c7">furi_hal_cdc_send()</a>.</em></li>
 </ol>
 </li>
-<li><em>VCP is configured via flipper buttons via <a class="el" href="group__CONTROLLER.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> </em></li>
+<li><em>VCP is configured via flipper buttons via <a class="el" href="group__MODEL.html#gaf0e6786f7908114eb4499a23797a2cdb">usb_can_set_config()</a> </em></li>
 </ul>
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00171">171</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00183">183</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -824,7 +1127,7 @@ either call :<ul>
 
 <p>Callback registered during USB CDC driver initialization. It is not used here since we do not need virtual UART control signals (CTS, etc...). </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00623">623</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00637">637</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -861,7 +1164,7 @@ either call :<ul>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00608">608</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00622">622</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -898,7 +1201,7 @@ either call :<ul>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00598">598</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00612">612</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -938,7 +1241,7 @@ either call :<ul>
 
 <p>Callback registered during USB CDC driver initialization. It is not used here since we use dedicated SLCAN commands to configure CAN link. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00630">630</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00644">644</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -979,7 +1282,7 @@ either call :<ul>
 <p>This function is a callback registered during USB CDC driver initialization. It is unused for the moment. </p>
 <p>This function simply clear <a class="el" href="usb__can__bridge_8cpp.html#ad701fa26d64b53cf69752136a047d6d6">cdc_busy</a> flag to signal USB CDC driver is available for transmission. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00616">616</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00630">630</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -1003,9 +1306,10 @@ either call :<ul>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>brief flag used to check CAN interface has been initialized before issuing a transaction. If it is not the case an error will be returned. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00096">96</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p>flag used to check CAN interface has been initialized before issuing a transaction. If it is not the case an error will be returned. </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00111">111</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -1030,9 +1334,9 @@ either call :<ul>
 </div><div class="memdoc">
 
 <p>flag used to synchronize cdc (VCP) driver access. </p>
-<p>This flag is set when an USB CDC transaction is requested (via WAIT_CDC) and cleared when USB CDC transaction complete (on <a class="el" href="usb__can__bridge_8cpp.html#a63bf611dc35634f8677cb42689d3157e">vcp_on_cdc_tx_complete()</a> call). This is used instead of mutex because mutex usage during interruption provoke error. </p>
+<p>This flag is set when an USB CDC transaction is requested (via <a class="el" href="usb__can__bridge_8cpp.html#ad9f6012ec8b56f6ea3245b200701b6e4">WAIT_CDC</a>) and cleared when USB CDC transaction complete (on <a class="el" href="usb__can__bridge_8cpp.html#a63bf611dc35634f8677cb42689d3157e">vcp_on_cdc_tx_complete()</a> call). This is used instead of mutex because mutex usage during interruption provoke error. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00094">94</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00109">109</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -1046,7 +1350,7 @@ either call :<ul>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const CdcCallbacks cdc_cb</td>
+          <td class="memname">const <a class="el" href="structCdcCallbacks.html">CdcCallbacks</a> cdc_cb</td>
         </tr>
       </table>
   </td>
@@ -1062,13 +1366,15 @@ either call :<ul>
 <div class="line">    <a class="code hl_function" href="usb__can__bridge_8cpp.html#a8688a5c0e28c311e959c6e7135d21c51">vcp_on_cdc_control_line</a>,</div>
 <div class="line">    <a class="code hl_function" href="usb__can__bridge_8cpp.html#a4c4af8be3de66312b625158924714f4f">vcp_on_line_config</a>,</div>
 <div class="line">}</div>
-<div class="ttc" id="ausb__can__bridge_8cpp_html_a4c4af8be3de66312b625158924714f4f"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a4c4af8be3de66312b625158924714f4f">vcp_on_line_config</a></div><div class="ttdeci">static void vcp_on_line_config(void *context, struct usb_cdc_line_coding *config)</div><div class="ttdoc">Callback registered during USB CDC driver initialization. It is not used here since we use dedicated ...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00630">usb_can_bridge.cpp:630</a></div></div>
-<div class="ttc" id="ausb__can__bridge_8cpp_html_a63bf611dc35634f8677cb42689d3157e"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a63bf611dc35634f8677cb42689d3157e">vcp_on_cdc_tx_complete</a></div><div class="ttdeci">static void vcp_on_cdc_tx_complete(void *context)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It permits to synchroniz...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00598">usb_can_bridge.cpp:598</a></div></div>
-<div class="ttc" id="ausb__can__bridge_8cpp_html_a8688a5c0e28c311e959c6e7135d21c51"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a8688a5c0e28c311e959c6e7135d21c51">vcp_on_cdc_control_line</a></div><div class="ttdeci">static void vcp_on_cdc_control_line(void *context, uint8_t state)</div><div class="ttdoc">Callback registered during USB CDC driver initialization. It is not used here since we do not need vi...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00623">usb_can_bridge.cpp:623</a></div></div>
-<div class="ttc" id="ausb__can__bridge_8cpp_html_add3cab4515460b49535bcb4a143d1733"><div class="ttname"><a href="usb__can__bridge_8cpp.html#add3cab4515460b49535bcb4a143d1733">vcp_on_cdc_rx</a></div><div class="ttdeci">static void vcp_on_cdc_rx(void *context)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It permits to signal to ...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00608">usb_can_bridge.cpp:608</a></div></div>
-<div class="ttc" id="ausb__can__bridge_8cpp_html_afca88e2d954db2bd9b8f9503f7bb1df0"><div class="ttname"><a href="usb__can__bridge_8cpp.html#afca88e2d954db2bd9b8f9503f7bb1df0">vcp_state_callback</a></div><div class="ttdeci">static void vcp_state_callback(void *context, uint8_t state)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It is unused for the mom...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00616">usb_can_bridge.cpp:616</a></div></div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_a4c4af8be3de66312b625158924714f4f"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a4c4af8be3de66312b625158924714f4f">vcp_on_line_config</a></div><div class="ttdeci">static void vcp_on_line_config(void *context, struct usb_cdc_line_coding *config)</div><div class="ttdoc">Callback registered during USB CDC driver initialization. It is not used here since we use dedicated ...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00644">usb_can_bridge.cpp:644</a></div></div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_a63bf611dc35634f8677cb42689d3157e"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a63bf611dc35634f8677cb42689d3157e">vcp_on_cdc_tx_complete</a></div><div class="ttdeci">static void vcp_on_cdc_tx_complete(void *context)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It permits to synchroniz...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00612">usb_can_bridge.cpp:612</a></div></div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_a8688a5c0e28c311e959c6e7135d21c51"><div class="ttname"><a href="usb__can__bridge_8cpp.html#a8688a5c0e28c311e959c6e7135d21c51">vcp_on_cdc_control_line</a></div><div class="ttdeci">static void vcp_on_cdc_control_line(void *context, uint8_t state)</div><div class="ttdoc">Callback registered during USB CDC driver initialization. It is not used here since we do not need vi...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00637">usb_can_bridge.cpp:637</a></div></div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_add3cab4515460b49535bcb4a143d1733"><div class="ttname"><a href="usb__can__bridge_8cpp.html#add3cab4515460b49535bcb4a143d1733">vcp_on_cdc_rx</a></div><div class="ttdeci">static void vcp_on_cdc_rx(void *context)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It permits to signal to ...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00622">usb_can_bridge.cpp:622</a></div></div>
+<div class="ttc" id="ausb__can__bridge_8cpp_html_afca88e2d954db2bd9b8f9503f7bb1df0"><div class="ttname"><a href="usb__can__bridge_8cpp.html#afca88e2d954db2bd9b8f9503f7bb1df0">vcp_state_callback</a></div><div class="ttdeci">static void vcp_state_callback(void *context, uint8_t state)</div><div class="ttdoc">This function is a callback registered during USB CDC driver initialization. It is unused for the mom...</div><div class="ttdef"><b>Definition</b> <a href="usb__can__bridge_8cpp_source.html#l00630">usb_can_bridge.cpp:630</a></div></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00083">83</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p>VCP events callback to be registered in USB CDC stack through <a class="el" href="usb__can__bridge_8cpp.html#a0461c692f48bebbdf299f22241951bbf">usb_can_vcp_init()</a> </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00095">95</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -1083,9 +1389,10 @@ either call :<ul>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>message used to signal to user command length is invalid </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00098">98</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p>message used to signal to user that SLCAN command length is invalid </p>
+
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00092">92</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -1107,9 +1414,10 @@ either call :<ul>
 <div class="line">    <span class="stringliteral">&quot; _\\ \\/ _// , _/ /|_/ / __ |  / _// ___/ // / / /__/ __ |/    / / _// // /\r\n&quot;</span></div>
 <div class="line">    <span class="stringliteral">&quot;/___/___/_/|_/_/  /_/_/ |_| /_/ /_/   \\___/  \\___/_/ |_/_/|_/ /_/ /____/ \r\n&quot;</span></div>
 <div class="line">    <span class="stringliteral">&quot;Serma Safety and Security (S3) - 2024 \r\n&quot;</span></div>
-</div><!-- fragment --><p>Serma banner to be displayed on USB virtual com port (VCP) via <a class="el" href="usb__can__bridge_8cpp.html#a95a17809f29f7bf230506e9cd42f34b2">usb_can_print_banner()</a> when entering in the APP </p>
+</div><!-- fragment -->
+<p>Serma banner to be displayed on USB virtual com port (VCP) via <a class="el" href="usb__can__bridge_8cpp.html#a95a17809f29f7bf230506e9cd42f34b2">usb_can_print_banner()</a> when entering in the APP operationnal mode. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00033">33</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00083">83</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>

@@ -108,7 +108,7 @@ Files</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ga406566144d24b0a1aadf763598a3f739" id="r_ga406566144d24b0a1aadf763598a3f739"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga406566144d24b0a1aadf763598a3f739">usb_can_enable</a> (<a class="el" href="structUsbCanApp.html">UsbCanApp</a> *app, <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a> state)</td></tr>
-<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
+<tr class="memdesc:ga406566144d24b0a1aadf763598a3f739"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point of application's operating mode (cf. <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a>) called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen.  <br /></td></tr>
 <tr class="separator:ga406566144d24b0a1aadf763598a3f739"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad5baaad7fe3398ff39000f47dd2b87c1" id="r_gad5baaad7fe3398ff39000f47dd2b87c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#gad5baaad7fe3398ff39000f47dd2b87c1">usb_can_disable</a> (<a class="el" href="structUsbCanBridge.html">UsbCanBridge</a> *usb_can)</td></tr>
 <tr class="memdesc:gad5baaad7fe3398ff39000f47dd2b87c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">function called to leave application operationnal mode (free memory).  <br /></td></tr>
@@ -155,7 +155,7 @@ Functions</h2></td></tr>
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00663">663</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00677">677</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -185,7 +185,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Entry point of application's operating mode called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen. </p>
+<p>Entry point of application's operating mode (cf. <a class="el" href="usb__can__bridge_8cpp.html#a00d38ba868852b5903768a70a92579f9">usb_can_worker()</a>) called when one of the can-fd-hs application menu item (USB-UART-Bridge, USB loopback, CAN test) is choosen. </p>
 <p>This function is called via <a class="el" href="usbCan__scene__usb__can_8cpp.html#aa123958b1d19c3bd71aa972698faf8c7">usb_can_scene_usb_can_on_enter()</a> when one of the flipper zero can-fd-hs applications mode is chosen by the user. It will:</p><ol type="1">
 <li>allocate memory to store USB and CAN control logic internal data app-&gt;usb_can_bridge ( <a class="el" href="structUsbCanBridge.html">UsbCanBridge</a>)</li>
 <li>set application internal state ( app.usb_can_bridge.state) according to application mode chosen by the user</li>
@@ -199,7 +199,7 @@ Functions</h2></td></tr>
 </li>
 </ol>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00645">645</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00659">659</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -231,7 +231,7 @@ Functions</h2></td></tr>
 
 <p>USB VCP channel config (channel number used) getter (cf. <a class="el" href="structUsbCanBridge.html#a8ff6a9bf7158be65ae830ce8c1d7a05b">UsbCanBridge::cfg_new</a> field) used for display purpose. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00688">688</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00702">702</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -263,7 +263,7 @@ Functions</h2></td></tr>
 
 <p>Application mode getter (cf. <a class="el" href="structUsbCanBridge.html#a4b434670b751d5755a8c94d1525b9aec">UsbCanBridge::st</a> field) used for display purpose. </p>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00698">698</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00711">711</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>
@@ -301,7 +301,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00676">676</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__bridge_8cpp_source.html#l00690">690</a> of file <a class="el" href="usb__can__bridge_8cpp_source.html">usb_can_bridge.cpp</a>.</p>
 
 </div>
 </div>

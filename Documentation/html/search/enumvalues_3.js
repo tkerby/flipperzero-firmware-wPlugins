@@ -1,10 +1,17 @@
 var searchData=
 [
-  ['mcp2518fd_5f10mhz_0',['MCP2518FD_10MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771af9444c80509633cf1c84bb284ec83026',1,'mcp_can_fd.h']]],
-  ['mcp2518fd_5f20mhz_1',['MCP2518FD_20MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771a1c58ce805ffc6ed7d5ca15227f17cabf',1,'mcp_can_fd.h']]],
-  ['mcp2518fd_5f40mhz_2',['MCP2518FD_40MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771a67a8c00b78bce008619117c92d960cef',1,'mcp_can_fd.h']]],
-  ['mcp_5f16mhz_3',['MCP_16MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771a366f481fd6f6756708853f8be8b2bfc4',1,'mcp_can_fd.h']]],
-  ['mcp_5f8mhz_4',['MCP_8MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771a9a6e580d4854f20c5d404e5b609d42e7',1,'mcp_can_fd.h']]],
-  ['mcp_5fno_5fmhz_5',['MCP_NO_MHz',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771ab3d7cba3f95703dda56cc2a94379b0d2',1,'mcp_can_fd.h']]],
-  ['msb_5ffirst_6',['MSB_FIRST',['../group__CAN-DRIVER-ADAPTATION.html#gga2bf5f470332190b5b526fff787c9af1aa89da3ebae748913c4ea84ed340c20aec',1,'SPI.h']]]
+  ['infraredstateasyncrx_0',['InfraredStateAsyncRx',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744ca539ed7c289339eab4f90b46ca7ec0790',1,'furi_hal_infrared.c']]],
+  ['infraredstateasynctx_1',['InfraredStateAsyncTx',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744cacf69ad1750b0f0176b3ec61f33931e70',1,'furi_hal_infrared.c']]],
+  ['infraredstateasynctxstopinprogress_2',['InfraredStateAsyncTxStopInProgress',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744cad2456a1a612acd0ca83c24d5ffc31dac',1,'furi_hal_infrared.c']]],
+  ['infraredstateasynctxstopped_3',['InfraredStateAsyncTxStopped',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744ca0f7d4990f56361280a761ae821c6fb31',1,'furi_hal_infrared.c']]],
+  ['infraredstateasynctxstopreq_4',['InfraredStateAsyncTxStopReq',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744ca4aa8e9b5a39731721fc9bc613be9b267',1,'furi_hal_infrared.c']]],
+  ['infraredstateidle_5',['InfraredStateIdle',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744ca8f3f88e2354c22fcd1d1fa823627555a',1,'furi_hal_infrared.c']]],
+  ['infraredstatemax_6',['InfraredStateMAX',['../furi__hal__infrared_8c.html#a301c3d40c53c3ebf7faf7954fe95744ca42130f93f95306967e5153d07e9f5a6b',1,'furi_hal_infrared.c']]],
+  ['inputkeyback_7',['InputKeyBack',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9a46abae0ada91e228918135e6f4702fab',1,'furi_hal_resources.h']]],
+  ['inputkeydown_8',['InputKeyDown',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9a13513c616d474275aabf25ce8466b049',1,'furi_hal_resources.h']]],
+  ['inputkeyleft_9',['InputKeyLeft',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9a955cb349dee4716ca603541127760004',1,'furi_hal_resources.h']]],
+  ['inputkeymax_10',['InputKeyMAX',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9a9e8439ec901d9e642a6f67de73278044',1,'furi_hal_resources.h']]],
+  ['inputkeyok_11',['InputKeyOk',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9a4b5bcf80e18251ba3e96f4e29e12f21f',1,'furi_hal_resources.h']]],
+  ['inputkeyright_12',['InputKeyRight',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9abb6489130336d74e4f1c1080176cee49',1,'furi_hal_resources.h']]],
+  ['inputkeyup_13',['InputKeyUp',['../furi__hal__resources_8h.html#a3a1ad9c72a28e97d9440d4cf7072b6d9ad286dc6c65cda5e2f37a829a06abddd2',1,'furi_hal_resources.h']]]
 ];

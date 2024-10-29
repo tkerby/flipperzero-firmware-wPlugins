@@ -1,7 +1,7 @@
 #pragma once
 /** 
   @file usb_can_custom_event.hpp
-  @ingroup CONTROLLER
+  @ingroup MODEL
   @brief
   contains event related to USB CAN Application definitions.
  */

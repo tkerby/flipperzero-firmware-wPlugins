@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['mcp_5fbittime_5fsetup_0',['MCP_BITTIME_SETUP',['../mcp__can__fd_8h.html#a3ad450fa9b74c8d9fc57d81124acf08c',1,'mcp_can_fd.h']]],
-  ['mcp_5fclock_5ft_1',['MCP_CLOCK_T',['../mcp__can__fd_8h.html#affe36495571420c007311bed9a921771',1,'mcp_can_fd.h']]]
+  ['hidinputnumber_0',['HidInputNumber',['../furi__hal__bt__hid_8c.html#a547bf5104d3c42271423add2f06a2afa',1,'furi_hal_bt_hid.c']]],
+  ['hidreportid_1',['hidreportid',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987',1,'HidReportId:&#160;furi_hal_bt_hid.c'],['../furi__hal__usb__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987',1,'HidReportId:&#160;furi_hal_usb_hid.c']]]
 ];

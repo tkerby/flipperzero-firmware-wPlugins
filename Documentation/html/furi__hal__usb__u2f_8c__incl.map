@@ -1,0 +1,18 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_usb_u2f.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_usb_u2f.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="368,5,536,75"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,123,144,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="368,65,135,122,134,117,367,59"/>
+<area shape="rect" id="Node000003" href="$furi__hal__usb__i_8h.html" title=" " alt="" coords="169,123,293,148"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="373,77,272,120,270,115,371,72"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="251,196,309,221"/>
+<area shape="poly" id="edge7_Node000001_Node000004" title=" " alt="" coords="413,77,359,125,300,187,297,184,355,121,409,73"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="369,123,535,148"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="455,75,455,109,449,109,449,75"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="559,123,673,148"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="513,72,585,113,582,118,510,77"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="697,123,753,148"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="537,67,685,118,683,123,535,72"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="778,123,862,148"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="537,60,765,117,764,123,536,65"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="241,147,266,183,262,186,237,150"/>
+</map>

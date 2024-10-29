@@ -1,10 +1,10 @@
 var searchData=
 [
-  ['workerevtcdcrx_0',['WorkerEvtCdcRx',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbacef6a16177177ad8b392d400e2d6ef5a',1,'usb_can_bridge.cpp']]],
-  ['workerevtcfgchange_1',['WorkerEvtCfgChange',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba15c6b5e6ba88204a3cbaea70be0b6e9b',1,'usb_can_bridge.cpp']]],
-  ['workerevtctrllineset_2',['WorkerEvtCtrlLineSet',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba4100833b524ada934d10c4a626befa0f',1,'usb_can_bridge.cpp']]],
-  ['workerevtlinecfgset_3',['WorkerEvtLineCfgSet',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba608b86cb83a0937999da06797c07f6bc',1,'usb_can_bridge.cpp']]],
-  ['workerevtrxdone_4',['WorkerEvtRxDone',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbbafa85abd279e5e93e33ec6ff6cce4118f',1,'usb_can_bridge.cpp']]],
-  ['workerevtstop_5',['WorkerEvtStop',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba10b57f10590433735494031d0e35845f',1,'usb_can_bridge.cpp']]],
-  ['workerevttxstop_6',['WorkerEvtTxStop',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbba36d545c2f2bdc2bf28e8985b59286ef2',1,'usb_can_bridge.cpp']]]
+  ['reportidconsumer_0',['reportidconsumer',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987abf98fdd20906a7d27c8abe549d6150e9',1,'ReportIdConsumer:&#160;furi_hal_bt_hid.c'],['../furi__hal__usb__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987abf98fdd20906a7d27c8abe549d6150e9',1,'ReportIdConsumer:&#160;furi_hal_usb_hid.c']]],
+  ['reportidkeyboard_1',['reportidkeyboard',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987ab7b34a8640e08528b1f05cf09d35ca60',1,'ReportIdKeyboard:&#160;furi_hal_bt_hid.c'],['../furi__hal__usb__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987ab7b34a8640e08528b1f05cf09d35ca60',1,'ReportIdKeyboard:&#160;furi_hal_usb_hid.c']]],
+  ['reportidledstate_2',['ReportIdLEDState',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987ae914feba73d8e8d4f0c72892f99fa693',1,'furi_hal_bt_hid.c']]],
+  ['reportidmouse_3',['reportidmouse',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987abbd77136bb3b2c374315fd8403a2f976',1,'ReportIdMouse:&#160;furi_hal_bt_hid.c'],['../furi__hal__usb__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987abbd77136bb3b2c374315fd8403a2f976',1,'ReportIdMouse:&#160;furi_hal_usb_hid.c']]],
+  ['reportnumberconsumer_4',['ReportNumberConsumer',['../furi__hal__bt__hid_8c.html#a547bf5104d3c42271423add2f06a2afaa8d8ca033093c757ad26aafad114238ea',1,'furi_hal_bt_hid.c']]],
+  ['reportnumberkeyboard_5',['ReportNumberKeyboard',['../furi__hal__bt__hid_8c.html#a547bf5104d3c42271423add2f06a2afaad868dce33e4049316e0264c1eb301b63',1,'furi_hal_bt_hid.c']]],
+  ['reportnumbermouse_6',['ReportNumberMouse',['../furi__hal__bt__hid_8c.html#a547bf5104d3c42271423add2f06a2afaa7c9329e650ee7f9a45adcb18e660832c',1,'furi_hal_bt_hid.c']]]
 ];

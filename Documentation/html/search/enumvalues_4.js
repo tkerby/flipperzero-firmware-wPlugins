@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['osc_5fclko_5fdiv1_0',['OSC_CLKO_DIV1',['../mcp2518fd__can__dfs_8h.html#a70eb35599f20ce9d042b16a427557014a9ad4f89bc3eb873087721c42333c7115',1,'mcp2518fd_can_dfs.h']]],
-  ['osc_5fclko_5fdiv10_1',['OSC_CLKO_DIV10',['../mcp2518fd__can__dfs_8h.html#a70eb35599f20ce9d042b16a427557014aafb20d416cc44eeac577dd2c21474a91',1,'mcp2518fd_can_dfs.h']]],
-  ['osc_5fclko_5fdiv2_2',['OSC_CLKO_DIV2',['../mcp2518fd__can__dfs_8h.html#a70eb35599f20ce9d042b16a427557014ac1a452ba2a49cbb63704e0f16d6398f0',1,'mcp2518fd_can_dfs.h']]],
-  ['osc_5fclko_5fdiv4_3',['OSC_CLKO_DIV4',['../mcp2518fd__can__dfs_8h.html#a70eb35599f20ce9d042b16a427557014ab50297323b27d913a458e28e885f7bb6',1,'mcp2518fd_can_dfs.h']]]
+  ['lightbacklight_0',['LightBacklight',['../furi__hal__resources_8h.html#a26d2e727d2ac8160c71b1493b44971a7a001c7cf7594d90a059bb4fa0a7cd8697',1,'furi_hal_resources.h']]],
+  ['lightblue_1',['LightBlue',['../furi__hal__resources_8h.html#a26d2e727d2ac8160c71b1493b44971a7a1a4360030daf53036ce1cd1668dc6243',1,'furi_hal_resources.h']]],
+  ['lightgreen_2',['LightGreen',['../furi__hal__resources_8h.html#a26d2e727d2ac8160c71b1493b44971a7a6f3bae902f4a1a3b69152ad13382ab18',1,'furi_hal_resources.h']]],
+  ['lightred_3',['LightRed',['../furi__hal__resources_8h.html#a26d2e727d2ac8160c71b1493b44971a7af1f766b65249fac0dbddf379c1dcb7f7',1,'furi_hal_resources.h']]],
+  ['lsb_5ffirst_4',['LSB_FIRST',['../group__CAN-DRIVER-ADAPTATION.html#gga2bf5f470332190b5b526fff787c9af1aaa7a58f44a10c5b3ff637d315043f1767',1,'SPI.h']]]
 ];

@@ -8,7 +8,7 @@ This software application is designed to run on flipper zero device and needs SE
 # Architecture overview
 
 This application is composed by 2 main components:
-- @ref APP : This is a  version of XTREME firmware [GPIO USB-UART bridge](https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/gpio/usb_uart_bridge.c) application modified to send data on CAN (via SPI) and not on UART.
+- @ref APP : This is a  version of XTREME firmware [GPIO USB-UART bridge](https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/gpio/usb_uart_bridge.c) application modified to send data on CAN (via SPI) and not on UART. It follows [Model-view-controller](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) (MVC) design pattern.
 - @ref CAN-DRIVER : Longan Labs [Longan_CANFD](https://github.com/Longan-Labs/Longan_CANFD) library driver for the MCP 2518 CAN transceiver ported on flipper zero platform.
 
 Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.

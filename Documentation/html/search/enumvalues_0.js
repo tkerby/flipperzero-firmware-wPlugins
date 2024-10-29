@@ -380,5 +380,16 @@ var searchData=
   ['can_5fwft00_377',['CAN_WFT00',['../mcp2518fd__can__dfs_8h.html#a135712833e6f27fb2450416e101e9bdfa1634070d19c45f38eb85782180cf3841',1,'mcp2518fd_can_dfs.h']]],
   ['can_5fwft01_378',['CAN_WFT01',['../mcp2518fd__can__dfs_8h.html#a135712833e6f27fb2450416e101e9bdfa7cb121de26b8f79be34c8d888e6216f2',1,'mcp2518fd_can_dfs.h']]],
   ['can_5fwft10_379',['CAN_WFT10',['../mcp2518fd__can__dfs_8h.html#a135712833e6f27fb2450416e101e9bdfaba2a202b74a03b4ead5ee78735c9e123',1,'mcp2518fd_can_dfs.h']]],
-  ['can_5fwft11_380',['CAN_WFT11',['../mcp2518fd__can__dfs_8h.html#a135712833e6f27fb2450416e101e9bdfaf9456f09318dd0d5e0a9729293116edb',1,'mcp2518fd_can_dfs.h']]]
+  ['can_5fwft11_380',['CAN_WFT11',['../mcp2518fd__can__dfs_8h.html#a135712833e6f27fb2450416e101e9bdfaf9456f09318dd0d5e0a9729293116edb',1,'mcp2518fd_can_dfs.h']]],
+  ['ccid_5ffeatures_5fauto_5ficcactivation_381',['CCID_Features_Auto_ICCActivation',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a5a4d3549794f9d0453bc15e0eda8bd82',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5ficcbaudratechange_382',['CCID_Features_Auto_ICCBaudRateChange',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0ac369b1ad1960ddbdd141c0c61fc7d6d3',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5ficcclockfrequencychange_383',['CCID_Features_Auto_ICCClockFrequencyChange',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a2bcacf7b884aa1492dfd191b157105cc',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5fnone_384',['CCID_Features_Auto_None',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a6b5f92f9b2ef5a58c7df9f55651fb943',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5fparameterconfiguration_385',['CCID_Features_Auto_ParameterConfiguration',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a5cb7ec48e445860ff63b9d32888a7926',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5fparameternegotiation_386',['CCID_Features_Auto_ParameterNegotiation',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0ad0e992ca0bf99a2813fd04b2df717a6b',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5fpps_387',['CCID_Features_Auto_PPS',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a978d12995f695252c24815ca1bf3c2da',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fauto_5fvoltageselection_388',['CCID_Features_Auto_VoltageSelection',['../furi__hal__usb__ccid_8c.html#a6c9fd75a79d8bda25c859043a7e690d0a857c028428cbf4aeaa67ed8636cb6400',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fexchangelevel_5fshortapdu_389',['CCID_Features_ExchangeLevel_ShortAPDU',['../furi__hal__usb__ccid_8c.html#a36c76dfb24643af29aca21ac19af567aaaa19603389ac1182906239abbaea65a0',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fexchangelevel_5fshortextendedapdu_390',['CCID_Features_ExchangeLevel_ShortExtendedAPDU',['../furi__hal__usb__ccid_8c.html#a36c76dfb24643af29aca21ac19af567aa6035047d293f22773b17f8dacecb0d52',1,'furi_hal_usb_ccid.c']]],
+  ['ccid_5ffeatures_5fexchangelevel_5ftpdu_391',['CCID_Features_ExchangeLevel_TPDU',['../furi__hal__usb__ccid_8c.html#a36c76dfb24643af29aca21ac19af567aae261599d09dd25167fb05576ff99bf04',1,'furi_hal_usb_ccid.c']]]
 ];

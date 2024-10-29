@@ -71,7 +71,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_18b7cbd64894ab3853314e9eb7a6c424.html">scenes</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_3d9fa5a0610306bce594bdcdc9bc5bc9.html">scenes</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -81,7 +81,82 @@ $(function() {
   <div class="headertitle"><div class="title">usbCan_scene_start.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-
+<div class="textblock"><code>#include &quot;<a class="el" href="usb__can__app__i_8hpp_source.html">../usb_can_app_i.hpp</a>&quot;</code><br />
+<code>#include &lt;furi_hal_power.h&gt;</code><br />
+<code>#include &lt;furi_hal_usb.h&gt;</code><br />
+<code>#include &lt;dolphin/dolphin.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="usbCan__scene__setState_8hpp_source.html">usbCan_scene_setState.hpp</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for usbCan_scene_start.cpp:</div>
+<div class="dyncontent">
+<div class="center"><img src="usbCan__scene__start_8cpp__incl.png" border="0" usemap="#ascenes_2usbCan__scene__start_8cpp" alt=""/></div>
+<map name="ascenes_2usbCan__scene__start_8cpp" id="ascenes_2usbCan__scene__start_8cpp">
+<area shape="rect" title=" " alt="" coords="1377,5,1541,45"/>
+<area shape="rect" href="usb__can__app__i_8hpp.html" title="Application top level header file. It main structures definitions." alt="" coords="1067,93,1224,119"/>
+<area shape="poly" title=" " alt="" coords="1384,48,1205,93,1204,87,1383,43"/>
+<area shape="rect" title=" " alt="" coords="1249,93,1378,119"/>
+<area shape="poly" title=" " alt="" coords="1425,48,1348,89,1345,84,1423,43"/>
+<area shape="rect" title=" " alt="" coords="1402,93,1515,119"/>
+<area shape="poly" title=" " alt="" coords="1461,46,1461,79,1456,79,1456,46"/>
+<area shape="rect" title=" " alt="" coords="1539,93,1674,119"/>
+<area shape="poly" title=" " alt="" coords="1495,43,1574,84,1571,89,1493,48"/>
+<area shape="rect" href="usbCan__scene__setState_8hpp.html" title=" " alt="" coords="1698,93,1902,119"/>
+<area shape="poly" title=" " alt="" coords="1541,43,1738,88,1736,93,1540,48"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="123,174,315,199"/>
+<area shape="poly" title=" " alt="" coords="1067,113,743,131,536,147,327,169,292,174,292,169,326,164,536,142,743,126,1066,108"/>
+<area shape="rect" title=" " alt="" coords="5,255,165,280"/>
+<area shape="poly" title=" " alt="" coords="1067,109,831,110,530,116,385,123,259,134,164,149,132,159,112,169,100,184,92,203,87,241,81,241,87,201,95,181,109,165,130,154,163,144,258,129,385,118,530,111,831,104,1067,104"/>
+<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="339,174,541,199"/>
+<area shape="poly" title=" " alt="" coords="1067,116,836,137,554,169,518,174,517,169,553,164,836,132,1066,111"/>
+<area shape="rect" title=" " alt="" coords="566,174,645,199"/>
+<area shape="poly" title=" " alt="" coords="1067,114,879,131,768,147,658,169,647,172,646,167,657,164,767,142,878,126,1066,109"/>
+<area shape="rect" title=" " alt="" coords="669,174,832,199"/>
+<area shape="poly" title=" " alt="" coords="1088,121,845,169,821,174,820,169,843,164,1086,116"/>
+<area shape="rect" title=" " alt="" coords="856,174,1035,199"/>
+<area shape="poly" title=" " alt="" coords="1117,121,988,171,986,166,1115,116"/>
+<area shape="rect" title=" " alt="" coords="1059,167,1231,207"/>
+<area shape="poly" title=" " alt="" coords="1148,119,1148,153,1143,153,1143,119"/>
+<area shape="rect" title=" " alt="" coords="1255,167,1414,207"/>
+<area shape="poly" title=" " alt="" coords="1174,116,1278,159,1276,164,1172,121"/>
+<area shape="rect" title=" " alt="" coords="1439,174,1601,199"/>
+<area shape="poly" title=" " alt="" coords="1200,116,1453,169,1451,174,1199,121"/>
+<area shape="rect" title=" " alt="" coords="1625,174,1807,199"/>
+<area shape="poly" title=" " alt="" coords="1225,115,1614,164,1643,169,1643,174,1613,169,1224,120"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="1831,167,2054,207"/>
+<area shape="poly" title=" " alt="" coords="1225,115,1236,116,1398,130,1525,139,1653,148,1818,164,1818,169,1653,153,1525,144,1397,136,1236,121,1224,120"/>
+<area shape="rect" title=" " alt="" coords="2245,174,2333,199"/>
+<area shape="poly" title=" " alt="" coords="1225,115,1236,116,1388,126,1517,128,1737,124,1843,123,1956,127,2084,140,2234,164,2248,167,2247,173,2233,169,2083,145,1955,133,1843,128,1737,129,1517,133,1388,131,1236,121,1224,120"/>
+<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="2078,174,2221,199"/>
+<area shape="poly" title=" " alt="" coords="1225,115,1236,116,1362,126,1469,131,1651,134,1833,140,1940,149,2066,164,2091,168,2091,174,2065,169,1940,154,1833,145,1651,139,1469,136,1362,131,1236,121,1224,120"/>
+<area shape="poly" title=" " alt="" coords="200,202,118,250,115,245,198,197"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="189,255,379,280"/>
+<area shape="poly" title=" " alt="" coords="230,198,268,242,263,246,226,201"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="1842,255,2006,280"/>
+<area shape="poly" title=" " alt="" coords="1941,208,1933,242,1927,240,1936,206"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="1738,401,1822,427"/>
+<area shape="poly" title=" " alt="" coords="1895,209,1861,229,1831,256,1812,289,1798,324,1785,388,1780,387,1793,323,1807,286,1827,253,1858,225,1893,205"/>
+<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="2057,401,2111,427"/>
+<area shape="poly" title=" " alt="" coords="1970,205,1996,226,2019,253,2041,287,2058,324,2080,387,2075,389,2053,326,2036,290,2015,256,1992,230,1967,209"/>
+<area shape="poly" title=" " alt="" coords="1914,282,1803,393,1799,389,1910,279"/>
+<area shape="rect" title=" " alt="" coords="1846,401,1933,427"/>
+<area shape="poly" title=" " alt="" coords="1924,281,1898,389,1893,387,1919,280"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="1927,328,2039,353"/>
+<area shape="poly" title=" " alt="" coords="1936,279,1967,316,1963,319,1932,282"/>
+<area shape="rect" title=" " alt="" coords="1724,475,1836,515"/>
+<area shape="poly" title=" " alt="" coords="1783,427,1783,461,1777,461,1777,427"/>
+<area shape="poly" title=" " alt="" coords="1951,356,1826,399,1825,394,1949,351"/>
+<area shape="poly" title=" " alt="" coords="1969,355,1917,395,1914,391,1966,351"/>
+<area shape="poly" title=" " alt="" coords="2000,351,2058,391,2055,395,1997,356"/>
+<area shape="rect" title=" " alt="" coords="1957,401,2032,427"/>
+<area shape="poly" title=" " alt="" coords="1987,353,1993,387,1988,388,1982,354"/>
+<area shape="rect" title=" " alt="" coords="2081,482,2151,507"/>
+<area shape="poly" title=" " alt="" coords="2091,426,2108,468,2104,470,2086,428"/>
+<area shape="poly" title=" " alt="" coords="2151,200,2127,427,2122,468,2116,468,2121,426,2146,199"/>
+<area shape="rect" title=" " alt="" coords="2187,255,2274,280"/>
+<area shape="poly" title=" " alt="" coords="2163,198,2211,243,2207,247,2159,201"/>
+</map>
+</div>
+</div>
 <p><a href="usbCan__scene__start_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>

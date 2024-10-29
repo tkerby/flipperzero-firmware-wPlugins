@@ -1,0 +1,28 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_spi.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_spi.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="493,5,661,75"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,196,61,221"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="493,44,370,47,230,59,164,70,106,84,59,102,29,124,22,137,20,152,26,183,20,184,15,152,17,136,25,121,57,97,104,79,163,64,229,54,370,42,493,38"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="39,123,148,148"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="494,60,162,124,161,118,493,55"/>
+<area shape="rect" id="Node000004" href="$furi__hal__resources_8h.html" title=" " alt="" coords="173,123,326,148"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="494,68,304,121,302,116,493,63"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="350,123,479,148"/>
+<area shape="poly" id="edge7_Node000001_Node000007" title=" " alt="" coords="520,77,448,118,445,113,517,72"/>
+<area shape="rect" id="Node000008" href="$furi__hal__interrupt_8h.html" title=" " alt="" coords="504,123,651,148"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="580,75,580,109,575,109,575,75"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="675,123,837,148"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="643,72,723,114,720,118,641,77"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="861,123,1011,148"/>
+<area shape="poly" id="edge11_Node000001_Node000011" title=" " alt="" coords="662,60,879,117,878,122,661,66"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="1036,123,1196,148"/>
+<area shape="poly" id="edge12_Node000001_Node000012" title=" " alt="" coords="662,53,1037,118,1036,123,661,58"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="1220,123,1393,148"/>
+<area shape="poly" id="edge13_Node000001_Node000013" title=" " alt="" coords="662,49,1206,119,1206,124,661,55"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="215,151,75,196,74,191,214,145"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="149,196,259,221"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="244,150,221,186,216,183,240,147"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="284,196,444,221"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="269,146,335,186,332,191,266,150"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="500,196,655,221"/>
+<area shape="poly" id="edge9_Node000008_Node000009" title=" " alt="" coords="580,148,580,182,575,182,575,148"/>
+</map>

@@ -71,19 +71,62 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_97bb94c315de1e95c694f28397c8225a.html">Longan_CANFD</a></li><li class="navelem"><a class="el" href="dir_84d2d35ba18361eb4593a3ecf284d769.html">src</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_b5606e6bc73789aafce5e6cb3a07d091.html">Longan_CANFD</a></li><li class="navelem"><a class="el" href="dir_b91f560b87482a4a16e4d5bcf1689e48.html">src</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">mcp2518fd_can.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-
+<div class="textblock"><code>#include &quot;<a class="el" href="mcp2518fd__can_8h_source.html">mcp2518fd_can.h</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for mcp2518fd_can.cpp:</div>
+<div class="dyncontent">
+<div class="center"><img src="mcp2518fd__can_8cpp__incl.png" border="0" usemap="#aLongan__CANFD_2src_2mcp2518fd__can_8cpp" alt=""/></div>
+<map name="aLongan__CANFD_2src_2mcp2518fd__can_8cpp" id="aLongan__CANFD_2src_2mcp2518fd__can_8cpp">
+<area shape="rect" title=" " alt="" coords="81,5,303,45"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="123,93,261,119"/>
+<area shape="poly" title=" " alt="" coords="195,46,195,79,189,79,189,46"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="110,167,274,192"/>
+<area shape="poly" title=" " alt="" coords="195,119,195,153,189,153,189,119"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="19,313,103,339"/>
+<area shape="poly" title=" " alt="" coords="163,121,129,140,99,168,82,201,72,236,64,300,59,299,66,235,77,199,95,165,126,136,161,116"/>
+<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="338,313,393,339"/>
+<area shape="poly" title=" " alt="" coords="219,117,254,137,287,165,313,198,333,235,360,299,355,301,328,237,308,201,283,169,250,141,216,121"/>
+<area shape="poly" title=" " alt="" coords="179,194,126,242,78,303,74,300,122,238,175,190"/>
+<area shape="rect" title=" " alt="" coords="227,313,314,339"/>
+<area shape="poly" title=" " alt="" coords="213,190,239,210,262,239,272,269,275,299,269,299,267,270,258,241,236,214,210,194"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="136,240,248,265"/>
+<area shape="poly" title=" " alt="" coords="195,192,195,226,189,226,189,192"/>
+<area shape="rect" title=" " alt="" coords="5,387,117,427"/>
+<area shape="poly" title=" " alt="" coords="64,339,64,373,59,373,59,339"/>
+<area shape="poly" title=" " alt="" coords="172,268,96,309,93,304,170,263"/>
+<area shape="poly" title=" " alt="" coords="206,263,250,302,246,306,203,267"/>
+<area shape="poly" title=" " alt="" coords="221,263,326,306,324,311,219,268"/>
+<area shape="rect" title=" " alt="" coords="128,313,203,339"/>
+<area shape="poly" title=" " alt="" coords="190,267,177,302,172,300,185,265"/>
+<area shape="rect" title=" " alt="" coords="330,394,401,419"/>
+<area shape="poly" title=" " alt="" coords="368,339,368,380,363,380,363,339"/>
+</map>
+</div>
+</div>
 <p><a href="mcp2518fd__can_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a6950e53c88ad3e9f54343be171b6a24f" id="r_a6950e53c88ad3e9f54343be171b6a24f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a6950e53c88ad3e9f54343be171b6a24f">MAX_TXQUEUE_ATTEMPTS</a>&#160;&#160;&#160;50</td></tr>
+<tr class="separator:a6950e53c88ad3e9f54343be171b6a24f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6de622b05e8348cf68c8dba280451abf" id="r_a6de622b05e8348cf68c8dba280451abf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a6de622b05e8348cf68c8dba280451abf">APP_TX_FIFO</a>&#160;&#160;&#160;<a class="el" href="mcp2518fd__can__dfs_8h.html#a63c8ccb2df03b8f7db8df6e06378ccdcac4ca97e76eebcbc410ceafcfbe8c62bf">CAN_FIFO_CH2</a></td></tr>
+<tr class="separator:a6de622b05e8348cf68c8dba280451abf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe59fcd0d80121588e488f218b035193" id="r_abe59fcd0d80121588e488f218b035193"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#abe59fcd0d80121588e488f218b035193">APP_RX_FIFO</a>&#160;&#160;&#160;<a class="el" href="mcp2518fd__can__dfs_8h.html#a63c8ccb2df03b8f7db8df6e06378ccdcac2490ef3c8bf15b6b402f1625d1cc935">CAN_FIFO_CH1</a></td></tr>
+<tr class="separator:abe59fcd0d80121588e488f218b035193"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae57c9e215ed764e1cd1f5fe392472c39" id="r_ae57c9e215ed764e1cd1f5fe392472c39"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#ae57c9e215ed764e1cd1f5fe392472c39">MAX_DATA_BYTES</a>&#160;&#160;&#160;64</td></tr>
+<tr class="separator:ae57c9e215ed764e1cd1f5fe392472c39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af6c34b43dad5745ff6ffdd9f5b49496c" id="r_af6c34b43dad5745ff6ffdd9f5b49496c"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#af6c34b43dad5745ff6ffdd9f5b49496c">DRV_CANFDSPI_CalculateCRC16</a> (uint8_t *data, uint16_t size)</td></tr>
@@ -103,7 +146,7 @@ Variables</h2></td></tr>
 <tr class="separator:a219b8712b3bcc0238c97adc6d0722fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1591c34c4548bbedad1af5f79d80d99b" id="r_a1591c34c4548bbedad1af5f79d80d99b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="mcp2518fd__can__dfs_8h.html#a1d04b8c0f91b7814ba4a1f8950e07c0d">CAN_RX_MSGOBJ</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a1591c34c4548bbedad1af5f79d80d99b">rxObj</a></td></tr>
 <tr class="separator:a1591c34c4548bbedad1af5f79d80d99b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ae76c0db69c2a3c75cc1b7087a13c5f" id="r_a7ae76c0db69c2a3c75cc1b7087a13c5f"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a7ae76c0db69c2a3c75cc1b7087a13c5f">rxd</a> [MAX_DATA_BYTES]</td></tr>
+<tr class="memitem:a7ae76c0db69c2a3c75cc1b7087a13c5f" id="r_a7ae76c0db69c2a3c75cc1b7087a13c5f"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a7ae76c0db69c2a3c75cc1b7087a13c5f">rxd</a> [<a class="el" href="mcp2518fd__can_8cpp.html#ae57c9e215ed764e1cd1f5fe392472c39">MAX_DATA_BYTES</a>]</td></tr>
 <tr class="separator:a7ae76c0db69c2a3c75cc1b7087a13c5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f8df81c0445a630dfe922e9b1e190a3" id="r_a2f8df81c0445a630dfe922e9b1e190a3"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="mcp2518fd__can__dfs_8h.html#afe872ecd7753a3c496c3b062c34873cb">CAN_TX_FIFO_CONFIG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a2f8df81c0445a630dfe922e9b1e190a3">txConfig</a></td></tr>
 <tr class="separator:a2f8df81c0445a630dfe922e9b1e190a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,12 +154,12 @@ Variables</h2></td></tr>
 <tr class="separator:a72f0fe9cacb947b2acddc167e4c2bf11"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a380f5fa9aefe178e652891750c074c3a" id="r_a380f5fa9aefe178e652891750c074c3a"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="mcp2518fd__can__dfs_8h.html#a9215478b0f5ceae715b7cb1bc967e288">CAN_TX_MSGOBJ</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a380f5fa9aefe178e652891750c074c3a">txObj</a></td></tr>
 <tr class="separator:a380f5fa9aefe178e652891750c074c3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4c2875d20a4b07bb80f19753f45ff8f" id="r_aa4c2875d20a4b07bb80f19753f45ff8f"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#aa4c2875d20a4b07bb80f19753f45ff8f">txd</a> [MAX_DATA_BYTES]</td></tr>
+<tr class="memitem:aa4c2875d20a4b07bb80f19753f45ff8f" id="r_aa4c2875d20a4b07bb80f19753f45ff8f"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#aa4c2875d20a4b07bb80f19753f45ff8f">txd</a> [<a class="el" href="mcp2518fd__can_8cpp.html#ae57c9e215ed764e1cd1f5fe392472c39">MAX_DATA_BYTES</a>]</td></tr>
 <tr class="separator:aa4c2875d20a4b07bb80f19753f45ff8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a181801ec11a72c45582accaeab309c29" id="r_a181801ec11a72c45582accaeab309c29"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a181801ec11a72c45582accaeab309c29">spiTransmitBuffer</a> [SPI_DEFAULT_BUFFER_LENGTH+2]</td></tr>
+<tr class="memitem:a181801ec11a72c45582accaeab309c29" id="r_a181801ec11a72c45582accaeab309c29"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a181801ec11a72c45582accaeab309c29">spiTransmitBuffer</a> [<a class="el" href="mcp2518fd__can_8h.html#a965da717cba3a74dce01200d8def3989">SPI_DEFAULT_BUFFER_LENGTH</a>+2]</td></tr>
 <tr class="memdesc:a181801ec11a72c45582accaeab309c29"><td class="mdescLeft">&#160;</td><td class="mdescRight">SPI Transmit buffer.  <br /></td></tr>
 <tr class="separator:a181801ec11a72c45582accaeab309c29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b96108d595bbd47e45fb4b3505c536b" id="r_a4b96108d595bbd47e45fb4b3505c536b"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a4b96108d595bbd47e45fb4b3505c536b">spiReceiveBuffer</a> [SPI_DEFAULT_BUFFER_LENGTH]</td></tr>
+<tr class="memitem:a4b96108d595bbd47e45fb4b3505c536b" id="r_a4b96108d595bbd47e45fb4b3505c536b"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a4b96108d595bbd47e45fb4b3505c536b">spiReceiveBuffer</a> [<a class="el" href="mcp2518fd__can_8h.html#a965da717cba3a74dce01200d8def3989">SPI_DEFAULT_BUFFER_LENGTH</a>]</td></tr>
 <tr class="memdesc:a4b96108d595bbd47e45fb4b3505c536b"><td class="mdescLeft">&#160;</td><td class="mdescRight">SPI Receive buffer.  <br /></td></tr>
 <tr class="separator:a4b96108d595bbd47e45fb4b3505c536b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52badbc79df0f89f8e1cd6cf1289a7d8" id="r_a52badbc79df0f89f8e1cd6cf1289a7d8"><td class="memItemLeft" align="right" valign="top">static const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a52badbc79df0f89f8e1cd6cf1289a7d8">MAX_BRP</a> = 256</td></tr>
@@ -134,6 +177,71 @@ Variables</h2></td></tr>
 <tr class="memitem:a5613b00e8f4a77ff78fc05d3c168c872" id="r_a5613b00e8f4a77ff78fc05d3c168c872"><td class="memItemLeft" align="right" valign="top">static const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp2518fd__can_8cpp.html#a5613b00e8f4a77ff78fc05d3c168c872">MAX_DATA_SJW</a> = 16</td></tr>
 <tr class="separator:a5613b00e8f4a77ff78fc05d3c168c872"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="abe59fcd0d80121588e488f218b035193" name="abe59fcd0d80121588e488f218b035193"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe59fcd0d80121588e488f218b035193">&#9670;&#160;</a></span>APP_RX_FIFO</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define APP_RX_FIFO&#160;&#160;&#160;<a class="el" href="mcp2518fd__can__dfs_8h.html#a63c8ccb2df03b8f7db8df6e06378ccdcac2490ef3c8bf15b6b402f1625d1cc935">CAN_FIFO_CH1</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mcp2518fd__can_8cpp_source.html#l00026">26</a> of file <a class="el" href="mcp2518fd__can_8cpp_source.html">mcp2518fd_can.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a6de622b05e8348cf68c8dba280451abf" name="a6de622b05e8348cf68c8dba280451abf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6de622b05e8348cf68c8dba280451abf">&#9670;&#160;</a></span>APP_TX_FIFO</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define APP_TX_FIFO&#160;&#160;&#160;<a class="el" href="mcp2518fd__can__dfs_8h.html#a63c8ccb2df03b8f7db8df6e06378ccdcac4ca97e76eebcbc410ceafcfbe8c62bf">CAN_FIFO_CH2</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mcp2518fd__can_8cpp_source.html#l00023">23</a> of file <a class="el" href="mcp2518fd__can_8cpp_source.html">mcp2518fd_can.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ae57c9e215ed764e1cd1f5fe392472c39" name="ae57c9e215ed764e1cd1f5fe392472c39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae57c9e215ed764e1cd1f5fe392472c39">&#9670;&#160;</a></span>MAX_DATA_BYTES</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define MAX_DATA_BYTES&#160;&#160;&#160;64</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mcp2518fd__can_8cpp_source.html#l00029">29</a> of file <a class="el" href="mcp2518fd__can_8cpp_source.html">mcp2518fd_can.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a6950e53c88ad3e9f54343be171b6a24f" name="a6950e53c88ad3e9f54343be171b6a24f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6950e53c88ad3e9f54343be171b6a24f">&#9670;&#160;</a></span>MAX_TXQUEUE_ATTEMPTS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define MAX_TXQUEUE_ATTEMPTS&#160;&#160;&#160;50</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mcp2518fd__can_8cpp_source.html#l00020">20</a> of file <a class="el" href="mcp2518fd__can_8cpp_source.html">mcp2518fd_can.cpp</a>.</p>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="af6c34b43dad5745ff6ffdd9f5b49496c" name="af6c34b43dad5745ff6ffdd9f5b49496c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af6c34b43dad5745ff6ffdd9f5b49496c">&#9670;&#160;</a></span>DRV_CANFDSPI_CalculateCRC16()</h2>
@@ -196,7 +304,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="mcp2518fd__can__dfs_8h.html#af29b2bea0f24bbe1a9bc2951feaacaff">REG_CiMASK</a> __attribute__ </td>
+          <td class="memname">static <a class="el" href="mcp2518fd__can__dfs_8h.html#af29b2bea0f24bbe1a9bc2951feaacaff">REG_CiMASK</a> <a class="el" href="struct____attribute____.html">__attribute__</a> </td>
           <td>(</td>
           <td class="paramtype">(used)&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -438,7 +546,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t rxd[MAX_DATA_BYTES]</td>
+          <td class="memname">uint8_t rxd[<a class="el" href="mcp2518fd__can_8cpp.html#ae57c9e215ed764e1cd1f5fe392472c39">MAX_DATA_BYTES</a>]</td>
         </tr>
       </table>
   </td>
@@ -510,7 +618,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t spiReceiveBuffer[SPI_DEFAULT_BUFFER_LENGTH]</td>
+          <td class="memname">uint8_t spiReceiveBuffer[<a class="el" href="mcp2518fd__can_8h.html#a965da717cba3a74dce01200d8def3989">SPI_DEFAULT_BUFFER_LENGTH</a>]</td>
         </tr>
       </table>
   </td>
@@ -536,7 +644,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t spiTransmitBuffer[SPI_DEFAULT_BUFFER_LENGTH+2]</td>
+          <td class="memname">uint8_t spiTransmitBuffer[<a class="el" href="mcp2518fd__can_8h.html#a965da717cba3a74dce01200d8def3989">SPI_DEFAULT_BUFFER_LENGTH</a>+2]</td>
         </tr>
       </table>
   </td>
@@ -586,7 +694,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t txd[MAX_DATA_BYTES]</td>
+          <td class="memname">uint8_t txd[<a class="el" href="mcp2518fd__can_8cpp.html#ae57c9e215ed764e1cd1f5fe392472c39">MAX_DATA_BYTES</a>]</td>
         </tr>
       </table>
   </td>

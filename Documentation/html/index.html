@@ -84,7 +84,7 @@ Flipper zero CAN FD</div></div>
     <h1><a class="anchor" id="autotoc_md0"></a>
 Architecture overview</h1>
 <p>This application is composed by 2 main components:</p><ul>
-<li><a class="el" href="group__APP.html">APP</a> : This is a version of XTREME firmware <a href="https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/gpio/usb_uart_bridge.c">GPIO USB-UART bridge</a> application modified to send data on CAN (via SPI) and not on UART.</li>
+<li><a class="el" href="group__APP.html">APP</a> : This is a version of XTREME firmware <a href="https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/gpio/usb_uart_bridge.c">GPIO USB-UART bridge</a> application modified to send data on CAN (via SPI) and not on UART. It follows <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-view-controller</a> (MVC) design pattern.</li>
 <li><a class="el" href="group__CAN-DRIVER.html">CAN-DRIVER</a> : Longan Labs <a href="https://github.com/Longan-Labs/Longan_CANFD">Longan_CANFD</a> library driver for the MCP 2518 CAN transceiver ported on flipper zero platform.</li>
 </ul>
 <p>Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.</p>

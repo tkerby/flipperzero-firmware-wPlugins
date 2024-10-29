@@ -1,9 +1,8 @@
 /** @file usb_can_app_i.hpp
  * @brief Application top level header file. It main structures definitions.
- * @ingroup CONTROLLER
+ * @ingroup MODEL
 */
 #pragma once
-#ifdef __cplusplus
 #include "scenes/usbCan_scene.hpp"
 #include "usb_can_custom_event.hpp"
 
@@ -90,10 +89,3 @@ typedef enum {
     UsbCanAppViewUsbBusy,
     UsbCanAppViewExitConfirm
 } UsbCanAppView;
-
-#define EXTERNC extern "C"
-#else
-#define EXTERNC extern
-#endif
-
-EXTERNC int32_t __attribute__((used)) usb_can_app(void* p);
