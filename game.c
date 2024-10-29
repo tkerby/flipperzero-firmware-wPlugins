@@ -269,7 +269,8 @@ uint32_t lastShotTick;
 
 static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
     //If we are not facing right or left, we cannot shoot
-    bool canShoot = playerCtx->sprite == playerCtx->sprite_left || playerCtx->sprite == playerCtx->sprite_right;
+    bool canShoot = playerCtx->sprite == playerCtx->sprite_left ||
+                    playerCtx->sprite == playerCtx->sprite_right;
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
@@ -306,8 +307,8 @@ static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Ve
         entity_pos_set(bullets[i], bulletPos);
 
         //Once bullet reaches end, destroy it
-        if(roundf(bulletPos.x) == WORLD_BORDER_RIGHT_X ||
-           roundf(bulletPos.x) == WORLD_BORDER_LEFT_X) {
+        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
+           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
             level_remove_entity(gameLevel, bullets[i]);
             bullets[i] = NULL;
         }
@@ -350,8 +351,8 @@ static void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
         entity_pos_set(enemyBullets[i], bulletPos);
 
         //Once bullet reaches end, destroy it
-        if(roundf(bulletPos.x) == WORLD_BORDER_RIGHT_X ||
-           roundf(bulletPos.x) == WORLD_BORDER_LEFT_X) {
+        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
+           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
             level_remove_entity(gameLevel, enemyBullets[i]);
             enemyBullets[i] = NULL;
         }
@@ -485,6 +486,12 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
 
+    canvas_draw_frame(canvas, 2, -4, 124, 61);
+    canvas_draw_line(canvas, 1, 57, 0, 60);
+    canvas_draw_line(canvas, 126, 57, 128, 61);
+
+    //canvas_draw_frame(canvas, 0, -4, 135, 64);
+
     // Get game context
     GameContext* game_context = game_manager_game_context_get(manager);
     UNUSED(game_context);
@@ -517,7 +524,8 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 furi_delay_ms(2000);
             }
         } else if(!startedGame) {
-            canvas_printf(canvas, 70, 40, "Continue! -->");
+            canvas_printf(canvas, 47 , 40, "Continue! -->");
+            canvas_draw_box(canvas, 126, 44, 2, 16);
             static bool continued;
             if(!continued) {
                 continued = true;
@@ -546,10 +554,10 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
         } else if(furi_get_tick() - secondKillTick > 7000 && furi_get_tick() - secondKillTick < 9000) {
             if(health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f))) {
-                canvas_printf(canvas, 0, 30, "Now the final challenge!");
+                canvas_printf(canvas, 5, 30, "Now the final challenge!");
             } else {
-                canvas_printf(canvas, 0, 30, "Well, here's the real challenge!");
-                canvas_printf(canvas, 10, 40, "Good luck?");
+                canvas_printf(canvas, 5, 30, "Well, here's the real challenge!");
+                canvas_printf(canvas, 13, 40, "Good luck?");
             }
             for(int i = 5; i > 0; i--) {
                 furi_delay_ms(i);
@@ -973,7 +981,7 @@ static void game_stop(void* ctx) {
     Yor game configuration, do not rename this variable, but you can change it's content here.  
 */
 const Game game = {
-    .target_fps = 120, // target fps, game will try to keep this value
+    .target_fps = 130, // target fps, game will try to keep this value
     .show_fps = false, // show fps counter on the screen
     .always_backlight = false, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
