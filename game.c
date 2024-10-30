@@ -421,6 +421,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             WORLD_TRANSITION_LEFT_STARTING_POINT);
         pos.y = CLAMP(pos.y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
         entity_pos_set(self, pos);
+
         return;
     }
 
@@ -524,7 +525,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 furi_delay_ms(2000);
             }
         } else if(!startedGame) {
-            canvas_printf(canvas, 47 , 40, "Continue! -->");
+            canvas_printf(canvas, 47, 40, "Continue! -->");
             canvas_draw_box(canvas, 126, 44, 2, 16);
             static bool continued;
             if(!continued) {
@@ -581,8 +582,16 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
             furi_delay_ms(tickThousands % 3 == 0 ? 10 : 0);
         }
     } else if(kills == 4) {
-        canvas_printf(canvas, 20, 30, "You've completed the");
-        canvas_printf(canvas, 20, 40, "tutorial!");
+        canvas_draw_box(canvas, 126, 44, 2, 16);
+        //Text will be blinking/flashing
+        if((int)roundf((furi_get_tick() - secondKillTick) / 1000.0f) % 2 == 0) {
+            canvas_printf(canvas, 20, 30, "You've completed the");
+            canvas_printf(canvas, 20, 40, "tutorial!");
+        }
+    }
+
+    if(tutorialCompleted && startedGame) {
+        canvas_draw_box(canvas, 0, 44, 2, 16);
     }
 
 #ifdef DEBUG_WEIGHTS
@@ -669,6 +678,7 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
                     damageSound = &sequence_success;
 
                     //Destroy all associated bullets
+                    //TODO CHECK IF BULLETS WERE THEIRS
                     for(int i = 0; i < MAX_BULLETS; i++) {
                         if(enemyBullets[i] == NULL) continue;
                         level_remove_entity(gameLevel, enemyBullets[i]);
@@ -942,12 +952,68 @@ static const LevelBehaviour level = {
 
 /****** Game ******/
 
+bool TUTORIAL = false;
+FuriApiLock exit_lock;
+
+static void submenu_button_callback(void* game_manager, uint32_t index) {
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+    if(index == 0) {
+        notification_message(notifications, &sequence_success);
+        api_lock_unlock(exit_lock);
+    } else if(index == 1) {
+        TUTORIAL = true;
+        notification_message(notifications, &sequence_success);
+        api_lock_unlock(exit_lock);
+    } else if(index == 2) {
+        //Settings menu
+        notification_message(notifications, &sequence_semi_success);
+    } else if(index == 3) {
+        //Quit
+        notification_message(notifications, &sequence_error);
+        api_lock_unlock(exit_lock);
+        game_manager_game_stop((GameManager*)game_manager);
+    }
+}
+
 /* 
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
 */
 static void game_start(GameManager* game_manager, void* ctx) {
     UNUSED(game_manager);
+
+    //Setup widget UI
+    Gui* gui = furi_record_open(RECORD_GUI);
+    /*
+     Widget* widget = widget_alloc();
+    widget_add_string_element(widget, 0, 30, AlignCenter, AlignCenter, FontPrimary, "test center");
+
+    ViewHolder* view_holder = view_holder_alloc();
+
+    view_holder_attach_to_gui(view_holder, gui);
+    view_holder_set_view(view_holder, widget_get_view(widget));*/
+
+    exit_lock = api_lock_alloc_locked();
+
+    Submenu* submenu = submenu_alloc();
+    submenu_add_item(submenu, "PLAY GAME", 0, submenu_button_callback, game_manager);
+    submenu_add_item(submenu, "TUTORIAL", 1, submenu_button_callback, game_manager);
+    submenu_add_item(submenu, "SETTINGS", 2, submenu_button_callback, game_manager);
+    submenu_add_item(submenu, "QUIT", 3, submenu_button_callback, game_manager);
+
+    ViewHolder* view_holder = view_holder_alloc();
+
+    view_holder_attach_to_gui(view_holder, gui);
+    view_holder_set_view(view_holder, submenu_get_view(submenu));
+
+    api_lock_wait_unlock(exit_lock);
+
+    view_holder_set_view(view_holder, NULL);
+    // Delete everything to prevent memory leaks.
+    view_holder_free(view_holder);
+    submenu_free(submenu);
+    // End access to the GUI API.
+    furi_record_close(RECORD_GUI);
 
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
@@ -963,6 +1029,9 @@ static void game_start(GameManager* game_manager, void* ctx) {
         bullets[i] = NULL;
         enemyBullets[i] = NULL;
     }
+
+    //TODO ANIMATIONS FOR GAME, such as particles going up like fire on player
+    //TODO walk animation, optional shooting animation
 }
 
 /* 
