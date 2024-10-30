@@ -525,7 +525,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 furi_delay_ms(2000);
             }
         } else if(!startedGame) {
-            canvas_printf(canvas, 47, 40, "Continue! -->");
+            canvas_printf(canvas, 47, 40, "Continue!     -->");
             canvas_draw_box(canvas, 126, 44, 2, 16);
             static bool continued;
             if(!continued) {
@@ -557,8 +557,8 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
             if(health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f))) {
                 canvas_printf(canvas, 5, 30, "Now the final challenge!");
             } else {
-                canvas_printf(canvas, 5, 30, "Well, here's the real challenge!");
-                canvas_printf(canvas, 13, 40, "Good luck?");
+                canvas_printf(canvas, 5, 30, "Well, here's the real");
+                canvas_printf(canvas, 5, 40, "challenge!");
             }
             for(int i = 5; i > 0; i--) {
                 furi_delay_ms(i);
@@ -851,9 +851,6 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
         if(health == 0) {
             //If dead, restart game
             health = STARTING_PLAYER_HEALTH;
-            tutorialCompleted = false;
-            startedGame = false;
-            hasSpawnedFirstMob = false;
             player_spawn(gameLevel, manager);
             entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
         }
@@ -966,10 +963,10 @@ static void submenu_button_callback(void* game_manager, uint32_t index) {
         api_lock_unlock(exit_lock);
     } else if(index == 2) {
         //Settings menu
-        notification_message(notifications, &sequence_semi_success);
+        notification_message(notifications, &sequence_single_vibro);
     } else if(index == 3) {
         //Quit
-        notification_message(notifications, &sequence_error);
+        notification_message(notifications, &sequence_single_vibro);
         api_lock_unlock(exit_lock);
         game_manager_game_stop((GameManager*)game_manager);
     }
