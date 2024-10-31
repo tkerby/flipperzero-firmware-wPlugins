@@ -101,6 +101,16 @@ uint32_t lastBehaviorTick;
 
 enum EnemyAction lastAction = EnemyActionStand;
 
+GameManager* globalGameManager;
+
+static void frame_cb(GameEngine* engine, Canvas* canvas, InputState input, void* context) {
+    UNUSED(engine);
+    GameManager* game_manager = context;
+    game_manager_input_set(game_manager, input);
+    game_manager_update(game_manager);
+    game_manager_render(game_manager, canvas);
+}
+
 static float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
 }
@@ -307,7 +317,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
         float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
         float distance = sqrtf(distXSq + distYSq);
-        FURI_LOG_I("deadzone", "Enemy bullet dist: %f", (double)distance);
+        //FURI_LOG_I("deadzone", "Enemy bullet dist: %f", (double)distance);
         if(distance < BULLET_DISTANCE_THRESHOLD) {
             //Self destruction of bullet and potentially player
             level_remove_entity(gameLevel, enemyBullets[i]);
@@ -396,10 +406,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     // Control game exit
     if(input.pressed & GameKeyBack) {
         //Only reaches if player is alive. Send them to the main menu
-        //game_manager_game_stop(manager);
-        api_lock_unlock(game_menu_exit_lock);
-        api_lock_relock(game_menu_exit_lock);
-        game_menu_open(manager);
+        game_manager_game_stop(manager);
     }
 
     if(tutorialCompleted && startedGame && roundf(pos.x) > WORLD_BORDER_LEFT_X) {
@@ -900,21 +907,13 @@ static const LevelBehaviour level = {
 
 /****** Game ******/
 
-/* 
-    Write here the start code for your game, for example: creating a level and so on.
-    Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
-*/
-static void game_start(GameManager* game_manager, void* ctx) {
-    UNUSED(game_manager);
-
-    //Instantiate the lock
-    game_menu_exit_lock = api_lock_alloc_locked();
-    game_menu_open(game_manager);
-
+static void game_start_post_menu(GameManager* game_manager, void* ctx) {
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
     GameContext* game_context = ctx;
     game_context->score = 0;
+
+    globalGameManager = game_manager;
 
     // Add level to the game
     game_manager_add_level(game_manager, &level);
@@ -931,16 +930,46 @@ static void game_start(GameManager* game_manager, void* ctx) {
 }
 
 /* 
+    Write here the start code for your game, for example: creating a level and so on.
+    Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
+*/
+static void game_start(GameManager* game_manager, void* ctx) {
+    UNUSED(game_manager);
+
+    //Instantiate the lock
+    game_menu_open(game_manager, false);
+
+    if(game_menu_settings_selected) {
+        // End access to the GUI API.
+        //furi_record_close(RECORD_GUI);
+
+        Gui* gui = furi_record_open(RECORD_GUI);
+
+        Submenu* submenu = submenu_alloc();
+        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, game_manager);
+        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, game_manager);
+        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, game_manager);
+        submenu_add_item(submenu, "D", 3, game_settings_menu_button_callback, game_manager);
+        ViewHolder* view_holder = view_holder_alloc();
+        view_holder_set_view(view_holder, submenu_get_view(submenu));
+        view_holder_attach_to_gui(view_holder, gui);
+        api_lock_wait_unlock(game_menu_exit_lock);
+    }
+
+    game_start_post_menu((game_manager), ctx);
+
+    if(game_menu_quit_selected) {
+        game_manager_game_stop(game_manager);
+    }
+}
+
+/* 
     Write here the stop code for your game, for example: freeing memory, if it was allocated.
     You don't need to free level, sprites or entities, it will be done automatically.
     Also, you don't need to free game_context, it will be done automatically, after this function.
 */
-static void game_stop(void* ctx) {
-    GameContext* game_context = ctx;
-    // Do some deinitialization here, for example you can save score to storage.
-    // For simplicity, we will just print it.
-    FURI_LOG_I("Game", "Your score: %lu", game_context->score);
-}
+
+static void game_stop(void* ctx);
 
 /*
     Yor game configuration, do not rename this variable, but you can change it's content here.  
@@ -953,3 +982,77 @@ const Game game = {
     .stop = game_stop, // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };
+
+int32_t relaunch_game() {
+    GameManager* game_manager = game_manager_alloc();
+
+    GameEngineSettings settings = game_engine_settings_init();
+    settings.target_fps = game.target_fps;
+    settings.show_fps = game.show_fps;
+    settings.always_backlight = game.always_backlight;
+    settings.frame_callback = frame_cb;
+    settings.context = game_manager;
+
+    GameEngine* engine = game_engine_alloc(settings);
+    game_manager_engine_set(game_manager, engine);
+
+    void* game_context = NULL;
+    if(game.context_size > 0) {
+        game_context = malloc(game.context_size);
+        game_manager_game_context_set(game_manager, game_context);
+    }
+    game_start_post_menu(game_manager, game_context);
+    game_engine_run(engine);
+    game_engine_free(engine);
+
+    game_manager_free(game_manager);
+
+    game_stop(game_context);
+    if(game_context) {
+        free(game_context);
+    }
+    return 0;
+}
+
+static void game_stop(void* ctx) {
+    //Leave immediately if they want to quit.
+    if(game_menu_quit_selected) return;
+    GameContext* game_context = ctx;
+    // Do some deinitialization here, for example you can save score to storage.
+    // For simplicity, we will just print it.
+    FURI_LOG_I("Game", "Your score: %lu", game_context->score);
+
+    Gui* gui = furi_record_open(RECORD_GUI);
+    Submenu* submenu = submenu_alloc();
+    submenu_add_item(submenu, "RESUME GAME", 0, game_menu_button_callback, ctx);
+    submenu_add_item(submenu, "RESUME TUTORIAL", 1, game_menu_button_callback, ctx);
+    submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);
+    submenu_add_item(submenu, "QUIT", 3, game_menu_button_callback, ctx);
+    ViewHolder* view_holder = view_holder_alloc();
+    view_holder_set_view(view_holder, submenu_get_view(submenu));
+    view_holder_attach_to_gui(view_holder, gui);
+    api_lock_wait_unlock(game_menu_exit_lock);
+
+    if(game_menu_settings_selected) {
+        // End access to the GUI API.
+        //furi_record_close(RECORD_GUI);
+
+        Gui* gui = furi_record_open(RECORD_GUI);
+
+        Submenu* submenu = submenu_alloc();
+        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(submenu, "D", 3, game_settings_menu_button_callback, globalGameManager);
+        ViewHolder* view_holder = view_holder_alloc();
+        view_holder_set_view(view_holder, submenu_get_view(submenu));
+        view_holder_attach_to_gui(view_holder, gui);
+        api_lock_wait_unlock(game_menu_exit_lock);
+    }
+
+    if(!game_menu_quit_selected) {
+        relaunch_game();
+    } else {
+        FURI_LOG_I("DEADZONE", "Trying to quit!");
+    }
+}
