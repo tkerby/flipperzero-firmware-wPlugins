@@ -19,6 +19,7 @@ typedef struct {
     Sprite* sprite;
     Sprite* sprite_left;
     Sprite* sprite_right;
+    Sprite* sprite_right_shadowed;
     Sprite* sprite_jump;
 } PlayerContext;
 
@@ -253,6 +254,8 @@ static void player_spawn(Level* level, GameManager* manager) {
 
     // Load player sprite
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
+    player_context->sprite_right_shadowed =
+        game_manager_sprite_load(manager, "player_right_shadow.fxbm");
     player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
     player_context->sprite_jump = game_manager_sprite_load(manager, "player_jump.fxbm");
 
@@ -424,6 +427,8 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     // Get player position
     Vector pos = entity_pos_get(self);
 
+    PlayerContext* playerCtx = context;
+
     //Player bullet collision
     for(int i = 0; i < MAX_BULLETS; i++) {
         if(enemyBullets[i] == NULL) continue;
@@ -466,6 +471,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         pos.x = WORLD_TRANSITION_LEFT_STARTING_POINT;
         targetX = WORLD_BORDER_LEFT_X;
         startedGame = true;
+        playerCtx->sprite = playerCtx->sprite_right;
     }
 
     if(tutorialCompleted && pos.x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
@@ -480,8 +486,6 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 
         return;
     }
-
-    PlayerContext* playerCtx = context;
 
     //Movement - Game position starts at TOP LEFT.
     //The higher the Y, the lower we move on the screen
@@ -503,7 +507,9 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         targetX += speed;
         pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
         //Switch to right direction
-        playerCtx->sprite = playerCtx->sprite_right;
+        if(playerCtx->sprite != playerCtx->sprite_right_shadowed) {
+            playerCtx->sprite = playerCtx->sprite_right;
+        }
     }
 
     // Clamp player position to screen bounds
@@ -584,6 +590,9 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
                 furi_delay_ms(2000);
             }
         } else if(!startedGame) {
+            if(player->sprite == player->sprite_right) {
+                player->sprite = player->sprite_right_shadowed;
+            }
             canvas_printf(canvas, 47, 40, "Continue!");
             canvas_printf(canvas, 100, 53, "-->");
             canvas_draw_box(canvas, 126, 44, 2, 16);
