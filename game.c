@@ -97,62 +97,6 @@ bool hasSpawnedFirstMob;
 int firstMobSpawnTicks;
 uint32_t gameBeginningTick;
 
-bool TUTORIAL = false;
-FuriApiLock exit_lock;
-
-static void submenu_button_callback(void* game_manager, uint32_t index) {
-    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-    if(index == 0) {
-        notification_message(notifications, &sequence_success);
-        api_lock_unlock(exit_lock);
-    } else if(index == 1) {
-        TUTORIAL = true;
-        notification_message(notifications, &sequence_success);
-        api_lock_unlock(exit_lock);
-    } else if(index == 2) {
-        //Settings menu
-        notification_message(notifications, &sequence_single_vibro);
-    } else if(index == 3) {
-        //Quit
-        notification_message(notifications, &sequence_single_vibro);
-        api_lock_unlock(exit_lock);
-        game_manager_game_stop((GameManager*)game_manager);
-    }
-}
-
-static void setup_mainmenu(GameManager* game_manager) {
-    //Setup widget UI
-    Gui* gui = furi_record_open(RECORD_GUI);
-    /*
-     Widget* widget = widget_alloc();
-    widget_add_string_element(widget, 0, 30, AlignCenter, AlignCenter, FontPrimary, "test center");
-
-    ViewHolder* view_holder = view_holder_alloc();
-
-    view_holder_attach_to_gui(view_holder, gui);
-    view_holder_set_view(view_holder, widget_get_view(widget));*/
-
-    Submenu* submenu = submenu_alloc();
-    submenu_add_item(submenu, "PLAY GAME", 0, submenu_button_callback, game_manager);
-    submenu_add_item(submenu, "TUTORIAL", 1, submenu_button_callback, game_manager);
-    submenu_add_item(submenu, "SETTINGS", 2, submenu_button_callback, game_manager);
-    submenu_add_item(submenu, "QUIT", 3, submenu_button_callback, game_manager);
-
-    ViewHolder* view_holder = view_holder_alloc();
-
-    view_holder_attach_to_gui(view_holder, gui);
-    view_holder_set_view(view_holder, submenu_get_view(submenu));
-
-    api_lock_wait_unlock(exit_lock);
-
-    view_holder_set_view(view_holder, NULL);
-    // Delete everything to prevent memory leaks.
-    view_holder_free(view_holder);
-    submenu_free(submenu);
-    // End access to the GUI API.
-    furi_record_close(RECORD_GUI);
-}
-
 static float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
 }
@@ -526,9 +470,9 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     if(input.pressed & GameKeyBack) {
         //Only reaches if player is alive. Send them to the main menu
         //game_manager_game_stop(manager);
-        api_lock_unlock(exit_lock);
-        api_lock_relock(exit_lock);
-        setup_mainmenu(manager);
+        api_lock_unlock(game_menu_exit_lock);
+        api_lock_relock(game_menu_exit_lock);
+        game_menu_open(manager);
     }
 
     if(tutorialCompleted && startedGame && roundf(pos.x) > WORLD_BORDER_LEFT_X) {
@@ -1025,8 +969,9 @@ static const LevelBehaviour level = {
 static void game_start(GameManager* game_manager, void* ctx) {
     UNUSED(game_manager);
 
-    exit_lock = api_lock_alloc_locked();
-    setup_mainmenu(game_manager);
+    //Instantiate the lock
+    game_menu_exit_lock = api_lock_alloc_locked();
+    game_menu_open(game_manager);
 
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
