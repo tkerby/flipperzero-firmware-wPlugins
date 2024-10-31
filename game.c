@@ -12,6 +12,7 @@
 
 #define STARTING_PLAYER_HEALTH 11
 #define STARTING_ENEMY_HEALTH  5
+//#define DEBUGGING
 
 /****** Entities: Player ******/
 
@@ -23,6 +24,7 @@ typedef struct {
     Sprite* sprite_jump;
 } PlayerContext;
 
+//Useful for the reinforcement learning
 enum EnemyAction {
     EnemyActionAttack,
     EnemyActionRetreat,
@@ -30,33 +32,7 @@ enum EnemyAction {
     EnemyActionJump
 };
 
-// Forward declaration of player_desc, because it's used in player_spawn function.
-static const EntityDescription player_desc;
-static const EntityDescription target_desc;
-
-static const EntityDescription enemy_desc;
-static const EntityDescription target_enemy_desc;
-Level* gameLevel;
-
-static bool jumping = false;
-static float targetY = WORLD_BORDER_BOTTOM_Y;
-static float targetX = 10.0F;
-static uint32_t shootingRate = 1700;
-static uint32_t enemyShootingRate = 1500;
-static float bulletMoveSpeed = 0.55f;
-static float speed = 0.6f;
-static float enemySpeed = 0.13f;
-static float jumpHeight = 22.0F;
-static float jumpSpeed = 0.074f;
-
-//#define DEBUGGING
-#ifdef DEBUGGING
-static int ENEMY_LIVES = 30;
-static int health = 100;
-#else
-static int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
-static int health = STARTING_PLAYER_HEALTH;
-#endif
+//Enemy structure
 struct Enemy {
     Entity* instance;
     bool jumping;
@@ -65,6 +41,33 @@ struct Enemy {
     uint32_t lastShot;
 };
 
+// Forward declaration of player_desc, because it's used in player_spawn function.
+
+//Configurable values
+uint32_t shootingRate = 1700;
+uint32_t enemyShootingRate = 1500;
+float bulletMoveSpeed = 0.55f;
+float speed = 0.6f;
+float enemySpeed = 0.13f;
+float jumpHeight = 22.0F;
+float jumpSpeed = 0.074f;
+//Enemies can jump slightly higher
+float enemyJumpHeight = 22.0F + 10.0F;
+
+//While debugging we increase all lives for longer testing/gameplay.
+#ifdef DEBUGGING
+static int ENEMY_LIVES = 30;
+static int health = 100;
+#else
+static int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
+static int health = STARTING_PLAYER_HEALTH;
+#endif
+
+//Tracking player data
+uint32_t kills = 0;
+bool jumping = false;
+
+//Enemy, and bullet storage
 #define MAX_ENEMIES 30
 struct Enemy enemies[MAX_ENEMIES];
 
@@ -76,19 +79,16 @@ Entity* enemyBullets[MAX_BULLETS];
 
 Entity* globalPlayer = NULL;
 
-//float weights[4] = {-2387.7f, -185.0f, 195.4f, 188.3f};
-//float weights[4] = {-56.5, -0.6f, 7.3f, 17.1f}; //moves close and far, not bad but wont jump
+//Internal variables
+static float targetY = WORLD_BORDER_BOTTOM_Y;
+static float targetX = 10.0F;
+static const EntityDescription player_desc;
+static const EntityDescription target_desc;
+static const EntityDescription enemy_desc;
+static const EntityDescription target_enemy_desc;
+Level* gameLevel;
 
-float weights[4] = {1.5f, -1.0f, 0, -1.0f};
-
-//float weights[4] = {-67.9, -0.4f, 27.4f, 18.6f}; //moves close and far, not bad but wont jump
-float features[4] = {0.0f};
-int rewardValue = 0;
-
-#ifdef DEBUGGING
-#define DEBUG_WEIGHTS
-#endif
-uint32_t kills = 0;
+//More internal variables
 uint32_t firstKillTick;
 uint32_t secondKillTick;
 bool tutorialCompleted = false;
@@ -96,6 +96,10 @@ bool startedGame = false;
 bool hasSpawnedFirstMob;
 int firstMobSpawnTicks;
 uint32_t gameBeginningTick;
+uint32_t lastShotTick;
+uint32_t lastBehaviorTick;
+
+enum EnemyAction lastAction = EnemyActionStand;
 
 static float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
@@ -105,81 +109,6 @@ static Vector random_pos(void) {
     return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 */
-
-// Function to calculate softmax probabilities
-void softmax(float scores[], float probs[]) {
-    float sum = 0.0;
-    for(int i = 0; i < 4; i++) {
-        scores[i] = expf(scores[i]);
-        sum += scores[i];
-    }
-    for(int i = 0; i < 4; i++) {
-        probs[i] = scores[i] / sum;
-    }
-}
-
-int choose_action(float probs[]) {
-    float rand_value = (float)rand() / RAND_MAX;
-    float cumulative = 0.0;
-    for(int i = 0; i < 4; i++) {
-        cumulative += probs[i];
-        if(rand_value < cumulative) return i;
-    }
-    return 2; // Fallback is STAY
-}
-
-// Main decision function for NPC
-int decide_action(
-    float player_x,
-    float player_y,
-    float bullet_x,
-    float bullet_y,
-    float opponent_x,
-    float opponent_y,
-    float weights[]) {
-    UNUSED(opponent_y);
-    float scores[4];
-    float probs[4];
-
-    // Simple distance-based feature calculation for each action
-    // Move around, but no jumps
-    /*
-    features[0] =
-        (player_y - bullet_y) *
-        (player_x - bullet_x <= 60.0F ? 0.5F : -0.5F); // Move up (independent from player)
-    features[1] =
-        player_x - opponent_x * (player_x - bullet_x > 80.0F ? 0.5F : -0.5F); // Move left
-    features[2] = bullet_y - player_y; // Move down
-    features[3] =
-        opponent_x - player_x * (player_x - bullet_x < 20.0F ? 0.5F : -0.5F); // Move right
-        */
-    // Simple distance-based feature calculation for each action
-    features[0] = (player_y > bullet_y ? 1 : -1) + (player_y > opponent_y ? -0.5 : 0.5); // Move up
-    features[1] =
-        (player_x > bullet_x ? 1 : -1) + (player_x > opponent_x ? -0.5 : 0.5); // Move left
-    features[2] =
-        (player_y < bullet_y ? 1 : -1) + (player_y < opponent_y ? -0.5 : 0.5); // Move down
-    features[3] =
-        (player_x < bullet_x ? 1 : -1) + (player_x < opponent_x ? -0.5 : 0.5); // Move right
-
-    // Calculate scores for each action based on weights and features
-    for(int i = 0; i < 4; i++) {
-        scores[i] = weights[i] * features[i];
-    }
-
-    // Compute probabilities with softmax
-    softmax(scores, probs);
-
-    // Choose an action based on the softmax probabilities
-    return choose_action(probs);
-}
-
-#define LEARNING_RATE 0.0001f
-// Update weights based on reward (1 for success, -1 for failure)
-void update_weights(float weights[], float features[], int action, int reward) {
-    weights[action] += LEARNING_RATE * reward * features[action];
-    rewardValue += reward;
-}
 
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -267,8 +196,6 @@ static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputStat
         }
     }
 }
-
-uint32_t lastShotTick;
 
 static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
     //If we are not facing right or left, we cannot shoot
@@ -607,10 +534,17 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
         canvas_draw_box(canvas, 0, 44, 2, 16);
     }
 
-#ifdef DEBUG_WEIGHTS
-    canvas_printf(canvas, 20, 50, "Weights: %.1f, %.1f", (double)weights[0], (double)weights[1]);
+#ifdef DEBUGGING
+    canvas_printf(
+        canvas,
+        20,
+        50,
+        "Weights: %.1f, %.1f",
+        (double)game_ai_weights[0],
+        (double)game_ai_weights[1]);
 
-    canvas_printf(canvas, 40, 60, "%.1f, %.1f", (double)weights[2], (double)weights[3]);
+    canvas_printf(
+        canvas, 40, 60, "%.1f, %.1f", (double)game_ai_weights[2], (double)game_ai_weights[3]);
 #endif
     if(hasSpawnedFirstMob) {
         if(furi_get_tick() - firstMobSpawnTicks < 3000) {
@@ -656,9 +590,7 @@ static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, voi
         canvas_printf(canvas, 20, 20, "Press Back to respawn.");
     }
 }
-uint32_t lastBehaviorTick;
 
-enum EnemyAction lastAction = EnemyActionStand;
 static void enemy_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(context);
     UNUSED(manager);
@@ -705,8 +637,8 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
 
                     if(enemies[i].instance != NULL) {
                         update_weights(
-                            weights,
-                            features,
+                            game_ai_weights,
+                            game_ai_features,
                             enemies[i].jumping ? EnemyActionJump : lastAction,
                             -400 / abs((int)roundf(
                                        entity_pos_get(enemies[i].instance).x -
@@ -737,15 +669,15 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
 
         if(roundf(distanceToPlayer) > 80.0f) {
-            update_weights(weights, features, EnemyActionAttack, -300);
+            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, -300);
         } else if(roundf(distanceToPlayer) < 45.0f) {
-            update_weights(weights, features, EnemyActionAttack, -300);
+            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, -300);
         } else if(roundf(distanceToPlayer) > 45.0f) {
-            update_weights(weights, features, EnemyActionAttack, 300);
+            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, 300);
         }
 
         if(roundf(pos.y) == WORLD_BORDER_BOTTOM_Y) {
-            update_weights(weights, features, lastAction, 10.0f);
+            update_weights(game_ai_weights, game_ai_features, lastAction, 10.0f);
         }
 
         Vector closestBullet = (Vector){200.0F, 200.0F};
@@ -773,22 +705,28 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
 
         if(closestBullet.x > pos.x && (closestBullet.x - pos.x) < 0.9F) {
             update_weights(
-                weights,
-                features,
+                game_ai_weights,
+                game_ai_features,
                 jumped ? EnemyActionJump : lastAction,
                 500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
         }
 
         if(closestBullet.y < pos.y && (pos.y - closestBullet.y) < 1.0f) {
             update_weights(
-                weights,
-                features,
+                game_ai_weights,
+                game_ai_features,
                 EnemyActionJump,
                 500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
         }
 
         enum EnemyAction action = (enum EnemyAction)decide_action(
-            pos.x, pos.y, closestBullet.x, closestBullet.y, playerPos.x, playerPos.y, weights);
+            pos.x,
+            pos.y,
+            closestBullet.x,
+            closestBullet.y,
+            playerPos.x,
+            playerPos.y,
+            game_ai_weights);
 
         lastAction = action;
         switch(action) {
@@ -822,7 +760,7 @@ static void enemy_update(Entity* self, GameManager* manager, void* context) {
                     enemies[i].jumping = true;
                     //Enemies have a higher jump height
                     enemies[i].targetY = CLAMP(
-                        WORLD_BORDER_BOTTOM_Y - (jumpHeight + 10.0F),
+                        WORLD_BORDER_BOTTOM_Y - (enemyJumpHeight),
                         WORLD_BORDER_BOTTOM_Y,
                         WORLD_BORDER_TOP_Y);
                     return;

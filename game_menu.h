@@ -9,8 +9,16 @@
 #include <gui/modules/submenu.h>
 #include <api_lock.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern bool game_menu_tutorial_selected;
 extern FuriApiLock game_menu_exit_lock;
 
 void game_menu_button_callback(void* game_manager, uint32_t index);
 void game_menu_open(GameManager* gameManager);
+
+#ifdef __cplusplus
+}
+#endif
