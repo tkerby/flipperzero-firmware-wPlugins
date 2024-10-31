@@ -19,6 +19,9 @@ Gui* gui;
 
 void game_settings_menu_button_callback(void* game_manager, uint32_t index) {
     UNUSED(game_manager);
+    if(index == 3) {
+        //TODO Back to main menu or pause menu.
+    }
     UNUSED(index);
 }
 

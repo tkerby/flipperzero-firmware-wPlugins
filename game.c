@@ -880,7 +880,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 
     //Add enemy to level
-    enemy_spawn(level, manager, (Vector){110, 49});
+    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49});
 
     // Add target entity to the level
     //level_add_entity(level, &target_desc);
@@ -1043,7 +1043,8 @@ static void game_stop(void* ctx) {
         submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
         submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, globalGameManager);
         submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(submenu, "D", 3, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(
+            submenu, "BACK", 3, game_settings_menu_button_callback, globalGameManager);
         ViewHolder* view_holder = view_holder_alloc();
         view_holder_set_view(view_holder, submenu_get_view(submenu));
         view_holder_attach_to_gui(view_holder, gui);
