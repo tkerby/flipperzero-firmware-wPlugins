@@ -18,9 +18,14 @@
 
 typedef struct {
     Sprite* sprite;
+
     Sprite* sprite_left;
+    Sprite* sprite_left_shadowed;
+    Sprite* sprite_left_recoil;
+
     Sprite* sprite_right;
     Sprite* sprite_right_shadowed;
+    Sprite* sprite_right_recoil;
     Sprite* sprite_jump;
 } PlayerContext;
 
@@ -139,7 +144,14 @@ static void player_spawn(Level* level, GameManager* manager) {
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
     player_context->sprite_right_shadowed =
         game_manager_sprite_load(manager, "player_right_shadow.fxbm");
+    player_context->sprite_right_recoil =
+        game_manager_sprite_load(manager, "player_right_recoil.fxbm");
+
     player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
+    player_context->sprite_left_shadowed =
+        game_manager_sprite_load(manager, "player_left_shadow.fxbm");
+    player_context->sprite_left_recoil =
+        game_manager_sprite_load(manager, "player_left_recoil.fxbm");
     player_context->sprite_jump = game_manager_sprite_load(manager, "player_jump.fxbm");
 
     player_context->sprite = player_context->sprite_right;
@@ -234,6 +246,26 @@ static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Ve
         // Set target position
         Vector bulletPos = (Vector){pos->x + deltaX, pos->y};
         entity_pos_set(bullets[bulletIndex], bulletPos);
+
+        //Handle recoil
+        float recoil = 0.0f;
+        if(playerCtx->sprite == playerCtx->sprite_right) {
+            playerCtx->sprite = playerCtx->sprite_right_recoil;
+            recoil -= 7;
+        } else if(playerCtx->sprite == playerCtx->sprite_left) {
+            playerCtx->sprite = playerCtx->sprite_left_recoil;
+            recoil += 7;
+        }
+        pos->x += recoil;
+        targetX += recoil;
+    }
+
+    if(furi_get_tick() - lastShotTick > 300) {
+        if(playerCtx->sprite == playerCtx->sprite_right_recoil) {
+            playerCtx->sprite = playerCtx->sprite_right;
+        } else if(playerCtx->sprite == playerCtx->sprite_left_recoil) {
+            playerCtx->sprite = playerCtx->sprite_left;
+        }
     }
 
     //Bullet movement mechanics
@@ -382,7 +414,9 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
 
         //Switch sprite to left direction
-        playerCtx->sprite = playerCtx->sprite_left;
+        if(playerCtx->sprite != playerCtx->sprite_left_shadowed) {
+            playerCtx->sprite = playerCtx->sprite_left;
+        }
     }
     if(input.held & GameKeyRight) {
         targetX += speed;
@@ -470,6 +504,8 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
         } else if(!startedGame) {
             if(player->sprite == player->sprite_right) {
                 player->sprite = player->sprite_right_shadowed;
+            } else if(player->sprite == player->sprite_left) {
+                player->sprite = player->sprite_left_shadowed;
             }
             canvas_printf(canvas, 47, 40, "Continue!");
             canvas_printf(canvas, 100, 53, "-->");
