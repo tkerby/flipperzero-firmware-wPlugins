@@ -490,6 +490,7 @@ static void tutorial_render(GameManager* manager, Canvas* canvas, PlayerContext*
 uint32_t lastSwitchRight = 0;
 
 static void player_update(Entity* self, GameManager* manager, void* context) {
+    if(game_menu_quit_selected) return;
     UNUSED(context);
 
     // Get game input
@@ -590,6 +591,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 }
 
 static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    if(game_menu_quit_selected) return;
     // Get player context
     PlayerContext* player = context;
 
@@ -635,6 +637,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 }
 
 static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    if(game_menu_quit_selected) return;
     UNUSED(manager);
     // Get enemy context
     PlayerContext* player = context;
@@ -665,6 +668,7 @@ static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, voi
 }
 
 static void enemy_update(Entity* self, GameManager* manager, void* context) {
+    if(game_menu_quit_selected) return;
     UNUSED(context);
     UNUSED(manager);
 
@@ -906,6 +910,7 @@ static const EntityDescription enemy_desc = {
 /****** Entities: Target ******/
 
 static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    if(game_menu_quit_selected) return;
     UNUSED(context);
     UNUSED(manager);
 
@@ -945,6 +950,7 @@ static void tutorial_level_alloc(Level* level, GameManager* manager) {
 /****** Level ******/
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
+    if(game_menu_quit_selected) return;
     UNUSED(manager);
     UNUSED(context);
 
@@ -1006,6 +1012,7 @@ static void game_start_post_menu(GameManager* game_manager, void* ctx) {
 */
 static void game_start(GameManager* game_manager, void* ctx) {
     UNUSED(game_manager);
+    if(game_menu_quit_selected) return;
 
     //Instantiate the lock
     game_menu_open(game_manager, false);
@@ -1020,7 +1027,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
         submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, game_manager);
         submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, game_manager);
         submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, game_manager);
-        submenu_add_item(submenu, "D", 3, game_settings_menu_button_callback, game_manager);
+        submenu_add_item(submenu, "BACK", 3, game_settings_menu_button_callback, game_manager);
         ViewHolder* view_holder = view_holder_alloc();
         view_holder_set_view(view_holder, submenu_get_view(submenu));
         view_holder_attach_to_gui(view_holder, gui);

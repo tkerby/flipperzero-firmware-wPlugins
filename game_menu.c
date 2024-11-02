@@ -55,7 +55,6 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_quit_selected = true;
         notification_message(notifications, &sequence_single_vibro);
         api_lock_unlock(game_menu_exit_lock);
-        //game_manager_game_stop((GameManager*)game_manager);
     }
 }
 
