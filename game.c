@@ -168,7 +168,7 @@ static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition
         if(enemies[i].instance != NULL) continue;
         enemyIndex = i;
         enemies[i].instance = level_add_entity(level, &enemy_desc);
-        FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
+        //FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
@@ -508,11 +508,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
         float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
         float distance = sqrtf(distXSq + distYSq);
-        FURI_LOG_I(
-            "deadzone",
-            "Enemy bullet dist: %f, %f",
-            (double)sqrtf(distXSq),
-            (double)sqrtf(distYSq));
+        //FURI_LOG_I("deadzone","Enemy bullet dist: %f, %f",(double)sqrtf(distXSq),(double)sqrtf(distYSq));
         if(distance < BULLET_DISTANCE_THRESHOLD ||
            (playerCtx->sprite == playerCtx->sprite_jump && sqrtf(distXSq) < 6 &&
             (distYSq > 0 ? distYSq < 8 : sqrtf(distYSq) < 7))) {
@@ -1095,10 +1091,8 @@ int32_t relaunch_game() {
 static void game_stop(void* ctx) {
     //Leave immediately if they want to quit.
     if(game_menu_quit_selected) return;
-    GameContext* game_context = ctx;
     // Do some deinitialization here, for example you can save score to storage.
     // For simplicity, we will just print it.
-    FURI_LOG_I("Game", "Your score: %lu", game_context->score);
 
     Gui* gui = furi_record_open(RECORD_GUI);
     Submenu* submenu = submenu_alloc();
@@ -1129,9 +1123,8 @@ static void game_stop(void* ctx) {
         api_lock_wait_unlock(game_menu_exit_lock);
     }
 
+    //Do they want to quit? Or do we relaunch
     if(!game_menu_quit_selected) {
         relaunch_game();
-    } else {
-        FURI_LOG_I("DEADZONE", "Trying to quit!");
     }
 }
