@@ -22,10 +22,15 @@ int32_t main_flip_social(void* p) {
     UNUSED(p);
 
     // Initialize the Hello World application
-    FlipSocialApp* app = flip_social_app_alloc();
-    if(!app) {
+    app_instance = flip_social_app_alloc();
+    if(!app_instance) {
         // Allocation failed
         return -1; // Indicate failure
+    }
+
+    if(!flipper_http_ping()) {
+        FURI_LOG_E(TAG, "Failed to ping the device");
+        return -1;
     }
 
     // send settings and connect wifi
@@ -34,16 +39,11 @@ int32_t main_flip_social(void* p) {
         return -1;
     }
 
-    if(!flipper_http_ping()) {
-        FURI_LOG_E(TAG, "Failed to ping the device");
-        return -1;
-    }
-
     // Run the view dispatcher
-    view_dispatcher_run(app->view_dispatcher);
+    view_dispatcher_run(app_instance->view_dispatcher);
 
     // Free the resources used by the Hello World application
-    flip_social_app_free(app);
+    flip_social_app_free(app_instance);
 
     // Return 0 to indicate success
     return 0;
