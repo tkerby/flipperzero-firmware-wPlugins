@@ -26,7 +26,9 @@ typedef struct {
     Sprite* sprite_right;
     Sprite* sprite_right_shadowed;
     Sprite* sprite_right_recoil;
+
     Sprite* sprite_jump;
+    Sprite* sprite_stand;
 } PlayerContext;
 
 //Useful for the reinforcement learning
@@ -153,6 +155,7 @@ static void player_spawn(Level* level, GameManager* manager) {
     player_context->sprite_left_recoil =
         game_manager_sprite_load(manager, "player_left_recoil.fxbm");
     player_context->sprite_jump = game_manager_sprite_load(manager, "player_jump.fxbm");
+    player_context->sprite_stand = game_manager_sprite_load(manager, "player_stand.fxbm");
 
     player_context->sprite = player_context->sprite_right;
 
@@ -217,12 +220,18 @@ static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputStat
             jumping = false;
         }
     }
+
+    if(roundf(pos->y) == WORLD_BORDER_BOTTOM_Y && !jumping &&
+       playerCtx->sprite == playerCtx->sprite_jump) {
+        playerCtx->sprite = playerCtx->sprite_stand;
+    }
 }
 
 static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
     //If we are not facing right or left, we cannot shoot
-    bool canShoot = playerCtx->sprite == playerCtx->sprite_left ||
-                    playerCtx->sprite == playerCtx->sprite_right;
+    bool canShoot = playerCtx->sprite != playerCtx->sprite_jump &&
+                    playerCtx->sprite != playerCtx->sprite_left_recoil &&
+                    playerCtx->sprite != playerCtx->sprite_right_recoil;
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
@@ -331,119 +340,32 @@ static void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
     }
 }
 
-static void player_update(Entity* self, GameManager* manager, void* context) {
-    UNUSED(context);
-
-    // Get game input
-    InputState input = game_manager_input_get(manager);
-
-    // Get player position
-    Vector pos = entity_pos_get(self);
-
-    PlayerContext* playerCtx = context;
-
-    //Player bullet collision
-    for(int i = 0; i < MAX_BULLETS; i++) {
-        if(enemyBullets[i] == NULL) continue;
-        Vector bulletPos = entity_pos_get(enemyBullets[i]);
-        float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
-        float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
-        float distance = sqrtf(distXSq + distYSq);
-        //FURI_LOG_I("deadzone", "Enemy bullet dist: %f", (double)distance);
-        if(distance < BULLET_DISTANCE_THRESHOLD) {
-            //Self destruction of bullet and potentially player
-            level_remove_entity(gameLevel, enemyBullets[i]);
-            enemyBullets[i] = NULL;
-            const NotificationSequence* damageSound = &sequence_single_vibro;
-
-            if(--health == 0) {
-                //Ran out of lives
-                level_remove_entity(gameLevel, self);
-
-                //Replace damage sound with death sound
-                damageSound = &sequence_double_vibro;
-
-                //Destroy all associated bullets
-                for(int i = 0; i < MAX_BULLETS; i++) {
-                    if(bullets[i] == NULL) continue;
-                    level_remove_entity(gameLevel, bullets[i]);
-                    bullets[i] = NULL;
-                }
-            }
-
-            //Play sound of getting hit
-            NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-            notification_message(notifications, damageSound);
-            break;
-        }
-    }
-
+static void
+    tutorial_update(Entity* self, GameManager* manager, PlayerContext* playerCtx, Vector* pos) {
+    if(!game_menu_tutorial_selected) return;
     //Completed tutorial and reached the end
-    if(tutorialCompleted && roundf(pos.x) == WORLD_BORDER_RIGHT_X) {
-        entity_pos_set(self, (Vector){WORLD_TRANSITION_LEFT_STARTING_POINT, pos.y});
-        pos.x = WORLD_TRANSITION_LEFT_STARTING_POINT;
+    if(tutorialCompleted && roundf(pos->x) == WORLD_BORDER_RIGHT_X) {
+        entity_pos_set(self, (Vector){WORLD_TRANSITION_LEFT_STARTING_POINT, pos->y});
+        pos->x = WORLD_TRANSITION_LEFT_STARTING_POINT;
         targetX = WORLD_BORDER_LEFT_X;
         startedGame = true;
         playerCtx->sprite = playerCtx->sprite_right;
     }
 
-    if(tutorialCompleted && pos.x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
+    if(tutorialCompleted && pos->x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
         //Smooth level transitioning code, hence border is extended in this snippet.
         //(0 -> right border) instead of (left border -> right border)
-        pos.x = CLAMP(
-            lerp(pos.x, targetX, jumpSpeed),
+        pos->x = CLAMP(
+            lerp(pos->x, targetX, jumpSpeed),
             WORLD_BORDER_RIGHT_X,
             WORLD_TRANSITION_LEFT_STARTING_POINT);
-        pos.y = CLAMP(pos.y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
-        entity_pos_set(self, pos);
+        pos->y = CLAMP(pos->y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
+        entity_pos_set(self, *pos);
 
         return;
     }
 
-    //Movement - Game position starts at TOP LEFT.
-    //The higher the Y, the lower we move on the screen
-    //The higher the X, the more we move toward the right side.
-    //Jump Mechanics
-    player_jump_handler(playerCtx, &pos, &input);
-
-    //Player Shooting Mechanics
-    player_shoot_handler(playerCtx, &input, &pos);
-
-    if(input.held & GameKeyLeft) {
-        targetX -= speed;
-        pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-
-        //Switch sprite to left direction
-        if(playerCtx->sprite != playerCtx->sprite_left_shadowed) {
-            playerCtx->sprite = playerCtx->sprite_left;
-        }
-    }
-    if(input.held & GameKeyRight) {
-        targetX += speed;
-        pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-        //Switch to right direction
-        if(playerCtx->sprite != playerCtx->sprite_right_shadowed) {
-            playerCtx->sprite = playerCtx->sprite_right;
-        }
-    }
-
-    // Clamp player position to screen bounds
-    pos.x = CLAMP(lerp(pos.x, targetX, jumpSpeed), WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-    pos.y = CLAMP(pos.y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
-
-    //Y increases as we go down.
-    //X increases as we go right
-
-    // Set new player position
-    entity_pos_set(self, pos);
-
-    // Control game exit
-    if(input.pressed & GameKeyBack) {
-        //Only reaches if player is alive. Send them to the main menu
-        game_manager_game_stop(manager);
-    }
-
-    if(tutorialCompleted && startedGame && roundf(pos.x) > WORLD_BORDER_LEFT_X) {
+    if(tutorialCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
         if(!hasSpawnedFirstMob) {
             //Spawn new mob
             enemy_spawn(gameLevel, manager, (Vector){110, 49});
@@ -453,35 +375,8 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
-static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
-    // Get player context
-    PlayerContext* player = context;
-
-    // Get player position
-    Vector pos = entity_pos_get(self);
-
-    // Draw player sprite
-    // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
-    canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
-
-    canvas_draw_frame(canvas, 2, -4, 124, 61);
-    canvas_draw_line(canvas, 1, 57, 0, 60);
-    canvas_draw_line(canvas, 126, 57, 128, 61);
-
-    //canvas_draw_frame(canvas, 0, -4, 135, 64);
-
-    // Get game context
-    GameContext* game_context = game_manager_game_context_get(manager);
-    UNUSED(game_context);
-
-    // Draw score
-    //canvas_printf(canvas, 60, 7, "Enemy Lives: %d", enemies[0].lives);
-    canvas_printf(canvas, 80, 7, "Health: %d", health);
-
-    if(kills > 0) {
-        canvas_printf(canvas, 10, 7, "Kills: %d", kills);
-    }
-
+static void tutorial_render(GameManager* manager, Canvas* canvas, PlayerContext* player) {
+    if(!game_menu_tutorial_selected) return;
     if(kills == 1) {
         if(furi_get_tick() - firstKillTick < 2000) {
             canvas_printf(canvas, 30, 30, "Great job!");
@@ -577,18 +472,6 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
         canvas_draw_box(canvas, 0, 44, 2, 16);
     }
 
-#ifdef DEBUGGING
-    canvas_printf(
-        canvas,
-        20,
-        50,
-        "Weights: %.1f, %.1f",
-        (double)game_ai_weights[0],
-        (double)game_ai_weights[1]);
-
-    canvas_printf(
-        canvas, 40, 60, "%.1f, %.1f", (double)game_ai_weights[2], (double)game_ai_weights[3]);
-#endif
     if(hasSpawnedFirstMob) {
         if(furi_get_tick() - firstMobSpawnTicks < 3000) {
             canvas_printf(canvas, 0, 40, "Welcome to the next level!");
@@ -602,6 +485,153 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
             }
         }
     }
+}
+
+uint32_t lastSwitchRight = 0;
+
+static void player_update(Entity* self, GameManager* manager, void* context) {
+    UNUSED(context);
+
+    // Get game input
+    InputState input = game_manager_input_get(manager);
+
+    // Get player position
+    Vector pos = entity_pos_get(self);
+
+    PlayerContext* playerCtx = context;
+
+    //Player bullet collision
+    for(int i = 0; i < MAX_BULLETS; i++) {
+        if(enemyBullets[i] == NULL) continue;
+        Vector bulletPos = entity_pos_get(enemyBullets[i]);
+        float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
+        float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
+        float distance = sqrtf(distXSq + distYSq);
+        FURI_LOG_I(
+            "deadzone",
+            "Enemy bullet dist: %f, %f",
+            (double)sqrtf(distXSq),
+            (double)sqrtf(distYSq));
+        if(distance < BULLET_DISTANCE_THRESHOLD ||
+           (playerCtx->sprite == playerCtx->sprite_jump && sqrtf(distXSq) < 6 &&
+            (distYSq > 0 ? distYSq < 8 : sqrtf(distYSq) < 16))) {
+            //Self destruction of bullet and potentially player
+            level_remove_entity(gameLevel, enemyBullets[i]);
+            enemyBullets[i] = NULL;
+            const NotificationSequence* damageSound = &sequence_single_vibro;
+
+            if(--health == 0) {
+                //Ran out of lives
+                level_remove_entity(gameLevel, self);
+
+                //Replace damage sound with death sound
+                damageSound = &sequence_double_vibro;
+
+                //Destroy all associated bullets
+                for(int i = 0; i < MAX_BULLETS; i++) {
+                    if(bullets[i] == NULL) continue;
+                    level_remove_entity(gameLevel, bullets[i]);
+                    bullets[i] = NULL;
+                }
+            }
+
+            //Play sound of getting hit
+            NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+            notification_message(notifications, damageSound);
+            break;
+        }
+    }
+
+    tutorial_update(self, manager, playerCtx, &pos);
+
+    //Movement - Game position starts at TOP LEFT.
+    //The higher the Y, the lower we move on the screen
+    //The higher the X, the more we move toward the right side.
+    //Jump Mechanics
+    player_jump_handler(playerCtx, &pos, &input);
+
+    //Player Shooting Mechanics
+    player_shoot_handler(playerCtx, &input, &pos);
+
+    if(input.held & GameKeyLeft) {
+        targetX -= speed;
+        pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+
+        //Switch sprite to left direction
+        if(playerCtx->sprite != playerCtx->sprite_left_shadowed) {
+            playerCtx->sprite = playerCtx->sprite_left;
+        }
+    }
+
+    if(input.held & GameKeyRight) {
+        targetX += speed;
+        pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+        //Switch to right direction
+        if(playerCtx->sprite != playerCtx->sprite_right_shadowed) {
+            playerCtx->sprite = playerCtx->sprite_right;
+        }
+    }
+
+    // Clamp player position to screen bounds
+    pos.x = CLAMP(lerp(pos.x, targetX, jumpSpeed), WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+    pos.y = CLAMP(pos.y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
+
+    //Y increases as we go down.
+    //X increases as we go right
+
+    // Set new player position
+    entity_pos_set(self, pos);
+
+    // Control game exit
+    if(input.pressed & GameKeyBack) {
+        //Only reaches if player is alive. Send them to the main menu
+        game_manager_game_stop(manager);
+    }
+}
+
+static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    // Get player context
+    PlayerContext* player = context;
+
+    // Get player position
+    Vector pos = entity_pos_get(self);
+
+    // Draw player sprite
+    // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
+    canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
+
+    canvas_draw_frame(canvas, 2, -4, 124, 61);
+    canvas_draw_line(canvas, 1, 57, 0, 60);
+    canvas_draw_line(canvas, 126, 57, 128, 61);
+
+    //canvas_draw_frame(canvas, 0, -4, 135, 64);
+
+    // Get game context
+    GameContext* game_context = game_manager_game_context_get(manager);
+    UNUSED(game_context);
+
+    // Draw score
+    //canvas_printf(canvas, 60, 7, "Enemy Lives: %d", enemies[0].lives);
+    canvas_printf(canvas, 80, 7, "Health: %d", health);
+
+    if(kills > 0) {
+        canvas_printf(canvas, 10, 7, "Kills: %d", kills);
+    }
+
+    tutorial_render(manager, canvas, player);
+
+#ifdef DEBUGGING
+    canvas_printf(
+        canvas,
+        20,
+        50,
+        "Weights: %.1f, %.1f",
+        (double)game_ai_weights[0],
+        (double)game_ai_weights[1]);
+
+    canvas_printf(
+        canvas, 40, 60, "%.1f, %.1f", (double)game_ai_weights[2], (double)game_ai_weights[3]);
+#endif
 }
 
 static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -906,6 +936,12 @@ static const EntityDescription target_enemy_desc = {
     .context_size = 0, // size of entity context, will be automatically allocated and freed
 };
 
+static void tutorial_level_alloc(Level* level, GameManager* manager) {
+    if(!game_menu_tutorial_selected) return;
+    //Add enemy to level
+    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49});
+}
+
 /****** Level ******/
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
@@ -915,8 +951,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     // Add player entity to the level
     player_spawn(level, manager);
 
-    //Add enemy to level
-    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49});
+    tutorial_level_alloc(level, manager);
 
     // Add target entity to the level
     //level_add_entity(level, &target_desc);
