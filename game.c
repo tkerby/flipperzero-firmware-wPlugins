@@ -230,8 +230,11 @@ static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputStat
 static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
     //If we are not facing right or left, we cannot shoot
     bool canShoot = playerCtx->sprite != playerCtx->sprite_jump &&
+                    playerCtx->sprite != playerCtx->sprite_stand &&
                     playerCtx->sprite != playerCtx->sprite_left_recoil &&
-                    playerCtx->sprite != playerCtx->sprite_right_recoil;
+                    playerCtx->sprite != playerCtx->sprite_right_recoil &&
+                    playerCtx->sprite != playerCtx->sprite_left_shadowed &&
+                    playerCtx->sprite != playerCtx->sprite_right_shadowed;
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
@@ -250,7 +253,9 @@ static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Ve
         if(bulletIndex == -1) return;
 
         bullets[bulletIndex] = level_add_entity(gameLevel, &target_desc);
-        bulletsDirection[bulletIndex] = playerCtx->sprite == playerCtx->sprite_right;
+        bulletsDirection[bulletIndex] = playerCtx->sprite == playerCtx->sprite_right ||
+                                        playerCtx->sprite == playerCtx->sprite_right_recoil ||
+                                        playerCtx->sprite == playerCtx->sprite_right_shadowed;
         float deltaX = bulletsDirection[bulletIndex] ? 10 : -10;
         // Set target position
         Vector bulletPos = (Vector){pos->x + deltaX, pos->y};
@@ -477,7 +482,7 @@ static void tutorial_render(GameManager* manager, Canvas* canvas, PlayerContext*
             canvas_printf(canvas, 0, 40, "Welcome to the next level!");
             furi_delay_ms(10);
         } else if(furi_get_tick() - firstMobSpawnTicks < 7000) {
-            canvas_printf(canvas, 20, 40, "Fight!");
+            canvas_printf(canvas, 50, 40, "Fight!");
             for(int i = 5; i > 0; i--) {
                 for(int j = 0; j < 5; j++) {
                     furi_delay_ms(i);
@@ -1090,14 +1095,21 @@ int32_t relaunch_game() {
 
 static void game_stop(void* ctx) {
     //Leave immediately if they want to quit.
-    if(game_menu_quit_selected) return;
+    if(game_menu_quit_selected) {
+        return;
+    }
     // Do some deinitialization here, for example you can save score to storage.
     // For simplicity, we will just print it.
 
     Gui* gui = furi_record_open(RECORD_GUI);
     Submenu* submenu = submenu_alloc();
     submenu_add_item(submenu, "RESUME GAME", 0, game_menu_button_callback, ctx);
-    submenu_add_item(submenu, "RESUME TUTORIAL", 1, game_menu_button_callback, ctx);
+    submenu_add_item(
+        submenu,
+        game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",
+        1,
+        game_menu_button_callback,
+        ctx);
     submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);
     submenu_add_item(submenu, "QUIT", 3, game_menu_button_callback, ctx);
     ViewHolder* view_holder = view_holder_alloc();
@@ -1126,5 +1138,12 @@ static void game_stop(void* ctx) {
     //Do they want to quit? Or do we relaunch
     if(!game_menu_quit_selected) {
         relaunch_game();
+    } else {
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        // End access to the GUI API.
+        furi_record_close(RECORD_GUI);
     }
 }
