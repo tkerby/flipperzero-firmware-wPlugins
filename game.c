@@ -514,7 +514,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             (double)sqrtf(distYSq));
         if(distance < BULLET_DISTANCE_THRESHOLD ||
            (playerCtx->sprite == playerCtx->sprite_jump && sqrtf(distXSq) < 6 &&
-            (distYSq > 0 ? distYSq < 8 : sqrtf(distYSq) < 16))) {
+            (distYSq > 0 ? distYSq < 8 : sqrtf(distYSq) < 7))) {
             //Self destruction of bullet and potentially player
             level_remove_entity(gameLevel, enemyBullets[i]);
             enemyBullets[i] = NULL;
