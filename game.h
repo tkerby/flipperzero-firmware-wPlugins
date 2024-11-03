@@ -21,6 +21,10 @@
 
 #define STARTING_PLAYER_HEALTH 11
 #define STARTING_ENEMY_HEALTH  5
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 //#define DEBUGGING
 
 //Configurable variables
@@ -70,3 +74,7 @@ typedef struct {
 typedef struct {
     uint32_t score;
 } GameContext;
+
+#ifdef __cplusplus
+}
+#endif
