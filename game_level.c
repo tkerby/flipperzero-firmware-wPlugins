@@ -2,6 +2,7 @@
 
 bool started = false;
 int welcomeTicks = 0;
+int enemiesSpawned = 0;
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
     if(!game_menu_game_selected) return;
@@ -15,6 +16,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
     if(kills == 1 && !hasProgressed) {
         hasProgressed = true;
         enemy_spawn(gameLevel, manager, (Vector){120, 0}, 3000, false);
+        furi_delay_ms(100);
         enemy_spawn(gameLevel, manager, (Vector){10, 0}, 3000, true);
     }
 }
@@ -29,6 +31,7 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         started = true;
         welcomeTicks = furi_get_tick();
         enemy_spawn(gameLevel, manager, (Vector){120, 0}, 1000, false);
+        enemiesSpawned++;
     }
 
     if(started && furi_get_tick() - welcomeTicks < 6000 &&

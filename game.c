@@ -520,7 +520,7 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
 
 void enemy_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
-    UNUSED(context);
+    PlayerContext* enemyCtx = context;
     UNUSED(manager);
 
     Vector pos = entity_pos_get(self);
@@ -659,22 +659,33 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             Enemy* enemy = NULL;
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance != self) continue;
-
                 enemy = &enemies[i];
                 break;
             }
 
             bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
 
-            pos.x = CLAMP(
-                lerp(pos.x, playerPos.x + ((pos.x - playerPos.x > 0) ? 30 : -30), enemySpeed),
-                WORLD_BORDER_RIGHT_X,
-                //Prevent from approaching too much during player spawning / grace period
-                gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
+            if(enemyCtx->sprite == enemyCtx->sprite_left) {
+                pos.x = CLAMP(
+                    lerp(pos.x, playerPos.x + ((pos.x - playerPos.x > 0) ? 30 : -30), enemySpeed),
+                    WORLD_BORDER_RIGHT_X,
+                    //Prevent from approaching too much during player spawning / grace period
+                    gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
+            } else {
+                pos.x = CLAMP(
+                    lerp(pos.x, pos.x + (pos.x - playerPos.x), enemySpeed),
+                    WORLD_BORDER_RIGHT_X,
+                    WORLD_BORDER_LEFT_X);
+                break;
+            }
             break;
         case EnemyActionRetreat:
             pos.x = CLAMP(
-                lerp(pos.x, pos.x + (pos.x - playerPos.x), enemySpeed),
+                lerp(
+                    pos.x,
+                    pos.x + (enemyCtx->sprite == enemyCtx->sprite_left ? (pos.x - playerPos.x) :
+                                                                         (playerPos.x - pos.x)),
+                    enemySpeed),
                 WORLD_BORDER_RIGHT_X,
                 WORLD_BORDER_LEFT_X);
             break;
