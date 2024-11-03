@@ -1,35 +1,6 @@
 #include "game.h"
 
-#define WORLD_BORDER_LEFT_X   6
-#define WORLD_BORDER_RIGHT_X  120
-#define WORLD_BORDER_TOP_Y    6
-#define WORLD_BORDER_BOTTOM_Y 53
-
-#define WORLD_TRANSITION_LEFT_STARTING_POINT 0
-#define WORLD_TRANSITION_LEFT_ENDING_POINT   4
-
-#define BULLET_DISTANCE_THRESHOLD 8
-
-#define STARTING_PLAYER_HEALTH 11
-#define STARTING_ENEMY_HEALTH  5
-//#define DEBUGGING
-
 /****** Entities: Player ******/
-
-typedef struct {
-    Sprite* sprite;
-
-    Sprite* sprite_left;
-    Sprite* sprite_left_shadowed;
-    Sprite* sprite_left_recoil;
-
-    Sprite* sprite_right;
-    Sprite* sprite_right_shadowed;
-    Sprite* sprite_right_recoil;
-
-    Sprite* sprite_jump;
-    Sprite* sprite_stand;
-} PlayerContext;
 
 //Useful for the reinforcement learning
 enum EnemyAction {
@@ -50,6 +21,8 @@ struct Enemy {
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 
+/* Begin of variables from header */
+
 //Configurable values
 uint32_t shootingRate = 1700;
 uint32_t enemyShootingRate = 1500;
@@ -58,21 +31,28 @@ float speed = 0.6f;
 float enemySpeed = 0.13f;
 float jumpHeight = 22.0F;
 float jumpSpeed = 0.074f;
-//Enemies can jump slightly higher
 float enemyJumpHeight = 22.0F + 10.0F;
-
-//While debugging we increase all lives for longer testing/gameplay.
-#ifdef DEBUGGING
-static int ENEMY_LIVES = 30;
-static int health = 100;
-#else
-static int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
-static int health = STARTING_PLAYER_HEALTH;
-#endif
-
 //Tracking player data
 uint32_t kills = 0;
 bool jumping = false;
+float targetY = WORLD_BORDER_BOTTOM_Y;
+float targetX = 10.0F;
+//Internal vars
+bool hasSpawnedFirstMob = false;
+int firstMobSpawnTicks = 0;
+//While debugging we increase all lives for longer testing/gameplay.
+#ifdef DEBUGGING
+int ENEMY_LIVES = 30;
+int health = 100;
+#else
+int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
+int health = STARTING_PLAYER_HEALTH;
+#endif
+uint32_t firstKillTick = 0;
+uint32_t secondKillTick = 0;
+Level* gameLevel = NULL;
+
+/* End of header variables */
 
 //Enemy, and bullet storage
 #define MAX_ENEMIES 30
@@ -87,21 +67,12 @@ Entity* enemyBullets[MAX_BULLETS];
 Entity* globalPlayer = NULL;
 
 //Internal variables
-static float targetY = WORLD_BORDER_BOTTOM_Y;
-static float targetX = 10.0F;
 static const EntityDescription player_desc;
 static const EntityDescription target_desc;
 static const EntityDescription enemy_desc;
 static const EntityDescription target_enemy_desc;
-Level* gameLevel;
 
 //More internal variables
-uint32_t firstKillTick;
-uint32_t secondKillTick;
-bool tutorialCompleted = false;
-bool startedGame = false;
-bool hasSpawnedFirstMob;
-int firstMobSpawnTicks;
 uint32_t gameBeginningTick;
 uint32_t lastShotTick;
 uint32_t lastBehaviorTick;
@@ -110,6 +81,10 @@ enum EnemyAction lastAction = EnemyActionStand;
 
 GameManager* globalGameManager;
 
+float lerp(float y1, float y2, float t) {
+    return y1 + t * (y2 - y1);
+}
+
 static void frame_cb(GameEngine* engine, Canvas* canvas, InputState input, void* context) {
     UNUSED(engine);
     GameManager* game_manager = context;
@@ -117,17 +92,13 @@ static void frame_cb(GameEngine* engine, Canvas* canvas, InputState input, void*
     game_manager_update(game_manager);
     game_manager_render(game_manager, canvas);
 }
-
-static float lerp(float y1, float y2, float t) {
-    return y1 + t * (y2 - y1);
-}
 /*
 static Vector random_pos(void) {
     return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 */
 
-static void player_spawn(Level* level, GameManager* manager) {
+void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
     globalPlayer = player;
 
@@ -162,7 +133,7 @@ static void player_spawn(Level* level, GameManager* manager) {
     gameBeginningTick = furi_get_tick();
 }
 
-static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition) {
+void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition) {
     int enemyIndex = -1;
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
@@ -194,7 +165,7 @@ static void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition
     player_context->sprite = game_manager_sprite_load(manager, "enemy_left.fxbm");
 }
 
-static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
+void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
     //Initiate jump process (first jump) if we are on ground (and are not jumping)
     if(input->held & GameKeyUp && !jumping && roundf(pos->y) == WORLD_BORDER_BOTTOM_Y) {
         //Start jumping
@@ -227,7 +198,7 @@ static void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputStat
     }
 }
 
-static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
+void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
     //If we are not facing right or left, we cannot shoot
     bool canShoot = playerCtx->sprite != playerCtx->sprite_jump &&
                     playerCtx->sprite != playerCtx->sprite_stand &&
@@ -301,7 +272,7 @@ static void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Ve
     }
 }
 
-static void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
+void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
     uint32_t currentTick = furi_get_tick();
 
     bool playerSpawning = hasSpawnedFirstMob && furi_get_tick() - firstMobSpawnTicks < 8000;
@@ -345,156 +316,9 @@ static void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
     }
 }
 
-static void
-    tutorial_update(Entity* self, GameManager* manager, PlayerContext* playerCtx, Vector* pos) {
-    if(!game_menu_tutorial_selected) return;
-    //Completed tutorial and reached the end
-    if(tutorialCompleted && roundf(pos->x) == WORLD_BORDER_RIGHT_X) {
-        entity_pos_set(self, (Vector){WORLD_TRANSITION_LEFT_STARTING_POINT, pos->y});
-        pos->x = WORLD_TRANSITION_LEFT_STARTING_POINT;
-        targetX = WORLD_BORDER_LEFT_X;
-        startedGame = true;
-        playerCtx->sprite = playerCtx->sprite_right;
-    }
-
-    if(tutorialCompleted && pos->x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
-        //Smooth level transitioning code, hence border is extended in this snippet.
-        //(0 -> right border) instead of (left border -> right border)
-        pos->x = CLAMP(
-            lerp(pos->x, targetX, jumpSpeed),
-            WORLD_BORDER_RIGHT_X,
-            WORLD_TRANSITION_LEFT_STARTING_POINT);
-        pos->y = CLAMP(pos->y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
-        entity_pos_set(self, *pos);
-
-        return;
-    }
-
-    if(tutorialCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
-        if(!hasSpawnedFirstMob) {
-            //Spawn new mob
-            enemy_spawn(gameLevel, manager, (Vector){110, 49});
-            hasSpawnedFirstMob = true;
-            firstMobSpawnTicks = furi_get_tick();
-        }
-    }
-}
-
-static void tutorial_render(GameManager* manager, Canvas* canvas, PlayerContext* player) {
-    if(!game_menu_tutorial_selected) return;
-    if(kills == 1) {
-        if(furi_get_tick() - firstKillTick < 2000) {
-            canvas_printf(canvas, 30, 30, "Great job!");
-            static bool firstKillMsg;
-            if(!firstKillMsg) {
-                firstKillMsg = true;
-                NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-                notification_message(notifications, &sequence_single_vibro);
-                furi_delay_ms(2000);
-            }
-        } else if(furi_get_tick() - firstKillTick < 7500) {
-            canvas_printf(canvas, 20, 40, "You got your first kill!");
-            static bool nextMsg;
-            if(!nextMsg) {
-                nextMsg = true;
-                NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-                notification_message(notifications, &sequence_single_vibro);
-                furi_delay_ms(2000);
-            }
-        } else if(!startedGame) {
-            if(player->sprite == player->sprite_right) {
-                player->sprite = player->sprite_right_shadowed;
-            } else if(player->sprite == player->sprite_left) {
-                player->sprite = player->sprite_left_shadowed;
-            }
-            canvas_printf(canvas, 47, 40, "Continue!");
-            canvas_printf(canvas, 100, 53, "-->");
-            canvas_draw_box(canvas, 126, 44, 2, 16);
-            static bool continued;
-            if(!continued) {
-                continued = true;
-                NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-                notification_message(notifications, &sequence_success);
-                tutorialCompleted = true;
-            }
-        }
-    } else if(kills == 2) {
-        static bool secondKill;
-        if(!secondKill) {
-            secondKill = true;
-            secondKillTick = furi_get_tick();
-        }
-
-        if(furi_get_tick() - secondKillTick < 5000) {
-            canvas_printf(
-                canvas,
-                20,
-                30,
-                health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f)) ? "Was that easy?..." :
-                                                                        "You seem to struggle?");
-            for(int i = 5; i > 0; i--) {
-                furi_delay_ms(i);
-            }
-
-        } else if(furi_get_tick() - secondKillTick > 7000 && furi_get_tick() - secondKillTick < 9000) {
-            if(health > ((int)roundf(STARTING_PLAYER_HEALTH / 2.0f))) {
-                canvas_printf(canvas, 5, 30, "Now the final challenge!");
-            } else {
-                canvas_printf(canvas, 5, 30, "Well, here's the real");
-                canvas_printf(canvas, 5, 40, "challenge!");
-            }
-            for(int i = 5; i > 0; i--) {
-                furi_delay_ms(i);
-            }
-        } else if(furi_get_tick() - secondKillTick > 10000) {
-            static bool hasSpawnedFinalBoss1;
-            if(!hasSpawnedFinalBoss1) {
-                hasSpawnedFinalBoss1 = true;
-                enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X - 30, WORLD_BORDER_TOP_Y});
-            }
-            static bool hasSpawnedFinalBoss2;
-            if(furi_get_tick() - secondKillTick > 12000 && !hasSpawnedFinalBoss2) {
-                hasSpawnedFinalBoss2 = true;
-                enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y});
-            }
-        }
-        if(furi_get_tick() - secondKillTick > 8000) {
-            int tickThousands = (int)roundf((furi_get_tick() - secondKill) / 1000.0F);
-            furi_delay_ms(tickThousands % 3 == 0 ? 10 : 0);
-        }
-    } else if(kills == 4) {
-        canvas_draw_box(canvas, 126, 44, 2, 16);
-        //Text will be blinking/flashing
-        if((int)roundf((furi_get_tick() - secondKillTick) / 1000.0f) % 2 == 0) {
-            canvas_printf(canvas, 20, 30, "You've completed the");
-            canvas_printf(canvas, 20, 40, "tutorial!");
-        }
-    }
-
-    if(tutorialCompleted && startedGame) {
-        canvas_draw_box(canvas, 0, 44, 2, 16);
-    }
-
-    if(hasSpawnedFirstMob) {
-        if(furi_get_tick() - firstMobSpawnTicks < 3000) {
-            canvas_printf(canvas, 0, 40, "Welcome to the next level!");
-            furi_delay_ms(10);
-        } else if(furi_get_tick() - firstMobSpawnTicks < 7000) {
-            canvas_printf(canvas, 50, 40, "Fight!");
-            for(int i = 5; i > 0; i--) {
-                for(int j = 0; j < 5; j++) {
-                    furi_delay_ms(i);
-                }
-            }
-        }
-    }
-}
-
 uint32_t lastSwitchRight = 0;
 
-static void player_update(Entity* self, GameManager* manager, void* context) {
+void player_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
     UNUSED(context);
 
@@ -591,7 +415,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
-static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     if(game_menu_quit_selected) return;
     // Get player context
     PlayerContext* player = context;
@@ -637,7 +461,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 #endif
 }
 
-static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     if(game_menu_quit_selected) return;
     UNUSED(manager);
     // Get enemy context
@@ -668,7 +492,7 @@ static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, voi
     }
 }
 
-static void enemy_update(Entity* self, GameManager* manager, void* context) {
+void enemy_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
     UNUSED(context);
     UNUSED(manager);
