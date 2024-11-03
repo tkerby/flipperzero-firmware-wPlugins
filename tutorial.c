@@ -1,6 +1,6 @@
 #include "tutorial.h"
 
-bool tutorialCompleted = false;
+bool firstLevelCompleted = false;
 bool startedGame = false;
 
 void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
@@ -8,8 +8,8 @@ void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* 
 
     PlayerContext* playerCtx = context;
 
-    //Completed tutorial and reached the end
-    if(tutorialCompleted && roundf(pos->x) == WORLD_BORDER_RIGHT_X) {
+    //Completed first level and reached end (willing to transition)
+    if(firstLevelCompleted && roundf(pos->x) == WORLD_BORDER_RIGHT_X) {
         entity_pos_set(self, (Vector){WORLD_TRANSITION_LEFT_STARTING_POINT, pos->y});
         pos->x = WORLD_TRANSITION_LEFT_STARTING_POINT;
         targetX = WORLD_BORDER_LEFT_X;
@@ -17,7 +17,8 @@ void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* 
         playerCtx->sprite = playerCtx->sprite_right;
     }
 
-    if(tutorialCompleted && pos->x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
+    //They transitioned to the second level (from first level)
+    if(firstLevelCompleted && pos->x < WORLD_TRANSITION_LEFT_ENDING_POINT) {
         //Smooth level transitioning code, hence border is extended in this snippet.
         //(0 -> right border) instead of (left border -> right border)
         pos->x = CLAMP(
@@ -30,7 +31,8 @@ void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* 
         return;
     }
 
-    if(tutorialCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
+    //Finally spawn the next mob after completing the first level.
+    if(firstLevelCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
         if(!hasSpawnedFirstMob) {
             //Spawn new mob
             enemy_spawn(gameLevel, manager, (Vector){110, 49});
@@ -76,7 +78,7 @@ void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
                 continued = true;
                 NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
                 notification_message(notifications, &sequence_success);
-                tutorialCompleted = true;
+                firstLevelCompleted = true;
             }
         }
     } else if(kills == 2) {
@@ -134,7 +136,8 @@ void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
         }
     }
 
-    if(tutorialCompleted && startedGame) {
+    //Draw the right door after completing the first level.
+    if(firstLevelCompleted && startedGame) {
         canvas_draw_box(canvas, 0, 44, 2, 16);
     }
 

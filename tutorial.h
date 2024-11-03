@@ -3,7 +3,7 @@
 #include <engine/entity.h>
 #include "game.h"
 
-extern bool tutorialCompleted;
+extern bool firstLevelCompleted;
 extern bool startedGame;
 
 void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* pos);
