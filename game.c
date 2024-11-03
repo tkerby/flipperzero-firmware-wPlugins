@@ -935,7 +935,7 @@ static void game_stop(void* ctx) {
     Submenu* submenu = submenu_alloc();
     submenu_add_item(
         submenu,
-        game_menu_game_selected ? "RESUME GAME" : "GAME",
+        game_menu_game_selected ? "RESUME GAME" : "PLAY GAME",
         0,
         game_menu_button_callback,
         ctx);
