@@ -16,7 +16,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
     if(kills == 1 && !hasProgressed) {
         hasProgressed = true;
         enemy_spawn(gameLevel, manager, (Vector){120, 0}, 3000, false);
-        furi_delay_ms(100);
+        furi_delay_ms(200);
         enemy_spawn(gameLevel, manager, (Vector){10, 0}, 3000, true);
     }
 }
