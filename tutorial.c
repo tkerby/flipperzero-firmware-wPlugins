@@ -2,7 +2,7 @@
 
 bool firstLevelCompleted = false;
 bool startedGame = false;
-
+bool hasSpawnedFirstMob = false;
 void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
     if(!game_menu_tutorial_selected) return;
 
@@ -35,7 +35,7 @@ void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* 
     if(firstLevelCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
         if(!hasSpawnedFirstMob) {
             //Spawn new mob
-            enemy_spawn(gameLevel, manager, (Vector){110, 49});
+            enemy_spawn(gameLevel, manager, (Vector){110, 49}, 8000);
             hasSpawnedFirstMob = true;
             firstMobSpawnTicks = furi_get_tick();
         }
@@ -114,13 +114,13 @@ void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
             if(!hasSpawnedFinalBoss1) {
                 hasSpawnedFinalBoss1 = true;
                 enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X - 30, WORLD_BORDER_TOP_Y});
+                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X - 30, WORLD_BORDER_TOP_Y}, 0);
             }
             static bool hasSpawnedFinalBoss2;
             if(furi_get_tick() - secondKillTick > 12000 && !hasSpawnedFinalBoss2) {
                 hasSpawnedFinalBoss2 = true;
                 enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y});
+                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y}, 0);
             }
         }
         if(furi_get_tick() - secondKillTick > 8000) {

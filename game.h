@@ -28,8 +28,8 @@
 //While debugging we increase all lives for longer testing/gameplay.
 extern int ENEMY_LIVES;
 
-extern uint32_t shootingRate;
-extern uint32_t enemyShootingRate;
+extern uint32_t shootingDelay;
+extern uint32_t enemyShootingDelay;
 extern float bulletMoveSpeed;
 extern float speed;
 extern float enemySpeed;
@@ -43,7 +43,6 @@ extern bool jumping;
 extern float targetY;
 extern float targetX;
 //Internals
-extern bool hasSpawnedFirstMob;
 extern int firstMobSpawnTicks;
 extern uint32_t firstKillTick;
 extern uint32_t secondKillTick;
@@ -51,7 +50,7 @@ extern Level* gameLevel;
 
 //Functions
 float lerp(float y1, float y2, float t);
-void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition);
+void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition, uint32_t mercyTicks);
 
 typedef struct {
     Sprite* sprite;

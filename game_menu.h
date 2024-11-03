@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+extern bool game_menu_game_selected;
 extern bool game_menu_tutorial_selected;
 extern bool game_menu_settings_selected;
 extern bool game_menu_quit_selected;

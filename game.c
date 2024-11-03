@@ -11,21 +11,23 @@ enum EnemyAction {
 };
 
 //Enemy structure
-struct Enemy {
+typedef struct {
     Entity* instance;
     bool jumping;
     float targetY;
     int lives;
+    uint32_t spawnTime;
+    uint32_t mercyTicks;
     uint32_t lastShot;
-};
+} Enemy;
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 
 /* Begin of variables from header */
 
 //Configurable values
-uint32_t shootingRate = 1700;
-uint32_t enemyShootingRate = 1500;
+uint32_t shootingDelay = 1700;
+uint32_t enemyShootingDelay = 1500;
 float bulletMoveSpeed = 0.55f;
 float speed = 0.6f;
 float enemySpeed = 0.13f;
@@ -38,7 +40,6 @@ bool jumping = false;
 float targetY = WORLD_BORDER_BOTTOM_Y;
 float targetX = 10.0F;
 //Internal vars
-bool hasSpawnedFirstMob = false;
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
 #ifdef DEBUGGING
@@ -56,7 +57,7 @@ Level* gameLevel = NULL;
 
 //Enemy, and bullet storage
 #define MAX_ENEMIES 30
-struct Enemy enemies[MAX_ENEMIES];
+Enemy enemies[MAX_ENEMIES];
 
 #define MAX_BULLETS 30
 Entity* bullets[MAX_BULLETS];
@@ -133,7 +134,7 @@ void player_spawn(Level* level, GameManager* manager) {
     gameBeginningTick = furi_get_tick();
 }
 
-void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition) {
+void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition, uint32_t mercyTicks) {
     int enemyIndex = -1;
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
@@ -143,6 +144,8 @@ void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition) {
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
+        enemies[i].spawnTime = furi_get_tick();
+        enemies[i].mercyTicks = mercyTicks;
         enemies[i].lastShot = furi_get_tick() + 2000;
         break;
     }
@@ -209,7 +212,7 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingRate) && canShoot) {
+    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -272,13 +275,13 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
     }
 }
 
-void enemy_shoot_handler(Vector* pos, uint32_t* enemyLastShotTick) {
+void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick) {
     uint32_t currentTick = furi_get_tick();
 
-    bool playerSpawning = hasSpawnedFirstMob && furi_get_tick() - firstMobSpawnTicks < 8000;
-    float shootingRateFactor = playerSpawning ? 30.0F : 1;
+    bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
+    float shootingRateFactor = gracePeriod ? 45.0F : 1;
     //Shooting action
-    if(currentTick - *enemyLastShotTick >= (enemyShootingRate * (shootingRateFactor)) &&
+    if(currentTick - *enemyLastShotTick >= (enemyShootingDelay * (shootingRateFactor)) &&
        health != 0) {
         *enemyLastShotTick = currentTick;
         //Spawn bullet
@@ -551,9 +554,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                 //Play sound of getting hit
                 NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
                 notification_message(notifications, damageSound);
-
-                //Don't spawn a new one
-                //enemy_spawn(gameLevel, manager);
                 break;
             }
             break;
@@ -633,14 +633,21 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         lastAction = action;
         switch(action) {
         case EnemyActionAttack:
+            Enemy* enemy = NULL;
+            for(int i = 0; i < MAX_ENEMIES; i++) {
+                if(enemies[i].instance != self) continue;
 
-            bool playerSpawning = hasSpawnedFirstMob &&
-                                  furi_get_tick() - firstMobSpawnTicks < 9000;
+                enemy = &enemies[i];
+                break;
+            }
+
+            bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
+
             pos.x = CLAMP(
                 lerp(pos.x, playerPos.x + ((pos.x - playerPos.x > 0) ? 30 : -30), enemySpeed),
                 WORLD_BORDER_RIGHT_X,
-                //Prevent from approaching too much during player spawning
-                playerSpawning ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
+                //Prevent from approaching too much during player spawning / grace period
+                gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
             break;
         case EnemyActionRetreat:
             pos.x = CLAMP(
@@ -691,7 +698,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy shooting
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != self) continue;
-        enemy_shoot_handler(&pos, &enemies[i].lastShot);
+        enemy_shoot_handler(&enemies[i], &pos, &enemies[i].lastShot);
         break;
     }
 
@@ -769,7 +776,7 @@ static const EntityDescription target_enemy_desc = {
 static void tutorial_level_alloc(Level* level, GameManager* manager) {
     if(!game_menu_tutorial_selected) return;
     //Add enemy to level
-    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49});
+    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49}, 3000);
 }
 
 /****** Level ******/
@@ -857,6 +864,12 @@ static void game_start(GameManager* game_manager, void* ctx) {
         view_holder_set_view(view_holder, submenu_get_view(submenu));
         view_holder_attach_to_gui(view_holder, gui);
         api_lock_wait_unlock(game_menu_exit_lock);
+
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        furi_record_close(RECORD_GUI);
     }
 
     game_start_post_menu((game_manager), ctx);
@@ -872,8 +885,76 @@ static void game_start(GameManager* game_manager, void* ctx) {
     Also, you don't need to free game_context, it will be done automatically, after this function.
 */
 
-static void game_stop(void* ctx);
+//Declare method
+int32_t relaunch_game();
 
+static void game_stop(void* ctx) {
+    //Leave immediately if they want to quit.
+    if(game_menu_quit_selected) {
+        return;
+    }
+    // Do some deinitialization here, for example you can save score to storage.
+    // For simplicity, we will just print it.
+
+    game_menu_exit_lock = api_lock_alloc_locked();
+    Gui* gui = furi_record_open(RECORD_GUI);
+    Submenu* submenu = submenu_alloc();
+    submenu_add_item(submenu, game_menu_game_selected ? "RESUME GAME" : "GAME", 0, game_menu_button_callback, ctx);
+    submenu_add_item(
+        submenu,
+        game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",
+        1,
+        game_menu_button_callback,
+        ctx);
+    submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);
+    submenu_add_item(submenu, "QUIT", 3, game_menu_button_callback, ctx);
+    ViewHolder* view_holder = view_holder_alloc();
+    view_holder_set_view(view_holder, submenu_get_view(submenu));
+    view_holder_attach_to_gui(view_holder, gui);
+    api_lock_wait_unlock_and_free(game_menu_exit_lock);
+
+    if(game_menu_settings_selected) {
+        //Clear previous menu
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        furi_record_close(RECORD_GUI);
+
+        game_menu_exit_lock = api_lock_alloc_locked();
+        Gui* gui = furi_record_open(RECORD_GUI);
+
+        Submenu* submenu = submenu_alloc();
+        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, globalGameManager);
+        submenu_add_item(
+            submenu, "BACK", 3, game_settings_menu_button_callback, globalGameManager);
+        view_holder = view_holder_alloc();
+        view_holder_set_view(view_holder, submenu_get_view(submenu));
+        view_holder_attach_to_gui(view_holder, gui);
+        api_lock_wait_unlock_and_free(game_menu_exit_lock);
+        furi_record_close(RECORD_GUI);
+    }
+
+    //Do they want to quit? Or do we relaunch
+    if(!game_menu_quit_selected) {
+        //Clear previous menu
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        furi_record_close(RECORD_GUI);
+        relaunch_game();
+    } else {
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        // End access to the GUI API.
+        furi_record_close(RECORD_GUI);
+    }
+}
 /*
     Yor game configuration, do not rename this variable, but you can change it's content here.  
 */
@@ -915,59 +996,4 @@ int32_t relaunch_game() {
         free(game_context);
     }
     return 0;
-}
-
-static void game_stop(void* ctx) {
-    //Leave immediately if they want to quit.
-    if(game_menu_quit_selected) {
-        return;
-    }
-    // Do some deinitialization here, for example you can save score to storage.
-    // For simplicity, we will just print it.
-
-    Gui* gui = furi_record_open(RECORD_GUI);
-    Submenu* submenu = submenu_alloc();
-    submenu_add_item(submenu, "RESUME GAME", 0, game_menu_button_callback, ctx);
-    submenu_add_item(
-        submenu,
-        game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",
-        1,
-        game_menu_button_callback,
-        ctx);
-    submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);
-    submenu_add_item(submenu, "QUIT", 3, game_menu_button_callback, ctx);
-    ViewHolder* view_holder = view_holder_alloc();
-    view_holder_set_view(view_holder, submenu_get_view(submenu));
-    view_holder_attach_to_gui(view_holder, gui);
-    api_lock_wait_unlock(game_menu_exit_lock);
-
-    if(game_menu_settings_selected) {
-        // End access to the GUI API.
-        //furi_record_close(RECORD_GUI);
-
-        Gui* gui = furi_record_open(RECORD_GUI);
-
-        Submenu* submenu = submenu_alloc();
-        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(
-            submenu, "BACK", 3, game_settings_menu_button_callback, globalGameManager);
-        ViewHolder* view_holder = view_holder_alloc();
-        view_holder_set_view(view_holder, submenu_get_view(submenu));
-        view_holder_attach_to_gui(view_holder, gui);
-        api_lock_wait_unlock(game_menu_exit_lock);
-    }
-
-    //Do they want to quit? Or do we relaunch
-    if(!game_menu_quit_selected) {
-        relaunch_game();
-    } else {
-        view_holder_set_view(view_holder, NULL);
-        // Delete everything to prevent memory leaks.
-        view_holder_free(view_holder);
-        submenu_free(submenu);
-        // End access to the GUI API.
-        furi_record_close(RECORD_GUI);
-    }
 }

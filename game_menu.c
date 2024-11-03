@@ -80,7 +80,7 @@ void game_menu_open(GameManager* game_manager, bool reopen) {
     if(reopen) {
         game_manager_game_stop(game_manager);
     }
-    api_lock_wait_unlock(game_menu_exit_lock);
+    api_lock_wait_unlock_and_free(game_menu_exit_lock);
     FURI_LOG_I("DEADZONE", "Hey, done waiting!");
 
     view_holder_set_view(view_holder, NULL);
