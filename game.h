@@ -5,7 +5,8 @@
 
 #include "game_menu.h"
 #include "reinforcement_learning_logic.h"
-#include "tutorial.h"
+#include "game_level.h"
+#include "tutorial_level.h"
 
 /* Global game defines go here */
 
@@ -50,11 +51,17 @@ extern float targetX;
 extern int firstMobSpawnTicks;
 extern uint32_t firstKillTick;
 extern uint32_t secondKillTick;
+extern uint32_t gameBeginningTick;
 extern Level* gameLevel;
 
 //Functions
 float lerp(float y1, float y2, float t);
-void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition, uint32_t mercyTicks);
+void enemy_spawn(
+    Level* level,
+    GameManager* manager,
+    Vector spawnPosition,
+    uint32_t mercyTicks,
+    bool right);
 
 typedef struct {
     Sprite* sprite;

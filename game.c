@@ -51,6 +51,7 @@ int health = STARTING_PLAYER_HEALTH;
 #endif
 uint32_t firstKillTick = 0;
 uint32_t secondKillTick = 0;
+uint32_t gameBeginningTick = 0;
 Level* gameLevel = NULL;
 
 /* End of header variables */
@@ -64,6 +65,7 @@ Entity* bullets[MAX_BULLETS];
 bool bulletsDirection[MAX_BULLETS];
 
 Entity* enemyBullets[MAX_BULLETS];
+bool enemyBulletsDirection[MAX_BULLETS];
 
 Entity* globalPlayer = NULL;
 
@@ -74,7 +76,6 @@ static const EntityDescription enemy_desc;
 static const EntityDescription target_enemy_desc;
 
 //More internal variables
-uint32_t gameBeginningTick;
 uint32_t lastShotTick;
 uint32_t lastBehaviorTick;
 
@@ -134,7 +135,12 @@ void player_spawn(Level* level, GameManager* manager) {
     gameBeginningTick = furi_get_tick();
 }
 
-void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition, uint32_t mercyTicks) {
+void enemy_spawn(
+    Level* level,
+    GameManager* manager,
+    Vector spawnPosition,
+    uint32_t mercyTicks,
+    bool right) {
     int enemyIndex = -1;
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
@@ -165,7 +171,13 @@ void enemy_spawn(Level* level, GameManager* manager, Vector spawnPosition, uint3
     PlayerContext* player_context = entity_context_get(enemies[enemyIndex].instance);
 
     // Load enemy sprite
-    player_context->sprite = game_manager_sprite_load(manager, "enemy_left.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "enemy_left.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, "enemy_right.fxbm");
+    if(right) {
+        player_context->sprite = player_context->sprite_right;
+    } else {
+        player_context->sprite = player_context->sprite_left;
+    }
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
@@ -275,7 +287,8 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
     }
 }
 
-void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick) {
+void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick, void* context) {
+    PlayerContext* enemyCtx = context;
     uint32_t currentTick = furi_get_tick();
 
     bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
@@ -298,7 +311,13 @@ void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick)
 
         enemyBullets[bulletIndex] = level_add_entity(gameLevel, &target_enemy_desc);
         // Set target position
-        Vector bulletPos = (Vector){pos->x - 10, pos->y};
+        Vector bulletPos;
+        enemyBulletsDirection[bulletIndex] = enemyCtx->sprite == enemyCtx->sprite_right;
+        if(enemyBulletsDirection[bulletIndex]) {
+            bulletPos = (Vector){pos->x + 10, pos->y};
+        } else {
+            bulletPos = (Vector){pos->x - 10, pos->y};
+        }
         entity_pos_set(enemyBullets[bulletIndex], bulletPos);
     }
 
@@ -306,8 +325,10 @@ void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick)
     for(int i = 0; i < MAX_BULLETS; i++) {
         if(enemyBullets[i] == NULL) continue;
         Vector bulletPos = entity_pos_get(enemyBullets[i]);
-        bulletPos.x = CLAMP(
-            bulletPos.x - bulletMoveSpeed, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
+        //TODO Currently movement is dependent on enemy's trajectory, no metadata of bullet.
+        float deltaX = enemyBulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
+        bulletPos.x =
+            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
         entity_pos_set(enemyBullets[i], bulletPos);
 
         //Once bullet reaches end, destroy it
@@ -371,7 +392,8 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         }
     }
 
-    tutorial_update(self, manager, playerCtx, &pos);
+    game_level_player_update(self, manager, playerCtx, &pos);
+    tutorial_level_player_update(self, manager, playerCtx, &pos);
 
     //Movement - Game position starts at TOP LEFT.
     //The higher the Y, the lower we move on the screen
@@ -448,7 +470,8 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
         canvas_printf(canvas, 10, 7, "Kills: %d", kills);
     }
 
-    tutorial_render(manager, canvas, player);
+    game_level_player_render(manager, canvas, player);
+    tutorial_level_player_render(manager, canvas, player);
 
 #ifdef DEBUGGING
     canvas_printf(
@@ -486,10 +509,10 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
 
     //This must be processed here, as the player object will be deinstantiated
 
-    if(health == STARTING_PLAYER_HEALTH && furi_get_tick() - gameBeginningTick < 5000) {
-        canvas_printf(canvas, 30, 20, "Welcome to the");
-        canvas_printf(canvas, 30, 36, "DEADZONE tutorial!");
-    } else if(health == 0) {
+    game_level_enemy_render(manager, canvas, context);
+    game_level_player_render(manager, canvas, context);
+
+    if(health == 0) {
         canvas_printf(canvas, 30, 10, "You're dead.");
         canvas_printf(canvas, 20, 20, "Press Back to respawn.");
     }
@@ -698,7 +721,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy shooting
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != self) continue;
-        enemy_shoot_handler(&enemies[i], &pos, &enemies[i].lastShot);
+        enemy_shoot_handler(&enemies[i], &pos, &enemies[i].lastShot, context);
         break;
     }
 
@@ -776,7 +799,7 @@ static const EntityDescription target_enemy_desc = {
 static void tutorial_level_alloc(Level* level, GameManager* manager) {
     if(!game_menu_tutorial_selected) return;
     //Add enemy to level
-    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49}, 3000);
+    if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49}, 3000, false);
 }
 
 /****** Level ******/
@@ -899,7 +922,12 @@ static void game_stop(void* ctx) {
     game_menu_exit_lock = api_lock_alloc_locked();
     Gui* gui = furi_record_open(RECORD_GUI);
     Submenu* submenu = submenu_alloc();
-    submenu_add_item(submenu, game_menu_game_selected ? "RESUME GAME" : "GAME", 0, game_menu_button_callback, ctx);
+    submenu_add_item(
+        submenu,
+        game_menu_game_selected ? "RESUME GAME" : "GAME",
+        0,
+        game_menu_button_callback,
+        ctx);
     submenu_add_item(
         submenu,
         game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",

@@ -1,9 +1,9 @@
-#include "tutorial.h"
+#include "tutorial_level.h"
 
 bool firstLevelCompleted = false;
 bool startedGame = false;
 bool hasSpawnedFirstMob = false;
-void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
+void tutorial_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
     if(!game_menu_tutorial_selected) return;
 
     PlayerContext* playerCtx = context;
@@ -35,14 +35,14 @@ void tutorial_update(Entity* self, GameManager* manager, void* context, Vector* 
     if(firstLevelCompleted && startedGame && roundf(pos->x) > WORLD_BORDER_LEFT_X) {
         if(!hasSpawnedFirstMob) {
             //Spawn new mob
-            enemy_spawn(gameLevel, manager, (Vector){110, 49}, 8000);
+            enemy_spawn(gameLevel, manager, (Vector){110, 49}, 8000, false);
             hasSpawnedFirstMob = true;
             firstMobSpawnTicks = furi_get_tick();
         }
     }
 }
 
-void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
+void tutorial_level_player_render(GameManager* manager, Canvas* canvas, void* context) {
     if(!game_menu_tutorial_selected) return;
     PlayerContext* player = context;
     if(kills == 1) {
@@ -114,13 +114,21 @@ void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
             if(!hasSpawnedFinalBoss1) {
                 hasSpawnedFinalBoss1 = true;
                 enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X - 30, WORLD_BORDER_TOP_Y}, 0);
+                    gameLevel,
+                    manager,
+                    (Vector){WORLD_BORDER_RIGHT_X - 30, WORLD_BORDER_TOP_Y},
+                    0,
+                    false);
             }
             static bool hasSpawnedFinalBoss2;
             if(furi_get_tick() - secondKillTick > 12000 && !hasSpawnedFinalBoss2) {
                 hasSpawnedFinalBoss2 = true;
                 enemy_spawn(
-                    gameLevel, manager, (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y}, 0);
+                    gameLevel,
+                    manager,
+                    (Vector){WORLD_BORDER_RIGHT_X, WORLD_BORDER_TOP_Y},
+                    0,
+                    false);
             }
         }
         if(furi_get_tick() - secondKillTick > 8000) {
@@ -153,5 +161,15 @@ void tutorial_render(GameManager* manager, Canvas* canvas, void* context) {
                 }
             }
         }
+    }
+}
+
+void tutorial_level_enemy_render(GameManager* manager, Canvas* canvas, void* context) {
+    UNUSED(manager);
+    UNUSED(canvas);
+    UNUSED(context);
+    if(health == STARTING_PLAYER_HEALTH && furi_get_tick() - gameBeginningTick < 5000) {
+        canvas_printf(canvas, 30, 20, "Welcome to the");
+        canvas_printf(canvas, 30, 36, "DEADZONE tutorial!");
     }
 }
