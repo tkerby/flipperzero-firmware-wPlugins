@@ -242,7 +242,7 @@ WebCrawlerApp* web_crawler_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            WebCrawlerViewSubmenuMain,
-           "Web Crawler v0.6",
+           "Web Crawler v0.7",
            web_crawler_exit_app_callback,
            &app->view_dispatcher)) {
         return NULL;
