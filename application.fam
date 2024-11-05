@@ -13,5 +13,5 @@ App(
     fap_icon_assets="assets",
     fap_description="Get inspired with a random motivational quote or fortune each time you open the app.",
     fap_author="@evillero",
-    fap_version="0.2",
+    fap_version="0.1",
 )
