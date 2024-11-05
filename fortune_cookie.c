@@ -88,7 +88,6 @@ void add_word_wrapped_text(Widget* widget, const char* text, int max_chars_per_l
     }
 }
 
-
 void fortune_message_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
@@ -138,14 +137,13 @@ static App* app_alloc() {
     App* app = malloc(sizeof(App));
     app->scene_manager = scene_manager_alloc(&scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
+    
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, fortune_back_event_callback);
-
+    
     app->widget = widget_alloc();
     view_dispatcher_add_view(app->view_dispatcher, 0, widget_get_view(app->widget));
-
+    
     app->random_seed = furi_get_tick(); 
     return app;
 }
@@ -171,4 +169,3 @@ int32_t fortune_cookie_app(void* p) {
     app_free(app);
     return 0;
 }
-
