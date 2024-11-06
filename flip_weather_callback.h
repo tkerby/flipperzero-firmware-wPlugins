@@ -1,33 +1,13 @@
 #ifndef FLIP_WEATHER_CALLBACK_H
 #define FLIP_WEATHER_CALLBACK_H
 
-static bool sent_get_request = false;
-static bool get_request_success = false;
 static bool weather_request_success = false;
-static bool got_ip_address = false;
 static bool sent_weather_request = false;
 static bool got_weather_data = false;
-static bool geo_information_processed = false;
-static bool weather_information_processed = false;
-static char ip_address[16];
-static char city_data[48];
-static char region_data[48];
-static char country_data[48];
-static char lat_data[32];
-static char lon_data[32];
-static char ip_data[32];
-static char temperature_data[32];
-static char precipitation_data[32];
-static char rain_data[32];
-static char showers_data[32];
-static char snowfall_data[32];
-static char time_data[32];
-
-#define MAX_TOKENS 64 // Adjust based on expected JSON size (50)
 
 void flip_weather_request_error(Canvas *canvas)
 {
-    if (fhttp.received_data == NULL)
+    if (fhttp.last_response == NULL)
     {
         if (fhttp.last_response != NULL)
         {
@@ -69,82 +49,6 @@ void flip_weather_request_error(Canvas *canvas)
     }
 }
 
-static bool send_geo_location_request()
-{
-    if (!sent_get_request && fhttp.state == IDLE)
-    {
-        sent_get_request = true;
-        get_request_success = flipper_http_get_request_with_headers("https://ipwhois.app/json/", "{\"Content-Type\": \"application/json\"}");
-        if (!get_request_success)
-        {
-            FURI_LOG_E(TAG, "Failed to send GET request");
-            return false;
-        }
-        fhttp.state = RECEIVING;
-    }
-    return true;
-}
-
-static void process_geo_location()
-{
-    if (!geo_information_processed && fhttp.received_data != NULL)
-    {
-        geo_information_processed = true;
-        char *city = get_json_value("city", fhttp.received_data, MAX_TOKENS);
-        char *region = get_json_value("region", fhttp.received_data, MAX_TOKENS);
-        char *country = get_json_value("country", fhttp.received_data, MAX_TOKENS);
-        char *latitude = get_json_value("latitude", fhttp.received_data, MAX_TOKENS);
-        char *longitude = get_json_value("longitude", fhttp.received_data, MAX_TOKENS);
-
-        snprintf(city_data, 64, "City: %s", city);
-        snprintf(region_data, 64, "Region: %s", region);
-        snprintf(country_data, 64, "Country: %s", country);
-        snprintf(lat_data, 64, "Latitude: %s", latitude);
-        snprintf(lon_data, 64, "Longitude: %s", longitude);
-        snprintf(ip_data, 64, "IP Address: %s", ip_address);
-
-        fhttp.state = IDLE;
-    }
-}
-
-static void process_weather()
-{
-    if (!weather_information_processed && fhttp.received_data != NULL)
-    {
-        weather_information_processed = true;
-        char *current_data = get_json_value("current", fhttp.received_data, MAX_TOKENS);
-        char *temperature = get_json_value("temperature_2m", current_data, MAX_TOKENS);
-        char *precipitation = get_json_value("precipitation", current_data, MAX_TOKENS);
-        char *rain = get_json_value("rain", current_data, MAX_TOKENS);
-        char *showers = get_json_value("showers", current_data, MAX_TOKENS);
-        char *snowfall = get_json_value("snowfall", current_data, MAX_TOKENS);
-        char *time = get_json_value("time", current_data, MAX_TOKENS);
-
-        // replace the "T" in time with a space
-        char *ptr = strstr(time, "T");
-        if (ptr != NULL)
-        {
-            *ptr = ' ';
-        }
-
-        snprintf(temperature_data, 64, "Temperature (C): %s", temperature);
-        snprintf(precipitation_data, 64, "Precipitation: %s", precipitation);
-        snprintf(rain_data, 64, "Rain: %s", rain);
-        snprintf(showers_data, 64, "Showers: %s", showers);
-        snprintf(snowfall_data, 64, "Snowfall: %s", snowfall);
-        snprintf(time_data, 64, "Time: %s", time);
-
-        fhttp.state = IDLE;
-    }
-    else if (!weather_information_processed && fhttp.received_data == NULL)
-    {
-        FURI_LOG_E(TAG, "Failed to process weather data");
-        // store error message
-        snprintf(temperature_data, 64, "Failed. Update WiFi settings.");
-        fhttp.state = ISSUE;
-    }
-}
-
 static void flip_weather_handle_gps_draw(Canvas *canvas, bool show_gps_data)
 {
     if (sent_get_request)
@@ -159,11 +63,11 @@ static void flip_weather_handle_gps_draw(Canvas *canvas, bool show_gps_data)
             }
         }
         // check status
-        else if (fhttp.state == ISSUE || !get_request_success || fhttp.received_data == NULL)
+        else if (fhttp.state == ISSUE || !get_request_success || fhttp.last_response == NULL)
         {
             flip_weather_request_error(canvas);
         }
-        else if (fhttp.state == IDLE && fhttp.received_data != NULL)
+        else if (fhttp.state == IDLE && fhttp.last_response != NULL)
         {
             // success, draw GPS
             process_geo_location();
@@ -226,10 +130,10 @@ static void flip_weather_view_draw_callback_weather(Canvas *canvas, void *model)
     if (!sent_weather_request && fhttp.state == IDLE)
     {
         sent_weather_request = true;
-        char url[256];
+        char url[512];
         char *lattitude = lat_data + 10;
         char *longitude = lon_data + 11;
-        snprintf(url, 256, "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&current=temperature_2m,precipitation,rain,showers,snowfall&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1", lattitude, longitude);
+        snprintf(url, 512, "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&current=temperature_2m,precipitation,rain,showers,snowfall&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1", lattitude, longitude);
         weather_request_success = flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}");
         if (!weather_request_success)
         {
@@ -247,7 +151,7 @@ static void flip_weather_view_draw_callback_weather(Canvas *canvas, void *model)
             return;
         }
         // check status
-        else if (fhttp.state == ISSUE || !weather_request_success || fhttp.received_data == NULL)
+        else if (fhttp.state == ISSUE || !weather_request_success || fhttp.last_response == NULL)
         {
             flip_weather_request_error(canvas);
         }
@@ -293,82 +197,6 @@ static void flip_weather_view_draw_callback_gps(Canvas *canvas, void *model)
     }
 
     flip_weather_handle_gps_draw(canvas, true);
-}
-
-// Input callback for the view (async input handling)
-bool flip_weather_view_input_callback_weather(InputEvent *event, void *context)
-{
-    FlipWeatherApp *app = (FlipWeatherApp *)context;
-    UNUSED(app);
-    if (event->type == InputTypePress && event->key == InputKeyBack)
-    {
-        // Exit the app when the back button is pressed
-        // view_dispatcher_stop(app->view_dispatcher);
-        // return true;
-    }
-    return false;
-}
-
-// Input callback for the view (async input handling)
-bool flip_weather_view_input_callback_gps(InputEvent *event, void *context)
-{
-    FlipWeatherApp *app = (FlipWeatherApp *)context;
-    UNUSED(app);
-    if (event->type == InputTypePress && event->key == InputKeyBack)
-    {
-        // Exit the app when the back button is pressed
-        // view_dispatcher_stop(app->view_dispatcher);
-        // return true;
-    }
-    return false;
-}
-// handle the async-to-sync process to get and set the IP address
-static bool flip_weather_handle_ip_address()
-{
-    if (!got_ip_address)
-    {
-        got_ip_address = true;
-        if (!flipper_http_get_request("https://httpbin.org/get"))
-        {
-            FURI_LOG_E(TAG, "Failed to get IP address");
-            return false;
-        }
-        else
-        {
-            fhttp.state = RECEIVING;
-            furi_timer_start(fhttp.get_timeout_timer, TIMEOUT_DURATION_TICKS);
-        }
-        while (fhttp.state == RECEIVING && furi_timer_is_running(fhttp.get_timeout_timer) > 0)
-        {
-            // Wait for the feed to be received
-            furi_delay_ms(100);
-        }
-        furi_timer_stop(fhttp.get_timeout_timer);
-        ip_address[0] = '\0';
-        if (fhttp.received_data != NULL)
-        {
-            char *ip = get_json_value("origin", fhttp.received_data, MAX_TOKENS);
-            if (ip == NULL)
-            {
-                FURI_LOG_E(TAG, "Failed to get IP address");
-                sent_get_request = true;
-                get_request_success = false;
-                fhttp.state = ISSUE;
-                return false;
-            }
-            strncpy(ip_address, ip, 15);
-            ip_address[15] = '\0';
-        }
-        else
-        {
-            FURI_LOG_E(TAG, "Failed to get IP address");
-            sent_get_request = true;
-            get_request_success = false;
-            fhttp.state = ISSUE;
-            return false;
-        }
-    }
-    return true;
 }
 
 static void callback_submenu_choices(void *context, uint32_t index)
@@ -536,6 +364,17 @@ static uint32_t callback_exit_app(void *context)
     }
     UNUSED(context);
     return VIEW_NONE; // Return VIEW_NONE to exit the app
+}
+
+static uint32_t callback_to_wifi_settings(void *context)
+{
+    if (!context)
+    {
+        FURI_LOG_E(TAG, "Context is NULL");
+        return VIEW_NONE;
+    }
+    UNUSED(context);
+    return FlipWeatherViewSettings;
 }
 
 #endif

@@ -42,27 +42,27 @@ static FlipWeatherApp *flip_weather_app_alloc()
     }
 
     // Main view
-    if (!easy_flipper_set_view(&app->view_weather, FlipWeatherViewWeather, flip_weather_view_draw_callback_weather, flip_weather_view_input_callback_weather, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_view(&app->view_weather, FlipWeatherViewWeather, flip_weather_view_draw_callback_weather, NULL, callback_to_submenu, &app->view_dispatcher, app))
     {
         return NULL;
     }
-    if (!easy_flipper_set_view(&app->view_gps, FlipWeatherViewGPS, flip_weather_view_draw_callback_gps, flip_weather_view_input_callback_gps, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_view(&app->view_gps, FlipWeatherViewGPS, flip_weather_view_draw_callback_gps, NULL, callback_to_submenu, &app->view_dispatcher, app))
     {
         return NULL;
     }
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget, FlipWeatherViewAbout, "FlipWeather v1.0\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget, FlipWeatherViewAbout, "FlipWeather v1.1\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
     {
         return NULL;
     }
 
     // Text Input
-    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_ssid, FlipWeatherViewTextInputSSID, "Enter SSID", app->uart_text_input_temp_buffer_ssid, app->uart_text_input_buffer_size_ssid, text_updated_ssid, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_ssid, FlipWeatherViewTextInputSSID, "Enter SSID", app->uart_text_input_temp_buffer_ssid, app->uart_text_input_buffer_size_ssid, text_updated_ssid, callback_to_wifi_settings, &app->view_dispatcher, app))
     {
         return NULL;
     }
-    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_password, FlipWeatherViewTextInputPassword, "Enter Password", app->uart_text_input_temp_buffer_password, app->uart_text_input_buffer_size_password, text_updated_password, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_password, FlipWeatherViewTextInputPassword, "Enter Password", app->uart_text_input_temp_buffer_password, app->uart_text_input_buffer_size_password, text_updated_password, callback_to_wifi_settings, &app->view_dispatcher, app))
     {
         return NULL;
     }
