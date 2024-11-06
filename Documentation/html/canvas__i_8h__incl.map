@@ -1,0 +1,20 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/canvas_i.h" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/canvas_i.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="123,5,291,75"/>
+<area shape="rect" id="Node000002" href="$canvas_8h.html" title=" " alt="" coords="70,123,150,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="174,77,134,115,130,111,170,73"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="174,123,241,148"/>
+<area shape="poly" id="edge9_Node000001_Node000007" title=" " alt="" coords="210,75,210,109,205,109,205,75"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="265,123,416,148"/>
+<area shape="poly" id="edge10_Node000001_Node000008" title=" " alt="" coords="257,73,314,112,311,117,254,77"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,343,76,368"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="80,150,47,169,33,182,22,197,12,231,13,266,21,301,31,329,26,331,16,302,8,267,6,230,17,195,29,178,44,165,77,146"/>
+<area shape="rect" id="Node000004" href="$icon__animation_8h.html" title=" " alt="" coords="31,196,189,221"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="113,148,113,182,107,182,107,148"/>
+<area shape="rect" id="Node000006" href="$icon_8h.html" title=" " alt="" coords="185,269,270,295"/>
+<area shape="poly" id="edge8_Node000002_Node000006" title=" " alt="" coords="139,146,173,165,204,194,220,225,227,255,222,256,215,227,200,198,170,170,136,150"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="102,223,85,244,68,271,56,301,48,330,43,328,51,299,64,268,80,241,97,220"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="78,269,161,295"/>
+<area shape="poly" id="edge5_Node000004_Node000005" title=" " alt="" coords="114,221,119,255,113,256,109,222"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="130,219,198,260,195,264,127,224"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="198,297,85,340,83,335,196,292"/>
+</map>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['workerevtflags_0',['WorkerEvtFlags',['../usb__can__bridge_8cpp.html#a4d8cfd5bbab11346a2557f1095081bbb',1,'usb_can_bridge.cpp']]]
+  ['osc_5fclko_5fdivide_0',['OSC_CLKO_DIVIDE',['../mcp2518fd__can__dfs_8h.html#a70eb35599f20ce9d042b16a427557014',1,'mcp2518fd_can_dfs.h']]]
 ];

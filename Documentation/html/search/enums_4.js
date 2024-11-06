@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['hidinputnumber_0',['HidInputNumber',['../furi__hal__bt__hid_8c.html#a547bf5104d3c42271423add2f06a2afa',1,'furi_hal_bt_hid.c']]],
-  ['hidreportid_1',['hidreportid',['../furi__hal__bt__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987',1,'HidReportId:&#160;furi_hal_bt_hid.c'],['../furi__hal__usb__hid_8c.html#ac7ce1f2278cd997da9eb59a6c7944987',1,'HidReportId:&#160;furi_hal_usb_hid.c']]]
+  ['e_5fspi_5fendiannes_5ft_0',['e_spi_endiannes_t',['../group__CAN-DRIVER-ADAPTATION.html#ga2bf5f470332190b5b526fff787c9af1a',1,'SPI.h']]],
+  ['e_5fspi_5fmode_5ft_1',['e_spi_mode_t',['../group__CAN-DRIVER-ADAPTATION.html#ga0d69ad4624512a751cb6389420d4c994',1,'SPI.h']]]
 ];

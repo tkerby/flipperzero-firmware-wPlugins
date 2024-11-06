@@ -1,0 +1,5 @@
+<map id="Keyboard" name="Keyboard">
+<area shape="rect" id="Node000001" title=" " alt="" coords="17,93,100,119"/>
+<area shape="rect" id="Node000002" href="$structTextInputKey.html" title=" " alt="" coords="5,5,112,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="61,45,61,93,56,93,56,45"/>
+</map>

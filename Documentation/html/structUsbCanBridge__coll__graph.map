@@ -1,6 +1,6 @@
 <map id="UsbCanBridge" name="UsbCanBridge">
-<area shape="rect" id="Node000001" title=" " alt="" coords="133,271,247,296"/>
-<area shape="rect" id="Node000002" href="$structUsbCanConfig.html" title=" " alt="" coords="5,168,119,193"/>
+<area shape="rect" id="Node000001" title="Holds MODEL component operationnal data and ressources (threads, mutexes,timer)" alt="" coords="133,271,247,296"/>
+<area shape="rect" id="Node000002" href="$structUsbCanConfig.html" title="Configuration used by MODEL to configure USB CDC VCP communication." alt="" coords="5,168,119,193"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,201,132,245,169,268,166,273,128,249,80,205"/>
 <area shape="rect" id="Node000003" href="$classmcp2518fd.html" title=" " alt="" coords="143,168,237,193"/>
 <area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="193,207,193,271,187,271,187,207"/>
@@ -8,6 +8,6 @@
 <area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="193,133,193,168,187,168,187,133"/>
 <area shape="rect" id="Node000005" href="$classSPIClass.html" title="Arduino&#39;s SPIclass porting. Used for communication with mcp2518." alt="" coords="151,5,229,31"/>
 <area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="193,45,193,93,187,93,187,45"/>
-<area shape="rect" id="Node000006" href="$structUsbCanStatus.html" title=" " alt="" coords="261,168,375,193"/>
+<area shape="rect" id="Node000006" href="$structUsbCanStatus.html" title="MODEL atatus information to be displayed by VIEW component" alt="" coords="261,168,375,193"/>
 <area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="294,204,206,273,203,269,291,200"/>
 </map>

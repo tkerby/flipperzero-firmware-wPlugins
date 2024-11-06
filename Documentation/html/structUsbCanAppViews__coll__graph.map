@@ -1,5 +1,31 @@
 <map id="UsbCanAppViews" name="UsbCanAppViews">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,93,141,119"/>
-<area shape="rect" id="Node000002" href="$structusbCanView.html" title="pouet" alt="" coords="22,5,125,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="76,45,76,93,71,93,71,45"/>
+<area shape="rect" id="Node000001" title="Holds VIEW component operationnal data and ressources (furi gui objects) allocated in usb_can_app_all..." alt="" coords="217,372,353,397"/>
+<area shape="rect" id="Node000002" href="$structGui.html" title=" " alt="" coords="43,93,87,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="52,132,32,168,14,215,9,239,9,263,13,286,23,308,35,319,52,329,101,347,160,361,217,371,216,377,159,366,100,352,50,334,31,323,19,311,8,288,3,264,4,238,9,213,27,166,47,129"/>
+<area shape="rect" id="Node000004" href="$structViewPort.html" title=" " alt="" coords="148,181,228,207"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="101,107,179,117,214,127,237,141,241,153,235,165,213,183,209,179,231,162,235,153,232,144,212,132,178,123,101,112"/>
+<area shape="rect" id="Node000005" href="$structViewDispatcher.html" title=" " alt="" coords="34,284,158,309"/>
+<area shape="poly" id="edge7_Node000005_Node000002" title=" " alt="" coords="60,132,58,157,75,229,94,283,89,285,70,231,53,158,55,132"/>
+<area shape="rect" id="Node000003" href="$structCanvas.html" title=" " alt="" coords="274,5,344,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="264,38,88,99,86,94,263,33"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="310,45,300,101,288,132,270,159,251,175,229,185,227,180,248,170,266,156,283,129,295,99,305,44"/>
+<area shape="rect" id="Node000006" href="$structView.html" title=" " alt="" coords="414,181,468,207"/>
+<area shape="poly" id="edge10_Node000006_Node000003" title=" " alt="" coords="342,36,373,60,403,92,417,115,428,140,441,181,436,182,423,141,413,117,399,95,370,64,338,40"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="134,193,96,183,79,173,64,159,57,139,59,119,65,119,63,138,69,156,82,169,98,178,135,188"/>
+<area shape="poly" id="edge8_Node000005_Node000004" title=" " alt="" coords="136,208,117,218,102,232,96,244,94,258,96,283,90,284,89,258,91,243,98,229,114,214,134,203"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="115,318,148,346,182,361,218,371,216,376,180,366,145,350,112,322"/>
+<area shape="poly" id="edge9_Node000005_Node000006" title=" " alt="" coords="400,201,289,212,234,221,197,233,184,246,171,262,127,286,125,282,167,258,180,243,194,228,233,216,288,206,400,195"/>
+<area shape="poly" id="edge11_Node000006_Node000006" title=" " alt="" coords="483,184,491,187,495,194,486,203,469,205,468,199,484,198,490,194,488,191,481,189"/>
+<area shape="rect" id="Node000007" href="$structWidget.html" title=" " alt="" coords="462,284,530,309"/>
+<area shape="poly" id="edge13_Node000007_Node000006" title=" " alt="" coords="459,216,467,229,493,282,488,285,463,232,455,219"/>
+<area shape="rect" id="Node000008" href="$structDialogEx.html" title=" " alt="" coords="554,284,634,309"/>
+<area shape="poly" id="edge15_Node000008_Node000006" title=" " alt="" coords="483,208,521,228,557,256,585,282,581,286,554,260,518,233,480,213"/>
+<area shape="rect" id="Node000009" href="$structVariableItemList.html" title=" " alt="" coords="182,284,310,309"/>
+<area shape="poly" id="edge17_Node000009_Node000006" title=" " alt="" coords="402,214,367,233,350,247,333,262,282,286,280,281,330,258,347,243,364,228,400,209"/>
+<area shape="rect" id="Node000010" href="$structusbCanView.html" title="Data used by VIEW component." alt="" coords="335,284,438,309"/>
+<area shape="poly" id="edge19_Node000010_Node000006" title=" " alt="" coords="431,220,395,285,390,283,426,218"/>
+<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="467,319,405,350,332,374,331,369,403,346,464,314"/>
+<area shape="poly" id="edge14_Node000001_Node000008" title=" " alt="" coords="582,322,569,338,552,350,516,362,465,371,354,382,353,377,464,366,514,357,549,346,565,334,578,319"/>
+<area shape="poly" id="edge16_Node000001_Node000009" title=" " alt="" coords="260,321,282,370,277,373,255,323"/>
+<area shape="poly" id="edge18_Node000001_Node000010" title=" " alt="" coords="364,320,301,373,297,369,360,316"/>
 </map>

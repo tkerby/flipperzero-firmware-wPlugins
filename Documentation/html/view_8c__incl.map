@@ -1,0 +1,28 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/view.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/view.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="197,5,365,75"/>
+<area shape="rect" id="Node000002" href="$view__i_8h.html" title=" " alt="" coords="243,123,319,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="284,75,284,109,279,109,279,75"/>
+<area shape="rect" id="Node000003" href="$view_8h.html" title=" " alt="" coords="208,196,272,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="277,150,256,185,251,183,272,147"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="296,196,352,221"/>
+<area shape="poly" id="edge15_Node000002_Node000011" title=" " alt="" coords="291,147,312,183,308,186,286,150"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,269,109,295"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="212,224,101,267,99,262,210,219"/>
+<area shape="rect" id="Node000005" href="$icon__animation_8h.html" title=" " alt="" coords="211,343,346,368"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="246,221,275,329,269,330,241,222"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="309,489,379,515"/>
+<area shape="poly" id="edge14_Node000003_Node000006" title=" " alt="" coords="232,223,204,263,173,319,163,350,158,382,161,412,174,440,199,464,230,480,263,490,295,496,295,501,262,496,228,485,196,468,170,443,156,413,153,382,157,349,168,317,199,260,228,220"/>
+<area shape="rect" id="Node000009" href="$canvas_8h.html" title=" " alt="" coords="277,269,357,295"/>
+<area shape="poly" id="edge9_Node000003_Node000009" title=" " alt="" coords="254,219,296,258,293,262,251,223"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="381,269,456,295"/>
+<area shape="poly" id="edge13_Node000003_Node000010" title=" " alt="" coords="270,219,378,262,376,267,268,224"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="286,367,336,476,331,478,282,370"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="184,416,267,441"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="272,370,244,407,240,404,268,367"/>
+<area shape="rect" id="Node000008" href="$icon_8h.html" title=" " alt="" coords="341,416,427,441"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="297,366,357,406,354,411,294,370"/>
+<area shape="poly" id="edge8_Node000008_Node000006" title=" " alt="" coords="380,443,360,479,355,476,375,440"/>
+<area shape="poly" id="edge11_Node000009_Node000005" title=" " alt="" coords="313,296,294,332,289,329,309,294"/>
+<area shape="poly" id="edge10_Node000009_Node000006" title=" " alt="" coords="336,293,362,312,392,340,421,375,441,415,445,429,441,443,419,468,392,486,389,481,416,464,436,440,439,429,436,417,416,378,388,344,358,316,333,297"/>
+<area shape="poly" id="edge12_Node000009_Node000008" title=" " alt="" coords="329,294,360,341,381,402,376,403,355,344,324,296"/>
+</map>

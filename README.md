@@ -71,6 +71,8 @@ This application is based on:
 - XTREME firmware USB-UART bridge application : It has been modified to send data on CAN (via SPI) and not on UART.
 - Longan Labs [Longan_CANFD](https://github.com/Longan-Labs/Longan_CANFD) library : this is the driver for the MCP 2518 CAN transceiver.
 
+**More information on architecture is given in [docs](./Documentation/html/index.html) (cf. previous section).**
+
 Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.
 
 ### Test status

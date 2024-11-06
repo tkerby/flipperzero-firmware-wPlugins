@@ -5,8 +5,8 @@
   @defgroup CAN-DRIVER-ADAPTATION
   @brief Longan Lab's [Longan_CANFD](https://github.com/Longan-Labs/Longan_CANFD) library adaptation files.
   @{
- * @file: SPI.h
- * @brief : bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo shall be OK.
+ * @file SPI.h
+ * @brief Bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo shall be OK.
 */
 #pragma once
 #include <stdint.h>
@@ -23,7 +23,7 @@ typedef uint8_t byte;
 #define SPI_MODE0 SPI_MODE_0
 
 /**
- * @brief Unused structure passed to @SPI.beginTransaction kept to ensure compatibility with Longan Labs library. */
+ * @brief Unused structure passed to @ref SPIClass::beginTransaction kept to ensure compatibility with Longan Labs library. */
 class SPISettings {
 public:
     uint32_t freqHz;

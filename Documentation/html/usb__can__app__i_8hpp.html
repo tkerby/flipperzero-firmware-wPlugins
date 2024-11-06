@@ -76,22 +76,22 @@ $(function() {
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a>  </div>
-  <div class="headertitle"><div class="title">usb_can_app_i.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__MODEL.html">MODEL</a></div></div></div>
+  <div class="headertitle"><div class="title">usb_can_app_i.hpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a></div></div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Application top level header file. It main structures definitions.  
+<p>Application top level header file. It holds main structures definitions related to <a class="el" href="group__MODEL.html">MODEL</a>, <a class="el" href="group__VIEW.html">VIEW</a> and <a class="el" href="group__CONTROLLER.html">CONTROLLER</a>.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="usbCan__scene_8hpp_source.html">scenes/usbCan_scene.hpp</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="usb__can__custom__event_8hpp_source.html">usb_can_custom_event.hpp</a>&quot;</code><br />
-<code>#include &lt;gui/gui.h&gt;</code><br />
-<code>#include &lt;gui/view_dispatcher.h&gt;</code><br />
-<code>#include &lt;gui/scene_manager.h&gt;</code><br />
-<code>#include &lt;gui/modules/submenu.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="gui_8h_source.html">gui/gui.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="view__dispatcher_8h_source.html">gui/view_dispatcher.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="scene__manager_8h_source.html">gui/scene_manager.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="submenu_8h_source.html">gui/modules/submenu.h</a>&gt;</code><br />
 <code>#include &lt;notification/notification_messages.h&gt;</code><br />
-<code>#include &lt;gui/modules/variable_item_list.h&gt;</code><br />
-<code>#include &lt;gui/modules/widget.h&gt;</code><br />
-<code>#include &lt;gui/modules/dialog_ex.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="variable__item__list_8h_source.html">gui/modules/variable_item_list.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="widget_8h_source.html">gui/modules/widget.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="dialog__ex_8h_source.html">gui/modules/dialog_ex.h</a>&gt;</code><br />
 <code>#include &quot;<a class="el" href="mcp2518fd__can_8h_source.html">Longan_CANFD/src/mcp2518fd_can.h</a>&quot;</code><br />
 <code>#include &quot;api_lock.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="furi__hal__usb__cdc_8h_source.html">furi_hal_usb_cdc.h</a>&quot;</code><br />
@@ -100,59 +100,94 @@ Include dependency graph for usb_can_app_i.hpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="usb__can__app__i_8hpp__incl.png" border="0" usemap="#ausb__can__app__i_8hpp" alt=""/></div>
 <map name="ausb__can__app__i_8hpp" id="ausb__can__app__i_8hpp">
-<area shape="rect" title="Application top level header file. It main structures definitions." alt="" coords="1073,5,1218,31"/>
-<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="123,86,315,111"/>
-<area shape="poly" title=" " alt="" coords="1072,25,749,43,539,59,327,81,292,86,292,81,326,76,538,54,748,38,1072,20"/>
-<area shape="rect" title=" " alt="" coords="5,167,165,192"/>
-<area shape="poly" title=" " alt="" coords="1073,21,839,21,536,28,389,35,261,46,165,61,132,70,112,81,100,96,92,115,87,153,81,153,87,113,95,93,109,77,130,65,163,56,260,41,388,30,536,23,839,16,1073,16"/>
-<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="339,86,541,111"/>
-<area shape="poly" title=" " alt="" coords="1072,28,841,49,554,81,518,86,517,81,553,76,840,43,1072,23"/>
-<area shape="rect" title=" " alt="" coords="566,86,645,111"/>
-<area shape="poly" title=" " alt="" coords="1073,26,884,43,770,59,658,81,647,84,646,79,657,76,769,54,883,38,1072,20"/>
-<area shape="rect" title=" " alt="" coords="669,86,832,111"/>
-<area shape="poly" title=" " alt="" coords="1088,33,845,81,821,86,820,81,843,76,1086,28"/>
-<area shape="rect" title=" " alt="" coords="856,86,1035,111"/>
-<area shape="poly" title=" " alt="" coords="1117,33,988,83,986,78,1115,28"/>
-<area shape="rect" title=" " alt="" coords="1059,79,1231,119"/>
-<area shape="poly" title=" " alt="" coords="1148,31,1148,65,1143,65,1143,31"/>
-<area shape="rect" title=" " alt="" coords="1255,79,1414,119"/>
-<area shape="poly" title=" " alt="" coords="1174,28,1278,71,1276,76,1172,33"/>
-<area shape="rect" title=" " alt="" coords="1439,86,1601,111"/>
-<area shape="poly" title=" " alt="" coords="1200,28,1453,81,1451,86,1199,33"/>
-<area shape="rect" title=" " alt="" coords="1625,86,1807,111"/>
-<area shape="poly" title=" " alt="" coords="1218,25,1398,46,1614,76,1643,81,1643,86,1613,81,1398,51,1218,30"/>
-<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="1831,79,2054,119"/>
-<area shape="poly" title=" " alt="" coords="1218,22,1479,42,1818,76,1817,81,1478,47,1218,27"/>
-<area shape="rect" title=" " alt="" coords="2245,86,2333,111"/>
-<area shape="poly" title=" " alt="" coords="1218,18,1732,35,2022,52,2143,63,2234,76,2248,79,2247,85,2233,81,2142,68,2022,57,1731,40,1218,23"/>
-<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="2078,86,2221,111"/>
-<area shape="poly" title=" " alt="" coords="1219,18,1373,22,1583,31,1823,48,2066,76,2091,81,2091,86,2065,81,1823,54,1583,36,1373,27,1218,23"/>
-<area shape="poly" title=" " alt="" coords="200,114,118,162,115,157,198,109"/>
-<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="189,167,379,192"/>
-<area shape="poly" title=" " alt="" coords="230,110,268,154,263,158,226,113"/>
-<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="1842,167,2006,192"/>
-<area shape="poly" title=" " alt="" coords="1941,120,1933,154,1927,152,1936,118"/>
-<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="1738,313,1822,339"/>
-<area shape="poly" title=" " alt="" coords="1895,121,1861,141,1831,168,1812,201,1798,236,1785,300,1780,299,1793,235,1807,198,1827,165,1858,137,1893,117"/>
-<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="2057,313,2111,339"/>
-<area shape="poly" title=" " alt="" coords="1970,117,1996,138,2019,165,2041,199,2058,236,2080,299,2075,301,2053,238,2036,202,2015,168,1992,142,1967,121"/>
-<area shape="poly" title=" " alt="" coords="1914,194,1803,305,1799,301,1910,191"/>
-<area shape="rect" title=" " alt="" coords="1846,313,1933,339"/>
-<area shape="poly" title=" " alt="" coords="1924,193,1898,301,1893,299,1919,192"/>
-<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="1927,240,2039,265"/>
-<area shape="poly" title=" " alt="" coords="1936,191,1967,228,1963,231,1932,194"/>
-<area shape="rect" title=" " alt="" coords="1724,387,1836,427"/>
-<area shape="poly" title=" " alt="" coords="1783,339,1783,373,1777,373,1777,339"/>
-<area shape="poly" title=" " alt="" coords="1951,268,1826,311,1825,306,1949,263"/>
-<area shape="poly" title=" " alt="" coords="1969,267,1917,307,1914,303,1966,263"/>
-<area shape="poly" title=" " alt="" coords="2000,263,2058,303,2055,307,1997,268"/>
-<area shape="rect" title=" " alt="" coords="1957,313,2032,339"/>
-<area shape="poly" title=" " alt="" coords="1987,265,1993,299,1988,300,1982,266"/>
-<area shape="rect" title=" " alt="" coords="2081,394,2151,419"/>
-<area shape="poly" title=" " alt="" coords="2091,338,2108,380,2104,382,2086,340"/>
-<area shape="poly" title=" " alt="" coords="2151,112,2127,339,2122,380,2116,380,2121,338,2146,111"/>
-<area shape="rect" title=" " alt="" coords="2187,167,2274,192"/>
-<area shape="poly" title=" " alt="" coords="2163,110,2211,155,2207,159,2159,113"/>
+<area shape="rect" title="Application top level header file. It holds main structures definitions related to MODEL,..." alt="" coords="1045,5,1190,31"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title="scene definitions : This is the logic between different menus of the applications...." alt="" coords="1415,86,1607,111"/>
+<area shape="poly" title=" " alt="" coords="1175,28,1441,81,1440,86,1174,33"/>
+<area shape="rect" href="scene__manager_8h.html" title=" " alt="" coords="1226,255,1386,280"/>
+<area shape="poly" title=" " alt="" coords="1191,20,1310,27,1444,39,1559,55,1599,65,1621,77,1631,100,1637,136,1634,175,1629,193,1620,208,1605,220,1584,231,1529,246,1464,257,1399,264,1399,258,1463,252,1528,241,1582,226,1602,216,1616,205,1624,191,1629,174,1631,136,1626,101,1617,80,1597,70,1558,60,1444,44,1309,33,1190,25"/>
+<area shape="rect" href="usb__can__custom__event_8hpp.html" title="contains event related to USB CAN Application definitions." alt="" coords="214,86,416,111"/>
+<area shape="poly" title=" " alt="" coords="1045,26,773,46,429,81,393,86,392,81,428,76,773,41,1044,21"/>
+<area shape="rect" href="gui_8h.html" title=" " alt="" coords="106,174,185,199"/>
+<area shape="poly" title=" " alt="" coords="1045,23,787,29,453,40,157,57,60,68,30,74,17,81,9,93,9,104,15,116,27,128,61,149,99,167,97,171,58,154,23,132,11,119,4,106,4,91,13,77,29,69,59,63,157,52,453,35,787,24,1044,18"/>
+<area shape="rect" href="view__dispatcher_8h.html" title=" " alt="" coords="27,86,190,111"/>
+<area shape="poly" title=" " alt="" coords="1045,23,682,38,443,55,202,81,172,86,172,81,201,76,443,50,682,33,1045,18"/>
+<area shape="rect" href="submenu_8h.html" title=" " alt="" coords="646,86,824,111"/>
+<area shape="poly" title=" " alt="" coords="1062,33,804,86,803,81,1061,28"/>
+<area shape="rect" title=" " alt="" coords="1032,79,1204,119"/>
+<area shape="poly" title=" " alt="" coords="1120,31,1120,65,1115,65,1115,31"/>
+<area shape="rect" href="variable__item__list_8h.html" title=" " alt="" coords="849,79,1008,119"/>
+<area shape="poly" title=" " alt="" coords="1091,33,987,76,985,71,1089,28"/>
+<area shape="rect" href="widget_8h.html" title=" " alt="" coords="1228,86,1391,111"/>
+<area shape="poly" title=" " alt="" coords="1146,28,1270,78,1268,83,1144,33"/>
+<area shape="rect" href="dialog__ex_8h.html" title=" " alt="" coords="440,86,622,111"/>
+<area shape="poly" title=" " alt="" coords="1045,30,858,51,634,81,604,86,603,81,633,76,858,46,1044,24"/>
+<area shape="rect" href="mcp2518fd__can_8h.html" title=" " alt="" coords="1681,79,1904,119"/>
+<area shape="poly" title=" " alt="" coords="1191,24,1403,46,1663,76,1668,77,1667,82,1663,81,1402,51,1190,29"/>
+<area shape="rect" title=" " alt="" coords="1928,86,2016,111"/>
+<area shape="poly" title=" " alt="" coords="1191,16,1327,18,1508,26,1712,44,1816,58,1917,76,1930,79,1929,84,1916,81,1815,64,1711,50,1507,32,1326,23,1190,21"/>
+<area shape="rect" href="furi__hal__usb__cdc_8h.html" title=" " alt="" coords="2041,86,2184,111"/>
+<area shape="poly" title=" " alt="" coords="1191,18,1343,22,1552,31,1789,49,2029,76,2054,81,2053,86,2028,81,1788,54,1551,37,1343,27,1190,23"/>
+<area shape="poly" title=" " alt="" coords="1491,114,1450,138,1406,169,1362,208,1327,245,1323,242,1359,204,1403,165,1447,133,1488,109"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="1416,174,1606,199"/>
+<area shape="poly" title=" " alt="" coords="1514,112,1514,160,1508,160,1508,112"/>
+<area shape="rect" title=" " alt="" coords="1168,328,1243,353"/>
+<area shape="poly" title=" " alt="" coords="1291,282,1234,322,1231,318,1288,278"/>
+<area shape="rect" title=" " alt="" coords="1096,563,1166,588"/>
+<area shape="poly" title=" " alt="" coords="1311,280,1319,323,1323,385,1321,419,1315,453,1304,486,1286,516,1264,538,1237,554,1208,564,1180,571,1179,566,1206,559,1235,549,1261,534,1282,513,1299,484,1310,452,1316,418,1318,385,1314,323,1306,281"/>
+<area shape="rect" title=" " alt="" coords="1190,489,1272,515"/>
+<area shape="poly" title=" " alt="" coords="1304,281,1241,477,1236,475,1299,280"/>
+<area shape="rect" href="view__port_8h.html" title=" " alt="" coords="763,255,862,280"/>
+<area shape="poly" title=" " alt="" coords="186,190,750,256,749,261,185,195"/>
+<area shape="rect" href="canvas_8h.html" title=" " alt="" coords="772,328,852,353"/>
+<area shape="poly" title=" " alt="" coords="186,194,759,325,758,330,185,200"/>
+<area shape="rect" title=" " alt="" coords="876,328,980,353"/>
+<area shape="poly" title=" " alt="" coords="832,278,899,318,896,323,829,282"/>
+<area shape="poly" title=" " alt="" coords="815,280,815,314,810,314,810,280"/>
+<area shape="poly" title=" " alt="" coords="820,352,836,385,864,429,901,475,923,495,947,512,981,530,1016,544,1083,562,1082,568,1014,549,978,535,944,517,920,499,897,479,860,432,832,388,815,355"/>
+<area shape="rect" href="icon__animation_8h.html" title=" " alt="" coords="934,409,1093,434"/>
+<area shape="poly" title=" " alt="" coords="842,351,973,401,971,406,840,356"/>
+<area shape="rect" href="icon_8h.html" title=" " alt="" coords="958,489,1043,515"/>
+<area shape="poly" title=" " alt="" coords="826,351,923,439,975,479,972,483,920,443,822,355"/>
+<area shape="poly" title=" " alt="" coords="1024,432,1116,550,1112,553,1020,436"/>
+<area shape="poly" title=" " alt="" coords="1046,431,1187,482,1185,487,1044,437"/>
+<area shape="poly" title=" " alt="" coords="1014,435,1007,476,1002,475,1009,434"/>
+<area shape="poly" title=" " alt="" coords="1022,512,1099,554,1096,558,1020,517"/>
+<area shape="poly" title=" " alt="" coords="162,109,202,116,1212,251,1212,256,201,121,161,114"/>
+<area shape="poly" title=" " alt="" coords="116,110,137,160,132,162,111,113"/>
+<area shape="rect" href="view_8h.html" title=" " alt="" coords="896,255,960,280"/>
+<area shape="poly" title=" " alt="" coords="165,109,874,252,883,254,882,259,873,257,164,114"/>
+<area shape="poly" title=" " alt="" coords="961,274,1155,324,1154,329,960,279"/>
+<area shape="poly" title=" " alt="" coords="956,278,991,296,1033,323,1074,357,1106,400,1123,439,1131,479,1135,549,1130,549,1126,480,1117,440,1102,403,1070,361,1030,327,989,301,953,282"/>
+<area shape="poly" title=" " alt="" coords="931,280,931,314,926,314,926,280"/>
+<area shape="poly" title=" " alt="" coords="911,282,844,323,841,318,908,278"/>
+<area shape="poly" title=" " alt="" coords="947,278,972,299,994,327,1008,361,1014,394,1009,395,1003,363,990,329,968,303,944,282"/>
+<area shape="poly" title=" " alt="" coords="750,109,906,244,903,248,746,113"/>
+<area shape="poly" title=" " alt="" coords="931,119,931,241,926,241,926,119"/>
+<area shape="poly" title=" " alt="" coords="1282,114,1148,169,967,251,964,246,1146,164,1280,109"/>
+<area shape="rect" href="widget__element_8h.html" title=" " alt="" coords="1158,167,1341,207"/>
+<area shape="poly" title=" " alt="" coords="1304,113,1273,157,1269,154,1299,110"/>
+<area shape="poly" title=" " alt="" coords="559,109,889,247,887,252,557,114"/>
+<area shape="rect" href="mcp2518fd__can__dfs_8h.html" title=" " alt="" coords="1740,174,1904,199"/>
+<area shape="poly" title=" " alt="" coords="1801,118,1816,160,1810,161,1796,120"/>
+<area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="1872,328,1956,353"/>
+<area shape="poly" title=" " alt="" coords="1858,117,1891,136,1906,149,1919,165,1933,204,1936,245,1931,283,1924,315,1919,314,1926,283,1930,245,1927,205,1914,168,1903,153,1888,140,1855,121"/>
+<area shape="rect" href="SPI_8h.html" title="Bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo sha..." alt="" coords="1649,328,1704,353"/>
+<area shape="poly" title=" " alt="" coords="1771,121,1750,142,1730,168,1712,206,1698,246,1683,315,1677,314,1693,245,1707,204,1726,165,1746,139,1767,117"/>
+<area shape="poly" title=" " alt="" coords="1831,198,1902,315,1897,318,1826,201"/>
+<area shape="rect" title=" " alt="" coords="1745,328,1832,353"/>
+<area shape="poly" title=" " alt="" coords="1830,199,1842,236,1844,258,1840,281,1829,302,1814,320,1810,317,1824,299,1835,279,1839,258,1837,237,1825,200"/>
+<area shape="rect" href="mcp__can__fd_8h.html" title=" " alt="" coords="1714,255,1826,280"/>
+<area shape="poly" title=" " alt="" coords="1816,201,1787,244,1783,242,1812,198"/>
+<area shape="rect" title=" " alt="" coords="1858,401,1970,441"/>
+<area shape="poly" title=" " alt="" coords="1916,354,1916,388,1911,388,1911,354"/>
+<area shape="poly" title=" " alt="" coords="1714,278,1257,336,1256,330,1713,273"/>
+<area shape="poly" title=" " alt="" coords="1794,278,1879,319,1877,324,1791,282"/>
+<area shape="poly" title=" " alt="" coords="1775,280,1784,314,1779,316,1770,281"/>
+<area shape="poly" title=" " alt="" coords="1756,282,1704,322,1701,317,1753,278"/>
+<area shape="poly" title=" " alt="" coords="1659,356,1533,429,1444,476,1350,517,1261,547,1180,567,1179,561,1259,541,1349,512,1442,471,1531,425,1657,351"/>
+<area shape="poly" title=" " alt="" coords="2102,113,2079,139,2053,175,2032,219,2025,242,2023,266,2023,423,2015,440,1993,456,1960,470,1916,483,1804,507,1670,527,1390,557,1180,574,1180,568,1390,552,1670,522,1803,501,1914,478,1958,465,1990,451,2011,437,2018,422,2018,266,2020,241,2027,217,2049,173,2075,136,2098,110"/>
+<area shape="rect" title=" " alt="" coords="2069,174,2156,199"/>
+<area shape="poly" title=" " alt="" coords="2115,112,2115,160,2110,160,2110,112"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -160,20 +195,20 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="usb__can__app__i_8hpp__dep__incl.png" border="0" usemap="#ausb__can__app__i_8hppdep" alt=""/></div>
 <map name="ausb__can__app__i_8hppdep" id="ausb__can__app__i_8hppdep">
-<area shape="rect" title="Application top level header file. It main structures definitions." alt="" coords="653,5,799,31"/>
-<area shape="rect" href="usbCan__scene__config_8cpp.html" title=" " alt="" coords="159,167,323,207"/>
+<area shape="rect" title="Application top level header file. It holds main structures definitions related to MODEL,..." alt="" coords="653,5,799,31"/>
+<area shape="rect" href="usbCan__scene__config__vcp_8cpp.html" title="Implements SCENE&#45;CONFIG." alt="" coords="159,167,323,207"/>
 <area shape="poly" title=" " alt="" coords="639,23,472,27,277,36,108,54,50,66,31,73,20,80,9,98,11,113,22,126,41,138,96,158,159,172,158,177,95,163,38,143,18,130,6,115,4,97,16,77,29,68,48,61,107,48,276,31,472,21,639,18"/>
-<area shape="rect" href="usbCan__scene__exit__confirm_8cpp.html" title=" " alt="" coords="31,79,195,119"/>
+<area shape="rect" href="usbCan__scene__exit__confirm_8cpp.html" title="Implements SCENE&#45;EXIT&#45;CONFIRM." alt="" coords="31,79,195,119"/>
 <area shape="poly" title=" " alt="" coords="640,30,441,50,206,81,195,83,195,78,206,76,441,45,639,24"/>
 <area shape="rect" href="usbCan__scene__start_8cpp.html" title=" " alt="" coords="219,79,383,119"/>
 <area shape="poly" title=" " alt="" coords="647,36,394,81,384,83,383,78,393,76,646,30"/>
 <area shape="rect" href="usbCan__scene__usb__busy_8cpp.html" title=" " alt="" coords="407,79,571,119"/>
 <area shape="poly" title=" " alt="" coords="679,37,546,81,545,76,678,32"/>
-<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="769,167,933,207"/>
+<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title="Implements SCENE&#45;START." alt="" coords="769,167,933,207"/>
 <area shape="poly" title=" " alt="" coords="748,39,780,77,841,165,837,168,776,80,744,43"/>
-<area shape="rect" href="usb__can__app_8cpp.html" title=" " alt="" coords="1094,174,1227,199"/>
+<area shape="rect" href="usb__can__app_8cpp.html" title="Application main file. It is top level file and application entry (and exit) point...." alt="" coords="1094,174,1227,199"/>
 <area shape="poly" title=" " alt="" coords="813,20,942,27,1087,38,1209,54,1251,64,1274,77,1283,92,1282,107,1274,122,1261,135,1226,159,1190,176,1188,172,1224,154,1258,131,1270,119,1277,106,1278,93,1271,81,1249,69,1208,59,1086,43,942,32,813,25"/>
-<area shape="rect" href="usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="595,174,745,199"/>
+<area shape="rect" href="usb__can__bridge_8cpp.html" title="MODEL component main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus an..." alt="" coords="595,174,745,199"/>
 <area shape="poly" title=" " alt="" coords="745,41,762,78,764,99,759,120,747,138,731,154,697,176,694,172,727,150,743,135,754,118,759,99,756,80,740,43"/>
 <area shape="rect" href="usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="595,86,745,111"/>
 <area shape="poly" title=" " alt="" coords="712,43,680,87,676,84,708,40"/>
@@ -194,27 +229,32 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanConfig.html">UsbCanConfig</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configuration used by <a class="el" href="group__MODEL.html">MODEL</a> to configure USB CDC VCP communication.  <a href="structUsbCanConfig.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structusbCanView.html">usbCanView</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">pouet  <a href="structusbCanView.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data used by <a class="el" href="group__VIEW.html">VIEW</a> component.  <a href="structusbCanView.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanStatus.html">UsbCanStatus</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="group__MODEL.html">MODEL</a> atatus information to be displayed by <a class="el" href="group__VIEW.html">VIEW</a> component  <a href="structUsbCanStatus.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanBridge.html">UsbCanBridge</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Holds <a class="el" href="group__MODEL.html">MODEL</a> component operationnal data and ressources (threads, mutexes,timer)  <a href="structUsbCanBridge.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanAppViews.html">UsbCanAppViews</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Holds <a class="el" href="group__VIEW.html">VIEW</a> component operationnal data and ressources (furi gui objects) allocated in <a class="el" href="usb__can__app_8cpp.html#ae2f2875694a49f1a33d4341f0c2348da">usb_can_app_alloc</a>.  <a href="structUsbCanAppViews.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsbCanApp.html">UsbCanApp</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">main holder. This is the Application root structure holding <a class="el" href="group__MODEL.html">MODEL</a>, <a class="el" href="group__VIEW.html">VIEW</a>, and <a class="el" href="group__CONTROLLER.html">CONTROLLER</a> components operationnal ressources and data.  <a href="structUsbCanApp.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:aede7150dde018d67dc67c52c8ddffee7" id="r_aede7150dde018d67dc67c52c8ddffee7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#aede7150dde018d67dc67c52c8ddffee7">USB_CDC_PKT_LEN</a>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td></tr>
+<tr class="memitem:aede7150dde018d67dc67c52c8ddffee7" id="r_aede7150dde018d67dc67c52c8ddffee7"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#aede7150dde018d67dc67c52c8ddffee7">USB_CDC_PKT_LEN</a>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td></tr>
 <tr class="separator:aede7150dde018d67dc67c52c8ddffee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:ad2a3696f0531e7f87875b5a9e7368809" id="r_ad2a3696f0531e7f87875b5a9e7368809"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#ad2a3696f0531e7f87875b5a9e7368809">usbCanViewCallBack_t</a>) (<a class="el" href="usb__can__custom__event_8hpp.html#aae7f17e3f50b9614a02f134fffb247ba">UsbCanCustomEvent</a> event, void *context)</td></tr>
+<tr class="memitem:ad2a3696f0531e7f87875b5a9e7368809" id="r_ad2a3696f0531e7f87875b5a9e7368809"><td class="memItemLeft" align="right" valign="top"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">typedef</a> <a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#ad2a3696f0531e7f87875b5a9e7368809">usbCanViewCallBack_t</a>) (<a class="el" href="usb__can__custom__event_8hpp.html#aae7f17e3f50b9614a02f134fffb247ba">UsbCanCustomEvent</a> event, <a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context)</td></tr>
 <tr class="separator:ad2a3696f0531e7f87875b5a9e7368809"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -223,6 +263,7 @@ Enumerations</h2></td></tr>
 , <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212ea4f524141270df36b8a311601d48b477d">UsbCanPingTestState</a>
 , <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475">UsbCanNominalState</a>
  }</td></tr>
+<tr class="memdesc:a56fa8446e1ae298f631e2dcd6858212e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Correspond to application mode selected by the user (USB-CAN-BRIDGE, USB-LOOPBACK-TEST, TEST-CAN). <a class="el" href="group__MODEL.html">MODEL</a> component compare <a class="el" href="structUsbCanBridge.html#a4b434670b751d5755a8c94d1525b9aec">UsbCanBridge::st</a> to these values to define its behavior.  <a href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">More...</a><br /></td></tr>
 <tr class="separator:a56fa8446e1ae298f631e2dcd6858212e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ea28af7210165fd74fccaac779aefa2" id="r_a5ea28af7210165fd74fccaac779aefa2"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2">UsbCanAppView</a> { <br />
 &#160;&#160;<a class="el" href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2acd07d7a22afcc17debc8c1c2bb74f950">UsbCanAppViewMenu</a>
@@ -233,10 +274,12 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631">UsbCanAppViewExitConfirm</a>
 <br />
  }</td></tr>
+<tr class="memdesc:a5ea28af7210165fd74fccaac779aefa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Application view identifiers allocated in <br  />
+  <a href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2">More...</a><br /></td></tr>
 <tr class="separator:a5ea28af7210165fd74fccaac779aefa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Application top level header file. It main structures definitions. </p>
+<div class="textblock"><p>Application top level header file. It holds main structures definitions related to <a class="el" href="group__MODEL.html">MODEL</a>, <a class="el" href="group__VIEW.html">VIEW</a> and <a class="el" href="group__CONTROLLER.html">CONTROLLER</a>. </p>
 
 <p class="definition">Definition in file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -247,7 +290,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define USB_CDC_PKT_LEN&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> USB_CDC_PKT_LEN&#160;&#160;&#160;<a class="el" href="furi__hal__usb__cdc_8h.html#ac2ca5aef2b9951222dfadb21704ebc2d">CDC_DATA_SZ</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -264,12 +307,12 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* usbCanViewCallBack_t) (<a class="el" href="usb__can__custom__event_8hpp.html#aae7f17e3f50b9614a02f134fffb247ba">UsbCanCustomEvent</a> event, void *context)</td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">typedef</a> <a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(* usbCanViewCallBack_t) (<a class="el" href="usb__can__custom__event_8hpp.html#aae7f17e3f50b9614a02f134fffb247ba">UsbCanCustomEvent</a> event, <a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00026">26</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00028">28</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>
@@ -281,19 +324,28 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2">UsbCanAppView</a></td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">enum</a> <a class="el" href="usb__can__app__i_8hpp.html#a5ea28af7210165fd74fccaac779aefa2">UsbCanAppView</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Application view identifiers allocated in <br  />
+ </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2acd07d7a22afcc17debc8c1c2bb74f950" name="a5ea28af7210165fd74fccaac779aefa2acd07d7a22afcc17debc8c1c2bb74f950"></a>UsbCanAppViewMenu&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a09dfc508fa621b79d9589e60c1e6e3aa" name="a5ea28af7210165fd74fccaac779aefa2a09dfc508fa621b79d9589e60c1e6e3aa"></a>UsbCanAppViewCfg&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a985d27e0ee4d083802cd1a9609c53082" name="a5ea28af7210165fd74fccaac779aefa2a985d27e0ee4d083802cd1a9609c53082"></a>UsbCanAppViewUsbCan&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2ab09a34b2d12d531bf1d729b4d4d1600a" name="a5ea28af7210165fd74fccaac779aefa2ab09a34b2d12d531bf1d729b4d4d1600a"></a>UsbCanAppViewUsbBusy&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631" name="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631"></a>UsbCanAppViewExitConfirm&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2acd07d7a22afcc17debc8c1c2bb74f950" name="a5ea28af7210165fd74fccaac779aefa2acd07d7a22afcc17debc8c1c2bb74f950"></a>UsbCanAppViewMenu&#160;</td><td class="fielddoc"><p>identifier used for main menu view (App mode selection menu) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a09dfc508fa621b79d9589e60c1e6e3aa" name="a5ea28af7210165fd74fccaac779aefa2a09dfc508fa621b79d9589e60c1e6e3aa"></a>UsbCanAppViewCfg&#160;</td><td class="fielddoc"><p>identifier used for USB link configuration menu </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a985d27e0ee4d083802cd1a9609c53082" name="a5ea28af7210165fd74fccaac779aefa2a985d27e0ee4d083802cd1a9609c53082"></a>UsbCanAppViewUsbCan&#160;</td><td class="fielddoc"><p>identifier used for application specific view implemented in <a class="el" href="group__VIEW.html">VIEW</a> </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2ab09a34b2d12d531bf1d729b4d4d1600a" name="a5ea28af7210165fd74fccaac779aefa2ab09a34b2d12d531bf1d729b4d4d1600a"></a>UsbCanAppViewUsbBusy&#160;</td><td class="fielddoc"><p>identifier used for error pop up message (appearing when USB CDC link is already in use) <br  />
+ </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631" name="a5ea28af7210165fd74fccaac779aefa2a1f5e34ee27863f95fc16d31b40a30631"></a>UsbCanAppViewExitConfirm&#160;</td><td class="fielddoc"><p>identifier used for exit confirmation message (appearing when user press back key from main menu) </p>
+</td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00085">85</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00097">97</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>
@@ -304,17 +356,22 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a></td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">enum</a> <a class="el" href="usb__can__app__i_8hpp.html#a56fa8446e1ae298f631e2dcd6858212e">usbCanState</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Correspond to application mode selected by the user (USB-CAN-BRIDGE, USB-LOOPBACK-TEST, TEST-CAN). <a class="el" href="group__MODEL.html">MODEL</a> component compare <a class="el" href="structUsbCanBridge.html#a4b434670b751d5755a8c94d1525b9aec">UsbCanBridge::st</a> to these values to define its behavior. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212ea85ccb7347b330528e23d574fa5a760c5" name="a56fa8446e1ae298f631e2dcd6858212ea85ccb7347b330528e23d574fa5a760c5"></a>UsbCanLoopBackTestState&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212ea4f524141270df36b8a311601d48b477d" name="a56fa8446e1ae298f631e2dcd6858212ea4f524141270df36b8a311601d48b477d"></a>UsbCanPingTestState&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475" name="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475"></a>UsbCanNominalState&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212ea85ccb7347b330528e23d574fa5a760c5" name="a56fa8446e1ae298f631e2dcd6858212ea85ccb7347b330528e23d574fa5a760c5"></a>UsbCanLoopBackTestState&#160;</td><td class="fielddoc"><p>USB-LOOPBACK-TEST </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212ea4f524141270df36b8a311601d48b477d" name="a56fa8446e1ae298f631e2dcd6858212ea4f524141270df36b8a311601d48b477d"></a>UsbCanPingTestState&#160;</td><td class="fielddoc"><p>TEST-CAN </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475" name="a56fa8446e1ae298f631e2dcd6858212eae349d87ed86f42a04cc2dd03c3328475"></a>UsbCanNominalState&#160;</td><td class="fielddoc"><p>USB-CAN-BRIDGE (main mode) </p>
+</td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00040">40</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usb__can__app__i_8hpp_source.html#l00045">45</a> of file <a class="el" href="usb__can__app__i_8hpp_source.html">usb_can_app_i.hpp</a>.</p>
 
 </div>
 </div>

@@ -94,7 +94,7 @@ Include dependency graph for mcp_can_fd.h:</div>
 <area shape="rect" title=" " alt="" coords="129,5,306,45"/>
 <area shape="rect" href="Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="30,93,114,119"/>
 <area shape="poly" title=" " alt="" coords="184,48,107,89,104,84,181,43"/>
-<area shape="rect" href="SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="143,93,198,119"/>
+<area shape="rect" href="SPI_8h.html" title="Bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo sha..." alt="" coords="143,93,198,119"/>
 <area shape="poly" title=" " alt="" coords="208,47,187,83,182,80,204,44"/>
 <area shape="rect" title=" " alt="" coords="222,93,309,119"/>
 <area shape="poly" title=" " alt="" coords="231,44,253,80,249,83,227,47"/>
@@ -120,21 +120,21 @@ This graph shows which files directly or indirectly include this file:</div>
 <area shape="poly" title=" " alt="" coords="625,147,625,181,619,181,619,147"/>
 <area shape="rect" href="mcp2518fd__can_8cpp.html" title=" " alt="" coords="407,269,629,309"/>
 <area shape="poly" title=" " alt="" coords="590,232,543,271,539,267,587,228"/>
-<area shape="rect" href="usb__can__app__i_8hpp.html" title="Application top level header file. It main structures definitions." alt="" coords="653,277,799,302"/>
+<area shape="rect" href="usb__can__app__i_8hpp.html" title="Application top level header file. It holds main structures definitions related to MODEL,..." alt="" coords="653,277,799,302"/>
 <area shape="poly" title=" " alt="" coords="657,228,713,274,710,278,654,232"/>
-<area shape="rect" href="usbCan__scene__config_8cpp.html" title=" " alt="" coords="159,445,323,485"/>
+<area shape="rect" href="usbCan__scene__config__vcp_8cpp.html" title="Implements SCENE&#45;CONFIG." alt="" coords="159,445,323,485"/>
 <area shape="poly" title=" " alt="" coords="667,307,641,312,521,317,321,321,218,325,126,332,56,344,33,351,20,359,9,376,11,391,22,405,41,417,96,437,159,450,158,455,94,442,38,422,18,409,6,393,4,375,16,355,31,346,55,338,125,327,217,320,321,315,521,311,640,307,666,302"/>
-<area shape="rect" href="usbCan__scene__exit__confirm_8cpp.html" title=" " alt="" coords="31,357,195,397"/>
+<area shape="rect" href="usbCan__scene__exit__confirm_8cpp.html" title="Implements SCENE&#45;EXIT&#45;CONFIRM." alt="" coords="31,357,195,397"/>
 <area shape="poly" title=" " alt="" coords="665,307,641,312,519,329,424,337,328,344,206,360,195,362,195,356,206,355,328,339,423,331,519,323,640,307,664,302"/>
 <area shape="rect" href="usbCan__scene__start_8cpp.html" title=" " alt="" coords="219,357,383,397"/>
 <area shape="poly" title=" " alt="" coords="662,308,641,312,395,360,384,362,383,357,393,355,640,307,661,302"/>
 <area shape="rect" href="usbCan__scene__usb__busy_8cpp.html" title=" " alt="" coords="407,357,571,397"/>
 <area shape="poly" title=" " alt="" coords="682,309,542,360,540,355,680,304"/>
-<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title=" " alt="" coords="769,445,933,485"/>
+<area shape="rect" href="usbCan__scene__usb__can_8cpp.html" title="Implements SCENE&#45;START." alt="" coords="769,445,933,485"/>
 <area shape="poly" title=" " alt="" coords="746,311,780,356,841,444,837,447,776,359,742,315"/>
-<area shape="rect" href="usb__can__app_8cpp.html" title=" " alt="" coords="1094,453,1227,478"/>
+<area shape="rect" href="usb__can__app_8cpp.html" title="Application main file. It is top level file and application entry (and exit) point...." alt="" coords="1094,453,1227,478"/>
 <area shape="poly" title=" " alt="" coords="813,292,942,301,1087,314,1209,332,1251,343,1275,355,1283,371,1282,386,1274,400,1261,414,1227,437,1191,455,1188,450,1224,433,1258,410,1270,397,1277,385,1278,372,1271,359,1249,348,1208,337,1086,319,942,306,813,298"/>
-<area shape="rect" href="usb__can__bridge_8cpp.html" title="Application main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus and vi..." alt="" coords="595,453,745,478"/>
+<area shape="rect" href="usb__can__bridge_8cpp.html" title="MODEL component main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus an..." alt="" coords="595,453,745,478"/>
 <area shape="poly" title=" " alt="" coords="745,313,762,353,765,376,759,398,747,417,731,433,697,455,694,450,727,428,743,414,754,396,759,376,757,354,740,315"/>
 <area shape="rect" href="usb__can__bridge_8hpp.html" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="595,365,745,390"/>
 <area shape="poly" title=" " alt="" coords="713,315,680,366,676,363,709,312"/>
@@ -159,23 +159,23 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a828ca6464d281c8b2a780169ac2c6318" id="r_a828ca6464d281c8b2a780169ac2c6318"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a828ca6464d281c8b2a780169ac2c6318">CAN_OK</a>&#160;&#160;&#160;(0)</td></tr>
+<tr class="memitem:a828ca6464d281c8b2a780169ac2c6318" id="r_a828ca6464d281c8b2a780169ac2c6318"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a828ca6464d281c8b2a780169ac2c6318">CAN_OK</a>&#160;&#160;&#160;(0)</td></tr>
 <tr class="separator:a828ca6464d281c8b2a780169ac2c6318"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00b48d1aebc2f5e5c344b6cafb664826" id="r_a00b48d1aebc2f5e5c344b6cafb664826"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a00b48d1aebc2f5e5c344b6cafb664826">CAN_FAILINIT</a>&#160;&#160;&#160;(1)</td></tr>
+<tr class="memitem:a00b48d1aebc2f5e5c344b6cafb664826" id="r_a00b48d1aebc2f5e5c344b6cafb664826"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a00b48d1aebc2f5e5c344b6cafb664826">CAN_FAILINIT</a>&#160;&#160;&#160;(1)</td></tr>
 <tr class="separator:a00b48d1aebc2f5e5c344b6cafb664826"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d33bedb210a5fd0605e73e4a985aeac" id="r_a7d33bedb210a5fd0605e73e4a985aeac"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a7d33bedb210a5fd0605e73e4a985aeac">CAN_FAILTX</a>&#160;&#160;&#160;(2)</td></tr>
+<tr class="memitem:a7d33bedb210a5fd0605e73e4a985aeac" id="r_a7d33bedb210a5fd0605e73e4a985aeac"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a7d33bedb210a5fd0605e73e4a985aeac">CAN_FAILTX</a>&#160;&#160;&#160;(2)</td></tr>
 <tr class="separator:a7d33bedb210a5fd0605e73e4a985aeac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88dd5035f1fa5b6070409d2cec9a2e2c" id="r_a88dd5035f1fa5b6070409d2cec9a2e2c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a88dd5035f1fa5b6070409d2cec9a2e2c">CAN_MSGAVAIL</a>&#160;&#160;&#160;(3)</td></tr>
+<tr class="memitem:a88dd5035f1fa5b6070409d2cec9a2e2c" id="r_a88dd5035f1fa5b6070409d2cec9a2e2c"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a88dd5035f1fa5b6070409d2cec9a2e2c">CAN_MSGAVAIL</a>&#160;&#160;&#160;(3)</td></tr>
 <tr class="separator:a88dd5035f1fa5b6070409d2cec9a2e2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4e14f8d900933e330aa7621d0bcf9d9" id="r_af4e14f8d900933e330aa7621d0bcf9d9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#af4e14f8d900933e330aa7621d0bcf9d9">CAN_NOMSG</a>&#160;&#160;&#160;(4)</td></tr>
+<tr class="memitem:af4e14f8d900933e330aa7621d0bcf9d9" id="r_af4e14f8d900933e330aa7621d0bcf9d9"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#af4e14f8d900933e330aa7621d0bcf9d9">CAN_NOMSG</a>&#160;&#160;&#160;(4)</td></tr>
 <tr class="separator:af4e14f8d900933e330aa7621d0bcf9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f666ae6ade9a658c5dbb48a9839f11d" id="r_a4f666ae6ade9a658c5dbb48a9839f11d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a4f666ae6ade9a658c5dbb48a9839f11d">CAN_CTRLERROR</a>&#160;&#160;&#160;(5)</td></tr>
+<tr class="memitem:a4f666ae6ade9a658c5dbb48a9839f11d" id="r_a4f666ae6ade9a658c5dbb48a9839f11d"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a4f666ae6ade9a658c5dbb48a9839f11d">CAN_CTRLERROR</a>&#160;&#160;&#160;(5)</td></tr>
 <tr class="separator:a4f666ae6ade9a658c5dbb48a9839f11d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5e00242f26cd33398411abd5955a41c" id="r_ad5e00242f26cd33398411abd5955a41c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#ad5e00242f26cd33398411abd5955a41c">CAN_GETTXBFTIMEOUT</a>&#160;&#160;&#160;(6)</td></tr>
+<tr class="memitem:ad5e00242f26cd33398411abd5955a41c" id="r_ad5e00242f26cd33398411abd5955a41c"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#ad5e00242f26cd33398411abd5955a41c">CAN_GETTXBFTIMEOUT</a>&#160;&#160;&#160;(6)</td></tr>
 <tr class="separator:ad5e00242f26cd33398411abd5955a41c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeaafe3b2fec30de0075ff07fbf55d1c0" id="r_aeaafe3b2fec30de0075ff07fbf55d1c0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#aeaafe3b2fec30de0075ff07fbf55d1c0">CAN_SENDMSGTIMEOUT</a>&#160;&#160;&#160;(7)</td></tr>
+<tr class="memitem:aeaafe3b2fec30de0075ff07fbf55d1c0" id="r_aeaafe3b2fec30de0075ff07fbf55d1c0"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#aeaafe3b2fec30de0075ff07fbf55d1c0">CAN_SENDMSGTIMEOUT</a>&#160;&#160;&#160;(7)</td></tr>
 <tr class="separator:aeaafe3b2fec30de0075ff07fbf55d1c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29140a6136288e3eabd7558d57152da1" id="r_a29140a6136288e3eabd7558d57152da1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a29140a6136288e3eabd7558d57152da1">CAN_FAIL</a>&#160;&#160;&#160;(0xff)</td></tr>
+<tr class="memitem:a29140a6136288e3eabd7558d57152da1" id="r_a29140a6136288e3eabd7558d57152da1"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mcp__can__fd_8h.html#a29140a6136288e3eabd7558d57152da1">CAN_FAIL</a>&#160;&#160;&#160;(0xff)</td></tr>
 <tr class="separator:a29140a6136288e3eabd7558d57152da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -228,7 +228,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_CTRLERROR&#160;&#160;&#160;(5)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_CTRLERROR&#160;&#160;&#160;(5)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -244,7 +244,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_FAIL&#160;&#160;&#160;(0xff)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_FAIL&#160;&#160;&#160;(0xff)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -260,7 +260,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_FAILINIT&#160;&#160;&#160;(1)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_FAILINIT&#160;&#160;&#160;(1)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -276,7 +276,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_FAILTX&#160;&#160;&#160;(2)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_FAILTX&#160;&#160;&#160;(2)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -292,7 +292,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_GETTXBFTIMEOUT&#160;&#160;&#160;(6)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_GETTXBFTIMEOUT&#160;&#160;&#160;(6)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -308,7 +308,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_MSGAVAIL&#160;&#160;&#160;(3)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_MSGAVAIL&#160;&#160;&#160;(3)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -324,7 +324,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_NOMSG&#160;&#160;&#160;(4)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_NOMSG&#160;&#160;&#160;(4)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -340,7 +340,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_OK&#160;&#160;&#160;(0)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_OK&#160;&#160;&#160;(0)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -356,7 +356,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define CAN_SENDMSGTIMEOUT&#160;&#160;&#160;(7)</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> CAN_SENDMSGTIMEOUT&#160;&#160;&#160;(7)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -373,7 +373,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="mcp__can__fd_8h.html#a3ad450fa9b74c8d9fc57d81124acf08c">MCP_BITTIME_SETUP</a></td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">enum</a> <a class="el" href="mcp__can__fd_8h.html#a3ad450fa9b74c8d9fc57d81124acf08c">MCP_BITTIME_SETUP</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -411,7 +411,7 @@ Enumerations</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="mcp__can__fd_8h.html#affe36495571420c007311bed9a921771">MCP_CLOCK_T</a></td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">enum</a> <a class="el" href="mcp__can__fd_8h.html#affe36495571420c007311bed9a921771">MCP_CLOCK_T</a></td>
         </tr>
       </table>
 </div><div class="memdoc">

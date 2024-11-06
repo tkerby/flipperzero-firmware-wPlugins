@@ -5,5 +5,7 @@ var searchData=
   ['_5f_5ffree_5fflash_5fstart_5f_5f_2',['__free_flash_start__',['../furi__hal__flash_8c.html#a3c67dfbc3a951fc9b9bdf1671d02c745',1,'furi_hal_flash.c']]],
   ['_5f_5fsram2a_5ffree_5f_5f_3',['__sram2a_free__',['../furi__hal__memory_8c.html#a95bcb3b62a4194a7bef14b4c3bde933e',1,'furi_hal_memory.c']]],
   ['_5f_5fsram2a_5fstart_5f_5f_4',['__sram2a_start__',['../furi__hal__memory_8c.html#addb3fe8e935e81e7e5ffbcd1fca231a3',1,'furi_hal_memory.c']]],
-  ['_5f_5fsram2b_5fstart_5f_5f_5',['__sram2b_start__',['../furi__hal__memory_8c.html#a74b1738c3f25bb706117328659adf79d',1,'furi_hal_memory.c']]]
+  ['_5f_5fsram2b_5fstart_5f_5f_5',['__sram2b_start__',['../furi__hal__memory_8c.html#a74b1738c3f25bb706117328659adf79d',1,'furi_hal_memory.c']]],
+  ['_5fidx_5flast_6',['_idx_last',['../structBrowserWorker.html#a5f31efb287c9f00e51d31cb02bad2f41',1,'BrowserWorker']]],
+  ['_5fitem_5fsel_5fidx_7',['_item_sel_idx',['../structBrowserWorker.html#a6de62777bf59a007ab0382e079b0e9fe',1,'BrowserWorker']]]
 ];

@@ -4,7 +4,7 @@
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="195,46,195,79,189,79,189,46"/>
 <area shape="rect" id="Node000003" href="$Arduino_8h.html" title="used to not provoke inclusion error in Longan labs library. delay() macro is redefined to call furi d..." alt="" coords="19,240,103,265"/>
 <area shape="poly" id="edge11_Node000001_Node000003" title=" " alt="" coords="154,48,125,68,100,95,83,128,72,163,64,227,59,226,67,162,78,126,95,92,121,64,151,43"/>
-<area shape="rect" id="Node000007" href="$SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="338,240,393,265"/>
+<area shape="rect" id="Node000007" href="$SPI_8h.html" title="Bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo sha..." alt="" coords="338,240,393,265"/>
 <area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="228,43,258,65,287,92,312,126,333,162,360,226,355,228,328,165,308,128,283,95,255,69,225,48"/>
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="179,121,126,168,78,230,74,227,122,165,175,117"/>
 <area shape="rect" id="Node000005" title=" " alt="" coords="227,240,314,265"/>

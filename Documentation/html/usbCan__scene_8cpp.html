@@ -78,9 +78,12 @@ $(function() {
   <div class="summary">
 <a href="#define-members">Macros</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">usbCan_scene.cpp File Reference</div></div>
+  <div class="headertitle"><div class="title">usbCan_scene.cpp File Reference<div class="ingroups"><a class="el" href="group__APP.html">APP</a> &raquo; <a class="el" href="group__CONTROLLER.html">CONTROLLER</a></div></div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>scene definitions : This is the logic between different menus of the applications. These scenes permit to bind their corresponding view (cf. <a class="el" href="group__VIEW.html">VIEW</a>, in particular usb CAN view) to <a class="el" href="group__MODEL.html">MODEL</a> component.  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="usbCan__scene_8hpp_source.html">usbCan_scene.hpp</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="usbCan__scene__config_8hpp_source.html">usbCan_scene_config.hpp</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
@@ -88,14 +91,20 @@ Include dependency graph for usbCan_scene.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="usbCan__scene_8cpp__incl.png" border="0" usemap="#ascenes_2usbCan__scene_8cpp" alt=""/></div>
 <map name="ascenes_2usbCan__scene_8cpp" id="ascenes_2usbCan__scene_8cpp">
-<area shape="rect" title=" " alt="" coords="134,5,325,31"/>
-<area shape="rect" href="usbCan__scene_8hpp.html" title=" " alt="" coords="103,79,246,104"/>
-<area shape="poly" title=" " alt="" coords="222,33,194,69,190,66,218,29"/>
-<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="189,152,379,177"/>
-<area shape="poly" title=" " alt="" coords="238,30,260,78,280,138,275,139,255,80,233,32"/>
-<area shape="rect" title=" " alt="" coords="5,152,165,177"/>
-<area shape="poly" title=" " alt="" coords="162,106,112,145,109,141,159,102"/>
-<area shape="poly" title=" " alt="" coords="194,102,256,142,253,147,191,106"/>
+<area shape="rect" title="scene definitions : This is the logic between different menus of the applications...." alt="" coords="189,5,379,31"/>
+<area shape="rect" href="usbCan__scene_8hpp.html" title="scene definitions : This is the logic between different menus of the applications...." alt="" coords="158,79,301,104"/>
+<area shape="poly" title=" " alt="" coords="277,33,249,69,244,66,273,29"/>
+<area shape="rect" href="usbCan__scene__config_8hpp.html" title=" " alt="" coords="244,152,433,177"/>
+<area shape="poly" title=" " alt="" coords="292,30,314,78,334,138,329,139,310,80,288,32"/>
+<area shape="rect" href="scene__manager_8h.html" title=" " alt="" coords="60,152,220,177"/>
+<area shape="poly" title=" " alt="" coords="217,106,167,145,164,141,213,102"/>
+<area shape="poly" title=" " alt="" coords="248,102,311,142,308,147,245,106"/>
+<area shape="rect" title=" " alt="" coords="5,225,80,251"/>
+<area shape="poly" title=" " alt="" coords="126,180,71,219,68,215,123,175"/>
+<area shape="rect" title=" " alt="" coords="105,225,175,251"/>
+<area shape="poly" title=" " alt="" coords="143,178,143,212,137,212,137,178"/>
+<area shape="rect" title=" " alt="" coords="200,225,283,251"/>
+<area shape="poly" title=" " alt="" coords="158,175,215,215,212,219,155,180"/>
 </map>
 </div>
 </div>
@@ -103,25 +112,29 @@ Include dependency graph for usbCan_scene.cpp:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;prefix##_scene_##name##_on_enter,</td></tr>
+<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>,  name,  id)&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_enter</a>,</td></tr>
 <tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;prefix##_scene_##name##_on_event,</td></tr>
+<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>,  name,  id)&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_event</a>,</td></tr>
 <tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(prefix,  name,  id)&#160;&#160;&#160;prefix##_scene_##name##_on_exit,</td></tr>
+<tr class="memitem:a8776d4cf7e872a390c03ef324bfda767" id="r_a8776d4cf7e872a390c03ef324bfda767"><td class="memItemLeft" align="right" valign="top">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a8776d4cf7e872a390c03ef324bfda767">ADD_SCENE</a>(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>,  name,  id)&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_exit</a>,</td></tr>
 <tr class="separator:a8776d4cf7e872a390c03ef324bfda767"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:acd3b6a32cb933a60a13c202f6995e66c" id="r_acd3b6a32cb933a60a13c202f6995e66c"><td class="memItemLeft" align="right" valign="top">void(*const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#acd3b6a32cb933a60a13c202f6995e66c">usb_can_scene_on_enter_handlers</a> [])(void *)</td></tr>
+<tr class="memitem:acd3b6a32cb933a60a13c202f6995e66c" id="r_acd3b6a32cb933a60a13c202f6995e66c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#acd3b6a32cb933a60a13c202f6995e66c">usb_can_scene_on_enter_handlers</a> [])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *)</td></tr>
 <tr class="separator:acd3b6a32cb933a60a13c202f6995e66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44ccd39aeb40062329739cba59c91917" id="r_a44ccd39aeb40062329739cba59c91917"><td class="memItemLeft" align="right" valign="top">bool(*const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a44ccd39aeb40062329739cba59c91917">usb_can_scene_on_event_handlers</a> [])(void *context, SceneManagerEvent event)</td></tr>
+<tr class="memitem:a44ccd39aeb40062329739cba59c91917" id="r_a44ccd39aeb40062329739cba59c91917"><td class="memItemLeft" align="right" valign="top"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">bool</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a44ccd39aeb40062329739cba59c91917">usb_can_scene_on_event_handlers</a> [])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context, <a class="el" href="structSceneManagerEvent.html">SceneManagerEvent</a> event)</td></tr>
 <tr class="separator:a44ccd39aeb40062329739cba59c91917"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1a7c2beb0f2274c7b84937a68d159a6" id="r_ac1a7c2beb0f2274c7b84937a68d159a6"><td class="memItemLeft" align="right" valign="top">void(*const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#ac1a7c2beb0f2274c7b84937a68d159a6">usb_can_scene_on_exit_handlers</a> [])(void *context)</td></tr>
+<tr class="memitem:ac1a7c2beb0f2274c7b84937a68d159a6" id="r_ac1a7c2beb0f2274c7b84937a68d159a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#ac1a7c2beb0f2274c7b84937a68d159a6">usb_can_scene_on_exit_handlers</a> [])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context)</td></tr>
 <tr class="separator:ac1a7c2beb0f2274c7b84937a68d159a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38a42bbbe31579a83b20680bb44448d3" id="r_a38a42bbbe31579a83b20680bb44448d3"><td class="memItemLeft" align="right" valign="top">const SceneManagerHandlers&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="usbCan__scene_8cpp.html#a38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a></td></tr>
-<tr class="separator:a38a42bbbe31579a83b20680bb44448d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga38a42bbbe31579a83b20680bb44448d3" id="r_ga38a42bbbe31579a83b20680bb44448d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a> <a class="el" href="structSceneManagerHandlers.html">SceneManagerHandlers</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__CONTROLLER.html#ga38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a></td></tr>
+<tr class="separator:ga38a42bbbe31579a83b20680bb44448d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Macro Definition Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>scene definitions : This is the logic between different menus of the applications. These scenes permit to bind their corresponding view (cf. <a class="el" href="group__VIEW.html">VIEW</a>, in particular usb CAN view) to <a class="el" href="group__MODEL.html">MODEL</a> component. </p>
+
+<p class="definition">Definition in file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
 <a id="a8776d4cf7e872a390c03ef324bfda767" name="a8776d4cf7e872a390c03ef324bfda767"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8776d4cf7e872a390c03ef324bfda767">&#9670;&#160;</a></span>ADD_SCENE <span class="overload">[1/3]</span></h2>
 
@@ -129,10 +142,10 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define ADD_SCENE</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> ADD_SCENE</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
+          <td class="paramname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -149,12 +162,15 @@ Variables</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;prefix##_scene_##name##_on_enter,</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_enter</a>,</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Generate scene on_enter handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a5547a56127c355c5c19610ebf245cacc">SceneManagerHandlers::on_enter_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_event handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a3c822ace00b47dc62f28b13a6c628008">SceneManagerHandlers::on_event_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_exit handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#ab268040309492dd6efa60c7de3b3cfea">SceneManagerHandlers::on_exit_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00004">4</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00009">9</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>
@@ -165,10 +181,10 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define ADD_SCENE</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> ADD_SCENE</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
+          <td class="paramname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -185,12 +201,15 @@ Variables</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;prefix##_scene_##name##_on_event,</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_event</a>,</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Generate scene on_enter handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a5547a56127c355c5c19610ebf245cacc">SceneManagerHandlers::on_enter_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_event handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a3c822ace00b47dc62f28b13a6c628008">SceneManagerHandlers::on_event_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_exit handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#ab268040309492dd6efa60c7de3b3cfea">SceneManagerHandlers::on_exit_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00004">4</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00009">9</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>
@@ -201,10 +220,10 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define ADD_SCENE</td>
+          <td class="memname">#<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">define</a> ADD_SCENE</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">prefix, </td>
+          <td class="paramname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -221,42 +240,19 @@ Variables</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;prefix##_scene_##name##_on_exit,</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">prefix</a>##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_scene_</a>##name##<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">_on_exit</a>,</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Generate scene on_enter handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a5547a56127c355c5c19610ebf245cacc">SceneManagerHandlers::on_enter_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_event handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#a3c822ace00b47dc62f28b13a6c628008">SceneManagerHandlers::on_event_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>.</p>
+<p>Generate scene on_exit handlers array to be passed <a class="el" href="structSceneManagerHandlers.html#ab268040309492dd6efa60c7de3b3cfea">SceneManagerHandlers::on_exit_handlers</a>. It fills this array with function names generated in <a class="el" href="usbCan__scene_8hpp.html">usbCan_scene.hpp</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00004">4</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00009">9</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Variable Documentation</h2>
-<a id="a38a42bbbe31579a83b20680bb44448d3" name="a38a42bbbe31579a83b20680bb44448d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38a42bbbe31579a83b20680bb44448d3">&#9670;&#160;</a></span>usb_can_scene_handlers</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const SceneManagerHandlers usb_can_scene_handlers</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
-<div class="line">    .on_enter_handlers = <a class="code hl_variable" href="usbCan__scene_8cpp.html#acd3b6a32cb933a60a13c202f6995e66c">usb_can_scene_on_enter_handlers</a>,</div>
-<div class="line">    .on_event_handlers = <a class="code hl_variable" href="usbCan__scene_8cpp.html#a44ccd39aeb40062329739cba59c91917">usb_can_scene_on_event_handlers</a>,</div>
-<div class="line">    .on_exit_handlers = <a class="code hl_variable" href="usbCan__scene_8cpp.html#ac1a7c2beb0f2274c7b84937a68d159a6">usb_can_scene_on_exit_handlers</a>,</div>
-<div class="line">    .scene_num = <a class="code hl_enumvalue" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a>,</div>
-<div class="line">}</div>
-<div class="ttc" id="ausbCan__scene_8cpp_html_a44ccd39aeb40062329739cba59c91917"><div class="ttname"><a href="usbCan__scene_8cpp.html#a44ccd39aeb40062329739cba59c91917">usb_can_scene_on_event_handlers</a></div><div class="ttdeci">bool(*const usb_can_scene_on_event_handlers[])(void *context, SceneManagerEvent event)</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8cpp_source.html#l00012">usbCan_scene.cpp:12</a></div></div>
-<div class="ttc" id="ausbCan__scene_8cpp_html_ac1a7c2beb0f2274c7b84937a68d159a6"><div class="ttname"><a href="usbCan__scene_8cpp.html#ac1a7c2beb0f2274c7b84937a68d159a6">usb_can_scene_on_exit_handlers</a></div><div class="ttdeci">void(*const usb_can_scene_on_exit_handlers[])(void *context)</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8cpp_source.html#l00019">usbCan_scene.cpp:19</a></div></div>
-<div class="ttc" id="ausbCan__scene_8cpp_html_acd3b6a32cb933a60a13c202f6995e66c"><div class="ttname"><a href="usbCan__scene_8cpp.html#acd3b6a32cb933a60a13c202f6995e66c">usb_can_scene_on_enter_handlers</a></div><div class="ttdeci">void(*const usb_can_scene_on_enter_handlers[])(void *)</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8cpp_source.html#l00005">usbCan_scene.cpp:5</a></div></div>
-<div class="ttc" id="ausbCan__scene_8hpp_html_a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b"><div class="ttname"><a href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a></div><div class="ttdeci">@ usb_canSceneNum</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8hpp_source.html#l00009">usbCan_scene.hpp:9</a></div></div>
-</div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00025">25</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
-
-</div>
-</div>
 <a id="acd3b6a32cb933a60a13c202f6995e66c" name="acd3b6a32cb933a60a13c202f6995e66c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acd3b6a32cb933a60a13c202f6995e66c">&#9670;&#160;</a></span>usb_can_scene_on_enter_handlers</h2>
 
@@ -264,9 +260,9 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void(*const usb_can_scene_on_enter_handlers[])(void *) </td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a> usb_can_scene_on_enter_handlers[])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *) </td>
           <td>(</td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -275,7 +271,7 @@ Variables</h2></td></tr>
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div>
 <div class="line">}</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00005">5</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00010">10</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>
@@ -286,15 +282,15 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool(*const usb_can_scene_on_event_handlers[])(void *context, SceneManagerEvent event) </td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">bool</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a> usb_can_scene_on_event_handlers[])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context, <a class="el" href="structSceneManagerEvent.html">SceneManagerEvent</a> event) </td>
           <td>(</td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *&#160;</td>
           <td class="paramname"><em>context</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">SceneManagerEvent&#160;</td>
+          <td class="paramtype"><a class="el" href="structSceneManagerEvent.html">SceneManagerEvent</a>&#160;</td>
           <td class="paramname"><em>event</em>&#160;</td>
         </tr>
         <tr>
@@ -307,7 +303,7 @@ Variables</h2></td></tr>
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div>
 <div class="line">}</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00012">12</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00017">17</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>
@@ -318,9 +314,9 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void(*const usb_can_scene_on_exit_handlers[])(void *context) </td>
+          <td class="memname"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a>(*<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">const</a> usb_can_scene_on_exit_handlers[])(<a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *context) </td>
           <td>(</td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype"><a class="el" href="furi__hal__usb__hid_8c.html#a3ed6e6c91c0b672a428f3f627dfd148b">void</a> *&#160;</td>
           <td class="paramname"><em>context</em></td><td>)</td>
           <td></td>
         </tr>
@@ -329,7 +325,7 @@ Variables</h2></td></tr>
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div>
 <div class="line">}</div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00019">19</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="usbCan__scene_8cpp_source.html#l00024">24</a> of file <a class="el" href="usbCan__scene_8cpp_source.html">usbCan_scene.cpp</a>.</p>
 
 </div>
 </div>

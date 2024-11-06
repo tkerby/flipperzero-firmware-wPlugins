@@ -10,7 +10,7 @@
 <area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="64,192,64,226,59,226,59,192"/>
 <area shape="poly" id="edge5_Node000005_Node000002" title=" " alt="" coords="220,121,106,164,104,159,218,116"/>
 <area shape="poly" id="edge8_Node000005_Node000004" title=" " alt="" coords="238,121,195,159,192,156,235,117"/>
-<area shape="rect" id="Node000006" href="$SPI_8h.html" title=": bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo s..." alt="" coords="238,167,293,192"/>
+<area shape="rect" id="Node000006" href="$SPI_8h.html" title="Bridge for porting Longan_CANFD to flipper zero without modifying code. A simple pull to the repo sha..." alt="" coords="238,167,293,192"/>
 <area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="255,118,262,153,257,154,249,120"/>
 <area shape="rect" id="Node000008" title=" " alt="" coords="317,167,392,192"/>
 <area shape="poly" id="edge9_Node000005_Node000008" title=" " alt="" coords="268,116,328,157,325,161,265,121"/>

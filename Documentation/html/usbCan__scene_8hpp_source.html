@@ -83,40 +83,39 @@ $(document).ready(function() { init_codefold(0); });
   <div class="headertitle"><div class="title">usbCan_scene.hpp</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="usbCan__scene_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;gui/scene_manager.h&gt;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment">// Generate scene id and total number</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="usbCan__scene_8hpp.html#a8776d4cf7e872a390c03ef324bfda767">    6</a></span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) UsbCanScene##id,</span></div>
-<div class="foldopen" id="foldopen00007" data-start="{" data-end="};">
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno"><a class="line" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044deb">    7</a></span><span class="keyword">typedef</span> <span class="keyword">enum</span> {</div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">    9</a></span>    <a class="code hl_enumvalue" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a>,</div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>} <a class="code hl_enumeration" href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044deb">usb_canScene</a>;</div>
-</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#undef ADD_SCENE</span></div>
+<a href="usbCan__scene_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;<a class="code" href="scene__manager_8h.html">gui/scene_manager.h</a>&gt;</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">extern</span> <span class="keyword">const</span> SceneManagerHandlers <a class="code hl_variable" href="usbCan__scene_8hpp.html#a38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a>;</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment">// Generate scene on_enter handlers declaration</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_enter(void*);</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="group__CONTROLLER.html#ga8776d4cf7e872a390c03ef324bfda767">   14</a></span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) UsbCanScene##id,</span></div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="};">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="group__CONTROLLER.html#ga0f499aff7302500ee1069d3b6b044deb">   16</a></span><span class="keyword">typedef</span> <span class="keyword">enum</span> {</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#undef ADD_SCENE</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment">// Generate scene on_event handlers declaration</span></div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) \</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">    bool prefix##_scene_##name##_on_event(void* context, SceneManagerEvent event);</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#undef ADD_SCENE</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment">// Generate scene on_exit handlers declaration</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_exit(void* context);</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#undef ADD_SCENE</span></div>
-<div class="ttc" id="ausbCan__scene_8hpp_html_a0f499aff7302500ee1069d3b6b044deb"><div class="ttname"><a href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044deb">usb_canScene</a></div><div class="ttdeci">usb_canScene</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8hpp_source.html#l00007">usbCan_scene.hpp:7</a></div></div>
-<div class="ttc" id="ausbCan__scene_8hpp_html_a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b"><div class="ttname"><a href="usbCan__scene_8hpp.html#a0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a></div><div class="ttdeci">@ usb_canSceneNum</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8hpp_source.html#l00009">usbCan_scene.hpp:9</a></div></div>
-<div class="ttc" id="ausbCan__scene_8hpp_html_a38a42bbbe31579a83b20680bb44448d3"><div class="ttname"><a href="usbCan__scene_8hpp.html#a38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a></div><div class="ttdeci">const SceneManagerHandlers usb_can_scene_handlers</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8cpp_source.html#l00025">usbCan_scene.cpp:25</a></div></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="group__CONTROLLER.html#gga0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">   18</a></span>    <a class="code hl_enumvalue" href="group__CONTROLLER.html#gga0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a>, </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>} <a class="code hl_enumeration" href="group__CONTROLLER.html#ga0f499aff7302500ee1069d3b6b044deb">usb_canScene</a>;</div>
+</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#undef ADD_SCENE</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">extern</span> <span class="keyword">const</span> <a class="code hl_struct" href="structSceneManagerHandlers.html">SceneManagerHandlers</a> <a class="code hl_variable" href="group__CONTROLLER.html#ga38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_enter(void*);</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#undef ADD_SCENE</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) \</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">    bool prefix##_scene_##name##_on_event(void* context, SceneManagerEvent event);</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#undef ADD_SCENE</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_exit(void* context);</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">#include &quot;<a class="code" href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#undef ADD_SCENE</span></div>
+<div class="ttc" id="agroup__CONTROLLER_html_ga0f499aff7302500ee1069d3b6b044deb"><div class="ttname"><a href="group__CONTROLLER.html#ga0f499aff7302500ee1069d3b6b044deb">usb_canScene</a></div><div class="ttdeci">usb_canScene</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8hpp_source.html#l00016">usbCan_scene.hpp:16</a></div></div>
+<div class="ttc" id="agroup__CONTROLLER_html_ga38a42bbbe31579a83b20680bb44448d3"><div class="ttname"><a href="group__CONTROLLER.html#ga38a42bbbe31579a83b20680bb44448d3">usb_can_scene_handlers</a></div><div class="ttdeci">const SceneManagerHandlers usb_can_scene_handlers</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8cpp_source.html#l00030">usbCan_scene.cpp:30</a></div></div>
+<div class="ttc" id="agroup__CONTROLLER_html_gga0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b"><div class="ttname"><a href="group__CONTROLLER.html#gga0f499aff7302500ee1069d3b6b044debaeb4b0b23d3abf81edc4f50e2dc01906b">usb_canSceneNum</a></div><div class="ttdeci">@ usb_canSceneNum</div><div class="ttdef"><b>Definition</b> <a href="usbCan__scene_8hpp_source.html#l00018">usbCan_scene.hpp:18</a></div></div>
+<div class="ttc" id="ascene__manager_8h_html"><div class="ttname"><a href="scene__manager_8h.html">scene_manager.h</a></div></div>
+<div class="ttc" id="astructSceneManagerHandlers_html"><div class="ttname"><a href="structSceneManagerHandlers.html">SceneManagerHandlers</a></div><div class="ttdef"><b>Definition</b> <a href="scene__manager_8h_source.html#l00042">scene_manager.h:42</a></div></div>
 <div class="ttc" id="ausbCan__scene__config_8hpp_html"><div class="ttname"><a href="usbCan__scene__config_8hpp.html">usbCan_scene_config.hpp</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

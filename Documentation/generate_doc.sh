@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(realpath $(dirname $0))
 SOURCE_DIR=$(dirname $SCRIPT_DIR)
-FLIPPER_DIR=$SOURCE_DIR/../../../targets/f7/furi_hal
+FLIPPER_DIR=$SOURCE_DIR/../../../targets/f7/furi_hal,$SOURCE_DIR/../../../applications/services/gui
 DOC_DIR=$SCRIPT_DIR/html
 IMAGE_DIR=$SCRIPT_DIR/images
 DOXYFILE=$SCRIPT_DIR/Doxyfile

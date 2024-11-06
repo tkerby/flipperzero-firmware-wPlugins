@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['view_0',['VIEW',['../group__VIEW.html',1,'']]]
+  ['model_0',['MODEL',['../group__MODEL.html',1,'']]]
 ];

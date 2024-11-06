@@ -1,7 +1,7 @@
 /** 
  * @ingroup APP
   @defgroup VIEW
-  @brief VIEW part of APP MVC model :  It displays menu and applications informations while running (TX and RX bytes)
+  @brief Application specific VIEW part of APP MVC model : It displays applications informations while running (Transmitted and received bytes on USB and CAN link). The other views (menus) are standard and implemented in furi gui layer.
   @{
   @file usb_can_view.cpp
   @brief VIEW part of APP.
@@ -21,7 +21,11 @@ typedef struct {
     bool rx_active;
 } UsbCanModel;
 
-/** @brief  This function displays bytes transmitted and received when application is in operating mode (user selected an item from the menu).
+/** @brief This function displays bytes transmitted and received when application is in operating mode (user selected an item from the menu). It is registered in @ref usb_can_view_alloc().
+ * @details This draw callback is application specific and uses lower level features than those used in other scenes (other than @ref SCENE-USB-CAN). Other draw callbacks are standard (item list, error message, popup) and supplied by furi layer. This function will:
+ * -# print Virtual COM Port used by formatting @ref UsbCanModel::vcp_port via @ref snprintf() and calling @ref canvas_draw_str_aligned()
+ * -# print transmitted bytes by formatting @ref UsbCanModel::tx_cnt via @ref snprintf() (in KiB if transmitted bytes > 1000000) and calling @ref canvas_draw_str_aligned()
+ * -# do the same thing for recived bytes (@ref UsbCanModel::rx_cnt)
 */
 static void usb_can_draw_callback(Canvas* canvas, void* _model) {
     UsbCanModel* model = (UsbCanModel*)_model;
@@ -70,7 +74,9 @@ static void usb_can_draw_callback(Canvas* canvas, void* _model) {
         canvas_draw_icon_ex(canvas, 48, 34, &I_ArrowUpEmpty_14x15, IconRotation180);*/
 }
 
-/** @brief function called on user input (press flipper key) */
+/** @brief This callback registered in @ref usb_can_view_alloc() and trigged by furi gui component is used to go to @ref SCENE-CONFIG if left arrow key is pressed via @ref usb_can_view_update_state().
+ * @details This callback registered in @ref usb_can_view_alloc() is called by furi gui component when a key is pressed. 
+ * If it is left arrow it will request to go to @ref SCENE-CONFIG by trigging @ref usb_can_scene_usb_can_callback registered through @ref usb_can_view_update_state(). */
 static bool usb_can_input_callback(InputEvent* event, void* context) {
     furi_assert(context);
     usbCanView* usb_can_view = (usbCanView*)context;
@@ -87,7 +93,7 @@ static bool usb_can_input_callback(InputEvent* event, void* context) {
     return consumed;
 }
 
-/** @ref This function allocate view @ref usbCanView::view element and register  @ref usb_can_draw_callback and @ref usb_can_input_callback callbacks 
+/** @brief This function allocate view @ref usbCanView::view element and register  @ref usb_can_draw_callback and @ref usb_can_input_callback callbacks to furi gui component.
  * @details This function is called on application start when memory is allocated through @ref usb_can_app_alloc(). It perform following actions:
  * -# allocate memory space for @ref usbCanView object via @ref malloc
  * -# initialize @ref usbCanView:view pointer allocating dedicated memory space via @ref malloc
@@ -109,7 +115,7 @@ usbCanView* usb_can_view_alloc() {
     return usb_can_view;
 }
 
-/** @ref This function free memory allocated for @ref VIEW component functionning in @ref usb_can_view_alloc.  
+/** @brief This function free memory allocated for @ref VIEW component functionning in @ref usb_can_view_alloc.  
  * @details This function is called on application start when memory is allocated through @ref usb_can_app_alloc().
 */
 void usb_can_view_free(usbCanView* usb_can_view) {
@@ -124,7 +130,7 @@ View* usb_can_get_view(usbCanView* usb_can_view) {
     return usb_can_view->view;
 }
 
-/** @brief register callback to @ref VIEW component. This will be used to forward callbacks registered in @ref usb_can_view_alloc() to @ref CONTROLLER component. */
+/** @brief register callback to @ref VIEW component (see @ref usbCanView::callback). This will be used to forward callbacks registered in @ref usb_can_view_alloc() to @ref SCENE-USB-CAN component. */
 void usb_can_view_set_callback(usbCanView* usb_can, usbCanViewCallBack_t callback, void* context) {
     furi_assert(usb_can);
     furi_assert(callback);
@@ -141,7 +147,12 @@ void usb_can_view_set_callback(usbCanView* usb_can, usbCanViewCallBack_t callbac
         false);
 }
 
-/** @ref function called by @ref usb_can_scene_usb_can_on_event() periodically to update data display ( holded by @ref MODEL component in @ref UsbCanApp::usb_can_bridge @ref UsbCanBridge::cfg and UsbCanBridge::st fields  ) */
+/** @brief function called by @ref usb_can_scene_usb_can_on_event() periodically to update data display (data updated to correspond to those holded by @ref MODEL component) 
+ * @details This function calls @ref with_view_model_cpp() macro in order to:
+ * -# get pointer to displayed data by calling @ref view_get_model()
+ * -# update data pointed by obtained pointer in order to correspond to values supplied in function arguments wich are coming from @ref MODEL component in @ref UsbCanApp::usb_can_bridge @ref UsbCanBridge::cfg and UsbCanBridge::st fields
+ * -# tell furi gui component to update displayed values through @ref view_commit_model() function
+*/
 void usb_can_view_update_state(usbCanView* instance, UsbCanConfig* cfg, UsbCanStatus* st) {
     furi_assert(instance);
     furi_assert(cfg);
