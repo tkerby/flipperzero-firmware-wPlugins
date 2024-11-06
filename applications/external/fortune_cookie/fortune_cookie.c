@@ -16,7 +16,7 @@ typedef struct App {
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
     Widget* widget;
-    uint32_t random_seed; 
+    uint32_t random_seed;
 } App;
 
 const char* fortune_messages[] = {
@@ -48,43 +48,46 @@ const char* fortune_messages[] = {
 const uint8_t fortune_count = sizeof(fortune_messages) / sizeof(fortune_messages[0]);
 
 const char* get_random_fortune(App* app) {
-    app->random_seed = (app->random_seed + 1) % fortune_count; 
-    return fortune_messages[app->random_seed]; 
+    app->random_seed = (app->random_seed + 1) % fortune_count;
+    return fortune_messages[app->random_seed];
 }
 
 void add_word_wrapped_text(Widget* widget, const char* text, int max_chars_per_line) {
-    char line_buffer[max_chars_per_line + 1]; 
+    char line_buffer[max_chars_per_line + 1];
     int line_length = 0;
-    int y_offset = 15; 
+    int y_offset = 15;
 
-    while (*text) {
+    while(*text) {
         const char* word_start = text;
         int word_length = 0;
 
-        while (*text && *text != ' ' && *text != '\n') {
+        while(*text && *text != ' ' && *text != '\n') {
             word_length++;
             text++;
         }
 
-        if (line_length + word_length > max_chars_per_line) {
+        if(line_length + word_length > max_chars_per_line) {
             line_buffer[line_length] = '\0';
-            widget_add_string_multiline_element(widget, 10, y_offset, AlignLeft, AlignTop, FontPrimary, line_buffer);
-            y_offset += 15; 
+            widget_add_string_multiline_element(
+                widget, 10, y_offset, AlignLeft, AlignTop, FontPrimary, line_buffer);
+            y_offset += 15;
             line_length = 0;
         }
 
-        if (line_length > 0) {
+        if(line_length > 0) {
             line_buffer[line_length++] = ' ';
         }
         strncpy(&line_buffer[line_length], word_start, word_length);
         line_length += word_length;
 
-        while (*text == ' ') text++;
+        while(*text == ' ')
+            text++;
     }
 
-    if (line_length > 0) {
+    if(line_length > 0) {
         line_buffer[line_length] = '\0';
-        widget_add_string_multiline_element(widget, 10, y_offset, AlignLeft, AlignTop, FontPrimary, line_buffer);
+        widget_add_string_multiline_element(
+            widget, 10, y_offset, AlignLeft, AlignTop, FontPrimary, line_buffer);
     }
 }
 
@@ -93,7 +96,7 @@ void fortune_message_scene_on_enter(void* context) {
     widget_reset(app->widget);
 
     const char* message = get_random_fortune(app);
-    add_word_wrapped_text(app->widget, message, 20); 
+    add_word_wrapped_text(app->widget, message, 20);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, 0);
 }
@@ -101,7 +104,7 @@ void fortune_message_scene_on_enter(void* context) {
 bool fortune_message_scene_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
-    return false; 
+    return false;
 }
 
 void fortune_message_scene_on_exit(void* context) {
@@ -137,14 +140,16 @@ static App* app_alloc() {
     App* app = malloc(sizeof(App));
     app->scene_manager = scene_manager_alloc(&scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
-    
+    view_dispatcher_enable_queue(app->view_dispatcher);
+
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, fortune_back_event_callback);
-    
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, fortune_back_event_callback);
+
     app->widget = widget_alloc();
     view_dispatcher_add_view(app->view_dispatcher, 0, widget_get_view(app->widget));
-    
-    app->random_seed = furi_get_tick(); 
+
+    app->random_seed = furi_get_tick();
     return app;
 }
 
