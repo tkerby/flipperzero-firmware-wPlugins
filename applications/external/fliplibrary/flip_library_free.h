@@ -7,10 +7,6 @@ static void flip_library_app_free(FlipLibraryApp* app) {
         FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
         return;
     }
-    // disconnect wifi
-    if(!flipper_http_disconnect_wifi()) {
-        FURI_LOG_E(TAG, "Failed to disconnect from wifi");
-    }
 
     // Free View(s)
     if(app->view_random_facts) {

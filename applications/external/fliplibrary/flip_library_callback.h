@@ -11,19 +11,42 @@ static FlipLibraryApp* app_instance = NULL;
 
 // Parse JSON to find the "text" key
 char* flip_library_parse_random_fact() {
-    return get_json_value("text", fhttp.received_data, 128);
+    return get_json_value("text", fhttp.last_response, 128);
 }
 
 char* flip_library_parse_cat_fact() {
-    return get_json_value("fact", fhttp.received_data, 128);
+    return get_json_value("fact", fhttp.last_response, 128);
+}
+
+char* flip_library_parse_dog_fact() {
+    return get_json_array_value("facts", 0, fhttp.last_response, 128);
+}
+
+char* flip_library_parse_quote() {
+    // remove [ and ] from the start and end of the string
+    char* response = fhttp.last_response;
+    if(response[0] == '[') {
+        response++;
+    }
+    if(response[strlen(response) - 1] == ']') {
+        response[strlen(response) - 1] = '\0';
+    }
+    // remove white space from both sides
+    while(response[0] == ' ') {
+        response++;
+    }
+    while(response[strlen(response) - 1] == ' ') {
+        response[strlen(response) - 1] = '\0';
+    }
+    return get_json_value("q", response, 128);
 }
 
 char* flip_library_parse_dictionary() {
-    return get_json_value("definition", fhttp.received_data, 16);
+    return get_json_value("definition", fhttp.last_response, 16);
 }
 
 static void flip_library_request_error(Canvas* canvas) {
-    if(fhttp.received_data == NULL) {
+    if(fhttp.last_response == NULL) {
         if(fhttp.last_response != NULL) {
             if(strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
                NULL) {
@@ -132,6 +155,7 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
         canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
         return;
     }
+    // Cats
     if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsCats) {
         canvas_draw_str(canvas, 0, 7, "Random Cat Fact");
         canvas_draw_str(canvas, 0, 15, "Loading...");
@@ -155,13 +179,13 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
             else if(fhttp.state == ISSUE || !random_fact_request_success) {
                 flip_library_request_error(canvas);
             } else if(
-                fhttp.state == IDLE && fhttp.received_data != NULL &&
+                fhttp.state == IDLE && fhttp.last_response != NULL &&
                 !random_fact_request_success_all) {
                 canvas_draw_str(canvas, 0, 22, "Processing...");
                 // success
                 // check status
                 // unnecessary check
-                if(fhttp.state == ISSUE || fhttp.received_data == NULL) {
+                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
                     flip_library_request_error(canvas);
                     FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
                     return;
@@ -195,7 +219,7 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
             } else // handle weird scenarios
             {
                 // if received data isnt NULL
-                if(fhttp.received_data != NULL) {
+                if(fhttp.last_response != NULL) {
                     // parse json to find the text key
                     random_fact = flip_library_parse_cat_fact();
 
@@ -207,7 +231,164 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
                 }
             }
         }
-    } else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsAll) {
+    }
+    // Dogs
+    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsDogs) {
+        canvas_draw_str(canvas, 0, 7, "Random Dog Fact");
+        canvas_draw_str(canvas, 0, 15, "Loading...");
+
+        if(!sent_random_fact_request) {
+            sent_random_fact_request = true;
+            random_fact_request_success = flipper_http_get_request_with_headers(
+                "https://dog-api.kinduff.com/api/facts",
+                "{\"Content-Type\":\"application/json\"}");
+            if(!random_fact_request_success) {
+                FURI_LOG_E(TAG, "Failed to send request");
+                flip_library_request_error(canvas);
+                return;
+            }
+            fhttp.state = RECEIVING;
+        } else {
+            if(fhttp.state == RECEIVING) {
+                canvas_draw_str(canvas, 0, 22, "Receiving...");
+                return;
+            }
+            // check status
+            else if(fhttp.state == ISSUE || !random_fact_request_success) {
+                flip_library_request_error(canvas);
+            } else if(
+                fhttp.state == IDLE && fhttp.last_response != NULL &&
+                !random_fact_request_success_all) {
+                canvas_draw_str(canvas, 0, 22, "Processing...");
+                // success
+                // check status
+                // unnecessary check
+                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
+                    flip_library_request_error(canvas);
+                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
+                    return;
+                } else if(!random_fact_request_success_all) {
+                    random_fact = flip_library_parse_dog_fact();
+
+                    if(random_fact == NULL) {
+                        flip_library_request_error(canvas);
+                        fhttp.state = ISSUE;
+                        return;
+                    }
+
+                    // Mark success
+                    random_fact_request_success_all = true;
+
+                    // draw random facts
+                    flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
+
+                    // go to random facts widget
+                    view_dispatcher_switch_to_view(
+                        app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
+                }
+            }
+            // likely redundant but just in case
+            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
+                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
+
+                // go to random facts widget
+                view_dispatcher_switch_to_view(
+                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
+            } else // handle weird scenarios
+            {
+                // if received data isnt NULL
+                if(fhttp.last_response != NULL) {
+                    // parse json to find the text key
+                    random_fact = flip_library_parse_cat_fact();
+
+                    if(random_fact == NULL) {
+                        flip_library_request_error(canvas);
+                        fhttp.state = ISSUE;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    // Quotes
+    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsQuotes) {
+        canvas_draw_str(canvas, 0, 7, "Random Quote");
+        canvas_draw_str(canvas, 0, 15, "Loading...");
+
+        if(!sent_random_fact_request) {
+            sent_random_fact_request = true;
+            random_fact_request_success =
+                flipper_http_get_request("https://zenquotes.io/api/random");
+            if(!random_fact_request_success) {
+                FURI_LOG_E(TAG, "Failed to send request");
+                flip_library_request_error(canvas);
+                return;
+            }
+            fhttp.state = RECEIVING;
+        } else {
+            if(fhttp.state == RECEIVING) {
+                canvas_draw_str(canvas, 0, 22, "Receiving...");
+                return;
+            }
+            // check status
+            else if(fhttp.state == ISSUE || !random_fact_request_success) {
+                flip_library_request_error(canvas);
+            } else if(
+                fhttp.state == IDLE && fhttp.last_response != NULL &&
+                !random_fact_request_success_all) {
+                canvas_draw_str(canvas, 0, 22, "Processing...");
+                // success
+                // check status
+                // unnecessary check
+                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
+                    flip_library_request_error(canvas);
+                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
+                    return;
+                } else if(!random_fact_request_success_all) {
+                    random_fact = flip_library_parse_quote();
+
+                    if(random_fact == NULL) {
+                        flip_library_request_error(canvas);
+                        fhttp.state = ISSUE;
+                        return;
+                    }
+
+                    // Mark success
+                    random_fact_request_success_all = true;
+
+                    // draw random facts
+                    flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
+
+                    // go to random facts widget
+                    view_dispatcher_switch_to_view(
+                        app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
+                }
+            }
+            // likely redundant but just in case
+            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
+                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
+
+                // go to random facts widget
+                view_dispatcher_switch_to_view(
+                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
+            } else // handle weird scenarios
+            {
+                // if received data isnt NULL
+                if(fhttp.last_response != NULL) {
+                    // parse json to find the text key
+                    random_fact = flip_library_parse_quote();
+
+                    if(random_fact == NULL) {
+                        flip_library_request_error(canvas);
+                        fhttp.state = ISSUE;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    // All Random Facts
+    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsAll) {
         canvas_draw_str(canvas, 0, 10, "Random Fact");
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 0, 20, "Loading...");
@@ -233,12 +414,12 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
                 flip_library_request_error(canvas);
                 return;
             } else if(
-                fhttp.state == IDLE && fhttp.received_data != NULL &&
+                fhttp.state == IDLE && fhttp.last_response != NULL &&
                 !random_fact_request_success_all) {
                 canvas_draw_str(canvas, 0, 30, "Processing...");
                 // success
                 // check status
-                if(fhttp.state == ISSUE || fhttp.received_data == NULL) {
+                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
                     flip_library_request_error(canvas);
                     FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
                     return;
@@ -274,7 +455,7 @@ static void view_draw_callback_random_facts(Canvas* canvas, void* model) {
             } else // handle weird scenarios
             {
                 // if received data isnt NULL
-                if(fhttp.received_data != NULL) {
+                if(fhttp.last_response != NULL) {
                     // parse json to find the text key
                     random_fact = flip_library_parse_random_fact();
 
@@ -342,12 +523,12 @@ static void view_draw_callback_dictionary_run(Canvas* canvas, void* model) {
             flip_library_request_error(canvas);
             return;
         } else if(
-            fhttp.state == IDLE && fhttp.received_data != NULL &&
+            fhttp.state == IDLE && fhttp.last_response != NULL &&
             !random_fact_request_success_all) {
             canvas_draw_str(canvas, 0, 20, "Processing...");
             // success
             // check status
-            if(fhttp.state == ISSUE || fhttp.received_data == NULL) {
+            if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
                 flip_library_request_error(canvas);
                 FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
                 return;
@@ -383,7 +564,7 @@ static void view_draw_callback_dictionary_run(Canvas* canvas, void* model) {
         } else // handle weird scenarios
         {
             // if received data isnt NULL
-            if(fhttp.received_data != NULL) {
+            if(fhttp.last_response != NULL) {
                 // parse json to find the text key
                 char* definition = flip_library_parse_dictionary();
 
@@ -446,6 +627,18 @@ static void callback_submenu_choices(void* context, uint32_t index) {
         break;
     case FlipLibrarySubmenuIndexRandomFactsCats:
         random_facts_index = FlipLibrarySubmenuIndexRandomFactsCats;
+        sent_random_fact_request = false;
+        random_fact = NULL;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        break;
+    case FlipLibrarySubmenuIndexRandomFactsDogs:
+        random_facts_index = FlipLibrarySubmenuIndexRandomFactsDogs;
+        sent_random_fact_request = false;
+        random_fact = NULL;
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        break;
+    case FlipLibrarySubmenuIndexRandomFactsQuotes:
+        random_facts_index = FlipLibrarySubmenuIndexRandomFactsQuotes;
         sent_random_fact_request = false;
         random_fact = NULL;
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);

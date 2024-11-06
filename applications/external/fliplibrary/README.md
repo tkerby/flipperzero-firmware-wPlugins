@@ -12,7 +12,7 @@ FlipLibrary uses the FlipperHTTP flash for the WiFi Devboard, first introduced i
 
 ## Features
 - **Dictionary**: Look up definitions of words directly on your Flipper Zero. Simply enter a word, and the app will provide its definition, making it easy to learn new vocabulary or clarify meaning.
-- **Random Facts**: Discover interesting and fun facts to share with friends or expand your general knowledge. The app offers various categories of facts, such as facts about cats or completely random trivia.
+- **Random Facts**: Discover interesting and fun facts to share with friends or expand your general knowledge. The app offers various categories of facts, such as facts about cats, dogs, quotes, or completely random trivia.
 - **WiFi Settings Management**: Configure and manage WiFi settings (SSID and password) for future app updates that may utilize network connectivity.
 
 ## Navigation
