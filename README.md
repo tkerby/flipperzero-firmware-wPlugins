@@ -30,9 +30,9 @@ If issues are encountered, you can get more informations by connecting directly 
 You can see the following screenshot for more informations.
 **This mode can also be used to configure connection in flexible datarate ("S9" command).**<br>
 
-**NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
-**NB2 : for compatibility reason (with can-utils)  newline character is not appended after CAN RX frames.As a consequence display of these frames is impacted.** <br>
-**NB3 : beware of usb cdc buffer length. Max size is 64. So command number that can be sent in one frame is limited.** <br>
+> **NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
+> **NB2 : for compatibility reason (with can-utils)  newline character is not appended after CAN RX frames.As a consequence display of these frames is impacted.** <br>
+> **NB3 : beware of usb cdc buffer length. Max size is 64. So command number that can be sent in one frame is limited.** <br>
 
 ### TEST USB LOOPBACK
 
@@ -51,11 +51,13 @@ This mode is used to test VCP (USB cdc) connectivity. To use this mode, you have
 This mode is used to test CAN connection (to verify wiring between CAN device under test and flipper zero board).
 No user action is required before using this mode (except the obvious wiring step).<br>
 The frame sent shall by the device shall be the following :
-- 007E5TCA:43414E4C49564500 (IIIIIIII:DDDDDDDDDDDDDDDD with \<III..\> the extended identifier "TESTCA" and \<DDD..\> the data "CANLIVE").
+- **007E5TCA:43414E4C49564500** : IIIIIIII:DDDDDDDDDDDDDDDD with 
+    - **\<III..\>** the extended identifier (007E57CA = "TESTCA" in hexspeak) 
+    - **\<DDD..\>** the data (43414E4C49564500 = "CANLIVE" in ascii).
 
 ![test can](./Documentation/images/testcan.JPG "test can")
 
-**Note:** received and sent bytes count (on the flipper screen) is not functionnal.
+> **Note:** received and sent bytes count (on the flipper screen) is not functionnal.
 
 ## Development
 
@@ -84,7 +86,7 @@ Applications has been tested with a MCP2515 evaluation board. As a consequence, 
 
 ![Flipper zero CAN FD test setup](./Documentation/images/CAN_test.png "Flipper zero CAN FD test setup")
 
-**Note the flexible datarate is not tested yet.**
+> **Note: the flexible datarate is not tested yet.**
 
 ### Known bugs
 
