@@ -41,9 +41,10 @@ typedef enum {
 
 typedef enum {
     BirdTypeDefault = 0,
-    BirdTypeYapper,
+    BirdType420,
     BirdTypeGhost,
     BirdTypeGhostESP,
+    BirdTypeYapper,
     BirdTypeMAX
 } BirdType;
 
@@ -63,26 +64,28 @@ static const CharacterDimensions character_dimensions[] = {
      2,
      FLAPPY_BIRD_WIDTH - 4,
      FLAPPY_BIRD_HEIGHT - 4}, // Default bird
-    {YAPPER_WIDTH,
-     YAPPER_HEIGHT,
-     4,
-     4,
-     YAPPER_WIDTH - 8,
-     YAPPER_HEIGHT - 8}, // Yapper with larger offset
+    {YAPPER_WIDTH - 1, YAPPER_HEIGHT - 3, 5, 5, YAPPER_WIDTH - 9, YAPPER_HEIGHT - 11}, // 420
     {YAPPER_WIDTH, YAPPER_HEIGHT, 5, 5, YAPPER_WIDTH - 8, YAPPER_HEIGHT - 8}, // Ghost
     {YAPPER_WIDTH,
      YAPPER_HEIGHT,
      5,
      5,
      YAPPER_WIDTH - 10,
-     YAPPER_HEIGHT - 10} // Ghost with smaller hitbox
+     YAPPER_HEIGHT - 10}, // Ghost with smaller hitbox
+    {YAPPER_WIDTH,
+     YAPPER_HEIGHT,
+     4,
+     4,
+     YAPPER_WIDTH - 8,
+     YAPPER_HEIGHT - 8} // Yapper with larger offset
 };
 
 const Icon* bird_sets[BirdTypeMAX][BirdStateMAX] = {
     {&I_bird_01, &I_bird_02, &I_bird_03},
-    {&I_yapper_01, &I_yapper_02, &I_yapper_03},
+    {&I_leaf_01, &I_leaf_02, &I_leaf_03},
     {&I_ghost_01, &I_ghost_02, &I_ghost_03},
-    {&I_ghostesp_01, &I_ghostesp_02, &I_ghostesp_03}};
+    {&I_ghostesp_01, &I_ghostesp_02, &I_ghostesp_03},
+    {&I_yapper_01, &I_yapper_02, &I_yapper_03}};
 
 typedef enum {
     EventTypeTick,
@@ -166,12 +169,14 @@ static int flappy_game_load_score() {
 
 static inline int get_gap_height(BirdType bird_type) {
     switch(bird_type) {
-    case BirdTypeYapper:
-        return YAPPER_GAB_HEIGHT;
+    case BirdType420:
+        return YAPPER_GAB_HEIGHT - 3;
     case BirdTypeGhost:
         return YAPPER_GAB_HEIGHT;
     case BirdTypeGhostESP:
         return GHOSTESP_GAB_HEIGHT;
+    case BirdTypeYapper:
+        return YAPPER_GAB_HEIGHT;
     default:
         return FLAPPY_GAB_HEIGHT;
     }
@@ -244,8 +249,9 @@ static bool check_collision(
     }
 
     // Extra forgiving collision for Yapper/Ghost
-    if(game_state->selected_bird == BirdTypeYapper || game_state->selected_bird == BirdTypeGhost ||
-       game_state->selected_bird == BirdTypeGhostESP) {
+    if(game_state->selected_bird == BirdType420 || game_state->selected_bird == BirdTypeGhost ||
+       game_state->selected_bird == BirdTypeGhostESP ||
+       game_state->selected_bird == BirdTypeYapper) {
         // Add small grace area for top and bottom pipes
         top_pipe_bottom += 2;
         bottom_pipe_top -= 2;
@@ -355,12 +361,14 @@ static void flappy_game_render_callback(Canvas* const canvas, void* ctx) {
             canvas_draw_frame(canvas, 14, 8, 100, 48);
             canvas_set_font(canvas, FontPrimary);
             // Change title based on selected character
-            if(game_state->selected_bird == BirdTypeYapper) {
-                canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Yappy Bird");
+            if(game_state->selected_bird == BirdType420) {
+                canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "420");
             } else if(game_state->selected_bird == BirdTypeGhost) {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Ghost");
             } else if(game_state->selected_bird == BirdTypeGhostESP) {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Flappy Ghost");
+            } else if(game_state->selected_bird == BirdTypeYapper) {
+                canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Yappy Bird");
             } else {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Flappy Bird");
             }
