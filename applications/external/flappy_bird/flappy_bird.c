@@ -184,7 +184,7 @@ static inline int get_gap_height(BirdType bird_type) {
     case BirdTypeGhostESP:
         return GHOSTESP_GAB_HEIGHT;
     case BirdTypeKirby:
-        return FLAPPY_GAB_HEIGHT - 5;
+        return FLAPPY_GAB_HEIGHT - 3;
     case BirdTypeYapper:
         return YAPPER_GAB_HEIGHT;
     default:
