@@ -1,5 +1,6 @@
 #include <flip_weather_e.h>
 #include <flip_weather_storage.h>
+#include "flip_weather_parse.h"
 #include <flip_weather_callback.h>
 #include <flip_weather_i.h>
 #include <flip_weather_free.h>

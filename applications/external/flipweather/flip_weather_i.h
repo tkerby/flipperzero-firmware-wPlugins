@@ -44,7 +44,7 @@ static FlipWeatherApp* flip_weather_app_alloc() {
            &app->view_weather,
            FlipWeatherViewWeather,
            flip_weather_view_draw_callback_weather,
-           flip_weather_view_input_callback_weather,
+           NULL,
            callback_to_submenu,
            &app->view_dispatcher,
            app)) {
@@ -54,7 +54,7 @@ static FlipWeatherApp* flip_weather_app_alloc() {
            &app->view_gps,
            FlipWeatherViewGPS,
            flip_weather_view_draw_callback_gps,
-           flip_weather_view_input_callback_gps,
+           NULL,
            callback_to_submenu,
            &app->view_dispatcher,
            app)) {
@@ -65,7 +65,7 @@ static FlipWeatherApp* flip_weather_app_alloc() {
     if(!easy_flipper_set_widget(
            &app->widget,
            FlipWeatherViewAbout,
-           "FlipWeather v1.0\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked",
+           "FlipWeather v1.1\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked",
            callback_to_submenu,
            &app->view_dispatcher)) {
         return NULL;
@@ -79,7 +79,7 @@ static FlipWeatherApp* flip_weather_app_alloc() {
            app->uart_text_input_temp_buffer_ssid,
            app->uart_text_input_buffer_size_ssid,
            text_updated_ssid,
-           callback_to_submenu,
+           callback_to_wifi_settings,
            &app->view_dispatcher,
            app)) {
         return NULL;
@@ -91,7 +91,7 @@ static FlipWeatherApp* flip_weather_app_alloc() {
            app->uart_text_input_temp_buffer_password,
            app->uart_text_input_buffer_size_password,
            text_updated_password,
-           callback_to_submenu,
+           callback_to_wifi_settings,
            &app->view_dispatcher,
            app)) {
         return NULL;

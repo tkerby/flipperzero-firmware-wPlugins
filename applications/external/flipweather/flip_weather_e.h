@@ -48,4 +48,20 @@ typedef struct {
     uint32_t uart_text_input_buffer_size_password; // Size of the text input buffer
 } FlipWeatherApp;
 
+static char city_data[48];
+static char region_data[48];
+static char country_data[48];
+static char lat_data[32];
+static char lon_data[32];
+static char ip_data[32];
+static char temperature_data[32];
+static char precipitation_data[32];
+static char rain_data[32];
+static char showers_data[32];
+static char snowfall_data[32];
+static char time_data[32];
+static char ip_address[16];
+
+#define MAX_TOKENS 64 // Adjust based on expected JSON size (50)
+
 #endif

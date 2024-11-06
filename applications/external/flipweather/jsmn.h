@@ -492,6 +492,17 @@ JSMN_API void jsmn_init(jsmn_parser* parser) {
 #include <stdio.h>
 #include <furi.h>
 
+// Helper function to create a JSON object
+char* jsmn(const char* key, const char* value) {
+    int length = strlen(key) + strlen(value) + 8; // Calculate required length
+    char* result = (char*)malloc(length * sizeof(char)); // Allocate memory
+    if(result == NULL) {
+        return NULL; // Handle memory allocation failure
+    }
+    snprintf(result, length, "{\"%s\":\"%s\"}", key, value);
+    return result; // Caller is responsible for freeing this memory
+}
+
 // Helper function to compare JSON keys
 int jsoneq(const char* json, jsmntok_t* tok, const char* s) {
     if(tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&

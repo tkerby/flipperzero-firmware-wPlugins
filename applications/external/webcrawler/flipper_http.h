@@ -1108,7 +1108,13 @@ void flipper_http_rx_callback(const char* line, void* context) {
     // Trim the received line to check if it's empty
     char* trimmed_line = trim(line);
     if(trimmed_line != NULL && trimmed_line[0] != '\0') {
-        fhttp.last_response = (char*)line;
+        // if the line is not [GET/END] or [POST/END] or [PUT/END] or [DELETE/END]
+        if(strstr(trimmed_line, "[GET/END]") == NULL &&
+           strstr(trimmed_line, "[POST/END]") == NULL &&
+           strstr(trimmed_line, "[PUT/END]") == NULL &&
+           strstr(trimmed_line, "[DELETE/END]") == NULL) {
+            strncpy(fhttp.last_response, trimmed_line, RX_BUF_SIZE);
+        }
     }
     free(trimmed_line); // Free the allocated memory for trimmed_line
 
