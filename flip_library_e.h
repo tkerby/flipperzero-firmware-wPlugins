@@ -23,8 +23,10 @@ typedef enum
     FlipLibrarySubmenuIndexAbout,       // Click to view the about screen
     FlipLibrarySubmenuIndexSettings,    // Click to view the WiFi settings
     //
-    FlipLibrarySubmenuIndexRandomFactsCats, // Click to view the random facts (cats)
-    FlipLibrarySubmenuIndexRandomFactsAll,  // Click to view the random facts (all)
+    FlipLibrarySubmenuIndexRandomFactsCats,   // Click to view the random facts (cats)
+    FlipLibrarySubmenuIndexRandomFactsDogs,   // Click to view the random facts (dogs)
+    FlipLibrarySubmenuIndexRandomFactsQuotes, // Click to view the random facts (quotes)
+    FlipLibrarySubmenuIndexRandomFactsAll,    // Click to view the random facts (all)
 } FlipLibrarySubmenuIndex;
 
 // Define a single view for our FlipLibrary application
@@ -43,10 +45,12 @@ typedef enum
     FlipLibraryViewDictionaryRun = 16,
     //
     FlipLibraryViewRandomFactsCats = 17,
-    FlipLibraryViewRandomFactsAll = 18,
+    FlipLibraryViewRandomFactsDogs = 18,
+    FlipLibraryViewRandomFactsQuotes = 19,
+    FlipLibraryViewRandomFactsAll = 20,
     //
-    FlipLibraryViewRandomFactWidget = 19, // The text box that displays the random fact
-    FlipLibraryViewDictionaryWidget = 20, // The text box that displays the dictionary
+    FlipLibraryViewRandomFactWidget = 21, // The text box that displays the random fact
+    FlipLibraryViewDictionaryWidget = 22, // The text box that displays the dictionary
 } FlipLibraryView;
 
 // Each screen will have its own view

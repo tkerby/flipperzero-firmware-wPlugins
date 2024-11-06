@@ -60,7 +60,7 @@ static FlipLibraryApp *flip_library_app_alloc()
     }
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget, FlipLibraryViewAbout, "FlipLibrary v1.0\n-----\nDictionary, random facts, and\nmore.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget, FlipLibraryViewAbout, "FlipLibrary v1.2\n-----\nDictionary, random facts, and\nmore.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -99,7 +99,7 @@ static FlipLibraryApp *flip_library_app_alloc()
     variable_item_set_current_value_text(app->variable_item_password, "");
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu_main, FlipLibraryViewSubmenuMain, "FlipLibrary v1.0", callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_main, FlipLibraryViewSubmenuMain, "FlipLibrary v1.2", callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -114,6 +114,8 @@ static FlipLibraryApp *flip_library_app_alloc()
     submenu_add_item(app->submenu_main, "WiFi", FlipLibrarySubmenuIndexSettings, callback_submenu_choices, app);
     //
     submenu_add_item(app->submenu_random_facts, "Cats", FlipLibrarySubmenuIndexRandomFactsCats, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Dogs", FlipLibrarySubmenuIndexRandomFactsDogs, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Quotes", FlipLibrarySubmenuIndexRandomFactsQuotes, callback_submenu_choices, app);
     submenu_add_item(app->submenu_random_facts, "Random", FlipLibrarySubmenuIndexRandomFactsAll, callback_submenu_choices, app);
 
     // load settings
