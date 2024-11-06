@@ -7,3 +7,7 @@ This app is all about bananas. Everyone loves bananas and want to share that lov
 ## Features
 
 - **Banana Tracker**: Keep track of how many bananas you eat each day. Or just spam bananas to see the number go up!
+
+## Author
+
+Marcin Sokołowski (@DrEverr)
