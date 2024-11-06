@@ -203,9 +203,9 @@ bool esp_flasher_scene_quick_on_event(void* context, SceneManagerEvent event) {
             enter_bootloader = true;
             /* fallthrough */
         case QuickS2_Blackmagic:
-            boot = APP_DATA_PATH("assets/blackmagic/bootloader.bin");
-            part = APP_DATA_PATH("assets/blackmagic/partition-table.bin");
-            firm = APP_DATA_PATH("assets/blackmagic/blackmagic.bin");
+            boot = APP_DATA_PATH("assets/blackmagic/s2/bootloader.bin");
+            part = APP_DATA_PATH("assets/blackmagic/s2/partition-table.bin");
+            firm = APP_DATA_PATH("assets/blackmagic/s2/blackmagic.bin");
             break;
 
         case QuickS2Boot_Flipperhttp:
