@@ -44,6 +44,7 @@ typedef enum {
     BirdType420,
     BirdTypeGhost,
     BirdTypeGhostESP,
+    BirdTypeKirby,
     BirdTypeYapper,
     BirdTypeMAX
 } BirdType;
@@ -72,6 +73,12 @@ static const CharacterDimensions character_dimensions[] = {
      5,
      YAPPER_WIDTH - 10,
      YAPPER_HEIGHT - 10}, // Ghost with smaller hitbox
+    {FLAPPY_BIRD_WIDTH,
+     FLAPPY_BIRD_HEIGHT - 5,
+     2,
+     2,
+     FLAPPY_BIRD_WIDTH - 4,
+     FLAPPY_BIRD_HEIGHT - 9}, // Kirby
     {YAPPER_WIDTH,
      YAPPER_HEIGHT,
      4,
@@ -85,6 +92,7 @@ const Icon* bird_sets[BirdTypeMAX][BirdStateMAX] = {
     {&I_leaf_01, &I_leaf_02, &I_leaf_03},
     {&I_ghost_01, &I_ghost_02, &I_ghost_03},
     {&I_ghostesp_01, &I_ghostesp_02, &I_ghostesp_03},
+    {&I_kirby_01, &I_kirby_02, &I_kirby_03},
     {&I_yapper_01, &I_yapper_02, &I_yapper_03}};
 
 typedef enum {
@@ -175,6 +183,8 @@ static inline int get_gap_height(BirdType bird_type) {
         return YAPPER_GAB_HEIGHT;
     case BirdTypeGhostESP:
         return GHOSTESP_GAB_HEIGHT;
+    case BirdTypeKirby:
+        return FLAPPY_GAB_HEIGHT - 5;
     case BirdTypeYapper:
         return YAPPER_GAB_HEIGHT;
     default:
@@ -367,6 +377,8 @@ static void flappy_game_render_callback(Canvas* const canvas, void* ctx) {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Ghost");
             } else if(game_state->selected_bird == BirdTypeGhostESP) {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Flappy Ghost");
+            } else if(game_state->selected_bird == BirdTypeKirby) {
+                canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Kirby");
             } else if(game_state->selected_bird == BirdTypeYapper) {
                 canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignBottom, "Yappy Bird");
             } else {

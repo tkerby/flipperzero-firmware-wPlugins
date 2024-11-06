@@ -9,7 +9,7 @@ App(
     fap_category="Games",
     fap_author="DroomOne, xMasterX, jaylikesbunda, the1anonlypr3",
     fap_weburl="https://github.com/DroomOne/flipperzero-firmware/tree/dev/applications/flappy_bird",  #  OG SOURCE
-    fap_version="1.4.2",
+    fap_version="1.5",
     fap_description="Flappy Bird Game",
     #  [Flappy: Border hitboxes, bigger Pilars (By TQMatvey)](https://github.com/DarkFlippers/unleashed-firmware/pull/114)
     #  [Increase pilars line width to improve visibility (By ahumeniy)](https://github.com/DarkFlippers/unleashed-firmware/pull/140)
@@ -17,4 +17,5 @@ App(
     #  [Ghost mode (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/6ed136bcba4333dca5af896623eb0dfd8a996f08)
     #  [Fix duplicate collision check & fixed pillar creation bug & GhostESP (By jaylikesbunda)](https://github.com/Next-Flip/Momentum-Apps/pull/31) (Retained Improved RM Ghost)
     #  [420 mode (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3559b8f6696a1005105086d51c4a69e320234f37)
+    #  [Kirby mode (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
 )
