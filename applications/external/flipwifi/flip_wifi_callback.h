@@ -1,5 +1,6 @@
 #ifndef FLIP_WIFI_CALLBACK_H
 #define FLIP_WIFI_CALLBACK_H
+#include "flip_wifi_icons.h"
 
 FlipWiFiApp* app_instance;
 

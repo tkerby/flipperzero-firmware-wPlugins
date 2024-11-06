@@ -230,7 +230,7 @@ FuriString* flipper_http_load_from_file(char* file_path) {
         storage_file_close(file);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
-        return false;
+        return NULL;
     }
 
     // Append each byte to the FuriString

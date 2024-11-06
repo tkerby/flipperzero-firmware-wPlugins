@@ -265,12 +265,12 @@ void save_settings(const char* ssid, const char* password) {
             }
 
             storage_file_close(file);
-            storage_file_free(file);
         } else {
             // If the file doesn't exist, initialize an empty buffer
             file_size = 0;
             buffer = NULL;
         }
+        storage_file_free(file);
 
         // Prepare new SSID and Password
         size_t new_ssid_length = strlen(ssid) + 1; // Including null terminator

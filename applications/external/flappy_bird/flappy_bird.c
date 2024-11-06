@@ -170,7 +170,7 @@ static int flappy_game_load_score() {
 static inline int get_gap_height(BirdType bird_type) {
     switch(bird_type) {
     case BirdType420:
-        return YAPPER_GAB_HEIGHT - 3;
+        return GHOSTESP_GAB_HEIGHT + 1;
     case BirdTypeGhost:
         return YAPPER_GAB_HEIGHT;
     case BirdTypeGhostESP:
