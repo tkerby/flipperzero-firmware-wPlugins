@@ -21,7 +21,7 @@
 
 */
 
-#include <SPI.h>
+#include "SPI.h"
 #include "mcp2518fd_can.h"
 
 #define MAX_DATA_SIZE 64
@@ -42,40 +42,35 @@ unsigned char buf[MAX_DATA_SIZE];
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial);
+    while(!Serial);
 
     CAN.setMode(CAN_NORMAL_MODE);
 
     // init can bus : arbitration bitrate = 500k, data bitrate = 1M
-    while (0 != CAN.begin(CAN_500K_4M)) {
+    while(0 != CAN.begin(CAN_500K_4M)) {
         Serial.println("CAN init fail, retry...");
         delay(100);
     }
     Serial.println("CAN init ok!");
-    
+
     // init_Filt_Mask(filter number, ext, filter, mask)
     // There're 32 set of filter/mask for MCP2517FD, filter number can be set to 0~31
-    CAN.init_Filt_Mask(0, 0, 0, 0);     // get all standard frame 
-    CAN.init_Filt_Mask(1, 1, 0, 0);     // get all extended frame
-
+    CAN.init_Filt_Mask(0, 0, 0, 0); // get all standard frame
+    CAN.init_Filt_Mask(1, 1, 0, 0); // get all extended frame
 }
 
-
-void loop() 
-{
-    
-    if (CAN_MSGAVAIL == CAN.checkReceive()) 
-    {
-        CAN.readMsgBuf(&len, buf);            // You should call readMsgBuff before getCanId
+void loop() {
+    if(CAN_MSGAVAIL == CAN.checkReceive()) {
+        CAN.readMsgBuf(&len, buf); // You should call readMsgBuff before getCanId
         unsigned long id = CAN.getCanId();
-        
+
         Serial.print("Get Data From id: ");
         Serial.println(id);
         Serial.print("Len = ");
         Serial.println(len);
-            // print the data
-        for (int i = 0; i < len; i++) {
-            Serial.print(buf[i]); 
+        // print the data
+        for(int i = 0; i < len; i++) {
+            Serial.print(buf[i]);
             Serial.print("\t");
         }
         Serial.println();

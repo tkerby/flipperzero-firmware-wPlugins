@@ -20,7 +20,7 @@
     CAN_1000K_4M
 */
 
-#include <SPI.h>
+#include "SPI.h"
 #include "mcp2518fd_can.h"
 
 #define MAX_DATA_SIZE 64
@@ -37,30 +37,27 @@ mcp2518fd CAN(SPI_CS_PIN); // Set CS pin
 
 unsigned char stmp[MAX_DATA_SIZE] = {0};
 
-
 void setup() {
     Serial.begin(115200);
-    while (!Serial) {}
+    while(!Serial) {
+    }
 
     CAN.setMode(CAN_NORMAL_MODE);
 
     // init can bus : arbitration bitrate = 500k, data bitrate = 1M
-    while (0 != CAN.begin(CAN_500K_4M));
+    while(0 != CAN.begin(CAN_500K_4M));
     Serial.println("CAN init ok!");
 
     byte mode = CAN.getMode();
     Serial.print("CAN mode = ");
     Serial.println(mode);
-    
-    for(int i=0; i<MAX_DATA_SIZE; i++)
-    {
+
+    for(int i = 0; i < MAX_DATA_SIZE; i++) {
         stmp[i] = i;
     }
 }
 
-
-void loop() 
-{
+void loop() {
     // send data:  id = 0x00, standrad frame, data len = 64, stmp: data buf
     CAN.sendMsgBuf(0x01, 0, CANFD::len2dlc(MAX_DATA_SIZE), stmp);
     delay(10);

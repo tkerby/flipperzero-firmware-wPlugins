@@ -3,8 +3,8 @@
 #ifndef _MCP2518FD_H_
 #define _MCP2518FD_H_
 #include "mcp2518fd_can_dfs.h"
-#include <Arduino.h>
-#include <SPI.h>
+#include "Arduino.h"
+#include "SPI.h"
 
 // *****************************************************************************
 // *****************************************************************************

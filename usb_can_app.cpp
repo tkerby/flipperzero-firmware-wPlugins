@@ -131,7 +131,7 @@ void usb_can_app_free(UsbCanApp* app) {
 /** @brief  Function called by entry function @ref usb_can_app_start. It will allocate ressource through @ref usb_can_app_alloc, start main application thread through @ref view_dispatcher_run(), and free ressources once applications is terminated via @ref usb_can_app_free(). 
  * @details This intermediary function is used because beeing within a C++ compilation unit, and therefore beeing able to use C++ features.
 */
-int32_t usb_can_app(void* p) {
+extern "C" int32_t usb_can_app(void* p) {
     UNUSED(p);
     UsbCanApp* usb_can_app = usb_can_app_alloc();
 

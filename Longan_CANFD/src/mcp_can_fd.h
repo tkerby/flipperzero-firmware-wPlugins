@@ -1,8 +1,8 @@
 #ifndef _MCP_CAN_H_
 #define _MCP_CAN_H_
 
-#include <Arduino.h>
-#include <SPI.h>
+#include "Arduino.h"
+#include "SPI.h"
 #include <inttypes.h>
 #include <stddef.h>
 

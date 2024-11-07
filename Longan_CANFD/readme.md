@@ -64,7 +64,7 @@ here are many examples implemented in this library. One of the examples is below
     CAN_1000K_4M
 */
 
-#include <SPI.h>
+#include "SPI.h"
 #include "mcp2518fd_can.h"
 
 #define MAX_DATA_SIZE 64

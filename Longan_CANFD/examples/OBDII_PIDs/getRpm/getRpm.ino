@@ -13,7 +13,7 @@
     https://en.wikipedia.org/wiki/OBD-II_PIDs
 ***************************************************************************************************/
 
-#include <SPI.h>
+#include "SPI.h"
 #include "mcp2518fd_can.h"
 
 // pin for CAN-FD Shield
@@ -26,14 +26,14 @@ const int CAN_INT_PIN = 7;
 
 mcp2518fd CAN(SPI_CS_PIN); // Set CS pin
 
-#define PID_ENGIN_PRM       0x0C
-#define PID_VEHICLE_SPEED   0x0D
-#define PID_COOLANT_TEMP    0x05
+#define PID_ENGIN_PRM 0x0C
+#define PID_VEHICLE_SPEED 0x0D
+#define PID_COOLANT_TEMP 0x05
 
-#define CAN_ID_PID          0x7DF
+#define CAN_ID_PID 0x7DF
 
 unsigned char PID_INPUT;
-unsigned char getPid    = 0;
+unsigned char getPid = 0;
 
 void set_mask_filt() {
     CAN.init_Filt_Mask(0, 0, 0x7E8, 0x7FC);
@@ -44,22 +44,20 @@ void sendPid(unsigned char __pid) {
     CAN.sendMsgBuf(CAN_ID_PID, 0, 8, tmp);
 }
 
-bool getRPM(int *r)
-{
+bool getRPM(int* r) {
     sendPid(PID_ENGIN_PRM);
     unsigned long __timeout = millis();
 
-    while(millis()-__timeout < 1000)      // 1s time out
+    while(millis() - __timeout < 1000) // 1s time out
     {
         unsigned char len = 0;
         unsigned char buf[8];
 
-        if (CAN_MSGAVAIL == CAN.checkReceive()) {                // check if get data
-            CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+        if(CAN_MSGAVAIL == CAN.checkReceive()) { // check if get data
+            CAN.readMsgBuf(&len, buf); // read data,  len: data length, buf: data buf
 
-            if(buf[1] == 0x41)
-            {
-                *r = (256*buf[3]+buf[4])/4;
+            if(buf[1] == 0x41) {
+                *r = (256 * buf[3] + buf[4]) / 4;
                 return 1;
             }
         }
@@ -70,9 +68,10 @@ bool getRPM(int *r)
 
 void setup() {
     Serial.begin(115200);
-    while(!Serial){};
+    while(!Serial) {
+    };
 
-    while (CAN_OK != CAN.begin(CAN20_500KBPS)) {             // init can bus : baudrate = 500k
+    while(CAN_OK != CAN.begin(CAN20_500KBPS)) { // init can bus : baudrate = 500k
         Serial.println("CAN init fail, retry...");
         delay(100);
     }
@@ -81,17 +80,16 @@ void setup() {
 }
 
 void loop() {
-
     int __rpm = 0;
 
     int ret = getRPM(&__rpm);
 
-    if(ret)
-    {
+    if(ret) {
         Serial.print("Engin Speed: ");
         Serial.print(__rpm);
         Serial.println(" rpm");
-    }else Serial.println("get Engin Speed Fail...");
+    } else
+        Serial.println("get Engin Speed Fail...");
 
     delay(500);
 }

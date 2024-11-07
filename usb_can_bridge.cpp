@@ -48,6 +48,7 @@ typedef enum {
     WorkerEvtCdcRx = (1 << 3),
 
     WorkerEvtCfgChange = (1 << 4),
+    WorkerEvtTestTx = (1 << 5)
 } WorkerEvtFlags;
 
 /** @brief used as condition to exit waiting routine for @ref usb_can_worker() */
@@ -58,7 +59,8 @@ typedef enum {
 #define USB_CAN_RX_BUF_SIZE (USB_CDC_PKT_LEN * 5)
 /** @brief SLCAN command max length */
 #define USB_CAN_BRIDGE_MAX_INPUT_LENGTH 28
-
+/** @brief CAN test message length "CANLIVE"+termination character */
+#define TEST_MESSAGE_LENGTH 8
 /* ----------------------------------------------------------- LOCAL FUNCTIONS DECLARATIONS--------------------------------------------------------------- */
 static void vcp_on_cdc_tx_complete(void* context);
 static void vcp_on_cdc_rx(void* context);
@@ -91,6 +93,9 @@ const char serma_banner[] =
 /**  @brief message used to signal to user that SLCAN command length is invalid*/
 const char invalid_length[] = "[err]: invalid command length (command %c) :length = %d\r\n";
 
+/**  @brief message used when user sends "d\\r\\n" while in USB-CAN-BRIDGE mode*/
+const char hello_bridge_usb[] = "USB BRIDGE STARTED in debug mode!\r\n";
+
 /** @brief VCP events callback to be registered in USB CDC stack through @ref usb_can_vcp_init() */
 static const CdcCallbacks cdc_cb = {
     vcp_on_cdc_tx_complete,
@@ -109,6 +114,8 @@ static const CdcCallbacks cdc_cb = {
 static volatile bool cdc_busy;
 /** @brief flag used to check CAN interface has been initialized before issuing a transaction. If it is not the case an error will be returned.*/
 static bool can_if_initialized;
+/** @brief flag set when 'd' custom command is sent in USB degub bridge mode used to add carriage return on CAN Rx frames */
+static bool debug;
 
 /* ----------------------------------------------------------- LOCAL FUNCTION IMPLEMENTATION--------------------------------------------------------------- */
 
@@ -163,12 +170,17 @@ static void usb_can_print_banner(UsbCanBridge* usb_can) {
  * @brief application main thread : receives CAN frames and forward it to host.
  * @details This thread is started upon application mode selection by user. It perform following actions:
  * -# if can is enabled (USB loopback test not selected)
- *     - initialize CAN
- *     - if CAN test is enabled : enter in an infinite transmit loop (identifier 0x7E57CA, data="CANLIVE")
- * -# initialize USB Virtual Com port (USB CDC class)
- * -# display Serma welcome banner on Virtual Com Port (VCP)
- * -# print application mode (USB loopback or USB-CAN-Bridge)
- * -# start @ref usb_can_tx_thread() (@ref usb_can->tx_thread) used for CAN transmission.
+ *     - initialize CAN @500KBaud through @ref mcp2518fd::begin()
+ *     - create a timer through @ref furi_timer_alloc() to clear TX LED through @ref 
+ *     - if CAN test is enabled , enter in an infinite transmit loop (exited only on @ref WorkerEvtStop) which will :
+ *          - switch ON every 2 transmissions through @ref mcp2518::mcpDigitalWrite()
+ *          - start timer @ 200ms through @ref furi_timer_start() to schedule LED clear and CAN transmissions through @ref usb_can_bridge_clear_led()
+ *          - send test message (identifier 0x7E57CA, data="CANLIVE") through @ref mcp2518::sendMsgBuf()
+ *          - wait either @ref usb_can_bridge_clear_led() is trigged ( @ref WorkerEvtTestTx) or app is leaved ( @ref WorkerEvtStop)
+ * -# initialize USB Virtual Com port (USB CDC class) through @ref usb_can_vcp_init()
+ * -# display Serma welcome banner on Virtual Com Port (VCP) through @ref usb_can_print_banner()
+ * -# print application mode (USB loopback or USB-CAN-Bridge) 
+ * -# allocate (through @ref furi_thread_alloc_ex()) and  start @ref usb_can_tx_thread() ( @ref UsbCanBridge::tx_thread) used for CAN transmission through @ref furi_thread_start().
  * -# start thread Main loop : This loop will block until either :
  *      - a packet is received on CAN Link : flag set via @ref usb_can_on_irq_cb(). in this case:
  *          -# CAN frame data field is read via @ref mcp2518fd::readMsgBuf()
@@ -180,12 +192,23 @@ static void usb_can_print_banner(UsbCanBridge* usb_can) {
  *              - for extended frames : TIIIIIIIIlddd... @ref snprintf() format T%08X%1d%02X%02X ...
  *          -# formated SLCAN frame is sent on USB VCP through @ref furi_hal_cdc_send().
  *      - VCP is configured via flipper buttons via @ref usb_can_set_config()
- * 
+ *  @warning 3 important points have to be considered:
+ *  - ssnprintf() works bad with "%hhx" formatter (for 8 bytes types) if data to print is not 4 bytes aligned (ex: in an array), that's why an intermediary variable is used to print CAN Rx buffer.
+ *  - @ref mcp2518fd::readMsgBuf() shall be called before clearing interrupt flags, otherwise flags will not be cleared.
+ *  - as described in detailed description, clear of interrupt flag shall be done here. 
  * */
 static int32_t usb_can_worker(void* context) {
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     uint32_t events = 0;
     uint32_t tmp_data;
+    int printSize;
+    byte len = 0;
+    REG_CiINTENABLE flags;
+    unsigned char buf[256];
+    char tmp[32];
+    const char msg_fmt[] = "t%03lX%1ld";
+    const char ext_msg_fmt[] = "T%08lX%1ld";
+    const char* fmt_pointer;
 
     if(usb_can->state != UsbCanLoopBackTestState) {
         furi_hal_gpio_init(&gpio_ext_pc3, GpioModeInterruptFall, GpioPullUp, GpioSpeedVeryHigh);
@@ -196,12 +219,22 @@ static int32_t usb_can_worker(void* context) {
 
         if(usb_can->state == UsbCanPingTestState) {
             const char test_can_msg[] = "CANLIVE";
-
+            usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
+            usb_can->timer =
+                furi_timer_alloc(usb_can_bridge_clear_led, FuriTimerTypeOnce, usb_can);
             while(!(events & WorkerEvtStop)) {
-                usb_can->can->begin(CAN20_500KBPS, CAN_SYSCLK_40M);
+                if(usb_can->st.tx_cnt % (TEST_MESSAGE_LENGTH * 2)) {
+                    usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_LOW);
+                }
+                usb_can->st.tx_cnt += TEST_MESSAGE_LENGTH;
+                furi_timer_start(usb_can->timer, furi_kernel_get_tick_frequency() / 5);
                 usb_can->can->sendMsgBuf(
-                    (uint32_t)0x7E57CA, (byte)1, (byte)8, (const byte*)test_can_msg);
-                events = furi_thread_flags_get();
+                    (uint32_t)0x7E57CA,
+                    (byte)1,
+                    (byte)TEST_MESSAGE_LENGTH,
+                    (const byte*)test_can_msg);
+                events = furi_thread_flags_wait(
+                    WorkerEvtStop | WorkerEvtTestTx, FuriFlagWaitAny, FuriWaitForever);
             }
             return 0;
         }
@@ -215,14 +248,9 @@ static int32_t usb_can_worker(void* context) {
     usb_can->tx_thread = furi_thread_alloc_ex("UsbCanTxWorker", 2048, usb_can_tx_thread, usb_can);
 
     usb_can_vcp_init(usb_can, usb_can->cfg.vcp_ch);
-    usb_can_print_banner(usb_can);
-
-    WAIT_CDC();
-    if(usb_can->state != UsbCanLoopBackTestState) {
-        const char hello_bridge_usb[] = "USB BRIDGE STARTED\r\n";
-        furi_hal_cdc_send(
-            usb_can->cfg.vcp_ch, (uint8_t*)hello_bridge_usb, sizeof(hello_bridge_usb));
-    } else {
+    if(usb_can->state == UsbCanLoopBackTestState) {
+        usb_can_print_banner(usb_can);
+        WAIT_CDC();
         const char hello_test_usb[] = "USB LOOPBACK TEST START\r\n";
         furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)hello_test_usb, sizeof(hello_test_usb));
     }
@@ -234,31 +262,31 @@ static int32_t usb_can_worker(void* context) {
         furi_check(!(events & FuriFlagError));
         if(events & WorkerEvtStop) break;
         if(events & WorkerEvtRxDone) {
-            int printSize;
-            byte len = 0;
-            REG_CiINTENABLE flags;
-            unsigned char buf[256];
-
             usb_can->can->readMsgBuf(&len, buf); // You should call readMsgBuff before getCanId
             usb_can->can->mcp2518fd_readClearInterruptFlags(&flags);
-            furi_hal_gpio_enable_int_callback(&gpio_ext_pc3);
+
             unsigned long id = usb_can->can->getCanId();
             byte ext = usb_can->can->isExtendedFrame();
-            char msg[] = "t%03lX%1d";
+            tmp_data = len;
+
             if(ext) {
-                msg[0] = 'T';
-                msg[2] = '8';
+                fmt_pointer = ext_msg_fmt;
+            } else {
+                fmt_pointer = msg_fmt;
             }
-            char tmp[32];
-            printSize = snprintf(tmp, sizeof(msg), msg, id, len);
+            printSize = snprintf(tmp, sizeof(tmp), fmt_pointer, id, tmp_data);
             for(int i = 0; i < len; i++) {
                 tmp_data = buf[i];
                 printSize += snprintf(&tmp[printSize], 3, "%02lX", tmp_data);
             }
-            printSize += snprintf(&tmp[printSize], 3, "\r\n");
+            printSize += snprintf(&tmp[printSize], 2, "\r");
+            if(debug) {
+                printSize += snprintf(&tmp[printSize], 2, "\n");
+            }
+            usb_can->st.rx_cnt += len;
             WAIT_CDC();
             furi_hal_cdc_send(usb_can->cfg.vcp_ch, (uint8_t*)tmp, printSize);
-            usb_can->st.rx_cnt += len;
+            furi_hal_gpio_enable_int_callback(&gpio_ext_pc3);
         }
 
         if(events & WorkerEvtCfgChange) {
@@ -380,6 +408,15 @@ static int32_t usb_can_tx_thread(void* context) {
                     case 't':
                         usb_can_bridge_send(usb_can, next_command, cmd_len, false, false);
                         break;
+                    case 'd': {
+                        usb_can_print_banner(usb_can);
+                        WAIT_CDC();
+                        furi_hal_cdc_send(
+                            usb_can->cfg.vcp_ch,
+                            (uint8_t*)hello_bridge_usb,
+                            sizeof(hello_bridge_usb));
+                        debug = true;
+                    } break;
                     default:
                         M_USB_CAN_ERROR_INVALID_COMMAND();
                         break;
@@ -581,6 +618,9 @@ static void usb_can_bridge_clear_led(void* context) {
     (void)context;
     UsbCanBridge* usb_can = (UsbCanBridge*)context;
     usb_can->can->mcpDigitalWrite(GPIO_PIN_0, GPIO_HIGH);
+    if(usb_can->state == UsbCanPingTestState) {
+        furi_thread_flags_set(furi_thread_get_id(usb_can->thread), WorkerEvtTestTx);
+    }
 }
 
 /** @brief function called on error : it is an implementation to printf which prints output on USB CDC channel.

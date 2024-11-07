@@ -27,11 +27,10 @@
   CANBed FD - https://www.longan-labs.cc/1030009.html
 */
 
-
-#include <SPI.h>
+#include "SPI.h"
 #include "mcp2518fd_can.h"
 
-// pinS for CAN-FD Shield, 
+// pinS for CAN-FD Shield,
 //const int SPI_CS_PIN = 9;
 //const int CAN_INT_PIN = 2;
 
@@ -45,7 +44,7 @@ unsigned char flagRecv = 0;
 void setup() {
     Serial.begin(115200);
     while(!Serial);
-    while (CAN_OK != CAN.begin(CAN20_500KBPS)) {             // init can bus : baudrate = 500k
+    while(CAN_OK != CAN.begin(CAN20_500KBPS)) { // init can bus : baudrate = 500k
         Serial.println("CAN init fail, retry...");
         delay(100);
     }
@@ -61,22 +60,20 @@ void loop() {
     unsigned char len = 0;
     unsigned char buf[8];
 
-    if (flagRecv) 
-    {         
-        
+    if(flagRecv) {
         flagRecv = 0;
-        CAN.readMsgBuf(&len, buf);            // You should call readMsgBuff before getCanId
+        CAN.readMsgBuf(&len, buf); // You should call readMsgBuff before getCanId
         unsigned long id = CAN.getCanId();
         unsigned char ext = CAN.isExtendedFrame();
-        
+
         Serial.print(ext ? "GET EXTENDED FRAME FROM ID: 0X" : "GET STANDARD FRAME FROM ID: 0X");
         Serial.println(id, HEX);
-        
+
         Serial.print("Len = ");
         Serial.println(len);
-            // print the data
-        for (int i = 0; i < len; i++) {
-            Serial.print(buf[i]); 
+        // print the data
+        for(int i = 0; i < len; i++) {
+            Serial.print(buf[i]);
             Serial.print("\t");
         }
         Serial.println();
