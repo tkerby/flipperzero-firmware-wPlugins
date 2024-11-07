@@ -1929,7 +1929,8 @@ uint8_t mcp2518fd::mcp2518fd_init(uint32_t speedset, const byte clock) {
     //mObj.word = 0; // Only allow standard IDs
     //mcp2518fd_FilterMaskConfigure(CAN_FILTER0, &mObj.bF);
 
-    for(int i = 0; i < 32; i++) CANFDSPI_FilterDisable((CAN_FILTER)i); // disable all filter
+    for(int i = 0; i < 32; i++)
+        CANFDSPI_FilterDisable((CAN_FILTER)i); // disable all filter
 
     // Link FIFO and Filter
     mcp2518fd_FilterToFifoLink(CAN_FILTER0, APP_RX_FIFO, true);
@@ -2130,7 +2131,7 @@ byte mcp2518fd::checkReceive(void) {
     // RXnIF in Bit 1 and 0 return ((res & MCP_STAT_RXIF_MASK)? CAN_MSGAVAIL: CAN_NOMSG);
     mcp2518fd_ReceiveChannelStatusGet(APP_RX_FIFO, &status);
 
-    byte res = (byte)(status & CAN_RX_FIFO_NOT_EMPTY_EVENT) + 2;
+    byte res = (byte)((byte)status & (byte)CAN_RX_FIFO_NOT_EMPTY_EVENT) + 2;
     return res;
 }
 

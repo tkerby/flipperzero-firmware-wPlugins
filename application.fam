@@ -2,7 +2,7 @@ App(
     appid="canfdhs",
     name="CAN-FD-HS",
     sources=["*.c","*.cpp"],
-    apptype=FlipperAppType.MENUEXTERNAL,
+    apptype=FlipperAppType.EXTERNAL,
     entry_point="usb_can_app_start",
     stack_size=1 * 1024,
     icon="A_GPIO_14",
