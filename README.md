@@ -27,7 +27,10 @@ If issues are encountered, you can get more informations by connecting directly 
 - no parity
 - no hardware control flow
 
-You can see the following screenshot for more informations.
+You can see the following screenshot for more informations:
+
+![debug mode](./Documentation/images/debug.png "debug mode")
+
 **This mode can also be used to configure connection in flexible datarate ("S9" command).**<br>
 
 > **NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
