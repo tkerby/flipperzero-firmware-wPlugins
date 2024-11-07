@@ -1,8 +1,8 @@
 #ifndef FLIP_LIBRARY_E_H
 #define FLIP_LIBRARY_E_H
 
-#include <flipper_http.h>
-#include <easy_flipper.h>
+#include <flipper_http/flipper_http.h>
+#include <easy_flipper/easy_flipper.h>
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -11,7 +11,7 @@
 #include <gui/view_dispatcher.h>
 #include <notification/notification.h>
 #include <dialogs/dialogs.h>
-#include <jsmn.h>
+#include <jsmn/jsmn.h>
 
 #define TAG "FlipLibrary"
 
@@ -82,4 +82,7 @@ typedef struct {
     uint32_t uart_text_input_buffer_size_dictionary; // Size of the text input buffer (dictionary)
 } FlipLibraryApp;
 
+// Function to free the resources used by FlipLibraryApp
+void flip_library_app_free(FlipLibraryApp* app);
+extern FlipLibraryApp* app_instance;
 #endif // FLIP_LIBRARY_E_H

@@ -34,3 +34,8 @@ The app automatically allocates necessary resources and initializes settings. If
    - Visit **Random Facts** to read interesting trivia.
    - Configure **WiFi settings** if network-related features are required in the future.
    - Check the **About** section to learn more about the app.
+
+# Known Bugs
+
+1. **Screen Delay**: Occasionally, the Defition or Random Facts screen may get stuck on "Loading".
+   - If it takes longer than 10 seconds, restart your Flipper Zero.
