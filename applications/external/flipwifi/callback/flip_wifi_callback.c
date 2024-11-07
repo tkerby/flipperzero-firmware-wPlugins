@@ -1,15 +1,9 @@
-#ifndef FLIP_WIFI_CALLBACK_H
-#define FLIP_WIFI_CALLBACK_H
-#include "flip_wifi_icons.h"
+#include <callback/flip_wifi_callback.h>
 
-FlipWiFiApp* app_instance;
-
-static void callback_submenu_choices(void* context, uint32_t index);
-// array to store each SSID
 char* ssid_list[64];
 uint32_t ssid_index = 0;
 
-static void flip_wifi_redraw_submenu_saved(FlipWiFiApp* app) {
+void flip_wifi_redraw_submenu_saved(FlipWiFiApp* app) {
     // re draw the saved submenu
     submenu_reset(app->submenu_wifi_saved);
     submenu_set_header(app->submenu_wifi_saved, "Saved APs");
@@ -29,7 +23,7 @@ static void flip_wifi_redraw_submenu_saved(FlipWiFiApp* app) {
     }
 }
 
-static uint32_t callback_to_submenu_main(void* context) {
+uint32_t callback_to_submenu_main(void* context) {
     if(!context) {
         FURI_LOG_E(TAG, "Context is NULL");
         return VIEW_NONE;
@@ -38,7 +32,7 @@ static uint32_t callback_to_submenu_main(void* context) {
     ssid_index = 0;
     return FlipWiFiViewSubmenuMain;
 }
-static uint32_t callback_to_submenu_scan(void* context) {
+uint32_t callback_to_submenu_scan(void* context) {
     if(!context) {
         FURI_LOG_E(TAG, "Context is NULL");
         return VIEW_NONE;
@@ -47,7 +41,7 @@ static uint32_t callback_to_submenu_scan(void* context) {
     ssid_index = 0;
     return FlipWiFiViewSubmenuScan;
 }
-static uint32_t callback_to_submenu_saved(void* context) {
+uint32_t callback_to_submenu_saved(void* context) {
     if(!context) {
         FURI_LOG_E(TAG, "Context is NULL");
         return VIEW_NONE;
@@ -74,7 +68,7 @@ void popup_callback_main(void* context) {
 }
 
 // Callback for drawing the main screen
-static void flip_wifi_view_draw_callback_scan(Canvas* canvas, void* model) {
+void flip_wifi_view_draw_callback_scan(Canvas* canvas, void* model) {
     UNUSED(model);
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -84,7 +78,7 @@ static void flip_wifi_view_draw_callback_scan(Canvas* canvas, void* model) {
     canvas_draw_icon(canvas, 96, 53, &I_ButtonRight_4x7);
     canvas_draw_str_aligned(canvas, 103, 54, AlignLeft, AlignTop, "Add");
 }
-static void flip_wifi_view_draw_callback_saved(Canvas* canvas, void* model) {
+void flip_wifi_view_draw_callback_saved(Canvas* canvas, void* model) {
     UNUSED(model);
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
@@ -284,7 +278,7 @@ bool flip_wifi_handle_scan(FlipWiFiApp* app) {
 
     return true;
 }
-static void callback_submenu_choices(void* context, uint32_t index) {
+void callback_submenu_choices(void* context, uint32_t index) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWiFiApp is NULL");
@@ -358,7 +352,7 @@ static void callback_submenu_choices(void* context, uint32_t index) {
     }
 }
 
-static void flip_wifi_text_updated_password_scan(void* context) {
+void flip_wifi_text_updated_password_scan(void* context) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWiFiApp is NULL");
@@ -389,7 +383,7 @@ static void flip_wifi_text_updated_password_scan(void* context) {
     // switch to back to the scan view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuScan);
 }
-static void flip_wifi_text_updated_password_saved(void* context) {
+void flip_wifi_text_updated_password_saved(void* context) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWiFiApp is NULL");
@@ -416,7 +410,7 @@ static void flip_wifi_text_updated_password_saved(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuSaved);
 }
 
-static void flip_wifi_text_updated_add_ssid(void* context) {
+void flip_wifi_text_updated_add_ssid(void* context) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWiFiApp is NULL");
@@ -435,7 +429,7 @@ static void flip_wifi_text_updated_add_ssid(void* context) {
     // do nothing for now, go to the next text input to set the password
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewTextInputSavedAddPassword);
 }
-static void flip_wifi_text_updated_add_password(void* context) {
+void flip_wifi_text_updated_add_password(void* context) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWiFiApp is NULL");
@@ -467,5 +461,3 @@ static void flip_wifi_text_updated_add_password(void* context) {
     // switch to back to the saved view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuSaved);
 }
-
-#endif // FLIP_WIFI_CALLBACK_H

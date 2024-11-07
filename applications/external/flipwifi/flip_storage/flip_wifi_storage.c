@@ -1,11 +1,17 @@
-#ifndef FLIP_WIFI_STORAGE_H
-#define FLIP_WIFI_STORAGE_H
+#include <flip_storage/flip_wifi_storage.h>
 
-// define the paths for all of the FlipperHTTP apps
-#define WIFI_SSID_LIST_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/wifi_list.txt"
+char* app_ids[8] = {
+    "flip_wifi",
+    "flip_store",
+    "flip_social",
+    "flip_trader",
+    "flip_weather",
+    "flip_library",
+    "web_crawler",
+    "flip_rss"};
 
 // Function to save the playlist
-void save_playlist(const WiFiPlaylist* playlist) {
+void save_playlist(WiFiPlaylist* playlist) {
     if(!playlist) {
         FURI_LOG_E(TAG, "Playlist is NULL");
         return;
@@ -192,20 +198,11 @@ bool load_playlist(WiFiPlaylist* playlist) {
     return true;
 }
 
-char* app_ids[7] = {
-    "flip_wifi",
-    "flip_store",
-    "flip_social",
-    "flip_trader",
-    "flip_weather",
-    "flip_library",
-    "web_crawler"};
-
 void save_settings(const char* ssid, const char* password) {
     char edited_directory_path[128];
     char edited_file_path[128];
 
-    for(size_t i = 0; i < 7; i++) {
+    for(size_t i = 0; i < 8; i++) {
         // Construct the directory and file paths for the current app
         snprintf(
             edited_directory_path,
@@ -270,6 +267,7 @@ void save_settings(const char* ssid, const char* password) {
             file_size = 0;
             buffer = NULL;
         }
+
         storage_file_free(file);
 
         // Prepare new SSID and Password
@@ -389,5 +387,3 @@ void save_settings(const char* ssid, const char* password) {
         furi_record_close(RECORD_STORAGE);
     }
 }
-
-#endif

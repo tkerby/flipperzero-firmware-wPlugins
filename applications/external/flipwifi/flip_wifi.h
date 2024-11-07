@@ -1,8 +1,8 @@
 #ifndef FLIP_WIFI_E_H
 #define FLIP_WIFI_E_H
 
-#include <flipper_http.h>
-#include <easy_flipper.h>
+#include <flipper_http/flipper_http.h>
+#include <easy_flipper/easy_flipper.h>
 #include <storage/storage.h>
 
 #define TAG               "FlipWiFi"
@@ -81,5 +81,10 @@ typedef struct {
 
     WiFiPlaylist wifi_playlist; // The playlist of wifi networks
 } FlipWiFiApp;
+
+extern FlipWiFiApp* app_instance;
+
+// Function to free the resources used by FlipWiFiApp
+void flip_wifi_app_free(FlipWiFiApp* app);
 
 #endif // FLIP_WIFI_E_H
