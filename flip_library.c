@@ -1,8 +1,9 @@
-#ifndef FLIP_LIBRARY_FREE_H
-#define FLIP_LIBRARY_FREE_H
+#include "flip_library.h"
+
+FlipLibraryApp *app_instance = NULL;
 
 // Function to free the resources used by FlipLibraryApp
-static void flip_library_app_free(FlipLibraryApp *app)
+void flip_library_app_free(FlipLibraryApp *app)
 {
     if (!app)
     {
@@ -94,5 +95,3 @@ static void flip_library_app_free(FlipLibraryApp *app)
     // free the app
     free(app);
 }
-
-#endif // FLIP_LIBRARY_FREE_H

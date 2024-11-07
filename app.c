@@ -1,8 +1,5 @@
-#include <flip_library_e.h>
-#include <flip_library_storage.h>
-#include <flip_library_callback.h>
-#include <flip_library_i.h>
-#include <flip_library_free.h>
+#include <flip_library.h>
+#include <alloc/flip_library_alloc.h>
 
 // Entry point for the FlipLibrary application
 int32_t flip_library_app(void *p)
@@ -11,8 +8,8 @@ int32_t flip_library_app(void *p)
     UNUSED(p);
 
     // Initialize the FlipLibrary application
-    FlipLibraryApp *app = flip_library_app_alloc();
-    if (!app)
+    app_instance = flip_library_app_alloc();
+    if (!app_instance)
     {
         FURI_LOG_E(TAG, "Failed to allocate FlipLibraryApp");
         return -1;
@@ -25,10 +22,10 @@ int32_t flip_library_app(void *p)
     }
 
     // Run the view dispatcher
-    view_dispatcher_run(app->view_dispatcher);
+    view_dispatcher_run(app_instance->view_dispatcher);
 
     // Free the resources used by the FlipLibrary application
-    flip_library_app_free(app);
+    flip_library_app_free(app_instance);
 
     // Return 0 to indicate success
     return 0;

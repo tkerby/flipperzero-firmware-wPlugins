@@ -1,8 +1,7 @@
-#ifndef FLIP_LIBRARY_I_H
-#define FLIP_LIBRARY_I_H
+#include "alloc/flip_library_alloc.h"
 
 // Function to allocate resources for the FlipLibraryApp
-static FlipLibraryApp *flip_library_app_alloc()
+FlipLibraryApp *flip_library_app_alloc()
 {
     FlipLibraryApp *app = (FlipLibraryApp *)malloc(sizeof(FlipLibraryApp));
 
@@ -147,5 +146,3 @@ static FlipLibraryApp *flip_library_app_alloc()
 
     return app;
 }
-
-#endif // FLIP_LIBRARY_I_H

@@ -1,13 +1,9 @@
-#ifndef FLIP_LIBRARY_CALLBACK_H
-#define FLIP_LIBRARY_CALLBACK_H
-static uint32_t random_facts_index = 0;
-static bool sent_random_fact_request = false;
-static bool random_fact_request_success = false;
-static bool random_fact_request_success_all = false;
+#include <callback/flip_library_callback.h>
+uint32_t random_facts_index = 0;
+bool sent_random_fact_request = false;
+bool random_fact_request_success = false;
+bool random_fact_request_success_all = false;
 char *random_fact = NULL;
-static FlipLibraryApp *app_instance = NULL;
-
-#define MAX_TOKENS 512 // Adjust based on expected JSON size
 
 // Parse JSON to find the "text" key
 char *flip_library_parse_random_fact()
@@ -54,7 +50,7 @@ char *flip_library_parse_dictionary()
     return get_json_value("definition", fhttp.last_response, 16);
 }
 
-static void flip_library_request_error(Canvas *canvas)
+void flip_library_request_error(Canvas *canvas)
 {
     if (fhttp.last_response == NULL)
     {
@@ -98,7 +94,7 @@ static void flip_library_request_error(Canvas *canvas)
     }
 }
 
-static void flip_library_draw_fact(char *message, Widget **widget)
+void flip_library_draw_fact(char *message, Widget **widget)
 {
     if (app_instance == NULL)
     {
@@ -170,7 +166,7 @@ static void flip_library_draw_fact(char *message, Widget **widget)
 }
 
 // Callback for drawing the main screen
-static void view_draw_callback_random_facts(Canvas *canvas, void *model)
+void view_draw_callback_random_facts(Canvas *canvas, void *model)
 {
     if (!canvas || !app_instance)
     {
@@ -554,7 +550,7 @@ static void view_draw_callback_random_facts(Canvas *canvas, void *model)
     }
 }
 
-static void view_draw_callback_dictionary_run(Canvas *canvas, void *model)
+void view_draw_callback_dictionary_run(Canvas *canvas, void *model)
 {
     if (!canvas || !app_instance || app_instance->uart_text_input_buffer_dictionary == NULL)
     {
@@ -693,7 +689,7 @@ bool view_input_callback_random_facts(InputEvent *event, void *context)
     return false;
 }
 
-static void callback_submenu_choices(void *context, uint32_t index)
+void callback_submenu_choices(void *context, uint32_t index)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
     if (!app)
@@ -747,7 +743,7 @@ static void callback_submenu_choices(void *context, uint32_t index)
     }
 }
 
-static void text_updated_ssid(void *context)
+void text_updated_ssid(void *context)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
     if (!app)
@@ -784,7 +780,7 @@ static void text_updated_ssid(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewSettings);
 }
 
-static void text_updated_password(void *context)
+void text_updated_password(void *context)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
     if (!app)
@@ -821,7 +817,7 @@ static void text_updated_password(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewSettings);
 }
 
-static void text_updated_dictionary(void *context)
+void text_updated_dictionary(void *context)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
     if (!app)
@@ -840,7 +836,7 @@ static void text_updated_dictionary(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewDictionaryRun);
 }
 
-static uint32_t callback_to_submenu(void *context)
+uint32_t callback_to_submenu(void *context)
 {
     if (!context)
     {
@@ -856,7 +852,7 @@ static uint32_t callback_to_submenu(void *context)
     return FlipLibraryViewSubmenuMain;
 }
 
-static uint32_t callback_to_wifi_settings(void *context)
+uint32_t callback_to_wifi_settings(void *context)
 {
     if (!context)
     {
@@ -867,7 +863,7 @@ static uint32_t callback_to_wifi_settings(void *context)
     return FlipLibraryViewSettings;
 }
 
-static uint32_t callback_to_random_facts(void *context)
+uint32_t callback_to_random_facts(void *context)
 {
     if (!context)
     {
@@ -878,7 +874,7 @@ static uint32_t callback_to_random_facts(void *context)
     return FlipLibraryViewRandomFacts;
 }
 
-static void settings_item_selected(void *context, uint32_t index)
+void settings_item_selected(void *context, uint32_t index)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
     if (!app)
@@ -905,7 +901,7 @@ static void settings_item_selected(void *context, uint32_t index)
  * @param context The context - unused
  * @return next view id (VIEW_NONE to exit the app)
  */
-static uint32_t callback_exit_app(void *context)
+uint32_t callback_exit_app(void *context)
 {
     // Exit the application
     if (!context)
@@ -916,5 +912,3 @@ static uint32_t callback_exit_app(void *context)
     UNUSED(context);
     return VIEW_NONE; // Return VIEW_NONE to exit the app
 }
-
-#endif // FLIP_LIBRARY_CALLBACK_H
