@@ -1,11 +1,12 @@
 #ifndef FLIP_WEATHER_E_H
 #define FLIP_WEATHER_E_H
 
-#include <flipper_http.h>
-#include <easy_flipper.h>
-#include <jsmn.h>
+#include <flipper_http/flipper_http.h>
+#include <easy_flipper/easy_flipper.h>
+#include <jsmn/jsmn.h>
 
-#define TAG "FlipWeather"
+#define TAG        "FlipWeather"
+#define MAX_TOKENS 64 // Adjust based on expected JSON size (50)
 
 // Define the submenu items for our FlipWeather application
 typedef enum {
@@ -48,20 +49,21 @@ typedef struct {
     uint32_t uart_text_input_buffer_size_password; // Size of the text input buffer
 } FlipWeatherApp;
 
-static char city_data[48];
-static char region_data[48];
-static char country_data[48];
-static char lat_data[32];
-static char lon_data[32];
-static char ip_data[32];
-static char temperature_data[32];
-static char precipitation_data[32];
-static char rain_data[32];
-static char showers_data[32];
-static char snowfall_data[32];
-static char time_data[32];
-static char ip_address[16];
+extern char city_data[48];
+extern char region_data[48];
+extern char country_data[48];
+extern char lat_data[32];
+extern char lon_data[32];
+extern char ip_data[32];
+extern char temperature_data[32];
+extern char precipitation_data[32];
+extern char rain_data[32];
+extern char showers_data[32];
+extern char snowfall_data[32];
+extern char time_data[32];
+extern char ip_address[16];
 
-#define MAX_TOKENS 64 // Adjust based on expected JSON size (50)
+// Function to free the resources used by FlipWeatherApp
+void flip_weather_app_free(FlipWeatherApp* app);
 
 #endif

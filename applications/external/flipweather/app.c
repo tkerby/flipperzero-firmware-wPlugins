@@ -1,9 +1,5 @@
-#include <flip_weather_e.h>
-#include <flip_weather_storage.h>
-#include "flip_weather_parse.h"
-#include <flip_weather_callback.h>
-#include <flip_weather_i.h>
-#include <flip_weather_free.h>
+#include <flip_weather.h>
+#include <alloc/flip_weather_alloc.h>
 
 // Entry point for the FlipWeather application
 int32_t flip_weather_app(void* p) {

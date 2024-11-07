@@ -1,8 +1,7 @@
-#ifndef FLIP_WEATHER_I_H
-#define FLIP_WEATHER_I_H
+#include <alloc/flip_weather_alloc.h>
 
 // Function to allocate resources for the FlipWeatherApp
-static FlipWeatherApp* flip_weather_app_alloc() {
+FlipWeatherApp* flip_weather_app_alloc() {
     FlipWeatherApp* app = (FlipWeatherApp*)malloc(sizeof(FlipWeatherApp));
 
     Gui* gui = furi_record_open(RECORD_GUI);
@@ -168,5 +167,3 @@ static FlipWeatherApp* flip_weather_app_alloc() {
 
     return app;
 }
-
-#endif
