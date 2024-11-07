@@ -194,7 +194,7 @@ FlipWiFiApp* flip_wifi_app_alloc() {
            callback_to_submenu_saved,
            &app->view_dispatcher,
            app)) {
-        return false;
+        return NULL;
     }
 
     // Load the playlist from storage
