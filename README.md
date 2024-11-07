@@ -39,5 +39,5 @@ FlipWeather automatically allocates necessary resources and initializes settings
 
 ## Known Issues
 
-1. **GPS Screen Delay**: Occasionally, the GPS screen may get stuck on "Loading Data" or take up to 30 seconds to display information.
-   - **Solution**: Restart your Flipper Zero if this occurs.
+1. **GPS Screen Delay**: Occasionally, the GPS or Weather screen may get stuck on "Loading Data".
+   - If it takes longer than 10 seconds, restart your Flipper Zero.

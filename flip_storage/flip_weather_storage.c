@@ -1,12 +1,7 @@
-#ifndef FLIP_WEATHER_STORAGE_H
-#define FLIP_WEATHER_STORAGE_H
 
-#include <furi.h>
-#include <storage/storage.h>
+#include "flip_storage/flip_weather_storage.h"
 
-#define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_weather/settings.bin"
-
-static void save_settings(
+void save_settings(
     const char *ssid,
     const char *password)
 {
@@ -49,7 +44,7 @@ static void save_settings(
     furi_record_close(RECORD_STORAGE);
 }
 
-static bool load_settings(
+bool load_settings(
     char *ssid,
     size_t ssid_size,
     char *password,
@@ -98,5 +93,3 @@ static bool load_settings(
 
     return true;
 }
-
-#endif // FLIP_WEATHER_STORAGE_H

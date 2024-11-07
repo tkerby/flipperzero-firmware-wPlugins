@@ -1,12 +1,12 @@
-#pragma once
+#include "parse/flip_weather_parse.h"
 
-static bool sent_get_request = false;
-static bool get_request_success = false;
-static bool got_ip_address = false;
-static bool geo_information_processed = false;
-static bool weather_information_processed = false;
+bool sent_get_request = false;
+bool get_request_success = false;
+bool got_ip_address = false;
+bool geo_information_processed = false;
+bool weather_information_processed = false;
 
-static bool flip_weather_parse_ip_address()
+bool flip_weather_parse_ip_address()
 {
     // load the received data from the saved file
     FuriString *returned_data = flipper_http_load_from_file(fhttp.file_path);
@@ -34,14 +34,13 @@ static bool flip_weather_parse_ip_address()
         return false;
     }
     snprintf(ip_address, 16, "%s", ip);
-    ip_address[15] = '\0';
     free(ip);
     furi_string_free(returned_data);
     return true;
 }
 
 // handle the async-to-sync process to get and set the IP address
-static bool flip_weather_handle_ip_address()
+bool flip_weather_handle_ip_address()
 {
     if (!got_ip_address)
     {
@@ -55,6 +54,7 @@ static bool flip_weather_handle_ip_address()
         if (!flipper_http_get_request("https://httpbin.org/get"))
         {
             FURI_LOG_E(TAG, "Failed to get IP address");
+            fhttp.state = ISSUE;
             return false;
         }
         else
@@ -65,7 +65,7 @@ static bool flip_weather_handle_ip_address()
         while (fhttp.state == RECEIVING && furi_timer_is_running(fhttp.get_timeout_timer) > 0)
         {
             // Wait for the feed to be received
-            furi_delay_ms(100);
+            furi_delay_ms(10);
         }
         furi_timer_stop(fhttp.get_timeout_timer);
         if (!flip_weather_parse_ip_address())
@@ -80,15 +80,18 @@ static bool flip_weather_handle_ip_address()
     return true;
 }
 
-static bool send_geo_location_request()
+bool send_geo_location_request()
 {
     if (!sent_get_request && fhttp.state == IDLE)
     {
         sent_get_request = true;
-        get_request_success = flipper_http_get_request_with_headers("https://ipwhois.app/json/", jsmn("Content-Type", "application/json"));
+        char *headers = jsmn("Content-Type", "application/json");
+        get_request_success = flipper_http_get_request_with_headers("https://ipwhois.app/json/", headers);
+        free(headers);
         if (!get_request_success)
         {
             FURI_LOG_E(TAG, "Failed to send GET request");
+            fhttp.state = ISSUE;
             return false;
         }
         fhttp.state = RECEIVING;
@@ -96,7 +99,7 @@ static bool send_geo_location_request()
     return true;
 }
 
-static void process_geo_location()
+void process_geo_location()
 {
     if (!geo_information_processed && fhttp.last_response != NULL)
     {
@@ -118,7 +121,7 @@ static void process_geo_location()
     }
 }
 
-static void process_weather()
+void process_weather()
 {
     if (!weather_information_processed && fhttp.last_response != NULL)
     {

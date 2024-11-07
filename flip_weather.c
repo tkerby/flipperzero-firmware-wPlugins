@@ -1,8 +1,21 @@
-#ifndef FLIP_WEATHER_FREE_H
-#define FLIP_WEATHER_FREE_H
+#include "flip_weather.h"
+
+char city_data[48];
+char region_data[48];
+char country_data[48];
+char lat_data[32];
+char lon_data[32];
+char ip_data[32];
+char temperature_data[32];
+char precipitation_data[32];
+char rain_data[32];
+char showers_data[32];
+char snowfall_data[32];
+char time_data[32];
+char ip_address[16];
 
 // Function to free the resources used by FlipWeatherApp
-static void flip_weather_app_free(FlipWeatherApp *app)
+void flip_weather_app_free(FlipWeatherApp *app)
 {
     if (!app)
     {
@@ -79,5 +92,3 @@ static void flip_weather_app_free(FlipWeatherApp *app)
     if (app)
         free(app);
 }
-
-#endif // FLIP_WEATHER_FREE_H
