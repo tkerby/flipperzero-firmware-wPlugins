@@ -1,8 +1,9 @@
-#ifndef FLIP_WIFI_FREE_H
-#define FLIP_WIFI_FREE_H
+#include "flip_wifi.h"
+
+FlipWiFiApp *app_instance = NULL;
 
 // Function to free the resources used by FlipWiFiApp
-static void flip_wifi_app_free(FlipWiFiApp *app)
+void flip_wifi_app_free(FlipWiFiApp *app)
 {
     if (!app)
     {
@@ -98,5 +99,3 @@ static void flip_wifi_app_free(FlipWiFiApp *app)
     if (app)
         free(app);
 }
-
-#endif // FLIP_WIFI_FREE_H

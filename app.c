@@ -1,8 +1,5 @@
-#include <flip_wifi_e.h>
-#include <flip_wifi_storage.h>
-#include <flip_wifi_callback.h>
-#include <flip_wifi_i.h>
-#include <flip_wifi_free.h>
+#include <flip_wifi.h>
+#include <alloc/flip_wifi_alloc.h>
 
 // Entry point for the FlipWiFi application
 int32_t flip_wifi_main(void *p)
@@ -11,8 +8,8 @@ int32_t flip_wifi_main(void *p)
     UNUSED(p);
 
     // Initialize the FlipWiFi application
-    FlipWiFiApp *app = flip_wifi_app_alloc();
-    if (!app)
+    app_instance = flip_wifi_app_alloc();
+    if (!app_instance)
     {
         FURI_LOG_E(TAG, "Failed to allocate FlipWiFiApp");
         return -1;
@@ -25,10 +22,10 @@ int32_t flip_wifi_main(void *p)
     }
 
     // Run the view dispatcher
-    view_dispatcher_run(app->view_dispatcher);
+    view_dispatcher_run(app_instance->view_dispatcher);
 
     // Free the resources used by the FlipWiFi application
-    flip_wifi_app_free(app);
+    flip_wifi_app_free(app_instance);
 
     // Return 0 to indicate success
     return 0;
