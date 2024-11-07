@@ -1,7 +1,6 @@
-#ifndef FLIP_SOCIAL_EXPLORE_H
-#define FLIP_SOCIAL_EXPLORE_H
+#include "flip_social_explore.h"
 
-static FlipSocialModel* flip_social_explore_alloc() {
+FlipSocialModel* flip_social_explore_alloc() {
     // Allocate memory for each username only if not already allocated
     FlipSocialModel* explore = malloc(sizeof(FlipSocialModel));
     if(explore == NULL) {
@@ -20,33 +19,52 @@ static FlipSocialModel* flip_social_explore_alloc() {
     return explore;
 }
 
-static void flip_social_free_explore() {
+void flip_social_free_explore() {
     if(!flip_social_explore) {
         FURI_LOG_E(TAG, "Explore model is NULL");
         return;
     }
     for(int i = 0; i < flip_social_explore->count; i++) {
-        free(flip_social_explore->usernames[i]);
+        if(flip_social_explore->usernames[i]) {
+            free(flip_social_explore->usernames[i]);
+        }
     }
 }
 
 // for now we're just listing the current users
 // as the feed is upgraded, then we can port more to the explore view
-static bool flip_social_get_explore() {
+bool flip_social_get_explore() {
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_rss/users.txt");
+
+    fhttp.save_received_data = true;
+    char* headers = jsmn("Content-Type", "application/json");
     // will return true unless the devboard is not connected
     bool success = flipper_http_get_request_with_headers(
-        "https://www.flipsocial.net/api/user/users/", jsmn("Content-Type", "application/json"));
+        "https://www.flipsocial.net/api/user/users/", headers);
+    free(headers);
     if(!success) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for explore");
+        fhttp.state = ISSUE;
         return false;
     }
     fhttp.state = RECEIVING;
     return true;
 }
 
-static bool flip_social_parse_json_explore() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_explore() {
+    // load the received data from the saved file
+    FuriString* user_data = flipper_http_load_from_file(fhttp.file_path);
+    if(user_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(user_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(user_data);
         return false;
     }
 
@@ -54,11 +72,13 @@ static bool flip_social_parse_json_explore() {
     flip_social_explore = flip_social_explore_alloc();
     if(flip_social_explore == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate memory for explore usernames.");
+        furi_string_free(user_data);
+        free(data_cstr);
         return false;
     }
 
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -67,9 +87,11 @@ static bool flip_social_parse_json_explore() {
     flip_social_explore->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("users", fhttp.received_data, MAX_TOKENS);
+    char* json_users = get_json_value("users", data_cstr, MAX_TOKENS);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse users array.");
+        furi_string_free(user_data);
+        free(data_cstr);
         return false;
     }
 
@@ -84,12 +106,11 @@ static bool flip_social_parse_json_explore() {
         if(*(end - 1) == '"') *(end - 1) = '\0';
 
         // Copy username to pre-allocated memory
-        strncpy(
+        snprintf(
             flip_social_explore->usernames[flip_social_explore->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_explore->usernames[flip_social_explore->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_explore->count++;
         start = end + 1;
     }
@@ -100,12 +121,11 @@ static bool flip_social_parse_json_explore() {
         if(*(start + strlen(start) - 1) == ']') *(start + strlen(start) - 1) = '\0';
         if(*(start + strlen(start) - 1) == '"') *(start + strlen(start) - 1) = '\0';
 
-        strncpy(
+        snprintf(
             flip_social_explore->usernames[flip_social_explore->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_explore->usernames[flip_social_explore->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_explore->count++;
     }
 
@@ -125,8 +145,7 @@ static bool flip_social_parse_json_explore() {
     free(json_users);
     free(start);
     free(end);
-
-    return true;
+    furi_string_free(user_data);
+    free(data_cstr);
+    return flip_social_explore->count > 0;
 }
-
-#endif // FLIP_SOCIAL_EXPLORE_H

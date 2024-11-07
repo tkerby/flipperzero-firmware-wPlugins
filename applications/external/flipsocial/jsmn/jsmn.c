@@ -3,113 +3,20 @@
  *
  * Copyright (c) 2010 Serge Zaitsev
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * [License text continues...]
  */
-#ifndef JSMN_H
-#define JSMN_H
 
-#include <stddef.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef JSMN_STATIC
-#define JSMN_API static
-#else
-#define JSMN_API extern
-#endif
+#include <jsmn/jsmn.h>
+#include <stdlib.h>
+#include <string.h>
 
 /**
-   * JSON type identifier. Basic types are:
-   * 	o Object
-   * 	o Array
-   * 	o String
-   * 	o Other primitive: number, boolean (true/false) or null
-   */
-typedef enum {
-    JSMN_UNDEFINED = 0,
-    JSMN_OBJECT = 1 << 0,
-    JSMN_ARRAY = 1 << 1,
-    JSMN_STRING = 1 << 2,
-    JSMN_PRIMITIVE = 1 << 3
-} jsmntype_t;
-
-enum jsmnerr {
-    /* Not enough tokens were provided */
-    JSMN_ERROR_NOMEM = -1,
-    /* Invalid character inside JSON string */
-    JSMN_ERROR_INVAL = -2,
-    /* The string is not a full JSON packet, more bytes expected */
-    JSMN_ERROR_PART = -3
-};
-
-/**
-   * JSON token description.
-   * type		type (object, array, string etc.)
-   * start	start position in JSON data string
-   * end		end position in JSON data string
-   */
-typedef struct jsmntok {
-    jsmntype_t type;
-    int start;
-    int end;
-    int size;
-#ifdef JSMN_PARENT_LINKS
-    int parent;
-#endif
-} jsmntok_t;
-
-/**
-   * JSON parser. Contains an array of token blocks available. Also stores
-   * the string being parsed now and current position in that string.
-   */
-typedef struct jsmn_parser {
-    unsigned int pos; /* offset in the JSON string */
-    unsigned int toknext; /* next token to allocate */
-    int toksuper; /* superior token node, e.g. parent object or array */
-} jsmn_parser;
-
-/**
-   * Create JSON parser over an array of tokens
-   */
-JSMN_API void jsmn_init(jsmn_parser* parser);
-
-/**
-   * Run JSON parser. It parses a JSON data string into and array of tokens, each
-   * describing
-   * a single JSON object.
-   */
-JSMN_API int jsmn_parse(
-    jsmn_parser* parser,
-    const char* js,
-    const size_t len,
-    jsmntok_t* tokens,
-    const unsigned int num_tokens);
-
-#ifndef JSMN_HEADER
-/**
-   * Allocates a fresh unused token from the token pool.
-   */
+ * Allocates a fresh unused token from the token pool.
+ */
 static jsmntok_t*
     jsmn_alloc_token(jsmn_parser* parser, jsmntok_t* tokens, const size_t num_tokens) {
     jsmntok_t* tok;
+
     if(parser->toknext >= num_tokens) {
         return NULL;
     }
@@ -123,8 +30,8 @@ static jsmntok_t*
 }
 
 /**
-   * Fills token type and boundaries.
-   */
+ * Fills token type and boundaries.
+ */
 static void
     jsmn_fill_token(jsmntok_t* token, const jsmntype_t type, const int start, const int end) {
     token->type = type;
@@ -134,8 +41,8 @@ static void
 }
 
 /**
-   * Fills next available token with JSON primitive.
-   */
+ * Fills next available token with JSON primitive.
+ */
 static int jsmn_parse_primitive(
     jsmn_parser* parser,
     const char* js,
@@ -195,8 +102,8 @@ found:
 }
 
 /**
-   * Fills next token with JSON string.
-   */
+ * Fills next token with JSON string.
+ */
 static int jsmn_parse_string(
     jsmn_parser* parser,
     const char* js,
@@ -272,9 +179,18 @@ static int jsmn_parse_string(
 }
 
 /**
-   * Parse JSON string and fill tokens.
-   */
-JSMN_API int jsmn_parse(
+ * Create JSON parser over an array of tokens
+ */
+void jsmn_init(jsmn_parser* parser) {
+    parser->pos = 0;
+    parser->toknext = 0;
+    parser->toksuper = -1;
+}
+
+/**
+ * Parse JSON string and fill tokens.
+ */
+int jsmn_parse(
     jsmn_parser* parser,
     const char* js,
     const size_t len,
@@ -464,36 +380,6 @@ JSMN_API int jsmn_parse(
     return count;
 }
 
-/**
-   * Creates a new parser based over a given buffer with an array of tokens
-   * available.
-   */
-JSMN_API void jsmn_init(jsmn_parser* parser) {
-    parser->pos = 0;
-    parser->toknext = 0;
-    parser->toksuper = -1;
-}
-
-#endif /* JSMN_HEADER */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* JSMN_H */
-
-#ifndef JB_JSMN_EDIT
-#define JB_JSMN_EDIT
-/* Added in by JBlanked on 2024-10-16 for use in Flipper Zero SDK*/
-
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdio.h>
-#include <string.h>
-#include <furi.h>
-
 // Helper function to create a JSON object
 char* jsmn(const char* key, const char* value) {
     int length = strlen(key) + strlen(value) + 8; // Calculate required length
@@ -514,7 +400,7 @@ int jsoneq(const char* json, jsmntok_t* tok, const char* s) {
     return -1;
 }
 
-// return the value of the key in the JSON data
+// Return the value of the key in the JSON data
 char* get_json_value(char* key, char* json_data, uint32_t max_tokens) {
     // Parse the JSON feed
     if(json_data != NULL) {
@@ -778,5 +664,3 @@ char** get_json_array_values(char* key, char* json_data, uint32_t max_tokens, in
     free(array_str);
     return values;
 }
-
-#endif /* JB_JSMN_EDIT */

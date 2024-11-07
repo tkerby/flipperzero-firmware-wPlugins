@@ -1,7 +1,6 @@
-#ifndef FLIP_SOCIAL_FRIENDS
-#define FLIP_SOCIAL_FRIENDS
+#include "flip_social_friends.h"
 
-static FlipSocialModel* flip_social_friends_alloc() {
+FlipSocialModel* flip_social_friends_alloc() {
     // Allocate memory for each username only if not already allocated
     FlipSocialModel* friends = malloc(sizeof(FlipSocialModel));
     for(size_t i = 0; i < MAX_FRIENDS; i++) {
@@ -16,28 +15,37 @@ static FlipSocialModel* flip_social_friends_alloc() {
     return friends;
 }
 
-static void flip_social_free_friends() {
+void flip_social_free_friends() {
     if(!flip_social_friends) {
         FURI_LOG_E(TAG, "Friends model is NULL");
         return;
     }
     for(int i = 0; i < flip_social_friends->count; i++) {
-        free(flip_social_friends->usernames[i]);
+        if(flip_social_friends->usernames[i]) {
+            free(flip_social_friends->usernames[i]);
+        }
     }
 }
 
 // for now we're just listing the current users
 // as the feed is upgraded, then we can port more to the friends view
-static bool flip_social_get_friends() {
+bool flip_social_get_friends() {
     // will return true unless the devboard is not connected
     char url[100];
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_rss/friends.txt");
+
+    fhttp.save_received_data = true;
+    char* headers = jsmn("Content-Type", "application/json");
     snprintf(
         url,
         100,
         "https://www.flipsocial.net/api/user/friends/%s/",
         app_instance->login_username_logged_in);
-    bool success =
-        flipper_http_get_request_with_headers(url, jsmn("Content-Type", "application/json"));
+    bool success = flipper_http_get_request_with_headers(url, headers);
+    free(headers);
     if(!success) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for friends");
         return false;
@@ -46,7 +54,7 @@ static bool flip_social_get_friends() {
     return true;
 }
 
-static bool flip_social_update_friends() {
+bool flip_social_update_friends() {
     if(!app_instance->submenu_friends) {
         FURI_LOG_E(TAG, "Friends submenu is NULL");
         return false;
@@ -69,9 +77,17 @@ static bool flip_social_update_friends() {
     return true;
 }
 
-static bool flip_social_parse_json_friends() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_friends() {
+    // load the received data from the saved file
+    FuriString* friend_data = flipper_http_load_from_file(fhttp.file_path);
+    if(friend_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(friend_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(friend_data);
         return false;
     }
 
@@ -79,11 +95,13 @@ static bool flip_social_parse_json_friends() {
     flip_social_friends = flip_social_friends_alloc();
     if(flip_social_friends == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate memory for friends usernames.");
+        furi_string_free(friend_data);
+        free(data_cstr);
         return false;
     }
 
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -92,9 +110,11 @@ static bool flip_social_parse_json_friends() {
     flip_social_friends->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("friends", fhttp.received_data, MAX_TOKENS);
+    char* json_users = get_json_value("friends", data_cstr, MAX_TOKENS);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse friends array.");
+        furi_string_free(friend_data);
+        free(data_cstr);
         return false;
     }
 
@@ -109,12 +129,11 @@ static bool flip_social_parse_json_friends() {
         if(*(end - 1) == '"') *(end - 1) = '\0';
 
         // Copy username to pre-allocated memory
-        strncpy(
+        snprintf(
             flip_social_friends->usernames[flip_social_friends->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_friends->usernames[flip_social_friends->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_friends->count++;
         start = end + 1;
     }
@@ -125,18 +144,19 @@ static bool flip_social_parse_json_friends() {
         if(*(start + strlen(start) - 1) == ']') *(start + strlen(start) - 1) = '\0';
         if(*(start + strlen(start) - 1) == '"') *(start + strlen(start) - 1) = '\0';
 
-        strncpy(
+        snprintf(
             flip_social_friends->usernames[flip_social_friends->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_friends->usernames[flip_social_friends->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_friends->count++;
     }
 
     // Add submenu items for the friends
     if(!flip_social_update_friends()) {
         FURI_LOG_E(TAG, "Failed to update friends submenu");
+        furi_string_free(friend_data);
+        free(data_cstr);
         return false;
     }
 
@@ -144,7 +164,7 @@ static bool flip_social_parse_json_friends() {
     free(json_users);
     free(start);
     free(end);
-
+    furi_string_free(friend_data);
+    free(data_cstr);
     return true;
 }
-#endif // FLIP_SOCIAL_FRIENDS

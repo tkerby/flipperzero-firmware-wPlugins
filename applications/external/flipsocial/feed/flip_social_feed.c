@@ -1,8 +1,7 @@
-#ifndef FLIP_SOCIAL_FEED_H
-#define FLIP_SOCIAL_FEED_H
+#include "flip_social_feed.h"
 
 // Set failure FlipSocialFeed object
-static bool flip_social_temp_feed() {
+bool flip_social_temp_feed() {
     if(flip_social_feed == NULL) {
         flip_social_feed = malloc(sizeof(FlipSocialFeed));
         if(flip_social_feed == NULL) {
@@ -54,7 +53,7 @@ static bool flip_social_temp_feed() {
 }
 
 // Allocate memory for each feed item if not already allocated
-static FlipSocialFeed* flip_social_feed_alloc() {
+FlipSocialFeed* flip_social_feed_alloc() {
     // Initialize the feed
     FlipSocialFeed* feed = (FlipSocialFeed*)malloc(sizeof(FlipSocialFeed));
     if(!feed) {
@@ -80,17 +79,19 @@ static FlipSocialFeed* flip_social_feed_alloc() {
     return feed;
 }
 
-static void flip_social_free_feed() {
+void flip_social_free_feed() {
     if(!flip_social_feed) {
         FURI_LOG_E(TAG, "Feed model is NULL");
         return;
     }
     for(uint32_t i = 0; i < flip_social_feed->count; i++) {
-        free(flip_social_feed->usernames[i]);
+        if(flip_social_feed->usernames[i]) {
+            free(flip_social_feed->usernames[i]);
+        }
     }
 }
 
-static bool flip_social_get_feed() {
+bool flip_social_get_feed() {
     // Get the feed from the server
     if(app_instance->login_username_logged_out == NULL) {
         FURI_LOG_E(TAG, "Username is NULL");
@@ -98,23 +99,39 @@ static bool flip_social_get_feed() {
     }
     char command[128];
     snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_rss/feed.txt");
+
+    fhttp.save_received_data = true;
+    char* headers = jsmn("Content-Type", "application/json");
+    snprintf(
         command,
         128,
         "https://www.flipsocial.net/api/feed/40/%s/extended/",
         app_instance->login_username_logged_out);
-    bool success =
-        flipper_http_get_request_with_headers(command, jsmn("Content-Type", "application/json"));
+    bool success = flipper_http_get_request_with_headers(command, headers);
+    free(headers);
     if(!success) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for feed");
+        fhttp.state = ISSUE;
         return false;
     }
     fhttp.state = RECEIVING;
     return true;
 }
 
-static bool flip_social_parse_json_feed() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_feed() {
+    // load the received data from the saved file
+    FuriString* feed_data = flipper_http_load_from_file(fhttp.file_path);
+    if(feed_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(feed_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(feed_data);
         return false;
     }
 
@@ -124,7 +141,7 @@ static bool flip_social_parse_json_feed() {
         return false;
     }
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -135,7 +152,7 @@ static bool flip_social_parse_json_feed() {
     // Iterate through the feed array
     for(int i = 0; i < MAX_FEED_ITEMS; i++) {
         // Parse each item in the array
-        char* item = get_json_array_value("feed", i, fhttp.received_data, MAX_TOKENS);
+        char* item = get_json_array_value("feed", i, data_cstr, MAX_TOKENS);
         if(item == NULL) {
             break;
         }
@@ -159,11 +176,8 @@ static bool flip_social_parse_json_feed() {
         }
 
         // Safely copy strings with bounds checking
-        strncpy(flip_social_feed->usernames[i], username, MAX_USER_LENGTH - 1);
-        flip_social_feed->usernames[i][MAX_USER_LENGTH - 1] = '\0';
-
-        strncpy(flip_social_feed->messages[i], message, MAX_MESSAGE_LENGTH - 1);
-        flip_social_feed->messages[i][MAX_MESSAGE_LENGTH - 1] = '\0';
+        snprintf(flip_social_feed->usernames[i], MAX_USER_LENGTH, "%s", username);
+        snprintf(flip_social_feed->messages[i], MAX_MESSAGE_LENGTH, "%s", message);
 
         // Store boolean and integer values
         flip_social_feed->is_flipped[i] = strstr(flipped, "true") != NULL;
@@ -181,7 +195,7 @@ static bool flip_social_parse_json_feed() {
         free(id);
     }
 
+    furi_string_free(feed_data);
+    free(data_cstr);
     return flip_social_feed->count > 0;
 }
-
-#endif // FLIP_SOCIAL_FEED_H

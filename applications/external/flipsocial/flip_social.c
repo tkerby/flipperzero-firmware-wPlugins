@@ -1,6 +1,24 @@
-// flip_social_free.h
-#ifndef FLIP_SOCIAL_FREE_H
-#define FLIP_SOCIAL_FREE_H
+#include "flip_social.h"
+
+FlipSocialFeed* flip_social_feed = NULL; // Store the feed
+FlipSocialModel* flip_social_friends = NULL; // Store the friends
+FlipSocialModel2* flip_social_message_users =
+    NULL; // Store the users that have sent messages to the logged in user
+FlipSocialModel* flip_social_explore = NULL; // Store the users to explore
+FlipSocialMessage* flip_social_messages =
+    NULL; // Store the messages between the logged in user and the selected user
+
+FlipSocialApp* app_instance = NULL;
+
+bool flip_social_sent_login_request = false;
+bool flip_social_sent_register_request = false;
+bool flip_social_login_success = false;
+bool flip_social_register_success = false;
+bool flip_social_dialog_shown = false;
+bool flip_social_dialog_stop = false;
+bool flip_social_send_message = false;
+char* last_explore_response = NULL;
+char* selected_message = NULL;
 
 /**
  * @brief Function to free the resources used by FlipSocialApp.
@@ -8,7 +26,7 @@
  * @param app The FlipSocialApp object to free.
  * @return void
  */
-static void flip_social_app_free(FlipSocialApp* app) {
+void flip_social_app_free(FlipSocialApp* app) {
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
         return;
@@ -227,21 +245,9 @@ static void flip_social_app_free(FlipSocialApp* app) {
     if(app->input_event && app->input_event_queue)
         furi_pubsub_unsubscribe(app->input_event_queue, app->input_event);
 
-    // free received_data
-    if(fhttp.received_data) free(fhttp.received_data);
-
-    // free playlist and explore page
-    flip_social_free_explore();
-    flip_social_free_feed();
-    flip_social_free_friends();
-    flip_social_free_message_users();
-    flip_social_free_messages();
-
     // DeInit UART
     flipper_http_deinit();
 
     // Free the app structure
     if(app_instance) free(app_instance);
 }
-
-#endif // FLIP_SOCIAL_FREE_H

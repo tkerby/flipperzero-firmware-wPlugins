@@ -1,13 +1,11 @@
-// flip_social_callback.h
-#ifndef FLIP_SOCIAL_CALLBACK_H
-#define FLIP_SOCIAL_CALLBACK_H
+#include <callback/flip_social_callback.h>
 
 /**
  * @brief Navigation callback to go back to the submenu Logged out.
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedOutSubmenu)
  */
-static uint32_t flip_social_callback_to_submenu_logged_out(void* context) {
+uint32_t flip_social_callback_to_submenu_logged_out(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedOutSubmenu;
 }
@@ -17,7 +15,7 @@ static uint32_t flip_social_callback_to_submenu_logged_out(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInSubmenu)
  */
-static uint32_t flip_social_callback_to_submenu_logged_in(void* context) {
+uint32_t flip_social_callback_to_submenu_logged_in(void* context) {
     UNUSED(context);
     flip_social_free_explore();
     flip_social_free_feed();
@@ -32,7 +30,7 @@ static uint32_t flip_social_callback_to_submenu_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedOutLogin)
  */
-static uint32_t flip_social_callback_to_login_logged_out(void* context) {
+uint32_t flip_social_callback_to_login_logged_out(void* context) {
     UNUSED(context);
     flip_social_sent_login_request = false;
     flip_social_login_success = false;
@@ -44,7 +42,7 @@ static uint32_t flip_social_callback_to_login_logged_out(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedOutRegister)
  */
-static uint32_t flip_social_callback_to_register_logged_out(void* context) {
+uint32_t flip_social_callback_to_register_logged_out(void* context) {
     UNUSED(context);
     flip_social_sent_register_request = false;
     flip_social_register_success = false;
@@ -56,7 +54,7 @@ static uint32_t flip_social_callback_to_register_logged_out(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedOutWifiSettings)
  */
-static uint32_t flip_social_callback_to_wifi_settings_logged_out(void* context) {
+uint32_t flip_social_callback_to_wifi_settings_logged_out(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedOutWifiSettings;
 }
@@ -66,7 +64,7 @@ static uint32_t flip_social_callback_to_wifi_settings_logged_out(void* context) 
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInSettingsWifi)
  */
-static uint32_t flip_social_callback_to_wifi_settings_logged_in(void* context) {
+uint32_t flip_social_callback_to_wifi_settings_logged_in(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInSettingsWifi;
 }
@@ -76,7 +74,7 @@ static uint32_t flip_social_callback_to_wifi_settings_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInSettingsWifi)
  */
-static uint32_t flip_social_callback_to_settings_logged_in(void* context) {
+uint32_t flip_social_callback_to_settings_logged_in(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInSettings;
 }
@@ -86,7 +84,7 @@ static uint32_t flip_social_callback_to_settings_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInCompose)
  */
-static uint32_t flip_social_callback_to_compose_logged_in(void* context) {
+uint32_t flip_social_callback_to_compose_logged_in(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInCompose;
 }
@@ -96,7 +94,7 @@ static uint32_t flip_social_callback_to_compose_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInProfile)
  */
-static uint32_t flip_social_callback_to_profile_logged_in(void* context) {
+uint32_t flip_social_callback_to_profile_logged_in(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInProfile;
 }
@@ -106,7 +104,7 @@ static uint32_t flip_social_callback_to_profile_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInExploreSubmenu)
  */
-static uint32_t flip_social_callback_to_explore_logged_in(void* context) {
+uint32_t flip_social_callback_to_explore_logged_in(void* context) {
     UNUSED(context);
     flip_social_dialog_stop = true;
     last_explore_response = "";
@@ -121,7 +119,7 @@ static uint32_t flip_social_callback_to_explore_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInFriendsSubmenu)
  */
-static uint32_t flip_social_callback_to_friends_logged_in(void* context) {
+uint32_t flip_social_callback_to_friends_logged_in(void* context) {
     UNUSED(context);
     flip_social_dialog_stop = true;
     last_explore_response = "";
@@ -136,7 +134,7 @@ static uint32_t flip_social_callback_to_friends_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInMessagesSubmenu)
  */
-static uint32_t flip_social_callback_to_messages_logged_in(void* context) {
+uint32_t flip_social_callback_to_messages_logged_in(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInMessagesSubmenu;
 }
@@ -146,7 +144,7 @@ static uint32_t flip_social_callback_to_messages_logged_in(void* context) {
  * @param context The context - unused
  * @return next view id (FlipSocialViewLoggedInMessagesUserChoices)
  */
-static uint32_t flip_social_callback_to_messages_user_choices(void* context) {
+uint32_t flip_social_callback_to_messages_user_choices(void* context) {
     UNUSED(context);
     return FlipSocialViewLoggedInMessagesUserChoices;
 }
@@ -156,7 +154,7 @@ static uint32_t flip_social_callback_to_messages_user_choices(void* context) {
  * @param context The context - unused
  * @return next view id (VIEW_NONE to exit the app)
  */
-static uint32_t flip_social_callback_exit_app(void* context) {
+uint32_t flip_social_callback_exit_app(void* context) {
     // Exit the application
     if(!context) {
         FURI_LOG_E(TAG, "Context is NULL");
@@ -172,7 +170,7 @@ static uint32_t flip_social_callback_exit_app(void* context) {
  * @param index The FlipSocialSubmenuIndex item that was clicked.
  * @return void
  */
-static void flip_social_callback_submenu_choices(void* context, uint32_t index) {
+void flip_social_callback_submenu_choices(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -240,13 +238,13 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
         app->is_logged_in = "false";
 
         save_settings(
-            app_instance->wifi_ssid_logged_out,
-            app_instance->wifi_password_logged_out,
-            app_instance->login_username_logged_out,
-            app_instance->login_username_logged_in,
-            app_instance->login_password_logged_out,
-            app_instance->change_password_logged_in,
-            app_instance->is_logged_in);
+            app->wifi_ssid_logged_out,
+            app->wifi_password_logged_out,
+            app->login_username_logged_out,
+            app->login_username_logged_in,
+            app->login_password_logged_out,
+            app->change_password_logged_in,
+            app->is_logged_in);
 
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipSocialViewLoggedOutSubmenu);
         break;
@@ -255,10 +253,20 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
             app->view_dispatcher, FlipSocialViewLoggedInComposeAddPreSaveInput);
         break;
     default:
+        action = ActionNone;
         // Handle the pre-saved message selection (has a max of 25 items)
         if(index >= FlipSocialSubemnuComposeIndexStartIndex &&
            index < FlipSocialSubemnuComposeIndexStartIndex + MAX_PRE_SAVED_MESSAGES) {
-            flip_social_feed->index = index - FlipSocialSubemnuComposeIndexStartIndex;
+            app->pre_saved_messages.index = index - FlipSocialSubemnuComposeIndexStartIndex;
+            snprintf(
+                selected_message,
+                MAX_MESSAGE_LENGTH,
+                "%s",
+                app->pre_saved_messages.messages[app->pre_saved_messages.index]);
+            if(!selected_message) {
+                FURI_LOG_E(TAG, "Selected message is NULL");
+                return;
+            }
             view_dispatcher_switch_to_view(
                 app->view_dispatcher, FlipSocialViewLoggedInProcessCompose);
         }
@@ -267,6 +275,10 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
         else if(
             index >= FlipSocialSubmenuExploreIndexStartIndex &&
             index < FlipSocialSubmenuExploreIndexStartIndex + MAX_EXPLORE_USERS) {
+            if(!flip_social_explore) {
+                FURI_LOG_E(TAG, "FlipSocialExplore is NULL");
+                return;
+            }
             flip_social_explore->index = index - FlipSocialSubmenuExploreIndexStartIndex;
             view_dispatcher_switch_to_view(
                 app->view_dispatcher, FlipSocialViewLoggedInExploreProccess);
@@ -276,6 +288,10 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
         else if(
             index >= FlipSocialSubmenuLoggedInIndexFriendsStart &&
             index < FlipSocialSubmenuLoggedInIndexFriendsStart + MAX_FRIENDS) {
+            if(!flip_social_friends) {
+                FURI_LOG_E(TAG, "FlipSocialFriends is NULL");
+                return;
+            }
             flip_social_friends->index = index - FlipSocialSubmenuLoggedInIndexFriendsStart;
             view_dispatcher_switch_to_view(
                 app->view_dispatcher, FlipSocialViewLoggedInFriendsProcess);
@@ -285,6 +301,10 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
         else if(
             index >= FlipSocialSubmenuLoggedInIndexMessagesUsersStart &&
             index < FlipSocialSubmenuLoggedInIndexMessagesUsersStart + MAX_MESSAGE_USERS) {
+            if(!flip_social_message_users) {
+                FURI_LOG_E(TAG, "FlipSocialMessageUsers is NULL");
+                return;
+            }
             flip_social_message_users->index =
                 index - FlipSocialSubmenuLoggedInIndexMessagesUsersStart;
             if(flipper_http_process_response_async(
@@ -299,6 +319,10 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
             index >= FlipSocialSubmenuLoggedInIndexMessagesUserChoicesIndexStart &&
             index <
                 FlipSocialSubmenuLoggedInIndexMessagesUserChoicesIndexStart + MAX_EXPLORE_USERS) {
+            if(!flip_social_explore) {
+                FURI_LOG_E(TAG, "FlipSocialExplore is NULL");
+                return;
+            }
             flip_social_explore->index =
                 index - FlipSocialSubmenuLoggedInIndexMessagesUserChoicesIndexStart;
             view_dispatcher_switch_to_view(
@@ -316,7 +340,7 @@ static void flip_social_callback_submenu_choices(void* context, uint32_t index) 
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_wifi_settings_ssid_updated(void* context) {
+void flip_social_logged_out_wifi_settings_ssid_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -371,7 +395,7 @@ static void flip_social_logged_out_wifi_settings_ssid_updated(void* context) {
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_wifi_settings_password_updated(void* context) {
+void flip_social_logged_out_wifi_settings_password_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -427,8 +451,7 @@ static void flip_social_logged_out_wifi_settings_password_updated(void* context)
  * @param index The index of the selected item.
  * @return void
  */
-static void
-    flip_social_text_input_logged_out_wifi_settings_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_out_wifi_settings_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -454,7 +477,7 @@ static void
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_login_username_updated(void* context) {
+void flip_social_logged_out_login_username_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -504,7 +527,7 @@ static void flip_social_logged_out_login_username_updated(void* context) {
  * @return void
  */
 
-static void flip_social_logged_out_login_password_updated(void* context) {
+void flip_social_logged_out_login_password_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -554,7 +577,7 @@ static void flip_social_logged_out_login_password_updated(void* context) {
  * @param index The index of the selected item.
  * @return void
  */
-static void flip_social_text_input_logged_out_login_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_out_login_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -583,7 +606,7 @@ static void flip_social_text_input_logged_out_login_item_selected(void* context,
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_register_username_updated(void* context) {
+void flip_social_logged_out_register_username_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -613,7 +636,7 @@ static void flip_social_logged_out_register_username_updated(void* context) {
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_register_password_updated(void* context) {
+void flip_social_logged_out_register_password_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -643,7 +666,7 @@ static void flip_social_logged_out_register_password_updated(void* context) {
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_out_register_password_2_updated(void* context) {
+void flip_social_logged_out_register_password_2_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -675,8 +698,7 @@ static void flip_social_logged_out_register_password_2_updated(void* context) {
  * @param index The index of the selected item.
  * @return void
  */
-static void
-    flip_social_text_input_logged_out_register_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_out_register_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -710,7 +732,7 @@ static void
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_wifi_settings_ssid_updated(void* context) {
+void flip_social_logged_in_wifi_settings_ssid_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -767,7 +789,7 @@ static void flip_social_logged_in_wifi_settings_ssid_updated(void* context) {
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_wifi_settings_password_updated(void* context) {
+void flip_social_logged_in_wifi_settings_password_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -825,8 +847,7 @@ static void flip_social_logged_in_wifi_settings_password_updated(void* context) 
  * @param index The index of the selected item.
  * @return void
  */
-static void
-    flip_social_text_input_logged_in_wifi_settings_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_in_wifi_settings_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -852,7 +873,7 @@ static void
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_compose_pre_save_updated(void* context) {
+void flip_social_logged_in_compose_pre_save_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -911,7 +932,7 @@ static void flip_social_logged_in_compose_pre_save_updated(void* context) {
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_profile_change_password_updated(void* context) {
+void flip_social_logged_in_profile_change_password_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -982,7 +1003,7 @@ static void flip_social_logged_in_profile_change_password_updated(void* context)
  * @param index The index of the selected item.
  * @return void
  */
-static void flip_social_text_input_logged_in_profile_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_in_profile_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -1028,8 +1049,7 @@ static void flip_social_text_input_logged_in_profile_item_selected(void* context
  * @param index The index of the selected item.
  * @return void
  */
-static void
-    flip_social_text_input_logged_in_settings_item_selected(void* context, uint32_t index) {
+void flip_social_text_input_logged_in_settings_item_selected(void* context, uint32_t index) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -1052,7 +1072,7 @@ static void
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_messages_user_choice_message_updated(void* context) {
+void flip_social_logged_in_messages_user_choice_message_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -1127,7 +1147,7 @@ static void flip_social_logged_in_messages_user_choice_message_updated(void* con
  * @param context The context - FlipSocialApp object.
  * @return void
  */
-static void flip_social_logged_in_messages_new_message_updated(void* context) {
+void flip_social_logged_in_messages_new_message_updated(void* context) {
     FlipSocialApp* app = (FlipSocialApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipSocialApp is NULL");
@@ -1186,5 +1206,3 @@ static void flip_social_logged_in_messages_new_message_updated(void* context) {
     furi_timer_stop(fhttp.get_timeout_timer);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipSocialViewLoggedInMessagesSubmenu);
 }
-
-#endif // FLIP_SOCIAL_CALLBACK_H

@@ -1,13 +1,4 @@
-// flip_social_storage.h
-#ifndef FLIP_SOCIAL_STORAGE_H
-#define FLIP_SOCIAL_STORAGE_H
-
-#include <furi.h>
-#include <storage/storage.h>
-
-#define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/settings.bin"
-#define PRE_SAVED_MESSAGES_PATH \
-    STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/pre_saved_messages.txt"
+#include "flip_social_storage.h"
 
 // Function to save the playlist
 void save_playlist(const PreSavedPlaylist* playlist) {
@@ -136,7 +127,7 @@ bool load_playlist(PreSavedPlaylist* playlist) {
 
     return true;
 }
-static void save_settings(
+void save_settings(
     const char* ssid,
     const char* password,
     const char* login_username_logged_out,
@@ -221,7 +212,7 @@ static void save_settings(
     furi_record_close(RECORD_STORAGE);
 }
 
-static bool load_settings(
+bool load_settings(
     char* ssid,
     size_t ssid_size,
     char* password,
@@ -353,5 +344,3 @@ static bool load_settings(
 
     return true;
 }
-
-#endif // FLIP_SOCIAL_STORAGE_H

@@ -1,7 +1,6 @@
-#ifndef FLIP_SOCIAL_MESSAGES_H
-#define FLIP_SOCIAL_MESSAGES_H
+#include "flip_social_messages.h"
 
-static FlipSocialModel2* flip_social_messages_alloc() {
+FlipSocialModel2* flip_social_messages_alloc() {
     // Allocate memory for each username only if not already allocated
     FlipSocialModel2* users = malloc(sizeof(FlipSocialModel2));
     if(users == NULL) {
@@ -20,7 +19,7 @@ static FlipSocialModel2* flip_social_messages_alloc() {
     return users;
 }
 
-static FlipSocialMessage* flip_social_user_messages_alloc() {
+FlipSocialMessage* flip_social_user_messages_alloc() {
     // Allocate memory for each username only if not already allocated
     FlipSocialMessage* messages = malloc(sizeof(FlipSocialMessage));
     if(messages == NULL) {
@@ -46,28 +45,34 @@ static FlipSocialMessage* flip_social_user_messages_alloc() {
     return messages;
 }
 
-static void flip_social_free_message_users() {
+void flip_social_free_message_users() {
     if(flip_social_message_users == NULL) {
         FURI_LOG_E(TAG, "Message users model is NULL");
         return;
     }
     for(int i = 0; i < flip_social_message_users->count; i++) {
-        free(flip_social_message_users->usernames[i]);
+        if(flip_social_message_users->usernames[i]) {
+            free(flip_social_message_users->usernames[i]);
+        }
     }
 }
 
-static void flip_social_free_messages() {
+void flip_social_free_messages() {
     if(flip_social_messages == NULL) {
         FURI_LOG_E(TAG, "Messages model is NULL");
         return;
     }
     for(int i = 0; i < flip_social_messages->count; i++) {
-        free(flip_social_messages->usernames[i]);
-        free(flip_social_messages->messages[i]);
+        if(flip_social_messages->usernames[i]) {
+            free(flip_social_messages->usernames[i]);
+        }
+        if(flip_social_messages->messages[i]) {
+            free(flip_social_messages->messages[i]);
+        }
     }
 }
 
-static bool flip_social_update_messages_submenu() {
+bool flip_social_update_messages_submenu() {
     if(app_instance->submenu_messages == NULL) {
         FURI_LOG_E(TAG, "Submenu is NULL");
         return false;
@@ -95,7 +100,7 @@ static bool flip_social_update_messages_submenu() {
     return true;
 }
 
-static bool flip_social_update_submenu_user_choices() {
+bool flip_social_update_submenu_user_choices() {
     if(app_instance->submenu_messages_user_choices == NULL) {
         FURI_LOG_E(TAG, "Submenu is NULL");
         return false;
@@ -118,21 +123,29 @@ static bool flip_social_update_submenu_user_choices() {
 }
 
 // Get all the users that have sent messages to the logged in user
-static bool flip_social_get_message_users() {
+bool flip_social_get_message_users() {
     if(app_instance->login_username_logged_out == NULL) {
         FURI_LOG_E(TAG, "Username is NULL");
         return false;
     }
     char command[128];
     snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_rss/message_users.txt");
+
+    fhttp.save_received_data = true;
+    char* headers = jsmn("Content-Type", "application/json");
+    snprintf(
         command,
         128,
         "https://www.flipsocial.net/api/messages/%s/get/list/",
         app_instance->login_username_logged_out);
-    bool success =
-        flipper_http_get_request_with_headers(command, "{\"Content-Type\":\"application/json\"}");
+    bool success = flipper_http_get_request_with_headers(command, headers);
+    free(headers);
     if(!success) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for messages");
+        fhttp.state = ISSUE;
         return false;
     }
     fhttp.state = RECEIVING;
@@ -140,22 +153,30 @@ static bool flip_social_get_message_users() {
 }
 
 // Get all the messages between the logged in user and the selected user
-static bool flip_social_get_messages_with_user() {
+bool flip_social_get_messages_with_user() {
     if(app_instance->login_username_logged_out == NULL) {
         FURI_LOG_E(TAG, "Username is NULL");
         return false;
     }
     char command[128];
     snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_rss/messages.txt");
+
+    fhttp.save_received_data = true;
+    char* headers = jsmn("Content-Type", "application/json");
+    snprintf(
         command,
         128,
         "https://www.flipsocial.net/api/messages/%s/get/%s/",
         app_instance->login_username_logged_out,
         flip_social_message_users->usernames[flip_social_message_users->index]);
-    bool success =
-        flipper_http_get_request_with_headers(command, "{\"Content-Type\":\"application/json\"}");
+    bool success = flipper_http_get_request_with_headers(command, headers);
+    free(headers);
     if(!success) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for messages");
+        fhttp.state = ISSUE;
         return false;
     }
     fhttp.state = RECEIVING;
@@ -163,9 +184,17 @@ static bool flip_social_get_messages_with_user() {
 }
 
 // Parse the users that have sent messages to the logged-in user
-static bool flip_social_parse_json_message_users() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_message_users() {
+    // load the received data from the saved file
+    FuriString* message_data = flipper_http_load_from_file(fhttp.file_path);
+    if(message_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(message_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(message_data);
         return false;
     }
 
@@ -173,11 +202,13 @@ static bool flip_social_parse_json_message_users() {
     flip_social_message_users = flip_social_messages_alloc();
     if(flip_social_message_users == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate memory for message users.");
+        furi_string_free(message_data);
+        free(data_cstr);
         return false;
     }
 
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -186,9 +217,11 @@ static bool flip_social_parse_json_message_users() {
     flip_social_message_users->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("users", fhttp.received_data, MAX_TOKENS);
+    char* json_users = get_json_value("users", data_cstr, MAX_TOKENS);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse users array.");
+        furi_string_free(message_data);
+        free(data_cstr);
         return false;
     }
 
@@ -204,13 +237,11 @@ static bool flip_social_parse_json_message_users() {
         if(*(end - 1) == '"') *(end - 1) = '\0';
 
         // Copy username to pre-allocated memory
-        strncpy(
+        snprintf(
             flip_social_message_users->usernames[flip_social_message_users->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_message_users
-            ->usernames[flip_social_message_users->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_message_users->count++;
         start = end + 1;
     }
@@ -221,13 +252,11 @@ static bool flip_social_parse_json_message_users() {
         if(*(start + strlen(start) - 1) == ']') *(start + strlen(start) - 1) = '\0';
         if(*(start + strlen(start) - 1) == '"') *(start + strlen(start) - 1) = '\0';
 
-        strncpy(
+        snprintf(
             flip_social_message_users->usernames[flip_social_message_users->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_message_users
-            ->usernames[flip_social_message_users->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_message_users->count++;
     }
 
@@ -238,14 +267,23 @@ static bool flip_social_parse_json_message_users() {
     free(json_users);
     free(start);
     free(end);
-
+    furi_string_free(message_data);
+    free(data_cstr);
     return true;
 }
 
 // Parse the users that the logged in user can message
-static bool flip_social_parse_json_message_user_choices() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_message_user_choices() {
+    // load the received data from the saved file
+    FuriString* user_data = flipper_http_load_from_file(fhttp.file_path);
+    if(user_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(user_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(user_data);
         return false;
     }
 
@@ -253,11 +291,13 @@ static bool flip_social_parse_json_message_user_choices() {
     flip_social_explore = flip_social_explore_alloc();
     if(flip_social_explore == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate memory for explore usernames.");
+        furi_string_free(user_data);
+        free(data_cstr);
         return false;
     }
 
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -266,9 +306,11 @@ static bool flip_social_parse_json_message_user_choices() {
     flip_social_explore->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("users", fhttp.received_data, MAX_TOKENS);
+    char* json_users = get_json_value("users", data_cstr, MAX_TOKENS);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse users array.");
+        furi_string_free(user_data);
+        free(data_cstr);
         return false;
     }
 
@@ -283,12 +325,11 @@ static bool flip_social_parse_json_message_user_choices() {
         if(*(end - 1) == '"') *(end - 1) = '\0';
 
         // Copy username to pre-allocated memory
-        strncpy(
+        snprintf(
             flip_social_explore->usernames[flip_social_explore->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_explore->usernames[flip_social_explore->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_explore->count++;
         start = end + 1;
     }
@@ -299,12 +340,11 @@ static bool flip_social_parse_json_message_user_choices() {
         if(*(start + strlen(start) - 1) == ']') *(start + strlen(start) - 1) = '\0';
         if(*(start + strlen(start) - 1) == '"') *(start + strlen(start) - 1) = '\0';
 
-        strncpy(
+        snprintf(
             flip_social_explore->usernames[flip_social_explore->count],
-            start,
-            MAX_USER_LENGTH - 1);
-        flip_social_explore->usernames[flip_social_explore->count][MAX_USER_LENGTH - 1] =
-            '\0'; // Ensure null termination
+            MAX_USER_LENGTH,
+            "%s",
+            start);
         flip_social_explore->count++;
     }
 
@@ -315,14 +355,23 @@ static bool flip_social_parse_json_message_user_choices() {
     free(json_users);
     free(start);
     free(end);
-
+    furi_string_free(user_data);
+    free(data_cstr);
     return true;
 }
 
 // parse messages between the logged in user and the selected user
-static bool flip_social_parse_json_messages() {
-    if(fhttp.received_data == NULL) {
-        FURI_LOG_E(TAG, "No data received.");
+bool flip_social_parse_json_messages() {
+    // load the received data from the saved file
+    FuriString* message_data = flipper_http_load_from_file(fhttp.file_path);
+    if(message_data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return false;
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(message_data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(message_data);
         return false;
     }
 
@@ -330,11 +379,13 @@ static bool flip_social_parse_json_messages() {
     flip_social_messages = flip_social_user_messages_alloc();
     if(!flip_social_messages) {
         FURI_LOG_E(TAG, "Failed to allocate memory for messages.");
+        furi_string_free(message_data);
+        free(data_cstr);
         return false;
     }
 
     // Remove newlines
-    char* pos = fhttp.received_data;
+    char* pos = data_cstr;
     while((pos = strchr(pos, '\n')) != NULL) {
         *pos = ' ';
     }
@@ -345,7 +396,7 @@ static bool flip_social_parse_json_messages() {
     // Iterate through the messages array
     for(int i = 0; i < MAX_MESSAGES; i++) {
         // Parse each item in the array
-        char* item = get_json_array_value("conversations", i, fhttp.received_data, MAX_TOKENS);
+        char* item = get_json_array_value("conversations", i, data_cstr, MAX_TOKENS);
         if(item == NULL) {
             break;
         }
@@ -360,19 +411,16 @@ static bool flip_social_parse_json_messages() {
             continue;
         }
 
-        // Store parsed values
-        strncpy(flip_social_messages->usernames[i], sender, MAX_USER_LENGTH - 1);
-        flip_social_messages->usernames[i][MAX_USER_LENGTH - 1] = '\0';
-        strncpy(flip_social_messages->messages[i], content, MAX_MESSAGE_LENGTH - 1);
-        flip_social_messages->messages[i][MAX_MESSAGE_LENGTH - 1] = '\0';
+        // Store parsed values in pre-allocated memory
+        snprintf(flip_social_messages->usernames[i], MAX_USER_LENGTH, "%s", sender);
+        snprintf(flip_social_messages->messages[i], MAX_MESSAGE_LENGTH, "%s", content);
         flip_social_messages->count++;
 
         free(item);
         free(sender);
         free(content);
     }
-
+    furi_string_free(message_data);
+    free(data_cstr);
     return true;
 }
-
-#endif // FLIP_SOCIAL_MESSAGES_H

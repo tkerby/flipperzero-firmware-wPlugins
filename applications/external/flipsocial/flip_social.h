@@ -1,10 +1,10 @@
-// flip_social_e.h
-#ifndef FLIP_SOCIAL_E
-#define FLIP_SOCIAL_E
-#include <easy_flipper.h>
+#ifndef FLIP_SOCIAL_H
+#define FLIP_SOCIAL_H
+
+#include <easy_flipper/easy_flipper.h>
 #include <dialogs/dialogs.h>
 #include <storage/storage.h>
-#include <flipper_http.h>
+#include <flipper_http/flipper_http.h>
 #include <input/input.h>
 #include <flip_social_icons.h>
 #define TAG "FlipSocial"
@@ -19,6 +19,10 @@
 #define MAX_LINE_LENGTH        30
 #define MAX_MESSAGE_USERS      20 // Maximum number of users to display in the submenu
 #define MAX_MESSAGES           20 // Maximum number of meesages between each user
+
+#define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/settings.bin"
+#define PRE_SAVED_MESSAGES_PATH \
+    STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/pre_saved_messages.txt"
 
 // Define the submenu items for our Hello World application
 typedef enum {
@@ -51,20 +55,11 @@ typedef enum {
         300, // click to select a user to message
 } FlipSocialSubmenuIndex;
 
-typedef enum {
-    ActionNone,
-    ActionBack,
-    ActionNext,
-    ActionPrev,
-    ActionFlip,
-} Action;
-
-static Action action = ActionNone;
-
 // Define the ScriptPlaylist structure
 typedef struct {
     char* messages[MAX_PRE_SAVED_MESSAGES];
     size_t count;
+    size_t index;
 } PreSavedPlaylist;
 
 typedef struct {
@@ -311,29 +306,26 @@ typedef struct {
         message_user_choice_logged_in_temp_buffer_size; // Size of the message to send to the selected user temporary buffer
 } FlipSocialApp;
 
-static FlipSocialFeed* flip_social_feed = NULL; // Store the feed
-static FlipSocialModel* flip_social_friends = NULL; // Store the friends
-static FlipSocialModel2* flip_social_message_users =
-    NULL; // Store the users that have sent messages to the logged in user
-static FlipSocialModel* flip_social_explore = NULL; // Store the users to explore
-static FlipSocialMessage* flip_social_messages =
-    NULL; // Store the messages between the logged in user and the selected user
+void flip_social_app_free(FlipSocialApp* app);
 
-// include strndup (otherwise NULL pointer dereference)
-char* strndup(const char* s, size_t n) {
-    char* result;
-    size_t len = strlen(s);
+extern FlipSocialFeed* flip_social_feed; // Store the feed
+extern FlipSocialModel* flip_social_friends; // Store the friends
+extern FlipSocialModel2*
+    flip_social_message_users; // Store the users that have sent messages to the logged in user
+extern FlipSocialModel* flip_social_explore; // Store the users to explore
+extern FlipSocialMessage*
+    flip_social_messages; // Store the messages between the logged in user and the selected user
 
-    if(n < len) len = n;
+extern FlipSocialApp* app_instance;
 
-    result = (char*)malloc(len + 1);
-    if(!result) return NULL;
+extern bool flip_social_sent_login_request;
+extern bool flip_social_sent_register_request;
+extern bool flip_social_login_success;
+extern bool flip_social_register_success;
+extern bool flip_social_dialog_shown;
+extern bool flip_social_dialog_stop;
+extern bool flip_social_send_message;
+extern char* last_explore_response;
+extern char* selected_message;
 
-    result[len] = '\0';
-    return (char*)memcpy(result, s, len);
-}
-
-static FlipSocialApp* app_instance = NULL;
-static void flip_social_logged_in_compose_pre_save_updated(void* context);
-static void flip_social_callback_submenu_choices(void* context, uint32_t index);
 #endif

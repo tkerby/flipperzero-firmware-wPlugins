@@ -1,13 +1,6 @@
-// flip_social.i.h
-#ifndef FLIP_SOCIAL_I
-#define FLIP_SOCIAL_I
+#include <alloc/flip_social_alloc.h>
 
-/**
- * @brief Function to allocate resources for the FlipSocialApp.
- * @details Initializes all components and views of the application.
- * @return Pointer to the initialized FlipSocialApp, or NULL on failure.
- */
-static FlipSocialApp* flip_social_app_alloc() {
+FlipSocialApp* flip_social_app_alloc() {
     // Initiailize the app
     FlipSocialApp* app = (FlipSocialApp*)malloc(sizeof(FlipSocialApp));
 
@@ -34,13 +27,13 @@ static FlipSocialApp* flip_social_app_alloc() {
     app->register_password_logged_out_temp_buffer_size = MAX_USER_LENGTH;
     app->register_password_2_logged_out_temp_buffer_size = MAX_USER_LENGTH;
     app->change_password_logged_in_temp_buffer_size = MAX_USER_LENGTH;
-    app->compose_pre_save_logged_in_temp_buffer_size = 100;
+    app->compose_pre_save_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
     app->wifi_ssid_logged_in_temp_buffer_size = MAX_USER_LENGTH;
     app->wifi_password_logged_in_temp_buffer_size = MAX_USER_LENGTH;
     app->is_logged_in_size = 8;
     app->login_username_logged_in_temp_buffer_size = MAX_USER_LENGTH;
-    app->messages_new_message_logged_in_temp_buffer_size = 100;
-    app->message_user_choice_logged_in_temp_buffer_size = 100;
+    app->messages_new_message_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
+    app->message_user_choice_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
     if(!easy_flipper_set_buffer(
            &app->wifi_ssid_logged_out_temp_buffer, app->wifi_ssid_logged_out_temp_buffer_size)) {
         return NULL;
@@ -175,12 +168,20 @@ static FlipSocialApp* flip_social_app_alloc() {
            app->message_user_choice_logged_in_temp_buffer_size)) {
         return NULL;
     }
+    if(!easy_flipper_set_buffer(
+           &selected_message, app->message_user_choice_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_buffer(
+           &last_explore_response, app->message_user_choice_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
 
     // Allocate Submenu(s)
     if(!easy_flipper_set_submenu(
            &app->submenu_logged_out,
            FlipSocialViewLoggedOutSubmenu,
-           "FlipSocial v0.5",
+           "FlipSocial v0.6",
            flip_social_callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -188,7 +189,7 @@ static FlipSocialApp* flip_social_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_logged_in,
            FlipSocialViewLoggedInSubmenu,
-           "FlipSocial v0.5",
+           "FlipSocial v0.6",
            flip_social_callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -937,5 +938,3 @@ static FlipSocialApp* flip_social_app_alloc() {
 
     return app;
 }
-
-#endif // FLIP_SOCIAL_I

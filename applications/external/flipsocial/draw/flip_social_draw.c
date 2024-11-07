@@ -1,15 +1,5 @@
-#ifndef FLIP_SOCIAL_DRAW_H
-#define FLIP_SOCIAL_DRAW_H
-
-bool flip_social_sent_login_request = false;
-bool flip_social_sent_register_request = false;
-bool flip_social_login_success = false;
-bool flip_social_register_success = false;
-bool flip_social_dialog_shown = false;
-bool flip_social_dialog_stop = false;
-char* last_explore_response = "";
-static bool flip_social_update_friends();
-
+#include "flip_social_draw.h"
+Action action = ActionNone;
 bool flip_social_board_is_active(Canvas* canvas) {
     if(fhttp.state == INACTIVE) {
         canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
@@ -24,14 +14,14 @@ bool flip_social_board_is_active(Canvas* canvas) {
 }
 
 void flip_social_handle_error(Canvas* canvas) {
-    if(fhttp.received_data != NULL) {
-        if(strstr(fhttp.received_data, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
+    if(fhttp.last_response != NULL) {
+        if(strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
            NULL) {
             canvas_clear(canvas);
             canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
             canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
             canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-        } else if(strstr(fhttp.received_data, "[ERROR] Failed to connect to Wifi.") != NULL) {
+        } else if(strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL) {
             canvas_clear(canvas);
             canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
             canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
@@ -48,7 +38,7 @@ void flip_social_handle_error(Canvas* canvas) {
     }
 }
 
-static void on_input(const void* event, void* ctx) {
+void on_input(const void* event, void* ctx) {
     UNUSED(ctx);
 
     InputKey key = ((InputEvent*)event)->key;
@@ -132,7 +122,7 @@ void draw_user_message(Canvas* canvas, const char* user_message, int x, int y) {
     }
 }
 
-static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
+void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -143,8 +133,6 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
         return;
     }
 
-    char* message = app_instance->pre_saved_messages.messages[flip_social_feed->index];
-
     if(!flip_social_dialog_shown) {
         flip_social_dialog_shown = true;
         app_instance->input_event_queue = furi_record_open(RECORD_INPUT_EVENTS);
@@ -152,7 +140,7 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
             furi_pubsub_subscribe(app_instance->input_event_queue, on_input, NULL);
     }
 
-    draw_user_message(canvas, message, 0, 2);
+    draw_user_message(canvas, selected_message, 0, 2);
 
     canvas_draw_icon(canvas, 0, 53, &I_ButtonLeft_4x7);
     canvas_draw_str_aligned(canvas, 7, 54, AlignLeft, AlignTop, "Delete");
@@ -169,16 +157,16 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
         flip_social_dialog_stop = true;
         break;
     case ActionNext:
-        // send message
-        if(message && app_instance->login_username_logged_in) {
-            // Send the message
-            char command[128];
+        // send selected_message
+        if(selected_message && app_instance->login_username_logged_in) {
+            // Send the selected_message
+            char command[256];
             snprintf(
                 command,
                 sizeof(command),
                 "{\"username\":\"%s\",\"content\":\"%s\"}",
                 app_instance->login_username_logged_in,
-                message);
+                selected_message);
 
             bool success = flipper_http_post_request_with_headers(
                 "https://www.flipsocial.net/api/feed/post/",
@@ -187,15 +175,14 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
 
             if(!success) {
                 FURI_LOG_E(TAG, "Failed to send HTTP request for feed");
-                furi_check(success); // Log the error with furi_check
-                return; // Exit early to avoid further errors
+                fhttp.state = ISSUE;
+                return;
             }
 
             fhttp.state = RECEIVING;
             furi_timer_start(fhttp.get_timeout_timer, TIMEOUT_DURATION_TICKS);
         } else {
             FURI_LOG_E(TAG, "Message or username is NULL");
-            furi_check(false); // Log as an error and return
             return;
         }
 
@@ -221,9 +208,10 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
         break;
     case ActionPrev:
         // delete message
-        app_instance->pre_saved_messages.messages[flip_social_feed->index] = NULL;
+        app_instance->pre_saved_messages.messages[app_instance->pre_saved_messages.index] = NULL;
 
-        for(uint32_t i = flip_social_feed->index; i < app_instance->pre_saved_messages.count - 1;
+        for(uint32_t i = app_instance->pre_saved_messages.index;
+            i < app_instance->pre_saved_messages.count - 1;
             i++) {
             app_instance->pre_saved_messages.messages[i] =
                 app_instance->pre_saved_messages.messages[i + 1];
@@ -264,9 +252,23 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
         flip_social_dialog_shown = false;
         flip_social_dialog_stop = false;
         if(action == ActionNext) {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "Sent successfully!");
+            canvas_draw_str(canvas, 0, 50, "Loading feed :D");
+            canvas_draw_str(canvas, 0, 60, "Please wait...");
             action = ActionNone;
-            view_dispatcher_switch_to_view(
-                app_instance->view_dispatcher, FlipSocialViewLoggedInFeed);
+            if(flipper_http_process_response_async(
+                   flip_social_get_feed, flip_social_parse_json_feed)) {
+                view_dispatcher_switch_to_view(
+                    app_instance->view_dispatcher, FlipSocialViewLoggedInFeed);
+            } else {
+                // Set failure FlipSocialFeed object
+                if(!flip_social_temp_feed()) {
+                    return;
+                }
+                view_dispatcher_switch_to_view(
+                    app_instance->view_dispatcher, FlipSocialViewLoggedInFeed);
+            }
         } else if(action == ActionBack) {
             action = ActionNone;
             view_dispatcher_switch_to_view(
@@ -279,7 +281,7 @@ static void flip_social_callback_draw_compose(Canvas* canvas, void* model) {
     }
 }
 // function to draw the dialog canvas
-static void flip_social_canvas_draw_message(
+void flip_social_canvas_draw_message(
     Canvas* canvas,
     char* user_username,
     char* user_message,
@@ -354,7 +356,7 @@ static void flip_social_canvas_draw_message(
     }
 }
 // Callback function to handle the feed dialog
-static void flip_social_callback_draw_feed(Canvas* canvas, void* model) {
+void flip_social_callback_draw_feed(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -476,7 +478,7 @@ static void flip_social_callback_draw_feed(Canvas* canvas, void* model) {
  * @param model The model - unused
  * @return void
  */
-static void flip_social_callback_draw_login(Canvas* canvas, void* model) {
+void flip_social_callback_draw_login(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -529,10 +531,10 @@ static void flip_social_callback_draw_login(Canvas* canvas, void* model) {
         canvas_draw_str(canvas, 0, 17, "Request Sent!");
         canvas_draw_str(canvas, 0, 32, "Awaiting reponse...");
 
-        if(fhttp.state == IDLE && fhttp.received_data != NULL) {
+        if(fhttp.state == IDLE && fhttp.last_response != NULL) {
             // read response
-            if(strstr(fhttp.received_data, "[SUCCESS]") != NULL ||
-               strstr(fhttp.received_data, "User found") != NULL) {
+            if(strstr(fhttp.last_response, "[SUCCESS]") != NULL ||
+               strstr(fhttp.last_response, "User found") != NULL) {
                 canvas_draw_str(canvas, 0, 42, "Login successful!");
                 canvas_draw_str(canvas, 0, 62, "Welcome back!");
 
@@ -561,16 +563,16 @@ static void flip_social_callback_draw_login(Canvas* canvas, void* model) {
                 // send user to the logged in submenu
                 view_dispatcher_switch_to_view(
                     app_instance->view_dispatcher, FlipSocialViewLoggedInSubmenu);
-            } else if(strstr(fhttp.received_data, "User not found") != NULL) {
+            } else if(strstr(fhttp.last_response, "User not found") != NULL) {
                 canvas_clear(canvas);
                 canvas_draw_str(canvas, 0, 10, "Account not found...");
                 canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
             } else {
                 flip_social_handle_error(canvas);
             }
-        } else if((fhttp.state == ISSUE || fhttp.state == INACTIVE) && fhttp.received_data != NULL) {
+        } else if((fhttp.state == ISSUE || fhttp.state == INACTIVE) && fhttp.last_response != NULL) {
             flip_social_handle_error(canvas);
-        } else if(fhttp.state == IDLE && fhttp.received_data == NULL) {
+        } else if(fhttp.state == IDLE && fhttp.last_response == NULL) {
             flip_social_handle_error(canvas);
         }
     } else if(flip_social_sent_login_request && !flip_social_login_success) {
@@ -587,7 +589,7 @@ static void flip_social_callback_draw_login(Canvas* canvas, void* model) {
  * @param model The model - unused
  * @return void
  */
-static void flip_social_callback_draw_register(Canvas* canvas, void* model) {
+void flip_social_callback_draw_register(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -653,9 +655,9 @@ static void flip_social_callback_draw_register(Canvas* canvas, void* model) {
 
         if(fhttp.state == IDLE) {
             // read response
-            if(fhttp.received_data != NULL &&
-               (strstr(fhttp.received_data, "[SUCCESS]") != NULL ||
-                strstr(fhttp.received_data, "User created") != NULL)) {
+            if(fhttp.last_response != NULL &&
+               (strstr(fhttp.last_response, "[SUCCESS]") != NULL ||
+                strstr(fhttp.last_response, "User created") != NULL)) {
                 canvas_draw_str(canvas, 0, 42, "Registeration successful!");
                 canvas_draw_str(canvas, 0, 62, "Welcome to FlipSocial!");
 
@@ -690,13 +692,13 @@ static void flip_social_callback_draw_register(Canvas* canvas, void* model) {
                 // send user to the logged in submenu
                 view_dispatcher_switch_to_view(
                     app_instance->view_dispatcher, FlipSocialViewLoggedInSubmenu);
-            } else if(strstr(fhttp.received_data, "Username or password not provided") != NULL) {
+            } else if(strstr(fhttp.last_response, "Username or password not provided") != NULL) {
                 canvas_clear(canvas);
                 canvas_draw_str(canvas, 0, 10, "Please enter your credentials.");
                 canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
             } else if(
-                strstr(fhttp.received_data, "User already exists") != NULL ||
-                strstr(fhttp.received_data, "Multiple users found") != NULL) {
+                strstr(fhttp.last_response, "User already exists") != NULL ||
+                strstr(fhttp.last_response, "Multiple users found") != NULL) {
                 canvas_draw_str(canvas, 0, 42, "Registration failed...");
                 canvas_draw_str(canvas, 0, 52, "Username already exists.");
                 canvas_draw_str(canvas, 0, 62, "Press BACK to return.");
@@ -717,7 +719,7 @@ static void flip_social_callback_draw_register(Canvas* canvas, void* model) {
 }
 
 // function to draw the dialog canvas
-static void flip_social_canvas_draw_explore(Canvas* canvas, char* user_username, char* content) {
+void flip_social_canvas_draw_explore(Canvas* canvas, char* user_username, char* content) {
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignCenter, user_username);
@@ -737,7 +739,7 @@ static void flip_social_canvas_draw_explore(Canvas* canvas, char* user_username,
 }
 
 // Callback function to handle the explore dialog
-static void flip_social_callback_draw_explore(Canvas* canvas, void* model) {
+void flip_social_callback_draw_explore(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -816,7 +818,7 @@ static void flip_social_callback_draw_explore(Canvas* canvas, void* model) {
 }
 
 // Callback function to handle the friends dialog
-static void flip_social_callback_draw_friends(Canvas* canvas, void* model) {
+void flip_social_callback_draw_friends(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -913,7 +915,7 @@ static void flip_social_callback_draw_friends(Canvas* canvas, void* model) {
     }
 }
 
-static void flip_social_canvas_draw_user_message(
+void flip_social_canvas_draw_user_message(
     Canvas* canvas,
     char* user_username,
     char* user_message,
@@ -942,7 +944,7 @@ static void flip_social_canvas_draw_user_message(
 }
 
 // Callback function to handle the messages dialog
-static void flip_social_callback_draw_messages(Canvas* canvas, void* model) {
+void flip_social_callback_draw_messages(Canvas* canvas, void* model) {
     UNUSED(model);
     if(!canvas) {
         FURI_LOG_E(TAG, "Canvas is NULL");
@@ -1007,18 +1009,22 @@ static void flip_social_callback_draw_messages(Canvas* canvas, void* model) {
     case ActionFlip:
         // go to the input view
         flip_social_dialog_stop = true;
+        flip_social_send_message = true;
+        action = ActionNone;
         break;
     default:
         action = ActionNone;
         break;
     }
 
-    if(flip_social_dialog_stop) {
+    if(flip_social_dialog_stop && flip_social_dialog_shown) {
         furi_pubsub_unsubscribe(app_instance->input_event_queue, app_instance->input_event);
         flip_social_dialog_shown = false;
         flip_social_dialog_stop = false;
-        if(action == ActionFlip) {
+        if(flip_social_send_message) {
+            FURI_LOG_I(TAG, "Switching to new message input view");
             action = ActionNone;
+            flip_social_send_message = false;
             view_dispatcher_switch_to_view(
                 app_instance->view_dispatcher, FlipSocialViewLoggedInMessagesNewMessageInput);
         } else {
@@ -1028,5 +1034,3 @@ static void flip_social_callback_draw_messages(Canvas* canvas, void* model) {
         }
     }
 }
-
-#endif // FLIP_SOCIAL_DRAW_H
