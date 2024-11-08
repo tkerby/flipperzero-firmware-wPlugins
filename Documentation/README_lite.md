@@ -16,9 +16,9 @@ When entering the application (by selecting can-fd-hs) from main menu or by sele
 
 This mode have to be entered before issuing any configuration command.
 Then you can :
-1. Create a CAN network interface through USB Virtual com port (VCP) :`sudo slcand -s<X> <options> ttyACM<Y> can<Z>`.
-2. enable your created network interface `sudo ifconfig can<X> up`.
-3. operate normally your can interface by using `cansend can<X> <iii>#<dddddddd>` and `candump can<X>` commands.
+1. Create a CAN network interface through USB Virtual com port (VCP) :***sudo slcand -s<X> <options> ttyACM<Y> can<Z>***.
+2. enable your created network interface ***sudo ifconfig can<X> up***.
+3. operate normally your can interface by using ***cansend can<X> <iii>#<dddddddd>*** and ***candump can<X>*** commands.
 
 Please refer to [can-utils](https://github.com/linux-can/can-utils) for more details.
 If issues are encountered, you can get more informations by connecting directly to vcp with tool like putty :
@@ -61,7 +61,7 @@ The frame sent every 200 ms shall by the device shall be the following :
 ## documentation
 
 Documentation can be found [here](./Documentation/html/index.html).\
-To re-generate documentation you have to install `doxygen` before running `Documentation/generate_doc.sh [--open]` (--open is used to open documentation after the generation). 
+To re-generate documentation you have to install ***doxygen*** before running ***Documentation/generate_doc.sh [--open]*** (--open is used to open documentation after the generation). 
 
 
 ## architecture overview
