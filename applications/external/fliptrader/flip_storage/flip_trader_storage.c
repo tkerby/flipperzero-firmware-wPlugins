@@ -1,12 +1,6 @@
-#ifndef FLIP_TRADER_STORAGE_H
-#define FLIP_TRADER_STORAGE_H
+#include "flip_storage/flip_trader_storage.h"
 
-#include <furi.h>
-#include <storage/storage.h>
-
-#define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_trader/settings.bin"
-
-static void save_settings(const char* ssid, const char* password) {
+void save_settings(const char* ssid, const char* password) {
     // Create the directory for saving settings
     char directory_path[256];
     snprintf(
@@ -44,7 +38,7 @@ static void save_settings(const char* ssid, const char* password) {
     furi_record_close(RECORD_STORAGE);
 }
 
-static bool load_settings(char* ssid, size_t ssid_size, char* password, size_t password_size) {
+bool load_settings(char* ssid, size_t ssid_size, char* password, size_t password_size) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
 
@@ -86,5 +80,3 @@ static bool load_settings(char* ssid, size_t ssid_size, char* password, size_t p
 
     return true;
 }
-
-#endif // FLIP_TRADER_STORAGE_H

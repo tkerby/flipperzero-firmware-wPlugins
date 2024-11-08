@@ -1,8 +1,7 @@
-#ifndef FLIP_TRADER_I_H
-#define FLIP_TRADER_I_H
+#include "alloc/flip_trader_alloc.h"
 
 // Function to allocate resources for the FlipTraderApp
-static FlipTraderApp* flip_trader_app_alloc() {
+FlipTraderApp* flip_trader_app_alloc() {
     FlipTraderApp* app = (FlipTraderApp*)malloc(sizeof(FlipTraderApp));
 
     Gui* gui = furi_record_open(RECORD_GUI);
@@ -31,6 +30,11 @@ static FlipTraderApp* flip_trader_app_alloc() {
     if(!easy_flipper_set_buffer(
            &app->uart_text_input_temp_buffer_password,
            app->uart_text_input_buffer_size_password)) {
+        return NULL;
+    }
+
+    asset_names = asset_names_alloc();
+    if(!asset_names) {
         return NULL;
     }
 
@@ -128,7 +132,7 @@ static FlipTraderApp* flip_trader_app_alloc() {
     submenu_add_item(
         app->submenu_main, "WiFi", FlipTraderSubmenuIndexSettings, callback_submenu_choices, app);
     // add the assets
-    for(uint32_t i = 0; i < sizeof(asset_names) / sizeof(asset_names[0]); i++) {
+    for(uint32_t i = 0; i < ASSET_COUNT; i++) {
         submenu_add_item(
             app->submenu_assets,
             asset_names[i],
@@ -173,5 +177,3 @@ static FlipTraderApp* flip_trader_app_alloc() {
 
     return app;
 }
-
-#endif // FLIP_TRADER_I_H
