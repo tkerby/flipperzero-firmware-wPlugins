@@ -1,76 +1,73 @@
-#ifndef FLIP_TRADER_CALLBACK_H
-#define FLIP_TRADER_CALLBACK_H
-
-#define MAX_TOKENS 32 // Adjust based on expected JSON size (25)
+#include <callback/flip_trader_callback.h>
 
 // hold the price of the asset
-static char asset_price[64];
-static bool sent_get_request = false;
-static bool get_request_success = false;
-static bool request_processed = false;
+char asset_price[64];
+bool sent_get_request = false;
+bool get_request_success = false;
+bool request_processed = false;
 
 void flip_trader_request_error(Canvas *canvas)
 {
-    if (fhttp.received_data == NULL)
+    if (fhttp.last_response != NULL)
     {
-        if (fhttp.last_response != NULL)
+        if (strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") != NULL)
         {
-            if (strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") != NULL)
-            {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-            }
-            else if (strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL)
-            {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-            }
-            else if (strstr(fhttp.last_response, "[ERROR] WiFi SSID or Password is empty") != NULL)
-            {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-            }
-            else
-            {
-                canvas_clear(canvas);
-                FURI_LOG_E(TAG, "Received an error: %s", fhttp.last_response);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Unusual error...");
-                canvas_draw_str(canvas, 0, 60, "Press BACK and retry.");
-            }
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        }
+        else if (strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL)
+        {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        }
+        else if (strstr(fhttp.last_response, "[ERROR] WiFi SSID or Password is empty") != NULL)
+        {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
         }
         else
         {
             canvas_clear(canvas);
-            canvas_draw_str(canvas, 0, 10, "[ERROR] Unknown error.");
-            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+            FURI_LOG_E(TAG, "Received an error: %s", fhttp.last_response);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Unusual error...");
+            canvas_draw_str(canvas, 0, 60, "Press BACK and retry.");
         }
     }
     else
     {
         canvas_clear(canvas);
-        canvas_draw_str(canvas, 0, 10, "Failed to receive data.");
+        canvas_draw_str(canvas, 0, 10, "[ERROR] Unknown error.");
+        canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
         canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
     }
 }
 
-static bool send_price_request()
+bool send_price_request()
 {
     if (!sent_get_request && fhttp.state == IDLE)
     {
         sent_get_request = true;
-        char url[128] = {0};
+        char url[128];
+        char *headers = jsmn("Content-Type", "application/json");
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_trader/price.txt");
+
+        fhttp.save_received_data = true;
         snprintf(url, 128, "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2X90WLEFMP43OJKE", asset_names[asset_index]);
-        get_request_success = flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}");
+        get_request_success = flipper_http_get_request_with_headers(url, headers);
+        free(headers);
         if (!get_request_success)
         {
             FURI_LOG_E(TAG, "Failed to send GET request");
+            fhttp.state = ISSUE;
             return false;
         }
         fhttp.state = RECEIVING;
@@ -78,39 +75,61 @@ static bool send_price_request()
     return true;
 }
 
-static void process_asset_price()
+void process_asset_price()
 {
-    if (!request_processed && fhttp.received_data != NULL)
+    // load the received data from the saved file
+    FuriString *price_data = flipper_http_load_from_file(fhttp.file_path);
+    if (price_data == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        fhttp.state = ISSUE;
+        return;
+    }
+    char *data_cstr = (char *)furi_string_get_cstr(price_data);
+    if (data_cstr == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(price_data);
+        fhttp.state = ISSUE;
+        return;
+    }
+    if (!request_processed)
     {
         request_processed = true;
-        char *global_quote = get_json_value("Global Quote", fhttp.received_data, MAX_TOKENS);
+        char *global_quote = get_json_value("Global Quote", data_cstr, MAX_TOKENS);
         if (global_quote == NULL)
         {
             FURI_LOG_E(TAG, "Failed to get Global Quote");
+            fhttp.state = ISSUE;
+            furi_string_free(price_data);
+            free(global_quote);
+            free(data_cstr);
             return;
         }
         char *price = get_json_value("05. price", global_quote, MAX_TOKENS);
         if (price == NULL)
         {
             FURI_LOG_E(TAG, "Failed to get price");
+            fhttp.state = ISSUE;
+            furi_string_free(price_data);
+            free(global_quote);
+            free(price);
+            free(data_cstr);
             return;
         }
         // store the price "Asset: $price"
         snprintf(asset_price, 64, "%s: $%s", asset_names[asset_index], price);
 
         fhttp.state = IDLE;
-    }
-    else if (!request_processed && fhttp.received_data == NULL)
-    {
-        request_processed = true;
-        // store an error message instead of the price
-        snprintf(asset_price, 64, "Failed. Update WiFi settings.");
-        fhttp.state = ISSUE;
+        furi_string_free(price_data);
+        free(global_quote);
+        free(price);
+        free(data_cstr);
     }
 }
 
 // Callback for drawing the main screen
-static void flip_trader_view_draw_callback(Canvas *canvas, void *model)
+void flip_trader_view_draw_callback(Canvas *canvas, void *model)
 {
     if (!canvas)
     {
@@ -145,7 +164,7 @@ static void flip_trader_view_draw_callback(Canvas *canvas, void *model)
         return;
     }
     // check status
-    if (fhttp.state == ISSUE || fhttp.received_data == NULL)
+    if (fhttp.state == ISSUE || fhttp.last_response == NULL)
     {
         flip_trader_request_error(canvas);
     }
@@ -168,7 +187,7 @@ bool flip_trader_view_input_callback(InputEvent *event, void *context)
     return false;
 }
 
-static void callback_submenu_choices(void *context, uint32_t index)
+void callback_submenu_choices(void *context, uint32_t index)
 {
     FlipTraderApp *app = (FlipTraderApp *)context;
     if (!app)
@@ -205,7 +224,7 @@ static void callback_submenu_choices(void *context, uint32_t index)
     }
 }
 
-static void text_updated_ssid(void *context)
+void text_updated_ssid(void *context)
 {
     FlipTraderApp *app = (FlipTraderApp *)context;
     if (!app)
@@ -242,7 +261,7 @@ static void text_updated_ssid(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipTraderViewWiFiSettings);
 }
 
-static void text_updated_password(void *context)
+void text_updated_password(void *context)
 {
     FlipTraderApp *app = (FlipTraderApp *)context;
     if (!app)
@@ -279,7 +298,7 @@ static void text_updated_password(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipTraderViewWiFiSettings);
 }
 
-static uint32_t callback_to_submenu(void *context)
+uint32_t callback_to_submenu(void *context)
 {
     if (!context)
     {
@@ -294,7 +313,7 @@ static uint32_t callback_to_submenu(void *context)
     return FlipTraderViewMainSubmenu;
 }
 
-static uint32_t callback_to_wifi_settings(void *context)
+uint32_t callback_to_wifi_settings(void *context)
 {
     if (!context)
     {
@@ -305,7 +324,7 @@ static uint32_t callback_to_wifi_settings(void *context)
     return FlipTraderViewWiFiSettings;
 }
 
-static uint32_t callback_to_assets_submenu(void *context)
+uint32_t callback_to_assets_submenu(void *context)
 {
     if (!context)
     {
@@ -320,7 +339,7 @@ static uint32_t callback_to_assets_submenu(void *context)
     return FlipTraderViewAssetsSubmenu;
 }
 
-static void settings_item_selected(void *context, uint32_t index)
+void settings_item_selected(void *context, uint32_t index)
 {
     FlipTraderApp *app = (FlipTraderApp *)context;
     if (!app)
@@ -341,5 +360,3 @@ static void settings_item_selected(void *context, uint32_t index)
         break;
     }
 }
-
-#endif // FLIP_TRADER_CALLBACK_H

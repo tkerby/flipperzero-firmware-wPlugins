@@ -1,8 +1,8 @@
 #ifndef FLIP_TRADE_E_H
 #define FLIP_TRADE_E_H
 
-#include <flipper_http.h>
-#include <easy_flipper.h>
+#include <flipper_http/flipper_http.h>
+#include <easy_flipper/easy_flipper.h>
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
@@ -11,7 +11,7 @@
 #include <gui/view_dispatcher.h>
 #include <notification/notification.h>
 #include <dialogs/dialogs.h>
-#include <jsmn.h>
+#include <jsmn/jsmn.h>
 
 #define TAG "FlipTrader"
 
@@ -63,53 +63,15 @@ typedef struct
 
 } FlipTraderApp;
 
-static char *asset_names[] = {
-    // Crypto pairs
-    "ETHUSD",
-    "BTCUSD",
-    // Stocks (will add mroe later)
-    "AAPL",
-    "AMZN",
-    "GOOGL",
-    "MSFT",
-    "TSLA",
-    "NFLX",
-    "META",
-    "NVDA",
-    "AMD",
-    // Forex pairs
-    "EURUSD",
-    "GBPUSD",
-    "AUDUSD",
-    "NZDUSD",
-    "XAUUSD",
-    "USDJPY",
-    "USDCHF",
-    "USDCAD",
-    "EURJPY",
-    "EURGBP",
-    "EURCHF",
-    "EURCAD",
-    "EURAUD",
-    "EURNZD",
-    "AUDJPY",
-    "AUDCHF",
-    "AUDCAD",
-    "NZDJPY",
-    "NZDCHF",
-    "NZDCAD",
-    "GBPJPY",
-    "GBPCHF",
-    "GBPCAD",
-    "CHFJPY",
-    "CADJPY",
-    "CADCHF",
-    "GBPAUD",
-    "GBPNZD",
-    "AUDNZD",
-};
+#define ASSET_COUNT 42
+extern char **asset_names;
 
 // index
-static uint32_t asset_index = 0;
+extern uint32_t asset_index;
+
+// Function to free the resources used by FlipTraderApp
+void flip_trader_app_free(FlipTraderApp *app);
+char **asset_names_alloc();
+void asset_names_free(char **names);
 
 #endif // FLIP_TRADE_E_H
