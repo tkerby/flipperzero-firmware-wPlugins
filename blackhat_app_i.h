@@ -51,7 +51,7 @@ typedef struct {
     int num_options_menu;
     char* selected_option;
     char* actual_command;
-    FocusConsole focus_console;
+    bool text_input_req;
 } BlackhatItem;
 
 #define ENTER_NAME_LENGTH 25
@@ -74,9 +74,9 @@ struct BlackhatApp {
     int selected_option_index[NUM_MENU_ITEMS];
     char* selected_tx_string;
     const char* selected_option_item_text;
-    bool focus_console_start;
     char text_store[128];
     char text_input_ch[ENTER_NAME_LENGTH];
+    bool text_input_req;
 };
 
 typedef enum {

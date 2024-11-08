@@ -1,36 +1,36 @@
 #include "../blackhat_app_i.h"
 
 BlackhatItem items[] = {
-    {"Shell", {""}, 1, NULL, SHELL_CMD, FOCUS_CONSOLE_END},
+    {"Shell", {""}, 1, NULL, SHELL_CMD, false},
     {"Connect WiFi",
      {"wlan0", "wlan1", "wlan2"},
      3,
      NULL,
      WIFI_CON_CMD,
      FOCUS_CONSOLE_END},
-    {"Set inet SSID", {""}, 1, NULL, SET_INET_SSID_CMD, FOCUS_CONSOLE_END},
-    {"Set inet Password", {""}, 1, NULL, SET_INET_PWD_CMD, FOCUS_CONSOLE_END},
-    {"Set AP SSID", {""}, 1, NULL, SET_AP_SSID_CMD, FOCUS_CONSOLE_END},
+    {"Set inet SSID", {""}, 1, NULL, SET_INET_SSID_CMD, true},
+    {"Set inet Password", {""}, 1, NULL, SET_INET_PWD_CMD, true},
+    {"Set AP SSID", {""}, 1, NULL, SET_AP_SSID_CMD, true},
     {"List Networks",
      {"wlan0", "wlan1", "wlan2"},
      3,
      NULL,
      LIST_AP_CMD,
      FOCUS_CONSOLE_END},
-    {"Wifi Device Info", {""}, 1, NULL, DEV_CMD, FOCUS_CONSOLE_END},
+    {"Wifi Device Info", {""}, 1, NULL, DEV_CMD, false},
     {"Enable AP",
      {"wlan0", "wlan1", "wlan2"},
      3,
      NULL,
      START_AP_CMD,
      FOCUS_CONSOLE_END},
-    {"Get IP", {""}, 1, NULL, START_AP_CMD, FOCUS_CONSOLE_END},
-    {"Enable SSH", {""}, 1, NULL, START_SSH_CMD, FOCUS_CONSOLE_END},
-    {"Start Evil Twin", {""}, 1, NULL, START_EVIL_TWIN, FOCUS_CONSOLE_END},
-    {"Start Evil Portal", {""}, 1, NULL, START_EVIL_PORT, FOCUS_CONSOLE_END},
-    {"Start RAT Driver", {""}, 1, NULL, START_RAT, FOCUS_CONSOLE_END},
-    {"Get Params", {""}, 1, NULL, GET_CMD, FOCUS_CONSOLE_START},
-    {"Help", {""}, 1, NULL, HELP_CMD, FOCUS_CONSOLE_START},
+    {"Get IP", {""}, 1, NULL, START_AP_CMD, false},
+    {"Enable SSH", {""}, 1, NULL, START_SSH_CMD, false},
+    {"Start Evil Twin", {""}, 1, NULL, START_EVIL_TWIN, false},
+    {"Start Evil Portal", {""}, 1, NULL, START_EVIL_PORT, false},
+    {"Start RAT Driver", {""}, 1, NULL, START_RAT, false},
+    {"Get Params", {""}, 1, NULL, GET_CMD, false},
+    {"Help", {""}, 1, NULL, HELP_CMD, false},
 };
 
 static void blackhat_scene_start_var_list_enter_callback(
@@ -46,10 +46,8 @@ static void blackhat_scene_start_var_list_enter_callback(
     const int selected_option_index = app->selected_option_index[index];
     furi_assert(selected_option_index < item->num_options_menu);
     app->selected_tx_string = item->actual_command;
+    app->text_input_req = item->text_input_req;
     app->selected_menu_index = index;
-    app->focus_console_start = (item->focus_console == FOCUS_CONSOLE_TOGGLE)
-                                   ? (selected_option_index == 0)
-                                   : item->focus_console;
 
     app->selected_option_item_text = item->selected_option;
     view_dispatcher_send_custom_event(

@@ -30,23 +30,16 @@ void blackhat_scene_console_output_on_enter(void* context)
     text_box_reset(app->text_box);
     text_box_set_font(text_box, TextBoxFontText);
 
-    if (app->focus_console_start) {
-        text_box_set_focus(text_box, TextBoxFocusStart);
-    } else {
-        text_box_set_focus(text_box, TextBoxFocusEnd);
-    }
+    text_box_set_focus(text_box, TextBoxFocusEnd);
 
     furi_string_reset(app->text_box_store);
     app->text_box_store_strlen = 0;
 
-    if (!strncmp(
-            SET_INET_SSID_CMD,
-            app->selected_tx_string,
-            strlen(SET_INET_SSID_CMD)
-        )) {
+    if (app->text_input_req) {
         scene_manager_next_scene(app->scene_manager, BlackhatSceneRename);
         return;
     }
+
     snprintf(
         app->text_store,
         sizeof(app->text_store),
