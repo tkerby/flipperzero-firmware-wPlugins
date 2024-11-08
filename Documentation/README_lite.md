@@ -60,7 +60,7 @@ The frame sent every 200 ms shall by the device shall be the following :
 ## documentation
 
 Documentation can be found [here](./Documentation/html/index.html).
-To re-generate documentation you have to install ***doxygen*** before running ***Documentation/generate_doc.sh [--open]*** (--open is used to open documentation after the generation). 
+To re-generate documentation you have to install ***doxygen*** before running ***Documentation/generate_doc.sh \[--open\]*** (--open is used to open documentation after the generation). 
 
 
 ## architecture overview
