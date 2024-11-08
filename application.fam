@@ -5,9 +5,8 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="usb_can_app_start",
     stack_size=1 * 1024,
-    icon="A_GPIO_14",
     order=50,
     fap_libs=["assets"],
     fap_icon="icon.png",
-    fap_category="USB_CAN",
+    fap_category="GPIO",
 )

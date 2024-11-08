@@ -2,7 +2,7 @@
 
 
 This software implements an USB to CAN bridge compatible with **Linux [can-utils](https://github.com/linux-can/can-utils) and slcan driver.** <br>
-This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports.<br>
+This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports available [here](https://github.com/serma-safety-security/flipper-zero-can-fd-hs-module).<br>
 ![Flipper zero CAN FD](./Documentation/images/main_logo.png "Flipper zero CAN FD")
 
 ## Usage
