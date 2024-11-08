@@ -33,9 +33,9 @@ You can see the following screenshot for more informations:
 
 **This mode can also be used to configure connection in flexible datarate ("S9" command).**<br>
 
-> **NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
-> **NB2 : for compatibility reason (with can-utils)  newline character is not appended after CAN RX frames.As a consequence display of these frames is impacted. To avoid this send "d" on VCP to enter in debug mode.** <br>
-> **NB3 : beware of usb cdc buffer length. Max size is 64. So command number that can be sent in one frame is limited.** <br>
+**NB1 : beware of command line termination. It must be a carriage return '\r'. For more convenience newline '\n' characters located after carriage returns are ignored.** <br>
+**NB2 : for compatibility reason (with can-utils)  newline character is not appended after CAN RX frames.As a consequence display of these frames is impacted. To avoid this send "d" on VCP to enter in debug mode.** <br>
+**NB3 : beware of usb cdc buffer length. Max size is 64. So command number that can be sent in one frame is limited.** <br>
 
 ## TEST USB LOOPBACK
 
@@ -60,7 +60,7 @@ The frame sent every 200 ms shall by the device shall be the following :
 
 ![test can](./Documentation/images/testcan.JPG "test can")
 
-> note : You can first check Tx LED blinks and transmitted byte counter (on flipper screen) increment by 8 every 200ms to diagnose problems.
+**note :** You can first check Tx LED blinks and transmitted byte counter (on flipper screen) increment by 8 every 200ms to diagnose problems.
 
 # Development
 
@@ -89,7 +89,7 @@ Applications has been tested with a MCP2515 evaluation board. As a consequence, 
 
 ![Flipper zero CAN FD test setup](./Documentation/images/CAN_test.png "Flipper zero CAN FD test setup")
 
-> **Note: the flexible datarate is not tested yet.**
+**Note: the flexible datarate is not tested yet.**
 
 ## Known bugs
 
