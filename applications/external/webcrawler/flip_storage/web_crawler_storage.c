@@ -1,25 +1,7 @@
-#ifndef WEB_CRAWLER_STORAGE_H
-#define WEB_CRAWLER_STORAGE_H
-
-#include <furi.h>
-#include <storage/storage.h>
-
-#define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/" http_tag "/settings.bin"
-#define RECEIVED_DATA_PATH                         \
-    STORAGE_EXT_PATH_PREFIX "/apps_data/" http_tag \
-                            "/" // add the file name to the end (e.g. "received_data.txt")
-
-// will need to make a duplicate of the file
-// one to save data, and the other for users to manipulate
-
-#define MAX_RECEIVED_DATA_SIZE 1024
-#define SHOW_MAX_FILE_SIZE     2048
-
-// Define the truncation notice
-#define TRUNCATION_NOTICE "\n\n[Data truncated due to size limits]"
+#include <flip_storage/web_crawler_storage.h>
 
 // Function to save settings: path, SSID, and password
-static void save_settings(
+void save_settings(
     const char* path,
     const char* ssid,
     const char* password,
@@ -113,7 +95,7 @@ static void save_settings(
 }
 
 // Function to load settings (the variables must be opened in the order they were saved)
-static bool load_settings(
+bool load_settings(
     char* path,
     size_t path_size,
     char* ssid,
@@ -260,7 +242,7 @@ static bool load_settings(
     return true;
 }
 
-static bool delete_received_data(WebCrawlerApp* app) {
+bool delete_received_data(WebCrawlerApp* app) {
     if(app == NULL) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
         return false;
@@ -310,7 +292,7 @@ static bool delete_received_data(WebCrawlerApp* app) {
     return true;
 }
 
-static bool rename_received_data(
+bool rename_received_data(
     const char* old_name,
     const char* new_name,
     const char* file_type,
@@ -379,4 +361,3 @@ static bool rename_received_data(
         return renamed;
     }
 }
-#endif // WEB_CRAWLER_STORAGE_H

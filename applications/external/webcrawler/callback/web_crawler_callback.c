@@ -1,21 +1,9 @@
-// web_crawler_callback.h
-static bool sent_http_request = false;
-static bool get_success = false;
-static bool already_success = false;
-static WebCrawlerApp* app_instance = NULL;
+#include <callback/web_crawler_callback.h>
+bool sent_http_request = false;
+bool get_success = false;
+bool already_success = false;
 
-// Forward declaration of callback functions
-static void web_crawler_setting_item_path_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_headers_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_payload_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_ssid_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_password_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_file_type_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_file_rename_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_file_delete_clicked(void* context, uint32_t index);
-static void web_crawler_setting_item_file_read_clicked(void* context, uint32_t index);
-
-static void web_crawler_http_method_change(VariableItem* item) {
+void web_crawler_http_method_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, http_method_names[index]);
 
@@ -39,7 +27,7 @@ static void web_crawler_http_method_change(VariableItem* item) {
     }
 }
 
-static void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
+void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
     UNUSED(context);
     if(!app_instance) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -183,7 +171,7 @@ static void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
  * @param      context   The context - WebCrawlerApp object.
  * @return     WebCrawlerViewSubmenu
  */
-static uint32_t web_crawler_back_to_configure_callback(void* context) {
+uint32_t web_crawler_back_to_configure_callback(void* context) {
     UNUSED(context);
     // free file read widget if it exists
     if(app_instance->widget_file_read) {
@@ -197,7 +185,7 @@ static uint32_t web_crawler_back_to_configure_callback(void* context) {
  * @param      context   The context - WebCrawlerApp object.
  * @return     WebCrawlerViewSubmenu
  */
-static uint32_t web_crawler_back_to_main_callback(void* context) {
+uint32_t web_crawler_back_to_main_callback(void* context) {
     UNUSED(context);
     // reset GET request flags
     sent_http_request = false;
@@ -210,17 +198,17 @@ static uint32_t web_crawler_back_to_main_callback(void* context) {
     return WebCrawlerViewSubmenuMain; // Return to the main submenu
 }
 
-static uint32_t web_crawler_back_to_file_callback(void* context) {
+uint32_t web_crawler_back_to_file_callback(void* context) {
     UNUSED(context);
     return WebCrawlerViewVariableItemListFile; // Return to the file submenu
 }
 
-static uint32_t web_crawler_back_to_wifi_callback(void* context) {
+uint32_t web_crawler_back_to_wifi_callback(void* context) {
     UNUSED(context);
     return WebCrawlerViewVariableItemListWifi; // Return to the wifi submenu
 }
 
-static uint32_t web_crawler_back_to_request_callback(void* context) {
+uint32_t web_crawler_back_to_request_callback(void* context) {
     UNUSED(context);
     return WebCrawlerViewVariableItemListRequest; // Return to the request submenu
 }
@@ -230,7 +218,7 @@ static uint32_t web_crawler_back_to_request_callback(void* context) {
  * @param      context   The context - unused
  * @return     VIEW_NONE to exit the app
  */
-static uint32_t web_crawler_exit_app_callback(void* context) {
+uint32_t web_crawler_exit_app_callback(void* context) {
     UNUSED(context);
     return VIEW_NONE;
 }
@@ -240,7 +228,7 @@ static uint32_t web_crawler_exit_app_callback(void* context) {
  * @param      context   The context - WebCrawlerApp object.
  * @param      index     The WebCrawlerSubmenuIndex item that was clicked.
  */
-static void web_crawler_submenu_callback(void* context, uint32_t index) {
+void web_crawler_submenu_callback(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
 
     if(app->view_dispatcher) {
@@ -279,7 +267,7 @@ static void web_crawler_submenu_callback(void* context, uint32_t index) {
  * @param      context   The context - WebCrawlerApp object.
  * @param      index     The index of the item that was clicked.
  */
-static void web_crawler_wifi_enter_callback(void* context, uint32_t index) {
+void web_crawler_wifi_enter_callback(void* context, uint32_t index) {
     switch(index) {
     case 0: // SSID
         web_crawler_setting_item_ssid_clicked(context, index);
@@ -298,7 +286,7 @@ static void web_crawler_wifi_enter_callback(void* context, uint32_t index) {
  * @param      context   The context - WebCrawlerApp object.
  * @param      index     The index of the item that was clicked.
  */
-static void web_crawler_file_enter_callback(void* context, uint32_t index) {
+void web_crawler_file_enter_callback(void* context, uint32_t index) {
     switch(index) {
     case 0: // File Read
         web_crawler_setting_item_file_read_clicked(context, index);
@@ -323,7 +311,7 @@ static void web_crawler_file_enter_callback(void* context, uint32_t index) {
  * @param      context   The context - WebCrawlerApp object.
  * @param      index     The index of the item that was clicked.
  */
-static void web_crawler_request_enter_callback(void* context, uint32_t index) {
+void web_crawler_request_enter_callback(void* context, uint32_t index) {
     switch(index) {
     case 0: // URL
         web_crawler_setting_item_path_clicked(context, index);
@@ -349,7 +337,7 @@ static void web_crawler_request_enter_callback(void* context, uint32_t index) {
  * @brief      Callback for when the user finishes entering the URL.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_path_updated(void* context) {
+void web_crawler_set_path_updated(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -385,7 +373,7 @@ static void web_crawler_set_path_updated(void* context) {
  * @brief      Callback for when the user finishes entering the headers
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_headers_updated(void* context) {
+void web_crawler_set_headers_updated(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -421,7 +409,7 @@ static void web_crawler_set_headers_updated(void* context) {
  * @brief      Callback for when the user finishes entering the payload.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_payload_updated(void* context) {
+void web_crawler_set_payload_updated(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -457,7 +445,7 @@ static void web_crawler_set_payload_updated(void* context) {
  * @brief      Callback for when the user finishes entering the SSID.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_ssid_updated(void* context) {
+void web_crawler_set_ssid_updated(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -499,7 +487,7 @@ static void web_crawler_set_ssid_updated(void* context) {
  * @brief      Callback for when the user finishes entering the Password.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_password_update(void* context) {
+void web_crawler_set_password_update(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -542,7 +530,7 @@ static void web_crawler_set_password_update(void* context) {
  * @brief      Callback for when the user finishes entering the File Type.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_file_type_update(void* context) {
+void web_crawler_set_file_type_update(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -600,7 +588,7 @@ static void web_crawler_set_file_type_update(void* context) {
  * @brief      Callback for when the user finishes entering the File Rename.
  * @param      context   The context - WebCrawlerApp object.
  */
-static void web_crawler_set_file_rename_update(void* context) {
+void web_crawler_set_file_rename_update(void* context) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -663,7 +651,7 @@ static void web_crawler_set_file_rename_update(void* context) {
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_path_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_path_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -708,7 +696,7 @@ static void web_crawler_setting_item_path_clicked(void* context, uint32_t index)
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_headers_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_headers_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -763,7 +751,7 @@ static void web_crawler_setting_item_headers_clicked(void* context, uint32_t ind
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_payload_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_payload_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -808,7 +796,7 @@ static void web_crawler_setting_item_payload_clicked(void* context, uint32_t ind
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_ssid_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_ssid_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -852,7 +840,7 @@ static void web_crawler_setting_item_ssid_clicked(void* context, uint32_t index)
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_password_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_password_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -891,7 +879,7 @@ static void web_crawler_setting_item_password_clicked(void* context, uint32_t in
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_file_type_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_file_type_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -935,7 +923,7 @@ static void web_crawler_setting_item_file_type_clicked(void* context, uint32_t i
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_file_rename_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_file_rename_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -981,7 +969,7 @@ static void web_crawler_setting_item_file_rename_clicked(void* context, uint32_t
  * @param      context  The context - WebCrawlerApp object.
  * @param      index    The index of the item that was clicked.
  */
-static void web_crawler_setting_item_file_delete_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_file_delete_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
@@ -1001,7 +989,7 @@ static void web_crawler_setting_item_file_delete_clicked(void* context, uint32_t
     view_dispatcher_switch_to_view(app->view_dispatcher, WebCrawlerViewFileDelete);
 }
 
-static void web_crawler_setting_item_file_read_clicked(void* context, uint32_t index) {
+void web_crawler_setting_item_file_read_clicked(void* context, uint32_t index) {
     WebCrawlerApp* app = (WebCrawlerApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "WebCrawlerApp is NULL");
