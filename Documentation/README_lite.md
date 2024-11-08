@@ -1,8 +1,8 @@
 # Introduction
 
 
-This software implements an USB to CAN bridge compatible with **Linux [can-utils](https://github.com/linux-can/can-utils) and slcan driver.** 
-This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports available [here](https://github.com/serma-safety-security/flipper-zero-can-fd-hs-module).
+This software implements an USB to CAN bridge compatible with **Linux https://github.com/linux-can/can-utils and slcan driver.** 
+This software application is designed to run on flipper zero device and needs SERMA CAN FD board to be plugged in GPIOs ports available https://github.com/serma-safety-security/flipper-zero-can-fd-hs-module.
 
 
 # Usage
@@ -20,14 +20,13 @@ Then you can :
 2. enable your created network interface ***sudo ifconfig can<X> up***.
 3. operate normally your can interface by using ***cansend can<X> <iii>#<dddddddd>*** and ***candump can<X>*** commands.
 
-Please refer to [can-utils](https://github.com/linux-can/can-utils) for more details.
+Please refer to https://github.com/linux-can/can-utils for more details.
 If issues are encountered, you can get more informations by connecting directly to vcp with tool like putty :
 - serial mode
 - 8 data bits
 - no parity
 - no hardware control flow
 
-You can see the following screenshot for more informations:
 
 **This mode can also be used to configure connection in flexible datarate ("S9" command).**
 
@@ -60,7 +59,7 @@ The frame sent every 200 ms shall by the device shall be the following :
 
 ## documentation
 
-Documentation can be found [here](./Documentation/html/index.html).\
+Documentation can be found ./Documentation/html/index.html.\
 To re-generate documentation you have to install ***doxygen*** before running ***Documentation/generate_doc.sh [--open]*** (--open is used to open documentation after the generation). 
 
 
@@ -68,9 +67,9 @@ To re-generate documentation you have to install ***doxygen*** before running **
 
 This application is based on:
 - XTREME firmware USB-UART bridge application : It has been modified to send data on CAN (via SPI) and not on UART.
-- Longan Labs [Longan_CANFD](https://github.com/Longan-Labs/Longan_CANFD) library : this is the driver for the MCP 2518 CAN transceiver.
+- Longan Labs https://github.com/Longan-Labs/Longan_CANFD library : this is the driver for the MCP 2518 CAN transceiver.
 
-**More information on architecture is given in [docs](./Documentation/html/index.html) (cf. previous section).**
+**More information on architecture is given in ./Documentation/html/index.html cf. previous section.**
 
 Application is built as an external app using standard fbt commands. Please refer to flipper documentation for more information.
 
