@@ -10,7 +10,7 @@
 
 #include "../usb_can_app_i.hpp"
 #include "../usb_can_custom_event.hpp"
-#include <assets_icons.h>
+#include "canfdhs_icons.h"
 
 /** @brief This function is called when @ref  SCENE-ERROR-DIALOG  is entered. It will display 2 popup messages and an icon.
  * @details This function:
