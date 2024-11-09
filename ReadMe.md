@@ -46,7 +46,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Fortune Cookie v0.1 (By evillero)](https://github.com/evillero/fortune_cookie)
 - Updated: [Banana v0.4 (By DrEverr)](https://github.com/DrEverr/FlipperApps)
 - Updated: [FlipSocial v0.6 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman)
 - OFW: PR: [Loader: Fix BusFault in handling of OOM #3992 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/3992)
 - Updated: [FlipLibrary v1.2 (By jblanked)](https://github.com/jblanked/FlipLibrary)
 - Updated: [FlipWeather v1.1 (By jblanked)](https://github.com/jblanked/FlipWeather)
@@ -54,6 +53,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipTrader v1.1 (By jblanked)](https://github.com/jblanked/FlipTrader)
 - Updated: [Web Crawler v0.7 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
+- Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman)
+- Updated: [Ghost ESP v1.1.0 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
+- Updated: [FlipTDI v1.1 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-good-faps/pull/234) [Fix FlipTDI crashing on Linux when connecting to a Linux system (By Jan200101)](https://github.com/flipperdevices/flipperzero-good-faps/pull/267)
 - Coming Soon: OFW: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3830](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3852](https://github.com/flipperdevices/flipperzero-firmware/pull/3852) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3859](https://github.com/flipperdevices/flipperzero-firmware/pull/3859) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980)
 
 <a name="release">
@@ -462,7 +464,7 @@ $ ./fbt dolphin_ext
 - [Flipper95 v1.0 (By CookiePLMonster)](https://github.com/CookiePLMonster/flipper-bakery/flipper95)
 - [FlipperZero Clock v1.2 (By mdaskalov)](https://github.com/mdaskalov/flipperzero-clock)
 - [Flippy Temp WIP v0.1 (By n0ciple)](https://github.com/n0ciple/flippy_sensors) `Req: Flippy Sensor Board`
-- [FlipTDI v1.0 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-good-faps/pull/234)
+- [FlipTDI v1.1 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-good-faps/pull/234)
 - [Flizzer Tracker v0.9 (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
 - [FM Radio v1.1 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-firmware-wPlugins/tree/420/applications/external/fm_radio)
 - [FMF2USBMIDI v0.1 (By crackerjacques)](https://github.com/crackerjacques/Flipper_Zero_FMF2USBMIDI)
@@ -471,7 +473,7 @@ $ ./fbt dolphin_ext
 - [GB Printer v0.2 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v0.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
-- [Ghost ESP v1.0.9 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
+- [Ghost ESP v1.1.0 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - [GPIO 7-Segment Output v1.3 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [GPIO Badge v1.0 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/gpio_badge)
 - [GPIO Controller (By Lokno)](https://github.com/Lokno/gpio_controller)
