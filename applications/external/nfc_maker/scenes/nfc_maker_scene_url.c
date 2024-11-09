@@ -16,10 +16,7 @@ void nfc_maker_scene_url_on_enter(void* context) {
 
     nfc_maker_text_input_set_header_text(text_input, "Enter Plain URL:");
 
-    strlcpy(
-        app->big_buf,
-        "https://rogue-master.net",
-        sizeof(app->big_buf));
+    strlcpy(app->big_buf, "https://rogue-master.net", sizeof(app->big_buf));
 
     nfc_maker_text_input_set_result_callback(
         text_input,

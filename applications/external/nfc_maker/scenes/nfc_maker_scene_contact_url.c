@@ -16,10 +16,7 @@ void nfc_maker_scene_contact_url_on_enter(void* context) {
 
     nfc_maker_text_input_set_header_text(text_input, "Enter URL Link:");
 
-    strlcpy(
-        app->big_buf,
-        "rogue-master.net",
-        sizeof(app->big_buf));
+    strlcpy(app->big_buf, "rogue-master.net", sizeof(app->big_buf));
 
     nfc_maker_text_input_set_result_callback(
         text_input,

@@ -766,7 +766,10 @@ void nfc_maker_text_input_set_minimum_length(
 void nfc_maker_text_input_show_illegal_symbols(NFCMaker_TextInput* text_input, bool show) {
     furi_check(text_input);
     with_view_model(
-        text_input->view, NFCMaker_TextInputModel * model, { model->illegal_symbols = show; }, true);
+        text_input->view,
+        NFCMaker_TextInputModel * model,
+        { model->illegal_symbols = show; },
+        true);
 }
 
 void nfc_maker_text_input_set_validator(
