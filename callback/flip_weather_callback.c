@@ -4,6 +4,17 @@ bool weather_request_success = false;
 bool sent_weather_request = false;
 bool got_weather_data = false;
 
+void flip_weather_popup_callback(void *context)
+{
+    FlipWeatherApp *app = (FlipWeatherApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWeatherApp is NULL");
+        return;
+    }
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewSubmenu);
+}
+
 void flip_weather_request_error(Canvas *canvas)
 {
     if (fhttp.last_response != NULL)
@@ -19,6 +30,13 @@ void flip_weather_request_error(Canvas *canvas)
         {
             canvas_clear(canvas);
             canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        }
+        else if (strstr(fhttp.last_response, "[ERROR] GET request failed or returned empty data.") != NULL)
+        {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] WiFi error.");
             canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
             canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
         }
@@ -102,7 +120,7 @@ void flip_weather_view_draw_callback_weather(Canvas *canvas, void *model)
     // handle geo location until it's processed and then handle weather
 
     // start the process
-    if (!send_geo_location_request())
+    if (!send_geo_location_request() || fhttp.state == ISSUE)
     {
         flip_weather_request_error(canvas);
     }
@@ -185,7 +203,7 @@ void flip_weather_view_draw_callback_gps(Canvas *canvas, void *model)
         return;
     }
 
-    if (!send_geo_location_request())
+    if (!send_geo_location_request() || fhttp.state == ISSUE)
     {
         flip_weather_request_error(canvas);
     }
@@ -206,14 +224,14 @@ void callback_submenu_choices(void *context, uint32_t index)
     case FlipWeatherSubmenuIndexWeather:
         if (!flip_weather_handle_ip_address())
         {
-            return;
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewPopupError);
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewWeather);
         break;
     case FlipWeatherSubmenuIndexGPS:
         if (!flip_weather_handle_ip_address())
         {
-            return;
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewPopupError);
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewGPS);
         break;

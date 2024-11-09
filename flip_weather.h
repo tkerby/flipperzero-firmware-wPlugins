@@ -27,6 +27,8 @@ typedef enum
     FlipWeatherViewSettings,          // The wifi settings screen
     FlipWeatherViewTextInputSSID,     // The text input screen for SSID
     FlipWeatherViewTextInputPassword, // The text input screen for password
+    //
+    FlipWeatherViewPopupError, // The error popup screen
 } FlipWeatherView;
 
 // Each screen will have its own view
@@ -37,6 +39,7 @@ typedef struct
     View *view_gps;                           // The GPS view
     Submenu *submenu;                         // The main submenu
     Widget *widget;                           // The widget (about)
+    Popup *popup_error;                       // The error popup
     VariableItemList *variable_item_list;     // The variable item list (settngs)
     VariableItem *variable_item_ssid;         // The variable item
     VariableItem *variable_item_password;     // The variable item

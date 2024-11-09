@@ -42,6 +42,12 @@ bool flip_weather_parse_ip_address()
 // handle the async-to-sync process to get and set the IP address
 bool flip_weather_handle_ip_address()
 {
+    if (fhttp.state == INACTIVE)
+    {
+        FURI_LOG_E(TAG, "Board is INACTIVE");
+        flipper_http_ping(); // ping the device
+        return false;
+    }
     if (!got_ip_address)
     {
         got_ip_address = true;
@@ -82,6 +88,12 @@ bool flip_weather_handle_ip_address()
 
 bool send_geo_location_request()
 {
+    if (fhttp.state == INACTIVE)
+    {
+        FURI_LOG_E(TAG, "Board is INACTIVE");
+        flipper_http_ping(); // ping the device
+        return false;
+    }
     if (!sent_get_request && fhttp.state == IDLE)
     {
         sent_get_request = true;
