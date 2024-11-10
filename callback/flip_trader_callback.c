@@ -50,6 +50,10 @@ void flip_trader_request_error(Canvas *canvas)
 
 bool send_price_request()
 {
+    if (fhttp.state == INACTIVE)
+    {
+        return false;
+    }
     if (!sent_get_request && fhttp.state == IDLE)
     {
         sent_get_request = true;
@@ -77,24 +81,24 @@ bool send_price_request()
 
 void process_asset_price()
 {
-    // load the received data from the saved file
-    FuriString *price_data = flipper_http_load_from_file(fhttp.file_path);
-    if (price_data == NULL)
-    {
-        FURI_LOG_E(TAG, "Failed to load received data from file.");
-        fhttp.state = ISSUE;
-        return;
-    }
-    char *data_cstr = (char *)furi_string_get_cstr(price_data);
-    if (data_cstr == NULL)
-    {
-        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
-        furi_string_free(price_data);
-        fhttp.state = ISSUE;
-        return;
-    }
     if (!request_processed)
     {
+        // load the received data from the saved file
+        FuriString *price_data = flipper_http_load_from_file(fhttp.file_path);
+        if (price_data == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to load received data from file.");
+            fhttp.state = ISSUE;
+            return;
+        }
+        char *data_cstr = (char *)furi_string_get_cstr(price_data);
+        if (data_cstr == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+            furi_string_free(price_data);
+            fhttp.state = ISSUE;
+            return;
+        }
         request_processed = true;
         char *global_quote = get_json_value("Global Quote", data_cstr, MAX_TOKENS);
         if (global_quote == NULL)
