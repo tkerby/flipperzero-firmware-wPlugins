@@ -711,7 +711,6 @@ D58660D1ACDE
 C01FC822C6E5
 0854BF31111E
 # MORE KEYS:
-8A19D40CF2B5
 AE8587108640
 135B88A94B8B
 # RUSSIAN TROIKA CARD
@@ -2030,43 +2029,29 @@ F1DF0CA8948B
 # yellow
 7747B4912984
 # Sector 3, key A
-# blue
 09D556D57A4B
-# yellow
 3ED158C6934E
 # Sector 4-7, key A
-# blue
 839DEDBFEC0D
-# yellow
 C694A9ED2F9E
-# Sector 15 - see above
 # Sector 0, 16, key B (blue)
 81D55F4551B9
 # Sector 0, key B (yellow)
 6E9A040C3C91
 # Sector 1, key B
-# blue
 5B72C63FB416
-# yellow
 A3CDCED46371
 # Sector 2, key B
-# blue
 87A61433D026
-# yellow
 9CD3A81F11AB
 # Sector 3, key B
-# blue
 7070D331360C
-# yellow
 836C790F6E2C
 # Sector 4-7, key B
-# blue
 7FE057787C4F
-# yellow
 FF59C6D13F88
 # Sector 8-14, 17-39, key B
 536F6669614D
-# Sector 15 - see above
 # End of SKGT
 # Hanoi Bus Rapid Transit - 1/2/3 A
 AAAFBA10FC37
@@ -2116,12 +2101,6 @@ F14D329CBDBE
 # Hotel cards from Austria
 AB287B3B4903
 7B0DEDA7E162
-# +-----------------------------------------------------------------------------------------------------------------------------------+
-# | https://github.com/ikarus23/MifareClassicTool/blob/master/Mifare%20Classic%20Tool/app/src/main/assets/key-files/extended-std.keys |
-# +-----------------------------------------------------------------------------------------------------------------------------------+
-# UK London Office
-435DF6296EC4
-2338B4913222
 # Acces card of students, and more in Occitanie, France
 E9A553102EA5
 F982E971CFED
@@ -2259,13 +2238,6 @@ D37C8F1793F7
 32B0A529CEC0
 22345517DFBA
 33B1A62ACFC1
-# Guest Cashless Prepaid Arcade Payment Cards https://github.com/RfidResearchGroup/proxmark3/pull/2415
-168168168168
-198407157610
-4E4F584D2101
-4E4F584D2105
-686B35333376
-861861861861
 # add keys from MCT project https://github.com/RfidResearchGroup/proxmark3/pull/2394
 518108E061E2
 558AAD64EB5B
