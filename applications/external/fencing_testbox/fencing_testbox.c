@@ -52,6 +52,7 @@ FencingTestboxApp* init_fencing_testbox() {
 
     app->scene_manager = scene_manager_alloc(&scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
 
     // Allocs
     app->submenu = submenu_alloc();
