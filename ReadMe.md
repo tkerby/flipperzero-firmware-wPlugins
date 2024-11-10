@@ -46,13 +46,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Banana v0.4 (By DrEverr)](https://github.com/DrEverr/FlipperApps)
 - Updated: [FlipSocial v0.6 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - OFW: PR: [Loader: Fix BusFault in handling of OOM #3992 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/3992)
-- Updated: [FlipLibrary v1.2 (By jblanked)](https://github.com/jblanked/FlipLibrary)
 - Updated: [FlipWeather v1.1 (By jblanked)](https://github.com/jblanked/FlipWeather)
 - Updated: [FlipWifi v1.1 (By jblanked)](https://github.com/jblanked/FlipWiFi)
 - Updated: [FlipTrader v1.1 (By jblanked)](https://github.com/jblanked/FlipTrader)
 - Updated: [Web Crawler v0.7 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
 - Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
-- Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman)
 - Updated: [FlipTDI v1.1 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-good-faps/pull/234) [Fix FlipTDI crashing on Linux when connecting to a Linux system (By Jan200101)](https://github.com/flipperdevices/flipperzero-good-faps/pull/267)
 - [GUI: Replace strcat() usage with strlcat() (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/59a7dad7a569c501660515a31c8b7fee9a2404f5)
 - [API: Move furi_hal_bt_reverse_mac_addr() out of API (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/aee7c2c5bb5e2b5ea94ceceb020cbad1948814aa)
@@ -60,6 +58,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Maker v1.2 (by Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
 - Updated: [Ghost ESP v1.1.1 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32`
 - Updated: [SD SPI v0.3 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board`
+- Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman)
+- Updated: [FlipLibrary v1.2 (By jblanked)](https://github.com/jblanked/FlipLibrary)
 - Coming Soon: OFW: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3830](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3852](https://github.com/flipperdevices/flipperzero-firmware/pull/3852) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3859](https://github.com/flipperdevices/flipperzero-firmware/pull/3859) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980)
 
 <a name="release">
