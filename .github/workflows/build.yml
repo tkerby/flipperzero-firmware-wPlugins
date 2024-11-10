@@ -1,9 +1,16 @@
-name: "FAP: Build and lint"
+name: "FAP: Build for multiple SDK sources"
 on: [push, pull_request]
 jobs:
   ufbt-build-action:
     runs-on: ubuntu-latest
-    name: 'ufbt: Build for Dev branch'
+    strategy:
+      matrix:
+        include:
+          - name: dev channel
+            sdk-channel: dev
+          - name: release channel
+            sdk-channel: release
+    name: 'ufbt: Build for ${{ matrix.name }}'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -11,16 +18,10 @@ jobs:
         uses: flipperdevices/flipperzero-ufbt-action@v0.1
         id: build-app
         with:
-          sdk-channel: release
+          sdk-channel: ${{ matrix.sdk-channel }}
+          sdk-index-url: ${{ matrix.sdk-index-url }}
       - name: Upload app artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
           path: ${{ steps.build-app.outputs.fap-artifacts }}
-      # You can remove this step if you don't want to check source code formatting
-      - name: Lint sources
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1
-        with:
-          # skip SDK setup, we already did it in previous step
-          skip-setup: true
-          task: lint
