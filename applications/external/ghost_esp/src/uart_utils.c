@@ -5,6 +5,7 @@
 #include "sequential_file.h"
 #include <gui/modules/text_box.h>
 #include <furi_hal_serial.h>
+#include <cfw/cfw.h>
 
 #define WORKER_ALL_RX_EVENTS   (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtPcapDone)
 #define PCAP_WRITE_CHUNK_SIZE  1024
@@ -391,7 +392,7 @@ UartContext* uart_init(AppState* state) {
     }
 
     // Initialize serial
-    uart->serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
+    uart->serial_handle = furi_hal_serial_control_acquire(cfw_settings.uart_esp_channel);
     if(uart->serial_handle) {
         furi_hal_serial_init(uart->serial_handle, 115200);
         uart->is_serial_active = true;
