@@ -68,7 +68,7 @@ int32_t image_viewer_main(void* p) {
     dialog_file_browser_set_basic_options(&browser_options, ".bm", &I_icon);
     browser_options.hide_ext = false;
 
-    FuriString* path = furi_string_alloc_set_str("/ext");
+    FuriString* path = furi_string_alloc_set_str("/ext/apps_assets/image_viewer");
 
     bool selected = dialog_file_browser_show(dialogs, path, path, &browser_options);
 
