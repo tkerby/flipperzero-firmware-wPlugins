@@ -6,6 +6,7 @@ App(
     cdefines=["ENC_READER"],
 	requires=[
         "gui",
+        "notifications",
     ],
     stack_size=1 * 1024,
     order=90,
