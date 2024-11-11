@@ -24,12 +24,13 @@ BlackhatItem items[] = {
      NULL,
      START_AP_CMD,
      FOCUS_CONSOLE_END},
-    {"Get IP", {""}, 1, NULL, START_AP_CMD, false},
+    {"Get IP", {""}, 1, NULL, GET_IP_CMD, false},
     {"Enable SSH", {""}, 1, NULL, START_SSH_CMD, false},
-    {"Start Evil Twin", {""}, 1, NULL, START_EVIL_TWIN, false},
-    {"Start Evil Portal", {""}, 1, NULL, START_EVIL_PORT, false},
-    {"Start RAT Driver", {""}, 1, NULL, START_RAT, false},
+    {"Start Evil Twin", {""}, 1, NULL, ST_EVIL_TWIN_CMD, false},
+    {"Start Evil Portal", {""}, 1, NULL, ST_EVIL_PORT_CMD, false},
+    {"Start RAT Driver", {""}, 1, NULL, ST_RAT_CMD, false},
     {"Get Params", {""}, 1, NULL, GET_CMD, false},
+    {"Reboot", {""}, 1, NULL, REBOOT_CMD, false},
     {"Help", {""}, 1, NULL, HELP_CMD, false},
 };
 

@@ -15,7 +15,7 @@
 #include "blackhat_uart.h"
 #include "scenes/blackhat_scene.h"
 
-#define NUM_MENU_ITEMS (15)
+#define NUM_MENU_ITEMS (16)
 
 #define BLACKHAT_TEXT_BOX_STORE_SIZE (4096)
 #define UART_CH FuriHalSerialIdUsart
@@ -30,10 +30,11 @@
 #define START_AP_CMD "bh wifi ap"
 #define GET_IP_CMD "bh wifi ip"
 #define START_SSH_CMD "bh ssh"
-#define START_EVIL_TWIN "bh evil_twin"
-#define START_EVIL_PORT "bh evil_portal"
-#define START_RAT "bh evil_portal"
+#define ST_EVIL_TWIN_CMD "bh evil_twin"
+#define ST_EVIL_PORT_CMD "bh evil_portal"
+#define ST_RAT_CMD "bh rat_driver"
 #define GET_CMD "bh get"
+#define REBOOT_CMD "reboot"
 #define HELP_CMD "cat /mnt/help.txt"
 
 typedef enum { NO_ARGS = 0, INPUT_ARGS, TOGGLE_ARGS } InputArgs;
