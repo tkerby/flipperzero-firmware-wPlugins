@@ -1,0 +1,15 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_nfc_tech_i.h" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_nfc_tech_i.h">
+<area shape="rect" id="Node000001" title="NFC HAL technology&#45;related private definitions." alt="" coords="504,5,672,75"/>
+<area shape="rect" id="Node000002" href="$furi__hal__nfc_8c.html" title=" " alt="" coords="5,123,173,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="491,60,346,87,186,125,174,129,173,124,185,120,345,82,490,55"/>
+<area shape="rect" id="Node000003" href="$furi__hal__nfc__felica_8c.html" title=" " alt="" coords="197,123,365,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="492,80,366,127,364,122,490,75"/>
+<area shape="rect" id="Node000004" href="$furi__hal__nfc__iso14443a_8c.html" title=" " alt="" coords="389,123,576,192"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="550,87,515,124,512,121,546,83"/>
+<area shape="rect" id="Node000005" href="$furi__hal__nfc__iso14443b_8c.html" title=" " alt="" coords="600,123,787,192"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="630,83,664,121,661,124,626,87"/>
+<area shape="rect" id="Node000006" href="$furi__hal__nfc__iso15693_8c.html" title=" " alt="" coords="811,123,989,192"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="686,74,811,121,809,126,684,79"/>
+<area shape="rect" id="Node000007" href="$furi__hal__nfc__timer_8c.html" title=" " alt="" coords="1013,123,1181,192"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="686,54,836,81,1002,120,1014,123,1013,129,1001,125,834,87,685,59"/>
+</map>

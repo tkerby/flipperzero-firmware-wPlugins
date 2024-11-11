@@ -1,0 +1,6 @@
+<map id="SCENE&#45;START" name="SCENE&#45;START">
+<area shape="rect" id="Node000002" href="$group__CONTROLLER.html" title="MVC controller component used to link VIEW (data displayed in flipper screen) to MODEL (application c..." alt="" coords="5,31,115,56"/>
+<area shape="rect" id="Node000001" title="This is the scene displayed on application entry (when CAN&#45;FD&#45;HS app is selected from flipper main me..." alt="" coords="344,31,455,56"/>
+<area shape="rect" id="Node000003" href="$group__SCENE-ERROR-DIALOG.html" title="This scene is called when the user tries to enter an application mode (i.e SCENE&#45;USB&#45;CAN) from SCENE&#45;..." alt="" coords="684,5,855,31"/>
+<area shape="rect" id="Node000004" href="$group__SCENE-USB-CAN.html" title="This is the main scene used when an application mode is entered. It will mainly run MODEL component a..." alt="" coords="704,55,835,80"/>
+</map>

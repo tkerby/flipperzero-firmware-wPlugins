@@ -1,0 +1,9 @@
+<map id="Gui" name="Gui">
+<area shape="rect" id="Node000001" title=" " alt="" coords="23,93,67,119"/>
+<area shape="rect" id="Node000003" href="$structViewPort.html" title=" " alt="" coords="5,181,85,207"/>
+<area shape="poly" id="edge3_Node000003_Node000001" title=" " alt="" coords="25,130,17,143,16,153,19,162,33,179,29,183,15,165,11,154,12,142,20,128"/>
+<area shape="rect" id="Node000002" href="$structCanvas.html" title=" " alt="" coords="103,5,174,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="118,42,60,95,57,91,114,38"/>
+<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="166,38,192,63,215,93,223,110,227,127,225,143,217,159,195,173,161,182,86,193,85,187,160,177,193,168,213,156,220,142,222,127,218,112,211,96,188,66,162,41"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="43,167,43,119,48,119,48,167"/>
+</map>

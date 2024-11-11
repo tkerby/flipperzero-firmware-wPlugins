@@ -1,0 +1,25 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_gpio.h" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_gpio.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="581,5,749,75"/>
+<area shape="rect" id="Node000002" href="$furi__hal__debug_8c.html" title=" " alt="" coords="5,123,173,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="568,56,389,83,287,102,186,125,174,129,173,123,185,120,286,97,388,77,567,50"/>
+<area shape="rect" id="Node000003" href="$furi__hal__gpio_8c.html" title=" " alt="" coords="197,123,365,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="569,70,378,125,366,129,365,124,377,120,567,65"/>
+<area shape="rect" id="Node000004" href="$furi__hal__os_8c.html" title=" " alt="" coords="389,123,557,192"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="599,84,531,125,528,120,596,80"/>
+<area shape="rect" id="Node000005" href="$furi__hal__speaker_8c.html" title=" " alt="" coords="581,123,749,192"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="668,89,668,122,663,122,663,89"/>
+<area shape="rect" id="Node000006" href="$furi__hal__spi__types_8h.html" title=" " alt="" coords="773,123,941,192"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="735,80,802,120,800,125,732,84"/>
+<area shape="rect" id="Node000009" href="$furi__hal__subghz_8h.html" title=" " alt="" coords="965,123,1133,192"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="763,65,954,120,966,124,964,129,953,125,762,70"/>
+<area shape="rect" id="Node000012" href="$furi__hal__vibro_8c.html" title=" " alt="" coords="1157,123,1325,192"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="763,50,942,77,1045,97,1146,120,1158,123,1157,129,1145,125,1044,102,941,83,762,56"/>
+<area shape="rect" id="Node000007" href="$furi__hal__spi__config_8h.html" title=" " alt="" coords="773,240,941,309"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="860,206,860,240,855,240,855,206"/>
+<area shape="rect" id="Node000008" href="$furi__hal__spi__config_8c.html" title=" " alt="" coords="773,357,941,427"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="860,323,860,357,855,357,855,323"/>
+<area shape="rect" id="Node000010" href="$furi__hal__subghz_8c.html" title=" " alt="" coords="965,240,1133,309"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="1052,206,1052,240,1047,240,1047,206"/>
+<area shape="rect" id="Node000011" href="$furi__hal__target__hw_8h.html" title=" " alt="" coords="1157,240,1325,309"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="1119,197,1186,237,1184,242,1116,202"/>
+</map>

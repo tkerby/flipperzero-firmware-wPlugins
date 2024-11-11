@@ -1,0 +1,9 @@
+<map id="CONTROLLER" name="CONTROLLER">
+<area shape="rect" id="Node000002" href="$group__APP.html" title="Applicative Software : this is an adaptation of Xtreme firmware USB&#45;UART bridge App in order to send ..." alt="" coords="5,135,52,160"/>
+<area shape="rect" id="Node000001" title="MVC controller component used to link VIEW (data displayed in flipper screen) to MODEL (application c..." alt="" coords="101,135,211,160"/>
+<area shape="rect" id="Node000003" href="$group__SCENE-CONFIG.html" title="This is the scene displayed when left key is pressed in SCENE&#45;USB&#45;CAN : it permits to chose Virtual C..." alt="" coords="465,5,586,31"/>
+<area shape="rect" id="Node000006" href="$group__SCENE-ERROR-DIALOG.html" title="This scene is called when the user tries to enter an application mode (i.e SCENE&#45;USB&#45;CAN) from SCENE&#45;..." alt="" coords="440,61,611,87"/>
+<area shape="rect" id="Node000004" href="$group__SCENE-EXIT-CONFIRM.html" title="This is the scene displayed when back key is pressed in SCENE&#45;USB&#45;CAN." alt="" coords="443,117,608,143"/>
+<area shape="rect" id="Node000005" href="$group__SCENE-START.html" title="This is the scene displayed on application entry (when CAN&#45;FD&#45;HS app is selected from flipper main me..." alt="" coords="470,176,581,201"/>
+<area shape="rect" id="Node000007" href="$group__SCENE-USB-CAN.html" title="This is the main scene used when an application mode is entered. It will mainly run MODEL component a..." alt="" coords="460,247,591,272"/>
+</map>

@@ -1,0 +1,30 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_uart.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_uart.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="508,5,676,75"/>
+<area shape="rect" id="Node000002" href="$furi__hal__uart_8h.html" title=" " alt="" coords="33,123,149,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="508,60,163,123,162,118,507,54"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="437,196,520,221"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="508,50,425,59,337,74,260,96,233,109,214,124,206,137,203,147,204,156,209,164,230,178,261,189,343,201,424,205,423,210,342,207,260,194,227,183,205,168,199,158,198,147,201,134,210,121,230,105,259,91,335,69,424,54,508,45"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="224,123,395,148"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="509,71,358,121,357,116,507,66"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="419,123,584,148"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="561,77,524,114,520,111,557,73"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="609,123,759,148"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="627,73,665,111,661,114,623,77"/>
+<area shape="rect" id="Node000009" href="$furi__hal__resources_8h.html" title=" " alt="" coords="921,123,1074,148"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="677,58,935,117,934,122,676,63"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="1101,196,1157,221"/>
+<area shape="poly" id="edge15_Node000001_Node000010" title=" " alt="" coords="676,43,784,52,904,67,1014,90,1057,104,1088,121,1102,134,1113,150,1126,182,1121,184,1108,152,1098,137,1085,125,1055,109,1012,95,903,73,783,58,676,49"/>
+<area shape="rect" id="Node000013" href="$furi__hal__bus_8h.html" title=" " alt="" coords="783,123,897,148"/>
+<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="677,70,798,115,796,120,675,75"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="5,196,80,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="85,150,60,186,56,183,81,147"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="105,196,175,221"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="101,147,126,183,122,186,97,150"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="1020,146,1097,187,1095,192,1017,150"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="782,196,893,221"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="973,150,877,193,875,188,971,146"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="917,196,1077,221"/>
+<area shape="poly" id="edge11_Node000009_Node000012" title=" " alt="" coords="1000,148,1000,182,995,182,995,148"/>
+<area shape="poly" id="edge14_Node000013_Node000005" title=" " alt="" coords="784,150,534,199,533,194,783,145"/>
+<area shape="poly" id="edge13_Node000013_Node000011" title=" " alt="" coords="842,148,841,183,836,182,837,148"/>
+</map>

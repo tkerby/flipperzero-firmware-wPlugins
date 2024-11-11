@@ -1,0 +1,24 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_nfc_irq.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_nfc_irq.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="494,5,662,75"/>
+<area shape="rect" id="Node000002" href="$furi__hal__nfc__i_8h.html" title="NFC HAL library (private definitions)." alt="" coords="328,123,449,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="511,77,426,119,423,114,508,72"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="494,123,662,148"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="581,75,581,109,575,109,575,75"/>
+<area shape="rect" id="Node000009" href="$furi__hal__resources_8h.html" title=" " alt="" coords="696,123,849,148"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="649,72,738,114,735,119,647,77"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="647,196,703,221"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="439,145,635,193,633,198,438,151"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,196,116,221"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="337,151,127,196,126,190,335,145"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="141,196,250,221"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="359,151,240,194,239,189,357,146"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="275,196,423,221"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="384,150,364,185,360,183,380,147"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="447,196,623,221"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="413,146,500,188,498,192,411,150"/>
+<area shape="poly" id="edge9_Node000009_Node000003" title=" " alt="" coords="759,150,704,190,701,185,755,146"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="728,196,839,221"/>
+<area shape="poly" id="edge10_Node000009_Node000010" title=" " alt="" coords="777,148,782,182,777,183,772,149"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="863,196,1023,221"/>
+<area shape="poly" id="edge11_Node000009_Node000011" title=" " alt="" coords="801,146,904,188,902,193,799,150"/>
+</map>

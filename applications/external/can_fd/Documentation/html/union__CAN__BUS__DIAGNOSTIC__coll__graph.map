@@ -1,0 +1,7 @@
+<map id="_CAN_BUS_DIAGNOSTIC" name="_CAN_BUS_DIAGNOSTIC">
+<area shape="rect" id="Node000001" title="CAN BUS DIAGNOSTICS." alt="" coords="121,93,301,119"/>
+<area shape="rect" id="Node000002" href="$struct__CAN__BUS__ERROR__COUNT.html" title="CAN Bus Diagnostic Error Counts." alt="" coords="5,5,203,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,37,198,91,195,95,127,41"/>
+<area shape="rect" id="Node000003" href="$struct__CAN__BUS__DIAG__FLAGS.html" title="CAN Bus Diagnostic flags." alt="" coords="227,5,408,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="294,41,227,95,223,91,291,37"/>
+</map>

@@ -1,0 +1,18 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/view_port.h" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/view_port.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="31,5,199,75"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,123,109,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="96,76,74,112,69,109,92,73"/>
+<area shape="rect" id="Node000003" href="$canvas_8h.html" title=" " alt="" coords="133,123,213,148"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="138,73,161,109,156,112,134,76"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="69,343,139,368"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="143,150,111,169,96,182,85,197,75,231,76,266,84,301,95,329,90,331,79,302,71,267,70,230,80,195,92,178,107,165,140,146"/>
+<area shape="rect" id="Node000005" href="$icon__animation_8h.html" title=" " alt="" coords="94,196,253,221"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="176,148,176,182,171,182,171,148"/>
+<area shape="rect" id="Node000007" href="$icon_8h.html" title=" " alt="" coords="248,269,333,295"/>
+<area shape="poly" id="edge9_Node000003_Node000007" title=" " alt="" coords="202,146,236,165,267,194,283,225,290,255,285,256,278,227,263,198,233,170,200,150"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="165,223,148,244,132,271,120,301,112,330,106,328,115,299,127,268,144,241,161,220"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="141,269,224,295"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="178,221,182,255,177,256,172,222"/>
+<area shape="poly" id="edge7_Node000005_Node000007" title=" " alt="" coords="194,219,261,260,258,264,191,224"/>
+<area shape="poly" id="edge8_Node000007_Node000004" title=" " alt="" coords="262,297,148,340,146,335,260,292"/>
+</map>

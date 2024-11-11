@@ -1,0 +1,21 @@
+<map id="FuriHalNfcTechBase" name="FuriHalNfcTechBase">
+<area shape="rect" id="Node000001" title="Abstract NFC technology definition structure." alt="" coords="317,387,467,412"/>
+<area shape="rect" id="Node000002" href="$structFuriHalNfcTechPollerBase.html" title="Abstract technology&#45;specific poller structure." alt="" coords="79,299,267,324"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="216,327,364,384,362,389,214,332"/>
+<area shape="rect" id="Node000003" href="$structFuriHalNfcPollerCompensation.html" title="Technology&#45;specific compenstaion values for pollers." alt="" coords="5,137,227,163"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="114,176,113,224,117,249,126,273,137,286,151,296,147,301,133,290,122,276,112,251,108,224,109,176"/>
+<area shape="rect" id="Node000004" href="$structFuriHalSpiBusHandle.html" title=" " alt="" coords="251,137,410,163"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="299,172,278,189,261,211,251,231,241,253,223,277,194,300,191,296,219,273,236,250,246,229,256,208,274,185,295,168"/>
+<area shape="poly" id="edge7_Node000004_Node000004" title=" " alt="" coords="425,139,433,143,437,150,429,160,411,164,410,159,426,155,431,150,429,147,422,144"/>
+<area shape="rect" id="Node000005" href="$structFuriHalSpiBus.html" title=" " alt="" coords="292,299,404,324"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="352,173,359,186,364,217,363,249,354,299,349,298,358,249,359,218,353,187,347,175"/>
+<area shape="rect" id="Node000007" href="$structFuriHalNfcTechListenerBase.html" title="Abstract technology&#45;specific listener structure." alt="" coords="511,299,713,324"/>
+<area shape="poly" id="edge11_Node000007_Node000004" title=" " alt="" coords="416,164,471,184,503,204,525,225,572,273,600,297,597,301,569,277,521,228,499,209,468,189,414,169"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="330,287,325,275,320,244,320,212,326,162,331,163,325,212,326,243,331,274,335,285"/>
+<area shape="poly" id="edge5_Node000005_Node000005" title=" " alt="" coords="419,303,431,311,422,319,404,322,404,317,420,314,425,311,416,307"/>
+<area shape="rect" id="Node000006" href="$structGpioPin.html" title=" " alt="" coords="295,5,367,31"/>
+<area shape="poly" id="edge8_Node000004_Node000006" title=" " alt="" coords="333,44,333,137,328,137,328,44"/>
+<area shape="poly" id="edge9_Node000001_Node000007" title=" " alt="" coords="571,332,423,389,421,384,569,327"/>
+<area shape="rect" id="Node000008" href="$structFuriHalNfcListenerCompensation.html" title="Technology&#45;specific compenstaion values for listeners." alt="" coords="517,137,753,163"/>
+<area shape="poly" id="edge10_Node000007_Node000008" title=" " alt="" coords="634,177,616,299,611,298,628,176"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_random.c" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/targets/f7/furi_hal/furi_hal_random.c">
+<area shape="rect" id="Node000001" title=" " alt="" coords="381,5,549,75"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,123,145,148"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="381,64,137,122,135,117,380,59"/>
+<area shape="rect" id="Node000003" href="$furi__hal__bus_8h.html" title=" " alt="" coords="169,123,283,148"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="381,76,269,120,267,115,380,72"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="307,123,363,148"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="420,77,365,116,361,112,416,73"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="388,123,541,148"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="467,75,467,109,462,109,462,75"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="565,123,716,148"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="529,72,608,114,605,118,527,77"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="741,123,909,148"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="550,60,768,117,766,122,548,66"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="933,123,1039,148"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="549,54,920,119,919,125,549,59"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="109,196,220,221"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="218,150,186,187,182,184,214,147"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="245,196,327,221"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="238,147,270,184,265,187,234,150"/>
+</map>

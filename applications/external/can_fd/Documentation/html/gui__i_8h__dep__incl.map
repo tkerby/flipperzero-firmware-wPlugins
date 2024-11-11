@@ -1,0 +1,15 @@
+<map id="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/gui_i.h" name="/home/kali/Flipper&#45;zero&#45;XTREME&#45;FW&#45;dev/applications/services/gui/gui_i.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="329,5,497,75"/>
+<area shape="rect" id="Node000002" href="$gui_8c.html" title=" " alt="" coords="5,123,173,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="317,78,175,129,173,124,316,73"/>
+<area shape="rect" id="Node000003" href="$view__dispatcher__i_8h.html" title=" " alt="" coords="197,123,376,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="368,86,326,124,322,120,365,82"/>
+<area shape="rect" id="Node000005" href="$view__port_8c.html" title=" " alt="" coords="423,240,591,309"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="418,88,425,139,441,191,456,216,474,238,470,241,451,219,436,193,420,140,412,89"/>
+<area shape="rect" id="Node000006" href="$view__port__i_8h.html" title=" " alt="" coords="451,123,619,192"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="452,83,493,121,489,124,449,87"/>
+<area shape="rect" id="Node000004" href="$view__dispatcher_8c.html" title=" " alt="" coords="203,240,371,309"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="289,206,289,240,284,240,284,206"/>
+<area shape="poly" id="edge6_Node000006_Node000001" title=" " alt="" coords="496,115,455,77,459,73,500,111"/>
+<area shape="poly" id="edge7_Node000006_Node000005" title=" " alt="" coords="526,206,517,240,512,239,521,205"/>
+</map>
