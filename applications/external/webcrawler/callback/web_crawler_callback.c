@@ -3,6 +3,59 @@ bool sent_http_request = false;
 bool get_success = false;
 bool already_success = false;
 
+void web_crawler_draw_error(Canvas* canvas) {
+    if(!canvas) {
+        FURI_LOG_E(TAG, "Canvas is NULL");
+        return;
+    }
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+
+    if(fhttp.state == INACTIVE) {
+        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
+        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
+        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
+        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
+        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
+        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
+        return;
+    }
+
+    if(fhttp.last_response) {
+        if(strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
+           NULL) {
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+            return;
+        }
+        if(strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL) {
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+            return;
+        }
+        if(strstr(
+               fhttp.last_response, "[ERROR] GET request failed with error: connection refused") !=
+           NULL) {
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Connection refused.");
+            canvas_draw_str(canvas, 0, 50, "Choose another URL.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+            return;
+        }
+
+        canvas_draw_str(canvas, 0, 10, "[ERROR] Failed to sync data.");
+        canvas_draw_str(canvas, 0, 30, "If this is your third attempt,");
+        canvas_draw_str(canvas, 0, 40, "it's likely your URL is not");
+        canvas_draw_str(canvas, 0, 50, "compabilbe or correct.");
+        canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        return;
+    }
+
+    canvas_draw_str(canvas, 0, 10, "HTTP request failed.");
+    canvas_draw_str(canvas, 0, 20, "Press BACK to return.");
+}
+
 void web_crawler_http_method_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, http_method_names[index]);
@@ -41,13 +94,8 @@ void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
 
-    if(fhttp.state == INACTIVE) {
-        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
-        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
-        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
-        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
-        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
-        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
+    if(fhttp.state == INACTIVE || fhttp.state == ISSUE) {
+        web_crawler_draw_error(canvas);
         return;
     }
 
@@ -124,10 +172,10 @@ void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
 
             if(get_success) {
                 canvas_draw_str(canvas, 0, 30, "Receiving data...");
-                // Set the state to RECEIVING to ensure we continue to see the receiving message
                 fhttp.state = RECEIVING;
             } else {
                 canvas_draw_str(canvas, 0, 30, "Failed.");
+                fhttp.state = ISSUE;
             }
 
             sent_http_request = true;
@@ -139,37 +187,7 @@ void web_crawler_view_draw_callback(Canvas* canvas, void* context) {
                 canvas_draw_str(canvas, 0, 10, "Data saved to file.");
                 canvas_draw_str(canvas, 0, 20, "Press BACK to return.");
             } else {
-                if(fhttp.state == ISSUE) {
-                    if(strstr(
-                           fhttp.last_response,
-                           "[ERROR] Not connected to Wifi. Failed to reconnect.") != NULL) {
-                        canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                        canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                        canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-                    } else if(
-                        strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") !=
-                        NULL) {
-                        canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                        canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                        canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-                    } else if(
-                        strstr(
-                            fhttp.last_response,
-                            "[ERROR] GET request failed with error: connection refused") != NULL) {
-                        canvas_draw_str(canvas, 0, 10, "[ERROR] Connection refused.");
-                        canvas_draw_str(canvas, 0, 50, "Choose another URL.");
-                        canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-                    } else {
-                        canvas_draw_str(canvas, 0, 10, "[ERROR] Failed to sync data.");
-                        canvas_draw_str(canvas, 0, 30, "If this is your third attempt,");
-                        canvas_draw_str(canvas, 0, 40, "it's likely your URL is not");
-                        canvas_draw_str(canvas, 0, 50, "compabilbe or correct.");
-                        canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-                    }
-                } else {
-                    canvas_draw_str(canvas, 0, 10, "HTTP request failed.");
-                    canvas_draw_str(canvas, 0, 20, "Press BACK to return.");
-                }
+                web_crawler_draw_error(canvas);
                 get_success = false;
             }
         }
