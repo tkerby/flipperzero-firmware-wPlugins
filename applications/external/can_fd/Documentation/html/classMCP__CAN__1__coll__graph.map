@@ -1,5 +1,0 @@
-<map id="MCP_CAN_1" name="MCP_CAN_1">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,93,107,119"/>
-<area shape="rect" id="Node000002" href="$classSPIClass.html" title="Arduino&#39;s SPIclass porting. Used for communication with mcp2518." alt="" coords="17,5,95,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="59,45,59,93,53,93,53,45"/>
-</map>

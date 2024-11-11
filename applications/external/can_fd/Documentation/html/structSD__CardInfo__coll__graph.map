@@ -1,9 +1,0 @@
-<map id="SD_CardInfo" name="SD_CardInfo">
-<area shape="rect" id="Node000001" title="SD Card information structure." alt="" coords="81,181,184,207"/>
-<area shape="rect" id="Node000002" href="$structSD__CSD.html" title="Card Specific Data: CSD Register." alt="" coords="47,93,122,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,129,128,179,124,182,95,132"/>
-<area shape="rect" id="Node000003" href="$unionSD__CSD_1_1csd__version.html" title=" " alt="" coords="5,5,164,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="87,45,87,93,82,93,82,45"/>
-<area shape="rect" id="Node000004" href="$structSD__CID.html" title="Card Identification Data: CID Register." alt="" coords="147,93,217,119"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="171,132,142,182,137,179,166,129"/>
-</map>

@@ -1,9 +1,0 @@
-<map id="usb_can_bridge.hpp" name="usb_can_bridge.hpp">
-<area shape="rect" id="Node000001" title="contains CAN bus and and USB VCP logic control functions (implemented in usb_can_bridge...." alt="" coords="200,5,351,31"/>
-<area shape="rect" id="Node000002" href="$usbCan__scene__config__vcp_8cpp.html" title="Implements SCENE&#45;CONFIG." alt="" coords="5,79,169,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="236,38,134,81,132,76,234,33"/>
-<area shape="rect" id="Node000003" href="$usbCan__scene__usb__can_8cpp.html" title="Implements SCENE&#45;START." alt="" coords="193,79,357,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="278,44,278,79,273,79,273,44"/>
-<area shape="rect" id="Node000004" href="$usb__can__bridge_8cpp.html" title="MODEL component main file. It mainly send SLCAN frames received on USB virtual com port to CAN bus an..." alt="" coords="381,86,532,111"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="315,34,431,84,429,88,313,39"/>
-</map>

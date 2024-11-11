@@ -1,7 +1,0 @@
-<map id="HidConfigDescriptor" name="HidConfigDescriptor">
-<area shape="rect" id="Node000001" title=" " alt="" coords="73,93,225,119"/>
-<area shape="rect" id="Node000002" href="$structHidIntfDescriptor.html" title=" " alt="" coords="5,5,139,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="94,39,141,91,137,95,90,43"/>
-<area shape="rect" id="Node000003" href="$structHidIadDescriptor.html" title=" " alt="" coords="163,5,293,31"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="210,43,162,95,158,91,206,39"/>
-</map>

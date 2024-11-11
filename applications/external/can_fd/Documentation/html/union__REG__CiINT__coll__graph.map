@@ -1,7 +1,0 @@
-<map id="_REG_CiINT" name="_REG_CiINT">
-<area shape="rect" id="Node000001" title="Interrupt Register." alt="" coords="108,93,207,119"/>
-<area shape="rect" id="Node000002" href="$struct__CAN__INT__FLAGS.html" title="Interrupt Flags." alt="" coords="5,5,141,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="96,39,148,91,144,95,92,43"/>
-<area shape="rect" id="Node000003" href="$struct__CAN__INT__ENABLES.html" title="Interrupt Enables." alt="" coords="165,5,317,31"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="222,43,171,95,167,91,218,39"/>
-</map>

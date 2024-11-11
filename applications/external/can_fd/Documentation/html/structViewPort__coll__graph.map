@@ -1,9 +1,0 @@
-<map id="ViewPort" name="ViewPort">
-<area shape="rect" id="Node000001" title=" " alt="" coords="102,93,182,119"/>
-<area shape="rect" id="Node000002" href="$structGui.html" title=" " alt="" coords="192,181,236,207"/>
-<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="90,113,55,119,25,127,9,140,9,147,14,156,25,164,44,172,93,182,192,190,192,195,92,187,42,177,23,169,10,159,3,148,5,137,23,123,53,113,89,108"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="201,171,183,144,157,121,161,117,187,141,205,168"/>
-<area shape="rect" id="Node000003" href="$structCanvas.html" title=" " alt="" coords="166,5,236,31"/>
-<area shape="poly" id="edge4_Node000001_Node000003" title=" " alt="" coords="161,40,146,56,141,75,142,93,137,93,136,74,141,53,157,36"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="232,38,244,54,251,89,246,126,235,158,224,182,219,180,230,156,241,125,246,90,239,56,228,41"/>
-</map>

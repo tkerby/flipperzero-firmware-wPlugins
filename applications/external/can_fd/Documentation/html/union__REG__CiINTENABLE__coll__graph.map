@@ -1,5 +1,0 @@
-<map id="_REG_CiINTENABLE" name="_REG_CiINTENABLE">
-<area shape="rect" id="Node000001" title="Interrupt Enable Register." alt="" coords="7,93,156,119"/>
-<area shape="rect" id="Node000002" href="$struct__CAN__INT__ENABLES.html" title="Interrupt Enables." alt="" coords="5,5,157,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="84,45,84,93,79,93,79,45"/>
-</map>

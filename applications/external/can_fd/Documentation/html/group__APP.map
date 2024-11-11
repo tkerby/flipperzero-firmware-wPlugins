@@ -1,6 +1,0 @@
-<map id="APP" name="APP">
-<area shape="rect" id="Node000001" title="Applicative Software : this is an adaptation of Xtreme firmware USB&#45;UART bridge App in order to send ..." alt="" coords="5,55,52,80"/>
-<area shape="rect" id="Node000002" href="$group__CONTROLLER.html" title="MVC controller component used to link VIEW (data displayed in flipper screen) to MODEL (application c..." alt="" coords="100,5,209,31"/>
-<area shape="rect" id="Node000003" href="$group__MODEL.html" title="Main application files used to operate USB VCP and CAN Link through CAN&#45;DRIVER module." alt="" coords="120,55,189,80"/>
-<area shape="rect" id="Node000004" href="$group__VIEW.html" title="Application specific VIEW part of APP MVC model : It displays applications informations while running..." alt="" coords="127,104,183,129"/>
-</map>

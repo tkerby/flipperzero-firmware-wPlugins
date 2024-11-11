@@ -1,8 +1,0 @@
-<map id="EmptyScreen" name="EmptyScreen">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,181,113,207"/>
-<area shape="rect" id="Node000002" href="$structView.html" title=" " alt="" coords="32,93,87,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="62,133,62,181,57,181,57,133"/>
-<area shape="poly" id="edge3_Node000002_Node000002" title=" " alt="" coords="101,96,110,99,113,106,105,115,87,117,87,111,102,110,108,106,106,103,100,101"/>
-<area shape="rect" id="Node000003" href="$structCanvas.html" title=" " alt="" coords="24,5,95,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="62,45,62,93,57,93,57,45"/>
-</map>

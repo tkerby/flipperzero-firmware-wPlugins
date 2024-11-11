@@ -1,9 +1,0 @@
-<map id="HidReport" name="HidReport">
-<area shape="rect" id="Node000001" title=" " alt="" coords="156,93,243,119"/>
-<area shape="rect" id="Node000002" href="$structHidReportKB.html" title=" " alt="" coords="5,5,111,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,37,130,67,175,91,173,96,127,72,82,41"/>
-<area shape="rect" id="Node000003" href="$structHidReportMouse.html" title=" " alt="" coords="134,5,265,31"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="202,45,202,93,197,93,197,45"/>
-<area shape="rect" id="Node000004" href="$structHidReportConsumer.html" title=" " alt="" coords="289,5,443,31"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="333,39,223,95,221,91,330,35"/>
-</map>

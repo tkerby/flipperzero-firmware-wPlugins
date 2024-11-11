@@ -1,8 +1,0 @@
-<map id="DialogEx" name="DialogEx">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,181,85,207"/>
-<area shape="rect" id="Node000002" href="$structView.html" title=" " alt="" coords="18,93,73,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="48,133,48,181,43,181,43,133"/>
-<area shape="poly" id="edge3_Node000002_Node000002" title=" " alt="" coords="87,96,96,99,99,106,91,115,73,117,73,111,88,110,94,106,92,103,86,101"/>
-<area shape="rect" id="Node000003" href="$structCanvas.html" title=" " alt="" coords="10,5,81,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="48,45,48,93,43,93,43,45"/>
-</map>
