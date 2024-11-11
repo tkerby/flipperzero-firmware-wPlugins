@@ -143,7 +143,7 @@ int32_t enc_reader_app(void *p) {
 			}
 		}
 	}
-
+	furi_hal_power_disable_otg();
 	enc_reader_app_free(app);
 	return 0;
 }
