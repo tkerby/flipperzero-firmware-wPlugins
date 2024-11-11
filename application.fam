@@ -3,7 +3,7 @@ App(
     appid="image_viewer",
     name="Image viewer",
     fap_description="Image viewer for flipper zero!",
-    fap_author="polioan",
+    fap_author="@polioan",
     fap_version="0.1",
     fap_weburl="https://github.com/polioan/flipper-zero-image-viewer",
     fap_category="Media",
