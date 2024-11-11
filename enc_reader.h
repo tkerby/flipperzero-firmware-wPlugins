@@ -6,18 +6,17 @@
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 
-const NotificationSequence blue_led_sequence = {
-    &message_blue_255,
+const NotificationSequence button_led_sequence = {
+	&message_blue_255,
 	&message_vibro_on,
 	&message_delay_50,
 	&message_vibro_off,
     &message_delay_500,
-    &message_blue_0,
     NULL,
 };
 
-const NotificationSequence red_led_sequence = {
-    &message_red_255,
+const NotificationSequence vOn_led_sequence = {
+    &message_green_255,
     &message_vibro_on,
 	&message_delay_50,
 	&message_vibro_off,
@@ -25,8 +24,14 @@ const NotificationSequence red_led_sequence = {
     &message_vibro_on,
 	&message_delay_50,
 	&message_vibro_off,
-    &message_delay_250,
-    &message_red_0,
+    NULL,
+};
+
+const NotificationSequence vOff_led_sequence = {
+    &message_red_255,
+    &message_vibro_on,
+	&message_delay_250,
+	&message_vibro_off,
     NULL,
 };
 
@@ -42,8 +47,14 @@ typedef struct EncApp{
 	} input_pin;
 
 	struct {
+		const GpioPin*	pp;
+	} output_pin;
+
+	struct {
 		int32_t abs;
 		int32_t org;
 		int32_t rel;
 	} coordinates;
+
+	bool Vbus_state;
 } EncApp;
