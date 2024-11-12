@@ -2,6 +2,8 @@
 
 This is a simple app for flipper that can read incremental quadrature encoders that show absolute and relative coordinate.
 
+Flipper firmware v1.0.1 required
+
 ### Pinouts
 
 - 5V - supply
