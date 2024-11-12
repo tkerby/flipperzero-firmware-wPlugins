@@ -104,6 +104,23 @@ bool delete_app(const char* app_id, const char* app_category) {
     return true;
 }
 
+bool app_exists(const char* app_id, const char* app_category) {
+    // Check if the app exists
+    char directory_path[128];
+    snprintf(
+        directory_path,
+        sizeof(directory_path),
+        STORAGE_EXT_PATH_PREFIX "/apps/%s/%s.fap",
+        app_category,
+        app_id);
+
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    bool exists = storage_common_exists(storage, directory_path);
+    furi_record_close(RECORD_STORAGE);
+
+    return exists;
+}
+
 // Function to parse JSON incrementally from a file
 bool parse_json_incrementally(
     const char* file_path,

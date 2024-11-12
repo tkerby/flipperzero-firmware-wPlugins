@@ -149,7 +149,7 @@ FlipStoreApp* flip_store_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu,
            FlipStoreViewSubmenu,
-           "FlipStore v0.3",
+           "FlipStore v0.4",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;

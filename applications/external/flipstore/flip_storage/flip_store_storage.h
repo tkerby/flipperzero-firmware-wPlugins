@@ -14,8 +14,9 @@ void save_settings(const char* ssid, const char* password);
 
 bool load_settings(char* ssid, size_t ssid_size, char* password, size_t password_size);
 
-// future implenetation because we need the app category
 bool delete_app(const char* app_id, const char* app_category);
+
+bool app_exists(const char* app_id, const char* app_category);
 
 // Function to parse JSON incrementally from a file
 bool parse_json_incrementally(
