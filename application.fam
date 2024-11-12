@@ -1,0 +1,13 @@
+App(
+    appid="flipper_spi_terminal",
+    name="SPI-Terminal",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_spi_terminal_main",
+    requires=["gui"],
+    stack_size=1 * 1024,
+    fap_icon="flipper_spi_terminal_10px.png",
+    fap_category="GPIO",
+    fap_author="Jan Wiesemann",
+    fap_version="0.1",
+    fap_description="Control devices using SPI",
+)
