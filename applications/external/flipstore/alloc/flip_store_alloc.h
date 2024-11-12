@@ -5,6 +5,6 @@
 #include <callback/flip_store_callback.h>
 
 // Function to allocate resources for the FlipStoreApp
-FlipStoreApp *flip_store_app_alloc();
+FlipStoreApp* flip_store_app_alloc();
 
 #endif // FLIP_STORE_I_H

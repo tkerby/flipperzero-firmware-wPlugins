@@ -29,14 +29,14 @@
  * @param context The context - unused
  * @return next view id (VIEW_NONE to exit the app)
  */
-uint32_t easy_flipper_callback_exit_app(void *context);
+uint32_t easy_flipper_callback_exit_app(void* context);
 /**
  * @brief Initialize a buffer
  * @param buffer The buffer to initialize
  * @param buffer_size The size of the buffer
  * @return true if successful, false otherwise
  */
-bool easy_flipper_set_buffer(char **buffer, uint32_t buffer_size);
+bool easy_flipper_set_buffer(char** buffer, uint32_t buffer_size);
 /**
  * @brief Initialize a View object
  * @param view The View object to initialize
@@ -48,13 +48,13 @@ bool easy_flipper_set_buffer(char **buffer, uint32_t buffer_size);
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_view(
-    View **view,
+    View** view,
     int32_t view_id,
-    void draw_callback(Canvas *, void *),
-    bool input_callback(InputEvent *, void *),
-    uint32_t (*previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    void draw_callback(Canvas*, void*),
+    bool input_callback(InputEvent*, void*),
+    uint32_t (*previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a ViewDispatcher object
@@ -63,7 +63,7 @@ bool easy_flipper_set_view(
  * @param context The context to pass to the event callback
  * @return true if successful, false otherwise
  */
-bool easy_flipper_set_view_dispatcher(ViewDispatcher **view_dispatcher, Gui *gui, void *context);
+bool easy_flipper_set_view_dispatcher(ViewDispatcher** view_dispatcher, Gui* gui, void* context);
 
 /**
  * @brief Initialize a Submenu object
@@ -76,11 +76,11 @@ bool easy_flipper_set_view_dispatcher(ViewDispatcher **view_dispatcher, Gui *gui
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_submenu(
-    Submenu **submenu,
+    Submenu** submenu,
     int32_t view_id,
-    char *title,
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher);
+    char* title,
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher);
 
 /**
  * @brief Initialize a Menu object
@@ -93,10 +93,10 @@ bool easy_flipper_set_submenu(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_menu(
-    Menu **menu,
+    Menu** menu,
     int32_t view_id,
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher);
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher);
 
 /**
  * @brief Initialize a Widget object
@@ -108,11 +108,11 @@ bool easy_flipper_set_menu(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_widget(
-    Widget **widget,
+    Widget** widget,
     int32_t view_id,
-    char *text,
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher);
+    char* text,
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher);
 
 /**
  * @brief Initialize a VariableItemList object
@@ -126,12 +126,12 @@ bool easy_flipper_set_widget(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_variable_item_list(
-    VariableItemList **variable_item_list,
+    VariableItemList** variable_item_list,
     int32_t view_id,
-    void (*enter_callback)(void *, uint32_t),
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    void (*enter_callback)(void*, uint32_t),
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a TextInput object
@@ -142,15 +142,15 @@ bool easy_flipper_set_variable_item_list(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_text_input(
-    TextInput **text_input,
+    TextInput** text_input,
     int32_t view_id,
-    char *header_text,
-    char *text_input_temp_buffer,
+    char* header_text,
+    char* text_input_temp_buffer,
     uint32_t text_input_buffer_size,
-    void (*result_callback)(void *),
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    void (*result_callback)(void*),
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a UART_TextInput object
@@ -161,15 +161,15 @@ bool easy_flipper_set_text_input(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_uart_text_input(
-    UART_TextInput **uart_text_input,
+    UART_TextInput** uart_text_input,
     int32_t view_id,
-    char *header_text,
-    char *uart_text_input_temp_buffer,
+    char* header_text,
+    char* uart_text_input_temp_buffer,
     uint32_t uart_text_input_buffer_size,
-    void (*result_callback)(void *),
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    void (*result_callback)(void*),
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a DialogEx object
@@ -191,21 +191,21 @@ bool easy_flipper_set_uart_text_input(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_dialog_ex(
-    DialogEx **dialog_ex,
+    DialogEx** dialog_ex,
     int32_t view_id,
-    char *header,
+    char* header,
     uint16_t header_x,
     uint16_t header_y,
-    char *text,
+    char* text,
     uint16_t text_x,
     uint16_t text_y,
-    char *left_button_text,
-    char *right_button_text,
-    char *center_button_text,
-    void (*result_callback)(DialogExResult, void *),
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    char* left_button_text,
+    char* right_button_text,
+    char* center_button_text,
+    void (*result_callback)(DialogExResult, void*),
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a Popup object
@@ -224,18 +224,18 @@ bool easy_flipper_set_dialog_ex(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_popup(
-    Popup **popup,
+    Popup** popup,
     int32_t view_id,
-    char *header,
+    char* header,
     uint16_t header_x,
     uint16_t header_y,
-    char *text,
+    char* text,
     uint16_t text_x,
     uint16_t text_y,
-    void (*result_callback)(void *),
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher,
-    void *context);
+    void (*result_callback)(void*),
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher,
+    void* context);
 
 /**
  * @brief Initialize a Loading object
@@ -246,10 +246,10 @@ bool easy_flipper_set_popup(
  * @return true if successful, false otherwise
  */
 bool easy_flipper_set_loading(
-    Loading **loading,
+    Loading** loading,
     int32_t view_id,
-    uint32_t(previous_callback)(void *),
-    ViewDispatcher **view_dispatcher);
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher);
 
 /**
  * @brief Set a char butter to a FuriString
@@ -257,6 +257,6 @@ bool easy_flipper_set_loading(
  * @param buffer The buffer to copy the string to
  * @return true if successful, false otherwise
  */
-bool easy_flipper_set_char_to_furi_string(FuriString **furi_string, char *buffer);
+bool easy_flipper_set_char_to_furi_string(FuriString** furi_string, char* buffer);
 
 #endif
