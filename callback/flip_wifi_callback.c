@@ -200,15 +200,27 @@ char *trim_whitespace(char *start, size_t *length)
 
 bool flip_wifi_handle_scan(FlipWiFiApp *app)
 {
-    if (fhttp.last_response == NULL || fhttp.last_response[0] == '\0')
+    // load the received data from the saved file
+    FuriString *scan_data = flipper_http_load_from_file(fhttp.file_path);
+    if (scan_data == NULL)
     {
-        FURI_LOG_E(TAG, "Failed to receive WiFi scan");
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        fhttp.state = ISSUE;
+        return false;
+    }
+    char *data_cstr = (char *)furi_string_get_cstr(scan_data);
+    if (data_cstr == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(scan_data);
+        fhttp.state = ISSUE;
+        free(data_cstr);
         return false;
     }
 
     uint32_t ssid_count = 0;
 
-    char *current_position = fhttp.last_response;
+    char *current_position = data_cstr;
     char *next_comma = NULL;
 
     // Manually split the string on commas
@@ -233,6 +245,8 @@ bool flip_wifi_handle_scan(FlipWiFiApp *app)
         if (ssid_list[ssid_count] == NULL)
         {
             FURI_LOG_E(TAG, "Memory allocation failed");
+            free(data_cstr);
+            furi_string_free(scan_data);
             return false;
         }
         strncpy(ssid_list[ssid_count], trim_start, trimmed_length);
@@ -286,7 +300,8 @@ bool flip_wifi_handle_scan(FlipWiFiApp *app)
         snprintf(ssid, sizeof(ssid), "%s", ssid_item);
         submenu_add_item(app->submenu_wifi_scan, ssid, FlipWiFiSubmenuIndexWiFiScanStart + i, callback_submenu_choices, app);
     }
-
+    free(data_cstr);
+    furi_string_free(scan_data);
     return true;
 }
 void callback_submenu_choices(void *context, uint32_t index)
@@ -313,6 +328,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         if (!flipper_http_scan_wifi())
         {
             FURI_LOG_E(TAG, "Failed to scan for WiFi");
+            fhttp.state = ISSUE;
             return;
         }
         else // start the async feed request
@@ -327,10 +343,16 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         furi_timer_stop(fhttp.get_timeout_timer);
         // set each SSID as a submenu item
-        if (fhttp.state != IDLE || fhttp.last_response == NULL)
+        if (fhttp.state != IDLE)
         {
+            fhttp.state = ISSUE;
             FURI_LOG_E(TAG, "Failed to receive WiFi scan");
-            return;
+            popup_set_header(app->popup, "[ERROR]", 0, 0, AlignLeft, AlignTop);
+            popup_set_text(app->popup, "Failed to scan...\nTry reconnecting the board!", 0, 40, AlignLeft, AlignTop);
+            view_set_previous_callback(popup_get_view(app->popup), callback_to_submenu_main);
+            popup_set_callback(app->popup, popup_callback_main);
+            // switch to the popup view
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewPopup);
         }
         else
         {
@@ -341,8 +363,17 @@ void callback_submenu_choices(void *context, uint32_t index)
                 // switch to the submenu
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuScan);
             }
-
-            FURI_LOG_E(TAG, "Failed to handle WiFi scan");
+            else
+            {
+                fhttp.state = ISSUE;
+                FURI_LOG_E(TAG, "Failed to handle WiFi scan");
+                popup_set_header(app->popup, "[ERROR]", 0, 0, AlignLeft, AlignTop);
+                popup_set_text(app->popup, "Failed to scan...\nTry reconnecting the board!", 0, 40, AlignLeft, AlignTop);
+                view_set_previous_callback(popup_get_view(app->popup), callback_to_submenu_main);
+                popup_set_callback(app->popup, popup_callback_main);
+                // switch to the popup view
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewPopup);
+            }
             return;
         }
         break;
