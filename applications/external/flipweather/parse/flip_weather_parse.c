@@ -13,7 +13,7 @@ bool flip_weather_parse_ip_address() {
         FURI_LOG_E(TAG, "Failed to load received data from file.");
         return false;
     }
-    const char* data_cstr = furi_string_get_cstr(returned_data);
+    char* data_cstr = (char*)furi_string_get_cstr(returned_data);
     if(data_cstr == NULL) {
         FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
         furi_string_free(returned_data);
@@ -25,13 +25,14 @@ bool flip_weather_parse_ip_address() {
         sent_get_request = true;
         get_request_success = false;
         fhttp.state = ISSUE;
-        free(ip);
         furi_string_free(returned_data);
+        free(data_cstr);
         return false;
     }
     snprintf(ip_address, 16, "%s", ip);
     free(ip);
     furi_string_free(returned_data);
+    free(data_cstr);
     return true;
 }
 
@@ -113,6 +114,11 @@ void process_geo_location() {
         snprintf(ip_data, 64, "IP Address: %s", ip_address);
 
         fhttp.state = IDLE;
+        free(city);
+        free(region);
+        free(country);
+        free(latitude);
+        free(longitude);
     }
 }
 
@@ -141,6 +147,13 @@ void process_weather() {
         snprintf(time_data, 64, "Time: %s", time);
 
         fhttp.state = IDLE;
+        free(current_data);
+        free(temperature);
+        free(precipitation);
+        free(rain);
+        free(showers);
+        free(snowfall);
+        free(time);
     } else if(!weather_information_processed && fhttp.last_response == NULL) {
         FURI_LOG_E(TAG, "Failed to process weather data");
         // store error message
