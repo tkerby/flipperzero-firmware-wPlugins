@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1111-2036-0.420.0-154092a](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1113-0000-0.420.0-578839f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-11 20:36 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-11 20:36 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-13 00:00 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-13 00:00 EST`
 - [Update Wifi-Stealer_ORG.txt #1106 (By Diegomjx)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1106)
 - [FlipperHTTP: Use UART chosen in settings (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/009296e25b79b35e7e3a5aee4a8e83e9f97dfa04)
 - Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) [Use UART chosen in settings (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed4dbb86a183d4057f02e7ecb84e56075a820c57)
