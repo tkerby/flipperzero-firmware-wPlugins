@@ -1,6 +1,6 @@
 ## Enc reader
 
-This is a simple app for flipper that can read incremental quadrature encoders that show absolute and relative coordinate.
+This is a simple app for flipper that can read incremental quadrature encoders and show absolute and relative coordinate.
 
 ### Pinouts
 
