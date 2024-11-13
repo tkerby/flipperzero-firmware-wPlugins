@@ -56,6 +56,16 @@ FlipStoreApp* flip_store_app_alloc() {
            app)) {
         return NULL;
     }
+    if(!easy_flipper_set_view(
+           &app->view_firmware_download,
+           FlipStoreViewFirmwareDownload,
+           flip_store_view_draw_callback_firmware,
+           NULL,
+           callback_to_firmware_list,
+           &app->view_dispatcher,
+           app)) {
+        return NULL;
+    }
 
     // Widget
     if(!easy_flipper_set_widget(
@@ -97,8 +107,27 @@ FlipStoreApp* flip_store_app_alloc() {
            "No",
            "Yes",
            NULL,
-           dialog_callback,
+           dialog_delete_callback,
            callback_to_app_list,
+           &app->view_dispatcher,
+           app)) {
+        return NULL;
+    }
+
+    if(!easy_flipper_set_dialog_ex(
+           &app->dialog_firmware,
+           FlipStoreViewFirmwareDialog,
+           "Download Firmware",
+           0,
+           0,
+           "Are you sure you want to\ndownload this firmware?",
+           0,
+           10,
+           "No",
+           "Yes",
+           NULL,
+           dialog_firmware_callback,
+           callback_to_firmware_list,
            &app->view_dispatcher,
            app)) {
         return NULL;
@@ -149,7 +178,7 @@ FlipStoreApp* flip_store_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            FlipStoreViewSubmenu,
-           "FlipStore v0.5",
+           "FlipStore v0.6",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -290,15 +319,7 @@ FlipStoreApp* flip_store_app_alloc() {
         FlipStoreSubmenuIndexFirmwares,
         callback_submenu_choices,
         app);
-    //
-    for(int i = 0; i < 3; i++) {
-        submenu_add_item(
-            app->submenu_firmwares,
-            firmwares[i],
-            FlipStoreSubmenuIndexStartFirmwares + i,
-            callback_submenu_choices,
-            app);
-    }
+
     //
     submenu_add_item(
         app->submenu_app_list,
