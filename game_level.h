@@ -3,11 +3,23 @@
 #include <furi_hal_random.h>
 #include <engine/engine.h>
 #include <engine/entity.h>
+#include <engine/game_manager_i.h>
 #include "game.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct game_door {
+    float x;
+    float y;
+    float width;
+    float height;
+    bool visible;
+
+    int transitionTicks;
+    char* transitionText;
+};
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos);
 void game_level_player_render(GameManager* manager, Canvas* canvas, void* context);
