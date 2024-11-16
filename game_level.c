@@ -2,9 +2,40 @@
 
 bool started = false;
 int welcomeTicks = 0;
-int enemiesSpawned = 0;
 #define MAX_DOORS 5
 struct game_door doors[MAX_DOORS];
+
+#define OBSTACLE_SPEED 0.5f
+#define OBSTACLE_WIDTH 8.0f
+#define MAX_OBSTACLES  5
+struct game_obstacle obstacles[MAX_OBSTACLES];
+
+int totalObstacles = 0;
+int level = 0;
+void postObstacleDestructionTask() {
+    //Range is 30-100
+    int x = rand() % (120 - 10 + 1) + 10;
+    obstacles[totalObstacles % MAX_OBSTACLES] = (struct game_obstacle){
+        x,
+        8,
+        OBSTACLE_WIDTH,
+        0,
+        x < 65,
+        true,
+        totalObstacles < 50 ? postObstacleDestructionTask : NULL};
+    totalObstacles++;
+}
+
+void postDoorEntryTask2() {
+    level++;
+    horizontalGame = true;
+}
+
+void postDoorEntryTask() {
+    obstacles[0] = (struct game_obstacle){
+        60, 16, OBSTACLE_WIDTH, 0, false, true, postObstacleDestructionTask};
+    level++;
+}
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
     if(!game_menu_game_selected) return;
@@ -24,20 +55,70 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
     if(kills == 3) {
         if(!completedFirstTask) {
             completedFirstTask = true;
-            doors[0] = (struct game_door){58, 24, 16, 32, true, 0, "Level one!"};
+            doors[0] = (struct game_door){
+                58, 24, 25, 32, true, 0, "Avoid the obstacles!", postDoorEntryTask};
         }
     }
+
+    static bool startedLevelTwo = false;
+    if(level == 2 && !startedLevelTwo) {
+        enemy_spawn(gameLevel, manager, (Vector){10, 0}, 3000, true);
+        startedLevelTwo = true;
+    }
+
     //Door processing
     InputState input = game_manager_input_get(manager);
     for(int i = 0; i < MAX_DOORS; i++) {
         struct game_door* door = &doors[i];
         if(!door->visible) continue;
-        if(input.pressed & GameKeyUp && fabsf(pos->x - door->x) < 16 &&
-           fabsf(pos->y - door->y) < 32) {
+        if(input.pressed & GameKeyUp && fabsf(pos->x - door->x) < door->width &&
+           fabsf(pos->y - door->y) < door->height) {
             door->visible = false;
             door->transitionTicks = furi_get_tick();
+            void (*task)(void) = door->postTask;
+            if(task != NULL) {
+                task();
+            }
             playerCtx->sprite = playerCtx->sprite_forward;
             //Went in door!
+        }
+    }
+
+    for(int i = 0; i < MAX_OBSTACLES; i++) {
+        struct game_obstacle* obstacle = &obstacles[i];
+        if(!obstacle->visible) continue;
+        if(obstacle->direction) {
+            obstacle->x += OBSTACLE_SPEED / 4.0f;
+        } else {
+            obstacle->x -= OBSTACLE_SPEED / 4.0f;
+        }
+        obstacle->y += OBSTACLE_SPEED;
+
+        if(obstacle->x < WORLD_BORDER_LEFT_X || obstacle->x > WORLD_BORDER_RIGHT_X ||
+           obstacle->y > WORLD_BORDER_BOTTOM_Y || obstacle->y < WORLD_BORDER_TOP_Y) {
+            //Destroy
+            obstacle->visible = false;
+
+            //Destruction post task
+            void (*task)(void) = obstacle->destructionTask;
+            if(task != NULL) {
+                task();
+            }
+        }
+
+        if(fabsf(pos->x - obstacle->x) < OBSTACLE_WIDTH &&
+           fabsf(pos->y - obstacle->y) < OBSTACLE_WIDTH) {
+            //Collision
+            obstacle->visible = false;
+
+            //Damage player
+            damage_player(self);
+
+            //Destruction post task
+            void (*task)(void) = obstacle->destructionTask;
+            if(task != NULL) {
+                task();
+            }
         }
     }
 }
@@ -52,7 +133,6 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         started = true;
         welcomeTicks = furi_get_tick();
         enemy_spawn(gameLevel, manager, (Vector){120, 0}, 1000, false);
-        enemiesSpawned++;
     }
 
     if(started && furi_get_tick() - welcomeTicks < 6000 &&
@@ -73,10 +153,29 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         canvas_draw_frame(canvas, door.x, door.y, door.width, door.height);
     }
 
-    if(doors[0].visible) {
+    if(doors[0].visible && level == 0) {
         canvas_draw_str_aligned(
             canvas, doors[0].x, doors[0].y - 15, AlignCenter, AlignTop, "Next level...");
-        playerCtx->horizontalGame = false;
+        horizontalGame = false;
+
+        //Spawn incoming thing.
+    }
+
+    for(int i = 0; i < MAX_OBSTACLES; i++) {
+        struct game_obstacle* obstacle = &obstacles[i];
+        if(!obstacle->visible) continue;
+        canvas_draw_disc(canvas, obstacle->x, obstacle->y, obstacle->width);
+    }
+
+    if(totalObstacles >= 50 && level == 1) {
+        canvas_draw_str_aligned(
+            canvas, 58, 8, AlignCenter, AlignTop, "Move onto the next level...");
+        static bool secondLevelGateway = false;
+        if(!secondLevelGateway) {
+            doors[1] =
+                (struct game_door){80, 24, 25, 32, true, 0, "Level two!", postDoorEntryTask2};
+            secondLevelGateway = true;
+        }
     }
 }
 

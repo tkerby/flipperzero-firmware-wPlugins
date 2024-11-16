@@ -47,12 +47,14 @@ extern uint32_t kills;
 extern bool jumping;
 extern float targetY;
 extern float targetX;
+extern bool horizontalGame;
 //Internals
 extern int firstMobSpawnTicks;
 extern uint32_t firstKillTick;
 extern uint32_t secondKillTick;
 extern uint32_t gameBeginningTick;
 extern Level* gameLevel;
+extern GameManager* globalGameManager;
 
 //Functions
 float lerp(float y1, float y2, float t);
@@ -62,6 +64,8 @@ void enemy_spawn(
     Vector spawnPosition,
     uint32_t mercyTicks,
     bool right);
+
+bool damage_player(Entity* self);
 
 typedef struct {
     Sprite* sprite;
@@ -77,8 +81,6 @@ typedef struct {
     Sprite* sprite_jump;
     Sprite* sprite_stand;
     Sprite* sprite_forward;
-
-    bool horizontalGame;
 } PlayerContext;
 
 typedef struct {

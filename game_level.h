@@ -10,6 +10,17 @@
 extern "C" {
 #endif
 
+struct game_obstacle {
+    float x;
+    float y;
+    float width;
+    float height;
+    bool direction;
+    bool visible;
+
+    void (*destructionTask)(void);
+};
+
 struct game_door {
     float x;
     float y;
@@ -19,6 +30,7 @@ struct game_door {
 
     int transitionTicks;
     char* transitionText;
+    void (*postTask)(void);
 };
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos);

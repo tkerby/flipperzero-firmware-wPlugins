@@ -39,6 +39,7 @@ uint32_t kills = 0;
 bool jumping = false;
 float targetY = WORLD_BORDER_BOTTOM_Y;
 float targetX = 10.0F;
+bool horizontalGame = true;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
@@ -53,6 +54,7 @@ uint32_t firstKillTick = 0;
 uint32_t secondKillTick = 0;
 uint32_t gameBeginningTick = 0;
 Level* gameLevel = NULL;
+GameManager* globalGameManager = NULL;
 
 /* End of header variables */
 
@@ -74,14 +76,13 @@ static const EntityDescription player_desc;
 static const EntityDescription target_desc;
 static const EntityDescription enemy_desc;
 static const EntityDescription target_enemy_desc;
+static const EntityDescription global_desc;
 
 //More internal variables
 uint32_t lastShotTick;
 uint32_t lastBehaviorTick;
 
 enum EnemyAction lastAction = EnemyActionStand;
-
-GameManager* globalGameManager;
 
 float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
@@ -133,8 +134,6 @@ void player_spawn(Level* level, GameManager* manager) {
 
     player_context->sprite = player_context->sprite_right;
 
-    player_context->horizontalGame = true;
-
     gameBeginningTick = furi_get_tick();
 }
 
@@ -184,10 +183,8 @@ void enemy_spawn(
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
-    Sprite* jumpingSprite = playerCtx->horizontalGame ? playerCtx->sprite_jump :
-                                                        playerCtx->sprite_forward;
-    Sprite* standingSprite = playerCtx->horizontalGame ? playerCtx->sprite_stand :
-                                                         playerCtx->sprite_forward;
+    Sprite* jumpingSprite = horizontalGame ? playerCtx->sprite_jump : playerCtx->sprite_forward;
+    Sprite* standingSprite = horizontalGame ? playerCtx->sprite_stand : playerCtx->sprite_forward;
 
     //Initiate jump process (first jump) if we are on ground (and are not jumping)
     if(input->held & GameKeyUp && !jumping && roundf(pos->y) == WORLD_BORDER_BOTTOM_Y) {
@@ -349,6 +346,32 @@ void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick,
 
 uint32_t lastSwitchRight = 0;
 
+bool damage_player(Entity* self) {
+    const NotificationSequence* damageSound = &sequence_single_vibro;
+
+    if(--health == 0) {
+        //Ran out of lives
+        level_remove_entity(gameLevel, self);
+
+        //Replace damage sound with death sound
+        damageSound = &sequence_double_vibro;
+
+        /*
+                //Destroy all associated bullets
+                for(int i = 0; i < MAX_BULLETS; i++) {
+                    if(bullets[i] == NULL) continue;
+                    level_remove_entity(gameLevel, bullets[i]);
+                    bullets[i] = NULL;
+                }*/
+    }
+
+    //Play sound of getting hit
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(notifications, damageSound);
+    notification_message(notifications, &sequence_blink_red_100);
+    return health == 0;
+}
+
 void player_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
     UNUSED(context);
@@ -375,28 +398,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
             //Self destruction of bullet and potentially player
             level_remove_entity(gameLevel, enemyBullets[i]);
             enemyBullets[i] = NULL;
-            const NotificationSequence* damageSound = &sequence_single_vibro;
-
-            if(--health == 0) {
-                //Ran out of lives
-                level_remove_entity(gameLevel, self);
-
-                //Replace damage sound with death sound
-                damageSound = &sequence_double_vibro;
-
-                /*
-                //Destroy all associated bullets
-                for(int i = 0; i < MAX_BULLETS; i++) {
-                    if(bullets[i] == NULL) continue;
-                    level_remove_entity(gameLevel, bullets[i]);
-                    bullets[i] = NULL;
-                }*/
-            }
-
-            //Play sound of getting hit
-            NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-            notification_message(notifications, damageSound);
-            notification_message(notifications, &sequence_blink_red_100);
+            damage_player(self);
         }
     }
 
@@ -445,6 +447,32 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     if(input.pressed & GameKeyBack) {
         //Only reaches if player is alive. Send them to the main menu
         game_manager_game_stop(manager);
+    }
+}
+
+void global_update(Entity* self, GameManager* manager, void* context) {
+    UNUSED(self);
+    UNUSED(context);
+    //Check player input when they're dead, since enemy is alive, processing must proceed here.
+    InputState input = game_manager_input_get(manager);
+    if(input.pressed & GameKeyBack) {
+        if(health == 0) {
+            //If dead, restart game
+            health = STARTING_PLAYER_HEALTH;
+            player_spawn(gameLevel, manager);
+            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
+        }
+    }
+}
+
+void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    UNUSED(self);
+    UNUSED(manager);
+    UNUSED(context);
+    UNUSED(context);
+    if(health == 0) {
+        canvas_printf(canvas, 30, 10, "You're dead.");
+        canvas_printf(canvas, 20, 20, "Press Back to respawn.");
     }
 }
 
@@ -519,11 +547,6 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
 
     game_level_enemy_render(manager, canvas, context);
     game_level_player_render(manager, canvas, context);
-
-    if(health == 0) {
-        canvas_printf(canvas, 30, 10, "You're dead.");
-        canvas_printf(canvas, 20, 20, "Press Back to respawn.");
-    }
 }
 
 void enemy_update(Entity* self, GameManager* manager, void* context) {
@@ -746,17 +769,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
 
     //Update position of npc
     entity_pos_set(self, pos);
-
-    //Check player input when they're dead, since enemy is alive, processing must proceed here.
-    InputState input = game_manager_input_get(manager);
-    if(input.pressed & GameKeyBack) {
-        if(health == 0) {
-            //If dead, restart game
-            health = STARTING_PLAYER_HEALTH;
-            player_spawn(gameLevel, manager);
-            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
-        }
-    }
 }
 
 static const EntityDescription player_desc = {
@@ -815,6 +827,16 @@ static const EntityDescription target_enemy_desc = {
     .context_size = 0, // size of entity context, will be automatically allocated and freed
 };
 
+static const EntityDescription global_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = global_update, // called every frame
+    .render = global_render, // called every frame, after update
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size = 0, // size of entity context, will be automatically allocated and freed
+};
+
 static void tutorial_level_alloc(Level* level, GameManager* manager) {
     if(!game_menu_tutorial_selected) return;
     //Add enemy to level
@@ -827,6 +849,8 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
     UNUSED(manager);
     UNUSED(context);
+
+    level_add_entity(level, &global_desc);
 
     // Add player entity to the level
     player_spawn(level, manager);
