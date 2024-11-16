@@ -192,12 +192,13 @@ int32_t flipper_http_worker(void *context)
                         if (!flipper_http_append_to_file(
                                 file_buffer,
                                 file_buffer_len,
-                                !fhttp.just_started_get && !fhttp.just_started_post,
+                                fhttp.just_started_bytes,
                                 fhttp.file_path))
                         {
                             FURI_LOG_E(HTTP_TAG, "Failed to append data to file");
                         }
                         file_buffer_len = 0;
+                        fhttp.just_started_bytes = false;
                     }
                 }
 
