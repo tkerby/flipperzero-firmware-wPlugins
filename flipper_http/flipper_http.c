@@ -15,6 +15,17 @@ bool flipper_http_append_to_file(
 
     if (start_new_file)
     {
+        // Delete the file if it already exists
+        if (storage_file_exists(storage, file_path))
+        {
+            if (!storage_simply_remove_recursive(storage, file_path))
+            {
+                FURI_LOG_E(HTTP_TAG, "Failed to delete file: %s", file_path);
+                storage_file_free(file);
+                furi_record_close(RECORD_STORAGE);
+                return false;
+            }
+        }
         // Open the file in write mode
         if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
         {
@@ -1294,6 +1305,7 @@ void flipper_http_rx_callback(const char *line, void *context)
         fhttp.state = RECEIVING;
         // for GET request, save data only if it's a bytes request
         fhttp.save_bytes = fhttp.is_bytes_request;
+        fhttp.just_started_bytes = true;
         return;
     }
     else if (strstr(line, "[POST/SUCCESS]") != NULL)
@@ -1304,6 +1316,7 @@ void flipper_http_rx_callback(const char *line, void *context)
         fhttp.state = RECEIVING;
         // for POST request, save data only if it's a bytes request
         fhttp.save_bytes = fhttp.is_bytes_request;
+        fhttp.just_started_bytes = true;
         return;
     }
     else if (strstr(line, "[PUT/SUCCESS]") != NULL)
