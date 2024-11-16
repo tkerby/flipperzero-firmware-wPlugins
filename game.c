@@ -397,8 +397,6 @@ void player_update(Entity* self, GameManager* manager, void* context) {
             NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
             notification_message(notifications, damageSound);
             notification_message(notifications, &sequence_blink_red_100);
-            notification_message(notifications, &sequence_blink_red_100);
-            notification_message(notifications, &sequence_blink_red_100);
         }
     }
 
