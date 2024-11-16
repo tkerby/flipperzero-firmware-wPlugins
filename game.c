@@ -129,8 +129,11 @@ void player_spawn(Level* level, GameManager* manager) {
         game_manager_sprite_load(manager, "player_left_recoil.fxbm");
     player_context->sprite_jump = game_manager_sprite_load(manager, "player_jump.fxbm");
     player_context->sprite_stand = game_manager_sprite_load(manager, "player_stand.fxbm");
+    player_context->sprite_forward = game_manager_sprite_load(manager, "player_forward.fxbm");
 
     player_context->sprite = player_context->sprite_right;
+
+    player_context->horizontalGame = true;
 
     gameBeginningTick = furi_get_tick();
 }
@@ -181,6 +184,11 @@ void enemy_spawn(
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
+    Sprite* jumpingSprite = playerCtx->horizontalGame ? playerCtx->sprite_jump :
+                                                        playerCtx->sprite_forward;
+    Sprite* standingSprite = playerCtx->horizontalGame ? playerCtx->sprite_stand :
+                                                         playerCtx->sprite_forward;
+
     //Initiate jump process (first jump) if we are on ground (and are not jumping)
     if(input->held & GameKeyUp && !jumping && roundf(pos->y) == WORLD_BORDER_BOTTOM_Y) {
         //Start jumping
@@ -190,7 +198,7 @@ void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* inpu
         targetY = CLAMP(pos->y - jumpHeight, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
 
         //Set player sprite to jumping
-        playerCtx->sprite = playerCtx->sprite_jump;
+        playerCtx->sprite = jumpingSprite;
         return;
     }
 
@@ -207,9 +215,8 @@ void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* inpu
         }
     }
 
-    if(roundf(pos->y) == WORLD_BORDER_BOTTOM_Y && !jumping &&
-       playerCtx->sprite == playerCtx->sprite_jump) {
-        playerCtx->sprite = playerCtx->sprite_stand;
+    if(roundf(pos->y) == WORLD_BORDER_BOTTOM_Y && !jumping && playerCtx->sprite == jumpingSprite) {
+        playerCtx->sprite = standingSprite;
     }
 }
 
@@ -377,18 +384,21 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 //Replace damage sound with death sound
                 damageSound = &sequence_double_vibro;
 
+                /*
                 //Destroy all associated bullets
                 for(int i = 0; i < MAX_BULLETS; i++) {
                     if(bullets[i] == NULL) continue;
                     level_remove_entity(gameLevel, bullets[i]);
                     bullets[i] = NULL;
-                }
+                }*/
             }
 
             //Play sound of getting hit
             NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
             notification_message(notifications, damageSound);
-            break;
+            notification_message(notifications, &sequence_blink_red_100);
+            notification_message(notifications, &sequence_blink_red_100);
+            notification_message(notifications, &sequence_blink_red_100);
         }
     }
 

@@ -9,9 +9,6 @@ struct game_door doors[MAX_DOORS];
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
     if(!game_menu_game_selected) return;
     PlayerContext* playerCtx = context;
-    UNUSED(playerCtx);
-    UNUSED(manager);
-    UNUSED(pos);
     UNUSED(self);
 
     static bool hasProgressed = false;
@@ -27,7 +24,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
     if(kills == 3) {
         if(!completedFirstTask) {
             completedFirstTask = true;
-            doors[0] = (struct game_door){58, 24, 16, 32, true, 0, "Salutations!"};
+            doors[0] = (struct game_door){58, 24, 16, 32, true, 0, "Level one!"};
         }
     }
     //Door processing
@@ -39,6 +36,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
            fabsf(pos->y - door->y) < 32) {
             door->visible = false;
             door->transitionTicks = furi_get_tick();
+            playerCtx->sprite = playerCtx->sprite_forward;
             //Went in door!
         }
     }
@@ -68,10 +66,17 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
             if((furi_get_tick() - door.transitionTicks) < 3000 && door.transitionText != NULL) {
                 canvas_draw_str_aligned(
                     canvas, door.x, door.y, AlignCenter, AlignCenter, door.transitionText);
+                playerCtx->sprite = playerCtx->sprite_forward;
             }
             continue;
         };
         canvas_draw_frame(canvas, door.x, door.y, door.width, door.height);
+    }
+
+    if(doors[0].visible) {
+        canvas_draw_str_aligned(
+            canvas, doors[0].x, doors[0].y - 15, AlignCenter, AlignTop, "Next level...");
+        playerCtx->horizontalGame = false;
     }
 }
 

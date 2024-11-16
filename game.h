@@ -76,6 +76,9 @@ typedef struct {
 
     Sprite* sprite_jump;
     Sprite* sprite_stand;
+    Sprite* sprite_forward;
+
+    bool horizontalGame;
 } PlayerContext;
 
 typedef struct {
