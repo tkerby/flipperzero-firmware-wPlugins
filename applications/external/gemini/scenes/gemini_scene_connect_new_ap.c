@@ -22,7 +22,6 @@ void gemini_scene_connect_new_ap_on_enter(void* context) {
     } else {
         text_input_set_header_text(app->text_input, "Enter SSID");
     }
-    text_input_set_minimum_length(app->text_input, 0);
     text_buffer[0] = '\0';
     text_input_set_result_callback(
         app->text_input,

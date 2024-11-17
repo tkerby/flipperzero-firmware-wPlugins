@@ -9,6 +9,6 @@ App(
     fap_category="GPIO/ESP32",
     fap_author="d4rks1d33 & jamisonderek",
     fap_weburl="https://github.com/d4rks1d33/Gemini-Flipper",
-    fap_version="0.1",
+    fap_version="1.1",
     fap_description="This is an app to interact with Google Gemini IA using the ESP32.",
 )
