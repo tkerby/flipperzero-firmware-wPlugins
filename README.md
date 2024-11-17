@@ -25,6 +25,8 @@ This is a BETA release - like, I'm surprised it works!
 * **Back** to return to the main menu or exit
 * **Up** to "bump" the table if the ball gets stuck
 
+I find it easiest to hold the flipper with both hands so I can hit left/right with my thumbs!
+
 ## Tables
 Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder. **The default tables may change over time.**
 
