@@ -35,7 +35,9 @@ void postDoorEntryTask2() {
     level++;
     horizontalGame = true;
     horizontalView = true;
-    enemy_spawn(gameLevel, globalGameManager, (Vector){10, 30}, 2000, true);
+    enemy_spawn(gameLevel, globalGameManager, (Vector){10, 30}, 500, true);
+    //Increase enemy shooting delay
+    enemyShootingDelay = 600;
 }
 
 void postDoorEntryTask() {

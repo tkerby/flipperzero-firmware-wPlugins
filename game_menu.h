@@ -10,6 +10,8 @@
 #include <gui/modules/submenu.h>
 #include <api_lock.h>
 
+#include "game.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

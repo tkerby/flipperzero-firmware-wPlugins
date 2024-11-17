@@ -954,13 +954,13 @@ static void game_stop(void* ctx) {
     submenu_add_item(
         submenu,
         game_menu_game_selected ? "RESUME GAME" : "PLAY GAME",
-        0,
+        4,
         game_menu_button_callback,
         ctx);
     submenu_add_item(
         submenu,
         game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",
-        1,
+        5,
         game_menu_button_callback,
         ctx);
     submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);

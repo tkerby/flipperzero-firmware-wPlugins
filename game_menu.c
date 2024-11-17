@@ -58,6 +58,27 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_quit_selected = true;
         notification_message(notifications, &sequence_single_vibro);
         api_lock_unlock(game_menu_exit_lock);
+    } else if(index == 4) {
+        if(!game_menu_game_selected) {
+            kills = 0;
+        }
+        game_menu_settings_selected = false;
+        game_menu_tutorial_selected = false;
+        game_menu_quit_selected = false;
+        game_menu_game_selected = true;
+        //TODO value for play game.
+        notification_message(notifications, &sequence_success);
+        api_lock_unlock(game_menu_exit_lock);
+    } else if(index == 5) {
+        if(!game_menu_tutorial_selected) {
+            kills = 0;
+        }
+        game_menu_settings_selected = false;
+        game_menu_quit_selected = false;
+        game_menu_game_selected = false;
+        game_menu_tutorial_selected = true;
+        notification_message(notifications, &sequence_success);
+        api_lock_unlock(game_menu_exit_lock);
     }
 }
 
