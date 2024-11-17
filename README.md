@@ -12,6 +12,13 @@ This is a BETA release - like, I'm surprised it works!
 ![el ocho](screenshots/screenshot_el_ocho.png)
 ![chamber](screenshots/screenshot_chamber.png)
 
+## Features
+* Realistic physics and collisions
+* User-defined tables via JSON files
+* Portals!
+* Bumpers, flat surfaces, curved surfaces
+* Fancy animations (-ish)
+
 ## Controls
 * **Ok** to release the ball
 * **Left** and **Right** to activate the left and right flippers
