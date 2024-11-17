@@ -28,7 +28,7 @@ struct game_door {
     float height;
     bool visible;
 
-    uint32_t transitionTicks;
+    int transitionTicks;
     char* transitionText;
     uint32_t transitionTime;
     void (*postTask)(void);

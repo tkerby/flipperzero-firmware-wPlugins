@@ -92,7 +92,9 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
         }
     }
 
-    if(enteredDoorIndex != -1) doors[enteredDoorIndex].visible = false;
+    if(enteredDoorIndex != -1) {
+        doors[enteredDoorIndex].visible = false;
+    }
 
     for(int i = 0; i < MAX_OBSTACLES; i++) {
         struct game_obstacle* obstacle = &obstacles[i];
