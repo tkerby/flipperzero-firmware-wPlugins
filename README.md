@@ -1,7 +1,7 @@
 # Pinball0 (Pinball Zero)
 Play pinball on your Flipperzero!
 
-This is a BETA release - like, I'm surprised it works! 
+This is a BETA release - like, I'm surprised it works! You may encounter crashes and/or memory leaks.
 
 > The default tables and example tables may / will change
 
@@ -17,6 +17,7 @@ This is a BETA release - like, I'm surprised it works!
 * User-defined tables via JSON files
 * Portals!
 * Bumpers, flat surfaces, curved surfaces
+* Rollover items
 * Fancy animations (-ish)
 
 ## Controls

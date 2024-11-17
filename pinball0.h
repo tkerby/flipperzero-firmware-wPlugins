@@ -40,7 +40,8 @@ typedef enum GameMode {
     GM_Playing,
     GM_GameOver,
     GM_Error,
-    GM_About // TODO
+    GM_Settings,
+    GM_About
 } GameMode;
 
 typedef struct {
@@ -56,9 +57,19 @@ typedef struct {
     bool keys[4]; // which key was pressed?
     bool processing; // controls game loop and physics threads
 
+    // user settings
+    struct {
+        bool sound_enabled;
+        bool vibrate_enabled;
+        bool led_enabled;
+        bool manual_mode;
+    } settings;
+    int selected_setting;
+    int max_settings;
+
     // system objects
     Storage* storage;
     NotificationApp* notify; // allows us to blink/buzz during game
     char text[256]; // general temp buffer
 
-} PinballState;
+} PinballApp;

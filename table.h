@@ -6,7 +6,8 @@
 
 #define TABLE_SELECT       0
 #define TABLE_ERROR        1
-#define TABLE_INDEX_OFFSET 2
+#define TABLE_SETTINGS     2
+#define TABLE_INDEX_OFFSET 3
 
 // Defines all of the elements on a pinball table:
 // edges, bumpers, flipper locations, scoreboard
@@ -44,8 +45,8 @@ class TableList {
 public:
     ~TableList();
     std::vector<TableMenuItem> menu_items;
-    size_t display_size; // how many can fit on screen
-    size_t selected;
+    int display_size; // how many can fit on screen
+    int selected;
 };
 
 // Read the list tables from the data folder and store in the state

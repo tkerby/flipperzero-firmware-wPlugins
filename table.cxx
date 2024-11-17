@@ -12,10 +12,6 @@
 #define LIVES     3
 #define LIVES_POS Vec2(20, 20)
 
-// forward declares
-Table* table_init_table_select(void* ctx);
-Table* table_init_table_error(void* ctx);
-
 Table::~Table() {
     for(size_t i = 0; i < objects.size(); i++) {
         delete objects[i];
@@ -60,7 +56,7 @@ void Table::draw(Canvas* canvas) {
 }
 
 void table_table_list_init(void* ctx) {
-    PinballState* pb = (PinballState*)ctx;
+    PinballApp* pb = (PinballApp*)ctx;
     // using the asset file path, read the table files, and for each one, extract their
     // display name (oof). let's just use their filenames for now (stripping any XX_ prefix)
     // sort tables by original filename
@@ -118,6 +114,12 @@ void table_table_list_init(void* ctx) {
         dir_walk_free(dir_walk);
     }
 
+    // Add 'Settings' as last element
+    TableMenuItem settings;
+    settings.filename = furi_string_alloc_set_str("99_Settings");
+    settings.name = furi_string_alloc_set_str("SETTINGS");
+    pb->table_list.menu_items.push_back(settings);
+
     FURI_LOG_I(TAG, "Found %d tables", pb->table_list.menu_items.size());
     for(auto& tmi : pb->table_list.menu_items) {
         FURI_LOG_I(TAG, "%s", furi_string_get_cstr(tmi.name));
@@ -154,7 +156,7 @@ bool table_file_parse_float(const nx_json* json, const char* key, float* v) {
     return true;
 }
 
-Table* table_load_table_from_file(PinballState* pb, size_t index) {
+Table* table_load_table_from_file(PinballApp* pb, size_t index) {
     auto& tmi = pb->table_list.menu_items[index];
 
     FURI_LOG_I(TAG, "Reading file: %s", furi_string_get_cstr(tmi.filename));
@@ -485,39 +487,12 @@ Table* table_load_table_from_file(PinballState* pb, size_t index) {
             }
         }
         break;
-    } while(true);
+    } while(false);
 
     nx_json_free(json);
     free(json_buffer);
 
     return table;
-}
-
-bool table_load_table(void* ctx, size_t index) {
-    PinballState* pb = (PinballState*)ctx;
-
-    // read the index'th file in pb->table_list and allocate
-    FURI_LOG_I(TAG, "Loading table %u", index);
-
-    // if there's already a table loaded, free it
-    if(pb->table) {
-        delete pb->table;
-        pb->table = nullptr;
-    }
-
-    pb->gameStarted = false;
-    switch(index) {
-    case TABLE_SELECT:
-        pb->table = table_init_table_select(ctx);
-        break;
-    case TABLE_ERROR:
-        pb->table = table_init_table_error(ctx);
-        break;
-    default:
-        pb->table = table_load_table_from_file(pb, index - TABLE_INDEX_OFFSET);
-        break;
-    }
-    return pb->table != NULL;
 }
 
 TableList::~TableList() {
@@ -579,7 +554,7 @@ Table* table_init_table_select(void* ctx) {
 
 Table* table_init_table_error(void* ctx) {
     UNUSED(ctx);
-    // PinballState* pb = (PinballState*)ctx;
+    // PinballApp* pb = (PinballApp*)ctx;
     Table* table = new Table();
 
     table->balls.push_back(Ball(Vec2(20, 880), 30));
@@ -622,4 +597,80 @@ Table* table_init_table_error(void* ctx) {
     table->objects.push_back(new Chaser(Vec2(61, top), Vec2(61, 84), gap, speed, Chaser::SLASH));
 
     return table;
+}
+
+Table* table_init_table_settings(void* ctx) {
+    UNUSED(ctx);
+    Table* table = new Table();
+
+    table->balls.push_back(Ball(Vec2(20, 880), 10));
+    table->balls.back().add_velocity(Vec2(7, 0), .10f);
+    table->balls.push_back(Ball(Vec2(610, 920), 10));
+    table->balls.back().add_velocity(Vec2(-8, 0), .10f);
+    table->balls.push_back(Ball(Vec2(250, 980), 10));
+    table->balls.back().add_velocity(Vec2(10, 0), .10f);
+
+    table->balls_released = true;
+
+    Polygon* new_rail = new Polygon();
+    new_rail->add_point({-1, 840});
+    new_rail->add_point({-1, 1280});
+    new_rail->finalize();
+    new_rail->hidden = true;
+    table->objects.push_back(new_rail);
+
+    new_rail = new Polygon();
+    new_rail->add_point({-1, 1280});
+    new_rail->add_point({640, 1280});
+    new_rail->finalize();
+    new_rail->hidden = true;
+    table->objects.push_back(new_rail);
+
+    new_rail = new Polygon();
+    new_rail->add_point({640, 1280});
+    new_rail->add_point({640, 840});
+    new_rail->finalize();
+    new_rail->hidden = true;
+    table->objects.push_back(new_rail);
+
+    // int gap = 8;
+    // int speed = 3;
+    // float top = 20;
+
+    // table->objects.push_back(new Chaser(Vec2(2, top), Vec2(61, top), gap, speed, Chaser::SLASH));
+    // table->objects.push_back(new Chaser(Vec2(2, top), Vec2(2, 84), gap, speed, Chaser::SLASH));
+    // table->objects.push_back(new Chaser(Vec2(2, 84), Vec2(61, 84), gap, speed, Chaser::SLASH));
+    // table->objects.push_back(new Chaser(Vec2(61, top), Vec2(61, 84), gap, speed, Chaser::SLASH));
+
+    return table;
+}
+
+bool table_load_table(void* ctx, size_t index) {
+    PinballApp* pb = (PinballApp*)ctx;
+
+    // read the index'th file in pb->table_list and allocate
+    FURI_LOG_I(TAG, "Loading table %u", index);
+
+    // if there's already a table loaded, free it
+    if(pb->table) {
+        delete pb->table;
+        pb->table = nullptr;
+    }
+
+    pb->gameStarted = false;
+    switch(index) {
+    case TABLE_SELECT:
+        pb->table = table_init_table_select(ctx);
+        break;
+    case TABLE_ERROR:
+        pb->table = table_init_table_error(ctx);
+        break;
+    case TABLE_SETTINGS:
+        pb->table = table_init_table_settings(ctx);
+        break;
+    default:
+        pb->table = table_load_table_from_file(pb, index - TABLE_INDEX_OFFSET);
+        break;
+    }
+    return pb->table != NULL;
 }
