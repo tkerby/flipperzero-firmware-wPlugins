@@ -511,8 +511,9 @@ void flip_social_callback_draw_login(Canvas* canvas, void* model) {
             "{\"username\":\"%s\",\"password\":\"%s\"}",
             app_instance->login_username_logged_out,
             app_instance->login_password_logged_out);
+        auth_headers_alloc();
         flip_social_login_success = flipper_http_post_request_with_headers(
-            "https://www.flipsocial.net/api/user/login/", buffer, buffer);
+            "https://www.flipsocial.net/api/user/login/", auth_headers, buffer);
         if(flip_social_login_success) {
             fhttp.state = RECEIVING;
             return;
