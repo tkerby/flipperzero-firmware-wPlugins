@@ -39,6 +39,7 @@ static const EntityDescription enemy_desc;
 //Enemy structure
 typedef struct {
     Entity* instance;
+    bool direction;
     bool jumping;
     float targetY;
     int lives;

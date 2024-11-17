@@ -140,6 +140,7 @@ void enemy_spawn(
         enemyIndex = i;
         FURI_LOG_I("deadzone", "PRE ALLOCATION!");
         enemies[i].instance = level_add_entity(level, &enemy_desc);
+        enemies[i].direction = right;
         FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
         if(enemies[i].instance == NULL) {
             FURI_LOG_I("deadzone", "ENEMY INSTANCE IS NULL");
@@ -467,6 +468,18 @@ void global_update(Entity* self, GameManager* manager, void* context) {
             entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
         }
     }
+
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(enemies[i].instance == NULL || globalPlayer == NULL) continue;
+        Vector playerPos = entity_pos_get(globalPlayer);
+        Vector enemyPos = entity_pos_get(enemies[i].instance);
+
+        if(playerPos.x - enemyPos.x > 0) {
+            enemies[i].direction = true;
+        } else {
+            enemies[i].direction = false;
+        }
+    }
 }
 
 void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -543,6 +556,11 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
     //Draw enemy health above their head
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != self) continue;
+        if(enemies[i].direction) {
+            player->sprite = player->sprite_right;
+        } else {
+            player->sprite = player->sprite_left;
+        }
         canvas_printf(canvas, pos.x + 1, pos.y - 10, "%d", enemies[i].lives);
         break;
     }
