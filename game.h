@@ -26,11 +26,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 //#define DEBUGGING
 
 //Configurable variables
 
 //While debugging we increase all lives for longer testing/gameplay.
+
+static const EntityDescription player_desc;
+static const EntityDescription enemy_desc;
+
+//Enemy structure
+typedef struct {
+    Entity* instance;
+    bool jumping;
+    float targetY;
+    int lives;
+    uint32_t spawnTime;
+    uint32_t mercyTicks;
+    uint32_t lastShot;
+} Enemy;
+
+#define MAX_ENEMIES 30
+extern Enemy enemies[MAX_ENEMIES];
+
 extern int ENEMY_LIVES;
 
 extern uint32_t shootingDelay;
@@ -48,6 +67,7 @@ extern bool jumping;
 extern float targetY;
 extern float targetX;
 extern bool horizontalGame;
+extern bool horizontalView;
 //Internals
 extern int firstMobSpawnTicks;
 extern uint32_t firstKillTick;
@@ -66,6 +86,11 @@ void enemy_spawn(
     bool right);
 
 bool damage_player(Entity* self);
+
+void player_update(Entity* self, GameManager* manager, void* context);
+void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
+void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
+void enemy_update(Entity* self, GameManager* manager, void* context);
 
 typedef struct {
     Sprite* sprite;
@@ -86,6 +111,28 @@ typedef struct {
 typedef struct {
     uint32_t score;
 } GameContext;
+
+static const EntityDescription player_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = player_update, // called every frame
+    .render = player_render, // called every frame, after update
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size =
+        sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
+};
+
+static const EntityDescription enemy_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = enemy_update, // called every frame
+    .render = enemy_render, // called every frame, after update
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size =
+        sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
+};
 
 #ifdef __cplusplus
 }

@@ -10,23 +10,22 @@ enum EnemyAction {
     EnemyActionJump
 };
 
-//Enemy structure
-typedef struct {
-    Entity* instance;
-    bool jumping;
-    float targetY;
-    int lives;
-    uint32_t spawnTime;
-    uint32_t mercyTicks;
-    uint32_t lastShot;
-} Enemy;
+Enemy enemies[MAX_ENEMIES];
+
+#define MAX_BULLETS 30
+Entity* bullets[MAX_BULLETS];
+bool bulletsDirection[MAX_BULLETS];
+
+Entity* enemyBullets[MAX_BULLETS];
+bool enemyBulletsDirection[MAX_BULLETS];
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 
 /* Begin of variables from header */
 
 //Configurable values
-uint32_t shootingDelay = 1700;
+//TODO Reloading with faster shooting.
+uint32_t shootingDelay = 300;
 uint32_t enemyShootingDelay = 1500;
 float bulletMoveSpeed = 0.55f;
 float speed = 0.6f;
@@ -40,6 +39,7 @@ bool jumping = false;
 float targetY = WORLD_BORDER_BOTTOM_Y;
 float targetX = 10.0F;
 bool horizontalGame = true;
+bool horizontalView = true;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
@@ -59,22 +59,13 @@ GameManager* globalGameManager = NULL;
 /* End of header variables */
 
 //Enemy, and bullet storage
-#define MAX_ENEMIES 30
-Enemy enemies[MAX_ENEMIES];
-
-#define MAX_BULLETS 30
-Entity* bullets[MAX_BULLETS];
-bool bulletsDirection[MAX_BULLETS];
-
-Entity* enemyBullets[MAX_BULLETS];
-bool enemyBulletsDirection[MAX_BULLETS];
 
 Entity* globalPlayer = NULL;
 
 //Internal variables
-static const EntityDescription player_desc;
+//static const EntityDescription player_desc;
 static const EntityDescription target_desc;
-static const EntityDescription enemy_desc;
+//static const EntityDescription enemy_desc;
 static const EntityDescription target_enemy_desc;
 static const EntityDescription global_desc;
 
@@ -147,8 +138,12 @@ void enemy_spawn(
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
         enemyIndex = i;
+        FURI_LOG_I("deadzone", "PRE ALLOCATION!");
         enemies[i].instance = level_add_entity(level, &enemy_desc);
-        //FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
+        FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
+        if(enemies[i].instance == NULL) {
+            FURI_LOG_I("deadzone", "ENEMY INSTANCE IS NULL");
+        }
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
@@ -164,13 +159,16 @@ void enemy_spawn(
     // Set enemy position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(enemies[enemyIndex].instance, spawnPosition);
+    FURI_LOG_I("deadzone", "SET ENEMY POS");
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 16x16
     entity_collider_add_rect(enemies[enemyIndex].instance, 16, 16);
+    FURI_LOG_I("deadzone", "SET ENEMY RECT");
 
     // Get enemy context
     PlayerContext* player_context = entity_context_get(enemies[enemyIndex].instance);
+    FURI_LOG_I("deadzone", "GET PLAYER CTX FOR ENEMY");
 
     // Load enemy sprite
     player_context->sprite_left = game_manager_sprite_load(manager, "enemy_left.fxbm");
@@ -180,6 +178,7 @@ void enemy_spawn(
     } else {
         player_context->sprite = player_context->sprite_left;
     }
+    FURI_LOG_I("deadzone", "DONE SPAWNING");
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
@@ -224,11 +223,13 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
                     playerCtx->sprite != playerCtx->sprite_left_recoil &&
                     playerCtx->sprite != playerCtx->sprite_right_recoil &&
                     playerCtx->sprite != playerCtx->sprite_left_shadowed &&
-                    playerCtx->sprite != playerCtx->sprite_right_shadowed;
+                    playerCtx->sprite != playerCtx->sprite_right_shadowed &&
+                    playerCtx->sprite !=
+                        playerCtx->sprite_forward; //TODO For now, can't shoot forward
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
+    if((input->pressed & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -414,8 +415,9 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     //Player Shooting Mechanics
     player_shoot_handler(playerCtx, &input, &pos);
 
-    if(input.held & GameKeyLeft) {
+    if(input.held & GameKeyLeft && playerCtx->sprite != playerCtx->sprite_left_recoil) {
         targetX -= speed;
+        targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
         pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
 
         //Switch sprite to left direction
@@ -424,9 +426,11 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         }
     }
 
-    if(input.held & GameKeyRight) {
+    if(input.held & GameKeyRight && playerCtx->sprite != playerCtx->sprite_right_recoil) {
         targetX += speed;
+        targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
         pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+
         //Switch to right direction
         if(playerCtx->sprite != playerCtx->sprite_right_shadowed) {
             playerCtx->sprite = playerCtx->sprite_right;
@@ -487,11 +491,15 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
-
-    canvas_draw_frame(canvas, 2, -4, 124, 61);
-    canvas_draw_line(canvas, 1, 57, 0, 60);
-    canvas_draw_line(canvas, 126, 57, 128, 61);
-
+    if(horizontalView) {
+        canvas_draw_frame(canvas, 2, -4, 124, 61);
+        canvas_draw_line(canvas, 1, 57, 0, 60);
+        canvas_draw_line(canvas, 126, 57, 128, 61);
+    } else {
+        canvas_draw_frame(canvas, 32, -4, 64, 30);
+        canvas_draw_line(canvas, 32, 26, 0, 57);
+        canvas_draw_line(canvas, 64 + 32, 26, 128, 57);
+    }
     //canvas_draw_frame(canvas, 0, -4, 135, 64);
 
     // Get game context
@@ -770,28 +778,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Update position of npc
     entity_pos_set(self, pos);
 }
-
-static const EntityDescription player_desc = {
-    .start = NULL, // called when entity is added to the level
-    .stop = NULL, // called when entity is removed from the level
-    .update = player_update, // called every frame
-    .render = player_render, // called every frame, after update
-    .collision = NULL, // called when entity collides with another entity
-    .event = NULL, // called when entity receives an event
-    .context_size =
-        sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
-};
-
-static const EntityDescription enemy_desc = {
-    .start = NULL, // called when entity is added to the level
-    .stop = NULL, // called when entity is removed from the level
-    .update = enemy_update, // called every frame
-    .render = enemy_render, // called every frame, after update
-    .collision = NULL, // called when entity collides with another entity
-    .event = NULL, // called when entity receives an event
-    .context_size =
-        sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
-};
 
 /****** Entities: Target ******/
 
