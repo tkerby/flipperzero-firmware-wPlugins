@@ -25,6 +25,11 @@ import io
 
 copy_dict(flipperzero.io, io)
 
+import flipperzero.random
+import random
+
+copy_dict(flipperzero.random, random)
+
 now = datetime.datetime.now()
 
 project = "uPython"

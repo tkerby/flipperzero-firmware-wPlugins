@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2024-11-17
+
+### Added
+
+* Enabled extra functions for the `random` module.
+
 ## [1.5.0] - 2024-10-06
 
 ### Added
@@ -156,7 +162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Basic build setup
 * Minimal working example
 
-[Unreleased]: https://github.com/ofabel/mp-flipper/compare/v1.5.0...dev
+[Unreleased]: https://github.com/ofabel/mp-flipper/compare/v1.6.0...dev
+[1.6.0]: https://github.com/ofabel/mp-flipper/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ofabel/mp-flipper/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ofabel/mp-flipper/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ofabel/mp-flipper/compare/v1.2.0...v1.3.0

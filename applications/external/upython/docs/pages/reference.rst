@@ -452,7 +452,7 @@ Functions
 I/O
 ---
 
-Read and write files on the SD card.
+Read and write SD card files.
 
 Constants
 ~~~~~~~~~
@@ -474,6 +474,22 @@ Classes
 
 .. autoclass:: io.TextFileIO
    :members: name, read, readline, readlines, readable, writable, write, flush, seek, tell, close, __enter__, __exit__, __del__
+
+Random
+------
+
+Generate pseudo-random number for various use cases. 
+
+Functions
+~~~~~~~~~
+
+.. autofunction:: random.random
+.. autofunction:: random.uniform
+.. autofunction:: random.randrange
+.. autofunction:: random.getrandbits
+.. autofunction:: random.randint
+.. autofunction:: random.choice
+.. autofunction:: random.seed
 
 Built-In
 --------
