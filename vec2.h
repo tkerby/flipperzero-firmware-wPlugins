@@ -92,56 +92,11 @@ public:
     float dist(const Vec2& v) const {
         return sqrtf(dist2(v));
     }
-
-    // void rotate(float radians) {
-    //     float c = std::cos(radians);
-    //     float s = std::sin(radians);
-    //     float xp = x * c - y * s;
-    //     float yp = x * s + y * c;
-    //     x = xp;
-    //     y = yp;
-    // }
 };
 
 inline Vec2 operator*(float s, const Vec2& v) {
     return Vec2(s * v.x, s * v.y);
 }
 
-// Vec2 Vec2_unit(const Vec2& v);
-
-// // Returns true if point b lies between points a and c
-// bool Vec2_colinear(const Vec2& a, const Vec2& b, const Vec2& c);
-
 // // Returns the closest point to the line segment ab and p
 Vec2 Vec2_closest(const Vec2& a, const Vec2& b, const Vec2& p);
-
-// // Returns the closest point to the infinite ray ab and p
-// Vec2 Vec2_closest_ray(const Vec2& a, const Vec2& b, const Vec2& p);
-
-// // Returns if A, B, C are listed in counterclockwise order
-// bool Vec2_ccw(const Vec2& A, const Vec2& B, const Vec2& C);
-
-// // Returns if line AB intersects with line CD
-// bool Vec2_intersect(const Vec2& A, const Vec2& B, const Vec2& C, const Vec2& D);
-
-// // Returns intersection point of two lines AB and CD.
-// // The intersection point may not lie on either segment.
-// Vec2 Vec2_intersection(const Vec2& A, const Vec2& B, const Vec2& C, const Vec2& D);
-
-// // Returns distance of ray origin to intersection point on line segment. -1 if no intersection
-// float Vec2_ray_line_segment_intersect(
-//     const Vec2& origin,
-//     const Vec2& dir,
-//     const Vec2& l1,
-//     const Vec2& l2);
-
-// bool Vec2_project(const Vec2& A, const Vec2& B, const Vec2& P, Vec2& dst);
-
-// bool Vec2_point_circle_collide(const Vec2& point, const Vec2& circle, float radius);
-
-// bool Vec2_line_circle_collide(
-//     const Vec2 a,
-//     const Vec2 b,
-//     const Vec2 circle,
-//     float radius,
-//     Vec2* nearest);
