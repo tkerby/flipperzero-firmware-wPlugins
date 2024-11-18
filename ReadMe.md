@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1117-1633-0.420.0-4676679](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1118-0018-0.420.0-c51dc5c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-17 16:33 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-17 16:33 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-18 00:18 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-18 00:18 EST`
 - [Update Wifi-Stealer_ORG.txt #1106 (By Diegomjx)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1106)
 - [FlipperHTTP: Use UART chosen in settings (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/009296e25b79b35e7e3a5aee4a8e83e9f97dfa04)
 - [ESP Flasher: Update FlipperHTTP, reorder quick flash options (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/f671266d632859b03b2f5474f7cdffb033c1a476)
@@ -53,7 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWeather v1.1.3 (By jblanked)](https://github.com/jblanked/FlipWeather)
 - Updated: [FlipWifi v1.1.1 (By jblanked)](https://github.com/jblanked/FlipWiFi)
 - Updated: [Web Crawler v0.7.3 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
-- Updated: [Ghost ESP v1.1.4 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) [Use UART chosen in settings (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed4dbb86a183d4057f02e7ecb84e56075a820c57)
+- Updated: [Ghost ESP v1.1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) [Use UART chosen in settings (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed4dbb86a183d4057f02e7ecb84e56075a820c57)
 - Updated:  [NFC Magic v1.14 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Added possibility to write 7b MFC to Gen1 tags (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/164)
 - Updated: [uPython v1.6 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - Added: [Pinball0 v0.1 (By rdefeo)](https://github.com/rdefeo/pinball0)
@@ -478,7 +478,7 @@ $ ./fbt dolphin_ext
 - [GB Printer v0.2 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
-- [Ghost ESP v1.1.4 (By Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [Ghost ESP v1.1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GPIO 7-Segment Output v1.3 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [GPIO Badge v1.0 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/gpio_badge)
 - [GPIO Controller (By Lokno)](https://github.com/Lokno/gpio_controller)
