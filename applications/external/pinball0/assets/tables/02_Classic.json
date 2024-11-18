@@ -1,0 +1,128 @@
+{
+    "name": "Classic",
+    "balls": [
+        {
+            "position": [ 600, 1110 ],
+            "velocity": [ 0, -12.0 ]
+        }
+    ],
+    "flippers": [
+        {
+            "position": [ 130, 1200 ],
+            "side": "LEFT",
+            "size": 130
+        },
+        {
+            "position": [ 490, 1200 ],
+            "side": "RIGHT",
+            "size": 130
+        }
+    ],
+    "bumpers": [
+        {
+            "position": [ 200, 260 ],
+            "radius": 60
+        },
+        {
+            "position": [ 450, 200 ],
+            "radius": 60
+        },
+        {
+            "position": [ 280, 550 ],
+            "radius": 40
+        },
+        {
+            "position": [ 480, 500 ],
+            "radius": 40
+        }
+    ],
+    "arcs": [
+        {
+            // top right curve
+            "position": [ 440, 200 ],
+            "radius": 200,
+            "start_angle": 0,
+            "end_angle": 95,
+            "surface": "INSIDE"
+        },
+        {
+            // top left curve
+            "position": [ 160, 240 ],
+            "radius": 160,
+            "start_angle": 95,
+            "end_angle": 180,
+            "surface": "INSIDE"
+        }
+    ],
+    "rails": [
+        // left wall
+        {
+            "start": [ 0, 240 ],
+            "end": [ 0, 1200 ]
+        },
+        // right wall
+        {
+            "start": [ 630, 1200 ],
+            "end": [ 630, 160 ]
+        },
+        // top roof
+        {
+            "start": [ 412, 1 ],
+            "end": [ 137, 81 ]
+        },
+        // left wall fixture
+        {
+            "start": [ 0, 400 ],
+            "end": [ 80, 480 ]
+        },
+        {
+            "start": [ 80, 480 ],
+            "end": [ 80, 660 ]
+        },
+        {
+            "start": [ 80, 660 ],
+            "end": [ 0, 720 ],
+            "bounce": 1.08
+        },
+        // left bottom rail
+        {
+            "start": [ 70, 900 ],
+            "end": [ 70, 1150 ],
+            "double_sided": true
+        },
+        {
+            "start": [ 70, 1150 ],
+            "end": [ 130, 1180 ],
+            "double_sided": true
+        },
+        // right bottom rail
+        {
+            "start": [ 560, 1150 ],
+            "end": [ 560, 900 ],
+            "double_sided": true
+        },
+        {
+            "start": [ 490, 1180 ],
+            "end": [ 560, 1150 ],
+            "double_sided": true
+        }
+    ],
+    "rollovers": [
+        {
+            "position": [ 200, 800 ],
+            "symbol": "Z"
+        },
+        {
+            "position": [ 280, 770 ],
+            "symbol": "E"
+        },
+        {
+            "position": [ 360, 770 ],
+            "symbol": "R"
+        },
+        {
+            "position": [ 440, 800 ],
+            "symbol": "O"
+        }
+    ]
+}
