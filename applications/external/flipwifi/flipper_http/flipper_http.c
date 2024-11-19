@@ -985,7 +985,7 @@ void flipper_http_rx_callback(const char* line, void* context) {
     // custom function to FlipWiFi
     if(fhttp.save_received_data) {
         if(!flipper_http_append_to_file(
-               line, strlen(line), !fhttp.just_started_get, fhttp.file_path)) {
+               line, strlen(line), fhttp.just_started_get, fhttp.file_path)) {
             FURI_LOG_E(HTTP_TAG, "Failed to append data to file.");
             fhttp.just_started_get = false;
             fhttp.state = ISSUE;
