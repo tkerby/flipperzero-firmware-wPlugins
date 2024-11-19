@@ -438,6 +438,13 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         }
     }
 
+//TODO Add switch to sprite_forward be automatic when switching direction (e.g. from left to right, vice versa)
+//TODO Switch to left/right when jumping up as part of jump animation
+    if(input.pressed & GameKeyDown && playerCtx->sprite != playerCtx->sprite_left_recoil &&
+       playerCtx->sprite != playerCtx->sprite_right_recoil) {
+        playerCtx->sprite = playerCtx->sprite_forward;
+    }
+
     // Clamp player position to screen bounds
     pos.x = CLAMP(lerp(pos.x, targetX, jumpSpeed), WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
     pos.y = CLAMP(pos.y, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);

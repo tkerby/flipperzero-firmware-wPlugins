@@ -27,8 +27,22 @@ void postObstacleDestructionTask() {
         0,
         x < 65,
         true,
-        totalObstacles < 35 ? postObstacleDestructionTask : emptyFunction};
+        totalObstacles < 10 ? postObstacleDestructionTask : emptyFunction};
+
     totalObstacles++;
+
+    if(totalObstacles > 10) {
+        x = rand() % (120 - 10 + 1) + 10;
+        obstacles[totalObstacles % MAX_OBSTACLES] = (struct game_obstacle){
+            x,
+            8,
+            OBSTACLE_WIDTH,
+            0,
+            x < 65,
+            true,
+            totalObstacles < 35 ? postObstacleDestructionTask : emptyFunction};
+        totalObstacles++;
+    }
 }
 
 void postDoorEntryTask2() {
