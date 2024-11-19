@@ -28,3 +28,15 @@ const SceneManagerHandlers flipper_spi_terminal_scene_handlers = {
     .on_exit_handlers = flipper_spi_terminal_on_exit_handlers,
     .scene_num = FlipperSPITerminalAppSceneNum,
 };
+
+void flipper_spi_terminal_scenes_alloc(FlipperSPITerminalApp* app) {
+#define ADD_SCENE(prefix, name, id) prefix##_scene_##name##_alloc(app);
+#include "scenes_config.h"
+#undef ADD_SCENE
+}
+
+void flipper_spi_terminal_scenes_free(FlipperSPITerminalApp* app) {
+#define ADD_SCENE(prefix, name, id) prefix##_scene_##name##_free(app);
+#include "scenes_config.h"
+#undef ADD_SCENE
+}

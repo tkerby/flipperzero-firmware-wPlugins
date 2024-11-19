@@ -18,6 +18,13 @@ LL_SPI_InitTypeDef spi_terminal_preset = {
 #define spi_terminal_spi_handle &furi_hal_spi_bus_handle_external
 #define spi_terminal_spi        furi_hal_spi_bus_handle_external.bus->spi
 
+#define SPI_TERMINAL_SCENE_ALLOC_FREE(scene, call) \
+    SPI_TERM_LOG_T("Scene " #scene " " #call);     \
+    flipper_spi_terminal_scene_##scene##_##call(app)
+
+#define SPI_TERMINAL_SCENE_ALLOC(scene) SPI_TERMINAL_SCENE_ALLOC_FREE(scene, alloc)
+#define SPI_TERMINAL_SCENE_FREE(scene)  SPI_TERMINAL_SCENE_ALLOC_FREE(scene, free)
+
 static bool flipper_spi_terminal_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     FlipperSPITerminalApp* app = context;
@@ -57,40 +64,15 @@ static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
         app->view_dispatcher, flipper_spi_terminal_tick_event_callback, 100);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    SPI_TERM_LOG_T("Alloc Main Screen!");
-    app->mainScreen = dialog_ex_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, FlipperSPITerminalAppSceneMain, dialog_ex_get_view(app->mainScreen));
-
-    SPI_TERM_LOG_T("Alloc Config Screen!");
-    app->configScreen = variable_item_list_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipperSPITerminalAppSceneConfig,
-        variable_item_list_get_view(app->configScreen));
+    flipper_spi_terminal_scenes_alloc(app);
 
     SPI_TERM_LOG_T("Alloc Terminal Screen!");
-    app->terminalScreen = text_box_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipperSPITerminalAppSceneTerminal,
-        text_box_get_view(app->terminalScreen));
 
     return app;
 }
 
 static void flipper_spi_terminal_free(FlipperSPITerminalApp* app) {
-    SPI_TERM_LOG_T("Free Main Screen");
-    view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneMain);
-    dialog_ex_free(app->mainScreen);
-
-    SPI_TERM_LOG_T("Free Config Screen");
-    view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneConfig);
-    variable_item_list_free(app->configScreen);
-
-    SPI_TERM_LOG_T("Free Config Screen");
-    view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
-    text_box_free(app->terminalScreen);
+    flipper_spi_terminal_scenes_free(app);
 
     SPI_TERM_LOG_T("Free Scene Manager");
     scene_manager_free(app->scene_manager);

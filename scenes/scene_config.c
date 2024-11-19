@@ -1,5 +1,17 @@
-#include "../flipper_spi_terminal.h"
 #include "scenes.h"
+
+void flipper_spi_terminal_scene_config_alloc(FlipperSPITerminalApp* app) {
+    app->configScreen = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        FlipperSPITerminalAppSceneConfig,
+        variable_item_list_get_view(app->configScreen));
+}
+
+void flipper_spi_terminal_scene_config_free(FlipperSPITerminalApp* app) {
+    view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneConfig);
+    variable_item_list_free(app->configScreen);
+}
 
 void flipper_spi_terminal_scene_config_on_enter(void* context) {
     FlipperSPITerminalApp* app = context;

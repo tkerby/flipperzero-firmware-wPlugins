@@ -1,5 +1,15 @@
-#include "../flipper_spi_terminal.h"
 #include "scenes.h"
+
+void flipper_spi_terminal_scene_main_alloc(FlipperSPITerminalApp* app) {
+    app->mainScreen = dialog_ex_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, FlipperSPITerminalAppSceneMain, dialog_ex_get_view(app->mainScreen));
+}
+
+void flipper_spi_terminal_scene_main_free(FlipperSPITerminalApp* app) {
+    view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneMain);
+    dialog_ex_free(app->mainScreen);
+}
 
 static void
     flipper_spi_terminal_scene_main_dialog_result_callback(DialogExResult result, void* context) {

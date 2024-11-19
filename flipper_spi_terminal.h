@@ -28,12 +28,4 @@
 #define SPI_TERM_LOG_D(format, ...) SPI_TERM_LOG(FuriLogLevelDebug, format, ##__VA_ARGS__)
 #define SPI_TERM_LOG_T(format, ...) SPI_TERM_LOG(FuriLogLevelTrace, format, ##__VA_ARGS__)
 
-typedef struct {
-    Gui* gui;
-    ViewDispatcher* view_dispatcher;
-    SceneManager* scene_manager;
-
-    DialogEx* mainScreen;
-    VariableItemList* configScreen;
-    TextBox* terminalScreen;
-} FlipperSPITerminalApp;
+#include "flipper_spi_terminal_app.h"
