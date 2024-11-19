@@ -6,7 +6,7 @@ FlipLibrary uses the FlipperHTTP flash for the WiFi Devboard, first introduced i
 
 
 ## Requirements
-- WiFi Dev Board or Raspberry Pi Pico W for Flipper Zero with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
+- WiFi Developer Board or Raspberry Pi Pico W with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
 - WiFi Access Point
 
 
