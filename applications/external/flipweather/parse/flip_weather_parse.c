@@ -106,6 +106,13 @@ void process_geo_location() {
         char* latitude = get_json_value("latitude", fhttp.last_response, MAX_TOKENS);
         char* longitude = get_json_value("longitude", fhttp.last_response, MAX_TOKENS);
 
+        if(city == NULL || region == NULL || country == NULL || latitude == NULL ||
+           longitude == NULL) {
+            FURI_LOG_E(TAG, "Failed to get geo location data");
+            fhttp.state = ISSUE;
+            return;
+        }
+
         snprintf(city_data, 64, "City: %s", city);
         snprintf(region_data, 64, "Region: %s", region);
         snprintf(country_data, 64, "Country: %s", country);
@@ -132,6 +139,13 @@ void process_weather() {
         char* showers = get_json_value("showers", current_data, MAX_TOKENS);
         char* snowfall = get_json_value("snowfall", current_data, MAX_TOKENS);
         char* time = get_json_value("time", current_data, MAX_TOKENS);
+
+        if(current_data == NULL || temperature == NULL || precipitation == NULL || rain == NULL ||
+           showers == NULL || snowfall == NULL || time == NULL) {
+            FURI_LOG_E(TAG, "Failed to get weather data");
+            fhttp.state = ISSUE;
+            return;
+        }
 
         // replace the "T" in time with a space
         char* ptr = strstr(time, "T");

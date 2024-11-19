@@ -14,7 +14,7 @@
 #define HTTP_TAG               "FlipWeather" // change this to your app name
 #define http_tag               "flip_weather" // change this to your app id
 #define UART_CH                (cfw_settings.uart_esp_channel) // UART channel
-#define TIMEOUT_DURATION_TICKS (5 * 1000) // 5 seconds
+#define TIMEOUT_DURATION_TICKS (6 * 1000) // 6 seconds
 #define BAUDRATE               (115200) // UART baudrate
 #define RX_BUF_SIZE            1024 // UART RX buffer size
 #define RX_LINE_BUFFER_SIZE    4096 // UART RX line buffer size (increase for large responses)
