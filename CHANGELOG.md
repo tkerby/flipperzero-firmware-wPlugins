@@ -1,3 +1,7 @@
+## v1.3
+- Improved displaying progress.
+- Reset wifi creds on startup.
+
 ## v1.2
 - Improved memory allocation.
 - Added in Dog Facts.

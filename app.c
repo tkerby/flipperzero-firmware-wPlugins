@@ -21,6 +21,41 @@ int32_t flip_library_app(void *p)
         return -1;
     }
 
+    if(app_instance->uart_text_input_buffer_ssid != NULL &&
+       app_instance->uart_text_input_buffer_password != NULL) {
+        // Try to wait for pong response.
+        uint8_t counter = 10;
+        while(fhttp.state == INACTIVE && --counter > 0) {
+            FURI_LOG_D(TAG, "Waiting for PONG");
+            furi_delay_ms(100);
+        }
+
+        FURI_LOG_E(TAG, "Counter: %d", counter);
+        if(counter == 0) {
+            DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+            DialogMessage* message = dialog_message_alloc();
+            dialog_message_set_header(
+                message, "WIFI NOT RESPONDING", 64, 0, AlignCenter, AlignTop);
+            dialog_message_set_text(
+                message,
+                "Ensure ESP32 is connected\nand latest FlipperHTTP\nfirmware is installed.",
+                0,
+                63,
+                AlignLeft,
+                AlignBottom);
+            dialog_message_show(dialogs, message);
+            dialog_message_free(message);
+            furi_record_close(RECORD_DIALOGS);
+        }
+
+        // Switch to application wifi settings
+        if(!flipper_http_save_wifi(
+               app_instance->uart_text_input_buffer_ssid,
+               app_instance->uart_text_input_buffer_password)) {
+            FURI_LOG_E(TAG, "Failed to save wifi settings");
+        }
+    }
+
     // Run the view dispatcher
     view_dispatcher_run(app_instance->view_dispatcher);
 
