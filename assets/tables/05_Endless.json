@@ -1,6 +1,8 @@
 {
     "name": "Endless",
-    "lives": 1,
+    "lives": {
+        "value": 1
+    },
     "balls": [
         {
             "position": [ 600, 510 ],

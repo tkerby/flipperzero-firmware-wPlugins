@@ -1,6 +1,5 @@
 {
     "name": "El Ocho",
-    "lives": 3,
     "balls": [
         {
             "position": [ 580, 580 ],

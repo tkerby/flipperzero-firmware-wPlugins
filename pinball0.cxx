@@ -31,9 +31,9 @@ void pinball_load_settings(PinballApp* pb) {
     // init the settings to default values, then overwrite them if
     // they appear in the settings file
     pb->settings.sound_enabled = true;
-    pb->settings.led_enabled = false;
-    pb->settings.vibrate_enabled = false;
-    pb->settings.manual_mode = true;
+    pb->settings.led_enabled = true;
+    pb->settings.vibrate_enabled = true;
+    pb->settings.manual_mode = false;
     pb->selected_setting = 0;
     pb->max_settings = 4;
 
@@ -46,7 +46,12 @@ void pinball_load_settings(PinballApp* pb) {
             FURI_LOG_E(TAG, "SETTINGS: Missing or incorrect header");
             break;
         }
-        // do settings file version here? eh..
+        if(!strcmp(furi_string_get_cstr(tmp_str), PINBALL_SETTINGS_FILE_TYPE) &&
+           (tmp_data32 == PINBALL_SETTINGS_FILE_VERSION)) {
+        } else {
+            FURI_LOG_E(TAG, "SETTINGS: Type or version mismatch");
+            break;
+        }
         if(flipper_format_read_uint32(fff_settings, "Sound", &tmp_data32, 1)) {
             pb->settings.sound_enabled = (tmp_data32 == 0) ? false : true;
         }
@@ -121,6 +126,7 @@ void solve(PinballApp* pb, float dt) {
             }
             for(auto& b : table->balls) {
                 // We multiply GRAVITY by dt since gravity is based on seconds
+                FURI_LOG_I(TAG, "GRAVI-TAYYY");
                 b.accelerate(Vec2(0, GRAVITY * bump_amt * sub_dt));
             }
         }
@@ -165,12 +171,20 @@ void solve(PinballApp* pb, float dt) {
         for(auto& b : table->balls) {
             for(auto& o : table->objects) {
                 if(o->physical && o->collide(b)) {
+                    if(o->notification) {
+                        (*o->notification)(pb);
+                    }
+                    table->score.value += o->score;
                     o->reset_animation();
                     continue;
                 }
             }
             for(auto& f : table->flippers) {
                 if(f.collide(b)) {
+                    if(f.notification) {
+                        (*f.notification)(pb);
+                    }
+                    table->score.value += f.score;
                     continue;
                 }
             }
@@ -188,22 +202,28 @@ void solve(PinballApp* pb, float dt) {
     }
 
     // Did any balls fall off the table?
-    size_t num_in_play = table->balls.size();
-    auto i = table->balls.begin();
-    while(i != table->balls.end()) {
-        if(i->p.y > 1280 + 100) {
-            FURI_LOG_I(TAG, "ball off table!");
-            i = table->balls.erase(i);
-            num_in_play--;
-        } else {
-            ++i;
+    if(table->balls.size()) {
+        auto num_in_play = table->balls.size();
+        auto i = table->balls.begin();
+        while(i != table->balls.end()) {
+            if(i->p.y > 1280 + 100) {
+                FURI_LOG_I(TAG, "ball off table!");
+                i = table->balls.erase(i);
+                num_in_play--;
+                notify_lost_life(pb);
+            } else {
+                ++i;
+            }
         }
-    }
-    if(num_in_play == 0) {
-        table->balls_released = false;
-        table->num_lives--;
-        if(table->num_lives > 0) {
-            table->balls = table->balls_initial;
+        if(num_in_play == 0) {
+            table->balls_released = false;
+            table->lives.value--;
+            if(table->lives.value > 0) {
+                // Reset our ball to it's starting position
+                table->balls = table->balls_initial;
+            } else {
+                table->game_over = true;
+            }
         }
     }
 }
@@ -212,6 +232,7 @@ void pinball_app_init(PinballApp* pb) {
     furi_assert(pb);
     pb->storage = (Storage*)furi_record_open(RECORD_STORAGE);
     pb->notify = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
+    notify_init();
 
     pb->table = NULL;
     pb->tick = 0;
@@ -269,23 +290,28 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         pb->table->draw(canvas);
         break;
     case GM_GameOver: {
-        // pb->table->draw(canvas);
-        int32_t y = 56;
-        size_t interval = 40;
-        float theta = (float)((pb->tick % interval) / (interval * 1.0f)) * (float)(M_PI * 2);
-        FURI_LOG_I(TAG, "tick: %lu, theta: %.4f", pb->tick, (double)theta);
-        // float theta_offset = (float)((pb->tick % 16) / 16.0);
-        float theta_offset = 0;
-        // int32_t y_offset = y + sinf(theta) * 4;
-        canvas_draw_icon(canvas, 16, y + sinf(theta) * 4, &I_Arcade_G);
-        canvas_draw_icon(canvas, 24, y + sinf(theta + theta_offset) * 4, &I_Arcade_A);
-        canvas_draw_icon(canvas, 32, y + sinf(theta + theta_offset * 2) * 4, &I_Arcade_M);
-        canvas_draw_icon(canvas, 40, y + sinf(theta + theta_offset * 3) * 4, &I_Arcade_E);
+        pb->table->draw(canvas);
 
-        canvas_draw_icon(canvas, 16, y + sinf(theta) * 4 + 8, &I_Arcade_O);
-        canvas_draw_icon(canvas, 24, y + sinf(theta + theta_offset) * 4 + 8, &I_Arcade_V);
-        canvas_draw_icon(canvas, 32, y + sinf(theta + theta_offset * 2) * 4 + 8, &I_Arcade_E);
-        canvas_draw_icon(canvas, 40, y + sinf(theta + theta_offset * 3) * 4 + 8, &I_Arcade_R);
+        const int32_t y = 56;
+        const size_t interval = 40;
+        const float theta = (float)((pb->tick % interval) / (interval * 1.0f)) * (float)(M_PI * 2);
+        const float sin_theta_4 = sinf(theta) * 4;
+
+        const int border = 3;
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_box(
+            canvas, 16 - border, y + sin_theta_4 - border, 32 + border * 2, 16 + border * 2);
+        canvas_set_color(canvas, ColorBlack);
+
+        canvas_draw_icon(canvas, 16, y + sin_theta_4, &I_Arcade_G);
+        canvas_draw_icon(canvas, 24, y + sin_theta_4, &I_Arcade_A);
+        canvas_draw_icon(canvas, 32, y + sin_theta_4, &I_Arcade_M);
+        canvas_draw_icon(canvas, 40, y + sin_theta_4, &I_Arcade_E);
+
+        canvas_draw_icon(canvas, 16, y + sin_theta_4 + 8, &I_Arcade_O);
+        canvas_draw_icon(canvas, 24, y + sin_theta_4 + 8, &I_Arcade_V);
+        canvas_draw_icon(canvas, 32, y + sin_theta_4 + 8, &I_Arcade_E);
+        canvas_draw_icon(canvas, 40, y + sin_theta_4 + 8, &I_Arcade_R);
     } break;
     case GM_Error: {
         // pb->text contains error message
@@ -322,6 +348,7 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         pb->table->draw(canvas);
     } break;
     case GM_Settings: {
+        // TODO: like... do better here. maybe vector of settings strings, etc
         canvas_draw_str_aligned(canvas, 2, 10, AlignLeft, AlignTop, "SETTINGS");
 
         int x = 55;
@@ -366,6 +393,12 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
             canvas_draw_triangle(canvas, 2, y + 3, 8, 5, CanvasDirectionLeftToRight);
         }
 
+        // About information
+        canvas_draw_str_aligned(canvas, 2, 88, AlignLeft, AlignTop, "Pinball0 " VERSION);
+        canvas_draw_str_aligned(canvas, 2, 98, AlignLeft, AlignTop, "github.com/");
+        canvas_draw_str_aligned(canvas, 2, 108, AlignLeft, AlignTop, "  rdefeo/");
+        canvas_draw_str_aligned(canvas, 2, 118, AlignLeft, AlignTop, "    pinball0");
+
         pb->table->draw(canvas);
     } break;
     default:
@@ -383,14 +416,20 @@ static void pinball_input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
 }
 
+PinballApp::~PinballApp() {
+    furi_mutex_free(mutex);
+    delete table;
+    notify_free();
+}
+
 extern "C" int32_t pinball0_app(void* p) {
     UNUSED(p);
 
-    PinballApp* app = (PinballApp*)malloc(sizeof(PinballApp));
+    PinballApp* app = (PinballApp*)new PinballApp;
     app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!app->mutex) {
         FURI_LOG_E(TAG, "Cannot create mutex!");
-        free(app);
+        delete app;
         return 0;
     }
 
@@ -447,32 +486,44 @@ extern "C" int32_t pinball0_app(void* p) {
                             app->processing = false;
                         }
                         break;
-                    case InputKeyRight:
+                    case InputKeyRight: {
                         app->keys[InputKeyRight] = true;
 
                         if(app->settings.manual_mode && app->table->balls_released == false) {
                             app->table->balls[0].p.x += MANUAL_ADJUSTMENT;
                             app->table->balls[0].prev_p.x += MANUAL_ADJUSTMENT;
                         }
+                        bool flipper_pressed = false;
                         for(auto& f : app->table->flippers) {
                             if(f.side == Flipper::RIGHT) {
                                 f.powered = true;
+                                flipper_pressed = true;
                             }
                         }
-                        break;
-                    case InputKeyLeft:
+                        if(flipper_pressed) {
+                            notify_flipper(app);
+                        }
+                    } break;
+                    case InputKeyLeft: {
                         app->keys[InputKeyLeft] = true;
 
                         if(app->settings.manual_mode && app->table->balls_released == false) {
                             app->table->balls[0].p.x -= MANUAL_ADJUSTMENT;
                             app->table->balls[0].prev_p.x -= MANUAL_ADJUSTMENT;
                         }
+                        bool flipper_pressed = false;
                         for(auto& f : app->table->flippers) {
                             if(f.side == Flipper::LEFT) {
                                 f.powered = true;
+                                if(f.rotation != f.max_rotation) {
+                                    flipper_pressed = true;
+                                }
                             }
                         }
-                        break;
+                        if(flipper_pressed) {
+                            notify_flipper(app);
+                        }
+                    } break;
                     case InputKeyUp:
                         switch(app->game_mode) {
                         case GM_Playing:
@@ -514,6 +565,7 @@ extern "C" int32_t pinball0_app(void* p) {
                             app->table_list.selected = (app->table_list.selected + 1 +
                                                         app->table_list.menu_items.size()) %
                                                        app->table_list.menu_items.size();
+                            // notify_game_over(app);
                             break;
                         case GM_Settings:
                             if(app->selected_setting < app->max_settings - 1) {
@@ -530,6 +582,7 @@ extern "C" int32_t pinball0_app(void* p) {
                             if(!app->table->balls_released) {
                                 app->gameStarted = true;
                                 app->table->balls_released = true;
+                                notify_ball_released(app);
                             }
                             break;
                         case GM_TableSelect: {
@@ -608,9 +661,11 @@ extern "C" int32_t pinball0_app(void* p) {
             o->step_animation();
         }
         // check game state
-        if(app->game_mode == GM_Playing && app->table->num_lives == 0) {
+        // if(app->game_mode == GM_Playing && app->table->lives.value == 0) {
+        if(app->game_mode != GM_GameOver && app->table->game_over) {
             FURI_LOG_W(TAG, "GAME OVER!");
             app->game_mode = GM_GameOver;
+            notify_game_over(app);
         }
 
         // no keys pressed - we should clear all input keys?
@@ -630,6 +685,7 @@ extern "C" int32_t pinball0_app(void* p) {
 
     // general cleanup
     notification_message(app->notify, &sequence_display_backlight_enforce_auto);
+    notification_message(app->notify, &sequence_reset_rgb);
 
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
@@ -639,10 +695,7 @@ extern "C" int32_t pinball0_app(void* p) {
     view_port_free(view_port);
     furi_message_queue_free(event_queue);
 
-    furi_mutex_free(app->mutex);
-
-    delete app->table;
-    free(app);
+    delete app;
 
     furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     return 0;

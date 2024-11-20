@@ -1,12 +1,17 @@
 {
     "name": "Basic",
+    "lives": {
+        "display": true
+    },
+    "score": {
+        "display": true
+    },
     "balls": [
         {
             "position": [ 600, 1110 ],
             "velocity": [ 0, -16.0 ]
         }
     ],
-    // "released": true,
     // "plunger": {
     //     "position": [ 600, 1200 ],
     //     "size": 100

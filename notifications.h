@@ -2,7 +2,19 @@
 
 #include <furi.h>
 #include <notification/notification.h>
-#include "pinball0.h"
 
-void notify_table_bump(PinballApp* app);
-void notify_error_message(PinballApp* app);
+void notify_init();
+void notify_free();
+
+void notify_ball_released(void* ctx);
+void notify_table_bump(void* ctx);
+void notify_error_message(void* ctx);
+void notify_game_over(void* ctx);
+
+void notify_bumper_hit(void* ctx);
+void notify_rail_hit(void* ctx);
+
+void notify_portal(void* ctx);
+void notify_lost_life(void* ctx);
+
+void notify_flipper(void* ctx);

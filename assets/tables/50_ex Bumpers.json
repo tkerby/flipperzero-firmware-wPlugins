@@ -1,12 +1,7 @@
 {
-    "lives": 3,
     "balls": [
         {
-            "position": [
-                250,
-                50
-            ],
-            "radius": 20
+            "position": [ 250, 50 ]
         }
     ],
     "flippers": [

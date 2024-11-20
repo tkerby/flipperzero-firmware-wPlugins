@@ -9,27 +9,65 @@
 #define TABLE_SETTINGS     2
 #define TABLE_INDEX_OFFSET 3
 
+class DataDisplay {
+public:
+    enum Align {
+        Horizontal,
+        Vertical
+    };
+    DataDisplay(const Vec2& pos, int val, bool disp, Align align)
+        : p(pos)
+        , value(val)
+        , display(disp)
+        , alignment(align) {
+    }
+    Vec2 p;
+    int value;
+    bool display;
+    Align alignment;
+    virtual void draw(Canvas* canvas) = 0;
+};
+class Lives : public DataDisplay {
+public:
+    Lives()
+        : DataDisplay(Vec2(), 3, false, Horizontal) {
+    }
+    void draw(Canvas* canvas);
+};
+
+class Score : public DataDisplay {
+public:
+    Score()
+        : DataDisplay(Vec2(64 - 1, 1), 0, false, Horizontal) {
+    }
+    void draw(Canvas* canvas);
+};
+
 // Defines all of the elements on a pinball table:
 // edges, bumpers, flipper locations, scoreboard
-// eventually read stae from file and dynamically allocate
+//
+// Also used for other app "views", like the main menu (table select)
+// and the Settings screen.
+// TODO: make this better? eh, it works for now...
 class Table {
 public:
     Table()
-        : balls_released(false)
-        , num_lives(1)
+        : game_over(false)
+        , balls_released(false)
         , plunger(nullptr) {
     }
 
     ~Table();
+
     std::vector<FixedObject*> objects;
     std::vector<Ball> balls; // current state of balls
     std::vector<Ball> balls_initial; // original positions, before release
     std::vector<Flipper> flippers;
 
+    bool game_over;
     bool balls_released; // is ball in play?
-    size_t num_lives;
-    Vec2 num_lives_pos;
-    size_t score;
+    Lives lives;
+    Score score;
 
     Plunger* plunger;
 
@@ -43,6 +81,7 @@ typedef struct {
 
 class TableList {
 public:
+    TableList() = default;
     ~TableList();
     std::vector<TableMenuItem> menu_items;
     int display_size; // how many can fit on screen

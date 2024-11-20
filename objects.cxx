@@ -3,6 +3,7 @@
 
 #include "objects.h"
 #include "pinball0.h"
+#include "graphics.h"
 
 Object::Object(const Vec2& p_, float r_)
     : p(p_)
@@ -28,7 +29,7 @@ void Object::update(float dt) {
 }
 
 void Ball::draw(Canvas* canvas) {
-    canvas_draw_disc(canvas, p.x / 10.0f, p.y / 10.0f, r / 10.0f);
+    gfx_draw_disc(canvas, p, r);
 }
 
 Flipper::Flipper(const Vec2& p_, Side side_, size_t size_)
@@ -39,7 +40,9 @@ Flipper::Flipper(const Vec2& p_, Side side_, size_t size_)
     , max_rotation(1.0f)
     , omega(4.0f)
     , rotation(0.0f)
-    , powered(false) {
+    , powered(false)
+    , score(50)
+    , notification(nullptr) {
     if(side_ == Side::LEFT) {
         rest_angle = -0.4f;
         sign = 1;
@@ -51,7 +54,7 @@ Flipper::Flipper(const Vec2& p_, Side side_, size_t size_)
 
 void Flipper::draw(Canvas* canvas) {
     // base / pivot
-    canvas_draw_circle(canvas, p.x / 10, p.y / 10, r / 10);
+    gfx_draw_circle(canvas, p, r);
 
     // tip
     float angle = rest_angle + sign * rotation;
@@ -59,19 +62,19 @@ void Flipper::draw(Canvas* canvas) {
 
     // draw the tip
     Vec2 tip = p + dir * size;
-    canvas_draw_circle(canvas, tip.x / 10, tip.y / 10, r / 10);
+    gfx_draw_circle(canvas, tip, r);
 
     // top and bottom lines
     Vec2 perp(-dir.y, dir.x);
     perp.normalize();
     Vec2 start = p + perp * r;
     Vec2 end = start + dir * size;
-    canvas_draw_line(canvas, start.x / 10, start.y / 10, end.x / 10, end.y / 10);
+    gfx_draw_line(canvas, start, end);
 
     perp *= -1.0f;
     start = p + perp * r;
     end = start + dir * size;
-    canvas_draw_line(canvas, start.x / 10, start.y / 10, end.x / 10, end.y / 10);
+    gfx_draw_line(canvas, start, end);
 }
 
 void Flipper::update(float dt) {
@@ -128,17 +131,11 @@ Vec2 Flipper::get_tip() const {
 void Polygon::draw(Canvas* canvas) {
     if(!hidden) {
         for(size_t i = 0; i < points.size() - 1; i++) {
-            canvas_draw_line(
-                canvas,
-                points[i].x / 10,
-                points[i].y / 10,
-                points[i + 1].x / 10,
-                points[i + 1].y / 10);
-
+            gfx_draw_line(canvas, points[i], points[i + 1]);
 #ifdef DRAW_NORMALS
             Vec2 c = (points[i] + points[i + 1]) / 2.0f;
             Vec2 e = c + normals[i] * 40.0f;
-            canvas_draw_line(canvas, c.x / 10, c.y / 10, e.x / 10, e.y / 10);
+            gfX_draw_line(canvas, c, e);
 #endif
         }
     }
@@ -176,7 +173,7 @@ bool Polygon::collide(Ball& ball) {
         dist = normal.mag();
     }
     dir = dir / dist;
-    if(dir.dot(normal) >= 0.0f) {
+    if(ball_v.dot(normal) < 0.0f) {
         // FURI_LOG_I(TAG, "Collision Moving TOWARDS");
         ball.p += dir * (ball.r - dist);
     } else {
@@ -260,49 +257,45 @@ void Portal::draw(Canvas* canvas) {
         Vec2 e;
 
         // Portal A
-        canvas_draw_line(canvas, a1.x / 10, a1.y / 10, a2.x / 10, a2.y / 10);
+        gfx_draw_line(canvas, a1, a2);
         d = a1 + au * amag * 0.33f;
         e = d + na * 20.0f;
-        canvas_draw_line(canvas, d.x / 10, d.y / 10, e.x / 10, e.y / 10);
+        gfx_draw_line(canvas, d, e);
         d += au * amag * 0.33f;
         e = d + na * 20.0f;
-        canvas_draw_line(canvas, d.x / 10, d.y / 10, e.x / 10, e.y / 10);
+        gfx_draw_line(canvas, d, e);
 
         // Portal B
-        canvas_draw_line(canvas, b1.x / 10, b1.y / 10, b2.x / 10, b2.y / 10);
+        gfx_draw_line(canvas, b1, b2);
         d = b1 + bu * bmag * 0.33f;
         e = d + nb * 20.0f;
-        canvas_draw_line(canvas, d.x / 10, d.y / 10, e.x / 10, e.y / 10);
+        gfx_draw_line(canvas, d, e);
         d += bu * bmag * 0.33f;
         e = d + nb * 20.0f;
-        canvas_draw_line(canvas, d.x / 10, d.y / 10, e.x / 10, e.y / 10);
+        gfx_draw_line(canvas, d, e);
 
         if(decay > 0) {
-            canvas_draw_circle(canvas, enter_p.x / 10, enter_p.y / 10, 2);
+            gfx_draw_circle(canvas, enter_p, 20);
         }
     }
 #ifdef DRAW_NORMALS
     Vec2 c = (a1 + a2) / 2.0f;
     Vec2 e = c + na * 40.0f;
-    canvas_draw_line(canvas, c.x / 10, c.y / 10, e.x / 10, e.y / 10);
+    gfx_draw_line(canvas, c, e);
     c = (b1 + b2) / 2.0f;
     e = c + nb * 40.0f;
-    canvas_draw_line(canvas, c.x / 10, c.y / 10, e.x / 10, e.y / 10);
+    gfx_draw_line(canvas, c, e);
 #endif
 }
 
+// TODO: simplify this code?
 bool Portal::collide(Ball& ball) {
     Vec2 ball_v = ball.p - ball.prev_p;
-    Vec2 dir;
-    Vec2 closest;
-    Vec2 normal;
     float dist;
 
     Vec2 a_cl = Vec2_closest(a1, a2, ball.p);
-    dir = ball.p - a_cl;
-    dist = dir.mag();
-    dir = dir / dist;
-    if(dist <= ball.r && dir.dot(na) >= 0.0f) {
+    dist = (ball.p - a_cl).mag();
+    if(dist <= ball.r && ball_v.dot(na) < 0.0f) {
         // entering portal a! move it to portal b
         // how far "along" the portal are we?
         enter_p = a_cl;
@@ -315,17 +308,17 @@ bool Portal::collide(Ball& ball) {
         float m = -ball_v.dot(au); // tangent magnitude
         float n = ball_v.dot(na); // normal magnitude
 
-        FURI_LOG_I(
-            TAG,
-            "v: %.3f,%.3f  u: %.3f,%.3f  n: %.3f,%.3f  M: %.3f  N: %.3f",
-            (double)ball_v.x,
-            (double)ball_v.y,
-            (double)au.x,
-            (double)au.y,
-            (double)na.x,
-            (double)na.y,
-            (double)m,
-            (double)n);
+        // FURI_LOG_I(
+        //     TAG,
+        //     "v: %.3f,%.3f  u: %.3f,%.3f  n: %.3f,%.3f  M: %.3f  N: %.3f",
+        //     (double)ball_v.x,
+        //     (double)ball_v.y,
+        //     (double)au.x,
+        //     (double)au.y,
+        //     (double)na.x,
+        //     (double)na.y,
+        //     (double)m,
+        //     (double)n);
 
         // transform to exit portal
         ball_v.x = bu.x * m - nb.x * n;
@@ -337,10 +330,8 @@ bool Portal::collide(Ball& ball) {
     }
 
     Vec2 b_cl = Vec2_closest(b1, b2, ball.p);
-    dir = ball.p - b_cl;
-    dist = dir.mag();
-    dir = dir / dist;
-    if(dist <= ball.r && dir.dot(nb) >= 0.0f) {
+    dist = (ball.p - b_cl).mag();
+    if(dist <= ball.r && ball_v.dot(nb) < 0.0f) {
         // entering portal b! move it to portal a
         // how far "along" the portal are we?
         enter_p = b_cl;
@@ -353,17 +344,17 @@ bool Portal::collide(Ball& ball) {
         float m = -ball_v.dot(bu); // tangent magnitude
         float n = ball_v.dot(nb); // normal magnitude
 
-        FURI_LOG_I(
-            TAG,
-            "v: %.3f,%.3f  u: %.3f,%.3f  n: %.3f,%.3f  M: %.3f  N: %.3f",
-            (double)ball_v.x,
-            (double)ball_v.y,
-            (double)bu.x,
-            (double)bu.y,
-            (double)nb.x,
-            (double)nb.y,
-            (double)m,
-            (double)n);
+        // FURI_LOG_I(
+        //     TAG,
+        //     "v: %.3f,%.3f  u: %.3f,%.3f  n: %.3f,%.3f  M: %.3f  N: %.3f",
+        //     (double)ball_v.x,
+        //     (double)ball_v.y,
+        //     (double)bu.x,
+        //     (double)bu.y,
+        //     (double)nb.x,
+        //     (double)nb.y,
+        //     (double)m,
+        //     (double)n);
 
         // transform to exit portal
         ball_v.x = au.x * m - na.x * n;
@@ -409,7 +400,7 @@ Arc::Arc(const Vec2& p_, float r_, float s_, float e_, Surface surf_)
 
 void Arc::draw(Canvas* canvas) {
     if(start == 0 && end == (float)M_PI * 2) {
-        canvas_draw_circle(canvas, p.x / 10.0f, p.y / 10.0f, r / 10.0f);
+        gfx_draw_circle(canvas, p, r);
     } else {
         float adj_end = end;
         if(end < start) {
@@ -422,8 +413,7 @@ void Arc::draw(Canvas* canvas) {
         for(size_t i = 1; i <= segments; i++) { // for now, use r to determin number of segments
             float nx = p.x + r * cosf(start + i / (segments / (adj_end - start)));
             float ny = p.y - r * sinf(start + i / (segments / (adj_end - start)));
-            canvas_draw_line(
-                canvas, roundf(sx / 10), roundf(sy / 10), roundf(nx / 10), roundf(ny / 10));
+            gfx_draw_line(canvas, sx, sy, nx, ny);
             sx = nx;
             sy = ny;
         }
@@ -487,7 +477,7 @@ bool Arc::collide(Ball& ball) {
         if(prev_dist < r && dist + ball.r > r) {
             // FURI_LOG_I(TAG, "Inside an arc!");
             float angle = vector_to_angle(dir.x, -dir.y);
-            FURI_LOG_I(TAG, "%f : %f : %f", (double)start, (double)angle, (double)end);
+            // FURI_LOG_I(TAG, "%f : %f : %f", (double)start, (double)angle, (double)end);
             // if(angle >= start && angle <= end) {
             if((start < end && start <= angle && angle <= end) ||
                (start > end && (angle >= start || angle <= end))) {
@@ -522,12 +512,14 @@ bool Arc::collide(Ball& ball) {
 
 Bumper::Bumper(const Vec2& p_, float r_)
     : Arc(p_, r_) {
+    score = 500;
 }
 
 void Bumper::draw(Canvas* canvas) {
     Arc::draw(canvas);
     if(decay) {
-        canvas_draw_disc(canvas, p.x / 10, p.y / 10, (r / 10) * 0.8f * (decay / 30.0f));
+        // canvas_draw_disc(canvas, p.x / 10, p.y / 10, (r / 10) * 0.8f * (decay / 30.0f));
+        gfx_draw_disc(canvas, p, r * 0.8f * (decay / 30.0f));
     }
 }
 void Bumper::reset_animation() {
@@ -546,7 +538,7 @@ void Rollover::draw(Canvas* canvas) {
     if(activated) {
         canvas_draw_str_aligned(canvas, p.x / 10, p.y / 10, AlignCenter, AlignCenter, c);
     } else {
-        canvas_draw_dot(canvas, p.x / 10, p.y / 10);
+        gfx_draw_dot(canvas, p);
     }
 }
 
@@ -560,15 +552,11 @@ bool Rollover::collide(Ball& ball) {
 }
 
 void Turbo::draw(Canvas* canvas) {
-    canvas_draw_line(
-        canvas, chevron_1[0].x / 10, chevron_1[0].y / 10, chevron_1[1].x / 10, chevron_1[1].y / 10);
-    canvas_draw_line(
-        canvas, chevron_1[1].x / 10, chevron_1[1].y / 10, chevron_1[2].x / 10, chevron_1[2].y / 10);
+    gfx_draw_line(canvas, chevron_1[0], chevron_1[1]);
+    gfx_draw_line(canvas, chevron_1[1], chevron_1[2]);
 
-    canvas_draw_line(
-        canvas, chevron_2[0].x / 10, chevron_2[0].y / 10, chevron_2[1].x / 10, chevron_2[1].y / 10);
-    canvas_draw_line(
-        canvas, chevron_2[1].x / 10, chevron_2[1].y / 10, chevron_2[2].x / 10, chevron_2[2].y / 10);
+    gfx_draw_line(canvas, chevron_2[0], chevron_2[1]);
+    gfx_draw_line(canvas, chevron_2[1], chevron_2[2]);
 }
 
 bool Turbo::collide(Ball& ball) {

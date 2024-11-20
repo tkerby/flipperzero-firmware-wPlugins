@@ -1,5 +1,14 @@
 {
     "name": "Classic",
+    "lives": {
+        "display": true,
+        "position": [ 20, 480 ],
+        "align": "VERTICAL"
+    },
+    "score": {
+        "display": true,
+        "position": [ 23, 0 ]
+    },
     "balls": [
         {
             "position": [ 600, 1110 ],
@@ -58,6 +67,10 @@
         // left wall
         {
             "start": [ 0, 240 ],
+            "end": [ 0, 400 ]
+        },
+        {
+            "start": [ 0, 740 ],
             "end": [ 0, 1200 ]
         },
         // right wall
@@ -73,15 +86,17 @@
         // left wall fixture
         {
             "start": [ 0, 400 ],
-            "end": [ 80, 480 ]
+            "end": [ 80, 480 ],
+            "bounce": 1.08
         },
         {
             "start": [ 80, 480 ],
-            "end": [ 80, 660 ]
+            "end": [ 80, 660 ],
+            "bounce": 1.1
         },
         {
             "start": [ 80, 660 ],
-            "end": [ 0, 720 ],
+            "end": [ 0, 740 ],
             "bounce": 1.08
         },
         // left bottom rail

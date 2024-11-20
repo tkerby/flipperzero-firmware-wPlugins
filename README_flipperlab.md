@@ -6,9 +6,12 @@ This is a BETA release
 ## Features
 * Realistic physics and collisions
 * User-defined tables via JSON files
-* Portals!
 * Bumpers, flat surfaces, curved surfaces
-* Fancy animations (-ish)
+* Table bumps
+* Portals!
+* Rollover items
+* Sounds! Blinky lights! Annoying vibrations!
+* Customizable notification settings: sound, LED, vibration
 
 ## Controls
 * **Ok** to release the ball
@@ -19,5 +22,9 @@ This is a BETA release
 I find it easiest to hold the flipper with both hands so I can hit left/right with my thumbs!
 
 ## Tables
-Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder. **The default tables may change over time.**
+Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (/apps_data/pinball0). Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (/apps_data/pinball0). 
+
+View the github repo for the JSON format specification: https://github.com/rdefeo/pinball0
+
+**The default tables may change over time.**
 

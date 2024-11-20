@@ -6,11 +6,39 @@
 
 #include "nxjson/nxjson.h"
 #include "pinball0.h"
+#include "graphics.h"
 #include "table.h"
+#include "notifications.h"
 
 // Table defaults
 #define LIVES     3
 #define LIVES_POS Vec2(20, 20)
+
+bool ON_TABLE(const Vec2& p) {
+    return 0 <= p.x && p.x <= 630 && 0 <= p.y && p.y <= 1270;
+}
+
+void Lives::draw(Canvas* canvas) {
+    // we don't draw the last one, as it's in play!
+    constexpr float r = 20;
+    if(display && value > 0) {
+        float x = p.x;
+        float y = p.y;
+        float x_off = alignment == Align::Horizontal ? (2 * r) + r : 0;
+        float y_off = alignment == Align::Vertical ? (2 * r) + r : 0;
+        for(auto l = 0; l < value - 1; x += x_off, y += y_off, l++) {
+            gfx_draw_disc(canvas, x + r, y + r, 20);
+        }
+    }
+}
+
+void Score::draw(Canvas* canvas) {
+    if(display) {
+        char buf[32];
+        snprintf(buf, 32, "%d", value);
+        gfx_draw_str(canvas, p.x, p.y, AlignRight, AlignTop, buf);
+    }
+}
 
 Table::~Table() {
     for(size_t i = 0; i < objects.size(); i++) {
@@ -22,6 +50,8 @@ Table::~Table() {
 }
 
 void Table::draw(Canvas* canvas) {
+    lives.draw(canvas);
+
     // da balls
     for(auto& b : balls) {
         b.draw(canvas);
@@ -40,19 +70,7 @@ void Table::draw(Canvas* canvas) {
         plunger->draw(canvas);
     }
 
-    // we don't draw the last one, as it's in play!
-    if(num_lives > 0) {
-        float x = num_lives_pos.x;
-        float y = num_lives_pos.y;
-        for(size_t l = 0; l < num_lives - 1; x += (2 * 20) + 20, l++) {
-            canvas_draw_disc(canvas, x / 10, y / 10, 2);
-        }
-    }
-
-    // score
-    // char buf[32];
-    // snprintf(buf, 32, "%8u", score);
-    // canvas_draw_str_aligned(canvas, LCD_WIDTH - 30, 1, AlignLeft, AlignTop, buf);
+    score.draw(canvas);
 }
 
 void table_table_list_init(void* ctx) {
@@ -129,30 +147,36 @@ void table_table_list_init(void* ctx) {
 }
 
 // json parse helper function
-bool table_file_parse_vec2(const nx_json* json, const char* key, Vec2* v) {
-    furi_assert(v);
+bool table_file_parse_vec2(const nx_json* json, const char* key, Vec2& v) {
     const nx_json* item = nx_json_get(json, key);
     if(!item || item->children.length != 2) {
         return false;
     }
-    v->x = nx_json_item(item, 0)->num.dbl_value;
-    v->y = nx_json_item(item, 1)->num.dbl_value;
+    v.x = nx_json_item(item, 0)->num.dbl_value;
+    v.y = nx_json_item(item, 1)->num.dbl_value;
     return true;
 }
 
-bool table_file_parse_int(const nx_json* json, const char* key, int* v) {
-    furi_assert(v);
+bool table_file_parse_int(const nx_json* json, const char* key, int& v) {
     const nx_json* item = nx_json_get(json, key);
     if(!item) return false;
-    *v = item->num.u_value;
+    v = item->num.u_value;
     return true;
 }
 
-bool table_file_parse_float(const nx_json* json, const char* key, float* v) {
-    furi_assert(v);
+bool table_file_parse_bool(const nx_json* json, const char* key, bool& v) {
+    int value = v == true ? 1 : 0; // set default value
+    if(table_file_parse_int(json, key, value)) {
+        v = value > 0 ? true : false;
+        return true;
+    }
+    return false;
+}
+
+bool table_file_parse_float(const nx_json* json, const char* key, float& v) {
     const nx_json* item = nx_json_get(json, key);
     if(!item) return false;
-    *v = item->num.dbl_value;
+    v = item->num.dbl_value;
     return true;
 }
 
@@ -227,39 +251,47 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
 
     Table* table = new Table();
 
-    int lives = LIVES;
-    table_file_parse_int(json, "lives", &lives);
-    table->num_lives = lives;
-
-    table->num_lives_pos = LIVES_POS;
-    table_file_parse_vec2(json, "lives_position", &table->num_lives_pos);
-
-    // TODO: this should be an attribute of balls?
-    table->balls_released = false;
-    const nx_json* released = nx_json_get(json, "released");
-    if(released) {
-        table->balls_released = released->num.u_value > 0;
-    }
-
     do {
+        const nx_json* lives = nx_json_get(json, "lives");
+        if(lives) {
+            table_file_parse_int(lives, "value", table->lives.value);
+            table_file_parse_bool(lives, "display", table->lives.display);
+            table_file_parse_vec2(lives, "position", table->lives.p);
+            const nx_json* align = nx_json_get(lives, "align");
+            if(align && !strcmp(align->text_value, "VERTICAL")) {
+                table->lives.alignment = Lives::Vertical;
+            }
+        }
+        const nx_json* score = nx_json_get(json, "score");
+        if(score) {
+            table_file_parse_bool(score, "display", table->score.display);
+            table_file_parse_vec2(score, "position", table->score.p);
+        }
+
         const nx_json* balls = nx_json_get(json, "balls");
         if(balls) {
             for(int i = 0; i < balls->children.length; i++) {
                 const nx_json* ball = nx_json_item(balls, i);
+                if(!ball) continue;
 
                 Vec2 p;
-                if(!table_file_parse_vec2(ball, "position", &p)) {
+                if(!table_file_parse_vec2(ball, "position", p)) {
                     FURI_LOG_E(TAG, "Ball missing \"position\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Ball with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
+                }
 
-                int r = DEF_BALL_RADIUS;
-                table_file_parse_int(ball, "radius", &r);
+                Ball new_ball(p);
+                table_file_parse_float(ball, "radius", new_ball.r);
 
                 Vec2 v = (Vec2){0, 0};
-                table_file_parse_vec2(ball, "velocity", &v);
-
-                Ball new_ball(p, r);
+                table_file_parse_vec2(ball, "velocity", v);
                 new_ball.accelerate(v);
 
                 table->balls_initial.push_back(new_ball);
@@ -278,12 +310,13 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
         const nx_json* plunger = nx_json_get(json, "plunger");
         if(plunger) {
             Vec2 p;
-            table_file_parse_vec2(plunger, "position", &p);
+            table_file_parse_vec2(plunger, "position", p);
             int s = 100;
-            table_file_parse_int(plunger, "size", &s);
+            table_file_parse_int(plunger, "size", s);
             table->plunger = new Plunger(p);
         } else {
-            FURI_LOG_E(TAG, "Table has NO PLUNGER");
+            FURI_LOG_W(
+                TAG, "Table has NO PLUNGER - s'ok, we don't really support one anyway (yet)");
         }
 
         const nx_json* flippers = nx_json_get(json, "flippers");
@@ -292,9 +325,16 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* flipper = nx_json_item(flippers, i);
 
                 Vec2 p;
-                if(!table_file_parse_vec2(flipper, "position", &p)) {
+                if(!table_file_parse_vec2(flipper, "position", p)) {
                     FURI_LOG_E(TAG, "Flipper missing \"position\", skipping");
                     continue;
+                }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Flipper with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
                 }
 
                 const nx_json* side = nx_json_get(flipper, "side");
@@ -304,8 +344,9 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 }
 
                 int sz = DEF_FLIPPER_SIZE;
-                table_file_parse_int(flipper, "size", &sz);
+                table_file_parse_int(flipper, "size", sz);
                 Flipper flip(p, sd, sz);
+                // flip.notification = &notify_flipper;
                 table->flippers.push_back(flip);
             }
         }
@@ -316,20 +357,27 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* bumper = nx_json_item(bumpers, i);
 
                 Vec2 p;
-                if(!table_file_parse_vec2(bumper, "position", &p)) {
+                if(!table_file_parse_vec2(bumper, "position", p)) {
                     FURI_LOG_E(TAG, "Bumper missing \"position\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Bumper with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
+                }
 
                 int r = DEF_BUMPER_RADIUS;
-                table_file_parse_int(bumper, "radius", &r);
+                table_file_parse_int(bumper, "radius", r);
 
                 float bnc = DEF_BUMPER_BOUNCE;
-                table_file_parse_float(bumper, "bounce", &bnc);
+                table_file_parse_float(bumper, "bounce", bnc);
 
                 Bumper* new_bumper = new Bumper(p, r);
-                FURI_LOG_I(TAG, "new bumper: %.3f,%.3f", (double)p.x, (double)p.y);
                 new_bumper->bounce = bnc;
+                new_bumper->notification = notify_bumper_hit;
                 table->objects.push_back(new_bumper);
             }
         }
@@ -341,22 +389,29 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* arc = nx_json_item(arcs, i);
 
                 Vec2 p;
-                if(!table_file_parse_vec2(arc, "position", &p)) {
+                if(!table_file_parse_vec2(arc, "position", p)) {
                     FURI_LOG_E(TAG, "Arc missing \"position\"");
                     continue;
                 }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Arc with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
+                }
 
                 int r = DEF_BUMPER_RADIUS;
-                table_file_parse_int(arc, "radius", &r);
+                table_file_parse_int(arc, "radius", r);
 
                 float bnc = 0.95f; // DEF_BUMPER_BOUNCE?
-                table_file_parse_float(arc, "bounce", &bnc);
+                table_file_parse_float(arc, "bounce", bnc);
 
                 float start_angle = 0.0;
-                table_file_parse_float(arc, "start_angle", &start_angle);
+                table_file_parse_float(arc, "start_angle", start_angle);
                 start_angle *= pi_180;
                 float end_angle = 0.0;
-                table_file_parse_float(arc, "end_angle", &end_angle);
+                table_file_parse_float(arc, "end_angle", end_angle);
                 end_angle *= pi_180;
 
                 Arc::Surface surface = Arc::OUTSIDE;
@@ -377,14 +432,28 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* rail = nx_json_item(rails, i);
 
                 Vec2 s;
-                if(!table_file_parse_vec2(rail, "start", &s)) {
+                if(!table_file_parse_vec2(rail, "start", s)) {
                     FURI_LOG_E(TAG, "Rail missing \"start\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(s)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Rail with starting position %.1f,%.1f is not on table!",
+                        (double)s.x,
+                        (double)s.y);
+                }
                 Vec2 e;
-                if(!table_file_parse_vec2(rail, "end", &e)) {
+                if(!table_file_parse_vec2(rail, "end", e)) {
                     FURI_LOG_E(TAG, "Rail missing \"end\", skipping");
                     continue;
+                }
+                if(!ON_TABLE(e)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Rail with ending position %.1f,%.1f is not on table!",
+                        (double)e.x,
+                        (double)e.y);
                 }
 
                 Polygon* new_rail = new Polygon();
@@ -392,13 +461,14 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 new_rail->add_point(e);
 
                 float bnc = DEF_RAIL_BOUNCE;
-                table_file_parse_float(rail, "bounce", &bnc);
+                table_file_parse_float(rail, "bounce", bnc);
                 new_rail->bounce = bnc;
 
                 int double_sided = 0;
-                table_file_parse_int(rail, "double_sided", &double_sided);
+                table_file_parse_int(rail, "double_sided", double_sided);
 
                 new_rail->finalize();
+                new_rail->notification = &notify_rail_hit;
                 table->objects.push_back(new_rail);
 
                 if(double_sided) {
@@ -407,6 +477,7 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                     new_rail->add_point(s);
                     new_rail->bounce = bnc;
                     new_rail->finalize();
+                    new_rail->notification = &notify_rail_hit;
                     table->objects.push_back(new_rail);
                 }
             }
@@ -418,28 +489,57 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* portal = nx_json_item(portals, i);
 
                 Vec2 a1;
-                if(!table_file_parse_vec2(portal, "a_start", &a1)) {
+                if(!table_file_parse_vec2(portal, "a_start", a1)) {
                     FURI_LOG_E(TAG, "Portal missing \"a_start\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(a1)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Portal A with starting position %.1f,%.1f is not on table!",
+                        (double)a1.x,
+                        (double)a1.y);
+                }
                 Vec2 a2;
-                if(!table_file_parse_vec2(portal, "a_end", &a2)) {
+                if(!table_file_parse_vec2(portal, "a_end", a2)) {
                     FURI_LOG_E(TAG, "Portal missing \"a_end\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(a2)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Portal A with ending position %.1f,%.1f is not on table!",
+                        (double)a2.x,
+                        (double)a2.y);
+                }
                 Vec2 b1;
-                if(!table_file_parse_vec2(portal, "b_start", &b1)) {
+                if(!table_file_parse_vec2(portal, "b_start", b1)) {
                     FURI_LOG_E(TAG, "Portal missing \"b_start\", skipping");
                     continue;
                 }
+                if(!ON_TABLE(b1)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Portal B with starting position %.1f,%.1f is not on table!",
+                        (double)b1.x,
+                        (double)b1.y);
+                }
                 Vec2 b2;
-                if(!table_file_parse_vec2(portal, "b_end", &b2)) {
+                if(!table_file_parse_vec2(portal, "b_end", b2)) {
                     FURI_LOG_E(TAG, "Portal missing \"b_end\", skipping");
                     continue;
+                }
+                if(!ON_TABLE(b2)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Portal B with ending position %.1f,%.1f is not on table!",
+                        (double)b2.x,
+                        (double)b2.y);
                 }
 
                 Portal* new_portal = new Portal(a1, a2, b1, b2);
                 new_portal->finalize();
+                new_portal->notification = &notify_portal;
                 table->objects.push_back(new_portal);
             }
         }
@@ -450,9 +550,16 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* rollover = nx_json_item(rollovers, i);
 
                 Vec2 p;
-                if(!table_file_parse_vec2(rollover, "position", &p)) {
+                if(!table_file_parse_vec2(rollover, "position", p)) {
                     FURI_LOG_E(TAG, "Rollover missing \"position\", skipping");
                     continue;
+                }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Rollover with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
                 }
                 char sym = '*';
                 const nx_json* symbol = nx_json_get(rollover, "symbol");
@@ -470,16 +577,23 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 const nx_json* turbo = nx_json_item(turbos, i);
 
                 Vec2 p;
-                if(!table_file_parse_vec2(turbo, "position", &p)) {
+                if(!table_file_parse_vec2(turbo, "position", p)) {
                     FURI_LOG_E(TAG, "Turbo missing \"position\"");
                     continue;
                 }
+                if(!ON_TABLE(p)) {
+                    FURI_LOG_W(
+                        TAG,
+                        "Turbo with position %.1f,%.1f is not on table!",
+                        (double)p.x,
+                        (double)p.y);
+                }
                 float angle = 0;
-                table_file_parse_float(turbo, "angle", &angle);
+                table_file_parse_float(turbo, "angle", angle);
                 angle *= pi_180;
 
                 float boost = 10;
-                table_file_parse_float(turbo, "boost", &boost);
+                table_file_parse_float(turbo, "boost", boost);
 
                 Turbo* new_turbo = new Turbo(p, angle, boost);
 
@@ -603,12 +717,12 @@ Table* table_init_table_settings(void* ctx) {
     UNUSED(ctx);
     Table* table = new Table();
 
-    table->balls.push_back(Ball(Vec2(20, 880), 10));
-    table->balls.back().add_velocity(Vec2(7, 0), .10f);
-    table->balls.push_back(Ball(Vec2(610, 920), 10));
-    table->balls.back().add_velocity(Vec2(-8, 0), .10f);
-    table->balls.push_back(Ball(Vec2(250, 980), 10));
-    table->balls.back().add_velocity(Vec2(10, 0), .10f);
+    // table->balls.push_back(Ball(Vec2(20, 880), 10));
+    // table->balls.back().add_velocity(Vec2(7, 0), .10f);
+    // table->balls.push_back(Ball(Vec2(610, 920), 10));
+    // table->balls.back().add_velocity(Vec2(-8, 0), .10f);
+    // table->balls.push_back(Ball(Vec2(250, 980), 10));
+    // table->balls.back().add_velocity(Vec2(10, 0), .10f);
 
     table->balls_released = true;
 
@@ -632,15 +746,6 @@ Table* table_init_table_settings(void* ctx) {
     new_rail->finalize();
     new_rail->hidden = true;
     table->objects.push_back(new_rail);
-
-    // int gap = 8;
-    // int speed = 3;
-    // float top = 20;
-
-    // table->objects.push_back(new Chaser(Vec2(2, top), Vec2(61, top), gap, speed, Chaser::SLASH));
-    // table->objects.push_back(new Chaser(Vec2(2, top), Vec2(2, 84), gap, speed, Chaser::SLASH));
-    // table->objects.push_back(new Chaser(Vec2(2, 84), Vec2(61, 84), gap, speed, Chaser::SLASH));
-    // table->objects.push_back(new Chaser(Vec2(61, top), Vec2(61, 84), gap, speed, Chaser::SLASH));
 
     return table;
 }
