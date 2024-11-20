@@ -19,7 +19,8 @@
 
 // #define DRAW_NORMALS
 
-#define TAG "Pinball0"
+#define TAG     "Pinball0"
+#define VERSION FAP_VERSION
 
 // Vertical orientation
 #define LCD_WIDTH  64
@@ -44,7 +45,9 @@ typedef enum GameMode {
     GM_About
 } GameMode;
 
-typedef struct {
+typedef struct PinballApp {
+    ~PinballApp();
+
     FuriMutex* mutex;
 
     TableList table_list;
@@ -55,7 +58,7 @@ typedef struct {
 
     bool gameStarted;
     bool keys[4]; // which key was pressed?
-    bool processing; // controls game loop and physics threads
+    bool processing; // controls game loop and game objects
 
     // user settings
     struct {

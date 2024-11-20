@@ -1,8 +1,7 @@
 {
-    "lives_position": [ 2, 2 ],
     "balls": [
         {
-            // "position": [ 50, 140 ]
+            // oh noes! we don't have a position!
         }
     ],
     "arcs": [

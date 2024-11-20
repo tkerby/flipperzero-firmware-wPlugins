@@ -1,5 +1,5 @@
 {
-    "lives_position": [ 290, 20 ],
+    "name": "Chamber",
     "balls": [
         {
             "position": [ 390, 400 ]

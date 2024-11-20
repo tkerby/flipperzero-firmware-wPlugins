@@ -1,7 +1,5 @@
 {
     "name": "Platforms",
-    "lives": 3,
-    "released": false,
     "balls": [
         {
             "position": [

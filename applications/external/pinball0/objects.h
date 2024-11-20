@@ -42,7 +42,7 @@ public:
 
 class Ball : public Object {
 public:
-    Ball(const Vec2& p_, float r_ = DEF_BALL_RADIUS)
+    Ball(const Vec2& p_ = Vec2(), float r_ = DEF_BALL_RADIUS)
         : Object(p_, r_) {
     }
     void draw(Canvas* canvas);
@@ -77,6 +77,9 @@ public:
     float current_omega;
 
     bool powered; // is this flipper being activated? i.e. is keypad pressed?
+
+    int score;
+    void (*notification)(void* app);
 };
 
 // A static object that never moves and can be any shape
@@ -85,13 +88,18 @@ public:
     FixedObject()
         : bounce(1.0f)
         , physical(true)
-        , hidden(false) {
+        , hidden(false)
+        , score(0)
+        , notification(nullptr) {
     }
     virtual ~FixedObject() = default;
 
     float bounce;
     bool physical; // can be hit
     bool hidden; // do not draw
+    int score;
+
+    void (*notification)(void* app);
 
     virtual void draw(Canvas* canvas) = 0;
     virtual bool collide(Ball& ball) = 0;
@@ -123,6 +131,7 @@ public:
         , a2(a2_)
         , b1(b1_)
         , b2(b2_) {
+        score = 200;
     }
     Vec2 a1, a2; // portal 'a'
     Vec2 b1, b2; // portal 'b'
@@ -193,6 +202,7 @@ public:
         , p(p_) {
         c[0] = c_;
         c[1] = '\0';
+        score = 400;
     }
 
     Vec2 p;
