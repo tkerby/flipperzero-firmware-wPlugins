@@ -272,24 +272,6 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
             playerCtx->sprite = playerCtx->sprite_left;
         }
     }
-
-    //Bullet movement mechanics
-    for(int i = 0; i < MAX_BULLETS; i++) {
-        if(bullets[i] == NULL) continue;
-        Vector bulletPos = entity_pos_get(bullets[i]);
-
-        float deltaX = bulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
-        bulletPos.x =
-            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
-        entity_pos_set(bullets[i], bulletPos);
-
-        //Once bullet reaches end, destroy it
-        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
-           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
-            level_remove_entity(gameLevel, bullets[i]);
-            bullets[i] = NULL;
-        }
-    }
 }
 
 void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick, void* context) {
@@ -324,24 +306,6 @@ void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick,
             bulletPos = (Vector){pos->x - 10, pos->y};
         }
         entity_pos_set(enemyBullets[bulletIndex], bulletPos);
-    }
-
-    //Bullet movement mechanics
-    for(int i = 0; i < MAX_BULLETS; i++) {
-        if(enemyBullets[i] == NULL) continue;
-        Vector bulletPos = entity_pos_get(enemyBullets[i]);
-        //TODO Currently movement is dependent on enemy's trajectory, no metadata of bullet.
-        float deltaX = enemyBulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
-        bulletPos.x =
-            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
-        entity_pos_set(enemyBullets[i], bulletPos);
-
-        //Once bullet reaches end, destroy it
-        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
-           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
-            level_remove_entity(gameLevel, enemyBullets[i]);
-            enemyBullets[i] = NULL;
-        }
     }
 }
 
@@ -424,7 +388,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
             playerCtx->sprite != playerCtx->sprite_right_shadowed &&
             playerCtx->sprite != playerCtx->sprite_left)) {
             if(playerCtx->sprite == playerCtx->sprite_stand) {
-                transitionLeftTicks++;
+                //transitionLeftTicks++;
             }
             if(transitionLeftTicks < TRANSITION_FRAMES) {
                 transitionLeftTicks++;
@@ -461,7 +425,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         if(playerCtx->sprite != playerCtx->sprite_right_shadowed &&
            playerCtx->sprite != playerCtx->sprite_right) {
             if(playerCtx->sprite == playerCtx->sprite_forward) {
-                transitionRightTicks++;
+                //transitionRightTicks++;
             }
             if(transitionRightTicks < TRANSITION_FRAMES) {
                 transitionRightTicks++;
@@ -539,6 +503,42 @@ void global_update(Entity* self, GameManager* manager, void* context) {
             enemies[i].direction = false;
         }
     }
+
+    //Player bullet movement mechanics
+    for(int i = 0; i < MAX_BULLETS; i++) {
+        if(bullets[i] == NULL) continue;
+        Vector bulletPos = entity_pos_get(bullets[i]);
+
+        float deltaX = bulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
+        bulletPos.x =
+            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
+        entity_pos_set(bullets[i], bulletPos);
+
+        //Once bullet reaches end, destroy it
+        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
+           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
+            level_remove_entity(gameLevel, bullets[i]);
+            bullets[i] = NULL;
+        }
+    }
+
+    //Enemy bullet movement mechanics
+    for(int i = 0; i < MAX_BULLETS; i++) {
+        if(enemyBullets[i] == NULL) continue;
+        Vector bulletPos = entity_pos_get(enemyBullets[i]);
+        //TODO Currently movement is dependent on enemy's trajectory, no metadata of bullet.
+        float deltaX = enemyBulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
+        bulletPos.x =
+            CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
+        entity_pos_set(enemyBullets[i], bulletPos);
+
+        //Once bullet reaches end, destroy it
+        if(roundf(bulletPos.x) >= WORLD_BORDER_RIGHT_X ||
+           roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
+            level_remove_entity(gameLevel, enemyBullets[i]);
+            enemyBullets[i] = NULL;
+        }
+    }
 }
 
 void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -563,6 +563,13 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
+
+    /*if((transitionLeftTicks < TRANSITION_FRAMES && transitionLeftTicks != 0) ||
+       (transitionRightTicks < TRANSITION_FRAMES && transitionRightTicks != 0)) {
+        canvas_draw_line(canvas, pos.x - 3, pos.y, pos.x - 5, pos.y);
+        canvas_draw_line(canvas, pos.x + 3, pos.y, pos.x + 5, pos.y);
+    }*/
+
     if(horizontalView) {
         canvas_draw_frame(canvas, 2, -4, 124, 61);
         canvas_draw_line(canvas, 1, 57, 0, 60);
@@ -666,13 +673,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                     //Replace damage sound with death sound
                     damageSound = &sequence_success;
 
-                    //Destroy all associated bullets
-                    //TODO CHECK IF BULLETS WERE THEIRS
-                    for(int i = 0; i < MAX_BULLETS; i++) {
-                        if(enemyBullets[i] == NULL) continue;
-                        level_remove_entity(gameLevel, enemyBullets[i]);
-                        enemyBullets[i] = NULL;
-                    }
                     enemies[i].instance = NULL;
                     kills++;
                     if(kills == 1) {

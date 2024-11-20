@@ -69,7 +69,7 @@ extern float targetY;
 extern float targetX;
 extern bool horizontalGame;
 extern bool horizontalView;
-#define TRANSITION_FRAMES 10
+#define TRANSITION_FRAMES 15
 
 extern int16_t transitionLeftTicks;
 extern int16_t transitionRightTicks;
