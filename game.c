@@ -40,6 +40,8 @@ float targetY = WORLD_BORDER_BOTTOM_Y;
 float targetX = 10.0F;
 bool horizontalGame = true;
 bool horizontalView = true;
+int16_t transitionLeftTicks = 0;
+int16_t transitionRightTicks = 0;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
@@ -417,29 +419,66 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     player_shoot_handler(playerCtx, &input, &pos);
 
     if(input.held & GameKeyLeft && playerCtx->sprite != playerCtx->sprite_left_recoil) {
-        targetX -= speed;
-        targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-        pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-
         //Switch sprite to left direction
-        if(playerCtx->sprite != playerCtx->sprite_left_shadowed) {
-            playerCtx->sprite = playerCtx->sprite_left;
+        if((playerCtx->sprite != playerCtx->sprite_left_shadowed &&
+            playerCtx->sprite != playerCtx->sprite_left)) {
+            if(playerCtx->sprite == playerCtx->sprite_stand) {
+                transitionLeftTicks++;
+            }
+            if(transitionLeftTicks < TRANSITION_FRAMES) {
+                transitionLeftTicks++;
+                if(playerCtx->sprite != playerCtx->sprite_stand &&
+                   playerCtx->sprite != playerCtx->sprite_jump) {
+                    playerCtx->sprite = playerCtx->sprite_forward;
+                }
+            } else if(
+                playerCtx->sprite != playerCtx->sprite_left_shadowed &&
+                transitionLeftTicks >= TRANSITION_FRAMES) {
+                transitionLeftTicks = 0;
+                playerCtx->sprite = playerCtx->sprite_left;
+            }
+        }
+
+        if(playerCtx->sprite == playerCtx->sprite_left_shadowed ||
+           playerCtx->sprite == playerCtx->sprite_left) {
+            targetX -= speed;
+            targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+            pos.x = CLAMP(pos.x - speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
         }
     }
 
     if(input.held & GameKeyRight && playerCtx->sprite != playerCtx->sprite_right_recoil) {
-        targetX += speed;
-        targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
-        pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+        //Switch sprite to left direction
+        if(playerCtx->sprite != playerCtx->sprite_right_shadowed &&
+           playerCtx->sprite != playerCtx->sprite_right) {
+            if(playerCtx->sprite == playerCtx->sprite_forward) {
+                transitionRightTicks++;
+            }
+            if(transitionRightTicks < TRANSITION_FRAMES) {
+                transitionRightTicks++;
+                if(playerCtx->sprite != playerCtx->sprite_forward &&
+                   playerCtx->sprite != playerCtx->sprite_jump) {
+                    playerCtx->sprite = playerCtx->sprite_stand;
+                }
+            } else if(
+                playerCtx->sprite != playerCtx->sprite_right_shadowed &&
+                transitionRightTicks >= TRANSITION_FRAMES) {
+                transitionRightTicks = 0;
+                playerCtx->sprite = playerCtx->sprite_right;
+            }
+        }
 
         //Switch to right direction
-        if(playerCtx->sprite != playerCtx->sprite_right_shadowed) {
-            playerCtx->sprite = playerCtx->sprite_right;
+        if(playerCtx->sprite == playerCtx->sprite_right_shadowed ||
+           playerCtx->sprite == playerCtx->sprite_right) {
+            targetX += speed;
+            targetX = CLAMP(targetX, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
+            pos.x = CLAMP(pos.x + speed, WORLD_BORDER_RIGHT_X, WORLD_BORDER_LEFT_X);
         }
     }
 
-//TODO Add switch to sprite_forward be automatic when switching direction (e.g. from left to right, vice versa)
-//TODO Switch to left/right when jumping up as part of jump animation
+    //TODO Add switch to sprite_forward be automatic when switching direction (e.g. from left to right, vice versa)
+    //TODO Switch to left/right when jumping up as part of jump animation
     if(input.pressed & GameKeyDown && playerCtx->sprite != playerCtx->sprite_left_recoil &&
        playerCtx->sprite != playerCtx->sprite_right_recoil) {
         playerCtx->sprite = playerCtx->sprite_forward;

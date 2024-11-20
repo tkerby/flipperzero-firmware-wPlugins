@@ -69,6 +69,10 @@ extern float targetY;
 extern float targetX;
 extern bool horizontalGame;
 extern bool horizontalView;
+#define TRANSITION_FRAMES 20
+
+extern int16_t transitionLeftTicks;
+extern int16_t transitionRightTicks;
 //Internals
 extern int firstMobSpawnTicks;
 extern uint32_t firstKillTick;
