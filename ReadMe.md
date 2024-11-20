@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1118-0018-0.420.0-c51dc5c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1119-2242-0.420.0-589e08f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-18 00:18 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-18 00:18 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-19 22:42 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-19 22:42 EST`
 - [Update Wifi-Stealer_ORG.txt #1106 (By Diegomjx)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1106)
 - [FlipperHTTP: Use UART chosen in settings (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/009296e25b79b35e7e3a5aee4a8e83e9f97dfa04)
 - [ESP Flasher: Update FlipperHTTP, reorder quick flash options (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/f671266d632859b03b2f5474f7cdffb033c1a476)
