@@ -30,7 +30,6 @@ int32_t flip_library_app(void *p)
             furi_delay_ms(100);
         }
 
-        FURI_LOG_E(TAG, "Counter: %d", counter);
         if(counter == 0) {
             DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
             DialogMessage* message = dialog_message_alloc();
