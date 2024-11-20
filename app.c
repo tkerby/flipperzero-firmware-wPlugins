@@ -47,13 +47,6 @@ int32_t flip_library_app(void *p)
             dialog_message_free(message);
             furi_record_close(RECORD_DIALOGS);
         }
-
-        // Switch to application wifi settings
-        if(!flipper_http_save_wifi(
-               app_instance->uart_text_input_buffer_ssid,
-               app_instance->uart_text_input_buffer_password)) {
-            FURI_LOG_E(TAG, "Failed to save wifi settings");
-        }
     }
 
     // Run the view dispatcher
