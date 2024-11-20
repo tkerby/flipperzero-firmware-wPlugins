@@ -14,7 +14,7 @@ FlipLibraryApp* flip_library_app_alloc() {
     // Allocate the text input buffer
     app->uart_text_input_buffer_size_ssid = 64;
     app->uart_text_input_buffer_size_password = 64;
-    app->uart_text_input_buffer_size_dictionary = 64;
+    app->uart_text_input_buffer_size_query = 64;
     if(!easy_flipper_set_buffer(
            &app->uart_text_input_buffer_ssid, app->uart_text_input_buffer_size_ssid)) {
         return NULL;
@@ -33,12 +33,11 @@ FlipLibraryApp* flip_library_app_alloc() {
         return NULL;
     }
     if(!easy_flipper_set_buffer(
-           &app->uart_text_input_buffer_dictionary, app->uart_text_input_buffer_size_dictionary)) {
+           &app->uart_text_input_buffer_query, app->uart_text_input_buffer_size_query)) {
         return NULL;
     }
     if(!easy_flipper_set_buffer(
-           &app->uart_text_input_temp_buffer_dictionary,
-           app->uart_text_input_buffer_size_dictionary)) {
+           &app->uart_text_input_temp_buffer_query, app->uart_text_input_buffer_size_query)) {
         return NULL;
     }
 
@@ -46,51 +45,36 @@ FlipLibraryApp* flip_library_app_alloc() {
     if(!easy_flipper_set_view_dispatcher(&app->view_dispatcher, gui, app)) {
         return NULL;
     }
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, flip_library_custom_event_callback);
 
     // Main view
     if(!easy_flipper_set_view(
-           &app->view_random_facts,
-           FlipLibraryViewRandomFactsRun,
-           view_draw_callback_random_facts,
+           &app->view_loader,
+           FlipLibraryViewLoader,
+           flip_library_loader_draw_callback,
            NULL,
            callback_to_random_facts,
            &app->view_dispatcher,
            app)) {
         return NULL;
     }
-    if(!easy_flipper_set_view(
-           &app->view_dictionary,
-           FlipLibraryViewDictionaryRun,
-           view_draw_callback_dictionary_run,
-           NULL,
-           callback_to_submenu,
-           &app->view_dispatcher,
-           app)) {
-        return NULL;
-    }
+    flip_library_loader_init(app->view_loader);
 
     // Widget
     if(!easy_flipper_set_widget(
-           &app->widget,
+           &app->widget_about,
            FlipLibraryViewAbout,
-           "FlipLibrary v1.2\n-----\nDictionary, random facts, and\nmore.\n-----\nwww.github.com/jblanked",
+           "FlipLibrary v1.3\n-----\nDictionary, random facts, and\nmore.\n-----\nwww.github.com/jblanked",
            callback_to_submenu,
            &app->view_dispatcher)) {
         return NULL;
     }
     if(!easy_flipper_set_widget(
-           &app->widget_random_fact,
-           FlipLibraryViewRandomFactWidget,
+           &app->widget_result,
+           FlipLibraryViewWidgetResult,
            "Error, try again.",
            callback_to_random_facts,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_widget(
-           &app->widget_dictionary,
-           FlipLibraryViewDictionaryWidget,
-           "Error, try again.",
-           callback_to_submenu,
            &app->view_dispatcher)) {
         return NULL;
     }
@@ -121,12 +105,12 @@ FlipLibraryApp* flip_library_app_alloc() {
         return NULL;
     }
     if(!easy_flipper_set_uart_text_input(
-           &app->uart_text_input_dictionary,
-           FlipLibraryViewDictionaryTextInput,
-           "Enter a word",
-           app->uart_text_input_temp_buffer_dictionary,
-           app->uart_text_input_buffer_size_dictionary,
-           text_updated_dictionary,
+           &app->uart_text_input_query,
+           FlipLibraryViewTextInputQuery,
+           "Enter Query",
+           app->uart_text_input_temp_buffer_query,
+           app->uart_text_input_buffer_size_query,
+           text_updated_query,
            callback_to_submenu,
            &app->view_dispatcher,
            app)) {
@@ -155,7 +139,7 @@ FlipLibraryApp* flip_library_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            FlipLibraryViewSubmenuMain,
-           "FlipLibrary v1.2",
+           "FlipLibrary v1.3",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -218,9 +202,10 @@ FlipLibraryApp* flip_library_app_alloc() {
            app->uart_text_input_buffer_password,
            app->uart_text_input_buffer_size_password)) {
         // Update variable items
-        if(app->variable_item_ssid)
+        if(app->variable_item_ssid) {
             variable_item_set_current_value_text(
                 app->variable_item_ssid, app->uart_text_input_buffer_ssid);
+        }
         // dont show password
 
         // Copy items into their temp buffers with safety checks

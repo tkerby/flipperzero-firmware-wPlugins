@@ -1,24 +1,87 @@
 #include <callback/flip_library_callback.h>
-uint32_t random_facts_index = 0;
-bool sent_random_fact_request = false;
-bool random_fact_request_success = false;
-bool random_fact_request_success_all = false;
-char* random_fact = NULL;
 
-// Parse JSON to find the "text" key
-char* flip_library_parse_random_fact() {
+// FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
+#ifdef DEVELOPMENT
+#define FURI_LOG_DEV(tag, format, ...) \
+    furi_log_print_format(FuriLogLevelInfo, tag, format, ##__VA_ARGS__)
+#define DEV_CRASH() furi_crash()
+#else
+#define FURI_LOG_DEV(tag, format, ...)
+#define DEV_CRASH()
+#endif
+
+static bool flip_library_random_fact_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    return flipper_http_get_request("https://uselessfacts.jsph.pl/api/v2/facts/random");
+}
+
+static char* flip_library_random_fact_parse(FactLoaderModel* model) {
+    UNUSED(model);
     return get_json_value("text", fhttp.last_response, 128);
 }
 
-char* flip_library_parse_cat_fact() {
+static void flip_library_random_fact_switch_to_view(FlipLibraryApp* app) {
+    flip_library_generic_switch_to_view(
+        app,
+        "Random Fact",
+        flip_library_random_fact_fetch,
+        flip_library_random_fact_parse,
+        1,
+        callback_to_random_facts,
+        FlipLibraryViewLoader);
+}
+
+static bool flip_library_cat_fact_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    return flipper_http_get_request_with_headers(
+        "https://catfact.ninja/fact", "{\"Content-Type\":\"application/json\"}");
+}
+
+static char* flip_library_cat_fact_parse(FactLoaderModel* model) {
+    UNUSED(model);
     return get_json_value("fact", fhttp.last_response, 128);
 }
 
-char* flip_library_parse_dog_fact() {
+static void flip_library_cat_fact_switch_to_view(FlipLibraryApp* app) {
+    flip_library_generic_switch_to_view(
+        app,
+        "Random Cat Fact",
+        flip_library_cat_fact_fetch,
+        flip_library_cat_fact_parse,
+        1,
+        callback_to_random_facts,
+        FlipLibraryViewLoader);
+}
+
+static bool flip_library_dog_fact_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    return flipper_http_get_request_with_headers(
+        "https://dog-api.kinduff.com/api/facts", "{\"Content-Type\":\"application/json\"}");
+}
+
+static char* flip_library_dog_fact_parse(FactLoaderModel* model) {
+    UNUSED(model);
     return get_json_array_value("facts", 0, fhttp.last_response, 256);
 }
 
-char* flip_library_parse_quote() {
+static void flip_library_dog_fact_switch_to_view(FlipLibraryApp* app) {
+    flip_library_generic_switch_to_view(
+        app,
+        "Random Dog Fact",
+        flip_library_dog_fact_fetch,
+        flip_library_dog_fact_parse,
+        1,
+        callback_to_random_facts,
+        FlipLibraryViewLoader);
+}
+
+static bool flip_library_quote_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    return flipper_http_get_request("https://zenquotes.io/api/random");
+}
+
+static char* flip_library_quote_parse(FactLoaderModel* model) {
+    UNUSED(model);
     // remove [ and ] from the start and end of the string
     char* response = fhttp.last_response;
     if(response[0] == '[') {
@@ -37,35 +100,77 @@ char* flip_library_parse_quote() {
     return get_json_value("q", response, 128);
 }
 
-char* flip_library_parse_dictionary() {
-    return get_json_value("definition", fhttp.last_response, 16);
+static void flip_library_quote_switch_to_view(FlipLibraryApp* app) {
+    flip_library_generic_switch_to_view(
+        app,
+        "Random Quote",
+        flip_library_quote_fetch,
+        flip_library_quote_parse,
+        1,
+        callback_to_random_facts,
+        FlipLibraryViewLoader);
 }
 
-void flip_library_request_error(Canvas* canvas) {
-    if(fhttp.last_response == NULL) {
-        if(fhttp.last_response != NULL) {
-            if(strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
-               NULL) {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-            } else if(strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL) {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
-                canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
-                canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
-            } else {
-                canvas_clear(canvas);
-                FURI_LOG_E(TAG, "Received an error: %s", fhttp.last_response);
-                canvas_draw_str(canvas, 0, 10, "[ERROR] Unusual error...");
-                canvas_draw_str(canvas, 0, 60, "Press BACK and retry.");
-            }
-        } else {
+static bool flip_library_dictionary_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    char payload[128];
+    snprintf(
+        payload, sizeof(payload), "{\"word\":\"%s\"}", app_instance->uart_text_input_buffer_query);
+
+    return flipper_http_post_request_with_headers(
+        "https://www.flipsocial.net/api/define/",
+        "{\"Content-Type\":\"application/json\"}",
+        payload);
+}
+
+static char* flip_library_dictionary_parse(FactLoaderModel* model) {
+    UNUSED(model);
+    char* defn = get_json_value("definition", fhttp.last_response, 16);
+    if(defn == NULL) {
+        defn = get_json_value("[ERROR]", fhttp.last_response, 16);
+    }
+    return defn;
+}
+
+static void flip_library_dictionary_switch_to_view(FlipLibraryApp* app) {
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter a word");
+    flip_library_generic_switch_to_view(
+        app,
+        "Defining",
+        flip_library_dictionary_fetch,
+        flip_library_dictionary_parse,
+        1,
+        callback_to_submenu,
+        FlipLibraryViewTextInputQuery);
+}
+
+static void flip_library_request_error_draw(Canvas* canvas) {
+    if(canvas == NULL) {
+        FURI_LOG_E(TAG, "flip_library_request_error_draw - canvas is NULL");
+        DEV_CRASH();
+        return;
+    }
+    if(fhttp.last_response != NULL) {
+        if(strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") !=
+           NULL) {
             canvas_clear(canvas);
-            canvas_draw_str(canvas, 0, 10, "[ERROR] Unknown error.");
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 22, "Failed to reconnect.");
             canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
             canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        } else if(strstr(fhttp.last_response, "[ERROR] Failed to connect to Wifi.") != NULL) {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Not connected to Wifi.");
+            canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
+            canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
+        } else if(strstr(fhttp.last_response, "[PONG]") != NULL) {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[STATUS]Connecting to AP...");
+        } else {
+            canvas_clear(canvas);
+            FURI_LOG_E(TAG, "Received an error: %s", fhttp.last_response);
+            canvas_draw_str(canvas, 0, 10, "[ERROR] Unusual error...");
+            canvas_draw_str(canvas, 0, 60, "Press BACK and retry.");
         }
     } else {
         canvas_clear(canvas);
@@ -74,47 +179,54 @@ void flip_library_request_error(Canvas* canvas) {
     }
 }
 
-void flip_library_draw_fact(char* message, Widget** widget) {
-    if(app_instance == NULL) {
-        FURI_LOG_E(TAG, "App instance is NULL");
+static void flip_library_widget_set_text(char* message, Widget** widget) {
+    if(widget == NULL) {
+        FURI_LOG_E(TAG, "flip_library_set_widget_text - widget is NULL");
+        DEV_CRASH();
+        return;
+    }
+    if(message == NULL) {
+        FURI_LOG_E(TAG, "flip_library_set_widget_text - message is NULL");
+        DEV_CRASH();
         return;
     }
     widget_reset(*widget);
 
-    uint32_t fact_length = strlen(message); // Length of the message
+    uint32_t message_length = strlen(message); // Length of the message
     uint32_t i = 0; // Index tracker
     uint32_t formatted_index = 0; // Tracker for where we are in the formatted message
     char* formatted_message; // Buffer to hold the final formatted message
-    if(!easy_flipper_set_buffer(&formatted_message, fact_length * 2 + 1)) {
+    if(!easy_flipper_set_buffer(&formatted_message, message_length * 2 + 1)) {
         return;
     }
 
-    while(i < fact_length) {
+    while(i < message_length) {
+        // TODO: Use canvas_glyph_width to calculate the maximum characters for the line
         uint32_t max_line_length = 29; // Maximum characters per line
-        uint32_t remaining_length = fact_length - i; // Remaining characters
+        uint32_t remaining_length = message_length - i; // Remaining characters
         uint32_t line_length = (remaining_length < max_line_length) ? remaining_length :
                                                                       max_line_length;
 
         // Temporary buffer to hold the current line
-        char fact_line[30];
-        strncpy(fact_line, message + i, line_length);
-        fact_line[line_length] = '\0';
+        char line[30];
+        strncpy(line, message + i, line_length);
+        line[line_length] = '\0';
 
         // Check if the line ends in the middle of a word and adjust accordingly
         if(line_length == 29 && message[i + line_length] != '\0' &&
            message[i + line_length] != ' ') {
             // Find the last space within the 30-character segment
-            char* last_space = strrchr(fact_line, ' ');
+            char* last_space = strrchr(line, ' ');
             if(last_space != NULL) {
                 // Adjust the line length to avoid cutting the word
-                line_length = last_space - fact_line;
-                fact_line[line_length] = '\0'; // Null-terminate at the space
+                line_length = last_space - line;
+                line[line_length] = '\0'; // Null-terminate at the space
             }
         }
 
         // Manually copy the fixed line into the formatted_message buffer
         for(uint32_t j = 0; j < line_length; j++) {
-            formatted_message[formatted_index++] = fact_line[j];
+            formatted_message[formatted_index++] = line[j];
         }
 
         // Add a newline character for line spacing
@@ -133,353 +245,20 @@ void flip_library_draw_fact(char* message, Widget** widget) {
     widget_add_text_scroll_element(*widget, 0, 0, 128, 64, formatted_message);
 }
 
-// Callback for drawing the main screen
-void view_draw_callback_random_facts(Canvas* canvas, void* model) {
-    if(!canvas || !app_instance) {
+void flip_library_loader_draw_callback(Canvas* canvas, void* model) {
+    if(!canvas || !model) {
+        FURI_LOG_E(TAG, "flip_library_loader_draw_callback - canvas or model is NULL");
         return;
     }
-    UNUSED(model);
+
+    SerialState http_state = fhttp.state;
+    FactLoaderModel* fact_loader_model = (FactLoaderModel*)model;
+    FactState fact_state = fact_loader_model->fact_state;
+    char* title = fact_loader_model->title;
 
     canvas_set_font(canvas, FontSecondary);
 
-    if(fhttp.state == INACTIVE) {
-        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
-        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
-        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
-        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
-        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
-        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
-        return;
-    }
-    // Cats
-    if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsCats) {
-        canvas_draw_str(canvas, 0, 7, "Random Cat Fact");
-        canvas_draw_str(canvas, 0, 15, "Loading...");
-
-        if(!sent_random_fact_request) {
-            sent_random_fact_request = true;
-            random_fact_request_success = flipper_http_get_request_with_headers(
-                "https://catfact.ninja/fact", "{\"Content-Type\":\"application/json\"}");
-            if(!random_fact_request_success) {
-                FURI_LOG_E(TAG, "Failed to send request");
-                flip_library_request_error(canvas);
-                return;
-            }
-            fhttp.state = RECEIVING;
-        } else {
-            if(fhttp.state == RECEIVING) {
-                canvas_draw_str(canvas, 0, 22, "Receiving...");
-                return;
-            }
-            // check status
-            else if(fhttp.state == ISSUE || !random_fact_request_success) {
-                flip_library_request_error(canvas);
-            } else if(
-                fhttp.state == IDLE && fhttp.last_response != NULL &&
-                !random_fact_request_success_all) {
-                canvas_draw_str(canvas, 0, 22, "Processing...");
-                // success
-                // check status
-                // unnecessary check
-                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
-                    flip_library_request_error(canvas);
-                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
-                    return;
-                } else if(!random_fact_request_success_all) {
-                    random_fact = flip_library_parse_cat_fact();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-
-                    // Mark success
-                    random_fact_request_success_all = true;
-
-                    // draw random facts
-                    flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                    // go to random facts widget
-                    view_dispatcher_switch_to_view(
-                        app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-                }
-            }
-            // likely redundant but just in case
-            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
-                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-            } else // handle weird scenarios
-            {
-                // if received data isnt NULL
-                if(fhttp.last_response != NULL) {
-                    // parse json to find the text key
-                    random_fact = flip_library_parse_cat_fact();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    // Dogs
-    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsDogs) {
-        canvas_draw_str(canvas, 0, 7, "Random Dog Fact");
-        canvas_draw_str(canvas, 0, 15, "Loading...");
-
-        if(!sent_random_fact_request) {
-            sent_random_fact_request = true;
-            random_fact_request_success = flipper_http_get_request_with_headers(
-                "https://dog-api.kinduff.com/api/facts",
-                "{\"Content-Type\":\"application/json\"}");
-            if(!random_fact_request_success) {
-                FURI_LOG_E(TAG, "Failed to send request");
-                flip_library_request_error(canvas);
-                fhttp.state = ISSUE;
-                return;
-            }
-            fhttp.state = RECEIVING;
-        } else {
-            if(fhttp.state == RECEIVING) {
-                canvas_draw_str(canvas, 0, 22, "Receiving...");
-                return;
-            }
-            // check status
-            else if(fhttp.state == ISSUE || !random_fact_request_success) {
-                flip_library_request_error(canvas);
-            } else if(
-                fhttp.state == IDLE && fhttp.last_response != NULL &&
-                !random_fact_request_success_all) {
-                canvas_draw_str(canvas, 0, 22, "Processing...");
-                // success
-                // check status
-                // unnecessary check
-                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
-                    flip_library_request_error(canvas);
-                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
-                    return;
-                } else if(!random_fact_request_success_all) {
-                    random_fact = flip_library_parse_dog_fact();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-
-                    // Mark success
-                    random_fact_request_success_all = true;
-
-                    // draw random facts
-                    flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                    // go to random facts widget
-                    view_dispatcher_switch_to_view(
-                        app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-                }
-            }
-            // likely redundant but just in case
-            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
-                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-            } else // handle weird scenarios
-            {
-                // if received data isnt NULL
-                if(fhttp.last_response != NULL) {
-                    // parse json to find the text key
-                    random_fact = flip_library_parse_cat_fact();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    // Quotes
-    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsQuotes) {
-        canvas_draw_str(canvas, 0, 7, "Random Quote");
-        canvas_draw_str(canvas, 0, 15, "Loading...");
-
-        if(!sent_random_fact_request) {
-            sent_random_fact_request = true;
-            random_fact_request_success =
-                flipper_http_get_request("https://zenquotes.io/api/random");
-            if(!random_fact_request_success) {
-                FURI_LOG_E(TAG, "Failed to send request");
-                flip_library_request_error(canvas);
-                return;
-            }
-            fhttp.state = RECEIVING;
-        } else {
-            if(fhttp.state == RECEIVING) {
-                canvas_draw_str(canvas, 0, 22, "Receiving...");
-                return;
-            }
-            // check status
-            else if(fhttp.state == ISSUE || !random_fact_request_success) {
-                flip_library_request_error(canvas);
-            } else if(
-                fhttp.state == IDLE && fhttp.last_response != NULL &&
-                !random_fact_request_success_all) {
-                canvas_draw_str(canvas, 0, 22, "Processing...");
-                // success
-                // check status
-                // unnecessary check
-                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
-                    flip_library_request_error(canvas);
-                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
-                    return;
-                } else if(!random_fact_request_success_all) {
-                    random_fact = flip_library_parse_quote();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-
-                    // Mark success
-                    random_fact_request_success_all = true;
-
-                    // draw random facts
-                    flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                    // go to random facts widget
-                    view_dispatcher_switch_to_view(
-                        app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-                }
-            }
-            // likely redundant but just in case
-            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
-                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-            } else // handle weird scenarios
-            {
-                // if received data isnt NULL
-                if(fhttp.last_response != NULL) {
-                    // parse json to find the text key
-                    random_fact = flip_library_parse_quote();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    // All Random Facts
-    else if(random_facts_index == FlipLibrarySubmenuIndexRandomFactsAll) {
-        canvas_draw_str(canvas, 0, 10, "Random Fact");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 0, 20, "Loading...");
-
-        if(!sent_random_fact_request) {
-            sent_random_fact_request = true;
-
-            random_fact_request_success =
-                flipper_http_get_request("https://uselessfacts.jsph.pl/api/v2/facts/random");
-            if(!random_fact_request_success) {
-                FURI_LOG_E(TAG, "Failed to send request");
-                fhttp.state = ISSUE;
-                return;
-            }
-            fhttp.state = RECEIVING;
-        } else {
-            // check status
-            if(fhttp.state == RECEIVING) {
-                canvas_draw_str(canvas, 0, 30, "Receiving...");
-                return;
-            }
-            // check status
-            else if(fhttp.state == ISSUE || !random_fact_request_success) {
-                flip_library_request_error(canvas);
-                return;
-            } else if(
-                fhttp.state == IDLE && fhttp.last_response != NULL &&
-                !random_fact_request_success_all) {
-                canvas_draw_str(canvas, 0, 30, "Processing...");
-                // success
-                // check status
-                if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
-                    flip_library_request_error(canvas);
-                    FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
-                    return;
-                }
-
-                // parse json to find the text key
-                random_fact = flip_library_parse_random_fact();
-
-                if(random_fact == NULL) {
-                    flip_library_request_error(canvas);
-                    fhttp.state = ISSUE;
-                    return;
-                }
-
-                // Mark success
-                random_fact_request_success_all = true;
-
-                // draw random facts
-                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-            }
-            // likely redundant but just in case
-            else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
-                // draw random facts
-                flip_library_draw_fact(random_fact, &app_instance->widget_random_fact);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewRandomFactWidget);
-            } else // handle weird scenarios
-            {
-                // if received data isnt NULL
-                if(fhttp.last_response != NULL) {
-                    // parse json to find the text key
-                    random_fact = flip_library_parse_random_fact();
-
-                    if(random_fact == NULL) {
-                        flip_library_request_error(canvas);
-                        fhttp.state = ISSUE;
-                        return;
-                    }
-                }
-            }
-        }
-    } else {
-        canvas_draw_str(canvas, 0, 7, "Random Fact");
-    }
-}
-
-void view_draw_callback_dictionary_run(Canvas* canvas, void* model) {
-    if(!canvas || !app_instance || app_instance->uart_text_input_buffer_dictionary == NULL) {
-        return;
-    }
-
-    UNUSED(model);
-
-    canvas_set_font(canvas, FontSecondary);
-
-    if(fhttp.state == INACTIVE) {
+    if(http_state == INACTIVE) {
         canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
         canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
         canvas_draw_str(canvas, 0, 32, "If your board is connected,");
@@ -489,131 +268,271 @@ void view_draw_callback_dictionary_run(Canvas* canvas, void* model) {
         return;
     }
 
-    canvas_draw_str(canvas, 0, 10, "Defining, please wait...");
+    if(fact_state == FactStateError || fact_state == FactStateParseError) {
+        flip_library_request_error_draw(canvas);
+        return;
+    }
 
-    if(!sent_random_fact_request) {
-        sent_random_fact_request = true;
+    canvas_draw_str(canvas, 0, 7, title);
+    canvas_draw_str(canvas, 0, 15, "Loading...");
 
-        char payload[128];
-        snprintf(
-            payload,
-            sizeof(payload),
-            "{\"word\":\"%s\"}",
-            app_instance->uart_text_input_buffer_dictionary);
+    if(fact_state == FactStateInitial) {
+        return;
+    }
 
-        random_fact_request_success = flipper_http_post_request_with_headers(
-            "https://www.flipsocial.net/api/define/",
-            "{\"Content-Type\":\"application/json\"}",
-            payload);
-        if(!random_fact_request_success) {
-            FURI_LOG_E(TAG, "Failed to send request");
-            flip_library_request_error(canvas);
-            fhttp.state = ISSUE;
-            return;
-        }
-        fhttp.state = RECEIVING;
-    } else {
-        // check status
-        if(fhttp.state == RECEIVING) {
-            canvas_draw_str(canvas, 0, 20, "Receiving...");
-            return;
-        }
-        // check status
-        else if(fhttp.state == ISSUE || !random_fact_request_success) {
-            flip_library_request_error(canvas);
-            return;
-        } else if(
-            fhttp.state == IDLE && fhttp.last_response != NULL &&
-            !random_fact_request_success_all) {
-            canvas_draw_str(canvas, 0, 20, "Processing...");
-            // success
-            // check status
-            if(fhttp.state == ISSUE || fhttp.last_response == NULL) {
-                flip_library_request_error(canvas);
-                FURI_LOG_E(TAG, "HTTP request failed or received data is NULL");
-                return;
-            }
+    if(http_state == SENDING) {
+        canvas_draw_str(canvas, 0, 22, "Sending...");
+        return;
+    }
 
-            // parse json to find the text key
-            char* definition = flip_library_parse_dictionary();
+    if(http_state == RECEIVING || fact_state == FactStateRequested) {
+        canvas_draw_str(canvas, 0, 22, "Receiving...");
+        return;
+    }
 
-            if(definition == NULL) {
-                flip_library_request_error(canvas);
-                fhttp.state = ISSUE;
-                return;
-            }
+    if(http_state == IDLE && fact_state == FactStateReceived) {
+        canvas_draw_str(canvas, 0, 22, "Processing...");
+        return;
+    }
 
-            // Mark success
-            random_fact_request_success_all = true;
-
-            // draw random facts
-            flip_library_draw_fact(definition, &app_instance->widget_dictionary);
-
-            // go to random facts widget
-            view_dispatcher_switch_to_view(
-                app_instance->view_dispatcher, FlipLibraryViewDictionaryWidget);
-        }
-        // likely redundant but just in case
-        else if(fhttp.state == IDLE && random_fact_request_success_all && random_fact != NULL) {
-            // draw random facts
-            flip_library_draw_fact(random_fact, &app_instance->widget_dictionary);
-
-            // go to random facts widget
-            view_dispatcher_switch_to_view(
-                app_instance->view_dispatcher, FlipLibraryViewDictionaryWidget);
-        } else // handle weird scenarios
-        {
-            // if received data isnt NULL
-            if(fhttp.last_response != NULL) {
-                // parse json to find the text key
-                char* definition = flip_library_parse_dictionary();
-
-                if(definition == NULL) {
-                    flip_library_request_error(canvas);
-                    fhttp.state = ISSUE;
-                    return;
-                }
-
-                // draw random facts
-                flip_library_draw_fact(definition, &app_instance->widget_dictionary);
-
-                // go to random facts widget
-                view_dispatcher_switch_to_view(
-                    app_instance->view_dispatcher, FlipLibraryViewDictionaryWidget);
-
-                free(definition);
-
-                return;
-            }
-        }
+    if(http_state == IDLE && fact_state == FactStateParsed) {
+        canvas_draw_str(canvas, 0, 22, "Processed...");
+        return;
     }
 }
 
-// Input callback for the view (async input handling)
-bool view_input_callback_random_facts(InputEvent* event, void* context) {
-    if(!event || !context) {
-        return false;
+static void flip_library_loader_process_callback(void* context) {
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_process_callback - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    FlipLibraryApp* app = (FlipLibraryApp*)context;
+    View* view = app->view_loader;
+
+    FactState current_fact_state;
+    with_view_model(
+        view, FactLoaderModel * model, { current_fact_state = model->fact_state; }, false);
+
+    if(current_fact_state == FactStateInitial) {
+        with_view_model(
+            view,
+            FactLoaderModel * model,
+            {
+                model->fact_state = FactStateRequested;
+                FactLoaderFetch fetch = model->fetcher;
+                if(fetch == NULL) {
+                    FURI_LOG_E(TAG, "Model doesn't have Fetch function assigned.");
+                    model->fact_state = FactStateError;
+                    return;
+                }
+
+                // Clear any previous responses
+                strncpy(fhttp.last_response, "", 1);
+                bool request_status = fetch(model);
+                if(!request_status) {
+                    model->fact_state = FactStateError;
+                }
+            },
+            true);
+    } else if(current_fact_state == FactStateRequested || current_fact_state == FactStateError) {
+        if(fhttp.state == IDLE && fhttp.last_response != NULL) {
+            if(strstr(fhttp.last_response, "[PONG]") != NULL) {
+                FURI_LOG_DEV(TAG, "PONG received.");
+            } else if(strncmp(fhttp.last_response, "[SUCCESS]", 9) == 0) {
+                FURI_LOG_DEV(
+                    TAG,
+                    "SUCCESS received. %s",
+                    fhttp.last_response ? fhttp.last_response : "NULL");
+            } else if(strncmp(fhttp.last_response, "[ERROR]", 9) == 0) {
+                FURI_LOG_DEV(
+                    TAG, "ERROR received. %s", fhttp.last_response ? fhttp.last_response : "NULL");
+            } else if(strlen(fhttp.last_response) == 0) {
+                // Still waiting on response
+            } else {
+                with_view_model(
+                    view,
+                    FactLoaderModel * model,
+                    { model->fact_state = FactStateReceived; },
+                    true);
+            }
+        } else if(fhttp.state == SENDING || fhttp.state == RECEIVING) {
+            // continue waiting
+        } else if(fhttp.state == INACTIVE) {
+            // inactive. try again
+        } else if(fhttp.state == ISSUE) {
+            with_view_model(
+                view, FactLoaderModel * model, { model->fact_state = FactStateError; }, true);
+        } else {
+            FURI_LOG_DEV(
+                TAG,
+                "Unexpected state: %d lastresp: %s",
+                fhttp.state,
+                fhttp.last_response ? fhttp.last_response : "NULL");
+            DEV_CRASH();
+        }
+    } else if(current_fact_state == FactStateReceived) {
+        with_view_model(
+            view,
+            FactLoaderModel * model,
+            {
+                char* fact_text;
+                if(model->parser == NULL) {
+                    fact_text = NULL;
+                    FURI_LOG_DEV(TAG, "Parser is NULL");
+                    DEV_CRASH();
+                } else {
+                    fact_text = model->parser(model);
+                }
+                FURI_LOG_DEV(
+                    TAG,
+                    "Parsed fact: %s\r\ntext: %s",
+                    fhttp.last_response ? fhttp.last_response : "NULL",
+                    fact_text ? fact_text : "NULL");
+                model->fact_text = fact_text;
+                if(fact_text == NULL) {
+                    model->fact_state = FactStateParseError;
+                } else {
+                    model->fact_state = FactStateParsed;
+                }
+            },
+            true);
+    } else if(current_fact_state == FactStateParsed) {
+        with_view_model(
+            view,
+            FactLoaderModel * model,
+            {
+                if(++model->request_index < model->request_count) {
+                    model->fact_state = FactStateInitial;
+                } else {
+                    flip_library_widget_set_text(
+                        model->fact_text != NULL ? model->fact_text : "Empty result",
+                        &app_instance->widget_result);
+                    if(model->fact_text != NULL) {
+                        free(model->fact_text);
+                        model->fact_text = NULL;
+                    }
+                    view_set_previous_callback(
+                        widget_get_view(app_instance->widget_result), model->back_callback);
+                    view_dispatcher_switch_to_view(
+                        app_instance->view_dispatcher, FlipLibraryViewWidgetResult);
+                }
+            },
+            true);
+    }
+}
+
+static void flip_library_loader_timer_callback(void* context) {
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_timer_callback - context is NULL");
+        DEV_CRASH();
+        return;
     }
     FlipLibraryApp* app = (FlipLibraryApp*)context;
-    if(event->type == InputTypePress && event->key == InputKeyBack) {
-        // Exit the app when the back button is pressed
-        view_dispatcher_stop(app->view_dispatcher);
-        return true;
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipLibraryCustomEventProcess);
+}
+
+static void flip_library_loader_on_enter(void* context) {
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_on_enter - context is NULL");
+        DEV_CRASH();
+        return;
     }
-    return false;
+    FlipLibraryApp* app = (FlipLibraryApp*)context;
+    View* view = app->view_loader;
+    with_view_model(
+        view,
+        FactLoaderModel * model,
+        {
+            view_set_previous_callback(view, model->back_callback);
+            if(model->timer == NULL) {
+                model->timer = furi_timer_alloc(
+                    flip_library_loader_timer_callback, FuriTimerTypePeriodic, app);
+            }
+            furi_timer_start(model->timer, 250);
+        },
+        true);
+}
+
+static void flip_library_loader_on_exit(void* context) {
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_on_exit - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+    FlipLibraryApp* app = (FlipLibraryApp*)context;
+    View* view = app->view_loader;
+    with_view_model(
+        view,
+        FactLoaderModel * model,
+        {
+            if(model->timer) {
+                furi_timer_stop(model->timer);
+            }
+        },
+        false);
+}
+
+void flip_library_loader_init(View* view) {
+    if(view == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_init - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+    view_allocate_model(view, ViewModelTypeLocking, sizeof(FactLoaderModel));
+    view_set_enter_callback(view, flip_library_loader_on_enter);
+    view_set_exit_callback(view, flip_library_loader_on_exit);
+}
+
+void flip_library_loader_free_model(View* view) {
+    if(view == NULL) {
+        FURI_LOG_E(TAG, "flip_library_loader_free_model - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+    with_view_model(
+        view,
+        FactLoaderModel * model,
+        {
+            if(model->timer) {
+                furi_timer_free(model->timer);
+                model->timer = NULL;
+            }
+            if(model->parser_context) {
+                free(model->parser_context);
+                model->parser_context = NULL;
+            }
+        },
+        false);
+}
+
+bool flip_library_custom_event_callback(void* context, uint32_t index) {
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "flip_library_custom_event_callback - context is NULL");
+        DEV_CRASH();
+        return false;
+    }
+
+    switch(index) {
+    case FlipLibraryCustomEventProcess:
+        flip_library_loader_process_callback(context);
+        return true;
+    default:
+        FURI_LOG_DEV(TAG, "flip_library_custom_event_callback. Unknown index: %ld", index);
+        return false;
+    }
 }
 
 void callback_submenu_choices(void* context, uint32_t index) {
-    FlipLibraryApp* app = (FlipLibraryApp*)context;
-    if(!app) {
-        FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
+    if(context == NULL) {
+        FURI_LOG_E(TAG, "callback_submenu_choices - context is NULL");
+        DEV_CRASH();
         return;
     }
+    FlipLibraryApp* app = (FlipLibraryApp*)context;
     switch(index) {
     case FlipLibrarySubmenuIndexRandomFacts:
-        random_facts_index = 0;
-        sent_random_fact_request = false;
-        random_fact = NULL;
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFacts);
         break;
     case FlipLibrarySubmenuIndexAbout:
@@ -623,31 +542,19 @@ void callback_submenu_choices(void* context, uint32_t index) {
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewSettings);
         break;
     case FlipLibrarySubmenuIndexDictionary:
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewDictionaryTextInput);
+        flip_library_dictionary_switch_to_view(app);
         break;
     case FlipLibrarySubmenuIndexRandomFactsCats:
-        random_facts_index = FlipLibrarySubmenuIndexRandomFactsCats;
-        sent_random_fact_request = false;
-        random_fact = NULL;
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        flip_library_cat_fact_switch_to_view(app);
         break;
     case FlipLibrarySubmenuIndexRandomFactsDogs:
-        random_facts_index = FlipLibrarySubmenuIndexRandomFactsDogs;
-        sent_random_fact_request = false;
-        random_fact = NULL;
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        flip_library_dog_fact_switch_to_view(app);
         break;
     case FlipLibrarySubmenuIndexRandomFactsQuotes:
-        random_facts_index = FlipLibrarySubmenuIndexRandomFactsQuotes;
-        sent_random_fact_request = false;
-        random_fact = NULL;
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        flip_library_quote_switch_to_view(app);
         break;
     case FlipLibrarySubmenuIndexRandomFactsAll:
-        random_facts_index = FlipLibrarySubmenuIndexRandomFactsAll;
-        sent_random_fact_request = false;
-        random_fact = NULL;
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
+        flip_library_random_fact_switch_to_view(app);
         break;
     default:
         break;
@@ -657,7 +564,8 @@ void callback_submenu_choices(void* context, uint32_t index) {
 void text_updated_ssid(void* context) {
     FlipLibraryApp* app = (FlipLibraryApp*)context;
     if(!app) {
-        FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
+        FURI_LOG_E(TAG, "text_updated_ssid - FlipLibraryApp is NULL");
+        DEV_CRASH();
         return;
     }
 
@@ -684,7 +592,7 @@ void text_updated_ssid(void* context) {
        strlen(app->uart_text_input_buffer_password) > 0) {
         if(!flipper_http_save_wifi(
                app->uart_text_input_buffer_ssid, app->uart_text_input_buffer_password)) {
-            FURI_LOG_E(TAG, "Failed to save wifi settings");
+            FURI_LOG_E(TAG, "Failed to save wifi settings.");
         }
     }
 
@@ -695,7 +603,8 @@ void text_updated_ssid(void* context) {
 void text_updated_password(void* context) {
     FlipLibraryApp* app = (FlipLibraryApp*)context;
     if(!app) {
-        FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
+        FURI_LOG_E(TAG, "text_updated_password - FlipLibraryApp is NULL");
+        DEV_CRASH();
         return;
     }
 
@@ -730,54 +639,38 @@ void text_updated_password(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewSettings);
 }
 
-void text_updated_dictionary(void* context) {
+void text_updated_query(void* context) {
     FlipLibraryApp* app = (FlipLibraryApp*)context;
     if(!app) {
-        FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
+        FURI_LOG_E(TAG, "text_updated_query - FlipLibraryApp is NULL");
+        DEV_CRASH();
         return;
     }
 
     // store the entered text
     strncpy(
-        app->uart_text_input_buffer_dictionary,
-        app->uart_text_input_temp_buffer_dictionary,
-        app->uart_text_input_buffer_size_dictionary);
+        app->uart_text_input_buffer_query,
+        app->uart_text_input_temp_buffer_query,
+        app->uart_text_input_buffer_size_query);
 
     // Ensure null-termination
-    app->uart_text_input_buffer_dictionary[app->uart_text_input_buffer_size_dictionary - 1] = '\0';
+    app->uart_text_input_buffer_query[app->uart_text_input_buffer_size_query - 1] = '\0';
 
-    // switch to the dictionary view
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewDictionaryRun);
+    // switch to the loader view
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewLoader);
 }
 
 uint32_t callback_to_submenu(void* context) {
-    if(!context) {
-        FURI_LOG_E(TAG, "Context is NULL");
-        return VIEW_NONE;
-    }
     UNUSED(context);
-    random_facts_index = 0;
-    sent_random_fact_request = false;
-    random_fact_request_success = false;
-    random_fact_request_success_all = false;
-    random_fact = NULL;
     return FlipLibraryViewSubmenuMain;
 }
 
 uint32_t callback_to_wifi_settings(void* context) {
-    if(!context) {
-        FURI_LOG_E(TAG, "Context is NULL");
-        return VIEW_NONE;
-    }
     UNUSED(context);
     return FlipLibraryViewSettings;
 }
 
 uint32_t callback_to_random_facts(void* context) {
-    if(!context) {
-        FURI_LOG_E(TAG, "Context is NULL");
-        return VIEW_NONE;
-    }
     UNUSED(context);
     return FlipLibraryViewRandomFacts;
 }
@@ -785,7 +678,8 @@ uint32_t callback_to_random_facts(void* context) {
 void settings_item_selected(void* context, uint32_t index) {
     FlipLibraryApp* app = (FlipLibraryApp*)context;
     if(!app) {
-        FURI_LOG_E(TAG, "FlipLibraryApp is NULL");
+        FURI_LOG_E(TAG, "settings_item_selected - FlipLibraryApp is NULL");
+        DEV_CRASH();
         return;
     }
     switch(index) {
@@ -809,9 +703,48 @@ void settings_item_selected(void* context, uint32_t index) {
 uint32_t callback_exit_app(void* context) {
     // Exit the application
     if(!context) {
-        FURI_LOG_E(TAG, "Context is NULL");
+        FURI_LOG_E(TAG, "callback_exit_app - Context is NULL");
         return VIEW_NONE;
     }
     UNUSED(context);
     return VIEW_NONE; // Return VIEW_NONE to exit the app
+}
+
+void flip_library_generic_switch_to_view(
+    FlipLibraryApp* app,
+    char* title,
+    FactLoaderFetch fetcher,
+    FactLoaderParser parser,
+    size_t request_count,
+    ViewNavigationCallback back,
+    uint32_t view_id) {
+    if(app == NULL) {
+        FURI_LOG_E(TAG, "flip_library_generic_switch_to_view - app is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    View* view = app->view_loader;
+    if(view == NULL) {
+        FURI_LOG_E(TAG, "flip_library_generic_switch_to_view - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    with_view_model(
+        view,
+        FactLoaderModel * model,
+        {
+            model->title = title;
+            model->fetcher = fetcher;
+            model->parser = parser;
+            model->request_index = 0;
+            model->request_count = request_count;
+            model->back_callback = back;
+            model->fact_state = FactStateInitial;
+            model->fact_text = NULL;
+        },
+        true);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, view_id);
 }

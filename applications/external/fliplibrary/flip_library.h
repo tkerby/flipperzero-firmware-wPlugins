@@ -31,43 +31,31 @@ typedef enum {
 // Define a single view for our FlipLibrary application
 typedef enum {
     FlipLibraryViewRandomFacts = 7, // The random facts main screen
-    FlipLibraryViewRandomFactsRun = 8, // The random facts widget that displays the random fact
-    FlipLibraryViewSubmenuMain = 9, // The submenu screen
-    FlipLibraryViewAbout = 10, // The about screen
-    FlipLibraryViewSettings = 11, // The settings screen
-    FlipLibraryViewTextInputSSID = 12, // The text input screen (SSID)
-    FlipLibraryViewTextInputPassword = 13, // The text input screen (password)
-    FlipLibraryViewDictionary = 14, // The dictionary submenu screen
-    //
-    FlipLibraryViewDictionaryTextInput = 15,
-    FlipLibraryViewDictionaryRun = 16,
-    //
-    FlipLibraryViewRandomFactsCats = 17,
-    FlipLibraryViewRandomFactsDogs = 18,
-    FlipLibraryViewRandomFactsQuotes = 19,
-    FlipLibraryViewRandomFactsAll = 20,
-    //
-    FlipLibraryViewRandomFactWidget = 21, // The text box that displays the random fact
-    FlipLibraryViewDictionaryWidget = 22, // The text box that displays the dictionary
+    FlipLibraryViewLoader, // The loader screen retrieves data from the internet
+    FlipLibraryViewSubmenuMain, // The submenu screen
+    FlipLibraryViewAbout, // The about screen
+    FlipLibraryViewSettings, // The settings screen
+    FlipLibraryViewTextInputSSID, // The text input screen (SSID)
+    FlipLibraryViewTextInputPassword, // The text input screen (password)
+    FlipLibraryViewTextInputQuery, // Query the user for information
+    FlipLibraryViewWidgetResult, // The text box that displays the random fact
 } FlipLibraryView;
 
 // Each screen will have its own view
 typedef struct {
     ViewDispatcher* view_dispatcher; // Switches between our views
-    View* view_random_facts; // The main screen that displays the random fact
-    View* view_dictionary; // The dictionary screen
+    View* view_loader; // The screen that loads data from internet
     Submenu* submenu_main; // The submenu for the main screen
     Submenu* submenu_random_facts; // The submenu for the random facts screen
-    Widget* widget; // The widget
+    Widget* widget_about; // The widget for the about screen
     VariableItemList* variable_item_list_wifi; // The variable item list (WiFi settings)
     VariableItem* variable_item_ssid; // The variable item (SSID)
     VariableItem* variable_item_password; // The variable item (password)
     UART_TextInput* uart_text_input_ssid; // The text input for the SSID
     UART_TextInput* uart_text_input_password; // The text input for the password
-    UART_TextInput* uart_text_input_dictionary; // The text input for the dictionary
+    UART_TextInput* uart_text_input_query; // The text input for querying information
     //
-    Widget* widget_random_fact; // The text box that displays the random fact
-    Widget* widget_dictionary; // The text box that displays the dictionary
+    Widget* widget_result; // The text box that displays the result
 
     char* uart_text_input_buffer_ssid; // Buffer for the text input (SSID)
     char* uart_text_input_temp_buffer_ssid; // Temporary buffer for the text input (SSID)
@@ -77,9 +65,9 @@ typedef struct {
     char* uart_text_input_temp_buffer_password; // Temporary buffer for the text input (password)
     uint32_t uart_text_input_buffer_size_password; // Size of the text input buffer (password)
 
-    char* uart_text_input_buffer_dictionary; // Buffer for the text input (dictionary)
-    char* uart_text_input_temp_buffer_dictionary; // Temporary buffer for the text input (dictionary)
-    uint32_t uart_text_input_buffer_size_dictionary; // Size of the text input buffer (dictionary)
+    char* uart_text_input_buffer_query; // Buffer for the text input (query)
+    char* uart_text_input_temp_buffer_query; // Temporary buffer for the text input (query)
+    uint32_t uart_text_input_buffer_size_query; // Size of the text input buffer (query)
 } FlipLibraryApp;
 
 // Function to free the resources used by FlipLibraryApp

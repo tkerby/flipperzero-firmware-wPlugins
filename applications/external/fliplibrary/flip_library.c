@@ -2,6 +2,8 @@
 
 FlipLibraryApp* app_instance = NULL;
 
+void flip_library_loader_free_model(View* view);
+
 // Function to free the resources used by FlipLibraryApp
 void flip_library_app_free(FlipLibraryApp* app) {
     if(!app) {
@@ -10,13 +12,10 @@ void flip_library_app_free(FlipLibraryApp* app) {
     }
 
     // Free View(s)
-    if(app->view_random_facts) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewRandomFactsRun);
-        view_free(app->view_random_facts);
-    }
-    if(app->view_dictionary) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewDictionaryRun);
-        view_free(app->view_dictionary);
+    if(app->view_loader) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewLoader);
+        flip_library_loader_free_model(app->view_loader);
+        view_free(app->view_loader);
     }
 
     // Free Submenu(s)
@@ -30,17 +29,13 @@ void flip_library_app_free(FlipLibraryApp* app) {
     }
 
     // Free Widget(s)
-    if(app->widget) {
+    if(app->widget_about) {
         view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewAbout);
-        widget_free(app->widget);
+        widget_free(app->widget_about);
     }
-    if(app->widget_random_fact) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewRandomFactWidget);
-        widget_free(app->widget_random_fact);
-    }
-    if(app->widget_dictionary) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewDictionaryWidget);
-        widget_free(app->widget_dictionary);
+    if(app->widget_result) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewWidgetResult);
+        widget_free(app->widget_result);
     }
 
     // Free Variable Item List(s)
@@ -58,16 +53,18 @@ void flip_library_app_free(FlipLibraryApp* app) {
         view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewTextInputPassword);
         uart_text_input_free(app->uart_text_input_password);
     }
-    if(app->uart_text_input_dictionary) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewDictionaryTextInput);
-        uart_text_input_free(app->uart_text_input_dictionary);
+    if(app->uart_text_input_query) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewTextInputQuery);
+        uart_text_input_free(app->uart_text_input_query);
     }
 
     // deinitalize flipper http
     flipper_http_deinit();
 
     // free the view dispatcher
-    if(app->view_dispatcher) view_dispatcher_free(app->view_dispatcher);
+    if(app->view_dispatcher) {
+        view_dispatcher_free(app->view_dispatcher);
+    }
 
     // close the gui
     furi_record_close(RECORD_GUI);
