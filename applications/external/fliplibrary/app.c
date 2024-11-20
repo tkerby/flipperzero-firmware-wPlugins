@@ -31,10 +31,10 @@ int32_t flip_library_app(void* p) {
             DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
             DialogMessage* message = dialog_message_alloc();
             dialog_message_set_header(
-                message, "WIFI NOT RESPONDING", 64, 0, AlignCenter, AlignTop);
+                message, "[FlipperHTTP Error]", 64, 0, AlignCenter, AlignTop);
             dialog_message_set_text(
                 message,
-                "Ensure ESP32 is connected\nand latest FlipperHTTP\nfirmware is installed.",
+                "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.",
                 0,
                 63,
                 AlignLeft,
