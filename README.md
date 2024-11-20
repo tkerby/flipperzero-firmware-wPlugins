@@ -1,6 +1,6 @@
 The **FlipLibrary** app for Flipper Zero is a versatile and user-friendly application that offers a combination of useful features to enhance your Flipper Zero experience. 
 
-The app includes a **dictionary**, **random facts**, and additional functionalities, all accessible directly from your Flipper Zero device. It is designed for easy navigation and quick access to information, making it a handy companion for on-the-go learning and entertainment. 
+The app includes a **dictionary**, **random facts**, and additional functionalities, all accessible directly from your Flipper Zero device. It is designed for easy navigation and quick access to information, making it a handy companion for on-the-go learning and entertainment. Big shout out to [Derek Jamison](https://github.com/jamisonderek) for his contributions. 
 
 FlipLibrary uses the FlipperHTTP flash for the WiFi Devboard, first introduced in the WebCrawler app: https://github.com/jblanked/WebCrawler-FlipperZero/tree/main/assets/FlipperHTTP
 
@@ -38,4 +38,4 @@ The app automatically allocates necessary resources and initializes settings. If
 # Known Bugs
 
 1. **Screen Delay**: Occasionally, the Defition or Random Facts screen may get stuck on "Loading".
-   - If it takes longer than 10 seconds, restart your Flipper Zero.
+   - Update to version 1.3 or higher.
