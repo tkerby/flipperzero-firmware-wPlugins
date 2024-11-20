@@ -25,7 +25,7 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 //Configurable values
 //TODO Reloading with faster shooting.
-uint32_t shootingDelay = 300;
+uint32_t shootingDelay = 500;
 uint32_t enemyShootingDelay = 1500;
 float bulletMoveSpeed = 0.55f;
 float speed = 0.6f;
@@ -140,13 +140,10 @@ void enemy_spawn(
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
         enemyIndex = i;
-        FURI_LOG_I("deadzone", "PRE ALLOCATION!");
+        //FURI_LOG_I("deadzone", "PRE ALLOCATION!");
         enemies[i].instance = level_add_entity(level, &enemy_desc);
         enemies[i].direction = right;
-        FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
-        if(enemies[i].instance == NULL) {
-            FURI_LOG_I("deadzone", "ENEMY INSTANCE IS NULL");
-        }
+        //FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
@@ -162,16 +159,16 @@ void enemy_spawn(
     // Set enemy position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(enemies[enemyIndex].instance, spawnPosition);
-    FURI_LOG_I("deadzone", "SET ENEMY POS");
+    //FURI_LOG_I("deadzone", "SET ENEMY POS");
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 16x16
     entity_collider_add_rect(enemies[enemyIndex].instance, 16, 16);
-    FURI_LOG_I("deadzone", "SET ENEMY RECT");
+    //FURI_LOG_I("deadzone", "SET ENEMY RECT");
 
     // Get enemy context
     PlayerContext* player_context = entity_context_get(enemies[enemyIndex].instance);
-    FURI_LOG_I("deadzone", "GET PLAYER CTX FOR ENEMY");
+    //FURI_LOG_I("deadzone", "GET PLAYER CTX FOR ENEMY");
 
     // Load enemy sprite
     player_context->sprite_left = game_manager_sprite_load(manager, "enemy_left.fxbm");
@@ -181,7 +178,7 @@ void enemy_spawn(
     } else {
         player_context->sprite = player_context->sprite_left;
     }
-    FURI_LOG_I("deadzone", "DONE SPAWNING");
+    //FURI_LOG_I("deadzone", "DONE SPAWNING");
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
@@ -232,7 +229,7 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if((input->pressed & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
+    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -419,8 +416,12 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     player_shoot_handler(playerCtx, &input, &pos);
 
     if(input.held & GameKeyLeft && playerCtx->sprite != playerCtx->sprite_left_recoil) {
+        if(playerCtx->sprite == playerCtx->sprite_right_shadowed) {
+            transitionLeftTicks = TRANSITION_FRAMES;
+        }
         //Switch sprite to left direction
         if((playerCtx->sprite != playerCtx->sprite_left_shadowed &&
+            playerCtx->sprite != playerCtx->sprite_right_shadowed &&
             playerCtx->sprite != playerCtx->sprite_left)) {
             if(playerCtx->sprite == playerCtx->sprite_stand) {
                 transitionLeftTicks++;
@@ -435,7 +436,11 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 playerCtx->sprite != playerCtx->sprite_left_shadowed &&
                 transitionLeftTicks >= TRANSITION_FRAMES) {
                 transitionLeftTicks = 0;
-                playerCtx->sprite = playerCtx->sprite_left;
+                if(playerCtx->sprite == playerCtx->sprite_right_shadowed) {
+                    playerCtx->sprite = playerCtx->sprite_left_shadowed;
+                } else {
+                    playerCtx->sprite = playerCtx->sprite_left;
+                }
             }
         }
 
@@ -449,6 +454,10 @@ void player_update(Entity* self, GameManager* manager, void* context) {
 
     if(input.held & GameKeyRight && playerCtx->sprite != playerCtx->sprite_right_recoil) {
         //Switch sprite to left direction
+
+        if(playerCtx->sprite == playerCtx->sprite_left_shadowed) {
+            transitionRightTicks = TRANSITION_FRAMES;
+        }
         if(playerCtx->sprite != playerCtx->sprite_right_shadowed &&
            playerCtx->sprite != playerCtx->sprite_right) {
             if(playerCtx->sprite == playerCtx->sprite_forward) {
@@ -464,7 +473,11 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 playerCtx->sprite != playerCtx->sprite_right_shadowed &&
                 transitionRightTicks >= TRANSITION_FRAMES) {
                 transitionRightTicks = 0;
-                playerCtx->sprite = playerCtx->sprite_right;
+                if(playerCtx->sprite == playerCtx->sprite_left_shadowed) {
+                    playerCtx->sprite = playerCtx->sprite_right_shadowed;
+                } else {
+                    playerCtx->sprite = playerCtx->sprite_right;
+                }
             }
         }
 
