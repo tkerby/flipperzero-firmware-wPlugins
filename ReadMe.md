@@ -4,7 +4,7 @@
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://rogue-master.net/img/Merch.png' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://rogue-master.net/img/Resources.png' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1111-1406-0.420.0-243c618.tgz&channel=RM1111-1406-0.420.0-243c618&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1119-2303-0.420.0-0872731.tgz&channel=RM1119-2303-0.420.0-0872731&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -31,33 +31,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-19 22:42 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-19 22:42 EST`
-- [Update Wifi-Stealer_ORG.txt #1106 (By Diegomjx)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1106)
-- [FlipperHTTP: Use UART chosen in settings (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/009296e25b79b35e7e3a5aee4a8e83e9f97dfa04)
-- [ESP Flasher: Update FlipperHTTP, reorder quick flash options (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/f671266d632859b03b2f5474f7cdffb033c1a476)
-- [Update Wifi-Stealer_ORG.txt #1107 (By Diegomjx)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1107)
-- Added: [FlipStore v0.3.1 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32S2` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [Encoder Reader v0.1 (By Engineegor)](https://github.com/Engineegor/Enc_reader)
-- Updated: [Pokemon Trading v2.2 (By EstebanFuentealba & kbembedded)](https://github.com/EstebanFuentealba/Flipper-Zero-Game-Boy-Trading-Pokemons)
-- Added: [Long press to quick select Zapper functionality for variable menu (By zxkmm)](https://github.com/Next-Flip/Momentum-Firmware/pull/258)
-- Updated: [Long press to quick select Zapper functionality for variable menu (By zxkmm)](https://github.com/Next-Flip/Momentum-Firmware/pull/258)
-- Updated: [FlipBIP Crypto Wallet v1.18 (By xtruan)](https://github.com/xtruan/FlipBIP)
-- Updated: [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) [Use UART chosen in settings (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed4dbb86a183d4057f02e7ecb84e56075a820c57)
-- Updated: [Encoder Reader v0.1 (By Engineegor)](https://github.com/Engineegor/Enc_reader)
-- Updated: [FlipSocial v0.6.3 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [Quac! v0.7.1 (By rdefeo)](https://github.com/rdefeo/quac) (Version Only)
-- Updated: [FlipStore v0.6 (By jblanked)](https://github.com/jblanked/FlipStore)
-- Updated: [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
-- Updated: [FlipTrader v1.1.2 (By jblanked)](https://github.com/jblanked/FlipTrader)
-- Updated: [Snake 2.0 v2.3 (By Willzvul)](https://github.com/Willzvul/Snake_2.0/)
-- Updated: [Web Crawler v0.7.3 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
-- Updated: [Ghost ESP v1.1.4 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) [Use UART chosen in settings (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed4dbb86a183d4057f02e7ecb84e56075a820c57)
-- Updated:  [NFC Magic v1.14 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) [Added possibility to write 7b MFC to Gen1 tags (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/164)
-- Updated: [uPython v1.6 (By ofabel)](https://github.com/ofabel/mp-flipper)
-- Added: [Pinball0 v0.1 (By rdefeo)](https://github.com/rdefeo/pinball0)
-- Updated: [FlipWeather v1.1.3 (By jblanked)](https://github.com/jblanked/FlipWeather)
-- Updated: [FlipWifi v1.1.1 (By jblanked)](https://github.com/jblanked/FlipWiFi)
-- NFC: [Parser for CTAS Andalucia (By Alejandro12120 & duhow)](https://github.com/DarkFlippers/unleashed-firmware/pull/808)
-- Updated: [FlipLibrary v1.3 (By jblanked)](https://github.com/jblanked/FlipLibrary)
 - Coming Soon: OFW: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3830](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3852](https://github.com/flipperdevices/flipperzero-firmware/pull/3852) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3859](https://github.com/flipperdevices/flipperzero-firmware/pull/3859) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980)
 
 <a name="release">
@@ -676,4 +649,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1111-1406-0.420.0-243c618.tgz&channel=RM1111-1406-0.420.0-243c618&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1119-2303-0.420.0-0872731.tgz&channel=RM1119-2303-0.420.0-0872731&version=0.420.0)
