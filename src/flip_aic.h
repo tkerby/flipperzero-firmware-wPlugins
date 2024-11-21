@@ -1,12 +1,14 @@
 #pragma once
 
+#include "modules/loading_cancellable.h"
+
 #include <furi.h>
 #include <furi_hal_usb.h>
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
+// #include <gui/modules/loading.h>
 #include <gui/modules/submenu.h>
-#include <gui/modules/loading.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/file_browser.h>
 #include <nfc/nfc_poller.h>
@@ -28,7 +30,7 @@ typedef struct {
 
     Gui* gui;
     Submenu* submenu;
-    Loading* loading;
+    LoadingCancellable* loading;
     DialogEx* dialog_ex;
     FileBrowser* file_browser;
     FuriString* file_browser_result_path;

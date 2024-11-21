@@ -38,11 +38,11 @@ static FlipAIC* flip_aic_alloc() {
         submenu_get_view(app->submenu)
     );
 
-    app->loading = loading_alloc();
+    app->loading = loading_cancellable_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         FlipAICViewLoading,
-        loading_get_view(app->loading)
+        loading_cancellable_get_view(app->loading)
     );
 
     app->dialog_ex = dialog_ex_alloc();
@@ -87,7 +87,7 @@ static void flip_aic_free(FlipAIC* app) {
     dialog_ex_free(app->dialog_ex);
 
     view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewLoading);
-    loading_free(app->loading);
+    loading_cancellable_free(app->loading);
 
     view_dispatcher_remove_view(app->view_dispatcher, FlipAICViewSubmenu);
     submenu_free(app->submenu);
