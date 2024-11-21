@@ -10,7 +10,13 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/variable_item_list.h>
 
+#include <furi_hal_spi.h>
+#include <furi_hal_spi_config.h>
+#include <furi_hal_spi_types.h>
+
 typedef struct {
+    LL_SPI_InitTypeDef spi_config;
+
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;

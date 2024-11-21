@@ -2,29 +2,6 @@
 #include <furi_hal_rtc.h>
 #include "scenes/scenes.h"
 
-LL_SPI_InitTypeDef spi_terminal_preset = {
-    .Mode = LL_SPI_MODE_SLAVE,
-    .TransferDirection = LL_SPI_FULL_DUPLEX,
-    .DataWidth = LL_SPI_DATAWIDTH_8BIT,
-    .ClockPolarity = LL_SPI_POLARITY_LOW,
-    .ClockPhase = LL_SPI_PHASE_1EDGE,
-    .NSS = LL_SPI_NSS_SOFT,
-    .BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV32,
-    .BitOrder = LL_SPI_MSB_FIRST,
-    .CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE,
-    .CRCPoly = 7,
-};
-
-#define spi_terminal_spi_handle &furi_hal_spi_bus_handle_external
-#define spi_terminal_spi        furi_hal_spi_bus_handle_external.bus->spi
-
-#define SPI_TERMINAL_SCENE_ALLOC_FREE(scene, call) \
-    SPI_TERM_LOG_T("Scene " #scene " " #call);     \
-    flipper_spi_terminal_scene_##scene##_##call(app)
-
-#define SPI_TERMINAL_SCENE_ALLOC(scene) SPI_TERMINAL_SCENE_ALLOC_FREE(scene, alloc)
-#define SPI_TERMINAL_SCENE_FREE(scene)  SPI_TERMINAL_SCENE_ALLOC_FREE(scene, free)
-
 static bool flipper_spi_terminal_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     FlipperSPITerminalApp* app = context;
@@ -46,6 +23,17 @@ static void flipper_spi_terminal_tick_event_callback(void* context) {
 static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
     SPI_TERM_LOG_T("Alloc App");
     FlipperSPITerminalApp* app = malloc(sizeof(FlipperSPITerminalApp));
+
+    app->spi_config.Mode = LL_SPI_MODE_SLAVE;
+    app->spi_config.TransferDirection = LL_SPI_FULL_DUPLEX;
+    app->spi_config.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+    app->spi_config.ClockPolarity = LL_SPI_POLARITY_LOW;
+    app->spi_config.ClockPhase = LL_SPI_PHASE_1EDGE;
+    app->spi_config.NSS = LL_SPI_NSS_SOFT;
+    app->spi_config.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV32;
+    app->spi_config.BitOrder = LL_SPI_MSB_FIRST;
+    app->spi_config.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+    app->spi_config.CRCPoly = 7;
 
     SPI_TERM_LOG_T("Open GUI");
     app->gui = furi_record_open(RECORD_GUI);
