@@ -2,6 +2,7 @@
 Refactored by Derek Jamison:  
 - Improved progress display.  
 - Added connectivity check on startup.
+- Added Wikipedia API.
 
 ## v1.2
 - Improved memory allocation.
