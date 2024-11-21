@@ -14,14 +14,16 @@
 #define GRAVITY           3.0f // 9.8f
 #define PHYSICS_SUB_STEPS 5
 #define GAME_FPS          30
-#define TABLE_BUMP_AMOUNT 0.3l
-
 #define MANUAL_ADJUSTMENT 20
+#define IDLE_TIMEOUT      120 * 1000 // 120 seconds * 1000 ticks/sec
 
 #define PINBALL_SETTINGS_FILENAME     ".pinball0.conf"
 #define PINBALL_SETTINGS_PATH         APP_DATA_PATH(PINBALL_SETTINGS_FILENAME)
 #define PINBALL_SETTINGS_FILE_TYPE    "Pinball0 Settings File"
 #define PINBALL_SETTINGS_FILE_VERSION 1
+
+namespace {
+uint32_t idle_start;
 
 void pinball_load_settings(PinballApp* pb) {
     FlipperFormat* fff_settings = flipper_format_file_alloc(pb->storage);
@@ -33,7 +35,7 @@ void pinball_load_settings(PinballApp* pb) {
     pb->settings.sound_enabled = true;
     pb->settings.led_enabled = true;
     pb->settings.vibrate_enabled = true;
-    pb->settings.manual_mode = false;
+    pb->settings.debug_mode = false;
     pb->selected_setting = 0;
     pb->max_settings = 4;
 
@@ -61,8 +63,8 @@ void pinball_load_settings(PinballApp* pb) {
         if(flipper_format_read_uint32(fff_settings, "Vibrate", &tmp_data32, 1)) {
             pb->settings.vibrate_enabled = (tmp_data32 == 0) ? false : true;
         }
-        if(flipper_format_read_uint32(fff_settings, "Manual", &tmp_data32, 1)) {
-            pb->settings.manual_mode = (tmp_data32 == 0) ? false : true;
+        if(flipper_format_read_uint32(fff_settings, "Debug", &tmp_data32, 1)) {
+            pb->settings.debug_mode = (tmp_data32 == 0) ? false : true;
         }
 
     } while(false);
@@ -101,9 +103,9 @@ void pinball_save_settings(PinballApp* pb) {
             FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Vibrate'");
             break;
         }
-        tmp_data32 = pb->settings.manual_mode ? 1 : 0;
-        if(!flipper_format_write_uint32(fff_settings, "Manual", &tmp_data32, 1)) {
-            FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Manual'");
+        tmp_data32 = pb->settings.debug_mode ? 1 : 0;
+        if(!flipper_format_write_uint32(fff_settings, "Debug", &tmp_data32, 1)) {
+            FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Debug'");
             break;
         }
     } while(false);
@@ -111,6 +113,7 @@ void pinball_save_settings(PinballApp* pb) {
     flipper_format_file_close(fff_settings);
     flipper_format_free(fff_settings);
 }
+};
 
 void solve(PinballApp* pb, float dt) {
     Table* table = pb->table;
@@ -126,7 +129,6 @@ void solve(PinballApp* pb, float dt) {
             }
             for(auto& b : table->balls) {
                 // We multiply GRAVITY by dt since gravity is based on seconds
-                FURI_LOG_I(TAG, "GRAVI-TAYYY");
                 b.accelerate(Vec2(0, GRAVITY * bump_amt * sub_dt));
             }
         }
@@ -384,9 +386,9 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         }
         y += 12;
 
-        canvas_draw_str_aligned(canvas, 10, y, AlignLeft, AlignTop, "Manual");
+        canvas_draw_str_aligned(canvas, 10, y, AlignLeft, AlignTop, "Debug");
         canvas_draw_circle(canvas, x, y + 3, 4);
-        if(pb->settings.manual_mode) {
+        if(pb->settings.debug_mode) {
             canvas_draw_disc(canvas, x, y + 3, 2);
         }
         if(pb->selected_setting == 3) {
@@ -461,6 +463,7 @@ extern "C" int32_t pinball0_app(void* p) {
 
     float dt = 0.0f;
     uint32_t last_frame_time = furi_get_tick();
+    idle_start = last_frame_time;
 
     FURI_LOG_I(TAG, "Starting event loop");
     PinballEvent event;
@@ -489,7 +492,7 @@ extern "C" int32_t pinball0_app(void* p) {
                     case InputKeyRight: {
                         app->keys[InputKeyRight] = true;
 
-                        if(app->settings.manual_mode && app->table->balls_released == false) {
+                        if(app->settings.debug_mode && app->table->balls_released == false) {
                             app->table->balls[0].p.x += MANUAL_ADJUSTMENT;
                             app->table->balls[0].prev_p.x += MANUAL_ADJUSTMENT;
                         }
@@ -507,7 +510,7 @@ extern "C" int32_t pinball0_app(void* p) {
                     case InputKeyLeft: {
                         app->keys[InputKeyLeft] = true;
 
-                        if(app->settings.manual_mode && app->table->balls_released == false) {
+                        if(app->settings.debug_mode && app->table->balls_released == false) {
                             app->table->balls[0].p.x -= MANUAL_ADJUSTMENT;
                             app->table->balls[0].prev_p.x -= MANUAL_ADJUSTMENT;
                         }
@@ -531,9 +534,10 @@ extern "C" int32_t pinball0_app(void* p) {
                                 // we only set the key if it's a 'press' to ensure
                                 // a single table "bump"
                                 app->keys[InputKeyUp] = true;
+
                                 notify_table_bump(app);
                             }
-                            if(app->settings.manual_mode && app->table->balls_released == false) {
+                            if(app->settings.debug_mode && app->table->balls_released == false) {
                                 app->table->balls[0].p.y -= MANUAL_ADJUSTMENT;
                                 app->table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
                             }
@@ -556,7 +560,7 @@ extern "C" int32_t pinball0_app(void* p) {
                         switch(app->game_mode) {
                         case GM_Playing:
                             app->keys[InputKeyDown] = true;
-                            if(app->settings.manual_mode && app->table->balls_released == false) {
+                            if(app->settings.debug_mode && app->table->balls_released == false) {
                                 app->table->balls[0].p.y += MANUAL_ADJUSTMENT;
                                 app->table->balls[0].prev_p.y += MANUAL_ADJUSTMENT;
                             }
@@ -610,7 +614,7 @@ extern "C" int32_t pinball0_app(void* p) {
                                 app->settings.vibrate_enabled = !app->settings.vibrate_enabled;
                                 break;
                             case 3:
-                                app->settings.manual_mode = !app->settings.manual_mode;
+                                app->settings.debug_mode = !app->settings.debug_mode;
                                 break;
                             default:
                                 break;
@@ -654,6 +658,8 @@ extern "C" int32_t pinball0_app(void* p) {
                         break;
                     }
                 }
+                // a key was pressed, reset idle counter
+                idle_start = furi_get_tick();
             }
         }
         solve(app, dt);
@@ -672,8 +678,15 @@ extern "C" int32_t pinball0_app(void* p) {
         view_port_update(view_port);
         furi_mutex_release(app->mutex);
 
-        // game timing
-        uint32_t time_lapsed = furi_get_tick() - last_frame_time;
+        // game timing + idle check
+        uint32_t current_tick = furi_get_tick();
+        if(current_tick - idle_start >= IDLE_TIMEOUT) {
+            FURI_LOG_W(TAG, "Idle timeout! Exiting Pinball0...");
+            app->processing = false;
+            break;
+        }
+
+        uint32_t time_lapsed = current_tick - last_frame_time;
         dt = time_lapsed / 1000.0f;
         while(dt < 1.0f / GAME_FPS) {
             time_lapsed = furi_get_tick() - last_frame_time;
