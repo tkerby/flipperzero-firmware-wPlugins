@@ -161,6 +161,12 @@ FlipLibraryApp* flip_library_app_alloc() {
         app);
     submenu_add_item(
         app->submenu_main,
+        "Wikipedia",
+        FlipLibrarySubmenuIndexRandomFactsWiki,
+        callback_submenu_choices,
+        app);
+    submenu_add_item(
+        app->submenu_main,
         "Dictionary",
         FlipLibrarySubmenuIndexDictionary,
         callback_submenu_choices,

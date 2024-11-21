@@ -26,6 +26,7 @@ typedef enum {
     FlipLibrarySubmenuIndexRandomFactsDogs, // Click to view the random facts (dogs)
     FlipLibrarySubmenuIndexRandomFactsQuotes, // Click to view the random facts (quotes)
     FlipLibrarySubmenuIndexRandomFactsAll, // Click to view the random facts (all)
+    FlipLibrarySubmenuIndexRandomFactsWiki, // Click to view the random facts (wiki)
 } FlipLibrarySubmenuIndex;
 
 // Define a single view for our FlipLibrary application

@@ -10,6 +10,71 @@
 #define DEV_CRASH()
 #endif
 
+static bool flip_library_wiki_fetch(FactLoaderModel* model) {
+    UNUSED(model);
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/wiki.json");
+
+    // encode spaces for url
+    for(size_t i = 0; i < strlen(app_instance->uart_text_input_buffer_query); i++) {
+        if(app_instance->uart_text_input_buffer_query[i] == ' ') {
+            app_instance->uart_text_input_buffer_query[i] = '_';
+        }
+    }
+
+    char url[260];
+    snprintf(
+        url,
+        sizeof(url),
+        "https://api.wikimedia.org/core/v1/wikipedia/en/search/title?q=%s&limit=1",
+        app_instance->uart_text_input_buffer_query);
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_simply_remove_recursive(storage, fhttp.file_path);
+    fhttp.save_received_data = true;
+
+    return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+}
+
+static char* flip_library_wiki_parse(FactLoaderModel* model) {
+    UNUSED(model);
+    FuriString* data = flipper_http_load_from_file(fhttp.file_path);
+    if(data == NULL) {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return "Failed to load received data from file.";
+    }
+    char* data_cstr = (char*)furi_string_get_cstr(data);
+    if(data_cstr == NULL) {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(data);
+        return "Failed to get C-string from FuriString.";
+    }
+    char* pages = get_json_array_value("pages", 0, data_cstr, MAX_TOKENS);
+    if(pages == NULL) {
+        furi_string_free(data);
+        return data_cstr;
+    }
+    char* description = get_json_value("description", pages, 64);
+    if(description == NULL) {
+        furi_string_free(data);
+        return data_cstr;
+    }
+    return description;
+}
+
+static void flip_library_wiki_switch_to_view(FlipLibraryApp* app) {
+    uart_text_input_set_header_text(app->uart_text_input_query, "Search Wikipedia");
+    flip_library_generic_switch_to_view(
+        app,
+        "Searching..",
+        flip_library_wiki_fetch,
+        flip_library_wiki_parse,
+        1,
+        callback_to_submenu,
+        FlipLibraryViewTextInputQuery);
+}
+
 static bool flip_library_random_fact_fetch(FactLoaderModel* model) {
     UNUSED(model);
     return flipper_http_get_request("https://uselessfacts.jsph.pl/api/v2/facts/random");
@@ -555,6 +620,9 @@ void callback_submenu_choices(void* context, uint32_t index) {
         break;
     case FlipLibrarySubmenuIndexRandomFactsAll:
         flip_library_random_fact_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomFactsWiki:
+        flip_library_wiki_switch_to_view(app);
         break;
     default:
         break;
