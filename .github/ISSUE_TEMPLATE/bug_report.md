@@ -8,14 +8,13 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is. Is this a game play bug? A build/compilation bug?
+A clear and concise description of what the bug is. Is this a game play bug? A build/compilation bug? More information is better.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+
+**Logs**
+Please include log output - this can be extremely helpful. To capture the logs, you will need to run `ufbt cli` and then the `log` command. Pinball0 will print various levels of logging data to the console. You can learn more about ufbt here: [github.com/flipperdevices/flipperzero-ufbt](https://github.com/flipperdevices/flipperzero-ufbt)
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
