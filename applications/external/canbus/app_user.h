@@ -19,6 +19,7 @@
 
 #include "libraries/mcp_can_2515.h"
 #include "libraries/pid_library.h"
+#include "libraries/uds_library.h"
 
 #include "canbus_icons.h"
 
@@ -92,6 +93,7 @@ typedef enum {
     SniffingTestOption,
     SenderOption,
     ObdiiOption,
+    UDSOption,
     ReadLOGOption,
     PlayLOGOption,
     SettingsOption,
@@ -104,6 +106,7 @@ typedef enum {
     SenderOptionEvent,
     SettingsOptionEvent,
     ObdiiOptionEvent,
+    UDSOptionEvent,
     ReadLOGOptionEvent,
     PlayLOGOptionEvent,
     AboutUsEvent,
