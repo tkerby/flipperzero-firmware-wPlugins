@@ -65,10 +65,12 @@ typedef struct PinballApp {
         bool sound_enabled;
         bool vibrate_enabled;
         bool led_enabled;
-        bool manual_mode;
+        bool debug_mode;
     } settings;
     int selected_setting;
     int max_settings;
+
+    uint32_t idle_start; // tick count (time) of last key press
 
     // system objects
     Storage* storage;

@@ -80,6 +80,8 @@ void table_table_list_init(void* ctx) {
     // sort tables by original filename
 
     const char* paths[] = {APP_ASSETS_PATH("tables"), APP_DATA_PATH("tables")};
+    const size_t ext_len_max = 32;
+    char ext[ext_len_max];
 
     for(size_t p = 0; p < 2; p++) {
         const char* path = paths[p];
@@ -92,24 +94,43 @@ void table_table_list_init(void* ctx) {
         dir_walk_set_recursive(dir_walk, false);
         if(dir_walk_open(dir_walk, path)) {
             while(dir_walk_read(dir_walk, table_path, NULL) == DirWalkOK) {
-                FURI_LOG_I(TAG, furi_string_get_cstr(table_path));
-                // set display 'name' and 'filename'
-                TableMenuItem tmi;
+                path_extract_extension(table_path, ext, ext_len_max);
+                if(strcmp(ext, ".json") != 0) {
+                    FURI_LOG_W(
+                        TAG, "Skipping non-json file: %s", furi_string_get_cstr(table_path));
+                    continue;
+                }
                 const char* cpath = furi_string_get_cstr(table_path);
-                tmi.filename = furi_string_alloc_set_str(cpath);
 
-                tmi.name = furi_string_alloc();
-                path_extract_filename_no_ext(cpath, tmi.name);
+                FuriString* filename_no_ext = furi_string_alloc();
+                path_extract_filename_no_ext(cpath, filename_no_ext);
 
                 // If filename starts with XX_ (for custom sorting) strip the prefix
-                char c = furi_string_get_char(tmi.name, 2);
+                char c = furi_string_get_char(filename_no_ext, 2);
                 if(c == '_') {
-                    char a = furi_string_get_char(tmi.name, 0);
-                    char b = furi_string_get_char(tmi.name, 1);
+                    char a = furi_string_get_char(filename_no_ext, 0);
+                    char b = furi_string_get_char(filename_no_ext, 1);
                     if(a >= '0' && a <= '9' && b >= '0' && b <= '9') {
-                        furi_string_right(tmi.name, 3);
+                        furi_string_right(filename_no_ext, 3);
                     }
                 }
+
+                if(!pb->settings.debug_mode &&
+                   !strncmp("dbg", furi_string_get_cstr(filename_no_ext), 3)) {
+                    furi_string_free(filename_no_ext);
+                    continue;
+                }
+
+                FURI_LOG_I(
+                    TAG,
+                    "Found table: name=%s | path=%s",
+                    furi_string_get_cstr(filename_no_ext),
+                    furi_string_get_cstr(table_path));
+
+                // set display 'name' and 'filename'
+                TableMenuItem tmi;
+                tmi.filename = furi_string_alloc_set_str(cpath);
+                tmi.name = filename_no_ext;
 
                 // Insert in sorted order
                 size_t i = 0;

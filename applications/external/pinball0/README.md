@@ -22,6 +22,7 @@ This is a BETA release!! Still a work in progress...
 * Rollover items
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
+* Idle timeout to save battery - will exit after ~120 seconds of no key-presses
 
 ## Controls
 * **Ok** to release the ball
@@ -34,17 +35,22 @@ I find it easiest to hold the flipper with both hands so I can hit left/right wi
 ## Settings
 The **SETTINGS** menu will be the "last" table listed. You can Enable / Disable the following: Sound, LED light, Vibration, and Manual mode. Move Up/Down to select your setting and press **OK** to toggle. Settings are saved in `/data/.pinball0.conf` as a native Flipper Format file. **Back** will return you to the main menu.
 
-**Manual** mode allows you to move the ball using the directional pad _before_ the ball is launched. This is useful for testing and may be removed in the future. May result in unexpected behavior.
+**Debug** mode allows you to move the ball using the directional pad _before_ the ball is launched. This is useful for testing and may be removed in the future. May result in unexpected behavior. It also displays test tables on the main menu. The test tables will only show/hide after you exit and restart the app. This feature is mainly for me - lol.
 
 ## Tables
-Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_data/pinball0`). Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0`). **The default tables may change over time.**
+Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_data/pinball0`) on your SD card. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0`). On the main menu, tables are sorted alphabetically. In order to "force" a sorting order, you can prepend any filename with `NN_` where `NN` is between `00` and `99`. When the files are displayed on the menu, if they start with `NN_`, that will be stripped - but their sorted order will be preserved.
+
+> The default tables may change over time.
+
+In **Debug** mode, test tables will be shown. A test table is one that begins with the text `dbg`. Given that you can prefix table names for sorting purposes, here are two valid table filenames for a test table called `my FLIPS`: `dbg my FLIPS.json` and `04_dbg my FLIPS.json`. In both cases it will be displayed as `dbg my FLIPS` on the menu. I doubt that you will use this feature, but I'm documenting it anyway.
+
 
 ### File Format
 Table units are specified at a 10x scale. This means our table is **630 x 1270** in size (as the F0 display is 64 pixels x 128 pixels). Our origin is in the top-left at 0, 0. Check out the default tables in the `assets/tables` folder for example usage.
 
 The JSON can include comments - because why not!
 
-> **DISCLAIMER:** The file format may change from release to release. Sorry. There is some basic error checking when reading / parsing the table files. If the error is serious enough, you will see an error message in the app. Otherwise, check the console logs. For those familiar with `ufbt`, simply run `ufbt cli` and issue the `log` command. Then launch Pinball0. All informational and higher logs will be displayed.
+> **DISCLAIMER:** The file format may change from release to release. Sorry. There is some basic error checking when reading / parsing the table files. If the error is serious enough, you will see an error message in the app. Otherwise, check the console logs. For those familiar with `ufbt`, simply run `ufbt cli` and issue the `log` command. Then launch Pinball0. All informational and higher logs will be displayed. These logs are useful when reporting bugs/issues!
 
 #### lives : object (optional)
 Defines how many lives/balls you start with, and display information
