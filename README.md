@@ -1,21 +1,14 @@
-# Flipper Zero Game Engine Example
+# DEADZONE
+### Fight through tough challenges, dodge enemy fire, and jump over falling obstacles to survive and beat the final level in this action-packed platformer!
+![95342864569](https://github.com/user-attachments/assets/0409277a-343e-4066-a4c9-116b028149d8)
 
-This repository contains an example project showcasing the usage of the [Flipper Zero Game Engine](https://github.com/flipperdevices/flipperzero-game-engine).
-
-## Cloning source code
-
-Make sure you clone the source code with submodules:
-```
-git clone https://github.com/flipperdevices/flipperzero-game-engine-example.git --recurse-submodules
-```
 
 ## Building
-
+### Clone Project
+```git clone https://github.com/retrooper/deadzone```
+### Install Necessary Build App
 Build an app using [micro Flipper Build Tool](https://pypi.org/project/ufbt/):
-```
-ufbt
-```
-You can now run the application (actually, the build step is not needed, it will be built and then launched):
+### Run Command
 ```
 ufbt launch
 ```
