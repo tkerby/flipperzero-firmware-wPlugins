@@ -20,7 +20,7 @@
 // #define DRAW_NORMALS
 
 #define TAG     "Pinball0"
-#define VERSION "v0.2"
+#define VERSION "v0.3"
 
 // Vertical orientation
 #define LCD_WIDTH  64
@@ -69,8 +69,6 @@ typedef struct PinballApp {
     } settings;
     int selected_setting;
     int max_settings;
-
-    uint32_t idle_start; // tick count (time) of last key press
 
     // system objects
     Storage* storage;

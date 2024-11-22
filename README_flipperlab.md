@@ -1,8 +1,6 @@
 # Pinball0 (Pinball Zero)
 Play pinball on your Flipperzero!
 
-This is a BETA release
-
 ## Features
 * Realistic physics and collisions
 * User-defined tables via JSON files
@@ -12,6 +10,7 @@ This is a BETA release
 * Rollover items
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
+* Idle timeout
 
 ## Controls
 * **Ok** to release the ball

@@ -1,9 +1,13 @@
 # Pinball0 (Pinball Zero)
 Play pinball on your Flipperzero!
 
-This is a BETA release!! Still a work in progress...
+Still a work in progress...
 
-> The default tables and example tables may / _will_ change
+[Latest version v0.3](https://github.com/rdefeo/pinball0/releases)
+
+![build status badge](https://github.com/rdefeo/pinball0/actions/workflows/build.yml/badge.svg)
+
+> The default tables and example tables may / will change
 
 ## Screenshots
 
