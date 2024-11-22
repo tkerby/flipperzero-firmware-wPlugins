@@ -6,7 +6,7 @@ void flip_aic_scene_saved_file_browser_callback(void* context) {
     FlipAIC* app = context;
 
     const char* path = furi_string_get_cstr(app->file_browser_result_path);
-    if (nfc_device_load(app->nfc_device, path)) {
+    if(nfc_device_load(app->nfc_device, path)) {
         view_dispatcher_send_custom_event(app->view_dispatcher, 0);
     }
 }
@@ -25,7 +25,7 @@ bool flip_aic_scene_saved_on_event(void* context, SceneManagerEvent event) {
     furi_assert(context);
     FlipAIC* app = context;
 
-    if (event.type == SceneManagerEventTypeCustom) {
+    if(event.type == SceneManagerEventTypeCustom) {
         scene_manager_next_scene(app->scene_manager, FlipAICSceneDisplay);
         return true;
     }

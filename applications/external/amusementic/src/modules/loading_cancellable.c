@@ -7,7 +7,7 @@
 #include <input/input.h>
 
 #include <furi.h>
-#include <flip_aic_icons.h>
+#include <aic_icons.h>
 #include <stdint.h>
 
 struct LoadingCancellable {

@@ -24,42 +24,30 @@ static FlipAIC* flip_aic_alloc() {
     app->scene_manager = scene_manager_alloc(&flip_aic_scene_handlers, app);
 
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, flip_aic_custom_event_callback);
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, flip_aic_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(
-        app->view_dispatcher,
-        flip_aic_navigation_event_callback
-    );
+        app->view_dispatcher, flip_aic_navigation_event_callback);
 
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipAICViewSubmenu,
-        submenu_get_view(app->submenu)
-    );
+        app->view_dispatcher, FlipAICViewSubmenu, submenu_get_view(app->submenu));
 
     app->loading = loading_cancellable_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipAICViewLoading,
-        loading_cancellable_get_view(app->loading)
-    );
+        app->view_dispatcher, FlipAICViewLoading, loading_cancellable_get_view(app->loading));
 
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipAICViewDialogEx,
-        dialog_ex_get_view(app->dialog_ex)
-    );
+        app->view_dispatcher, FlipAICViewDialogEx, dialog_ex_get_view(app->dialog_ex));
 
     app->file_browser_result_path = furi_string_alloc_set_str("/ext/nfc");
     app->file_browser = file_browser_alloc(app->file_browser_result_path);
     file_browser_configure(app->file_browser, ".nfc", "/ext/nfc", true, true, NULL, true);
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        FlipAICViewFileBrowser,
-        file_browser_get_view(app->file_browser)
-    );
+        app->view_dispatcher, FlipAICViewFileBrowser, file_browser_get_view(app->file_browser));
 
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();

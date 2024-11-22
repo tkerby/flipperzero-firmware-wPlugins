@@ -14,13 +14,13 @@ static void flip_aic_scene_display_dialog_callback(DialogExResult result, void* 
     furi_assert(context);
     FlipAIC* app = context;
 
-    switch (result) {
+    switch(result) {
     case DialogExResultLeft:
         view_dispatcher_send_custom_event(app->view_dispatcher, FlipAICSceneDisplayEventMenu);
         break;
 
     case DialogExResultCenter:
-        if (cardio_is_connected()) {
+        if(cardio_is_connected()) {
             const FelicaData* data = nfc_device_get_data(app->nfc_device, NfcProtocolFelica);
             cardio_send_report(CardioReportIdFeliCa, data->idm.data);
         }
@@ -71,10 +71,11 @@ bool flip_aic_scene_display_on_event(void* context, SceneManagerEvent event) {
     furi_assert(context);
     FlipAIC* app = context;
 
-    if (event.type == SceneManagerEventTypeCustom) {
-        switch (event.event) {
+    if(event.type == SceneManagerEventTypeCustom) {
+        switch(event.event) {
         case FlipAICSceneDisplayEventMenu:
-            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, FlipAICSceneMenu);
+            scene_manager_search_and_switch_to_previous_scene(
+                app->scene_manager, FlipAICSceneMenu);
             return true;
         }
     }

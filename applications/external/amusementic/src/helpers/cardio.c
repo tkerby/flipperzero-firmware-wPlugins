@@ -175,13 +175,13 @@ bool cardio_is_connected(void) {
 }
 
 bool cardio_send_report(CardioReportId report_id, const uint8_t value[8]) {
-    if ((cardio_semaphore == NULL) || !cardio_connected) return false;
+    if((cardio_semaphore == NULL) || !cardio_connected) return false;
 
     FuriStatus status = furi_semaphore_acquire(cardio_semaphore, HID_INTERVAL * 2);
-    if (status == FuriStatusErrorTimeout) return false;
+    if(status == FuriStatusErrorTimeout) return false;
     furi_check(status == FuriStatusOk);
 
-    if (!cardio_connected) return false;
+    if(!cardio_connected) return false;
 
     uint8_t data[9];
     data[0] = report_id;
@@ -192,14 +192,14 @@ bool cardio_send_report(CardioReportId report_id, const uint8_t value[8]) {
 }
 
 void cardio_set_state_callback(HidStateCallback cb, void* ctx) {
-    if (callback != NULL && cardio_connected) {
+    if(callback != NULL && cardio_connected) {
         callback(false, callback_ctx);
     }
 
     callback = cb;
     callback_ctx = ctx;
 
-    if (callback != NULL && cardio_connected) {
+    if(callback != NULL && cardio_connected) {
         callback(true, callback_ctx);
     }
 }
@@ -211,7 +211,7 @@ static void* set_string_descr(const char* str) {
     struct usb_string_descriptor* dev_str_desc = malloc(len * 2 + 2);
     dev_str_desc->bLength = len * 2 + 2;
     dev_str_desc->bDescriptorType = USB_DTYPE_STRING;
-    for (size_t i = 0; i < len; i++)
+    for(size_t i = 0; i < len; i++)
         dev_str_desc->wString[i] = str[i];
 
     return dev_str_desc;
@@ -221,14 +221,14 @@ static void cardio_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) 
     UNUSED(intf);
     CardioUsbHidConfig* cfg = (CardioUsbHidConfig*)ctx;
 
-    if (cardio_semaphore == NULL) {
+    if(cardio_semaphore == NULL) {
         cardio_semaphore = furi_semaphore_alloc(1, 1);
     }
     usb_dev = dev;
 
     const char* str_serial_descr = String_Serial_Player1;
-    if (cfg != NULL) {
-        switch (cfg->player_id) {
+    if(cfg != NULL) {
+        switch(cfg->player_id) {
         case CardioPlayerId1:
             str_serial_descr = String_Serial_Player1;
             break;
@@ -259,9 +259,9 @@ static void cardio_deinit(usbd_device* dev) {
 
 static void cardio_on_wakeup(usbd_device* dev) {
     UNUSED(dev);
-    if (!cardio_connected) {
+    if(!cardio_connected) {
         cardio_connected = true;
-        if (callback != NULL) {
+        if(callback != NULL) {
             callback(true, callback_ctx);
         }
     }
@@ -269,10 +269,10 @@ static void cardio_on_wakeup(usbd_device* dev) {
 
 static void cardio_on_suspend(usbd_device* dev) {
     UNUSED(dev);
-    if (cardio_connected) {
+    if(cardio_connected) {
         cardio_connected = false;
         furi_semaphore_release(cardio_semaphore);
-        if (callback != NULL) {
+        if(callback != NULL) {
             callback(false, callback_ctx);
         }
     }
@@ -281,14 +281,14 @@ static void cardio_on_suspend(usbd_device* dev) {
 static void cardio_txrx_ep_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
     UNUSED(dev);
     UNUSED(ep);
-    if (event == usbd_evt_eptx) {
+    if(event == usbd_evt_eptx) {
         furi_semaphore_release(cardio_semaphore);
     }
 }
 
 // configure endpoints
 static usbd_respond cardio_ep_config(usbd_device* dev, uint8_t cfg) {
-    switch (cfg) {
+    switch(cfg) {
     case 0:
         // deconfiguring device
         usbd_ep_deconfig(dev, HID_EP_IN);
@@ -312,10 +312,10 @@ static usbd_respond
     cardio_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
     UNUSED(callback);
     // HID control requests
-    if (((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
-            (USB_REQ_INTERFACE | USB_REQ_CLASS) &&
-        req->wIndex == 0) {
-        switch (req->bRequest) {
+    if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
+           (USB_REQ_INTERFACE | USB_REQ_CLASS) &&
+       req->wIndex == 0) {
+        switch(req->bRequest) {
         case USB_HID_SETIDLE:
             return usbd_ack;
         case USB_HID_GETREPORT:
@@ -326,10 +326,10 @@ static usbd_respond
             return usbd_fail;
         }
     }
-    if (((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
-            (USB_REQ_INTERFACE | USB_REQ_STANDARD) &&
-        req->wIndex == 0 && req->bRequest == USB_STD_GET_DESCRIPTOR) {
-        switch (req->wValue >> 8) {
+    if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
+           (USB_REQ_INTERFACE | USB_REQ_STANDARD) &&
+       req->wIndex == 0 && req->bRequest == USB_STD_GET_DESCRIPTOR) {
+        switch(req->wValue >> 8) {
         case USB_DTYPE_HID:
             dev->status.data_ptr = (uint8_t*)&(cardio_cfg_desc.intf_0.hid_desc);
             dev->status.data_count = sizeof(cardio_cfg_desc.intf_0.hid_desc);

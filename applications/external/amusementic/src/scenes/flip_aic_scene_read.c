@@ -16,7 +16,7 @@ static NfcCommand flip_aic_scene_read_poller_callback(NfcGenericEvent event, voi
     FelicaPollerEvent* poller_event = event.event_data;
     FURI_LOG_I(TAG, "Poller event: %d", poller_event->type);
 
-    switch (poller_event->type) {
+    switch(poller_event->type) {
     case FelicaPollerEventTypeReady:
     case FelicaPollerEventTypeIncomplete:
         view_dispatcher_send_custom_event(app->view_dispatcher, PollerResultSuccess);
@@ -51,14 +51,11 @@ bool flip_aic_scene_read_on_event(void* context, SceneManagerEvent event) {
     furi_assert(context);
     FlipAIC* app = context;
 
-    if (event.type == SceneManagerEventTypeCustom) {
-        switch (event.event) {
+    if(event.type == SceneManagerEventTypeCustom) {
+        switch(event.event) {
         case PollerResultSuccess:
             nfc_device_set_data(
-                app->nfc_device,
-                NfcProtocolFelica,
-                nfc_poller_get_data(app->nfc_poller)
-            );
+                app->nfc_device, NfcProtocolFelica, nfc_poller_get_data(app->nfc_poller));
             scene_manager_next_scene(app->scene_manager, FlipAICSceneDisplay);
             return true;
 

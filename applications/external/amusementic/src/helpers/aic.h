@@ -165,8 +165,7 @@ static uint8_t S_BOX_INV[9][256] = {
      0xb9, 0x7d, 0x68, 0xf2, 0xad, 0x99, 0xa7, 0x07, 0x2c, 0x73, 0x38, 0xb0, 0x6b, 0xb7, 0x8e,
      0x71, 0xa0, 0xf4, 0x3d, 0xa6, 0x0d, 0x37, 0xdb, 0x0a, 0x47, 0x36, 0x16, 0x96, 0x6d, 0x32,
      0x2a, 0x5b, 0xe2, 0x45, 0x94, 0xf5, 0xa5, 0x4c, 0xc8, 0x8a, 0x49, 0x64, 0xbb, 0x08, 0xc9,
-     0xb8}
-};
+     0xb8}};
 
 static void rotate_right(uint8_t* data, size_t n_bytes, size_t n_bits) {
     /*
@@ -176,7 +175,7 @@ static void rotate_right(uint8_t* data, size_t n_bytes, size_t n_bits) {
             prior, data[i] = data[i], (data[i] >> n_bits) | ((prior & ((1 << n_bits) - 1)) << (8 - n_bits))
     */
     uint8_t prior = data[n_bytes - 1];
-    for (size_t i = 0; i < n_bytes; i++) {
+    for(size_t i = 0; i < n_bytes; i++) {
         uint8_t tmp = prior;
         prior = data[i];
         data[i] = (data[i] >> n_bits) | ((tmp & ((1 << n_bits) - 1)) << (8 - n_bits));
@@ -205,24 +204,24 @@ void aic_access_code(const FelicaData* data, uint8_t* out) {
     */
 
     uint8_t spad0[16];
-    for (size_t i = 0; i < 16; i++) {
+    for(size_t i = 0; i < 16; i++) {
         spad0[i] = S_BOX_INV[8][data->data.fs.spad[0].data[i]];
     }
 
     uint8_t count = (spad0[15] >> 4) + 7;
     uint8_t table = spad0[15] + 5 * count;
 
-    while (count--) {
+    while(count--) {
         table -= 5;
 
         rotate_right(spad0, 15, 5);
 
-        for (size_t i = 0; i < 15; i++) {
+        for(size_t i = 0; i < 15; i++) {
             spad0[i] = S_BOX_INV[table % 8][spad0[i]];
         }
     }
 
-    for (int i = 0; i < 10; i++) {
+    for(int i = 0; i < 10; i++) {
         out[i] = spad0[i + 6];
     }
 }
@@ -246,7 +245,7 @@ typedef enum {
 } AICVendor;
 
 const char* aic_vendor_name(AICVendor vendor) {
-    switch (vendor) {
+    switch(vendor) {
     case AICVendorSEGA:
         return "SEGA";
     case AICVendorKonami:
@@ -265,7 +264,7 @@ const char* aic_vendor_name(AICVendor vendor) {
 }
 
 const char* aic_vendor_name_short(AICVendor vendor) {
-    switch (vendor) {
+    switch(vendor) {
     case AICVendorSEGA:
         return "AiMe";
     case AICVendorKonami:
@@ -285,7 +284,7 @@ const char* aic_vendor_name_short(AICVendor vendor) {
 AICVendor aic_vendor(const FelicaData* data) {
     const uint8_t* id = data->data.fs.id.data;
     uint16_t dfc = (id[8] << 8) + id[9];
-    switch (dfc) {
+    switch(dfc) {
     case 0x0078:
         return AICVendorSEGA;
     case 0x0068:

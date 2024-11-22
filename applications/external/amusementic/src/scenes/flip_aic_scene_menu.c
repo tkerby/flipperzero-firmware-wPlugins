@@ -17,24 +17,12 @@ void flip_aic_scene_menu_on_enter(void* context) {
     FlipAIC* app = context;
 
     submenu_add_item(
-        app->submenu,
-        "Read",
-        SubmenuIndexRead,
-        flip_aic_scene_menu_submenu_callback,
-        app
-    );
+        app->submenu, "Read", SubmenuIndexRead, flip_aic_scene_menu_submenu_callback, app);
     submenu_add_item(
-        app->submenu,
-        "Saved",
-        SubmenuIndexSaved,
-        flip_aic_scene_menu_submenu_callback,
-        app
-    );
+        app->submenu, "Saved", SubmenuIndexSaved, flip_aic_scene_menu_submenu_callback, app);
 
     submenu_set_selected_item(
-        app->submenu,
-        scene_manager_get_scene_state(app->scene_manager, FlipAICSceneMenu)
-    );
+        app->submenu, scene_manager_get_scene_state(app->scene_manager, FlipAICSceneMenu));
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipAICViewSubmenu);
 }
@@ -43,9 +31,9 @@ bool flip_aic_scene_menu_on_event(void* context, SceneManagerEvent event) {
     furi_assert(context);
     FlipAIC* app = context;
 
-    if (event.type == SceneManagerEventTypeCustom) {
+    if(event.type == SceneManagerEventTypeCustom) {
         scene_manager_set_scene_state(app->scene_manager, FlipAICSceneMenu, event.event);
-        switch (event.event) {
+        switch(event.event) {
         case SubmenuIndexRead:
             scene_manager_next_scene(app->scene_manager, FlipAICSceneRead);
             return true;
