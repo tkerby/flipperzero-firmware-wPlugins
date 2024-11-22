@@ -1,9 +1,13 @@
 # Pinball0 (Pinball Zero)
 Play pinball on your Flipperzero!
 
-This is a BETA release!! Still a work in progress...
+Still a work in progress...
 
-> The default tables and example tables may / _will_ change
+[Latest version v0.3](https://github.com/rdefeo/pinball0/releases)
+
+![build status badge](https://github.com/rdefeo/pinball0/actions/workflows/build.yml/badge.svg)
+
+> The default tables and example tables may / will change
 
 ## Screenshots
 
@@ -33,9 +37,9 @@ This is a BETA release!! Still a work in progress...
 I find it easiest to hold the flipper with both hands so I can hit left/right with my thumbs!
 
 ## Settings
-The **SETTINGS** menu will be the "last" table listed. You can Enable / Disable the following: Sound, LED light, Vibration, and Manual mode. Move Up/Down to select your setting and press **OK** to toggle. Settings are saved in `/data/.pinball0.conf` as a native Flipper Format file. **Back** will return you to the main menu.
+The **SETTINGS** menu will be the "last" table listed. You can Enable / Disable the following: Sound, LED light, Vibration, and Debug mode. Move Up/Down to select your setting and press **OK** to toggle. Settings are saved in `/data/.pinball0.conf` as a native Flipper Format file. **Back** will return you to the main menu.
 
-**Debug** mode allows you to move the ball using the directional pad _before_ the ball is launched. This is useful for testing and may be removed in the future. May result in unexpected behavior. It also displays test tables on the main menu. The test tables will only show/hide after you exit and restart the app. This feature is mainly for me - lol.
+**Debug** mode allows you to move the ball using the directional pad _before_ the ball is launched. This is useful for testing and may be removed in the future. (May result in unexpected behavior.) It also displays test tables on the main menu. The test tables will only show/hide after you exit and restart the app. This feature is mainly for me - lol.
 
 ## Tables
 Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_data/pinball0`) on your SD card. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0`). On the main menu, tables are sorted alphabetically. In order to "force" a sorting order, you can prepend any filename with `NN_` where `NN` is between `00` and `99`. When the files are displayed on the menu, if they start with `NN_`, that will be stripped - but their sorted order will be preserved.

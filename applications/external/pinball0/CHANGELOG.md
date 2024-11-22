@@ -1,3 +1,8 @@
+## 0.3.0
+
+- Added Idle timeout of 2 minutes
+- Changed Manual mode to Debug mode
+
 ## 0.2.0
 
 - User tables from /apps_data/pinball0 folder

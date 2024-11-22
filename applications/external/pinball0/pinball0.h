@@ -70,8 +70,6 @@ typedef struct PinballApp {
     int selected_setting;
     int max_settings;
 
-    uint32_t idle_start; // tick count (time) of last key press
-
     // system objects
     Storage* storage;
     NotificationApp* notify; // allows us to blink/buzz during game
