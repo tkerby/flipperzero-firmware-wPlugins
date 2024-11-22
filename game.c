@@ -868,6 +868,7 @@ static void target_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     Vector pos = entity_pos_get(self);
 
     // Draw target
+    //canvas_draw_box(canvas, pos.x, pos.y, 8, 5);
     canvas_draw_disc(canvas, pos.x, pos.y, 2);
 }
 
@@ -968,7 +969,7 @@ static void game_start_post_menu(GameManager* game_manager, void* ctx) {
     //TODO walk animation, optional shooting animation
 }
 
-/* 
+/*
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
 */
@@ -1057,7 +1058,7 @@ static void game_stop(void* ctx) {
         furi_record_close(RECORD_GUI);
 
         game_menu_exit_lock = api_lock_alloc_locked();
-        Gui* gui = furi_record_open(RECORD_GUI);
+        gui = furi_record_open(RECORD_GUI);
 
         Submenu* submenu = submenu_alloc();
         submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
@@ -1094,7 +1095,7 @@ static void game_stop(void* ctx) {
     Yor game configuration, do not rename this variable, but you can change it's content here.  
 */
 const Game game = {
-    .target_fps = 130, // target fps, game will try to keep this value
+    .target_fps = 125, // target fps, game will try to keep this value
     .show_fps = false, // show fps counter on the screen
     .always_backlight = false, // keep display backlight always on
     .start = game_start, // will be called once, when game starts

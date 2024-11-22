@@ -17,8 +17,19 @@ FuriApiLock game_menu_exit_lock = NULL;
 
 void game_settings_menu_button_callback(void* game_manager, uint32_t index) {
     UNUSED(game_manager);
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+
     if(index == 3) {
         //TODO Back to main menu or pause menu.
+        //Return from settings menu
+        game_menu_tutorial_selected = false;
+        game_menu_settings_selected = false;
+        game_menu_game_selected = false;
+        game_menu_quit_selected = false;
+        notification_message(notifications, &sequence_success);
+        api_lock_unlock(game_menu_exit_lock);
+
+        //game_menu_open(game_manager, false);
     }
     UNUSED(index);
 }
@@ -51,13 +62,24 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
 
         api_lock_unlock(game_menu_exit_lock);
     } else if(index == 3) {
-        //Quit
-        game_menu_tutorial_selected = false;
-        game_menu_settings_selected = false;
-        game_menu_game_selected = false;
-        game_menu_quit_selected = true;
-        notification_message(notifications, &sequence_single_vibro);
-        api_lock_unlock(game_menu_exit_lock);
+        if(game_menu_settings_selected) {
+            //Return from settings menu
+            game_menu_tutorial_selected = false;
+            game_menu_settings_selected = false;
+            game_menu_game_selected = false;
+            game_menu_quit_selected = false;
+            notification_message(notifications, &sequence_success);
+            api_lock_unlock(game_menu_exit_lock);
+            game_menu_open(game_manager, false);
+        } else {
+            //Quit
+            game_menu_tutorial_selected = false;
+            game_menu_settings_selected = false;
+            game_menu_game_selected = false;
+            game_menu_quit_selected = true;
+            notification_message(notifications, &sequence_single_vibro);
+            api_lock_unlock(game_menu_exit_lock);
+        }
     } else if(index == 4) {
         if(!game_menu_game_selected) {
             kills = 0;
