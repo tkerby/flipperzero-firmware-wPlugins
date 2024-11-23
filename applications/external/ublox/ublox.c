@@ -1,11 +1,9 @@
 #include "ublox_i.h"
 
 const NotificationSequence sequence_new_reading = {
-    //&message_vibro_on,
     &message_green_255,
     &message_delay_100,
     &message_green_0,
-    //&message_vibro_off,
     NULL,
 };
 
@@ -72,7 +70,9 @@ Ublox* ublox_alloc() {
     (ublox->data_display_state).refresh_rate = 2;
     (ublox->data_display_state).notify_mode = UbloxDataDisplayNotifyOn;
     (ublox->data_display_state).backlight_mode = UbloxDataDisplayBacklightDefault;
+    (ublox->data_display_state).log_format = UbloxLogFormatKML;
     (ublox->device_state).odometer_mode = UbloxOdometerModeRunning;
+
     // "suitable for most applications" according to u-blox.
     (ublox->device_state).platform_model = UbloxPlatformModelPortable;
     ublox->gps_initted = false;
