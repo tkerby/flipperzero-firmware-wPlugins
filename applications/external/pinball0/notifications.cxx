@@ -2,14 +2,15 @@
 #include "pinball0.h"
 
 static const NotificationMessage* nm_list[32];
-static FuriMutex* nm_mutex;
 
-void notify_init() {
-    nm_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-}
-void notify_free() {
-    furi_mutex_free(nm_mutex);
-}
+// static FuriMutex* nm_mutex;
+
+// void notify_init() {
+//     nm_mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+// }
+// void notify_free() {
+//     furi_mutex_free(nm_mutex);
+// }
 
 void notify_ball_released(void* ctx) {
     PinballApp* app = (PinballApp*)ctx;

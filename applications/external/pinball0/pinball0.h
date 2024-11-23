@@ -16,6 +16,7 @@
 
 #include "vec2.h"
 #include "objects.h"
+#include "settings.h"
 
 // #define DRAW_NORMALS
 
@@ -26,23 +27,12 @@
 #define LCD_WIDTH  64
 #define LCD_HEIGHT 128
 
-typedef enum {
-    EventTypeTick,
-    EventTypeKey
-} EventType;
-
-typedef struct {
-    EventType type;
-    InputEvent input;
-} PinballEvent;
-
 typedef enum GameMode {
     GM_TableSelect,
     GM_Playing,
     GM_GameOver,
     GM_Error,
-    GM_Settings,
-    GM_About
+    GM_Settings
 } GameMode;
 
 class TableList {
@@ -68,7 +58,10 @@ public:
 class Table;
 
 typedef struct PinballApp {
+    PinballApp();
     ~PinballApp();
+
+    bool initialized;
 
     FuriMutex* mutex;
 
@@ -84,14 +77,7 @@ typedef struct PinballApp {
     uint32_t idle_start; // tracks time of last key press
 
     // user settings
-    struct {
-        bool sound_enabled;
-        bool vibrate_enabled;
-        bool led_enabled;
-        bool debug_mode;
-    } settings;
-    int selected_setting;
-    int max_settings;
+    PinballSettings settings;
 
     // system objects
     Storage* storage;
