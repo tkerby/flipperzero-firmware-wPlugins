@@ -11,6 +11,9 @@
 void gfx_draw_line(Canvas* canvas, float x1, float y1, float x2, float y2);
 void gfx_draw_line(Canvas* canvas, const Vec2& p1, const Vec2& p2);
 
+void gfx_draw_line_thick(Canvas* canvas, float x1, float y1, float x2, float y2, int thickness);
+void gfx_draw_line_thick(Canvas* canvas, const Vec2& p1, const Vec2& p2, int thickness);
+
 void gfx_draw_disc(Canvas* canvas, float x, float y, float r);
 void gfx_draw_disc(Canvas* canvas, const Vec2& p, float r);
 

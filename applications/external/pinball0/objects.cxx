@@ -53,28 +53,37 @@ Flipper::Flipper(const Vec2& p_, Side side_, size_t size_)
 }
 
 void Flipper::draw(Canvas* canvas) {
-    // base / pivot
-    gfx_draw_circle(canvas, p, r);
-
     // tip
     float angle = rest_angle + sign * rotation;
     Vec2 dir(cos(angle), -sin(angle));
 
     // draw the tip
     Vec2 tip = p + dir * size;
-    gfx_draw_circle(canvas, tip, r);
+    gfx_draw_line_thick(canvas, p, tip, (r * 1.5f) / 10.0f);
+    gfx_draw_disc(canvas, tip, r * 0.6f);
 
-    // top and bottom lines
-    Vec2 perp(-dir.y, dir.x);
-    perp.normalize();
-    Vec2 start = p + perp * r;
-    Vec2 end = start + dir * size;
-    gfx_draw_line(canvas, start, end);
+    // // base / pivot
+    // gfx_draw_circle(canvas, p, r);
 
-    perp *= -1.0f;
-    start = p + perp * r;
-    end = start + dir * size;
-    gfx_draw_line(canvas, start, end);
+    // // tip
+    // float angle = rest_angle + sign * rotation;
+    // Vec2 dir(cos(angle), -sin(angle));
+
+    // // draw the tip
+    // Vec2 tip = p + dir * size;
+    // gfx_draw_circle(canvas, tip, r);
+
+    // // top and bottom lines
+    // Vec2 perp(-dir.y, dir.x);
+    // perp.normalize();
+    // Vec2 start = p + perp * r;
+    // Vec2 end = start + dir * size;
+    // gfx_draw_line(canvas, start, end);
+
+    // perp *= -1.0f;
+    // start = p + perp * r;
+    // end = start + dir * size;
+    // gfx_draw_line(canvas, start, end);
 }
 
 void Flipper::update(float dt) {

@@ -2,6 +2,7 @@
 
 #include <furi.h>
 #include <vector>
+#include "pinball0.h"
 #include "objects.h"
 
 #define TABLE_SELECT       0
@@ -9,6 +10,10 @@
 #define TABLE_SETTINGS     2
 #define TABLE_INDEX_OFFSET 3
 
+struct PinballApp;
+
+// Table display elements, rendered on the physical display coordinates,
+// not the table's scaled coords
 class DataDisplay {
 public:
     enum Align {
@@ -72,23 +77,14 @@ public:
     Plunger* plunger;
 
     void draw(Canvas* canvas);
-};
-
-typedef struct {
-    FuriString* name;
-    FuriString* filename;
-} TableMenuItem;
-
-class TableList {
-public:
-    TableList() = default;
-    ~TableList();
-    std::vector<TableMenuItem> menu_items;
-    int display_size; // how many can fit on screen
-    int selected;
+    bool handle_key_event(const PinballEvent& event);
 };
 
 // Read the list tables from the data folder and store in the state
 void table_table_list_init(void* ctx);
+
+// Reads the table file and creates the new table.
+Table* table_load_table_from_file(PinballApp* ctx, size_t index);
+
 // Loads the index'th table from the list
 bool table_load_table(void* ctx, size_t index);
