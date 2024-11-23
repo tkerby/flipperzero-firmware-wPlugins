@@ -8,12 +8,12 @@
 #define PINBALL_SETTINGS_FILE_TYPE    "Pinball0 Settings File"
 #define PINBALL_SETTINGS_FILE_VERSION 1
 
-void pinball_load_settings(PinballApp* pb) {
-    FlipperFormat* fff_settings = flipper_format_file_alloc(pb->storage);
+void pinball_load_settings(PinballApp& pb) {
+    FlipperFormat* fff_settings = flipper_format_file_alloc(pb.storage);
     FuriString* tmp_str = furi_string_alloc();
     uint32_t tmp_data32 = 0;
 
-    PinballSettings& settings = pb->settings;
+    PinballSettings& settings = pb.settings;
     // init the settings to default values, then overwrite them if found in the settings file
     settings.sound_enabled = true;
     settings.led_enabled = true;
@@ -56,10 +56,10 @@ void pinball_load_settings(PinballApp* pb) {
     flipper_format_free(fff_settings);
 }
 
-void pinball_save_settings(PinballApp* pb) {
-    FlipperFormat* fff_settings = flipper_format_file_alloc(pb->storage);
+void pinball_save_settings(PinballApp& pb) {
+    FlipperFormat* fff_settings = flipper_format_file_alloc(pb.storage);
     uint32_t tmp_data32 = 0;
-    PinballSettings& settings = pb->settings;
+    PinballSettings& settings = pb.settings;
 
     FURI_LOG_I(TAG, "SETTINGS: Saving settings");
     do {

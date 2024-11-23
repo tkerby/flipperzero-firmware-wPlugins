@@ -3,8 +3,8 @@
 #include <furi.h>
 #include <notification/notification.h>
 
-void notify_init();
-void notify_free();
+// void notify_init();
+// void notify_free();
 
 void notify_ball_released(void* ctx);
 void notify_table_bump(void* ctx);

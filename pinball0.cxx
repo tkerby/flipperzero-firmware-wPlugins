@@ -134,25 +134,6 @@ void solve(PinballApp* pb, float dt) {
     }
 }
 
-void pinball_app_init(PinballApp* pb) {
-    furi_assert(pb);
-    pb->storage = (Storage*)furi_record_open(RECORD_STORAGE);
-    pb->notify = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
-    notify_init();
-
-    pb->table = NULL;
-    pb->tick = 0;
-    pb->gameStarted = false;
-
-    pb->game_mode = GM_TableSelect;
-    pb->keys[InputKeyUp] = false;
-    pb->keys[InputKeyDown] = false;
-    pb->keys[InputKeyRight] = false;
-    pb->keys[InputKeyLeft] = false;
-
-    pinball_load_settings(pb);
-}
-
 static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
     furi_assert(ctx);
     PinballApp* pb = (PinballApp*)ctx;
@@ -314,211 +295,236 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
 static void pinball_input_callback(InputEvent* input_event, void* ctx) {
     furi_assert(ctx);
     FuriMessageQueue* event_queue = (FuriMessageQueue*)ctx;
-    PinballEvent event = {.type = EventTypeKey, .input = *input_event};
-    furi_message_queue_put(event_queue, &event, FuriWaitForever);
+    // PinballEvent event = {.type = EventTypeKey, .input = *input_event};
+    furi_message_queue_put(event_queue, input_event, FuriWaitForever);
+}
+
+PinballApp::PinballApp() {
+    initialized = false;
+
+    mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(!mutex) {
+        FURI_LOG_E(TAG, "Cannot create mutex!");
+        return;
+    }
+
+    storage = (Storage*)furi_record_open(RECORD_STORAGE);
+    notify = (NotificationApp*)furi_record_open(RECORD_NOTIFICATION);
+    // notify_init();
+    notification_message(notify, &sequence_display_backlight_enforce_on);
+
+    table = NULL;
+    tick = 0;
+    gameStarted = false;
+
+    game_mode = GM_TableSelect;
+    keys[InputKeyUp] = false;
+    keys[InputKeyDown] = false;
+    keys[InputKeyRight] = false;
+    keys[InputKeyLeft] = false;
+
+    initialized = true;
 }
 
 PinballApp::~PinballApp() {
     furi_mutex_free(mutex);
     delete table;
-    notify_free();
+    // notify_free();
+
+    notification_message(notify, &sequence_display_backlight_enforce_auto);
+    notification_message(notify, &sequence_reset_rgb);
+
+    furi_record_close(RECORD_STORAGE);
+    furi_record_close(RECORD_NOTIFICATION);
 }
 
 extern "C" int32_t pinball0_app(void* p) {
     UNUSED(p);
 
-    PinballApp* app = (PinballApp*)new PinballApp;
-    app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
-    if(!app->mutex) {
-        FURI_LOG_E(TAG, "Cannot create mutex!");
-        delete app;
+    PinballApp app;
+    if(!app.initialized) {
+        FURI_LOG_E(TAG, "Failed to initialize Pinball0! Exiting.");
         return 0;
     }
 
-    pinball_app_init(app);
+    pinball_load_settings(app);
 
     // read the list of tables from storage
-    table_table_list_init(app);
+    table_table_list_init(&app);
 
-    // load the table select table
-    table_load_table(app, 0);
+    table_load_table(&app, TABLE_SELECT);
 
-    FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(PinballEvent));
+    FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
 
     ViewPort* view_port = view_port_alloc();
     view_port_set_orientation(view_port, ViewPortOrientationVertical);
-    view_port_draw_callback_set(view_port, pinball_draw_callback, app);
+    view_port_draw_callback_set(view_port, pinball_draw_callback, &app);
     view_port_input_callback_set(view_port, pinball_input_callback, event_queue);
 
     // Open the GUI and register view_port
     Gui* gui = (Gui*)furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
-    notification_message(app->notify, &sequence_display_backlight_enforce_on);
-
     // TODO: Dolphin deed actions
     // dolphin_deed(DolphinDeedPluginGameStart);
 
-    app->processing = true;
+    app.processing = true;
 
     float dt = 0.0f;
     uint32_t last_frame_time = furi_get_tick();
-    app->idle_start = last_frame_time;
+    app.idle_start = last_frame_time;
 
     // I'm not thrilled with this event loop - kinda messy but it'll do for now
-    PinballEvent event;
-    while(app->processing) {
+    InputEvent event;
+    while(app.processing) {
         FuriStatus event_status = furi_message_queue_get(event_queue, &event, 10);
-        furi_mutex_acquire(app->mutex, FuriWaitForever);
+        furi_mutex_acquire(app.mutex, FuriWaitForever);
 
         if(event_status == FuriStatusOk) {
-            if(event.type == EventTypeKey) {
-                if(event.input.type == InputTypePress || event.input.type == InputTypeLong ||
-                   event.input.type == InputTypeRepeat) {
-                    switch(event.input.key) {
-                    case InputKeyBack:
-                        if(app->game_mode == GM_Playing || app->game_mode == GM_GameOver ||
-                           app->game_mode == GM_Error || app->game_mode == GM_Settings) {
-                            if(app->game_mode == GM_Settings) {
-                                pinball_save_settings(app);
-                            }
-                            app->game_mode = GM_TableSelect;
-                            table_load_table(app, TABLE_SELECT);
-                        } else if(app->game_mode == GM_TableSelect) {
-                            app->processing = false;
-                        }
+            if(event.type == InputTypePress || event.type == InputTypeLong ||
+               event.type == InputTypeRepeat) {
+                switch(event.key) {
+                case InputKeyBack:
+                    switch(app.game_mode) {
+                    case GM_TableSelect:
+                        app.processing = false;
                         break;
-                    case InputKeyRight: {
-                        app->keys[InputKeyRight] = true;
+                    case GM_Settings:
+                        pinball_save_settings(app);
+                        // fall through
+                    default:
+                        app.game_mode = GM_TableSelect;
+                        table_load_table(&app, TABLE_SELECT);
+                        break;
+                    }
+                    break;
+                case InputKeyRight: {
+                    app.keys[InputKeyRight] = true;
 
-                        if(app->settings.debug_mode && app->table->balls_released == false) {
-                            app->table->balls[0].p.x += MANUAL_ADJUSTMENT;
-                            app->table->balls[0].prev_p.x += MANUAL_ADJUSTMENT;
-                        }
-                        bool flipper_pressed = false;
-                        for(auto& f : app->table->flippers) {
-                            if(f.side == Flipper::RIGHT) {
-                                f.powered = true;
+                    if(app.settings.debug_mode && app.table->balls_released == false) {
+                        app.table->balls[0].p.x += MANUAL_ADJUSTMENT;
+                        app.table->balls[0].prev_p.x += MANUAL_ADJUSTMENT;
+                    }
+                    bool flipper_pressed = false;
+                    for(auto& f : app.table->flippers) {
+                        if(f.side == Flipper::RIGHT) {
+                            f.powered = true;
+                            if(f.rotation != f.max_rotation) {
                                 flipper_pressed = true;
                             }
                         }
-                        if(flipper_pressed) {
-                            notify_flipper(app);
-                        }
-                    } break;
-                    case InputKeyLeft: {
-                        app->keys[InputKeyLeft] = true;
+                    }
+                    if(flipper_pressed) {
+                        notify_flipper(&app);
+                    }
+                } break;
+                case InputKeyLeft: {
+                    app.keys[InputKeyLeft] = true;
 
-                        if(app->settings.debug_mode && app->table->balls_released == false) {
-                            app->table->balls[0].p.x -= MANUAL_ADJUSTMENT;
-                            app->table->balls[0].prev_p.x -= MANUAL_ADJUSTMENT;
-                        }
-                        bool flipper_pressed = false;
-                        for(auto& f : app->table->flippers) {
-                            if(f.side == Flipper::LEFT) {
-                                f.powered = true;
-                                if(f.rotation != f.max_rotation) {
-                                    flipper_pressed = true;
-                                }
+                    if(app.settings.debug_mode && app.table->balls_released == false) {
+                        app.table->balls[0].p.x -= MANUAL_ADJUSTMENT;
+                        app.table->balls[0].prev_p.x -= MANUAL_ADJUSTMENT;
+                    }
+                    bool flipper_pressed = false;
+                    for(auto& f : app.table->flippers) {
+                        if(f.side == Flipper::LEFT) {
+                            f.powered = true;
+                            if(f.rotation != f.max_rotation) {
+                                flipper_pressed = true;
                             }
                         }
-                        if(flipper_pressed) {
-                            notify_flipper(app);
+                    }
+                    if(flipper_pressed) {
+                        notify_flipper(&app);
+                    }
+                } break;
+                case InputKeyUp:
+                    switch(app.game_mode) {
+                    case GM_Playing:
+                        if(event.type == InputTypePress) {
+                            // we only set the key if it's a 'press' to ensure
+                            // a single table "bump"
+                            app.keys[InputKeyUp] = true;
+                            notify_table_bump(&app);
                         }
-                    } break;
-                    case InputKeyUp:
-                        switch(app->game_mode) {
-                        case GM_Playing:
-                            if(event.input.type == InputTypePress) {
-                                // we only set the key if it's a 'press' to ensure
-                                // a single table "bump"
-                                app->keys[InputKeyUp] = true;
-
-                                notify_table_bump(app);
-                            }
-                            if(app->settings.debug_mode && app->table->balls_released == false) {
-                                app->table->balls[0].p.y -= MANUAL_ADJUSTMENT;
-                                app->table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
-                            }
-                            break;
-                        case GM_TableSelect:
-                            app->table_list.selected = (app->table_list.selected - 1 +
-                                                        app->table_list.menu_items.size()) %
-                                                       app->table_list.menu_items.size();
-                            break;
-                        case GM_Settings:
-                            if(app->settings.selected_setting > 0) {
-                                app->settings.selected_setting--;
-                            }
-                            break;
-                        default:
-                            break;
+                        if(app.settings.debug_mode && app.table->balls_released == false) {
+                            app.table->balls[0].p.y -= MANUAL_ADJUSTMENT;
+                            app.table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
                         }
                         break;
-                    case InputKeyDown:
-                        switch(app->game_mode) {
-                        case GM_Playing:
-                            app->keys[InputKeyDown] = true;
-                            if(app->settings.debug_mode && app->table->balls_released == false) {
-                                app->table->balls[0].p.y += MANUAL_ADJUSTMENT;
-                                app->table->balls[0].prev_p.y += MANUAL_ADJUSTMENT;
-                            }
-                            break;
-                        case GM_TableSelect:
-                            app->table_list.selected = (app->table_list.selected + 1 +
-                                                        app->table_list.menu_items.size()) %
-                                                       app->table_list.menu_items.size();
-                            // notify_game_over(app);
-                            break;
-                        case GM_Settings:
-                            if(app->settings.selected_setting < app->settings.max_settings - 1) {
-                                app->settings.selected_setting++;
-                            }
-                            break;
-                        default:
-                            break;
+                    case GM_TableSelect:
+                        app.table_list.selected =
+                            (app.table_list.selected - 1 + app.table_list.menu_items.size()) %
+                            app.table_list.menu_items.size();
+                        break;
+                    case GM_Settings:
+                        if(app.settings.selected_setting > 0) {
+                            app.settings.selected_setting--;
                         }
                         break;
-                    case InputKeyOk:
-                        switch(app->game_mode) {
-                        case GM_Playing:
-                            if(!app->table->balls_released) {
-                                app->gameStarted = true;
-                                app->table->balls_released = true;
-                                notify_ball_released(app);
-                            }
+                    default:
+                        break;
+                    }
+                    break;
+                case InputKeyDown:
+                    switch(app.game_mode) {
+                    case GM_Playing:
+                        app.keys[InputKeyDown] = true;
+                        if(app.settings.debug_mode && app.table->balls_released == false) {
+                            app.table->balls[0].p.y += MANUAL_ADJUSTMENT;
+                            app.table->balls[0].prev_p.y += MANUAL_ADJUSTMENT;
+                        }
+                        break;
+                    case GM_TableSelect:
+                        app.table_list.selected =
+                            (app.table_list.selected + 1 + app.table_list.menu_items.size()) %
+                            app.table_list.menu_items.size();
+                        break;
+                    case GM_Settings:
+                        if(app.settings.selected_setting < app.settings.max_settings - 1) {
+                            app.settings.selected_setting++;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    break;
+                case InputKeyOk:
+                    switch(app.game_mode) {
+                    case GM_Playing:
+                        if(!app.table->balls_released) {
+                            app.gameStarted = true;
+                            app.table->balls_released = true;
+                            notify_ball_released(&app);
+                        }
+                        break;
+                    case GM_TableSelect: {
+                        size_t sel = app.table_list.selected;
+                        if(sel == app.table_list.menu_items.size() - 1) {
+                            app.game_mode = GM_Settings;
+                            table_load_table(&app, TABLE_SETTINGS);
+                        } else if(!table_load_table(&app, sel + TABLE_INDEX_OFFSET)) {
+                            app.game_mode = GM_Error;
+                            table_load_table(&app, TABLE_ERROR);
+                            notify_error_message(&app);
+                        } else {
+                            app.game_mode = GM_Playing;
+                        }
+                    } break;
+                    case GM_Settings:
+                        switch(app.settings.selected_setting) {
+                        case 0:
+                            app.settings.sound_enabled = !app.settings.sound_enabled;
                             break;
-                        case GM_TableSelect: {
-                            size_t sel = app->table_list.selected;
-                            if(sel == app->table_list.menu_items.size() - 1) {
-                                app->game_mode = GM_Settings;
-                                table_load_table(app, TABLE_SETTINGS);
-                            } else if(!table_load_table(app, sel + TABLE_INDEX_OFFSET)) {
-                                app->game_mode = GM_Error;
-                                table_load_table(app, TABLE_ERROR);
-                                notify_error_message(app);
-                            } else {
-                                app->game_mode = GM_Playing;
-                            }
-                        } break;
-                        case GM_Settings:
-                            switch(app->settings.selected_setting) {
-                            case 0:
-                                app->settings.sound_enabled = !app->settings.sound_enabled;
-                                break;
-                            case 1:
-                                app->settings.led_enabled = !app->settings.led_enabled;
-                                break;
-                            case 2:
-                                app->settings.vibrate_enabled = !app->settings.vibrate_enabled;
-                                break;
-                            case 3:
-                                app->settings.debug_mode = !app->settings.debug_mode;
-                                break;
-                            default:
-                                break;
-                            }
+                        case 1:
+                            app.settings.led_enabled = !app.settings.led_enabled;
+                            break;
+                        case 2:
+                            app.settings.vibrate_enabled = !app.settings.vibrate_enabled;
+                            break;
+                        case 3:
+                            app.settings.debug_mode = !app.settings.debug_mode;
                             break;
                         default:
                             break;
@@ -527,62 +533,66 @@ extern "C" int32_t pinball0_app(void* p) {
                     default:
                         break;
                     }
-                } else if(event.input.type == InputTypeRelease) {
-                    switch(event.input.key) {
-                    case InputKeyLeft: {
-                        app->keys[InputKeyLeft] = false;
-                        for(auto& f : app->table->flippers) {
-                            if(f.side == Flipper::LEFT) {
-                                f.powered = false;
-                            }
-                        }
-                        break;
-                    }
-                    case InputKeyRight: {
-                        app->keys[InputKeyRight] = false;
-                        for(auto& f : app->table->flippers) {
-                            if(f.side == Flipper::RIGHT) {
-                                f.powered = false;
-                            }
-                        }
-                        break;
-                    }
-                    case InputKeyUp:
-                        app->keys[InputKeyUp] = false;
-                        break;
-                    case InputKeyDown:
-                        app->keys[InputKeyDown] = false;
-                        // TODO: release plunger?
-                        break;
-                    default:
-                        break;
-                    }
+                    break;
+                default:
+                    break;
                 }
-                // a key was pressed, reset idle counter
-                app->idle_start = furi_get_tick();
+            } else if(event.type == InputTypeRelease) {
+                switch(event.key) {
+                case InputKeyLeft: {
+                    app.keys[InputKeyLeft] = false;
+                    for(auto& f : app.table->flippers) {
+                        if(f.side == Flipper::LEFT) {
+                            f.powered = false;
+                        }
+                    }
+                    break;
+                }
+                case InputKeyRight: {
+                    app.keys[InputKeyRight] = false;
+                    for(auto& f : app.table->flippers) {
+                        if(f.side == Flipper::RIGHT) {
+                            f.powered = false;
+                        }
+                    }
+                    break;
+                }
+                case InputKeyUp:
+                    app.keys[InputKeyUp] = false;
+                    break;
+                case InputKeyDown:
+                    app.keys[InputKeyDown] = false;
+                    // TODO: release plunger?
+                    break;
+                default:
+                    break;
+                }
             }
+            // a key was pressed, reset idle counter
+            app.idle_start = furi_get_tick();
         }
-        solve(app, dt);
-        for(auto& o : app->table->objects) {
+
+        solve(&app, dt);
+        for(auto& o : app.table->objects) {
             o->step_animation();
         }
         // check game state
-        // if(app->game_mode == GM_Playing && app->table->lives.value == 0) {
-        if(app->game_mode != GM_GameOver && app->table->game_over) {
+        // if(app.game_mode == GM_Playing && app.table->lives.value == 0) {
+        if(app.game_mode != GM_GameOver && app.table->game_over) {
             FURI_LOG_W(TAG, "GAME OVER!");
-            app->game_mode = GM_GameOver;
-            notify_game_over(app);
+            app.game_mode = GM_GameOver;
+            notify_game_over(&app);
         }
 
         // no keys pressed - we should clear all input keys?
         view_port_update(view_port);
-        furi_mutex_release(app->mutex);
+        furi_mutex_release(app.mutex);
 
         // game timing + idle check
         uint32_t current_tick = furi_get_tick();
-        if(current_tick - app->idle_start >= IDLE_TIMEOUT) {
+        if(current_tick - app.idle_start >= IDLE_TIMEOUT) {
             FURI_LOG_W(TAG, "Idle timeout! Exiting Pinball0...");
-            app->processing = false;
+            app.processing = false;
             break;
         }
 
@@ -592,23 +602,16 @@ extern "C" int32_t pinball0_app(void* p) {
             time_lapsed = furi_get_tick() - last_frame_time;
             dt = time_lapsed / 1000.0f;
         }
-        app->tick++;
+        app.tick++;
         last_frame_time = furi_get_tick();
     }
 
     // general cleanup
-    notification_message(app->notify, &sequence_display_backlight_enforce_auto);
-    notification_message(app->notify, &sequence_reset_rgb);
-
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
     furi_record_close(RECORD_GUI);
-    furi_record_close(RECORD_STORAGE);
-    furi_record_close(RECORD_NOTIFICATION);
     view_port_free(view_port);
     furi_message_queue_free(event_queue);
-
-    delete app;
 
     furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
     return 0;

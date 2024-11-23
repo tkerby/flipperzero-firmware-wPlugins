@@ -27,23 +27,12 @@
 #define LCD_WIDTH  64
 #define LCD_HEIGHT 128
 
-typedef enum {
-    EventTypeTick,
-    EventTypeKey
-} EventType;
-
-typedef struct {
-    EventType type;
-    InputEvent input;
-} PinballEvent;
-
 typedef enum GameMode {
     GM_TableSelect,
     GM_Playing,
     GM_GameOver,
     GM_Error,
-    GM_Settings,
-    GM_About
+    GM_Settings
 } GameMode;
 
 class TableList {
@@ -69,7 +58,10 @@ public:
 class Table;
 
 typedef struct PinballApp {
+    PinballApp();
     ~PinballApp();
+
+    bool initialized;
 
     FuriMutex* mutex;
 
