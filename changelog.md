@@ -8,6 +8,6 @@
 - Predefined \( x \) value for evaluation.
 
 ## Planned for Future Releases
-- Support for solving polynomial roots.**
-- User-defined \( x \) values for evaluation.**
-- C-style polynomial ASCII graph visualization.**
+- **Support for solving polynomial roots.**
+- **User-defined \( x \) values for evaluation.**
+- **C-style polynomial ASCII graph visualization.**
