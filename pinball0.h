@@ -48,7 +48,12 @@ typedef enum GameMode {
 class TableList {
 public:
     TableList() = default;
-    ~TableList();
+    ~TableList() {
+        for(auto& mi : menu_items) {
+            furi_string_free(mi.name);
+            furi_string_free(mi.filename);
+        }
+    }
 
     typedef struct {
         FuriString* name;
@@ -76,6 +81,7 @@ typedef struct PinballApp {
     bool gameStarted;
     bool keys[4]; // which key was pressed?
     bool processing; // controls game loop and game objects
+    uint32_t idle_start; // tracks time of last key press
 
     // user settings
     struct {
