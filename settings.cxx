@@ -1,6 +1,7 @@
 #include <flipper_format/flipper_format.h>
 
 #include "settings.h"
+#include "pinball0.h"
 
 #define PINBALL_SETTINGS_FILENAME     ".pinball0.conf"
 #define PINBALL_SETTINGS_PATH         APP_DATA_PATH(PINBALL_SETTINGS_FILENAME)
@@ -12,13 +13,14 @@ void pinball_load_settings(PinballApp* pb) {
     FuriString* tmp_str = furi_string_alloc();
     uint32_t tmp_data32 = 0;
 
+    PinballSettings& settings = pb->settings;
     // init the settings to default values, then overwrite them if found in the settings file
-    pb->settings.sound_enabled = true;
-    pb->settings.led_enabled = true;
-    pb->settings.vibrate_enabled = true;
-    pb->settings.debug_mode = false;
-    pb->selected_setting = 0;
-    pb->max_settings = 4;
+    settings.sound_enabled = true;
+    settings.led_enabled = true;
+    settings.vibrate_enabled = true;
+    settings.debug_mode = false;
+    settings.selected_setting = 0;
+    settings.max_settings = 4;
 
     do {
         if(!flipper_format_file_open_existing(fff_settings, PINBALL_SETTINGS_PATH)) {
@@ -36,16 +38,16 @@ void pinball_load_settings(PinballApp* pb) {
             break;
         }
         if(flipper_format_read_uint32(fff_settings, "Sound", &tmp_data32, 1)) {
-            pb->settings.sound_enabled = (tmp_data32 == 0) ? false : true;
+            settings.sound_enabled = (tmp_data32 == 0) ? false : true;
         }
         if(flipper_format_read_uint32(fff_settings, "LED", &tmp_data32, 1)) {
-            pb->settings.led_enabled = (tmp_data32 == 0) ? false : true;
+            settings.led_enabled = (tmp_data32 == 0) ? false : true;
         }
         if(flipper_format_read_uint32(fff_settings, "Vibrate", &tmp_data32, 1)) {
-            pb->settings.vibrate_enabled = (tmp_data32 == 0) ? false : true;
+            settings.vibrate_enabled = (tmp_data32 == 0) ? false : true;
         }
         if(flipper_format_read_uint32(fff_settings, "Debug", &tmp_data32, 1)) {
-            pb->settings.debug_mode = (tmp_data32 == 0) ? false : true;
+            settings.debug_mode = (tmp_data32 == 0) ? false : true;
         }
 
     } while(false);
@@ -57,6 +59,8 @@ void pinball_load_settings(PinballApp* pb) {
 void pinball_save_settings(PinballApp* pb) {
     FlipperFormat* fff_settings = flipper_format_file_alloc(pb->storage);
     uint32_t tmp_data32 = 0;
+    PinballSettings& settings = pb->settings;
+
     FURI_LOG_I(TAG, "SETTINGS: Saving settings");
     do {
         if(!flipper_format_file_open_always(fff_settings, PINBALL_SETTINGS_PATH)) {
@@ -69,22 +73,22 @@ void pinball_save_settings(PinballApp* pb) {
             break;
         }
         // now write out our settings data
-        tmp_data32 = pb->settings.sound_enabled ? 1 : 0;
+        tmp_data32 = settings.sound_enabled ? 1 : 0;
         if(!flipper_format_write_uint32(fff_settings, "Sound", &tmp_data32, 1)) {
             FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Sound'");
             break;
         }
-        tmp_data32 = pb->settings.led_enabled ? 1 : 0;
+        tmp_data32 = settings.led_enabled ? 1 : 0;
         if(!flipper_format_write_uint32(fff_settings, "LED", &tmp_data32, 1)) {
             FURI_LOG_E(TAG, "SETTINGS: Failed to write 'LED'");
             break;
         }
-        tmp_data32 = pb->settings.vibrate_enabled ? 1 : 0;
+        tmp_data32 = settings.vibrate_enabled ? 1 : 0;
         if(!flipper_format_write_uint32(fff_settings, "Vibrate", &tmp_data32, 1)) {
             FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Vibrate'");
             break;
         }
-        tmp_data32 = pb->settings.debug_mode ? 1 : 0;
+        tmp_data32 = settings.debug_mode ? 1 : 0;
         if(!flipper_format_write_uint32(fff_settings, "Debug", &tmp_data32, 1)) {
             FURI_LOG_E(TAG, "SETTINGS: Failed to write 'Debug'");
             break;

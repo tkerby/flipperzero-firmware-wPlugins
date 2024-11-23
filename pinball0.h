@@ -16,6 +16,7 @@
 
 #include "vec2.h"
 #include "objects.h"
+#include "settings.h"
 
 // #define DRAW_NORMALS
 
@@ -84,14 +85,7 @@ typedef struct PinballApp {
     uint32_t idle_start; // tracks time of last key press
 
     // user settings
-    struct {
-        bool sound_enabled;
-        bool vibrate_enabled;
-        bool led_enabled;
-        bool debug_mode;
-    } settings;
-    int selected_setting;
-    int max_settings;
+    PinballSettings settings;
 
     // system objects
     Storage* storage;

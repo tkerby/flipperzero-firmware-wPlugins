@@ -261,7 +261,7 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         if(pb->settings.sound_enabled) {
             canvas_draw_disc(canvas, x, y + 3, 2);
         }
-        if(pb->selected_setting == 0) {
+        if(pb->settings.selected_setting == 0) {
             canvas_draw_triangle(canvas, 2, y + 3, 8, 5, CanvasDirectionLeftToRight);
         }
         y += 12;
@@ -271,7 +271,7 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         if(pb->settings.led_enabled) {
             canvas_draw_disc(canvas, x, y + 3, 2);
         }
-        if(pb->selected_setting == 1) {
+        if(pb->settings.selected_setting == 1) {
             canvas_draw_triangle(canvas, 2, y + 3, 8, 5, CanvasDirectionLeftToRight);
         }
         y += 12;
@@ -281,7 +281,7 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         if(pb->settings.vibrate_enabled) {
             canvas_draw_disc(canvas, x, y + 3, 2);
         }
-        if(pb->selected_setting == 2) {
+        if(pb->settings.selected_setting == 2) {
             canvas_draw_triangle(canvas, 2, y + 3, 8, 5, CanvasDirectionLeftToRight);
         }
         y += 12;
@@ -291,7 +291,7 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
         if(pb->settings.debug_mode) {
             canvas_draw_disc(canvas, x, y + 3, 2);
         }
-        if(pb->selected_setting == 3) {
+        if(pb->settings.selected_setting == 3) {
             canvas_draw_triangle(canvas, 2, y + 3, 8, 5, CanvasDirectionLeftToRight);
         }
 
@@ -448,8 +448,8 @@ extern "C" int32_t pinball0_app(void* p) {
                                                        app->table_list.menu_items.size();
                             break;
                         case GM_Settings:
-                            if(app->selected_setting > 0) {
-                                app->selected_setting--;
+                            if(app->settings.selected_setting > 0) {
+                                app->settings.selected_setting--;
                             }
                             break;
                         default:
@@ -472,8 +472,8 @@ extern "C" int32_t pinball0_app(void* p) {
                             // notify_game_over(app);
                             break;
                         case GM_Settings:
-                            if(app->selected_setting < app->max_settings - 1) {
-                                app->selected_setting++;
+                            if(app->settings.selected_setting < app->settings.max_settings - 1) {
+                                app->settings.selected_setting++;
                             }
                             break;
                         default:
@@ -503,7 +503,7 @@ extern "C" int32_t pinball0_app(void* p) {
                             }
                         } break;
                         case GM_Settings:
-                            switch(app->selected_setting) {
+                            switch(app->settings.selected_setting) {
                             case 0:
                                 app->settings.sound_enabled = !app->settings.sound_enabled;
                                 break;
