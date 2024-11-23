@@ -10,8 +10,6 @@
 #define TABLE_SETTINGS     2
 #define TABLE_INDEX_OFFSET 3
 
-struct PinballApp;
-
 // Table display elements, rendered on the physical display coordinates,
 // not the table's scaled coords
 class DataDisplay {
@@ -77,7 +75,6 @@ public:
     Plunger* plunger;
 
     void draw(Canvas* canvas);
-    bool handle_key_event(const PinballEvent& event);
 };
 
 // Read the list tables from the data folder and store in the state

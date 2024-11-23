@@ -19,11 +19,6 @@
 #define MANUAL_ADJUSTMENT 20
 #define IDLE_TIMEOUT      120 * 1000 // 120 seconds * 1000 ticks/sec
 
-namespace {
-uint32_t idle_start; // tracks time of last key press
-
-};
-
 void solve(PinballApp* pb, float dt) {
     Table* table = pb->table;
 
@@ -369,13 +364,12 @@ extern "C" int32_t pinball0_app(void* p) {
 
     float dt = 0.0f;
     uint32_t last_frame_time = furi_get_tick();
-    idle_start = last_frame_time;
+    app->idle_start = last_frame_time;
 
-    FURI_LOG_I(TAG, "Starting event loop");
+    // I'm not thrilled with this event loop - kinda messy but it'll do for now
     PinballEvent event;
     while(app->processing) {
-        FuriStatus event_status =
-            furi_message_queue_get(event_queue, &event, 10); // TODO best rate?
+        FuriStatus event_status = furi_message_queue_get(event_queue, &event, 10);
         furi_mutex_acquire(app->mutex, FuriWaitForever);
 
         if(event_status == FuriStatusOk) {
@@ -565,7 +559,7 @@ extern "C" int32_t pinball0_app(void* p) {
                     }
                 }
                 // a key was pressed, reset idle counter
-                idle_start = furi_get_tick();
+                app->idle_start = furi_get_tick();
             }
         }
         solve(app, dt);
@@ -586,7 +580,7 @@ extern "C" int32_t pinball0_app(void* p) {
 
         // game timing + idle check
         uint32_t current_tick = furi_get_tick();
-        if(current_tick - idle_start >= IDLE_TIMEOUT) {
+        if(current_tick - app->idle_start >= IDLE_TIMEOUT) {
             FURI_LOG_W(TAG, "Idle timeout! Exiting Pinball0...");
             app->processing = false;
             break;

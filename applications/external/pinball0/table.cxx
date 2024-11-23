@@ -57,22 +57,17 @@ void Table::draw(Canvas* canvas) {
         o->draw(canvas);
     }
 
+    // now draw flippers
     for(auto& f : flippers) {
         f.draw(canvas);
     }
 
+    // is there a plunger in the house?
     if(plunger) {
         plunger->draw(canvas);
     }
 
     score.draw(canvas);
-}
-
-TableList::~TableList() {
-    for(auto& mi : menu_items) {
-        furi_string_free(mi.name);
-        furi_string_free(mi.filename);
-    }
 }
 
 Table* table_init_table_select(void* ctx) {
