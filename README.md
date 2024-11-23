@@ -6,9 +6,7 @@ Integration: Calculate the integral of the polynomial, increasing its degree (up
 Scrollable Results: View long polynomial equations by scrolling horizontally.
 Intuitive Navigation: Use the Flipper's directional buttons to navigate menus and input data.
 How It Works
-Set Polynomial Coefficients:
-
-Input coefficients for each term of the polynomial, starting from 𝑥^0 (constant term) up to 𝑥^𝑛 (highest degree term). Adjust coefficients using UP and DOWN buttons.
+Set Polynomial Coefficients: Input coefficients for each term of the polynomial, starting from 𝑥^0 (constant term) up to 𝑥^𝑛 (highest degree term). Adjust coefficients using UP and DOWN buttons.
 View Polynomial: Once coefficients are set, the app displays the complete polynomial equation.
 Scroll left or right to view long equations.
 Evaluate Polynomial: The app calculates the polynomial's value at a predefined 𝑥 value and displays the result.
