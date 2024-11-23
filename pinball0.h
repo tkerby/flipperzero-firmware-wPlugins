@@ -1,13 +1,14 @@
 #pragma once
 
 #include <gui/gui.h>
-// #include <input/input.h>
+#include <input/input.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <cmath>
 // #include <furi_hal_resources.h>
 // #include <furi_hal_gpio.h>
+#include <furi.h>
 #include <dolphin/dolphin.h>
 #include <storage/storage.h>
 #include <notification/notification.h>
@@ -15,7 +16,6 @@
 
 #include "vec2.h"
 #include "objects.h"
-#include "table.h"
 
 // #define DRAW_NORMALS
 
@@ -44,6 +44,23 @@ typedef enum GameMode {
     GM_Settings,
     GM_About
 } GameMode;
+
+class TableList {
+public:
+    TableList() = default;
+    ~TableList();
+
+    typedef struct {
+        FuriString* name;
+        FuriString* filename;
+    } TableMenuItem;
+
+    std::vector<TableMenuItem> menu_items;
+    int display_size; // how many can fit on screen
+    int selected;
+};
+
+class Table;
 
 typedef struct PinballApp {
     ~PinballApp();
