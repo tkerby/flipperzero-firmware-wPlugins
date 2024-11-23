@@ -5,6 +5,7 @@ Derivative Calculation: Compute the derivative of the polynomial, reducing its d
 Integration: Calculate the integral of the polynomial, increasing its degree (up to a maximum limit).
 Scrollable Results: View long polynomial equations by scrolling horizontally.
 Intuitive Navigation: Use the Flipper's directional buttons to navigate menus and input data.
+
 How It Works
 Set Polynomial Coefficients: Input coefficients for each term of the polynomial, starting from 𝑥^0 (constant term) up to 𝑥^𝑛 (highest degree term). Adjust coefficients using UP and DOWN buttons.
 View Polynomial: Once coefficients are set, the app displays the complete polynomial equation.
