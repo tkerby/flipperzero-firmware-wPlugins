@@ -1,0 +1,17 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="math_wiz",  # Must be unique
+    name="Math Wiz",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="math_wiz_main",
+    stack_size=2 * 1024,
+    fap_category="Tools",
+    # Optional values
+    # fap_version="0.1",
+    fap_icon="math_wiz.png",  # 10x10 1-bit PNG
+    # fap_description="Does some trig/calculus calculations",
+    # fap_author="Papa_Ghost",
+    # fap_weburl="https://github.com/ImPapaGhost/math_wiz",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
