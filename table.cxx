@@ -35,6 +35,15 @@ void Score::draw(Canvas* canvas) {
     }
 }
 
+Table::Table()
+    : game_over(false)
+    , balls_released(false)
+    , plunger(nullptr)
+    , tilt_detect_enabled(true)
+    , last_bump(furi_get_tick())
+    , bump_count(0) {
+}
+
 Table::~Table() {
     for(size_t i = 0; i < objects.size(); i++) {
         delete objects[i];
@@ -216,7 +225,6 @@ bool table_load_table(void* ctx, size_t index) {
         pb->table = nullptr;
     }
 
-    pb->gameStarted = false;
     switch(index) {
     case TABLE_SELECT:
         pb->table = table_init_table_select(ctx);

@@ -225,6 +225,10 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 table->lives.alignment = Lives::Vertical;
             }
         }
+        const nx_json* tilt = nx_json_get(json, "tilt_detect");
+        if(tilt) {
+            table->tilt_detect_enabled = tilt->num.u_value > 0 ? true : false;
+        }
         const nx_json* score = nx_json_get(json, "score");
         if(score) {
             table_file_parse_bool(score, "display", table->score.display);

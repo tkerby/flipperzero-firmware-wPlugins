@@ -46,6 +46,32 @@ void notify_table_bump(void* ctx) {
     notification_message(app->notify, &nm_list);
 }
 
+void notify_table_tilted(void* ctx) {
+    PinballApp* app = (PinballApp*)ctx;
+    int n = 0;
+
+    for(int i = 0; i < 2; i++) {
+        nm_list[n++] = &message_display_backlight_off;
+        if(app->settings.vibrate_enabled) {
+            nm_list[n++] = &message_vibro_on;
+        }
+        if(app->settings.led_enabled) {
+            nm_list[n++] = &message_red_255;
+        }
+        nm_list[n++] = &message_delay_500;
+
+        nm_list[n++] = &message_display_backlight_on;
+        if(app->settings.vibrate_enabled) {
+            nm_list[n++] = &message_vibro_off;
+        }
+        if(app->settings.led_enabled) {
+            nm_list[n++] = &message_red_0;
+        }
+    }
+    nm_list[n] = NULL;
+    notification_message(app->notify, &nm_list);
+}
+
 void notify_error_message(void* ctx) {
     PinballApp* app = (PinballApp*)ctx;
     int n = 0;

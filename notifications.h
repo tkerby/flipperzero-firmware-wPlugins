@@ -8,6 +8,8 @@
 
 void notify_ball_released(void* ctx);
 void notify_table_bump(void* ctx);
+void notify_table_tilted(void* ctx);
+
 void notify_error_message(void* ctx);
 void notify_game_over(void* ctx);
 

@@ -32,7 +32,8 @@ typedef enum GameMode {
     GM_Playing,
     GM_GameOver,
     GM_Error,
-    GM_Settings
+    GM_Settings,
+    GM_Tilted
 } GameMode;
 
 class TableList {
@@ -71,7 +72,6 @@ typedef struct PinballApp {
     Table* table; // data for the current table
     uint32_t tick;
 
-    bool gameStarted;
     bool keys[4]; // which key was pressed?
     bool processing; // controls game loop and game objects
     uint32_t idle_start; // tracks time of last key press
