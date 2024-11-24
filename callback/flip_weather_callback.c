@@ -1,22 +1,27 @@
 #include "callback/flip_weather_callback.h"
 
+// Below added by Derek Jamison
+// FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
+#ifdef DEVELOPMENT
+#define FURI_LOG_DEV(tag, format, ...) furi_log_print_format(FuriLogLevelInfo, tag, format, ##__VA_ARGS__)
+#define DEV_CRASH() furi_crash()
+#else
+#define FURI_LOG_DEV(tag, format, ...)
+#define DEV_CRASH()
+#endif
+
 bool weather_request_success = false;
 bool sent_weather_request = false;
 bool got_weather_data = false;
 
-void flip_weather_popup_callback(void *context)
+static void flip_weather_request_error_draw(Canvas *canvas)
 {
-    FlipWeatherApp *app = (FlipWeatherApp *)context;
-    if (!app)
+    if (canvas == NULL)
     {
-        FURI_LOG_E(TAG, "FlipWeatherApp is NULL");
+        FURI_LOG_E(TAG, "flip_weather_request_error_draw - canvas is NULL");
+        DEV_CRASH();
         return;
     }
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewSubmenu);
-}
-
-void flip_weather_request_error(Canvas *canvas)
-{
     if (fhttp.last_response != NULL)
     {
         if (strstr(fhttp.last_response, "[ERROR] Not connected to Wifi. Failed to reconnect.") != NULL)
@@ -40,6 +45,11 @@ void flip_weather_request_error(Canvas *canvas)
             canvas_draw_str(canvas, 0, 50, "Update your WiFi settings.");
             canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
         }
+        else if (strstr(fhttp.last_response, "[PONG]") != NULL)
+        {
+            canvas_clear(canvas);
+            canvas_draw_str(canvas, 0, 10, "[STATUS]Connecting to AP...");
+        }
         else
         {
             canvas_clear(canvas);
@@ -56,164 +66,14 @@ void flip_weather_request_error(Canvas *canvas)
         canvas_draw_str(canvas, 0, 60, "Press BACK to return.");
     }
 }
-
-void flip_weather_handle_gps_draw(Canvas *canvas, bool show_gps_data)
+static void flip_weather_gps_switch_to_view(FlipWeatherApp *app)
 {
-    if (sent_get_request)
-    {
-        if (fhttp.state == RECEIVING)
-        {
-            if (show_gps_data)
-            {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "Loading GPS...");
-                canvas_draw_str(canvas, 0, 22, "Receiving...");
-            }
-        }
-        // check status
-        else if (fhttp.state == ISSUE || !get_request_success)
-        {
-            flip_weather_request_error(canvas);
-        }
-        else if (fhttp.state == IDLE)
-        {
-            // success, draw GPS
-            process_geo_location();
-
-            if (show_gps_data)
-            {
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, city_data);
-                canvas_draw_str(canvas, 0, 20, region_data);
-                canvas_draw_str(canvas, 0, 30, country_data);
-                canvas_draw_str(canvas, 0, 40, lat_data);
-                canvas_draw_str(canvas, 0, 50, lon_data);
-                canvas_draw_str(canvas, 0, 60, ip_data);
-            }
-        }
-    }
+    flip_weather_generic_switch_to_view(app, "Fetching GPS data..", send_geo_location_request, process_geo_location, 1, callback_to_submenu, FlipWeatherViewLoader);
 }
 
-// Callback for drawing the weather screen
-void flip_weather_view_draw_callback_weather(Canvas *canvas, void *model)
+static void flip_weather_weather_switch_to_view(FlipWeatherApp *app)
 {
-    if (!canvas)
-    {
-        return;
-    }
-    UNUSED(model);
-
-    canvas_set_font(canvas, FontSecondary);
-
-    if (fhttp.state == INACTIVE)
-    {
-        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
-        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
-        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
-        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
-        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
-        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
-        return;
-    }
-
-    canvas_draw_str(canvas, 0, 10, "Loading location data...");
-    // handle geo location until it's processed and then handle weather
-
-    // start the process
-    if (!send_geo_location_request() || fhttp.state == ISSUE)
-    {
-        flip_weather_request_error(canvas);
-    }
-    // wait until geo location is processed
-    if (!sent_get_request || !get_request_success || fhttp.state == RECEIVING)
-    {
-        canvas_draw_str(canvas, 0, 22, "Receiving data...");
-        return;
-    }
-    // get/set geo lcoation once
-    if (!geo_information_processed)
-    {
-        flip_weather_handle_gps_draw(canvas, false);
-        canvas_draw_str(canvas, 0, 34, "Parsed location data.");
-    }
-    // start the weather process
-    if (!sent_weather_request && fhttp.state == IDLE)
-    {
-        canvas_clear(canvas);
-        canvas_draw_str(canvas, 0, 10, "Getting Weather...");
-        sent_weather_request = true;
-        char url[512];
-        char *lattitude = lat_data + 10;
-        char *longitude = lon_data + 11;
-        char *headers = jsmn("Content-Type", "application/json");
-        snprintf(url, 512, "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&current=temperature_2m,precipitation,rain,showers,snowfall&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1", lattitude, longitude);
-        weather_request_success = flipper_http_get_request_with_headers(url, headers);
-        free(headers);
-        if (!weather_request_success)
-        {
-            FURI_LOG_E(TAG, "Failed to send GET request");
-            fhttp.state = ISSUE;
-            flip_weather_request_error(canvas);
-        }
-        fhttp.state = RECEIVING;
-    }
-    else
-    {
-        if (fhttp.state == RECEIVING)
-        {
-            canvas_draw_str(canvas, 0, 10, "Loading Weather...");
-            canvas_draw_str(canvas, 0, 22, "Receiving...");
-            return;
-        }
-
-        // check status
-        if (fhttp.state == ISSUE || !weather_request_success)
-        {
-            flip_weather_request_error(canvas);
-            fhttp.state = ISSUE;
-        }
-        else
-        {
-            // success, draw weather
-            process_weather();
-            canvas_clear(canvas);
-            canvas_draw_str(canvas, 0, 10, temperature_data);
-            canvas_draw_str(canvas, 0, 20, precipitation_data);
-            canvas_draw_str(canvas, 0, 30, rain_data);
-            canvas_draw_str(canvas, 0, 40, showers_data);
-            canvas_draw_str(canvas, 0, 50, snowfall_data);
-            canvas_draw_str(canvas, 0, 60, time_data);
-        }
-    }
-}
-
-// Callback for drawing the GPS screen
-void flip_weather_view_draw_callback_gps(Canvas *canvas, void *model)
-{
-    if (!canvas)
-    {
-        return;
-    }
-    UNUSED(model);
-
-    if (fhttp.state == INACTIVE)
-    {
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
-        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
-        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
-        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
-        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
-        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
-        return;
-    }
-
-    if (!send_geo_location_request() || fhttp.state == ISSUE)
-    {
-        flip_weather_request_error(canvas);
-    }
-
-    flip_weather_handle_gps_draw(canvas, true);
+    flip_weather_generic_switch_to_view(app, "Fetching Weather data..", send_geo_weather_request, process_weather, 1, callback_to_submenu, FlipWeatherViewLoader);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -227,24 +87,11 @@ void callback_submenu_choices(void *context, uint32_t index)
     switch (index)
     {
     case FlipWeatherSubmenuIndexWeather:
-        if (!flip_weather_handle_ip_address())
-        {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewPopupError);
-        }
-        else
-        {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewWeather);
-        }
+        flipper_http_loading_task(send_geo_location_request, process_geo_location_2, FlipWeatherViewSubmenu, FlipWeatherViewSubmenu, &app->view_dispatcher);
+        flip_weather_weather_switch_to_view(app);
         break;
     case FlipWeatherSubmenuIndexGPS:
-        if (!flip_weather_handle_ip_address())
-        {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewPopupError);
-        }
-        else
-        {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewGPS);
-        }
+        flip_weather_gps_switch_to_view(app);
         break;
     case FlipWeatherSubmenuIndexAbout:
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWeatherViewAbout);
@@ -347,6 +194,16 @@ uint32_t callback_to_submenu(void *context)
     weather_information_processed = false;
     sent_weather_request = false;
     weather_request_success = false;
+    if (weather_data != NULL)
+    {
+        free(weather_data);
+        weather_data = NULL;
+    }
+    if (total_data != NULL)
+    {
+        free(total_data);
+        total_data = NULL;
+    }
     return FlipWeatherViewSubmenu;
 }
 
@@ -398,4 +255,463 @@ uint32_t callback_to_wifi_settings(void *context)
     }
     UNUSED(context);
     return FlipWeatherViewSettings;
+}
+
+static void flip_weather_widget_set_text(char *message, Widget **widget)
+{
+    if (widget == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_set_widget_text - widget is NULL");
+        DEV_CRASH();
+        return;
+    }
+    if (message == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_set_widget_text - message is NULL");
+        DEV_CRASH();
+        return;
+    }
+    widget_reset(*widget);
+
+    uint32_t message_length = strlen(message); // Length of the message
+    uint32_t i = 0;                            // Index tracker
+    uint32_t formatted_index = 0;              // Tracker for where we are in the formatted message
+    char *formatted_message;                   // Buffer to hold the final formatted message
+
+    // Allocate buffer with double the message length plus one for safety
+    if (!easy_flipper_set_buffer(&formatted_message, message_length * 2 + 1))
+    {
+        return;
+    }
+
+    while (i < message_length)
+    {
+        uint32_t max_line_length = 31;                  // Maximum characters per line
+        uint32_t remaining_length = message_length - i; // Remaining characters
+        uint32_t line_length = (remaining_length < max_line_length) ? remaining_length : max_line_length;
+
+        // Check for newline character within the current segment
+        uint32_t newline_pos = i;
+        bool found_newline = false;
+        for (; newline_pos < i + line_length && newline_pos < message_length; newline_pos++)
+        {
+            if (message[newline_pos] == '\n')
+            {
+                found_newline = true;
+                break;
+            }
+        }
+
+        if (found_newline)
+        {
+            // If newline found, set line_length up to the newline
+            line_length = newline_pos - i;
+        }
+
+        // Temporary buffer to hold the current line
+        char line[32];
+        strncpy(line, message + i, line_length);
+        line[line_length] = '\0';
+
+        // If newline was found, skip it for the next iteration
+        if (found_newline)
+        {
+            i += line_length + 1; // +1 to skip the '\n' character
+        }
+        else
+        {
+            // Check if the line ends in the middle of a word and adjust accordingly
+            if (line_length == max_line_length && message[i + line_length] != '\0' && message[i + line_length] != ' ')
+            {
+                // Find the last space within the current line to avoid breaking a word
+                char *last_space = strrchr(line, ' ');
+                if (last_space != NULL)
+                {
+                    // Adjust the line_length to avoid cutting the word
+                    line_length = last_space - line;
+                    line[line_length] = '\0'; // Null-terminate at the space
+                }
+            }
+
+            // Move the index forward by the determined line_length
+            i += line_length;
+
+            // Skip any spaces at the beginning of the next line
+            while (i < message_length && message[i] == ' ')
+            {
+                i++;
+            }
+        }
+
+        // Manually copy the fixed line into the formatted_message buffer
+        for (uint32_t j = 0; j < line_length; j++)
+        {
+            formatted_message[formatted_index++] = line[j];
+        }
+
+        // Add a newline character for line spacing
+        formatted_message[formatted_index++] = '\n';
+    }
+
+    // Null-terminate the formatted_message
+    formatted_message[formatted_index] = '\0';
+
+    // Add the formatted message to the widget
+    widget_add_text_scroll_element(*widget, 0, 0, 128, 64, formatted_message);
+}
+
+void flip_weather_loader_draw_callback(Canvas *canvas, void *model)
+{
+    if (!canvas || !model)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_draw_callback - canvas or model is NULL");
+        return;
+    }
+
+    SerialState http_state = fhttp.state;
+    DataLoaderModel *data_loader_model = (DataLoaderModel *)model;
+    DataState data_state = data_loader_model->data_state;
+    char *title = data_loader_model->title;
+
+    canvas_set_font(canvas, FontSecondary);
+
+    if (http_state == INACTIVE)
+    {
+        canvas_draw_str(canvas, 0, 7, "Wifi Dev Board disconnected.");
+        canvas_draw_str(canvas, 0, 17, "Please connect to the board.");
+        canvas_draw_str(canvas, 0, 32, "If your board is connected,");
+        canvas_draw_str(canvas, 0, 42, "make sure you have flashed");
+        canvas_draw_str(canvas, 0, 52, "your WiFi Devboard with the");
+        canvas_draw_str(canvas, 0, 62, "latest FlipperHTTP flash.");
+        return;
+    }
+
+    if (data_state == DataStateError || data_state == DataStateParseError)
+    {
+        flip_weather_request_error_draw(canvas);
+        return;
+    }
+
+    canvas_draw_str(canvas, 0, 7, title);
+    canvas_draw_str(canvas, 0, 17, "Loading...");
+
+    if (data_state == DataStateInitial)
+    {
+        return;
+    }
+
+    if (http_state == SENDING)
+    {
+        canvas_draw_str(canvas, 0, 27, "Sending...");
+        return;
+    }
+
+    if (http_state == RECEIVING || data_state == DataStateRequested)
+    {
+        canvas_draw_str(canvas, 0, 27, "Receiving...");
+        return;
+    }
+
+    if (http_state == IDLE && data_state == DataStateReceived)
+    {
+        canvas_draw_str(canvas, 0, 27, "Processing...");
+        return;
+    }
+
+    if (http_state == IDLE && data_state == DataStateParsed)
+    {
+        canvas_draw_str(canvas, 0, 27, "Processed...");
+        return;
+    }
+}
+
+static void flip_weather_loader_process_callback(void *context)
+{
+    if (context == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_process_callback - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    FlipWeatherApp *app = (FlipWeatherApp *)context;
+    View *view = app->view_loader;
+
+    DataState current_data_state;
+    with_view_model(view, DataLoaderModel * model, { current_data_state = model->data_state; }, false);
+
+    if (current_data_state == DataStateInitial)
+    {
+        with_view_model(
+            view,
+            DataLoaderModel * model,
+            {
+                model->data_state = DataStateRequested;
+                DataLoaderFetch fetch = model->fetcher;
+                if (fetch == NULL)
+                {
+                    FURI_LOG_E(TAG, "Model doesn't have Fetch function assigned.");
+                    model->data_state = DataStateError;
+                    return;
+                }
+
+                // Clear any previous responses
+                strncpy(fhttp.last_response, "", 1);
+                bool request_status = fetch(model);
+                if (!request_status)
+                {
+                    model->data_state = DataStateError;
+                }
+            },
+            true);
+    }
+    else if (current_data_state == DataStateRequested || current_data_state == DataStateError)
+    {
+        if (fhttp.state == IDLE && fhttp.last_response != NULL)
+        {
+            if (strstr(fhttp.last_response, "[PONG]") != NULL)
+            {
+                FURI_LOG_DEV(TAG, "PONG received.");
+            }
+            else if (strncmp(fhttp.last_response, "[SUCCESS]", 9) == 0)
+            {
+                FURI_LOG_DEV(TAG, "SUCCESS received. %s", fhttp.last_response ? fhttp.last_response : "NULL");
+            }
+            else if (strncmp(fhttp.last_response, "[ERROR]", 9) == 0)
+            {
+                FURI_LOG_DEV(TAG, "ERROR received. %s", fhttp.last_response ? fhttp.last_response : "NULL");
+            }
+            else if (strlen(fhttp.last_response) == 0)
+            {
+                // Still waiting on response
+            }
+            else
+            {
+                with_view_model(view, DataLoaderModel * model, { model->data_state = DataStateReceived; }, true);
+            }
+        }
+        else if (fhttp.state == SENDING || fhttp.state == RECEIVING)
+        {
+            // continue waiting
+        }
+        else if (fhttp.state == INACTIVE)
+        {
+            // inactive. try again
+        }
+        else if (fhttp.state == ISSUE)
+        {
+            with_view_model(view, DataLoaderModel * model, { model->data_state = DataStateError; }, true);
+        }
+        else
+        {
+            FURI_LOG_DEV(TAG, "Unexpected state: %d lastresp: %s", fhttp.state, fhttp.last_response ? fhttp.last_response : "NULL");
+            DEV_CRASH();
+        }
+    }
+    else if (current_data_state == DataStateReceived)
+    {
+        with_view_model(
+            view,
+            DataLoaderModel * model,
+            {
+                char *data_text;
+                if (model->parser == NULL)
+                {
+                    data_text = NULL;
+                    FURI_LOG_DEV(TAG, "Parser is NULL");
+                    DEV_CRASH();
+                }
+                else
+                {
+                    data_text = model->parser(model);
+                }
+                FURI_LOG_DEV(TAG, "Parsed data: %s\r\ntext: %s", fhttp.last_response ? fhttp.last_response : "NULL", data_text ? data_text : "NULL");
+                model->data_text = data_text;
+                if (data_text == NULL)
+                {
+                    model->data_state = DataStateParseError;
+                }
+                else
+                {
+                    model->data_state = DataStateParsed;
+                }
+            },
+            true);
+    }
+    else if (current_data_state == DataStateParsed)
+    {
+        with_view_model(
+            view,
+            DataLoaderModel * model,
+            {
+                if (++model->request_index < model->request_count)
+                {
+                    model->data_state = DataStateInitial;
+                }
+                else
+                {
+                    flip_weather_widget_set_text(model->data_text != NULL ? model->data_text : "Empty result", &app_instance->widget_result);
+                    if (model->data_text != NULL)
+                    {
+                        free(model->data_text);
+                        model->data_text = NULL;
+                    }
+                    view_set_previous_callback(widget_get_view(app_instance->widget_result), model->back_callback);
+                    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWeatherViewWidgetResult);
+                }
+            },
+            true);
+    }
+}
+
+static void flip_weather_loader_timer_callback(void *context)
+{
+    if (context == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_timer_callback - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+    FlipWeatherApp *app = (FlipWeatherApp *)context;
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipWeatherCustomEventProcess);
+}
+
+static void flip_weather_loader_on_enter(void *context)
+{
+    if (context == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_on_enter - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+    FlipWeatherApp *app = (FlipWeatherApp *)context;
+    View *view = app->view_loader;
+    with_view_model(
+        view,
+        DataLoaderModel * model,
+        {
+            view_set_previous_callback(view, model->back_callback);
+            if (model->timer == NULL)
+            {
+                model->timer = furi_timer_alloc(flip_weather_loader_timer_callback, FuriTimerTypePeriodic, app);
+            }
+            furi_timer_start(model->timer, 250);
+        },
+        true);
+}
+
+static void flip_weather_loader_on_exit(void *context)
+{
+    if (context == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_on_exit - context is NULL");
+        DEV_CRASH();
+        return;
+    }
+    FlipWeatherApp *app = (FlipWeatherApp *)context;
+    View *view = app->view_loader;
+    with_view_model(
+        view,
+        DataLoaderModel * model,
+        {
+            if (model->timer)
+            {
+                furi_timer_stop(model->timer);
+            }
+        },
+        false);
+}
+
+void flip_weather_loader_init(View *view)
+{
+    if (view == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_init - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+    view_allocate_model(view, ViewModelTypeLocking, sizeof(DataLoaderModel));
+    view_set_enter_callback(view, flip_weather_loader_on_enter);
+    view_set_exit_callback(view, flip_weather_loader_on_exit);
+}
+
+void flip_weather_loader_free_model(View *view)
+{
+    if (view == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_loader_free_model - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+    with_view_model(
+        view,
+        DataLoaderModel * model,
+        {
+            if (model->timer)
+            {
+                furi_timer_free(model->timer);
+                model->timer = NULL;
+            }
+            if (model->parser_context)
+            {
+                free(model->parser_context);
+                model->parser_context = NULL;
+            }
+        },
+        false);
+}
+
+bool flip_weather_custom_event_callback(void *context, uint32_t index)
+{
+    if (context == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_custom_event_callback - context is NULL");
+        DEV_CRASH();
+        return false;
+    }
+
+    switch (index)
+    {
+    case FlipWeatherCustomEventProcess:
+        flip_weather_loader_process_callback(context);
+        return true;
+    default:
+        FURI_LOG_DEV(TAG, "flip_weather_custom_event_callback. Unknown index: %ld", index);
+        return false;
+    }
+}
+
+void flip_weather_generic_switch_to_view(FlipWeatherApp *app, char *title, DataLoaderFetch fetcher, DataLoaderParser parser, size_t request_count, ViewNavigationCallback back, uint32_t view_id)
+{
+    if (app == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_generic_switch_to_view - app is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    View *view = app->view_loader;
+    if (view == NULL)
+    {
+        FURI_LOG_E(TAG, "flip_weather_generic_switch_to_view - view is NULL");
+        DEV_CRASH();
+        return;
+    }
+
+    with_view_model(
+        view,
+        DataLoaderModel * model,
+        {
+            model->title = title;
+            model->fetcher = fetcher;
+            model->parser = parser;
+            model->request_index = 0;
+            model->request_count = request_count;
+            model->back_callback = back;
+            model->data_state = DataStateInitial;
+            model->data_text = NULL;
+        },
+        true);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, view_id);
 }

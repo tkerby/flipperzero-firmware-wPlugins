@@ -20,25 +20,25 @@ typedef enum
 // Define a single view for our FlipWeather application
 typedef enum
 {
-    FlipWeatherViewWeather,           // The weather screen
-    FlipWeatherViewGPS,               // The GPS screen
     FlipWeatherViewSubmenu,           // The main submenu
     FlipWeatherViewAbout,             // The about screen
     FlipWeatherViewSettings,          // The wifi settings screen
     FlipWeatherViewTextInputSSID,     // The text input screen for SSID
     FlipWeatherViewTextInputPassword, // The text input screen for password
     //
-    FlipWeatherViewPopupError, // The error popup screen
+    FlipWeatherViewPopupError,   // The error popup screen
+    FlipWeatherViewWidgetResult, // The text box that displays the random fact
+    FlipWeatherViewLoader,       // The loader screen retrieves data from the internet
 } FlipWeatherView;
 
 // Each screen will have its own view
 typedef struct
 {
     ViewDispatcher *view_dispatcher;          // Switches between our views
-    View *view_weather;                       // The weather view
-    View *view_gps;                           // The GPS view
+    View *view_loader;                        // The screen that loads data from internet
     Submenu *submenu;                         // The main submenu
     Widget *widget;                           // The widget (about)
+    Widget *widget_result;                    // The widget that displays the result
     Popup *popup_error;                       // The error popup
     VariableItemList *variable_item_list;     // The variable item list (settngs)
     VariableItem *variable_item_ssid;         // The variable item
@@ -55,21 +55,14 @@ typedef struct
     uint32_t uart_text_input_buffer_size_password; // Size of the text input buffer
 } FlipWeatherApp;
 
-extern char city_data[48];
-extern char region_data[48];
-extern char country_data[48];
 extern char lat_data[32];
 extern char lon_data[32];
-extern char ip_data[32];
-extern char temperature_data[32];
-extern char precipitation_data[32];
-extern char rain_data[32];
-extern char showers_data[32];
-extern char snowfall_data[32];
-extern char time_data[32];
-extern char ip_address[16];
+
+extern char *total_data;
+extern char *weather_data;
 
 // Function to free the resources used by FlipWeatherApp
 void flip_weather_app_free(FlipWeatherApp *app);
+extern FlipWeatherApp *app_instance;
 
 #endif

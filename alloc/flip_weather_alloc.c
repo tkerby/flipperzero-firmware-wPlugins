@@ -39,19 +39,20 @@ FlipWeatherApp *flip_weather_app_alloc()
     {
         return NULL;
     }
-
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, flip_weather_custom_event_callback);
     // Main view
-    if (!easy_flipper_set_view(&app->view_weather, FlipWeatherViewWeather, flip_weather_view_draw_callback_weather, NULL, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_view(&app->view_loader, FlipWeatherViewLoader, flip_weather_loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
     {
         return NULL;
     }
-    if (!easy_flipper_set_view(&app->view_gps, FlipWeatherViewGPS, flip_weather_view_draw_callback_gps, NULL, callback_to_submenu, &app->view_dispatcher, app))
-    {
-        return NULL;
-    }
+    flip_weather_loader_init(app->view_loader);
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget, FlipWeatherViewAbout, "FlipWeather v1.1\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget, FlipWeatherViewAbout, "FlipWeather v1.2\n-----\nUse WiFi to get GPS and \nWeather information.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
+    {
+        return NULL;
+    }
+    if (!easy_flipper_set_widget(&app->widget_result, FlipWeatherViewWidgetResult, "Error, try again.", callback_to_submenu, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -77,7 +78,7 @@ FlipWeatherApp *flip_weather_app_alloc()
     variable_item_set_current_value_text(app->variable_item_password, "");
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu, FlipWeatherViewSubmenu, "FlipWeather v1.1", callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu, FlipWeatherViewSubmenu, "FlipWeather v1.2", callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -105,12 +106,6 @@ FlipWeatherApp *flip_weather_app_alloc()
             strncpy(app->uart_text_input_temp_buffer_password, app->uart_text_input_buffer_password, app->uart_text_input_buffer_size_password - 1);
             app->uart_text_input_temp_buffer_password[app->uart_text_input_buffer_size_password - 1] = '\0';
         }
-    }
-
-    // Popup
-    if (!easy_flipper_set_popup(&app->popup_error, FlipWeatherViewPopupError, "[ERROR]", 0, 0, "Wifi Dev Board disconnected.\nIf your board is connected,\nmake sure you have the\nlatest FlipperHTTP flash.", 0, 12, flip_weather_popup_callback, callback_to_submenu, &app->view_dispatcher, app))
-    {
-        return NULL;
     }
 
     // Switch to the main view

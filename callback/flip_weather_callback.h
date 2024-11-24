@@ -9,9 +9,6 @@ extern bool weather_request_success;
 extern bool sent_weather_request;
 extern bool got_weather_data;
 
-void flip_weather_popup_callback(void *context);
-void flip_weather_request_error(Canvas *canvas);
-void flip_weather_handle_gps_draw(Canvas *canvas, bool show_gps_data);
 void flip_weather_view_draw_callback_weather(Canvas *canvas, void *model);
 void flip_weather_view_draw_callback_gps(Canvas *canvas, void *model);
 void callback_submenu_choices(void *context, uint32_t index);
@@ -27,4 +24,15 @@ void settings_item_selected(void *context, uint32_t index);
  */
 uint32_t callback_exit_app(void *context);
 uint32_t callback_to_wifi_settings(void *context);
+
+// Add edits by Derek Jamison
+void flip_weather_generic_switch_to_view(FlipWeatherApp *app, char *title, DataLoaderFetch fetcher, DataLoaderParser parser, size_t request_count, ViewNavigationCallback back, uint32_t view_id);
+
+void flip_weather_loader_draw_callback(Canvas *canvas, void *model);
+
+void flip_weather_loader_init(View *view);
+
+void flip_weather_loader_free_model(View *view);
+
+bool flip_weather_custom_event_callback(void *context, uint32_t index);
 #endif
