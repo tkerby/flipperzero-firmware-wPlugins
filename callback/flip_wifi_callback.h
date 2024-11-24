@@ -17,10 +17,6 @@ uint32_t callback_to_submenu_scan(void *context);
 
 uint32_t callback_to_submenu_saved(void *context);
 
-void popup_callback_saved(void *context);
-
-void popup_callback_main(void *context);
-
 // Callback for drawing the main screen
 void flip_wifi_view_draw_callback_scan(Canvas *canvas, void *model);
 
@@ -31,12 +27,6 @@ bool flip_wifi_view_input_callback_scan(InputEvent *event, void *context);
 
 // Input callback for the view (async input handling)
 bool flip_wifi_view_input_callback_saved(InputEvent *event, void *context);
-
-// Function to trim leading and trailing whitespace
-// Returns the trimmed start pointer and updates the length
-char *trim_whitespace(char *start, size_t *length);
-
-bool flip_wifi_handle_scan(FlipWiFiApp *app);
 
 void callback_submenu_choices(void *context, uint32_t index);
 

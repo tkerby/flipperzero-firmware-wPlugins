@@ -69,7 +69,7 @@ FlipWiFiApp *flip_wifi_app_alloc()
     }
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.1\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.2\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -93,7 +93,7 @@ FlipWiFiApp *flip_wifi_app_alloc()
     }
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.1", easy_flipper_callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.2", easy_flipper_callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -108,12 +108,6 @@ FlipWiFiApp *flip_wifi_app_alloc()
     submenu_add_item(app->submenu_main, "Scan", FlipWiFiSubmenuIndexWiFiScan, callback_submenu_choices, app);
     submenu_add_item(app->submenu_main, "Saved APs", FlipWiFiSubmenuIndexWiFiSaved, callback_submenu_choices, app);
     submenu_add_item(app->submenu_main, "Info", FlipWiFiSubmenuIndexAbout, callback_submenu_choices, app);
-
-    // Popup
-    if (!easy_flipper_set_popup(&app->popup, FlipWiFiViewPopup, "Success", 0, 0, "The WiFi setting has been set.", 0, 10, popup_callback_saved, callback_to_submenu_saved, &app->view_dispatcher, app))
-    {
-        return false;
-    }
 
     // Load the playlist from storage
     if (!load_playlist(&app->wifi_playlist))
