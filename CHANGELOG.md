@@ -1,3 +1,9 @@
+## 0.4.0
+
+- Table Tilt!
+- Solid flipper rendering
+- Code refactor / cleanup
+
 ## 0.3.0
 
 - Added Idle timeout of 2 minutes

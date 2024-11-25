@@ -491,10 +491,6 @@ extern "C" int32_t pinball0_app(void* p) {
                 case InputKeyUp:
                     switch(app.game_mode) {
                     case GM_Playing:
-                        app.game_mode = GM_Tilted;
-                        app.table->bump_count = 0;
-                        notify_table_tilted(&app);
-
                         if(event.type == InputTypePress) {
                             // Table bump and Tilt tracking
                             uint32_t current_tick = furi_get_tick();

@@ -21,7 +21,7 @@ Still a work in progress...
 * User-defined tables via JSON files
 * Bumpers, flat surfaces, curved surfaces
 * Scores! (no high scores yet, just a running tally as you play)
-* Table bumps!
+* Table bumps! (Don't tilt the table!)
 * Portals!
 * Rollover items
 * Sounds! Blinky lights! Annoying vibrations!
@@ -52,7 +52,7 @@ In **Debug** mode, test tables will be shown. A test table is one that begins wi
 ### File Format
 Table units are specified at a 10x scale. This means our table is **630 x 1270** in size (as the F0 display is 64 pixels x 128 pixels). Our origin is in the top-left at 0, 0. Check out the default tables in the `assets/tables` folder for example usage.
 
-The JSON can include comments - because why not!
+These JSON elements are all defined at the top-level. The JSON can include comments - because why not!
 
 > **DISCLAIMER:** The file format may change from release to release. Sorry. There is some basic error checking when reading / parsing the table files. If the error is serious enough, you will see an error message in the app. Otherwise, check the console logs. For those familiar with `ufbt`, simply run `ufbt cli` and issue the `log` command. Then launch Pinball0. All informational and higher logs will be displayed. These logs are useful when reporting bugs/issues!
 
@@ -117,3 +117,8 @@ When the ball passes over/through a rollover object, the symbol will appear. Onl
 * `"b_end": [ X, Y]`
 
 Defines two portals, **a** and **b**. They are bi-drectional. Like rails, their "surface" - or in this case, their "entry surface" - is "on the left" from their respective start to end direction. You can't "enter" a portal from it's reverse side, you will pass through.
+
+#### tilt_detect : boolean
+* `"tilt_detect": bool` : optional, defaults to `true`
+
+Mainly used to turn off tilt detection. Useful for tables that promote free-play and multiple table bumps without penalty.
