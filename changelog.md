@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0 - Initial Release
+## v1.1.0 - Release
 - **User-defined \( x \) values for evaluation.**
 - Improved navigation flow to eliminate redundant screens.
 
