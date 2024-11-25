@@ -11,7 +11,8 @@ typedef enum {
     ModeViewPolynomial,
     ModeEditCalculus,
     ModeInstructions,
-    ModeMainMenu
+    ModeMainMenu,
+    ModeSetX
 } AppMode;
 
 typedef struct {
@@ -73,11 +74,8 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
                     case InputKeyUp:
                         app->mode = ModeInstructions;
                         break;
-                    case InputKeyDown:
-                        app->mode = ModeViewPolynomial;
-                        break;
                     case InputKeyOk:
-                        app->mode = ModeViewPolynomial;
+                        app->mode = ModeSetX; // Start by setting X
                         break;
                     case InputKeyBack:
                         app->running = false; // Exit the app
@@ -86,6 +84,27 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
                         break;
                 }
                 break;
+
+            case ModeSetX: // Adjust the x value
+                switch(input_event->key) {
+                    case InputKeyUp:
+                        app->x_value += (double)0.1; // Increment x
+                        break;
+                    case InputKeyDown:
+                        app->x_value -= (double)0.1; // Decrement x
+                        break;
+                    case InputKeyOk:
+                        app->mode = ModeInputCoefficients; // Transition to coefficient input
+                        app->current_input_index = 0; // Reset input index
+                        break;
+                    case InputKeyBack:
+                        app->mode = ModeMainMenu; // Cancel and return to main menu
+                        break;
+                    default:
+                        break;
+                }
+                break;
+
             case ModeInputCoefficients:
                 switch(input_event->key) {
                     case InputKeyUp:
@@ -107,6 +126,7 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
                         break;
                 }
                 break;
+
             case ModeViewPolynomial:
                 switch(input_event->key) {
                     case InputKeyLeft:
@@ -127,8 +147,9 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
                         break;
                     default:
                         break;
-                }
-                break;
+            }
+            break;
+
             case ModeEditCalculus:
                 switch(input_event->key) {
                     case InputKeyUp:
@@ -144,17 +165,19 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
                         break;
                     default:
                         break;
-                }
-                break;
-            case ModeInstructions:
-                switch(input_event->key) {
-                    case InputKeyBack:
-                        app->mode = ModeMainMenu;
+                    }
+                    break;
+
+                    case ModeInstructions:
+                        switch(input_event->key) {
+                            case InputKeyBack:
+                                app->mode = ModeMainMenu;
+                                break;
+                            default:
+                                break;
+                        }
                         break;
-                    default:
-                        break;
-                }
-                break;
+
             default:
                 break;
         }
@@ -164,65 +187,67 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
 static void math_wiz_render_callback(Canvas* canvas, void* context) {
     MathWizApp* app = context;
     FuriString* output = furi_string_alloc();
+    char buffer[64]; // Declare buffer once here and reuse
 
     switch(app->mode) {
-        case ModeMainMenu:
-            // Display main menu
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Main Menu:");
-            canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP: Instructions");
-            canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "DOWN: Polynomial Solver");
-            canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Exit App");
-            break;
+    case ModeMainMenu:
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Main Menu:");
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP: Instructions");
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "OK: Set X Value");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Exit App");
+        break;
 
-        case ModeInputCoefficients:
-            // Display coefficient input instructions
-            char buffer[64];
-            snprintf(buffer, sizeof(buffer), "Set coefficient for x^%d: %.2lf",
-                     app->current_input_index, app->coefficients[app->current_input_index]);
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, buffer);
-            canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP/DOWN: Adjust");
-            canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "OK: Next Coefficient");
-            canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Polynomial");
-            break;
 
-        case ModeViewPolynomial:
-            // Display the polynomial and evaluation result
-            display_polynomial(app, output);
-            const char* output_text = furi_string_get_cstr(output) + app->horizontal_scroll_offset;
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, output_text);
 
-            snprintf(buffer, sizeof(buffer), "f(%lf) = %lf", app->x_value,
-                     evaluate_polynomial(app->x_value, app->degree, app->coefficients));
-            canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, buffer);
+    case ModeSetX:
+        snprintf(buffer, sizeof(buffer), "Set X Value: %.2lf", app->x_value);
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, buffer);
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP: Increase");
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "DOWN: Decrease");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "OK: Confirm BACK: Cancel");
+        break;
 
-            canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "LEFT/RIGHT: Scroll");
-            canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Menu");
-            break;
 
-        case ModeEditCalculus:
-            // Display calculus options
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Calculus Options:");
-            canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP: Derivative");
-            canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "DOWN: Integral");
-            canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Polynomial");
-            break;
+    case ModeInputCoefficients:
+        snprintf(buffer, sizeof(buffer), "Set coefficient for x^%d: %.2lf",
+        app->current_input_index, app->coefficients[app->current_input_index]);
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, buffer);
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP/DOWN: Adjust");
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "OK: Next Coefficient");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Polynomial");
+        break;
 
-        case ModeInstructions:
-            // Display instructions
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Instructions:");
-            canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "Navigate the app:");
-            canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "- UP/DOWN/LEFT/RIGHT");
-            canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Menu");
-            break;
+    case ModeViewPolynomial:
+        display_polynomial(app, output);
+        const char* output_text = furi_string_get_cstr(output) + app->horizontal_scroll_offset;
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, output_text);
 
-        default:
-            // Shouldn't reach here, but clear the canvas just in case
-            canvas_clear(canvas);
-            canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Unexpected Mode");
-            break;
+        snprintf(buffer, sizeof(buffer), "f(%lf) = %lf", app->x_value,
+                    evaluate_polynomial(app->x_value, app->degree, app->coefficients));
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, buffer);
+
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "LEFT/RIGHT: Scroll");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Menu");
+        break;
+
+    case ModeEditCalculus:
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Calculus Options:");
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP: Derivative");
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "DOWN: Integral");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Polynomial");
+        break;
+
+    case ModeInstructions:
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Instructions:");
+        canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "Navigate the app:");
+        canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "- UP/DOWN/LEFT/RIGHT");
+        canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Return to Menu");
+        break;
+
+    default:
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Unexpected Mode");
+        break;
     }
-
-    furi_string_free(output);
 }
 
 int32_t math_wiz_main(void* p) {
@@ -230,7 +255,10 @@ int32_t math_wiz_main(void* p) {
     MathWizApp* app = malloc(sizeof(MathWizApp));
     app->degree = MAX_DEGREE;
     app->running = true; // Initialize the running flag
+    app->mode = ModeMainMenu; // Start in the main menu
+    app->x_value = 0.0; // Set initial x_value to 0
 
+    // Initialize coefficients to 0
     for(int i = 0; i <= app->degree; i++) {
         app->coefficients[i] = 0.0;
     }
@@ -242,10 +270,12 @@ int32_t math_wiz_main(void* p) {
     Gui* gui = furi_record_open("gui");
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
+    // Main loop
     while(app->running) {
         furi_delay_ms(100);
     }
 
+    // Cleanup
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_record_close("gui");

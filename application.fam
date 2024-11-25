@@ -8,7 +8,7 @@ App(
     stack_size=2 * 1024,
     fap_category="Tools",
     # Optional values
-    # fap_version="0.1",
+    # fap_version="1.1",
     fap_icon="math_wiz.png",  # 10x10 1-bit PNG
     # fap_description="Does some trig/calculus calculations",
     # fap_author="Papa_Ghost",
