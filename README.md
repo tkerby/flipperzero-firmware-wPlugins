@@ -1,6 +1,9 @@
 # Metroflip
 Metroflip is a multi-protocol metro card reader app for the Flipper Zero, inspired by the Metrodroid project. It enables the parsing and analysis of metro cards from transit systems around the world, providing a proof-of-concept for exploring transit card data in a portable format.
 
+# Author
+[@luu176](https://github.com/luu176)
+
 # Metroflip - Card Support TODO List
 
 This is a list of metro cards and transit systems that need support or have partial support in the **Metroflip** app.
@@ -11,6 +14,9 @@ This is a list of metro cards and transit systems that need support or have part
 
 - [x] **Charliecard**  
   - Status: Fully supported.
+     
+- [x] **Metromoney**  
+  - Status: Fully supported.
 
 ## 🚧 In Progress / Needs More Functionality
 - [ ] **Rav-Kav**  
@@ -18,9 +24,6 @@ This is a list of metro cards and transit systems that need support or have part
   - To Do: Parse more data from the card (e.g., transaction history, expiration date, etc.).
 
 ## 📝 To Do (Unimplemented)
-- [ ] **Metromoney**  
-  - To Do: Add support for reading and analyzing Metromoney transit cards.
-
 - [ ] **Tianjin Railway Transit (TRT)**  
   - To Do: Add support for reading and analyzing Tianjin Railway Transit cards.
 
@@ -29,6 +32,7 @@ This is a list of metro cards and transit systems that need support or have part
 ### Credits:
 - **Charliecard Parser**: by [@zacharyweiss](https://github.com/zacharyweiss)
 - **Rav-Kav Parser**: by [@luu176](https://github.com/luu176)
+- **Metromoney Parser**: by [@Leptopt1los](https://github.com/Leptopt1los)
 - **Info Slave**: [@equipter](https://github.com/equipter)
 
 
