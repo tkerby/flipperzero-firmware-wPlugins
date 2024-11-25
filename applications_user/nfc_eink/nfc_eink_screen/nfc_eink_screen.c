@@ -204,6 +204,7 @@ bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** 
     bool loaded = false;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
+    FuriString* name = furi_string_alloc();
 
     do {
         if(!flipper_format_buffered_file_open_existing(ff, file_path)) break;
@@ -212,12 +213,7 @@ bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** 
         if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_MANUFACTURER_TYPE_KEY, &tmp, 1)) break;
         NfcEinkManufacturer manufacturer = tmp;
 
-        if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &tmp, 1)) break;
-        NfcEinkScreenType screen_type = tmp;
-        if(screen_type == NfcEinkScreenTypeUnknown || screen_type == NfcEinkScreenTypeNum) {
-            FURI_LOG_E(TAG, "Loaded screen type is invalid");
-            break;
-        }
+        if(!flipper_format_read_string(ff, NFC_EINK_SCREEN_NAME_KEY, name)) break;
 
         uint32_t width = 0;
         if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_WIDTH_KEY, &width, 1)) break;
@@ -225,7 +221,11 @@ bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** 
         uint32_t height = 0;
         if(!flipper_format_read_uint32(ff, NFC_EINK_SCREEN_HEIGHT_KEY, &height, 1)) break;
 
-        const NfcEinkScreenInfo* inf_tmp = nfc_eink_descriptor_get_by_type(screen_type);
+        const NfcEinkScreenInfo* inf_tmp = nfc_eink_descriptor_get_by_name(name);
+        if(!inf_tmp) {
+            FURI_LOG_E(TAG, "Screen %s was not found", furi_string_get_cstr(name));
+            break;
+        }
 
         if(inf_tmp->screen_manufacturer != manufacturer) {
             FURI_LOG_E(TAG, "Loaded manufacturer doesn't match with info field");
@@ -241,6 +241,7 @@ bool nfc_eink_screen_load_info(const char* file_path, const NfcEinkScreenInfo** 
         loaded = true;
     } while(false);
 
+    furi_string_free(name);
     flipper_format_free(ff);
     furi_record_close(RECORD_STORAGE);
 
@@ -366,10 +367,6 @@ bool nfc_eink_screen_save(const NfcEinkScreen* screen, const char* file_path) {
         // Write manufacturer type
         uint32_t buf = screen->data->base.screen_manufacturer;
         if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_MANUFACTURER_TYPE_KEY, &buf, 1)) break;
-
-        // Write screen type
-        buf = screen->data->base.screen_type;
-        if(!flipper_format_write_uint32(ff, NFC_EINK_SCREEN_TYPE_KEY, &buf, 1)) break;
 
         // Write screen name
         if(!flipper_format_write_string_cstr(ff, NFC_EINK_SCREEN_NAME_KEY, screen->data->base.name))
