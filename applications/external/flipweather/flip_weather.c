@@ -1,18 +1,13 @@
 #include "flip_weather.h"
 
-char city_data[48];
-char region_data[48];
-char country_data[48];
 char lat_data[32];
 char lon_data[32];
-char ip_data[32];
-char temperature_data[32];
-char precipitation_data[32];
-char rain_data[32];
-char showers_data[32];
-char snowfall_data[32];
-char time_data[32];
-char ip_address[16];
+
+char* total_data = NULL;
+char* weather_data = NULL;
+
+FlipWeatherApp* app_instance = NULL;
+void flip_weather_loader_free_model(View* view);
 
 // Function to free the resources used by FlipWeatherApp
 void flip_weather_app_free(FlipWeatherApp* app) {
@@ -22,13 +17,10 @@ void flip_weather_app_free(FlipWeatherApp* app) {
     }
 
     // Free View(s)
-    if(app->view_weather) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewWeather);
-        view_free(app->view_weather);
-    }
-    if(app->view_gps) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewGPS);
-        view_free(app->view_gps);
+    if(app->view_loader) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewLoader);
+        flip_weather_loader_free_model(app->view_loader);
+        view_free(app->view_loader);
     }
 
     // Free Submenu(s)
@@ -41,6 +33,10 @@ void flip_weather_app_free(FlipWeatherApp* app) {
     if(app->widget) {
         view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewAbout);
         widget_free(app->widget);
+    }
+    if(app->widget_result) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewWidgetResult);
+        widget_free(app->widget_result);
     }
 
     // Free Variable Item List(s)
@@ -59,12 +55,6 @@ void flip_weather_app_free(FlipWeatherApp* app) {
         uart_text_input_free(app->uart_text_input_password);
     }
 
-    // Free Popup(s)
-    if(app->popup_error) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWeatherViewPopupError);
-        popup_free(app->popup_error);
-    }
-
     // Free the text input buffer
     if(app->uart_text_input_buffer_ssid) free(app->uart_text_input_buffer_ssid);
     if(app->uart_text_input_temp_buffer_ssid) free(app->uart_text_input_temp_buffer_ssid);
@@ -79,6 +69,8 @@ void flip_weather_app_free(FlipWeatherApp* app) {
 
     // close the gui
     furi_record_close(RECORD_GUI);
+
+    if(total_data) free(total_data);
 
     // free the app
     if(app) free(app);

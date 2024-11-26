@@ -7,10 +7,42 @@ extern bool got_ip_address;
 extern bool geo_information_processed;
 extern bool weather_information_processed;
 
-bool flip_weather_parse_ip_address();
-bool flip_weather_handle_ip_address();
+// Add edits by Derek Jamison
+typedef enum DataState DataState;
+enum DataState {
+    DataStateInitial,
+    DataStateRequested,
+    DataStateReceived,
+    DataStateParsed,
+    DataStateParseError,
+    DataStateError,
+};
+
+typedef enum FlipWeatherCustomEvent FlipWeatherCustomEvent;
+enum FlipWeatherCustomEvent {
+    FlipWeatherCustomEventProcess,
+};
+
+typedef struct DataLoaderModel DataLoaderModel;
+typedef bool (*DataLoaderFetch)(DataLoaderModel* model);
+typedef char* (*DataLoaderParser)(DataLoaderModel* model);
+struct DataLoaderModel {
+    char* title;
+    char* data_text;
+    DataState data_state;
+    DataLoaderFetch fetcher;
+    DataLoaderParser parser;
+    void* parser_context;
+    size_t request_index;
+    size_t request_count;
+    ViewNavigationCallback back_callback;
+    FuriTimer* timer;
+};
+
 bool send_geo_location_request();
-void process_geo_location();
-void process_weather();
+char* process_geo_location(DataLoaderModel* model);
+bool process_geo_location_2();
+char* process_weather(DataLoaderModel* model);
+bool send_geo_weather_request(DataLoaderModel* model);
 
 #endif
