@@ -9,7 +9,7 @@
 #if __has_include(<assets_icons.h>)
 #include <assets_icons.h>
 #else
-extern const Icon I_RFIDDolphinReceive_97x61.png;
+extern const Icon I_RFIDDolphinReceive_97x61;
 #endif
 
 #include <gui/modules/submenu.h>
