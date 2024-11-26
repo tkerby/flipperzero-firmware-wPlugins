@@ -11,11 +11,11 @@ This is a list of metro cards and transit systems that need support or have part
 ## ✅ Supported Cards
 - [x] **Rav-Kav**  
   - Status: Needs more functionality (currently only able to read balance).
-
 - [x] **Charliecard**  
   - Status: Fully supported.
-     
 - [x] **Metromoney**  
+  - Status: Fully supported.
+- [x] **Bip!**  
   - Status: Fully supported.
 
 ## 🚧 In Progress / Needs More Functionality
@@ -28,16 +28,16 @@ This is a list of metro cards and transit systems that need support or have part
   - To Do: Add support for reading and analyzing Tianjin Railway Transit cards.
 - [ ] **Clipper**  
   - To Do: Add support for reading and analyzing Clipper cards.
-- [ ] **Bip!**  
-  - To Do: Add support for reading and analyzing Bip! cards.
 
 
 ---
 
 ### Credits:
-- **Charliecard Parser**: by [@zacharyweiss](https://github.com/zacharyweiss)
-- **Rav-Kav Parser**: by [@luu176](https://github.com/luu176)
-- **Metromoney Parser**: by [@Leptopt1los](https://github.com/Leptopt1los)
+- **App Author**: [@luu176](https://github.com/luu176)
+- **Charliecard Parser**: [@zacharyweiss](https://github.com/zacharyweiss)
+- **Rav-Kav Parser**: [@luu176](https://github.com/luu176)
+- **Metromoney Parser**: [@Leptopt1los](https://github.com/Leptopt1los)
+- **Bip! Parser**: [@rbasoalto](https://github.com/rbasoalto) [@gornekich](https://github.com/gornekich)
 - **Info Slave**: [@equipter](https://github.com/equipter)
 
 
