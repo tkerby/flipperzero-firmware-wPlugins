@@ -26,6 +26,8 @@ This is a list of metro cards and transit systems that need support or have part
 ## 📝 To Do (Unimplemented)
 - [ ] **Tianjin Railway Transit (TRT)**  
   - To Do: Add support for reading and analyzing Tianjin Railway Transit cards.
+- [ ] **Clipper**  
+  - To Do: Add support for reading and analyzing Clipper cards.
 
 ---
 
