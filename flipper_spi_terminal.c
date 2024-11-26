@@ -20,21 +20,31 @@ static void flipper_spi_terminal_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
+static void flipper_spi_terminal_init_default_config(FlipperSPITerminalAppConfig* config) {
+    SPI_TERM_LOG_T("Setting default settings...");
+
+    furi_check(config);
+
+    config->spi.Mode = LL_SPI_MODE_SLAVE;
+    config->spi.TransferDirection = LL_SPI_FULL_DUPLEX;
+    config->spi.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+    config->spi.ClockPolarity = LL_SPI_POLARITY_LOW;
+    config->spi.ClockPhase = LL_SPI_PHASE_1EDGE;
+    config->spi.NSS = LL_SPI_NSS_SOFT;
+    config->spi.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV32;
+    config->spi.BitOrder = LL_SPI_MSB_FIRST;
+    config->spi.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+    config->spi.CRCPoly = 7;
+
+    config->print_mode = FlipperSPITerminalAppPrintModeDynamic;
+
+    config->rx_dma_buffer_size = 2;
+}
+
 static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
     SPI_TERM_LOG_T("Alloc App");
     FlipperSPITerminalApp* app = malloc(sizeof(FlipperSPITerminalApp));
-
-    app->config.print_mode = FlipperSPITerminalAppPrintModeDynamic;
-    app->config.spi.Mode = LL_SPI_MODE_SLAVE;
-    app->config.spi.TransferDirection = LL_SPI_FULL_DUPLEX;
-    app->config.spi.DataWidth = LL_SPI_DATAWIDTH_8BIT;
-    app->config.spi.ClockPolarity = LL_SPI_POLARITY_LOW;
-    app->config.spi.ClockPhase = LL_SPI_PHASE_1EDGE;
-    app->config.spi.NSS = LL_SPI_NSS_SOFT;
-    app->config.spi.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV32;
-    app->config.spi.BitOrder = LL_SPI_MSB_FIRST;
-    app->config.spi.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
-    app->config.spi.CRCPoly = 7;
+    flipper_spi_terminal_init_default_config(&app->config);
 
     SPI_TERM_LOG_T("Open GUI");
     app->gui = furi_record_open(RECORD_GUI);
