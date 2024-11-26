@@ -1,5 +1,7 @@
 #include <web_crawler.h>
 
+void web_crawler_loader_free_model(View* view);
+
 void free_buffers(WebCrawlerApp* app) {
     if(!app) {
         FURI_LOG_E(TAG, "Invalid app context");
@@ -104,7 +106,7 @@ void free_all(WebCrawlerApp* app, char* reason) {
         FURI_LOG_I(TAG, reason);
     }
 
-    if(app->view_main) view_free(app->view_main);
+    if(app->view_loader) view_free(app->view_loader);
     if(app->submenu_main) submenu_free(app->submenu_main);
     if(app->submenu_config) submenu_free(app->submenu_config);
     if(app->variable_item_list_wifi) variable_item_list_free(app->variable_item_list_wifi);
@@ -140,14 +142,11 @@ void web_crawler_app_free(WebCrawlerApp* app) {
         return;
     }
 
-    // Remove and free Main view
-    if(app->view_main) {
-        view_dispatcher_remove_view(app->view_dispatcher, WebCrawlerViewMain);
-        view_free(app->view_main);
-    }
-    if(app->view_run) {
-        view_dispatcher_remove_view(app->view_dispatcher, WebCrawlerViewRun);
-        view_free(app->view_run);
+    // Free View(s)
+    if(app->view_loader) {
+        view_dispatcher_remove_view(app->view_dispatcher, WebCrawlerViewLoader);
+        web_crawler_loader_free_model(app->view_loader);
+        view_free(app->view_loader);
     }
     // Deinitialize UART
     flipper_http_deinit();
@@ -203,6 +202,10 @@ void web_crawler_app_free(WebCrawlerApp* app) {
     if(app->widget_file_delete) {
         view_dispatcher_remove_view(app->view_dispatcher, WebCrawlerViewFileDelete);
         widget_free(app->widget_file_delete);
+    }
+    if(app->widget_result) {
+        view_dispatcher_remove_view(app->view_dispatcher, WebCrawlerViewWidgetResult);
+        widget_free(app->widget_result);
     }
 
     // Free the ViewDispatcher and close GUI

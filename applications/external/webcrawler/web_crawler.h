@@ -23,13 +23,11 @@ typedef enum {
 } WebCrawlerSubmenuIndex;
 
 typedef enum {
-    WebCrawlerViewRun, // Run the GET request
     WebCrawlerViewAbout, // About screen
     WebCrawlerViewSubmenuConfig, // Submenu Config view for App (Wifi, File)
     WebCrawlerViewVariableItemListRequest, // Submenu for URL (Set URL, HTTP Method, Headers)
     WebCrawlerViewVariableItemListWifi, // Wifi Configuration screen (Submenu for SSID, Password)
     WebCrawlerViewVariableItemListFile, // Submenu for File (Read, File Type, Rename, Delete)
-    WebCrawlerViewMain, // Main view for App
     WebCrawlerViewSubmenuMain, // Submenu Main view for App (Run, About, Config)
     WebCrawlerViewTextInput, // Text input for Path
     WebCrawlerViewTextInputSSID, // Text input for SSID
@@ -40,6 +38,9 @@ typedef enum {
     WebCrawlerViewTextInputHeaders, // Text input for Headers
     WebCrawlerViewTextInputPayload, // Text input for Payload
     WebCrawlerViewFileDelete, // File Delete
+    //
+    WebCrawlerViewWidgetResult, // The text box that displays the random fact
+    WebCrawlerViewLoader, // The loader screen retrieves data from the internet
 } WebCrawlerViewIndex;
 
 // Define the application structure
@@ -47,9 +48,11 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     View* view_main;
     View* view_run;
+    View* view_loader;
     Submenu* submenu_main;
     Submenu* submenu_config;
     Widget* widget_about;
+    Widget* widget_result; // The widget that displays the result
 
     UART_TextInput* text_input_path;
     UART_TextInput* text_input_ssid;

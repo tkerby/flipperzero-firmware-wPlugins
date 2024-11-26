@@ -21,6 +21,8 @@ WebCrawlerApp* web_crawler_app_alloc() {
     if(!easy_flipper_set_view_dispatcher(&app->view_dispatcher, gui, app)) {
         return NULL;
     }
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, web_crawler_custom_event_callback);
 
     // Allocate and initialize temp_buffer and path
     app->temp_buffer_size_path = 128;
@@ -241,7 +243,7 @@ WebCrawlerApp* web_crawler_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            WebCrawlerViewSubmenuMain,
-           "Web Crawler v0.7",
+           "Web Crawler v0.8",
            web_crawler_exit_app_callback,
            &app->view_dispatcher)) {
         return NULL;
@@ -278,27 +280,18 @@ WebCrawlerApp* web_crawler_app_alloc() {
         web_crawler_submenu_callback,
         app);
 
-    // Allocate views
+    // Main view
     if(!easy_flipper_set_view(
-           &app->view_main,
-           WebCrawlerViewMain,
-           NULL,
-           NULL,
-           web_crawler_exit_app_callback,
-           &app->view_dispatcher,
-           app)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_view(
-           &app->view_run,
-           WebCrawlerViewRun,
-           web_crawler_view_draw_callback,
+           &app->view_loader,
+           WebCrawlerViewLoader,
+           web_crawler_loader_draw_callback,
            NULL,
            web_crawler_back_to_main_callback,
            &app->view_dispatcher,
            app)) {
         return NULL;
     }
+    web_crawler_loader_init(app->view_loader);
 
     //-- WIDGET ABOUT VIEW --
     if(!easy_flipper_set_widget(
@@ -322,6 +315,14 @@ WebCrawlerApp* web_crawler_app_alloc() {
            WebCrawlerViewFileDelete,
            "File deleted.",
            web_crawler_back_to_file_callback,
+           &app->view_dispatcher)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_widget(
+           &app->widget_result,
+           WebCrawlerViewWidgetResult,
+           "Error, try again.",
+           web_crawler_back_to_main_callback,
            &app->view_dispatcher)) {
         return NULL;
     }
