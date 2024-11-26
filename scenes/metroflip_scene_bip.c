@@ -50,22 +50,6 @@ typedef struct {
 } MfClassicKeyPair;
 
 static const MfClassicKeyPair bip_1k_keys[] = {
-    {.a = 0x3060206F5B0A, .b = 0xF1B9F5669CC8},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x5EC39B022F2B, .b = 0xF662248E7E89},
-    {.a = 0x3A09594C8587, .b = 0x62387B8D250D},
-    {.a = 0xF238D78FF48F, .b = 0x9DC282D46217},
-    {.a = 0xAFD0BA94D624, .b = 0x92EE4DC87191},
-    {.a = 0xB35A0E4ACC09, .b = 0x756EF55E2507},
-    {.a = 0x447AB7FD5A6B, .b = 0x932B9CB730EF},
-    {.a = 0x1F1A0A111B5B, .b = 0xAD9E0A1CA2F7},
-    {.a = 0xD58023BA2BDC, .b = 0x62CED42A6D87},
-    {.a = 0x2548A443DF28, .b = 0x2ED3B15E7C0F}, /*
     {.a = 0x3a42f33af429, .b = 0x1fc235ac1309},
     {.a = 0x6338a371c0ed, .b = 0x243f160918d1},
     {.a = 0xf124c2578ad0, .b = 0x9afc42372af1},
@@ -81,7 +65,7 @@ static const MfClassicKeyPair bip_1k_keys[] = {
     {.a = 0x63f17a449af0, .b = 0x82f435dedf01},
     {.a = 0xc4652c54261c, .b = 0x0263de1278f3},
     {.a = 0xd49e2826664f, .b = 0x51284c3686a6},
-    {.a = 0x3df14c8000a1, .b = 0x6a470d54127c},*/
+    {.a = 0x3df14c8000a1, .b = 0x6a470d54127c},
 };
 
 static void bip_parse_datetime(const MfClassicBlock* block, DateTime* parsed_data) {
