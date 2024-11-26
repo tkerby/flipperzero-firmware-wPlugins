@@ -6,7 +6,7 @@ Metroflip is a multi-protocol metro card reader app for the Flipper Zero, inspir
 
 # Metroflip - Card Support TODO List
 
-This is a list of metro cards and transit systems that need support or have partial support in the **Metroflip** app.
+This is a list of metro cards and transit systems that need support or have partial support.
 
 ## ✅ Supported Cards
 - [x] **Rav-Kav**  
