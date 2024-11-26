@@ -581,6 +581,7 @@ bool flipper_http_scan_wifi() {
     }
     // custom for FlipWiFi app
     fhttp.just_started_get = true;
+
     snprintf(
         fhttp.file_path,
         sizeof(fhttp.file_path),
@@ -987,9 +988,11 @@ void flipper_http_rx_callback(const char* line, void* context) {
         if(!flipper_http_append_to_file(
                line, strlen(line), fhttp.just_started_get, fhttp.file_path)) {
             FURI_LOG_E(HTTP_TAG, "Failed to append data to file.");
-            fhttp.just_started_get = false;
             fhttp.state = ISSUE;
             return;
+        }
+        if(fhttp.just_started_get) {
+            fhttp.just_started_get = false;
         }
     }
 
@@ -1313,4 +1316,51 @@ bool flipper_http_process_response_async(bool (*http_request)(void), bool (*pars
         return false;
     }
     return true;
+}
+
+/**
+ * @brief Perform a task while displaying a loading screen
+ * @param http_request The function to send the request
+ * @param parse_response The function to parse the response
+ * @param success_view_id The view ID to switch to on success
+ * @param failure_view_id The view ID to switch to on failure
+ * @param view_dispatcher The view dispatcher to use
+ * @return
+ */
+void flipper_http_loading_task(
+    bool (*http_request)(void),
+    bool (*parse_response)(void),
+    uint32_t success_view_id,
+    uint32_t failure_view_id,
+    ViewDispatcher** view_dispatcher) {
+    Loading* loading;
+    int32_t loading_view_id = 987654321; // Random ID
+
+    loading = loading_alloc();
+    if(!loading) {
+        FURI_LOG_E(HTTP_TAG, "Failed to allocate loading");
+        view_dispatcher_switch_to_view(*view_dispatcher, failure_view_id);
+
+        return;
+    }
+
+    view_dispatcher_add_view(*view_dispatcher, loading_view_id, loading_get_view(loading));
+
+    // Switch to the loading view
+    view_dispatcher_switch_to_view(*view_dispatcher, loading_view_id);
+
+    // Make the request
+    if(!flipper_http_process_response_async(http_request, parse_response)) {
+        FURI_LOG_E(HTTP_TAG, "Failed to make request");
+        view_dispatcher_switch_to_view(*view_dispatcher, failure_view_id);
+        view_dispatcher_remove_view(*view_dispatcher, loading_view_id);
+        loading_free(loading);
+
+        return;
+    }
+
+    // Switch to the success view
+    view_dispatcher_switch_to_view(*view_dispatcher, success_view_id);
+    view_dispatcher_remove_view(*view_dispatcher, loading_view_id);
+    loading_free(loading);
 }
