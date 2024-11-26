@@ -27,6 +27,9 @@ void metroflip_scene_start_on_enter(void* context) {
         MetroflipSceneMetromoney,
         metroflip_scene_start_submenu_callback,
         app);
+
+    submenu_add_item(
+        submenu, "Bip!", MetroflipSceneBip, metroflip_scene_start_submenu_callback, app);
     submenu_set_selected_item(
         submenu, scene_manager_get_scene_state(app->scene_manager, MetroflipSceneStart));
 
