@@ -61,8 +61,7 @@ void flipper_spi_terminal_scene_terminal_free(FlipperSPITerminalApp *app) {
 }
 
 static void flipper_spi_terminal_scene_terminal_dma_rx_isr(void *context) {
-  furi_check(context);
-  FlipperSPITerminalApp *app = context;
+  SPI_TERM_CONTEXT_TO_APP(context);
 
   if (!LL_DMA_IsEnabledIT_TC(SPI_DMA, SPI_DMA_RX_CHANNEL) &&
       !LL_DMA_IsEnabledIT_HT(SPI_DMA, SPI_DMA_RX_CHANNEL) &&
@@ -176,7 +175,7 @@ flipper_spi_terminal_scene_terminal_deinit_spi_dma(FlipperSPITerminalApp *app) {
 
 void flipper_spi_terminal_scene_terminal_on_enter(void *context) {
   SPI_TERM_LOG_T("Enter Terminal");
-  FlipperSPITerminalApp *app = context;
+  SPI_TERM_CONTEXT_TO_APP(context);
 
   furi_string_reset(app->terminalScreen.output_string_buffer);
   text_box_set_text(
@@ -198,8 +197,8 @@ void flipper_spi_terminal_scene_terminal_on_enter(void *context) {
 
 bool flipper_spi_terminal_scene_terminal_on_event(void *context,
                                                   SceneManagerEvent event) {
-  furi_check(context);
-  FlipperSPITerminalApp *app = context;
+
+  SPI_TERM_CONTEXT_TO_APP(context);
 
   if (event.type == SceneManagerEventTypeTick) {
     bool addedAny = false;
@@ -232,7 +231,7 @@ bool flipper_spi_terminal_scene_terminal_on_event(void *context,
 
 void flipper_spi_terminal_scene_terminal_on_exit(void *context) {
   SPI_TERM_LOG_T("Exit Terminal");
-  FlipperSPITerminalApp *app = context;
+  SPI_TERM_CONTEXT_TO_APP(context);
 
   flipper_spi_terminal_scene_terminal_deinit_spi_dma(app);
 
