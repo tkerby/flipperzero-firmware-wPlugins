@@ -18,6 +18,8 @@
 #define GAME_FPS          30
 #define MANUAL_ADJUSTMENT 20
 #define IDLE_TIMEOUT      120 * 1000 // 120 seconds * 1000 ticks/sec
+#define BUMP_DELAY        2 * 1000 // 2 seconds
+#define BUMP_MAX          3
 
 void solve(PinballApp* pb, float dt) {
     Table* table = pb->table;
@@ -77,6 +79,9 @@ void solve(PinballApp* pb, float dt) {
         for(auto& b : table->balls) {
             for(auto& o : table->objects) {
                 if(o->physical && o->collide(b)) {
+                    if(pb->game_mode == GM_Tilted) {
+                        continue;
+                    }
                     if(o->notification) {
                         (*o->notification)(pb);
                     }
@@ -87,6 +92,9 @@ void solve(PinballApp* pb, float dt) {
             }
             for(auto& f : table->flippers) {
                 if(f.collide(b)) {
+                    if(pb->game_mode == GM_Tilted) {
+                        continue;
+                    }
                     if(f.notification) {
                         (*f.notification)(pb);
                     }
@@ -127,6 +135,9 @@ void solve(PinballApp* pb, float dt) {
             if(table->lives.value > 0) {
                 // Reset our ball to it's starting position
                 table->balls = table->balls_initial;
+                if(pb->game_mode == GM_Tilted) {
+                    pb->game_mode = GM_Playing;
+                }
             } else {
                 table->game_over = true;
             }
@@ -284,6 +295,37 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
 
         pb->table->draw(canvas);
     } break;
+    case GM_Tilted: {
+        pb->table->draw(canvas);
+
+        const int32_t y = 56;
+        const int border = 8;
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_box(canvas, 16 - border, y - border, 32 + border * 2, 8 + border * 2);
+        canvas_set_color(canvas, ColorBlack);
+
+        bool display = furi_get_tick() % 1000 < 500;
+        if(display) {
+            canvas_draw_icon(canvas, 17, y, &I_Arcade_T);
+            canvas_draw_icon(canvas, 25, y, &I_Arcade_I);
+            canvas_draw_icon(canvas, 33, y, &I_Arcade_L);
+            canvas_draw_icon(canvas, 40, y, &I_Arcade_T);
+        }
+
+        int dots = 5;
+        int x_start = 16;
+        int x_gap = (48 - 16) / (dots - 1);
+        for(int x = 0; x < 5; x++, x_start += x_gap) {
+            if(x % 2 != display) {
+                canvas_draw_disc(canvas, x_start, 50, 2);
+                canvas_draw_disc(canvas, x_start, 70, 2);
+            } else {
+                canvas_draw_dot(canvas, x_start, 50);
+                canvas_draw_dot(canvas, x_start, 70);
+            }
+        }
+
+    } break;
     default:
         FURI_LOG_E(TAG, "Unknown Game Mode");
         break;
@@ -315,7 +357,6 @@ PinballApp::PinballApp() {
 
     table = NULL;
     tick = 0;
-    gameStarted = false;
 
     game_mode = GM_TableSelect;
     keys[InputKeyUp] = false;
@@ -385,7 +426,7 @@ extern "C" int32_t pinball0_app(void* p) {
             if(event.type == InputTypePress || event.type == InputTypeLong ||
                event.type == InputTypeRepeat) {
                 switch(event.key) {
-                case InputKeyBack:
+                case InputKeyBack: // navigate to previous screen or exit
                     switch(app.game_mode) {
                     case GM_TableSelect:
                         app.processing = false;
@@ -400,6 +441,10 @@ extern "C" int32_t pinball0_app(void* p) {
                     }
                     break;
                 case InputKeyRight: {
+                    if(app.game_mode == GM_Tilted) {
+                        break;
+                    }
+
                     app.keys[InputKeyRight] = true;
 
                     if(app.settings.debug_mode && app.table->balls_released == false) {
@@ -420,6 +465,10 @@ extern "C" int32_t pinball0_app(void* p) {
                     }
                 } break;
                 case InputKeyLeft: {
+                    if(app.game_mode == GM_Tilted) {
+                        break;
+                    }
+
                     app.keys[InputKeyLeft] = true;
 
                     if(app.settings.debug_mode && app.table->balls_released == false) {
@@ -443,10 +492,22 @@ extern "C" int32_t pinball0_app(void* p) {
                     switch(app.game_mode) {
                     case GM_Playing:
                         if(event.type == InputTypePress) {
-                            // we only set the key if it's a 'press' to ensure
-                            // a single table "bump"
-                            app.keys[InputKeyUp] = true;
-                            notify_table_bump(&app);
+                            // Table bump and Tilt tracking
+                            uint32_t current_tick = furi_get_tick();
+                            if(current_tick - app.table->last_bump >= BUMP_DELAY) {
+                                app.table->bump_count++;
+                                app.table->last_bump = current_tick;
+                                if(!app.table->tilt_detect_enabled ||
+                                   app.table->bump_count < BUMP_MAX) {
+                                    app.keys[InputKeyUp] = true;
+                                    notify_table_bump(&app);
+                                } else {
+                                    FURI_LOG_W(TAG, "TABLE TILTED!");
+                                    app.game_mode = GM_Tilted;
+                                    app.table->bump_count = 0;
+                                    notify_table_tilted(&app);
+                                }
+                            }
                         }
                         if(app.settings.debug_mode && app.table->balls_released == false) {
                             app.table->balls[0].p.y -= MANUAL_ADJUSTMENT;
@@ -464,6 +525,7 @@ extern "C" int32_t pinball0_app(void* p) {
                         }
                         break;
                     default:
+                        FURI_LOG_W(TAG, "Table tilted, UP does nothing!");
                         break;
                     }
                     break;
@@ -494,7 +556,6 @@ extern "C" int32_t pinball0_app(void* p) {
                     switch(app.game_mode) {
                     case GM_Playing:
                         if(!app.table->balls_released) {
-                            app.gameStarted = true;
                             app.table->balls_released = true;
                             notify_ball_released(&app);
                         }
@@ -538,53 +599,35 @@ extern "C" int32_t pinball0_app(void* p) {
                     break;
                 }
             } else if(event.type == InputTypeRelease) {
-                switch(event.key) {
-                case InputKeyLeft: {
-                    app.keys[InputKeyLeft] = false;
+                if(event.key != InputKeyOk && event.key != InputKeyBack) {
+                    app.keys[event.key] = false;
                     for(auto& f : app.table->flippers) {
-                        if(f.side == Flipper::LEFT) {
+                        if(event.key == InputKeyLeft && f.side == Flipper::LEFT) {
+                            f.powered = false;
+                        } else if(event.key == InputKeyRight && f.side == Flipper::RIGHT) {
                             f.powered = false;
                         }
                     }
-                    break;
-                }
-                case InputKeyRight: {
-                    app.keys[InputKeyRight] = false;
-                    for(auto& f : app.table->flippers) {
-                        if(f.side == Flipper::RIGHT) {
-                            f.powered = false;
-                        }
-                    }
-                    break;
-                }
-                case InputKeyUp:
-                    app.keys[InputKeyUp] = false;
-                    break;
-                case InputKeyDown:
-                    app.keys[InputKeyDown] = false;
-                    // TODO: release plunger?
-                    break;
-                default:
-                    break;
                 }
             }
             // a key was pressed, reset idle counter
             app.idle_start = furi_get_tick();
         }
 
+        // update physics / motion
         solve(&app, dt);
         for(auto& o : app.table->objects) {
             o->step_animation();
         }
+
         // check game state
-        // if(app.game_mode == GM_Playing && app.table->lives.value == 0) {
         if(app.game_mode != GM_GameOver && app.table->game_over) {
-            FURI_LOG_W(TAG, "GAME OVER!");
+            FURI_LOG_I(TAG, "GAME OVER!");
             app.game_mode = GM_GameOver;
             notify_game_over(&app);
         }
 
-        // no keys pressed - we should clear all input keys?
+        // render
         view_port_update(view_port);
         furi_mutex_release(app.mutex);
 

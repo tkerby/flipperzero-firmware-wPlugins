@@ -3,6 +3,7 @@
     "lives": {
         "value": 1
     },
+    "tilt_detect": false,
     "balls": [
         {
             "position": [ 600, 510 ],

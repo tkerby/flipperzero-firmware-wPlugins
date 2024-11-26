@@ -54,11 +54,7 @@ public:
 // TODO: make this better? eh, it works for now...
 class Table {
 public:
-    Table()
-        : game_over(false)
-        , balls_released(false)
-        , plunger(nullptr) {
-    }
+    Table();
 
     ~Table();
 
@@ -73,6 +69,11 @@ public:
     Score score;
 
     Plunger* plunger;
+
+    // table bump / tilt tracking
+    bool tilt_detect_enabled;
+    uint32_t last_bump;
+    uint32_t bump_count;
 
     void draw(Canvas* canvas);
 };
