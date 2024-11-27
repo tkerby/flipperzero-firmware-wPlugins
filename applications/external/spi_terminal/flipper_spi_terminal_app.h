@@ -14,14 +14,39 @@
 #include <furi_hal_spi_config.h>
 #include <furi_hal_spi_types.h>
 
+typedef enum {
+  FlipperSPITerminalAppPrintModeDynamic,
+  FlipperSPITerminalAppPrintModeASCII,
+  FlipperSPITerminalAppPrintModeHex,
+  FlipperSPITerminalAppPrintModeBinary,
+
+  FlipperSPITerminalAppPrintModeMax,
+} FlipperSPITerminalAppPrintMode;
+
 typedef struct {
-    LL_SPI_InitTypeDef spi_config;
+  LL_SPI_InitTypeDef spi;
+  FlipperSPITerminalAppPrintMode print_mode;
+  size_t rx_dma_buffer_size;
+} FlipperSPITerminalAppConfig;
 
-    Gui* gui;
-    ViewDispatcher* view_dispatcher;
-    SceneManager* scene_manager;
+typedef struct {
+  TextBox *view;
+  FuriString *output_string_buffer;
 
-    DialogEx* mainScreen;
-    VariableItemList* configScreen;
-    TextBox* terminalScreen;
+  uint8_t *rx_dma_buffer;
+  FuriStreamBuffer *rx_buffer_stream;
+} FlipperSPITerminalAppScreenTerminal;
+
+typedef struct {
+  Gui *gui;
+  ViewDispatcher *view_dispatcher;
+  SceneManager *scene_manager;
+
+  DialogEx *mainScreen;
+
+  VariableItemList *configScreen;
+
+  FlipperSPITerminalAppScreenTerminal terminalScreen;
+
+  FlipperSPITerminalAppConfig config;
 } FlipperSPITerminalApp;
