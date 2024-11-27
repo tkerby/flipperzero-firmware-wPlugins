@@ -30,7 +30,6 @@ void metroflip_scene_credits_on_enter(void* context) {
     furi_string_cat_printf(str, "Bip! Parser:\n rbasoalto, gornekich\n\n");
     furi_string_cat_printf(str, "CharlieCard Parser:\n zacharyweiss\n\n");
     furi_string_cat_printf(str, "Info Slave: equip\n\n");
-    
 
     widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(str));
 
