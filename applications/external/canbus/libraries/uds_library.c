@@ -56,7 +56,7 @@ bool read_frames_uds(MCP2515* CAN, uint32_t id, CANFRAME* frame) {
 
     } while((time_delay < 6000));
 
-    log_exception("Error");
+    // log_exception("Error");
 
     return false;
 }
@@ -133,6 +133,157 @@ bool uds_get_vin(UDS_SERVICE* uds_instance, FuriString* text) {
     furi_string_reset(text);
 
     furi_string_cat_printf(text, "%.17s", vin_name);
+
+    return true;
+}
+
+// Function to send multiframes
+// This will be on development
+bool uds_multi_frame_request(
+    UDS_SERVICE* uds,
+    uint8_t* data,
+    uint8_t length,
+    CANFRAME* canframes_to_send,
+    uint8_t count_of_frames_to_received,
+    CANFRAME* canframes_to_received) {
+    uint8_t size_frames_to_send = 1;
+
+    // Condition to know the count of frames to send if the data need more frames
+    if(length > 7) {
+        if(((length - 6) % 7) != 0) {
+            size_frames_to_send = ((length - 6) / 7) + 2;
+        } else {
+            size_frames_to_send = ((length - 6) / 7) + 1;
+        }
+    }
+
+    // log_info("count of frames to send: %u", size_frames_to_send);
+
+    // log_info("Start"); // 0
+
+    // Set the frames if the data need more than one can frame
+    if(size_frames_to_send > 1) {
+        canframes_to_send[0].buffer[0] = 0x10; // Set the byte to indicate the first frame
+        canframes_to_send[0].buffer[1] = length; // The length of the data
+
+        // This counter works as a pivot to save the data in it respective byte of any frame
+        uint8_t counter = 0;
+
+        for(uint8_t i = 0; i < size_frames_to_send; i++) {
+            canframes_to_send[i].canId = uds->id_to_send; // Set the id to be sent
+            canframes_to_send[i].data_lenght = 8; // Set the lenght
+
+            if(i >= 1) canframes_to_send[i].buffer[0] = (0x20) + (i & 0xf); // every
+
+            uint8_t start_num = (i == 0) ? 2 : 1;
+
+            for(uint8_t j = start_num; j < 8; j++) {
+                // log_info("counter: %u data: %x", counter, data[counter]);
+                canframes_to_send[i].buffer[j] = data[counter++];
+
+                if(counter == length) {
+                    canframes_to_send[i].data_lenght = j + 1;
+                }
+            }
+        }
+    }
+
+    // If the data only needs one frame
+    else {
+        canframes_to_send[0].canId = uds->id_to_send;
+        canframes_to_send[0].data_lenght = length + 1;
+        canframes_to_send[0].buffer[0] = length;
+        for(uint8_t i = 1; i < (length + 1); i++) {
+            canframes_to_send[0].buffer[i] = data[i - 1];
+        }
+    }
+
+    canframes_to_send[size_frames_to_send].canId = uds->id_to_send;
+    canframes_to_send[size_frames_to_send].data_lenght = 3;
+    canframes_to_send[size_frames_to_send].buffer[0] = 0x30;
+
+    log_info("Messages already set, count of frames: %u", size_frames_to_send); // 1
+
+    //  Just for debbug
+    FuriString* text = furi_string_alloc();
+
+    log_info("------------To send--------------------------");
+
+    for(uint8_t j = 0; j < size_frames_to_send; j++) {
+        furi_string_reset(text);
+        furi_string_cat_printf(text, "%lx\t", canframes_to_send[j].canId);
+        for(uint8_t i = 0; i < canframes_to_send[j].data_lenght; i++) {
+            furi_string_cat_printf(text, "%x ", canframes_to_send[j].buffer[i]);
+        }
+
+        log_info(furi_string_get_cstr(text));
+    }
+
+    furi_string_free(text);
+
+    // From here is the work to send de canbus data
+
+    // Send the first frame
+    if(send_can_frame(uds->CAN, &canframes_to_send[0]) != ERROR_OK) {
+        log_exception("First message wasnt send");
+        return false;
+    }
+
+    // Wait message of the response
+    if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[0])) {
+        log_exception("message wasnt received");
+        return false;
+    }
+
+    // To received multiple frames
+    if(canframes_to_received[0].buffer[0] == 0x10 && count_of_frames_to_received > 1) {
+        // If there no more data will pass this code
+        send_can_frame(uds->CAN, &canframes_to_send[size_frames_to_send]);
+
+        for(uint8_t i = 1; i < count_of_frames_to_received; i++) {
+            if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[i])) break;
+        }
+    }
+
+    // To know if it is only one frame to send
+    if(size_frames_to_send == 1) {
+        canframes_to_send[size_frames_to_send].canId = 0;
+        return true;
+    }
+
+    /*
+        Here is the end for only one frame received.
+        The next code describe how to send multple frames
+    */
+
+    // If the flow control is not ok
+    if(canframes_to_received[0].buffer[0] != 0x30) {
+        log_exception("Message to flow_control was a error");
+        return false;
+    }
+
+    // Send the rest of the data
+    for(uint8_t i = 1; i < size_frames_to_send; i++) {
+        send_can_frame(uds->CAN, &canframes_to_send[i]);
+    }
+
+    // Read the first ECU's response
+    if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[0])) {
+        log_exception("Error to read the frame");
+        return false;
+    }
+
+    // To received multiple frames
+    if(canframes_to_received[0].buffer[0] == 0x10 && count_of_frames_to_received > 1) {
+        // If there no more data will pass this code
+        send_can_frame(uds->CAN, &canframes_to_send[size_frames_to_send]);
+
+        for(uint8_t i = 1; i < count_of_frames_to_received; i++) {
+            if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[i])) break;
+        }
+    }
+
+    canframes_to_send[size_frames_to_send].canId = 0;
 
     return true;
 }

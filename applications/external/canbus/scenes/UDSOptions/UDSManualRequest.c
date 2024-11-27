@@ -10,10 +10,13 @@ static uint8_t id_response_array[4] = {0, 0, 0x7, 0xe8};
 static uint8_t count_of_frames = 1;
 static uint8_t count_of_bytes = 1;
 
-static uint8_t data_to_send[7] = {0};
+static uint8_t data_to_send[100] = {0};
 
 // Thread to work
-static int32_t uds_single_frame_request_thread(void* context);
+//static int32_t uds_single_frame_request_thread(void* context);
+
+// Thread to test
+static int32_t uds_multiframe_request_thread(void* context);
 
 /*
     Scene uds manual sender to set the values to send
@@ -112,8 +115,8 @@ void app_scene_uds_single_frame_request_sender_on_enter(void* context) {
     variable_item_set_current_value_text(item, furi_string_get_cstr(text));
 
     // SET COUNT OF BYTES   3
-    item =
-        variable_item_list_add(app->varList, "Bytes", 7, callback_single_frame_request_menu, app);
+    item = variable_item_list_add(
+        app->varList, "Bytes", 100, callback_single_frame_request_menu, app);
     variable_item_set_current_value_index(item, count_of_bytes - 1);
     furi_string_reset(text);
     furi_string_cat_printf(text, "%u", count_of_bytes);
@@ -251,7 +254,7 @@ void app_scene_uds_single_frame_request_response_on_enter(void* context) {
     text_box_reset(app->textBox);
     text_box_set_focus(app->textBox, TextBoxFocusEnd);
 
-    app->thread = furi_thread_alloc_ex("ManualUDS", 1024, uds_single_frame_request_thread, app);
+    app->thread = furi_thread_alloc_ex("ManualUDS", 10 * 1024, uds_multiframe_request_thread, app);
     furi_thread_start(app->thread);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, TextBoxView);
@@ -274,7 +277,7 @@ void app_scene_uds_single_frame_request_response_on_exit(void* context) {
 /*
     Thread to work
 */
-
+/*
 static int32_t uds_single_frame_request_thread(void* context) {
     App* app = context;
     MCP2515* CAN = app->mcp_can;
@@ -342,6 +345,78 @@ static int32_t uds_single_frame_request_thread(void* context) {
     } else {
         furi_string_printf(text, "DEVICE NOT CONNECTED!");
         text_box_set_text(app->textBox, furi_string_get_cstr(text));
+    }
+
+    free_uds(uds_service);
+
+    return 0;
+}
+*/
+
+/*
+    Thread to TEST
+*/
+
+static int32_t uds_multiframe_request_thread(void* context) {
+    App* app = context;
+    FuriString* text = app->text;
+    furi_string_reset(text);
+    text_box_set_text(app->textBox, furi_string_get_cstr(text));
+
+    MCP2515* CAN = app->mcp_can;
+
+    UDS_SERVICE* uds_service =
+        uds_service_alloc(id_request, id_response, CAN->mode, CAN->clck, CAN->bitRate);
+
+    bool run = uds_init(uds_service);
+
+    furi_delay_ms(500);
+
+    log_info("Here");
+
+    if(run) {
+        CANFRAME canframes_to_received[count_of_frames];
+
+        CANFRAME canframes_to_send[15];
+
+        memset(canframes_to_received, 0, sizeof(canframes_to_received));
+
+        memset(canframes_to_send, 0, sizeof(canframes_to_send));
+
+        if(uds_multi_frame_request(
+               uds_service,
+               data_to_send,
+               count_of_bytes,
+               canframes_to_send,
+               count_of_frames,
+               canframes_to_received)) {
+            for(uint8_t i = 0; i < 15; i++) {
+                if(canframes_to_send[i].canId != uds_service->id_to_send) break;
+
+                furi_string_cat_printf(text, "->%lx  ", canframes_to_send[i].canId);
+                for(uint8_t j = 0; j < canframes_to_send[i].data_lenght; j++) {
+                    furi_string_cat_printf(text, "%x ", canframes_to_send[i].buffer[j]);
+                }
+
+                furi_string_cat_printf(text, "\n");
+            }
+
+            for(uint8_t i = 0; i < count_of_frames; i++) {
+                if(canframes_to_received[i].canId != uds_service->id_to_received) break;
+                furi_string_cat_printf(text, "<-%lx  ", canframes_to_received[i].canId);
+                for(uint8_t j = 0; j < canframes_to_received[i].data_lenght; j++) {
+                    furi_string_cat_printf(text, "%x ", canframes_to_received[i].buffer[j]);
+                }
+
+                furi_string_cat_printf(text, "\n");
+            }
+
+            text_box_set_text(app->textBox, furi_string_get_cstr(text));
+        } else {
+            text_box_set_text(app->textBox, "Transmition Failure");
+        }
+
+    } else {
     }
 
     free_uds(uds_service);
