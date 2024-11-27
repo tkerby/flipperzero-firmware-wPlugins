@@ -30,12 +30,6 @@ static bool
     return ((response_len == 2) && (response[0] == 0xFF) && (response[1] == 0));
 }
 
-static bool eink_waveshare_dummy_validator(const uint8_t* response, const size_t response_len) {
-    UNUSED(response);
-    UNUSED(response_len);
-    return true;
-}
-
 static EinkWaveshareSendStatus eink_waveshare_send_data(
     Iso14443_3aPoller* poller,
     const NfcEinkScreen* screen,
@@ -147,8 +141,18 @@ static NfcCommand
     do {
         EinkScreenTypeWaveshare screen_type =
             eink_waveshare_config_get_protocol_screen_type_by_name(screen->name);
-        EinkWaveshareSendStatus result = eink_waveshare_send_command(
-            poller, screen, EINK_WAVESHARE_COMMAND_SELECT_TYPE, &screen_type, sizeof(screen_type));
+
+        uint32_t fwt = EINK_WAVESHARE_POLLER_FWT;
+        if(screen_type == EinkScreenTypeWaveshare7n5inch) fwt *= 2;
+
+        EinkWaveshareSendStatus result = eink_waveshare_send_command_ex(
+            poller,
+            screen,
+            EINK_WAVESHARE_COMMAND_SELECT_TYPE,
+            &screen_type,
+            sizeof(screen_type),
+            eink_waveshare_default_validator,
+            fwt);
         if(result != EinkWaveshareSendStatusSuccess) break;
 
         ctx->poller_state = EinkWavesharePollerStateSetNormalMode;
