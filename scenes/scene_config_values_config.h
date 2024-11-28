@@ -7,17 +7,19 @@
 
 ADD_CONFIG_ENTRY(
     "Display mode",
-    "Changes, how the received data is displayed.",
+    "Changes, how the received data is displayed.\n"
+    "Auto: Use ASCII or C escape sequence\n"
+    "Hex: Use Hex for everything\n"
+    "Binary: Binary representation",
     display_mode,
     FlipperSPITerminalAppDisplayMode,
-    FlipperSPITerminalAppDisplayModeDynamic,
+    FlipperSPITerminalAppDisplayModeAuto,
     value_index_display_mode,
     display_mode,
-    (FlipperSPITerminalAppDisplayModeDynamic,
-     FlipperSPITerminalAppDisplayModeASCII,
+    (FlipperSPITerminalAppDisplayModeAuto,
      FlipperSPITerminalAppDisplayModeHex,
      FlipperSPITerminalAppDisplayModeBinary),
-    ("Dynamic", "ASCII", "Hex", "Binary"))
+    ("Auto", "Hex", "Binary"))
 
 ADD_CONFIG_ENTRY(
     "DMA RX Buffer size",
@@ -50,7 +52,7 @@ ADD_CONFIG_ENTRY(
     "Half Duplex TX: Only receive data",
     spi_direction,
     uint32_t,
-    LL_SPI_HALF_DUPLEX_RX,
+    LL_SPI_FULL_DUPLEX,
     value_index_uint32,
     spi.TransferDirection,
     (LL_SPI_FULL_DUPLEX, LL_SPI_HALF_DUPLEX_RX, LL_SPI_HALF_DUPLEX_TX),
