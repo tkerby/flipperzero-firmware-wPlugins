@@ -42,7 +42,7 @@ The **SETTINGS** menu will be the "last" table listed. You can Enable / Disable 
 **Debug** mode allows you to move the ball using the directional pad _before_ the ball is launched. This is useful for testing and may be removed in the future. (May result in unexpected behavior.) It also displays test tables on the main menu. The test tables will only show/hide after you exit and restart the app. This feature is mainly for me - lol.
 
 ## Tables
-Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_data/pinball0`) on your SD card. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0`). On the main menu, tables are sorted alphabetically. In order to "force" a sorting order, you can prepend any filename with `NN_` where `NN` is between `00` and `99`. When the files are displayed on the menu, if they start with `NN_`, that will be stripped - but their sorted order will be preserved.
+Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_assets/pinball0/tables`) on your SD card. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0/tables`). On the main menu, tables are sorted alphabetically. In order to "force" a sorting order, you can prepend any filename with `NN_` where `NN` is between `00` and `99`. When the files are displayed on the menu, if they start with `NN_`, that will be stripped - but their sorted order will be preserved.
 
 > The default tables may change over time.
 
