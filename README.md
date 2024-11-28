@@ -3,7 +3,7 @@ Play pinball on your Flipperzero!
 
 Still a work in progress...
 
-[Latest version v0.4](https://github.com/rdefeo/pinball0/releases)
+[Get latest version](https://github.com/rdefeo/pinball0/releases)
 
 ![build status badge](https://github.com/rdefeo/pinball0/actions/workflows/build.yml/badge.svg)
 
