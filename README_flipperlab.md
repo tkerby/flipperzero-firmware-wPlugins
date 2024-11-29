@@ -5,7 +5,7 @@ Play pinball on your Flipperzero!
 * Realistic physics and collisions
 * User-defined tables via JSON files
 * Bumpers, flat surfaces, curved surfaces
-* Table bumps (Don't tile the table!)
+* Table bumps (Don't tilt the table!)
 * Portals!
 * Rollover items
 * Sounds! Blinky lights! Annoying vibrations!
