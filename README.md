@@ -1,13 +1,14 @@
 # Pinball0 (Pinball Zero)
 Play pinball on your Flipperzero!
 
-Still a work in progress...
-
-[Get latest version](https://github.com/rdefeo/pinball0/releases)
+Get the latest version:
+* [Flipper Lab](https://lab.flipper.net/apps/pinball0)
+* [Latest builds](https://github.com/rdefeo/pinball0/releases) - manual install of .fap
+* Or build yourself with [ufbt](https://github.com/flipperdevices/flipperzero-ufbt)
 
 ![build status badge](https://github.com/rdefeo/pinball0/actions/workflows/build.yml/badge.svg)
 
-> The default tables and example tables may / will change
+> Note: The default tables and example tables may / will change
 
 ## Screenshots
 
@@ -26,13 +27,13 @@ Still a work in progress...
 * Rollover items
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
-* Idle timeout to save battery - will exit after ~120 seconds of no key-presses
+* Idle timeout to save battery - will exit after ~2 minutes of no key-presses on menu screen
 
 ## Controls
 * **Ok** to release the ball
 * **Left** and **Right** to activate the left and right flippers
 * **Back** to return to the main menu or exit
-* **Up** to "bump" the table if the ball gets stuck
+* **Up** to "bump" the table if the ball gets stuck. Table bumps are limited to 1 per second. if a table has `tilt_detect` enabled (default is `true`) then your 3rd table bump will tilt the machine and you'll lose the current ball!
 
 I find it easiest to hold the flipper with both hands so I can hit left/right with my thumbs!
 
@@ -44,17 +45,15 @@ The **SETTINGS** menu will be the "last" table listed. You can Enable / Disable 
 ## Tables
 Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (`/apps_assets/pinball0/tables`) on your SD card. Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (`/apps_data/pinball0/tables`). On the main menu, tables are sorted alphabetically. In order to "force" a sorting order, you can prepend any filename with `NN_` where `NN` is between `00` and `99`. When the files are displayed on the menu, if they start with `NN_`, that will be stripped - but their sorted order will be preserved.
 
-> The default tables may change over time.
-
 In **Debug** mode, test tables will be shown. A test table is one that begins with the text `dbg`. Given that you can prefix table names for sorting purposes, here are two valid table filenames for a test table called `my FLIPS`: `dbg my FLIPS.json` and `04_dbg my FLIPS.json`. In both cases it will be displayed as `dbg my FLIPS` on the menu. I doubt that you will use this feature, but I'm documenting it anyway.
 
 
 ### File Format
 Table units are specified at a 10x scale. This means our table is **630 x 1270** in size (as the F0 display is 64 pixels x 128 pixels). Our origin is in the top-left at 0, 0. Check out the default tables in the `assets/tables` folder for example usage.
 
-These JSON elements are all defined at the top-level. The JSON can include comments - because why not!
+> There is some basic error checking when reading / parsing the table files. If the error is serious enough, you will see an error message in the app. Otherwise, check the console logs. For those familiar with `ufbt`, simply run `ufbt cli` and issue the `log` command. Then launch Pinball0. All informational and higher logs will be displayed. These logs are useful when reporting bugs/issues!
 
-> **DISCLAIMER:** The file format may change from release to release. Sorry. There is some basic error checking when reading / parsing the table files. If the error is serious enough, you will see an error message in the app. Otherwise, check the console logs. For those familiar with `ufbt`, simply run `ufbt cli` and issue the `log` command. Then launch Pinball0. All informational and higher logs will be displayed. These logs are useful when reporting bugs/issues!
+These JSON elements are all defined at the top-level. The JSON can include comments - because why not!
 
 #### lives : object (optional)
 Defines how many lives/balls you start with, and display information
