@@ -7,7 +7,7 @@ Play pinball on your Flipperzero!
 * Bumpers, flat surfaces, curved surfaces
 * Table bumps (Don't tilt the table!)
 * Portals!
-* Rollover items
+* Rollover items, Turbo boosts
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
 * Idle timeout

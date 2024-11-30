@@ -24,7 +24,7 @@ Get the latest version:
 * Scores! (no high scores yet, just a running tally as you play)
 * Table bumps! (Don't tilt the table!)
 * Portals!
-* Rollover items
+* Rollover items, Turbo boosts
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
 * Idle timeout to save battery - will exit after ~2 minutes of no key-presses on menu screen
@@ -116,6 +116,14 @@ When the ball passes over/through a rollover object, the symbol will appear. Onl
 * `"b_end": [ X, Y]`
 
 Defines two portals, **a** and **b**. They are bi-drectional. Like rails, their "surface" - or in this case, their "entry surface" - is "on the left" from their respective start to end direction. You can't "enter" a portal from it's reverse side, you will pass through.
+
+#### turbos : list of objects (optional)
+* `"position": [ X, Y ]`
+* `"angle": N` : in degrees from 0 to 360
+* `"boost": N` : optional, defaults to `5`
+* `"radius" : N` : optional, defaults to `20`
+
+When the ball hits a turbo boost, it will force the new velocity to be in the direction of `angle`.
 
 #### tilt_detect : boolean
 * `"tilt_detect": bool` : optional, defaults to `true`
