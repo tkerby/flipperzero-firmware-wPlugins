@@ -569,12 +569,12 @@ void Turbo::draw(Canvas* canvas) {
 }
 
 bool Turbo::collide(Ball& ball) {
-    Vec2 dir = ball.p - p;
-    float dist = dir.mag();
-    if(dist < 30) {
+    float dist = (ball.p - p).mag();
+    // our distance check doesn't include the ball radius as we want the ball
+    // to enter the turbo area a bit before being affected by the boost
+    if(dist < r + 10) {
         // apply the turbo in 'dir' with force of 'boost'
-        FURI_LOG_I(TAG, "TURBO! dir: %.3f,%.3f", (double)dir.x, (double)dir.y);
-        ball.accelerate(dir * (boost / 50.0f));
+        ball.prev_p = ball.p - (dir * (boost));
     }
     return false;
 }

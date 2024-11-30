@@ -559,10 +559,13 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 table_file_parse_float(turbo, "angle", angle);
                 angle *= pi_180;
 
-                float boost = 10;
+                float boost = DEF_TURBO_BOOST;
                 table_file_parse_float(turbo, "boost", boost);
 
-                Turbo* new_turbo = new Turbo(p, angle, boost);
+                float radius = DEF_TURBO_RADIUS;
+                table_file_parse_float(turbo, "radius", radius);
+
+                Turbo* new_turbo = new Turbo(p, angle, boost, radius);
 
                 table->objects.push_back(new_turbo);
             }
