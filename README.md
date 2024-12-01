@@ -125,6 +125,44 @@ Defines two portals, **a** and **b**. They are bi-drectional. Like rails, their 
 
 When the ball hits a turbo boost, it will force the new velocity to be in the direction of `angle`.
 
+#### signal : object attribute (optional)
+* `"tx": N` : id to transmit
+* `"rx": N` : id to receive
+* `"any": bool` : signal trigger type, defaults to `false` (i.e. "all")
+
+Can be added to a **bumper** or **rollover** to send notifications of collisions. When defining a signal, you can define a `tx` or a `rx` or both. The id value can be any number. If you add a `"tx": 4` to a rollover, when the ball collides with the rollover, it will trigger a signal to any object that has a `"rx": 4` defined.
+
+The `"any"` bool will determine __when__ to send the signal. Let's look at an example:
+
+```json
+"rollovers": [
+    {
+        "position": [ X, Y ],
+        "symbol" : "A",
+        "signal": { "tx": 3 }
+    },
+    {
+        "position": [ X, Y ],
+        "symbol" : "B",
+        "signal": { "tx": 3 }
+    }
+]
+```
+
+Since we didn't specify `"any": true` within the `signal` objects for each rollover, then ALL rollovers must be hit by the ball before a signal for id 3 is "sent". If we specifyed `"any": true`, then the signal with id 3 will be sent when the ball hits any of the rollovers.
+
+All signals with a `tx` must have a corresponding `rx` with the same id on the table - and vice versa - otherwise an error will be thrown.
+
+All signals with the same `tx` id must have the same trigger type (i.e. any or all).
+
+The default behavior for objects when a signal is received / sent:
+* **rollover**
+  * received - rollover reset to non-activated (i.e. symbol is hidden)
+  * sent - nothing
+* **bumper**
+  * received - becomes visible and can be hit by ball
+  * sent - disappears
+
 #### tilt_detect : boolean
 * `"tilt_detect": bool` : optional, defaults to `true`
 

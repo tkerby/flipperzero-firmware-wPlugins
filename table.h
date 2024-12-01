@@ -4,6 +4,7 @@
 #include <vector>
 #include "pinball0.h"
 #include "objects.h"
+#include "signals.h"
 
 #define TABLE_SELECT       0
 #define TABLE_ERROR        1
@@ -74,6 +75,8 @@ public:
     bool tilt_detect_enabled;
     uint32_t last_bump;
     uint32_t bump_count;
+
+    SignalManager sm;
 
     void draw(Canvas* canvas);
 };

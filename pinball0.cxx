@@ -85,6 +85,9 @@ void solve(PinballApp* pb, float dt) {
                     if(o->notification) {
                         (*o->notification)(pb);
                     }
+                    // Send this object's signal (if defined)
+                    table->sm.send(o);
+
                     table->score.value += o->score;
                     o->reset_animation();
                     continue;

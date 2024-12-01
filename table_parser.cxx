@@ -143,6 +143,25 @@ bool table_file_parse_float(const nx_json* json, const char* key, float& v) {
     return true;
 }
 
+void table_file_parse_signal(const nx_json* json, Table* table, FixedObject* obj) {
+    const nx_json* signal = nx_json_get(json, "signal");
+    if(signal) {
+        int tx = INVALID_ID;
+        int rx = INVALID_ID;
+        if(table_file_parse_int(signal, "tx", tx) && tx != INVALID_ID) {
+            obj->tx_id = tx;
+            table->sm.register_signal(tx, obj);
+        }
+        if(table_file_parse_int(signal, "rx", rx) && rx != INVALID_ID) {
+            obj->rx_id = rx;
+            table->sm.register_slot(rx, obj);
+        }
+        bool any = false;
+        table_file_parse_bool(signal, "any", any);
+        obj->tx_type = any ? SignalType::ANY : SignalType::ALL;
+    }
+}
+
 Table* table_load_table_from_file(PinballApp* pb, size_t index) {
     auto& tmi = pb->table_list.menu_items[index];
 
@@ -165,10 +184,14 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
         storage_file_free(file);
         return NULL;
     }
-    FURI_LOG_I(TAG, "File size is ok!");
     bool ok =
         storage_file_open(file, furi_string_get_cstr(tmi.filename), FSAM_READ, FSOM_OPEN_EXISTING);
-    FURI_LOG_I(TAG, "File opened? %s", ok ? "YES" : "NO");
+    if(!ok) {
+        FURI_LOG_E(TAG, "Failed to open table file: %s", furi_string_get_cstr(tmi.filename));
+        snprintf(pb->text, 256, "Failed\nto open\nfile!");
+        storage_file_free(file);
+        return NULL;
+    }
 
     // read the file as a string
     uint8_t* buffer;
@@ -342,9 +365,20 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 float bnc = DEF_BUMPER_BOUNCE;
                 table_file_parse_float(bumper, "bounce", bnc);
 
+                bool physical = true;
+                table_file_parse_bool(bumper, "physical", physical);
+
+                bool hidden = false;
+                table_file_parse_bool(bumper, "hidden", hidden);
+
                 Bumper* new_bumper = new Bumper(p, r);
                 new_bumper->bounce = bnc;
                 new_bumper->notification = notify_bumper_hit;
+                new_bumper->physical = physical;
+                new_bumper->hidden = hidden;
+
+                table_file_parse_signal(bumper, table, new_bumper);
+
                 table->objects.push_back(new_bumper);
             }
         }
@@ -534,6 +568,9 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                     sym = symbol->text_value[0];
                 }
                 Rollover* new_rollover = new Rollover(p, sym);
+
+                table_file_parse_signal(rollover, table, new_rollover);
+
                 table->objects.push_back(new_rollover);
             }
         }
@@ -572,6 +609,12 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
         }
         break;
     } while(false);
+
+    if(!table->sm.validate(pb->text, 256)) {
+        FURI_LOG_E(TAG, "Signal validation failed!");
+        delete table;
+        table = NULL;
+    }
 
     nx_json_free(json);
     free(json_buffer);

@@ -3,6 +3,8 @@
 #include "vec2.h"
 #include <gui/canvas.h> // for Canvas*
 
+#include "signals.h"
+
 #define DEF_BALL_RADIUS   20
 #define DEF_BUMPER_RADIUS 40
 #define DEF_BUMPER_BOUNCE 1.0f
@@ -92,14 +94,20 @@ public:
         , physical(true)
         , hidden(false)
         , score(0)
+        , tx_id(INVALID_ID)
+        , rx_id(INVALID_ID)
+        , tx_type(SignalType::ALL)
         , notification(nullptr) {
     }
     virtual ~FixedObject() = default;
 
     float bounce;
-    bool physical; // can be hit
+    bool physical; // interacts with ball vs table decoration
     bool hidden; // do not draw
     int score;
+    int tx_id;
+    int rx_id;
+    SignalType tx_type;
 
     void (*notification)(void* app);
 
@@ -107,6 +115,9 @@ public:
     virtual bool collide(Ball& ball) = 0;
     virtual void reset_animation() {};
     virtual void step_animation() {};
+
+    virtual void signal_receive();
+    virtual void signal_send();
 };
 
 class Polygon : public FixedObject {
@@ -213,6 +224,9 @@ public:
 
     void draw(Canvas* canvas);
     bool collide(Ball& ball);
+
+    void signal_receive();
+    void signal_send();
 };
 
 class Turbo : public FixedObject {
@@ -294,7 +308,3 @@ public:
     void draw(Canvas* canvas);
     void step_animation();
 };
-
-// class IconImage : public Object {
-//     Vec2 v;
-// };

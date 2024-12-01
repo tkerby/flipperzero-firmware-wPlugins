@@ -120,7 +120,6 @@ void notify_game_over(void* ctx) {
 }
 
 void notify_bumper_hit(void* ctx) {
-    FURI_LOG_I(TAG, "notify_bumper_hit");
     PinballApp* app = (PinballApp*)ctx;
     int n = 0;
     if(app->settings.led_enabled) {
