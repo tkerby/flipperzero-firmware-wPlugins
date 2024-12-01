@@ -137,12 +137,12 @@ The `"any"` bool will determine __when__ to send the signal. Let's look at an ex
 ```json
 "rollovers": [
     {
-        "position": [ X, Y ],
+        "position": [ 100, 100 ],
         "symbol" : "A",
         "signal": { "tx": 3 }
     },
     {
-        "position": [ X, Y ],
+        "position": [ 150, 100 ],
         "symbol" : "B",
         "signal": { "tx": 3 }
     }

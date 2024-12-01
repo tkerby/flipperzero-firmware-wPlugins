@@ -2,7 +2,10 @@
     "lives": 3,
     "balls": [
         {
-            "position": [ 220, 200 ]
+            "position": [ 110, 200 ]
+        },
+        {
+            "position": [ 610, 900 ]
         }
     ],
     "flippers": [
@@ -40,6 +43,7 @@
         }
     ],
     "turbos": [
+        // rect
         {
             "position": [ 100, 400 ],
             "angle": 0
@@ -55,6 +59,24 @@
         {
             "position": [ 100, 600 ],
             "angle": 90
+        },
+        // loop
+        {
+            "position": [ 440, 740 ],
+            "angle": 0
+        },
+        {
+            "position": [ 440, 1050 ],
+            "angle": 180
+        }
+    ],
+    "arcs": [
+        {
+            "position": [ 440, 900 ],
+            "radius": 180,
+            "surface": "INSIDE",
+            "start_angle": 0,
+            "end_angle": 360
         }
     ]
 }
