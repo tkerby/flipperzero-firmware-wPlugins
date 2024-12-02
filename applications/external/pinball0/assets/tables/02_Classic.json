@@ -43,6 +43,40 @@
         {
             "position": [ 480, 500 ],
             "radius": 40
+        },
+        // gutter guards - for Z,E,R,O rollover
+        {
+            "position": [ 310, 1265 ],
+            "radius": 20,
+            "physical": false,
+            "hidden": true,
+            "signal": {
+                "tx": 1,
+                "rx": 0,
+                "any": true
+            }
+        },
+        {
+            "position": [ 35, 900 ],
+            "radius": 20,
+            "physical": false,
+            "hidden": true,
+            "signal": {
+                "tx": 1,
+                "rx": 0,
+                "any": true
+            }
+        },
+        {
+            "position": [ 595, 900 ],
+            "radius": 20,
+            "physical": false,
+            "hidden": true,
+            "signal": {
+                "tx": 1,
+                "rx": 0,
+                "any": true
+            }
         }
     ],
     "arcs": [
@@ -125,19 +159,35 @@
     "rollovers": [
         {
             "position": [ 200, 800 ],
-            "symbol": "Z"
+            "symbol": "Z",
+            "signal": {
+                "tx": 0,
+                "rx": 1
+            }
         },
         {
             "position": [ 280, 770 ],
-            "symbol": "E"
+            "symbol": "E",
+            "signal": {
+                "tx": 0,
+                "rx": 1
+            }
         },
         {
             "position": [ 360, 770 ],
-            "symbol": "R"
+            "symbol": "R",
+            "signal": {
+                "tx": 0,
+                "rx": 1
+            }
         },
         {
             "position": [ 440, 800 ],
-            "symbol": "O"
+            "symbol": "O",
+            "signal": {
+                "tx": 0,
+                "rx": 1
+            }
         }
     ]
 }

@@ -117,14 +117,14 @@ bool Flipper::collide(Ball& ball) {
     perp *= -1.0f;
     perp.normalize();
     Vec2 surface_velocity = perp * 1.7f; // TODO: flipper power??
-    FURI_LOG_I(TAG, "sv: %.3f,%.3f", (double)surface_velocity.x, (double)surface_velocity.y);
+    // FURI_LOG_I(TAG, "sv: %.3f,%.3f", (double)surface_velocity.x, (double)surface_velocity.y);
     if(current_omega != 0.0f) surface_velocity *= current_omega;
-    FURI_LOG_I(TAG, "sv: %.3f,%.3f", (double)surface_velocity.x, (double)surface_velocity.y);
+    // FURI_LOG_I(TAG, "sv: %.3f,%.3f", (double)surface_velocity.x, (double)surface_velocity.y);
 
     // TODO: Flippers currently aren't "bouncy" when they are still
     float v = ball_v.dot(dir);
     float v_new = surface_velocity.dot(dir);
-    FURI_LOG_I(TAG, "v_new: %.4f, v: %.4f", (double)v_new, (double)v);
+    // FURI_LOG_I(TAG, "v_new: %.4f, v: %.4f", (double)v_new, (double)v);
     ball_v += dir * (v_new - v);
     ball.prev_p = ball.p - ball_v;
     return true;
@@ -135,6 +135,18 @@ Vec2 Flipper::get_tip() const {
     Vec2 dir(cos(angle), -sin(angle));
     Vec2 tip = p + dir * size;
     return tip;
+}
+
+// The default action for receiving a signal is to "appear"
+void FixedObject::signal_receive() {
+    physical = true;
+    hidden = false;
+}
+
+// The default action for a sending signal to have completed is to "hide"
+void FixedObject::signal_send() {
+    physical = false;
+    hidden = true;
 }
 
 void Polygon::draw(Canvas* canvas) {
@@ -208,48 +220,9 @@ bool Polygon::collide(Ball& ball) {
     return true;
 }
 
-// Works-ish - 11/5/2024
-// bool Polygon::collide(Ball& ball) {
-//     Vec2 ball_v = ball.p - ball.prev_p;
-//     // We need to check for collisions across all line segments
-//     for(size_t i = 0; i < points.size() - 1; i++) {
-//         // If ball is moving away from the line, we can't have a collision!
-//         if(normals[i].dot(ball_v) > 0) {
-//             continue;
-//         }
-
-//         Vec2& p1 = points[i];
-//         Vec2& p2 = points[i + 1];
-//         // bool isLeft_prev = Vec2_ccw(p1, p2, ball.prev_p);
-//         // bool isLeft = Vec2_ccw(p1, p2, ball.p);
-//         Vec2 closest = Vec2_closest(p1, p2, ball.p);
-//         float dist = ball.p.dist(closest);
-
-//         if(dist < ball.r) {
-//             // FURI_LOG_I(TAG, "... within collision distance!");
-//             // ball_v.dot
-
-//             // float factor = (ball.r - dist) / ball.r;
-//             // ball.p -= normals[i] * factor;
-//             float depth = ball.r - dist;
-//             ball.p -= normals[i] * depth * 1.05f;
-
-//             Vec2 rel_v = ball_v * -1;
-//             float velAlongNormal = rel_v.dot(normals[i]);
-//             float j = (-(1 + 1) * velAlongNormal);
-//             Vec2 impulse = j * normals[i];
-//             ball_v -= impulse;
-
-//             ball.prev_p = ball.p - ball_v;
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
 void Polygon::finalize() {
     if(points.size() < 2) {
-        FURI_LOG_E(TAG, "Polygon: FINALIZE_ERROR - insufficient points");
+        FURI_LOG_E(TAG, "Polygon: FINALIZE ERROR - insufficient points");
         return;
     }
     // compute and store normals on all segments
@@ -405,9 +378,16 @@ Arc::Arc(const Vec2& p_, float r_, float s_, float e_, Surface surf_)
     , start(s_)
     , end(e_)
     , surface(surf_) {
+    // Vec2 s(p.x + r * cosf(start), p.y - r * sinf(start));
+    // Vec2 e(p.x + r * cosf(end), p.y - r * sinf(end));
+    // FURI_LOG_I(
+    //     TAG, "ARC: %.2f,%.2f - %.2f,%.2f", (double)s.x, (double)s.y, (double)e.x, (double)e.y);
 }
 
 void Arc::draw(Canvas* canvas) {
+    if(hidden) {
+        return;
+    }
     if(start == 0 && end == (float)M_PI * 2) {
         gfx_draw_circle(canvas, p, r);
     } else {
@@ -552,12 +532,25 @@ void Rollover::draw(Canvas* canvas) {
 }
 
 bool Rollover::collide(Ball& ball) {
+    if(activated) {
+        return false; // we've already rolled over it, prevent further signals
+    }
     Vec2 dir = ball.p - p;
     float dist = dir.mag();
     if(dist < 30) {
         activated = true;
+        return true;
     }
     return false;
+}
+
+// Reset the rollover
+void Rollover::signal_receive() {
+    activated = false;
+}
+
+void Rollover::signal_send() {
+    // maybe we should start a blink animation of the letters?
 }
 
 void Turbo::draw(Canvas* canvas) {
@@ -569,12 +562,12 @@ void Turbo::draw(Canvas* canvas) {
 }
 
 bool Turbo::collide(Ball& ball) {
-    Vec2 dir = ball.p - p;
-    float dist = dir.mag();
-    if(dist < 30) {
+    float dist = (ball.p - p).mag();
+    // our distance check doesn't include the ball radius as we want the ball
+    // to enter the turbo area a bit before being affected by the boost
+    if(dist < r + 10) {
         // apply the turbo in 'dir' with force of 'boost'
-        FURI_LOG_I(TAG, "TURBO! dir: %.3f,%.3f", (double)dir.x, (double)dir.y);
-        ball.accelerate(dir * (boost / 50.0f));
+        ball.prev_p = ball.p - (dir * (boost));
     }
     return false;
 }

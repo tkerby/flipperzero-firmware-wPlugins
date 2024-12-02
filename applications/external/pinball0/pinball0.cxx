@@ -18,7 +18,7 @@
 #define GAME_FPS          30
 #define MANUAL_ADJUSTMENT 20
 #define IDLE_TIMEOUT      120 * 1000 // 120 seconds * 1000 ticks/sec
-#define BUMP_DELAY        2 * 1000 // 2 seconds
+#define BUMP_COOLDOWN     1 * 1000 // 1 seconds
 #define BUMP_MAX          3
 
 void solve(PinballApp* pb, float dt) {
@@ -85,6 +85,9 @@ void solve(PinballApp* pb, float dt) {
                     if(o->notification) {
                         (*o->notification)(pb);
                     }
+                    // Send this object's signal (if defined)
+                    table->sm.send(o);
+
                     table->score.value += o->score;
                     o->reset_animation();
                     continue;
@@ -494,7 +497,7 @@ extern "C" int32_t pinball0_app(void* p) {
                         if(event.type == InputTypePress) {
                             // Table bump and Tilt tracking
                             uint32_t current_tick = furi_get_tick();
-                            if(current_tick - app.table->last_bump >= BUMP_DELAY) {
+                            if(current_tick - app.table->last_bump >= BUMP_COOLDOWN) {
                                 app.table->bump_count++;
                                 app.table->last_bump = current_tick;
                                 if(!app.table->tilt_detect_enabled ||
@@ -631,14 +634,15 @@ extern "C" int32_t pinball0_app(void* p) {
         view_port_update(view_port);
         furi_mutex_release(app.mutex);
 
-        // game timing + idle check
+        // idle timeout check
         uint32_t current_tick = furi_get_tick();
-        if(current_tick - app.idle_start >= IDLE_TIMEOUT) {
+        if(app.game_mode == GM_TableSelect && current_tick - app.idle_start >= IDLE_TIMEOUT) {
             FURI_LOG_W(TAG, "Idle timeout! Exiting Pinball0...");
             app.processing = false;
             break;
         }
 
+        // game loop timing
         uint32_t time_lapsed = current_tick - last_frame_time;
         dt = time_lapsed / 1000.0f;
         while(dt < 1.0f / GAME_FPS) {

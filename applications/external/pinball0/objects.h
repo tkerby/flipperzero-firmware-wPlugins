@@ -3,11 +3,15 @@
 #include "vec2.h"
 #include <gui/canvas.h> // for Canvas*
 
+#include "signals.h"
+
 #define DEF_BALL_RADIUS   20
 #define DEF_BUMPER_RADIUS 40
 #define DEF_BUMPER_BOUNCE 1.0f
 #define DEF_FLIPPER_SIZE  120
 #define DEF_RAIL_BOUNCE   0.9f
+#define DEF_TURBO_RADIUS  20
+#define DEF_TURBO_BOOST   5
 
 #define ARC_TANGENT_RESTITUTION 1.0f
 #define ARC_NORMAL_RESTITUTION  0.8f
@@ -90,14 +94,20 @@ public:
         , physical(true)
         , hidden(false)
         , score(0)
+        , tx_id(INVALID_ID)
+        , rx_id(INVALID_ID)
+        , tx_type(SignalType::ALL)
         , notification(nullptr) {
     }
     virtual ~FixedObject() = default;
 
     float bounce;
-    bool physical; // can be hit
+    bool physical; // interacts with ball vs table decoration
     bool hidden; // do not draw
     int score;
+    int tx_id;
+    int rx_id;
+    SignalType tx_type;
 
     void (*notification)(void* app);
 
@@ -105,6 +115,9 @@ public:
     virtual bool collide(Ball& ball) = 0;
     virtual void reset_animation() {};
     virtual void step_animation() {};
+
+    virtual void signal_receive();
+    virtual void signal_send();
 };
 
 class Polygon : public FixedObject {
@@ -211,19 +224,23 @@ public:
 
     void draw(Canvas* canvas);
     bool collide(Ball& ball);
+
+    void signal_receive();
+    void signal_send();
 };
 
 class Turbo : public FixedObject {
 public:
-    Turbo(const Vec2& p_, float angle_, float boost_)
+    Turbo(const Vec2& p_, float angle_, float boost_, float radius_)
         : FixedObject()
         , p(p_)
         , angle(angle_)
-        , boost(boost_) {
+        , boost(boost_)
+        , r(radius_) {
+        // Our boost direction
         dir = Vec2(cosf(angle), -sinf(angle));
 
-        // for now, fix the radius to 30 or whatever
-        size_t r = 30;
+        // define the points of the chevrons at the 0 angle
         chevron_1[0] = Vec2(p.x, p.y - r);
         chevron_1[1] = Vec2(p.x + r, p.y);
         chevron_1[2] = Vec2(p.x, p.y + r);
@@ -232,6 +249,7 @@ public:
         chevron_2[1] = Vec2(p.x, p.y);
         chevron_2[2] = Vec2(p.x - r, p.y + r);
 
+        // rotate the chevrons to the correct angle
         for(size_t i = 0; i < 3; i++) {
             Vec2& v = chevron_1[i];
             Vec2 d = v - p;
@@ -249,6 +267,7 @@ public:
     Vec2 p;
     float angle;
     float boost;
+    float r;
 
     Vec2 dir; // unit normal of turbo direction
 
@@ -289,7 +308,3 @@ public:
     void draw(Canvas* canvas);
     void step_animation();
 };
-
-// class IconImage : public Object {
-//     Vec2 v;
-// };

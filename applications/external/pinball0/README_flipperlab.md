@@ -5,9 +5,9 @@ Play pinball on your Flipperzero!
 * Realistic physics and collisions
 * User-defined tables via JSON files
 * Bumpers, flat surfaces, curved surfaces
-* Table bumps
+* Table bumps (Don't tilt the table!)
 * Portals!
-* Rollover items
+* Rollover items, Turbo boosts
 * Sounds! Blinky lights! Annoying vibrations!
 * Customizable notification settings: sound, LED, vibration
 * Idle timeout
@@ -21,7 +21,7 @@ Play pinball on your Flipperzero!
 I find it easiest to hold the flipper with both hands so I can hit left/right with my thumbs!
 
 ## Tables
-Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (/apps_data/pinball0). Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (/apps_data/pinball0). 
+Pinball0 ships with several default tables. These tables are automatically deployed into the assets folder (/apps_assets/pinball0/tables). Tables are simple JSON which means you can define your own! Your tables should be stored in the data folder (/apps_data/pinball0/tables). 
 
 View the github repo for the JSON format specification: https://github.com/rdefeo/pinball0
 
