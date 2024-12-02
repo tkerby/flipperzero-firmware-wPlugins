@@ -1,3 +1,8 @@
+## 0.5.0
+
+- Turbo boosts
+- Signals for improved gameplay
+
 ## 0.4.0
 
 - Table Tilt!
