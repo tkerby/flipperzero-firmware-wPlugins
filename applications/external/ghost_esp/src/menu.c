@@ -285,31 +285,14 @@ static const MenuCommand wifi_commands[] = {
         .confirm_text = NULL,
         .details_header = "Raw Packet Capture",
         .details_text = "Captures all WiFi\n"
-                        "traffic in range.\n"
-                        "Saves as PCAP.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff PMKID",
-        .command = "capture -eapol\n",
-        .capture_prefix = "pmkid_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "PMKID Capture",
-        .details_text = "Captures PMKID and\n"
-                        "EAPOL handshakes.\n"
-                        "Saves as PCAP.\n"
+                        "traffic to a PCAP file\n"
+                        "for later analysis.\n"
                         "Range: ~50-100m\n",
     },
     {
         .label = "Sniff Probes",
-        .command = "capture -probe\n",
-        .capture_prefix = "probes_capture",
+        .command = "capture -p\n",
+        .capture_prefix = "probe_capture",
         .file_ext = "pcap",
         .folder = GHOST_ESP_APP_FOLDER_PCAPS,
         .needs_input = false,
@@ -318,9 +301,9 @@ static const MenuCommand wifi_commands[] = {
         .confirm_header = NULL,
         .confirm_text = NULL,
         .details_header = "Probe Capture",
-        .details_text = "Captures probe\n"
-                        "requests from clients.\n"
-                        "Saves to PCAP file.\n"
+        .details_text = "Captures probe requests\n"
+                        "from client devices to\n"
+                        "a PCAP file.\n"
                         "Range: ~50-100m\n",
     },
     {
@@ -335,9 +318,9 @@ static const MenuCommand wifi_commands[] = {
         .confirm_header = NULL,
         .confirm_text = NULL,
         .details_header = "WPS Capture",
-        .details_text = "Captures WPS data\n"
-                        "exchanges & beacons.\n"
-                        "Saves to PCAP file.\n"
+        .details_text = "Captures WPS traffic\n"
+                        "to a PCAP file for\n"
+                        "later analysis.\n"
                         "Range: ~50-100m\n",
     },
     {
@@ -537,9 +520,9 @@ static const MenuCommand ble_commands[] = {
                         "- Last seen time\n",
     },
     {
-        .label = "Sniff Bluetooth",
-        .command = "blescan -r\n",
-        .capture_prefix = "btscan",
+        .label = "Sniff BLE",
+        .command = "blescan -s\n",
+        .capture_prefix = "ble_capture",
         .file_ext = "pcap",
         .folder = GHOST_ESP_APP_FOLDER_PCAPS,
         .needs_input = false,
@@ -548,10 +531,9 @@ static const MenuCommand ble_commands[] = {
         .confirm_header = NULL,
         .confirm_text = NULL,
         .details_header = "BLE Sniffer",
-        .details_text = "Captures Bluetooth LE\n"
-                        "packets & adv data.\n"
-                        "Saves to PCAP file.\n"
-                        "Range: ~50m\n",
+        .details_text = "Captures Bluetooth Low\n"
+                        "Energy traffic.\n"
+                        "Range: ~10-30m\n",
     },
     {
         .label = "Stop BLE Scan",
