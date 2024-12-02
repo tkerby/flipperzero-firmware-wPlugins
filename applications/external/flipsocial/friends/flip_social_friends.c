@@ -15,33 +15,29 @@ FlipSocialModel* flip_social_friends_alloc() {
     return friends;
 }
 
-void flip_social_free_friends() {
-    if(!flip_social_friends) {
-        FURI_LOG_E(TAG, "Friends model is NULL");
-        return;
-    }
-    for(int i = 0; i < flip_social_friends->count; i++) {
-        if(flip_social_friends->usernames[i]) {
-            free(flip_social_friends->usernames[i]);
-        }
-    }
-}
-
 // for now we're just listing the current users
 // as the feed is upgraded, then we can port more to the friends view
 bool flip_social_get_friends() {
+    if(!app_instance) {
+        FURI_LOG_E(TAG, "App instance is NULL");
+        return false;
+    }
+    if(fhttp.state == INACTIVE) {
+        FURI_LOG_E(TAG, "HTTP state is INACTIVE");
+        return false;
+    }
     // will return true unless the devboard is not connected
     char url[100];
     snprintf(
         fhttp.file_path,
         sizeof(fhttp.file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/friends.txt");
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/friends.json");
 
     fhttp.save_received_data = true;
     auth_headers_alloc();
     snprintf(
         url,
-        100,
+        sizeof(url),
         "https://www.flipsocial.net/api/user/friends/%s/",
         app_instance->login_username_logged_in);
     if(!flipper_http_get_request_with_headers(url, auth_headers)) {
@@ -108,6 +104,10 @@ bool flip_social_parse_json_friends() {
     // Initialize friends count
     flip_social_friends->count = 0;
 
+    // Reset the friends submenu
+    submenu_reset(app_instance->submenu_friends);
+    submenu_set_header(app_instance->submenu_friends, "Friends");
+
     // Extract the users array from the JSON
     char* json_users = get_json_value("friends", data_cstr, MAX_TOKENS);
     if(json_users == NULL) {
@@ -133,6 +133,12 @@ bool flip_social_parse_json_friends() {
             MAX_USER_LENGTH,
             "%s",
             start);
+        submenu_add_item(
+            app_instance->submenu_friends,
+            flip_social_friends->usernames[flip_social_friends->count],
+            FlipSocialSubmenuLoggedInIndexFriendsStart + flip_social_friends->count,
+            flip_social_callback_submenu_choices,
+            app_instance);
         flip_social_friends->count++;
         start = end + 1;
     }
@@ -148,22 +154,19 @@ bool flip_social_parse_json_friends() {
             MAX_USER_LENGTH,
             "%s",
             start);
+        submenu_add_item(
+            app_instance->submenu_friends,
+            flip_social_friends->usernames[flip_social_friends->count],
+            FlipSocialSubmenuLoggedInIndexFriendsStart + flip_social_friends->count,
+            flip_social_callback_submenu_choices,
+            app_instance);
         flip_social_friends->count++;
     }
 
-    // Add submenu items for the friends
-    if(!flip_social_update_friends()) {
-        FURI_LOG_E(TAG, "Failed to update friends submenu");
-        furi_string_free(friend_data);
-        free(data_cstr);
-        return false;
-    }
-
-    // Free the json_users
+    furi_string_free(friend_data);
+    free(data_cstr);
     free(json_users);
     free(start);
     free(end);
-    furi_string_free(friend_data);
-    free(data_cstr);
     return true;
 }
