@@ -6,6 +6,7 @@ App(
     requires=["gui"],
     stack_size=1 * 1024,
     fap_icon="flipper_spi_terminal_10px.png",
+    fap_icon_assets="assets",
     fap_category="GPIO",
     fap_author="Jan Wiesemann",
     fap_version="0.1",
