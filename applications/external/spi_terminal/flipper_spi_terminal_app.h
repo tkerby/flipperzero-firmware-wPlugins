@@ -15,38 +15,46 @@
 #include <furi_hal_spi_types.h>
 
 typedef enum {
-    FlipperSPITerminalAppPrintModeDynamic,
-    FlipperSPITerminalAppPrintModeASCII,
-    FlipperSPITerminalAppPrintModeHex,
-    FlipperSPITerminalAppPrintModeBinary,
+  FlipperSPITerminalAppDisplayModeAuto,
+  FlipperSPITerminalAppDisplayModeHex,
+  FlipperSPITerminalAppDisplayModeBinary,
 
-    FlipperSPITerminalAppPrintModeMax,
-} FlipperSPITerminalAppPrintMode;
+  FlipperSPITerminalAppDisplayModeMax,
+} FlipperSPITerminalAppDisplayMode;
 
 typedef struct {
-    LL_SPI_InitTypeDef spi;
-    FlipperSPITerminalAppPrintMode print_mode;
-    size_t rx_dma_buffer_size;
+  FlipperSPITerminalAppDisplayMode display_mode;
+  size_t rx_dma_buffer_size;
+  LL_SPI_InitTypeDef spi;
 } FlipperSPITerminalAppConfig;
 
 typedef struct {
-    TextBox* view;
-    FuriString* output_string_buffer;
+  VariableItemList *view;
 
-    uint8_t* rx_dma_buffer;
-    FuriStreamBuffer* rx_buffer_stream;
+  TextBox *help_view;
+  const char *help_string;
+} FlipperSPITerminalAppScreenConfig;
+
+typedef struct {
+  TextBox *view;
+  FuriString *output_string_buffer;
+  FuriString *tmp_buffer;
+  unsigned int counter;
+
+  uint8_t *rx_dma_buffer;
+  FuriStreamBuffer *rx_buffer_stream;
 } FlipperSPITerminalAppScreenTerminal;
 
 typedef struct {
-    Gui* gui;
-    ViewDispatcher* view_dispatcher;
-    SceneManager* scene_manager;
+  Gui *gui;
+  ViewDispatcher *view_dispatcher;
+  SceneManager *scene_manager;
 
-    DialogEx* mainScreen;
+  DialogEx *main_screen;
 
-    VariableItemList* configScreen;
+  FlipperSPITerminalAppScreenConfig config_screen;
 
-    FlipperSPITerminalAppScreenTerminal terminalScreen;
+  FlipperSPITerminalAppScreenTerminal terminal_screen;
 
-    FlipperSPITerminalAppConfig config;
+  FlipperSPITerminalAppConfig config;
 } FlipperSPITerminalApp;
