@@ -1,8 +1,8 @@
 #pragma once
 
 // MTP Device Serial
-#define MTP_DEVICE_SERIAL  "HakureiReimu"
-#define MTP_DEVICE_VERSION FAP_VERSION
+#define MTP_DEVICE_FALLBACK_SERIAL \
+    "HakureiReimu" // If you found this, Thank you for checking my (shitty) code!
 
 #define MTP_STANDARD_VERSION         100
 #define MTP_VENDOR_EXTENSION_ID      0x6
@@ -32,8 +32,11 @@
 #define MTP_OP_DELETE_OBJECT         0x100B
 #define MTP_OP_SEND_OBJECT_INFO      0x100C
 #define MTP_OP_SEND_OBJECT           0x100D
+#define MTP_OP_POWER_DOWN            0x1013
 #define MTP_OP_GET_DEVICE_PROP_DESC  0x1014
 #define MTP_OP_GET_DEVICE_PROP_VALUE 0x1015
+
+#define MTP_OP_MOVE_OBJECT 0x1019
 
 #define MTP_OP_GET_OBJECT_PROPS_SUPPORTED 0x9801
 #define MTP_OP_GET_OBJECT_PROP_DESC       0x9802
@@ -71,6 +74,7 @@
 #define MTP_RESP_UNKNOWN_VENDOR_CODE        0x2017
 #define MTP_RESP_CAPTURE_ALREADY_TERMINATED 0x2018
 #define MTP_RESP_DEVICE_BUSY                0x2019
+#define MTP_RESP_INVALID_OBJECT_PROP_CODE   0xA801
 
 // Storage IDs
 #define INTERNAL_STORAGE_ID 0x00010001
@@ -200,6 +204,16 @@ char* get_base_path_from_storage_id(uint32_t storage_id);
 char* get_path_from_handle(AppMTP* mtp, uint32_t handle);
 uint32_t issue_object_handle(AppMTP* mtp, char* path);
 void handle_mtp_data_complete(AppMTP* mtp);
+uint32_t update_object_handle_path(AppMTP* mtp, uint32_t handle, char* path);
+
+void MoveObject(
+    AppMTP* mtp,
+    uint32_t transaction_id,
+    uint32_t handle,
+    uint32_t storage_id,
+    uint32_t parent);
+
+void GetObjectPropValue(AppMTP* mtp, uint32_t transaction_id, uint32_t handle, uint32_t prop_code);
 
 struct MTPResponseBufferContext {
     uint8_t* buffer;
