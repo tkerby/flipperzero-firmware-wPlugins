@@ -38,6 +38,7 @@ bool uds_init(UDS_SERVICE* uds_instance) {
 // Free instance
 void free_uds(UDS_SERVICE* uds_instance) {
     free_mcp2515(uds_instance->CAN);
+    free(uds_instance->CAN);
     free(uds_instance);
 }
 
@@ -140,7 +141,7 @@ bool uds_get_vin(UDS_SERVICE* uds_instance, FuriString* text) {
 // Function to send multiframes
 // This will be on development
 bool uds_multi_frame_request(
-    UDS_SERVICE* uds,
+    UDS_SERVICE* uds_instance,
     uint8_t* data,
     uint8_t length,
     CANFRAME* canframes_to_send,
@@ -170,7 +171,7 @@ bool uds_multi_frame_request(
         uint8_t counter = 0;
 
         for(uint8_t i = 0; i < size_frames_to_send; i++) {
-            canframes_to_send[i].canId = uds->id_to_send; // Set the id to be sent
+            canframes_to_send[i].canId = uds_instance->id_to_send; // Set the id to be sent
             canframes_to_send[i].data_lenght = 8; // Set the lenght
 
             if(i >= 1) canframes_to_send[i].buffer[0] = (0x20) + (i & 0xf); // every
@@ -190,7 +191,7 @@ bool uds_multi_frame_request(
 
     // If the data only needs one frame
     else {
-        canframes_to_send[0].canId = uds->id_to_send;
+        canframes_to_send[0].canId = uds_instance->id_to_send;
         canframes_to_send[0].data_lenght = length + 1;
         canframes_to_send[0].buffer[0] = length;
         for(uint8_t i = 1; i < (length + 1); i++) {
@@ -198,7 +199,7 @@ bool uds_multi_frame_request(
         }
     }
 
-    canframes_to_send[size_frames_to_send].canId = uds->id_to_send;
+    canframes_to_send[size_frames_to_send].canId = uds_instance->id_to_send;
     canframes_to_send[size_frames_to_send].data_lenght = 3;
     canframes_to_send[size_frames_to_send].buffer[0] = 0x30;
 
@@ -224,13 +225,14 @@ bool uds_multi_frame_request(
     // From here is the work to send de canbus data
 
     // Send the first frame
-    if(send_can_frame(uds->CAN, &canframes_to_send[0]) != ERROR_OK) {
+    if(send_can_frame(uds_instance->CAN, &canframes_to_send[0]) != ERROR_OK) {
         log_exception("First message wasnt send");
         return false;
     }
 
     // Wait message of the response
-    if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[0])) {
+    if(!read_frames_uds(
+           uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[0])) {
         log_exception("message wasnt received");
         return false;
     }
@@ -238,10 +240,12 @@ bool uds_multi_frame_request(
     // To received multiple frames
     if(canframes_to_received[0].buffer[0] == 0x10 && count_of_frames_to_received > 1) {
         // If there no more data will pass this code
-        send_can_frame(uds->CAN, &canframes_to_send[size_frames_to_send]);
+        send_can_frame(uds_instance->CAN, &canframes_to_send[size_frames_to_send]);
 
         for(uint8_t i = 1; i < count_of_frames_to_received; i++) {
-            if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[i])) break;
+            if(!read_frames_uds(
+                   uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[i]))
+                break;
         }
     }
 
@@ -264,11 +268,12 @@ bool uds_multi_frame_request(
 
     // Send the rest of the data
     for(uint8_t i = 1; i < size_frames_to_send; i++) {
-        send_can_frame(uds->CAN, &canframes_to_send[i]);
+        send_can_frame(uds_instance->CAN, &canframes_to_send[i]);
     }
 
     // Read the first ECU's response
-    if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[0])) {
+    if(!read_frames_uds(
+           uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[0])) {
         log_exception("Error to read the frame");
         return false;
     }
@@ -276,14 +281,154 @@ bool uds_multi_frame_request(
     // To received multiple frames
     if(canframes_to_received[0].buffer[0] == 0x10 && count_of_frames_to_received > 1) {
         // If there no more data will pass this code
-        send_can_frame(uds->CAN, &canframes_to_send[size_frames_to_send]);
+        send_can_frame(uds_instance->CAN, &canframes_to_send[size_frames_to_send]);
 
         for(uint8_t i = 1; i < count_of_frames_to_received; i++) {
-            if(!read_frames_uds(uds->CAN, uds->id_to_received, &canframes_to_received[i])) break;
+            if(!read_frames_uds(
+                   uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[i]))
+                break;
         }
     }
 
     canframes_to_send[size_frames_to_send].canId = 0;
 
+    return true;
+}
+
+// Set diagnostic session
+bool uds_set_diagnostic_session(UDS_SERVICE* uds_instance, diagnostic_session session) {
+    uint8_t data[2] = {0x10, (uint8_t)session};
+
+    if(session == 0) return false;
+
+    CANFRAME frame_to_send = {0};
+    CANFRAME frame_to_received = {0};
+
+    if(!uds_multi_frame_request(
+           uds_instance, data, COUNT_OF(data), &frame_to_send, 1, &frame_to_received))
+        return false;
+
+    if(frame_to_received.buffer[1] != 0x50) return false;
+
+    return true;
+}
+
+// Reset the ECU
+bool uds_reset_ecu(UDS_SERVICE* uds_instance, type_ecu_reset type) {
+    uint8_t data[2] = {0x11, (uint8_t)type};
+
+    if(type == 0) return false;
+
+    CANFRAME frame_to_send = {0};
+    CANFRAME frame_to_received = {0};
+
+    if(!uds_multi_frame_request(
+           uds_instance, data, COUNT_OF(data), &frame_to_send, 1, &frame_to_received))
+        return false;
+
+    if(frame_to_received.buffer[1] != 0x51) return false;
+
+    return true;
+}
+
+// Get count of DTC
+bool uds_get_count_stored_dtc(UDS_SERVICE* uds_instance, uint16_t* count_of_dtc) {
+    uint8_t data[3] = {0x19, 0x1, 0xff};
+
+    CANFRAME frame_to_send = {0};
+    CANFRAME frame_to_received = {0};
+
+    if(!uds_multi_frame_request(
+           uds_instance, data, COUNT_OF(data), &frame_to_send, 1, &frame_to_received))
+        return false;
+
+    if(frame_to_received.buffer[1] != 0x59) return false;
+
+    *count_of_dtc = (uint16_t)frame_to_received.buffer[5] << 8 | frame_to_received.buffer[6];
+
+    return true;
+}
+
+// Get the DTC
+bool uds_get_stored_dtc(UDS_SERVICE* uds_instance, uint8_t* codes, uint16_t* count_of_dtc) {
+    // To get the count of DTC stored
+    if(!uds_get_count_stored_dtc(uds_instance, count_of_dtc)) {
+        log_exception("Salimos Aqui 1");
+        return true;
+    }
+
+    UNUSED(codes);
+
+    log_info("Vamos aqui 1");
+
+    uint8_t data[3] = {0x19, 0x2, 0xff};
+
+    CANFRAME frame_to_send = {0};
+    CANFRAME* frame_to_received = calloc(5, sizeof(CANFRAME));
+
+    log_info("Vamos aqui 2");
+
+    // Get the canframes with the data
+    if(!uds_multi_frame_request(
+           uds_instance, data, COUNT_OF(data), &frame_to_send, 5, frame_to_received)) {
+        log_exception("Salimos Aqui 2");
+        free(frame_to_received);
+        return false;
+    }
+
+    log_info("Vamos aqui 3");
+
+    // If the message has error
+    if(frame_to_received[0].buffer[0] == 0x7F) {
+        log_exception("Salimos Aqui 3");
+        free(frame_to_received);
+        return false;
+    }
+
+    log_info("Vamos aqui 4");
+
+    // If the data has only 1 DTC code
+    if(*count_of_dtc == 1) {
+        log_info("Pues practicamente esto esta bien");
+
+        for(uint8_t i = 3; i < frame_to_received[0].data_lenght; i++) {
+            log_info("value of %u %x", i - 3, frame_to_received[0].buffer[i]);
+            codes[i - 3] = frame_to_received[0].buffer[i];
+        }
+
+        log_info("Casi Sale");
+
+        free(frame_to_received);
+
+        log_info("Debe Sale");
+
+        return true;
+    }
+
+    // If the data has more than only one dtc
+
+    log_info("Vamos aqui 5");
+
+    uint8_t count_of_bytes = frame_to_received[0].buffer[1] - 2;
+
+    uint8_t data_codes[count_of_bytes];
+
+    UNUSED(data_codes);
+
+    for(uint8_t i = 0; i < 5; i++) {
+        if(frame_to_received[i].canId != uds_instance->id_to_received) break;
+
+        uint32_t start_num = (i == 0) ? 4 : 1;
+
+        uint8_t counter = 0;
+
+        for(uint8_t j = start_num; j < frame_to_received[i].data_lenght; j++) {
+            data_codes[counter++] = frame_to_received[i].buffer[j];
+        }
+    }
+
+    log_info("Vamos aqui 6");
+
+    free(frame_to_received);
     return true;
 }
