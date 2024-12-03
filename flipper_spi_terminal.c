@@ -20,18 +20,6 @@ static void flipper_spi_terminal_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
-#define ADD_CONFIG_ENTRY(                                                              \
-    label, helpText, name, type, defaultValue, valueIndexFunc, field, values, strings) \
-    config->field = defaultValue;
-
-static void flipper_spi_terminal_init_default_config(FlipperSPITerminalAppConfig* config) {
-    SPI_TERM_LOG_T("Setting default settings...");
-    furi_check(config);
-
-#include "scenes/scene_config_values_config.h"
-}
-#undef ADD_CONFIG_ENTRY
-
 // Yes, it's a global variable, I know...
 // It's just one less thing I need to free and it's automatically initalized to 0.
 FlipperSPITerminalApp app_instance = {0};
@@ -39,7 +27,9 @@ FlipperSPITerminalApp app_instance = {0};
 static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
     SPI_TERM_LOG_T("Alloc App");
     FlipperSPITerminalApp* app = &app_instance;
-    flipper_spi_terminal_init_default_config(&app->config);
+
+    SPI_TERM_LOG_T("Config restore");
+    flipper_spi_terminal_config_load(&app->config);
 
     SPI_TERM_LOG_T("Open GUI");
     app->gui = furi_record_open(RECORD_GUI);
@@ -59,8 +49,6 @@ static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     flipper_spi_terminal_scenes_alloc(app);
-
-    SPI_TERM_LOG_T("Alloc Terminal Screen!");
 
     return app;
 }

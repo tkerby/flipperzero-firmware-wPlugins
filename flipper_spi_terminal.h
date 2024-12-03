@@ -15,6 +15,7 @@
 #define SPI_TERM_OUTPUT_BUFFER_SIZE 4096
 
 #include "flipper_spi_terminal_app.h"
+#include "flipper_spi_terminal_config.h"
 
 #define SPI_TERM_CONTEXT_TO_APP(context) \
     void* _context_to_app_tmp = context; \
