@@ -15,6 +15,13 @@
 #include "../flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
 
+static void flipper_spi_terminal_scene_config_alloc_spi_config_items(FlipperSPITerminalApp* app) {
+    VariableItem* item;
+    size_t value_index;
+
+    UNUSED(item);
+    UNUSED(value_index);
+
 // Add item generation
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
@@ -27,27 +34,20 @@
     value_index = (valueIndexFunc)(app->config.field, spi_config_##name##_values, valuesCount);     \
     variable_item_set_current_value_index(item, value_index);                                       \
     name##_changed(item);
-
-static void flipper_spi_terminal_scene_config_alloc_spi_config_items(FlipperSPITerminalApp* app) {
-    VariableItem* item;
-    size_t value_index;
-
-    UNUSED(item);
-    UNUSED(value_index);
-
 #include "../flipper_spi_terminal_config_declarations.h"
-}
 #undef ADD_CONFIG_ENTRY
+}
 
 #define SPI_TERM_HELP_TEXT_INDEX_OFFSET 1
+
 // Help strings
+const char* const flipper_spi_terminal_scene_config_help_strings[] = {
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     label "\n\n" helpText,
-const char* const flipper_spi_terminal_scene_config_help_strings[] = {
 #include "../flipper_spi_terminal_config_declarations.h"
-};
 #undef ADD_CONFIG_ENTRY
+};
 
 void flipper_spi_terminal_scene_config_on_center_button(void* context, uint32_t index) {
     SPI_TERM_CONTEXT_TO_APP(context);
