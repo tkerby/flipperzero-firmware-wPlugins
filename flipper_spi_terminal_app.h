@@ -50,11 +50,10 @@ typedef struct {
   ViewDispatcher *view_dispatcher;
   SceneManager *scene_manager;
 
-  DialogEx *main_screen;
-
-  FlipperSPITerminalAppScreenConfig config_screen;
-
-  FlipperSPITerminalAppScreenTerminal terminal_screen;
-
   FlipperSPITerminalAppConfig config;
+
+  DialogEx *main_screen;
+  FlipperSPITerminalAppScreenConfig config_screen;
+  FlipperSPITerminalAppScreenTerminal terminal_screen;
+  TextBox *about_screen;
 } FlipperSPITerminalApp;

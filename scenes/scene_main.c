@@ -20,6 +20,7 @@ void flipper_spi_terminal_scene_main_alloc(FlipperSPITerminalApp* app) {
 
     dialog_ex_set_left_button_text(app->main_screen, "Config");
     dialog_ex_set_center_button_text(app->main_screen, "Run");
+    dialog_ex_set_right_button_text(app->main_screen, "About");
 
     dialog_ex_set_icon(app->main_screen, 0, 0, &I_flipper_spi_terminal_connection_diagram);
 
@@ -47,6 +48,9 @@ bool flipper_spi_terminal_scene_main_on_event(void* context, SceneManagerEvent e
             return true;
         } else if(event.event == DialogExResultCenter) {
             scene_manager_next_scene(app->scene_manager, FlipperSPITerminalAppSceneTerminal);
+            return true;
+        } else if(event.event == DialogExResultRight) {
+            scene_manager_next_scene(app->scene_manager, FlipperSPITerminalAppSceneAbout);
             return true;
         }
     }
