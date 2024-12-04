@@ -14,6 +14,11 @@ typedef enum {
 
 extern const SceneManagerHandlers flipper_spi_terminal_scene_handlers;
 
+// Generate scene alloc handlers declaration
+#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_alloc(FlipperSPITerminalApp* app);
+#include "scenes_config.h"
+#undef ADD_SCENE
+
 // Generate scene on_enter handlers declaration
 #define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_enter(void*);
 #include "scenes_config.h"
@@ -27,11 +32,6 @@ extern const SceneManagerHandlers flipper_spi_terminal_scene_handlers;
 
 // Generate scene on_exit handlers declaration
 #define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_on_exit(void* context);
-#include "scenes_config.h"
-#undef ADD_SCENE
-
-// Generate scene alloc handlers declaration
-#define ADD_SCENE(prefix, name, id) void prefix##_scene_##name##_alloc(FlipperSPITerminalApp* app);
 #include "scenes_config.h"
 #undef ADD_SCENE
 

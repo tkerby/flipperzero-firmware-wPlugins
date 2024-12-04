@@ -1,31 +1,14 @@
 #include <furi_hal.h>
 #include <furi_hal_spi_types.h>
 #include <lib/flipper_format/flipper_format.h>
-#include <lib/toolbox/value_index.h>
 
 #include "flipper_spi_terminal.h"
 #include "flipper_spi_terminal_app.h"
 #include "flipper_spi_terminal_config.h"
 
-size_t value_index_display_mode(
-    const FlipperSPITerminalAppDisplayMode value,
-    const FlipperSPITerminalAppDisplayMode values[],
-    size_t values_count) {
-    size_t index = 0;
-
-    for(size_t i = 0; i < values_count; i++) {
-        if(value == values[i]) {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
-}
-
-size_t value_index_size_t(const size_t value, const size_t values[], size_t values_count) {
-    return value_index_uint32(value, (uint32_t*)values, values_count);
-}
+// Ignore the 'clangd(unused-include)' warning.
+// It's only referenced on compile time.
+#include "toolbox/value_index_ex.h"
 
 #define UNWRAP_ARGS(...) __VA_ARGS__
 

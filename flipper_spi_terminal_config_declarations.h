@@ -2,7 +2,7 @@
 #define ADD_CONFIG_ENTRY( \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings)
 #include <furi_hal_spi_types.h>
-#include <lib/toolbox/value_index.h>
+#include "toolbox/value_index_ex.h"
 #endif
 
 ADD_CONFIG_ENTRY(

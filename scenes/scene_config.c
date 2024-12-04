@@ -3,6 +3,10 @@
 #include "../flipper_spi_terminal_config.h"
 #include "../flipper_spi_terminal.h"
 
+// Ignore the 'clangd(unused-include)' warning.
+// It's only referenced on compile time.
+#include "../toolbox/value_index_ex.h"
+
 // Value changed callback generation
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
@@ -49,7 +53,7 @@ const char* const flipper_spi_terminal_scene_config_help_strings[] = {
 #undef ADD_CONFIG_ENTRY
 };
 
-void flipper_spi_terminal_scene_config_on_center_button(void* context, uint32_t index) {
+static void flipper_spi_terminal_scene_config_on_center_button(void* context, uint32_t index) {
     SPI_TERM_CONTEXT_TO_APP(context);
 
     if(index < SPI_TERM_HELP_TEXT_INDEX_OFFSET ||
