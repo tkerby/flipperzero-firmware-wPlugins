@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1126-2010-0.420.0-2e64848s](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1204-1241-0.420.0-7add7d3s](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-11-26 20:10 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-11-26 20:10 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-04 12:41 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-04 12:41 EST`
 - [Animations: L1_Mods frames order and text fix #1114 (By grishiny)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1114)
 - Updated: [Pinball0 v0.5 (By rdefeo)](https://github.com/rdefeo/pinball0)
 - Updated: [FlipSocial v0.7 (By jblanked)](https://github.com/jblanked/FlipSocial)
