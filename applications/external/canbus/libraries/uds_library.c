@@ -158,10 +158,6 @@ bool uds_multi_frame_request(
         }
     }
 
-    // log_info("count of frames to send: %u", size_frames_to_send);
-
-    // log_info("Start"); // 0
-
     // Set the frames if the data need more than one can frame
     if(size_frames_to_send > 1) {
         canframes_to_send[0].buffer[0] = 0x10; // Set the byte to indicate the first frame
@@ -179,7 +175,6 @@ bool uds_multi_frame_request(
             uint8_t start_num = (i == 0) ? 2 : 1;
 
             for(uint8_t j = start_num; j < 8; j++) {
-                // log_info("counter: %u data: %x", counter, data[counter]);
                 canframes_to_send[i].buffer[j] = data[counter++];
 
                 if(counter == length) {
@@ -203,12 +198,8 @@ bool uds_multi_frame_request(
     canframes_to_send[size_frames_to_send].data_lenght = 3;
     canframes_to_send[size_frames_to_send].buffer[0] = 0x30;
 
-    log_info("Messages already set, count of frames: %u", size_frames_to_send); // 1
-
     //  Just for debbug
     FuriString* text = furi_string_alloc();
-
-    log_info("------------To send--------------------------");
 
     for(uint8_t j = 0; j < size_frames_to_send; j++) {
         furi_string_reset(text);
@@ -216,8 +207,6 @@ bool uds_multi_frame_request(
         for(uint8_t i = 0; i < canframes_to_send[j].data_lenght; i++) {
             furi_string_cat_printf(text, "%x ", canframes_to_send[j].buffer[i]);
         }
-
-        log_info(furi_string_get_cstr(text));
     }
 
     furi_string_free(text);
@@ -226,14 +215,12 @@ bool uds_multi_frame_request(
 
     // Send the first frame
     if(send_can_frame(uds_instance->CAN, &canframes_to_send[0]) != ERROR_OK) {
-        log_exception("First message wasnt send");
         return false;
     }
 
     // Wait message of the response
     if(!read_frames_uds(
            uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[0])) {
-        log_exception("message wasnt received");
         return false;
     }
 
@@ -262,7 +249,6 @@ bool uds_multi_frame_request(
 
     // If the flow control is not ok
     if(canframes_to_received[0].buffer[0] != 0x30) {
-        log_exception("Message to flow_control was a error");
         return false;
     }
 
@@ -274,7 +260,6 @@ bool uds_multi_frame_request(
     // Read the first ECU's response
     if(!read_frames_uds(
            uds_instance->CAN, uds_instance->id_to_received, &canframes_to_received[0])) {
-        log_exception("Error to read the frame");
         return false;
     }
 
@@ -349,85 +334,115 @@ bool uds_get_count_stored_dtc(UDS_SERVICE* uds_instance, uint16_t* count_of_dtc)
     return true;
 }
 
-// Get the DTC
-bool uds_get_stored_dtc(UDS_SERVICE* uds_instance, uint8_t* codes, uint16_t* count_of_dtc) {
-    // To get the count of DTC stored
-    if(!uds_get_count_stored_dtc(uds_instance, count_of_dtc)) {
-        log_exception("Salimos Aqui 1");
-        return true;
+// Show the real DTC
+void get_data_trouble_code(char* text, uint8_t* data) {
+    FuriString* code = furi_string_alloc();
+
+    uint8_t letter = data[0] >> 6;
+    uint8_t first_digit = (data[0] >> 4) & 0b0011;
+    uint8_t second_digit = data[0] & 0xf;
+    uint8_t third_digit = (data[1]) >> 4;
+    uint8_t fourth_digit = data[1] & 0xf;
+
+    switch(letter) {
+    case 0:
+        text[0] = 'P';
+        break;
+
+    case 1:
+        text[0] = 'C';
+        break;
+
+    case 2:
+        text[0] = 'B';
+        break;
+
+    case 4:
+        text[0] = 'U';
+        break;
+
+    default:
+        break;
     }
 
-    UNUSED(codes);
+    furi_string_printf(
+        code, "%c%u%u%u%u", text[0], first_digit, second_digit, third_digit, fourth_digit);
 
-    log_info("Vamos aqui 1");
+    for(uint8_t i = 0; i < 5; i++) {
+        text[i] = furi_string_get_char(code, i);
+    }
+
+    furi_string_free(code);
+}
+
+// Get the DTC
+bool uds_get_stored_dtc(UDS_SERVICE* uds_instance, char* codes[], uint16_t* count_of_dtc) {
+    // To get the count of DTC stored
+    if(!uds_get_count_stored_dtc(uds_instance, count_of_dtc)) {
+        return false;
+    }
 
     uint8_t data[3] = {0x19, 0x2, 0xff};
 
     CANFRAME frame_to_send = {0};
-    CANFRAME* frame_to_received = calloc(5, sizeof(CANFRAME));
-
-    log_info("Vamos aqui 2");
+    CANFRAME* frame_to_received = calloc(20, sizeof(CANFRAME));
 
     // Get the canframes with the data
     if(!uds_multi_frame_request(
-           uds_instance, data, COUNT_OF(data), &frame_to_send, 5, frame_to_received)) {
-        log_exception("Salimos Aqui 2");
+           uds_instance, data, COUNT_OF(data), &frame_to_send, 20, frame_to_received)) {
         free(frame_to_received);
         return false;
     }
 
-    log_info("Vamos aqui 3");
+    uint8_t data_count = *count_of_dtc * 4;
+    uint8_t data_dtc[*count_of_dtc][data_count];
 
     // If the message has error
     if(frame_to_received[0].buffer[0] == 0x7F) {
-        log_exception("Salimos Aqui 3");
         free(frame_to_received);
         return false;
     }
 
-    log_info("Vamos aqui 4");
-
     // If the data has only 1 DTC code
     if(*count_of_dtc == 1) {
-        log_info("Pues practicamente esto esta bien");
-
-        for(uint8_t i = 3; i < frame_to_received[0].data_lenght; i++) {
-            log_info("value of %u %x", i - 3, frame_to_received[0].buffer[i]);
-            codes[i - 3] = frame_to_received[0].buffer[i];
+        for(uint8_t i = 4; i < frame_to_received[0].data_lenght; i++) {
+            data_dtc[0][i - 4] = frame_to_received[0].buffer[i];
         }
-
-        log_info("Casi Sale");
-
         free(frame_to_received);
-
-        log_info("Debe Sale");
+        get_data_trouble_code(codes[0], data_dtc[0]);
 
         return true;
     }
 
     // If the data has more than only one dtc
 
-    log_info("Vamos aqui 5");
+    uint8_t data_saver[data_count];
 
-    uint8_t count_of_bytes = frame_to_received[0].buffer[1] - 2;
+    memset(data_saver, 0, sizeof(data_saver));
 
-    uint8_t data_codes[count_of_bytes];
-
-    UNUSED(data_codes);
+    uint8_t counter = 0;
 
     for(uint8_t i = 0; i < 5; i++) {
         if(frame_to_received[i].canId != uds_instance->id_to_received) break;
 
-        uint32_t start_num = (i == 0) ? 4 : 1;
-
-        uint8_t counter = 0;
+        uint32_t start_num = (i == 0) ? 5 : 1;
 
         for(uint8_t j = start_num; j < frame_to_received[i].data_lenght; j++) {
-            data_codes[counter++] = frame_to_received[i].buffer[j];
+            data_saver[counter++] = frame_to_received[i].buffer[j];
         }
     }
 
-    log_info("Vamos aqui 6");
+    counter = 0;
+
+    for(uint8_t i = 0; i < (*count_of_dtc); i++) {
+        for(uint8_t j = 0; j < 4; j++) {
+            data_dtc[i][j] = data_saver[counter++];
+        }
+    }
+
+    for(uint8_t i = 0; i < *count_of_dtc; i++) {
+        get_data_trouble_code(codes[i], data_dtc[i]);
+    }
 
     free(frame_to_received);
     return true;
