@@ -53,13 +53,5 @@ bool flip_store_get_fap_file(
     uint16_t api_minor);
 
 // function to handle the entire installation process "asynchronously"
-bool flip_store_install_app(Canvas* canvas, char* category);
-
-// process the app list and return view
-int32_t flip_store_handle_app_list(
-    FlipStoreApp* app,
-    int32_t success_view,
-    char* category,
-    Submenu** submenu);
-
+bool flip_store_install_app(char* category);
 #endif // FLIP_STORE_APPS_H

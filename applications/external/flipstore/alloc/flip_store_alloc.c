@@ -34,34 +34,36 @@ FlipStoreApp* flip_store_app_alloc() {
     if(!easy_flipper_set_view_dispatcher(&app->view_dispatcher, gui, app)) {
         return NULL;
     }
-
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, flip_store_custom_event_callback);
     // Main view
     if(!easy_flipper_set_view(
-           &app->view_main,
-           FlipStoreViewMain,
-           flip_store_view_draw_callback_main,
+           &app->view_loader,
+           FlipStoreViewLoader,
+           flip_store_loader_draw_callback,
            NULL,
-           callback_to_app_list,
+           callback_to_submenu_options,
            &app->view_dispatcher,
            app)) {
         return NULL;
     }
+    flip_store_loader_init(app->view_loader);
+    if(!easy_flipper_set_widget(
+           &app->widget_result,
+           FlipStoreViewWidgetResult,
+           "Error, try again.",
+           callback_to_submenu_options,
+           &app->view_dispatcher)) {
+        return NULL;
+    }
+
+    // Main view
     if(!easy_flipper_set_view(
            &app->view_app_info,
            FlipStoreViewAppInfo,
            flip_store_view_draw_callback_app_list,
            flip_store_input_callback,
            callback_to_app_list,
-           &app->view_dispatcher,
-           app)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_view(
-           &app->view_firmware_download,
-           FlipStoreViewFirmwareDownload,
-           flip_store_view_draw_callback_firmware,
-           NULL,
-           callback_to_firmware_list,
            &app->view_dispatcher,
            app)) {
         return NULL;
@@ -178,7 +180,7 @@ FlipStoreApp* flip_store_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            FlipStoreViewSubmenu,
-           "FlipStore v0.6",
+           "FlipStore v0.7",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -207,94 +209,7 @@ FlipStoreApp* flip_store_app_alloc() {
            &app->view_dispatcher)) {
         return NULL;
     }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_bluetooth,
-           FlipStoreViewAppListBluetooth,
-           "Bluetooth",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_games,
-           FlipStoreViewAppListGames,
-           "Games",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_gpio,
-           FlipStoreViewAppListGPIO,
-           "GPIO",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_infrared,
-           FlipStoreViewAppListInfrared,
-           "Infrared",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_ibutton,
-           FlipStoreViewAppListiButton,
-           "iButton",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_media,
-           FlipStoreViewAppListMedia,
-           "Media",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_nfc,
-           FlipStoreViewAppListNFC,
-           "NFC",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_rfid,
-           FlipStoreViewAppListRFID,
-           "RFID",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_subghz,
-           FlipStoreViewAppListSubGHz,
-           "Sub-GHz",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_tools,
-           FlipStoreViewAppListTools,
-           "Tools",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
-    if(!easy_flipper_set_submenu(
-           &app->submenu_app_list_usb,
-           FlipStoreViewAppListUSB,
-           "USB",
-           callback_to_app_list,
-           &app->view_dispatcher)) {
-        return NULL;
-    }
+
     //
     submenu_add_item(
         app->submenu_main, "Browse", FlipStoreSubmenuIndexOptions, callback_submenu_choices, app);
