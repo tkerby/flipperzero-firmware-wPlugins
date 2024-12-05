@@ -111,6 +111,11 @@ public:
 
     void (*notification)(void* app);
 
+    struct {
+        bool physical;
+        bool hidden;
+    } saved;
+
     virtual void draw(Canvas* canvas) = 0;
     virtual bool collide(Ball& ball) = 0;
     virtual void reset_animation() {};
@@ -118,6 +123,9 @@ public:
 
     virtual void signal_receive();
     virtual void signal_send();
+
+    virtual void save_state();
+    virtual void reset_state();
 };
 
 class Polygon : public FixedObject {
@@ -227,6 +235,8 @@ public:
 
     void signal_receive();
     void signal_send();
+
+    void reset_state();
 };
 
 class Turbo : public FixedObject {

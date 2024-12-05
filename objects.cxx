@@ -149,6 +149,16 @@ void FixedObject::signal_send() {
     hidden = true;
 }
 
+void FixedObject::save_state() {
+    saved.physical = physical;
+    saved.hidden = hidden;
+}
+
+void FixedObject::reset_state() {
+    physical = saved.physical;
+    hidden = saved.hidden;
+}
+
 void Polygon::draw(Canvas* canvas) {
     if(!hidden) {
         for(size_t i = 0; i < points.size() - 1; i++) {
@@ -551,6 +561,10 @@ void Rollover::signal_receive() {
 
 void Rollover::signal_send() {
     // maybe we should start a blink animation of the letters?
+}
+
+void Rollover::reset_state() {
+    activated = false;
 }
 
 void Turbo::draw(Canvas* canvas) {
