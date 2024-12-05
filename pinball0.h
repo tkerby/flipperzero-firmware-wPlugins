@@ -21,7 +21,7 @@
 // #define DRAW_NORMALS
 
 #define TAG     "Pinball0"
-#define VERSION "v0.5"
+#define VERSION "v0.5.1"
 
 // Vertical orientation
 #define LCD_WIDTH  64
