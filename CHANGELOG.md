@@ -1,3 +1,8 @@
+## 0.5.1
+
+- Stop scores when moving ball in debug mode
+- Reset dynamic objects during tilt
+
 ## 0.5.0
 
 - Turbo boosts
