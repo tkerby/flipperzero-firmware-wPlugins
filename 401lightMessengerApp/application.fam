@@ -1,0 +1,11 @@
+App(
+    appid="401_light_msg",
+    name="401/Light MESSENGER",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="lightMsg_app",
+    requires=["gui"],
+    stack_size=2 * 1024,
+    fap_icon="images/401_lghtmsg_icon_10px.png",
+    fap_category="GPIO",
+    fap_icon_assets="images",
+)
