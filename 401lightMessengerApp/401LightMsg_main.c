@@ -7,7 +7,7 @@
 #include "401LightMsg_main.h"
 
 #include <assets_icons.h>
-static const char *TAG = "401_LightMsg";
+static const char* TAG = "401_LightMsg";
 /**
  * Handles input events for the app.
  *
@@ -15,8 +15,7 @@ static const char *TAG = "401_LightMsg";
  * @param ctx The application context.
  * @return false to indicate the event was not consumed.
  */
-bool app_input_callback(InputEvent *input_event, void *ctx)
-{
+bool app_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(ctx);
     UNUSED(input_event);
     return false;
@@ -29,10 +28,9 @@ bool app_input_callback(InputEvent *input_event, void *ctx)
  * @param event The custom event identifier.
  * @return true if the event was handled, false otherwise.
  */
-bool app_custom_event_callback(void *context, uint32_t event)
-{
+bool app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
-    AppContext *app = context;
+    AppContext* app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
@@ -43,28 +41,39 @@ bool app_custom_event_callback(void *context, uint32_t event)
  * @param context The application context.
  * @return true if the back event was handled, false otherwise.
  */
-bool app_navigation_event_callback(void *context)
-{
+bool app_navigation_event_callback(void* context) {
     furi_assert(context);
-    AppContext *app = context;
+    AppContext* app = context;
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
 // ON ENTER SCENE CALLBACKS
-void (*const app_on_enter_handlers[])(void *) = {app_scene_mainmenu_on_enter, app_scene_bmp_editor_on_enter,
-                                                 app_scene_splash_on_enter,   app_scene_config_on_enter,
-                                                 app_scene_set_text_on_enter, app_scene_acc_on_enter};
+void (*const app_on_enter_handlers[])(void*) = {
+    app_scene_mainmenu_on_enter,
+    app_scene_bmp_editor_on_enter,
+    app_scene_splash_on_enter,
+    app_scene_config_on_enter,
+    app_scene_set_text_on_enter,
+    app_scene_acc_on_enter};
 
 // ON EVENT SCENE CALLBACKS
-bool (*const app_on_event_handlers[])(void *context, SceneManagerEvent event) = {
-    app_scene_mainmenu_on_event, app_scene_bmp_editor_on_event, app_scene_splash_on_event,
-    app_scene_config_on_event,   app_scene_set_text_on_event,   app_scene_acc_on_event,
+bool (*const app_on_event_handlers[])(void* context, SceneManagerEvent event) = {
+    app_scene_mainmenu_on_event,
+    app_scene_bmp_editor_on_event,
+    app_scene_splash_on_event,
+    app_scene_config_on_event,
+    app_scene_set_text_on_event,
+    app_scene_acc_on_event,
 };
 
 // ON EXIT SCENE CALLBACKS
-void (*const app_on_exit_handlers[])(void *context) = {
-    app_scene_mainmenu_on_exit, app_scene_bmp_editor_on_exit, app_scene_splash_on_exit,
-    app_scene_config_on_exit,   app_scene_set_text_on_exit,   app_scene_acc_on_exit,
+void (*const app_on_exit_handlers[])(void* context) = {
+    app_scene_mainmenu_on_exit,
+    app_scene_bmp_editor_on_exit,
+    app_scene_splash_on_exit,
+    app_scene_config_on_exit,
+    app_scene_set_text_on_exit,
+    app_scene_acc_on_exit,
 };
 
 const SceneManagerHandlers app_scene_handlers = {
@@ -80,8 +89,7 @@ const SceneManagerHandlers app_scene_handlers = {
  * @param context The application context.
  * @return VIEW_NONE indicating no view should be displayed.
  */
-uint32_t app_Quit_callback(void *ctx)
-{
+uint32_t app_Quit_callback(void* ctx) {
     UNUSED(ctx);
     return VIEW_NONE;
 }
@@ -92,8 +100,7 @@ uint32_t app_Quit_callback(void *ctx)
  * @param context The application context.
  * @return AppViewMainMenu indicating the main menu view should be displayed.
  */
-uint32_t app_navigateTo_MainMenu_callback(void *ctx)
-{
+uint32_t app_navigateTo_MainMenu_callback(void* ctx) {
     UNUSED(ctx);
     return AppViewMainMenu;
 }
@@ -104,20 +111,17 @@ uint32_t app_navigateTo_MainMenu_callback(void *ctx)
  * @param context The application context.
  * @return AppViewSplash indicating the splash view should be displayed.
  */
-uint32_t app_navigateTo_Splash_callback(void *ctx)
-{
+uint32_t app_navigateTo_Splash_callback(void* ctx) {
     UNUSED(ctx);
     return AppViewSplash;
 }
 
-l401_err check_hat(AppContext *app)
-{
+l401_err check_hat(AppContext* app) {
     furi_assert(app);
-    AppContext *app_ctx = app;
+    AppContext* app_ctx = app;
     uint8_t acc_id = 0;
     lis2dh12_device_id_get(&app_ctx->data->lis2dh12, &acc_id);
-    if (acc_id == 0)
-    {
+    if(acc_id == 0) {
         return L401_ERR_HARDWARE;
     }
     return L401_OK;
@@ -129,14 +133,13 @@ l401_err check_hat(AppContext *app)
  *
  * @return A pointer to the allocated AppContext.
  */
-AppContext *app_alloc()
-{
+AppContext* app_alloc() {
     // Enables 5V on GPIO Header
     furi_hal_power_enable_otg();
     l401_err res;
     // Initialize application
-    AppContext *app_ctx = malloc(sizeof(AppContext));
-    Gui *gui = furi_record_open(RECORD_GUI);
+    AppContext* app_ctx = malloc(sizeof(AppContext));
+    Gui* gui = furi_record_open(RECORD_GUI);
 
     app_ctx->scene_manager = scene_manager_alloc(&app_scene_handlers, app_ctx);
     app_ctx->notifications = furi_record_open(RECORD_NOTIFICATION); // Used for backlight
@@ -156,8 +159,7 @@ AppContext *app_alloc()
 
     app_ctx->err = L401_OK;
 
-    if (check_hat(app_ctx) != L401_OK)
-    {
+    if(check_hat(app_ctx) != L401_OK) {
         app_ctx->err = L401_ERR_HARDWARE;
         return app_ctx;
     }
@@ -165,16 +167,14 @@ AppContext *app_alloc()
     lis2dh12_init(&app_ctx->data->lis2dh12);
 
     res = config_alloc(&app_ctx->data->config);
-    if (res != L401_OK)
-    {
+    if(res != L401_OK) {
         app_ctx->err = L401_ERR_INTERNAL;
         return app_ctx;
     }
 
     // Load configuration.
     res = config_load_json(LIGHTMSGCONF_CONFIG_FILE, app_ctx->data->config);
-    if (res != L401_OK)
-    {
+    if(res != L401_OK) {
         app_ctx->err = L401_ERR_MALFORMED;
         return app_ctx;
     }
@@ -183,13 +183,28 @@ AppContext *app_alloc()
     app_ctx->data->shader = lightmsg_color_value[app_ctx->data->config->color];
 
     // Populates the main menu
-    submenu_add_item(app_ctx->mainmenu, "Text", AppMainMenuIndex_Acc_Text, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "Bitmap", AppMainMenuIndex_Acc_Bitmap, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "BitmapEditor", AppMainMenuIndex_BmpEditor, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "Configuration", AppMainMenuIndex_Config, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "FlashLight", AppMainMenuIndex_Flashlight, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "About", AppMainMenuIndex_About, appMainMenu_callback, app_ctx);
-    submenu_add_item(app_ctx->mainmenu, "Splash", AppMainMenuIndex_Splash, appMainMenu_callback, app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu, "Text", AppMainMenuIndex_Acc_Text, appMainMenu_callback, app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu, "Bitmap", AppMainMenuIndex_Acc_Bitmap, appMainMenu_callback, app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu,
+        "BitmapEditor",
+        AppMainMenuIndex_BmpEditor,
+        appMainMenu_callback,
+        app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu, "Configuration", AppMainMenuIndex_Config, appMainMenu_callback, app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu,
+        "FlashLight",
+        AppMainMenuIndex_Flashlight,
+        appMainMenu_callback,
+        app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu, "About", AppMainMenuIndex_About, appMainMenu_callback, app_ctx);
+    submenu_add_item(
+        app_ctx->mainmenu, "Splash", AppMainMenuIndex_Splash, appMainMenu_callback, app_ctx);
 
     // Allocate scenes
     app_ctx->sceneSplash = app_splash_alloc(app_ctx);
@@ -200,16 +215,24 @@ AppContext *app_alloc()
 
     view_dispatcher_set_event_callback_context(app_ctx->view_dispatcher, app_ctx);
 
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewMainMenu, submenu_get_view(app_ctx->mainmenu));
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewSplash, app_splash_get_view(app_ctx->sceneSplash));
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewBmpEditor,
-                             app_bitmap_editor_get_view(app_ctx->sceneBmpEditor));
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewSetText, text_input_get_view(app_ctx->sceneSetText));
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewConfig, app_config_get_view(app_ctx->sceneConfig));
-    view_dispatcher_add_view(app_ctx->view_dispatcher, AppViewAcc, app_acc_get_view(app_ctx->sceneAcc));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher, AppViewMainMenu, submenu_get_view(app_ctx->mainmenu));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher, AppViewSplash, app_splash_get_view(app_ctx->sceneSplash));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher,
+        AppViewBmpEditor,
+        app_bitmap_editor_get_view(app_ctx->sceneBmpEditor));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher, AppViewSetText, text_input_get_view(app_ctx->sceneSetText));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher, AppViewConfig, app_config_get_view(app_ctx->sceneConfig));
+    view_dispatcher_add_view(
+        app_ctx->view_dispatcher, AppViewAcc, app_acc_get_view(app_ctx->sceneAcc));
 
     // Initialize events
-    view_dispatcher_set_navigation_event_callback(app_ctx->view_dispatcher, app_navigation_event_callback);
+    view_dispatcher_set_navigation_event_callback(
+        app_ctx->view_dispatcher, app_navigation_event_callback);
     view_dispatcher_set_custom_event_callback(app_ctx->view_dispatcher, app_custom_event_callback);
     view_set_previous_callback(submenu_get_view(app_ctx->mainmenu), app_Quit_callback);
 
@@ -223,8 +246,7 @@ AppContext *app_alloc()
  *
  * @param app_ctx The app context to be freed.
  */
-void app_free(AppContext *app_ctx)
-{
+void app_free(AppContext* app_ctx) {
     furi_assert(app_ctx);
 
     // Free AppViewSplash
@@ -264,22 +286,20 @@ void app_free(AppContext *app_ctx)
  * @param p Unused parameter.
  * @return 0 indicating successful execution.
  */
-int32_t lightMsg_app(void *p)
-{
+int32_t lightMsg_app(void* p) {
     UNUSED(p);
-    AppContext *app_ctx = app_alloc();
-    FURI_LOG_I(TAG,"Start Lab401's LighMsg app");
-    if (app_ctx->err == L401_OK)
-    {
+    AppContext* app_ctx = app_alloc();
+    FURI_LOG_I(TAG, "Start Lab401's LighMsg app");
+    if(app_ctx->err == L401_OK) {
         with_view_model(
-            app_splash_get_view(app_ctx->sceneSplash), AppStateCtx * model, { model->app_state = AppStateSplash; },
+            app_splash_get_view(app_ctx->sceneSplash),
+            AppStateCtx * model,
+            { model->app_state = AppStateSplash; },
             true);
         view_dispatcher_run(app_ctx->view_dispatcher);
         app_free(app_ctx);
         furi_record_close(RECORD_GUI);
-    }
-    else
-    {
+    } else {
         l401_sign_app(app_ctx->err);
     }
 

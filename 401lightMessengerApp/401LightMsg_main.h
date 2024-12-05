@@ -24,26 +24,22 @@
 #include <locale/locale.h>
 #include <notification/notification_messages.h>
 
-typedef enum
-{
+typedef enum {
     AppEventTypeTick,
     AppEventTypeKey,
     // You can add additional events here.
 } AppEventType;
 
-typedef enum
-{
+typedef enum {
     AppCustomEventQuit
 } AppCustomEvent;
 
-typedef struct
-{
+typedef struct {
     AppEventType type; // The reason for this event.
-    InputEvent input;  // This data is specific to keypress data.
+    InputEvent input; // This data is specific to keypress data.
 } AppEvent;
 
-typedef enum
-{
+typedef enum {
     AppSceneMainMenu,
     AppSceneBmpEditor,
     AppSceneSplash,
@@ -53,8 +49,7 @@ typedef enum
     AppSceneNum,
 } appScene;
 
-typedef enum
-{
+typedef enum {
     lightMsgStateNotFound,
     lightMsgStateFound,
     lightMsgStateWriteSuccess,
@@ -62,8 +57,7 @@ typedef enum
     lightMsgStateWriteReadSuccess,
 } lightMsgState;
 
-typedef enum
-{
+typedef enum {
     AppViewPopup,
     AppViewMainMenu,
     AppViewBmpEditor,
@@ -73,15 +67,13 @@ typedef enum
     AppViewAcc,
 } appViews;
 
-typedef enum
-{
+typedef enum {
     AppStateSplash,
     AppStateAbout,
     AppStateFlashlight,
 } AppState;
 
-typedef struct
-{
+typedef struct {
     AppState app_state;
     char message[64];
 } AppStateCtx;
@@ -95,32 +87,30 @@ typedef struct
 #include "401LightMsg_config.h"
 #include "401LightMsg_main_menu.h"
 
-uint32_t app_Quit_callback(void *context);
-uint32_t app_navigateTo_MainMenu_callback(void *context);
-uint32_t app_navigateTo_Splash_callback(void *context);
+uint32_t app_Quit_callback(void* context);
+uint32_t app_navigateTo_MainMenu_callback(void* context);
+uint32_t app_navigateTo_Splash_callback(void* context);
 
-typedef struct
-{
-    Configuration *config;
+typedef struct {
+    Configuration* config;
     stmdev_ctx_t lis2dh12;
     lis2dh12_reg_t lis2dh12_reg;
     color_animation_callback shader;
 } AppData;
 
-typedef struct
-{
-    SceneManager *scene_manager;
-    ViewDispatcher *view_dispatcher;
-    NotificationApp *notifications;
+typedef struct {
+    SceneManager* scene_manager;
+    ViewDispatcher* view_dispatcher;
+    NotificationApp* notifications;
 
     l401_err err;
-    AppSplash *sceneSplash;
-    AppConfig *sceneConfig;
-    TextInput *sceneSetText;
-    AppBmpEditor *sceneBmpEditor;
-    AppAcc *sceneAcc;
-    Submenu *mainmenu;
-    AppData *data;
+    AppSplash* sceneSplash;
+    AppConfig* sceneConfig;
+    TextInput* sceneSetText;
+    AppBmpEditor* sceneBmpEditor;
+    AppAcc* sceneAcc;
+    Submenu* mainmenu;
+    AppData* data;
 } AppContext;
 
 #endif

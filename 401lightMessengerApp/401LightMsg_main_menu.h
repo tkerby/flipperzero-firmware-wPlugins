@@ -17,15 +17,13 @@
 
 #include <401_light_msg_icons.h>
 
-typedef struct AppMainMenu
-{
-    Submenu *submenu;
+typedef struct AppMainMenu {
+    Submenu* submenu;
 } AppMainMenu;
 
 #include "401LightMsg_main.h"
 
-typedef enum
-{
+typedef enum {
     AppMainMenuIndex_Splash,
     AppMainMenuIndex_About,
     AppMainMenuIndex_Flashlight,
@@ -36,9 +34,9 @@ typedef enum
     AppMainMenuIndex_Acc_Bitmap,
 } AppMainMenuIndex;
 
-AppMainMenu *app_mainmenu_alloc();
-void appMainMenu_callback(void *context, uint32_t index);
-void app_scene_mainmenu_on_enter(void *context);
-bool app_scene_mainmenu_on_event(void *context, SceneManagerEvent event);
-void app_scene_mainmenu_on_exit(void *context);
+AppMainMenu* app_mainmenu_alloc();
+void appMainMenu_callback(void* context, uint32_t index);
+void app_scene_mainmenu_on_enter(void* context);
+bool app_scene_mainmenu_on_event(void* context, SceneManagerEvent event);
+void app_scene_mainmenu_on_exit(void* context);
 #endif

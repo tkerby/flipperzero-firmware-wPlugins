@@ -24,14 +24,12 @@
 #include <gui/view_dispatcher.h>
 #include <lib/toolbox/name_generator.h>
 
-typedef struct
-{
+typedef struct {
     uint8_t x;
     uint8_t y;
 } bmpEditorCursor;
 
-typedef enum
-{
+typedef enum {
     BmpEditorStateDrawing,
     BmpEditorStateSelectSize,
     BmpEditorStateSelectName,
@@ -42,22 +40,19 @@ typedef enum
 
 // BMPEditor views
 #define BMPEDITORVIEW_BASE 100
-typedef enum
-{
+typedef enum {
     BmpEditorViewMainMenu = BMPEDITORVIEW_BASE,
     BmpEditorViewSelectSize,
     BmpEditorViewSelectName,
     BmpEditorViewDraw,
 } BmpEditorViews;
 
-typedef enum
-{
+typedef enum {
     BmpEditorMainmenuIndex_New,
     BmpEditorMainmenuIndex_Open,
 } BmpEditorMainmenuIndex;
 
-typedef struct
-{
+typedef struct {
     bmpEditorCursor cursor;
     uint8_t bmp_pixel_size;
     uint8_t bmp_pixel_spacing;
@@ -68,31 +63,28 @@ typedef struct
     uint8_t bmp_frame_h;
     uint8_t bmp_frame_x;
     uint8_t bmp_frame_y;
-    uint8_t *bmp_canvas;
-    bitmapMatrix *bitmap;
+    uint8_t* bmp_canvas;
+    bitmapMatrix* bitmap;
     bmpEditorState state;
 } bmpEditorData;
 
-typedef struct
-{
-    bmpEditorData *data;
+typedef struct {
+    bmpEditorData* data;
 } bmpEditorModel;
 
-typedef struct AppBmpEditor
-{
-    View *view;
-    bmpEditorData *model_data;
-    Submenu *mainmenu;
-    DialogsApp *dialogs;
-    TextInput *text_input;
+typedef struct AppBmpEditor {
+    View* view;
+    bmpEditorData* model_data;
+    Submenu* mainmenu;
+    DialogsApp* dialogs;
+    TextInput* text_input;
     char bitmapName[LIGHTMSG_MAX_BITMAPNAME_LEN + 1];
     char bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN + 1];
 } AppBmpEditor;
 
 #include "401LightMsg_main.h"
 
-typedef enum
-{
+typedef enum {
     AppBmpEditorEventQuit,
     AppBmpEditorEventUp,
     AppBmpEditorEventDown,
@@ -101,13 +93,13 @@ typedef enum
     AppBmpEditorEventToggle,
 } AppBmpEditorCustomEvents;
 
-bool app_scene_bmp_editor_input_callback(InputEvent *input_event, void *ctx);
-void app_scene_bmp_editor_render_callback(Canvas *canvas, void *ctx);
-AppBmpEditor *app_bmp_editor_alloc();
-void app_bmp_editor_free(void *ctx);
-View *app_bitmap_editor_get_view(AppBmpEditor *appBmpEditor);
-void app_scene_bmp_editor_on_enter(void *context);
-bool app_scene_bmp_editor_on_event(void *context, SceneManagerEvent event);
-void app_scene_bmp_editor_on_exit(void *context);
+bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* ctx);
+void app_scene_bmp_editor_render_callback(Canvas* canvas, void* ctx);
+AppBmpEditor* app_bmp_editor_alloc();
+void app_bmp_editor_free(void* ctx);
+View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor);
+void app_scene_bmp_editor_on_enter(void* context);
+bool app_scene_bmp_editor_on_event(void* context, SceneManagerEvent event);
+void app_scene_bmp_editor_on_exit(void* context);
 
 #endif

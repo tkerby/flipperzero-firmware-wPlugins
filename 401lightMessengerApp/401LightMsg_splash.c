@@ -6,7 +6,7 @@
  */
 #include "401LightMsg_splash.h"
 
-static const char *TAG = "401_LightMsgSplash";
+static const char* TAG = "401_LightMsgSplash";
 /**
  * Handles input events for the splash scene. Sends custom events based on
  * the user's keypresses.
@@ -15,10 +15,9 @@ static const char *TAG = "401_LightMsgSplash";
  * @param ctx The application context.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_splash_input_callback(InputEvent *input_event, void *ctx)
-{
-  UNUSED(input_event);
-    AppContext *app = (AppContext *)ctx;
+bool app_splash_input_callback(InputEvent* input_event, void* ctx) {
+    UNUSED(input_event);
+    AppContext* app = (AppContext*)ctx;
     view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
     return true;
 }
@@ -30,20 +29,17 @@ bool app_splash_input_callback(InputEvent *input_event, void *ctx)
  * @param ctx The application context.
  */
 // Invoked by the draw callback to render the AppSplash.
-void app_splash_render_callback(Canvas *canvas, void *_model)
-{
-    AppStateCtx *model = (AppStateCtx *)_model;
+void app_splash_render_callback(Canvas* canvas, void* _model) {
+    AppStateCtx* model = (AppStateCtx*)_model;
     uint8_t i = 0;
     canvas_clear(canvas);
-    switch (model->app_state)
-    {
+    switch(model->app_state) {
     case AppStateSplash:
         canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_splash);
         break;
     case AppStateFlashlight:
         canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_flashlight);
-        for (i = 0; i < LIGHTMSG_LED_ROWS; i++)
-        {
+        for(i = 0; i < LIGHTMSG_LED_ROWS; i++) {
             SK6805_set_led_color(i, 0xFF, 0xFF, 0xFF);
         }
         SK6805_update();
@@ -67,11 +63,10 @@ void app_splash_render_callback(Canvas *canvas, void *_model)
  * @param ctx The application context.
  * @return Pointer to the newly allocated AppSplash instance.
  */
-AppSplash *app_splash_alloc(void *ctx)
-{
+AppSplash* app_splash_alloc(void* ctx) {
     FURI_LOG_I(TAG, "app_splash_alloc");
-    AppContext *app = (AppContext *)ctx;
-    AppSplash *appSplash = malloc(sizeof(AppSplash));
+    AppContext* app = (AppContext*)ctx;
+    AppSplash* appSplash = malloc(sizeof(AppSplash));
     appSplash->view = view_alloc();
     view_allocate_model(appSplash->view, ViewModelTypeLocking, sizeof(AppStateCtx));
     view_set_context(appSplash->view, app);
@@ -85,8 +80,7 @@ AppSplash *app_splash_alloc(void *ctx)
  * @param appSplash Pointer to the AppSplash instance.
  * @return Pointer to the associated view.
  */
-View *app_splash_get_view(AppSplash *appSplash)
-{
+View* app_splash_get_view(AppSplash* appSplash) {
     furi_assert(appSplash);
     return appSplash->view;
 }
@@ -96,9 +90,8 @@ View *app_splash_get_view(AppSplash *appSplash)
  *
  * @param context The application context.
  */
-void app_scene_splash_on_enter(void *context)
-{
-    AppContext *app = context;
+void app_scene_splash_on_enter(void* context) {
+    AppContext* app = context;
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewSplash);
 }
 /**
@@ -109,13 +102,11 @@ void app_scene_splash_on_enter(void *context)
  * @param event The scene manager event.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_scene_splash_on_event(void *context, SceneManagerEvent event)
-{
-    AppContext *app = context;
+bool app_scene_splash_on_event(void* context, SceneManagerEvent event) {
+    AppContext* app = context;
     bool consumed = false;
 
-    if (event.type == SceneManagerEventTypeCustom && event.event == AppSplashEventQuit)
-    {
+    if(event.type == SceneManagerEventTypeCustom && event.event == AppSplashEventQuit) {
         scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
         consumed = true;
     }
@@ -128,8 +119,7 @@ bool app_scene_splash_on_event(void *context, SceneManagerEvent event)
  *
  * @param context The application context.
  */
-void app_scene_splash_on_exit(void *context)
-{
+void app_scene_splash_on_exit(void* context) {
     UNUSED(context);
     SK6805_off();
 }
@@ -139,8 +129,7 @@ void app_scene_splash_on_exit(void *context)
  *
  * @param appSplash Pointer to the AppSplash instance to be freed.
  */
-void app_splash_free(AppSplash *appSplash)
-{
+void app_splash_free(AppSplash* appSplash) {
     furi_assert(appSplash);
     view_free(appSplash->view);
     free(appSplash);

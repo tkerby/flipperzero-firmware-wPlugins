@@ -20,13 +20,12 @@
 
 #include "401LightMsg_main.h"
 
-typedef enum
-{
+typedef enum {
     SetTextInputSaveEvent,
 } SetTextInputEvent;
 
-void app_scene_set_text_callback(void *context);
-void app_scene_set_text_on_enter(void *context);
-bool app_scene_set_text_on_event(void *context, SceneManagerEvent event);
-void app_scene_set_text_on_exit(void *ctx);
+void app_scene_set_text_callback(void* context);
+void app_scene_set_text_on_enter(void* context);
+bool app_scene_set_text_on_event(void* context, SceneManagerEvent event);
+void app_scene_set_text_on_exit(void* ctx);
 #endif

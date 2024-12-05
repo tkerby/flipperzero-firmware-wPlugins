@@ -3,8 +3,7 @@
 // static const char* TAG = "LIS2DH12W";
 #define RW_TIMEOUT 1000
 
-int32_t lis2dh12_init(void *stmdev)
-{
+int32_t lis2dh12_init(void* stmdev) {
     // Interrupt registers
     lis2dh12_int1_cfg_t int1_cfg;
     lis2dh12_int2_cfg_t int2_cfg;
@@ -30,7 +29,7 @@ int32_t lis2dh12_init(void *stmdev)
     lis2dh12_operating_mode_set(stmdev, PARAM_OPERATION_MODE);
 
     // lis2dh12 INT1
-    int1_cfg.zhie = PROPERTY_ENABLE;  // Z High interrupt enable on INT1
+    int1_cfg.zhie = PROPERTY_ENABLE; // Z High interrupt enable on INT1
     int1_cfg.zlie = PROPERTY_DISABLE; // Z Low interrupt disable on INT1
     int1_cfg.aoi = PROPERTY_ENABLE;
     int1_cfg._6d = PROPERTY_ENABLE;
@@ -42,7 +41,7 @@ int32_t lis2dh12_init(void *stmdev)
 
     // lis2dh12 INT2
     int2_cfg.zhie = PROPERTY_DISABLE; // Z High interrupt disable on INT1
-    int2_cfg.zlie = PROPERTY_ENABLE;  // Z Low interrupt enable on INT1
+    int2_cfg.zlie = PROPERTY_ENABLE; // Z Low interrupt enable on INT1
     int2_cfg.aoi = PROPERTY_ENABLE;
     int2_cfg._6d = PROPERTY_ENABLE;
     lis2dh12_int2_gen_conf_set(stmdev, &int2_cfg);
@@ -54,8 +53,7 @@ int32_t lis2dh12_init(void *stmdev)
     return 0;
 }
 
-int32_t platform_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t len)
-{
+int32_t platform_write(void* handle, uint8_t reg, const uint8_t* bufp, uint16_t len) {
     UNUSED(handle);
     furi_hal_i2c_acquire(I2C_BUS);
     furi_hal_i2c_write_mem(I2C_BUS, LIS2DH12_I2C_ADD_L, reg, bufp, len, RW_TIMEOUT);
@@ -63,8 +61,7 @@ int32_t platform_write(void *handle, uint8_t reg, const uint8_t *bufp, uint16_t 
     return 0;
 }
 
-int32_t platform_read(void *handle, uint8_t reg, uint8_t *bufp, uint16_t len)
-{
+int32_t platform_read(void* handle, uint8_t reg, uint8_t* bufp, uint16_t len) {
     UNUSED(handle);
     furi_hal_i2c_acquire(I2C_BUS);
     reg |= 0x80;

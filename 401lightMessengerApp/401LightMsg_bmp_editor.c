@@ -5,47 +5,45 @@
  *    + Tixlegeek
  */
 #include "401LightMsg_bmp_editor.h"
-static const char *TAG = "401_LightMsgBmpEditor";
+static const char* TAG = "401_LightMsgBmpEditor";
 
-uint8_t bmp_editor_toggle(AppBmpEditor *BmpEditor)
-{
-    BmpEditor->model_data->bitmap->array[BmpEditor->model_data->cursor.y][BmpEditor->model_data->cursor.x] ^= 0xFF;
+uint8_t bmp_editor_toggle(AppBmpEditor* BmpEditor) {
+    BmpEditor->model_data->bitmap
+        ->array[BmpEditor->model_data->cursor.y][BmpEditor->model_data->cursor.x] ^= 0xFF;
     return 0;
 }
 
-uint8_t bmp_editor_move(AppBmpEditor *BmpEditor, int8_t x, int8_t y)
-{
+uint8_t bmp_editor_move(AppBmpEditor* BmpEditor, int8_t x, int8_t y) {
     int dy = BmpEditor->model_data->cursor.y + y;
     int dx = BmpEditor->model_data->cursor.x + x;
-    if (dx < 0)
+    if(dx < 0)
         BmpEditor->model_data->cursor.x = 0;
-    else if (dx > BmpEditor->model_data->bmp_w - 1)
+    else if(dx > BmpEditor->model_data->bmp_w - 1)
         BmpEditor->model_data->cursor.x = BmpEditor->model_data->bmp_w - 1;
     else
         BmpEditor->model_data->cursor.x = dx;
-    if (dy < 0)
+    if(dy < 0)
         BmpEditor->model_data->cursor.y = 0;
-    else if (dy > BmpEditor->model_data->bmp_h - 1)
+    else if(dy > BmpEditor->model_data->bmp_h - 1)
         BmpEditor->model_data->cursor.y = BmpEditor->model_data->bmp_h - 1;
     else
         BmpEditor->model_data->cursor.y = dy;
     return 0;
 }
 
-uint8_t bmp_editor_resize(AppBmpEditor *BmpEditor, int8_t w, int8_t h)
-{
+uint8_t bmp_editor_resize(AppBmpEditor* BmpEditor, int8_t w, int8_t h) {
     int dh = BmpEditor->model_data->bmp_h + h;
     int dw = BmpEditor->model_data->bmp_w + w;
-    if (dh < PARAM_BMP_EDITOR_MIN_RES_H)
+    if(dh < PARAM_BMP_EDITOR_MIN_RES_H)
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MIN_RES_H;
-    else if (dh > PARAM_BMP_EDITOR_MAX_RES_H)
+    else if(dh > PARAM_BMP_EDITOR_MAX_RES_H)
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MAX_RES_H;
     else
         BmpEditor->model_data->bmp_h = dh;
 
-    if (dw < PARAM_BMP_EDITOR_MIN_RES_W)
+    if(dw < PARAM_BMP_EDITOR_MIN_RES_W)
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MIN_RES_W;
-    else if (dw > PARAM_BMP_EDITOR_MAX_RES_W)
+    else if(dw > PARAM_BMP_EDITOR_MAX_RES_W)
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MAX_RES_W;
     else
         BmpEditor->model_data->bmp_w = dw;
@@ -61,57 +59,65 @@ uint8_t bmp_editor_resize(AppBmpEditor *BmpEditor, int8_t w, int8_t h)
  * @param appBmpEditor Pointer to the contexts of the app.
  * @param model_data Pointer to the Model data.
  */
-void bmp_compute_model(AppBmpEditor *BmpEditor, bmpEditorData *BmpEditorData)
-{
+void bmp_compute_model(AppBmpEditor* BmpEditor, bmpEditorData* BmpEditorData) {
     UNUSED(BmpEditor);
     BmpEditorData->bmp_frame_spacing = 1;
     BmpEditorData->bmp_frame_w =
-        ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) * BmpEditorData->bmp_w) +
+        ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) *
+         BmpEditorData->bmp_w) +
         (BmpEditorData->bmp_frame_spacing * 2) + 1;
     BmpEditorData->bmp_frame_h =
-        ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) * BmpEditorData->bmp_h) +
+        ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) *
+         BmpEditorData->bmp_h) +
         (BmpEditorData->bmp_frame_spacing * 2) + 1;
     BmpEditorData->bmp_frame_x = (GUI_DISPLAY_WIDTH - BmpEditorData->bmp_frame_w) >> 1;
     BmpEditorData->bmp_frame_y = 0;
 }
 
-void bmp_editor_text_input_callback(void *ctx)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    snprintf(BmpEditor->bitmapPath, LIGHTMSG_MAX_BITMAPPATH_LEN, "%s/%s%s", LIGHTMSGCONF_SAVE_FOLDER,
-             BmpEditor->bitmapName, ".bmp");
+void bmp_editor_text_input_callback(void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    snprintf(
+        BmpEditor->bitmapPath,
+        LIGHTMSG_MAX_BITMAPPATH_LEN,
+        "%s/%s%s",
+        LIGHTMSGCONF_SAVE_FOLDER,
+        BmpEditor->bitmapName,
+        ".bmp");
     view_dispatcher_send_custom_event(app->view_dispatcher, SetTextInputSaveEvent);
 }
 
-void bmp_editor_select_name(void *ctx)
-{
-    AppContext *app = (AppContext *)ctx; // Main app struct
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
+void bmp_editor_select_name(void* ctx) {
+    AppContext* app = (AppContext*)ctx; // Main app struct
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
 
-    ValidatorIsFile *validator_is_file =
+    ValidatorIsFile* validator_is_file =
         validator_is_file_alloc_init(LIGHTMSGCONF_SAVE_FOLDER, ".bmp", BmpEditor->bitmapPath);
 
     text_input_reset(BmpEditor->text_input);
     // Ensures the name don't exists yet
     text_input_set_validator(BmpEditor->text_input, validator_is_file_callback, validator_is_file);
     text_input_set_header_text(BmpEditor->text_input, "Name of the new file:");
-    text_input_set_result_callback(BmpEditor->text_input, bmp_editor_text_input_callback, app, BmpEditor->bitmapName,
-                                   LIGHTMSG_MAX_BITMAPNAME_LEN, false);
+    text_input_set_result_callback(
+        BmpEditor->text_input,
+        bmp_editor_text_input_callback,
+        app,
+        BmpEditor->bitmapName,
+        LIGHTMSG_MAX_BITMAPNAME_LEN,
+        false);
 
     // view_dispatcher_switch_to_view(app->view_dispatcher, AppViewSetText);
     view_dispatcher_switch_to_view(app->view_dispatcher, BmpEditorViewSelectName);
 }
 
-void bmp_editor_select_file(void *ctx)
-{
-    AppContext *app = (AppContext *)ctx; // Main app struct
-    AppData *appData = (AppData *)app->data;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
-    Configuration *light_msg_data = (Configuration *)appData->config;
+void bmp_editor_select_file(void* ctx) {
+    AppContext* app = (AppContext*)ctx; // Main app struct
+    AppData* appData = (AppData*)app->data;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
+    Configuration* light_msg_data = (Configuration*)appData->config;
     DialogsFileBrowserOptions browser_options;
-    FuriString *bitmapPath;
+    FuriString* bitmapPath;
     BmpEditor->dialogs = furi_record_open(RECORD_DIALOGS);
     bitmapPath = furi_string_alloc();
 
@@ -120,45 +126,41 @@ void bmp_editor_select_file(void *ctx)
     dialog_file_browser_set_basic_options(&browser_options, ".bmp", &I_401_lghtmsg_icon_10px);
     browser_options.base_path = LIGHTMSGCONF_SAVE_FOLDER;
     browser_options.skip_assets = true;
-    if (dialog_file_browser_show(BmpEditor->dialogs, bitmapPath, bitmapPath, &browser_options))
-    {
-        if (BmpEditorData->bitmap)
-            bitmapMatrix_free(BmpEditorData->bitmap);
+    if(dialog_file_browser_show(BmpEditor->dialogs, bitmapPath, bitmapPath, &browser_options)) {
+        if(BmpEditorData->bitmap) bitmapMatrix_free(BmpEditorData->bitmap);
         BmpEditorData->bitmap = bmp_to_bitmapMatrix(furi_string_get_cstr(bitmapPath));
         BmpEditorData->bmp_w = BmpEditorData->bitmap->width;
         BmpEditorData->bmp_h = BmpEditorData->bitmap->height;
         BmpEditorData->state = BmpEditorStateDrawing;
 
-        memcpy(BmpEditor->bitmapPath, furi_string_get_cstr(bitmapPath), strlen(furi_string_get_cstr(bitmapPath)));
+        memcpy(
+            BmpEditor->bitmapPath,
+            furi_string_get_cstr(bitmapPath),
+            strlen(furi_string_get_cstr(bitmapPath)));
         bmp_compute_model(BmpEditor, BmpEditor->model_data);
         view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
     }
     furi_string_free(bitmapPath);
 }
 
-void bmp_editor_select_size(void *ctx)
-{
+void bmp_editor_select_size(void* ctx) {
     UNUSED(ctx);
 }
 
-bool bmp_editor_mainmenu_input_callback(InputEvent *input_event, void *ctx)
-{
+bool bmp_editor_mainmenu_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(input_event);
     UNUSED(ctx);
     return false;
 }
 
-bool bmp_editor_select_size_input_callback(InputEvent *input_event, void *ctx)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
+bool bmp_editor_select_size_input_callback(InputEvent* input_event, void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
     bool consumed = false;
 
-    if ((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat))
-    {
-        switch (input_event->key)
-        {
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+        switch(input_event->key) {
         case InputKeyLeft:
             bmp_editor_resize(BmpEditor, -1, 0);
             bmp_compute_model(BmpEditor, BmpEditor->model_data);
@@ -182,27 +184,24 @@ bool bmp_editor_select_size_input_callback(InputEvent *input_event, void *ctx)
             consumed = false;
             break;
         }
-        with_view_model(BmpEditor->view, bmpEditorModel * model, model->data = BmpEditor->model_data;, true);
+        with_view_model(
+            BmpEditor->view, bmpEditorModel * model, model->data = BmpEditor->model_data;, true);
     }
     return consumed;
 }
 
-bool bmp_save_bitmatrix(char *bitmapPath, bitmapMatrix *bitmap)
-{
+bool bmp_save_bitmatrix(char* bitmapPath, bitmapMatrix* bitmap) {
     return bmp_write(bitmapPath, bitmap);
 }
 
-bool bmp_editor_draw_input_callback(InputEvent *input_event, void *ctx)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
+bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
 
     bool consumed = false;
     BMP_err res = BMP_OK;
-    if ((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat))
-    {
-        switch (input_event->key)
-        {
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+        switch(input_event->key) {
         case InputKeyUp:
             bmp_editor_move(BmpEditor, 0, -1);
             consumed = true;
@@ -229,13 +228,11 @@ bool bmp_editor_draw_input_callback(InputEvent *input_event, void *ctx)
         case InputKeyBack:
 
             res = bmp_write(BmpEditor->bitmapPath, BmpEditor->model_data->bitmap);
-            if (res == BMP_OK)
-            {
+            if(res == BMP_OK) {
                 view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventQuit);
-            }
-            else
-            {
-                FURI_LOG_E(TAG, "Could not write file to %s. Reason: %d", BmpEditor->bitmapPath, res);
+            } else {
+                FURI_LOG_E(
+                    TAG, "Could not write file to %s. Reason: %d", BmpEditor->bitmapPath, res);
             }
             consumed = false;
             break;
@@ -243,7 +240,8 @@ bool bmp_editor_draw_input_callback(InputEvent *input_event, void *ctx)
             consumed = false;
             break;
         }
-        with_view_model(BmpEditor->view, bmpEditorModel * model, model->data = BmpEditor->model_data;, true);
+        with_view_model(
+            BmpEditor->view, bmpEditorModel * model, model->data = BmpEditor->model_data;, true);
     }
     return consumed;
 }
@@ -255,15 +253,13 @@ bool bmp_editor_draw_input_callback(InputEvent *input_event, void *ctx)
  * @param ctx The application context.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_scene_bmp_editor_input_callback(InputEvent *input_event, void *ctx)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
+bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
 
     bool consumed = false;
-    switch (BmpEditorData->state)
-    {
+    switch(BmpEditorData->state) {
     case BmpEditorStateMainMenu:
         consumed = bmp_editor_mainmenu_input_callback(input_event, ctx);
         break;
@@ -279,17 +275,15 @@ bool app_scene_bmp_editor_input_callback(InputEvent *input_event, void *ctx)
     return consumed;
 }
 
-bool open_bitmap_dialog(void *ctx)
-{
+bool open_bitmap_dialog(void* ctx) {
     UNUSED(ctx);
     return true;
 }
 
-void bmp_editor_drawSizePicker(Canvas *canvas, void *ctx)
-{
+void bmp_editor_drawSizePicker(Canvas* canvas, void* ctx) {
     // UNUSED(ctx);
-    bmpEditorModel *BmpEditorModel = (bmpEditorModel *)ctx;
-    bmpEditorData *BmpEditorData = BmpEditorModel->data;
+    bmpEditorModel* BmpEditorModel = (bmpEditorModel*)ctx;
+    bmpEditorData* BmpEditorData = BmpEditorModel->data;
     char text[32];
     snprintf(text, sizeof(text), "%d", BmpEditorData->bmp_w);
     canvas_clear(canvas);
@@ -309,11 +303,9 @@ void bmp_editor_drawSizePicker(Canvas *canvas, void *ctx)
     canvas_draw_str(canvas, 25 + 45, 62, "OK");
 }
 
-void bmp_editor_drawBoard(Canvas *canvas, void *ctx)
-{
-
-    bmpEditorModel *BmpEditorModel = (bmpEditorModel *)ctx;
-    bmpEditorData *BmpEditorData = BmpEditorModel->data;
+void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
+    bmpEditorModel* BmpEditorModel = (bmpEditorModel*)ctx;
+    bmpEditorData* BmpEditorData = BmpEditorModel->data;
     bmpEditorCursor cursor = BmpEditorData->cursor;
     uint8_t x;
     uint8_t y;
@@ -321,8 +313,13 @@ void bmp_editor_drawBoard(Canvas *canvas, void *ctx)
     snprintf(text, sizeof(text), "W: %d", BmpEditorData->bmp_w);
     canvas_clear(canvas);
     // Frame
-    canvas_draw_rframe(canvas, BmpEditorData->bmp_frame_x, BmpEditorData->bmp_frame_y, BmpEditorData->bmp_frame_w,
-                       BmpEditorData->bmp_frame_h, (BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing));
+    canvas_draw_rframe(
+        canvas,
+        BmpEditorData->bmp_frame_x,
+        BmpEditorData->bmp_frame_y,
+        BmpEditorData->bmp_frame_w,
+        BmpEditorData->bmp_frame_h,
+        (BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing));
     // UX elements btn_13x13
     canvas_set_font_direction(canvas, CanvasDirectionLeftToRight);
 
@@ -334,30 +331,31 @@ void bmp_editor_drawBoard(Canvas *canvas, void *ctx)
 
     canvas_set_font(canvas, FontPrimary);
     // Bitmap
-    for (x = 0; x < BmpEditorData->bmp_w; x++)
-    {
-        for (y = 0; y < BmpEditorData->bmp_h; y++)
-        {
-            if (BmpEditorData->bitmap->array[y][x] > 0x00)
-            {
-                canvas_draw_box(canvas,
-                                (BmpEditorData->bmp_frame_x + BmpEditorData->bmp_frame_spacing + 1) +
-                                    (x * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
-                                (BmpEditorData->bmp_frame_y + BmpEditorData->bmp_frame_spacing + 1) +
-                                    (y * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
-                                (BmpEditorData->bmp_pixel_size), (BmpEditorData->bmp_pixel_size));
+    for(x = 0; x < BmpEditorData->bmp_w; x++) {
+        for(y = 0; y < BmpEditorData->bmp_h; y++) {
+            if(BmpEditorData->bitmap->array[y][x] > 0x00) {
+                canvas_draw_box(
+                    canvas,
+                    (BmpEditorData->bmp_frame_x + BmpEditorData->bmp_frame_spacing + 1) +
+                        (x * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
+                    (BmpEditorData->bmp_frame_y + BmpEditorData->bmp_frame_spacing + 1) +
+                        (y * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
+                    (BmpEditorData->bmp_pixel_size),
+                    (BmpEditorData->bmp_pixel_size));
             }
         }
     }
 
     // Cursor
     canvas_set_color(canvas, ColorXOR);
-    canvas_draw_frame(canvas,
-                      (BmpEditorData->bmp_frame_x + BmpEditorData->bmp_frame_spacing) +
-                          (cursor.x * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
-                      (BmpEditorData->bmp_frame_y + BmpEditorData->bmp_frame_spacing) +
-                          (cursor.y * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
-                      (BmpEditorData->bmp_pixel_size + 2), (BmpEditorData->bmp_pixel_size + 2));
+    canvas_draw_frame(
+        canvas,
+        (BmpEditorData->bmp_frame_x + BmpEditorData->bmp_frame_spacing) +
+            (cursor.x * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
+        (BmpEditorData->bmp_frame_y + BmpEditorData->bmp_frame_spacing) +
+            (cursor.y * (BmpEditorData->bmp_pixel_spacing + BmpEditorData->bmp_pixel_size)),
+        (BmpEditorData->bmp_pixel_size + 2),
+        (BmpEditorData->bmp_pixel_size + 2));
     canvas_set_color(canvas, ColorBlack);
 }
 
@@ -368,14 +366,12 @@ void bmp_editor_drawBoard(Canvas *canvas, void *ctx)
  * @param ctx The application context.
  */
 // Invoked by the draw callback to render the AppBmpEditor.
-void app_scene_bmp_editor_render_callback(Canvas *canvas, void *_model)
-{
+void app_scene_bmp_editor_render_callback(Canvas* canvas, void* _model) {
     // UNUSED(_model);
-    bmpEditorModel *BmpEditorModel = (bmpEditorModel *)_model;
-    bmpEditorData *BmpEditorData = BmpEditorModel->data;
+    bmpEditorModel* BmpEditorModel = (bmpEditorModel*)_model;
+    bmpEditorData* BmpEditorData = BmpEditorModel->data;
 
-    switch (BmpEditorData->state)
-    {
+    switch(BmpEditorData->state) {
     case BmpEditorStateSelectSize:
         bmp_editor_drawSizePicker(canvas, _model);
         break;
@@ -387,14 +383,12 @@ void app_scene_bmp_editor_render_callback(Canvas *canvas, void *_model)
     }
 }
 
-void bmp_editor_mainmenu_callback(void *ctx, uint32_t index)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
+void bmp_editor_mainmenu_callback(void* ctx, uint32_t index) {
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
 
-    switch (index)
-    {
+    switch(index) {
     case BmpEditorMainmenuIndex_New:
         BmpEditorData->state = BmpEditorStateSelectSize;
         view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
@@ -415,11 +409,10 @@ void bmp_editor_mainmenu_callback(void *ctx, uint32_t index)
  * @param ctx The application context.
  * @return Pointer to the newly allocated AppBmpEditor instance.
  */
-AppBmpEditor *app_bmp_editor_alloc(void *ctx)
-{
+AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
     FURI_LOG_I(TAG, "app_bmp_editor_alloc");
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *appBmpEditor = malloc(sizeof(AppBmpEditor));
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* appBmpEditor = malloc(sizeof(AppBmpEditor));
     appBmpEditor->model_data = malloc(sizeof(bmpEditorData));
     appBmpEditor->model_data->bmp_pixel_size = 3;
     appBmpEditor->model_data->bmp_pixel_spacing = 0;
@@ -427,14 +420,27 @@ AppBmpEditor *app_bmp_editor_alloc(void *ctx)
     appBmpEditor->model_data->bmp_h = 16;
     appBmpEditor->mainmenu = submenu_alloc();
 
-    submenu_add_item(appBmpEditor->mainmenu, "New", BmpEditorMainmenuIndex_New, bmp_editor_mainmenu_callback, app);
-    submenu_add_item(appBmpEditor->mainmenu, "Open", BmpEditorMainmenuIndex_Open, bmp_editor_mainmenu_callback, app);
+    submenu_add_item(
+        appBmpEditor->mainmenu,
+        "New",
+        BmpEditorMainmenuIndex_New,
+        bmp_editor_mainmenu_callback,
+        app);
+    submenu_add_item(
+        appBmpEditor->mainmenu,
+        "Open",
+        BmpEditorMainmenuIndex_Open,
+        bmp_editor_mainmenu_callback,
+        app);
 
-    view_dispatcher_add_view(app->view_dispatcher, BmpEditorViewMainMenu, submenu_get_view(appBmpEditor->mainmenu));
+    view_dispatcher_add_view(
+        app->view_dispatcher, BmpEditorViewMainMenu, submenu_get_view(appBmpEditor->mainmenu));
 
     appBmpEditor->text_input = text_input_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, BmpEditorViewSelectName,
-                             text_input_get_view(appBmpEditor->text_input));
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        BmpEditorViewSelectName,
+        text_input_get_view(appBmpEditor->text_input));
 
     bmp_compute_model(appBmpEditor, appBmpEditor->model_data);
 
@@ -453,17 +459,15 @@ AppBmpEditor *app_bmp_editor_alloc(void *ctx)
  *
  * @param appBmpEditor Pointer to the AppBmpEditor instance to be freed.
  */
-void app_bmp_editor_free(void *ctx)
-{
+void app_bmp_editor_free(void* ctx) {
     furi_assert(ctx);
-    AppContext *app = (AppContext *)ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
+    AppContext* app = (AppContext*)ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
 
     view_free(BmpEditor->view);
     view_dispatcher_remove_view(app->view_dispatcher, BmpEditorViewMainMenu);
     view_dispatcher_remove_view(app->view_dispatcher, BmpEditorViewSelectName);
-    if(BmpEditor->model_data->bitmap)
-      bitmapMatrix_free(BmpEditor->model_data->bitmap);
+    if(BmpEditor->model_data->bitmap) bitmapMatrix_free(BmpEditor->model_data->bitmap);
     submenu_free(BmpEditor->mainmenu);
     free(BmpEditor->model_data);
     free(BmpEditor);
@@ -475,8 +479,7 @@ void app_bmp_editor_free(void *ctx)
  * @param appBmpEditor Pointer to the AppBmpEditor instance.
  * @return Pointer to the associated view.
  */
-View *app_bitmap_editor_get_view(AppBmpEditor *appBmpEditor)
-{
+View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor) {
     furi_assert(appBmpEditor);
     return appBmpEditor->view;
 }
@@ -485,10 +488,9 @@ View *app_bitmap_editor_get_view(AppBmpEditor *appBmpEditor)
  *
  * @param context The application context.
  */
-void app_scene_bmp_editor_on_enter(void *context)
-{
-    AppContext *app = context;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
+void app_scene_bmp_editor_on_enter(void* context) {
+    AppContext* app = context;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
     BmpEditor->model_data->state = BmpEditorStateMainMenu;
     with_view_model(
         BmpEditor->view, bmpEditorModel * model, { model->data = BmpEditor->model_data; }, false);
@@ -498,15 +500,13 @@ void app_scene_bmp_editor_on_enter(void *context)
     // view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
 }
 
-l401_err bmp_editor_init_bitmap(void *ctx)
-{
-    AppContext *app = ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
-    bitmapMatrix *bitmap = (bitmapMatrix *)malloc(sizeof(bitmapMatrix));
+l401_err bmp_editor_init_bitmap(void* ctx) {
+    AppContext* app = ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
+    bitmapMatrix* bitmap = (bitmapMatrix*)malloc(sizeof(bitmapMatrix));
 
-    if (bitmap == NULL)
-    {
+    if(bitmap == NULL) {
         return L401_ERR_INTERNAL; // Échec de l'allocation de mémoire
     }
 
@@ -514,26 +514,22 @@ l401_err bmp_editor_init_bitmap(void *ctx)
     bitmap->height = BmpEditorData->bmp_h;
 
     // Étape 2: Allouer la mémoire pour les lignes de l'array
-    bitmap->array = (uint8_t **)malloc(bitmap->height * sizeof(uint8_t *));
-    if (bitmap->array == NULL)
-    {
-        free(bitmap);             // Libérer la structure bitmapMatrix allouée précédemment
+    bitmap->array = (uint8_t**)malloc(bitmap->height * sizeof(uint8_t*));
+    if(bitmap->array == NULL) {
+        free(bitmap); // Libérer la structure bitmapMatrix allouée précédemment
         return L401_ERR_INTERNAL; // Échec de l'allocation de mémoire
     }
 
     // Étape 3: Allouer la mémoire pour chaque colonne de chaque ligne
-    for (uint8_t i = 0; i < bitmap->height; i++)
-    {
-        bitmap->array[i] = (uint8_t *)malloc(bitmap->width * sizeof(uint8_t));
-        if (bitmap->array[i] == NULL)
-        {
+    for(uint8_t i = 0; i < bitmap->height; i++) {
+        bitmap->array[i] = (uint8_t*)malloc(bitmap->width * sizeof(uint8_t));
+        if(bitmap->array[i] == NULL) {
             // En cas d'échec, libérer toute la mémoire déjà allouée
-            for (uint8_t j = 0; j < i; j++)
-            {
+            for(uint8_t j = 0; j < i; j++) {
                 free(bitmap->array[j]); // Libérer les lignes allouées précédemment
             }
-            free(bitmap->array);      // Libérer le tableau de lignes
-            free(bitmap);             // Libérer la structure bitmapMatrix
+            free(bitmap->array); // Libérer le tableau de lignes
+            free(bitmap); // Libérer la structure bitmapMatrix
             return L401_ERR_INTERNAL; // Échec de l'allocation de mémoire
         }
     }
@@ -549,18 +545,15 @@ l401_err bmp_editor_init_bitmap(void *ctx)
  * @param event The scene manager event.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_scene_bmp_editor_on_event(void *ctx, SceneManagerEvent event)
-{
-    AppContext *app = ctx;
-    AppBmpEditor *BmpEditor = app->sceneBmpEditor;
-    bmpEditorData *BmpEditorData = BmpEditor->model_data;
+bool app_scene_bmp_editor_on_event(void* ctx, SceneManagerEvent event) {
+    AppContext* app = ctx;
+    AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
 
     // UNUSED(ctx);
     bool consumed = false;
-    if (event.type == SceneManagerEventTypeCustom)
-    {
-        if (event.event == SetTextInputSaveEvent)
-        {
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == SetTextInputSaveEvent) {
             bmp_editor_init_bitmap(ctx);
             BmpEditorData->state = BmpEditorStateDrawing;
             view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
@@ -576,7 +569,6 @@ bool app_scene_bmp_editor_on_event(void *ctx, SceneManagerEvent event)
  *
  * @param context The application context.
  */
-void app_scene_bmp_editor_on_exit(void *context)
-{
+void app_scene_bmp_editor_on_exit(void* context) {
     UNUSED(context);
 }

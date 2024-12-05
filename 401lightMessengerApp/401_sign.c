@@ -5,22 +5,18 @@
  *    + Tixlegeek
  */
 #include "./401_sign.h"
-void l401_sign_input_callback(InputEvent *input, void *ctx)
-{
-    FuriSemaphore *semaphore = ctx;
-    if ((input->type == InputTypeShort) && (input->key == InputKeyBack))
-    {
+void l401_sign_input_callback(InputEvent* input, void* ctx) {
+    FuriSemaphore* semaphore = ctx;
+    if((input->type == InputTypeShort) && (input->key == InputKeyBack)) {
         furi_semaphore_release(semaphore);
     }
 }
 
-void l401_sign_render_callback(Canvas *canvas, void *status)
-{
-    l401_err *err = (l401_err *)status;
+void l401_sign_render_callback(Canvas* canvas, void* status) {
+    l401_err* err = (l401_err*)status;
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 128 / 2, 10, AlignLeft, AlignTop, "ERROR!");
-    switch (*err)
-    {
+    switch(*err) {
     case L401_ERR_STORAGE:
         canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_err_storage);
         canvas_set_font(canvas, FontSecondary);
@@ -79,15 +75,14 @@ void l401_sign_render_callback(Canvas *canvas, void *status)
     }
 }
 
-int32_t l401_sign_app(l401_err err)
-{
-    FuriSemaphore *semaphore = furi_semaphore_alloc(1, 0);
+int32_t l401_sign_app(l401_err err) {
+    FuriSemaphore* semaphore = furi_semaphore_alloc(1, 0);
     furi_assert(semaphore);
-    ViewPort *view_port = view_port_alloc();
+    ViewPort* view_port = view_port_alloc();
     view_port_draw_callback_set(view_port, l401_sign_render_callback, &err);
     view_port_input_callback_set(view_port, l401_sign_input_callback, semaphore);
 
-    Gui *gui = furi_record_open(RECORD_GUI);
+    Gui* gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
     view_port_update(view_port);

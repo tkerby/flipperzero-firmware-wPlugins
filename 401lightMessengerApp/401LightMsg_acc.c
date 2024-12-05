@@ -11,10 +11,10 @@
 #include "font.h"
 #include "gui/gui_i.h"
 #include "gui/view_dispatcher_i.h"
-#define PI 3.14159
+#define PI  3.14159
 #define PI3 PI / 3
 
-static const char *TAG = "401_LightMsgAcc";
+static const char* TAG = "401_LightMsgAcc";
 
 /**
  * Creates a bit array representation of the given text using the provided font.
@@ -23,8 +23,7 @@ static const char *TAG = "401_LightMsgAcc";
  * @param font The font to use for conversion.
  * @return A pointer to the created text bit array.
  */
-bitmapMatrix *bitMatrix_text_create(const char *text, bitmapMatrixFont *font)
-{
+bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font) {
     furi_assert(text);
     furi_assert(font);
     uint8_t textLen = strlen(text);
@@ -32,46 +31,41 @@ bitmapMatrix *bitMatrix_text_create(const char *text, bitmapMatrixFont *font)
     uint8_t fontHeight = font[1];
     uint8_t fontOffset = font[2];
     uint8_t totalWidth = (fontWidth + FONT_SPACE_WIDTH) * textLen;
-    bitmapMatrix *bitMatrix = NULL;
+    bitmapMatrix* bitMatrix = NULL;
     uint8_t letter = 0;
     size_t letterPtr = 0;
     size_t bitMatrixOffset = 0;
     FURI_LOG_I(TAG, "[SCENE_ACC] bitMatrix_text_create");
     FURI_LOG_I(TAG, "Font Size: %dx%d", fontWidth, fontHeight);
     bitMatrix = malloc(sizeof(bitmapMatrix));
-    if (!bitMatrix)
-        return NULL;
+    if(!bitMatrix) return NULL;
 
     bitMatrix->width = totalWidth;
     bitMatrix->height = fontHeight;
     bitMatrix->array = NULL;
 
-    bitMatrix->array = malloc(fontHeight * sizeof(uint8_t *));
+    bitMatrix->array = malloc(fontHeight * sizeof(uint8_t*));
 
-    if (!bitMatrix->array)
-    {
+    if(!bitMatrix->array) {
         free(bitMatrix);
         return NULL;
     }
 
-    for (uint8_t h = 0; h < fontHeight; h++)
-    {
+    for(uint8_t h = 0; h < fontHeight; h++) {
         bitMatrix->array[h] = malloc(totalWidth * sizeof(uint8_t));
         bitMatrix->height = h;
-        if (!bitMatrix->array[h])
-        {
+        if(!bitMatrix->array[h]) {
             bitmapMatrix_free(bitMatrix);
             return NULL;
         }
         // Write each letter next to each other, accounting for spaces.
-        for (uint8_t t = 0; t < textLen; t++)
-        {
+        for(uint8_t t = 0; t < textLen; t++) {
             letter = text[t];
             letterPtr = ((letter - fontOffset) * fontHeight) + 4;
-            for (uint8_t w = 0; w < fontWidth; w++)
-            {
+            for(uint8_t w = 0; w < fontWidth; w++) {
                 bitMatrixOffset = (t * (FONT_SPACE_WIDTH + fontWidth)) + w;
-                bitMatrix->array[h][bitMatrixOffset] = ((font[letterPtr + h] >> (fontWidth - w)) & 0x01) ? 0xff : 0x00;
+                bitMatrix->array[h][bitMatrixOffset] =
+                    ((font[letterPtr + h] >> (fontWidth - w)) & 0x01) ? 0xff : 0x00;
             }
         }
     }
@@ -81,14 +75,11 @@ bitmapMatrix *bitMatrix_text_create(const char *text, bitmapMatrixFont *font)
     return bitMatrix;
 }
 
-void hex_dump(void *ptr, size_t size)
-{
-    unsigned char *p = (unsigned char *)ptr;
-    for (size_t i = 0; i < size; i++)
-    {
+void hex_dump(void* ptr, size_t size) {
+    unsigned char* p = (unsigned char*)ptr;
+    for(size_t i = 0; i < size; i++) {
         printf("%02x ", p[i]);
-        if ((i + 1) % 16 == 0)
-        {
+        if((i + 1) % 16 == 0) {
             printf("\n");
         }
     }
@@ -102,8 +93,7 @@ void hex_dump(void *ptr, size_t size)
  * @param ctx The application ctx.
  * @return Always returns false.
  */
-bool app_acc_input_callback(InputEvent *input_event, void *ctx)
-{
+bool app_acc_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(ctx);
     UNUSED(input_event);
 
@@ -115,9 +105,8 @@ bool app_acc_input_callback(InputEvent *input_event, void *ctx)
  *
  * @param ctx The ctx.
  */
-void swipes_tick(void *ctx)
-{
-    AppAcc *appAcc = (AppAcc *)ctx;
+void swipes_tick(void* ctx) {
+    AppAcc* appAcc = (AppAcc*)ctx;
     appAcc->cycles++;
 }
 
@@ -127,14 +116,12 @@ void swipes_tick(void *ctx)
  * @param ctx The ctx.
  * @param direction The swipe direction.
  */
-void swipes_init(void *ctx, uint8_t direction)
-{
-    AppContext *app = (AppContext *)ctx;
-    AppAcc *appAcc = (AppAcc *)app->sceneAcc;
+void swipes_init(void* ctx, uint8_t direction) {
+    AppContext* app = (AppContext*)ctx;
+    AppAcc* appAcc = (AppAcc*)app->sceneAcc;
 
-    if (appAcc->direction != direction)
-    {
-        if (appAcc->cyclesAvg != 0)
+    if(appAcc->direction != direction) {
+        if(appAcc->cyclesAvg != 0)
             appAcc->cyclesAvg = (appAcc->cyclesAvg + appAcc->cycles) / 2;
         else
             appAcc->cyclesAvg = appAcc->cycles;
@@ -151,9 +138,8 @@ void swipes_init(void *ctx, uint8_t direction)
  *
  * @param ctx The ctx.
  */
-void zmax_callback(void *ctx)
-{
-    AppContext *app = (AppContext *)ctx; // Main app struct
+void zmax_callback(void* ctx) {
+    AppContext* app = (AppContext*)ctx; // Main app struct
     swipes_init(app, 1);
 }
 
@@ -162,9 +148,8 @@ void zmax_callback(void *ctx)
  *
  * @param ctx The ctx.
  */
-void zmin_callback(void *ctx)
-{
-    AppContext *app = (AppContext *)ctx; // Main app struct
+void zmin_callback(void* ctx) {
+    AppContext* app = (AppContext*)ctx; // Main app struct
     swipes_init(app, 0);
 }
 
@@ -174,22 +159,21 @@ void zmin_callback(void *ctx)
  * @param ctx The ctx.
  * @return Always returns 0.
  */
-int32_t app_acc_worker(void *ctx)
-{
+int32_t app_acc_worker(void* ctx) {
     assert(ctx);
-    AppContext *app = (AppContext *)ctx; // Main app struct
-    AppAcc *appAcc = (AppAcc *)app->sceneAcc;
-    AppData *appData = (AppData *)app->data;
-    Canvas *canvas = app->view_dispatcher->gui->canvas;
-    Configuration *light_msg_data = (Configuration *)appData->config;
-    bitmapMatrix *bitmapMatrix = appAcc->bitmapMatrix;
+    AppContext* app = (AppContext*)ctx; // Main app struct
+    AppAcc* appAcc = (AppAcc*)app->sceneAcc;
+    AppData* appData = (AppData*)app->data;
+    Canvas* canvas = app->view_dispatcher->gui->canvas;
+    Configuration* light_msg_data = (Configuration*)appData->config;
+    bitmapMatrix* bitmapMatrix = appAcc->bitmapMatrix;
 
-    uint16_t time = 0;         // time ticker
-    bool running = true;       // Keeps the thread running
+    uint16_t time = 0; // time ticker
+    bool running = true; // Keeps the thread running
     bool is_bitmap_window = 0; // Check if
     // FuriMutex *mutex = appAcc->mutex;
 
-    uint8_t column = 0;          // Column of the bitmap array
+    uint8_t column = 0; // Column of the bitmap array
     uint8_t column_directed = 0; // Column of the bitmap array
 
     uint8_t row = 0;
@@ -208,16 +192,13 @@ int32_t app_acc_worker(void *ctx)
     canvas_draw_icon(canvas, 43, 46, &I_401_lghtmsg_arrow);
     canvas_commit(canvas);
 
-    while (running)
-    {
+    while(running) {
         // Checks if the thread must be ended.
-        if (furi_thread_flags_get())
-        {
+        if(furi_thread_flags_get()) {
             FURI_LOG_I(TAG, "Exit thread");
             running = false;
         }
-        if (time++ == 4000)
-        {
+        if(time++ == 4000) {
             notification_message(app->notifications, &sequence_display_backlight_off);
         }
 
@@ -241,55 +222,47 @@ int32_t app_acc_worker(void *ctx)
             ⟵t─
         */
         // Get current column to be displayed.
-        column = appAcc->cycles - ((appAcc->cyclesCenter) - (bitmapMatrix->width / 2)  );
+        column = appAcc->cycles - ((appAcc->cyclesCenter) - (bitmapMatrix->width / 2));
 
         // Swipe direction, according to orientation
-        if (appAcc->direction ^ light_msg_data->orientation)
-        {
-            column_directed = (column % bitmapMatrix->width) - appAcc->direction ;
+        if(appAcc->direction ^ light_msg_data->orientation) {
+            column_directed = (column % bitmapMatrix->width) - appAcc->direction;
+        } else {
+            column_directed =
+                bitmapMatrix->width - (column % (bitmapMatrix->width)) - appAcc->direction;
         }
-        else
-        {
-            column_directed = bitmapMatrix->width - (column % (bitmapMatrix->width)) - appAcc->direction;
-        }
-
 
         // Computes the window in which the text is displayed.
         // low limit  = center - len / 2
         // high limit = center + len / 2
-        is_bitmap_window = (appAcc->cycles > (appAcc->cyclesCenter - ((bitmapMatrix->width-appAcc->direction) / 2))) &&
-                           (appAcc->cycles <= (appAcc->cyclesCenter + ((bitmapMatrix->width-appAcc->direction) / 2)));
+        is_bitmap_window =
+            (appAcc->cycles >
+             (appAcc->cyclesCenter - ((bitmapMatrix->width - appAcc->direction) / 2))) &&
+            (appAcc->cycles <=
+             (appAcc->cyclesCenter + ((bitmapMatrix->width - appAcc->direction) / 2)));
 
         // Update the color according to the current shader
         shader(time, color, app);
         // Let the leds shine for a bit
         furi_delay_us(500);
 
-        if (is_bitmap_window)
-        {
+        if(is_bitmap_window) {
             // Draws each rows for each collumns
-            for (row = 0; row < LIGHTMSG_LED_ROWS; row++)
-            {
+            for(row = 0; row < LIGHTMSG_LED_ROWS; row++) {
                 pixel = (uint8_t)(bitmapMatrix->array[row][column_directed]);
                 //  Assign R/G/B on dimmed pixel value
                 r = (uint8_t)((pixel & (color[row] >> 16)) * brightness);
                 g = (uint8_t)((pixel & (color[row] >> 8)) * brightness);
                 b = (uint8_t)((pixel & (color[row] >> 0)) * brightness);
                 // Orientation (wheel up/wheel down)
-                if (light_msg_data->orientation)
-                {
+                if(light_msg_data->orientation) {
                     SK6805_set_led_color(row, r, g, b);
-                }
-                else
-                {
+                } else {
                     SK6805_set_led_color(LIGHTMSG_LED_ROWS - 1 - row, r, g, b);
                 }
             }
-        }
-        else
-        {
-            for (row = 0; row < LIGHTMSG_LED_ROWS; row++)
-            {
+        } else {
+            for(row = 0; row < LIGHTMSG_LED_ROWS; row++) {
                 // Assign brightness accordingly to pixel
                 pixel = (uint8_t)(bitmapMatrix->array[row][column_directed - 1] * brightness);
                 //  Assign R/G/B on dimmed pixel value
@@ -298,12 +271,9 @@ int32_t app_acc_worker(void *ctx)
                 b = 0x00;
 
                 // Orientation (wheel up/wheel down)
-                if (light_msg_data->orientation)
-                {
+                if(light_msg_data->orientation) {
                     SK6805_set_led_color(row, r, g, b);
-                }
-                else
-                {
+                } else {
                     SK6805_set_led_color(LIGHTMSG_LED_ROWS - 1 - row, r, g, b);
                 }
             }
@@ -323,13 +293,12 @@ int32_t app_acc_worker(void *ctx)
  *
  * @return A pointer to the allocated AppAcc.
  */
-AppAcc *app_acc_alloc(void *ctx)
-{
+AppAcc* app_acc_alloc(void* ctx) {
     FURI_LOG_I(TAG, "app_acc_alloc");
     furi_assert(ctx);
-    AppContext *app = (AppContext *)ctx; // Main app struct
+    AppContext* app = (AppContext*)ctx; // Main app struct
     furi_assert(app->data);
-    AppAcc *appAcc = malloc(sizeof(AppAcc)); // app Acc struct
+    AppAcc* appAcc = malloc(sizeof(AppAcc)); // app Acc struct
 
     appAcc->displayMode = APPACC_DISPLAYMODE_TEXT;
     appAcc->counter = 0;
@@ -358,24 +327,22 @@ AppAcc *app_acc_alloc(void *ctx)
  * @param appAcc The AppAcc instance.
  * @return A pointer to the view.
  */
-View *app_acc_get_view(AppAcc *appAcc)
-{
+View* app_acc_get_view(AppAcc* appAcc) {
     FURI_LOG_I(TAG, "[SCENE_ACC] app_acc_get_view");
     furi_assert(appAcc);
     return appAcc->view;
 }
 
-bool set_bitmap_dialog(void *ctx)
-{
+bool set_bitmap_dialog(void* ctx) {
     furi_assert(ctx);
-    AppContext *app = (AppContext *)ctx; // Main app struct
-    AppData *appData = (AppData *)app->data;
-    AppAcc *appAcc = (AppAcc *)app->sceneAcc;
+    AppContext* app = (AppContext*)ctx; // Main app struct
+    AppData* appData = (AppData*)app->data;
+    AppAcc* appAcc = (AppAcc*)app->sceneAcc;
     bool set = true;
 
-    Configuration *light_msg_data = (Configuration *)appData->config;
+    Configuration* light_msg_data = (Configuration*)appData->config;
     DialogsFileBrowserOptions browser_options;
-    FuriString *bitmapPath;
+    FuriString* bitmapPath;
 
     appAcc->dialogs = furi_record_open(RECORD_DIALOGS);
     bitmapPath = furi_string_alloc();
@@ -386,33 +353,28 @@ bool set_bitmap_dialog(void *ctx)
     browser_options.skip_assets = true;
 
     // Input events and views are managed by file_browser
-    if (!dialog_file_browser_show(appAcc->dialogs, bitmapPath, bitmapPath, &browser_options))
-    {
+    if(!dialog_file_browser_show(appAcc->dialogs, bitmapPath, bitmapPath, &browser_options)) {
         set = false;
-    }
-    else
-    {
+    } else {
         int res = bmp_header_check_1bpp(furi_string_get_cstr(bitmapPath));
         FURI_LOG_E(TAG, "FILE READ CHECK RES: %d", res);
-        if (res == 0)
-        {
-            strncpy(light_msg_data->bitmapPath, furi_string_get_cstr(bitmapPath), LIGHTMSG_MAX_BITMAPPATH_LEN);
+        if(res == 0) {
+            strncpy(
+                light_msg_data->bitmapPath,
+                furi_string_get_cstr(bitmapPath),
+                LIGHTMSG_MAX_BITMAPPATH_LEN);
             light_msg_data->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN] = '\0';
 
             l401_err res = config_save_json(LIGHTMSGCONF_CONFIG_FILE, light_msg_data);
 
-            if (res == L401_OK)
-            {
-                FURI_LOG_I(TAG, "Successfully saved configuration to %s.", LIGHTMSGCONF_CONFIG_FILE);
-            }
-            else
-            {
+            if(res == L401_OK) {
+                FURI_LOG_I(
+                    TAG, "Successfully saved configuration to %s.", LIGHTMSGCONF_CONFIG_FILE);
+            } else {
                 l401_sign_app(res);
                 set = false;
             }
-        }
-        else
-        {
+        } else {
             l401_sign_app(L401_ERR_BMP_FILE);
             set = false;
         }
@@ -427,13 +389,12 @@ bool set_bitmap_dialog(void *ctx)
  *
  * @param ctx The ctx.
  */
-void app_scene_acc_on_enter(void *ctx)
-{
+void app_scene_acc_on_enter(void* ctx) {
     furi_assert(ctx);
-    AppContext *app = (AppContext *)ctx;
-    AppAcc *appAcc = (AppAcc *)app->sceneAcc;
-    AppData *appData = (AppData *)app->data;
-    Configuration *light_msg_data = (Configuration *)appData->config;
+    AppContext* app = (AppContext*)ctx;
+    AppAcc* appAcc = (AppAcc*)app->sceneAcc;
+    AppData* appData = (AppData*)app->data;
+    Configuration* light_msg_data = (Configuration*)appData->config;
     // AppBmpEditor* BmpEditor = app->sceneBmpEditor;
 
     appAcc->accThread = NULL;
@@ -442,20 +403,17 @@ void app_scene_acc_on_enter(void *ctx)
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewAcc);
 
-    switch (appAcc->displayMode)
-    {
+    switch(appAcc->displayMode) {
     case APPACC_DISPLAYMODE_TEXT:
-        appAcc->bitmapMatrix = bitMatrix_text_create((char *)light_msg_data->text, Retro8x16);
+        appAcc->bitmapMatrix = bitMatrix_text_create((char*)light_msg_data->text, Retro8x16);
         break;
 
     case APPACC_DISPLAYMODE_BITMAP:
-        if (set_bitmap_dialog(ctx))
-        {
+        if(set_bitmap_dialog(ctx)) {
             appAcc->bitmapMatrix = bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
-        }
-        else
-        {
-            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, AppSceneMainMenu);
+        } else {
+            scene_manager_search_and_switch_to_previous_scene(
+                app->scene_manager, AppSceneMainMenu);
         }
         break;
 
@@ -467,11 +425,9 @@ void app_scene_acc_on_enter(void *ctx)
         break;
     }
 
-    if (appAcc->bitmapMatrix != NULL)
-    {
+    if(appAcc->bitmapMatrix != NULL) {
         appAcc->accThread = furi_thread_alloc();
-        if (appAcc->accThread == NULL)
-        {
+        if(appAcc->accThread == NULL) {
             FURI_LOG_E(TAG, "Failed to allocate thread");
             return;
         }
@@ -492,8 +448,7 @@ void app_scene_acc_on_enter(void *ctx)
  * @param event The scene manager event.
  * @return Always returns false.
  */
-bool app_scene_acc_on_event(void *ctx, SceneManagerEvent event)
-{
+bool app_scene_acc_on_event(void* ctx, SceneManagerEvent event) {
     UNUSED(ctx);
     UNUSED(event);
     return false;
@@ -504,16 +459,14 @@ bool app_scene_acc_on_event(void *ctx, SceneManagerEvent event)
  *
  * @param ctx The ctx.
  */
-void app_scene_acc_on_exit(void *ctx)
-{
+void app_scene_acc_on_exit(void* ctx) {
     furi_assert(ctx);
-    AppContext *app = ctx;
-    AppAcc *appAcc = (AppAcc *)app->sceneAcc;
-    Canvas *canvas = app->view_dispatcher->gui->canvas;
+    AppContext* app = ctx;
+    AppAcc* appAcc = (AppAcc*)app->sceneAcc;
+    Canvas* canvas = app->view_dispatcher->gui->canvas;
     canvas_reset(canvas);
 
-    if (appAcc->accThread != NULL)
-    {
+    if(appAcc->accThread != NULL) {
         furi_thread_flags_set(furi_thread_get_id(appAcc->accThread), 1);
         furi_thread_join(appAcc->accThread);
         furi_thread_free(appAcc->accThread);
@@ -525,8 +478,7 @@ void app_scene_acc_on_exit(void *ctx)
  *
  * @param appAcc The AppAcc instance to be freed.
  */
-void app_acc_free(AppAcc *appAcc)
-{
+void app_acc_free(AppAcc* appAcc) {
     furi_assert(appAcc);
     furi_hal_gpio_remove_int_callback(LGHTMSG_INT2PIN);
     furi_hal_gpio_init(LGHTMSG_INT1PIN, GpioModeAnalog, GpioPullNo, GpioSpeedLow);

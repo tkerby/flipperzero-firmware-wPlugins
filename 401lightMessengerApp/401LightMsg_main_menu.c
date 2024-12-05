@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "401LightMsg_main_menu.h"
-static const char *TAG = "401_LightMsgMainMenu";
+static const char* TAG = "401_LightMsgMainMenu";
 
 /**
  * Callback function for the main menu. Handles menu item selection and
@@ -14,25 +14,31 @@ static const char *TAG = "401_LightMsgMainMenu";
  * @param ctx The application ctx.
  * @param index The index of the selected menu item.
  */
-void appMainMenu_callback(void *ctx, uint32_t index)
-{
-    AppContext *app = (AppContext *)ctx;
-    switch (index)
-    {
+void appMainMenu_callback(void* ctx, uint32_t index) {
+    AppContext* app = (AppContext*)ctx;
+    switch(index) {
     case AppMainMenuIndex_Splash:
         with_view_model(
-            app_splash_get_view(app->sceneSplash), AppStateCtx * model, { model->app_state = AppStateSplash; }, true);
+            app_splash_get_view(app->sceneSplash),
+            AppStateCtx * model,
+            { model->app_state = AppStateSplash; },
+            true);
         scene_manager_next_scene(app->scene_manager, AppSceneSplash);
         break;
     case AppMainMenuIndex_Flashlight:
         with_view_model(
-            app_splash_get_view(app->sceneSplash), AppStateCtx * model, { model->app_state = AppStateFlashlight; },
+            app_splash_get_view(app->sceneSplash),
+            AppStateCtx * model,
+            { model->app_state = AppStateFlashlight; },
             true);
         scene_manager_next_scene(app->scene_manager, AppSceneSplash);
         break;
     case AppMainMenuIndex_About:
         with_view_model(
-            app_splash_get_view(app->sceneSplash), AppStateCtx * model, { model->app_state = AppStateAbout; }, true);
+            app_splash_get_view(app->sceneSplash),
+            AppStateCtx * model,
+            { model->app_state = AppStateAbout; },
+            true);
         scene_manager_next_scene(app->scene_manager, AppSceneSplash);
         break;
     case AppMainMenuIndex_Config:
@@ -63,9 +69,8 @@ void appMainMenu_callback(void *ctx, uint32_t index)
  *
  * @param ctx The application ctx.
  */
-void app_scene_mainmenu_on_enter(void *ctx)
-{
-    AppContext *app = ctx;
+void app_scene_mainmenu_on_enter(void* ctx) {
+    AppContext* app = ctx;
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewMainMenu);
 }
 
@@ -77,8 +82,7 @@ void app_scene_mainmenu_on_enter(void *ctx)
  * @param event The scene manager event.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_scene_mainmenu_on_event(void *ctx, SceneManagerEvent event)
-{
+bool app_scene_mainmenu_on_event(void* ctx, SceneManagerEvent event) {
     UNUSED(ctx);
     UNUSED(event);
     bool consumed = false;
@@ -90,8 +94,7 @@ bool app_scene_mainmenu_on_event(void *ctx, SceneManagerEvent event)
  *
  * @param ctx The application ctx.
  */
-void app_scene_mainmenu_on_exit(void *ctx)
-{
+void app_scene_mainmenu_on_exit(void* ctx) {
     UNUSED(ctx);
 }
 
@@ -101,8 +104,7 @@ void app_scene_mainmenu_on_exit(void *ctx)
  *
  * @return A pointer to the allocated AppMainMenu or NULL.
  */
-AppMainMenu *app_mainmenu_alloc()
-{
+AppMainMenu* app_mainmenu_alloc() {
     FURI_LOG_I(TAG, "app_mainmenu_alloc");
     return NULL;
 }
