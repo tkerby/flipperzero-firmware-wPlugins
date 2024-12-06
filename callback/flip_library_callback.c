@@ -34,7 +34,6 @@ static bool flip_library_wiki_fetch(FactLoaderModel *model)
 
     return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
 }
-
 static char *flip_library_wiki_parse(FactLoaderModel *model)
 {
     UNUSED(model);
@@ -65,70 +64,62 @@ static char *flip_library_wiki_parse(FactLoaderModel *model)
     }
     return description;
 }
-
 static void flip_library_wiki_switch_to_view(FlipLibraryApp *app)
 {
     uart_text_input_set_header_text(app->uart_text_input_query, "Search Wikipedia");
-    flip_library_generic_switch_to_view(app, "Searching..", flip_library_wiki_fetch, flip_library_wiki_parse, 1, callback_to_submenu, FlipLibraryViewTextInputQuery);
+    flip_library_generic_switch_to_view(app, "Searching..", flip_library_wiki_fetch, flip_library_wiki_parse, 1, callback_to_submenu_library, FlipLibraryViewTextInputQuery);
 }
-
+//
 static bool flip_library_random_fact_fetch(FactLoaderModel *model)
 {
     UNUSED(model);
     return flipper_http_get_request("https://uselessfacts.jsph.pl/api/v2/facts/random");
 }
-
 static char *flip_library_random_fact_parse(FactLoaderModel *model)
 {
     UNUSED(model);
     return get_json_value("text", fhttp.last_response, 128);
 }
-
 static void flip_library_random_fact_switch_to_view(FlipLibraryApp *app)
 {
     flip_library_generic_switch_to_view(app, "Random Fact", flip_library_random_fact_fetch, flip_library_random_fact_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
 }
-
+//
 static bool flip_library_cat_fact_fetch(FactLoaderModel *model)
 {
     UNUSED(model);
     return flipper_http_get_request_with_headers("https://catfact.ninja/fact", "{\"Content-Type\":\"application/json\"}");
 }
-
 static char *flip_library_cat_fact_parse(FactLoaderModel *model)
 {
     UNUSED(model);
     return get_json_value("fact", fhttp.last_response, 128);
 }
-
 static void flip_library_cat_fact_switch_to_view(FlipLibraryApp *app)
 {
     flip_library_generic_switch_to_view(app, "Random Cat Fact", flip_library_cat_fact_fetch, flip_library_cat_fact_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
 }
-
+//
 static bool flip_library_dog_fact_fetch(FactLoaderModel *model)
 {
     UNUSED(model);
     return flipper_http_get_request_with_headers("https://dog-api.kinduff.com/api/facts", "{\"Content-Type\":\"application/json\"}");
 }
-
 static char *flip_library_dog_fact_parse(FactLoaderModel *model)
 {
     UNUSED(model);
     return get_json_array_value("facts", 0, fhttp.last_response, 256);
 }
-
 static void flip_library_dog_fact_switch_to_view(FlipLibraryApp *app)
 {
     flip_library_generic_switch_to_view(app, "Random Dog Fact", flip_library_dog_fact_fetch, flip_library_dog_fact_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
 }
-
+//
 static bool flip_library_quote_fetch(FactLoaderModel *model)
 {
     UNUSED(model);
     return flipper_http_get_request("https://zenquotes.io/api/random");
 }
-
 static char *flip_library_quote_parse(FactLoaderModel *model)
 {
     UNUSED(model);
@@ -153,12 +144,11 @@ static char *flip_library_quote_parse(FactLoaderModel *model)
     }
     return get_json_value("q", response, 128);
 }
-
 static void flip_library_quote_switch_to_view(FlipLibraryApp *app)
 {
     flip_library_generic_switch_to_view(app, "Random Quote", flip_library_quote_fetch, flip_library_quote_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
 }
-
+//
 static bool flip_library_dictionary_fetch(FactLoaderModel *model)
 {
     UNUSED(model);
@@ -167,7 +157,6 @@ static bool flip_library_dictionary_fetch(FactLoaderModel *model)
 
     return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/define/", "{\"Content-Type\":\"application/json\"}", payload);
 }
-
 static char *flip_library_dictionary_parse(FactLoaderModel *model)
 {
     UNUSED(model);
@@ -178,13 +167,775 @@ static char *flip_library_dictionary_parse(FactLoaderModel *model)
     }
     return defn;
 }
-
 static void flip_library_dictionary_switch_to_view(FlipLibraryApp *app)
 {
     uart_text_input_set_header_text(app->uart_text_input_query, "Enter a word");
-    flip_library_generic_switch_to_view(app, "Defining", flip_library_dictionary_fetch, flip_library_dictionary_parse, 1, callback_to_submenu, FlipLibraryViewTextInputQuery);
+    flip_library_generic_switch_to_view(app, "Defining", flip_library_dictionary_fetch, flip_library_dictionary_parse, 1, callback_to_submenu_library, FlipLibraryViewTextInputQuery);
 }
+//
+static bool flip_library_gps_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.state == INACTIVE)
+    {
+        FURI_LOG_E(TAG, "Board is INACTIVE");
+        flipper_http_ping(); // ping the device
+        fhttp.state = ISSUE;
+        return false;
+    }
+    if (!flipper_http_get_request_with_headers("https://ipwhois.app/json/", "{\"Content-Type\": \"application/json\"}"))
+    {
+        FURI_LOG_E(TAG, "Failed to send GET request");
+        fhttp.state = ISSUE;
+        return false;
+    }
+    fhttp.state = RECEIVING;
+    return true;
+}
+static char *flip_library_gps_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char *total_data = NULL;
+    if (fhttp.last_response != NULL)
+    {
+        char *city = get_json_value("city", fhttp.last_response, MAX_TOKENS);
+        char *region = get_json_value("region", fhttp.last_response, MAX_TOKENS);
+        char *country = get_json_value("country", fhttp.last_response, MAX_TOKENS);
+        char *latitude = get_json_value("latitude", fhttp.last_response, MAX_TOKENS);
+        char *longitude = get_json_value("longitude", fhttp.last_response, MAX_TOKENS);
 
+        if (city == NULL || region == NULL || country == NULL || latitude == NULL || longitude == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get geo location data");
+            fhttp.state = ISSUE;
+            return NULL;
+        }
+
+        if (!total_data)
+        {
+            total_data = (char *)malloc(512);
+            if (!total_data)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate memory for total_data");
+                fhttp.state = ISSUE;
+                return NULL;
+            }
+        }
+        snprintf(total_data, 512, "You are in %s, %s, %s. \nLatitude: %s, Longitude: %s", city, region, country, latitude, longitude);
+
+        fhttp.state = IDLE;
+        free(city);
+        free(region);
+        free(country);
+        free(latitude);
+        free(longitude);
+    }
+    return total_data;
+}
+static void flip_library_gps_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Fetching GPS data..", flip_library_gps_fetch, flip_library_gps_parse, 1, callback_to_submenu_library, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_weather_fetch(FactLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        fhttp.save_received_data = true;
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/gps.json");
+        return flip_library_gps_fetch(model); // fetch the Lat and Long
+    }
+    else if (model->request_index == 1)
+    {
+        FuriString *data = flipper_http_load_from_file(fhttp.file_path);
+        if (data == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to load received data from file.");
+            return false;
+        }
+        char *data_cstr = (char *)furi_string_get_cstr(data);
+        if (data_cstr == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+            furi_string_free(data);
+            return false;
+        }
+        char url[512];
+        char *latitude = get_json_value("latitude", data_cstr, MAX_TOKENS);
+        char *longitude = get_json_value("longitude", data_cstr, MAX_TOKENS);
+        if (latitude == NULL || longitude == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get geo location data");
+            fhttp.state = ISSUE;
+            return false;
+        }
+        snprintf(url, 512, "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&current=temperature_2m,precipitation,rain,showers,snowfall&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1", latitude, longitude);
+        if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}"))
+        {
+            FURI_LOG_E(TAG, "Failed to send GET request");
+            fhttp.state = ISSUE;
+            return false;
+        }
+        fhttp.state = RECEIVING;
+        return true;
+    }
+    return false;
+}
+static char *flip_library_weather_parse(FactLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        return flip_library_gps_parse(model); // show the location
+    }
+    else if (model->request_index == 1)
+    {
+        UNUSED(model);
+        char *weather_data = NULL;
+        if (fhttp.last_response != NULL)
+        {
+            char *current_data = get_json_value("current", fhttp.last_response, MAX_TOKENS);
+            char *temperature = get_json_value("temperature_2m", current_data, MAX_TOKENS);
+            char *precipitation = get_json_value("precipitation", current_data, MAX_TOKENS);
+            char *rain = get_json_value("rain", current_data, MAX_TOKENS);
+            char *showers = get_json_value("showers", current_data, MAX_TOKENS);
+            char *snowfall = get_json_value("snowfall", current_data, MAX_TOKENS);
+            char *time = get_json_value("time", current_data, MAX_TOKENS);
+
+            if (current_data == NULL || temperature == NULL || precipitation == NULL || rain == NULL || showers == NULL || snowfall == NULL || time == NULL)
+            {
+                FURI_LOG_E(TAG, "Failed to get weather data");
+                fhttp.state = ISSUE;
+                return NULL;
+            }
+
+            // replace the "T" in time with a space
+            char *ptr = strstr(time, "T");
+            if (ptr != NULL)
+            {
+                *ptr = ' ';
+            }
+
+            if (!weather_data)
+            {
+                weather_data = (char *)malloc(512);
+                if (!weather_data)
+                {
+                    FURI_LOG_E(TAG, "Failed to allocate memory for weather_data");
+                    fhttp.state = ISSUE;
+                    return NULL;
+                }
+            }
+            snprintf(weather_data, 512, "Temperature: %s C\nPrecipitation: %s\nRain: %s\nShowers: %s\nSnowfall: %s\nTime: %s", temperature, precipitation, rain, showers, snowfall, time);
+
+            fhttp.state = IDLE;
+            free(current_data);
+            free(temperature);
+            free(precipitation);
+            free(rain);
+            free(showers);
+            free(snowfall);
+            free(time);
+        }
+        return weather_data;
+    }
+    return NULL;
+}
+static void flip_library_weather_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Fetching Weather data..", flip_library_weather_fetch, flip_library_weather_parse, 2, callback_to_submenu_library, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_elevation_fetch(FactLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        fhttp.save_received_data = true;
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/gps.json");
+        return flip_library_gps_fetch(model); // fetch the Lat and Long
+    }
+    else if (model->request_index == 1)
+    {
+        FuriString *data = flipper_http_load_from_file(fhttp.file_path);
+        if (data == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to load received data from file.");
+            return false;
+        }
+        char *data_cstr = (char *)furi_string_get_cstr(data);
+        if (data_cstr == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+            furi_string_free(data);
+            return false;
+        }
+        char url[256];
+        char *latitude = get_json_value("latitude", data_cstr, MAX_TOKENS);
+        char *longitude = get_json_value("longitude", data_cstr, MAX_TOKENS);
+        if (latitude == NULL || longitude == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get geo location data");
+            fhttp.state = ISSUE;
+            return false;
+        }
+        fhttp.save_received_data = true;
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/elevation.json");
+        snprintf(url, sizeof(url), "https://api.opentopodata.org/v1/aster30m?locations=%s,%s", latitude, longitude);
+        if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}"))
+        {
+            FURI_LOG_E(TAG, "Failed to send GET request");
+            fhttp.state = ISSUE;
+            return false;
+        }
+        fhttp.state = RECEIVING;
+        return true;
+    }
+    return false;
+}
+static char *flip_library_elevation_parse(FactLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        return flip_library_gps_parse(model); // show the location
+    }
+    else if (model->request_index == 1)
+    {
+        UNUSED(model);
+        FuriString *data = flipper_http_load_from_file(fhttp.file_path);
+        if (data == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to load received data from file.");
+            return NULL;
+        }
+        char *elevation_data = NULL;
+        char *results = get_json_array_value("results", 0, (char *)furi_string_get_cstr(data), 64);
+        char *elevation = get_json_value("elevation", results, 16);
+        if (elevation == NULL)
+        {
+            FURI_LOG_E(TAG, "Failed to get elevation data");
+            fhttp.state = ISSUE;
+            return NULL;
+        }
+
+        elevation_data = (char *)malloc(64);
+        if (!elevation_data)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate memory for elevation_data");
+            fhttp.state = ISSUE;
+            return NULL;
+        }
+        snprintf(elevation_data, 64, "Elevation: %s meters", elevation);
+
+        fhttp.state = IDLE;
+        free(elevation);
+
+        return elevation_data;
+    }
+    return NULL;
+}
+static void flip_library_elevation_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Fetching Elevation data..", flip_library_elevation_fetch, flip_library_elevation_parse, 2, callback_to_submenu_library, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_asset_price_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!app_instance->uart_text_input_buffer_query)
+    {
+        FURI_LOG_E(TAG, "Query is NULL");
+        fhttp.state = ISSUE;
+        return false;
+    }
+    char url[128];
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/price.txt");
+    // capitalize the query
+    for (size_t i = 0; i < strlen(app_instance->uart_text_input_buffer_query); i++)
+    {
+        app_instance->uart_text_input_buffer_query[i] = toupper(app_instance->uart_text_input_buffer_query[i]);
+    }
+    fhttp.save_received_data = true;
+    snprintf(url, 128, "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2X90WLEFMP43OJKE", app_instance->uart_text_input_buffer_query);
+    if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}"))
+    {
+        FURI_LOG_E(TAG, "Failed to send GET request");
+        fhttp.state = ISSUE;
+        return false;
+    }
+    fhttp.state = RECEIVING;
+    return true;
+}
+static char *flip_library_asset_price_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    // load the received data from the saved file
+    FuriString *price_data = flipper_http_load_from_file(fhttp.file_path);
+    if (price_data == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        fhttp.state = ISSUE;
+        return NULL;
+    }
+    char *data_cstr = (char *)furi_string_get_cstr(price_data);
+    if (data_cstr == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
+        furi_string_free(price_data);
+        fhttp.state = ISSUE;
+        return NULL;
+    }
+    char *global_quote = get_json_value("Global Quote", data_cstr, MAX_TOKENS);
+    if (global_quote == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to get Global Quote");
+        fhttp.state = ISSUE;
+        furi_string_free(price_data);
+        free(global_quote);
+        free(data_cstr);
+        return NULL;
+    }
+    char *price = get_json_value("05. price", global_quote, MAX_TOKENS);
+    if (price == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to get price");
+        fhttp.state = ISSUE;
+        furi_string_free(price_data);
+        free(global_quote);
+        free(price);
+        free(data_cstr);
+        return NULL;
+    }
+    char *asset_price = (char *)malloc(64);
+    if (!asset_price)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate memory for asset_price");
+        fhttp.state = ISSUE;
+        furi_string_free(price_data);
+        free(global_quote);
+        free(price);
+        free(data_cstr);
+        return NULL;
+    }
+    snprintf(asset_price, 64, "%s: $%s", app_instance->uart_text_input_buffer_query, price);
+
+    fhttp.state = IDLE;
+    furi_string_free(price_data);
+    free(global_quote);
+    free(price);
+    free(data_cstr);
+    return asset_price;
+}
+static void flip_library_asset_price_switch_to_view(FlipLibraryApp *app)
+{
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter an asset");
+    flip_library_generic_switch_to_view(app, "Fetching Asset Price..", flip_library_asset_price_fetch, flip_library_asset_price_parse, 1, callback_to_submenu_library, FlipLibraryViewTextInputQuery);
+}
+//
+static bool flip_library_next_holiday_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char url[128];
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_library/holiday.json");
+    fhttp.save_received_data = true;
+    snprintf(url, sizeof(url), "https://date.nager.at/api/v3/NextPublicHolidays/%s", app_instance->uart_text_input_buffer_query);
+    return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_library_next_holiday_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    FuriString *holiday_data = flipper_http_load_from_file(fhttp.file_path);
+    if (holiday_data == NULL)
+    {
+        FURI_LOG_E(TAG, "Failed to load received data from file.");
+        return "Failed to load received data from file.";
+    }
+    furi_string_replace_at(holiday_data, 0, 0, "{\"holidays\": ");
+    size_t term = furi_string_search_char(holiday_data, 0x0d, 0);
+    if (term == FURI_STRING_FAILURE)
+    {
+        term = furi_string_size(holiday_data);
+    }
+    furi_string_replace_at(holiday_data, term, 0, "}");
+    char *holiday = get_json_array_value("holidays", 0, (char *)furi_string_get_cstr(holiday_data), 512);
+    if (holiday == NULL)
+    {
+        furi_string_free(holiday_data);
+        return NULL;
+    }
+    char *name = get_json_value("name", holiday, 32);
+    char *date = get_json_value("date", holiday, 32);
+    char *result = (char *)malloc(strlen(name) + strlen(date) + 3);
+    if (result == NULL)
+    {
+        furi_string_free(holiday_data);
+        free(name);
+        free(date);
+        return NULL;
+    }
+    snprintf(result, strlen(name) + strlen(date) + 3, "%s: %s", date, name);
+    furi_string_free(holiday_data);
+    free(name);
+    free(date);
+    return result;
+}
+static void flip_library_next_holiday_switch_to_view(FlipLibraryApp *app)
+{
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter a country code");
+    flip_library_generic_switch_to_view(app, "Fetching Next Holiday..", flip_library_next_holiday_fetch, flip_library_next_holiday_parse, 1, callback_to_submenu_library, FlipLibraryViewTextInputQuery);
+}
+//
+static bool flip_library_predict_age_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char url[128];
+    snprintf(url, sizeof(url), "https://api.agify.io/?name=%s", app_instance->uart_text_input_buffer_query);
+    return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_library_predict_age_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.last_response == NULL)
+    {
+        return "Failed to get response";
+    }
+    char *age = get_json_value("age", fhttp.last_response, 16);
+    if (age == NULL)
+    {
+        age = get_json_value("[ERROR]", fhttp.last_response, 16);
+    }
+    return age;
+}
+static void flip_library_predict_age_switch_to_view(FlipLibraryApp *app)
+{
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter a name");
+    flip_library_generic_switch_to_view(app, "Predicting Age..", flip_library_predict_age_fetch, flip_library_predict_age_parse, 1, callback_to_submenu_predict, FlipLibraryViewTextInputQuery);
+}
+//
+static bool flip_library_predict_gender_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char url[128];
+    snprintf(url, sizeof(url), "https://api.genderize.io/?name=%s", app_instance->uart_text_input_buffer_query);
+    return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_library_predict_gender_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.last_response == NULL)
+    {
+        return "Failed to get response";
+    }
+    char *gender = get_json_value("gender", fhttp.last_response, 16);
+    if (gender == NULL)
+    {
+        gender = get_json_value("[ERROR]", fhttp.last_response, 16);
+    }
+    return gender;
+}
+static void flip_library_predict_gender_switch_to_view(FlipLibraryApp *app)
+{
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter a name");
+    flip_library_generic_switch_to_view(app, "Predicing Gender..", flip_library_predict_gender_fetch, flip_library_predict_gender_parse, 1, callback_to_submenu_predict, FlipLibraryViewTextInputQuery);
+}
+//
+static bool flip_library_predict_ethnicity_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char url[128];
+    snprintf(url, sizeof(url), "https://api.nationalize.io/?name=%s", app_instance->uart_text_input_buffer_query);
+    return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_library_predict_ethnicity_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.last_response == NULL)
+    {
+        return "Failed to get response";
+    }
+    char *country = get_json_array_value("country", 0, fhttp.last_response, 64);
+    if (country == NULL)
+    {
+        return get_json_value("[ERROR]", fhttp.last_response, 16);
+    }
+    return get_json_value("country_id", country, 16);
+}
+static void flip_library_predict_ethnicity_switch_to_view(FlipLibraryApp *app)
+{
+    uart_text_input_set_header_text(app->uart_text_input_query, "Enter a name");
+    flip_library_generic_switch_to_view(app, "Predicting Ethnicity..", flip_library_predict_ethnicity_fetch, flip_library_predict_ethnicity_parse, 1, callback_to_submenu_predict, FlipLibraryViewTextInputQuery);
+}
+//
+static bool flip_library_random_advice_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://api.adviceslip.com/advice");
+}
+static char *flip_library_random_advice_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    char *slip = get_json_value("slip", fhttp.last_response, 32);
+    if (!slip)
+    {
+        return "Failed to get response";
+    }
+    return get_json_value("advice", slip, 32);
+}
+static void flip_library_random_advice_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random Advice", flip_library_random_advice_fetch, flip_library_random_advice_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_trivia_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request_with_headers("https://opentdb.com/api.php?amount=1", "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_library_random_trivia_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!fhttp.last_response)
+    {
+        return "Failed to get response";
+    }
+    // replace the &quot; with "
+    char *ptr = fhttp.last_response;
+    while ((ptr = strstr(ptr, "&quot;")) != NULL)
+    {
+        ptr[0] = '"';
+        ptr[1] = '"';
+        ptr[2] = '"';
+        ptr[3] = '"';
+    }
+    // replace the &#039; with '
+    ptr = fhttp.last_response;
+    while ((ptr = strstr(ptr, "&#039;")) != NULL)
+    {
+        ptr[0] = '\'';
+        ptr[1] = '\0';
+    }
+    // replace the &amp; with &
+    ptr = fhttp.last_response;
+    while ((ptr = strstr(ptr, "&amp;")) != NULL)
+    {
+        ptr[0] = '&';
+        ptr[1] = '\0';
+    }
+    char *results = get_json_array_value("results", 0, fhttp.last_response, 256);
+    if (!results)
+    {
+        FURI_LOG_E(TAG, "Failed to get response");
+        FURI_LOG_E(TAG, fhttp.last_response);
+        return "Failed to get response";
+    }
+    char *question = get_json_value("question", results, 32);
+    char *correct_answer = get_json_value("correct_answer", results, 32);
+    if (!question || !correct_answer)
+    {
+        return "Failed to get response";
+    }
+    char *result = (char *)malloc(strlen(question) + strlen(correct_answer) + 128);
+    if (!result)
+    {
+        return "Failed to allocate memory";
+    }
+    snprintf(result, strlen(question) + strlen(correct_answer) + 128, "Q: %s\n\n(Scroll down for the answer)\n\nA: %s", question, correct_answer);
+    return result;
+}
+static void flip_library_random_trivia_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random Trivia", flip_library_random_trivia_fetch, flip_library_random_trivia_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_tech_phrase_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://techy-api.vercel.app/api/json");
+}
+static char *flip_library_random_tech_phrase_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!fhttp.last_response)
+    {
+        return "Failed to get response";
+    }
+    char *message = get_json_value("message", fhttp.last_response, 32);
+    if (!message)
+    {
+        return "Failed to get response";
+    }
+    return message;
+}
+static void flip_library_random_tech_phrase_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random Tech Phrase", flip_library_random_tech_phrase_fetch, flip_library_random_tech_phrase_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_uuid_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://www.uuidtools.com/api/generate/v4");
+}
+static char *flip_library_random_uuid_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!fhttp.last_response)
+    {
+        return "Failed to get response";
+    }
+    // remove [ and ] from the start and end of the string and " from the start and end of the uuid
+    char *response = fhttp.last_response;
+    if (response[0] == '[')
+    {
+        response++;
+    }
+    if (response[strlen(response) - 1] == ']')
+    {
+        response[strlen(response) - 1] = '\0';
+    }
+    if (response[0] == '"')
+    {
+        response++;
+    }
+    if (response[strlen(response) - 1] == '"')
+    {
+        response[strlen(response) - 1] = '\0';
+    }
+    return response;
+}
+static void flip_library_random_uuid_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random UUID", flip_library_random_uuid_fetch, flip_library_random_uuid_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_address_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://fakerapi.it/api/v2/addresses?_quantity=1");
+}
+static char *flip_library_random_address_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.last_response == NULL)
+    {
+        return "Failed to get response";
+    }
+    char *data = get_json_array_value("data", 0, fhttp.last_response, 128);
+    if (!data)
+    {
+        return "Failed to get response";
+    }
+    char *street = get_json_value("street", data, 32);
+    char *city = get_json_value("city", data, 32);
+    char *country = get_json_value("country", data, 32);
+    char *zip = get_json_value("zipcode", data, 32);
+    if (!street || !city || !country || !zip)
+    {
+        return "Failed to get response";
+    }
+    char *result = (char *)malloc(strlen(street) + strlen(city) + strlen(country) + strlen(zip) + 128);
+    if (!result)
+    {
+        return "Failed to allocate memory";
+    }
+    snprintf(result, strlen(street) + strlen(city) + strlen(country) + strlen(zip) + 128, "Street: %s\nCity: %s\nCountry: %s\nZip: %s", street, city, country, zip);
+    return result;
+}
+static void flip_library_random_address_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random Address", flip_library_random_address_fetch, flip_library_random_address_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_credit_card_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://fakerapi.it/api/v2/creditCards?_quantity=1");
+}
+static char *flip_library_random_credit_card_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!fhttp.last_response)
+    {
+        return "Failed to get response";
+    }
+    char *data = get_json_array_value("data", 0, fhttp.last_response, 128);
+    if (!data)
+    {
+        return "Failed to get response";
+    }
+    char *card_number = get_json_value("number", data, 32);
+    char *card_name = get_json_value("owner", data, 32);
+    char *card_expiration = get_json_value("expiration", data, 32);
+    char *card_type = get_json_value("type", data, 32);
+    if (!card_number || !card_name || !card_expiration || !card_type)
+    {
+        return "Failed to get response";
+    }
+    char *result = (char *)malloc(strlen(card_number) + strlen(card_name) + strlen(card_expiration) + strlen(card_type) + 128);
+    if (!result)
+    {
+        return "Failed to allocate memory";
+    }
+    snprintf(result, strlen(card_number) + strlen(card_name) + strlen(card_expiration) + strlen(card_type) + 128, "Card Number: %s\nName: %s\nExpiration: %s\nType: %s", card_number, card_name, card_expiration, card_type);
+    return result;
+}
+static void flip_library_random_credit_card_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random Credit Card", flip_library_random_credit_card_fetch, flip_library_random_credit_card_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
+static bool flip_library_random_user_info_fetch(FactLoaderModel *model)
+{
+    UNUSED(model);
+    return flipper_http_get_request("https://fakerapi.it/api/v2/users?_quantity=1&_gender=male");
+}
+static char *flip_library_random_user_info_parse(FactLoaderModel *model)
+{
+    UNUSED(model);
+    if (!fhttp.last_response)
+    {
+        return "Failed to get response";
+    }
+    char *data = get_json_array_value("data", 0, fhttp.last_response, 128);
+    if (!data)
+    {
+        return "Failed to get response";
+    }
+    char *firstname = get_json_value("firstname", data, 32);
+    char *lastname = get_json_value("lastname", data, 32);
+    char *email = get_json_value("email", data, 32);
+    char *username = get_json_value("username", data, 32);
+    char *password = get_json_value("password", data, 32);
+    if (!firstname || !lastname || !email || !username || !password)
+    {
+        return "Failed to get response";
+    }
+    char *result = (char *)malloc(strlen(firstname) + strlen(lastname) + strlen(email) + strlen(username) + strlen(password) + 128);
+    if (!result)
+    {
+        return "Failed to allocate memory";
+    }
+    snprintf(result, strlen(firstname) + strlen(lastname) + strlen(email) + strlen(username) + strlen(password) + 128, "First Name: %s\nLast Name: %s\nEmail: %s\nUsername: %s\nPassword: %s", firstname, lastname, email, username, password);
+    return result;
+}
+static void flip_library_random_user_info_switch_to_view(FlipLibraryApp *app)
+{
+    flip_library_generic_switch_to_view(app, "Random User Info", flip_library_random_user_info_fetch, flip_library_random_user_info_parse, 1, callback_to_random_facts, FlipLibraryViewLoader);
+}
+//
 static void flip_library_request_error_draw(Canvas *canvas)
 {
     if (canvas == NULL)
@@ -251,6 +1002,8 @@ static void flip_library_widget_set_text(char *message, Widget **widget)
     uint32_t i = 0;                            // Index tracker
     uint32_t formatted_index = 0;              // Tracker for where we are in the formatted message
     char *formatted_message;                   // Buffer to hold the final formatted message
+
+    // Allocate buffer with double the message length plus one for safety
     if (!easy_flipper_set_buffer(&formatted_message, message_length * 2 + 1))
     {
         return;
@@ -258,26 +1011,60 @@ static void flip_library_widget_set_text(char *message, Widget **widget)
 
     while (i < message_length)
     {
-        // TODO: Use canvas_glyph_width to calculate the maximum characters for the line
-        uint32_t max_line_length = 29;                  // Maximum characters per line
+        uint32_t max_line_length = 31;                  // Maximum characters per line
         uint32_t remaining_length = message_length - i; // Remaining characters
         uint32_t line_length = (remaining_length < max_line_length) ? remaining_length : max_line_length;
 
+        // Check for newline character within the current segment
+        uint32_t newline_pos = i;
+        bool found_newline = false;
+        for (; newline_pos < i + line_length && newline_pos < message_length; newline_pos++)
+        {
+            if (message[newline_pos] == '\n')
+            {
+                found_newline = true;
+                break;
+            }
+        }
+
+        if (found_newline)
+        {
+            // If newline found, set line_length up to the newline
+            line_length = newline_pos - i;
+        }
+
         // Temporary buffer to hold the current line
-        char line[30];
+        char line[32];
         strncpy(line, message + i, line_length);
         line[line_length] = '\0';
 
-        // Check if the line ends in the middle of a word and adjust accordingly
-        if (line_length == 29 && message[i + line_length] != '\0' && message[i + line_length] != ' ')
+        // If newline was found, skip it for the next iteration
+        if (found_newline)
         {
-            // Find the last space within the 30-character segment
-            char *last_space = strrchr(line, ' ');
-            if (last_space != NULL)
+            i += line_length + 1; // +1 to skip the '\n' character
+        }
+        else
+        {
+            // Check if the line ends in the middle of a word and adjust accordingly
+            if (line_length == max_line_length && message[i + line_length] != '\0' && message[i + line_length] != ' ')
             {
-                // Adjust the line length to avoid cutting the word
-                line_length = last_space - line;
-                line[line_length] = '\0'; // Null-terminate at the space
+                // Find the last space within the current line to avoid breaking a word
+                char *last_space = strrchr(line, ' ');
+                if (last_space != NULL)
+                {
+                    // Adjust the line_length to avoid cutting the word
+                    line_length = last_space - line;
+                    line[line_length] = '\0'; // Null-terminate at the space
+                }
+            }
+
+            // Move the index forward by the determined line_length
+            i += line_length;
+
+            // Skip any spaces at the beginning of the next line
+            while (i < message_length && message[i] == ' ')
+            {
+                i++;
             }
         }
 
@@ -289,16 +1076,10 @@ static void flip_library_widget_set_text(char *message, Widget **widget)
 
         // Add a newline character for line spacing
         formatted_message[formatted_index++] = '\n';
-
-        // Move i forward to the start of the next word
-        i += line_length;
-
-        // Skip spaces at the beginning of the next line
-        while (message[i] == ' ')
-        {
-            i++;
-        }
     }
+
+    // Null-terminate the formatted_message
+    formatted_message[formatted_index] = '\0';
 
     // Add the formatted message to the widget
     widget_add_text_scroll_element(*widget, 0, 0, 128, 64, formatted_message);
@@ -660,8 +1441,59 @@ void callback_submenu_choices(void *context, uint32_t index)
     case FlipLibrarySubmenuIndexRandomFactsAll:
         flip_library_random_fact_switch_to_view(app);
         break;
-    case FlipLibrarySubmenuIndexRandomFactsWiki:
+    case FlipLibrarySubmenuIndexRandomAdvice:
+        flip_library_random_advice_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomTrivia:
+        flip_library_random_trivia_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomTechPhrase:
+        flip_library_random_tech_phrase_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomUUID:
+        flip_library_random_uuid_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomAddress:
+        flip_library_random_address_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomCreditCard:
+        flip_library_random_credit_card_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexRandomUserInfo:
+        flip_library_random_user_info_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexWiki:
         flip_library_wiki_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexGPS:
+        flip_library_gps_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexWeather:
+        flip_library_weather_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexElevation:
+        flip_library_elevation_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexAssetPrice:
+        flip_library_asset_price_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexNextHoliday:
+        flip_library_next_holiday_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexPredict: // predict submenu
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewPredict);
+        break;
+    case FlipLibrarySubmenuIndexPredictGender:
+        flip_library_predict_gender_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexPredictAge:
+        flip_library_predict_age_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexPredictEthnicity:
+        flip_library_predict_ethnicity_switch_to_view(app);
+        break;
+    case FlipLibrarySubmenuIndexLibrary:
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipLibraryViewSubmenuLibrary);
         break;
     default:
         break;
@@ -782,6 +1614,12 @@ uint32_t callback_to_random_facts(void *context)
     return FlipLibraryViewRandomFacts;
 }
 
+uint32_t callback_to_submenu_library(void *context)
+{
+    UNUSED(context);
+    return FlipLibraryViewSubmenuLibrary;
+}
+
 void settings_item_selected(void *context, uint32_t index)
 {
     FlipLibraryApp *app = (FlipLibraryApp *)context;
@@ -820,6 +1658,11 @@ uint32_t callback_exit_app(void *context)
     }
     UNUSED(context);
     return VIEW_NONE; // Return VIEW_NONE to exit the app
+}
+uint32_t callback_to_submenu_predict(void *context)
+{
+    UNUSED(context);
+    return FlipLibraryViewPredict;
 }
 
 void flip_library_generic_switch_to_view(FlipLibraryApp *app, char *title, FactLoaderFetch fetcher, FactLoaderParser parser, size_t request_count, ViewNavigationCallback back, uint32_t view_id)

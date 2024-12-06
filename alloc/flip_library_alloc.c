@@ -57,7 +57,7 @@ FlipLibraryApp *flip_library_app_alloc()
     flip_library_loader_init(app->view_loader);
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget_about, FlipLibraryViewAbout, "FlipLibrary v1.3\n-----\nDictionary, random facts, and\nmore.\n-----\nwww.github.com/jblanked", callback_to_submenu, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget_about, FlipLibraryViewAbout, "FlipLibrary v1.4\n-----\nUtilize WiFi to retrieve data\nfrom 20 different APIs.\n-----\nCreated by JBlanked and\nDerek Jamison.\n-----\nwww.github.com/jblanked/\nFlipLibrary\n-----\nPress BACK to return.", callback_to_submenu, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -75,7 +75,7 @@ FlipLibraryApp *flip_library_app_alloc()
     {
         return NULL;
     }
-    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_query, FlipLibraryViewTextInputQuery, "Enter Query", app->uart_text_input_temp_buffer_query, app->uart_text_input_buffer_size_query, text_updated_query, callback_to_submenu, &app->view_dispatcher, app))
+    if (!easy_flipper_set_uart_text_input(&app->uart_text_input_query, FlipLibraryViewTextInputQuery, "Enter Query", app->uart_text_input_temp_buffer_query, app->uart_text_input_buffer_size_query, text_updated_query, callback_to_submenu_library, &app->view_dispatcher, app))
     {
         return NULL;
     }
@@ -92,25 +92,51 @@ FlipLibraryApp *flip_library_app_alloc()
     variable_item_set_current_value_text(app->variable_item_password, "");
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu_main, FlipLibraryViewSubmenuMain, "FlipLibrary v1.3", callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_main, FlipLibraryViewSubmenuMain, "FlipLibrary v1.4", callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }
-    if (!easy_flipper_set_submenu(&app->submenu_random_facts, FlipLibraryViewRandomFacts, "Random Facts", callback_to_submenu, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_library, FlipLibraryViewSubmenuLibrary, "Library", callback_to_submenu, &app->view_dispatcher))
+    {
+        return NULL;
+    }
+    if (!easy_flipper_set_submenu(&app->submenu_random_facts, FlipLibraryViewRandomFacts, "Random", callback_to_submenu_library, &app->view_dispatcher))
+    {
+        return NULL;
+    }
+    if (!easy_flipper_set_submenu(&app->submenu_predict, FlipLibraryViewPredict, "Predict", callback_to_submenu_library, &app->view_dispatcher))
     {
         return NULL;
     }
 
-    submenu_add_item(app->submenu_main, "Random Fact", FlipLibrarySubmenuIndexRandomFacts, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_main, "Wikipedia", FlipLibrarySubmenuIndexRandomFactsWiki, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_main, "Dictionary", FlipLibrarySubmenuIndexDictionary, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_main, "Library", FlipLibrarySubmenuIndexLibrary, callback_submenu_choices, app);
     submenu_add_item(app->submenu_main, "About", FlipLibrarySubmenuIndexAbout, callback_submenu_choices, app);
     submenu_add_item(app->submenu_main, "WiFi", FlipLibrarySubmenuIndexSettings, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Wikipedia", FlipLibrarySubmenuIndexWiki, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Dictionary", FlipLibrarySubmenuIndexDictionary, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Predict", FlipLibrarySubmenuIndexPredict, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Random", FlipLibrarySubmenuIndexRandomFacts, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Weather", FlipLibrarySubmenuIndexWeather, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "GPS", FlipLibrarySubmenuIndexGPS, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Elevation", FlipLibrarySubmenuIndexElevation, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Asset Price", FlipLibrarySubmenuIndexAssetPrice, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_library, "Next Holiday", FlipLibrarySubmenuIndexNextHoliday, callback_submenu_choices, app);
     //
-    submenu_add_item(app->submenu_random_facts, "Cats", FlipLibrarySubmenuIndexRandomFactsCats, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_random_facts, "Dogs", FlipLibrarySubmenuIndexRandomFactsDogs, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_random_facts, "Quotes", FlipLibrarySubmenuIndexRandomFactsQuotes, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_random_facts, "Random", FlipLibrarySubmenuIndexRandomFactsAll, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Trivia", FlipLibrarySubmenuIndexRandomTrivia, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Advice", FlipLibrarySubmenuIndexRandomAdvice, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Quote", FlipLibrarySubmenuIndexRandomFactsQuotes, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Fact", FlipLibrarySubmenuIndexRandomFactsAll, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Cat Fact", FlipLibrarySubmenuIndexRandomFactsCats, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Dog Fact", FlipLibrarySubmenuIndexRandomFactsDogs, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Tech Phrase", FlipLibrarySubmenuIndexRandomTechPhrase, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "UUID", FlipLibrarySubmenuIndexRandomUUID, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Address", FlipLibrarySubmenuIndexRandomAddress, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "Credit Card", FlipLibrarySubmenuIndexRandomCreditCard, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_random_facts, "User Info", FlipLibrarySubmenuIndexRandomUserInfo, callback_submenu_choices, app);
+    //
+    submenu_add_item(app->submenu_predict, "Age", FlipLibrarySubmenuIndexPredictAge, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_predict, "Ethnicity", FlipLibrarySubmenuIndexPredictEthnicity, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_predict, "Gender", FlipLibrarySubmenuIndexPredictGender, callback_submenu_choices, app);
 
     // load settings
     if (load_settings(app->uart_text_input_buffer_ssid, app->uart_text_input_buffer_size_ssid, app->uart_text_input_buffer_password, app->uart_text_input_buffer_size_password))
