@@ -69,7 +69,7 @@ FlipWiFiApp *flip_wifi_app_alloc()
     }
 
     // Widget
-    if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.2\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
+    if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.2.1\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
     {
         return NULL;
     }
@@ -93,7 +93,7 @@ FlipWiFiApp *flip_wifi_app_alloc()
     }
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.2", easy_flipper_callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.2.1", easy_flipper_callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }

@@ -4,7 +4,7 @@ FlipWiFi is the companion app for the popular FlipperHTTP flash, originally intr
 
 ## Requirements
 
-- WiFi Dev Board or Raspberry Pi Pico W for Flipper Zero with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
+- WiFi Developer Board, Raspberry Pi, or ESP32 Device with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
 - WiFi Access Point
 
 ## Features
