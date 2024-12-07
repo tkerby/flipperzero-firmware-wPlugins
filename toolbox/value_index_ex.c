@@ -1,8 +1,8 @@
 #include "value_index_ex.h"
 
 size_t value_index_display_mode(
-    const FlipperSPITerminalAppDisplayMode value,
-    const FlipperSPITerminalAppDisplayMode values[],
+    const TerminalDisplayMode value,
+    const TerminalDisplayMode values[],
     size_t values_count) {
     size_t index = 0;
 

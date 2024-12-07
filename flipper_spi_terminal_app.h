@@ -18,6 +18,10 @@
 
 #include "views/terminal_view.h"
 
+typedef enum {
+    FlipperSPITerminalEventReceivedData
+} FlipperSPITerminalEvent;
+
 typedef struct {
     TerminalDisplayMode display_mode;
     size_t rx_dma_buffer_size;
@@ -33,6 +37,7 @@ typedef struct {
 
 typedef struct {
     TerminalView* view;
+    bool is_active;
 
     uint8_t* rx_dma_buffer;
     FuriStreamBuffer* rx_buffer_stream;
