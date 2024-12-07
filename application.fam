@@ -3,7 +3,7 @@ App(
     name="SPI-Terminal",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flipper_spi_terminal_main",
-    requires=["gui"],
+    requires=["gui", "input", "cli"],
     stack_size=1 * 1024,
     fap_icon="flipper_spi_terminal_10px.png",
     fap_icon_assets="assets",

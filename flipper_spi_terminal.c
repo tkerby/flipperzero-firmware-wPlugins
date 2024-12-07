@@ -2,6 +2,8 @@
 #include <furi_hal_rtc.h>
 #include "scenes/scenes.h"
 
+#include "flipper_spi_terminal_cli.h"
+
 static bool flipper_spi_terminal_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     FlipperSPITerminalApp* app = context;
@@ -50,10 +52,14 @@ static FlipperSPITerminalApp* flipper_spi_terminal_alloc(void) {
 
     flipper_spi_terminal_scenes_alloc(app);
 
+    flipper_spi_terminal_cli_alloc(app);
+
     return app;
 }
 
 static void flipper_spi_terminal_free(FlipperSPITerminalApp* app) {
+    flipper_spi_terminal_cli_free(app);
+
     flipper_spi_terminal_scenes_free(app);
 
     SPI_TERM_LOG_T("Free Scene Manager");
@@ -64,6 +70,9 @@ static void flipper_spi_terminal_free(FlipperSPITerminalApp* app) {
 
     SPI_TERM_LOG_T("Close GUI");
     furi_record_close(RECORD_GUI);
+
+    SPI_TERM_LOG_T("Close CLI");
+    furi_record_close(RECORD_CLI);
 }
 
 int32_t flipper_spi_terminal_main(void* args) {

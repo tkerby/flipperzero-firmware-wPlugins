@@ -23,6 +23,7 @@ void flipper_spi_terminal_scene_about_alloc(FlipperSPITerminalApp* app) {
 
 void flipper_spi_terminal_scene_about_free(FlipperSPITerminalApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneAbout);
+
     text_box_free(app->about_screen);
 }
 
