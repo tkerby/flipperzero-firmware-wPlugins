@@ -1,11 +1,6 @@
 #include "flipper_spi_terminal_cli.h"
+#include "flipper_spi_terminal.h"
 #include <toolbox/args.h>
-
-typedef struct FlipperSpiTerminalCliCommand FlipperSpiTerminalCliCommand;
-typedef void (*FlipperSPITerminalCLICallback)(
-    const FlipperSpiTerminalCliCommand* cmd,
-    FlipperSPITerminalApp* app,
-    FuriString* args);
 
 struct FlipperSpiTerminalCliCommand {
     const char* name;
@@ -14,8 +9,26 @@ struct FlipperSpiTerminalCliCommand {
     const FlipperSPITerminalCLICallback callback;
 };
 
+const char* flipper_spi_terminal_cli_command_get_name(const FlipperSpiTerminalCliCommand* cmd) {
+    furi_check(cmd);
+    return cmd->name;
+}
+
+const char* flipper_spi_terminal_cli_command_get_format(const FlipperSpiTerminalCliCommand* cmd) {
+    furi_check(cmd);
+    return cmd->format;
+}
+
+const char*
+    flipper_spi_terminal_cli_command_get_description(const FlipperSpiTerminalCliCommand* cmd) {
+    furi_check(cmd);
+    return cmd->description;
+}
+
 void flipper_spi_terminal_cli_print_usage(const FlipperSpiTerminalCliCommand* cmd) {
-    printf("- " SPI_TERM_CLI_COMMAND " %s", cmd->name);
+    furi_check(cmd);
+
+    printf(" - " SPI_TERM_CLI_COMMAND " %s", cmd->name);
 
     if(cmd->format != NULL) {
         printf(" %s", cmd->format);
@@ -28,22 +41,30 @@ void flipper_spi_terminal_cli_print_usage(const FlipperSpiTerminalCliCommand* cm
     printf("\n\n");
 }
 
-void abc(const FlipperSpiTerminalCliCommand* cmd, FlipperSPITerminalApp* app, FuriString* args) {
-    UNUSED(cmd);
-    UNUSED(app);
-    UNUSED(args);
-    printf("HELLO");
-}
+#define CLI_COMMAND_FULL_CALLBACK_NAME(cmdName) flipper_spi_terminal_cli_command_##cmdName
 
-#define CLI_COMMAND(name_, format_, description_, callback_) \
-    {                                                        \
-        .name = name_,                                       \
-        .format = format_,                                   \
-        .description = description_,                         \
-        .callback = callback_,                               \
+// Generate Callbacks for commands
+#define CLI_COMMAND(cmdName, cmdFormat, cmdDescription, cmdImplementation)                       \
+    static void CLI_COMMAND_FULL_CALLBACK_NAME(cmdName)(                                         \
+        const FlipperSpiTerminalCliCommand* cmd, FlipperSPITerminalApp* app, FuriString* args) { \
+        furi_check(cmd);                                                                         \
+        SPI_TERM_LOG_D("Executing command: %s\n\t%s", cmd->name, cmd->description);              \
+        furi_check(app);                                                                         \
+        furi_check(args);                                                                        \
+        cmdImplementation                                                                        \
     }
+#include "flipper_spi_terminal_cli_commands.h"
+#undef CLI_COMMAND
+
+#define CLI_COMMAND(cmdName, cmdFormat, cmdDescription, cmdImplementation) \
+    {                                                                      \
+        .name = #cmdName,                                                  \
+        .format = cmdFormat,                                               \
+        .description = cmdDescription,                                     \
+        .callback = CLI_COMMAND_FULL_CALLBACK_NAME(cmdName),               \
+    },
 static const FlipperSpiTerminalCliCommand commands[] = {
-    CLI_COMMAND("abc", "<text>", "does something", abc),
+#include "flipper_spi_terminal_cli_commands.h"
 };
 #undef CLI_COMMAND
 
@@ -61,7 +82,7 @@ static void flipper_spi_terminal_cli_command(Cli* cli, FuriString* args, void* c
     for(size_t i = 0; i < COUNT_OF(commands); i++) {
         const FlipperSpiTerminalCliCommand* cli_cmd = &commands[i];
         if(furi_string_equal_str(cmd, cli_cmd->name)) {
-            SPI_TERM_LOG_T("Executing command %s...", cli_cmd->name);
+            SPI_TERM_LOG_T("Found command %s!", cli_cmd->name);
             cli_cmd->callback(cli_cmd, app, args);
             executed = true;
             break;
