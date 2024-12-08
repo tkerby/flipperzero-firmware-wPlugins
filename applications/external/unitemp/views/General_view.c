@@ -151,7 +151,13 @@ static void _draw_heat_index(Canvas* canvas, Sensor* sensor, const uint8_t pos[2
 }
 
 static void _draw_pressure(Canvas* canvas, Sensor* sensor) {
-    const uint8_t x = 29, y = 39;
+    uint8_t x = 29, y = 39;
+    //Slide the canvas over slightly to account for the larger hPa values
+    if(app->settings.pressure_unit == UT_PRESSURE_HPA) {
+        x = 21;
+    } else {
+        x = 29;
+    }
     //Рисование рамки
     canvas_draw_rframe(canvas, x, y, 76, 20, 3);
     canvas_draw_rframe(canvas, x, y, 76, 19, 3);
