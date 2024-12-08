@@ -24,7 +24,7 @@ static void vcp_on_state_change(void*, uint8_t);
 
 /*** Virtual COM port callbacks ***/
 static CdcCallbacks cdc_callbacks =
-    {vcp_on_cdc_tx_complete, vcp_on_cdc_rx, vcp_on_state_change, NULL, NULL};
+    {vcp_on_cdc_tx_complete, vcp_on_cdc_rx, vcp_on_state_change, NULL, NULL, NULL};
 
 /*** Virtual COM port RX/TX thread events ***/
 typedef enum {
