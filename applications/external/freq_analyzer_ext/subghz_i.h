@@ -6,7 +6,6 @@
 #include "views/subghz_frequency_analyzer.h"
 
 #include <gui/gui.h>
-#include <freq_analyzer_ext_icons.h>
 #include <gui/scene_manager.h>
 #include <notification/notification_messages.h>
 #include <gui/view_dispatcher.h>
