@@ -21,32 +21,21 @@
 #define SPI_DMA_TX_CHANNEL LL_DMA_CHANNEL_7
 #define SPI_DMA_TX_IRQ     FuriHalInterruptIdDma2Ch7
 
-typedef enum {
-    FlipperSPITerminalAppTerminalEventReceived
-} FlipperSPITerminalAppTerminalEvent;
-
 void flipper_spi_terminal_scene_terminal_alloc(FlipperSPITerminalApp* app) {
     SPI_TERM_LOG_T("allocating terminal screen...");
     furi_check(app);
 
     // Main View
-    app->terminal_screen.view = text_box_alloc();
-
-    // Buffer for view text
-    app->terminal_screen.output_string_buffer = furi_string_alloc();
-    furi_string_reserve(app->terminal_screen.output_string_buffer, SPI_TERM_OUTPUT_BUFFER_SIZE);
-
-    // Buffer for temporary stuff
-    app->terminal_screen.tmp_buffer = furi_string_alloc();
-    furi_string_reserve(app->terminal_screen.tmp_buffer, 512);
+    app->terminal_screen.view = terminal_view_alloc();
+    app->terminal_screen.is_active = false;
 
     // Buffer for transfer from DMA to screen
-    app->terminal_screen.rx_buffer_stream = furi_stream_buffer_alloc(512, 256);
+    app->terminal_screen.rx_buffer_stream = furi_stream_buffer_alloc(512, 512);
 
     view_dispatcher_add_view(
         app->view_dispatcher,
         FlipperSPITerminalAppSceneTerminal,
-        text_box_get_view(app->terminal_screen.view));
+        terminal_view_get_view(app->terminal_screen.view));
 
     SPI_TERM_LOG_T("allocating terminal screen done!");
 }
@@ -57,11 +46,9 @@ void flipper_spi_terminal_scene_terminal_free(FlipperSPITerminalApp* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
 
-    furi_string_free(app->terminal_screen.tmp_buffer);
+    furi_stream_buffer_free(app->terminal_screen.rx_buffer_stream);
 
-    furi_string_free(app->terminal_screen.output_string_buffer);
-
-    text_box_free(app->terminal_screen.view);
+    terminal_view_free(app->terminal_screen.view);
     SPI_TERM_LOG_T("Freeing terminal screen done!");
 }
 
@@ -85,6 +72,8 @@ static void flipper_spi_terminal_scene_terminal_dma_rx_isr(void* context) {
     if(startOfData != NULL) {
         furi_stream_buffer_send(
             app->terminal_screen.rx_buffer_stream, startOfData, app->config.rx_dma_buffer_size, 0);
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, FlipperSPITerminalEventReceivedData);
     }
 
     LL_DMA_ClearFlag_HT6(SPI_DMA);
@@ -179,14 +168,10 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
     SPI_TERM_LOG_T("Enter Terminal");
     SPI_TERM_CONTEXT_TO_APP(context);
 
-    furi_string_reset(app->terminal_screen.output_string_buffer);
-    text_box_set_text(
-        app->terminal_screen.view,
-        furi_string_get_cstr(app->terminal_screen.output_string_buffer));
+    //terminal_view_reset(app->terminal_screen.view);
+    terminal_view_set_display_mode(app->terminal_screen.view, app->config.display_mode);
 
     furi_stream_buffer_reset(app->terminal_screen.rx_buffer_stream);
-
-    app->terminal_screen.counter = 0;
 
     // Minimum of 2 bytes for rx buffer
     furi_check(app->config.rx_dma_buffer_size >= 1);
@@ -195,129 +180,17 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
     flipper_spi_terminal_scene_terminal_init_spi_dma(app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
-}
-
-static bool
-    try_append_escape_char(FuriString* str, uint8_t check, char escape_char, uint8_t byte) {
-    if(check != byte) {
-        return false;
-    }
-
-    furi_string_push_back(str, '\\');
-    furi_string_push_back(str, escape_char);
-
-    return true;
-}
-
-static FuriString* flipper_spi_terminal_scene_terminal_spi_buffer_to_string(
-    FlipperSPITerminalApp* app,
-    uint8_t* buffer,
-    size_t size) {
-    furi_check(app);
-
-    FuriString* str = app->terminal_screen.tmp_buffer;
-    furi_string_reset(str);
-
-    switch(app->config.display_mode) {
-    default:
-    case FlipperSPITerminalAppDisplayModeAuto:
-        for(size_t i = 0; i < size; i++) {
-            uint8_t c = *(buffer + i);
-
-            // Special cases for "End of message characters"
-            if(try_append_escape_char(str, '\0', '0', c) ||
-               try_append_escape_char(str, '\n', 'n', c)) {
-                furi_string_push_back(str, '\n');
-            } else if( // C Escape sequences
-                // '\0' is covered above
-                try_append_escape_char(str, '\a', 'a', c) ||
-                try_append_escape_char(str, '\b', 'b', c) ||
-                try_append_escape_char(str, '\e', 'e', c) ||
-                try_append_escape_char(str, '\f', 'f', c) ||
-                // '\n' is covered above
-                try_append_escape_char(str, '\r', 'r', c) ||
-                try_append_escape_char(str, '\t', 't', c) ||
-                try_append_escape_char(str, '\v', 'v', c) ||
-                try_append_escape_char(str, '\\', '\\', c) ||
-                try_append_escape_char(str, '\'', '\'', c) ||
-                try_append_escape_char(str, '\"', '\"', c)) {
-                break;
-            } else if(c < 32 || c == 127) { // Control chars (some of them are
-                // already handled above)
-                furi_string_cat_printf(str, "\\0x%02X", c);
-            } else { // "Normal" Char
-                furi_string_push_back(str, c);
-            }
-        }
-        break;
-
-    case FlipperSPITerminalAppDisplayModeHex:
-        for(size_t i = 0; i < size; i++) {
-            uint8_t c = *(buffer + i);
-            furi_string_cat_printf(str, "%02X", c);
-
-            app->terminal_screen.counter++;
-            if((app->terminal_screen.counter % 8) == 0) {
-                furi_string_push_back(str, '\n');
-            } else {
-                furi_string_push_back(str, ' ');
-            }
-        }
-        break;
-
-    case FlipperSPITerminalAppDisplayModeBinary:
-        for(size_t i = 0; i < size; i++) {
-            uint8_t c = *(buffer + i);
-            for(int j = 7; j >= 0; j--) {
-                if((c & (1 << j)) != 0) {
-                    furi_string_push_back(str, '1');
-                } else {
-                    furi_string_push_back(str, '0');
-                }
-            }
-
-            furi_string_push_back(str, '\n');
-        }
-        break;
-    }
-
-    return str;
+    app->terminal_screen.is_active = true;
 }
 
 bool flipper_spi_terminal_scene_terminal_on_event(void* context, SceneManagerEvent event) {
     SPI_TERM_CONTEXT_TO_APP(context);
 
-    if(event.type == SceneManagerEventTypeTick) {
-        bool addedAny = false;
-        for(size_t i = 0; i < 4; i++) {
-            uint8_t buffer[64];
-            size_t count = furi_stream_buffer_receive(
-                app->terminal_screen.rx_buffer_stream, buffer, sizeof(buffer), 0);
-            if(count == 0)
-                break;
-            else
-                addedAny = true;
-
-            FuriString* str =
-                flipper_spi_terminal_scene_terminal_spi_buffer_to_string(app, buffer, count);
-            size_t length = furi_string_size(str);
-
-            size_t newOutputBufferLength =
-                furi_string_size(app->terminal_screen.output_string_buffer) + length;
-            if(newOutputBufferLength > SPI_TERM_OUTPUT_BUFFER_SIZE) {
-                furi_string_right(
-                    app->terminal_screen.output_string_buffer,
-                    newOutputBufferLength - SPI_TERM_OUTPUT_BUFFER_SIZE);
-            }
-            furi_string_cat(app->terminal_screen.output_string_buffer, str);
-        }
-
-        if(addedAny) {
-            text_box_set_text(
-                app->terminal_screen.view,
-                furi_string_get_cstr(app->terminal_screen.output_string_buffer));
-
-            text_box_set_focus(app->terminal_screen.view, TextBoxFocusEnd);
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == FlipperSPITerminalEventReceivedData) {
+            terminal_view_append_data_from_stream(
+                app->terminal_screen.view, app->terminal_screen.rx_buffer_stream);
+            return true;
         }
     }
 
@@ -327,6 +200,8 @@ bool flipper_spi_terminal_scene_terminal_on_event(void* context, SceneManagerEve
 void flipper_spi_terminal_scene_terminal_on_exit(void* context) {
     SPI_TERM_LOG_T("Exit Terminal");
     SPI_TERM_CONTEXT_TO_APP(context);
+
+    app->terminal_screen.is_active = false;
 
     flipper_spi_terminal_scene_terminal_deinit_spi_dma(app);
 

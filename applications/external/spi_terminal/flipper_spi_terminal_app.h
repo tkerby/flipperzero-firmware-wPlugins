@@ -14,16 +14,16 @@
 #include <furi_hal_spi_config.h>
 #include <furi_hal_spi_types.h>
 
-typedef enum {
-    FlipperSPITerminalAppDisplayModeAuto,
-    FlipperSPITerminalAppDisplayModeHex,
-    FlipperSPITerminalAppDisplayModeBinary,
+#include <cli/cli.h>
 
-    FlipperSPITerminalAppDisplayModeMax,
-} FlipperSPITerminalAppDisplayMode;
+#include "views/terminal_view.h"
+
+typedef enum {
+    FlipperSPITerminalEventReceivedData
+} FlipperSPITerminalEvent;
 
 typedef struct {
-    FlipperSPITerminalAppDisplayMode display_mode;
+    TerminalDisplayMode display_mode;
     size_t rx_dma_buffer_size;
     LL_SPI_InitTypeDef spi;
 } FlipperSPITerminalAppConfig;
@@ -36,10 +36,8 @@ typedef struct {
 } FlipperSPITerminalAppScreenConfig;
 
 typedef struct {
-    TextBox* view;
-    FuriString* output_string_buffer;
-    FuriString* tmp_buffer;
-    unsigned int counter;
+    TerminalView* view;
+    bool is_active;
 
     uint8_t* rx_dma_buffer;
     FuriStreamBuffer* rx_buffer_stream;
@@ -49,12 +47,12 @@ typedef struct {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
-
-    DialogEx* main_screen;
-
-    FlipperSPITerminalAppScreenConfig config_screen;
-
-    FlipperSPITerminalAppScreenTerminal terminal_screen;
+    Cli* cli;
 
     FlipperSPITerminalAppConfig config;
+
+    DialogEx* main_screen;
+    FlipperSPITerminalAppScreenConfig config_screen;
+    FlipperSPITerminalAppScreenTerminal terminal_screen;
+    TextBox* about_screen;
 } FlipperSPITerminalApp;

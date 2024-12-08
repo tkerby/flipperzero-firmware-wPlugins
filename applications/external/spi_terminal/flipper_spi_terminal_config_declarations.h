@@ -2,7 +2,7 @@
 #define ADD_CONFIG_ENTRY( \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings)
 #include <furi_hal_spi_types.h>
-#include <lib/toolbox/value_index.h>
+#include "toolbox/value_index_ex.h"
 #endif
 
 ADD_CONFIG_ENTRY(
@@ -13,14 +13,12 @@ ADD_CONFIG_ENTRY(
     "Binary: Binary representation\n\n"
     "Default: Auto",
     display_mode,
-    FlipperSPITerminalAppDisplayMode,
-    FlipperSPITerminalAppDisplayModeAuto,
+    TerminalDisplayMode,
+    TerminalDisplayModeAuto,
     value_index_display_mode,
     display_mode,
     3,
-    (FlipperSPITerminalAppDisplayModeAuto,
-     FlipperSPITerminalAppDisplayModeHex,
-     FlipperSPITerminalAppDisplayModeBinary),
+    (TerminalDisplayModeAuto, TerminalDisplayModeHex, TerminalDisplayModeBinary),
     ("Auto", "Hex", "Binary"))
 
 ADD_CONFIG_ENTRY(

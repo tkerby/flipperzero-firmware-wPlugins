@@ -1,13 +1,6 @@
 #pragma once
 
 #include "flipper_spi_terminal_app.h"
-#include <lib/toolbox/value_index.h>
-
-size_t value_index_display_mode(
-    const FlipperSPITerminalAppDisplayMode value,
-    const FlipperSPITerminalAppDisplayMode values[],
-    size_t values_count);
-size_t value_index_size_t(const size_t value, const size_t values[], size_t values_count);
 
 #define SPI_TERM_LAST_SETTINGS_DIR EXT_PATH("apps_data/flipper_spi_terminal")
 #define SPI_TERM_LAST_SETTINGS_PATH \

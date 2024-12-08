@@ -12,8 +12,6 @@
 #define SPI_TERM_LOG_D(format, ...) SPI_TERM_LOG(FuriLogLevelDebug, format, ##__VA_ARGS__)
 #define SPI_TERM_LOG_T(format, ...) SPI_TERM_LOG(FuriLogLevelTrace, format, ##__VA_ARGS__)
 
-#define SPI_TERM_OUTPUT_BUFFER_SIZE 4096
-
 #include "flipper_spi_terminal_app.h"
 #include "flipper_spi_terminal_config.h"
 
