@@ -8,11 +8,7 @@
 #include <gui/modules/validators.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
-#if __has_include(<assets_icons.h>)
-#include <assets_icons.h>
-#else
-extern const Icon I_RFIDDolphinReceive_97x61;
-#endif
+#include <metroflip_icons.h>
 
 #include <gui/modules/submenu.h>
 #include <gui/modules/popup.h>
