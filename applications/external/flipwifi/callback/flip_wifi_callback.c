@@ -130,6 +130,23 @@ bool flip_wifi_view_input_callback_saved(InputEvent* event, void* context) {
            app->wifi_playlist.passwords[ssid_index] == NULL) {
             return false;
         }
+        if(!app->popup) {
+            if(!easy_flipper_set_popup(
+                   &app->popup,
+                   FlipWiFiViewPopup,
+                   "[SUCCESS]",
+                   0,
+                   0,
+                   "All FlipperHTTP apps will now\nuse the selected network.",
+                   0,
+                   40,
+                   popup_callback_saved,
+                   callback_to_submenu_saved,
+                   &app->view_dispatcher,
+                   app)) {
+                return false;
+            }
+        }
         save_settings(
             app->wifi_playlist.ssids[ssid_index], app->wifi_playlist.passwords[ssid_index]);
 
