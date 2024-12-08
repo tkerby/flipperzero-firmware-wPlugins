@@ -81,5 +81,7 @@ void settings_item_selected(void* context, uint32_t index);
  * @return next view id (VIEW_NONE to exit the app)
  */
 uint32_t callback_exit_app(void* context);
+uint32_t callback_to_submenu_predict(void* context);
+uint32_t callback_to_submenu_library(void* context);
 
 #endif // FLIP_LIBRARY_CALLBACK_H

@@ -23,9 +23,17 @@ void flip_library_app_free(FlipLibraryApp* app) {
         view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewSubmenuMain);
         submenu_free(app->submenu_main);
     }
+    if(app->submenu_library) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewSubmenuLibrary);
+        submenu_free(app->submenu_library);
+    }
     if(app->submenu_random_facts) {
         view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewRandomFacts);
         submenu_free(app->submenu_random_facts);
+    }
+    if(app->submenu_predict) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipLibraryViewPredict);
+        submenu_free(app->submenu_predict);
     }
 
     // Free Widget(s)
