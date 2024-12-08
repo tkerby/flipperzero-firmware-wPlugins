@@ -607,7 +607,11 @@ Table* table_load_table_from_file(PinballApp* pb, size_t index) {
                 table->objects.push_back(new_turbo);
             }
         }
-        break;
+
+        for(auto& o : table->objects) {
+            o->save_state();
+        }
+
     } while(false);
 
     if(!table->sm.validate(pb->text, 256)) {

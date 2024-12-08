@@ -79,7 +79,8 @@ void solve(PinballApp* pb, float dt) {
         for(auto& b : table->balls) {
             for(auto& o : table->objects) {
                 if(o->physical && o->collide(b)) {
-                    if(pb->game_mode == GM_Tilted) {
+                    if(pb->game_mode == GM_Tilted || table->balls_released == false) {
+                        o->reset_state(); // ensure we do nothing!
                         continue;
                     }
                     if(o->notification) {
@@ -175,8 +176,8 @@ static void pinball_draw_callback(Canvas* const canvas, void* ctx) {
                 AlignTop,
                 furi_string_get_cstr(menu_item.name));
             if(i == half_way) {
-                canvas_draw_disc(canvas, 8, y + 3, 2);
-                canvas_draw_disc(canvas, 56, y + 3, 2);
+                canvas_draw_disc(canvas, 6, y + 3, 2);
+                canvas_draw_disc(canvas, 58, y + 3, 2);
             }
             y += 12;
         }
@@ -453,6 +454,7 @@ extern "C" int32_t pinball0_app(void* p) {
                     if(app.settings.debug_mode && app.table->balls_released == false) {
                         app.table->balls[0].p.x += MANUAL_ADJUSTMENT;
                         app.table->balls[0].prev_p.x += MANUAL_ADJUSTMENT;
+                        break;
                     }
                     bool flipper_pressed = false;
                     for(auto& f : app.table->flippers) {
@@ -477,6 +479,7 @@ extern "C" int32_t pinball0_app(void* p) {
                     if(app.settings.debug_mode && app.table->balls_released == false) {
                         app.table->balls[0].p.x -= MANUAL_ADJUSTMENT;
                         app.table->balls[0].prev_p.x -= MANUAL_ADJUSTMENT;
+                        break;
                     }
                     bool flipper_pressed = false;
                     for(auto& f : app.table->flippers) {
@@ -494,6 +497,11 @@ extern "C" int32_t pinball0_app(void* p) {
                 case InputKeyUp:
                     switch(app.game_mode) {
                     case GM_Playing:
+                        if(app.settings.debug_mode && app.table->balls_released == false) {
+                            app.table->balls[0].p.y -= MANUAL_ADJUSTMENT;
+                            app.table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
+                            break;
+                        }
                         if(event.type == InputTypePress) {
                             // Table bump and Tilt tracking
                             uint32_t current_tick = furi_get_tick();
@@ -508,13 +516,12 @@ extern "C" int32_t pinball0_app(void* p) {
                                     FURI_LOG_W(TAG, "TABLE TILTED!");
                                     app.game_mode = GM_Tilted;
                                     app.table->bump_count = 0;
+                                    for(auto& o : app.table->objects) {
+                                        o->reset_state();
+                                    }
                                     notify_table_tilted(&app);
                                 }
                             }
-                        }
-                        if(app.settings.debug_mode && app.table->balls_released == false) {
-                            app.table->balls[0].p.y -= MANUAL_ADJUSTMENT;
-                            app.table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
                         }
                         break;
                     case GM_TableSelect:
@@ -535,11 +542,12 @@ extern "C" int32_t pinball0_app(void* p) {
                 case InputKeyDown:
                     switch(app.game_mode) {
                     case GM_Playing:
-                        app.keys[InputKeyDown] = true;
                         if(app.settings.debug_mode && app.table->balls_released == false) {
                             app.table->balls[0].p.y += MANUAL_ADJUSTMENT;
                             app.table->balls[0].prev_p.y += MANUAL_ADJUSTMENT;
+                            break;
                         }
+                        app.keys[InputKeyDown] = true;
                         break;
                     case GM_TableSelect:
                         app.table_list.selected =
