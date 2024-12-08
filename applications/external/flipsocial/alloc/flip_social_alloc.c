@@ -49,6 +49,7 @@ FlipSocialApp* flip_social_app_alloc() {
     app->register_password_logged_out_temp_buffer_size = MAX_USER_LENGTH;
     app->register_password_2_logged_out_temp_buffer_size = MAX_USER_LENGTH;
     app->change_password_logged_in_temp_buffer_size = MAX_USER_LENGTH;
+    app->change_bio_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
     app->compose_pre_save_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
     app->wifi_ssid_logged_in_temp_buffer_size = MAX_USER_LENGTH;
     app->wifi_password_logged_in_temp_buffer_size = MAX_USER_LENGTH;
@@ -56,6 +57,8 @@ FlipSocialApp* flip_social_app_alloc() {
     app->login_username_logged_in_temp_buffer_size = MAX_USER_LENGTH;
     app->messages_new_message_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
     app->message_user_choice_logged_in_temp_buffer_size = MAX_MESSAGE_LENGTH;
+    app->explore_logged_in_temp_buffer_size = MAX_USER_LENGTH;
+    app->message_users_logged_in_temp_buffer_size = MAX_USER_LENGTH;
     if(!easy_flipper_set_buffer(
            &app->wifi_ssid_logged_out_temp_buffer, app->wifi_ssid_logged_out_temp_buffer_size)) {
         return NULL;
@@ -93,6 +96,10 @@ FlipSocialApp* flip_social_app_alloc() {
     if(!easy_flipper_set_buffer(
            &app->change_password_logged_in_temp_buffer,
            app->change_password_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_buffer(
+           &app->change_bio_logged_in_temp_buffer, app->change_bio_logged_in_temp_buffer_size)) {
         return NULL;
     }
     if(!easy_flipper_set_buffer(
@@ -154,6 +161,10 @@ FlipSocialApp* flip_social_app_alloc() {
         return NULL;
     }
     if(!easy_flipper_set_buffer(
+           &app->change_bio_logged_in, app->change_bio_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_buffer(
            &app->compose_pre_save_logged_in, app->compose_pre_save_logged_in_temp_buffer_size)) {
         return NULL;
     }
@@ -194,8 +205,20 @@ FlipSocialApp* flip_social_app_alloc() {
            &selected_message, app->message_user_choice_logged_in_temp_buffer_size)) {
         return NULL;
     }
+    if(!easy_flipper_set_buffer(&app->explore_logged_in, app->explore_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
     if(!easy_flipper_set_buffer(
-           &last_explore_response, app->message_user_choice_logged_in_temp_buffer_size)) {
+           &app->explore_logged_in_temp_buffer, app->explore_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_buffer(
+           &app->message_users_logged_in, app->message_users_logged_in_temp_buffer_size)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_buffer(
+           &app->message_users_logged_in_temp_buffer,
+           app->message_users_logged_in_temp_buffer_size)) {
         return NULL;
     }
 
@@ -203,7 +226,7 @@ FlipSocialApp* flip_social_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_logged_out,
            FlipSocialViewLoggedOutSubmenu,
-           "FlipSocial v0.7",
+           "FlipSocial v0.8",
            flip_social_callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -211,7 +234,7 @@ FlipSocialApp* flip_social_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_logged_in,
            FlipSocialViewLoggedInSubmenu,
-           "FlipSocial v0.7",
+           "FlipSocial v0.8",
            flip_social_callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
@@ -374,7 +397,9 @@ FlipSocialApp* flip_social_app_alloc() {
     app->variable_item_logged_in_profile_username = variable_item_list_add(
         app->variable_item_list_logged_in_profile, "Username", 1, NULL, app);
     app->variable_item_logged_in_profile_change_password = variable_item_list_add(
-        app->variable_item_list_logged_in_profile, "Change Password", 1, NULL, app);
+        app->variable_item_list_logged_in_profile, "Password", 1, NULL, app);
+    app->variable_item_logged_in_profile_change_bio =
+        variable_item_list_add(app->variable_item_list_logged_in_profile, "Bio", 1, NULL, app);
     app->variable_item_logged_in_profile_friends =
         variable_item_list_add(app->variable_item_list_logged_in_profile, "Friends", 0, NULL, app);
     //
@@ -477,10 +502,22 @@ FlipSocialApp* flip_social_app_alloc() {
     if(!easy_flipper_set_uart_text_input(
            &app->text_input_logged_in_change_password,
            FlipSocialViewLoggedInChangePasswordInput,
-           "Enter New Password",
+           "Password",
            app->change_password_logged_in_temp_buffer,
            app->change_password_logged_in_temp_buffer_size,
            flip_social_logged_in_profile_change_password_updated,
+           flip_social_callback_to_profile_logged_in,
+           &app->view_dispatcher,
+           app)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_uart_text_input(
+           &app->text_input_logged_in_change_bio,
+           FlipSocialViewLoggedInChangeBioInput,
+           "Bio",
+           app->change_bio_logged_in_temp_buffer,
+           app->change_bio_logged_in_temp_buffer_size,
+           flip_social_logged_in_profile_change_bio_updated,
            flip_social_callback_to_profile_logged_in,
            &app->view_dispatcher,
            app)) {
@@ -547,6 +584,30 @@ FlipSocialApp* flip_social_app_alloc() {
            app)) {
         return NULL;
     }
+    if(!easy_flipper_set_uart_text_input(
+           &app->text_input_logged_in_explore,
+           FlipSocialViewLoggedInExploreInput,
+           "Enter Username or Keyword",
+           app->explore_logged_in_temp_buffer,
+           app->explore_logged_in_temp_buffer_size,
+           flip_social_logged_in_explore_updated,
+           flip_social_callback_to_submenu_logged_in,
+           &app->view_dispatcher,
+           app)) {
+        return NULL;
+    }
+    if(!easy_flipper_set_uart_text_input(
+           &app->text_input_logged_in_message_users,
+           FlipSocialViewLoggedInMessageUsersInput,
+           "Enter Username or Keyword",
+           app->message_users_logged_in_temp_buffer,
+           app->message_users_logged_in_temp_buffer_size,
+           flip_social_logged_in_message_users_updated,
+           flip_social_callback_to_submenu_logged_in,
+           &app->view_dispatcher,
+           app)) {
+        return NULL;
+    }
 
     // Load the settings
     if(!load_settings(
@@ -562,6 +623,8 @@ FlipSocialApp* flip_social_app_alloc() {
            app->login_password_logged_out_temp_buffer_size,
            app->change_password_logged_in,
            app->change_password_logged_in_temp_buffer_size,
+           app->change_bio_logged_in,
+           app->change_bio_logged_in_temp_buffer_size,
            app->is_logged_in,
            app->is_logged_in_size))
 
@@ -640,6 +703,14 @@ FlipSocialApp* flip_social_app_alloc() {
                 app->change_password_logged_in_temp_buffer_size - 1);
             app->change_password_logged_in_temp_buffer
                 [app->change_password_logged_in_temp_buffer_size - 1] = '\0';
+        }
+        if(app->change_bio_logged_in && app->change_bio_logged_in_temp_buffer) {
+            strncpy(
+                app->change_bio_logged_in_temp_buffer,
+                app->change_bio_logged_in,
+                app->change_bio_logged_in_temp_buffer_size - 1);
+            app->change_bio_logged_in_temp_buffer[app->change_bio_logged_in_temp_buffer_size - 1] =
+                '\0';
         }
         if(app->compose_pre_save_logged_in && app->compose_pre_save_logged_in_temp_buffer) {
             strncpy(
@@ -809,6 +880,8 @@ FlipSocialApp* flip_social_app_alloc() {
             app->variable_item_logged_out_login_username, app->login_username_logged_out);
         variable_item_set_current_value_text(
             app->variable_item_logged_in_profile_username, app->login_username_logged_in);
+        variable_item_set_current_value_text(
+            app->variable_item_logged_in_profile_change_bio, app->change_bio_logged_in);
         //
 
         if(app->is_logged_in != NULL && strcmp(app->is_logged_in, "true") == 0) {

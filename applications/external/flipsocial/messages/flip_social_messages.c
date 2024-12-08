@@ -36,7 +36,7 @@ FlipSocialMessage* flip_social_user_messages_alloc() {
         FURI_LOG_E(TAG, "Failed to allocate memory for messages");
         return NULL;
     }
-    for(size_t i = 0; i < MAX_MESSAGE_USERS; i++) {
+    for(size_t i = 0; i < MAX_MESSAGES; i++) {
         if(messages->usernames[i] == NULL) {
             messages->usernames[i] = malloc(MAX_USER_LENGTH);
             if(messages->usernames[i] == NULL) {
@@ -148,8 +148,9 @@ bool flip_social_get_message_users() {
     snprintf(
         command,
         128,
-        "https://www.flipsocial.net/api/messages/%s/get/list/",
-        app_instance->login_username_logged_out);
+        "https://www.flipsocial.net/api/messages/%s/get/list/%d/",
+        app_instance->login_username_logged_out,
+        MAX_MESSAGE_USERS);
     if(!flipper_http_get_request_with_headers(command, auth_headers)) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for messages");
         fhttp.state = ISSUE;
@@ -174,7 +175,7 @@ bool flip_social_get_messages_with_user() {
         FURI_LOG_E(TAG, "Username is NULL");
         return false;
     }
-    char command[128];
+    char command[256];
     snprintf(
         fhttp.file_path,
         sizeof(fhttp.file_path),
@@ -185,10 +186,11 @@ bool flip_social_get_messages_with_user() {
     auth_headers_alloc();
     snprintf(
         command,
-        128,
-        "https://www.flipsocial.net/api/messages/%s/get/%s/",
+        sizeof(command),
+        "https://www.flipsocial.net/api/messages/%s/get/%s/%d/",
         app_instance->login_username_logged_out,
-        flip_social_message_users->usernames[flip_social_message_users->index]);
+        flip_social_message_users->usernames[flip_social_message_users->index],
+        MAX_MESSAGES);
     if(!flipper_http_get_request_with_headers(command, auth_headers)) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for messages");
         fhttp.state = ISSUE;
@@ -222,17 +224,11 @@ bool flip_social_parse_json_message_users() {
         return false;
     }
 
-    // Remove newlines
-    char* pos = data_cstr;
-    while((pos = strchr(pos, '\n')) != NULL) {
-        *pos = ' ';
-    }
-
     // Initialize message users count
     flip_social_message_users->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("users", data_cstr, MAX_TOKENS);
+    char* json_users = get_json_value("users", data_cstr, 64);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse users array.");
         furi_string_free(message_data);
@@ -311,17 +307,11 @@ bool flip_social_parse_json_message_user_choices() {
         return false;
     }
 
-    // Remove newlines
-    char* pos = data_cstr;
-    while((pos = strchr(pos, '\n')) != NULL) {
-        *pos = ' ';
-    }
-
     // Initialize explore count
     flip_social_explore->count = 0;
 
     // Extract the users array from the JSON
-    char* json_users = get_json_value("users", data_cstr, MAX_TOKENS);
+    char* json_users = get_json_value("users", data_cstr, 64);
     if(json_users == NULL) {
         FURI_LOG_E(TAG, "Failed to parse users array.");
         furi_string_free(user_data);
@@ -399,26 +389,20 @@ bool flip_social_parse_json_messages() {
         return false;
     }
 
-    // Remove newlines
-    char* pos = data_cstr;
-    while((pos = strchr(pos, '\n')) != NULL) {
-        *pos = ' ';
-    }
-
     // Initialize messages count
     flip_social_messages->count = 0;
 
     // Iterate through the messages array
     for(int i = 0; i < MAX_MESSAGES; i++) {
         // Parse each item in the array
-        char* item = get_json_array_value("conversations", i, data_cstr, MAX_TOKENS);
+        char* item = get_json_array_value("conversations", i, data_cstr, 64);
         if(item == NULL) {
             break;
         }
 
         // Extract individual fields from the JSON object
-        char* sender = get_json_value("sender", item, 64);
-        char* content = get_json_value("content", item, 64);
+        char* sender = get_json_value("sender", item, 8);
+        char* content = get_json_value("content", item, 8);
 
         if(sender == NULL || content == NULL) {
             FURI_LOG_E(TAG, "Failed to parse item fields.");
