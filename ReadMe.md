@@ -52,7 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher)
 - Updated: [Bluetooth/USB Remote v1.8 (By Cutch)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1330) [feat(hid_ptt): support Gather (By SapphicCode)](https://github.com/Next-Flip/Momentum-Firmware/pull/304)
 - GPIO: [VCP Break Support (By gsurkov)](https://github.com/DarkFlippers/unleashed-firmware/commit/fc25c9fba02abb640eaed84988f7184fbfb823c6)
-- [Increase system stacks reserved memory size (By Astrrra)](https://github.com/DarkFlippers/unleashed-firmware/commit/0fd26ee14826247ea77c1ee8ee121952ae6924c7)
+- OFW: PR: [Increase system stacks reserved memory size #4025 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4025)
 - [Apps updated with VCP Break Support Updates (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/4758cd65e5fc923d1970fd17fc0dd4e5e8af7604#diff-4779dde12b41b371f2fd268ddef9c6a24bf02aca75b489d535c0991adda90369)
 - Updated:-[Temp Sensors Reader 1.6 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) [Recenter the pressure canvas if hPa unit is selected (By shininghero)](https://github.com/xMasterX/all-the-plugins/commit/bc4e84ef8a37e93e4a549a24fa04eb6655ff9d63)
 - Added: [Frequency Analyzer (External) v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/dev/non_catalog_apps/freq_analyzer_ext)
