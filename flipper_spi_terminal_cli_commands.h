@@ -12,6 +12,7 @@
 
 #ifndef CLI_COMMANDS_ADDED_INCLUDES
 #include "views/terminal_view.h"
+#include "flipper_spi_terminal_config.h"
 #define CLI_COMMANDS_ADDED_INCLUDES
 #endif
 
@@ -31,3 +32,8 @@ CLI_COMMAND(dbg_term_data_show,
             NULL,
             "(DEBUG) prints the current buffer",
             terminal_view_debug_print_buffer(app->terminal_screen.view);)
+
+CLI_COMMAND(dbg_config_print,
+            "",
+            "(DEBUG) Prints the content of the configuration file",
+            flipper_spi_terminal_config_debug_print_saved();)

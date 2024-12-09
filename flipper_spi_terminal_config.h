@@ -26,3 +26,5 @@ void flipper_spi_terminal_config_log(FlipperSPITerminalAppConfig* config);
 void flipper_spi_terminal_config_defaults(FlipperSPITerminalAppConfig* config);
 bool flipper_spi_terminal_config_load(FlipperSPITerminalAppConfig* config);
 bool flipper_spi_terminal_config_save(FlipperSPITerminalAppConfig* config);
+
+void flipper_spi_terminal_config_debug_print_saved();
