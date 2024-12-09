@@ -80,7 +80,7 @@ static uint8_t* terminal_view_get_start(TerminalViewModel* model, size_t bytes_i
     return wrap_pointer(model, start);
 }
 
-static inline void terminal_view_draw_binary_draw_row(
+static inline void terminal_view_draw_table_row(
     Canvas* canvas,
     const TerminalViewDrawInfo* info,
     size_t row,
@@ -103,11 +103,15 @@ static inline size_t calc_total_numer_of_rows(size_t size, size_t per_row) {
     }
 }
 
-static TerminalViewScrollInfo terminal_view_draw_binary(
+typedef void (*TerminalViewDrawTableAddByteToStrCallback)(uint8_t byte, FuriString* str);
+
+static TerminalViewScrollInfo terminal_view_draw_table(
     Canvas* canvas,
     TerminalViewModel* model,
-    const TerminalViewDrawInfo* info) {
-    const size_t bytes_per_row = (info->columns / 9); // +1 => Space between bytes
+    const TerminalViewDrawInfo* info,
+    size_t chars_per_byte,
+    TerminalViewDrawTableAddByteToStrCallback add_byte_to_str_cb) {
+    const size_t bytes_per_row = info->columns / (chars_per_byte + 1);
     const size_t bytes_on_screen = bytes_per_row * info->rows; // max number of bytes on screen
     const size_t total_numer_of_rows = calc_total_numer_of_rows(model->size, bytes_per_row);
     if(model->scroll_offset + info->rows > total_numer_of_rows) {
@@ -130,13 +134,7 @@ static TerminalViewScrollInfo terminal_view_draw_binary(
     while(to_print > 0) {
         uint8_t b = byte_val_from_start(model, start, offset);
 
-        for(int i = 7; i >= 0; i--) {
-            if(b & (1 << i)) {
-                furi_string_push_back(model->tmp_str, '1');
-            } else {
-                furi_string_push_back(model->tmp_str, '0');
-            }
-        }
+        add_byte_to_str_cb(b, model->tmp_str);
 
         furi_string_push_back(model->tmp_str, ' ');
 
@@ -145,7 +143,7 @@ static TerminalViewScrollInfo terminal_view_draw_binary(
 
         in_row++;
         if(in_row >= bytes_per_row) { // end of row reached
-            terminal_view_draw_binary_draw_row(canvas, info, current_row, model->tmp_str);
+            terminal_view_draw_table_row(canvas, info, current_row, model->tmp_str);
             furi_string_reset(model->tmp_str);
 
             in_row = 0;
@@ -156,7 +154,7 @@ static TerminalViewScrollInfo terminal_view_draw_binary(
     }
 
     if(in_row > 0) {
-        terminal_view_draw_binary_draw_row(canvas, info, current_row, model->tmp_str);
+        terminal_view_draw_table_row(canvas, info, current_row, model->tmp_str);
     }
 
     TerminalViewScrollInfo ret = {
@@ -164,6 +162,24 @@ static TerminalViewScrollInfo terminal_view_draw_binary(
         .total = total_numer_of_rows - info->rows + 1,
     };
     return ret;
+}
+
+static void terminal_view_draw_binary_byte_to_string(uint8_t byte, FuriString* str) {
+    for(int i = 7; i >= 0; i--) {
+        if(byte & (1 << i)) {
+            furi_string_push_back(str, '1');
+        } else {
+            furi_string_push_back(str, '0');
+        }
+    }
+}
+
+static inline TerminalViewScrollInfo terminal_view_draw_binary(
+    Canvas* canvas,
+    TerminalViewModel* model,
+    const TerminalViewDrawInfo* info) {
+    return terminal_view_draw_table(
+        canvas, model, info, 8, terminal_view_draw_binary_byte_to_string);
 }
 
 static TerminalViewScrollInfo terminal_view_call_draw(
