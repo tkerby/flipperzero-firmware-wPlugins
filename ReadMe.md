@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1204-1241-0.420.0-7add7d3s](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1208-2133-0.420.0-837fb79s](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-04 12:41 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-04 12:41 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-08 21:33 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-08 21:33 EST`
 - [Animations: L1_Mods frames order and text fix #1114 (By grishiny)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1114)
 - Updated: [Ghost ESP v1.1.7 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
 - OFW: [Add IR command for NAD DR2 D7050 D3020 #4020 (By nikos9742)](https://github.com/flipperdevices/flipperzero-firmware/pull/4020)
