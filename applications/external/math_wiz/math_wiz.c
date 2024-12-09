@@ -3,7 +3,7 @@
 #include <input/input.h>
 #include <math.h>
 
-#define MAX_DEGREE 6
+#define MAX_DEGREE  6
 #define SCROLL_STEP 1
 
 typedef enum {
@@ -30,7 +30,7 @@ typedef struct {
 
 static double evaluate_polynomial(double x, int degree, const double coefficients[]) {
     double result = 0.0;
-    for (int i = 0; i <= degree; i++) {
+    for(int i = 0; i <= degree; i++) {
         result += coefficients[i] * pow(x, i);
     }
     return result;
@@ -38,7 +38,7 @@ static double evaluate_polynomial(double x, int degree, const double coefficient
 
 static void display_polynomial(MathWizApp* app, FuriString* output) {
     furi_string_cat_str(output, "Polynomial: ");
-    for (int i = app->degree; i >= 0; i--) {
+    for(int i = app->degree; i >= 0; i--) {
         char buffer[32];
         snprintf(buffer, sizeof(buffer), "%+lf*x^%d ", app->coefficients[i], i);
         furi_string_cat_str(output, buffer);
@@ -69,117 +69,117 @@ static void math_wiz_input_callback(InputEvent* input_event, void* context) {
 
     if(input_event->type == InputTypePress) {
         switch(app->mode) {
-            case ModeMainMenu:
-                switch(input_event->key) {
-                    case InputKeyUp:
-                        app->mode = ModeInstructions;
-                        break;
-                    case InputKeyOk:
-                        app->mode = ModeSetX; // Start by setting X
-                        break;
-                    case InputKeyBack:
-                        app->running = false; // Exit the app
-                        break;
-                    default:
-                        break;
-                }
+        case ModeMainMenu:
+            switch(input_event->key) {
+            case InputKeyUp:
+                app->mode = ModeInstructions;
                 break;
-
-            case ModeSetX: // Adjust the x value
-                switch(input_event->key) {
-                    case InputKeyUp:
-                        app->x_value += (double)0.1; // Increment x
-                        break;
-                    case InputKeyDown:
-                        app->x_value -= (double)0.1; // Decrement x
-                        break;
-                    case InputKeyOk:
-                        app->mode = ModeInputCoefficients; // Transition to coefficient input
-                        app->current_input_index = 0; // Reset input index
-                        break;
-                    case InputKeyBack:
-                        app->mode = ModeMainMenu; // Cancel and return to main menu
-                        break;
-                    default:
-                        break;
-                }
+            case InputKeyOk:
+                app->mode = ModeSetX; // Start by setting X
                 break;
-
-            case ModeInputCoefficients:
-                switch(input_event->key) {
-                    case InputKeyUp:
-                        app->coefficients[app->current_input_index] += (double)0.1;
-                        break;
-                    case InputKeyDown:
-                        app->coefficients[app->current_input_index] -= (double)0.1;
-                        break;
-                    case InputKeyOk:
-                        app->current_input_index++;
-                        if(app->current_input_index > app->degree) {
-                            app->mode = ModeViewPolynomial;
-                        }
-                        break;
-                    case InputKeyBack:
-                        app->mode = ModeViewPolynomial;
-                        break;
-                    default:
-                        break;
-                }
+            case InputKeyBack:
+                app->running = false; // Exit the app
                 break;
-
-            case ModeViewPolynomial:
-                switch(input_event->key) {
-                    case InputKeyLeft:
-                        if(app->horizontal_scroll_offset > 0) {
-                            app->horizontal_scroll_offset -= SCROLL_STEP;
-                        }
-                        break;
-                    case InputKeyRight:
-                        if(app->horizontal_scroll_offset < app->scroll_pos_total) {
-                            app->horizontal_scroll_offset += SCROLL_STEP;
-                        }
-                        break;
-                    case InputKeyOk:
-                        app->mode = ModeEditCalculus;
-                        break;
-                    case InputKeyBack:
-                        app->mode = ModeMainMenu;
-                        break;
-                    default:
-                        break;
+            default:
+                break;
             }
             break;
 
-            case ModeEditCalculus:
-                switch(input_event->key) {
-                    case InputKeyUp:
-                        take_derivative(app);
-                        app->mode = ModeViewPolynomial;
-                        break;
-                    case InputKeyDown:
-                        take_integral(app);
-                        app->mode = ModeViewPolynomial;
-                        break;
-                    case InputKeyBack:
-                        app->mode = ModeViewPolynomial;
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-
-                    case ModeInstructions:
-                        switch(input_event->key) {
-                            case InputKeyBack:
-                                app->mode = ModeMainMenu;
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-
+        case ModeSetX: // Adjust the x value
+            switch(input_event->key) {
+            case InputKeyUp:
+                app->x_value += (double)0.1; // Increment x
+                break;
+            case InputKeyDown:
+                app->x_value -= (double)0.1; // Decrement x
+                break;
+            case InputKeyOk:
+                app->mode = ModeInputCoefficients; // Transition to coefficient input
+                app->current_input_index = 0; // Reset input index
+                break;
+            case InputKeyBack:
+                app->mode = ModeMainMenu; // Cancel and return to main menu
+                break;
             default:
                 break;
+            }
+            break;
+
+        case ModeInputCoefficients:
+            switch(input_event->key) {
+            case InputKeyUp:
+                app->coefficients[app->current_input_index] += (double)0.1;
+                break;
+            case InputKeyDown:
+                app->coefficients[app->current_input_index] -= (double)0.1;
+                break;
+            case InputKeyOk:
+                app->current_input_index++;
+                if(app->current_input_index > app->degree) {
+                    app->mode = ModeViewPolynomial;
+                }
+                break;
+            case InputKeyBack:
+                app->mode = ModeViewPolynomial;
+                break;
+            default:
+                break;
+            }
+            break;
+
+        case ModeViewPolynomial:
+            switch(input_event->key) {
+            case InputKeyLeft:
+                if(app->horizontal_scroll_offset > 0) {
+                    app->horizontal_scroll_offset -= SCROLL_STEP;
+                }
+                break;
+            case InputKeyRight:
+                if(app->horizontal_scroll_offset < app->scroll_pos_total) {
+                    app->horizontal_scroll_offset += SCROLL_STEP;
+                }
+                break;
+            case InputKeyOk:
+                app->mode = ModeEditCalculus;
+                break;
+            case InputKeyBack:
+                app->mode = ModeMainMenu;
+                break;
+            default:
+                break;
+            }
+            break;
+
+        case ModeEditCalculus:
+            switch(input_event->key) {
+            case InputKeyUp:
+                take_derivative(app);
+                app->mode = ModeViewPolynomial;
+                break;
+            case InputKeyDown:
+                take_integral(app);
+                app->mode = ModeViewPolynomial;
+                break;
+            case InputKeyBack:
+                app->mode = ModeViewPolynomial;
+                break;
+            default:
+                break;
+            }
+            break;
+
+        case ModeInstructions:
+            switch(input_event->key) {
+            case InputKeyBack:
+                app->mode = ModeMainMenu;
+                break;
+            default:
+                break;
+            }
+            break;
+
+        default:
+            break;
         }
     }
 }
@@ -197,8 +197,6 @@ static void math_wiz_render_callback(Canvas* canvas, void* context) {
         canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "BACK: Exit App");
         break;
 
-
-
     case ModeSetX:
         snprintf(buffer, sizeof(buffer), "Set X Value: %.2lf", app->x_value);
         canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, buffer);
@@ -207,10 +205,13 @@ static void math_wiz_render_callback(Canvas* canvas, void* context) {
         canvas_draw_str_aligned(canvas, 0, 40, AlignLeft, AlignTop, "OK: Confirm BACK: Cancel");
         break;
 
-
     case ModeInputCoefficients:
-        snprintf(buffer, sizeof(buffer), "Set coefficient for x^%d: %.2lf",
-        app->current_input_index, app->coefficients[app->current_input_index]);
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            "Set coefficient for x^%d: %.2lf",
+            app->current_input_index,
+            app->coefficients[app->current_input_index]);
         canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, buffer);
         canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, "UP/DOWN: Adjust");
         canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "OK: Next Coefficient");
@@ -222,8 +223,12 @@ static void math_wiz_render_callback(Canvas* canvas, void* context) {
         const char* output_text = furi_string_get_cstr(output) + app->horizontal_scroll_offset;
         canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, output_text);
 
-        snprintf(buffer, sizeof(buffer), "f(%lf) = %lf", app->x_value,
-                    evaluate_polynomial(app->x_value, app->degree, app->coefficients));
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            "f(%lf) = %lf",
+            app->x_value,
+            evaluate_polynomial(app->x_value, app->degree, app->coefficients));
         canvas_draw_str_aligned(canvas, 0, 10, AlignLeft, AlignTop, buffer);
 
         canvas_draw_str_aligned(canvas, 0, 30, AlignLeft, AlignTop, "LEFT/RIGHT: Scroll");
