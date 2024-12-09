@@ -47,7 +47,7 @@ void flipper_spi_terminal_config_log(FlipperSPITerminalAppConfig* config) {
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     value_index = (valueIndexFunc)(config->field, spi_config_##name##_values, valuesCount);         \
     str = spi_config_##name##_strings[value_index];                                                 \
-    SPI_TERM_LOG_D(label "(" #name "): %s", str);
+    SPI_TERM_LOG_D("%s (%s): %s", label, #name, str);
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
 }
@@ -113,7 +113,7 @@ bool flipper_spi_terminal_write_config_values(
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     if(!flipper_format_write_comment_cstr(file, helpText)) {                                        \
-        SPI_TERM_LOG_E("Could not write comment for " #name "!");                                   \
+        SPI_TERM_LOG_E("Could not write comment for  %s!", #name);                                  \
         return false;                                                                               \
     }                                                                                               \
     value_index = (valueIndexFunc)(config->field,                                                   \
@@ -121,7 +121,7 @@ bool flipper_spi_terminal_write_config_values(
                                    COUNT_OF(spi_config_##name##_values));                           \
     value_string = spi_config_##name##_strings[value_index];                                        \
     if(!flipper_format_write_string_cstr(file, #name, value_string)) {                              \
-        SPI_TERM_LOG_E("Could not write field " #name "!");                                         \
+        SPI_TERM_LOG_E("Could not write field %s!", #name);                                         \
         return false;                                                                               \
     }
 #include "flipper_spi_terminal_config_declarations.h"
