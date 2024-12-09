@@ -1,8 +1,29 @@
-#ifndef ADD_CONFIG_ENTRY
-#define ADD_CONFIG_ENTRY( \
-    label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings)
+#ifndef SPI_CONFIG_ADDED_INCLUDES
 #include <furi_hal_spi_types.h>
 #include "toolbox/value_index_ex.h"
+#define SPI_CONFIG_ADDED_INCLUDES
+#endif
+
+#ifndef UNWRAP_ARGS
+// Removes brackets from a list of values
+#define UNWRAP_ARGS(...) __VA_ARGS__
+#endif
+
+#ifndef ADD_CONFIG_ENTRY
+// This is just a dummy function to enable some fancy syntax highlighting and autocomplete.
+// It will only be used at edit time.
+#define ADD_CONFIG_ENTRY(                                                                           \
+    label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
+    void(dummy_config_##name##_preview_func)() {                                                    \
+        printf(label);                                                                              \
+        printf(helpText);                                                                           \
+        const type def = defaultValue;                                                              \
+        const type vals[valuesCount] = {UNWRAP_ARGS values};                                        \
+        size_t index = (valueIndexFunc)(def, vals, valuesCount);                                    \
+        UNUSED(index);                                                                              \
+        const char* const strs[valuesCount] = {UNWRAP_ARGS strings};                                \
+        UNUSED(strs);                                                                               \
+    }
 #endif
 
 ADD_CONFIG_ENTRY(

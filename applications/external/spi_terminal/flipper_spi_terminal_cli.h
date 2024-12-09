@@ -17,3 +17,8 @@ const char* flipper_spi_terminal_cli_command_get_name(const FlipperSpiTerminalCl
 const char* flipper_spi_terminal_cli_command_get_format(const FlipperSpiTerminalCliCommand* cmd);
 const char*
     flipper_spi_terminal_cli_command_get_description(const FlipperSpiTerminalCliCommand* cmd);
+
+void flipper_spi_terminal_cli_command_debug_set_data(
+    FlipperSPITerminalApp* app,
+    FuriString* data,
+    bool reset_data);

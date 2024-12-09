@@ -3,10 +3,6 @@
 #include "../flipper_spi_terminal_config.h"
 #include "../flipper_spi_terminal.h"
 
-// Ignore the 'clangd(unused-include)' warning.
-// It's only referenced on compile time.
-#include "../toolbox/value_index_ex.h"
-
 // Value changed callback generation
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \

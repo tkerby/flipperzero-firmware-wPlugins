@@ -121,3 +121,24 @@ void flipper_spi_terminal_cli_free(FlipperSPITerminalApp* app) {
     SPI_TERM_LOG_T("Closing CLI");
     furi_record_close(RECORD_CLI);
 }
+
+void flipper_spi_terminal_cli_command_debug_set_data(
+    FlipperSPITerminalApp* app,
+    FuriString* data,
+    bool reset_data) {
+    if(app->terminal_screen.is_active) {
+        if(reset_data) {
+            terminal_view_reset(app->terminal_screen.view);
+        }
+
+        const char* str = furi_string_get_cstr(data);
+        const size_t length = furi_string_size(data);
+        furi_stream_buffer_send(
+            app->terminal_screen.rx_buffer_stream, str, length, FuriWaitForever);
+
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, FlipperSPITerminalEventReceivedData);
+    } else {
+        printf("Non on terminal screen!");
+    }
+}

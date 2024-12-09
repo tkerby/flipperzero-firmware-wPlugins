@@ -6,12 +6,6 @@
 #include "flipper_spi_terminal_app.h"
 #include "flipper_spi_terminal_config.h"
 
-// Ignore the 'clangd(unused-include)' warning.
-// It's only referenced on compile time.
-#include "toolbox/value_index_ex.h"
-
-#define UNWRAP_ARGS(...) __VA_ARGS__
-
 // Value array generation
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
@@ -47,7 +41,7 @@ void flipper_spi_terminal_config_log(FlipperSPITerminalAppConfig* config) {
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     value_index = (valueIndexFunc)(config->field, spi_config_##name##_values, valuesCount);         \
     str = spi_config_##name##_strings[value_index];                                                 \
-    SPI_TERM_LOG_D(label "(" #name "): %s", str);
+    SPI_TERM_LOG_D("%s (%s): %s", label, #name, str);
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
 }
@@ -100,6 +94,37 @@ void flipper_spi_terminal_read_config_values(
     furi_string_free(tmp);
 }
 
+bool flipper_spi_terminal_write_multiline_comment(FlipperFormat* file, const char* comment) {
+    furi_check(file);
+    if(comment == NULL) {
+        return true;
+    }
+
+    FuriString* str = furi_string_alloc();
+    bool res = true;
+
+    while(res && *comment != '\0') {
+        if(*comment == '\n') {
+            if(!furi_string_empty(str)) {
+                res = res && flipper_format_write_comment(file, str);
+                furi_string_reset(str);
+            }
+        } else {
+            furi_string_push_back(str, *comment);
+        }
+
+        comment++;
+    }
+
+    if(res && !furi_string_empty(str)) {
+        res = res && flipper_format_write_comment(file, str);
+    }
+
+    furi_string_free(str);
+
+    return res;
+}
+
 bool flipper_spi_terminal_write_config_values(
     FlipperSPITerminalAppConfig* config,
     FlipperFormat* file) {
@@ -112,8 +137,9 @@ bool flipper_spi_terminal_write_config_values(
 
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
-    if(!flipper_format_write_comment_cstr(file, helpText)) {                                        \
-        SPI_TERM_LOG_E("Could not write comment for " #name "!");                                   \
+    if(!flipper_format_write_comment_cstr(file, "\n") ||                                            \
+       !flipper_spi_terminal_write_multiline_comment(file, helpText)) {                             \
+        SPI_TERM_LOG_E("Could not write comment for  %s!", #name);                                  \
         return false;                                                                               \
     }                                                                                               \
     value_index = (valueIndexFunc)(config->field,                                                   \
@@ -121,7 +147,7 @@ bool flipper_spi_terminal_write_config_values(
                                    COUNT_OF(spi_config_##name##_values));                           \
     value_string = spi_config_##name##_strings[value_index];                                        \
     if(!flipper_format_write_string_cstr(file, #name, value_string)) {                              \
-        SPI_TERM_LOG_E("Could not write field " #name "!");                                         \
+        SPI_TERM_LOG_E("Could not write field %s!", #name);                                         \
         return false;                                                                               \
     }
 #include "flipper_spi_terminal_config_declarations.h"
@@ -225,4 +251,28 @@ bool flipper_spi_terminal_config_save(FlipperSPITerminalAppConfig* config) {
     flipper_spi_terminal_config_log(config);
 
     return result;
+}
+
+void flipper_spi_terminal_config_debug_print_saved() {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(storage_sd_status(storage) == FSE_OK) {
+        File* file = storage_file_alloc(storage);
+        if(storage_file_open(file, SPI_TERM_LAST_SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+            char buffer[512];
+            while(true) {
+                size_t read = storage_file_read(file, buffer, sizeof(buffer) - 1);
+                if(read == 0) {
+                    break;
+                }
+                buffer[read] = '\0';
+                printf(buffer);
+            }
+        } else {
+            printf("Can not open file %s", SPI_TERM_LAST_SETTINGS_PATH);
+        }
+        storage_file_free(file);
+    } else {
+        printf("SD not ready!");
+    }
+    furi_record_close(RECORD_STORAGE);
 }
