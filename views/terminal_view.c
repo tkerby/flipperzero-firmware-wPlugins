@@ -185,8 +185,6 @@ static void terminal_view_draw_callback(Canvas* canvas, void* context) {
     furi_check(canvas);
     TERMINAL_VIEW_CONTEXT_TO_MODEL(context);
 
-#pragma message "canvas_clear(canvas); // might not be needed?"
-    canvas_clear(canvas);
     canvas_set_font(canvas, FontKeyboard);
 
     TerminalViewDrawInfo info = {0};
