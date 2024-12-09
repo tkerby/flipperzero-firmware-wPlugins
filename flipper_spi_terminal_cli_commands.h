@@ -1,5 +1,11 @@
-#ifndef CLI_COMMAND
+#ifndef CLI_COMMANDS_ADDED_INCLUDES
+#include "views/terminal_view.h"
+#include "flipper_spi_terminal_config.h"
 #include "flipper_spi_terminal_cli.h"
+#define CLI_COMMANDS_ADDED_INCLUDES
+#endif
+
+#ifndef CLI_COMMAND
 #define CLI_COMMAND(cmdName, cmdFormat, cmdDescription, cmdImplementation)                       \
     void cmdName(                                                                                \
         const FlipperSpiTerminalCliCommand* cmd, FlipperSPITerminalApp* app, FuriString* args) { \
@@ -8,12 +14,6 @@
         UNUSED(args);                                                                            \
         cmdImplementation                                                                        \
     }
-#endif
-
-#ifndef CLI_COMMANDS_ADDED_INCLUDES
-#include "views/terminal_view.h"
-#include "flipper_spi_terminal_config.h"
-#define CLI_COMMANDS_ADDED_INCLUDES
 #endif
 
 CLI_COMMAND(dbg_term_data_set,

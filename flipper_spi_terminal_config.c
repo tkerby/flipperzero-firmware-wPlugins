@@ -6,12 +6,6 @@
 #include "flipper_spi_terminal_app.h"
 #include "flipper_spi_terminal_config.h"
 
-// Ignore the 'clangd(unused-include)' warning.
-// It's only referenced on compile time.
-#include "toolbox/value_index_ex.h"
-
-#define UNWRAP_ARGS(...) __VA_ARGS__
-
 // Value array generation
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
