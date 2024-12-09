@@ -4,7 +4,7 @@
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://rogue-master.net/img/Merch.png' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://rogue-master.net/img/Resources.png' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1202-0837-0.420.0-6d10bad.tgz&channel=RM1202-0837-0.420.0-6d10bad&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1208-2257-0.420.0-f117b40.tgz&channel=RM1208-2257-0.420.0-f117b40&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -31,34 +31,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-08 21:33 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-08 21:33 EST`
-- [Animations: L1_Mods frames order and text fix #1114 (By grishiny)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/1114)
-- Updated: [Ghost ESP v1.1.7 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
-- OFW: [Add IR command for NAD DR2 D7050 D3020 #4020 (By nikos9742)](https://github.com/flipperdevices/flipperzero-firmware/pull/4020)
-- OFW: [Fix typo for mf_classic_key_cahce_get_next_key() function #4015 (By luu176)](https://github.com/flipperdevices/flipperzero-firmware/pull/4015)
-- OFW: [Settings: More granularity for LCD and Notification #4010 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4010) (Already In RM)
-- OFW: [NFC: Plantain parser Last payment amount fix #3998 (By mxcdoam)](https://github.com/flipperdevices/flipperzero-firmware/pull/3998)
-- OFW: [nfc/clipper: #3991 (By ted-logan)](https://github.com/flipperdevices/flipperzero-firmware/pull/3991) (Already In RM)
-- Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
-- Updated: [u-blox GPS v0.5 (By liamhays)](https://github.com/liamhays/ublox)
-- Updated: [FlipStore v0.7 (By jblanked)](https://github.com/jblanked/FlipStore)
-- Updated: [Pinball0 v0.5.1 (By rdefeo)](https://github.com/rdefeo/pinball0)
-- Updated: [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary)
-- Updated: [FlipSocial v0.8 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [FlipWifi v1.2.1 (By jblanked)](https://github.com/jblanked/FlipWiFi)
-- Updated: [CANBUS v1.1.4 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS)
-- Updated: [SPI Terminal v0.1 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal)
-- Updated: [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher) [ESP Flasher: add c3 and c6 to s3 option (By jaylikesbunda)](https://github.com/Next-Flip/Momentum-Apps/pull/35) [ESP Flasher Assets Updated to LATEST Marauder v1.1.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.1.0)
-- Updated: [Bluetooth/USB Remote v1.8 (By Cutch)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1330) [feat(hid_ptt): support Gather (By SapphicCode)](https://github.com/Next-Flip/Momentum-Firmware/pull/304)
-- GPIO: [VCP Break Support (By gsurkov)](https://github.com/DarkFlippers/unleashed-firmware/commit/fc25c9fba02abb640eaed84988f7184fbfb823c6)
-- OFW: PR: [Increase system stacks reserved memory size #4025 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4025)
-- [Apps updated with VCP Break Support Updates (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/4758cd65e5fc923d1970fd17fc0dd4e5e8af7604#diff-4779dde12b41b371f2fd268ddef9c6a24bf02aca75b489d535c0991adda90369)
-- Updated: [Temp Sensors Reader 1.6 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) [Recenter the pressure canvas if hPa unit is selected (By shininghero)](https://github.com/xMasterX/all-the-plugins/commit/bc4e84ef8a37e93e4a549a24fa04eb6655ff9d63)
-- Added: [Frequency Analyzer (External) v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/dev/non_catalog_apps/freq_analyzer_ext)
-- UL: SubGHz: [keeloq jolly motors add full support with add manually (By pkooiman)](https://github.com/DarkFlippers/unleashed-firmware/commit/dd6e0a9b721c09b82a127aadd0a1accba8b18f7c)
-- OFW: [Replace mf_classic_dict.nfc with Proxmark3 version #4013](https://github.com/flipperdevices/flipperzero-firmware/pull/4013) RM MF DICT Updated to include latest keys
-- [Apps updated with VCP Break Support Updates (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/cb1e1297c758cdb346248f9dd18b2337eeb76706)
-- Updated: [Metroflip v0.2 (By luu176)](https://github.com/luu176/Metroflip)
-- Added: [Math Wiz v1.1 (By ImPapaGhost)](https://github.com/ImPapaGhost/math_wiz)
 - Coming Soon: OFW: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3830](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3852](https://github.com/flipperdevices/flipperzero-firmware/pull/3852) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3859](https://github.com/flipperdevices/flipperzero-firmware/pull/3859) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980)
 
 <a name="release">
@@ -684,4 +656,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1202-0837-0.420.0-6d10bad.tgz&channel=RM1202-0837-0.420.0-6d10bad&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM1208-2257-0.420.0-f117b40.tgz&channel=RM1208-2257-0.420.0-f117b40&version=0.420.0)
