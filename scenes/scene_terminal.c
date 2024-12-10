@@ -186,10 +186,6 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
     app->terminal_screen.is_active = true;
-
-    terminal_view_reset(app->terminal_screen.view);
-    const uint8_t data[] = "TEST Daten 0123456789 \n\r\t\0 Banane! §$&/()=";
-    flipper_spi_terminal_scene_terminal_add_data(app, data, sizeof(data));
 }
 
 bool flipper_spi_terminal_scene_terminal_on_event(void* context, SceneManagerEvent event) {
