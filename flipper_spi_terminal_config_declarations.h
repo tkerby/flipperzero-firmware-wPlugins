@@ -29,7 +29,8 @@
 ADD_CONFIG_ENTRY(
     "Display mode",
     "Changes, how the received data is displayed.\n"
-    "Auto: Use ASCII or C escape sequence\n"
+    "Auto: Use ASCII, C escape sequence or Hex\n"
+    "Text: Use ASCII for everything (Non printable chars are replaced by a space ' ')\n"
     "Hex: Use Hex for everything\n"
     "Binary: Binary representation\n\n"
     "Default: Auto",
@@ -38,9 +39,12 @@ ADD_CONFIG_ENTRY(
     TerminalDisplayModeAuto,
     value_index_display_mode,
     display_mode,
-    3,
-    (TerminalDisplayModeAuto, TerminalDisplayModeHex, TerminalDisplayModeBinary),
-    ("Auto", "Hex", "Binary"))
+    4,
+    (TerminalDisplayModeAuto,
+     TerminalDisplayModeText,
+     TerminalDisplayModeHex,
+     TerminalDisplayModeBinary),
+    ("Auto", "Text", "Hex", "Binary"))
 
 ADD_CONFIG_ENTRY(
     "DMA RX Buffer size",

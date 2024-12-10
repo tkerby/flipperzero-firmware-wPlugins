@@ -135,6 +135,7 @@ static TerminalViewScrollInfo terminal_view_draw_table(
     const TerminalViewDrawInfo* info,
     size_t bytes_per_row,
     size_t chars_per_byte,
+    const char* separator,
     TerminalViewDrawTableAddByteToStrCallback add_byte_to_str_cb,
     TerminalViewDrawTableAddEndOfRowCallback add_end_of_row_cb) {
     const size_t bytes_on_screen = bytes_per_row * info->rows; // max number of bytes on screen
@@ -161,7 +162,7 @@ static TerminalViewScrollInfo terminal_view_draw_table(
 
         add_byte_to_str_cb(b, model->tmp_str);
 
-        furi_string_push_back(model->tmp_str, ' '); // separator between bytes/chars
+        furi_string_cat_str(model->tmp_str, separator); // separator between bytes/chars
 
         offset++;
         to_print--;
@@ -227,12 +228,17 @@ static inline TerminalViewScrollInfo terminal_view_draw_binary(
         info,
         info->columns / (8 + 1), // 8 => Bit per byte; 1 => Separator
         8,
+        " ",
         terminal_view_draw_binary_byte_to_string,
         NULL);
 }
 
 static void terminal_view_draw_binary_hex_to_string(uint8_t byte, FuriString* str) {
     furi_string_cat_printf(str, "%02X", byte);
+}
+
+static bool is_text_byte(uint8_t b) {
+    return (b >= '!' && b <= '~');
 }
 
 static void terminal_view_draw_binary_hex_append_as_ascii(
@@ -248,7 +254,7 @@ static void terminal_view_draw_binary_hex_append_as_ascii(
     for(size_t i = 0; i < byte_in_row; i++) {
         uint8_t b = byte_val_from_start(model, start, (row * byte_per_row) + i);
 
-        if((b >= '0' && b <= '9') || (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')) {
+        if(is_text_byte(b)) {
             furi_string_push_back(str, b);
         } else {
             furi_string_push_back(str, ' ');
@@ -266,8 +272,75 @@ static inline TerminalViewScrollInfo terminal_view_draw_hex(
         info,
         4,
         2,
+        " ",
         terminal_view_draw_binary_hex_to_string,
         terminal_view_draw_binary_hex_append_as_ascii);
+}
+
+static void terminal_view_draw_auto_add_byte_to_str(uint8_t byte, FuriString* str) {
+    if(is_text_byte(byte) && byte != '"' && byte != '\\' && byte != ' ' && byte != '\'') {
+        furi_string_push_back(str, byte);
+        furi_string_push_back(str, ' ');
+    } else {
+        if(byte == '\a') {
+            furi_string_cat_str(str, "\\a");
+        } else if(byte == '\b') {
+            furi_string_cat_str(str, "\\b");
+        } else if(byte == '\e') {
+            furi_string_cat_str(str, "\\e");
+        } else if(byte == '\f') {
+            furi_string_cat_str(str, "\\f");
+        } else if(byte == '\n') {
+            furi_string_cat_str(str, "\\n");
+        } else if(byte == '\r') {
+            furi_string_cat_str(str, "\\r");
+        } else if(byte == '\t') {
+            furi_string_cat_str(str, "\\t");
+        } else if(byte == '\v') {
+            furi_string_cat_str(str, "\\v");
+        } else if(byte == '\\') {
+            furi_string_cat_str(str, "\\\\");
+        } else if(byte == '\'') {
+            furi_string_cat_str(str, "\\'");
+        } else if(byte == '\"') {
+            furi_string_cat_str(str, "\\\"");
+        } else if(byte == ' ') {
+            furi_string_cat_str(str, "\\ ");
+        } else {
+            furi_string_cat_printf(str, "%02X", byte);
+        }
+    }
+}
+
+static inline TerminalViewScrollInfo terminal_view_draw_auto(
+    Canvas* canvas,
+    TerminalViewModel* model,
+    const TerminalViewDrawInfo* info) {
+    return terminal_view_draw_table(
+        canvas,
+        model,
+        info,
+        info->columns / 2,
+        2,
+        "",
+        terminal_view_draw_auto_add_byte_to_str,
+        NULL);
+}
+
+static void terminal_view_draw_text_add_byte_to_str(uint8_t byte, FuriString* str) {
+    if(is_text_byte(byte)) {
+        furi_string_push_back(str, byte);
+    } else {
+        furi_string_push_back(str, ' ');
+    }
+}
+
+static inline TerminalViewScrollInfo terminal_view_draw_text(
+    Canvas* canvas,
+    TerminalViewModel* model,
+    const TerminalViewDrawInfo* info) {
+    return terminal_view_draw_table(
+        canvas, model, info, info->columns, 1, "", terminal_view_draw_text_add_byte_to_str, NULL);
 }
 
 static TerminalViewScrollInfo terminal_view_call_draw(
@@ -276,6 +349,11 @@ static TerminalViewScrollInfo terminal_view_call_draw(
     const TerminalViewDrawInfo* info) {
     switch(model->display_mode) {
     case TerminalDisplayModeAuto:
+        return terminal_view_draw_auto(canvas, model, info);
+
+    case TerminalDisplayModeText:
+        return terminal_view_draw_text(canvas, model, info);
+
     case TerminalDisplayModeHex:
         return terminal_view_draw_hex(canvas, model, info);
 
@@ -363,7 +441,7 @@ TerminalView* terminal_view_alloc() {
         terminal->view,
         TerminalViewModel * model,
         {
-            model->display_mode = TerminalDisplayModeAuto;
+            model->display_mode = TerminalDisplayModeText;
             model->tail = model->buffer;
             model->size = 0;
             model->scroll_offset = 0;
