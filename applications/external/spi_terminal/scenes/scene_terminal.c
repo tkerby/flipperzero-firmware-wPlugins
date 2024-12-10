@@ -52,6 +52,14 @@ void flipper_spi_terminal_scene_terminal_free(FlipperSPITerminalApp* app) {
     SPI_TERM_LOG_T("Freeing terminal screen done!");
 }
 
+static void flipper_spi_terminal_scene_terminal_add_data(
+    FlipperSPITerminalApp* app,
+    const void* data,
+    size_t length) {
+    furi_stream_buffer_send(app->terminal_screen.rx_buffer_stream, data, length, 0);
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipperSPITerminalEventReceivedData);
+}
+
 static void flipper_spi_terminal_scene_terminal_dma_rx_isr(void* context) {
     SPI_TERM_CONTEXT_TO_APP(context);
 
@@ -70,10 +78,8 @@ static void flipper_spi_terminal_scene_terminal_dma_rx_isr(void* context) {
     }
 
     if(startOfData != NULL) {
-        furi_stream_buffer_send(
-            app->terminal_screen.rx_buffer_stream, startOfData, app->config.rx_dma_buffer_size, 0);
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, FlipperSPITerminalEventReceivedData);
+        flipper_spi_terminal_scene_terminal_add_data(
+            app, startOfData, app->config.rx_dma_buffer_size);
     }
 
     LL_DMA_ClearFlag_HT6(SPI_DMA);
@@ -168,7 +174,6 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
     SPI_TERM_LOG_T("Enter Terminal");
     SPI_TERM_CONTEXT_TO_APP(context);
 
-    //terminal_view_reset(app->terminal_screen.view);
     terminal_view_set_display_mode(app->terminal_screen.view, app->config.display_mode);
 
     furi_stream_buffer_reset(app->terminal_screen.rx_buffer_stream);

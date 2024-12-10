@@ -12,6 +12,7 @@ typedef struct TerminalView TerminalView;
 
 typedef enum {
     TerminalDisplayModeAuto,
+    TerminalDisplayModeText,
     TerminalDisplayModeHex,
     TerminalDisplayModeBinary,
 
