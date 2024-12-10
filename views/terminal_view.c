@@ -50,6 +50,7 @@ typedef struct {
 } TerminalViewScrollInfo;
 
 typedef void (*TerminalViewDrawTableAddByteToStrCallback)(uint8_t byte, FuriString* str);
+
 typedef void (*TerminalViewDrawTableAddEndOfRowCallback)(
     TerminalViewModel* model,
     uint8_t* start,
@@ -58,7 +59,11 @@ typedef void (*TerminalViewDrawTableAddEndOfRowCallback)(
     size_t byte_in_row,
     FuriString* str);
 
-static inline uint8_t* wrap_pointer(TerminalViewModel* model, uint8_t* ptr) {
+static bool terminal_view_byte_is_printable(uint8_t b) {
+    return (b >= '!' && b <= '~');
+}
+
+static inline uint8_t* terminal_view_wrap_buffer_pointer(TerminalViewModel* model, uint8_t* ptr) {
     int pos = ptr - model->buffer;
 
     int offset_from_start_of_buffer = pos % sizeof(model->buffer);
@@ -66,17 +71,22 @@ static inline uint8_t* wrap_pointer(TerminalViewModel* model, uint8_t* ptr) {
     return model->buffer + offset_from_start_of_buffer;
 }
 
-static inline uint8_t* byte_form_start(TerminalViewModel* model, uint8_t* start, size_t offset) {
-    return wrap_pointer(model, start + offset);
+static inline uint8_t* terminal_view_buffer_get_byte_form_start(
+    TerminalViewModel* model,
+    uint8_t* start,
+    size_t offset) {
+    return terminal_view_wrap_buffer_pointer(model, start + offset);
 }
 
-static inline uint8_t
-    byte_val_from_start(TerminalViewModel* model, uint8_t* start, size_t offset) {
-    uint8_t* ptr = byte_form_start(model, start, offset);
+static inline uint8_t terminal_view_get_byte_value_from_start(
+    TerminalViewModel* model,
+    uint8_t* start,
+    size_t offset) {
+    uint8_t* ptr = terminal_view_buffer_get_byte_form_start(model, start, offset);
     return *ptr;
 }
 
-static uint8_t* terminal_view_get_start(TerminalViewModel* model, size_t bytes_in_row) {
+static uint8_t* terminal_view_get_start_of_data(TerminalViewModel* model, size_t bytes_in_row) {
     uint8_t* start;
     if(model->size != sizeof(model->buffer)) {
         start = model->buffer;
@@ -86,7 +96,7 @@ static uint8_t* terminal_view_get_start(TerminalViewModel* model, size_t bytes_i
 
     start = start + (model->scroll_offset * bytes_in_row);
 
-    return wrap_pointer(model, start);
+    return terminal_view_wrap_buffer_pointer(model, start);
 }
 
 static inline void terminal_view_draw_table_row(
@@ -120,7 +130,8 @@ static inline void terminal_view_draw_table_row(
     canvas_draw_str(canvas, x, y, furi_string_get_cstr(str));
 }
 
-static inline size_t calc_total_numer_of_rows(size_t size, size_t per_row) {
+static inline size_t
+    terminal_view_draw_table_calculate_total_numer_of_rows(size_t size, size_t per_row) {
     size_t full_rows = size / per_row;
     if(size % per_row == 0) { //All rows are full
         return full_rows;
@@ -139,7 +150,8 @@ static TerminalViewScrollInfo terminal_view_draw_table(
     TerminalViewDrawTableAddByteToStrCallback add_byte_to_str_cb,
     TerminalViewDrawTableAddEndOfRowCallback add_end_of_row_cb) {
     const size_t bytes_on_screen = bytes_per_row * info->rows; // max number of bytes on screen
-    const size_t total_numer_of_rows = calc_total_numer_of_rows(model->size, bytes_per_row);
+    const size_t total_numer_of_rows =
+        terminal_view_draw_table_calculate_total_numer_of_rows(model->size, bytes_per_row);
     if(model->scroll_offset + info->rows > total_numer_of_rows) {
         if(total_numer_of_rows < info->rows) {
             model->scroll_offset = 0;
@@ -148,7 +160,7 @@ static TerminalViewScrollInfo terminal_view_draw_table(
         }
     }
 
-    uint8_t* start = terminal_view_get_start(model, bytes_per_row);
+    uint8_t* start = terminal_view_get_start_of_data(model, bytes_per_row);
 
     furi_string_reset(model->tmp_str);
     size_t to_print =
@@ -158,7 +170,7 @@ static TerminalViewScrollInfo terminal_view_draw_table(
     size_t in_row = 0; // printed number of bytes in current row
     size_t offset = 0; // offset of current byte
     while(to_print > 0) {
-        uint8_t b = byte_val_from_start(model, start, offset);
+        uint8_t b = terminal_view_get_byte_value_from_start(model, start, offset);
 
         add_byte_to_str_cb(b, model->tmp_str);
 
@@ -208,77 +220,9 @@ static TerminalViewScrollInfo terminal_view_draw_table(
     return ret;
 }
 
-static void terminal_view_draw_binary_byte_to_string(uint8_t byte, FuriString* str) {
-    for(int i = 7; i >= 0; i--) {
-        if(byte & (1 << i)) {
-            furi_string_push_back(str, '1');
-        } else {
-            furi_string_push_back(str, '0');
-        }
-    }
-}
-
-static inline TerminalViewScrollInfo terminal_view_draw_binary(
-    Canvas* canvas,
-    TerminalViewModel* model,
-    const TerminalViewDrawInfo* info) {
-    return terminal_view_draw_table(
-        canvas,
-        model,
-        info,
-        info->columns / (8 + 1), // 8 => Bit per byte; 1 => Separator
-        8,
-        " ",
-        terminal_view_draw_binary_byte_to_string,
-        NULL);
-}
-
-static void terminal_view_draw_binary_hex_to_string(uint8_t byte, FuriString* str) {
-    furi_string_cat_printf(str, "%02X", byte);
-}
-
-static bool is_text_byte(uint8_t b) {
-    return (b >= '!' && b <= '~');
-}
-
-static void terminal_view_draw_binary_hex_append_as_ascii(
-    TerminalViewModel* model,
-    uint8_t* start,
-    size_t row,
-    size_t byte_per_row,
-    size_t byte_in_row,
-    FuriString* str) {
-    furi_string_push_back(str, '|');
-    furi_string_push_back(str, ' ');
-
-    for(size_t i = 0; i < byte_in_row; i++) {
-        uint8_t b = byte_val_from_start(model, start, (row * byte_per_row) + i);
-
-        if(is_text_byte(b)) {
-            furi_string_push_back(str, b);
-        } else {
-            furi_string_push_back(str, ' ');
-        }
-    }
-}
-
-static inline TerminalViewScrollInfo terminal_view_draw_hex(
-    Canvas* canvas,
-    TerminalViewModel* model,
-    const TerminalViewDrawInfo* info) {
-    return terminal_view_draw_table(
-        canvas,
-        model,
-        info,
-        4,
-        2,
-        " ",
-        terminal_view_draw_binary_hex_to_string,
-        terminal_view_draw_binary_hex_append_as_ascii);
-}
-
 static void terminal_view_draw_auto_add_byte_to_str(uint8_t byte, FuriString* str) {
-    if(is_text_byte(byte) && byte != '"' && byte != '\\' && byte != ' ' && byte != '\'') {
+    if(terminal_view_byte_is_printable(byte) && byte != '"' && byte != '\\' && byte != ' ' &&
+       byte != '\'') {
         furi_string_push_back(str, byte);
         furi_string_push_back(str, ' ');
     } else {
@@ -328,7 +272,7 @@ static inline TerminalViewScrollInfo terminal_view_draw_auto(
 }
 
 static void terminal_view_draw_text_add_byte_to_str(uint8_t byte, FuriString* str) {
-    if(is_text_byte(byte)) {
+    if(terminal_view_byte_is_printable(byte)) {
         furi_string_push_back(str, byte);
     } else {
         furi_string_push_back(str, ' ');
@@ -341,6 +285,72 @@ static inline TerminalViewScrollInfo terminal_view_draw_text(
     const TerminalViewDrawInfo* info) {
     return terminal_view_draw_table(
         canvas, model, info, info->columns, 1, "", terminal_view_draw_text_add_byte_to_str, NULL);
+}
+
+static void terminal_view_draw_hex_add_byte_to_string(uint8_t byte, FuriString* str) {
+    furi_string_cat_printf(str, "%02X", byte);
+}
+
+static void terminal_view_draw_hex_append_data_as_string(
+    TerminalViewModel* model,
+    uint8_t* start,
+    size_t row,
+    size_t byte_per_row,
+    size_t byte_in_row,
+    FuriString* str) {
+    furi_string_push_back(str, '|');
+    furi_string_push_back(str, ' ');
+
+    for(size_t i = 0; i < byte_in_row; i++) {
+        uint8_t b =
+            terminal_view_get_byte_value_from_start(model, start, (row * byte_per_row) + i);
+
+        if(terminal_view_byte_is_printable(b)) {
+            furi_string_push_back(str, b);
+        } else {
+            furi_string_push_back(str, ' ');
+        }
+    }
+}
+
+static inline TerminalViewScrollInfo terminal_view_draw_hex(
+    Canvas* canvas,
+    TerminalViewModel* model,
+    const TerminalViewDrawInfo* info) {
+    return terminal_view_draw_table(
+        canvas,
+        model,
+        info,
+        4,
+        2,
+        " ",
+        terminal_view_draw_hex_add_byte_to_string,
+        terminal_view_draw_hex_append_data_as_string);
+}
+
+static void terminal_view_draw_binary_add_byte_to_string(uint8_t byte, FuriString* str) {
+    for(int i = 7; i >= 0; i--) {
+        if(byte & (1 << i)) {
+            furi_string_push_back(str, '1');
+        } else {
+            furi_string_push_back(str, '0');
+        }
+    }
+}
+
+static inline TerminalViewScrollInfo terminal_view_draw_binary(
+    Canvas* canvas,
+    TerminalViewModel* model,
+    const TerminalViewDrawInfo* info) {
+    return terminal_view_draw_table(
+        canvas,
+        model,
+        info,
+        info->columns / (8 + 1), // 8 => Bit per byte; 1 => Separator
+        8,
+        " ",
+        terminal_view_draw_binary_add_byte_to_string,
+        NULL);
 }
 
 static TerminalViewScrollInfo terminal_view_call_draw(
@@ -511,7 +521,8 @@ void terminal_view_debug_print_buffer(TerminalView* terminal) {
         false);
 }
 
-static bool handle_recv(TerminalViewModel* model, FuriStreamBuffer* stream) {
+static bool
+    terminal_view_read_data_from_stream(TerminalViewModel* model, FuriStreamBuffer* stream) {
     const uint8_t* end_of_buffer = model->buffer + sizeof(model->buffer);
     size_t free = end_of_buffer - model->tail;
     if(free == 0) {
@@ -530,7 +541,7 @@ static bool handle_recv(TerminalViewModel* model, FuriStreamBuffer* stream) {
         model->size = sizeof(model->buffer);
     }
 
-    model->tail = wrap_pointer(model, model->tail + read);
+    model->tail = terminal_view_wrap_buffer_pointer(model, model->tail + read);
 
     return true;
 }
@@ -541,5 +552,8 @@ void terminal_view_append_data_from_stream(TerminalView* terminal, FuriStreamBuf
 
     bool update;
     with_view_model(
-        terminal->view, TerminalViewModel * model, { update = handle_recv(model, stream); }, update)
+        terminal->view,
+        TerminalViewModel * model,
+        { update = terminal_view_read_data_from_stream(model, stream); },
+        update)
 }
