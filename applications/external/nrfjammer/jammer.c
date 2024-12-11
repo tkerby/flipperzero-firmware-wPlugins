@@ -46,32 +46,31 @@ static void render_callback(Canvas* const canvas, void* ctx) {
 
     canvas_set_font(canvas, FontSecondary);
     if(!plugin_state->is_thread_running) {
-	canvas_set_font(canvas, FontPrimary);
+        canvas_set_font(canvas, FontPrimary);
 
-	char tmp[128];
-	char *jam_types[] = {"narrow", "wide", "full"};
-	snprintf(tmp, 128, "^ type:%s", jam_types[plugin_state->jam_type]);
-       	canvas_draw_str_aligned(canvas, 10, 3, AlignLeft, AlignTop, tmp);
-	canvas_set_font(canvas, FontSecondary);
-	canvas_draw_str_aligned(canvas, 10, 40, AlignLeft, AlignBottom, "Press Ok button to start");
+        char tmp[128];
+        char* jam_types[] = {"narrow", "wide", "full"};
+        snprintf(tmp, 128, "^ type:%s", jam_types[plugin_state->jam_type]);
+        canvas_draw_str_aligned(canvas, 10, 3, AlignLeft, AlignTop, tmp);
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(
+            canvas, 10, 40, AlignLeft, AlignBottom, "Press Ok button to start");
         if(!plugin_state->is_nrf24_connected) {
             canvas_draw_str_aligned(
                 canvas, 10, 60, AlignLeft, AlignBottom, "Connect NRF24 to GPIO!");
         }
     } else if(plugin_state->is_thread_running) {
-	canvas_set_font(canvas, FontPrimary);
+        canvas_set_font(canvas, FontPrimary);
 
         char tmp[128];
-	char *jam_types[] = {"narrow", "wide", "full"};
-	snprintf(tmp, 128, "^ type:%s", jam_types[plugin_state->jam_type]);
-       	canvas_draw_str_aligned(canvas, 10, 3, AlignLeft, AlignTop, tmp);
-	canvas_set_font(canvas, FontSecondary);
+        char* jam_types[] = {"narrow", "wide", "full"};
+        snprintf(tmp, 128, "^ type:%s", jam_types[plugin_state->jam_type]);
+        canvas_draw_str_aligned(canvas, 10, 3, AlignLeft, AlignTop, tmp);
+        canvas_set_font(canvas, FontSecondary);
 
-	    
-	canvas_draw_str_aligned(canvas, 3, 30, AlignLeft, AlignBottom, "Causing mayhem...");
+        canvas_draw_str_aligned(canvas, 3, 30, AlignLeft, AlignBottom, "Causing mayhem...");
         canvas_draw_str_aligned(canvas, 3, 40, AlignLeft, AlignBottom, "Please wait!");
-        canvas_draw_str_aligned(
-            canvas, 3, 50, AlignLeft, AlignBottom, "Press back to exit.");
+        canvas_draw_str_aligned(canvas, 3, 50, AlignLeft, AlignBottom, "Press back to exit.");
     } else {
         canvas_draw_str_aligned(canvas, 3, 10, AlignLeft, AlignBottom, "Unknown Error");
         canvas_draw_str_aligned(canvas, 3, 20, AlignLeft, AlignBottom, "press back");
@@ -99,29 +98,32 @@ static int32_t mj_worker_thread(void* ctx) {
     char tmp[128];
     // make sure the NRF24 is powered down so we can do all the initial setup
     nrf24_set_idle(nrf24_HANDLE);
-    uint8_t mac[] = { 0xDE, 0xAD}; // DEAD BEEF FEED
-    uint8_t ping_packet[] = {0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF,0xDE, 0xAD, 0xBE, 0xEF}; // 32 bytes, in case we ever need to experiment with bigger packets
+    uint8_t mac[] = {0xDE, 0xAD}; // DEAD BEEF FEED
+    uint8_t ping_packet[] = {
+        0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE,
+        0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD,
+        0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF}; // 32 bytes, in case we ever need to experiment with bigger packets
     plugin_state->is_thread_running = true;
-       
+
     uint8_t conf = 0;
 
     nrf24_configure(nrf24_HANDLE, 2, mac, mac, 2, 1, true, true);
     // set PA level to maximum
-    uint8_t setup; 
-    nrf24_read_reg(nrf24_HANDLE, REG_RF_SETUP, &setup,1);
-    
+    uint8_t setup;
+    nrf24_read_reg(nrf24_HANDLE, REG_RF_SETUP, &setup, 1);
+
     setup &= 0xF8;
     setup |= 7;
-    
+
     snprintf(tmp, 128, "NRF24 SETUP REGISTER: %d", setup);
     FURI_LOG_D(TAG, tmp);
-    
-    nrf24_read_reg(nrf24_HANDLE, REG_CONFIG, &conf,1);
+
+    nrf24_read_reg(nrf24_HANDLE, REG_CONFIG, &conf, 1);
     snprintf(tmp, 128, "NRF24 CONFIG REGISTER: %d", conf);
     FURI_LOG_D(TAG, tmp);
     nrf24_write_reg(nrf24_HANDLE, REG_RF_SETUP, setup);
 
-    #define size 32
+#define size 32
     uint8_t status = 0;
     uint8_t tx[size + 1];
     uint8_t rx[size + 1];
@@ -132,44 +134,52 @@ static int32_t mj_worker_thread(void* ctx) {
 
     memcpy(&tx[1], ping_packet, size);
 
-    #define nrf24_TIMEOUT 500
+#define nrf24_TIMEOUT 500
     // push data to the TX register
     nrf24_spi_trx(nrf24_HANDLE, tx, 0, size + 1, nrf24_TIMEOUT);
     // put the module in TX mode
     nrf24_set_tx_mode(nrf24_HANDLE);
     // send one test packet (for debug reasons)
-    while(!(status & (TX_DS | MAX_RT))) 
-    {
+    while(!(status & (TX_DS | MAX_RT))) {
         status = nrf24_status(nrf24_HANDLE);
         snprintf(tmp, 128, "NRF24 STATUS REGISTER: %d", status);
-        
+
         FURI_LOG_D(TAG, tmp);
     }
     // various types of hopping I empirically found
     uint8_t hopping_channels_2[128];
-    for(int i = 0; i < 128; i++) hopping_channels_2[i] = i;
-    uint8_t hopping_channels_1[] = {32,34, 46,48, 50, 52, 0, 1, 2, 4, 6, 8, 22, 24, 26, 28, 30, 74, 76, 78, 80, 82, 84,86 };
+    for(int i = 0; i < 128; i++)
+        hopping_channels_2[i] = i;
+    uint8_t hopping_channels_1[] = {32, 34, 46, 48, 50, 52, 0,  1,  2,  4,  6,  8,
+                                    22, 24, 26, 28, 30, 74, 76, 78, 80, 82, 84, 86};
     uint8_t hopping_channels_0[] = {2, 26, 80};
     uint8_t hopping_channels_len[] = {3, 24, 124};
 
     uint8_t chan = 0;
     uint8_t limit = 0;
     do {
-	limit = hopping_channels_len[plugin_state->jam_type];
-        for(int ch = 0;ch < limit; ch++) {
-	    switch(plugin_state->jam_type) {
-		case 0: chan = hopping_channels_0[ch]; break;
-		case 1: chan = hopping_channels_1[ch]; break;
-		case 2: chan = hopping_channels_2[ch]; break;
-		default: break;
-	    }
-	    // change channel
+        limit = hopping_channels_len[plugin_state->jam_type];
+        for(int ch = 0; ch < limit; ch++) {
+            switch(plugin_state->jam_type) {
+            case 0:
+                chan = hopping_channels_0[ch];
+                break;
+            case 1:
+                chan = hopping_channels_1[ch];
+                break;
+            case 2:
+                chan = hopping_channels_2[ch];
+                break;
+            default:
+                break;
+            }
+            // change channel
             nrf24_write_reg(nrf24_HANDLE, REG_RF_CH, chan);
             // push new data to the TX register
             nrf24_spi_trx(nrf24_HANDLE, tx, 0, 3, nrf24_TIMEOUT);
         }
     } while(!plugin_state->close_thread_please);
-    
+
     plugin_state->is_thread_running = false;
     nrf24_set_idle(nrf24_HANDLE);
     return 0;
@@ -220,7 +230,7 @@ int32_t jammer_app(void* p) {
                 if(event.input.type == InputTypePress) {
                     switch(event.input.key) {
                     case InputKeyUp:
-			plugin_state->jam_type = (plugin_state->jam_type + 1) % 3;
+                        plugin_state->jam_type = (plugin_state->jam_type + 1) % 3;
                         break;
                     case InputKeyDown:
                         break;
@@ -240,7 +250,7 @@ int32_t jammer_app(void* p) {
                         break;
                     case InputKeyBack:
                         FURI_LOG_D(TAG, "CLOSE_PLZ");
-			if(!plugin_state->is_thread_running) processing = false;
+                        if(!plugin_state->is_thread_running) processing = false;
 
                         plugin_state->close_thread_please = true;
                         if(plugin_state->is_thread_running && plugin_state->mjthread) {
