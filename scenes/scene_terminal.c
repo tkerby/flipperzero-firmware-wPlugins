@@ -186,6 +186,14 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
 
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
     app->terminal_screen.is_active = true;
+
+    if(!furi_string_empty(app->config.debug.debug_terminal_data)) {
+        const char* data = furi_string_get_cstr(app->config.debug.debug_terminal_data);
+        size_t length = furi_string_size(app->config.debug.debug_terminal_data);
+
+        terminal_view_reset(app->terminal_screen.view);
+        flipper_spi_terminal_scene_terminal_add_data(app, data, length);
+    }
 }
 
 bool flipper_spi_terminal_scene_terminal_on_event(void* context, SceneManagerEvent event) {

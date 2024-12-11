@@ -29,7 +29,12 @@ void flipper_spi_terminal_config_defaults(FlipperSPITerminalAppConfig* config) {
     config->field = defaultValue;
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
+
+    furi_string_reset(config->debug.debug_terminal_data);
 }
+
+#define SPI_TERM_LOG_SETTING(label, name, value_string) \
+    SPI_TERM_LOG_D("%s (%s): %s", label, #name, str);
 
 void flipper_spi_terminal_config_log(FlipperSPITerminalAppConfig* config) {
     furi_check(config);
@@ -41,24 +46,38 @@ void flipper_spi_terminal_config_log(FlipperSPITerminalAppConfig* config) {
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     value_index = (valueIndexFunc)(config->field, spi_config_##name##_values, valuesCount);         \
     str = spi_config_##name##_strings[value_index];                                                 \
-    SPI_TERM_LOG_D("%s (%s): %s", label, #name, str);
+    SPI_TERM_LOG_SETTING(label, #name, str);
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
+
+    SPI_TERM_LOG_SETTING(
+        SPI_TERM_LAST_SETTING_DEBUG_DATA_KEY, debug.debug_string, config.debug.debug_string);
 }
 
-bool flipper_spi_terminal_read_config_value_index(
+static bool flipper_spi_terminal_read_config_value(
+    FlipperFormat* file,
+    const char* key,
+    FuriString* target_str) {
+    if(!flipper_format_read_string(file, key, target_str)) {
+        flipper_format_rewind(file);
+        if(!flipper_format_read_string(file, key, target_str)) {
+            SPI_TERM_LOG_W("Did not read value for %s!", key);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool flipper_spi_terminal_read_config_value_index(
     FlipperFormat* file,
     const char* key,
     FuriString* tmp,
     const char* const strings[],
     size_t count,
     size_t* result) {
-    if(!flipper_format_read_string(file, key, tmp)) {
-        flipper_format_rewind(file);
-        if(!flipper_format_read_string(file, key, tmp)) {
-            SPI_TERM_LOG_W("Did not read Setting value %s!", key);
-            return false;
-        }
+    if(!flipper_spi_terminal_read_config_value(file, key, tmp)) {
+        return false;
     }
 
     for(size_t i = 0; i < count; i++) {
@@ -90,6 +109,11 @@ void flipper_spi_terminal_read_config_values(
     }
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
+
+    if(!flipper_spi_terminal_read_config_value(
+           file, SPI_TERM_LAST_SETTING_DEBUG_DATA_KEY, config->debug.debug_terminal_data)) {
+        furi_string_reset(config->debug.debug_terminal_data);
+    }
 
     furi_string_free(tmp);
 }
@@ -125,6 +149,25 @@ bool flipper_spi_terminal_write_multiline_comment(FlipperFormat* file, const cha
     return res;
 }
 
+static bool flipper_spi_terminal_write_config_value(
+    FlipperFormat* file,
+    const char* key,
+    const char* value,
+    const char* description) {
+    if(!flipper_format_write_comment_cstr(file, "\n") ||
+       !flipper_spi_terminal_write_multiline_comment(file, description)) {
+        SPI_TERM_LOG_E("Could not write comment for  %s!", key);
+        return false;
+    }
+
+    if(!flipper_format_write_string_cstr(file, key, value)) {
+        SPI_TERM_LOG_E("Could not write field %s!", key);
+        return false;
+    }
+
+    return true;
+}
+
 bool flipper_spi_terminal_write_config_values(
     FlipperSPITerminalAppConfig* config,
     FlipperFormat* file) {
@@ -137,21 +180,25 @@ bool flipper_spi_terminal_write_config_values(
 
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
-    if(!flipper_format_write_comment_cstr(file, "\n") ||                                            \
-       !flipper_spi_terminal_write_multiline_comment(file, helpText)) {                             \
-        SPI_TERM_LOG_E("Could not write comment for  %s!", #name);                                  \
-        return false;                                                                               \
-    }                                                                                               \
     value_index = (valueIndexFunc)(config->field,                                                   \
                                    spi_config_##name##_values,                                      \
                                    COUNT_OF(spi_config_##name##_values));                           \
     value_string = spi_config_##name##_strings[value_index];                                        \
-    if(!flipper_format_write_string_cstr(file, #name, value_string)) {                              \
-        SPI_TERM_LOG_E("Could not write field %s!", #name);                                         \
+    if(!flipper_spi_terminal_write_config_value(file, #name, value_string, helpText)) {             \
         return false;                                                                               \
     }
 #include "flipper_spi_terminal_config_declarations.h"
 #undef ADD_CONFIG_ENTRY
+
+    if(!furi_string_empty(config->debug.debug_terminal_data)) {
+        if(!flipper_spi_terminal_write_config_value(
+               file,
+               SPI_TERM_LAST_SETTING_DEBUG_DATA_KEY,
+               furi_string_get_cstr(config->debug.debug_terminal_data),
+               SPI_TERM_LAST_SETTING_DEBUG_DATA_DESCRIPTION)) {
+            return false;
+        }
+    }
 
     return true;
 }

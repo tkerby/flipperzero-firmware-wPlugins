@@ -8,6 +8,10 @@
 #define SPI_TERM_LAST_SETTING_FILE_TYPE    "Flipper SPI-Terminal Setting File"
 #define SPI_TERM_LAST_SETTING_FILE_VERSION 1
 
+#define SPI_TERM_LAST_SETTING_DEBUG_DATA_KEY "Debug Data"
+#define SPI_TERM_LAST_SETTING_DEBUG_DATA_DESCRIPTION \
+    "Can be used to set data, wich is automatically loaded into the terminal"
+
 // Value array declarations
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
