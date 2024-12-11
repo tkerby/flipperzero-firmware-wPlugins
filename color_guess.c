@@ -37,8 +37,6 @@ ColorGuess* color_guess_app_alloc() {
 
     //Scene additions
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
-
     app->scene_manager = scene_manager_alloc(&color_guess_scene_handlers, app);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(
@@ -86,7 +84,6 @@ void color_guess_app_free(ColorGuess* app) {
     // View Dispatcher
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdStartscreen);
     color_guess_startscreen_free(app->color_guess_startscreen);
-    dialog_ex_free(app->dialog_ex);
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdMenu);
     submenu_free(app->submenu);
     view_dispatcher_remove_view(app->view_dispatcher, ColorGuessViewIdPlay);
