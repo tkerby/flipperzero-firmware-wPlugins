@@ -9,7 +9,6 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
 #include <gui/scene_manager.h>
-#include <gui/modules/dialog_ex.h>
 #include <gui/modules/variable_item_list.h>
 #include "helpers/color_guess_custom_event.h"
 #include "scenes/color_guess_scene.h"
