@@ -8,8 +8,7 @@ import subprocess
 
 from flipper.app import App
 
-# SOURCE_CODE_FILE_EXTENSIONS = [".h", ".c", ".cpp", ".cxx", ".hpp"]
-SOURCE_CODE_FILE_EXTENSIONS = [".h", ".c", ".cxx", ".hpp"]
+SOURCE_CODE_FILE_EXTENSIONS = [".h", ".c", ".cpp", ".cxx", ".hpp"]
 SOURCE_CODE_FILE_PATTERN = r"^[0-9A-Za-z_]+\.[a-z]+$"
 SOURCE_CODE_DIR_PATTERN = r"^[0-9A-Za-z_]+$"
 
