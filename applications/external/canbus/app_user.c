@@ -72,7 +72,7 @@ static App* app_alloc() {
 
     app->mcp_can = mcp_alloc(MCP_NORMAL, MCP_16MHZ, MCP_500KBPS);
 
-    app->frameArray = (CANFRAME*)malloc(100 * sizeof(CANFRAME));
+    app->frameArray = (CANFRAME*)calloc(100, sizeof(CANFRAME));
 
     app->log_file_path = (char*)malloc(100 * sizeof(char));
 
@@ -121,6 +121,8 @@ static void app_free(App* app) {
 
     free(app->log_file_path);
     free(app->frameArray);
+
+    free_mcp2515(app->mcp_can);
 
     free(app);
 }

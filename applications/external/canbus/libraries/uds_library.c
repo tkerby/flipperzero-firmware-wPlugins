@@ -18,6 +18,7 @@ UDS_SERVICE* uds_service_alloc(
 // Init the mcp2515 with it respeclty mask and filters
 bool uds_init(UDS_SERVICE* uds_instance) {
     MCP2515* CAN = uds_instance->CAN;
+    CAN->mode = MCP_NORMAL;
     if(mcp2515_init(CAN) != ERROR_OK) return false;
 
     uint32_t mask = 0x7ff;
@@ -28,16 +29,20 @@ bool uds_init(UDS_SERVICE* uds_instance) {
 
     init_mask(CAN, 0, mask);
     init_filter(CAN, 0, uds_instance->id_to_received);
+    init_filter(CAN, 1, uds_instance->id_to_received);
 
     init_mask(CAN, 1, mask);
-    init_filter(CAN, 1, uds_instance->id_to_received);
+    init_filter(CAN, 2, uds_instance->id_to_received);
+    init_filter(CAN, 3, uds_instance->id_to_received);
+    init_filter(CAN, 4, uds_instance->id_to_received);
+    init_filter(CAN, 5, uds_instance->id_to_received);
 
     return true;
 }
 
 // Free instance
 void free_uds(UDS_SERVICE* uds_instance) {
-    free_mcp2515(uds_instance->CAN);
+    deinit_mcp2515(uds_instance->CAN);
     free(uds_instance->CAN);
     free(uds_instance);
 }
