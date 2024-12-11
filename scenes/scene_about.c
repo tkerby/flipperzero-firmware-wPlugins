@@ -13,7 +13,9 @@ void flipper_spi_terminal_scene_about_alloc(FlipperSPITerminalApp* app) {
         "\n"
         "SPI TERMINAL is a SPI App, which allows you to control external devices using SPI. Your Flipper can act as a SPI Master or Slave device. The Slave mode allows you to sniff the communication between different SPI peripherals.\n"
         "\n"
-        "The App uses the Low-Level SPI Interface of the STM32WB55RG Microprocessor. All data is transmitted with DMA Sub-module and can reach speeds of up to 32 Mbit/s in Master and up to 24 Mbit/s in Slave mode.");
+        "The App uses the Low-Level SPI Interface of the STM32WB55RG Microprocessor. All data is transmitted with DMA Sub-module and can reach speeds of up to 32 Mbit/s in Master and up to 24 Mbit/s in Slave mode.\n"
+        "\n"
+        "CAUTION: Flipper Zero's pins are only 5V tolerant, if they are configured as an input. Due to this limitation, only 3.3V signals should be used!");
 
     view_dispatcher_add_view(
         app->view_dispatcher,
