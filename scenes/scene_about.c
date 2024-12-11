@@ -15,7 +15,13 @@ void flipper_spi_terminal_scene_about_alloc(FlipperSPITerminalApp* app) {
         "\n"
         "The App uses the Low-Level SPI Interface of the STM32WB55RG Microprocessor. All data is transmitted with DMA Sub-module and can reach speeds of up to 32 Mbit/s in Master and up to 24 Mbit/s in Slave mode.\n"
         "\n"
-        "CAUTION: Flipper Zero's pins are only 5V tolerant, if they are configured as an input. Due to this limitation, only 3.3V signals should be used!");
+        "=== Pin configuration ===\n"
+        "CAUTION: Flipper Zero's pins are only 5V tolerant, if they are configured as an input. Due to this limitation, only 3.3V signals should be used!\n"
+        "\n"
+        "MOSI: 2 (PA7)\n"
+        "MISO: 3 (PA6)\n"
+        " !CS: 4 (PA4, active low)\n"
+        " SCK: 5 (PB3)");
 
     view_dispatcher_add_view(
         app->view_dispatcher,

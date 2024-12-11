@@ -8,6 +8,9 @@
 #include <stm32wbxx_ll_spi.h>
 #include <stm32wbxx_ll_utils.h>
 
+#include <FreeRTOS.h>
+#include <atomic.h>
+
 #define spi_terminal_spi_bus_handle &furi_hal_spi_bus_handle_external
 #define spi_terminal_spi_bus        furi_hal_spi_bus_handle_external.bus
 #define spi_terminal_spi            SPI1
@@ -21,6 +24,11 @@
 #define SPI_DMA_TX_CHANNEL LL_DMA_CHANNEL_7
 #define SPI_DMA_TX_IRQ     FuriHalInterruptIdDma2Ch7
 
+void flipper_spi_terminal_scene_terminal_process_receive_timer(void* context) {
+    SPI_TERM_CONTEXT_TO_APP(context);
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipperSPITerminalEventReceivedData);
+}
+
 void flipper_spi_terminal_scene_terminal_alloc(FlipperSPITerminalApp* app) {
     SPI_TERM_LOG_T("allocating terminal screen...");
     furi_check(app);
@@ -31,6 +39,10 @@ void flipper_spi_terminal_scene_terminal_alloc(FlipperSPITerminalApp* app) {
 
     // Buffer for transfer from DMA to screen
     app->terminal_screen.rx_buffer_stream = furi_stream_buffer_alloc(512, 512);
+
+    // Timer for data read from RX buffer. I tried a lot of things. This is the only reliable solution.
+    app->terminal_screen.recv_timer = furi_timer_alloc(
+        flipper_spi_terminal_scene_terminal_process_receive_timer, FuriTimerTypePeriodic, app);
 
     view_dispatcher_add_view(
         app->view_dispatcher,
@@ -57,7 +69,6 @@ static void flipper_spi_terminal_scene_terminal_add_data(
     const void* data,
     size_t length) {
     furi_stream_buffer_send(app->terminal_screen.rx_buffer_stream, data, length, 0);
-    view_dispatcher_send_custom_event(app->view_dispatcher, FlipperSPITerminalEventReceivedData);
 }
 
 static void flipper_spi_terminal_scene_terminal_dma_rx_isr(void* context) {
@@ -101,6 +112,9 @@ static void flipper_spi_terminal_scene_terminal_init_spi_dma(FlipperSPITerminalA
     SPI_TERM_LOG_T("Init SPI-Settings");
     LL_SPI_Disable(spi_terminal_spi);
     LL_SPI_Init(spi_terminal_spi, &app->config.spi);
+    if(app->config.spi.Mode == LL_SPI_MODE_SLAVE) {
+        furi_hal_gpio_init(&gpio_ext_pa4, GpioModeInput, app->config.cs_pull, GpioSpeedVeryHigh);
+    }
     LL_SPI_Enable(spi_terminal_spi);
 
     SPI_TERM_LOG_T("Init DMA");
@@ -187,6 +201,8 @@ void flipper_spi_terminal_scene_terminal_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipperSPITerminalAppSceneTerminal);
     app->terminal_screen.is_active = true;
 
+    furi_timer_start(app->terminal_screen.recv_timer, 300);
+
     if(!furi_string_empty(app->config.debug.debug_terminal_data)) {
         const char* data = furi_string_get_cstr(app->config.debug.debug_terminal_data);
         size_t length = furi_string_size(app->config.debug.debug_terminal_data);
@@ -217,6 +233,8 @@ void flipper_spi_terminal_scene_terminal_on_exit(void* context) {
     app->terminal_screen.is_active = false;
 
     flipper_spi_terminal_scene_terminal_deinit_spi_dma(app);
+
+    furi_timer_stop(app->terminal_screen.recv_timer);
 
     free(app->terminal_screen.rx_dma_buffer);
     app->terminal_screen.rx_dma_buffer = NULL;

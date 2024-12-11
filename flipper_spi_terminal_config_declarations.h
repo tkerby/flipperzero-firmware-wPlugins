@@ -85,9 +85,9 @@ ADD_CONFIG_ENTRY(
     LL_SPI_FULL_DUPLEX,
     value_index_uint32,
     spi.TransferDirection,
-    3,
-    (LL_SPI_FULL_DUPLEX, LL_SPI_HALF_DUPLEX_RX, LL_SPI_HALF_DUPLEX_TX),
-    ("Full Duplex", "Half Duplex RX", "Half Duplex TX"))
+    4,
+    (LL_SPI_FULL_DUPLEX, LL_SPI_SIMPLEX_RX, LL_SPI_HALF_DUPLEX_RX, LL_SPI_HALF_DUPLEX_TX),
+    ("Full Duplex", "Simplex", "Half Duplex RX", "Half Duplex TX"))
 
 ADD_CONFIG_ENTRY(
     "Data Width",
@@ -156,11 +156,11 @@ ADD_CONFIG_ENTRY(
     ("1-Edge", "2-Edge"))
 
 ADD_CONFIG_ENTRY(
-    "NSS",
-    "Configures the chip select behavior.\n"
+    "Non Slave Select",
+    "Configures the slave select behavior.\n"
     "Soft: NSS managed internally. NSS pin not used and free. Always send/receive.\n"
-    "Input: NSS pin used in Input. Only used in Master mode.\n"
-    "Hard: NSS pin used in Output. Only used in Slave mode as chip select.\n\n"
+    "Hard Input: NSS pin used in Input. Only used in Master mode.\n"
+    "Hard Output: NSS pin used in Output. Only used in Slave mode as chip select.\n\n"
     "Default: Soft",
     spi_nss,
     uint32_t,
@@ -169,7 +169,23 @@ ADD_CONFIG_ENTRY(
     spi.NSS,
     3,
     (LL_SPI_NSS_SOFT, LL_SPI_NSS_HARD_INPUT, LL_SPI_NSS_HARD_OUTPUT),
-    ("Soft", "Input", "Hard"))
+    ("Soft", "Hard Input", "Hard Output"))
+
+ADD_CONFIG_ENTRY(
+    "CS Pull",
+    "Pull mode for the CS pin. Only used in Slave mode. The nominal resistance between VCC or GND is around 40k ohm.\n"
+    "No: Do not use Pull-up or Pull-down\n"
+    "Up: Connect Pull-up\n"
+    "Down: Connect Pull-down\n\n"
+    "Default: No",
+    spi_cs_pull,
+    GpioPull,
+    GpioPullNo,
+    value_index_gpio_pull,
+    cs_pull,
+    3,
+    (GpioPullNo, GpioPullUp, GpioPullDown),
+    ("No", "Up", "Down"))
 
 ADD_CONFIG_ENTRY(
     "Baudrate prescaler",

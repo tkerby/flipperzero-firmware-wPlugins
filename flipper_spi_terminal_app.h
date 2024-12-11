@@ -31,6 +31,7 @@ typedef struct {
     size_t rx_dma_buffer_size;
     LL_SPI_InitTypeDef spi;
     FlipperSPITerminalAppConfigDebug debug;
+    GpioPull cs_pull;
 } FlipperSPITerminalAppConfig;
 
 typedef struct {
@@ -46,6 +47,7 @@ typedef struct {
 
     uint8_t* rx_dma_buffer;
     FuriStreamBuffer* rx_buffer_stream;
+    FuriTimer* recv_timer;
 } FlipperSPITerminalAppScreenTerminal;
 
 typedef struct {
