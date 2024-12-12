@@ -16,6 +16,11 @@
     }
 #endif
 
+CLI_COMMAND(help,
+            NULL,
+            "Prints a list with all commands.",
+            flipper_spi_terminal_cli_command_print_full_help();)
+
 CLI_COMMAND(dbg_term_data_set,
             "<text>",
             "(DEBUG) Sets the <text> of the terminal view",
@@ -43,6 +48,6 @@ CLI_COMMAND(dbg_text_data_clear,
             flipper_spi_terminal_cli_command_debug_data(app, NULL);)
 
 CLI_COMMAND(dbg_config_print,
-            "",
+            NULL,
             "(DEBUG) Prints the content of the configuration file",
             flipper_spi_terminal_config_debug_print_saved();)

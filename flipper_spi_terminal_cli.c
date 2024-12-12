@@ -68,6 +68,13 @@ static const FlipperSpiTerminalCliCommand commands[] = {
 };
 #undef CLI_COMMAND
 
+void flipper_spi_terminal_cli_command_print_full_help() {
+    for(size_t i = 0; i < COUNT_OF(commands); i++) {
+        const FlipperSpiTerminalCliCommand* cli_cmd = &commands[i];
+        flipper_spi_terminal_cli_print_usage(cli_cmd);
+    }
+}
+
 static void flipper_spi_terminal_cli_command(Cli* cli, FuriString* args, void* context) {
     SPI_TERM_LOG_T("Received CLI command %s", furi_string_get_cstr(args));
     furi_check(cli);
@@ -92,10 +99,7 @@ static void flipper_spi_terminal_cli_command(Cli* cli, FuriString* args, void* c
 
     if(!executed) {
         SPI_TERM_LOG_T("Command not found! Printing usage...");
-        for(size_t i = 0; i < COUNT_OF(commands); i++) {
-            const FlipperSpiTerminalCliCommand* cli_cmd = &commands[i];
-            flipper_spi_terminal_cli_print_usage(cli_cmd);
-        }
+        flipper_spi_terminal_cli_command_print_full_help();
     }
 }
 
@@ -117,6 +121,8 @@ void flipper_spi_terminal_cli_alloc(FlipperSPITerminalApp* app) {
 void flipper_spi_terminal_cli_free(FlipperSPITerminalApp* app) {
     SPI_TERM_LOG_T("Free CLI");
     furi_check(app);
+
+    cli_delete_command(app->cli, SPI_TERM_CLI_COMMAND);
 
     SPI_TERM_LOG_T("Closing CLI");
     furi_record_close(RECORD_CLI);
@@ -147,7 +153,7 @@ void flipper_spi_terminal_cli_command_debug_data(FlipperSPITerminalApp* app, Fur
     furi_check(app);
 
     if(!app->terminal_screen.is_active) {
-        if(data == NULL || furi_string_empty(app->config.debug.debug_terminal_data)) {
+        if(data != NULL && !furi_string_empty(data)) {
             furi_string_set(app->config.debug.debug_terminal_data, data);
         } else {
             furi_string_reset(app->config.debug.debug_terminal_data);
