@@ -9,6 +9,9 @@ It contains a rich [Inbuilt Documentation](#inbuilt-documentation).
 > [!IMPORTANT]
 > The current version does not support the sending of data. This is planned for future versions.
 
+> [!IMPORTANT]
+> Flipper SPI Terminal requires full control over Flipper Zero's `SPI Bus R`/`SPI1`. Due to this, all access to it and it's connected peripherals is blocked up on entering the Terminal Screen. This includes access to the SD-Card. All SD accesses (i.e.: qFlipper, lab.flipper.net, iOS/Android App) will result in a crash and you'll need to reset you Flipper by simultaneously holding down the `Left` and `Back` buttons.
+
 ## GPIO
 
 > [!CAUTION]
