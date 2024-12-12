@@ -64,7 +64,6 @@ int32_t game_app(void *p)
 }
 
 static bool alloc_about_view(void *context);
-static bool alloc_main_view(void *context);
 static bool alloc_text_input_view(void *context, char *title);
 static bool alloc_variable_item_list(void *context);
 //
@@ -83,14 +82,6 @@ static uint32_t callback_to_wifi_settings(void *context)
     return FlipWorldViewSettings;
 }
 
-// Callback for drawing the main screen
-static void flip_world_view_game_draw_callback(Canvas *canvas, void *model)
-{
-    UNUSED(model);
-    canvas_clear(canvas);
-    canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
-    canvas_draw_str(canvas, 0, 10, "Game");
-}
 static void flip_world_view_about_draw_callback(Canvas *canvas, void *model)
 {
     UNUSED(model);
@@ -128,27 +119,6 @@ static bool alloc_about_view(void *context)
     return true;
 }
 
-static bool alloc_main_view(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
-    if (!app->view_main)
-    {
-        if (!easy_flipper_set_view(&app->view_main, FlipWorldViewMain, flip_world_view_game_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
-        {
-            return false;
-        }
-        if (!app->view_main)
-        {
-            return false;
-        }
-    }
-    return true;
-}
 static bool alloc_text_input_view(void *context, char *title)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -357,7 +327,6 @@ bool flip_world_custom_event_callback(void *context, uint32_t index)
     switch (index)
     {
     case FlipWorldCustomEventPlay:
-        // free_all_views(app, true);
         flip_world_loader_process_callback(context);
         return true;
     default:
@@ -377,12 +346,6 @@ void callback_submenu_choices(void *context, uint32_t index)
     {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true);
-        if (!alloc_main_view(app))
-        {
-            FURI_LOG_E(TAG, "Failed to allocate main view");
-            return;
-        }
-        // view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
         view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
         break;
     case FlipWorldSubmenuIndexAbout:
