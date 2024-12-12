@@ -10,5 +10,5 @@ App(
     fap_author="Jan Wiesemann",
     fap_weburl="https://github.com/janwiesemann/flipper-spi-terminal",
     fap_version="0.1",
-    fap_description="Control devices using SPI",
+    fap_description="A Terminal Application for full SPI access.",
 )
