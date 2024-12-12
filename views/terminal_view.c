@@ -385,8 +385,9 @@ static void terminal_view_draw_callback(Canvas* canvas, void* context) {
     TerminalViewDrawInfo info = {0};
     info.width = canvas_width(canvas);
     info.height = canvas_height(canvas);
-    info.glyph_width = canvas_current_font_width(canvas);
     info.glyph_height = canvas_current_font_height(canvas);
+    info.glyph_width =
+        info.glyph_height; // For some reason not supported with uFTB canvas_current_font_width(canvas);
     info.frame_width = info.width - 4; // 4 => scrollbar has a width of 3 + 1 space
     info.frame_height = info.height; // mainly a alias
     info.frame_padding = 2 + 1; // +1 => line with of frame

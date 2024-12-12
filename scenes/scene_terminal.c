@@ -8,9 +8,6 @@
 #include <stm32wbxx_ll_spi.h>
 #include <stm32wbxx_ll_utils.h>
 
-#include <FreeRTOS.h>
-#include <atomic.h>
-
 #define spi_terminal_spi_bus_handle &furi_hal_spi_bus_handle_external
 #define spi_terminal_spi_bus        furi_hal_spi_bus_handle_external.bus
 #define spi_terminal_spi            SPI1
