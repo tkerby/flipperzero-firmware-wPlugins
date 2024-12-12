@@ -91,7 +91,7 @@ static uint8_t* terminal_view_get_start_of_data(TerminalViewModel* model, size_t
     if(model->size != sizeof(model->buffer)) {
         start = model->buffer;
     } else {
-        start = model->tail + 1;
+        start = model->tail;
     }
 
     start = start + (model->scroll_offset * bytes_in_row);

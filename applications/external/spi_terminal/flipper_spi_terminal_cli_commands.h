@@ -19,11 +19,11 @@
 CLI_COMMAND(dbg_term_data_set,
             "<text>",
             "(DEBUG) Sets the <text> of the terminal view",
-            flipper_spi_terminal_cli_command_debug_set_data(app, args, true);)
+            flipper_spi_terminal_cli_command_debug_terminal_data(app, args, true);)
 CLI_COMMAND(dbg_term_data_add,
             "<text>",
             "(DEBUG) Adds the <text> to the terminal view",
-            flipper_spi_terminal_cli_command_debug_set_data(app, args, false);)
+            flipper_spi_terminal_cli_command_debug_terminal_data(app, args, false);)
 CLI_COMMAND(dbg_term_data_clear,
             "<text>",
             "(DEBUG) Removes everything from the terminal view",
@@ -32,6 +32,15 @@ CLI_COMMAND(dbg_term_data_show,
             NULL,
             "(DEBUG) prints the current buffer",
             terminal_view_debug_print_buffer(app->terminal_screen.view);)
+
+CLI_COMMAND(dbg_text_data_set,
+            "<text>",
+            "(DEBUG) Sets the <text> as test data in the config file",
+            flipper_spi_terminal_cli_command_debug_data(app, args);)
+CLI_COMMAND(dbg_text_data_clear,
+            "<text>",
+            "(DEBUG) removes the <text> test data from the config file",
+            flipper_spi_terminal_cli_command_debug_data(app, NULL);)
 
 CLI_COMMAND(dbg_config_print,
             "",

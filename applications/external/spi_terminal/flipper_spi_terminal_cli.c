@@ -122,7 +122,7 @@ void flipper_spi_terminal_cli_free(FlipperSPITerminalApp* app) {
     furi_record_close(RECORD_CLI);
 }
 
-void flipper_spi_terminal_cli_command_debug_set_data(
+void flipper_spi_terminal_cli_command_debug_terminal_data(
     FlipperSPITerminalApp* app,
     FuriString* data,
     bool reset_data) {
@@ -140,5 +140,21 @@ void flipper_spi_terminal_cli_command_debug_set_data(
             app->view_dispatcher, FlipperSPITerminalEventReceivedData);
     } else {
         printf("Non on terminal screen!");
+    }
+}
+
+void flipper_spi_terminal_cli_command_debug_data(FlipperSPITerminalApp* app, FuriString* data) {
+    furi_check(app);
+
+    if(!app->terminal_screen.is_active) {
+        if(data == NULL || furi_string_empty(app->config.debug.debug_terminal_data)) {
+            furi_string_set(app->config.debug.debug_terminal_data, data);
+        } else {
+            furi_string_reset(app->config.debug.debug_terminal_data);
+        }
+
+        flipper_spi_terminal_config_save(&app->config);
+    } else {
+        printf("Can not set test data while terminal is active!");
     }
 }

@@ -23,9 +23,14 @@ typedef enum {
 } FlipperSPITerminalEvent;
 
 typedef struct {
+    FuriString* debug_terminal_data;
+} FlipperSPITerminalAppConfigDebug;
+
+typedef struct {
     TerminalDisplayMode display_mode;
     size_t rx_dma_buffer_size;
     LL_SPI_InitTypeDef spi;
+    FlipperSPITerminalAppConfigDebug debug;
 } FlipperSPITerminalAppConfig;
 
 typedef struct {
@@ -41,6 +46,7 @@ typedef struct {
 
     uint8_t* rx_dma_buffer;
     FuriStreamBuffer* rx_buffer_stream;
+    FuriTimer* recv_timer;
 } FlipperSPITerminalAppScreenTerminal;
 
 typedef struct {
