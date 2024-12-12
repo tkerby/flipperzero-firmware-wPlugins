@@ -112,9 +112,6 @@ static void flipper_spi_terminal_scene_terminal_init_spi_dma(FlipperSPITerminalA
     SPI_TERM_LOG_T("Init SPI-Settings");
     LL_SPI_Disable(spi_terminal_spi);
     LL_SPI_Init(spi_terminal_spi, &app->config.spi);
-    if(app->config.spi.Mode == LL_SPI_MODE_SLAVE) {
-        furi_hal_gpio_init(&gpio_ext_pa4, GpioModeInput, app->config.cs_pull, GpioSpeedVeryHigh);
-    }
     LL_SPI_Enable(spi_terminal_spi);
 
     SPI_TERM_LOG_T("Init DMA");

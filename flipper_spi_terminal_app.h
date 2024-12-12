@@ -31,7 +31,6 @@ typedef struct {
     size_t rx_dma_buffer_size;
     LL_SPI_InitTypeDef spi;
     FlipperSPITerminalAppConfigDebug debug;
-    GpioPull cs_pull;
 } FlipperSPITerminalAppConfig;
 
 typedef struct {

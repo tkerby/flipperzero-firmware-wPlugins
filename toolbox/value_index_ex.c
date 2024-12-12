@@ -13,5 +13,4 @@
     }
 
 SPI_TERMINAL_VALUE_INDEX_IMPL(value_index_display_mode, TerminalDisplayMode);
-SPI_TERMINAL_VALUE_INDEX_IMPL(value_index_gpio_pull, GpioPull);
 SPI_TERMINAL_VALUE_INDEX_IMPL(value_index_size_t, size_t);

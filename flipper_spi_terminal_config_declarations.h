@@ -15,8 +15,10 @@
 #define ADD_CONFIG_ENTRY(                                                                           \
     label, helpText, name, type, defaultValue, valueIndexFunc, field, valuesCount, values, strings) \
     void(dummy_config_##name##_preview_func)() {                                                    \
-        printf(label);                                                                              \
-        printf(helpText);                                                                           \
+        const char* labelstr = label;                                                               \
+        UNUSED(labelstr);                                                                           \
+        const char* helpstr = helpText;                                                             \
+        UNUSED(helpstr);                                                                            \
         const type def = defaultValue;                                                              \
         const type vals[valuesCount] = {UNWRAP_ARGS values};                                        \
         size_t index = (valueIndexFunc)(def, vals, valuesCount);                                    \
@@ -26,14 +28,31 @@
     }
 #endif
 
+#ifndef FORMAT_VALUE_DESCRIPTION
+#define FORMAT_VALUE_DESCRIPTION(header, text) "=== " header " ===\n" text "\n"
+#endif
+
+#ifndef FORMAT_DESCRIPTION_MIN
+#define FORMAT_DESCRIPTION_MIN(general_info, default_value_str) \
+    general_info "\n\nDefault: " default_value_str
+#endif
+
+#ifndef FORMAT_DESCRIPTION
+#define FORMAT_DESCRIPTION(general_info, default_value_str, value_descriptions) \
+    general_info "\n\n" UNWRAP_ARGS value_descriptions "\nDefault: " default_value_str
+#endif
+
 ADD_CONFIG_ENTRY(
     "Display mode",
-    "Changes, how the received data is displayed.\n"
-    "Auto: Use ASCII, C escape sequence or Hex\n"
-    "Text: Use ASCII for everything (Non printable chars are replaced by a space ' ')\n"
-    "Hex: Use Hex for everything\n"
-    "Binary: Binary representation\n\n"
-    "Default: Auto",
+    FORMAT_DESCRIPTION(
+        "Changes, how the received data is displayed.",
+        "Auto",
+        (FORMAT_VALUE_DESCRIPTION("Auto", "Use ASCII, C escape sequence or Hex")
+             FORMAT_VALUE_DESCRIPTION(
+                 "Text",
+                 "Use ASCII for everything (Non printable chars are replaced by a space ' ')")
+                 FORMAT_VALUE_DESCRIPTION("Hex", "Use Hex for everything")
+                     FORMAT_VALUE_DESCRIPTION("Binary", "Use binary for everything"))),
     display_mode,
     TerminalDisplayMode,
     TerminalDisplayModeAuto,
@@ -48,9 +67,11 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "DMA RX Buffer size",
-    "Sets the buffer size for a SPI read request. A higher value results in a less frequent update. A higher value will result in a faster data rate.\n\n"
-    "SPI Terminal utilizes the inbuild DMA controller for a event/interrupt based receive and transmit system. This removes the overhead of a polling based system.\n\n"
-    "Default: 1",
+    FORMAT_DESCRIPTION(
+        "Sets the buffer size for a SPI read request. A higher value results in a less frequent update. A higher value will result in a faster data rate."
+        "SPI Terminal utilizes the inbuild DMA controller for a event/interrupt based receive and transmit system. This removes the overhead of a polling based system.",
+        "1",
+        ("1-256 byte")),
     rx_dma_buffer_size,
     size_t,
     1,
@@ -62,9 +83,11 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Mode",
-    "Master: Flipper is controlling the SPI clock\n"
-    "Slave: A external device is controlling the SPI clock\n\n"
-    "Default: Slave",
+    FORMAT_DESCRIPTION(
+        "Configures the SPI-Mode.",
+        "Slave",
+        (FORMAT_VALUE_DESCRIPTION("Master", "Flipper is controlling the SPI clock")
+             FORMAT_VALUE_DESCRIPTION("Slave", "A external device is controlling the SPI clock"))),
     spi_mode,
     uint32_t,
     LL_SPI_MODE_SLAVE,
@@ -76,10 +99,18 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Direction",
-    "Full Duplex: Data is transmitted in both directions (Rx and Tx)\n"
-    "Half Duplex RX: Only send data\n"
-    "Half Duplex TX: Only receive data\n\n"
-    "Default: Full Duplex",
+    FORMAT_DESCRIPTION(
+        "Configures the transfer direction.",
+        "Full Duplex",
+        (FORMAT_VALUE_DESCRIPTION(
+            "Full Duplex",
+            "Data is transmitted in both directions at the same time (RX and TX). Both data lines are used simultaneously.")
+             FORMAT_VALUE_DESCRIPTION(
+                 "Simplex RX",
+                 "Only receive data. Can be used to 'sniff' the communication between devices.")
+                 FORMAT_VALUE_DESCRIPTION(
+                     "Half Duplex RX/TX",
+                     "Only send data. In this mode, RX and TX modes are altered after every transfer. This alows the use of only one data line"))),
     spi_direction,
     uint32_t,
     LL_SPI_FULL_DUPLEX,
@@ -87,12 +118,11 @@ ADD_CONFIG_ENTRY(
     spi.TransferDirection,
     4,
     (LL_SPI_FULL_DUPLEX, LL_SPI_SIMPLEX_RX, LL_SPI_HALF_DUPLEX_RX, LL_SPI_HALF_DUPLEX_TX),
-    ("Full Duplex", "Simplex", "Half Duplex RX", "Half Duplex TX"))
+    ("Full Duplex", "Simplex RX", "Half Duplex RX", "Half Duplex TX"))
 
 ADD_CONFIG_ENTRY(
     "Data Width",
-    "Sets the data width of a single transfer.\n\n"
-    "Default: 8 bit",
+    FORMAT_DESCRIPTION_MIN("Sets the data width of a single transfer.", "8 bit"),
     spi_data_width,
     uint32_t,
     LL_SPI_DATAWIDTH_8BIT,
@@ -128,9 +158,11 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Clock polarity",
-    "Low: Clock line is 0 (low, off) on idle\n"
-    "High: Clock line is 1 (high, on) on idle\n\n"
-    "Default: High",
+    FORMAT_DESCRIPTION(
+        "Configures the polarity of the SPI clock.",
+        "High",
+        (FORMAT_VALUE_DESCRIPTION("Low", "Clock line is 0 (low, off) on idle")
+             FORMAT_VALUE_DESCRIPTION("High", "Clock line is 1 (high, on) on idle"))),
     spi_clock_polarity,
     uint32_t,
     LL_SPI_POLARITY_LOW,
@@ -142,10 +174,15 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Clock Phase",
-    "Defines, on which clock edge the data is sampled.\n"
-    "1. Edge: Trigger on the first clock polarity change (CP: High, CLK: ...1 1010 1010 1... => Trigger on the transition from 1 to 0)\n"
-    "2. Edge: Trigger on the second clock polarity change (CP: High, CLK: ...1 1010 1010 1... => Trigger on the transition from 0 to 1)\n\n"
-    "Default: !-Edge",
+    FORMAT_DESCRIPTION(
+        "Defines, on which clock edge the data is sampled.",
+        "1-Edge",
+        (FORMAT_VALUE_DESCRIPTION(
+            "1-Edge",
+            "Trigger on the first clock polarity change (CP: High, CLK: ...1 1010 1010 1... => Trigger on the transition from 1 to 0)")
+             FORMAT_VALUE_DESCRIPTION(
+                 "2-Edge",
+                 "Trigger on the second clock polarity change (CP: High, CLK: ...1 1010 1010 1... => Trigger on the transition from 0 to 1)"))),
     spi_clock_phase,
     uint32_t,
     LL_SPI_PHASE_1EDGE,
@@ -157,11 +194,18 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Non Slave Select",
-    "Configures the slave select behavior.\n"
-    "Soft: NSS managed internally. NSS pin not used and free. Always send/receive.\n"
-    "Hard Input: NSS pin used in Input. Only used in Master mode.\n"
-    "Hard Output: NSS pin used in Output. Only used in Slave mode as chip select.\n\n"
-    "Default: Soft",
+    FORMAT_DESCRIPTION(
+        "Configures the slave select behavior on the CS pin",
+        "Soft",
+        (FORMAT_VALUE_DESCRIPTION(
+            "Soft",
+            "NSS managed by the software. In this mode, Flipper SPI Terminal is not using any Slave Select mechanisms and is always sending or receiving data.")
+             FORMAT_VALUE_DESCRIPTION(
+                 "Hard Input",
+                 "If Flipper Zero is acting as a Slave, CS-Pin is used as standard chip select. If Flipper Zero is configured as Master, this pin can be used for a 'Multi Master' configuration.")
+                 FORMAT_VALUE_DESCRIPTION(
+                     "Hard Output:",
+                     " (Only used in Master-Mode) CS is driven low as soon as the Terminal Screen is entered. Due to a Flipper Firmware limitation, the pin might send a pulse to the other devices."))),
     spi_nss,
     uint32_t,
     LL_SPI_NSS_SOFT,
@@ -172,33 +216,10 @@ ADD_CONFIG_ENTRY(
     ("Soft", "Hard Input", "Hard Output"))
 
 ADD_CONFIG_ENTRY(
-    "CS Pull",
-    "Pull mode for the CS pin. Only used in Slave mode. The nominal resistance between VCC or GND is around 40k ohm.\n"
-    "No: Do not use Pull-up or Pull-down\n"
-    "Up: Connect Pull-up\n"
-    "Down: Connect Pull-down\n\n"
-    "Default: No",
-    spi_cs_pull,
-    GpioPull,
-    GpioPullNo,
-    value_index_gpio_pull,
-    cs_pull,
-    3,
-    (GpioPullNo, GpioPullUp, GpioPullDown),
-    ("No", "Up", "Down"))
-
-ADD_CONFIG_ENTRY(
     "Baudrate prescaler",
-    "Sets, by how many cycles, the SPI clock is divided. Flippers SPI clock is running at 32MHz. A prescaler of Div 2 will result int a baudrate of around 16 Mbit.\n"
-    "/ 2 = 16 Mbit\n"
-    "/ 4 = 8 Mbit\n"
-    "/ 8 = 4 Mbit\n"
-    "/ 16 = 2 Mbit\n"
-    "/ 32 = 1 Mbit\n"
-    "/ 64 = 500 Kbit\n"
-    "/ 128 = 250 Kbit\n"
-    "/ 256 = 125 Kbit\n\n"
-    "Default: Div 32",
+    FORMAT_DESCRIPTION_MIN(
+        "Sets, by how many cycles, the SPI clock is divided. Flippers SPI clock is running at 32MHz. A prescaler of Div 2 will result int a baudrate of around 16 Mbit.",
+        "Div 32"),
     spi_baud_rate,
     uint32_t,
     LL_SPI_BAUDRATEPRESCALER_DIV32,
@@ -217,21 +238,22 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "Bit-order",
-    "Sets, in which order bytes are received.\n\n"
-    "Default: MSB",
+    FORMAT_DESCRIPTION(
+        "Sets, in which order bytes are received.",
+        "MSB",
+        ("Most significant bit or Least significant bit")),
     spi_bit_order,
     uint32_t,
     LL_SPI_MSB_FIRST,
     value_index_uint32,
     spi.BitOrder,
     2,
-    (LL_SPI_LSB_FIRST, LL_SPI_MSB_FIRST),
-    ("LSB", "MSB"))
+    (LL_SPI_MSB_FIRST, LL_SPI_LSB_FIRST),
+    ("MSB", "LSB"))
 
 ADD_CONFIG_ENTRY(
     "CRC",
-    "Enables or disables the CRC calculation.\n\n"
-    "Default: Disabled",
+    FORMAT_DESCRIPTION_MIN("Enables or disables the CRC calculation.", "Disabled"),
     spi_crc_calculation,
     uint32_t,
     LL_SPI_CRCCALCULATION_DISABLE,
@@ -243,8 +265,7 @@ ADD_CONFIG_ENTRY(
 
 ADD_CONFIG_ENTRY(
     "CRC Poly",
-    "Sets the CRC Polynomial value.\n\n"
-    "Default: 7",
+    FORMAT_DESCRIPTION_MIN("Sets the CRC Polynomial value.", "/"),
     spi_crc_poly,
     uint32_t,
     7,
