@@ -30,8 +30,13 @@ typedef enum
     FlipWorldViewAbout,     // The about screen
     FlipWorldViewSettings,  // The settings screen
     FlipWorldViewTextInput, // The text input screen
-    FlipWorldlViewDialog,   // The dialog screen
 } FlipWorldView;
+
+// Define a custom event for our FlipWorld application
+typedef enum
+{
+    FlipWorldCustomEventPlay, // Play the game
+} FlipWorldCustomEvent;
 
 // Each screen will have its own view
 typedef struct
