@@ -50,8 +50,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         pos.x += 2;
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
-    pos.x = CLAMP(pos.x, 123, 5);
-    pos.y = CLAMP(pos.y, 59, 5);
+    pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
+    pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
 
     // Set new player position
     entity_pos_set(self, pos);
@@ -97,7 +97,7 @@ static const EntityDescription player_desc = {
 
 static Vector random_pos(void)
 {
-    return (Vector){rand() % 120 + 4, rand() % 58 + 4};
+    return (Vector){rand() % (WORLD_WIDTH - 8) + 4, rand() % (WORLD_HEIGHT - 8) + 4};
 }
 
 static void target_start(Entity *self, GameManager *manager, void *context)
@@ -123,7 +123,6 @@ static void target_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     canvas_draw_disc(canvas, pos.x, pos.y, 3);
 
     // Draw background
-    canvas_draw_box(canvas, 0, 20, 40, 20);
 }
 
 static void target_collision(Entity *self, Entity *other, GameManager *manager, void *context)
@@ -162,9 +161,6 @@ static void level_alloc(Level *level, GameManager *manager, void *context)
     player_spawn(level, manager);
 
     // Add first target entity to the level
-    level_add_entity(level, &target_desc);
-
-    // Add second target entity to the level
     level_add_entity(level, &target_desc);
 }
 
