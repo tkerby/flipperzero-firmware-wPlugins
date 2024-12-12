@@ -5,7 +5,7 @@ App(
     fap_version="0.1",
     fap_category="GPIO",
     fap_author="Jan Wiesemann",
-    fap_description="A Terminal Application for full SPI access.",
+    fap_description="A Terminal Application for the SPI interface",
     fap_weburl="https://github.com/janwiesemann/flipper-spi-terminal",
     requires=["gui", "input", "cli"],
     stack_size=1 * 1024,
