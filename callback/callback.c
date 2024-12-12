@@ -1,5 +1,68 @@
 #include <callback/callback.h>
 
+static void frame_cb(GameEngine *engine, Canvas *canvas, InputState input, void *context)
+{
+    UNUSED(engine);
+    GameManager *game_manager = context;
+    game_manager_input_set(game_manager, input);
+    game_manager_update(game_manager);
+    game_manager_render(game_manager, canvas);
+}
+
+int32_t game_app(void *p)
+{
+    UNUSED(p);
+    GameManager *game_manager = game_manager_alloc();
+    if (!game_manager)
+    {
+        FURI_LOG_E("Game", "Failed to allocate game manager");
+        return -1;
+    }
+    GameEngineSettings settings = game_engine_settings_init();
+    settings.target_fps = game.target_fps;
+    settings.show_fps = game.show_fps;
+    settings.always_backlight = game.always_backlight;
+    settings.frame_callback = frame_cb;
+    settings.context = game_manager;
+
+    GameEngine *engine = game_engine_alloc(settings);
+    if (!engine)
+    {
+        FURI_LOG_E("Game", "Failed to allocate game engine");
+        game_manager_free(game_manager);
+        return -1;
+    }
+    game_manager_engine_set(game_manager, engine);
+
+    void *game_context = NULL;
+    if (game.context_size > 0)
+    {
+        game_context = malloc(game.context_size);
+        game_manager_game_context_set(game_manager, game_context);
+    }
+    game.start(game_manager, game_context);
+
+    game_engine_run(engine);
+    game_engine_free(engine);
+
+    game_manager_free(game_manager);
+
+    game.stop(game_context);
+    if (game_context)
+    {
+        free(game_context);
+    }
+
+    int32_t entities = entities_get_count();
+    if (entities != 0)
+    {
+        FURI_LOG_E("Game", "Memory leak detected: %ld entities still allocated", entities);
+        return -1;
+    }
+
+    return 0;
+}
+
 static bool alloc_about_view(void *context);
 static bool alloc_main_view(void *context);
 static bool alloc_text_input_view(void *context, char *title);
@@ -271,6 +334,37 @@ void free_all_views(void *context, bool should_free_variable_item_list)
     free_text_input_view(app);
 }
 
+static void flip_world_loader_process_callback(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+
+    // load game
+    game_app(NULL);
+}
+
+bool flip_world_custom_event_callback(void *context, uint32_t index)
+{
+    if (!context)
+    {
+        FURI_LOG_E(TAG, "context is NULL");
+        return false;
+    }
+    switch (index)
+    {
+    case FlipWorldCustomEventPlay:
+        // free_all_views(app, true);
+        flip_world_loader_process_callback(context);
+        return true;
+    default:
+        return false;
+    }
+}
+
 void callback_submenu_choices(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -288,7 +382,8 @@ void callback_submenu_choices(void *context, uint32_t index)
             FURI_LOG_E(TAG, "Failed to allocate main view");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
+        // view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
+        view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true);

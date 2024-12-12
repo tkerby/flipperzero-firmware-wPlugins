@@ -25,6 +25,8 @@ FlipWorldApp *flip_world_app_alloc()
         return NULL;
     }
 
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, flip_world_custom_event_callback);
+
     // Submenu
     if (!easy_flipper_set_submenu(&app->submenu, FlipWorldViewSubmenu, VERSION_TAG, callback_exit_app, &app->view_dispatcher))
     {
