@@ -54,7 +54,8 @@ static void background_render(Canvas *canvas, Vector pos)
     camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
     camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
-    draw_world_example(canvas);
+    // Draw the world
+    draw_tree_world(canvas);
 }
 
 /****** Entities: Player ******/
