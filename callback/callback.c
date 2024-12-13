@@ -287,6 +287,8 @@ static void free_variable_item_list(void *context)
         app->variable_item_pass = NULL;
     }
 }
+static FuriThreadId thread_id;
+static bool game_thread_running = false;
 void free_all_views(void *context, bool should_free_variable_item_list)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -308,6 +310,13 @@ void free_all_views(void *context, bool should_free_variable_item_list)
         view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMain);
         app->view_main = NULL;
     }
+    // free game thread
+    if (game_thread_running)
+    {
+        game_thread_running = false;
+        furi_thread_flags_set(thread_id, WorkerEvtStop);
+        furi_thread_free(thread_id);
+    }
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -321,6 +330,13 @@ void callback_submenu_choices(void *context, uint32_t index)
     switch (index)
     {
     case FlipWorldSubmenuIndexRun:
+        // free game thread
+        if (game_thread_running)
+        {
+            game_thread_running = false;
+            furi_thread_flags_set(thread_id, WorkerEvtStop);
+            furi_thread_free(thread_id);
+        }
         free_all_views(app, true);
         if (!app->view_main)
         {
@@ -335,7 +351,14 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
         FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app);
+        if (!thread)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate game thread");
+            return;
+        }
         furi_thread_start(thread);
+        thread_id = furi_thread_get_id(thread);
+        game_thread_running = true;
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true);

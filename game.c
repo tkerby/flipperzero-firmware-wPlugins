@@ -384,10 +384,11 @@ static void game_start(GameManager *game_manager, void *ctx)
 */
 static void game_stop(void *ctx)
 {
-    GameContext *game_context = ctx;
-    // Do some deinitialization here, for example you can save score to storage.
-    // For simplicity, we will just print it.
-    FURI_LOG_I("Game", "Your score: %lu", game_context->score);
+    UNUSED(ctx);
+    // GameContext *game_context = ctx;
+    //  Do some deinitialization here, for example you can save score to storage.
+    //  For simplicity, we will just print it.
+    // FURI_LOG_I("Game", "Your score: %lu", game_context->score);
 }
 
 /*
