@@ -302,35 +302,10 @@ void free_all_views(void *context, bool should_free_variable_item_list)
     free_about_view(app);
     free_main_view(app);
     free_text_input_view(app);
-}
-
-static void flip_world_loader_process_callback(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
+    if (app->view_main)
     {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-
-    // load game
-    game_app(NULL);
-}
-
-bool flip_world_custom_event_callback(void *context, uint32_t index)
-{
-    if (!context)
-    {
-        FURI_LOG_E(TAG, "context is NULL");
-        return false;
-    }
-    switch (index)
-    {
-    case FlipWorldCustomEventPlay:
-        flip_world_loader_process_callback(context);
-        return true;
-    default:
-        return false;
+        view_free(app->view_main);
+        app->view_main = NULL;
     }
 }
 
@@ -346,7 +321,20 @@ void callback_submenu_choices(void *context, uint32_t index)
     {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true);
-        view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
+        if (!app->view_main)
+        {
+            if (!easy_flipper_set_view(&app->view_main, FlipWorldViewMain, NULL, NULL, callback_to_submenu, &app->view_dispatcher, app))
+            {
+                return;
+            }
+            if (!app->view_main)
+            {
+                return;
+            }
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
+        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app);
+        furi_thread_start(thread);
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true);

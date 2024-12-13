@@ -11,5 +11,4 @@
 #include "engine/entity_i.h"
 
 void free_all_views(void *context, bool free_variable_item_list);
-bool flip_world_custom_event_callback(void *context, uint32_t index);
 void callback_submenu_choices(void *context, uint32_t index);
