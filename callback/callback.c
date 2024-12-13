@@ -305,6 +305,7 @@ void free_all_views(void *context, bool should_free_variable_item_list)
     if (app->view_main)
     {
         view_free(app->view_main);
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMain);
         app->view_main = NULL;
     }
 }
