@@ -1,4 +1,6 @@
 #include "game.h"
+#include "flip_world.h"
+#include "flip_world_icons.h"
 
 Wall walls[] = {
     WALL(true, 12, 0, 3),
@@ -36,11 +38,11 @@ Wall walls[] = {
 };
 
 // Global variables to store camera position
-int camera_x = 0;
-int camera_y = 0;
+static int camera_x = 0;
+static int camera_y = 0;
 
 // Background rendering function
-void background_render(Canvas *canvas, Vector pos)
+static void background_render(Canvas *canvas, Vector pos)
 {
     // Clear the canvas
     canvas_clear(canvas);
@@ -65,6 +67,27 @@ void background_render(Canvas *canvas, Vector pos)
 
     // Static 8x8 Rectangle Frame at (96, 48)
     canvas_draw_frame(canvas, 96 - camera_x, 48 - camera_y, 8, 8);
+
+    // Static earth icon at (112, 56)
+    canvas_draw_icon(canvas, 112 - camera_x, 56 - camera_y, &I_icon_earth);
+
+    // static home icon at (128, 24)
+    canvas_draw_icon(canvas, 128 - camera_x, 24 - camera_y, &I_icon_home);
+
+    // static menu icon at (144, 24)
+    canvas_draw_icon(canvas, 144 - camera_x, 24 - camera_y, &I_icon_info);
+
+    // static man icon at (160, 56)
+    canvas_draw_icon(canvas, 160 - camera_x, 56 - camera_y, &I_icon_man);
+
+    // static plant icon at (176, 32)
+    canvas_draw_icon(canvas, 176 - camera_x, 32 - camera_y, &I_icon_plant);
+
+    // static tree icon at (104, 40)
+    canvas_draw_icon(canvas, 192 - camera_x, 40 - camera_y, &I_icon_tree);
+
+    // static woman icon at (208, 32)
+    canvas_draw_icon(canvas, 208 - camera_x, 32 - camera_y, &I_icon_woman);
 }
 
 /****** Entities: Player ******/
@@ -236,18 +259,21 @@ typedef struct
 static void wall_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
     UNUSED(manager);
+    UNUSED(self);
+    UNUSED(canvas);
+    UNUSED(context);
 
-    WallContext *wall = context;
+    // WallContext *wall = context;
 
-    Vector pos = entity_pos_get(self);
+    // Vector pos = entity_pos_get(self);
 
     // Draw the wall relative to the camera
-    canvas_draw_box(
-        canvas,
-        pos.x - camera_x - (wall->width / 2),
-        pos.y - camera_y - (wall->height / 2),
-        wall->width,
-        wall->height);
+    // canvas_draw_box(
+    //     canvas,
+    //     pos.x - camera_x - (wall->width / 2),
+    //     pos.y - camera_y - (wall->height / 2),
+    //     wall->width,
+    //     wall->height);
 }
 
 static void wall_collision(Entity *self, Entity *other, GameManager *manager, void *context)

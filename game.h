@@ -27,3 +27,22 @@ typedef struct
 {
     uint32_t score;
 } GameContext;
+
+typedef enum
+{
+    // system draw objects
+    DRAW_DOT,        // canvas_draw_dot
+    DRAW_LINE,       // canvas_draw_line
+    DRAW_BOX,        // canvas_draw_box
+    DRAW_FRAME,      // canvas_draw_frame
+    DRAW_CIRCLE,     // canvas_draw_circle
+    DRAW_XBM,        // canvas_draw_xbm
+                     // custom draw objects
+    DRAW_ICON_EARTH, // 	canvas_draw_icon
+    DRAW_ICON_HOME,  // 	canvas_draw_icon
+    DRAW_ICON_INFO,  // 	canvas_draw_icon
+    DRAW_ICON_MAN,   // 	canvas_draw_man
+    DRAW_ICON_PLANT, // 	canvas_draw_icon
+    DRAW_ICON_TREE,  // 	canvas_draw_icon
+    DRAW_ICON_WOMAN, // 	canvas_draw_icon
+} FlipWorldDrawObjects;
