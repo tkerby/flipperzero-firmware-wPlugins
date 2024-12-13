@@ -14,6 +14,14 @@
 #define TAG "FlipWorld"
 #define VERSION_TAG "FlipWorld v0.1"
 
+// Screen size
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+// World size (3x3)
+#define WORLD_WIDTH 384
+#define WORLD_HEIGHT 192
+
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
