@@ -1,10 +1,58 @@
 #include "game.h"
 
+Wall walls[] = {
+    WALL(true, 12, 0, 3),
+    WALL(false, 3, 3, 17),
+    WALL(false, 23, 3, 6),
+    WALL(true, 3, 4, 57),
+    WALL(true, 28, 4, 56),
+    WALL(false, 4, 7, 5),
+    WALL(false, 12, 7, 13),
+    WALL(true, 8, 8, 34),
+    WALL(true, 12, 8, 42),
+    WALL(true, 24, 8, 8),
+    WALL(true, 16, 11, 8),
+    WALL(false, 17, 11, 4),
+    WALL(true, 20, 12, 22),
+    WALL(false, 6, 17, 2),
+    WALL(true, 24, 19, 15),
+    WALL(true, 16, 22, 16),
+    WALL(false, 4, 24, 1),
+    WALL(false, 21, 28, 2),
+    WALL(false, 6, 33, 2),
+    WALL(false, 13, 34, 3),
+    WALL(false, 17, 37, 11),
+    WALL(true, 16, 41, 14),
+    WALL(false, 20, 41, 5),
+    WALL(true, 20, 45, 12),
+    WALL(true, 24, 45, 12),
+    WALL(false, 4, 46, 2),
+    WALL(false, 9, 46, 3),
+    WALL(false, 6, 50, 3),
+    WALL(true, 12, 53, 7),
+    WALL(true, 8, 54, 6),
+    WALL(false, 4, 60, 19),
+    WALL(false, 26, 60, 6),
+};
+
+// update the background as the player moves
+void background_render(Canvas *canvas, Vector pos)
+{
+    // player starts at 64 (x) and 32 (y)
+
+    // test with a static dot at (72, 40)
+    canvas_draw_dot(canvas, 72 + (64 - pos.x), 40 + (32 - pos.y));
+}
+
 /****** Entities: Player ******/
 
 typedef struct
 {
-    Sprite *sprite;
+    Vector trajectory; // Direction player would like to move.
+    float radius;      // collision radius
+    int8_t dx;         // x direction
+    int8_t dy;         // y direction
+    Sprite *sprite;    // player sprite
 } PlayerContext;
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
@@ -50,8 +98,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         pos.x += 2;
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
-    pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
-    pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
+    pos.x = CLAMP(pos.x, SCREEN_WIDTH - 5, 5);
+    pos.y = CLAMP(pos.y, SCREEN_HEIGHT - 5, 5);
 
     // Set new player position
     entity_pos_set(self, pos);
@@ -79,25 +127,25 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     GameContext *game_context = game_manager_game_context_get(manager);
 
     // Draw score
-    canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
+    UNUSED(game_context);
+    // canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
 
 static const EntityDescription player_desc = {
-    .start = NULL,           // called when entity is added to the level
-    .stop = NULL,            // called when entity is removed from the level
-    .update = player_update, // called every frame
-    .render = player_render, // called every frame, after update
-    .collision = NULL,       // called when entity collides with another entity
-    .event = NULL,           // called when entity receives an event
-    .context_size =
-        sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
+    .start = NULL,                         // called when entity is added to the level
+    .stop = NULL,                          // called when entity is removed from the level
+    .update = player_update,               // called every frame
+    .render = player_render,               // called every frame, after update
+    .collision = NULL,                     // called when entity collides with another entity
+    .event = NULL,                         // called when entity receives an event
+    .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
 /****** Entities: Target ******/
 
 static Vector random_pos(void)
 {
-    return (Vector){rand() % (WORLD_WIDTH - 8) + 4, rand() % (WORLD_HEIGHT - 8) + 4};
+    return (Vector){rand() % (SCREEN_WIDTH - 8) + 4, rand() % (SCREEN_HEIGHT - 8) + 4};
 }
 
 static void target_start(Entity *self, GameManager *manager, void *context)
@@ -121,8 +169,6 @@ static void target_render(Entity *self, GameManager *manager, Canvas *canvas, vo
 
     // Draw target
     canvas_draw_disc(canvas, pos.x, pos.y, 3);
-
-    // Draw background
 }
 
 static void target_collision(Entity *self, Entity *other, GameManager *manager, void *context)
@@ -150,6 +196,134 @@ static const EntityDescription target_desc = {
     .context_size = 0,             // size of entity context, will be automatically allocated and freed
 };
 
+/****** Entities: Wall ******/
+
+static uint8_t wall_index;
+
+static void wall_start(Entity *self, GameManager *manager, void *context);
+
+typedef struct
+{
+    float width;
+    float height;
+} WallContext;
+
+static void wall_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
+{
+    UNUSED(manager);
+
+    WallContext *wall = context;
+
+    Vector pos = entity_pos_get(self);
+
+    canvas_draw_box(
+        canvas, pos.x - wall->width / 2, pos.y - wall->height / 2, wall->width, wall->height);
+}
+
+static void wall_collision(Entity *self, Entity *other, GameManager *manager, void *context)
+{
+    WallContext *wall = context;
+
+    // Check if wall collided with player
+    if (entity_description_get(other) == &player_desc)
+    {
+        // Increase score
+        GameContext *game_context = game_manager_game_context_get(manager);
+        game_context->score++;
+
+        PlayerContext *player = (PlayerContext *)entity_context_get(other);
+        if (player)
+        {
+            if (player->dx || player->dy)
+            {
+                Vector pos = entity_pos_get(other);
+
+                // TODO: Based on where we collided, we should still slide across/down the wall.
+                UNUSED(wall);
+
+                if (player->dx)
+                {
+                    FURI_LOG_D(
+                        "Player",
+                        "Player collided with wall, dx: %d.  center:%f,%f",
+                        player->dx,
+                        (double)pos.x,
+                        (double)pos.y);
+                    pos.x -= player->dx;
+                    player->dx = 0;
+                }
+                if (player->dy)
+                {
+                    FURI_LOG_D(
+                        "Player",
+                        "Player collided with wall, dy: %d.  center:%f,%f",
+                        player->dy,
+                        (double)pos.x,
+                        (double)pos.y);
+                    pos.y -= player->dy;
+                    player->dy = 0;
+                }
+                entity_pos_set(other, pos);
+                FURI_LOG_D("Player", "Set to center:%f,%f", (double)pos.x, (double)pos.y);
+            }
+        }
+        else
+        {
+            FURI_LOG_D("Player", "Player collided with wall, but context null.");
+        }
+    }
+    else
+    {
+        // HACK: Wall touching other items destroys each other (to help find collider issues)
+        Level *level = game_manager_current_level_get(manager);
+        level_remove_entity(level, self);
+        level_remove_entity(level, other);
+    }
+}
+
+static const EntityDescription wall_desc = {
+    .start = wall_start,         // called when entity is added to the level
+    .stop = NULL,                // called when entity is removed from the level
+    .update = NULL,              // called every frame
+    .render = wall_render,       // called every frame, after update
+    .collision = wall_collision, // called when entity collides with another entity
+    .event = NULL,               // called when entity receives an event
+    .context_size =
+        sizeof(WallContext), // size of entity context, will be automatically allocated and freed
+};
+
+static void wall_start(Entity *self, GameManager *manager, void *context)
+{
+    UNUSED(manager);
+
+    WallContext *wall = context;
+
+    // TODO: We can get the current number of items from the level (instead of wall_index).
+
+    if (wall_index < COUNT_OF(walls))
+    {
+        if (walls[wall_index].horizontal)
+        {
+            wall->width = walls[wall_index].length * 2;
+            wall->height = 1 * 2;
+        }
+        else
+        {
+            wall->width = 1 * 2;
+            wall->height = walls[wall_index].length * 2;
+        }
+
+        entity_pos_set(
+            self,
+            (Vector){
+                walls[wall_index].x + wall->width / 2, walls[wall_index].y + wall->height / 2});
+
+        entity_collider_add_rect(self, wall->width, wall->height);
+
+        wall_index++;
+    }
+}
+
 /****** Level ******/
 
 static void level_alloc(Level *level, GameManager *manager, void *context)
@@ -162,6 +336,13 @@ static void level_alloc(Level *level, GameManager *manager, void *context)
 
     // Add first target entity to the level
     level_add_entity(level, &target_desc);
+
+    // Add wall entities to the level
+    wall_index = 0;
+    for (size_t i = 0; i < COUNT_OF(walls); i++)
+    {
+        level_add_entity(level, &wall_desc);
+    }
 }
 
 static const LevelBehaviour level = {
