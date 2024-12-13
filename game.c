@@ -38,6 +38,8 @@ Wall walls[] = {
 // update the background as the player moves
 void background_render(Canvas *canvas, Vector pos)
 {
+    // clear the screen
+    canvas_clear(canvas);
     // player starts at 64 (x) and 32 (y)
 
     // test with a static dot at (72, 40)
@@ -118,6 +120,9 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
 
     // Get player position
     Vector pos = entity_pos_get(self);
+
+    // draw background
+    background_render(canvas, pos);
 
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
