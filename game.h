@@ -46,3 +46,5 @@ typedef enum
     DRAW_ICON_TREE,  // 	canvas_draw_icon
     DRAW_ICON_WOMAN, // 	canvas_draw_icon
 } FlipWorldDrawObjects;
+
+// create custom icons at https://lopaka.app/sandbox

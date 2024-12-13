@@ -41,7 +41,51 @@ Wall walls[] = {
 static int camera_x = 0;
 static int camera_y = 0;
 
+// Draw a line of icons (16 width)
+static void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, const Icon *icon)
+{
+    for (int i = 0; i < amount; i++)
+    {
+        if (horizontal)
+        {
+            // check if element is outside the world
+            if (pos.x + (i * 17) > WORLD_WIDTH)
+            {
+                break;
+            }
+
+            canvas_draw_icon(canvas, pos.x + (i * 17) - camera_x, pos.y - camera_y, icon);
+        }
+        else
+        {
+            // check if element is outside the world
+            if (pos.y + (i * 17) > WORLD_HEIGHT)
+            {
+                break;
+            }
+
+            canvas_draw_icon(canvas, pos.x - camera_x, pos.y + (i * 17) - camera_y, icon);
+        }
+    }
+}
+// Draw a half section of icons (16 width)
+void draw_icon_half_world(Canvas *canvas, bool right, const Icon *icon)
+{
+    for (int i = 0; i < 10; i++)
+    {
+        if (right)
+        {
+            draw_icon_line(canvas, (Vector){WORLD_WIDTH / 2 + 6, i * 19 + 2}, 11, true, icon);
+        }
+        else
+        {
+            draw_icon_line(canvas, (Vector){0, i * 19 + 2}, 11, true, icon);
+        }
+    }
+}
+
 // Background rendering function
+// TODO: each object needs a collision box so we can detect collisions and prevent movement through walls.
 static void background_render(Canvas *canvas, Vector pos)
 {
     // Clear the canvas
@@ -55,9 +99,6 @@ static void background_render(Canvas *canvas, Vector pos)
     camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
     camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
-    // Draw the outer bounds adjusted by camera offset
-    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
-
     // Draw other elements adjusted by camera offset
     // Static Dot at (72, 40)
     canvas_draw_dot(canvas, 72 - camera_x, 40 - camera_y);
@@ -69,25 +110,29 @@ static void background_render(Canvas *canvas, Vector pos)
     canvas_draw_frame(canvas, 96 - camera_x, 48 - camera_y, 8, 8);
 
     // Static earth icon at (112, 56)
-    canvas_draw_icon(canvas, 112 - camera_x, 56 - camera_y, &I_icon_earth);
+    canvas_draw_icon(canvas, 112 - camera_x, 56 - camera_y, &I_icon_earth_15x16);
 
     // static home icon at (128, 24)
-    canvas_draw_icon(canvas, 128 - camera_x, 24 - camera_y, &I_icon_home);
+    canvas_draw_icon(canvas, 128 - camera_x, 24 - camera_y, &I_icon_home_15x16);
 
     // static menu icon at (144, 24)
-    canvas_draw_icon(canvas, 144 - camera_x, 24 - camera_y, &I_icon_info);
+    canvas_draw_icon(canvas, 144 - camera_x, 24 - camera_y, &I_icon_info_15x16);
 
     // static man icon at (160, 56)
-    canvas_draw_icon(canvas, 160 - camera_x, 56 - camera_y, &I_icon_man);
+    canvas_draw_icon(canvas, 160 - camera_x, 56 - camera_y, &I_icon_man_7x16);
 
-    // static plant icon at (176, 32)
-    canvas_draw_icon(canvas, 176 - camera_x, 32 - camera_y, &I_icon_plant);
+    // static woman icon at (208, 56)
+    canvas_draw_icon(canvas, 168 - camera_x, 56 - camera_y, &I_icon_woman_9x16);
 
-    // static tree icon at (104, 40)
-    canvas_draw_icon(canvas, 192 - camera_x, 40 - camera_y, &I_icon_tree);
+    // static plant icon at (168, 32)
+    canvas_draw_icon(canvas, 168 - camera_x, 32 - camera_y, &I_icon_plant_16x16);
 
-    // static woman icon at (208, 32)
-    canvas_draw_icon(canvas, 208 - camera_x, 32 - camera_y, &I_icon_woman);
+    // tree world
+    draw_icon_half_world(canvas, true, &I_icon_tree_16x16);
+
+    // Draw the outer bounds adjusted by camera offset
+    // we draw this last to ensure users can see the bounds
+    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 }
 
 /****** Entities: Player ******/
@@ -110,7 +155,7 @@ static void player_spawn(Level *level, GameManager *manager)
 
     // Set player position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
-    entity_pos_set(player, (Vector){64, 32});
+    entity_pos_set(player, (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 10x10
