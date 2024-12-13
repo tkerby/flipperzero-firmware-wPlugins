@@ -6,7 +6,7 @@ App(
     stack_size=4 * 1024,
     fap_icon="app.png",
     fap_category="GPIO",
-    fap_description="Open World Multiplayer game, best played with the VGM."
+    fap_description="Open World Multiplayer game, best played with the VGM.",
     fap_icon_assets="assets",
     fap_file_assets="assets", # Do not touch this and the next line, it is needed to generate sprites
     fap_extbuild=(
