@@ -2,17 +2,15 @@
 
 /****** Entities: Player ******/
 
-typedef struct
-{
-    Sprite *sprite;
+typedef struct {
+    Sprite* sprite;
 } PlayerContext;
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 static const EntityDescription player_desc;
 
-static void player_spawn(Level *level, GameManager *manager)
-{
-    Entity *player = level_add_entity(level, &player_desc);
+static void player_spawn(Level* level, GameManager* manager) {
+    Entity* player = level_add_entity(level, &player_desc);
 
     // Set player position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
@@ -23,14 +21,13 @@ static void player_spawn(Level *level, GameManager *manager)
     entity_collider_add_rect(player, 10, 10);
 
     // Get player context
-    PlayerContext *player_context = entity_context_get(player);
+    PlayerContext* player_context = entity_context_get(player);
 
     // Load player sprite
     player_context->sprite = game_manager_sprite_load(manager, "player.fxbm");
 }
 
-static void player_update(Entity *self, GameManager *manager, void *context)
-{
+static void player_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(context);
 
     // Get game input
@@ -40,14 +37,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     Vector pos = entity_pos_get(self);
 
     // Control player movement
-    if (input.held & GameKeyUp)
-        pos.y -= 2;
-    if (input.held & GameKeyDown)
-        pos.y += 2;
-    if (input.held & GameKeyLeft)
-        pos.x -= 2;
-    if (input.held & GameKeyRight)
-        pos.x += 2;
+    if(input.held & GameKeyUp) pos.y -= 2;
+    if(input.held & GameKeyDown) pos.y += 2;
+    if(input.held & GameKeyLeft) pos.x -= 2;
+    if(input.held & GameKeyRight) pos.x += 2;
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
     pos.x = CLAMP(pos.x, 123, 5);
@@ -57,16 +50,14 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     entity_pos_set(self, pos);
 
     // Control game exit
-    if (input.pressed & GameKeyBack)
-    {
+    if(input.pressed & GameKeyBack) {
         game_manager_game_stop(manager);
     }
 }
 
-static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
-{
+static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     // Get player context
-    PlayerContext *player = context;
+    PlayerContext* player = context;
 
     // Get player position
     Vector pos = entity_pos_get(self);
@@ -76,32 +67,30 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
 
     // Get game context
-    GameContext *game_context = game_manager_game_context_get(manager);
+    GameContext* game_context = game_manager_game_context_get(manager);
 
     // Draw score
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
 
 static const EntityDescription player_desc = {
-    .start = NULL,           // called when entity is added to the level
-    .stop = NULL,            // called when entity is removed from the level
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
     .update = player_update, // called every frame
     .render = player_render, // called every frame, after update
-    .collision = NULL,       // called when entity collides with another entity
-    .event = NULL,           // called when entity receives an event
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
     .context_size =
         sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
 /****** Entities: Target ******/
 
-static Vector random_pos(void)
-{
+static Vector random_pos(void) {
     return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 
-static void target_start(Entity *self, GameManager *manager, void *context)
-{
+static void target_start(Entity* self, GameManager* manager, void* context) {
     UNUSED(context);
     UNUSED(manager);
     // Set target position
@@ -111,8 +100,7 @@ static void target_start(Entity *self, GameManager *manager, void *context)
     entity_collider_add_circle(self, 3);
 }
 
-static void target_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
-{
+static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(context);
     UNUSED(manager);
 
@@ -126,14 +114,12 @@ static void target_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     canvas_draw_box(canvas, 0, 20, 40, 20);
 }
 
-static void target_collision(Entity *self, Entity *other, GameManager *manager, void *context)
-{
+static void target_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
     UNUSED(context);
     // Check if target collided with player
-    if (entity_description_get(other) == &player_desc)
-    {
+    if(entity_description_get(other) == &player_desc) {
         // Increase score
-        GameContext *game_context = game_manager_game_context_get(manager);
+        GameContext* game_context = game_manager_game_context_get(manager);
         game_context->score++;
 
         // Move target to new random position
@@ -142,19 +128,18 @@ static void target_collision(Entity *self, Entity *other, GameManager *manager, 
 }
 
 static const EntityDescription target_desc = {
-    .start = target_start,         // called when entity is added to the level
-    .stop = NULL,                  // called when entity is removed from the level
-    .update = NULL,                // called every frame
-    .render = target_render,       // called every frame, after update
+    .start = target_start, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = NULL, // called every frame
+    .render = target_render, // called every frame, after update
     .collision = target_collision, // called when entity collides with another entity
-    .event = NULL,                 // called when entity receives an event
-    .context_size = 0,             // size of entity context, will be automatically allocated and freed
+    .event = NULL, // called when entity receives an event
+    .context_size = 0, // size of entity context, will be automatically allocated and freed
 };
 
 /****** Level ******/
 
-static void level_alloc(Level *level, GameManager *manager, void *context)
-{
+static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(manager);
     UNUSED(context);
 
@@ -170,10 +155,10 @@ static void level_alloc(Level *level, GameManager *manager, void *context)
 
 static const LevelBehaviour level = {
     .alloc = level_alloc, // called once, when level allocated
-    .free = NULL,         // called once, when level freed
-    .start = NULL,        // called when level is changed to this level
-    .stop = NULL,         // called when level is changed from this level
-    .context_size = 0,    // size of level context, will be automatically allocated and freed
+    .free = NULL, // called once, when level freed
+    .start = NULL, // called when level is changed to this level
+    .stop = NULL, // called when level is changed from this level
+    .context_size = 0, // size of level context, will be automatically allocated and freed
 };
 
 /****** Game ******/
@@ -182,13 +167,12 @@ static const LevelBehaviour level = {
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
 */
-static void game_start(GameManager *game_manager, void *ctx)
-{
+static void game_start(GameManager* game_manager, void* ctx) {
     UNUSED(game_manager);
 
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
-    GameContext *game_context = ctx;
+    GameContext* game_context = ctx;
     game_context->score = 0;
 
     // Add level to the game
@@ -200,9 +184,8 @@ static void game_start(GameManager *game_manager, void *ctx)
     You don't need to free level, sprites or entities, it will be done automatically.
     Also, you don't need to free game_context, it will be done automatically, after this function.
 */
-static void game_stop(void *ctx)
-{
-    GameContext *game_context = ctx;
+static void game_stop(void* ctx) {
+    GameContext* game_context = ctx;
     // Do some deinitialization here, for example you can save score to storage.
     // For simplicity, we will just print it.
     FURI_LOG_I("Game", "Your score: %lu", game_context->score);
@@ -212,10 +195,10 @@ static void game_stop(void *ctx)
     Your game configuration, do not rename this variable, but you can change its content here.
 */
 const Game game = {
-    .target_fps = 30,                    // target fps, game will try to keep this value
-    .show_fps = false,                   // show fps counter on the screen
-    .always_backlight = true,            // keep display backlight always on
-    .start = game_start,                 // will be called once, when game starts
-    .stop = game_stop,                   // will be called once, when game stops
+    .target_fps = 30, // target fps, game will try to keep this value
+    .show_fps = false, // show fps counter on the screen
+    .always_backlight = true, // keep display backlight always on
+    .start = game_start, // will be called once, when game starts
+    .stop = game_stop, // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };
