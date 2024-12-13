@@ -44,6 +44,9 @@ void background_render(Canvas *canvas, Vector pos)
 
     // test with a static dot at (72, 40)
     canvas_draw_dot(canvas, 72 + (64 - pos.x), 40 + (32 - pos.y));
+
+    // test with a static circl at (16, 16)
+    canvas_draw_circle(canvas, 16 + (64 - pos.x), 16 + (32 - pos.y), 4);
 }
 
 /****** Entities: Player ******/
@@ -220,9 +223,11 @@ static void wall_render(Entity *self, GameManager *manager, Canvas *canvas, void
     WallContext *wall = context;
 
     Vector pos = entity_pos_get(self);
-
-    canvas_draw_box(
-        canvas, pos.x - wall->width / 2, pos.y - wall->height / 2, wall->width, wall->height);
+    UNUSED(wall);
+    UNUSED(canvas);
+    UNUSED(pos);
+    // canvas_draw_box(
+    //     canvas, pos.x - wall->width / 2, pos.y - wall->height / 2, wall->width, wall->height);
 }
 
 static void wall_collision(Entity *self, Entity *other, GameManager *manager, void *context)
