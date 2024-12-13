@@ -35,18 +35,36 @@ Wall walls[] = {
     WALL(false, 26, 60, 6),
 };
 
-// update the background as the player moves
+// Global variables to store camera position
+int camera_x = 0;
+int camera_y = 0;
+
+// Background rendering function
 void background_render(Canvas *canvas, Vector pos)
 {
-    // clear the screen
+    // Clear the canvas
     canvas_clear(canvas);
-    // player starts at 64 (x) and 32 (y)
 
-    // test with a static dot at (72, 40)
-    canvas_draw_dot(canvas, 72 + (64 - pos.x), 40 + (32 - pos.y));
+    // Calculate camera offset to center the player
+    camera_x = pos.x - (SCREEN_WIDTH / 2);
+    camera_y = pos.y - (SCREEN_HEIGHT / 2);
 
-    // test with a static circl at (16, 16)
-    canvas_draw_circle(canvas, 16 + (64 - pos.x), 16 + (32 - pos.y), 4);
+    // Clamp camera position to prevent showing areas outside the world
+    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
+    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
+
+    // Draw the outer bounds adjusted by camera offset
+    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
+
+    // Draw other elements adjusted by camera offset
+    // Static Dot at (72, 40)
+    canvas_draw_dot(canvas, 72 - camera_x, 40 - camera_y);
+
+    // Static Circle at (16, 16) with radius 4
+    canvas_draw_circle(canvas, 16 - camera_x, 16 - camera_y, 4);
+
+    // Static 8x8 Rectangle Frame at (96, 48)
+    canvas_draw_frame(canvas, 96 - camera_x, 48 - camera_y, 8, 8);
 }
 
 /****** Entities: Player ******/
@@ -103,8 +121,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         pos.x += 2;
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
-    pos.x = CLAMP(pos.x, SCREEN_WIDTH - 5, 5);
-    pos.y = CLAMP(pos.y, SCREEN_HEIGHT - 5, 5);
+    pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
+    pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
 
     // Set new player position
     entity_pos_set(self, pos);
@@ -124,17 +142,16 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Get player position
     Vector pos = entity_pos_get(self);
 
-    // draw background
+    // Draw background (updates camera_x and camera_y)
     background_render(canvas, pos);
 
-    // Draw player sprite
-    // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
-    canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
+    // Draw player sprite relative to camera
+    canvas_draw_sprite(canvas, player->sprite, pos.x - camera_x - 5, pos.y - camera_y - 5);
 
     // Get game context
     GameContext *game_context = game_manager_game_context_get(manager);
 
-    // Draw score
+    // Draw score (optional)
     UNUSED(game_context);
     // canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
@@ -175,8 +192,8 @@ static void target_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Get target position
     Vector pos = entity_pos_get(self);
 
-    // Draw target
-    canvas_draw_disc(canvas, pos.x, pos.y, 3);
+    // Draw target relative to the camera
+    canvas_draw_disc(canvas, pos.x - camera_x, pos.y - camera_y, 3);
 }
 
 static void target_collision(Entity *self, Entity *other, GameManager *manager, void *context)
@@ -223,11 +240,14 @@ static void wall_render(Entity *self, GameManager *manager, Canvas *canvas, void
     WallContext *wall = context;
 
     Vector pos = entity_pos_get(self);
-    UNUSED(wall);
-    UNUSED(canvas);
-    UNUSED(pos);
-    // canvas_draw_box(
-    //     canvas, pos.x - wall->width / 2, pos.y - wall->height / 2, wall->width, wall->height);
+
+    // Draw the wall relative to the camera
+    canvas_draw_box(
+        canvas,
+        pos.x - camera_x - (wall->width / 2),
+        pos.y - camera_y - (wall->height / 2),
+        wall->width,
+        wall->height);
 }
 
 static void wall_collision(Entity *self, Entity *other, GameManager *manager, void *context)
