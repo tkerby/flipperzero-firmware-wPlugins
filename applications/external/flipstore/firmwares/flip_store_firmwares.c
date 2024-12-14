@@ -107,9 +107,8 @@ bool flip_store_get_firmware_file(char* link, char* name, char* filename) {
         filename);
     fhttp.save_received_data = false;
     fhttp.is_bytes_request = true;
-    char* headers = jsmn("Content-Type", "application/octet-stream");
-    bool sent_request = flipper_http_get_request_bytes(link, headers);
-    free(headers);
+    bool sent_request =
+        flipper_http_get_request_bytes(link, "{\"Content-Type\":\"application/octet-stream\"}");
     if(sent_request) {
         fhttp.state = RECEIVING;
         return true;
