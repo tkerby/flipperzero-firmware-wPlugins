@@ -166,6 +166,19 @@ static bool alloc_text_input_view(void *context, char *title)
         {
             return false;
         }
+        char ssid[64];
+        char pass[64];
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+        {
+            if (strcmp(title, "SSID") == 0)
+            {
+                strncpy(app->text_input_temp_buffer, ssid, app->text_input_buffer_size);
+            }
+            else
+            {
+                strncpy(app->text_input_temp_buffer, pass, app->text_input_buffer_size);
+            }
+        }
     }
     return true;
 }
@@ -201,6 +214,8 @@ static bool alloc_variable_item_list(void *context)
         {
             variable_item_set_current_value_text(app->variable_item_ssid, ssid);
             // variable_item_set_current_value_text(app->variable_item_pass, pass);
+            save_char("WiFi-SSID", ssid);
+            save_char("WiFi-Password", pass);
         }
     }
     return true;
@@ -502,6 +517,8 @@ static void settings_item_selected(void *context, uint32_t index)
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return;
     }
+    char ssid[64];
+    char pass[64];
     switch (index)
     {
     case 0: // Input SSID
@@ -512,8 +529,7 @@ static void settings_item_selected(void *context, uint32_t index)
             return;
         }
         // load SSID
-        char ssid[64];
-        if (load_char("WiFi-SSID", ssid, sizeof(ssid)))
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
         {
             strncpy(app->text_input_temp_buffer, ssid, app->text_input_buffer_size - 1);
             app->text_input_temp_buffer[app->text_input_buffer_size - 1] = '\0';
@@ -528,8 +544,7 @@ static void settings_item_selected(void *context, uint32_t index)
             return;
         }
         // load password
-        char pass[64];
-        if (load_char("WiFi-Password", pass, sizeof(pass)))
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
         {
             strncpy(app->text_input_temp_buffer, pass, app->text_input_buffer_size - 1);
             app->text_input_temp_buffer[app->text_input_buffer_size - 1] = '\0';
