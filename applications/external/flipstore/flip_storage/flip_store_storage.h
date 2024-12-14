@@ -25,4 +25,8 @@ bool parse_json_incrementally(
     char* value_buffer,
     size_t value_buffer_size);
 
+bool save_char(const char* path_name, const char* value);
+
+bool load_char(const char* path_name, char* value, size_t value_size);
+
 #endif
