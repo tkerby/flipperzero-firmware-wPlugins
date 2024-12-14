@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1212-1321-0.420.0-c0f9167](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1214-0125-0.420.0-63e0d30](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-12 13:21 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-12 13:21 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-14 01:25 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-12 01:25 EST`
 - Updated: [Chess v1.12 (By xtruan)](https://github.com/xtruan/flipper-chess)
 - Updated: [MFC Dictionary dedupe script (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bed41647503ca124743783f9e6a9fdd074e20e6f)
 - NFC: [Parser for Ventra ULEV1 (By hazardousvoltage)](https://github.com/Next-Flip/Momentum-Firmware/pull/310)
