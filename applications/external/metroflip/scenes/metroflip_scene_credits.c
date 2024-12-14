@@ -3,15 +3,6 @@
 
 #define TAG "Metroflip:Scene:Credits"
 
-void metroflip_credits_widget_callback(GuiButtonType result, InputType type, void* context) {
-    Metroflip* app = context;
-    UNUSED(result);
-
-    if(type == InputTypeShort) {
-        scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
-    }
-}
-
 void metroflip_scene_credits_on_enter(void* context) {
     Metroflip* app = context;
     Widget* widget = app->widget;
@@ -26,15 +17,21 @@ void metroflip_scene_credits_on_enter(void* context) {
     furi_string_cat_printf(str, "Inspired by Metrodroid\n\n");
     furi_string_cat_printf(str, "\e#Parser Credits:\n\n");
     furi_string_cat_printf(str, "Rav-Kav Parser: luu176\n\n");
+    furi_string_cat_printf(str, "Navigo Parser: luu176\n\n");
     furi_string_cat_printf(str, "Metromoney Parser:\n Leptopt1los\n\n");
     furi_string_cat_printf(str, "Bip! Parser:\n rbasoalto, gornekich\n\n");
     furi_string_cat_printf(str, "CharlieCard Parser:\n zacharyweiss\n\n");
-    furi_string_cat_printf(str, "Info Slave: equip\n\n");
+    furi_string_cat_printf(str, "Clipper Parser:\n ke6jjj\n\n");
+    furi_string_cat_printf(str, "Troika Parser:\n gornekich\n\n");
+    furi_string_cat_printf(str, "ITSO Parser:\n gsp8181, hedger, gornekich\n\n");
+    furi_string_cat_printf(str, "Opal Parser:\n gornekich\n\n");
+    furi_string_cat_printf(str, "Myki Parser:\n gornekich\n\n");
+    furi_string_cat_printf(str, "Info Slaves:\n Equip, TheDingo8MyBaby\n\n");
 
     widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(str));
 
     widget_add_button_element(
-        widget, GuiButtonTypeRight, "Exit", metroflip_credits_widget_callback, app);
+        widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
 
     furi_string_free(str);
     view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
