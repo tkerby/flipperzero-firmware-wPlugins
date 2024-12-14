@@ -1,0 +1,15 @@
+App(
+    appid="gnomishtool",
+    name="GnomishTool",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="F0App_entry",
+    requires=["gui"],
+    stack_size=1 * 1024,
+    fap_icon="F0Icon.png",
+    fap_category="Tools",
+    fap_icon_assets="icons",
+    fap_author="@Andreeved88",
+    fap_weburl="https://github.com/Andreeved88/GnomishTool",
+    fap_version="0.9",
+    fap_description="Gnomish army multitool. Assembled in Gnomeregan",
+)
