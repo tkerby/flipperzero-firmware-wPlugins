@@ -1,25 +1,15 @@
 # GnomishTool 
-Гномский армейский нож для владельцев Flipper Zero.
-Версия для гражданского рынка! Очередной подгон от братишек из Гномрегана.
+Gnomish army knife for Flipper Zero owners.
+Civilian market version! Another gift from the brothers from Gnomeregan.
 
 -----
-<h2 align="left">Функции</h2>
+<h2 align="left">Functions</h2>
 <br>
 <img src=".github/assets/view_main.png" align="left" height="160hv"/>
 
-   - <ins><b>Линейка :</b></ins> 3 см с разделением до 0.25мм(1пкс). Дюймовая и полдюймовая (0.50 или 1/2) отметки для владельцев неоткалиброванных глазомеров!
-   - <ins><b>Счетчик:</b></ins> Считает количество импульсов от навиблока. Встроенный Х5 повторитель для ускорения!
-   - <ins><b>Фонарик:</b></ins> Подсветка экраном, внешним эммитером, кристаллическим нотификатором, а также 3 встроенных светофильтра!
-   - <ins><b>Детектор обрыва:</b></ins>2.4кГц вой при замыкании (и тишина при обрыве) между 7 и 8 выходом (C3-Gnd).
-   - <ins><b>Вольтметр:</b></ins> Измеряет напряжение между 7 и 8 выходами, предел 2048 мВ при постоянном токе.
+   - <ins><b>Ruler :</b></ins> 3 cm with a division of up to 0.25 mm (1 px). Inch and half-inch (0.50 or 1/2) marks for owners of uncalibrated eyeballs!
+   - <ins><b>Counter:</b></ins> Counts the number of pulses from the naviblock. Built-in X5 repeater for speed!
+   - <ins><b>Flashlight:</b></ins> Backlight with screen, external emitter, crystal notifier, and 3 built-in light filters!
+   - <ins><b>Break detector:</b></ins> 2.4 kHz howl when shorted (and silence when open) between output 7 and 8 (C3-Gnd).
+   - <ins><b>Voltmeter:</b></ins> Measures voltage between outputs 7 and 8, limit 2048 mV DC.
 <br>
-
-<h2 align="left">Установка и запуск</h2>
-  
-   - копируем gnomishtool.fap в apps/Tools/
-   - ищем в меню Apps > Tools
-   - запускаем
-
-<br>
-API от 78.1<br>
-Cобирается и тестируется под Momentum
