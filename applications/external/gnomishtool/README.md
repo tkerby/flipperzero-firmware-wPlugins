@@ -5,7 +5,6 @@ Civilian market version! Another gift from the brothers from Gnomeregan.
 -----
 <h2 align="left">Functions</h2>
 <br>
-<img src=".github/assets/view_main.png" align="left" height="160hv"/>
 
    - <ins><b>Ruler :</b></ins> 3 cm with a division of up to 0.25 mm (1 px). Inch and half-inch (0.50 or 1/2) marks for owners of uncalibrated eyeballs!
    - <ins><b>Counter:</b></ins> Counts the number of pulses from the naviblock. Built-in X5 repeater for speed!
