@@ -17,7 +17,7 @@ static void F0App_input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put((FuriMessageQueue*)ctx, input_event, FuriWaitForever);
 }
 
-int32_t F0App_entry(void* p) {
+int32_t gnomishtool_main(void* p) {
     UNUSED(p);
     F0App* app = malloc(sizeof(F0App));
     app->event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
