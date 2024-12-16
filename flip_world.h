@@ -14,35 +14,26 @@
 #define TAG "FlipWorld"
 #define VERSION_TAG "FlipWorld v0.1"
 
-// Screen size
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-
-// World size (3x3)
-#define WORLD_WIDTH 384
-#define WORLD_HEIGHT 192
-
-// Maximum number of world objects
-#define MAX_WORLD_OBJECTS 100
-// Maximum number of world tokens
-#define MAX_WORLD_TOKENS 512
-
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
     FlipWorldSubmenuIndexRun, // Click to run the FlipWorld application
     FlipWorldSubmenuIndexAbout,
     FlipWorldSubmenuIndexSettings,
+    FlipWorldSubmenuIndexWiFiSettings,
+    FlipWorldSubmenuIndexGameSettings,
+    FlipWorldSubmenuIndexUserSettings,
 } FlipWorldSubmenuIndex;
 
 // Define a single view for our FlipWorld application
 typedef enum
 {
-    FlipWorldViewMain,      // The main screen
-    FlipWorldViewSubmenu,   // The submenu
-    FlipWorldViewAbout,     // The about screen
-    FlipWorldViewSettings,  // The settings screen
-    FlipWorldViewTextInput, // The text input screen
+    FlipWorldViewMain,             // The main screen
+    FlipWorldViewSubmenu,          // The submenu
+    FlipWorldViewAbout,            // The about screen
+    FlipWorldViewSettings,         // The settings screen
+    FlipWorldViewVariableItemList, // The variable item list screen
+    FlipWorldViewTextInput,        // The text input screen
 } FlipWorldView;
 
 // Define a custom event for our FlipWorld application
@@ -55,18 +46,27 @@ typedef enum
 typedef struct
 {
     // necessary
-    ViewDispatcher *view_dispatcher;      // Switches between our views
-    View *view_main;                      // The game screen
-    View *view_about;                     // The about screen
-    Submenu *submenu;                     // The submenu
-    VariableItemList *variable_item_list; // The variable item list (settngs)
-    VariableItem *variable_item_ssid;     // The variable item
-    VariableItem *variable_item_pass;     // The variable item
+    ViewDispatcher *view_dispatcher;       // Switches between our views
+    View *view_main;                       // The game screen
+    View *view_about;                      // The about screen
+    Submenu *submenu;                      // The submenu
+    Submenu *submenu_settings;             // The settings submenu
+    VariableItemList *variable_item_list;  // The variable item list (settngs)
+    VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
+    VariableItem *variable_item_wifi_pass; // The variable item for WiFi password
+    //
+    VariableItem *variable_item_game_fps; // The variable item for Game FPS
+    //
+    VariableItem *variable_item_user_username; // The variable item for the User username
+    VariableItem *variable_item_user_password; // The variable item for the User password
 
     UART_TextInput *text_input;      // The text input
     char *text_input_buffer;         // Buffer for the text input
     char *text_input_temp_buffer;    // Temporary buffer for the text input
     uint32_t text_input_buffer_size; // Size of the text input buffer
+
 } FlipWorldApp;
 
+extern char *game_fps_choices[];
+extern char *game_fps; // The game FPS
 // TODO - Add Download world function and download world pack button

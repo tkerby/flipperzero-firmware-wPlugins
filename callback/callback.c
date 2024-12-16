@@ -9,7 +9,7 @@ static void frame_cb(GameEngine *engine, Canvas *canvas, InputState input, void 
     game_manager_render(game_manager, canvas);
 }
 
-int32_t game_app(void *p)
+static int32_t game_app(void *p)
 {
     UNUSED(p);
     GameManager *game_manager = game_manager_alloc();
@@ -65,18 +65,26 @@ int32_t game_app(void *p)
 
 static bool alloc_about_view(void *context);
 static bool alloc_text_input_view(void *context, char *title);
-static bool alloc_variable_item_list(void *context);
+static bool alloc_variable_item_list(void *context, uint32_t view_id);
 //
-static void settings_item_selected(void *context, uint32_t index);
+static void wifi_settings_item_selected(void *context, uint32_t index);
 static void text_updated_ssid(void *context);
 static void text_updated_pass(void *context);
+//
+static void flip_world_game_fps_change(VariableItem *item);
+static void game_settings_item_selected(void *context, uint32_t index);
 
-static uint32_t callback_to_submenu(void *context)
+uint32_t callback_to_submenu(void *context)
 {
     UNUSED(context);
     return FlipWorldViewSubmenu;
 }
 static uint32_t callback_to_wifi_settings(void *context)
+{
+    UNUSED(context);
+    return FlipWorldViewVariableItemList;
+}
+static uint32_t callback_to_settings(void *context)
 {
     UNUSED(context);
     return FlipWorldViewSettings;
@@ -182,7 +190,7 @@ static bool alloc_text_input_view(void *context, char *title)
     }
     return true;
 }
-static bool alloc_variable_item_list(void *context)
+static bool alloc_variable_item_list(void *context, uint32_t view_id)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -192,31 +200,97 @@ static bool alloc_variable_item_list(void *context)
     }
     if (!app->variable_item_list)
     {
-        if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewSettings, settings_item_selected, callback_to_submenu, &app->view_dispatcher, app))
-            return false;
+        switch (view_id)
+        {
+        case FlipWorldSubmenuIndexWiFiSettings:
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, wifi_settings_item_selected, callback_to_settings, &app->view_dispatcher, app))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate variable item list");
+                return false;
+            }
 
-        if (!app->variable_item_list)
-            return false;
+            if (!app->variable_item_list)
+            {
+                FURI_LOG_E(TAG, "Variable item list is NULL");
+                return false;
+            }
 
-        if (!app->variable_item_ssid)
-        {
-            app->variable_item_ssid = variable_item_list_add(app->variable_item_list, "SSID", 0, NULL, NULL);
-            variable_item_set_current_value_text(app->variable_item_ssid, "");
+            if (!app->variable_item_wifi_ssid)
+            {
+                app->variable_item_wifi_ssid = variable_item_list_add(app->variable_item_list, "SSID", 0, NULL, NULL);
+                variable_item_set_current_value_text(app->variable_item_wifi_ssid, "");
+            }
+            if (!app->variable_item_wifi_pass)
+            {
+                app->variable_item_wifi_pass = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
+                variable_item_set_current_value_text(app->variable_item_wifi_pass, "");
+            }
+            char ssid[64];
+            char pass[64];
+            if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+            {
+                variable_item_set_current_value_text(app->variable_item_wifi_ssid, ssid);
+                // variable_item_set_current_value_text(app->variable_item_wifi_pass, pass);
+                save_char("WiFi-SSID", ssid);
+                save_char("WiFi-Password", pass);
+            }
+            break;
+        case FlipWorldSubmenuIndexGameSettings:
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, game_settings_item_selected, callback_to_settings, &app->view_dispatcher, app))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate variable item list");
+                return false;
+            }
+
+            if (!app->variable_item_list)
+            {
+                FURI_LOG_E(TAG, "Variable item list is NULL");
+                return false;
+            }
+
+            if (!app->variable_item_game_fps)
+            {
+                app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, flip_world_game_fps_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_fps, 0);
+                variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[0]);
+            }
+            char _game_fps[8];
+            if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
+            {
+                int index = strcmp(_game_fps, "30") == 0 ? 0 : strcmp(_game_fps, "60") == 0 ? 1
+                                                           : strcmp(_game_fps, "120") == 0  ? 2
+                                                           : strcmp(_game_fps, "240") == 0  ? 3
+                                                                                            : 0;
+                variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[index]);
+                variable_item_set_current_value_index(app->variable_item_game_fps, index);
+                snprintf(game_fps, 8, "%s", _game_fps);
+            }
+            break;
         }
-        if (!app->variable_item_pass)
+    }
+    return true;
+}
+static bool alloc_submenu_settings(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return false;
+    }
+    if (!app->submenu_settings)
+    {
+        if (!easy_flipper_set_submenu(&app->submenu_settings, FlipWorldViewSettings, "Settings", callback_to_submenu, &app->view_dispatcher))
         {
-            app->variable_item_pass = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
-            variable_item_set_current_value_text(app->variable_item_pass, "");
+            return NULL;
         }
-        char ssid[64];
-        char pass[64];
-        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+        if (!app->submenu_settings)
         {
-            variable_item_set_current_value_text(app->variable_item_ssid, ssid);
-            // variable_item_set_current_value_text(app->variable_item_pass, pass);
-            save_char("WiFi-SSID", ssid);
-            save_char("WiFi-Password", pass);
+            return false;
         }
+        submenu_add_item(app->submenu_settings, "WiFi", FlipWorldSubmenuIndexWiFiSettings, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_settings, "Game", FlipWorldSubmenuIndexGameSettings, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_settings, "User", FlipWorldSubmenuIndexUserSettings, callback_submenu_choices, app);
     }
     return true;
 }
@@ -287,24 +361,54 @@ static void free_variable_item_list(void *context)
     }
     if (app->variable_item_list)
     {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSettings);
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewVariableItemList);
         variable_item_list_free(app->variable_item_list);
         app->variable_item_list = NULL;
     }
-    if (app->variable_item_ssid)
+    if (app->variable_item_wifi_ssid)
     {
-        free(app->variable_item_ssid);
-        app->variable_item_ssid = NULL;
+        free(app->variable_item_wifi_ssid);
+        app->variable_item_wifi_ssid = NULL;
     }
-    if (app->variable_item_pass)
+    if (app->variable_item_wifi_pass)
     {
-        free(app->variable_item_pass);
-        app->variable_item_pass = NULL;
+        free(app->variable_item_wifi_pass);
+        app->variable_item_wifi_pass = NULL;
+    }
+    if (app->variable_item_game_fps)
+    {
+        free(app->variable_item_game_fps);
+        app->variable_item_game_fps = NULL;
+    }
+    if (app->variable_item_user_username)
+    {
+        free(app->variable_item_user_username);
+        app->variable_item_user_username = NULL;
+    }
+    if (app->variable_item_user_password)
+    {
+        free(app->variable_item_user_password);
+        app->variable_item_user_password = NULL;
+    }
+}
+static void free_submenu_settings(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    if (app->submenu_settings)
+    {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSettings);
+        submenu_free(app->submenu_settings);
+        app->submenu_settings = NULL;
     }
 }
 static FuriThreadId thread_id;
 static bool game_thread_running = false;
-void free_all_views(void *context, bool should_free_variable_item_list)
+void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -332,6 +436,9 @@ void free_all_views(void *context, bool should_free_variable_item_list)
         furi_thread_flags_set(thread_id, WorkerEvtStop);
         furi_thread_free(thread_id);
     }
+
+    if (should_free_submenu_settings)
+        free_submenu_settings(app);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -352,7 +459,7 @@ void callback_submenu_choices(void *context, uint32_t index)
             furi_thread_flags_set(thread_id, WorkerEvtStop);
             furi_thread_free(thread_id);
         }
-        free_all_views(app, true);
+        free_all_views(app, true, true);
         if (!app->view_main)
         {
             if (!easy_flipper_set_view(&app->view_main, FlipWorldViewMain, NULL, NULL, callback_to_submenu, &app->view_dispatcher, app))
@@ -376,7 +483,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         game_thread_running = true;
         break;
     case FlipWorldSubmenuIndexAbout:
-        free_all_views(app, true);
+        free_all_views(app, true, true);
         if (!alloc_about_view(app))
         {
             FURI_LOG_E(TAG, "Failed to allocate about view");
@@ -385,13 +492,34 @@ void callback_submenu_choices(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewAbout);
         break;
     case FlipWorldSubmenuIndexSettings:
-        free_all_views(app, true);
-        if (!alloc_variable_item_list(app))
+        free_all_views(app, true, true);
+        if (!alloc_submenu_settings(app))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate settings view");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSettings);
+        break;
+    case FlipWorldSubmenuIndexWiFiSettings:
+        free_all_views(app, true, false);
+        if (!alloc_variable_item_list(app, FlipWorldSubmenuIndexWiFiSettings))
         {
             FURI_LOG_E(TAG, "Failed to allocate variable item list");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSettings);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
+        break;
+    case FlipWorldSubmenuIndexGameSettings:
+        free_all_views(app, true, false);
+        if (!alloc_variable_item_list(app, FlipWorldSubmenuIndexGameSettings))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate variable item list");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
+        break;
+    case FlipWorldSubmenuIndexUserSettings:
+        easy_flipper_dialog("User Settings", "Coming soon...");
         break;
     default:
         break;
@@ -417,9 +545,9 @@ static void text_updated_ssid(void *context)
     save_char("WiFi-SSID", app->text_input_buffer);
 
     // update the variable item text
-    if (app->variable_item_ssid)
+    if (app->variable_item_wifi_ssid)
     {
-        variable_item_set_current_value_text(app->variable_item_ssid, app->text_input_buffer);
+        variable_item_set_current_value_text(app->variable_item_wifi_ssid, app->text_input_buffer);
 
         // get value of password
         char pass[64];
@@ -451,7 +579,7 @@ static void text_updated_ssid(void *context)
     }
 
     // switch to the settings view
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSettings);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
 static void text_updated_pass(void *context)
 {
@@ -472,9 +600,9 @@ static void text_updated_pass(void *context)
     save_char("WiFi-Password", app->text_input_buffer);
 
     // update the variable item text
-    if (app->variable_item_pass)
+    if (app->variable_item_wifi_pass)
     {
-        // variable_item_set_current_value_text(app->variable_item_pass, app->text_input_buffer);
+        // variable_item_set_current_value_text(app->variable_item_wifi_pass, app->text_input_buffer);
     }
 
     // get value of ssid
@@ -506,10 +634,10 @@ static void text_updated_pass(void *context)
     }
 
     // switch to the settings view
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSettings);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
 
-static void settings_item_selected(void *context, uint32_t index)
+static void wifi_settings_item_selected(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -522,7 +650,7 @@ static void settings_item_selected(void *context, uint32_t index)
     switch (index)
     {
     case 0: // Input SSID
-        free_all_views(app, false);
+        free_all_views(app, false, false);
         if (!alloc_text_input_view(app, "SSID"))
         {
             FURI_LOG_E(TAG, "Failed to allocate text input view");
@@ -537,7 +665,7 @@ static void settings_item_selected(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
         break;
     case 1: // Input Password
-        free_all_views(app, false);
+        free_all_views(app, false, false);
         if (!alloc_text_input_view(app, "Password"))
         {
             FURI_LOG_E(TAG, "Failed to allocate text input view");
@@ -554,5 +682,29 @@ static void settings_item_selected(void *context, uint32_t index)
     default:
         FURI_LOG_E(TAG, "Unknown configuration item index");
         break;
+    }
+}
+static void flip_world_game_fps_change(VariableItem *item)
+{
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, game_fps_choices[index]);
+
+    // save the fps
+    snprintf(game_fps, 8, "%s", game_fps_choices[index]);
+    save_char("Game-FPS", game_fps);
+}
+
+static void game_settings_item_selected(void *context, uint32_t index)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    switch (index)
+    {
+    case 0:    // Game FPS
+        break; // handled by flip_world_game_fps_change
     }
 }

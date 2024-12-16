@@ -33,6 +33,7 @@ FlipWorldApp *flip_world_app_alloc()
     submenu_add_item(app->submenu, "Play", FlipWorldSubmenuIndexRun, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "About", FlipWorldSubmenuIndexAbout, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "Settings", FlipWorldSubmenuIndexSettings, callback_submenu_choices, app);
+    //
 
     // Switch to the main view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
@@ -56,7 +57,7 @@ void flip_world_app_free(FlipWorldApp *app)
         submenu_free(app->submenu);
     }
 
-    free_all_views(app, true);
+    free_all_views(app, true, true);
 
     // free the view dispatcher
     view_dispatcher_free(app->view_dispatcher);
