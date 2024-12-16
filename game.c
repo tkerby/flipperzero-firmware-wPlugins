@@ -2,43 +2,6 @@
 #include "flip_world.h"
 #include "flip_world_icons.h"
 
-Wall walls[] = {
-    WALL(true, 12, 0, 3),
-    WALL(false, 3, 3, 17),
-    WALL(false, 23, 3, 6),
-    WALL(true, 3, 4, 57),
-    WALL(true, 28, 4, 56),
-    WALL(false, 4, 7, 5),
-    WALL(false, 12, 7, 13),
-    WALL(true, 8, 8, 34),
-    WALL(true, 12, 8, 42),
-    WALL(true, 24, 8, 8),
-    WALL(true, 16, 11, 8),
-    WALL(false, 17, 11, 4),
-    WALL(true, 20, 12, 22),
-    WALL(false, 6, 17, 2),
-    WALL(true, 24, 19, 15),
-    WALL(true, 16, 22, 16),
-    WALL(false, 4, 24, 1),
-    WALL(false, 21, 28, 2),
-    WALL(false, 6, 33, 2),
-    WALL(false, 13, 34, 3),
-    WALL(false, 17, 37, 11),
-    WALL(true, 16, 41, 14),
-    WALL(false, 20, 41, 5),
-    WALL(true, 20, 45, 12),
-    WALL(true, 24, 45, 12),
-    WALL(false, 4, 46, 2),
-    WALL(false, 9, 46, 3),
-    WALL(false, 6, 50, 3),
-    WALL(true, 12, 53, 7),
-    WALL(true, 8, 54, 6),
-    WALL(false, 4, 60, 19),
-    WALL(false, 26, 60, 6),
-};
-
-// Tree World
-
 // Background rendering function
 // TODO: each object needs a collision box so we can detect collisions and prevent movement through walls.
 static void background_render(Canvas *canvas, Vector pos)
@@ -54,8 +17,8 @@ static void background_render(Canvas *canvas, Vector pos)
     camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
     camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
-    // Draw the world
-    draw_tree_world(canvas);
+    // Draw the outer bounds adjusted by camera offset
+    draw_bounds(canvas);
 }
 
 /****** Entities: Player ******/
@@ -91,34 +54,43 @@ static void player_spawn(Level *level, GameManager *manager)
     player_context->sprite = game_manager_sprite_load(manager, "player.fxbm");
 }
 
+// Modify player_update to track direction
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
-    UNUSED(context);
-
-    // Get game input
+    PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
-
-    // Get player position
     Vector pos = entity_pos_get(self);
 
-    // Control player movement
-    if (input.held & GameKeyUp)
-        pos.y -= 2;
-    if (input.held & GameKeyDown)
-        pos.y += 2;
-    if (input.held & GameKeyLeft)
-        pos.x -= 2;
-    if (input.held & GameKeyRight)
-        pos.x += 2;
+    // Reset direction each frame
+    player->dx = 0;
+    player->dy = 0;
 
-    // Clamp player position to screen bounds, considering player sprite size (10x10)
+    if (input.held & GameKeyUp)
+    {
+        pos.y -= 2;
+        player->dy = -1;
+    }
+    if (input.held & GameKeyDown)
+    {
+        pos.y += 2;
+        player->dy = 1;
+    }
+    if (input.held & GameKeyLeft)
+    {
+        pos.x -= 2;
+        player->dx = -1;
+    }
+    if (input.held & GameKeyRight)
+    {
+        pos.x += 2;
+        player->dx = 1;
+    }
+
     pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
     pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
 
-    // Set new player position
     entity_pos_set(self, pos);
 
-    // Control game exit
     if (input.pressed & GameKeyBack)
     {
         game_manager_game_stop(manager);
@@ -128,6 +100,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
     // Get player context
+    UNUSED(manager);
     PlayerContext *player = context;
 
     // Get player position
@@ -138,13 +111,6 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
 
     // Draw player sprite relative to camera
     canvas_draw_sprite(canvas, player->sprite, pos.x - camera_x - 5, pos.y - camera_y - 5);
-
-    // Get game context
-    GameContext *game_context = game_manager_game_context_get(manager);
-
-    // Draw score (optional)
-    UNUSED(game_context);
-    // canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
 
 static const EntityDescription player_desc = {
@@ -157,197 +123,6 @@ static const EntityDescription player_desc = {
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
-/****** Entities: Target ******/
-
-static Vector random_pos(void)
-{
-    return (Vector){rand() % (SCREEN_WIDTH - 8) + 4, rand() % (SCREEN_HEIGHT - 8) + 4};
-}
-
-static void target_start(Entity *self, GameManager *manager, void *context)
-{
-    UNUSED(context);
-    UNUSED(manager);
-    // Set target position
-    entity_pos_set(self, random_pos());
-    // Add collision circle to target entity
-    // Circle is centered in target x and y, and it's radius is 3
-    entity_collider_add_circle(self, 3);
-}
-
-static void target_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
-{
-    UNUSED(context);
-    UNUSED(manager);
-
-    // Get target position
-    Vector pos = entity_pos_get(self);
-
-    // Draw target relative to the camera
-    canvas_draw_disc(canvas, pos.x - camera_x, pos.y - camera_y, 3);
-}
-
-static void target_collision(Entity *self, Entity *other, GameManager *manager, void *context)
-{
-    UNUSED(context);
-    // Check if target collided with player
-    if (entity_description_get(other) == &player_desc)
-    {
-        // Increase score
-        GameContext *game_context = game_manager_game_context_get(manager);
-        game_context->score++;
-
-        // Move target to new random position
-        entity_pos_set(self, random_pos());
-    }
-}
-
-static const EntityDescription target_desc = {
-    .start = target_start,         // called when entity is added to the level
-    .stop = NULL,                  // called when entity is removed from the level
-    .update = NULL,                // called every frame
-    .render = target_render,       // called every frame, after update
-    .collision = target_collision, // called when entity collides with another entity
-    .event = NULL,                 // called when entity receives an event
-    .context_size = 0,             // size of entity context, will be automatically allocated and freed
-};
-
-/****** Entities: Wall ******/
-
-static uint8_t wall_index;
-
-static void wall_start(Entity *self, GameManager *manager, void *context);
-
-typedef struct
-{
-    float width;
-    float height;
-} WallContext;
-
-static void wall_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
-{
-    UNUSED(manager);
-    UNUSED(self);
-    UNUSED(canvas);
-    UNUSED(context);
-
-    // WallContext *wall = context;
-
-    // Vector pos = entity_pos_get(self);
-
-    // Draw the wall relative to the camera
-    // canvas_draw_box(
-    //     canvas,
-    //     pos.x - camera_x - (wall->width / 2),
-    //     pos.y - camera_y - (wall->height / 2),
-    //     wall->width,
-    //     wall->height);
-}
-
-static void wall_collision(Entity *self, Entity *other, GameManager *manager, void *context)
-{
-    WallContext *wall = context;
-
-    // Check if wall collided with player
-    if (entity_description_get(other) == &player_desc)
-    {
-        // Increase score
-        GameContext *game_context = game_manager_game_context_get(manager);
-        game_context->score++;
-
-        PlayerContext *player = (PlayerContext *)entity_context_get(other);
-        if (player)
-        {
-            if (player->dx || player->dy)
-            {
-                Vector pos = entity_pos_get(other);
-
-                // TODO: Based on where we collided, we should still slide across/down the wall.
-                UNUSED(wall);
-
-                if (player->dx)
-                {
-                    FURI_LOG_D(
-                        "Player",
-                        "Player collided with wall, dx: %d.  center:%f,%f",
-                        player->dx,
-                        (double)pos.x,
-                        (double)pos.y);
-                    pos.x -= player->dx;
-                    player->dx = 0;
-                }
-                if (player->dy)
-                {
-                    FURI_LOG_D(
-                        "Player",
-                        "Player collided with wall, dy: %d.  center:%f,%f",
-                        player->dy,
-                        (double)pos.x,
-                        (double)pos.y);
-                    pos.y -= player->dy;
-                    player->dy = 0;
-                }
-                entity_pos_set(other, pos);
-                FURI_LOG_D("Player", "Set to center:%f,%f", (double)pos.x, (double)pos.y);
-            }
-        }
-        else
-        {
-            FURI_LOG_D("Player", "Player collided with wall, but context null.");
-        }
-    }
-    else
-    {
-        // HACK: Wall touching other items destroys each other (to help find collider issues)
-        Level *level = game_manager_current_level_get(manager);
-        level_remove_entity(level, self);
-        level_remove_entity(level, other);
-    }
-}
-
-static const EntityDescription wall_desc = {
-    .start = wall_start,         // called when entity is added to the level
-    .stop = NULL,                // called when entity is removed from the level
-    .update = NULL,              // called every frame
-    .render = wall_render,       // called every frame, after update
-    .collision = wall_collision, // called when entity collides with another entity
-    .event = NULL,               // called when entity receives an event
-    .context_size =
-        sizeof(WallContext), // size of entity context, will be automatically allocated and freed
-};
-
-static void wall_start(Entity *self, GameManager *manager, void *context)
-{
-    UNUSED(manager);
-
-    WallContext *wall = context;
-
-    // TODO: We can get the current number of items from the level (instead of wall_index).
-
-    if (wall_index < COUNT_OF(walls))
-    {
-        if (walls[wall_index].horizontal)
-        {
-            wall->width = walls[wall_index].length * 2;
-            wall->height = 1 * 2;
-        }
-        else
-        {
-            wall->width = 1 * 2;
-            wall->height = walls[wall_index].length * 2;
-        }
-
-        entity_pos_set(
-            self,
-            (Vector){
-                walls[wall_index].x + wall->width / 2, walls[wall_index].y + wall->height / 2});
-
-        entity_collider_add_rect(self, wall->width, wall->height);
-
-        wall_index++;
-    }
-}
-
 /****** Level ******/
 
 static void level_alloc(Level *level, GameManager *manager, void *context)
@@ -358,15 +133,8 @@ static void level_alloc(Level *level, GameManager *manager, void *context)
     // Add player entity to the level
     player_spawn(level, manager);
 
-    // Add first target entity to the level
-    level_add_entity(level, &target_desc);
-
-    // Add wall entities to the level
-    wall_index = 0;
-    for (size_t i = 0; i < COUNT_OF(walls); i++)
-    {
-        level_add_entity(level, &wall_desc);
-    }
+    draw_tree_world(level);
+    // draw_example_world(level);
 }
 
 static const LevelBehaviour level = {
@@ -376,6 +144,70 @@ static const LevelBehaviour level = {
     .stop = NULL,         // called when level is changed from this level
     .context_size = 0,    // size of level context, will be automatically allocated and freed
 };
+
+typedef struct
+{
+    const Icon *icon;
+} IconContext;
+
+// Forward declaration of icon_desc
+static const EntityDescription icon_desc;
+
+static void icon_collision(Entity *self, Entity *other, GameManager *manager, void *context)
+{
+    UNUSED(manager);
+    UNUSED(self);
+    IconContext *icon = (IconContext *)context;
+    UNUSED(icon);
+    if (entity_description_get(other) == &player_desc)
+    {
+        PlayerContext *player = (PlayerContext *)entity_context_get(other);
+        if (player)
+        {
+            Vector pos = entity_pos_get(other);
+            // Bounce the player back by 3 units opposite their last movement direction
+            pos.x -= player->dx * 3;
+            pos.y -= player->dy * 3;
+            entity_pos_set(other, pos);
+        }
+    }
+}
+
+static void icon_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
+{
+    UNUSED(manager);
+    IconContext *icon_ctx = (IconContext *)context;
+    Vector pos = entity_pos_get(self);
+    canvas_draw_icon(canvas, pos.x - camera_x - 8, pos.y - camera_y - 8, icon_ctx->icon);
+}
+
+static void icon_start(Entity *self, GameManager *manager, void *context)
+{
+    UNUSED(manager);
+    UNUSED(context);
+    // Just add the collision rectangle for 16x16 icon
+    entity_collider_add_rect(self, 16, 16);
+}
+
+static const EntityDescription icon_desc = {
+    .start = icon_start,
+    .stop = NULL,
+    .update = NULL,
+    .render = icon_render,
+    .collision = icon_collision,
+    .event = NULL,
+    .context_size = sizeof(IconContext),
+};
+
+// Helper function to spawn an icon entity at a given position
+void spawn_icon(Level *level, const Icon *icon, float x, float y)
+{
+    Entity *e = level_add_entity(level, &icon_desc);
+    IconContext *icon_ctx = entity_context_get(e);
+    icon_ctx->icon = icon;
+    // Set the entity position to the center of the icon
+    entity_pos_set(e, (Vector){x + 8, y + 8});
+}
 
 /****** Game ******/
 
