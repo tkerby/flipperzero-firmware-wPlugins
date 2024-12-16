@@ -1,6 +1,8 @@
 #pragma once
 #include "flip_world_icons.h"
 #include "game.h"
+#define COLLISION_BOX_PADDING_HORIZONTAL 10
+#define COLLISION_BOX_PADDING_VERTICAL 12
 
 typedef struct
 {

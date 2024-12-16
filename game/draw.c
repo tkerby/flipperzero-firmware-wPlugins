@@ -73,7 +73,7 @@ void spawn_icon(Level *level, const Icon *icon, float x, float y, uint8_t width,
     icon_ctx->width = width;
     icon_ctx->height = height;
     // Set the entity position to the center of the icon
-    entity_pos_set(e, (Vector){x + 8, y + 8});
+    entity_pos_set(e, (Vector){x + (width / 2), y + (height / 2)});
 }
 // Draw a line of icons at a specific position (with collision detection)
 void spawn_icon_line(Level *level, const Icon *icon, float x, float y, uint8_t width, uint8_t height, uint8_t amount, bool horizontal)

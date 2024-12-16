@@ -14,13 +14,15 @@ static void player_spawn(Level *level, GameManager *manager)
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 10x10
-    entity_collider_add_rect(player, 10, 10);
+    entity_collider_add_rect(player, 10 + PLAYER_COLLISION_HORIZONTAL, 10 + PLAYER_COLLISION_VERTICAL);
 
     // Get player context
     PlayerContext *player_context = entity_context_get(player);
 
     // Load player sprite
-    player_context->sprite = game_manager_sprite_load(manager, "player.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
+    player_context->is_looking_left = false; // player starts looking right
 }
 
 // Modify player_update to track direction
@@ -30,10 +32,15 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
 
-    // Reset direction each frame
+    // Store previous direction
+    int prev_dx = player->dx;
+    int prev_dy = player->dy;
+
+    // Reset movement deltas each frame
     player->dx = 0;
     player->dy = 0;
 
+    // Handle movement input
     if (input.held & GameKeyUp)
     {
         pos.y -= 2;
@@ -48,18 +55,30 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         pos.x -= 2;
         player->dx = -1;
+        player->is_looking_left = true;
     }
     if (input.held & GameKeyRight)
     {
         pos.x += 2;
         player->dx = 1;
+        player->is_looking_left = false;
     }
 
+    // Clamp the player's position to stay within world bounds
     pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
     pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
 
+    // Update player position
     entity_pos_set(self, pos);
 
+    // If the player is not moving, retain the last movement direction
+    if (player->dx == 0 && player->dy == 0)
+    {
+        player->dx = prev_dx;
+        player->dy = prev_dy;
+    }
+
+    // Handle back button to stop the game
     if (input.pressed & GameKeyBack)
     {
         game_manager_game_stop(manager);
@@ -78,8 +97,13 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Draw background (updates camera_x and camera_y)
     draw_background(canvas, pos);
 
-    // Draw player sprite relative to camera
-    canvas_draw_sprite(canvas, player->sprite, pos.x - camera_x - 5, pos.y - camera_y - 5);
+    // Draw player sprite relative to camera, centered on the player's position
+    canvas_draw_sprite(
+        canvas,
+        player->is_looking_left ? player->sprite_left : player->sprite_right,
+        pos.x - camera_x - 5, // Center the sprite horizontally
+        pos.y - camera_y - 5  // Center the sprite vertically
+    );
 }
 
 const EntityDescription player_desc = {

@@ -39,16 +39,22 @@ static void icon_collision(Entity *self, Entity *other, GameManager *manager, vo
     UNUSED(self);
     IconContext *icon = (IconContext *)context;
     UNUSED(icon);
+
     if (entity_description_get(other) == &player_desc)
     {
         PlayerContext *player = (PlayerContext *)entity_context_get(other);
         if (player)
         {
             Vector pos = entity_pos_get(other);
-            // Bounce the player back by 3 units opposite their last movement direction
-            pos.x -= player->dx * 3;
-            pos.y -= player->dy * 3;
+
+            // Bounce the player back by 2 units opposite their last movement direction
+            pos.x -= player->dx * 2;
+            pos.y -= player->dy * 2;
             entity_pos_set(other, pos);
+
+            // Reset player's movement direction to prevent immediate re-collision
+            player->dx = 0;
+            player->dy = 0;
         }
     }
 }
@@ -58,15 +64,15 @@ static void icon_render(Entity *self, GameManager *manager, Canvas *canvas, void
     UNUSED(manager);
     IconContext *icon_ctx = (IconContext *)context;
     Vector pos = entity_pos_get(self);
-    canvas_draw_icon(canvas, pos.x - camera_x - 8, pos.y - camera_y - 8, icon_ctx->icon);
+    canvas_draw_icon(canvas, pos.x - camera_x - icon_ctx->width / 2, pos.y - camera_y - icon_ctx->height / 2, icon_ctx->icon);
 }
 
 static void icon_start(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(manager);
-    UNUSED(context);
+    IconContext *icon_ctx = (IconContext *)context;
     // Just add the collision rectangle for 16x16 icon
-    entity_collider_add_rect(self, 16, 16);
+    entity_collider_add_rect(self, icon_ctx->width + COLLISION_BOX_PADDING_HORIZONTAL, icon_ctx->height + COLLISION_BOX_PADDING_VERTICAL);
 }
 
 const EntityDescription icon_desc = {
