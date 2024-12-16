@@ -34,18 +34,24 @@ typedef enum
     FlipWorldViewSettings,         // The settings screen
     FlipWorldViewVariableItemList, // The variable item list screen
     FlipWorldViewTextInput,        // The text input screen
+    //
+    FlipWorldViewWidgetResult, // The text box that displays the random fact
+    FlipWorldViewLoader,       // The loader screen retrieves data from the internet
 } FlipWorldView;
 
 // Define a custom event for our FlipWorld application
 typedef enum
 {
+    FlipWorldCustomEventProcess,
     FlipWorldCustomEventPlay, // Play the game
 } FlipWorldCustomEvent;
 
 // Each screen will have its own view
 typedef struct
 {
-    // necessary
+    View *view_loader;
+    Widget *widget_result;
+    //
     ViewDispatcher *view_dispatcher;       // Switches between our views
     View *view_main;                       // The game screen
     View *view_about;                      // The about screen
@@ -55,7 +61,8 @@ typedef struct
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
     VariableItem *variable_item_wifi_pass; // The variable item for WiFi password
     //
-    VariableItem *variable_item_game_fps; // The variable item for Game FPS
+    VariableItem *variable_item_game_fps;            // The variable item for Game FPS
+    VariableItem *variable_item_game_download_world; // The variable item for Download world
     //
     VariableItem *variable_item_user_username; // The variable item for the User username
     VariableItem *variable_item_user_password; // The variable item for the User password

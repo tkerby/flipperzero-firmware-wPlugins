@@ -24,6 +24,17 @@ FlipWorldApp *flip_world_app_alloc()
     {
         return NULL;
     }
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, flip_world_custom_event_callback);
+    // Main view
+    if (!easy_flipper_set_view(&app->view_loader, FlipWorldViewLoader, flip_world_loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
+    {
+        return NULL;
+    }
+    flip_world_loader_init(app->view_loader);
+    if (!easy_flipper_set_widget(&app->widget_result, FlipWorldViewWidgetResult, "", callback_to_submenu, &app->view_dispatcher))
+    {
+        return NULL;
+    }
 
     // Submenu
     if (!easy_flipper_set_submenu(&app->submenu, FlipWorldViewSubmenu, VERSION_TAG, callback_exit_app, &app->view_dispatcher))
@@ -55,6 +66,20 @@ void flip_world_app_free(FlipWorldApp *app)
     {
         view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSubmenu);
         submenu_free(app->submenu);
+    }
+    // Free Widget(s)
+    if (app->widget_result)
+    {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewWidgetResult);
+        widget_free(app->widget_result);
+    }
+
+    // Free View(s)
+    if (app->view_loader)
+    {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewLoader);
+        flip_world_loader_free_model(app->view_loader);
+        view_free(app->view_loader);
     }
 
     free_all_views(app, true, true);

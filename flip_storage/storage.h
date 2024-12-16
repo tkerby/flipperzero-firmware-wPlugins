@@ -23,3 +23,12 @@ bool load_char(
     const char *path_name,
     char *value,
     size_t value_size);
+
+bool save_world(
+    const char *name,
+    const char *world_data);
+
+bool load_world(
+    const char *name,
+    char *json_data,
+    size_t json_data_size);
