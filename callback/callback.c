@@ -537,7 +537,7 @@ void callback_submenu_choices(void *context, uint32_t index)
             }
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
-        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app);
+        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app);
         if (!thread)
         {
             FURI_LOG_E(TAG, "Failed to allocate game thread");
