@@ -7,7 +7,53 @@ void draw_bounds(Canvas *canvas)
     canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 }
 
-bool draw_json_world(Level *level, FuriString *json_data)
+bool draw_json_world(Level *level, char *json_data)
+{
+    for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
+    {
+        char *data = get_json_array_value("json_data", i, json_data, MAX_WORLD_TOKENS);
+        if (data == NULL)
+        {
+            break;
+        }
+        char *icon = get_json_value("icon", data, 64);
+        char *x = get_json_value("x", data, 64);
+        char *y = get_json_value("y", data, 64);
+        char *width = get_json_value("width", data, 64);
+        char *height = get_json_value("height", data, 64);
+        char *amount = get_json_value("amount", data, 64);
+        char *horizontal = get_json_value("horizontal", data, 64);
+        if (icon == NULL || x == NULL || y == NULL || width == NULL || height == NULL || amount == NULL || horizontal == NULL)
+        {
+            return false;
+        }
+        // if amount is less than 2, we spawn a single icon
+        if (atoi(amount) < 2)
+        {
+            spawn_icon(level, get_icon(icon), atoi(x), atoi(y), atoi(width), atoi(height));
+            free(data);
+            free(icon);
+            free(x);
+            free(y);
+            free(width);
+            free(height);
+            free(amount);
+            free(horizontal);
+            continue;
+        }
+        spawn_icon_line(level, get_icon(icon), atoi(x), atoi(y), atoi(width), atoi(height), atoi(amount), strcmp(horizontal, "true") == 0);
+        free(data);
+        free(icon);
+        free(x);
+        free(y);
+        free(width);
+        free(height);
+        free(amount);
+        free(horizontal);
+    }
+    return true;
+}
+bool draw_json_world_furi(Level *level, FuriString *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
@@ -63,70 +109,6 @@ void draw_example_world(Level *level)
     spawn_icon(level, &I_icon_woman, 168, 56, 9, 16);
     spawn_icon(level, &I_icon_plant, 168, 32, 16, 16);
 }
-
-/* JSON of the draw_example_world with fields icon, x, y, width, height
-{
-    "name": "Example World",
-    "author": "JBlanked",
-    "json_data": [
-        {
-            "icon": "earth",
-            "x": 112,
-            "y": 56,
-            "width": 15,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        },
-        {
-            "icon": "home",
-            "x": 128,
-            "y": 24,
-            "width": 15,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        },
-        {
-            "icon": "info",
-            "x": 144,
-            "y": 24,
-            "width": 15,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        },
-        {
-            "icon": "man",
-            "x": 160,
-            "y": 56,
-            "width": 7,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        },
-        {
-            "icon": "woman",
-            "x": 168,
-            "y": 56,
-            "width": 9,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        },
-        {
-            "icon": "plant",
-            "x": 168,
-            "y": 32,
-            "width": 16,
-            "height": 16,
-            "amount": 1,
-            "horizontal": true
-        }
-    ]
-}
-
-*/
 
 void draw_tree_world(Level *level)
 {
@@ -186,38 +168,3 @@ void draw_tree_world(Level *level)
     spawn_icon_line(level, &I_icon_tree, 5 + 5 * 17, 2 + 8 * 17, 16, 16, 1, true);  // 1 middle
     spawn_icon_line(level, &I_icon_tree, 5 + 11 * 17, 2 + 8 * 17, 16, 16, 3, true); // 3 right
 }
-
-/* JSON of the draw_tree_world
-{
-    "name" : "tree_world",
-    "author" : "JBlanked",
-    "json_data" : [
-        {"icon" : "tree", "x" : 5, "y" : 2, "width" : 16, "height" : 16, "amount" : 22, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 2, "width" : 16, "height" : 16, "amount" : 11, "horizontal" : false},
-        {"icon" : "tree", "x" : 22, "y" : 2, "width" : 16, "height" : 16, "amount" : 22, "horizontal" : true},
-        {"icon" : "tree", "x" : 22, "y" : 2, "width" : 16, "height" : 16, "amount" : 11, "horizontal" : false},
-        {"icon" : "tree", "x" : 5, "y" : 155, "width" : 16, "height" : 16, "amount" : 22, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 172, "width" : 16, "height" : 16, "amount" : 22, "horizontal" : true},
-        {"icon" : "tree", "x" : 345, "y" : 50, "width" : 16, "height" : 16, "amount" : 8, "horizontal" : false},
-        {"icon" : "tree", "x" : 362, "y" : 50, "width" : 16, "height" : 16, "amount" : 8, "horizontal" : false},
-        {"icon" : "tree", "x" : 5, "y" : 36, "width" : 16, "height" : 16, "amount" : 14, "horizontal" : true},
-        {"icon" : "tree", "x" : 277, "y" : 36, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 53, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true},
-        {"icon" : "tree", "x" : 124, "y" : 53, "width" : 16, "height" : 16, "amount" : 6, "horizontal" : true},
-        {"icon" : "tree", "x" : 260, "y" : 53, "width" : 16, "height" : 16, "amount" : 4, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 70, "width" : 16, "height" : 16, "amount" : 6, "horizontal" : true},
-        {"icon" : "tree", "x" : 124, "y" : 70, "width" : 16, "height" : 16, "amount" : 7, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 87, "width" : 16, "height" : 16, "amount" : 5, "horizontal" : true},
-        {"icon" : "tree", "x" : 124, "y" : 87, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true},
-        {"icon" : "tree", "x" : 260, "y" : 87, "width" : 16, "height" : 16, "amount" : 7, "horizontal" : true},
-        {"icon" : "tree", "x" : 107, "y" : 104, "width" : 16, "height" : 16, "amount" : 7, "horizontal" : true},
-        {"icon" : "tree", "x" : 243, "y" : 104, "width" : 16, "height" : 16, "amount" : 4, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 121, "width" : 16, "height" : 16, "amount" : 4, "horizontal" : true},
-        {"icon" : "tree", "x" : 124, "y" : 121, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true},
-        {"icon" : "tree", "x" : 260, "y" : 121, "width" : 16, "height" : 16, "amount" : 4, "horizontal" : true},
-        {"icon" : "tree", "x" : 5, "y" : 138, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true},
-        {"icon" : "tree", "x" : 90, "y" : 138, "width" : 16, "height" : 16, "amount" : 1, "horizontal" : true},
-        {"icon" : "tree", "x" : 192, "y" : 138, "width" : 16, "height" : 16, "amount" : 3, "horizontal" : true}
-    ]
-}
-*/

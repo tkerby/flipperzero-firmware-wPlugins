@@ -268,3 +268,95 @@ bool load_world(
 
     return true;
 }
+
+FuriString *load_furi_world(
+    const char *name)
+{
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    File *file = storage_file_alloc(storage);
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+    // Open the file for reading
+    if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
+    {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL; // Return false if the file does not exist
+    }
+
+    // Allocate a FuriString to hold the received data
+    FuriString *str_result = furi_string_alloc();
+    if (!str_result)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to allocate FuriString");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+    // Reset the FuriString to ensure it's empty before reading
+    furi_string_reset(str_result);
+
+    // Define a buffer to hold the read data
+    uint8_t *buffer = (uint8_t *)malloc(MAX_FILE_SHOW);
+    if (!buffer)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to allocate buffer");
+        furi_string_free(str_result);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    // Read data into the buffer
+    size_t read_count = storage_file_read(file, buffer, MAX_FILE_SHOW);
+    if (storage_file_get_error(file) != FSE_OK)
+    {
+        FURI_LOG_E(HTTP_TAG, "Error reading from file.");
+        furi_string_free(str_result);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    // Append each byte to the FuriString
+    for (size_t i = 0; i < read_count; i++)
+    {
+        furi_string_push_back(str_result, buffer[i]);
+    }
+
+    // Check if there is more data beyond the maximum size
+    char extra_byte;
+    storage_file_read(file, &extra_byte, 1);
+
+    // Clean up
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    free(buffer);
+    return str_result;
+}
+
+bool world_exists(const char *name)
+{
+    if (!name)
+    {
+        FURI_LOG_E(TAG, "Invalid name");
+        return false;
+    }
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    if (!storage)
+    {
+        FURI_LOG_E(TAG, "Failed to open storage");
+        return false;
+    }
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+    bool does_exist = storage_file_exists(storage, file_path);
+
+    // Clean up
+    furi_record_close(RECORD_STORAGE);
+    return does_exist;
+}

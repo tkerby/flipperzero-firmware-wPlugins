@@ -102,8 +102,20 @@ static void level_alloc(Level *level, GameManager *manager, void *context)
     // Add player entity to the level
     player_spawn(level, manager);
 
-    draw_tree_world(level);
-    // draw_example_world(level);
+    // check if tree world exists
+    if (!world_exists("tree_world"))
+    {
+        FURI_LOG_E("Game", "Tree world does not exist");
+        easy_flipper_dialog("[WORLD ERROR]", "No world data installed.\n\n\nSettings -> Game ->\nInstall Official World Pack");
+        draw_example_world(level);
+        return;
+    }
+
+    if (!draw_json_world_furi(level, load_furi_world("tree_world")))
+    {
+        FURI_LOG_E("Game", "Tree World exists but failed to draw.");
+        draw_example_world(level);
+    }
 }
 
 static const LevelBehaviour level = {

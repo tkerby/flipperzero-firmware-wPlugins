@@ -32,3 +32,9 @@ bool load_world(
     const char *name,
     char *json_data,
     size_t json_data_size);
+
+FuriString *load_furi_world(
+    const char *name);
+
+bool world_exists(
+    const char *name);
