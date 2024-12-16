@@ -19,8 +19,8 @@ It contains a rich [Inbuilt Documentation](#inbuilt-documentation).
 ## Contents <!-- omit in toc -->
 
 - [Installation](#installation)
-  - [Flipper Apps Catalog](#flipper-apps-catalog)
-  - [GitHub (Recommended)](#github-recommended)
+  - [Flipper Apps Catalog (Recommended)](#flipper-apps-catalog-recommended)
+  - [GitHub](#github)
   - [Building Flipper SPI Terminal](#building-flipper-spi-terminal)
 - [GPIO](#gpio)
 - [Configuration](#configuration)
@@ -32,12 +32,11 @@ It contains a rich [Inbuilt Documentation](#inbuilt-documentation).
 
 ## Installation
 
-### Flipper Apps Catalog
+### Flipper Apps Catalog (Recommended)
 
-> [!IMPORTANT]
-> The app has been [submitted to the Flipper Apps Catalog](https://github.com/flipperdevices/flipper-application-catalog/pull/577) but it hasn't yet been accepted.
+<https://lab.flipper.net/apps/flipper_spi_terminal>
 
-### GitHub (Recommended)
+### GitHub
 
 1. Head over to the [Releases](https://github.com/janwiesemann/flipper-spi-terminal/releases) section
 2. Download the latest `flipper_spi_terminal.fap`
