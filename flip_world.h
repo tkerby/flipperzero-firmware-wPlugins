@@ -22,6 +22,11 @@
 #define WORLD_WIDTH 384
 #define WORLD_HEIGHT 192
 
+// Maximum number of world objects
+#define MAX_WORLD_OBJECTS 100
+// Maximum number of world tokens
+#define MAX_WORLD_TOKENS 512
+
 // Define the submenu items for our FlipWorld application
 typedef enum
 {

@@ -28,5 +28,6 @@ extern int camera_y;
 
 void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, const Icon *icon);
 void draw_icon_half_world(Canvas *canvas, bool right, const Icon *icon);
+const Icon *get_icon(char *name);
 
 // create custom icons at https://lopaka.app/sandbox

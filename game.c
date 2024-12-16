@@ -145,11 +145,6 @@ static const LevelBehaviour level = {
     .context_size = 0,    // size of level context, will be automatically allocated and freed
 };
 
-typedef struct
-{
-    const Icon *icon;
-} IconContext;
-
 // Forward declaration of icon_desc
 static const EntityDescription icon_desc;
 
@@ -200,11 +195,13 @@ static const EntityDescription icon_desc = {
 };
 
 // Helper function to spawn an icon entity at a given position
-void spawn_icon(Level *level, const Icon *icon, float x, float y)
+void spawn_icon(Level *level, const Icon *icon, float x, float y, uint8_t width, uint8_t height)
 {
     Entity *e = level_add_entity(level, &icon_desc);
     IconContext *icon_ctx = entity_context_get(e);
     icon_ctx->icon = icon;
+    icon_ctx->width = width;
+    icon_ctx->height = height;
     // Set the entity position to the center of the icon
     entity_pos_set(e, (Vector){x + 8, y + 8});
 }
@@ -246,7 +243,7 @@ static void game_stop(void *ctx)
     Your game configuration, do not rename this variable, but you can change its content here.
 */
 const Game game = {
-    .target_fps = 30,                    // target fps, game will try to keep this value
+    .target_fps = 60,                    // target fps, game will try to keep this value
     .show_fps = false,                   // show fps counter on the screen
     .always_backlight = true,            // keep display backlight always on
     .start = game_start,                 // will be called once, when game starts

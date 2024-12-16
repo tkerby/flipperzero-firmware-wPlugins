@@ -46,3 +46,35 @@ void draw_icon_half_world(Canvas *canvas, bool right, const Icon *icon)
         }
     }
 }
+const Icon *get_icon(char *name)
+{
+    if (strcmp(name, "earth") == 0)
+    {
+        return &I_icon_earth;
+    }
+    if (strcmp(name, "home") == 0)
+    {
+        return &I_icon_home;
+    }
+    if (strcmp(name, "info") == 0)
+    {
+        return &I_icon_info;
+    }
+    if (strcmp(name, "man") == 0)
+    {
+        return &I_icon_man;
+    }
+    if (strcmp(name, "plant") == 0)
+    {
+        return &I_icon_plant;
+    }
+    if (strcmp(name, "tree") == 0)
+    {
+        return &I_icon_tree;
+    }
+    if (strcmp(name, "woman") == 0)
+    {
+        return &I_icon_woman;
+    }
+    return NULL;
+}
