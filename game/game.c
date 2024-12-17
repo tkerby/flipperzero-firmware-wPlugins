@@ -68,7 +68,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     if (input.held & GameKeyOk)
     {
         game_manager_next_level_set(manager, game_manager_current_level_get(manager) == level_tree ? level_example : level_tree);
-        furi_delay_ms(1000);
+        furi_delay_ms(500);
         return;
     }
 
@@ -138,21 +138,12 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->score = 0;
 
     // load all levels
-    // if (level_load_all())
-    // {
-    //     // loop through all levels and add them to the game
-    //     for (int i = level_count; i > 0; i--)
-    //     {
-    //         levels[i] = game_manager_add_level(game_manager, level_behaviors[i]);
-    //     }
-    // }
-    // else
+    // if (!level_load_all(game_manager))
     // {
     //     FURI_LOG_E("Game", "Failed to load levels");
     //     easy_flipper_dialog("[LEVEL ERROR]", "No level data installed.\n\n\nSettings -> Game ->\nInstall Official Level Pack");
-    //     game_manager_add_level(game_manager, &example_level);
+    //     game_manager_add_level(game_manager, &tree_level);
     // }
-
     level_tree = game_manager_add_level(game_manager, &tree_level);
     level_example = game_manager_add_level(game_manager, &example_level);
 }

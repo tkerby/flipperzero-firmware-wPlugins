@@ -57,45 +57,60 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
-        char *data = get_json_array_value("json_data", i, furi_string_get_cstr(json_data));
+        FuriString *data = get_json_array_value_furi("json_data", i, json_data);
         if (data == NULL)
         {
             break;
         }
-        char *icon = get_json_value("icon", data);
-        char *x = get_json_value("x", data);
-        char *y = get_json_value("y", data);
-        char *width = get_json_value("width", data);
-        char *height = get_json_value("height", data);
-        char *amount = get_json_value("amount", data);
-        char *horizontal = get_json_value("horizontal", data);
-        if (icon == NULL || x == NULL || y == NULL || width == NULL || height == NULL || amount == NULL || horizontal == NULL)
+        FuriString *icon = get_json_value_furi("icon", data);
+        FuriString *x = get_json_value_furi("x", data);
+        FuriString *y = get_json_value_furi("y", data);
+        FuriString *width = get_json_value_furi("width", data);
+        FuriString *height = get_json_value_furi("height", data);
+        FuriString *amount = get_json_value_furi("amount", data);
+        FuriString *horizontal = get_json_value_furi("horizontal", data);
+        if (!icon || !x || !y || !width || !height || !amount || !horizontal)
         {
+            furi_string_free(data);
             return false;
         }
         // if amount is less than 2, we spawn a single icon
-        if (atoi(amount) < 2)
+        if (atoi(furi_string_get_cstr(amount)) < 2)
         {
-            spawn_icon(level, get_icon(icon), atoi(x), atoi(y), atoi(width), atoi(height));
-            free(data);
-            free(icon);
-            free(x);
-            free(y);
-            free(width);
-            free(height);
-            free(amount);
-            free(horizontal);
+            spawn_icon(
+                level,
+                get_icon_furi(icon),
+                atoi(furi_string_get_cstr(x)),
+                atoi(furi_string_get_cstr(y)),
+                atoi(furi_string_get_cstr(width)),
+                atoi(furi_string_get_cstr(height)));
+            furi_string_free(data);
+            furi_string_free(icon);
+            furi_string_free(x);
+            furi_string_free(y);
+            furi_string_free(width);
+            furi_string_free(height);
+            furi_string_free(amount);
+            furi_string_free(horizontal);
             continue;
         }
-        spawn_icon_line(level, get_icon(icon), atoi(x), atoi(y), atoi(width), atoi(height), atoi(amount), strcmp(horizontal, "true") == 0);
-        free(data);
-        free(icon);
-        free(x);
-        free(y);
-        free(width);
-        free(height);
-        free(amount);
-        free(horizontal);
+        spawn_icon_line(
+            level,
+            get_icon_furi(icon),
+            atoi(furi_string_get_cstr(x)),
+            atoi(furi_string_get_cstr(y)),
+            atoi(furi_string_get_cstr(width)),
+            atoi(furi_string_get_cstr(height)),
+            atoi(furi_string_get_cstr(amount)),
+            furi_string_cmp(horizontal, "true") == 0);
+        furi_string_free(data);
+        furi_string_free(icon);
+        furi_string_free(x);
+        furi_string_free(y);
+        furi_string_free(width);
+        furi_string_free(height);
+        furi_string_free(amount);
+        furi_string_free(horizontal);
     }
     return true;
 }

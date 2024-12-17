@@ -7,19 +7,31 @@ static void level_start(Level *level, GameManager *manager, void *context)
     UNUSED(manager);
     LevelContext *level_context = context;
     // check if the world exists
-    if (!world_exists(level_context->id))
-    {
-        FURI_LOG_E("Game", "World does not exist");
-        easy_flipper_dialog("[WORLD ERROR]", "No world data installed.\n\n\nSettings -> Game ->\nInstall Official World Pack");
-        draw_example_world(level);
-        return;
-    }
+    // if (!world_exists(level_context->id))
+    // {
+    //     FURI_LOG_E("Game", "World does not exist");
+    //     easy_flipper_dialog("[WORLD ERROR]", "No world data installed.\n\n\nSettings -> Game ->\nInstall Official World Pack");
+    //     draw_example_world(level);
+    //     return;
+    // }
     // draw the world
-    if (!draw_json_world_furi(level, load_furi_world(level_context->id)))
-    {
-        FURI_LOG_E("Game", "World exists but failed to draw.");
+    // FuriString *world_data = load_furi_world(level_context->id);
+    // if (!world_data)
+    // {
+    //     FURI_LOG_E("Game", "Failed to load world data");
+    //     draw_example_world(level);
+    //     return;
+    // }
+    // if (!draw_json_world_furi(level, load_furi_world(level_context->id)))
+    // {
+    //     FURI_LOG_E("Game", "World exists but failed to draw.");
+    //     draw_example_world(level);
+    // }
+    // furi_string_free(world_data);
+    if (level_context->index == 0)
+        draw_tree_world(level);
+    else
         draw_example_world(level);
-    }
 }
 
 static void level_alloc_tree_world(Level *level, GameManager *manager, void *context)
@@ -52,11 +64,11 @@ const LevelBehaviour tree_level = {
     .context_size = sizeof(LevelContext), // size of level context, will be automatically allocated and freed
 };
 const LevelBehaviour example_level = {
-    .alloc = level_alloc_example_world,   // called once, when level allocated
-    .free = NULL,                         // called once, when level freed
-    .start = level_start,                 // called when level is changed to this level
-    .stop = NULL,                         // called when level is changed from this level
-    .context_size = sizeof(LevelContext), // size of level context, will be automatically allocated and freed
+    .alloc = level_alloc_example_world,
+    .free = NULL,
+    .start = level_start,
+    .stop = NULL,
+    .context_size = sizeof(LevelContext),
 };
 
 void level_alloc_world(Level *level, GameManager *manager, void *context)
@@ -69,70 +81,53 @@ void level_alloc_world(Level *level, GameManager *manager, void *context)
     player_spawn(level, manager);
 }
 
-bool level_load_all()
+bool level_load_all(GameManager *game_manager)
 {
     char file_path[128];
     snprintf(
         file_path,
         sizeof(file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds.json");
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
-    FuriString *world_data = flipper_http_load_from_file(file_path);
-    if (!world_data)
+    FuriString *world_list = flipper_http_load_from_file(file_path);
+    if (!world_list)
     {
-        FURI_LOG_E(TAG, "Failed to load world data");
+        FURI_LOG_E(TAG, "Failed to load world list");
         return false;
     }
-
-    const char *json_data = furi_string_get_cstr(world_data);
-    if (!json_data)
-    {
-        FURI_LOG_E(TAG, "Failed to get world data");
-        furi_string_free(world_data);
-        return false;
-    }
-
-    const LevelBehaviour new_behavior = {
-        .alloc = level_alloc_world,
-        .free = NULL,
-        .start = level_start,
-        .stop = NULL,
-        .context_size = sizeof(LevelContext),
-    };
-
     for (int i = 0; i < 10; i++)
     {
-        char *json = get_json_array_value("worlds", i, json_data);
-        if (!json)
-        {
-            FURI_LOG_E(TAG, "Failed to get worlds. Data likely empty");
-            break;
-        }
-
-        char *world_id = get_json_value("name", json);
+        FuriString *world_id = get_json_array_value_furi("names", i, world_list);
         if (!world_id)
         {
             FURI_LOG_E(TAG, "Failed to get world id");
-            furi_string_free(world_data);
-            free(json);
+            break;
+        }
+        snprintf(level_contexts[i].id, sizeof(level_contexts[i].id), "%s", furi_string_get_cstr(world_id));
+        level_contexts[i].index = i;
+        LevelBehaviour *new_behavior = malloc(sizeof(LevelBehaviour));
+        if (!new_behavior)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate memory for level behavior");
+            furi_string_free(world_id);
+            furi_string_free(world_list);
             return false;
         }
-
-        snprintf(level_contexts[i].id, sizeof(level_contexts[i].id), "%s", "example_world");
-        // safely copy the i value to the index
-        level_contexts[i].index = i;
-        level_behaviors[i] = &new_behavior;
+        *new_behavior = (LevelBehaviour){
+            .alloc = level_alloc_world,
+            .free = NULL,
+            .start = level_start,
+            .stop = NULL,
+            .context_size = sizeof(LevelContext),
+        };
         level_count++;
-        free(json);
-        free(world_id);
+        game_manager_add_level(game_manager, new_behavior);
+        furi_string_free(world_id);
     }
-
-    furi_string_free(world_data);
+    furi_string_free(world_list);
     return true;
 }
 
-// array of LevelBehaviour structures
-const LevelBehaviour *level_behaviors[10] = {0};
 LevelContext level_contexts[] = {0};
 Level *levels[] = {0};
 int level_count = 0;

@@ -13,3 +13,4 @@ typedef struct
 
 extern const EntityDescription icon_desc;
 const Icon *get_icon(char *name);
+const Icon *get_icon_furi(FuriString *name);
