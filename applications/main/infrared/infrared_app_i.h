@@ -43,8 +43,8 @@
 #define INFRARED_TEXT_STORE_NUM  2
 #define INFRARED_TEXT_STORE_SIZE 128
 
-#define INFRARED_MAX_BUTTON_NAME_LENGTH 22
-#define INFRARED_MAX_REMOTE_NAME_LENGTH 22
+#define INFRARED_MAX_BUTTON_NAME_LENGTH 23
+#define INFRARED_MAX_REMOTE_NAME_LENGTH 23
 
 #define INFRARED_APP_FOLDER    EXT_PATH("infrared")
 #define INFRARED_APP_EXTENSION ".ir"
@@ -207,9 +207,9 @@ void infrared_tx_start(InfraredApp* infrared);
  *
  * @param[in,out] infrared pointer to the application instance.
  * @param[in] button_index index of the signal to be loaded.
- * @returns true if the signal could be loaded, false otherwise.
+ * @returns InfraredErrorCodeNone if the signal could be loaded, otherwise error code.
  */
-void infrared_tx_start_button_index(InfraredApp* infrared, size_t button_index);
+InfraredErrorCode infrared_tx_start_button_index(InfraredApp* infrared, size_t button_index);
 
 /**
  * @brief Stop transmission of the currently loaded signal.
