@@ -17,7 +17,6 @@ App_Global_Data AppGlobal = {
     .pc3Voltage = 0};
 
 int AppInit() {
-    //  stop_feedback(FApp->Notificator);
     AppGlobal.adc_handle = furi_hal_adc_acquire();
     furi_hal_adc_configure(AppGlobal.adc_handle);
     notification_message(FApp->Notificator, &sequence_display_backlight_on);
