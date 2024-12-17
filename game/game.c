@@ -4,7 +4,7 @@
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 
-static void player_spawn(Level *level, GameManager *manager)
+void player_spawn(Level *level, GameManager *manager)
 {
     Entity *player = level_add_entity(level, &player_desc);
 
@@ -64,6 +64,14 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         player->is_looking_left = false;
     }
 
+    // switch levels if holding OK
+    if (input.held & GameKeyOk)
+    {
+        game_manager_next_level_set(manager, game_manager_current_level_get(manager) == level_tree ? level_example : level_tree);
+        furi_delay_ms(1000);
+        return;
+    }
+
     // Clamp the player's position to stay within world bounds
     pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
     pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
@@ -116,40 +124,6 @@ const EntityDescription player_desc = {
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
-/****** Level ******/
-
-static void level_alloc(Level *level, GameManager *manager, void *context)
-{
-    UNUSED(manager);
-    UNUSED(context);
-
-    // Add player entity to the level
-    player_spawn(level, manager);
-
-    // check if tree world exists
-    if (!world_exists("tree_world"))
-    {
-        FURI_LOG_E("Game", "Tree world does not exist");
-        easy_flipper_dialog("[WORLD ERROR]", "No world data installed.\n\n\nSettings -> Game ->\nInstall Official World Pack");
-        draw_example_world(level);
-        return;
-    }
-
-    if (!draw_json_world_furi(level, load_furi_world("tree_world")))
-    {
-        FURI_LOG_E("Game", "Tree World exists but failed to draw.");
-        draw_example_world(level);
-    }
-}
-
-static const LevelBehaviour level = {
-    .alloc = level_alloc, // called once, when level allocated
-    .free = NULL,         // called once, when level freed
-    .start = NULL,        // called when level is changed to this level
-    .stop = NULL,         // called when level is changed from this level
-    .context_size = 0,    // size of level context, will be automatically allocated and freed
-};
-
 /****** Game ******/
 
 /*
@@ -163,8 +137,24 @@ static void game_start(GameManager *game_manager, void *ctx)
     GameContext *game_context = ctx;
     game_context->score = 0;
 
-    // Add level to the game
-    game_manager_add_level(game_manager, &level);
+    // load all levels
+    // if (level_load_all())
+    // {
+    //     // loop through all levels and add them to the game
+    //     for (int i = level_count; i > 0; i--)
+    //     {
+    //         levels[i] = game_manager_add_level(game_manager, level_behaviors[i]);
+    //     }
+    // }
+    // else
+    // {
+    //     FURI_LOG_E("Game", "Failed to load levels");
+    //     easy_flipper_dialog("[LEVEL ERROR]", "No level data installed.\n\n\nSettings -> Game ->\nInstall Official Level Pack");
+    //     game_manager_add_level(game_manager, &example_level);
+    // }
+
+    level_tree = game_manager_add_level(game_manager, &tree_level);
+    level_example = game_manager_add_level(game_manager, &example_level);
 }
 
 /*
@@ -207,7 +197,7 @@ float game_fps_int()
     Your game configuration, do not rename this variable, but you can change its content here.
 */
 const Game game = {
-    .target_fps = 240,                   // target fps, game will try to keep this value
+    .target_fps = 30,                    // target fps, game will try to keep this value
     .show_fps = false,                   // show fps counter on the screen
     .always_backlight = true,            // keep display backlight always on
     .start = game_start,                 // will be called once, when game starts

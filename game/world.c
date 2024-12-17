@@ -7,7 +7,7 @@ void draw_bounds(Canvas *canvas)
     canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 }
 
-bool draw_json_world(Level *level, char *json_data)
+bool draw_json_world(Level *level, const char *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
@@ -57,7 +57,7 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
-        char *data = get_json_array_value("json_data", i, (char *)furi_string_get_cstr(json_data), MAX_WORLD_TOKENS);
+        char *data = get_json_array_value("json_data", i, furi_string_get_cstr(json_data), MAX_WORLD_TOKENS);
         if (data == NULL)
         {
             break;

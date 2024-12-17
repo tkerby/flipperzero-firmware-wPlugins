@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/engine.h"
 #include <game/world.h>
+#include <game/level.h>
 #include "flip_world.h"
 #include "flip_storage/storage.h"
 
@@ -24,3 +25,4 @@ typedef struct
 } PlayerContext;
 
 extern const EntityDescription player_desc;
+void player_spawn(Level *level, GameManager *manager);

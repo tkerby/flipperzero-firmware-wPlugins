@@ -76,4 +76,3 @@ typedef struct
 
 extern char *game_fps_choices[];
 extern char *game_fps; // The game FPS
-// TODO - Add Download world function and download world pack button
