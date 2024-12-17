@@ -476,14 +476,14 @@ static int skip_token(const jsmntok_t *tokens, int start, int total)
 /**
  * Parse JSON and return the value associated with a given char* key.
  */
-FuriString *get_json_value_furi(const char *key, const FuriString *json_data, uint32_t max_tokens)
+FuriString *get_json_value_furi(const char *key, const FuriString *json_data)
 {
     if (json_data == NULL)
     {
         FURI_LOG_E("JSMM.H", "JSON data is NULL");
         return NULL;
     }
-
+    uint32_t max_tokens = json_token_count_furi(json_data);
     // Create a temporary FuriString from key
     FuriString *key_str = furi_string_alloc();
     furi_string_cat_str(key_str, key);
@@ -538,16 +538,15 @@ FuriString *get_json_value_furi(const char *key, const FuriString *json_data, ui
 /**
  * Return the value at a given index in a JSON array for a given char* key.
  */
-FuriString *get_json_array_value_furi(const char *key, uint32_t index, const FuriString *json_data, uint32_t max_tokens)
+FuriString *get_json_array_value_furi(const char *key, uint32_t index, const FuriString *json_data)
 {
-    // Convert key to FuriString and call get_json_value_furi
-    FuriString *array_str = get_json_value_furi(key, json_data, max_tokens);
+    FuriString *array_str = get_json_value_furi(key, json_data);
     if (array_str == NULL)
     {
         FURI_LOG_E("JSMM.H", "Failed to get array for key");
         return NULL;
     }
-
+    uint32_t max_tokens = json_token_count_furi(array_str);
     jsmn_parser parser;
     jsmn_init_furi(&parser);
 
@@ -612,18 +611,18 @@ FuriString *get_json_array_value_furi(const char *key, uint32_t index, const Fur
 /**
  * Extract all object values from a JSON array associated with a given char* key.
  */
-FuriString **get_json_array_values_furi(const char *key, const FuriString *json_data, uint32_t max_tokens, int *num_values)
+FuriString **get_json_array_values_furi(const char *key, const FuriString *json_data, int *num_values)
 {
     *num_values = 0;
-
     // Convert key to FuriString and call get_json_value_furi
-    FuriString *array_str = get_json_value_furi(key, json_data, max_tokens);
+    FuriString *array_str = get_json_value_furi(key, json_data);
     if (array_str == NULL)
     {
         FURI_LOG_E("JSMM.H", "Failed to get array for key");
         return NULL;
     }
 
+    uint32_t max_tokens = json_token_count_furi(array_str);
     jsmn_parser parser;
     jsmn_init_furi(&parser);
 
@@ -705,7 +704,7 @@ FuriString **get_json_array_values_furi(const char *key, const FuriString *json_
     return values;
 }
 
-int json_token_count_furi(const FuriString *json)
+uint32_t json_token_count_furi(const FuriString *json)
 {
     if (json == NULL)
     {

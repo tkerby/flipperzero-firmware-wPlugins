@@ -783,13 +783,13 @@ static char *flip_world_parse_worlds(DataLoaderModel *model)
     // we used 10 since we passed 10 in the request
     for (int i = 0; i < 10; i++)
     {
-        char *json = get_json_array_value("worlds", i, furi_string_get_cstr(world_data), 1024);
+        char *json = get_json_array_value("worlds", i, furi_string_get_cstr(world_data));
         if (!json)
         {
             FURI_LOG_E(TAG, "Failed to get worlds. Data likely empty");
             break;
         }
-        char *world_name = get_json_value("name", json, 1024);
+        char *world_name = get_json_value("name", json);
         if (!world_name)
         {
             FURI_LOG_E(TAG, "Failed to get world name");

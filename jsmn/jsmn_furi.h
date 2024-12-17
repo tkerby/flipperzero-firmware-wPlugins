@@ -50,11 +50,11 @@ extern "C"
 FuriString *jsmn_create_object(const FuriString *key, const FuriString *value);
 
 // Updated signatures to accept const char* key
-FuriString *get_json_value_furi(const char *key, const FuriString *json_data, uint32_t max_tokens);
-FuriString *get_json_array_value_furi(const char *key, uint32_t index, const FuriString *json_data, uint32_t max_tokens);
-FuriString **get_json_array_values_furi(const char *key, const FuriString *json_data, uint32_t max_tokens, int *num_values);
+FuriString *get_json_value_furi(const char *key, const FuriString *json_data);
+FuriString *get_json_array_value_furi(const char *key, uint32_t index, const FuriString *json_data);
+FuriString **get_json_array_values_furi(const char *key, const FuriString *json_data, int *num_values);
 
-int json_token_count_furi(const FuriString *json);
+uint32_t json_token_count_furi(const FuriString *json);
 /* Example usage:
 char *json = "{\"key1\":\"value1\",\"key2\":\"value2\"}";
 FuriString *json_data = char_to_furi_string(json);

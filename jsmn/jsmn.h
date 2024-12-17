@@ -68,13 +68,13 @@ char *jsmn(const char *key, const char *value);
 int jsoneq(const char *json, jsmntok_t *tok, const char *s);
 
 // Return the value of the key in the JSON data
-char *get_json_value(char *key, const char *json_data, uint32_t max_tokens);
+char *get_json_value(char *key, const char *json_data);
 
 // Revised get_json_array_value function
-char *get_json_array_value(char *key, uint32_t index, const char *json_data, uint32_t max_tokens);
+char *get_json_array_value(char *key, uint32_t index, const char *json_data);
 
 // Revised get_json_array_values function with correct token skipping
-char **get_json_array_values(char *key, char *json_data, uint32_t max_tokens, int *num_values);
+char **get_json_array_values(char *key, char *json_data, int *num_values);
 
 int json_token_count(const char *json);
 #endif /* JB_JSMN_EDIT */

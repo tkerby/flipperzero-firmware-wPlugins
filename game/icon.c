@@ -3,31 +3,31 @@ const Icon *get_icon(char *name)
 {
     if (strcmp(name, "earth") == 0)
     {
-        return &I_icon_earth;
+        return &I_icon_earth_15x16;
     }
     if (strcmp(name, "home") == 0)
     {
-        return &I_icon_home;
+        return &I_icon_home_15x16;
     }
     if (strcmp(name, "info") == 0)
     {
-        return &I_icon_info;
+        return &I_icon_info_15x16;
     }
     if (strcmp(name, "man") == 0)
     {
-        return &I_icon_man;
+        return &I_icon_man_7x16;
     }
     if (strcmp(name, "plant") == 0)
     {
-        return &I_icon_plant;
+        return &I_icon_plant_16x16;
     }
     if (strcmp(name, "tree") == 0)
     {
-        return &I_icon_tree;
+        return &I_icon_tree_16x16;
     }
     if (strcmp(name, "woman") == 0)
     {
-        return &I_icon_woman;
+        return &I_icon_woman_9x16;
     }
     return NULL;
 }
