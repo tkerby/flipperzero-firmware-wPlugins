@@ -1,36 +1,5 @@
 #include "game/icon.h"
-const Icon *get_icon(char *name)
-{
-    if (strcmp(name, "earth") == 0)
-    {
-        return &I_icon_earth_15x16;
-    }
-    if (strcmp(name, "home") == 0)
-    {
-        return &I_icon_home_15x16;
-    }
-    if (strcmp(name, "info") == 0)
-    {
-        return &I_icon_info_15x16;
-    }
-    if (strcmp(name, "man") == 0)
-    {
-        return &I_icon_man_7x16;
-    }
-    if (strcmp(name, "plant") == 0)
-    {
-        return &I_icon_plant_16x16;
-    }
-    if (strcmp(name, "tree") == 0)
-    {
-        return &I_icon_tree_16x16;
-    }
-    if (strcmp(name, "woman") == 0)
-    {
-        return &I_icon_woman_9x16;
-    }
-    return NULL;
-}
+
 // Icon entity description
 
 static void icon_collision(Entity *self, Entity *other, GameManager *manager, void *context)
@@ -84,3 +53,126 @@ const EntityDescription icon_desc = {
     .event = NULL,
     .context_size = sizeof(IconContext),
 };
+
+const Icon *get_icon(char *name)
+{
+    if (strcmp(name, "earth") == 0)
+    {
+        return &I_icon_earth_15x16;
+    }
+    if (strcmp(name, "home") == 0)
+    {
+        return &I_icon_home_15x16;
+    }
+    if (strcmp(name, "house") == 0)
+    {
+        return &I_icon_house_48x48px;
+    }
+    if (strcmp(name, "house_3d") == 0)
+    {
+        return &I_icon_house_3d_34x45px;
+    }
+    if (strcmp(name, "info") == 0)
+    {
+        return &I_icon_info_15x16;
+    }
+    if (strcmp(name, "man") == 0)
+    {
+        return &I_icon_man_7x16;
+    }
+    if (strcmp(name, "plant") == 0)
+    {
+        return &I_icon_plant_16x16;
+    }
+    if (strcmp(name, "plant_fern") == 0)
+    {
+        return &I_icon_plant_fern_18x16px;
+    }
+    if (strcmp(name, "plant_pointy") == 0)
+    {
+        return &I_icon_plant_pointy_13x16px;
+    }
+    if (strcmp(name, "tree") == 0)
+    {
+        return &I_icon_tree_16x16;
+    }
+    if (strcmp(name, "tree_29x30") == 0)
+    {
+        return &I_icon_tree_29x30px;
+    }
+    if (strcmp(name, "tree_48x48") == 0)
+    {
+        return &I_icon_tree_48x48px;
+    }
+    if (strcmp(name, "woman") == 0)
+    {
+        return &I_icon_woman_9x16;
+    }
+    if (strcmp(name, "chest_closed") == 0)
+    {
+        return &I_icon_chest_closed_16x13px;
+    }
+    if (strcmp(name, "chest_open") == 0)
+    {
+        return &I_icon_chest_open_16x16px;
+    }
+    if (strcmp(name, "fence") == 0)
+    {
+        return &I_icon_fence_16x8px;
+    }
+    if (strcmp(name, "fence_end") == 0)
+    {
+        return &I_icon_fence_end_16x8px;
+    }
+    if (strcmp(name, "flower") == 0)
+    {
+        return &I_icon_flower_16x16;
+    }
+    if (strcmp(name, "lake_bottom") == 0)
+    {
+        return &I_icon_lake_bottom_31x31px;
+    }
+    if (strcmp(name, "lake_bottom_left") == 0)
+    {
+        return &I_icon_lake_bottom_left_31x31px;
+    }
+    if (strcmp(name, "lake_bottom_right") == 0)
+    {
+        return &I_icon_lake_bottom_right_31x31px;
+    }
+    if (strcmp(name, "lake_left") == 0)
+    {
+        return &I_icon_lake_left_31x31;
+    }
+    if (strcmp(name, "lake_right") == 0)
+    {
+        return &I_icon_lake_right_31x31px;
+    }
+    if (strcmp(name, "lake_top") == 0)
+    {
+        return &I_icon_lake_top_31x31px;
+    }
+    if (strcmp(name, "lake_top_left") == 0)
+    {
+        return &I_icon_lake_top_left_31x31px;
+    }
+    if (strcmp(name, "lake_top_right") == 0)
+    {
+        return &I_icon_lake_top_right_31x31px;
+    }
+    if (strcmp(name, "rock_large") == 0)
+    {
+        return &I_icon_rock_large_18x19px;
+    }
+    if (strcmp(name, "rock_medium") == 0)
+    {
+        return &I_icon_rock_medium_16x14px;
+    }
+    if (strcmp(name, "rock_small") == 0)
+    {
+        return &I_icon_rock_small_10x8px;
+    }
+
+    // If no match is found
+    return NULL;
+}
