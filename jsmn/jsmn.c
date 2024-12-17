@@ -7,8 +7,6 @@
  */
 
 #include <jsmn/jsmn.h>
-#include <stdlib.h>
-#include <string.h>
 
 /**
  * Allocates a fresh unused token from the token pool.
@@ -768,4 +766,19 @@ char **get_json_array_values(char *key, char *json_data, uint32_t max_tokens, in
     free(tokens);
     free(array_str);
     return values;
+}
+
+int json_token_count(const char *json)
+{
+    if (json == NULL)
+    {
+        return JSMN_ERROR_INVAL;
+    }
+
+    jsmn_parser parser;
+    jsmn_init(&parser);
+
+    // Pass NULL for tokens and 0 for num_tokens to get the token count only
+    int ret = jsmn_parse(&parser, json, strlen(json), NULL, 0);
+    return ret; // If ret >= 0, it represents the number of tokens needed.
 }
