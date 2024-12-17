@@ -14,6 +14,14 @@
 #define TAG         "FlipWorld"
 #define VERSION_TAG "FlipWorld v0.1"
 
+// Screen size
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT 64
+
+// World size (3x3)
+#define WORLD_WIDTH  384
+#define WORLD_HEIGHT 192
+
 // Define the submenu items for our FlipWorld application
 typedef enum {
     FlipWorldSubmenuIndexRun, // Click to run the FlipWorld application
@@ -51,3 +59,5 @@ typedef struct {
     char* text_input_temp_buffer; // Temporary buffer for the text input
     uint32_t text_input_buffer_size; // Size of the text input buffer
 } FlipWorldApp;
+
+// TODO - Add Download world function and download world pack button
