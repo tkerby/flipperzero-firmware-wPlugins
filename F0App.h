@@ -18,7 +18,7 @@ struct F0App {
     ViewPort* view_port;
     FuriMessageQueue* event_queue;
     FuriMutex* mutex;
-    //    FuriTimer* timer;
+    FuriTimer* timer;
     NotificationApp* Notificator;
     bool TimerEventFlag;
     float SystemScreenBrightness;
