@@ -609,7 +609,13 @@ void callback_submenu_choices(void *context, uint32_t index)
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
             return;
         }
-        app_instance = app;
+        app_instance = malloc(sizeof(FlipWorldApp));
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate FlipWorldApp");
+            return;
+        }
+        memcpy(app_instance, app, sizeof(FlipWorldApp));
         flip_world_switch_to_view_get_world_list(app);
         break;
     case FlipWorldSubmenuIndexAbout:
