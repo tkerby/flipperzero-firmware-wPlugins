@@ -7,9 +7,33 @@ static void level_start(Level *level, GameManager *manager, void *context)
     // check if the world exists
     if (!world_exists(level_context->id))
     {
-        FURI_LOG_E("Game", "World does not exist");
-        easy_flipper_dialog("[WORLD ERROR]", "No world data installed.\n\n\nSettings -> Game ->\nInstall Official World Pack");
-        draw_town_world(level);
+        FURI_LOG_E("Game", "World does not exist.. downloading now");
+        if (!level_context->app)
+        {
+            level_context->app = (FlipWorldApp *)malloc(sizeof(FlipWorldApp));
+            if (!level_context->app)
+            {
+                FURI_LOG_E("Game", "Failed to allocate FlipWorldApp");
+                return;
+            }
+        }
+        FuriString *world_data = fetch_world(level_context->id, level_context->app);
+        if (!world_data)
+        {
+            FURI_LOG_E("Game", "Failed to fetch world data");
+            draw_town_world(level);
+            free(level_context->app);
+            level_context->app = NULL;
+            return;
+        }
+        if (!draw_json_world(level, furi_string_get_cstr(world_data)))
+        {
+            FURI_LOG_E("Game", "Failed to draw world");
+            draw_town_world(level);
+        }
+        free(level_context->app);
+        level_context->app = NULL;
+        furi_string_free(world_data);
         return;
     }
     // get the world data
@@ -38,6 +62,7 @@ static LevelContext *level_generic_alloc(const char *id, int index)
     }
     snprintf(level_context_generic->id, sizeof(level_context_generic->id), "%s", id);
     level_context_generic->index = index;
+    level_context_generic->app = NULL;
     return level_context_generic;
 }
 static void level_generic_free()
@@ -59,6 +84,7 @@ static void level_alloc_generic_world(Level *level, GameManager *manager, void *
     LevelContext *level_context = context;
     snprintf(level_context->id, sizeof(level_context->id), "%s", level_context_generic->id);
     level_context->index = level_context_generic->index;
+    level_context->app = level_context_generic->app;
     player_spawn(level, manager);
 }
 

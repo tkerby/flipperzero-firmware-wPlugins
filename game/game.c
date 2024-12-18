@@ -151,6 +151,9 @@ static void game_start(GameManager *game_manager, void *ctx)
     {
         FURI_LOG_E("Game", "Failed to load world list");
         levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
+        levels[1] = game_manager_add_level(game_manager, generic_level("tree_world", 1));
+        levels[2] = game_manager_add_level(game_manager, generic_level("generic_world", 2));
+        return;
     }
     for (int i = 0; i < 10; i++)
     {
@@ -160,7 +163,9 @@ static void game_start(GameManager *game_manager, void *ctx)
             break;
         }
         levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
+        furi_string_free(world_name);
     }
+    furi_string_free(world_list);
 }
 
 /*

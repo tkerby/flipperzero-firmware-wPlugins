@@ -525,22 +525,6 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
     }
     else if (model->request_index == 1)
     {
-        snprintf(
-            fhttp.file_path,
-            sizeof(fhttp.file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%p.json", model->parser_context);
-
-        fhttp.save_received_data = true;
-        char url[128];
-        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%p/", model->parser_context);
-        return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
-    }
-    return false;
-}
-static char *flip_world_parse_world_list(DataLoaderModel *model)
-{
-    if (model->request_index == 0)
-    {
         FuriString *world_list = flipper_http_load_from_file(fhttp.file_path);
         if (!world_list)
         {
@@ -553,20 +537,35 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
             FURI_LOG_E(TAG, "Failed to get first world");
             return "Failed to get first world";
         }
-        model->parser_context = malloc(furi_string_size(first_world) + 1);
-        if (!model->parser_context)
-        {
-            FURI_LOG_E(TAG, "Failed to allocate parser context");
-            return "Failed to allocate parser context";
-        }
-        snprintf(model->parser_context, furi_string_size(first_world) + 1, "%s", furi_string_get_cstr(first_world));
+        // if (world_exists(furi_string_get_cstr(first_world)))
+        // {
+        //     furi_string_free(world_list);
+        //     furi_string_free(first_world);
+        //     FURI_LOG_I(TAG, "World already exists");
+        //     fhttp.state = IDLE;
+        //     return true;
+        // }
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(first_world));
+
+        fhttp.save_received_data = true;
+        char url[128];
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
+        return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+    }
+    return false;
+}
+static char *flip_world_parse_world_list(DataLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
         return "World List Fetched";
     }
     else if (model->request_index == 1)
     {
         flipper_http_deinit();
-        free(model->parser_context);
-        model->parser_context = NULL;
         // free game thread
         if (game_thread_running)
         {

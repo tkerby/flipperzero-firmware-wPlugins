@@ -301,3 +301,45 @@ void draw_town_world(Level *level)
     ]
 }
 */
+
+FuriString *fetch_world(char *name, void *app)
+{
+    if (!app || !name)
+    {
+        FURI_LOG_E("Game", "App or name is NULL");
+        return NULL;
+    }
+    if (!flipper_http_init(flipper_http_rx_callback, app))
+    {
+        FURI_LOG_E("Game", "Failed to initialize HTTP");
+        return NULL;
+    }
+    char url[256];
+    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", name);
+    snprintf(fhttp.file_path, sizeof(fhttp.file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+    fhttp.save_received_data = true;
+    if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}"))
+    {
+        FURI_LOG_E("Game", "Failed to send HTTP request");
+        return NULL;
+    }
+    furi_timer_start(fhttp.get_timeout_timer, TIMEOUT_DURATION_TICKS);
+    while (fhttp.state == RECEIVING && furi_timer_is_running(fhttp.get_timeout_timer) > 0)
+    {
+        // Wait for the request to be received
+        furi_delay_ms(100);
+    }
+    furi_timer_stop(fhttp.get_timeout_timer);
+    if (fhttp.state != IDLE)
+    {
+        FURI_LOG_E("Game", "Failed to receive world data");
+        return NULL;
+    }
+    FuriString *returned_data = flipper_http_load_from_file(fhttp.file_path);
+    if (!returned_data)
+    {
+        FURI_LOG_E("Game", "Failed to load world data from file");
+        return NULL;
+    }
+    return returned_data;
+}
