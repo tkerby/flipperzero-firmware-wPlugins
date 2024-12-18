@@ -1,6 +1,9 @@
 #include "game.h"
 
 /****** Entities: Player ******/
+Level *level_tree;
+Level *level_town;
+Level *level_generic;
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
 
@@ -67,9 +70,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // switch levels if holding OK
     if (input.held & GameKeyOk)
     {
-        game_manager_next_level_set(manager, game_manager_current_level_get(manager) == level_tree ? level_example : level_tree);
-        furi_delay_ms(500);
-        return;
+        // game_manager_next_level_set(manager, game_manager_current_level_get(manager) == level_tree ? level_town : level_tree);
+        // furi_delay_ms(500);
+        // return;
     }
 
     // Clamp the player's position to stay within world bounds
@@ -136,16 +139,9 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->score = 0;
-
-    // load all levels
-    // if (!level_load_all(game_manager))
-    // {
-    //     FURI_LOG_E("Game", "Failed to load levels");
-    //     easy_flipper_dialog("[LEVEL ERROR]", "No level data installed.\n\n\nSettings -> Game ->\nInstall Official Level Pack");
-    //     game_manager_add_level(game_manager, &tree_level);
-    // }
-    level_tree = game_manager_add_level(game_manager, &tree_level);
-    level_example = game_manager_add_level(game_manager, &example_level);
+    level_town = game_manager_add_level(game_manager, generic_level("town_world", 0));
+    level_tree = game_manager_add_level(game_manager, generic_level("tree_world", 1));
+    level_generic = game_manager_add_level(game_manager, generic_level("generic_world", 2));
 }
 
 /*
