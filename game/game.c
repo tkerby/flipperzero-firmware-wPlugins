@@ -128,7 +128,7 @@ const EntityDescription player_desc = {
 };
 
 /****** Game ******/
-
+Level *levels[10];
 /*
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
@@ -139,9 +139,28 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->score = 0;
-    level_town = game_manager_add_level(game_manager, generic_level("town_world", 0));
-    level_tree = game_manager_add_level(game_manager, generic_level("tree_world", 1));
-    level_generic = game_manager_add_level(game_manager, generic_level("generic_world", 2));
+    // level_town = game_manager_add_level(game_manager, generic_level("town_world", 0));
+    // level_tree = game_manager_add_level(game_manager, generic_level("tree_world", 1));
+    // level_generic = game_manager_add_level(game_manager, generic_level("generic_world", 2));
+
+    // open the world list from storage, then create a level for each world
+    char file_path[128];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+    FuriString *world_list = flipper_http_load_from_file(file_path);
+    if (!world_list)
+    {
+        FURI_LOG_E("Game", "Failed to load world list");
+        levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
+    }
+    for (int i = 0; i < 10; i++)
+    {
+        FuriString *world_name = get_json_array_value_furi("worlds", i, world_list);
+        if (!world_name)
+        {
+            break;
+        }
+        levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
+    }
 }
 
 /*

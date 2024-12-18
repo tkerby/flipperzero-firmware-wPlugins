@@ -28,7 +28,6 @@ typedef enum
 // Define a single view for our FlipWorld application
 typedef enum
 {
-    FlipWorldViewMain,             // The main screen
     FlipWorldViewSubmenu,          // The submenu
     FlipWorldViewAbout,            // The about screen
     FlipWorldViewSettings,         // The settings screen
@@ -53,7 +52,6 @@ typedef struct
     Widget *widget_result;
     //
     ViewDispatcher *view_dispatcher;       // Switches between our views
-    View *view_main;                       // The game screen
     View *view_about;                      // The about screen
     Submenu *submenu;                      // The submenu
     Submenu *submenu_settings;             // The settings submenu

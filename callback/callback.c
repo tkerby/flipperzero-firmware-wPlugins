@@ -383,12 +383,6 @@ static void free_main_view(void *context)
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return;
     }
-    if (app->view_main)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMain);
-        view_free(app->view_main);
-        app->view_main = NULL;
-    }
 }
 
 static void free_text_input_view(void *context)
@@ -471,6 +465,7 @@ static void free_submenu_settings(void *context)
         app->submenu_settings = NULL;
     }
 }
+static FlipWorldApp *app_instance = NULL;
 static FuriThreadId thread_id;
 static bool game_thread_running = false;
 void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings)
@@ -488,12 +483,6 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
     free_about_view(app);
     free_main_view(app);
     free_text_input_view(app);
-    if (app->view_main)
-    {
-        view_free(app->view_main);
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMain);
-        app->view_main = NULL;
-    }
     // free game thread
     if (game_thread_running)
     {
@@ -504,6 +493,104 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
 
     if (should_free_submenu_settings)
         free_submenu_settings(app);
+
+    if (app_instance)
+    {
+        free(app_instance);
+        app_instance = NULL;
+    }
+}
+static bool flip_world_fetch_world_list(DataLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        // Create the directory for saving worlds
+        char directory_path[128];
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+
+        // Create the directory
+        Storage *storage = furi_record_open(RECORD_STORAGE);
+        storage_common_mkdir(storage, directory_path);
+
+        // free storage
+        furi_record_close(RECORD_STORAGE);
+
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+
+        fhttp.save_received_data = true;
+        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
+    }
+    else if (model->request_index == 1)
+    {
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%p.json", model->parser_context);
+
+        fhttp.save_received_data = true;
+        char url[128];
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%p/", model->parser_context);
+        return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+    }
+    return false;
+}
+static char *flip_world_parse_world_list(DataLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        FuriString *world_list = flipper_http_load_from_file(fhttp.file_path);
+        if (!world_list)
+        {
+            FURI_LOG_E(TAG, "Failed to load world list");
+            return "Failed to load world list";
+        }
+        FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
+        if (!first_world)
+        {
+            FURI_LOG_E(TAG, "Failed to get first world");
+            return "Failed to get first world";
+        }
+        model->parser_context = malloc(furi_string_size(first_world) + 1);
+        if (!model->parser_context)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate parser context");
+            return "Failed to allocate parser context";
+        }
+        snprintf(model->parser_context, furi_string_size(first_world) + 1, "%s", furi_string_get_cstr(first_world));
+        return "World List Fetched";
+    }
+    else if (model->request_index == 1)
+    {
+        flipper_http_deinit();
+        free(model->parser_context);
+        model->parser_context = NULL;
+        // free game thread
+        if (game_thread_running)
+        {
+            game_thread_running = false;
+            furi_thread_flags_set(thread_id, WorkerEvtStop);
+            furi_thread_free(thread_id);
+        }
+        // free_all_views(app_instance, true, true);
+        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+        if (!thread)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate game thread");
+            return "Failed to allocate game thread";
+        }
+        furi_thread_start(thread);
+        thread_id = furi_thread_get_id(thread);
+        game_thread_running = true;
+        return "Thanks for playing!\nPress BACK to return.";
+    }
+    return "Unknown error";
+}
+static void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
+{
+    flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 2, callback_to_submenu, FlipWorldViewLoader);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -517,35 +604,13 @@ void callback_submenu_choices(void *context, uint32_t index)
     switch (index)
     {
     case FlipWorldSubmenuIndexRun:
-        // free game thread
-        if (game_thread_running)
+        if (!flipper_http_init(flipper_http_rx_callback, app))
         {
-            game_thread_running = false;
-            furi_thread_flags_set(thread_id, WorkerEvtStop);
-            furi_thread_free(thread_id);
-        }
-        free_all_views(app, true, true);
-        if (!app->view_main)
-        {
-            if (!easy_flipper_set_view(&app->view_main, FlipWorldViewMain, NULL, NULL, callback_to_submenu, &app->view_dispatcher, app))
-            {
-                return;
-            }
-            if (!app->view_main)
-            {
-                return;
-            }
-        }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMain);
-        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app);
-        if (!thread)
-        {
-            FURI_LOG_E(TAG, "Failed to allocate game thread");
+            FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
             return;
         }
-        furi_thread_start(thread);
-        thread_id = furi_thread_get_id(thread);
-        game_thread_running = true;
+        app_instance = app;
+        flip_world_switch_to_view_get_world_list(app);
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true, true);
@@ -772,59 +837,12 @@ static bool flip_world_fetch_worlds(DataLoaderModel *model)
 static char *flip_world_parse_worlds(DataLoaderModel *model)
 {
     UNUSED(model);
-    // load the received data from the saved file
-    FuriString *world_data = flipper_http_load_from_file(fhttp.file_path);
     flipper_http_deinit();
-    if (!world_data)
-    {
-        FURI_LOG_E(TAG, "Failed to load world data");
-        return "Failed to load world data";
-    }
-    // first save list of names
-    FuriString *names = get_json_value_furi("names", world_data);
-    if (!names)
-    {
-        FURI_LOG_E(TAG, "Failed to get names");
-        furi_string_free(world_data);
-        return "Failed to get names";
-    }
-    if (!save_world_names(names))
-    {
-        FURI_LOG_E(TAG, "Failed to save world names");
-        furi_string_free(names);
-        furi_string_free(world_data);
-        return "Failed to save world names";
-    }
-    furi_string_free(names);
-    // we used 10 since we passed 10 in the request
-    for (int i = 0; i < 10; i++)
-    {
-        FuriString *worlds = get_json_array_value_furi("worlds", i, world_data);
-        if (!worlds)
-        {
-            FURI_LOG_E(TAG, "Failed to get worlds. Data likely empty");
-            break;
-        }
-        FuriString *world_name = get_json_array_value_furi("names", i, world_data);
-        if (!world_name)
-        {
-            FURI_LOG_E(TAG, "Failed to get world name");
-            furi_string_free(worlds);
-            break;
-        }
-        if (!save_world_furi(world_name, worlds))
-        {
-            FURI_LOG_E(TAG, "Failed to save world");
-        }
-        furi_string_free(world_name);
-        furi_string_free(worlds);
-    }
-    furi_string_free(world_data);
     return "World Pack Installed";
 }
 static void flip_world_switch_to_view_get_worlds(FlipWorldApp *app)
 {
-    flip_world_generic_switch_to_view(app, "Downlading Worlds..", flip_world_fetch_worlds, flip_world_parse_worlds, 1, callback_to_submenu, FlipWorldViewLoader);
+    flip_world_generic_switch_to_view(app, "Fetching World Pack..", flip_world_fetch_worlds, flip_world_parse_worlds, 1, callback_to_submenu, FlipWorldViewLoader);
 }
 static void game_settings_item_selected(void *context, uint32_t index)
 {
