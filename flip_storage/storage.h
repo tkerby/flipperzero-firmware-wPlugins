@@ -28,6 +28,8 @@ bool save_world(
     const char *name,
     const char *world_data);
 
+bool save_world_furi(FuriString *name, FuriString *world_data);
+
 bool load_world(
     const char *name,
     char *json_data,
@@ -38,3 +40,5 @@ FuriString *load_furi_world(
 
 bool world_exists(
     const char *name);
+
+bool save_world_names(const FuriString *json);

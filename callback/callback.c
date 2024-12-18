@@ -780,26 +780,46 @@ static char *flip_world_parse_worlds(DataLoaderModel *model)
         FURI_LOG_E(TAG, "Failed to load world data");
         return "Failed to load world data";
     }
+    // first save list of names
+    FuriString *names = get_json_value_furi("names", world_data);
+    if (!names)
+    {
+        FURI_LOG_E(TAG, "Failed to get names");
+        furi_string_free(world_data);
+        return "Failed to get names";
+    }
+    if (!save_world_names(names))
+    {
+        FURI_LOG_E(TAG, "Failed to save world names");
+        furi_string_free(names);
+        furi_string_free(world_data);
+        return "Failed to save world names";
+    }
+    furi_string_free(names);
     // we used 10 since we passed 10 in the request
     for (int i = 0; i < 10; i++)
     {
-        char *json = get_json_array_value("worlds", i, furi_string_get_cstr(world_data), 1024);
-        if (!json)
+        FuriString *worlds = get_json_array_value_furi("worlds", i, world_data);
+        if (!worlds)
         {
             FURI_LOG_E(TAG, "Failed to get worlds. Data likely empty");
             break;
         }
-        char *world_name = get_json_value("name", json, 1024);
+        FuriString *world_name = get_json_array_value_furi("names", i, world_data);
         if (!world_name)
         {
             FURI_LOG_E(TAG, "Failed to get world name");
+            furi_string_free(worlds);
             break;
         }
-        if (!save_world(world_name, json))
+        if (!save_world_furi(world_name, worlds))
         {
             FURI_LOG_E(TAG, "Failed to save world");
         }
+        furi_string_free(world_name);
+        furi_string_free(worlds);
     }
+    furi_string_free(world_data);
     return "World Pack Installed";
 }
 static void flip_world_switch_to_view_get_worlds(FlipWorldApp *app)

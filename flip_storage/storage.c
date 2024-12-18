@@ -229,6 +229,48 @@ bool save_world(
     return true;
 }
 
+bool save_world_furi(FuriString *name, FuriString *world_data)
+{
+    // Create the directory for saving settings
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+
+    // Open the settings file
+    File *file = storage_file_alloc(storage);
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(name));
+
+    // Open the file in write mode
+    if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to open file for writing: %s", file_path);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Write the data to the file
+    size_t data_size = furi_string_size(world_data) + 1; // Include null terminator
+    if (storage_file_write(file, furi_string_get_cstr(world_data), data_size) != data_size)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to append data to file");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
+}
+
 bool load_world(
     const char *name,
     char *json_data,
@@ -274,7 +316,7 @@ FuriString *load_furi_world(
 {
     Storage *storage = furi_record_open(RECORD_STORAGE);
     File *file = storage_file_alloc(storage);
-    char file_path[256];
+    char file_path[128];
     snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
     // Open the file for reading
     if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
@@ -359,4 +401,46 @@ bool world_exists(const char *name)
     // Clean up
     furi_record_close(RECORD_STORAGE);
     return does_exist;
+}
+
+bool save_world_names(const FuriString *json)
+{
+    // Create the directory for saving settings
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+
+    // Open the settings file
+    File *file = storage_file_alloc(storage);
+    char file_path[128];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+
+    // Open the file in write mode
+    if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to open file for writing: %s", file_path);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Write the data to the file
+    size_t data_size = furi_string_size(json) + 1; // Include null terminator
+    if (storage_file_write(file, furi_string_get_cstr(json), data_size) != data_size)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to append data to file");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
 }
