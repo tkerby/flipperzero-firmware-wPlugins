@@ -73,4 +73,5 @@ typedef struct
 } FlipWorldApp;
 
 extern char *game_fps_choices[];
-extern char *game_fps; // The game FPS
+extern const float game_fps_choices_2[];
+extern int game_fps_index;

@@ -181,34 +181,13 @@ static void game_stop(void *ctx)
     //  For simplicity, we will just print it.
     // FURI_LOG_I("Game", "Your score: %lu", game_context->score);
 }
-float game_fps_int()
-{
-    if (strcmp(game_fps, "30") == 0)
-    {
-        return 30.0;
-    }
-    else if (strcmp(game_fps, "60") == 0)
-    {
-        return 60.0;
-    }
-    else if (strcmp(game_fps, "120") == 0)
-    {
-        return 120.0;
-    }
-    else if (strcmp(game_fps, "240") == 0)
-    {
-        return 240.0;
-    }
-    else
-    {
-        return 60.0;
-    }
-}
+
 /*
     Your game configuration, do not rename this variable, but you can change its content here.
 */
+
 const Game game = {
-    .target_fps = 30,                    // target fps, game will try to keep this value
+    .target_fps = 0,                     // set to 0 because we set this in game_app (callback.c line 22)
     .show_fps = false,                   // show fps counter on the screen
     .always_backlight = true,            // keep display backlight always on
     .start = game_start,                 // will be called once, when game starts

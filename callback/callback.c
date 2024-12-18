@@ -29,7 +29,7 @@ static int32_t game_app(void *p)
         return -1;
     }
     GameEngineSettings settings = game_engine_settings_init();
-    settings.target_fps = game.target_fps;
+    settings.target_fps = game_fps_choices_2[game_fps_index];
     settings.show_fps = game.show_fps;
     settings.always_backlight = game.always_backlight;
     settings.frame_callback = frame_cb;
@@ -328,7 +328,6 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                                                                                             : 0;
                 variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_fps, index);
-                snprintf(game_fps, 8, "%s", _game_fps);
             }
             break;
         }
@@ -822,11 +821,11 @@ static void wifi_settings_item_selected(void *context, uint32_t index)
 static void flip_world_game_fps_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
+    game_fps_index = index;
     variable_item_set_current_value_text(item, game_fps_choices[index]);
 
     // save the fps
-    snprintf(game_fps, 8, "%s", game_fps_choices[index]);
-    save_char("Game-FPS", game_fps);
+    save_char("Game-FPS", game_fps_choices[index]);
 }
 
 static bool flip_world_fetch_worlds(DataLoaderModel *model)
