@@ -124,6 +124,14 @@ const Icon *get_icon(char *name)
     {
         return &I_icon_fence_end_16x8px;
     }
+    if (strcmp(name, "fence_vertical_end") == 0)
+    {
+        return &I_icon_fence_vertical_end_6x8px;
+    }
+    if (strcmp(name, "fence_vertical_start") == 0)
+    {
+        return &I_icon_fence_vertical_start_6x15px;
+    }
     if (strcmp(name, "flower") == 0)
     {
         return &I_icon_flower_16x16;
@@ -176,6 +184,7 @@ const Icon *get_icon(char *name)
     // If no match is found
     return NULL;
 }
+
 const Icon *get_icon_furi(FuriString *name)
 {
     if (furi_string_cmp(name, "earth") == 0)
@@ -246,6 +255,14 @@ const Icon *get_icon_furi(FuriString *name)
     {
         return &I_icon_fence_end_16x8px;
     }
+    if (furi_string_cmp(name, "fence_vertical_end") == 0)
+    {
+        return &I_icon_fence_vertical_end_6x8px;
+    }
+    if (furi_string_cmp(name, "fence_vertical_start") == 0)
+    {
+        return &I_icon_fence_vertical_start_6x15px;
+    }
     if (furi_string_cmp(name, "flower") == 0)
     {
         return &I_icon_flower_16x16;
@@ -294,5 +311,7 @@ const Icon *get_icon_furi(FuriString *name)
     {
         return &I_icon_rock_small_10x8px;
     }
+
+    // If no match is found
     return NULL;
 }
