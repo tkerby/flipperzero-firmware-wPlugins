@@ -66,7 +66,7 @@ const Icon *get_icon(char *name)
     }
     if (strcmp(name, "house") == 0)
     {
-        return &I_icon_house_48x48px;
+        return &I_icon_house_48x32px;
     }
     if (strcmp(name, "house_3d") == 0)
     {
@@ -130,35 +130,35 @@ const Icon *get_icon(char *name)
     }
     if (strcmp(name, "lake_bottom") == 0)
     {
-        return &I_icon_lake_bottom_31x31px;
+        return &I_icon_lake_bottom_31x12px;
     }
     if (strcmp(name, "lake_bottom_left") == 0)
     {
-        return &I_icon_lake_bottom_left_31x31px;
+        return &I_icon_lake_bottom_left_24x22px;
     }
     if (strcmp(name, "lake_bottom_right") == 0)
     {
-        return &I_icon_lake_bottom_right_31x31px;
+        return &I_icon_lake_bottom_right_24x22px;
     }
     if (strcmp(name, "lake_left") == 0)
     {
-        return &I_icon_lake_left_31x31;
+        return &I_icon_lake_left_11x31;
     }
     if (strcmp(name, "lake_right") == 0)
     {
-        return &I_icon_lake_right_31x31px;
+        return &I_icon_lake_right_11x31px;
     }
     if (strcmp(name, "lake_top") == 0)
     {
-        return &I_icon_lake_top_31x31px;
+        return &I_icon_lake_top_31x22px;
     }
     if (strcmp(name, "lake_top_left") == 0)
     {
-        return &I_icon_lake_top_left_31x31px;
+        return &I_icon_lake_top_left_24x22px;
     }
     if (strcmp(name, "lake_top_right") == 0)
     {
-        return &I_icon_lake_top_right_31x31px;
+        return &I_icon_lake_top_right_24x22px;
     }
     if (strcmp(name, "rock_large") == 0)
     {
@@ -188,7 +188,7 @@ const Icon *get_icon_furi(FuriString *name)
     }
     if (furi_string_cmp(name, "house") == 0)
     {
-        return &I_icon_house_48x48px;
+        return &I_icon_house_48x32px;
     }
     if (furi_string_cmp(name, "house_3d") == 0)
     {
@@ -252,35 +252,35 @@ const Icon *get_icon_furi(FuriString *name)
     }
     if (furi_string_cmp(name, "lake_bottom") == 0)
     {
-        return &I_icon_lake_bottom_31x31px;
+        return &I_icon_lake_bottom_31x12px;
     }
     if (furi_string_cmp(name, "lake_bottom_left") == 0)
     {
-        return &I_icon_lake_bottom_left_31x31px;
+        return &I_icon_lake_bottom_left_24x22px;
     }
     if (furi_string_cmp(name, "lake_bottom_right") == 0)
     {
-        return &I_icon_lake_bottom_right_31x31px;
+        return &I_icon_lake_bottom_right_24x22px;
     }
     if (furi_string_cmp(name, "lake_left") == 0)
     {
-        return &I_icon_lake_left_31x31;
+        return &I_icon_lake_left_11x31;
     }
     if (furi_string_cmp(name, "lake_right") == 0)
     {
-        return &I_icon_lake_right_31x31px;
+        return &I_icon_lake_right_11x31px;
     }
     if (furi_string_cmp(name, "lake_top") == 0)
     {
-        return &I_icon_lake_top_31x31px;
+        return &I_icon_lake_top_31x22px;
     }
     if (furi_string_cmp(name, "lake_top_left") == 0)
     {
-        return &I_icon_lake_top_left_31x31px;
+        return &I_icon_lake_top_left_24x22px;
     }
     if (furi_string_cmp(name, "lake_top_right") == 0)
     {
-        return &I_icon_lake_top_right_31x31px;
+        return &I_icon_lake_top_right_24x22px;
     }
     if (furi_string_cmp(name, "rock_large") == 0)
     {
