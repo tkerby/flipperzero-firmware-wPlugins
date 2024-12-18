@@ -1,10 +1,10 @@
 #include "F0App.h"
 F0App* FApp = 0;
-/*
+
 static void F0App_timer_callback(void* ctx) {
     InputEvent event = {.type = InputTypeMAX, .key = 255};
     furi_message_queue_put((FuriMessageQueue*)ctx, &event, 0);
-}*/
+}
 
 static void F0App_draw_callback(Canvas* canvas, void* ctx) {
     if(furi_mutex_acquire(FApp->mutex, 200) != FuriStatusOk) return;
@@ -28,7 +28,7 @@ int32_t gnomishtool_main(void* p) {
         furi_message_queue_free(app->event_queue);
         return 255;
     }
-    /*    
+
     app->timer = furi_timer_alloc(F0App_timer_callback, FuriTimerTypePeriodic, app->event_queue);
     if(app->timer == NULL) {
         furi_mutex_free(app->mutex);
@@ -36,7 +36,7 @@ int32_t gnomishtool_main(void* p) {
         return 255;
     }
     furi_timer_start(app->timer, furi_kernel_get_tick_frequency());
-*/
+
     app->view_port = view_port_alloc();
     view_port_draw_callback_set(app->view_port, F0App_draw_callback, NULL);
     view_port_input_callback_set(app->view_port, F0App_input_callback, app->event_queue);
@@ -60,7 +60,7 @@ int32_t gnomishtool_main(void* p) {
             furi_mutex_release(app->mutex);
         }
     }
-    //    furi_timer_stop(app->timer);
+    furi_timer_stop(app->timer);
     AppDeinit();
     view_port_enabled_set(app->view_port, false);
     gui_remove_view_port(app->gui, app->view_port);
@@ -68,7 +68,7 @@ int32_t gnomishtool_main(void* p) {
     furi_message_queue_free(app->event_queue);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
-    //    furi_timer_free(app->timer);
+    furi_timer_free(app->timer);
     furi_mutex_free(app->mutex);
     free(app);
     return 0;
