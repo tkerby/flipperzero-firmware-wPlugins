@@ -25,6 +25,16 @@ bool draw_json_world(Level *level, const char *json_data)
         char *horizontal = get_json_value("horizontal", data);
         if (icon == NULL || x == NULL || y == NULL || width == NULL || height == NULL || amount == NULL || horizontal == NULL)
         {
+            FURI_LOG_E("Failed Data: ", data);
+            free(data);
+            free(icon);
+            free(x);
+            free(y);
+            free(width);
+            free(height);
+            free(amount);
+            free(horizontal);
+            level_clear(level);
             return false;
         }
         // if amount is less than 2, we spawn a single icon
@@ -71,6 +81,7 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
         FuriString *horizontal = get_json_value_furi("horizontal", data);
         if (!icon || !x || !y || !width || !height || !amount || !horizontal)
         {
+            FURI_LOG_E("Failed Data: ", furi_string_get_cstr(data));
             furi_string_free(data);
             furi_string_free(icon);
             furi_string_free(x);
@@ -79,6 +90,7 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
             furi_string_free(height);
             furi_string_free(amount);
             furi_string_free(horizontal);
+            level_clear(level);
             return false;
         }
         // if amount is less than 2, we spawn a single icon

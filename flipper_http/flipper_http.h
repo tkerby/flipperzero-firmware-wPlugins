@@ -23,7 +23,7 @@
 #define TIMEOUT_DURATION_TICKS (5 * 1000) // 5 seconds
 #define BAUDRATE (115200)                 // UART baudrate
 #define RX_BUF_SIZE 2048                  // UART RX buffer size
-#define RX_LINE_BUFFER_SIZE 2048          // UART RX line buffer size (increase for large responses)
+#define RX_LINE_BUFFER_SIZE 4096          // UART RX line buffer size (increase for large responses)
 #define MAX_FILE_SHOW 3000                // Maximum data from file to show
 #define FILE_BUFFER_SIZE 512              // File buffer size
 
