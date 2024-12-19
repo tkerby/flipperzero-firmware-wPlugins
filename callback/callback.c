@@ -138,6 +138,7 @@ static void text_updated_password(void *context);
 //
 static void flip_world_game_fps_change(VariableItem *item);
 static void game_settings_item_selected(void *context, uint32_t index);
+static void user_settings_item_selected(void *context, uint32_t index);
 static void flip_world_game_screen_always_on_change(VariableItem *item);
 
 uint32_t callback_to_submenu(void *context)
@@ -268,6 +269,10 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return false;
     }
+    char ssid[64];
+    char pass[64];
+    char username[64];
+    char password[64];
     if (!app->variable_item_list)
     {
         switch (view_id)
@@ -295,10 +300,6 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 app->variable_item_wifi_pass = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
                 variable_item_set_current_value_text(app->variable_item_wifi_pass, "");
             }
-            char ssid[64];
-            char pass[64];
-            char username[64];
-            char password[64];
             if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
             {
                 variable_item_set_current_value_text(app->variable_item_wifi_ssid, ssid);
@@ -359,7 +360,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
             break;
         case FlipWorldSubmenuIndexUserSettings:
-            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, NULL, callback_to_settings, &app->view_dispatcher, app))
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, user_settings_item_selected, callback_to_settings, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate variable item list");
                 return false;
@@ -372,7 +373,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
 
             // if logged in, show profile info, otherwise show login/register
-            if (is_logged_in_to_flip_social())
+            if (is_logged_in() || is_logged_in_to_flip_social())
             {
                 if (!app->variable_item_user_username)
                 {
@@ -384,8 +385,11 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                     app->variable_item_user_password = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
                     variable_item_set_current_value_text(app->variable_item_user_password, "");
                 }
-                variable_item_set_current_value_text(app->variable_item_user_username, furi_string_get_cstr(flip_social_info("login_username_logged_in")));
-                variable_item_set_current_value_text(app->variable_item_user_password, "");
+                if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
+                {
+                    variable_item_set_current_value_text(app->variable_item_user_username, username);
+                    variable_item_set_current_value_text(app->variable_item_user_password, "*****");
+                }
             }
             else
             {
@@ -399,8 +403,6 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                     app->variable_item_user_password = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
                     variable_item_set_current_value_text(app->variable_item_user_password, "");
                 }
-                variable_item_list_add(app->variable_item_list, "Login", 0, NULL, NULL);
-                variable_item_list_add(app->variable_item_list, "Register", 0, NULL, NULL);
             }
             break;
         }
@@ -723,6 +725,7 @@ static char *flip_social_login_parse(DataLoaderModel *model)
     else if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
     {
         snprintf(returned_message, sizeof(returned_message), "Login successful!");
+        flip_world_switch_to_view_get_world_list(app_instance);
     }
     else if (strstr(fhttp.last_response, "User not found") != NULL)
     {
@@ -767,7 +770,15 @@ void callback_submenu_choices(void *context, uint32_t index)
             return;
         }
         memcpy(app_instance, app, sizeof(FlipWorldApp));
-        flip_world_switch_to_view_get_world_list(app);
+        // check if logged in
+        if (is_logged_in() || is_logged_in_to_flip_social())
+        {
+            flip_world_switch_to_view_get_world_list(app_instance);
+        }
+        else
+        {
+            flip_social_login_switch_to_view(app_instance);
+        }
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true, true);
@@ -806,19 +817,13 @@ void callback_submenu_choices(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
         break;
     case FlipWorldSubmenuIndexUserSettings:
-        if (!flipper_http_init(flipper_http_rx_callback, app))
-        {
-            FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
-            return;
-        }
         free_all_views(app, true, false);
-        if (!alloc_text_input_view(app, "Username"))
+        if (!alloc_variable_item_list(app, FlipWorldSubmenuIndexUserSettings))
         {
-            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            FURI_LOG_E(TAG, "Failed to allocate variable item list");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
-        // easy_flipper_dialog("User Settings", "Coming soon...");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
         break;
     default:
         break;
@@ -966,15 +971,7 @@ static void text_updated_username(void *context)
     {
         variable_item_set_current_value_text(app->variable_item_user_username, app->text_input_buffer);
     }
-    // switch to blank view, reset text input, then switch to password
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewWidgetResult);
-    free_text_input_view(app);
-    if (!alloc_text_input_view(app, "Password"))
-    {
-        FURI_LOG_E(TAG, "Failed to allocate text input view");
-        return;
-    }
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
 static void text_updated_password(void *context)
 {
@@ -1014,9 +1011,7 @@ static void text_updated_password(void *context)
             save_settings(ssid, pass, username, app->text_input_buffer);
         }
     }
-
-    // login
-    flip_social_login_switch_to_view(app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
 
 static void wifi_settings_item_selected(void *context, uint32_t index)
@@ -1126,6 +1121,36 @@ static void game_settings_item_selected(void *context, uint32_t index)
     case 1: // Change FPS
         break;
     case 2: // Screen Always On
+        break;
+    }
+}
+static void user_settings_item_selected(void *context, uint32_t index)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    switch (index)
+    {
+    case 0: // Username
+        free_all_views(app, false, false);
+        if (!alloc_text_input_view(app, "Username"))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
+        break;
+    case 1: // Password
+        free_all_views(app, false, false);
+        if (!alloc_text_input_view(app, "Password"))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
         break;
     }
 }

@@ -512,7 +512,7 @@ bool save_world_names(const FuriString *json)
     return true;
 }
 
-FuriString *flip_social_info(char *key)
+static FuriString *flip_social_info(char *key)
 {
     char ssid[64];
     char password[64];
@@ -565,9 +565,13 @@ FuriString *flip_social_info(char *key)
     {
         furi_string_set_str(result, is_logged_in);
     }
-    FURI_LOG_E(TAG, "Invalid key");
-    furi_string_free(result);
-    return NULL;
+    else
+    {
+        FURI_LOG_E(TAG, "Invalid key");
+        furi_string_free(result);
+        return NULL;
+    }
+    return result;
 }
 
 bool is_logged_in_to_flip_social()
@@ -583,7 +587,7 @@ bool is_logged_in_to_flip_social()
     {
         // copy the logged_in FlipSocaial settings to FlipWorld
         FuriString *username = flip_social_info("login_username_logged_in");
-        FuriString *password = flip_social_info("login_password_logged_out");
+        FuriString *password = flip_social_info("change_password_logged_in");
         FuriString *wifi_password = flip_social_info("password");
         FuriString *wifi_ssid = flip_social_info("ssid");
         if (!username || !password || !wifi_password || !wifi_ssid)
