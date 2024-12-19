@@ -1,8 +1,29 @@
 
 #include "flip_storage/storage.h"
 
+// Forward declaration for use in other functions
+static bool load_flip_social_settings(
+    char *ssid,
+    size_t ssid_size,
+    char *password,
+    size_t password_size,
+    char *login_username_logged_out,
+    size_t username_out_size,
+    char *login_username_logged_in,
+    size_t username_in_size,
+    char *login_password_logged_out,
+    size_t password_out_size,
+    char *change_password_logged_in,
+    size_t change_password_size,
+    char *change_bio_logged_in,
+    size_t change_bio_size,
+    char *is_logged_in,
+    size_t is_logged_in_size);
+
 void save_settings(
-    const char *ssid,
+    const char *wifi_ssid,
+    const char *wifi_password,
+    const char *username,
     const char *password)
 {
     // Create the directory for saving settings
@@ -23,12 +44,28 @@ void save_settings(
         return;
     }
 
-    // Save the ssid length and data
-    size_t ssid_length = strlen(ssid) + 1; // Include null terminator
-    if (storage_file_write(file, &ssid_length, sizeof(size_t)) != sizeof(size_t) ||
-        storage_file_write(file, ssid, ssid_length) != ssid_length)
+    // Save the wifi_ssid length and data
+    size_t wifi_ssid_length = strlen(wifi_ssid) + 1; // Include null terminator
+    if (storage_file_write(file, &wifi_ssid_length, sizeof(size_t)) != sizeof(size_t) ||
+        storage_file_write(file, wifi_ssid, wifi_ssid_length) != wifi_ssid_length)
     {
-        FURI_LOG_E(TAG, "Failed to write SSID");
+        FURI_LOG_E(TAG, "Failed to write wifi_SSID");
+    }
+
+    // Save the wifi_password length and data
+    size_t wifi_password_length = strlen(wifi_password) + 1; // Include null terminator
+    if (storage_file_write(file, &wifi_password_length, sizeof(size_t)) != sizeof(size_t) ||
+        storage_file_write(file, wifi_password, wifi_password_length) != wifi_password_length)
+    {
+        FURI_LOG_E(TAG, "Failed to write wifi_password");
+    }
+
+    // Save the username length and data
+    size_t username_length = strlen(username) + 1; // Include null terminator
+    if (storage_file_write(file, &username_length, sizeof(size_t)) != sizeof(size_t) ||
+        storage_file_write(file, username, username_length) != username_length)
+    {
+        FURI_LOG_E(TAG, "Failed to write username");
     }
 
     // Save the password length and data
@@ -45,8 +82,12 @@ void save_settings(
 }
 
 bool load_settings(
-    char *ssid,
-    size_t ssid_size,
+    char *wifi_ssid,
+    size_t wifi_ssid_size,
+    char *wifi_password,
+    size_t wifi_password_size,
+    char *username,
+    size_t username_size,
     char *password,
     size_t password_size)
 {
@@ -61,18 +102,44 @@ bool load_settings(
         return false; // Return false if the file does not exist
     }
 
-    // Load the ssid
-    size_t ssid_length;
-    if (storage_file_read(file, &ssid_length, sizeof(size_t)) != sizeof(size_t) || ssid_length > ssid_size ||
-        storage_file_read(file, ssid, ssid_length) != ssid_length)
+    // Load the wifi_ssid
+    size_t wifi_ssid_length;
+    if (storage_file_read(file, &wifi_ssid_length, sizeof(size_t)) != sizeof(size_t) || wifi_ssid_length > wifi_ssid_size ||
+        storage_file_read(file, wifi_ssid, wifi_ssid_length) != wifi_ssid_length)
     {
-        FURI_LOG_E(TAG, "Failed to read SSID");
+        FURI_LOG_E(TAG, "Failed to read wifi_SSID");
         storage_file_close(file);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
         return false;
     }
-    ssid[ssid_length - 1] = '\0'; // Ensure null-termination
+    wifi_ssid[wifi_ssid_length - 1] = '\0'; // Ensure null-termination
+
+    // Load the wifi_password
+    size_t wifi_password_length;
+    if (storage_file_read(file, &wifi_password_length, sizeof(size_t)) != sizeof(size_t) || wifi_password_length > wifi_password_size ||
+        storage_file_read(file, wifi_password, wifi_password_length) != wifi_password_length)
+    {
+        FURI_LOG_E(TAG, "Failed to read wifi_password");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+    wifi_password[wifi_password_length - 1] = '\0'; // Ensure null-termination
+
+    // Load the username
+    size_t username_length;
+    if (storage_file_read(file, &username_length, sizeof(size_t)) != sizeof(size_t) || username_length > username_size ||
+        storage_file_read(file, username, username_length) != username_length)
+    {
+        FURI_LOG_E(TAG, "Failed to read username");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+    username[username_length - 1] = '\0'; // Ensure null-termination
 
     // Load the password
     size_t password_length;
@@ -445,6 +512,78 @@ bool save_world_names(const FuriString *json)
     return true;
 }
 
+FuriString *flip_social_info(char *key)
+{
+    char ssid[64];
+    char password[64];
+    char login_username_logged_out[64];
+    char login_username_logged_in[64];
+    char login_password_logged_out[64];
+    char change_password_logged_in[64];
+    char change_bio_logged_in[64];
+    char is_logged_in[64];
+    FuriString *result = furi_string_alloc();
+    if (!result)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate FuriString");
+        return NULL;
+    }
+    if (!load_flip_social_settings(ssid, sizeof(ssid), password, sizeof(password), login_username_logged_out, sizeof(login_username_logged_out), login_username_logged_in, sizeof(login_username_logged_in), login_password_logged_out, sizeof(login_password_logged_out), change_password_logged_in, sizeof(change_password_logged_in), change_bio_logged_in, sizeof(change_bio_logged_in), is_logged_in, sizeof(is_logged_in)))
+    {
+        FURI_LOG_E(TAG, "Failed to load flip social settings");
+        return NULL;
+    }
+    if (strcmp(key, "ssid") == 0)
+    {
+        furi_string_set_str(result, ssid);
+    }
+    else if (strcmp(key, "password") == 0)
+    {
+        furi_string_set_str(result, password);
+    }
+    else if (strcmp(key, "login_username_logged_out") == 0)
+    {
+        furi_string_set_str(result, login_username_logged_out);
+    }
+    else if (strcmp(key, "login_username_logged_in") == 0)
+    {
+        furi_string_set_str(result, login_username_logged_in);
+    }
+    else if (strcmp(key, "login_password_logged_out") == 0)
+    {
+        furi_string_set_str(result, login_password_logged_out);
+    }
+    else if (strcmp(key, "change_password_logged_in") == 0)
+    {
+        furi_string_set_str(result, change_password_logged_in);
+    }
+    else if (strcmp(key, "change_bio_logged_in") == 0)
+    {
+        furi_string_set_str(result, change_bio_logged_in);
+    }
+    else if (strcmp(key, "is_logged_in") == 0)
+    {
+        furi_string_set_str(result, is_logged_in);
+    }
+    FURI_LOG_E(TAG, "Invalid key");
+    furi_string_free(result);
+    return NULL;
+}
+
+bool is_logged_in_to_flip_social()
+{
+    // load flip social settings and check if logged in
+    FuriString *is_logged_in = flip_social_info("is_logged_in");
+    if (!is_logged_in)
+    {
+        FURI_LOG_E(TAG, "Failed to load is_logged_in");
+        return false;
+    }
+    bool logged_in = furi_string_cmp(is_logged_in, "true") == 0;
+    free(is_logged_in);
+    return logged_in;
+}
+
 static bool load_flip_social_settings(
     char *ssid,
     size_t ssid_size,
@@ -607,76 +746,4 @@ static bool load_flip_social_settings(
     furi_record_close(RECORD_STORAGE);
 
     return true;
-}
-
-FuriString *flip_social_info(char *key)
-{
-    char ssid[64];
-    char password[64];
-    char login_username_logged_out[64];
-    char login_username_logged_in[64];
-    char login_password_logged_out[64];
-    char change_password_logged_in[64];
-    char change_bio_logged_in[64];
-    char is_logged_in[64];
-    FuriString *result = furi_string_alloc();
-    if (!result)
-    {
-        FURI_LOG_E(TAG, "Failed to allocate FuriString");
-        return NULL;
-    }
-    if (!load_flip_social_settings(ssid, sizeof(ssid), password, sizeof(password), login_username_logged_out, sizeof(login_username_logged_out), login_username_logged_in, sizeof(login_username_logged_in), login_password_logged_out, sizeof(login_password_logged_out), change_password_logged_in, sizeof(change_password_logged_in), change_bio_logged_in, sizeof(change_bio_logged_in), is_logged_in, sizeof(is_logged_in)))
-    {
-        FURI_LOG_E(TAG, "Failed to load flip social settings");
-        return NULL;
-    }
-    if (strcmp(key, "ssid") == 0)
-    {
-        furi_string_set_str(result, ssid);
-    }
-    else if (strcmp(key, "password") == 0)
-    {
-        furi_string_set_str(result, password);
-    }
-    else if (strcmp(key, "login_username_logged_out") == 0)
-    {
-        furi_string_set_str(result, login_username_logged_out);
-    }
-    else if (strcmp(key, "login_username_logged_in") == 0)
-    {
-        furi_string_set_str(result, login_username_logged_in);
-    }
-    else if (strcmp(key, "login_password_logged_out") == 0)
-    {
-        furi_string_set_str(result, login_password_logged_out);
-    }
-    else if (strcmp(key, "change_password_logged_in") == 0)
-    {
-        furi_string_set_str(result, change_password_logged_in);
-    }
-    else if (strcmp(key, "change_bio_logged_in") == 0)
-    {
-        furi_string_set_str(result, change_bio_logged_in);
-    }
-    else if (strcmp(key, "is_logged_in") == 0)
-    {
-        furi_string_set_str(result, is_logged_in);
-    }
-    FURI_LOG_E(TAG, "Invalid key");
-    furi_string_free(result);
-    return NULL;
-}
-
-bool is_logged_in_to_flip_social()
-{
-    // load flip social settings and check if logged in
-    FuriString *is_logged_in = flip_social_info("is_logged_in");
-    if (!is_logged_in)
-    {
-        FURI_LOG_E(TAG, "Failed to load is_logged_in");
-        return false;
-    }
-    bool logged_in = furi_string_cmp(is_logged_in, "true") == 0;
-    free(is_logged_in);
-    return logged_in;
 }

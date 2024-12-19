@@ -131,8 +131,10 @@ static bool alloc_text_input_view(void *context, char *title);
 static bool alloc_variable_item_list(void *context, uint32_t view_id);
 //
 static void wifi_settings_item_selected(void *context, uint32_t index);
-static void text_updated_ssid(void *context);
-static void text_updated_pass(void *context);
+static void text_updated_wifi_ssid(void *context);
+static void text_updated_wifi_pass(void *context);
+static void text_updated_username(void *context);
+static void text_updated_password(void *context);
 //
 static void flip_world_game_fps_change(VariableItem *item);
 static void game_settings_item_selected(void *context, uint32_t index);
@@ -227,7 +229,9 @@ static bool alloc_text_input_view(void *context, char *title)
                 title,
                 app->text_input_temp_buffer,
                 app->text_input_buffer_size,
-                strcmp(title, "SSID") == 0 ? text_updated_ssid : text_updated_pass,
+                strcmp(title, "SSID") == 0 ? text_updated_wifi_ssid : strcmp(title, "Password") == 0 ? text_updated_wifi_pass
+                                                                  : strcmp(title, "Password") == 0   ? text_updated_username
+                                                                                                     : text_updated_password,
                 callback_to_wifi_settings,
                 &app->view_dispatcher,
                 app))
@@ -240,7 +244,9 @@ static bool alloc_text_input_view(void *context, char *title)
         }
         char ssid[64];
         char pass[64];
-        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+        char username[64];
+        char password[64];
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
         {
             if (strcmp(title, "SSID") == 0)
             {
@@ -291,12 +297,16 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
             char ssid[64];
             char pass[64];
-            if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+            char username[64];
+            char password[64];
+            if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
             {
                 variable_item_set_current_value_text(app->variable_item_wifi_ssid, ssid);
                 // variable_item_set_current_value_text(app->variable_item_wifi_pass, pass);
                 save_char("WiFi-SSID", ssid);
                 save_char("WiFi-Password", pass);
+                save_char("Flip-Social-Username", username);
+                save_char("Flip-Social-Password", password);
             }
             break;
         case FlipWorldSubmenuIndexGameSettings:
@@ -609,14 +619,33 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
             FURI_LOG_E(TAG, "Failed to get first world");
             return "Failed to get first world";
         }
-        // if (world_exists(furi_string_get_cstr(first_world)))
-        // {
-        //     furi_string_free(world_list);
-        //     furi_string_free(first_world);
-        //     FURI_LOG_I(TAG, "World already exists");
-        //     fhttp.state = IDLE;
-        //     return true;
-        // }
+        if (world_exists(furi_string_get_cstr(first_world)))
+        {
+            furi_string_free(world_list);
+            furi_string_free(first_world);
+            FURI_LOG_I(TAG, "World already exists");
+            fhttp.state = IDLE;
+            model->data_state = DataStateParsed;
+            flipper_http_deinit();
+            // free game thread
+            if (game_thread_running)
+            {
+                game_thread_running = false;
+                furi_thread_flags_set(thread_id, WorkerEvtStop);
+                furi_thread_free(thread_id);
+            }
+            // free_all_views(app_instance, true, true);
+            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!thread)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate game thread");
+                return "Failed to allocate game thread";
+            }
+            furi_thread_start(thread);
+            thread_id = furi_thread_get_id(thread);
+            game_thread_running = true;
+            return true;
+        }
         snprintf(
             fhttp.file_path,
             sizeof(fhttp.file_path),
@@ -666,96 +695,53 @@ static void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
 static bool flip_social_login_fetch(DataLoaderModel *model)
 {
     UNUSED(model);
-    if (model->request_index == 0)
+    char username[64];
+    char password[64];
+    if (!load_char("Flip-Social-Username", username, sizeof(username)))
     {
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "app_instance is NULL");
-            return false;
-        }
-        free_text_input_view(app_instance);
-        if (!alloc_text_input_view(app_instance, "Username"))
-        {
-            FURI_LOG_E(TAG, "Failed to allocate text input view");
-            return false;
-        }
-        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
-        return true;
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        return false;
     }
-    else if (model->request_index == 1)
+    if (!load_char("Flip-Social-Password", password, sizeof(password)))
     {
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "app_instance is NULL");
-            return false;
-        }
-        free_text_input_view(app_instance);
-        if (!alloc_text_input_view(app_instance, "Password"))
-        {
-            FURI_LOG_E(TAG, "Failed to allocate text input view");
-            return false;
-        }
-        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
-        return true;
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+        return false;
     }
-    else if (model->request_index == 2)
-    {
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "app_instance is NULL");
-            return false;
-        }
-        return true;
-    }
-    return false;
+    char payload[172];
+    snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+    return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
 }
 
 static char *flip_social_login_parse(DataLoaderModel *model)
 {
-    if (model->request_index == 0)
+    UNUSED(model);
+    char returned_message[128];
+    if (!fhttp.last_response)
     {
-        return "Enter your username...";
+        snprintf(returned_message, sizeof(returned_message), "Failed to login...");
     }
-    else if (model->request_index == 1)
+    else if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
     {
-        return "Enter your password...";
+        snprintf(returned_message, sizeof(returned_message), "Login successful!");
     }
-    else if (model->request_index == 2)
+    else if (strstr(fhttp.last_response, "User not found") != NULL)
     {
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "app_instance is NULL");
-            return "Failed to login...";
-        }
-        if (!fhttp.last_response)
-        {
-            flipper_http_deinit();
-            return "Failed to login...";
-        }
-        // read response
-        if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
-        {
-            flipper_http_deinit();
-            save_char("is_logged_in", "true");
-            return "Login successful!";
-        }
-        else if (strstr(fhttp.last_response, "User not found") != NULL)
-        {
-            flipper_http_deinit();
-            return "Account not found...";
-        }
-        else
-        {
-            flipper_http_deinit();
-            return "Failed to login...";
-        }
+        snprintf(returned_message, sizeof(returned_message), "Account not found...");
     }
-    return NULL;
+    else
+    {
+        snprintf(returned_message, sizeof(returned_message), "Failed to login...");
+    }
+    flipper_http_deinit();
+    save_char("is_logged_in", strstr(fhttp.last_response, "[SUCCESS]") != NULL ? "true" : "false");
+    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+    return strstr(returned_message, "successful") != NULL ? "Login successful!" : strstr(returned_message, "found") != NULL ? "Account not found..."
+                                                                                                                            : "Failed to login...";
 }
 
-void flip_social_login_switch_to_view(FlipWorldApp *app)
+static void flip_social_login_switch_to_view(FlipWorldApp *app)
 {
-    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 3, callback_to_settings, FlipWorldViewTextInput);
+    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 1, callback_to_settings, FlipWorldViewTextInput);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -820,27 +806,26 @@ void callback_submenu_choices(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
         break;
     case FlipWorldSubmenuIndexUserSettings:
-        free_all_views(app, true, false);
         if (!flipper_http_init(flipper_http_rx_callback, app))
         {
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
             return;
         }
-        // free_text_input_view(app_instance);
-        // if (!alloc_text_input_view(app_instance, "Username"))
-        // {
-        //     FURI_LOG_E(TAG, "Failed to allocate text input view");
-        //     return false;
-        // }
-        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
-        easy_flipper_dialog("User Settings", "Coming soon...");
+        free_all_views(app, true, false);
+        if (!alloc_text_input_view(app, "Username"))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
+        // easy_flipper_dialog("User Settings", "Coming soon...");
         break;
     default:
         break;
     }
 }
 
-static void text_updated_ssid(void *context)
+static void text_updated_wifi_ssid(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -865,12 +850,16 @@ static void text_updated_ssid(void *context)
 
         // get value of password
         char pass[64];
+        char username[64];
+        char password[64];
         if (load_char("WiFi-Password", pass, sizeof(pass)))
         {
             if (strlen(pass) > 0 && strlen(app->text_input_buffer) > 0)
             {
                 // save the settings
-                save_settings(app->text_input_buffer, pass);
+                load_char("Flip-Social-Username", username, sizeof(username));
+                load_char("Flip-Social-Password", password, sizeof(password));
+                save_settings(app->text_input_buffer, pass, username, password);
 
                 // initialize the http
                 if (flipper_http_init(flipper_http_rx_callback, app))
@@ -895,7 +884,7 @@ static void text_updated_ssid(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-static void text_updated_pass(void *context)
+static void text_updated_wifi_pass(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -921,12 +910,16 @@ static void text_updated_pass(void *context)
 
     // get value of ssid
     char ssid[64];
+    char username[64];
+    char password[64];
     if (load_char("WiFi-SSID", ssid, sizeof(ssid)))
     {
         if (strlen(ssid) > 0 && strlen(app->text_input_buffer) > 0)
         {
             // save the settings
-            save_settings(ssid, app->text_input_buffer);
+            load_char("Flip-Social-Username", username, sizeof(username));
+            load_char("Flip-Social-Password", password, sizeof(password));
+            save_settings(ssid, app->text_input_buffer, username, password);
 
             // initialize the http
             if (flipper_http_init(flipper_http_rx_callback, app))
@@ -950,6 +943,81 @@ static void text_updated_pass(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
+static void text_updated_username(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+
+    // store the entered text
+    strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
+
+    // Ensure null-termination
+    app->text_input_buffer[app->text_input_buffer_size - 1] = '\0';
+
+    // save the setting
+    save_char("Flip-Social-Username", app->text_input_buffer);
+
+    // update the variable item text
+    if (app->variable_item_user_username)
+    {
+        variable_item_set_current_value_text(app->variable_item_user_username, app->text_input_buffer);
+    }
+    // switch to blank view, reset text input, then switch to password
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewWidgetResult);
+    free_text_input_view(app);
+    if (!alloc_text_input_view(app, "Password"))
+    {
+        FURI_LOG_E(TAG, "Failed to allocate text input view");
+        return;
+    }
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
+}
+static void text_updated_password(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+
+    // store the entered text
+    strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
+
+    // Ensure null-termination
+    app->text_input_buffer[app->text_input_buffer_size - 1] = '\0';
+
+    // save the setting
+    save_char("Flip-Social-Password", app->text_input_buffer);
+
+    // update the variable item text
+    if (app->variable_item_user_password)
+    {
+        variable_item_set_current_value_text(app->variable_item_user_password, app->text_input_buffer);
+    }
+
+    // get value of username
+    char username[64];
+    char ssid[64];
+    char pass[64];
+    if (load_char("Flip-Social-Username", username, sizeof(username)))
+    {
+        if (strlen(username) > 0 && strlen(app->text_input_buffer) > 0)
+        {
+            // save the settings
+            load_char("WiFi-SSID", ssid, sizeof(ssid));
+            load_char("WiFi-Password", pass, sizeof(pass));
+            save_settings(ssid, pass, username, app->text_input_buffer);
+        }
+    }
+
+    // login
+    flip_social_login_switch_to_view(app);
+}
 
 static void wifi_settings_item_selected(void *context, uint32_t index)
 {
@@ -961,6 +1029,8 @@ static void wifi_settings_item_selected(void *context, uint32_t index)
     }
     char ssid[64];
     char pass[64];
+    char username[64];
+    char password[64];
     switch (index)
     {
     case 0: // Input SSID
@@ -971,7 +1041,7 @@ static void wifi_settings_item_selected(void *context, uint32_t index)
             return;
         }
         // load SSID
-        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
         {
             strncpy(app->text_input_temp_buffer, ssid, app->text_input_buffer_size - 1);
             app->text_input_temp_buffer[app->text_input_buffer_size - 1] = '\0';
@@ -986,7 +1056,7 @@ static void wifi_settings_item_selected(void *context, uint32_t index)
             return;
         }
         // load password
-        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass)))
+        if (load_settings(ssid, sizeof(ssid), pass, sizeof(pass), username, sizeof(username), password, sizeof(password)))
         {
             strncpy(app->text_input_temp_buffer, pass, app->text_input_buffer_size - 1);
             app->text_input_temp_buffer[app->text_input_buffer_size - 1] = '\0';

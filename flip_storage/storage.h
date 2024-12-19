@@ -7,12 +7,18 @@
 #define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/settings.bin"
 
 void save_settings(
-    const char *ssid,
+    const char *wifi_ssid,
+    const char *wifi_password,
+    const char *username,
     const char *password);
 
 bool load_settings(
-    char *ssid,
-    size_t ssid_size,
+    char *wifi_ssid,
+    size_t wifi_ssid_size,
+    char *wifi_password,
+    size_t wifi_password_size,
+    char *username,
+    size_t username_size,
     char *password,
     size_t password_size);
 
