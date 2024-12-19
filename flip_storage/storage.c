@@ -579,9 +579,41 @@ bool is_logged_in_to_flip_social()
         FURI_LOG_E(TAG, "Failed to load is_logged_in");
         return false;
     }
-    bool logged_in = furi_string_cmp(is_logged_in, "true") == 0;
-    free(is_logged_in);
-    return logged_in;
+    if (furi_string_cmp(is_logged_in, "true") == 0)
+    {
+        // copy the logged_in FlipSocaial settings to FlipWorld
+        FuriString *username = flip_social_info("login_username_logged_in");
+        FuriString *password = flip_social_info("login_password_logged_out");
+        FuriString *wifi_password = flip_social_info("password");
+        FuriString *wifi_ssid = flip_social_info("ssid");
+        if (!username || !password || !wifi_password || !wifi_ssid)
+        {
+            furi_string_free(username);
+            furi_string_free(password);
+            furi_string_free(wifi_password);
+            furi_string_free(wifi_ssid);
+            return false;
+        }
+        save_settings(furi_string_get_cstr(wifi_ssid), furi_string_get_cstr(wifi_password), furi_string_get_cstr(username), furi_string_get_cstr(password));
+        furi_string_free(username);
+        furi_string_free(password);
+        furi_string_free(wifi_password);
+        furi_string_free(wifi_ssid);
+        furi_string_free(is_logged_in);
+        return true;
+    }
+    furi_string_free(is_logged_in);
+    return false;
+}
+
+bool is_logged_in()
+{
+    char is_logged_in[64];
+    if (load_char("is_logged_in", is_logged_in, sizeof(is_logged_in)))
+    {
+        return strcmp(is_logged_in, "true") == 0;
+    }
+    return false;
 }
 
 static bool load_flip_social_settings(
@@ -605,9 +637,12 @@ static bool load_flip_social_settings(
     Storage *storage = furi_record_open(RECORD_STORAGE);
     File *file = storage_file_alloc(storage);
 
-    if (!storage_file_open(file, SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING))
+    // file path from flipsocial
+    char file_path[128];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/settings.bin");
+    if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
     {
-        FURI_LOG_E(TAG, "Failed to open settings file for reading: %s", SETTINGS_PATH);
+        FURI_LOG_E(TAG, "Failed to open settings file for reading: %s", file_path);
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
         return false; // Return false if the file does not exist

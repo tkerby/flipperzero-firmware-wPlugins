@@ -50,3 +50,4 @@ bool world_exists(
 bool save_world_names(const FuriString *json);
 FuriString *flip_social_info(char *key);
 bool is_logged_in_to_flip_social();
+bool is_logged_in();
