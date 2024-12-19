@@ -275,6 +275,7 @@ int ToolLighterKey(int type, int key) {
         }
         if(AppGlobal.lighter_mode == 6) { //B
             SetLED(0, 0, 255, 1.0);
+            SetScreenBacklightBrightness(0);
         }
     }
     return 0;
