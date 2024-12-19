@@ -330,6 +330,51 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 variable_item_set_current_value_index(app->variable_item_game_fps, index);
             }
             break;
+        case FlipWorldSubmenuIndexUserSettings:
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, NULL, callback_to_settings, &app->view_dispatcher, app))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate variable item list");
+                return false;
+            }
+
+            if (!app->variable_item_list)
+            {
+                FURI_LOG_E(TAG, "Variable item list is NULL");
+                return false;
+            }
+
+            // if logged in, show profile info, otherwise show login/register
+            if (is_logged_in_to_flip_social())
+            {
+                if (!app->variable_item_user_username)
+                {
+                    app->variable_item_user_username = variable_item_list_add(app->variable_item_list, "Username", 0, NULL, NULL);
+                    variable_item_set_current_value_text(app->variable_item_user_username, "");
+                }
+                if (!app->variable_item_user_password)
+                {
+                    app->variable_item_user_password = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
+                    variable_item_set_current_value_text(app->variable_item_user_password, "");
+                }
+                variable_item_set_current_value_text(app->variable_item_user_username, furi_string_get_cstr(flip_social_info("login_username_logged_in")));
+                variable_item_set_current_value_text(app->variable_item_user_password, "");
+            }
+            else
+            {
+                if (!app->variable_item_user_username)
+                {
+                    app->variable_item_user_username = variable_item_list_add(app->variable_item_list, "Username", 0, NULL, NULL);
+                    variable_item_set_current_value_text(app->variable_item_user_username, "");
+                }
+                if (!app->variable_item_user_password)
+                {
+                    app->variable_item_user_password = variable_item_list_add(app->variable_item_list, "Password", 0, NULL, NULL);
+                    variable_item_set_current_value_text(app->variable_item_user_password, "");
+                }
+                variable_item_list_add(app->variable_item_list, "Login", 0, NULL, NULL);
+                variable_item_list_add(app->variable_item_list, "Register", 0, NULL, NULL);
+            }
+            break;
         }
     }
     return true;
@@ -590,6 +635,100 @@ static void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
 {
     flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 2, callback_to_submenu, FlipWorldViewLoader);
 }
+static bool flip_social_login_fetch(DataLoaderModel *model)
+{
+    UNUSED(model);
+    if (model->request_index == 0)
+    {
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            return false;
+        }
+        free_text_input_view(app_instance);
+        if (!alloc_text_input_view(app_instance, "Username"))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            return false;
+        }
+        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
+        return true;
+    }
+    else if (model->request_index == 1)
+    {
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            return false;
+        }
+        free_text_input_view(app_instance);
+        if (!alloc_text_input_view(app_instance, "Password"))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate text input view");
+            return false;
+        }
+        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
+        return true;
+    }
+    else if (model->request_index == 2)
+    {
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+static char *flip_social_login_parse(DataLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        return "Enter your username...";
+    }
+    else if (model->request_index == 1)
+    {
+        return "Enter your password...";
+    }
+    else if (model->request_index == 2)
+    {
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            return "Failed to login...";
+        }
+        if (!fhttp.last_response)
+        {
+            flipper_http_deinit();
+            return "Failed to login...";
+        }
+        // read response
+        if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
+        {
+            flipper_http_deinit();
+            save_char("is_logged_in", "true");
+            return "Login successful!";
+        }
+        else if (strstr(fhttp.last_response, "User not found") != NULL)
+        {
+            flipper_http_deinit();
+            return "Account not found...";
+        }
+        else
+        {
+            flipper_http_deinit();
+            return "Failed to login...";
+        }
+    }
+    return NULL;
+}
+
+void flip_social_login_switch_to_view(FlipWorldApp *app)
+{
+    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 3, callback_to_settings, FlipWorldViewTextInput);
+}
 
 void callback_submenu_choices(void *context, uint32_t index)
 {
@@ -653,6 +792,20 @@ void callback_submenu_choices(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
         break;
     case FlipWorldSubmenuIndexUserSettings:
+        free_all_views(app, true, false);
+        // if (!flipper_http_init(flipper_http_rx_callback, app))
+        // {
+        //     FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
+        //     return;
+        // }
+        // app_instance = malloc(sizeof(FlipWorldApp));
+        // if (!app_instance)
+        // {
+        //     FURI_LOG_E(TAG, "Failed to allocate FlipWorldApp");
+        //     return;
+        // }
+        // memcpy(app_instance, app, sizeof(FlipWorldApp));
+        // flip_social_login_switch_to_view(app);
         easy_flipper_dialog("User Settings", "Coming soon...");
         break;
     default:
