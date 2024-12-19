@@ -31,7 +31,7 @@ static int32_t game_app(void *p)
     GameEngineSettings settings = game_engine_settings_init();
     settings.target_fps = game_fps_choices_2[game_fps_index];
     settings.show_fps = game.show_fps;
-    settings.always_backlight = game.always_backlight;
+    settings.always_backlight = strstr(game_screen_always_on_choices[game_screen_always_on_index], "Yes") != NULL;
     settings.frame_callback = frame_cb;
     settings.context = game_manager;
 
@@ -136,6 +136,7 @@ static void text_updated_pass(void *context);
 //
 static void flip_world_game_fps_change(VariableItem *item);
 static void game_settings_item_selected(void *context, uint32_t index);
+static void flip_world_game_screen_always_on_change(VariableItem *item);
 
 uint32_t callback_to_submenu(void *context)
 {
@@ -311,13 +312,22 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 return false;
             }
 
+            if (!app->variable_item_game_download_world)
+            {
+                app->variable_item_game_download_world = variable_item_list_add(app->variable_item_list, "Install Official World Pack", 0, NULL, NULL);
+                variable_item_set_current_value_text(app->variable_item_game_download_world, "");
+            }
             if (!app->variable_item_game_fps)
             {
                 app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, flip_world_game_fps_change, NULL);
-                app->variable_item_game_download_world = variable_item_list_add(app->variable_item_list, "Install Official World Pack", 0, NULL, NULL);
-                variable_item_set_current_value_text(app->variable_item_game_download_world, "");
                 variable_item_set_current_value_index(app->variable_item_game_fps, 0);
                 variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[0]);
+            }
+            if (!app->variable_item_game_screen_always_on)
+            {
+                app->variable_item_game_screen_always_on = variable_item_list_add(app->variable_item_list, "Keep Screen On?", 2, flip_world_game_screen_always_on_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_screen_always_on, 1);
+                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, game_screen_always_on_choices[1]);
             }
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
@@ -328,6 +338,14 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                                                                                             : 0;
                 variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_fps, index);
+            }
+            char _game_screen_always_on[8];
+            if (load_char("Game-Screen-Always-On", _game_screen_always_on, sizeof(_game_screen_always_on)))
+            {
+                int index = strcmp(_game_screen_always_on, "No") == 0 ? 0 : strcmp(_game_screen_always_on, "Yes") == 0 ? 1
+                                                                                                                       : 0;
+                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, game_screen_always_on_choices[index]);
+                variable_item_set_current_value_index(app->variable_item_game_screen_always_on, index);
             }
             break;
         case FlipWorldSubmenuIndexUserSettings:
@@ -483,6 +501,16 @@ static void free_variable_item_list(void *context)
         free(app->variable_item_game_fps);
         app->variable_item_game_fps = NULL;
     }
+    if (app->variable_item_game_screen_always_on)
+    {
+        free(app->variable_item_game_screen_always_on);
+        app->variable_item_game_screen_always_on = NULL;
+    }
+    if (app->variable_item_game_download_world)
+    {
+        free(app->variable_item_game_download_world);
+        app->variable_item_game_download_world = NULL;
+    }
     if (app->variable_item_user_username)
     {
         free(app->variable_item_user_username);
@@ -627,7 +655,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
         furi_thread_start(thread);
         thread_id = furi_thread_get_id(thread);
         game_thread_running = true;
-        return "Thanks for playing!\nPress BACK to return.";
+        return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
     }
     return "Unknown error";
 }
@@ -793,19 +821,18 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     case FlipWorldSubmenuIndexUserSettings:
         free_all_views(app, true, false);
-        // if (!flipper_http_init(flipper_http_rx_callback, app))
+        if (!flipper_http_init(flipper_http_rx_callback, app))
+        {
+            FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
+            return;
+        }
+        // free_text_input_view(app_instance);
+        // if (!alloc_text_input_view(app_instance, "Username"))
         // {
-        //     FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
-        //     return;
+        //     FURI_LOG_E(TAG, "Failed to allocate text input view");
+        //     return false;
         // }
-        // app_instance = malloc(sizeof(FlipWorldApp));
-        // if (!app_instance)
-        // {
-        //     FURI_LOG_E(TAG, "Failed to allocate FlipWorldApp");
-        //     return;
-        // }
-        // memcpy(app_instance, app, sizeof(FlipWorldApp));
-        // flip_social_login_switch_to_view(app);
+        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewTextInput);
         easy_flipper_dialog("User Settings", "Coming soon...");
         break;
     default:
@@ -980,6 +1007,14 @@ static void flip_world_game_fps_change(VariableItem *item)
     // save the fps
     save_char("Game-FPS", game_fps_choices[index]);
 }
+static void flip_world_game_screen_always_on_change(VariableItem *item)
+{
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, game_screen_always_on_choices[index]);
+
+    // save the screen always on
+    save_char("Game-Screen-Always-On", game_screen_always_on_choices[index]);
+}
 
 static bool flip_world_fetch_worlds(DataLoaderModel *model)
 {
@@ -1011,16 +1046,16 @@ static void game_settings_item_selected(void *context, uint32_t index)
     }
     switch (index)
     {
-    case 0:    // Game FPS
-        break; // handled by flip_world_game_fps_change
-    case 1:    // Download Worlds
-        // TODO: Implement download worlds
+    case 0: // Download Worlds
         if (!flipper_http_init(flipper_http_rx_callback, app))
         {
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
             return;
         }
         flip_world_switch_to_view_get_worlds(app);
+    case 1: // Change FPS
+        break;
+    case 2: // Screen Always On
         break;
     }
 }

@@ -59,8 +59,9 @@ typedef struct
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
     VariableItem *variable_item_wifi_pass; // The variable item for WiFi password
     //
-    VariableItem *variable_item_game_fps;            // The variable item for Game FPS
-    VariableItem *variable_item_game_download_world; // The variable item for Download world
+    VariableItem *variable_item_game_fps;              // The variable item for Game FPS
+    VariableItem *variable_item_game_screen_always_on; // The variable item for Screen always on
+    VariableItem *variable_item_game_download_world;   // The variable item for Download world
     //
     VariableItem *variable_item_user_username; // The variable item for the User username
     VariableItem *variable_item_user_password; // The variable item for the User password
@@ -75,3 +76,5 @@ typedef struct
 extern char *game_fps_choices[];
 extern const float game_fps_choices_2[];
 extern int game_fps_index;
+extern char *game_screen_always_on_choices[];
+extern int game_screen_always_on_index;
