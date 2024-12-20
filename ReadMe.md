@@ -27,21 +27,21 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1217-2015-0.420.0-6efa662](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1220-0916-0.420.0-02cd6788c9](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-17 20:15 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-17 20:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-20 09:16 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-20 09:16 EST`
 - Updated: [SD SPI v0.4 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) (Version Number Update Only)
 - OFW: [Add the ability to send a signal once via RPC #4000 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4000)
 - OFW: [5V on GPIO control for ext. modules #3830 (By gsurkov)](https://github.com/flipperdevices/flipperzero-firmware/pull/3830)
 - OFW: [Broken file interaction fixes #3852 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/3852)
 - OFW: [Infrared button operation fails now shows more informative messages #3859 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/3859)
-- OFW: [Update infrared_test.c reference #3983 (By emmanuel-ferdman)](https://github.com/flipperdevices/flipperzero-firmware/pull/3983)
-- OFW: [Fix ISO15693 stucking in wrong mode. #3988 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/3988)
-- OFW: [Increase system stack's reserved memory size #4025 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4025) (Already in RM)
 - SubGHz: Fix Bypass Region Error (By RogueMaster)
 - Updated: [FlipWorld v0.1 (By jblanked)](https://github.com/jblanked/FlipWorld)
 - OFW: [Loader: Fix BusFault in handling of OOM #3992 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/3992)
+- OFW: [Fix ISO15693 stucking in wrong mode. #3988 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/3988)
+- OFW: [Increase system stacks reserved memory size #4025 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4025) (Already in RM)
+- OFW: [Update infrared_test.c reference #3983 (By emmanuel-ferdman)](https://github.com/flipperdevices/flipperzero-firmware/pull/3983)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader) (Version Number Update Only)
 - Updated: [GnomishTool v1.0 (By Andreeved88)](https://github.com/Andreeved88/GnomishTool)
 - OFW: [Move updater and unit tests to dockerized runner #4028 (By ssecsd)](https://github.com/flipperdevices/flipperzero-firmware/pull/4028)
