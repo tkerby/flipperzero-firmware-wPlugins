@@ -694,6 +694,82 @@ static void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
 {
     flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 2, callback_to_submenu, FlipWorldViewLoader);
 }
+static bool flip_social_register_fetch(DataLoaderModel *model)
+{
+    UNUSED(model);
+    char username[64];
+    char password[64];
+    if (!load_char("Flip-Social-Username", username, sizeof(username)))
+    {
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        return false;
+    }
+    if (!load_char("Flip-Social-Password", password, sizeof(password)))
+    {
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+        return false;
+    }
+    char payload[172];
+    snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+    return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
+}
+static char *flip_social_register_parse(DataLoaderModel *model)
+{
+    UNUSED(model);
+    if (fhttp.last_response != NULL && (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User created") != NULL))
+    {
+        flipper_http_deinit();
+        save_char("is_logged_in", "true");
+        char username[64];
+        char password[64];
+        // load the username and password, then save them
+        if (!load_char("Flip-Social-Username", username, sizeof(username)))
+        {
+            FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+            return "Failed to load Flip-Social-Username";
+        }
+        if (!load_char("Flip-Social-Password", password, sizeof(password)))
+        {
+            FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+            return "Failed to load Flip-Social-Password";
+        }
+        // load wifi ssid,pass then save
+        char ssid[64];
+        char pass[64];
+        if (!load_char("WiFi-SSID", ssid, sizeof(ssid)))
+        {
+            FURI_LOG_E(TAG, "Failed to load WiFi-SSID");
+            return "Failed to load WiFi-SSID";
+        }
+        if (!load_char("WiFi-Password", pass, sizeof(pass)))
+        {
+            FURI_LOG_E(TAG, "Failed to load WiFi-Password");
+            return "Failed to load WiFi-Password";
+        }
+        save_settings(ssid, pass, username, password);
+        flip_world_switch_to_view_get_world_list(app_instance);
+        return "Account created!";
+    }
+    else if (strstr(fhttp.last_response, "Username or password not provided") != NULL)
+    {
+        flipper_http_deinit();
+        return "Please enter your credentials.\nPress BACK to return.";
+    }
+    else if (strstr(fhttp.last_response, "User already exists") != NULL || strstr(fhttp.last_response, "Multiple users found") != NULL)
+    {
+        flipper_http_deinit();
+        return "Registration failed...\nUsername already exists.\nPress BACK to return.";
+    }
+    else
+    {
+        flipper_http_deinit();
+        return "Registration failed...\nUpdate your credentials.\nPress BACK to return.";
+    }
+}
+static void flip_social_register_switch_to_view(FlipWorldApp *app)
+{
+    flip_world_generic_switch_to_view(app, "Registering...", flip_social_register_fetch, flip_social_register_parse, 1, callback_to_settings, FlipWorldViewTextInput);
+}
 static bool flip_social_login_fetch(DataLoaderModel *model)
 {
     UNUSED(model);
@@ -730,10 +806,17 @@ static char *flip_social_login_parse(DataLoaderModel *model)
     else if (strstr(fhttp.last_response, "User not found") != NULL)
     {
         snprintf(returned_message, sizeof(returned_message), "Account not found...");
+
+        // only if the warning is User not found, should we allow the user to register
+        flip_social_register_switch_to_view(app_instance);
     }
     else
     {
-        snprintf(returned_message, sizeof(returned_message), "Failed to login...");
+        snprintf(
+            returned_message,
+            sizeof(returned_message),
+            strlen(fhttp.last_response) > 127 || strlen(fhttp.last_response) == 0 ? "Failed to login..." : "%s",
+            fhttp.last_response);
     }
     flipper_http_deinit();
     save_char("is_logged_in", strstr(fhttp.last_response, "[SUCCESS]") != NULL ? "true" : "false");
