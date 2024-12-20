@@ -12,7 +12,6 @@
 #define MAX_WORLD_OBJECTS 100
 
 void draw_bounds(Canvas *canvas);
-void draw_example_world(Level *level);
 void draw_tree_world(Level *level);
 void draw_town_world(Level *level);
 bool draw_json_world(Level *level, const char *json_data);

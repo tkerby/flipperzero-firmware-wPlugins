@@ -12,5 +12,5 @@ typedef struct
 } IconContext;
 
 extern const EntityDescription icon_desc;
-const Icon *get_icon(char *name);
-const Icon *get_icon_furi(FuriString *name);
+IconContext *get_icon_context(char *name);
+IconContext *get_icon_context_furi(FuriString *name);
