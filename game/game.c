@@ -1,23 +1,20 @@
 #include "game.h"
 
 /****** Entities: Player ******/
-Level *levels[10];
+static Level *levels[10];
+static int level_count = 0;
+static bool has_pressed_ok = false;
 
 static Level *get_next_level(GameManager *manager)
 {
+    has_pressed_ok = false;
     Level *current_level = game_manager_current_level_get(manager);
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < level_count; i++)
     {
         if (levels[i] == current_level)
         {
-            if (levels[i + 1] != NULL)
-            {
-                return levels[i + 1];
-            }
-            else
-            {
-                return levels[0];
-            }
+            // check if i+1 is out of bounds, if so, return the first level
+            return levels[(i + 1) % level_count];
         }
     }
     return levels[0] ? levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
@@ -86,8 +83,12 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // switch levels if holding OK
     if (input.held & GameKeyOk)
     {
-        game_manager_next_level_set(manager, get_next_level(manager));
-        furi_delay_ms(500);
+        if (!has_pressed_ok)
+        {
+            has_pressed_ok = true;
+            game_manager_next_level_set(manager, get_next_level(manager));
+            furi_delay_ms(500);
+        }
         return;
     }
 
@@ -164,6 +165,7 @@ static void game_start(GameManager *game_manager, void *ctx)
         FURI_LOG_E("Game", "Failed to load world list");
         levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
         levels[1] = game_manager_add_level(game_manager, generic_level("tree_world", 1));
+        level_count = 2;
         return;
     }
     for (int i = 0; i < 10; i++)
@@ -175,6 +177,7 @@ static void game_start(GameManager *game_manager, void *ctx)
         }
         levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
         furi_string_free(world_name);
+        level_count++;
     }
     furi_string_free(world_list);
 }

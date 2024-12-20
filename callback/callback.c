@@ -664,7 +664,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
 {
     if (model->request_index == 0)
     {
-        return "World List Fetched";
+        return "Welcome to FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
     }
     else if (model->request_index == 1)
     {
