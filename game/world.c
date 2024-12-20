@@ -311,6 +311,22 @@ void draw_town_world(Level *level)
         // Vertical line of 8 icons starting further down (y=50)
         spawn_icon_line(level, tree_icon->icon, 5 + i * 17, 50, tree_icon->width, tree_icon->height, 8, false);
     }
+    free(house_icon);
+    free(fence_icon);
+    free(fence_end_icon);
+    free(plant_icon);
+    free(flower_icon);
+    free(man_icon);
+    free(woman_icon);
+    free(lake_top_left_icon);
+    free(lake_top_icon);
+    free(lake_top_right_icon);
+    free(lake_left_icon);
+    free(lake_right_icon);
+    free(lake_bottom_left_icon);
+    free(lake_bottom_icon);
+    free(lake_bottom_right_icon);
+    free(tree_icon);
 }
 
 FuriString *fetch_world(char *name, void *app)

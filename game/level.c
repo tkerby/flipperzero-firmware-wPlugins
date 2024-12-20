@@ -6,6 +6,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     level_clear(level);
     player_spawn(level, manager);
     LevelContext *level_context = context;
+
     // check if the world exists
     if (!world_exists(level_context->id))
     {
@@ -94,7 +95,7 @@ static void level_alloc_generic_world(Level *level, GameManager *manager, void *
 // Do NOT touch (this is for dynamic level creation)
 const LevelBehaviour _generic_level = {
     .alloc = level_alloc_generic_world,   // called once, when level allocated
-    .free = level_generic_free,           // called once, when level freed
+    .free = NULL,                         // called once, when level freed
     .start = level_start,                 // called when level is changed to this level
     .stop = NULL,                         // called when level is changed from this level
     .context_size = sizeof(LevelContext), // size of level context, will be automatically allocated and freed
