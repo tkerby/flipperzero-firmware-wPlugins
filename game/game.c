@@ -1,11 +1,27 @@
 #include "game.h"
 
 /****** Entities: Player ******/
-Level *level_tree;
-Level *level_town;
-Level *level_generic;
+Level *levels[10];
 
-// Forward declaration of player_desc, because it's used in player_spawn function.
+static Level *get_next_level(GameManager *manager)
+{
+    Level *current_level = game_manager_current_level_get(manager);
+    for (int i = 0; i < 10; i++)
+    {
+        if (levels[i] == current_level)
+        {
+            if (levels[i + 1] != NULL)
+            {
+                return levels[i + 1];
+            }
+            else
+            {
+                return levels[0];
+            }
+        }
+    }
+    return levels[0] ? levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
+}
 
 void player_spawn(Level *level, GameManager *manager)
 {
@@ -70,9 +86,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // switch levels if holding OK
     if (input.held & GameKeyOk)
     {
-        // game_manager_next_level_set(manager, game_manager_current_level_get(manager) == level_tree ? level_town : level_tree);
-        // furi_delay_ms(500);
-        // return;
+        game_manager_next_level_set(manager, get_next_level(manager));
+        furi_delay_ms(500);
+        return;
     }
 
     // Clamp the player's position to stay within world bounds
@@ -128,7 +144,6 @@ const EntityDescription player_desc = {
 };
 
 /****** Game ******/
-Level *levels[10];
 /*
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
@@ -139,9 +154,6 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->score = 0;
-    // level_town = game_manager_add_level(game_manager, generic_level("town_world", 0));
-    // level_tree = game_manager_add_level(game_manager, generic_level("tree_world", 1));
-    // level_generic = game_manager_add_level(game_manager, generic_level("generic_world", 2));
 
     // open the world list from storage, then create a level for each world
     char file_path[128];
@@ -152,7 +164,6 @@ static void game_start(GameManager *game_manager, void *ctx)
         FURI_LOG_E("Game", "Failed to load world list");
         levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
         levels[1] = game_manager_add_level(game_manager, generic_level("tree_world", 1));
-        levels[2] = game_manager_add_level(game_manager, generic_level("generic_world", 2));
         return;
     }
     for (int i = 0; i < 10; i++)
