@@ -1,5 +1,8 @@
 #include "utils.h"
 #include "app_state.h"
+#include <storage/storage.h>
+#include <furi_hal.h>
+#include <toolbox/path.h> // For EXT_PATH
 
 // Structure to hold confirmation dialog data
 typedef struct {
@@ -74,3 +77,5 @@ void show_confirmation_view_wrapper(void* context, ConfirmationView* view) {
         current_dialog.ok_callback,
         current_dialog.cancel_callback);
 }
+
+// 6675636B796F7564656B69
