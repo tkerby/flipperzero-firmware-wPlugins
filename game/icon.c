@@ -150,15 +150,15 @@ const Icon *get_icon(char *name)
     }
     if (strcmp(name, "lake_left") == 0)
     {
-        return &I_icon_lake_left_11x31;
+        return &I_icon_lake_left_11x31px;
     }
     if (strcmp(name, "lake_right") == 0)
     {
-        return &I_icon_lake_right_11x31px;
+        return &I_icon_lake_right_11x31;
     }
     if (strcmp(name, "lake_top") == 0)
     {
-        return &I_icon_lake_top_31x22px;
+        return &I_icon_lake_top_31x12px;
     }
     if (strcmp(name, "lake_top_left") == 0)
     {
@@ -281,15 +281,15 @@ const Icon *get_icon_furi(FuriString *name)
     }
     if (furi_string_cmp(name, "lake_left") == 0)
     {
-        return &I_icon_lake_left_11x31;
+        return &I_icon_lake_left_11x31px;
     }
     if (furi_string_cmp(name, "lake_right") == 0)
     {
-        return &I_icon_lake_right_11x31px;
+        return &I_icon_lake_right_11x31;
     }
     if (furi_string_cmp(name, "lake_top") == 0)
     {
-        return &I_icon_lake_top_31x22px;
+        return &I_icon_lake_top_31x12px;
     }
     if (furi_string_cmp(name, "lake_top_left") == 0)
     {
