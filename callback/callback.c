@@ -902,14 +902,14 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         memcpy(app_instance, app, sizeof(FlipWorldApp));
         // check if logged in
-        // if (is_logged_in() || is_logged_in_to_flip_social())
-        // {
-        //     flip_world_switch_to_view_get_world_list(app_instance);
-        // }
-        // else
-        // {
-        flip_social_login_switch_to_view(app_instance);
-        //}
+        if (is_logged_in() || is_logged_in_to_flip_social())
+        {
+            flip_world_switch_to_view_get_world_list(app_instance);
+        }
+        else
+        {
+            flip_social_login_switch_to_view(app_instance);
+        }
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true, true);
