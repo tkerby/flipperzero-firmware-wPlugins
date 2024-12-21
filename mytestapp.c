@@ -55,11 +55,11 @@ typedef struct {
     short int projectileY;
 
     // Enemies
-    short int enemyX[3][8];
-    short int enemyY[3];
-    short int enemyDirection;
-    short int enemyCount[3];
-    bool enemyAnimation;
+    short int enemyX[3][8]; // X coordinate of each emeny
+    short int enemyY[3]; // Y coordinate of each row of enemies
+    short int enemyDirection; // Direction of enemy movement
+    short int enemyCount[3]; // Number of enemies in each row
+    bool enemyAnimation; // Animation frame
 
     // Expolosions
     short int explosionCount;
@@ -293,6 +293,7 @@ static void timer_callback(void* context) {
         }
     }
 
+    // Increment enemy animation frame
     if(app->gameContext.time % 15 == 1) {
         app->gameContext.enemyAnimation = !app->gameContext.enemyAnimation;
     }
