@@ -660,6 +660,7 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
                 easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+                furi_thread_free(thread);
                 return false;
             }
             furi_thread_start(thread);
@@ -675,6 +676,8 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
         fhttp.save_received_data = true;
         char url[128];
         snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
+        furi_string_free(world_list);
+        furi_string_free(first_world);
         return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
     }
     view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
@@ -703,6 +706,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
         if (!thread)
         {
             FURI_LOG_E(TAG, "Failed to allocate game thread");
+            furi_thread_free(thread);
             return "Failed to allocate game thread";
         }
         furi_thread_start(thread);
@@ -850,7 +854,7 @@ static char *flip_social_login_parse(DataLoaderModel *model)
         save_char("is_logged_in", "false");
         view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
         flip_social_register_switch_to_view(app_instance);
-        return "Account not found and failed to register..."; // if they see this an issue happened switching to register
+        return "Account not found and failed\nto register...\n\nRestart your Flipper Zero."; // if they see this an issue happened switching to register
     }
 
     // If not success, not found, check length conditions
