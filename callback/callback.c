@@ -230,9 +230,9 @@ static bool alloc_text_input_view(void *context, char *title)
                 title,
                 app->text_input_temp_buffer,
                 app->text_input_buffer_size,
-                strcmp(title, "SSID") == 0 ? text_updated_wifi_ssid : strcmp(title, "Password") == 0 ? text_updated_wifi_pass
-                                                                  : strcmp(title, "Password") == 0   ? text_updated_username
-                                                                                                     : text_updated_password,
+                strcmp(title, "SSID") == 0 ? text_updated_wifi_ssid : strcmp(title, "Password") == 0     ? text_updated_wifi_pass
+                                                                  : strcmp(title, "Username-Login") == 0 ? text_updated_username
+                                                                                                         : text_updated_password,
                 callback_to_wifi_settings,
                 &app->view_dispatcher,
                 app))
@@ -253,9 +253,17 @@ static bool alloc_text_input_view(void *context, char *title)
             {
                 strncpy(app->text_input_temp_buffer, ssid, app->text_input_buffer_size);
             }
-            else
+            else if (strcmp(title, "Password") == 0)
             {
                 strncpy(app->text_input_temp_buffer, pass, app->text_input_buffer_size);
+            }
+            else if (strcmp(title, "Username-Login") == 0)
+            {
+                strncpy(app->text_input_temp_buffer, username, app->text_input_buffer_size);
+            }
+            else if (strcmp(title, "Password-Login") == 0)
+            {
+                strncpy(app->text_input_temp_buffer, password, app->text_input_buffer_size);
             }
         }
     }
@@ -609,17 +617,26 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
     }
     else if (model->request_index == 1)
     {
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+
         FuriString *world_list = flipper_http_load_from_file(fhttp.file_path);
         if (!world_list)
         {
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to load world list");
-            return "Failed to load world list";
+            easy_flipper_dialog("Error", "Failed to load world list. Go to game settings to download packs.");
+            return false;
         }
         FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
         if (!first_world)
         {
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to get first world");
-            return "Failed to get first world";
+            easy_flipper_dialog("Error", "Failed to get first world. Go to game settings to download packs.");
+            return false;
         }
         if (world_exists(furi_string_get_cstr(first_world)))
         {
@@ -640,8 +657,10 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
             FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
             if (!thread)
             {
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
-                return "Failed to allocate game thread";
+                easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+                return false;
             }
             furi_thread_start(thread);
             thread_id = furi_thread_get_id(thread);
@@ -658,6 +677,9 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
         snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
         return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
     }
+    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+    FURI_LOG_E(TAG, "Unknown request index");
+    easy_flipper_dialog("Error", "Unknown request index.");
     return false;
 }
 static char *flip_world_parse_world_list(DataLoaderModel *model)
@@ -701,12 +723,16 @@ static bool flip_social_register_fetch(DataLoaderModel *model)
     char password[64];
     if (!load_char("Flip-Social-Username", username, sizeof(username)))
     {
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
         FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
         return false;
     }
     if (!load_char("Flip-Social-Password", password, sizeof(password)))
     {
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
         FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+        easy_flipper_dialog("Error", "Failed to load saved password. Go to settings to update.");
         return false;
     }
     char payload[172];
@@ -768,7 +794,7 @@ static char *flip_social_register_parse(DataLoaderModel *model)
 }
 static void flip_social_register_switch_to_view(FlipWorldApp *app)
 {
-    flip_world_generic_switch_to_view(app, "Registering...", flip_social_register_fetch, flip_social_register_parse, 1, callback_to_settings, FlipWorldViewTextInput);
+    flip_world_generic_switch_to_view(app, "Registering...", flip_social_register_fetch, flip_social_register_parse, 1, callback_to_submenu, FlipWorldViewLoader);
 }
 static bool flip_social_login_fetch(DataLoaderModel *model)
 {
@@ -778,14 +804,20 @@ static bool flip_social_login_fetch(DataLoaderModel *model)
     if (!load_char("Flip-Social-Username", username, sizeof(username)))
     {
         FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+        easy_flipper_dialog("Error", "Failed to load saved username\nGo to user settings to update.");
+        flipper_http_deinit();
         return false;
     }
     if (!load_char("Flip-Social-Password", password, sizeof(password)))
     {
         FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+        easy_flipper_dialog("Error", "Failed to load saved password\nGo to settings to update.");
+        flipper_http_deinit();
         return false;
     }
-    char payload[172];
+    char payload[256];
     snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
     return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
 }
@@ -793,41 +825,57 @@ static bool flip_social_login_fetch(DataLoaderModel *model)
 static char *flip_social_login_parse(DataLoaderModel *model)
 {
     UNUSED(model);
-    char returned_message[128];
+
     if (!fhttp.last_response)
     {
-        snprintf(returned_message, sizeof(returned_message), "Failed to login...");
+        save_char("is_logged_in", "false");
+        flipper_http_deinit();
+        // Go back to the main menu
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+        return "Response is empty...";
     }
-    else if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
-    {
-        snprintf(returned_message, sizeof(returned_message), "Login successful!");
-        flip_world_switch_to_view_get_world_list(app_instance);
-    }
-    else if (strstr(fhttp.last_response, "User not found") != NULL)
-    {
-        snprintf(returned_message, sizeof(returned_message), "Account not found...");
 
-        // only if the warning is User not found, should we allow the user to register
-        flip_social_register_switch_to_view(app_instance);
-    }
-    else
+    // Check for successful conditions
+    if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
     {
-        snprintf(
-            returned_message,
-            sizeof(returned_message),
-            strlen(fhttp.last_response) > 127 || strlen(fhttp.last_response) == 0 ? "Failed to login..." : "%s",
-            fhttp.last_response);
+        save_char("is_logged_in", "true");
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+        flip_world_switch_to_view_get_world_list(app_instance);
+        return "Login successful!";
     }
+
+    // Check if user not found
+    if (strstr(fhttp.last_response, "User not found") != NULL)
+    {
+        save_char("is_logged_in", "false");
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+        flip_social_register_switch_to_view(app_instance);
+        return "Account not found and failed to register..."; // if they see this an issue happened switching to register
+    }
+
+    // If not success, not found, check length conditions
+    size_t resp_len = strlen(fhttp.last_response);
+    if (resp_len == 0 || resp_len > 127)
+    {
+        // Empty or too long means failed login
+        flipper_http_deinit();
+        save_char("is_logged_in", "false");
+        // Go back to the main menu
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+        return "Failed to login...";
+    }
+
+    // Handle any other unknown response as a failure
     flipper_http_deinit();
-    save_char("is_logged_in", strstr(fhttp.last_response, "[SUCCESS]") != NULL ? "true" : "false");
-    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-    return strstr(returned_message, "successful") != NULL ? "Login successful!" : strstr(returned_message, "found") != NULL ? "Account not found..."
-                                                                                                                            : "Failed to login...";
+    save_char("is_logged_in", "false");
+    // Go back to the main menu
+    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+    return "Failed to login...";
 }
 
 static void flip_social_login_switch_to_view(FlipWorldApp *app)
 {
-    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 1, callback_to_settings, FlipWorldViewTextInput);
+    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 1, callback_to_submenu, FlipWorldViewLoader);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -854,14 +902,14 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         memcpy(app_instance, app, sizeof(FlipWorldApp));
         // check if logged in
-        if (is_logged_in() || is_logged_in_to_flip_social())
-        {
-            flip_world_switch_to_view_get_world_list(app_instance);
-        }
-        else
-        {
-            flip_social_login_switch_to_view(app_instance);
-        }
+        // if (is_logged_in() || is_logged_in_to_flip_social())
+        // {
+        //     flip_world_switch_to_view_get_world_list(app_instance);
+        // }
+        // else
+        // {
+        flip_social_login_switch_to_view(app_instance);
+        //}
         break;
     case FlipWorldSubmenuIndexAbout:
         free_all_views(app, true, true);
@@ -1219,7 +1267,7 @@ static void user_settings_item_selected(void *context, uint32_t index)
     {
     case 0: // Username
         free_all_views(app, false, false);
-        if (!alloc_text_input_view(app, "Username"))
+        if (!alloc_text_input_view(app, "Username-Login"))
         {
             FURI_LOG_E(TAG, "Failed to allocate text input view");
             return;
@@ -1228,7 +1276,7 @@ static void user_settings_item_selected(void *context, uint32_t index)
         break;
     case 1: // Password
         free_all_views(app, false, false);
-        if (!alloc_text_input_view(app, "Password"))
+        if (!alloc_text_input_view(app, "Password-Login"))
         {
             FURI_LOG_E(TAG, "Failed to allocate text input view");
             return;
