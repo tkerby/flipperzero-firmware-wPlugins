@@ -6,19 +6,21 @@
 #include "game_manager.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef struct {
-    float target_fps;
-    bool show_fps;
-    bool always_backlight;
-    void (*start)(GameManager* game_manager, void* context);
-    void (*stop)(void* context);
-    size_t context_size;
-} Game;
+    typedef struct
+    {
+        float target_fps;
+        bool show_fps;
+        bool always_backlight;
+        void (*start)(GameManager *game_manager, void *context);
+        void (*stop)(void *context);
+        size_t context_size;
+    } Game;
 
-extern const Game game;
+    extern const Game game;
 
 #ifdef __cplusplus
 }
