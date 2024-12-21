@@ -7,7 +7,6 @@
  */
 static uint32_t callback_exit_app(void *context)
 {
-    // Exit the application
     UNUSED(context);
     return VIEW_NONE; // Return VIEW_NONE to exit the app
 }

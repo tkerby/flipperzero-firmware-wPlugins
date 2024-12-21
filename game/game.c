@@ -14,7 +14,7 @@ static Level *get_next_level(GameManager *manager)
         if (levels[i] == current_level)
         {
             // check if i+1 is out of bounds, if so, return the first level
-            return levels[(i + 1) % level_count];
+            return levels[(i + 1) % level_count] ? levels[(i + 1) % level_count] : levels[0];
         }
     }
     return levels[0] ? levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
@@ -164,8 +164,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     {
         FURI_LOG_E("Game", "Failed to load world list");
         levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
-        levels[1] = game_manager_add_level(game_manager, generic_level("tree_world", 1));
-        level_count = 2;
+        level_count = 1;
         return;
     }
     for (int i = 0; i < 10; i++)
@@ -190,10 +189,15 @@ static void game_start(GameManager *game_manager, void *ctx)
 static void game_stop(void *ctx)
 {
     UNUSED(ctx);
-    // GameContext *game_context = ctx;
-    //  Do some deinitialization here, for example you can save score to storage.
-    //  For simplicity, we will just print it.
-    // FURI_LOG_I("Game", "Your score: %lu", game_context->score);
+    // If you want to do other final logic (like saving scores), do it here.
+    // But do NOT free levels[] if the engine manages them.
+
+    // Just clear out your pointer array if you like (not strictly necessary)
+    for (int i = 0; i < level_count; i++)
+    {
+        levels[i] = NULL;
+    }
+    level_count = 0;
 }
 
 /*

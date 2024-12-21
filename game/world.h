@@ -16,4 +16,4 @@ void draw_tree_world(Level *level);
 void draw_town_world(Level *level);
 bool draw_json_world(Level *level, const char *json_data);
 bool draw_json_world_furi(Level *level, FuriString *json_data);
-FuriString *fetch_world(char *name, void *app);
+FuriString *fetch_world(const char *name);

@@ -78,3 +78,4 @@ extern const float game_fps_choices_2[];
 extern int game_fps_index;
 extern char *game_screen_always_on_choices[];
 extern int game_screen_always_on_index;
+extern FlipWorldApp *app_instance;

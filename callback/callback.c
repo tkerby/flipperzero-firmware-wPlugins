@@ -28,13 +28,14 @@ static int32_t game_app(void *p)
         FURI_LOG_E("Game", "Failed to allocate game manager");
         return -1;
     }
+
+    // Setup game engine settings...
     GameEngineSettings settings = game_engine_settings_init();
     settings.target_fps = game_fps_choices_2[game_fps_index];
     settings.show_fps = game.show_fps;
     settings.always_backlight = strstr(game_screen_always_on_choices[game_screen_always_on_index], "Yes") != NULL;
     settings.frame_callback = frame_cb;
     settings.context = game_manager;
-
     GameEngine *engine = game_engine_alloc(settings);
     if (!engine)
     {
@@ -44,25 +45,36 @@ static int32_t game_app(void *p)
     }
     game_manager_engine_set(game_manager, engine);
 
+    // Allocate custom game context if needed
     void *game_context = NULL;
     if (game.context_size > 0)
     {
         game_context = malloc(game.context_size);
         game_manager_game_context_set(game_manager, game_context);
     }
+
+    // Start the game
     game.start(game_manager, game_context);
 
+    // 1) Run the engine
     game_engine_run(engine);
+
+    // 2) Stop the game FIRST, so it can do any internal cleanup
+    game.stop(game_context);
+
+    // 3) Now free the engine
     game_engine_free(engine);
 
+    // 4) Now free the manager
     game_manager_free(game_manager);
 
-    game.stop(game_context);
+    // 5) Finally, free your custom context if it was allocated
     if (game_context)
     {
         free(game_context);
     }
 
+    // 6) Check for leftover entities
     int32_t entities = entities_get_count();
     if (entities != 0)
     {
@@ -457,15 +469,6 @@ static void free_about_view(void *context)
         app->view_about = NULL;
     }
 }
-static void free_main_view(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-}
 
 static void free_text_input_view(void *context)
 {
@@ -557,7 +560,6 @@ static void free_submenu_settings(void *context)
         app->submenu_settings = NULL;
     }
 }
-static FlipWorldApp *app_instance = NULL;
 static FuriThreadId thread_id;
 static bool game_thread_running = false;
 void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings)
@@ -573,8 +575,8 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         free_variable_item_list(app);
     }
     free_about_view(app);
-    free_main_view(app);
     free_text_input_view(app);
+
     // free game thread
     if (game_thread_running)
     {
@@ -643,9 +645,6 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
             furi_string_free(world_list);
             furi_string_free(first_world);
             FURI_LOG_I(TAG, "World already exists");
-            fhttp.state = IDLE;
-            model->data_state = DataStateParsed;
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
             flipper_http_deinit();
             // free game thread
             if (game_thread_running)
@@ -654,14 +653,19 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
                 furi_thread_flags_set(thread_id, WorkerEvtStop);
                 furi_thread_free(thread_id);
             }
-            // free_all_views(app_instance, true, true);
-            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!app_instance)
+            {
+                FURI_LOG_E(TAG, "app_instance is NULL");
+                easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "app_instance is NULL";
+            }
+            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
             if (!thread)
             {
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
                 easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
-                furi_thread_free(thread);
                 return false;
             }
             furi_thread_start(thread);
@@ -702,12 +706,17 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
             furi_thread_flags_set(thread_id, WorkerEvtStop);
             furi_thread_free(thread_id);
         }
-        // free_all_views(app_instance, true, true);
-        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            return "app_instance is NULL";
+        }
+        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
         if (!thread)
         {
             FURI_LOG_E(TAG, "Failed to allocate game thread");
-            furi_thread_free(thread);
             return "Failed to allocate game thread";
         }
         furi_thread_start(thread);
@@ -843,7 +852,6 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
             view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to load world list");
             easy_flipper_dialog("Error", "Failed to load world list. Go to game settings to download packs.");
-            furi_string_free(world_list);
             return false;
         }
         FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
@@ -852,7 +860,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
             view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to get first world");
             easy_flipper_dialog("Error", "Failed to get first world. Go to game settings to download packs.");
-            furi_string_free(first_world);
+            furi_string_free(world_list);
             return false;
         }
         if (world_exists(furi_string_get_cstr(first_world)))
@@ -860,9 +868,8 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
             furi_string_free(world_list);
             furi_string_free(first_world);
             FURI_LOG_I(TAG, "World already exists");
-            fhttp.state = IDLE;
-            model->data_state = DataStateParsed;
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+
+            // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
             flipper_http_deinit();
             // free game thread
             if (game_thread_running)
@@ -871,14 +878,19 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
                 furi_thread_flags_set(thread_id, WorkerEvtStop);
                 furi_thread_free(thread_id);
             }
-            // free_all_views(app_instance, true, true);
-            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!app_instance)
+            {
+                FURI_LOG_E(TAG, "app_instance is NULL");
+                easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "app_instance is NULL";
+            }
+            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
             if (!thread)
             {
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
                 easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
-                furi_thread_free(thread);
                 return false;
             }
             furi_thread_start(thread);
@@ -1027,9 +1039,8 @@ static char *flip_world_parse_game(DataLoaderModel *model)
         }
         else
         {
-            fhttp.state = IDLE;
-            model->data_state = DataStateParsed;
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+
+            // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
             flipper_http_deinit();
             // free game thread
             if (game_thread_running)
@@ -1038,12 +1049,17 @@ static char *flip_world_parse_game(DataLoaderModel *model)
                 furi_thread_flags_set(thread_id, WorkerEvtStop);
                 furi_thread_free(thread_id);
             }
-            // free_all_views(app_instance, true, true);
-            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!app_instance)
+            {
+                FURI_LOG_E(TAG, "app_instance is NULL");
+                easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "app_instance is NULL";
+            }
+            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
             if (!thread)
             {
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
-                furi_thread_free(thread);
                 easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Failed to allocate game thread";
@@ -1060,9 +1076,8 @@ static char *flip_world_parse_game(DataLoaderModel *model)
     }
     else if (model->request_index == 3)
     {
-        fhttp.state = IDLE;
-        model->data_state = DataStateParsed;
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+
+        // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
         flipper_http_deinit();
         // free game thread
         if (game_thread_running)
@@ -1071,12 +1086,17 @@ static char *flip_world_parse_game(DataLoaderModel *model)
             furi_thread_flags_set(thread_id, WorkerEvtStop);
             furi_thread_free(thread_id);
         }
-        // free_all_views(app_instance, true, true);
-        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+        if (!app_instance)
+        {
+            FURI_LOG_E(TAG, "app_instance is NULL");
+            easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            return "app_instance is NULL";
+        }
+        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
         if (!thread)
         {
             FURI_LOG_E(TAG, "Failed to allocate game thread");
-            furi_thread_free(thread);
             easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
             view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             return "Failed to allocate game thread";
@@ -1090,7 +1110,7 @@ static char *flip_world_parse_game(DataLoaderModel *model)
     view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
     return "Unknown error";
 }
-static void flip_world_switch_to_view_get_game(FlipWorldApp *app)
+void flip_world_switch_to_view_get_game(FlipWorldApp *app)
 {
     flip_world_generic_switch_to_view(app, "Starting Game..", flip_world_fetch_game, flip_world_parse_game, 5, callback_to_submenu, FlipWorldViewLoader);
 }

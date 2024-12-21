@@ -11,55 +11,90 @@ bool draw_json_world(Level *level, const char *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
+        // 1) Get data array item
         char *data = get_json_array_value("json_data", i, json_data);
-        if (data == NULL)
+        if (!data)
         {
+            // Means we've reached the end of the array
             break;
         }
+
+        // 2) Extract all required fields
         char *icon = get_json_value("icon", data);
         char *x = get_json_value("x", data);
         char *y = get_json_value("y", data);
         char *amount = get_json_value("amount", data);
         char *horizontal = get_json_value("horizontal", data);
-        if (icon == NULL || x == NULL || y == NULL || amount == NULL || horizontal == NULL)
+
+        // 3) Check for any NULL pointers
+        if (!icon || !x || !y || !amount || !horizontal)
         {
-            FURI_LOG_E("Failed Data: ", data);
-            free(data);
-            free(icon);
-            free(x);
-            free(y);
-            free(amount);
-            free(horizontal);
+            FURI_LOG_E("Game", "Failed Data: %s", data);
+
+            // Free everything carefully
+            if (data)
+                free(data);
+            if (icon)
+                free(icon);
+            if (x)
+                free(x);
+            if (y)
+                free(y);
+            if (amount)
+                free(amount);
+            if (horizontal)
+                free(horizontal);
+
             level_clear(level);
             return false;
         }
+
+        // 4) Get the IconContext
         IconContext *icon_context = get_icon_context(icon);
-        if (icon_context == NULL)
+        if (!icon_context)
         {
-            FURI_LOG_E("Failed Icon: ", icon);
+            FURI_LOG_E("Game", "Failed Icon: %s", icon);
+
             free(data);
             free(icon);
             free(x);
             free(y);
             free(amount);
             free(horizontal);
+
             level_clear(level);
             return false;
         }
-        // if amount is less than 2, we spawn a single icon
-        if (atoi(amount) < 2)
+
+        // 5) Decide how many icons to spawn
+        int count = atoi(amount);
+        if (count < 2)
         {
-            spawn_icon(level, icon_context->icon, atoi(x), atoi(y), icon_context->width, icon_context->height);
-            free(data);
-            free(icon);
-            free(x);
-            free(y);
-            free(amount);
-            free(horizontal);
-            free(icon_context);
-            continue;
+            // Just one icon
+            spawn_icon(
+                level,
+                icon_context->icon,
+                atoi(x),
+                atoi(y),
+                icon_context->width,
+                icon_context->height);
         }
-        spawn_icon_line(level, icon_context->icon, atoi(x), atoi(y), icon_context->width, icon_context->height, atoi(amount), strcmp(horizontal, "true") == 0);
+        else
+        {
+            // Spawn multiple in a line
+            bool is_horizontal = (strcmp(horizontal, "true") == 0);
+            spawn_icon_line(
+                level,
+                icon_context->icon,
+                atoi(x),
+                atoi(y),
+                icon_context->width,
+                icon_context->height,
+                count,
+                is_horizontal);
+        }
+
+        // 6) Cleanup
         free(data);
         free(icon);
         free(x);
@@ -70,49 +105,70 @@ bool draw_json_world(Level *level, const char *json_data)
     }
     return true;
 }
+
 bool draw_json_world_furi(Level *level, FuriString *json_data)
 {
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
+        // 1) Get data array item as FuriString
         FuriString *data = get_json_array_value_furi("json_data", i, json_data);
-        if (data == NULL)
+        if (!data)
         {
+            // Means we've reached the end of the array
             break;
         }
+
+        // 2) Extract all required fields
         FuriString *icon = get_json_value_furi("icon", data);
         FuriString *x = get_json_value_furi("x", data);
         FuriString *y = get_json_value_furi("y", data);
         FuriString *amount = get_json_value_furi("amount", data);
         FuriString *horizontal = get_json_value_furi("horizontal", data);
+
+        // 3) Check for any NULL pointers
         if (!icon || !x || !y || !amount || !horizontal)
         {
-            FURI_LOG_E("Failed Data: ", furi_string_get_cstr(data));
-            furi_string_free(data);
-            furi_string_free(icon);
-            furi_string_free(x);
-            furi_string_free(y);
-            furi_string_free(amount);
-            furi_string_free(horizontal);
+            FURI_LOG_E("Game", "Failed Data: %s", furi_string_get_cstr(data));
+
+            if (data)
+                furi_string_free(data);
+            if (icon)
+                furi_string_free(icon);
+            if (x)
+                furi_string_free(x);
+            if (y)
+                furi_string_free(y);
+            if (amount)
+                furi_string_free(amount);
+            if (horizontal)
+                furi_string_free(horizontal);
+
             level_clear(level);
             return false;
         }
+
+        // 4) Get the IconContext from a FuriString
         IconContext *icon_context = get_icon_context_furi(icon);
-        if (icon_context == NULL)
+        if (!icon_context)
         {
-            FURI_LOG_E("Failed Icon: ", furi_string_get_cstr(icon));
+            FURI_LOG_E("Game", "Failed Icon: %s", furi_string_get_cstr(icon));
+
             furi_string_free(data);
             furi_string_free(icon);
             furi_string_free(x);
             furi_string_free(y);
             furi_string_free(amount);
             furi_string_free(horizontal);
+
             level_clear(level);
-            free(icon_context);
             return false;
         }
-        // if amount is less than 2, we spawn a single icon
-        if (atoi(furi_string_get_cstr(amount)) < 2)
+
+        // 5) Decide how many icons to spawn
+        int count = atoi(furi_string_get_cstr(amount));
+        if (count < 2)
         {
+            // Just one icon
             spawn_icon(
                 level,
                 icon_context->icon,
@@ -120,24 +176,23 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
                 atoi(furi_string_get_cstr(y)),
                 icon_context->width,
                 icon_context->height);
-            furi_string_free(data);
-            furi_string_free(icon);
-            furi_string_free(x);
-            furi_string_free(y);
-            furi_string_free(amount);
-            furi_string_free(horizontal);
-            free(icon_context);
-            continue;
         }
-        spawn_icon_line(
-            level,
-            icon_context->icon,
-            atoi(furi_string_get_cstr(x)),
-            atoi(furi_string_get_cstr(y)),
-            icon_context->width,
-            icon_context->height,
-            atoi(furi_string_get_cstr(amount)),
-            furi_string_cmp(horizontal, "true") == 0);
+        else
+        {
+            // Spawn multiple in a line
+            bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
+            spawn_icon_line(
+                level,
+                icon_context->icon,
+                atoi(furi_string_get_cstr(x)),
+                atoi(furi_string_get_cstr(y)),
+                icon_context->width,
+                icon_context->height,
+                count,
+                is_horizontal);
+        }
+
+        // 6) Clean up after every iteration
         furi_string_free(data);
         furi_string_free(icon);
         furi_string_free(x);
@@ -329,14 +384,21 @@ void draw_town_world(Level *level)
     free(tree_icon);
 }
 
-FuriString *fetch_world(char *name, void *app)
+FuriString *fetch_world(const char *name)
 {
-    if (!app || !name)
+    if (!name)
     {
-        FURI_LOG_E("Game", "App or name is NULL");
+        FURI_LOG_E("Game", "World name is NULL");
         return NULL;
     }
-    if (!flipper_http_init(flipper_http_rx_callback, app))
+    if (!app_instance)
+    {
+        // as long as the game is running, app_instance should be non-NULL
+        FURI_LOG_E("Game", "App instance is NULL");
+        return NULL;
+    }
+
+    if (!flipper_http_init(flipper_http_rx_callback, app_instance))
     {
         FURI_LOG_E("Game", "Failed to initialize HTTP");
         return NULL;
@@ -348,8 +410,10 @@ FuriString *fetch_world(char *name, void *app)
     if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}"))
     {
         FURI_LOG_E("Game", "Failed to send HTTP request");
+        flipper_http_deinit();
         return NULL;
     }
+    fhttp.state = RECEIVING;
     furi_timer_start(fhttp.get_timeout_timer, TIMEOUT_DURATION_TICKS);
     while (fhttp.state == RECEIVING && furi_timer_is_running(fhttp.get_timeout_timer) > 0)
     {
@@ -360,9 +424,11 @@ FuriString *fetch_world(char *name, void *app)
     if (fhttp.state != IDLE)
     {
         FURI_LOG_E("Game", "Failed to receive world data");
+        flipper_http_deinit();
         return NULL;
     }
-    FuriString *returned_data = flipper_http_load_from_file(fhttp.file_path);
+    flipper_http_deinit();
+    FuriString *returned_data = load_furi_world(name);
     if (!returned_data)
     {
         FURI_LOG_E("Game", "Failed to load world data from file");
