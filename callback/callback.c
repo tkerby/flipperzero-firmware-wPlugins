@@ -645,6 +645,7 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
             FURI_LOG_I(TAG, "World already exists");
             fhttp.state = IDLE;
             model->data_state = DataStateParsed;
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
             flipper_http_deinit();
             // free game thread
             if (game_thread_running)
@@ -716,170 +717,382 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
     }
     return "Unknown error";
 }
-static void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
+void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
 {
     flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 2, callback_to_submenu, FlipWorldViewLoader);
 }
-static bool flip_social_register_fetch(DataLoaderModel *model)
+// combine register, login, and world list fetch into one function to switch to the loader view
+static bool flip_world_fetch_game(DataLoaderModel *model)
 {
-    UNUSED(model);
-    char username[64];
-    char password[64];
-    if (!load_char("Flip-Social-Username", username, sizeof(username)))
+    if (model->request_index == 0)
     {
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
-        easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
-        return false;
-    }
-    if (!load_char("Flip-Social-Password", password, sizeof(password)))
-    {
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
-        easy_flipper_dialog("Error", "Failed to load saved password. Go to settings to update.");
-        return false;
-    }
-    char payload[172];
-    snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
-    return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
-}
-static char *flip_social_register_parse(DataLoaderModel *model)
-{
-    UNUSED(model);
-    if (fhttp.last_response != NULL && (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User created") != NULL))
-    {
-        flipper_http_deinit();
-        save_char("is_logged_in", "true");
+        // login
         char username[64];
         char password[64];
-        // load the username and password, then save them
         if (!load_char("Flip-Social-Username", username, sizeof(username)))
         {
             FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
-            return "Failed to load Flip-Social-Username";
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            easy_flipper_dialog("Error", "Failed to load saved username\nGo to user settings to update.");
+            flipper_http_deinit();
+            return false;
         }
         if (!load_char("Flip-Social-Password", password, sizeof(password)))
         {
             FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
-            return "Failed to load Flip-Social-Password";
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            easy_flipper_dialog("Error", "Failed to load saved password\nGo to settings to update.");
+            flipper_http_deinit();
+            return false;
         }
-        // load wifi ssid,pass then save
-        char ssid[64];
-        char pass[64];
-        if (!load_char("WiFi-SSID", ssid, sizeof(ssid)))
+        char payload[256];
+        snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+        return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
+    }
+    else if (model->request_index == 1)
+    {
+        // check if login was successful
+        char is_logged_in[8];
+        if (!load_char("is_logged_in", is_logged_in, sizeof(is_logged_in)))
         {
-            FURI_LOG_E(TAG, "Failed to load WiFi-SSID");
-            return "Failed to load WiFi-SSID";
+            FURI_LOG_E(TAG, "Failed to load is_logged_in");
+            easy_flipper_dialog("Error", "Failed to load is_logged_in\nGo to user settings to update.");
+            flipper_http_deinit();
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            return false;
         }
-        if (!load_char("WiFi-Password", pass, sizeof(pass)))
+        if (strcmp(is_logged_in, "false") == 0 && strcmp(model->title, "Registering...") == 0)
         {
-            FURI_LOG_E(TAG, "Failed to load WiFi-Password");
-            return "Failed to load WiFi-Password";
+            // register
+            char username[64];
+            char password[64];
+            if (!load_char("Flip-Social-Username", username, sizeof(username)))
+            {
+                FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+                easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
+                flipper_http_deinit();
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return false;
+            }
+            if (!load_char("Flip-Social-Password", password, sizeof(password)))
+            {
+                FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+                easy_flipper_dialog("Error", "Failed to load saved password. Go to settings to update.");
+                flipper_http_deinit();
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return false;
+            }
+            char payload[172];
+            snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+            model->title = "Registering...";
+            return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
         }
-        save_settings(ssid, pass, username, password);
-        flip_world_switch_to_view_get_world_list(app_instance);
-        return "Account created!";
-    }
-    else if (strstr(fhttp.last_response, "Username or password not provided") != NULL)
-    {
-        flipper_http_deinit();
-        return "Please enter your credentials.\nPress BACK to return.";
-    }
-    else if (strstr(fhttp.last_response, "User already exists") != NULL || strstr(fhttp.last_response, "Multiple users found") != NULL)
-    {
-        flipper_http_deinit();
-        return "Registration failed...\nUsername already exists.\nPress BACK to return.";
-    }
-    else
-    {
-        flipper_http_deinit();
-        return "Registration failed...\nUpdate your credentials.\nPress BACK to return.";
-    }
-}
-static void flip_social_register_switch_to_view(FlipWorldApp *app)
-{
-    flip_world_generic_switch_to_view(app, "Registering...", flip_social_register_fetch, flip_social_register_parse, 1, callback_to_submenu, FlipWorldViewLoader);
-}
-static bool flip_social_login_fetch(DataLoaderModel *model)
-{
-    UNUSED(model);
-    char username[64];
-    char password[64];
-    if (!load_char("Flip-Social-Username", username, sizeof(username)))
-    {
-        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        easy_flipper_dialog("Error", "Failed to load saved username\nGo to user settings to update.");
-        flipper_http_deinit();
-        return false;
-    }
-    if (!load_char("Flip-Social-Password", password, sizeof(password)))
-    {
-        FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        easy_flipper_dialog("Error", "Failed to load saved password\nGo to settings to update.");
-        flipper_http_deinit();
-        return false;
-    }
-    char payload[256];
-    snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
-    return flipper_http_post_request_with_headers("https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
-}
+        else
+        {
+            // Create the directory for saving worlds
+            char directory_path[128];
+            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
 
-static char *flip_social_login_parse(DataLoaderModel *model)
-{
-    UNUSED(model);
+            // Create the directory
+            Storage *storage = furi_record_open(RECORD_STORAGE);
+            storage_common_mkdir(storage, directory_path);
 
-    if (!fhttp.last_response)
+            // free storage
+            furi_record_close(RECORD_STORAGE);
+
+            snprintf(
+                fhttp.file_path,
+                sizeof(fhttp.file_path),
+                STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+            model->title = "Fetching World List..";
+            fhttp.save_received_data = true;
+            return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
+        }
+    }
+    else if (model->request_index == 2)
     {
+        // Create the directory for saving worlds
+        char directory_path[128];
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+
+        // Create the directory
+        Storage *storage = furi_record_open(RECORD_STORAGE);
+        storage_common_mkdir(storage, directory_path);
+
+        // free storage
+        furi_record_close(RECORD_STORAGE);
+
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+        model->title = "Fetching World List..";
+        fhttp.save_received_data = true;
+        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
+    }
+    else if (model->request_index == 3)
+    {
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+
+        FuriString *world_list = flipper_http_load_from_file(fhttp.file_path);
+        if (!world_list)
+        {
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            FURI_LOG_E(TAG, "Failed to load world list");
+            easy_flipper_dialog("Error", "Failed to load world list. Go to game settings to download packs.");
+            furi_string_free(world_list);
+            return false;
+        }
+        FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
+        if (!first_world)
+        {
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            FURI_LOG_E(TAG, "Failed to get first world");
+            easy_flipper_dialog("Error", "Failed to get first world. Go to game settings to download packs.");
+            furi_string_free(first_world);
+            return false;
+        }
+        if (world_exists(furi_string_get_cstr(first_world)))
+        {
+            furi_string_free(world_list);
+            furi_string_free(first_world);
+            FURI_LOG_I(TAG, "World already exists");
+            fhttp.state = IDLE;
+            model->data_state = DataStateParsed;
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+            flipper_http_deinit();
+            // free game thread
+            if (game_thread_running)
+            {
+                game_thread_running = false;
+                furi_thread_flags_set(thread_id, WorkerEvtStop);
+                furi_thread_free(thread_id);
+            }
+            // free_all_views(app_instance, true, true);
+            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!thread)
+            {
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                FURI_LOG_E(TAG, "Failed to allocate game thread");
+                easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+                furi_thread_free(thread);
+                return false;
+            }
+            furi_thread_start(thread);
+            thread_id = furi_thread_get_id(thread);
+            game_thread_running = true;
+            return true;
+        }
+        snprintf(
+            fhttp.file_path,
+            sizeof(fhttp.file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(first_world));
+
+        fhttp.save_received_data = true;
+        char url[128];
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
+        furi_string_free(world_list);
+        furi_string_free(first_world);
+        return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
+    }
+    FURI_LOG_E(TAG, "Unknown request index");
+    return false;
+}
+static char *flip_world_parse_game(DataLoaderModel *model)
+{
+    if (model->request_index == 0)
+    {
+        if (!fhttp.last_response)
+        {
+            save_char("is_logged_in", "false");
+            flipper_http_deinit();
+            // Go back to the main menu
+            easy_flipper_dialog("Error", "Response is empty. Press BACK to return.");
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+            return "Response is empty...";
+        }
+
+        // Check for successful conditions
+        if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
+        {
+            save_char("is_logged_in", "true");
+            model->title = "Login successful!";
+            model->title = "Fetching World List..";
+            return "Login successful!";
+        }
+
+        // Check if user not found
+        if (strstr(fhttp.last_response, "User not found") != NULL)
+        {
+            save_char("is_logged_in", "false");
+            model->title = "Registering...";
+            return "Account not found...\nRegistering now.."; // if they see this an issue happened switching to register
+        }
+
+        // If not success, not found, check length conditions
+        size_t resp_len = strlen(fhttp.last_response);
+        if (resp_len == 0 || resp_len > 127)
+        {
+            // Empty or too long means failed login
+            flipper_http_deinit();
+            save_char("is_logged_in", "false");
+            // Go back to the main menu
+            easy_flipper_dialog("Error", "Failed to login. Press BACK to return.");
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+            return "Failed to login...";
+        }
+
+        // Handle any other unknown response as a failure
+        flipper_http_deinit();
         save_char("is_logged_in", "false");
-        flipper_http_deinit();
         // Go back to the main menu
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
-        return "Response is empty...";
-    }
-
-    // Check for successful conditions
-    if (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User found") != NULL)
-    {
-        save_char("is_logged_in", "true");
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
-        flip_world_switch_to_view_get_world_list(app_instance);
-        return "Login successful!";
-    }
-
-    // Check if user not found
-    if (strstr(fhttp.last_response, "User not found") != NULL)
-    {
-        save_char("is_logged_in", "false");
-        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
-        flip_social_register_switch_to_view(app_instance);
-        return "Account not found and failed\nto register...\n\nRestart your Flipper Zero."; // if they see this an issue happened switching to register
-    }
-
-    // If not success, not found, check length conditions
-    size_t resp_len = strlen(fhttp.last_response);
-    if (resp_len == 0 || resp_len > 127)
-    {
-        // Empty or too long means failed login
-        flipper_http_deinit();
-        save_char("is_logged_in", "false");
-        // Go back to the main menu
+        easy_flipper_dialog("Error", "Failed to login. Press BACK to return.");
         view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
         return "Failed to login...";
     }
-
-    // Handle any other unknown response as a failure
-    flipper_http_deinit();
-    save_char("is_logged_in", "false");
-    // Go back to the main menu
-    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
-    return "Failed to login...";
+    else if (model->request_index == 1)
+    {
+        if (strcmp(model->title, "Registering...") == 0)
+        {
+            // check registration response
+            if (fhttp.last_response != NULL && (strstr(fhttp.last_response, "[SUCCESS]") != NULL || strstr(fhttp.last_response, "User created") != NULL))
+            {
+                save_char("is_logged_in", "true");
+                char username[64];
+                char password[64];
+                // load the username and password, then save them
+                if (!load_char("Flip-Social-Username", username, sizeof(username)))
+                {
+                    FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+                    easy_flipper_dialog("Error", "Failed to load Flip-Social-Username");
+                    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+                    flipper_http_deinit();
+                    return "Failed to load Flip-Social-Username";
+                }
+                if (!load_char("Flip-Social-Password", password, sizeof(password)))
+                {
+                    FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
+                    easy_flipper_dialog("Error", "Failed to load Flip-Social-Password");
+                    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+                    flipper_http_deinit();
+                    return "Failed to load Flip-Social-Password";
+                }
+                // load wifi ssid,pass then save
+                char ssid[64];
+                char pass[64];
+                if (!load_char("WiFi-SSID", ssid, sizeof(ssid)))
+                {
+                    FURI_LOG_E(TAG, "Failed to load WiFi-SSID");
+                    easy_flipper_dialog("Error", "Failed to load WiFi-SSID");
+                    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+                    flipper_http_deinit();
+                    return "Failed to load WiFi-SSID";
+                }
+                if (!load_char("WiFi-Password", pass, sizeof(pass)))
+                {
+                    FURI_LOG_E(TAG, "Failed to load WiFi-Password");
+                    easy_flipper_dialog("Error", "Failed to load WiFi-Password");
+                    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+                    flipper_http_deinit();
+                    return "Failed to load WiFi-Password";
+                }
+                save_settings(ssid, pass, username, password);
+                model->title = "Fetching World List..";
+                return "Account created!";
+            }
+            else if (strstr(fhttp.last_response, "Username or password not provided") != NULL)
+            {
+                flipper_http_deinit();
+                easy_flipper_dialog("Error", "Please enter your credentials.\nPress BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "Please enter your credentials.";
+            }
+            else if (strstr(fhttp.last_response, "User already exists") != NULL || strstr(fhttp.last_response, "Multiple users found") != NULL)
+            {
+                flipper_http_deinit();
+                easy_flipper_dialog("Error", "Registration failed...\nUsername already exists.\nPress BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "Username already exists.";
+            }
+            else
+            {
+                flipper_http_deinit();
+                easy_flipper_dialog("Error", "Registration failed...\nUpdate your credentials.\nPress BACK to return.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "Registration failed...";
+            }
+        }
+        else
+        {
+            fhttp.state = IDLE;
+            model->data_state = DataStateParsed;
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+            flipper_http_deinit();
+            // free game thread
+            if (game_thread_running)
+            {
+                game_thread_running = false;
+                furi_thread_flags_set(thread_id, WorkerEvtStop);
+                furi_thread_free(thread_id);
+            }
+            // free_all_views(app_instance, true, true);
+            FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+            if (!thread)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate game thread");
+                furi_thread_free(thread);
+                easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                return "Failed to allocate game thread";
+            }
+            furi_thread_start(thread);
+            thread_id = furi_thread_get_id(thread);
+            game_thread_running = true;
+            return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
+        }
+    }
+    else if (model->request_index == 2)
+    {
+        return "Welcome to FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
+    }
+    else if (model->request_index == 3)
+    {
+        fhttp.state = IDLE;
+        model->data_state = DataStateParsed;
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
+        flipper_http_deinit();
+        // free game thread
+        if (game_thread_running)
+        {
+            game_thread_running = false;
+            furi_thread_flags_set(thread_id, WorkerEvtStop);
+            furi_thread_free(thread_id);
+        }
+        // free_all_views(app_instance, true, true);
+        FuriThread *thread = furi_thread_alloc_ex("game", 1024, game_app, app_instance);
+        if (!thread)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate game thread");
+            furi_thread_free(thread);
+            easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            return "Failed to allocate game thread";
+        }
+        furi_thread_start(thread);
+        thread_id = furi_thread_get_id(thread);
+        game_thread_running = true;
+        return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
+    }
+    easy_flipper_dialog("Error", "Unknown error. Press BACK to return.");
+    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+    return "Unknown error";
 }
-
-static void flip_social_login_switch_to_view(FlipWorldApp *app)
+static void flip_world_switch_to_view_get_game(FlipWorldApp *app)
 {
-    flip_world_generic_switch_to_view(app, "Logging in...", flip_social_login_fetch, flip_social_login_parse, 1, callback_to_submenu, FlipWorldViewLoader);
+    flip_world_generic_switch_to_view(app, "Starting Game..", flip_world_fetch_game, flip_world_parse_game, 5, callback_to_submenu, FlipWorldViewLoader);
 }
 
 void callback_submenu_choices(void *context, uint32_t index)
@@ -893,6 +1106,7 @@ void callback_submenu_choices(void *context, uint32_t index)
     switch (index)
     {
     case FlipWorldSubmenuIndexRun:
+        free_all_views(app, true, true);
         if (!flipper_http_init(flipper_http_rx_callback, app))
         {
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
@@ -912,7 +1126,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         else
         {
-            flip_social_login_switch_to_view(app_instance);
+            flip_world_switch_to_view_get_game(app_instance);
         }
         break;
     case FlipWorldSubmenuIndexAbout:

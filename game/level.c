@@ -17,6 +17,8 @@ static void level_start(Level *level, GameManager *manager, void *context)
             if (!level_context->app)
             {
                 FURI_LOG_E("Game", "Failed to allocate FlipWorldApp");
+                free(level_context->app);
+                level_context->app = NULL;
                 return;
             }
         }
@@ -27,6 +29,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
             draw_town_world(level);
             free(level_context->app);
             level_context->app = NULL;
+            furi_string_free(world_data);
             return;
         }
         if (!draw_json_world(level, furi_string_get_cstr(world_data)))
@@ -45,6 +48,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     {
         FURI_LOG_E("Game", "Failed to load world data");
         draw_town_world(level);
+        furi_string_free(world_data);
         return;
     }
     // draw the world
