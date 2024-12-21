@@ -335,12 +335,10 @@ static void timer_callback(void* context) {
             }
         }
 
-        // Change direction and ascend
-        if(enemyDirection == 1 && maxEnemyX >= DISPLAY_WIDTH) {
-            app->gameContext.enemyDirection = -1;
-            movementY = true;
-        } else if(enemyDirection == -1 && minEnemyX <= 0) {
-            app->gameContext.enemyDirection = 1;
+        // Change direction and descend
+        if((enemyDirection > 0 && maxEnemyX >= DISPLAY_WIDTH) ||
+           (enemyDirection < 0 && minEnemyX <= 0)) {
+            app->gameContext.enemyDirection = app->gameContext.enemyDirection * -1;
             movementY = true;
         }
         // Or move in the direction
