@@ -16,6 +16,7 @@ The controls in the game are straightforward. Press and hold left to go left, pr
 ## Roadmap
 **v0.2**
 - Stability patch
+- Video Game Module support
 
 **v0.3**
 - ???
