@@ -76,7 +76,8 @@ FuriString* flipper_http_load_from_file(char* file_path) {
     if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
-        return NULL; // Return false if the file does not exist
+        FURI_LOG_E(HTTP_TAG, "Failed to open file for reading: %s", file_path);
+        return NULL;
     }
 
     // Allocate a FuriString to hold the received data
