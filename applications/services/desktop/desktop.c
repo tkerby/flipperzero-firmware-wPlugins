@@ -357,9 +357,11 @@ static void desktop_stop_auto_lock_timer(Desktop* desktop) {
 
 static void desktop_auto_lock_arm(Desktop* desktop) {
     if(desktop->settings.auto_lock_delay_ms) {
-        desktop->input_events_subscription = furi_pubsub_subscribe(
-            desktop->input_events_pubsub, desktop_input_event_callback, desktop);
-        desktop_start_auto_lock_timer(desktop);
+        if(!desktop->input_events_subscription) {
+            desktop->input_events_subscription = furi_pubsub_subscribe(
+                desktop->input_events_pubsub, desktop_input_event_callback, desktop);
+            desktop_start_auto_lock_timer(desktop);
+        }
     }
 }
 
