@@ -205,6 +205,19 @@ static void game_start(GameManager *game_manager, void *ctx)
                                       10,
                                       10,
                                       100));
+
+    // add another enemy
+    level_add_entity(levels[0], enemy(game_manager,
+                                      "player",
+                                      1,
+                                      (Vector){10, 10},
+                                      (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 32},
+                                      (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
+                                      1,
+                                      32,
+                                      10,
+                                      10,
+                                      100));
 }
 
 /*

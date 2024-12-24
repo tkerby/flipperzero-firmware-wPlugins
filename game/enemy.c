@@ -54,21 +54,15 @@ static EnemyContext *enemy_generic_alloc(
 // Free function
 static void enemy_generic_free(void *context)
 {
-    if (context != NULL)
+    if (!context)
     {
-        EnemyContext *enemy_context = (EnemyContext *)context;
-
-        // Free sprites if they were dynamically loaded
-        if (enemy_context->sprite_right)
-        {
-            sprite_free(enemy_context->sprite_right);
-        }
-        if (enemy_context->sprite_left)
-        {
-            sprite_free(enemy_context->sprite_left);
-        }
-
-        free(context);
+        FURI_LOG_E("Game", "Enemy generic free: Invalid context");
+        return;
+    }
+    if (enemy_context_generic)
+    {
+        free(enemy_context_generic);
+        enemy_context_generic = NULL;
     }
 }
 
