@@ -179,6 +179,9 @@ static void game_start(GameManager *game_manager, void *ctx)
         level_count++;
     }
     furi_string_free(world_list);
+
+    // add one enemy
+    level_add_entity(levels[0], enemy(game_manager, "player", 0, WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2, 10, 10, true));
 }
 
 /*

@@ -1,28 +1,33 @@
 // enemy.c
 #include <game/enemy.h>
 
+static EnemyContext *enemy_context_generic;
+
 // Allocation function
 static EnemyContext *enemy_generic_alloc(const char *id, int index, float x, float y, float width, float height)
 {
-    EnemyContext *context = malloc(sizeof(EnemyContext));
-    if (!context)
+    if (!enemy_context_generic)
+    {
+        enemy_context_generic = malloc(sizeof(EnemyContext));
+    }
+    if (!enemy_context_generic)
     {
         FURI_LOG_E("Game", "Failed to allocate EnemyContext");
         return NULL;
     }
-    snprintf(context->id, sizeof(context->id), "%s", id);
-    context->index = index;
-    context->x = x;
-    context->y = y;
-    context->width = width;
-    context->height = height;
+    snprintf(enemy_context_generic->id, sizeof(enemy_context_generic->id), "%s", id);
+    enemy_context_generic->index = index;
+    enemy_context_generic->x = x;
+    enemy_context_generic->y = y;
+    enemy_context_generic->width = width;
+    enemy_context_generic->height = height;
     // Initialize other fields as needed
-    context->trajectory = (Vector){0, 0}; // Default trajectory
-    context->sprite_right = NULL;         // Assign appropriate sprite
-    context->sprite_left = NULL;          // Assign appropriate sprite
-    context->is_looking_left = false;
-    context->radius = 3.0f; // Default collision radius
-    return context;
+    enemy_context_generic->trajectory = (Vector){0, 0}; // Default trajectory
+    enemy_context_generic->sprite_right = NULL;         // Assign appropriate sprite
+    enemy_context_generic->sprite_left = NULL;          // Assign appropriate sprite
+    enemy_context_generic->is_looking_left = false;
+    enemy_context_generic->radius = 3.0f; // Default collision radius
+    return enemy_context_generic;
 }
 
 // Free function
@@ -51,9 +56,26 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(manager);
     if (!self || !context)
-        return;
+    {
+        FURI_LOG_E("Game", "Enemy start: Invalid parameters");
+    }
+    if (!enemy_context_generic)
+    {
+        FURI_LOG_E("Game", "Enemy start: Enemy context not set");
+    }
 
     EnemyContext *enemy_context = (EnemyContext *)context;
+    snprintf(enemy_context->id, sizeof(enemy_context->id), "%s", enemy_context_generic->id);
+    enemy_context->index = enemy_context_generic->index;
+    enemy_context->x = enemy_context_generic->x;
+    enemy_context->y = enemy_context_generic->y;
+    enemy_context->width = enemy_context_generic->width;
+    enemy_context->height = enemy_context_generic->height;
+    enemy_context->trajectory = enemy_context_generic->trajectory;
+    enemy_context->sprite_right = enemy_context_generic->sprite_right;
+    enemy_context->sprite_left = enemy_context_generic->sprite_left;
+    enemy_context->is_looking_left = enemy_context_generic->is_looking_left;
+    enemy_context->radius = enemy_context_generic->radius;
 
     // Set enemy's initial position based on context
     entity_pos_set(self, (Vector){enemy_context->x, enemy_context->y});
@@ -74,20 +96,13 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
 
-    // Draw the enemy sprite based on their direction
-    if (enemy_context->is_looking_left && enemy_context->sprite_left)
-    {
-        canvas_draw_sprite(canvas, enemy_context->sprite_left, pos.x, pos.y);
-    }
-    else if (enemy_context->sprite_right)
-    {
-        canvas_draw_sprite(canvas, enemy_context->sprite_right, pos.x, pos.y);
-    }
-    else
-    {
-        // Fallback if no sprite is set
-        canvas_draw_disc(canvas, pos.x, pos.y, enemy_context->radius);
-    }
+    // Draw enemy sprite relative to camera, centered on the enemy's position
+    canvas_draw_sprite(
+        canvas,
+        enemy_context->is_looking_left ? enemy_context->sprite_left : enemy_context->sprite_right,
+        pos.x - camera_x - 5, // Center the sprite horizontally
+        pos.y - camera_y - 5  // Center the sprite vertically
+    );
 }
 
 // Enemy collision function
@@ -165,9 +180,10 @@ static const EntityDescription _generic_enemy = {
 const EntityDescription *enemy(GameManager *manager, const char *id, int index, float x, float y, float width, float height, bool moving_left)
 {
     // Allocate a new EnemyContext with provided parameters
-    EnemyContext *context = enemy_generic_alloc(id, index, x, y, width, height);
-    if (!context)
+    enemy_context_generic = enemy_generic_alloc(id, index, x, y, width, height);
+    if (!enemy_context_generic)
     {
+        FURI_LOG_E("Game", "Failed to allocate EnemyContext");
         return NULL;
     }
     char right_edited[64];
@@ -175,14 +191,14 @@ const EntityDescription *enemy(GameManager *manager, const char *id, int index, 
     snprintf(right_edited, sizeof(right_edited), "%s_right.fxbm", id);
     snprintf(left_edited, sizeof(left_edited), "%s_left.fxbm", id);
 
-    context->sprite_right = game_manager_sprite_load(manager, right_edited);
-    context->sprite_left = game_manager_sprite_load(manager, left_edited);
+    enemy_context_generic->sprite_right = game_manager_sprite_load(manager, right_edited);
+    enemy_context_generic->sprite_left = game_manager_sprite_load(manager, left_edited);
 
     // Set initial direction
-    context->is_looking_left = moving_left; // Default direction
+    enemy_context_generic->is_looking_left = moving_left; // Default direction
 
     // set trajectory
-    context->trajectory = !moving_left ? (Vector){1.0f, 0.0f} : (Vector){-1.0f, 0.0f}; // Default trajectory
+    enemy_context_generic->trajectory = !moving_left ? (Vector){1.0f, 0.0f} : (Vector){-1.0f, 0.0f}; // Default trajectory
 
     return &_generic_enemy;
 }
