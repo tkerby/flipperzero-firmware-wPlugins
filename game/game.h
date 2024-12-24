@@ -42,7 +42,11 @@ typedef struct
 typedef struct
 {
     float fps;
-    PlayerContext *player;
+    PlayerContext *player_context;
+    Level *levels[10];
+    Entity *enemies[2];
+    Entity *players[1];
+    int level_count;
 } GameContext;
 
 extern const EntityDescription player_desc;

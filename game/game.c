@@ -1,39 +1,39 @@
 #include "game.h"
 
 /****** Entities: Player ******/
-static Level *levels[10];
-static int level_count = 0;
 static bool has_pressed_ok = false;
 
 static Level *get_next_level(GameManager *manager)
 {
     has_pressed_ok = false;
     Level *current_level = game_manager_current_level_get(manager);
-    for (int i = 0; i < level_count; i++)
+    GameContext *game_context = game_manager_game_context_get(manager);
+    for (int i = 0; i < game_context->level_count; i++)
     {
-        if (levels[i] == current_level)
+        if (game_context->levels[i] == current_level)
         {
             // check if i+1 is out of bounds, if so, return the first level
-            return levels[(i + 1) % level_count] ? levels[(i + 1) % level_count] : levels[0];
+            return game_context->levels[(i + 1) % game_context->level_count] ? game_context->levels[(i + 1) % game_context->level_count] : game_context->levels[0];
         }
     }
-    return levels[0] ? levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
+    return game_context->levels[0] ? game_context->levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
 }
 
 void player_spawn(Level *level, GameManager *manager)
 {
-    Entity *player = level_add_entity(level, &player_desc);
+    GameContext *game_context = game_manager_game_context_get(manager);
+    game_context->players[0] = level_add_entity(level, &player_desc);
 
     // Set player position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
-    entity_pos_set(player, (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
+    entity_pos_set(game_context->players[0], (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 10x10
-    entity_collider_add_rect(player, 10 + PLAYER_COLLISION_HORIZONTAL, 10 + PLAYER_COLLISION_VERTICAL);
+    entity_collider_add_rect(game_context->players[0], 10 + PLAYER_COLLISION_HORIZONTAL, 10 + PLAYER_COLLISION_VERTICAL);
 
     // Get player context
-    PlayerContext *player_context = entity_context_get(player);
+    PlayerContext *player_context = entity_context_get(game_context->players[0]);
 
     // Load player sprite
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
@@ -44,8 +44,7 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->level = 1;
     player_context->xp = 0;
 
-    GameContext *game_context = game_manager_game_context_get(manager);
-    game_context->player = player_context;
+    game_context->player_context = player_context;
 }
 
 // Modify player_update to track direction
@@ -167,7 +166,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->fps = game_fps_choices_2[game_fps_index];
-    game_context->player = NULL;
+    game_context->player_context = NULL;
 
     // open the world list from storage, then create a level for each world
     char file_path[128];
@@ -176,8 +175,8 @@ static void game_start(GameManager *game_manager, void *ctx)
     if (!world_list)
     {
         FURI_LOG_E("Game", "Failed to load world list");
-        levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
-        level_count = 1;
+        game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
+        game_context->level_count = 1;
         return;
     }
     for (int i = 0; i < 10; i++)
@@ -187,37 +186,37 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             break;
         }
-        levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
+        game_context->levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
         furi_string_free(world_name);
-        level_count++;
+        game_context->level_count++;
     }
     furi_string_free(world_list);
 
     // add one enemy
-    level_add_entity(levels[0], enemy(game_manager,
-                                      "player",
-                                      0,
-                                      (Vector){10, 10},
-                                      (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 16},
-                                      (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
-                                      1,
-                                      32,
-                                      10,
-                                      10,
-                                      100));
+    game_context->enemies[0] = level_add_entity(game_context->levels[0], enemy(game_manager,
+                                                                               "player",
+                                                                               0,
+                                                                               (Vector){10, 10},
+                                                                               (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 16},
+                                                                               (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
+                                                                               1,
+                                                                               32,
+                                                                               10,
+                                                                               10,
+                                                                               100));
 
     // add another enemy
-    level_add_entity(levels[0], enemy(game_manager,
-                                      "player",
-                                      1,
-                                      (Vector){10, 10},
-                                      (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 32},
-                                      (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
-                                      1,
-                                      32,
-                                      10,
-                                      10,
-                                      100));
+    game_context->enemies[1] = level_add_entity(game_context->levels[0], enemy(game_manager,
+                                                                               "player",
+                                                                               1,
+                                                                               (Vector){10, 10},
+                                                                               (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 32},
+                                                                               (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
+                                                                               1,
+                                                                               32,
+                                                                               10,
+                                                                               10,
+                                                                               100));
 }
 
 /*
@@ -227,16 +226,16 @@ static void game_start(GameManager *game_manager, void *ctx)
 */
 static void game_stop(void *ctx)
 {
-    UNUSED(ctx);
+    GameContext *game_context = ctx;
     // If you want to do other final logic (like saving scores), do it here.
     // But do NOT free levels[] if the engine manages them.
 
     // Just clear out your pointer array if you like (not strictly necessary)
-    for (int i = 0; i < level_count; i++)
+    for (int i = 0; i < game_context->level_count; i++)
     {
-        levels[i] = NULL;
+        game_context->levels[i] = NULL;
     }
-    level_count = 0;
+    game_context->level_count = 0;
 }
 
 /*

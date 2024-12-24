@@ -187,14 +187,14 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             GameContext *game_context = game_manager_game_context_get(manager);
             if (game_context)
             {
-                if (game_context->player->health <= 0)
+                if (game_context->player_context->health <= 0)
                 {
                     FURI_LOG_I("Game", "Player is dead");
-                    game_context->player->state = PLAYER_DEAD;
+                    game_context->player_context->state = PLAYER_DEAD;
                 }
                 else
                 {
-                    game_context->player->health -= enemy_context->strength;
+                    game_context->player_context->health -= enemy_context->strength;
                     FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
                 }
             }
