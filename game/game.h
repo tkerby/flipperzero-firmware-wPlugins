@@ -10,7 +10,12 @@
 
 typedef struct
 {
-    uint32_t score;
+    uint32_t xp;
+    uint32_t level;
+    uint32_t health;
+    //
+    uint32_t strength; // for later uppdate
+    uint32_t defense;  // for later uppdate
 } GameContext;
 
 typedef struct
@@ -26,3 +31,5 @@ typedef struct
 
 extern const EntityDescription player_desc;
 void player_spawn(Level *level, GameManager *manager);
+
+// Get game context: GameContext* game_context = game_manager_game_context_get(manager);
