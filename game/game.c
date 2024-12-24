@@ -35,6 +35,10 @@ void player_spawn(Level *level, GameManager *manager)
     // Get player context
     PlayerContext *player_context = entity_context_get(player);
 
+    // add player context to game context
+    GameContext *game_context = game_manager_game_context_get(manager);
+    game_context->player = player_context;
+
     // Load player sprite
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
     player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
@@ -154,8 +158,8 @@ static void game_start(GameManager *game_manager, void *ctx)
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
-    game_context->level = 1; // we'll load this from SD later
     game_context->fps = game_fps_choices_2[game_fps_index];
+    game_context->player = NULL;
 
     // open the world list from storage, then create a level for each world
     char file_path[128];

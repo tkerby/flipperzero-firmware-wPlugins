@@ -147,27 +147,68 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
 // Enemy collision function
 static void enemy_collision(Entity *self, Entity *other, GameManager *manager, void *context)
 {
-    UNUSED(self);
-    UNUSED(context);
+    // Ensure that 'self', 'other', and 'context' are valid
+    if (!self || !other || !context)
+    {
+        FURI_LOG_E("Game", "Enemy collision: Invalid parameters");
+        return;
+    }
 
     // Check if the enemy collided with the player
     if (entity_description_get(other) == &player_desc)
     {
-        // Increase score
+
+        // Retrieve enemy context
+        EnemyContext *enemy_context = (EnemyContext *)context;
+        if (!enemy_context)
+        {
+            FURI_LOG_E("Game", "Enemy collision: EnemyContext is NULL");
+            return;
+        }
+
+        // Decrease player health
         GameContext *game_context = game_manager_game_context_get(manager);
         if (game_context)
         {
-            game_context->xp++;
+            // damage done is the absolute value of the strength of the enemy subtracted by the strength of the player
+            double damage_done = fabs(enemy_context->strength - game_context->player->strength);
+            game_context->player->health -= damage_done;
+            FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", damage_done, enemy_context->id);
+        }
+        else
+        {
+            FURI_LOG_E("Game", "Enemy collision: Failed to get GameContext");
         }
 
-        // Move enemy to original position or handle respawn logic
-        EnemyContext *enemy_context = (EnemyContext *)context;
-        if (enemy_context)
+        // Get positions of the enemy and the player
+        Vector enemy_pos = entity_pos_get(self);
+        Vector player_pos = entity_pos_get(other);
+
+        // Determine if the enemy is facing the player
+        bool is_facing_player = false;
+
+        if (enemy_context->direction == ENEMY_LEFT && player_pos.x < enemy_pos.x)
         {
-            entity_pos_set(self, enemy_context->start_position);
-            enemy_context->state = ENEMY_IDLE;
-            enemy_context->elapsed_move_timer = 0.0f;
+            is_facing_player = true;
         }
+        else if (enemy_context->direction == ENEMY_RIGHT && player_pos.x > enemy_pos.x)
+        {
+            is_facing_player = true;
+        }
+
+        // If the enemy is facing the player, perform an attack (log message)
+        if (is_facing_player)
+        {
+            FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
+            // Future Implementation: Apply damage to the player here
+        }
+
+        // Reset enemy's position and state
+        entity_pos_set(self, enemy_context->start_position);
+        enemy_context->state = ENEMY_IDLE;
+        enemy_context->elapsed_move_timer = 0.0f;
+
+        FURI_LOG_D("Game", "Enemy '%s' reset to start position after collision", enemy_context->id);
     }
 }
 
