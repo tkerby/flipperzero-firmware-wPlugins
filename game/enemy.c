@@ -59,6 +59,8 @@ static void enemy_generic_free(void *context)
         FURI_LOG_E("Game", "Enemy generic free: Invalid context");
         return;
     }
+    free(context);
+    context = NULL;
     if (enemy_context_generic)
     {
         free(enemy_context_generic);
