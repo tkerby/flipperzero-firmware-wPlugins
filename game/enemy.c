@@ -166,20 +166,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             return;
         }
 
-        // Decrease player health
-        GameContext *game_context = game_manager_game_context_get(manager);
-        if (game_context)
-        {
-            // damage done is the absolute value of the strength of the enemy subtracted by the strength of the player
-            double damage_done = fabs(enemy_context->strength - game_context->player->strength);
-            game_context->player->health -= damage_done;
-            FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", damage_done, enemy_context->id);
-        }
-        else
-        {
-            FURI_LOG_E("Game", "Enemy collision: Failed to get GameContext");
-        }
-
         // Get positions of the enemy and the player
         Vector enemy_pos = entity_pos_get(self);
         Vector player_pos = entity_pos_get(other);
@@ -200,7 +186,26 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         if (is_facing_player)
         {
             FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
-            // Future Implementation: Apply damage to the player here
+
+            // Decrease player health
+            GameContext *game_context = game_manager_game_context_get(manager);
+            if (game_context)
+            {
+                if (game_context->player->health <= 0)
+                {
+                    FURI_LOG_I("Game", "Player is dead");
+                    game_context->player->state = PLAYER_DEAD;
+                }
+                else
+                {
+                    game_context->player->health -= enemy_context->strength;
+                    FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
+                }
+            }
+            else
+            {
+                FURI_LOG_E("Game", "Enemy collision: Failed to get GameContext");
+            }
         }
 
         // Reset enemy's position and state

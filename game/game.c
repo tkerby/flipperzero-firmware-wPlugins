@@ -35,14 +35,17 @@ void player_spawn(Level *level, GameManager *manager)
     // Get player context
     PlayerContext *player_context = entity_context_get(player);
 
-    // add player context to game context
-    GameContext *game_context = game_manager_game_context_get(manager);
-    game_context->player = player_context;
-
     // Load player sprite
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
     player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
-    player_context->is_looking_left = false; // player starts looking right
+    player_context->direction = PLAYER_RIGHT; // default direction
+    player_context->health = 100;
+    player_context->strength = 10;
+    player_context->level = 1;
+    player_context->xp = 0;
+
+    GameContext *game_context = game_manager_game_context_get(manager);
+    game_context->player = player_context;
 }
 
 // Modify player_update to track direction
@@ -75,13 +78,13 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         pos.x -= 2;
         player->dx = -1;
-        player->is_looking_left = true;
+        player->direction = PLAYER_LEFT;
     }
     if (input.held & GameKeyRight)
     {
         pos.x += 2;
         player->dx = 1;
-        player->is_looking_left = false;
+        player->direction = PLAYER_RIGHT;
     }
 
     // switch levels if holding OK
@@ -108,6 +111,11 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         player->dx = prev_dx;
         player->dy = prev_dy;
+        player->state = PLAYER_IDLE;
+    }
+    else
+    {
+        player->state = PLAYER_MOVING;
     }
 
     // Handle back button to stop the game
@@ -132,7 +140,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Draw player sprite relative to camera, centered on the player's position
     canvas_draw_sprite(
         canvas,
-        player->is_looking_left ? player->sprite_left : player->sprite_right,
+        player->direction == PLAYER_RIGHT ? player->sprite_right : player->sprite_left,
         pos.x - camera_x - 5, // Center the sprite horizontally
         pos.y - camera_y - 5  // Center the sprite vertically
     );

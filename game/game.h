@@ -9,21 +9,34 @@
 #define PLAYER_COLLISION_VERTICAL 5
 #define PLAYER_COLLISION_HORIZONTAL 5
 
+typedef enum
+{
+    PLAYER_IDLE,
+    PLAYER_MOVING,
+    PLAYER_ATTACKING,
+    PLAYER_DEAD,
+} PlayerState;
+
+typedef enum
+{
+    PLAYER_UP,
+    PLAYER_DOWN,
+    PLAYER_LEFT,
+    PLAYER_RIGHT
+} PlayerDirection;
+
 typedef struct
 {
-    Vector trajectory;    // Direction player would like to move.
-    float radius;         // collision radius
-    int8_t dx;            // x direction
-    int8_t dy;            // y direction
-    Sprite *sprite_right; // player sprite
-    Sprite *sprite_left;  // player sprite looking left
-    bool is_looking_left; // player is looking left
-                          //
-    uint32_t xp;
-    uint32_t level;
-    uint32_t health;
-    //
-    uint32_t strength; // for later uppdate
+    PlayerDirection direction; // direction the player is facing
+    PlayerState state;         // current state of the player
+    Sprite *sprite_right;      // player sprite looking right
+    Sprite *sprite_left;       // player sprite looking left
+    int8_t dx;                 // x direction
+    int8_t dy;                 // y direction
+    uint32_t xp;               // experience points
+    uint32_t level;            // player level
+    uint32_t health;           // player health
+    uint32_t strength;         // player strength
 } PlayerContext;
 
 typedef struct
