@@ -154,7 +154,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
-    game_context->score = 0;
+    game_context->level = 1; // we'll load this from SD later
 
     // open the world list from storage, then create a level for each world
     char file_path[128];

@@ -12,7 +12,7 @@
 #include <dialogs/dialogs.h>
 
 #define TAG "FlipWorld"
-#define VERSION_TAG "FlipWorld v0.1"
+#define VERSION_TAG "FlipWorld v0.2"
 
 // Define the submenu items for our FlipWorld application
 typedef enum
