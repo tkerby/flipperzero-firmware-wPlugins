@@ -1,10 +1,25 @@
 // enemy.c
 #include <game/enemy.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+#define EPSILON 0.1f
 
 static EnemyContext *enemy_context_generic;
 
 // Allocation function
-static EnemyContext *enemy_generic_alloc(const char *id, int index, float x, float y, float width, float height)
+static EnemyContext *enemy_generic_alloc(
+    const char *id,
+    int index,
+    Vector size,
+    Vector start_position,
+    Vector end_position,
+    float move_timer, // Wait duration before moving again
+    float speed,
+    float attack_timer,
+    float strength,
+    float health)
 {
     if (!enemy_context_generic)
     {
@@ -17,16 +32,22 @@ static EnemyContext *enemy_generic_alloc(const char *id, int index, float x, flo
     }
     snprintf(enemy_context_generic->id, sizeof(enemy_context_generic->id), "%s", id);
     enemy_context_generic->index = index;
-    enemy_context_generic->x = x;
-    enemy_context_generic->y = y;
-    enemy_context_generic->width = width;
-    enemy_context_generic->height = height;
+    enemy_context_generic->size = size;
+    enemy_context_generic->start_position = start_position;
+    enemy_context_generic->end_position = end_position;
+    enemy_context_generic->move_timer = move_timer;   // Set wait duration
+    enemy_context_generic->elapsed_move_timer = 0.0f; // Initialize elapsed timer
+    enemy_context_generic->speed = speed;
+    enemy_context_generic->attack_timer = attack_timer;
+    enemy_context_generic->strength = strength;
+    enemy_context_generic->health = health;
     // Initialize other fields as needed
-    enemy_context_generic->trajectory = (Vector){0, 0}; // Default trajectory
     enemy_context_generic->sprite_right = NULL;         // Assign appropriate sprite
     enemy_context_generic->sprite_left = NULL;          // Assign appropriate sprite
-    enemy_context_generic->is_looking_left = false;
-    enemy_context_generic->radius = 3.0f; // Default collision radius
+    enemy_context_generic->direction = ENEMY_RIGHT;     // Default direction
+    enemy_context_generic->state = ENEMY_MOVING_TO_END; // Start in IDLE state
+    // Set radius based on size, for example, average of size.x and size.y divided by 2
+    enemy_context_generic->radius = (size.x + size.y) / 4.0f;
     return enemy_context_generic;
 }
 
@@ -58,27 +79,35 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
     if (!self || !context)
     {
         FURI_LOG_E("Game", "Enemy start: Invalid parameters");
+        return;
     }
     if (!enemy_context_generic)
     {
         FURI_LOG_E("Game", "Enemy start: Enemy context not set");
+        return;
     }
 
     EnemyContext *enemy_context = (EnemyContext *)context;
+    // Copy fields from generic context
     snprintf(enemy_context->id, sizeof(enemy_context->id), "%s", enemy_context_generic->id);
     enemy_context->index = enemy_context_generic->index;
-    enemy_context->x = enemy_context_generic->x;
-    enemy_context->y = enemy_context_generic->y;
-    enemy_context->width = enemy_context_generic->width;
-    enemy_context->height = enemy_context_generic->height;
-    enemy_context->trajectory = enemy_context_generic->trajectory;
+    enemy_context->size = enemy_context_generic->size;
+    enemy_context->start_position = enemy_context_generic->start_position;
+    enemy_context->end_position = enemy_context_generic->end_position;
+    enemy_context->move_timer = enemy_context_generic->move_timer;
+    enemy_context->elapsed_move_timer = enemy_context_generic->elapsed_move_timer;
+    enemy_context->speed = enemy_context_generic->speed;
+    enemy_context->attack_timer = enemy_context_generic->attack_timer;
+    enemy_context->strength = enemy_context_generic->strength;
+    enemy_context->health = enemy_context_generic->health;
     enemy_context->sprite_right = enemy_context_generic->sprite_right;
     enemy_context->sprite_left = enemy_context_generic->sprite_left;
-    enemy_context->is_looking_left = enemy_context_generic->is_looking_left;
+    enemy_context->direction = enemy_context_generic->direction;
+    enemy_context->state = enemy_context_generic->state;
     enemy_context->radius = enemy_context_generic->radius;
 
-    // Set enemy's initial position based on context
-    entity_pos_set(self, (Vector){enemy_context->x, enemy_context->y});
+    // Set enemy's initial position based on start_position
+    entity_pos_set(self, enemy_context->start_position);
 
     // Add collision circle based on the enemy's radius
     entity_collider_add_circle(self, enemy_context->radius);
@@ -96,13 +125,23 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
 
+    // Choose sprite based on direction
+    Sprite *current_sprite = NULL;
+    if (enemy_context->direction == ENEMY_LEFT)
+    {
+        current_sprite = enemy_context->sprite_left;
+    }
+    else
+    {
+        current_sprite = enemy_context->sprite_right;
+    }
+
     // Draw enemy sprite relative to camera, centered on the enemy's position
     canvas_draw_sprite(
         canvas,
-        enemy_context->is_looking_left ? enemy_context->sprite_left : enemy_context->sprite_right,
-        pos.x - camera_x - 5, // Center the sprite horizontally
-        pos.y - camera_y - 5  // Center the sprite vertically
-    );
+        current_sprite,
+        pos.x - camera_x - (enemy_context->size.x / 2),
+        pos.y - camera_y - (enemy_context->size.y / 2));
 }
 
 // Enemy collision function
@@ -125,35 +164,133 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         EnemyContext *enemy_context = (EnemyContext *)context;
         if (enemy_context)
         {
-            entity_pos_set(self, (Vector){enemy_context->x, enemy_context->y});
+            entity_pos_set(self, enemy_context->start_position);
+            enemy_context->state = ENEMY_IDLE;
+            enemy_context->elapsed_move_timer = 0.0f;
         }
     }
 }
 
-// Enemy update function (optional)
+// Enemy update function
 static void enemy_update(Entity *self, GameManager *manager, void *context)
 {
-    if (!self || !context)
+    if (!self || !context || !manager)
         return;
-    UNUSED(manager);
+
     EnemyContext *enemy_context = (EnemyContext *)context;
 
-    // Update position based on trajectory
-    Vector pos = entity_pos_get(self);
-    pos.x += enemy_context->trajectory.x;
-    pos.y += enemy_context->trajectory.y;
-    entity_pos_set(self, pos);
-
-    // Example: Change direction if hitting boundaries
-    if (pos.x < 0 || pos.x > WORLD_WIDTH)
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!game_context)
     {
-        enemy_context->trajectory.x *= -1;
-        enemy_context->is_looking_left = !enemy_context->is_looking_left;
+        FURI_LOG_E("Game", "Enemy update: Failed to get GameContext");
+        return;
     }
 
-    if (pos.y < 0 || pos.y > WORLD_HEIGHT)
+    float delta_time = 1.0f / game_context->fps;
+
+    switch (enemy_context->state)
     {
-        enemy_context->trajectory.y *= -1;
+    case ENEMY_IDLE:
+        // Increment the elapsed_move_timer
+        enemy_context->elapsed_move_timer += delta_time;
+
+        // Check if it's time to move again
+        if (enemy_context->elapsed_move_timer >= enemy_context->move_timer)
+        {
+            // Determine the next state based on the current position
+            Vector current_pos = entity_pos_get(self);
+            if (fabs(current_pos.x - enemy_context->start_position.x) < (double)EPSILON &&
+                fabs(current_pos.y - enemy_context->start_position.y) < (double)EPSILON)
+            {
+                enemy_context->state = ENEMY_MOVING_TO_END;
+            }
+            else
+            {
+                enemy_context->state = ENEMY_MOVING_TO_START;
+            }
+            enemy_context->elapsed_move_timer = 0.0f;
+
+            FURI_LOG_D("Game", "Enemy %s transitioning to state %d", enemy_context->id, enemy_context->state);
+        }
+        break;
+
+    case ENEMY_MOVING_TO_END:
+    case ENEMY_MOVING_TO_START:
+    {
+        // Determine the target position based on the current state
+        Vector target_position = (enemy_context->state == ENEMY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
+
+        // Get current position
+        Vector current_pos = entity_pos_get(self);
+        Vector direction_vector = {0, 0};
+
+        // Calculate direction towards the target
+        if (current_pos.x < target_position.x)
+        {
+            direction_vector.x = 1.0f;
+            enemy_context->direction = ENEMY_RIGHT;
+        }
+        else if (current_pos.x > target_position.x)
+        {
+            direction_vector.x = -1.0f;
+            enemy_context->direction = ENEMY_LEFT;
+        }
+
+        if (current_pos.y < target_position.y)
+        {
+            direction_vector.y = 1.0f;
+        }
+        else if (current_pos.y > target_position.y)
+        {
+            direction_vector.y = -1.0f;
+        }
+
+        // Normalize direction vector
+        float length = sqrt(direction_vector.x * direction_vector.x + direction_vector.y * direction_vector.y);
+        if (length != 0)
+        {
+            direction_vector.x /= length;
+            direction_vector.y /= length;
+        }
+
+        // Update position based on direction and speed
+        Vector new_pos = current_pos;
+        new_pos.x += direction_vector.x * enemy_context->speed * delta_time;
+        new_pos.y += direction_vector.y * enemy_context->speed * delta_time;
+
+        // Clamp the position to the target to prevent overshooting
+        if ((direction_vector.x > 0.0f && new_pos.x > target_position.x) ||
+            (direction_vector.x < 0.0f && new_pos.x < target_position.x))
+        {
+            new_pos.x = target_position.x;
+        }
+
+        if ((direction_vector.y > 0.0f && new_pos.y > target_position.y) ||
+            (direction_vector.y < 0.0f && new_pos.y < target_position.y))
+        {
+            new_pos.y = target_position.y;
+        }
+
+        entity_pos_set(self, new_pos);
+
+        // Check if the enemy has reached or surpassed the target_position
+        bool reached_x = fabs(new_pos.x - target_position.x) < (double)EPSILON;
+        bool reached_y = fabs(new_pos.y - target_position.y) < (double)EPSILON;
+
+        // If reached the target position on both axes, transition to IDLE
+        if (reached_x && reached_y)
+        {
+            enemy_context->state = ENEMY_IDLE;
+            enemy_context->elapsed_move_timer = 0.0f;
+
+            FURI_LOG_D("Game", "Enemy %s reached target and transitioning to IDLE", enemy_context->id);
+        }
+    }
+    break;
+
+    default:
+        FURI_LOG_E("Game", "Enemy update: Unknown state %d", enemy_context->state);
+        break;
     }
 }
 
@@ -177,10 +314,31 @@ static const EntityDescription _generic_enemy = {
 };
 
 // Enemy function to return the entity description
-const EntityDescription *enemy(GameManager *manager, const char *id, int index, float x, float y, float width, float height, bool moving_left)
+const EntityDescription *enemy(
+    GameManager *manager,
+    const char *id,
+    int index,
+    Vector size,
+    Vector start_position,
+    Vector end_position,
+    float move_timer, // Wait duration before moving again
+    float speed,
+    float attack_timer,
+    float strength,
+    float health)
 {
     // Allocate a new EnemyContext with provided parameters
-    enemy_context_generic = enemy_generic_alloc(id, index, x, y, width, height);
+    enemy_context_generic = enemy_generic_alloc(
+        id,
+        index,
+        size,
+        start_position,
+        end_position,
+        move_timer, // Set wait duration
+        speed,
+        attack_timer,
+        strength,
+        health);
     if (!enemy_context_generic)
     {
         FURI_LOG_E("Game", "Failed to allocate EnemyContext");
@@ -194,11 +352,25 @@ const EntityDescription *enemy(GameManager *manager, const char *id, int index, 
     enemy_context_generic->sprite_right = game_manager_sprite_load(manager, right_edited);
     enemy_context_generic->sprite_left = game_manager_sprite_load(manager, left_edited);
 
-    // Set initial direction
-    enemy_context_generic->is_looking_left = moving_left; // Default direction
+    // Set initial direction based on start and end positions
+    if (start_position.x < end_position.x)
+    {
+        enemy_context_generic->direction = ENEMY_RIGHT;
+    }
+    else
+    {
+        enemy_context_generic->direction = ENEMY_LEFT;
+    }
 
-    // set trajectory
-    enemy_context_generic->trajectory = !moving_left ? (Vector){1.0f, 0.0f} : (Vector){-1.0f, 0.0f}; // Default trajectory
+    // Set initial state based on movement
+    if (start_position.x != end_position.x || start_position.y != end_position.y)
+    {
+        enemy_context_generic->state = ENEMY_MOVING_TO_END;
+    }
+    else
+    {
+        enemy_context_generic->state = ENEMY_IDLE;
+    }
 
     return &_generic_enemy;
 }

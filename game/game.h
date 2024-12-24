@@ -11,6 +11,8 @@
 
 typedef struct
 {
+    float fps;
+    //
     uint32_t xp;
     uint32_t level;
     uint32_t health;

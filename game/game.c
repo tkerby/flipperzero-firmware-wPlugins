@@ -155,6 +155,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->level = 1; // we'll load this from SD later
+    game_context->fps = game_fps_choices_2[game_fps_index];
 
     // open the world list from storage, then create a level for each world
     char file_path[128];
@@ -181,7 +182,17 @@ static void game_start(GameManager *game_manager, void *ctx)
     furi_string_free(world_list);
 
     // add one enemy
-    level_add_entity(levels[0], enemy(game_manager, "player", 0, WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2, 10, 10, true));
+    level_add_entity(levels[0], enemy(game_manager,
+                                      "player",
+                                      0,
+                                      (Vector){10, 10},
+                                      (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 16},
+                                      (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
+                                      1,
+                                      32,
+                                      10,
+                                      10,
+                                      100));
 }
 
 /*
