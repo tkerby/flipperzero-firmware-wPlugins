@@ -69,11 +69,13 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         pos.y -= 2;
         player->dy = -1;
+        player->direction = PLAYER_UP;
     }
     if (input.held & GameKeyDown)
     {
         pos.y += 2;
         player->dy = 1;
+        player->direction = PLAYER_DOWN;
     }
     if (input.held & GameKeyLeft)
     {

@@ -14,6 +14,7 @@ typedef enum
     PLAYER_IDLE,
     PLAYER_MOVING,
     PLAYER_ATTACKING,
+    PLAYER_ATTACKED,
     PLAYER_DEAD,
 } PlayerState;
 

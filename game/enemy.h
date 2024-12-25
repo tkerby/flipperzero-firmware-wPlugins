@@ -9,6 +9,7 @@ typedef enum
     ENEMY_MOVING_TO_START,
     ENEMY_MOVING_TO_END,
     ENEMY_ATTACKING,
+    ENEMY_ATTACKED,
     ENEMY_DEAD
 } EnemyState;
 

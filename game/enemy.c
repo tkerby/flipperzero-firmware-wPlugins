@@ -171,10 +171,12 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         if (enemy_context->direction == ENEMY_LEFT && player_pos.x < enemy_pos.x)
         {
             is_facing_player = true;
+            enemy_context->state = ENEMY_ATTACKING;
         }
         else if (enemy_context->direction == ENEMY_RIGHT && player_pos.x > enemy_pos.x)
         {
             is_facing_player = true;
+            enemy_context->state = ENEMY_ATTACKING;
         }
 
         // If the enemy is facing the player, perform an attack (log message)
@@ -199,6 +201,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 {
                     FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
                     game_context->player_context->health -= enemy_context->strength;
+                    game_context->player_context->state = PLAYER_ATTACKED;
                 }
             }
             else
@@ -284,10 +287,12 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         if (current_pos.y < target_position.y)
         {
             direction_vector.y = 1.0f;
+            enemy_context->direction = ENEMY_DOWN;
         }
         else if (current_pos.y > target_position.y)
         {
             direction_vector.y = -1.0f;
+            enemy_context->direction = ENEMY_UP;
         }
 
         // Normalize direction vector
