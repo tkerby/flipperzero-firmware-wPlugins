@@ -48,6 +48,12 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->attack_timer = 0.5f;
     player_context->elapsed_attack_timer = player_context->attack_timer;
 
+    // Set player username
+    if (!load_char("Flip-Social-Username", player_context->username, 32))
+    {
+        snprintf(player_context->username, 32, "Player");
+    }
+
     game_context->player_context = player_context;
 }
 
@@ -165,6 +171,10 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         pos.x - camera_x - 5, // Center the sprite horizontally
         pos.y - camera_y - 5  // Center the sprite vertically
     );
+
+    // draw username over player's head
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    canvas_draw_str(canvas, pos.x - camera_x - (strlen(player->username) * 2), pos.y - camera_y - 7, player->username);
 }
 
 const EntityDescription player_desc = {

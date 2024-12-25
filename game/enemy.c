@@ -138,6 +138,9 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         current_sprite,
         pos.x - camera_x - (enemy_context->size.x / 2),
         pos.y - camera_y - (enemy_context->size.y / 2));
+
+    // Draw user stats (this has to be done for all enemies)
+    draw_user_stats(canvas, (Vector){0, 7}, manager);
 }
 
 // Enemy collision function

@@ -22,6 +22,32 @@ void draw_background(Canvas *canvas, Vector pos)
     draw_bounds(canvas);
 }
 
+// Draw the user stats (health, xp, and level)
+// Draw the user stats (health, xp, and level)
+void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager)
+{
+    GameContext *game_context = game_manager_game_context_get(manager);
+    PlayerContext *player = game_context->player_context;
+
+    // first draw a black rectangle to make the text more readable
+    canvas_invert_color(canvas);
+    canvas_draw_box(canvas, pos.x - 1, pos.y - 7, 32, 21);
+    canvas_invert_color(canvas);
+
+    char health[32];
+    char xp[32];
+    char level[32];
+
+    snprintf(health, sizeof(health), "HP : %ld", player->health);
+    snprintf(xp, sizeof(xp), "XP : %ld", player->xp);
+    snprintf(level, sizeof(level), "LVL: %ld", player->level);
+
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    canvas_draw_str(canvas, pos.x, pos.y, health);
+    canvas_draw_str(canvas, pos.x, pos.y + 7, xp);
+    canvas_draw_str(canvas, pos.x, pos.y + 14, level);
+}
+
 // Draw a line of icons (16 width)
 void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, const Icon *icon)
 {

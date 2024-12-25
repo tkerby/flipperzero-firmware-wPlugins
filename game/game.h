@@ -41,6 +41,7 @@ typedef struct
     uint32_t strength;          // player strength
     float attack_timer;         // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
+    char username[32];          // player username
 } PlayerContext;
 
 typedef struct
