@@ -1,11 +1,9 @@
 #include "game.h"
 
 /****** Entities: Player ******/
-static bool has_pressed_ok = false;
 
 static Level *get_next_level(GameManager *manager)
 {
-    has_pressed_ok = false;
     Level *current_level = game_manager_current_level_get(manager);
     GameContext *game_context = game_manager_game_context_get(manager);
     for (int i = 0; i < game_context->level_count; i++)
@@ -47,6 +45,8 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->level = 1;
     player_context->xp = 0;
     player_context->start_position = entity_pos_get(game_context->players[0]);
+    player_context->attack_timer = 0.5f;
+    player_context->elapsed_attack_timer = player_context->attack_timer;
 
     game_context->player_context = player_context;
 }
@@ -58,6 +58,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // Increment the elapsed_attack_timer for the player
+    player->elapsed_attack_timer += 1.0f / game_context->fps;
 
     // Store previous direction
     int prev_dx = player->dx;
@@ -97,22 +100,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         game_context->user_input = GameKeyRight;
     }
 
-    // switch levels if holding OK
-    if (input.held & GameKeyOk)
-    {
-        game_context->user_input = GameKeyOk;
-
-        // if all enemies are dead, allow the "OK" button to switch levels
-        // otherwise the "OK" button will be used to attack
-        if (!has_pressed_ok && game_context->enemy_count == 0)
-        {
-            has_pressed_ok = true; // prevent multiple level switches
-            game_manager_next_level_set(manager, get_next_level(manager));
-            furi_delay_ms(500);
-        }
-        return;
-    }
-
     // Clamp the player's position to stay within world bounds
     pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
     pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
@@ -120,12 +107,32 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // Update player position
     entity_pos_set(self, pos);
 
+    // switch levels if holding OK
+    if (input.held & GameKeyOk)
+    {
+        // if all enemies are dead, allow the "OK" button to switch levels
+        // otherwise the "OK" button will be used to attack
+        if (game_context->enemy_count == 0)
+        {
+            game_manager_next_level_set(manager, get_next_level(manager));
+            furi_delay_ms(500);
+        }
+        else
+        {
+            game_context->user_input = GameKeyOk;
+            FURI_LOG_I("Game", "Player is attacking");
+            furi_delay_ms(100);
+        }
+        return;
+    }
+
     // If the player is not moving, retain the last movement direction
     if (player->dx == 0 && player->dy == 0)
     {
         player->dx = prev_dx;
         player->dy = prev_dy;
         player->state = PLAYER_IDLE;
+        game_context->user_input = -1; // reset user input
     }
     else
     {
@@ -216,7 +223,7 @@ static void game_start(GameManager *game_manager, void *ctx)
                                                                                (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
                                                                                1,
                                                                                32,
-                                                                               10,
+                                                                               0.5f,
                                                                                10,
                                                                                100));
 
@@ -229,7 +236,7 @@ static void game_start(GameManager *game_manager, void *ctx)
                                                                                (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
                                                                                1,
                                                                                32,
-                                                                               10,
+                                                                               0.5f,
                                                                                10,
                                                                                100));
 

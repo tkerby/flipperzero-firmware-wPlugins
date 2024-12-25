@@ -152,7 +152,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     // Check if the enemy collided with the player
     if (entity_description_get(other) == &player_desc)
     {
-
         // Retrieve enemy context
         EnemyContext *enemy_context = (EnemyContext *)context;
         GameContext *game_context = game_manager_game_context_get(manager);
@@ -175,101 +174,94 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         bool enemy_is_facing_player = false;
         bool player_is_facing_enemy = false;
 
-        // setting enemy_is_facing_player to true if the enemy is facing the player
-        if (enemy_context->direction == ENEMY_LEFT && player_pos.x < enemy_pos.x)
+        // Determine if the enemy is facing the player
+        if ((enemy_context->direction == ENEMY_LEFT && player_pos.x < enemy_pos.x) ||
+            (enemy_context->direction == ENEMY_RIGHT && player_pos.x > enemy_pos.x) ||
+            (enemy_context->direction == ENEMY_UP && player_pos.y < enemy_pos.y) ||
+            (enemy_context->direction == ENEMY_DOWN && player_pos.y > enemy_pos.y))
         {
             enemy_is_facing_player = true;
-            enemy_context->state = ENEMY_ATTACKING;
-        }
-        else if (enemy_context->direction == ENEMY_RIGHT && player_pos.x > enemy_pos.x)
-        {
-            enemy_is_facing_player = true;
-            enemy_context->state = ENEMY_ATTACKING;
-        }
-        else if (enemy_context->direction == ENEMY_UP && player_pos.y < enemy_pos.y)
-        {
-            enemy_is_facing_player = true;
-            enemy_context->state = ENEMY_ATTACKING;
-        }
-        else if (enemy_context->direction == ENEMY_DOWN && player_pos.y > enemy_pos.y)
-        {
-            enemy_is_facing_player = true;
-            enemy_context->state = ENEMY_ATTACKING;
         }
 
-        // setting player_is_facing_enemy to true if the player is facing the enemy
-        if (game_context->player_context->direction == PLAYER_LEFT && enemy_pos.x < player_pos.x)
-        {
-            player_is_facing_enemy = true;
-        }
-        else if (game_context->player_context->direction == PLAYER_RIGHT && enemy_pos.x > player_pos.x)
-        {
-            player_is_facing_enemy = true;
-        }
-        else if (game_context->player_context->direction == PLAYER_UP && enemy_pos.y < player_pos.y)
-        {
-            player_is_facing_enemy = true;
-        }
-        else if (game_context->player_context->direction == PLAYER_DOWN && enemy_pos.y > player_pos.y)
+        // Determine if the player is facing the enemy
+        if ((game_context->player_context->direction == PLAYER_LEFT && enemy_pos.x < player_pos.x) ||
+            (game_context->player_context->direction == PLAYER_RIGHT && enemy_pos.x > player_pos.x) ||
+            (game_context->player_context->direction == PLAYER_UP && enemy_pos.y < player_pos.y) ||
+            (game_context->player_context->direction == PLAYER_DOWN && enemy_pos.y > player_pos.y))
         {
             player_is_facing_enemy = true;
         }
 
-        // If the player is facing the enemy and pressed OK, perform an attack (log message)
+        // Handle Player Attacking Enemy
         if (player_is_facing_enemy && game_context->user_input == GameKeyOk)
         {
-            FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
-
-            // increase xp by the enemy's strength
-            game_context->player_context->xp += enemy_context->strength;
-
-            // Decrease enemy health by player strength
-            if (enemy_context->health <= 0)
+            if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
-                FURI_LOG_I("Game", "Enemy '%s' is dead.. resetting enemy position and health", enemy_context->id);
-                enemy_context->state = ENEMY_DEAD;
+                FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
 
-                // reset enemy position and health
-                entity_pos_set(self, enemy_context->start_position);
-                enemy_context->health = 100;
+                // Reset player's elapsed attack timer
+                game_context->player_context->elapsed_attack_timer = 0.0f;
+
+                // Increase XP by the enemy's strength
+                game_context->player_context->xp += enemy_context->strength;
+
+                // Decrease enemy health by player strength
+                enemy_context->health -= game_context->player_context->strength;
+
+                if (enemy_context->health <= 0)
+                {
+                    FURI_LOG_I("Game", "Enemy '%s' is dead.. resetting enemy position and health", enemy_context->id);
+                    enemy_context->state = ENEMY_DEAD;
+
+                    // Reset enemy position and health
+                    entity_pos_set(self, enemy_context->start_position);
+                    enemy_context->health = 100;
+                }
+                else
+                {
+                    FURI_LOG_I("Game", "Enemy '%s' took %f damage from player", enemy_context->id, (double)game_context->player_context->strength);
+                    enemy_context->state = ENEMY_ATTACKED;
+                }
             }
             else
             {
-                FURI_LOG_I("Game", "Enemy '%s' took %f damage from player", enemy_context->id, (double)game_context->player_context->strength);
-                enemy_context->health -= game_context->player_context->strength;
-                enemy_context->state = ENEMY_ATTACKED;
+                FURI_LOG_I("Game", "Player attack on enemy '%s' is on cooldown: %f seconds remaining", enemy_context->id, (double)(game_context->player_context->attack_timer - game_context->player_context->elapsed_attack_timer));
             }
         }
 
-        // If the enemy is facing the player, perform an attack (log message)
+        // Handle Enemy Attacking Player
         if (enemy_is_facing_player)
         {
-            FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
-
-            // Decrease player health by enemy strength
-            if (game_context->player_context->health <= 0)
+            if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
-                game_context->player_context->state = PLAYER_DEAD;
+                FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
 
-                // reset player position and health
-                entity_pos_set(other, game_context->player_context->start_position);
-                game_context->player_context->health = 100;
+                // Reset enemy's elapsed attack timer
+                enemy_context->elapsed_attack_timer = 0.0f;
+
+                // Decrease player health by enemy strength
+                game_context->player_context->health -= enemy_context->strength;
+
+                if (game_context->player_context->health <= 0)
+                {
+                    FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
+                    game_context->player_context->state = PLAYER_DEAD;
+
+                    // Reset player position and health
+                    entity_pos_set(other, game_context->player_context->start_position);
+                    game_context->player_context->health = 100;
+                }
+                else
+                {
+                    FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
+                    game_context->player_context->state = PLAYER_ATTACKED;
+                }
             }
             else
             {
-                FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
-                game_context->player_context->health -= enemy_context->strength;
-                game_context->player_context->state = PLAYER_ATTACKED;
+                FURI_LOG_I("Game", "Enemy '%s' attack on player is on cooldown: %f seconds remaining", enemy_context->id, (double)(enemy_context->attack_timer - enemy_context->elapsed_attack_timer));
             }
         }
-
-        // Reset enemy's position and state
-        entity_pos_set(self, enemy_context->start_position);
-        enemy_context->state = ENEMY_IDLE;
-        enemy_context->elapsed_move_timer = 0.0f;
-
-        FURI_LOG_D("Game", "Enemy '%s' reset to start position after collision", enemy_context->id);
     }
 }
 
@@ -289,6 +281,9 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     }
 
     float delta_time = 1.0f / game_context->fps;
+
+    // Increment the elapsed_attack_timer for the enemy
+    enemy_context->elapsed_attack_timer += delta_time;
 
     switch (enemy_context->state)
     {
@@ -311,8 +306,6 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
                 enemy_context->state = ENEMY_MOVING_TO_START;
             }
             enemy_context->elapsed_move_timer = 0.0f;
-
-            FURI_LOG_D("Game", "Enemy %s transitioning to state %d", enemy_context->id, enemy_context->state);
         }
         break;
 
@@ -386,14 +379,11 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         {
             enemy_context->state = ENEMY_IDLE;
             enemy_context->elapsed_move_timer = 0.0f;
-
-            FURI_LOG_D("Game", "Enemy %s reached target and transitioning to IDLE", enemy_context->id);
         }
     }
     break;
 
     default:
-        FURI_LOG_E("Game", "Enemy update: Unknown state %d", enemy_context->state);
         break;
     }
 }
