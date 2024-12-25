@@ -55,6 +55,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
+    GameContext *game_context = game_manager_game_context_get(manager);
 
     // Store previous direction
     int prev_dx = player->dx;
@@ -70,32 +71,40 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         pos.y -= 2;
         player->dy = -1;
         player->direction = PLAYER_UP;
+        game_context->user_input = GameKeyUp;
     }
     if (input.held & GameKeyDown)
     {
         pos.y += 2;
         player->dy = 1;
         player->direction = PLAYER_DOWN;
+        game_context->user_input = GameKeyDown;
     }
     if (input.held & GameKeyLeft)
     {
         pos.x -= 2;
         player->dx = -1;
         player->direction = PLAYER_LEFT;
+        game_context->user_input = GameKeyLeft;
     }
     if (input.held & GameKeyRight)
     {
         pos.x += 2;
         player->dx = 1;
         player->direction = PLAYER_RIGHT;
+        game_context->user_input = GameKeyRight;
     }
 
     // switch levels if holding OK
     if (input.held & GameKeyOk)
     {
-        if (!has_pressed_ok)
+        game_context->user_input = GameKeyOk;
+
+        // if all enemies are dead, allow the "OK" button to switch levels
+        // otherwise the "OK" button will be used to attack
+        if (!has_pressed_ok && game_context->enemy_count == 0)
         {
-            has_pressed_ok = true;
+            has_pressed_ok = true; // prevent multiple level switches
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
         }
@@ -221,6 +230,8 @@ static void game_start(GameManager *game_manager, void *ctx)
                                                                                10,
                                                                                10,
                                                                                100));
+
+    game_context->enemy_count = 2;
 }
 
 /*

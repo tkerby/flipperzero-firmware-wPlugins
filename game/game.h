@@ -43,12 +43,14 @@ typedef struct
 
 typedef struct
 {
-    float fps;
     PlayerContext *player_context;
     Level *levels[10];
     Entity *enemies[2];
     Entity *players[1];
+    GameKey user_input;
+    float fps;
     int level_count;
+    int enemy_count;
 } GameContext;
 
 extern const EntityDescription player_desc;
