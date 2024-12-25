@@ -51,6 +51,7 @@ typedef struct
     float fps;
     int level_count;
     int enemy_count;
+    int current_level;
 } GameContext;
 
 extern const EntityDescription player_desc;

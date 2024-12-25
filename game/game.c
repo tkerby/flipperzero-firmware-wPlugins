@@ -13,9 +13,11 @@ static Level *get_next_level(GameManager *manager)
         if (game_context->levels[i] == current_level)
         {
             // check if i+1 is out of bounds, if so, return the first level
+            game_context->current_level = (i + 1) % game_context->level_count;
             return game_context->levels[(i + 1) % game_context->level_count] ? game_context->levels[(i + 1) % game_context->level_count] : game_context->levels[0];
         }
     }
+    game_context->current_level = 0;
     return game_context->levels[0] ? game_context->levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
 }
 
@@ -232,6 +234,7 @@ static void game_start(GameManager *game_manager, void *ctx)
                                                                                100));
 
     game_context->enemy_count = 2;
+    game_context->current_level = 0;
 }
 
 /*
