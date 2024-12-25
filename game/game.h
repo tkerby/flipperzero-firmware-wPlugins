@@ -29,6 +29,7 @@ typedef struct
 {
     PlayerDirection direction; // direction the player is facing
     PlayerState state;         // current state of the player
+    Vector start_position;     // starting position of the player
     Sprite *sprite_right;      // player sprite looking right
     Sprite *sprite_left;       // player sprite looking left
     int8_t dx;                 // x direction

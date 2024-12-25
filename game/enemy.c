@@ -143,7 +143,6 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
 // Enemy collision function
 static void enemy_collision(Entity *self, Entity *other, GameManager *manager, void *context)
 {
-    // Ensure that 'self', 'other', and 'context' are valid
     if (!self || !other || !context)
     {
         FURI_LOG_E("Game", "Enemy collision: Invalid parameters");
@@ -189,13 +188,17 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             {
                 if (game_context->player_context->health <= 0)
                 {
-                    FURI_LOG_I("Game", "Player is dead");
+                    FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
                     game_context->player_context->state = PLAYER_DEAD;
+
+                    // reset player position and health
+                    entity_pos_set(other, game_context->player_context->start_position);
+                    game_context->player_context->health = 100;
                 }
                 else
                 {
-                    game_context->player_context->health -= enemy_context->strength;
                     FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
+                    game_context->player_context->health -= enemy_context->strength;
                 }
             }
             else

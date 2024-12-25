@@ -25,6 +25,7 @@ void player_spawn(Level *level, GameManager *manager)
     game_context->players[0] = level_add_entity(level, &player_desc);
 
     // Set player position.
+
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(game_context->players[0], (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
@@ -43,6 +44,7 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->strength = 10;
     player_context->level = 1;
     player_context->xp = 0;
+    player_context->start_position = entity_pos_get(game_context->players[0]);
 
     game_context->player_context = player_context;
 }
