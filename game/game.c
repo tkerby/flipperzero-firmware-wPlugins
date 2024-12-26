@@ -47,7 +47,7 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->elapsed_attack_timer = player_context->attack_timer;
     player_context->health_regen = 1; // 1 health per second
     player_context->elapsed_health_regen = 0;
-    player_context->max_health = 100 + (player_context->level * 10); // 10 health per level
+    player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
 
     // Set player username
     if (!load_char("Flip-Social-Username", player_context->username, 32))
@@ -68,7 +68,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     // apply health regeneration
     player->elapsed_health_regen += 1.0f / game_context->fps;
-    if (player->elapsed_health_regen >= 1.0f)
+    if (player->elapsed_health_regen >= 1.0f && player->health < player->max_health)
     {
         player->health += player->health_regen;
         player->elapsed_health_regen = 0;
