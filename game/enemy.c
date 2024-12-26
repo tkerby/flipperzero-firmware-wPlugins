@@ -242,7 +242,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;
-                game_context->player_context->elapsed_attack_timer = 0.0f; // Reset player's attack timer to block player attack
 
                 // Decrease player health by enemy strength
                 game_context->player_context->health -= enemy_context->strength;
