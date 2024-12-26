@@ -233,6 +233,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Handle Enemy Attacking Player
+        // future integration: block enemy attack if player is attacking and vice versa (and add a cooldown)
         if (enemy_is_facing_player)
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
@@ -265,6 +266,13 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 FURI_LOG_I("Game", "Enemy '%s' attack on player is on cooldown: %f seconds remaining", enemy_context->id, (double)(enemy_context->attack_timer - enemy_context->elapsed_attack_timer));
             }
         }
+
+        // Reset enemy's position and state
+        entity_pos_set(self, enemy_context->start_position);
+        enemy_context->state = ENEMY_IDLE;
+        enemy_context->elapsed_move_timer = 0.0f;
+
+        FURI_LOG_I("Game", "Enemy '%s' reset to start position after collision", enemy_context->id);
     }
 }
 
