@@ -204,6 +204,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 // Reset player's elapsed attack timer
                 game_context->player_context->elapsed_attack_timer = 0.0f;
+                enemy_context->elapsed_attack_timer = 0.0f; // Reset enemy's attack timer to block enemy attack
 
                 // Increase XP by the enemy's strength
                 game_context->player_context->xp += enemy_context->strength;
@@ -233,7 +234,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Handle Enemy Attacking Player
-        // future integration: block enemy attack if player is attacking and vice versa (and add a cooldown)
         if (enemy_is_facing_player)
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
@@ -242,6 +242,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;
+                game_context->player_context->elapsed_attack_timer = 0.0f; // Reset player's attack timer to block player attack
 
                 // Decrease player health by enemy strength
                 game_context->player_context->health -= enemy_context->strength;
@@ -271,8 +272,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         entity_pos_set(self, enemy_context->start_position);
         enemy_context->state = ENEMY_IDLE;
         enemy_context->elapsed_move_timer = 0.0f;
-
-        FURI_LOG_I("Game", "Enemy '%s' reset to start position after collision", enemy_context->id);
     }
 }
 

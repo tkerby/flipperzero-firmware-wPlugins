@@ -126,7 +126,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         else
         {
             game_context->user_input = GameKeyOk;
-            FURI_LOG_I("Game", "Player is attacking");
             furi_delay_ms(100);
         }
         return;
