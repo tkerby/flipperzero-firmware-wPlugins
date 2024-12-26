@@ -1,5 +1,6 @@
 #pragma once
 #include "game/icon.h"
+#include <game/player.h>
 
 // Global variables to store camera position
 extern int camera_x;

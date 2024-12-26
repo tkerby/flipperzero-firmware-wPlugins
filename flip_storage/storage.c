@@ -170,7 +170,7 @@ bool save_char(
     }
     // Create the directory for saving settings
     char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data");
 
     // Create the directory
     Storage *storage = furi_record_open(RECORD_STORAGE);
@@ -179,7 +179,7 @@ bool save_char(
     // Open the settings file
     File *file = storage_file_alloc(storage);
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/%s.txt", path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/%s.txt", path_name);
 
     // Open the file in write mode
     if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
@@ -221,7 +221,7 @@ bool load_char(
     File *file = storage_file_alloc(storage);
 
     char file_path[256];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/%s.txt", path_name);
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/%s.txt", path_name);
 
     // Open the file for reading
     if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))

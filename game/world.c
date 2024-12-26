@@ -1,5 +1,5 @@
 #include <game/world.h>
-
+#include <flip_storage/storage.h>
 void draw_bounds(Canvas *canvas)
 {
     // Draw the outer bounds adjusted by camera offset

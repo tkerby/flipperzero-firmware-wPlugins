@@ -1,5 +1,5 @@
 #pragma once
-#include "game.h"
+#include <game/game.h>
 #include "flip_world.h"
 
 typedef enum
