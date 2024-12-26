@@ -37,8 +37,11 @@ typedef struct
     int8_t dy;                  // y direction
     uint32_t xp;                // experience points
     uint32_t level;             // player level
-    uint32_t health;            // player health
     uint32_t strength;          // player strength
+    uint32_t health;            // player health
+    uint32_t max_health;        // player maximum health
+    uint32_t health_regen;      // player health regeneration rate per second/frame
+    float elapsed_health_regen; // time elapsed since last health regeneration
     float attack_timer;         // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
     char username[32];          // player username

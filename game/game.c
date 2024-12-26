@@ -25,8 +25,6 @@ void player_spawn(Level *level, GameManager *manager)
     game_context->players[0] = level_add_entity(level, &player_desc);
 
     // Set player position.
-
-    // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(game_context->players[0], (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
     // Add collision box to player entity
@@ -47,6 +45,9 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->start_position = entity_pos_get(game_context->players[0]);
     player_context->attack_timer = 0.5f;
     player_context->elapsed_attack_timer = player_context->attack_timer;
+    player_context->health_regen = 1; // 1 health per second
+    player_context->elapsed_health_regen = 0;
+    player_context->max_health = 100 + (player_context->level * 10); // 10 health per level
 
     // Set player username
     if (!load_char("Flip-Social-Username", player_context->username, 32))
@@ -64,6 +65,14 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // apply health regeneration
+    player->elapsed_health_regen += 1.0f / game_context->fps;
+    if (player->elapsed_health_regen >= 1.0f)
+    {
+        player->health += player->health_regen;
+        player->elapsed_health_regen = 0;
+    }
 
     // Increment the elapsed_attack_timer for the player
     player->elapsed_attack_timer += 1.0f / game_context->fps;
