@@ -38,8 +38,8 @@ void player_spawn(Level *level, GameManager *manager)
     if (!loaded_player_context)
     {
         // Load player sprite
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
+        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
+        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
         player_context->direction = PLAYER_RIGHT; // default direction
         player_context->health = 100;
         player_context->strength = 10;
@@ -70,8 +70,8 @@ void player_spawn(Level *level, GameManager *manager)
     free(loaded_player_context);
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
 
     // save the player context to storage
     save_player_context(player_context);

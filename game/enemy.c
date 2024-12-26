@@ -447,10 +447,16 @@ const EntityDescription *enemy(
         FURI_LOG_E("Game", "Failed to allocate EnemyContext");
         return NULL;
     }
-    char right_edited[64];
-    char left_edited[64];
-    snprintf(right_edited, sizeof(right_edited), "%s_right.fxbm", id);
-    snprintf(left_edited, sizeof(left_edited), "%s_left.fxbm", id);
+    char right_edited[128];
+    char left_edited[128];
+
+    // Convert the float values to integers and use them in the filename
+    int size_x_int = (int)size.x;
+    int size_y_int = (int)size.y;
+
+    // Format the strings without the decimal points
+    snprintf(right_edited, sizeof(right_edited), "player_right_%s_%dx%dpx.fxbm", id, size_x_int, size_y_int);
+    snprintf(left_edited, sizeof(left_edited), "player_left_%s_%dx%dpx.fxbm", id, size_x_int, size_y_int);
 
     enemy_context_generic->sprite_right = game_manager_sprite_load(manager, right_edited);
     enemy_context_generic->sprite_left = game_manager_sprite_load(manager, left_edited);
