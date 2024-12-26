@@ -40,9 +40,9 @@ static void game_start(GameManager *game_manager, void *ctx)
 
     // add one enemy
     game_context->enemies[0] = level_add_entity(game_context->levels[0], enemy(game_manager,
-                                                                               "naked", // enemy id
+                                                                               "sword", // enemy id
                                                                                0,
-                                                                               (Vector){10, 10},
+                                                                               (Vector){15, 11},
                                                                                (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 16},
                                                                                (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
                                                                                1,
@@ -53,9 +53,9 @@ static void game_start(GameManager *game_manager, void *ctx)
 
     // add another enemy
     game_context->enemies[1] = level_add_entity(game_context->levels[0], enemy(game_manager,
-                                                                               "naked", // enemy id
+                                                                               "axe", // enemy id
                                                                                1,
-                                                                               (Vector){10, 10},
+                                                                               (Vector){15, 11},
                                                                                (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 32},
                                                                                (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
                                                                                1,
