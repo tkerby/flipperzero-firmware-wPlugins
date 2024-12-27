@@ -92,6 +92,12 @@ static LevelContext *level_generic_alloc(const char *id, int index)
 {
     if (level_context_generic == NULL)
     {
+        size_t heap_size = memmgr_get_free_heap();
+        if (heap_size < sizeof(LevelContext))
+        {
+            FURI_LOG_E("Game", "Not enough heap to allocate level context");
+            return NULL;
+        }
         level_context_generic = malloc(sizeof(LevelContext));
     }
     snprintf(level_context_generic->id, sizeof(level_context_generic->id), "%s", id);

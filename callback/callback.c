@@ -594,140 +594,26 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         app_instance = NULL;
     }
 }
-static bool flip_world_fetch_world_list(DataLoaderModel *model)
+static bool flip_world_fetch_world_list()
 {
-    if (model->request_index == 0)
-    {
-        // Create the directory for saving worlds
-        char directory_path[128];
-        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+    // Create the directory for saving worlds
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
 
-        // Create the directory
-        Storage *storage = furi_record_open(RECORD_STORAGE);
-        storage_common_mkdir(storage, directory_path);
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
 
-        // free storage
-        furi_record_close(RECORD_STORAGE);
+    // free storage
+    furi_record_close(RECORD_STORAGE);
 
-        snprintf(
-            fhttp.file_path,
-            sizeof(fhttp.file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+    snprintf(
+        fhttp.file_path,
+        sizeof(fhttp.file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
-        fhttp.save_received_data = true;
-        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
-    }
-    else if (model->request_index == 1)
-    {
-        snprintf(
-            fhttp.file_path,
-            sizeof(fhttp.file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
-
-        FuriString *world_list = flipper_http_load_from_file(fhttp.file_path);
-        if (!world_list)
-        {
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-            FURI_LOG_E(TAG, "Failed to load world list");
-            easy_flipper_dialog("Error", "Failed to load world list. Go to game settings to download packs.");
-            return false;
-        }
-        FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
-        if (!first_world)
-        {
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-            FURI_LOG_E(TAG, "Failed to get first world");
-            easy_flipper_dialog("Error", "Failed to get first world. Go to game settings to download packs.");
-            return false;
-        }
-        if (world_exists(furi_string_get_cstr(first_world)))
-        {
-            furi_string_free(world_list);
-            furi_string_free(first_world);
-            flipper_http_deinit();
-            // free game thread
-            if (game_thread_running)
-            {
-                game_thread_running = false;
-                furi_thread_flags_set(thread_id, WorkerEvtStop);
-                furi_thread_free(thread_id);
-            }
-            if (!app_instance)
-            {
-                FURI_LOG_E(TAG, "app_instance is NULL");
-                easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
-                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-                return "app_instance is NULL";
-            }
-            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
-            if (!thread)
-            {
-                view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-                FURI_LOG_E(TAG, "Failed to allocate game thread");
-                easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
-                return false;
-            }
-            furi_thread_start(thread);
-            thread_id = furi_thread_get_id(thread);
-            game_thread_running = true;
-            return true;
-        }
-        snprintf(
-            fhttp.file_path,
-            sizeof(fhttp.file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(first_world));
-
-        fhttp.save_received_data = true;
-        char url[128];
-        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
-        furi_string_free(world_list);
-        furi_string_free(first_world);
-        return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
-    }
-    view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-    FURI_LOG_E(TAG, "Unknown request index");
-    easy_flipper_dialog("Error", "Unknown request index.");
-    return false;
-}
-static char *flip_world_parse_world_list(DataLoaderModel *model)
-{
-    if (model->request_index == 0)
-    {
-        return "Welcome to FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
-    }
-    else if (model->request_index == 1)
-    {
-        flipper_http_deinit();
-        // free game thread
-        if (game_thread_running)
-        {
-            game_thread_running = false;
-            furi_thread_flags_set(thread_id, WorkerEvtStop);
-            furi_thread_free(thread_id);
-        }
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "app_instance is NULL");
-            easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
-            view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-            return "app_instance is NULL";
-        }
-        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
-        if (!thread)
-        {
-            FURI_LOG_E(TAG, "Failed to allocate game thread");
-            return "Failed to allocate game thread";
-        }
-        furi_thread_start(thread);
-        thread_id = furi_thread_get_id(thread);
-        game_thread_running = true;
-        return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
-    }
-    return "Unknown error";
-}
-void flip_world_switch_to_view_get_world_list(FlipWorldApp *app)
-{
-    flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 2, callback_to_submenu, FlipWorldViewLoader);
+    fhttp.save_received_data = true;
+    return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
 }
 // combine register, login, and world list fetch into one function to switch to the loader view
 static bool flip_world_fetch_game(DataLoaderModel *model)
@@ -814,7 +700,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
                 STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
             model->title = "Fetching World List..";
             fhttp.save_received_data = true;
-            return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
+            return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
         }
     }
     else if (model->request_index == 2)
@@ -836,7 +722,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
         model->title = "Fetching World List..";
         fhttp.save_received_data = true;
-        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/list/10/", "{\"Content-Type\":\"application/json\"}");
+        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
     }
     else if (model->request_index == 3)
     {
@@ -903,7 +789,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
 
         fhttp.save_received_data = true;
         char url[128];
-        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/get/world/%s/", furi_string_get_cstr(first_world));
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v2/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
         return flipper_http_get_request_with_headers(url, "{\"Content-Type\":\"application/json\"}");
@@ -1140,11 +1026,49 @@ void callback_submenu_choices(void *context, uint32_t index)
         // check if logged in
         if (is_logged_in() || is_logged_in_to_flip_social())
         {
-            flip_world_switch_to_view_get_world_list(app_instance);
+            bool parse_world_list()
+            {
+                flipper_http_deinit();
+                return true;
+            }
+
+            flipper_http_loading_task(
+                flip_world_fetch_world_list,
+                parse_world_list,
+                FlipWorldViewSubmenu,
+                FlipWorldViewSubmenu,
+                &app->view_dispatcher);
+
+            // Free game thread properly
+            if (game_thread_running)
+            {
+                game_thread_running = false;
+                furi_thread_flags_set(thread_id, WorkerEvtStop);
+                // Wait for the thread to terminate
+                furi_thread_join(thread_id);
+                furi_thread_free(thread_id);
+            }
+
+            // Update heap sizes after freeing
+            size_t heap_size = memmgr_get_free_heap();
+            size_t total_heap_size = memmgr_get_total_heap();
+
+            FURI_LOG_I(TAG, "Heap size: %d", heap_size);
+            FURI_LOG_I(TAG, "Total heap size: %d", total_heap_size);
+
+            FuriThread *thread = furi_thread_alloc_ex("flip_world_game", 4096, game_app, app);
+            if (!thread)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate game thread");
+                return;
+            }
+            furi_thread_start(thread);
+            thread_id = furi_thread_get_id(thread);
+            game_thread_running = true;
         }
         else
         {
-            flip_world_switch_to_view_get_game(app_instance);
+            flip_world_switch_to_view_get_game(app);
         }
         break;
     case FlipWorldSubmenuIndexAbout:
@@ -1451,12 +1375,20 @@ static void flip_world_game_screen_always_on_change(VariableItem *item)
 static bool flip_world_fetch_worlds(DataLoaderModel *model)
 {
     UNUSED(model);
+    // Create the directory for saving settings
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    furi_record_close(RECORD_STORAGE);
     snprintf(
         fhttp.file_path,
         sizeof(fhttp.file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds.json");
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     fhttp.save_received_data = true;
-    return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/get/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/get/10/", "{\"Content-Type\":\"application/json\"}");
 }
 static char *flip_world_parse_worlds(DataLoaderModel *model)
 {
@@ -1478,7 +1410,7 @@ static void game_settings_item_selected(void *context, uint32_t index)
     }
     switch (index)
     {
-    case 0: // Download Worlds
+    case 0: // Download all world data s one huge json
         if (!flipper_http_init(flipper_http_rx_callback, app))
         {
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
