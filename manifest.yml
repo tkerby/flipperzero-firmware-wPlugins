@@ -1,6 +1,3 @@
-## This is a sample manifest file for the Flipper Apps Catalog.
-## Create one for your app in a corresponding directory in the 'applications' folder.
-
 sourcecode:
   type: git
   location:
@@ -10,8 +7,8 @@ short_description: 'matrix rain' effect for flipper.
 version: 0.1
 description: |
   fmatrix displays the 'matrix rain' effect on your Flipper Zero.
+  For more info, please visit https://github.com/misterwaztaken/fmatrix/
 changelog: "@changelog.md"
-description: "@README.md"
 screenshots:
   - screenshots/ss1.png
   - screenshots/ss2.png
