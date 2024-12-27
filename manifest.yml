@@ -4,20 +4,14 @@
 sourcecode:
   type: git
   location:
-    ## Specify the git URL of your repository
     origin: https://github.com/misterwaztaken/fmatrix.git
-    ## Put the full commit SHA of the commit with the app's code you want to submit
     commit_sha: f8acc6f4c381c941ac725b6c0b5c42ccd84a654f
-    ## (Optional) If your app is located in a subdirectory of the repository, specify it here
-    # subdir: .
-## If application.fam contains 'fap_description', it will be used as a short description
 short_description: 'matrix rain' effect for flipper.
-## For 'description' and 'changelog', you can use limited markdown syntax
-## You can also specify a file from your app's repository as a source with @
+version: 0.1
 description: |
   fmatrix displays the 'matrix rain' effect on your Flipper Zero.
 changelog: "@changelog.md"
-## Unmodified screenshots from qFlipper
+description: "@README.md"
 screenshots:
   - screenshots/ss1.png
   - screenshots/ss2.png
