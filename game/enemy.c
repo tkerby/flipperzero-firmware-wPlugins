@@ -221,8 +221,14 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     enemy_context->state = ENEMY_DEAD;
 
                     // Reset enemy position and health
-                    entity_pos_set(self, enemy_context->start_position);
                     enemy_context->health = 100;
+
+                    // remove from game context and set in safe zone
+                    game_context->enemies[enemy_context->index] = NULL;
+                    game_context->enemy_count--;
+                    entity_collider_remove(self);
+                    entity_pos_set(self, (Vector){-100, -100});
+                    return;
                 }
                 else
                 {
@@ -347,6 +353,10 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         return;
 
     EnemyContext *enemy_context = (EnemyContext *)context;
+    if (!enemy_context || enemy_context->state == ENEMY_DEAD)
+    {
+        return;
+    }
 
     GameContext *game_context = game_manager_game_context_get(manager);
     if (!game_context)
@@ -468,7 +478,8 @@ static void enemy_free(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(self);
     UNUSED(manager);
-    enemy_generic_free(context);
+    if (context)
+        enemy_generic_free(context);
 }
 
 // Enemy behavior structure
