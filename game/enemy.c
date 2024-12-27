@@ -583,8 +583,8 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
     char *_index = get_json_value("index", json);
     //
     char *size = get_json_value("size", json);
-    char *size_x = get_json_value("x", size);
-    char *size_y = get_json_value("y", size);
+    char *size_x = get_json_value("width", size);
+    char *size_y = get_json_value("height", size);
     //
     char *start_position = get_json_value("start_position", json);
     char *start_position_x = get_json_value("x", start_position);
@@ -614,14 +614,14 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
                                                                                        manager,
                                                                                        id,
                                                                                        atoi(_index),
-                                                                                       (Vector){atof(size_x), atof(size_y)},
-                                                                                       (Vector){atof(start_position_x), atof(start_position_y)},
-                                                                                       (Vector){atof(end_position_x), atof(end_position_y)},
-                                                                                       atof(move_timer),
-                                                                                       atof(speed),
-                                                                                       atof(attack_timer),
-                                                                                       atof(strength),
-                                                                                       atof(health)));
+                                                                                       (Vector){strtod(size_x, NULL), strtod(size_y, NULL)},
+                                                                                       (Vector){strtod(start_position_x, NULL), strtod(start_position_y, NULL)},
+                                                                                       (Vector){strtod(end_position_x, NULL), strtod(end_position_y, NULL)},
+                                                                                       strtod(move_timer, NULL),
+                                                                                       strtod(speed, NULL),
+                                                                                       strtod(attack_timer, NULL),
+                                                                                       strtod(strength, NULL),
+                                                                                       strtod(health, NULL)));
         game_context->enemy_count++;
     }
 
@@ -665,8 +665,8 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
     FuriString *_index = get_json_value_furi("index", json);
     //
     FuriString *size = get_json_value_furi("size", json);
-    FuriString *size_x = get_json_value_furi("x", size);
-    FuriString *size_y = get_json_value_furi("y", size);
+    FuriString *size_x = get_json_value_furi("width", size);
+    FuriString *size_y = get_json_value_furi("height", size);
     //
     FuriString *start_position = get_json_value_furi("start_position", json);
     FuriString *start_position_x = get_json_value_furi("x", start_position);
@@ -696,14 +696,14 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
                                                                                        manager,
                                                                                        furi_string_get_cstr(id),
                                                                                        atoi(furi_string_get_cstr(_index)),
-                                                                                       (Vector){atof(furi_string_get_cstr(size_x)), atof(furi_string_get_cstr(size_y))},
-                                                                                       (Vector){atof(furi_string_get_cstr(start_position_x)), atof(furi_string_get_cstr(start_position_y))},
-                                                                                       (Vector){atof(furi_string_get_cstr(end_position_x)), atof(furi_string_get_cstr(end_position_y))},
-                                                                                       atof(furi_string_get_cstr(move_timer)),
-                                                                                       atof(furi_string_get_cstr(speed)),
-                                                                                       atof(furi_string_get_cstr(attack_timer)),
-                                                                                       atof(furi_string_get_cstr(strength)),
-                                                                                       atof(furi_string_get_cstr(health))));
+                                                                                       (Vector){strtod(furi_string_get_cstr(size_x), NULL), strtod(furi_string_get_cstr(size_y), NULL)},
+                                                                                       (Vector){strtod(furi_string_get_cstr(start_position_x), NULL), strtod(furi_string_get_cstr(start_position_y), NULL)},
+                                                                                       (Vector){strtod(furi_string_get_cstr(end_position_x), NULL), strtod(furi_string_get_cstr(end_position_y), NULL)},
+                                                                                       strtod(furi_string_get_cstr(move_timer), NULL),
+                                                                                       strtod(furi_string_get_cstr(speed), NULL),
+                                                                                       strtod(furi_string_get_cstr(attack_timer), NULL),
+                                                                                       strtod(furi_string_get_cstr(strength), NULL),
+                                                                                       strtod(furi_string_get_cstr(health), NULL)));
         game_context->enemy_count++;
     }
 

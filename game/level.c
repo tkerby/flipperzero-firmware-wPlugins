@@ -1,11 +1,63 @@
 #include <game/level.h>
 #include <flip_storage/storage.h>
+#include <game/storage.h>
+static void set_world(Level *level, GameManager *manager, char *id)
+{
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path),
+             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_json_data.json",
+             id, id);
+
+    FuriString *json_data_str = flipper_http_load_from_file(file_path);
+    if (!json_data_str || furi_string_empty(json_data_str))
+    {
+        FURI_LOG_E("Game", "Failed to load json data from file");
+        draw_tree_world(level);
+        return;
+    }
+
+    if (!draw_json_world_furi(level, json_data_str))
+    {
+        FURI_LOG_E("Game", "Failed to draw world");
+        draw_tree_world(level);
+        furi_string_free(json_data_str);
+    }
+    else
+    {
+        furi_string_free(json_data_str);
+        snprintf(file_path, sizeof(file_path),
+                 STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_enemy_data.json",
+                 id, id);
+
+        FuriString *enemy_data_str = flipper_http_load_from_file(file_path);
+        if (!enemy_data_str || furi_string_empty(enemy_data_str))
+        {
+            FURI_LOG_E("Game", "Failed to get enemy data");
+            draw_tree_world(level);
+            return;
+        }
+        // Loop through the array
+        for (int i = 0; i < MAX_ENEMIES; i++)
+        {
+            FuriString *single_enemy_data = get_json_array_value_furi("enemy_data", i, enemy_data_str);
+            if (!single_enemy_data || furi_string_empty(single_enemy_data))
+            {
+                // No more enemy elements found
+                break;
+            }
+
+            spawn_enemy_json_furi(level, manager, single_enemy_data);
+            furi_string_free(single_enemy_data);
+        }
+        furi_string_free(enemy_data_str);
+    }
+}
+
 static void level_start(Level *level, GameManager *manager, void *context)
 {
-    UNUSED(manager);
-    if (!level || !context)
+    if (!level || !context || !manager)
     {
-        FURI_LOG_E("Game", "Level or context is NULL");
+        FURI_LOG_E("Game", "Level, context, or manager is NULL");
         return;
     }
 
@@ -24,36 +76,14 @@ static void level_start(Level *level, GameManager *manager, void *context)
             draw_tree_world(level);
             return;
         }
-
-        if (!draw_json_world(level, furi_string_get_cstr(world_data)))
-        {
-            FURI_LOG_E("Game", "Failed to draw world");
-            draw_tree_world(level);
-        }
-
-        // world_data is guaranteed non-NULL here
         furi_string_free(world_data);
-        return;
-    }
 
-    // get the world data
-    FuriString *world_data = load_furi_world(level_context->id);
-    if (!world_data)
+        set_world(level, manager, level_context->id);
+    }
+    else
     {
-        FURI_LOG_E("Game", "Failed to load world data");
-        draw_tree_world(level);
-        return;
+        set_world(level, manager, level_context->id);
     }
-
-    // draw the world
-    if (!draw_json_world(level, furi_string_get_cstr(world_data)))
-    {
-        FURI_LOG_E("Game", "World exists but failed to draw.");
-        draw_tree_world(level);
-    }
-
-    // world_data is guaranteed non-NULL here
-    furi_string_free(world_data);
 }
 
 static LevelContext *level_context_generic;

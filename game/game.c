@@ -38,33 +38,6 @@ static void game_start(GameManager *game_manager, void *ctx)
     }
     furi_string_free(world_list);
 
-    // add one enemy
-    game_context->enemies[0] = level_add_entity(game_context->levels[0], enemy(game_manager,
-                                                                               "sword", // enemy id
-                                                                               0,
-                                                                               (Vector){15, 11},
-                                                                               (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 16},
-                                                                               (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 16},
-                                                                               1,
-                                                                               32,
-                                                                               0.5f,
-                                                                               10,
-                                                                               100));
-
-    // add another enemy
-    game_context->enemies[1] = level_add_entity(game_context->levels[0], enemy(game_manager,
-                                                                               "axe", // enemy id
-                                                                               1,
-                                                                               (Vector){15, 11},
-                                                                               (Vector){WORLD_WIDTH / 2 + 11, WORLD_HEIGHT / 2 + 32},
-                                                                               (Vector){WORLD_WIDTH / 2 - 11, WORLD_HEIGHT / 2 + 32},
-                                                                               1,
-                                                                               32,
-                                                                               0.5f,
-                                                                               10,
-                                                                               100));
-
-    game_context->enemy_count = 2;
     game_context->current_level = 0;
 }
 

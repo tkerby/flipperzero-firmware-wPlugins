@@ -644,7 +644,6 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
         {
             furi_string_free(world_list);
             furi_string_free(first_world);
-            FURI_LOG_I(TAG, "World already exists");
             flipper_http_deinit();
             // free game thread
             if (game_thread_running)
@@ -867,7 +866,6 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
         {
             furi_string_free(world_list);
             furi_string_free(first_world);
-            FURI_LOG_I(TAG, "World already exists");
 
             // view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu);
             flipper_http_deinit();

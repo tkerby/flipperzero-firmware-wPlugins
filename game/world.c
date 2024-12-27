@@ -1,4 +1,5 @@
 #include <game/world.h>
+#include <game/storage.h>
 #include <flip_storage/storage.h>
 void draw_bounds(Canvas *canvas)
 {
@@ -9,24 +10,21 @@ void draw_bounds(Canvas *canvas)
 
 bool draw_json_world(Level *level, const char *json_data)
 {
+    int levels_added = 0;
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
-        // 1) Get data array item
         char *data = get_json_array_value("json_data", i, json_data);
         if (!data)
         {
-            // Means we've reached the end of the array
             break;
         }
 
-        // 2) Extract all required fields
         char *icon = get_json_value("icon", data);
         char *x = get_json_value("x", data);
         char *y = get_json_value("y", data);
         char *amount = get_json_value("amount", data);
         char *horizontal = get_json_value("horizontal", data);
 
-        // 3) Check for any NULL pointers
         if (!icon || !x || !y || !amount || !horizontal)
         {
             FURI_LOG_E("Game", "Failed Data: %s", data);
@@ -49,7 +47,6 @@ bool draw_json_world(Level *level, const char *json_data)
             return false;
         }
 
-        // 4) Get the IconContext
         IconContext *icon_context = get_icon_context(icon);
         if (!icon_context)
         {
@@ -66,7 +63,6 @@ bool draw_json_world(Level *level, const char *json_data)
             return false;
         }
 
-        // 5) Decide how many icons to spawn
         int count = atoi(amount);
         if (count < 2)
         {
@@ -81,7 +77,6 @@ bool draw_json_world(Level *level, const char *json_data)
         }
         else
         {
-            // Spawn multiple in a line
             bool is_horizontal = (strcmp(horizontal, "true") == 0);
             spawn_icon_line(
                 level,
@@ -93,8 +88,6 @@ bool draw_json_world(Level *level, const char *json_data)
                 count,
                 is_horizontal);
         }
-
-        // 6) Cleanup
         free(data);
         free(icon);
         free(x);
@@ -102,30 +95,29 @@ bool draw_json_world(Level *level, const char *json_data)
         free(amount);
         free(horizontal);
         free(icon_context);
+        levels_added++;
     }
-    return true;
+    return levels_added > 0;
 }
 
 bool draw_json_world_furi(Level *level, FuriString *json_data)
 {
+    int levels_added = 0;
+
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
-        // 1) Get data array item as FuriString
         FuriString *data = get_json_array_value_furi("json_data", i, json_data);
         if (!data)
         {
-            // Means we've reached the end of the array
             break;
         }
 
-        // 2) Extract all required fields
         FuriString *icon = get_json_value_furi("icon", data);
         FuriString *x = get_json_value_furi("x", data);
         FuriString *y = get_json_value_furi("y", data);
         FuriString *amount = get_json_value_furi("amount", data);
         FuriString *horizontal = get_json_value_furi("horizontal", data);
 
-        // 3) Check for any NULL pointers
         if (!icon || !x || !y || !amount || !horizontal)
         {
             FURI_LOG_E("Game", "Failed Data: %s", furi_string_get_cstr(data));
@@ -147,7 +139,6 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
             return false;
         }
 
-        // 4) Get the IconContext from a FuriString
         IconContext *icon_context = get_icon_context_furi(icon);
         if (!icon_context)
         {
@@ -164,7 +155,6 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
             return false;
         }
 
-        // 5) Decide how many icons to spawn
         int count = atoi(furi_string_get_cstr(amount));
         if (count < 2)
         {
@@ -179,7 +169,6 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
         }
         else
         {
-            // Spawn multiple in a line
             bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
             spawn_icon_line(
                 level,
@@ -192,7 +181,6 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
                 is_horizontal);
         }
 
-        // 6) Clean up after every iteration
         furi_string_free(data);
         furi_string_free(icon);
         furi_string_free(x);
@@ -200,8 +188,9 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
         furi_string_free(amount);
         furi_string_free(horizontal);
         free(icon_context);
+        levels_added++;
     }
-    return true;
+    return levels_added > 0;
 }
 
 void draw_tree_world(Level *level)
@@ -432,6 +421,12 @@ FuriString *fetch_world(const char *name)
     if (!returned_data)
     {
         FURI_LOG_E("Game", "Failed to load world data from file");
+        return NULL;
+    }
+    if (!separate_world_data((char *)name, returned_data))
+    {
+        FURI_LOG_E("Game", "Failed to separate world data");
+        furi_string_free(returned_data);
         return NULL;
     }
     return returned_data;

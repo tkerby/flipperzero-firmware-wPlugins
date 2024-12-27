@@ -137,10 +137,6 @@ FuriString *flipper_http_load_from_file(char *file_path)
         furi_string_push_back(str_result, buffer[i]);
     }
 
-    // Check if there is more data beyond the maximum size
-    char extra_byte;
-    storage_file_read(file, &extra_byte, 1);
-
     // Clean up
     storage_file_close(file);
     storage_file_free(file);
