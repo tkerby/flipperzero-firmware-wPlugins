@@ -560,3 +560,167 @@ const EntityDescription *enemy(
 
     return &_generic_enemy;
 }
+
+void spawn_enemy_json(Level *level, GameManager *manager, char *json)
+{
+    if (!level)
+    {
+        FURI_LOG_E("Game", "Level is NULL");
+        return;
+    }
+    if (!json)
+    {
+        FURI_LOG_E("Game", "JSON is NULL");
+        return;
+    }
+    if (!manager)
+    {
+        FURI_LOG_E("Game", "GameManager is NULL");
+        return;
+    }
+    // parameters: id, index, size.x, size.y, start_position.x, start_position.y, end_position.x, end_position.y, move_timer, speed, attack_timer, strength, health
+    char *id = get_json_value("id", json);
+    char *_index = get_json_value("index", json);
+    //
+    char *size = get_json_value("size", json);
+    char *size_x = get_json_value("x", size);
+    char *size_y = get_json_value("y", size);
+    //
+    char *start_position = get_json_value("start_position", json);
+    char *start_position_x = get_json_value("x", start_position);
+    char *start_position_y = get_json_value("y", start_position);
+    //
+    char *end_position = get_json_value("end_position", json);
+    char *end_position_x = get_json_value("x", end_position);
+    char *end_position_y = get_json_value("y", end_position);
+    //
+    char *move_timer = get_json_value("move_timer", json);
+    char *speed = get_json_value("speed", json);
+    char *attack_timer = get_json_value("attack_timer", json);
+    char *strength = get_json_value("strength", json);
+    char *health = get_json_value("health", json);
+    //
+
+    if (!id || !_index || !size_x || !size_y || !start_position_x || !start_position_y || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
+    {
+        FURI_LOG_E("Game", "Failed to parse JSON values");
+        return;
+    }
+
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (game_context && game_context->enemy_count < MAX_ENEMIES && !game_context->enemies[game_context->enemy_count])
+    {
+        game_context->enemies[game_context->enemy_count] = level_add_entity(level, enemy(
+                                                                                       manager,
+                                                                                       id,
+                                                                                       atoi(_index),
+                                                                                       (Vector){atof(size_x), atof(size_y)},
+                                                                                       (Vector){atof(start_position_x), atof(start_position_y)},
+                                                                                       (Vector){atof(end_position_x), atof(end_position_y)},
+                                                                                       atof(move_timer),
+                                                                                       atof(speed),
+                                                                                       atof(attack_timer),
+                                                                                       atof(strength),
+                                                                                       atof(health)));
+        game_context->enemy_count++;
+    }
+
+    free(id);
+    free(_index);
+    free(size);
+    free(size_x);
+    free(size_y);
+    free(start_position);
+    free(start_position_x);
+    free(start_position_y);
+    free(end_position);
+    free(end_position_x);
+    free(end_position_y);
+    free(move_timer);
+    free(speed);
+    free(attack_timer);
+    free(strength);
+    free(health);
+}
+
+void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
+{
+    if (!level)
+    {
+        FURI_LOG_E("Game", "Level is NULL");
+        return;
+    }
+    if (!json)
+    {
+        FURI_LOG_E("Game", "JSON is NULL");
+        return;
+    }
+    if (!manager)
+    {
+        FURI_LOG_E("Game", "GameManager is NULL");
+        return;
+    }
+    // parameters: id, index, size.x, size.y, start_position.x, start_position.y, end_position.x, end_position.y, move_timer, speed, attack_timer, strength, health
+    FuriString *id = get_json_value_furi("id", json);
+    FuriString *_index = get_json_value_furi("index", json);
+    //
+    FuriString *size = get_json_value_furi("size", json);
+    FuriString *size_x = get_json_value_furi("x", size);
+    FuriString *size_y = get_json_value_furi("y", size);
+    //
+    FuriString *start_position = get_json_value_furi("start_position", json);
+    FuriString *start_position_x = get_json_value_furi("x", start_position);
+    FuriString *start_position_y = get_json_value_furi("y", start_position);
+    //
+    FuriString *end_position = get_json_value_furi("end_position", json);
+    FuriString *end_position_x = get_json_value_furi("x", end_position);
+    FuriString *end_position_y = get_json_value_furi("y", end_position);
+    //
+    FuriString *move_timer = get_json_value_furi("move_timer", json);
+    FuriString *speed = get_json_value_furi("speed", json);
+    FuriString *attack_timer = get_json_value_furi("attack_timer", json);
+    FuriString *strength = get_json_value_furi("strength", json);
+    FuriString *health = get_json_value_furi("health", json);
+    //
+
+    if (!id || !_index || !size_x || !size_y || !start_position_x || !start_position_y || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
+    {
+        FURI_LOG_E("Game", "Failed to parse JSON values");
+        return;
+    }
+
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (game_context && game_context->enemy_count < MAX_ENEMIES && !game_context->enemies[game_context->enemy_count])
+    {
+        game_context->enemies[game_context->enemy_count] = level_add_entity(level, enemy(
+                                                                                       manager,
+                                                                                       furi_string_get_cstr(id),
+                                                                                       atoi(furi_string_get_cstr(_index)),
+                                                                                       (Vector){atof(furi_string_get_cstr(size_x)), atof(furi_string_get_cstr(size_y))},
+                                                                                       (Vector){atof(furi_string_get_cstr(start_position_x)), atof(furi_string_get_cstr(start_position_y))},
+                                                                                       (Vector){atof(furi_string_get_cstr(end_position_x)), atof(furi_string_get_cstr(end_position_y))},
+                                                                                       atof(furi_string_get_cstr(move_timer)),
+                                                                                       atof(furi_string_get_cstr(speed)),
+                                                                                       atof(furi_string_get_cstr(attack_timer)),
+                                                                                       atof(furi_string_get_cstr(strength)),
+                                                                                       atof(furi_string_get_cstr(health))));
+        game_context->enemy_count++;
+    }
+
+    furi_string_free(id);
+    furi_string_free(_index);
+    furi_string_free(size);
+    furi_string_free(size_x);
+    furi_string_free(size_y);
+    furi_string_free(start_position);
+    furi_string_free(start_position_x);
+    furi_string_free(start_position_y);
+    furi_string_free(end_position);
+    furi_string_free(end_position_x);
+    furi_string_free(end_position_y);
+    furi_string_free(move_timer);
+    furi_string_free(speed);
+    furi_string_free(attack_timer);
+    furi_string_free(strength);
+    furi_string_free(health);
+}

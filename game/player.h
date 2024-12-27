@@ -6,6 +6,9 @@
 #define PLAYER_COLLISION_VERTICAL 5
 #define PLAYER_COLLISION_HORIZONTAL 5
 
+// Maximum enemies
+#define MAX_ENEMIES 10
+
 typedef enum
 {
     PLAYER_IDLE,
@@ -48,7 +51,7 @@ typedef struct
 {
     PlayerContext *player_context;
     Level *levels[10];
-    Entity *enemies[2];
+    Entity *enemies[MAX_ENEMIES];
     Entity *players[1];
     GameKey user_input;
     float fps;

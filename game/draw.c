@@ -23,7 +23,6 @@ void draw_background(Canvas *canvas, Vector pos)
 }
 
 // Draw the user stats (health, xp, and level)
-// Draw the user stats (health, xp, and level)
 void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
