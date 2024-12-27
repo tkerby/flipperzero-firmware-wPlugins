@@ -2,7 +2,7 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/misterwaztaken/fmatrix.git
-    commit_sha: f8acc6f4c381c941ac725b6c0b5c42ccd84a654f
+    commit_sha: 3da214352e68f3fd38ed22688fab03e23e32b619
 short_description: 'matrix rain' effect for flipper.
 version: 0.2
 description: |
