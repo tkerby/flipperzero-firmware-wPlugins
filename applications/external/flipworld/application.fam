@@ -17,5 +17,5 @@ App(
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipWorld",
     fap_version="0.1",
-    fap_description="The first open-world multiplayer game, best played with the VGM.", 
+    fap_description="The first open-world multiplayer game, best played with the VGM.",
 )
