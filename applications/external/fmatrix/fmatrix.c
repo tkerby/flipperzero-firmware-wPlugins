@@ -6,7 +6,7 @@
 // Display constants
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64
-#define CHAR__WIDTH    6
+#define CHAR__WIDTH   6
 #define CHAR_HEIGHT   8
 #define MAX_COLUMNS   (SCREEN_WIDTH / CHAR__WIDTH)
 #define MAX_ROWS      (SCREEN_HEIGHT / CHAR_HEIGHT)
