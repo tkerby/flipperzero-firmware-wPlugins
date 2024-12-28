@@ -1,4 +1,4 @@
-<h1 align="center"><a href='https://rogue-master.net'><img src="https://drive.google.com/drive-viewer/AKGpihb2sWG_ZpJ1R2oKqljt9sVStAxTHUng29XmqJhXg4dTheom_PValZKNn7z52v3PovQn72wb0L7D0uiMAwLdrJDVFGVOBfTfHjc=w1919-h929" width="40%"></a>
+<h1 align="center"><a href='https://rogue-master.net'><img src="https://rogue-master.net/img/rmlogo.png" width="40%"></a>
 <br><a href='https://discord.gg/gF2bBUzAFe' target='_blank'><img src='https://rogue-master.net/img/Discord.png' alt='Discord' title='Discord'></a>
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://rogue-master.net/img/Patreon.png' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://rogue-master.net/img/Merch.png' alt='RM Merch'' title='RM Merch'></a>
