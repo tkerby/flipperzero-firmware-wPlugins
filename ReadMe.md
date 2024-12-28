@@ -1,4 +1,4 @@
-<h1 align="center"><a href='https://rogue-master.net'><img src="https://rogue-master.net/img/rmlogo.png" width="40%"></a>
+<h1 align="center"><a href='https://rogue-master.net'><img src="https://drive.google.com/drive-viewer/AKGpihb2sWG_ZpJ1R2oKqljt9sVStAxTHUng29XmqJhXg4dTheom_PValZKNn7z52v3PovQn72wb0L7D0uiMAwLdrJDVFGVOBfTfHjc=w1919-h929" width="40%"></a>
 <br><a href='https://discord.gg/gF2bBUzAFe' target='_blank'><img src='https://rogue-master.net/img/Discord.png' alt='Discord' title='Discord'></a>
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://rogue-master.net/img/Patreon.png' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://rogue-master.net/img/Merch.png' alt='RM Merch'' title='RM Merch'></a>
@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1224-1716-0.420.0-60e3156](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1228-1505-0.420.0-b6a6654](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-24 17:15 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-24 17:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-28 15:05 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-28 15:05 EST`
 - UL: [Desktop: add input events sub check (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/38326877eab18cb3c4150df51c32afe5ed459f0b)
 - Updated: [FlipSocial v1.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Hoping everyone has a wonderful holiday season! Thank you to all our supporters and our community that keeps on making the Flipper Zero better!
