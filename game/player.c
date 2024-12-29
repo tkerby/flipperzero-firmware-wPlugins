@@ -29,7 +29,7 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 10x10
-    entity_collider_add_rect(game_context->players[0], 10 + PLAYER_COLLISION_HORIZONTAL, 10 + PLAYER_COLLISION_VERTICAL);
+    entity_collider_add_rect(game_context->players[0], 10, 10);
 
     // Get player context
     PlayerContext *player_context = entity_context_get(game_context->players[0]);
@@ -57,19 +57,19 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     game_context->player_context = player_context;
-    save_player_context(player_context);
-    //  return;
-    //  }
+    // save_player_context(player_context);
+    //   return;
+    //   }
 
     // Copy loaded player context to player context
     // game_context->player_context = player_context;
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
+    // player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
+    // player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
 
     // save the player context to storage
-    save_player_context(player_context);
+    // save_player_context(player_context);
 }
 
 // Modify player_update to track direction

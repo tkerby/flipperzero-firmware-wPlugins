@@ -53,11 +53,11 @@ static void game_stop(void *ctx)
         FURI_LOG_E("Game", "Invalid game context");
         return;
     }
-    GameContext *game_context = ctx;
-    if (game_context->player_context)
-    {
-        save_player_context(game_context->player_context);
-    }
+    // GameContext *game_context = ctx;
+    // if (game_context->player_context)
+    // {
+    //     save_player_context(game_context->player_context);
+    // }
 }
 
 /*
