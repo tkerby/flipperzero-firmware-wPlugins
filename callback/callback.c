@@ -645,7 +645,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
     furi_thread_start(thread);
     thread_id = furi_thread_get_id(thread);
     game_thread_running = true;
-    return "Game started";
+    return "Game starting... please wait :D";
 }
 static void flip_world_world_list_switch_to_view(FlipWorldApp *app)
 {

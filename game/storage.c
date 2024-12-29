@@ -582,9 +582,9 @@ bool separate_world_data(char *id, FuriString *world_data)
         return false;
     }
     FuriString *file_json_data = json_data(world_data);
-    if (!file_json_data)
+    if (!file_json_data || furi_string_size(file_json_data) == 0)
     {
-        FURI_LOG_E("Game", "Failed to get json data");
+        FURI_LOG_E("Game", "Failed to get json data in separate_world_data");
         return false;
     }
 
@@ -616,6 +616,7 @@ bool separate_world_data(char *id, FuriString *world_data)
     {
         FURI_LOG_E("Game", "Failed to write json_data");
     }
+    storage_file_close(file);
 
     furi_string_replace_at(file_json_data, 0, 1, "");
     furi_string_replace_at(file_json_data, furi_string_size(file_json_data) - 1, 1, "");
