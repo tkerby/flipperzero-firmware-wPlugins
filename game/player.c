@@ -33,36 +33,36 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Get player context
     PlayerContext *player_context = entity_context_get(game_context->players[0]);
-    if (!load_player_context(player_context))
+    // if (!load_player_context(player_context))
+    //  {
+    // Load player sprite
+    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
+    player_context->direction = PLAYER_RIGHT; // default direction
+    player_context->health = 100;
+    player_context->strength = 10;
+    player_context->level = 1;
+    player_context->xp = 0;
+    player_context->start_position = entity_pos_get(game_context->players[0]);
+    player_context->attack_timer = 0.1f;
+    player_context->elapsed_attack_timer = player_context->attack_timer;
+    player_context->health_regen = 1; // 1 health per second
+    player_context->elapsed_health_regen = 0;
+    player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+
+    // Set player username
+    if (!load_char("Flip-Social-Username", player_context->username, 32))
     {
-        // Load player sprite
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
-        player_context->direction = PLAYER_RIGHT; // default direction
-        player_context->health = 100;
-        player_context->strength = 10;
-        player_context->level = 1;
-        player_context->xp = 0;
-        player_context->start_position = entity_pos_get(game_context->players[0]);
-        player_context->attack_timer = 0.5f;
-        player_context->elapsed_attack_timer = player_context->attack_timer;
-        player_context->health_regen = 1; // 1 health per second
-        player_context->elapsed_health_regen = 0;
-        player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
-
-        // Set player username
-        if (!load_char("Flip-Social-Username", player_context->username, 32))
-        {
-            snprintf(player_context->username, 32, "Player");
-        }
-
-        game_context->player_context = player_context;
-        save_player_context(player_context);
-        return;
+        snprintf(player_context->username, 32, "Player");
     }
 
-    // Copy loaded player context to player context
     game_context->player_context = player_context;
+    save_player_context(player_context);
+    //  return;
+    //  }
+
+    // Copy loaded player context to player context
+    // game_context->player_context = player_context;
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
@@ -195,8 +195,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     );
 
     // draw username over player's head
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, pos.x - camera_x - (strlen(player->username) * 2), pos.y - camera_y - 7, player->username);
+    // draw_username(canvas, pos, player->username);
 }
 
 const EntityDescription player_desc = {

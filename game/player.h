@@ -3,8 +3,8 @@
 #include <flip_world.h>
 #include <game/game.h>
 
-#define PLAYER_COLLISION_VERTICAL 5
-#define PLAYER_COLLISION_HORIZONTAL 5
+#define PLAYER_COLLISION_VERTICAL 0   // was 5
+#define PLAYER_COLLISION_HORIZONTAL 0 // was 5
 
 // Maximum enemies
 #define MAX_ENEMIES 10

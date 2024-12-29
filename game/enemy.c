@@ -117,6 +117,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         return;
 
     EnemyContext *enemy_context = (EnemyContext *)context;
+    GameContext *game_context = game_manager_game_context_get(manager);
 
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
@@ -139,8 +140,17 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         pos.x - camera_x - (enemy_context->size.x / 2),
         pos.y - camera_y - (enemy_context->size.y / 2));
 
+    // instead of username, draw health
+    char health_str[32];
+    snprintf(health_str, sizeof(health_str), "%.0f", (double)enemy_context->health);
+    draw_username(canvas, pos, health_str);
+
     // Draw user stats (this has to be done for all enemies)
-    draw_user_stats(canvas, (Vector){0, 7}, manager);
+    draw_user_stats(canvas, (Vector){0, 50}, manager);
+
+    // draw player username from GameContext
+    Vector posi = entity_pos_get(game_context->players[0]);
+    draw_username(canvas, posi, game_context->player_context->username);
 }
 
 // Enemy collision function
@@ -211,6 +221,10 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 // Increase healthy by 10% of the enemy's strength
                 game_context->player_context->health += enemy_context->strength * 0.1f;
+                if (game_context->player_context->health > 100)
+                {
+                    game_context->player_context->health = 100;
+                }
 
                 // Decrease enemy health by player strength
                 enemy_context->health -= game_context->player_context->strength;
