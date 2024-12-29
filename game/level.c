@@ -1,7 +1,7 @@
 #include <game/level.h>
 #include <flip_storage/storage.h>
 #include <game/storage.h>
-static void set_world(Level *level, GameManager *manager, char *id)
+void set_world(Level *level, GameManager *manager, char *id)
 {
     char file_path[256];
     snprintf(file_path, sizeof(file_path),

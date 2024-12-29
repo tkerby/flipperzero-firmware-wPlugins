@@ -21,7 +21,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     if (!world_list)
     {
         FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world", 0));
+        game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
         game_context->level_count = 1;
         return;
     }

@@ -602,7 +602,6 @@ char *get_json_array_value(char *key, uint32_t index, const char *json_data)
 
     if (index >= (uint32_t)tokens[0].size)
     {
-        FURI_LOG_E("JSMM.H", "Index %lu out of bounds for array with size %u.", index, tokens[0].size);
         free(tokens);
         free(array_str);
         return NULL;

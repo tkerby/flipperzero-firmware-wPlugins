@@ -33,9 +33,7 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Get player context
     PlayerContext *player_context = entity_context_get(game_context->players[0]);
-    PlayerContext *loaded_player_context = load_player_context();
-
-    if (!loaded_player_context)
+    if (!load_player_context(player_context))
     {
         // Load player sprite
         player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
@@ -59,15 +57,12 @@ void player_spawn(Level *level, GameManager *manager)
         }
 
         game_context->player_context = player_context;
+        save_player_context(player_context);
         return;
     }
 
     // Copy loaded player context to player context
-    memcpy(player_context, loaded_player_context, sizeof(PlayerContext));
     game_context->player_context = player_context;
-
-    // Free loaded player context
-    free(loaded_player_context);
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");

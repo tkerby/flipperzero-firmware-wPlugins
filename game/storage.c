@@ -1,4 +1,30 @@
 #include <game/storage.h>
+#include <stdio.h>
+#include <furi.h>
+#include <furi_hal.h>
+
+bool save_uint32(const char *path_name, uint32_t value)
+{
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%lu", value);
+    return save_char(path_name, buffer);
+}
+
+// Helper function to save an int8_t
+bool save_int8(const char *path_name, int8_t value)
+{
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%d", value);
+    return save_char(path_name, buffer);
+}
+
+// Helper function to save a float
+bool save_float(const char *path_name, float value)
+{
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)value); // Limit to 6 decimal places
+    return save_char(path_name, buffer);
+}
 bool save_player_context(PlayerContext *player_context)
 {
     if (!player_context)
@@ -6,87 +32,442 @@ bool save_player_context(PlayerContext *player_context)
         FURI_LOG_E(TAG, "Invalid player context");
         return false;
     }
-    char player_context_json[512];
-    snprintf(player_context_json, sizeof(player_context_json), "{\"username\":\"%s\",\"level\":%lu,\"xp\":%lu,\"health\":%lu,\"strength\":%lu,\"max_health\":%lu,\"health_regen\":%ld,\"elapsed_health_regen\":%f,\"attack_timer\":%f,\"elapsed_attack_timer\":%f,\"direction\":%u,\"state\":%u,\"start_position\":{\"x\":%f,\"y\":%f},\"dx\":%u,\"dy\":%u}",
-             player_context->username, player_context->level, player_context->xp, player_context->health, player_context->strength, player_context->max_health, player_context->health_regen, (double)player_context->elapsed_health_regen, (double)player_context->attack_timer, (double)player_context->elapsed_attack_timer, player_context->direction, player_context->state, (double)player_context->start_position.x, (double)player_context->start_position.y, player_context->dx, player_context->dy);
 
-    return save_char("player_context", player_context_json);
+    // Create the directory for saving settings
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player");
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    furi_record_close(RECORD_STORAGE);
+
+    // 1. Username (String)
+    if (!save_char("player/username", player_context->username))
+    {
+        FURI_LOG_E(TAG, "Failed to save player username");
+        return false;
+    }
+
+    // 2. Level (uint32_t)
+    if (!save_uint32("player/level", player_context->level))
+    {
+        FURI_LOG_E(TAG, "Failed to save player level");
+        return false;
+    }
+
+    // 3. XP (uint32_t)
+    if (!save_uint32("player/xp", player_context->xp))
+    {
+        FURI_LOG_E(TAG, "Failed to save player xp");
+        return false;
+    }
+
+    // 4. Health (uint32_t)
+    if (!save_uint32("player/health", player_context->health))
+    {
+        FURI_LOG_E(TAG, "Failed to save player health");
+        return false;
+    }
+
+    // 5. Strength (uint32_t)
+    if (!save_uint32("player/strength", player_context->strength))
+    {
+        FURI_LOG_E(TAG, "Failed to save player strength");
+        return false;
+    }
+
+    // 6. Max Health (uint32_t)
+    if (!save_uint32("player/max_health", player_context->max_health))
+    {
+        FURI_LOG_E(TAG, "Failed to save player max health");
+        return false;
+    }
+
+    // 7. Health Regen (uint32_t)
+    if (!save_uint32("player/health_regen", player_context->health_regen))
+    {
+        FURI_LOG_E(TAG, "Failed to save player health regen");
+        return false;
+    }
+
+    // 8. Elapsed Health Regen (float)
+    if (!save_float("player/elapsed_health_regen", player_context->elapsed_health_regen))
+    {
+        FURI_LOG_E(TAG, "Failed to save player elapsed health regen");
+        return false;
+    }
+
+    // 9. Attack Timer (float)
+    if (!save_float("player/attack_timer", player_context->attack_timer))
+    {
+        FURI_LOG_E(TAG, "Failed to save player attack timer");
+        return false;
+    }
+
+    // 10. Elapsed Attack Timer (float)
+    if (!save_float("player/elapsed_attack_timer", player_context->elapsed_attack_timer))
+    {
+        FURI_LOG_E(TAG, "Failed to save player elapsed attack timer");
+        return false;
+    }
+
+    // 11. Direction (enum PlayerDirection)
+    {
+        char direction_str[2];
+        switch (player_context->direction)
+        {
+        case PLAYER_UP:
+            strncpy(direction_str, "0", sizeof(direction_str));
+            break;
+        case PLAYER_DOWN:
+            strncpy(direction_str, "1", sizeof(direction_str));
+            break;
+        case PLAYER_LEFT:
+            strncpy(direction_str, "2", sizeof(direction_str));
+            break;
+        case PLAYER_RIGHT:
+        default:
+            strncpy(direction_str, "3", sizeof(direction_str));
+            break;
+        }
+        direction_str[1] = '\0'; // Ensure null termination
+
+        if (!save_char("player/direction", direction_str))
+        {
+            FURI_LOG_E(TAG, "Failed to save player direction");
+            return false;
+        }
+    }
+
+    // 12. State (enum PlayerState)
+    {
+        char state_str[2];
+        switch (player_context->state)
+        {
+        case PLAYER_IDLE:
+            strncpy(state_str, "0", sizeof(state_str));
+            break;
+        case PLAYER_MOVING:
+            strncpy(state_str, "1", sizeof(state_str));
+            break;
+        case PLAYER_ATTACKING:
+            strncpy(state_str, "2", sizeof(state_str));
+            break;
+        case PLAYER_ATTACKED:
+            strncpy(state_str, "3", sizeof(state_str));
+            break;
+        case PLAYER_DEAD:
+            strncpy(state_str, "4", sizeof(state_str));
+            break;
+        default:
+            strncpy(state_str, "5", sizeof(state_str)); // Assuming '5' for unknown states
+            break;
+        }
+        state_str[1] = '\0'; // Ensure null termination
+
+        if (!save_char("player/state", state_str))
+        {
+            FURI_LOG_E(TAG, "Failed to save player state");
+            return false;
+        }
+    }
+
+    // 13. Start Position X (float)
+    if (!save_float("player/start_position_x", player_context->start_position.x))
+    {
+        FURI_LOG_E(TAG, "Failed to save player start position x");
+        return false;
+    }
+
+    // 14. Start Position Y (float)
+    if (!save_float("player/start_position_y", player_context->start_position.y))
+    {
+        FURI_LOG_E(TAG, "Failed to save player start position y");
+        return false;
+    }
+
+    // 15. dx (int8_t)
+    if (!save_int8("player/dx", player_context->dx))
+    {
+        FURI_LOG_E(TAG, "Failed to save player dx");
+        return false;
+    }
+
+    // 16. dy (int8_t)
+    if (!save_int8("player/dy", player_context->dy))
+    {
+        FURI_LOG_E(TAG, "Failed to save player dy");
+        return false;
+    }
+
+    return true;
 }
 
-PlayerContext *load_player_context()
+// Helper function to load an integer
+bool load_number(const char *path_name, int *value)
 {
-    char player_context_json[512];
-    if (!load_char("player_context", player_context_json, sizeof(player_context_json)))
+    if (!path_name || !value)
     {
-        FURI_LOG_E(TAG, "Failed to load player context");
-        return NULL;
+        FURI_LOG_E(TAG, "Invalid arguments to load_number");
+        return false;
     }
-    PlayerContext *player_context = (PlayerContext *)malloc(sizeof(PlayerContext));
+
+    char buffer[32];
+    if (!load_char(path_name, buffer, sizeof(buffer)))
+    {
+        FURI_LOG_E(TAG, "Failed to load number from path: %s", path_name);
+        return false;
+    }
+
+    *value = atoi(buffer);
+    return true;
+}
+
+// Helper function to load a float
+bool load_float(const char *path_name, float *value)
+{
+    if (!path_name || !value)
+    {
+        FURI_LOG_E(TAG, "Invalid arguments to load_float");
+        return false;
+    }
+
+    char buffer[32];
+    if (!load_char(path_name, buffer, sizeof(buffer)))
+    {
+        FURI_LOG_E(TAG, "Failed to load float from path: %s", path_name);
+        return false;
+    }
+
+    *value = strtof(buffer, NULL);
+    return true;
+}
+bool load_int8(const char *path_name, int8_t *value)
+{
+    if (!path_name || !value)
+    {
+        FURI_LOG_E(TAG, "Invalid arguments to load_int8");
+        return false;
+    }
+
+    char buffer[32];
+    if (!load_char(path_name, buffer, sizeof(buffer)))
+    {
+        FURI_LOG_E(TAG, "Failed to load int8 from path: %s", path_name);
+        return false;
+    }
+
+    long temp = strtol(buffer, NULL, 10);
+    if (temp < INT8_MIN || temp > INT8_MAX)
+    {
+        FURI_LOG_E(TAG, "Value out of range for int8: %ld", temp);
+        return false;
+    }
+
+    *value = (int8_t)temp;
+    return true;
+}
+bool load_uint32(const char *path_name, uint32_t *value)
+{
+    if (!path_name || !value)
+    {
+        FURI_LOG_E(TAG, "Invalid arguments to load_uint32");
+        return false;
+    }
+
+    char buffer[32];
+    if (!load_char(path_name, buffer, sizeof(buffer)))
+    {
+        FURI_LOG_E(TAG, "Failed to load uint32 from path: %s", path_name);
+        return false;
+    }
+
+    *value = (uint32_t)strtoul(buffer, NULL, 10);
+    return true;
+}
+
+bool load_player_context(PlayerContext *player_context)
+{
     if (!player_context)
     {
-        FURI_LOG_E(TAG, "Failed to allocate player context");
-        return NULL;
+        FURI_LOG_E(TAG, "Player context is NULL");
+        return false;
     }
-    // Parse the JSON data
-    char *username = get_json_value("username", player_context_json);
-    char *level = get_json_value("level", player_context_json);
-    char *xp = get_json_value("xp", player_context_json);
-    char *health = get_json_value("health", player_context_json);
-    char *strength = get_json_value("strength", player_context_json);
-    char *max_health = get_json_value("max_health", player_context_json);
-    char *health_regen = get_json_value("health_regen", player_context_json);
-    char *elapsed_health_regen = get_json_value("elapsed_health_regen", player_context_json);
-    char *attack_timer = get_json_value("attack_timer", player_context_json);
-    char *elapsed_attack_timer = get_json_value("elapsed_attack_timer", player_context_json);
-    char *direction = get_json_value("direction", player_context_json);
-    char *state = get_json_value("state", player_context_json);
-    char *dx = get_json_value("dx", player_context_json);
-    char *dy = get_json_value("dy", player_context_json);
-    char *start_position = get_json_value("start_position", player_context_json);
-    char *start_position_x = get_json_value("x", start_position);
-    char *start_position_y = get_json_value("y", start_position);
 
-    if (!username || !level || !xp || !health || !strength || !max_health || !health_regen || !elapsed_health_regen || !attack_timer || !elapsed_attack_timer || !direction || !state || !dx || !dy || !start_position || !start_position_x || !start_position_y)
+    // Load each field and check for success
+
+    // 1. Username (String)
+    if (!load_char("player/username", player_context->username, sizeof(player_context->username)))
     {
-        FURI_LOG_E(TAG, "Failed to parse player context");
-        free(player_context);
-        return NULL;
+        FURI_LOG_E(TAG, "Failed to load player username");
+        return false;
     }
 
-    // Copy the parsed values to the player context
-    strncpy(player_context->username, username, sizeof(player_context->username));
-    player_context->level = atoi(level);
-    player_context->xp = atoi(xp);
-    player_context->health = atoi(health);
-    player_context->strength = atoi(strength);
-    player_context->max_health = atoi(max_health);
-    player_context->health_regen = atoi(health_regen);
-    player_context->elapsed_health_regen = strtod(elapsed_health_regen, NULL);
-    player_context->attack_timer = strtod(attack_timer, NULL);
-    player_context->elapsed_attack_timer = strtod(elapsed_attack_timer, NULL);
-    player_context->direction = atoi(direction);
-    player_context->state = atoi(state);
-    player_context->dx = atoi(dx);
-    player_context->dy = atoi(dy);
-    player_context->start_position.x = atoi(start_position_x);
-    player_context->start_position.y = atoi(start_position_y);
+    // 2. Level (uint32_t)
+    if (!load_uint32("player/level", &player_context->level))
+    {
+        FURI_LOG_E(TAG, "Failed to load player level");
+        return false;
+    }
 
-    return player_context;
+    // 3. XP (uint32_t)
+    if (!load_uint32("player/xp", &player_context->xp))
+    {
+        FURI_LOG_E(TAG, "Failed to load player xp");
+        return false;
+    }
+
+    // 4. Health (uint32_t)
+    if (!load_uint32("player/health", &player_context->health))
+    {
+        FURI_LOG_E(TAG, "Failed to load player health");
+        return false;
+    }
+
+    // 5. Strength (uint32_t)
+    if (!load_uint32("player/strength", &player_context->strength))
+    {
+        FURI_LOG_E(TAG, "Failed to load player strength");
+        return false;
+    }
+
+    // 6. Max Health (uint32_t)
+    if (!load_uint32("player/max_health", &player_context->max_health))
+    {
+        FURI_LOG_E(TAG, "Failed to load player max health");
+        return false;
+    }
+
+    // 7. Health Regen (uint32_t)
+    if (!load_uint32("player/health_regen", &player_context->health_regen))
+    {
+        FURI_LOG_E(TAG, "Failed to load player health regen");
+        return false;
+    }
+
+    // 8. Elapsed Health Regen (float)
+    if (!load_float("player/elapsed_health_regen", &player_context->elapsed_health_regen))
+    {
+        FURI_LOG_E(TAG, "Failed to load player elapsed health regen");
+        return false;
+    }
+
+    // 9. Attack Timer (float)
+    if (!load_float("player/attack_timer", &player_context->attack_timer))
+    {
+        FURI_LOG_E(TAG, "Failed to load player attack timer");
+        return false;
+    }
+
+    // 10. Elapsed Attack Timer (float)
+    if (!load_float("player/elapsed_attack_timer", &player_context->elapsed_attack_timer))
+    {
+        FURI_LOG_E(TAG, "Failed to load player elapsed attack timer");
+        return false;
+    }
+
+    // 11. Direction (enum PlayerDirection)
+    {
+        char direction_str[2];
+        if (!load_char("player/direction", direction_str, sizeof(direction_str)))
+        {
+            FURI_LOG_E(TAG, "Failed to load player direction");
+            return false;
+        }
+
+        int direction_int = atoi(direction_str);
+        switch (direction_int)
+        {
+        case 0:
+            player_context->direction = PLAYER_UP;
+            break;
+        case 1:
+            player_context->direction = PLAYER_DOWN;
+            break;
+        case 2:
+            player_context->direction = PLAYER_LEFT;
+            break;
+        case 3:
+            player_context->direction = PLAYER_RIGHT;
+            break;
+        default:
+            FURI_LOG_E(TAG, "Invalid direction value: %d", direction_int);
+            player_context->direction = PLAYER_RIGHT; // Default value
+            break;
+        }
+    }
+
+    // 12. State (enum PlayerState)
+    {
+        char state_str[2];
+        if (!load_char("player/state", state_str, sizeof(state_str)))
+        {
+            FURI_LOG_E(TAG, "Failed to load player state");
+            return false;
+        }
+
+        int state_int = atoi(state_str);
+        switch (state_int)
+        {
+        case 0:
+            player_context->state = PLAYER_IDLE;
+            break;
+        case 1:
+            player_context->state = PLAYER_MOVING;
+            break;
+        case 2:
+            player_context->state = PLAYER_ATTACKING;
+            break;
+        case 3:
+            player_context->state = PLAYER_ATTACKED;
+            break;
+        case 4:
+            player_context->state = PLAYER_DEAD; // Assuming '4' represents 'dead' or similar
+            break;
+        default:
+            FURI_LOG_E(TAG, "Invalid state value: %d", state_int);
+            player_context->state = PLAYER_IDLE; // Default value
+            break;
+        }
+    }
+
+    // 13. Start Position X (float)
+    if (!load_float("player/start_position_x", &player_context->start_position.x))
+    {
+        FURI_LOG_E(TAG, "Failed to load player start position x");
+        return false;
+    }
+
+    // 14. Start Position Y (float)
+    if (!load_float("player/start_position_y", &player_context->start_position.y))
+    {
+        FURI_LOG_E(TAG, "Failed to load player start position y");
+        return false;
+    }
+
+    // 15. dx (int8_t)
+    if (!load_int8("player/dx", &player_context->dx))
+    {
+        FURI_LOG_E(TAG, "Failed to load player dx");
+        return false;
+    }
+
+    // 16. dy (int8_t)
+    if (!load_int8("player/dy", &player_context->dy))
+    {
+        FURI_LOG_E(TAG, "Failed to load player dy");
+        return false;
+    }
+
+    return true;
 }
 
-#include <stdio.h>
-#include <furi.h>
-#include <furi_hal.h>
-// etc.  Make sure you include the relevant headers for your project
-
-// 1) Helper: remove first occurrence of "needle" from "string"
 static inline void furi_string_remove_str(FuriString *string, const char *needle)
 {
-    // Remove the FIRST occurrence
     furi_string_replace_str(string, needle, "", 0);
 }
 
-// 2) Adjusted function: returns exactly "json_data":[ ... ]
 static FuriString *enemy_data(const FuriString *world_data)
 {
     size_t enemy_data_pos = furi_string_search_str(world_data, "enemy_data", 0);

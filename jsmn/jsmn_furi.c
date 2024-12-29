@@ -576,7 +576,6 @@ FuriString *get_json_array_value_furi(const char *key, uint32_t index, const Fur
 
     if (index >= (uint32_t)tokens[0].size)
     {
-        FURI_LOG_E("JSMM.H", "Index %lu out of bounds for array with size %u.", index, tokens[0].size);
         free(tokens);
         furi_string_free(array_str);
         return NULL;
