@@ -48,17 +48,13 @@ static void game_start(GameManager *game_manager, void *ctx)
 */
 static void game_stop(void *ctx)
 {
+    if (!ctx)
+    {
+        FURI_LOG_E("Game", "Invalid game context");
+        return;
+    }
     GameContext *game_context = ctx;
     save_player_context(game_context->player_context);
-    if (game_context->player_context)
-    {
-        free(game_context->player_context);
-    }
-    for (int i = 0; i < game_context->level_count; i++)
-    {
-        game_context->levels[i] = NULL;
-    }
-    game_context->level_count = 0;
 }
 
 /*

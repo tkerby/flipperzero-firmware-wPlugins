@@ -594,8 +594,9 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         app_instance = NULL;
     }
 }
-static bool flip_world_fetch_world_list()
+static bool flip_world_fetch_world_list(DataLoaderModel *model)
 {
+    UNUSED(model);
     // Create the directory for saving worlds
     char directory_path[128];
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
@@ -614,6 +615,41 @@ static bool flip_world_fetch_world_list()
 
     fhttp.save_received_data = true;
     return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
+}
+static char *flip_world_parse_world_list(DataLoaderModel *model)
+{
+    UNUSED(model);
+    flipper_http_deinit();
+    // free game thread
+    if (game_thread_running)
+    {
+        game_thread_running = false;
+        furi_thread_flags_set(thread_id, WorkerEvtStop);
+        furi_thread_free(thread_id);
+    }
+    if (!app_instance)
+    {
+        FURI_LOG_E(TAG, "app_instance is NULL");
+        easy_flipper_dialog("Error", "app_instance is NULL. Press BACK to return.");
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+        return "app_instance is NULL";
+    }
+    FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
+    if (!thread)
+    {
+        view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+        FURI_LOG_E(TAG, "Failed to allocate game thread");
+        easy_flipper_dialog("Error", "Failed to allocate game thread. Restart your Flipper.");
+        return "Failed to allocate game thread";
+    }
+    furi_thread_start(thread);
+    thread_id = furi_thread_get_id(thread);
+    game_thread_running = true;
+    return "Game started";
+}
+static void flip_world_world_list_switch_to_view(FlipWorldApp *app)
+{
+    return flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 1, callback_to_submenu, FlipWorldViewLoader);
 }
 // combine register, login, and world list fetch into one function to switch to the loader view
 static bool flip_world_fetch_game(DataLoaderModel *model)
@@ -1026,45 +1062,13 @@ void callback_submenu_choices(void *context, uint32_t index)
         // check if logged in
         if (is_logged_in() || is_logged_in_to_flip_social())
         {
-            bool parse_world_list()
-            {
-                flipper_http_deinit();
-                return true;
-            }
-
-            flipper_http_loading_task(
-                flip_world_fetch_world_list,
-                parse_world_list,
-                FlipWorldViewSubmenu,
-                FlipWorldViewSubmenu,
-                &app->view_dispatcher);
-
-            // Free game thread properly
-            if (game_thread_running)
-            {
-                game_thread_running = false;
-                furi_thread_flags_set(thread_id, WorkerEvtStop);
-                // Wait for the thread to terminate
-                furi_thread_join(thread_id);
-                furi_thread_free(thread_id);
-            }
-
-            // Update heap sizes after freeing
             size_t heap_size = memmgr_get_free_heap();
             size_t total_heap_size = memmgr_get_total_heap();
 
             FURI_LOG_I(TAG, "Heap size: %d", heap_size);
             FURI_LOG_I(TAG, "Total heap size: %d", total_heap_size);
 
-            FuriThread *thread = furi_thread_alloc_ex("flip_world_game", 4096, game_app, app);
-            if (!thread)
-            {
-                FURI_LOG_E(TAG, "Failed to allocate game thread");
-                return;
-            }
-            furi_thread_start(thread);
-            thread_id = furi_thread_get_id(thread);
-            game_thread_running = true;
+            flip_world_world_list_switch_to_view(app_instance);
         }
         else
         {
