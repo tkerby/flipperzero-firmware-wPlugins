@@ -1,0 +1,31 @@
+name: "FAP: Build for multiple SDK sources"
+# This will build your app for dev and release channels on GitHub.
+# It will also build your app every day to make sure it's up to date with the latest SDK changes.
+# See https://github.com/marketplace/actions/build-flipper-application-package-fap for more information
+
+on:
+  push:
+    ## put your main branch name under "branches"
+    #branches:
+    #  - master
+  pull_request:
+
+jobs:
+  ufbt-build:
+    runs-on: ubuntu-latest
+    name: "ufbt: Build"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        id: build-app
+        with:
+          sdk-hw-target: f7
+          sdk-url: "https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-008/flipper-z-f7-sdk-mntm-008.zip"
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          # See ufbt action docs for other output variables
+          name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
+          path: ${{ steps.build-app.outputs.fap-artifacts }}
