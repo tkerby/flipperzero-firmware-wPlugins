@@ -1,5 +1,5 @@
 App(
-    appid="vin_decoder",
+    appid="vin_decoder_app",
     name="VIN decoder",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="vin_decoder_app",
