@@ -214,25 +214,25 @@ void draw_town_world(Level *level)
 {
 
     // house-fence group 1
-    spawn_icon(level, "house", 148, 36);
-    spawn_icon(level, "fence", 148, 72);
-    spawn_icon(level, "fence", 164, 72);
-    spawn_icon(level, "fence_end", 180, 72);
+    spawn_icon(level, "house", 164, 40);
+    spawn_icon(level, "fence", 148, 64);
+    spawn_icon(level, "fence", 164, 64);
+    spawn_icon(level, "fence_end", 180, 64);
 
     // house-fence group 4 (the left of group 1)
-    spawn_icon(level, "house", 96, 36);
-    spawn_icon(level, "fence", 96, 72);
-    spawn_icon(level, "fence", 110, 72);
-    spawn_icon(level, "fence_end", 126, 72);
+    spawn_icon(level, "house", 110, 40);
+    spawn_icon(level, "fence", 96, 64);
+    spawn_icon(level, "fence", 110, 64);
+    spawn_icon(level, "fence_end", 126, 64);
 
     // house-fence group 5 (the left of group 4)
-    spawn_icon(level, "house", 40, 36);
-    spawn_icon(level, "fence", 40, 72);
-    spawn_icon(level, "fence", 56, 72);
-    spawn_icon(level, "fence_end", 72, 72);
+    spawn_icon(level, "house", 56, 40);
+    spawn_icon(level, "fence", 40, 64);
+    spawn_icon(level, "fence", 56, 64);
+    spawn_icon(level, "fence_end", 72, 64);
 
     // line of fences on the 8th row (using spawn_icon_line)
-    spawn_icon_line(level, "fence", 8, 100, 10, true);
+    spawn_icon_line(level, "fence", 8, 96, 10, true);
 
     // plants spaced out underneath the fences
     spawn_icon_line(level, "plant", 40, 110, 6, true);
@@ -244,18 +244,18 @@ void draw_town_world(Level *level)
 
     // lake
     // Top row
-    spawn_icon(level, "lake_top_left", 240, 52);
-    spawn_icon(level, "lake_top", 264, 52);
-    spawn_icon(level, "lake_top_right", 295, 52);
+    spawn_icon(level, "lake_top_left", 240, 62);
+    spawn_icon(level, "lake_top", 264, 57);
+    spawn_icon(level, "lake_top_right", 295, 62);
 
     // Middle row
-    spawn_icon(level, "lake_left", 231, 74);
-    spawn_icon(level, "lake_right", 317, 74);
+    spawn_icon(level, "lake_left", 231, 84);
+    spawn_icon(level, "lake_right", 304, 84);
 
     // Bottom row
-    spawn_icon(level, "lake_bottom_left", 240, 105);
-    spawn_icon(level, "lake_bottom", 264, 124);
-    spawn_icon(level, "lake_bottom_right", 295, 105);
+    spawn_icon(level, "lake_bottom_left", 240, 115);
+    spawn_icon(level, "lake_bottom", 264, 120);
+    spawn_icon(level, "lake_bottom_right", 295, 115);
 
     // Spawn two full left/up tree lines
     for (int i = 0; i < 2; i++)

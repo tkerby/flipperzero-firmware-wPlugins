@@ -12,14 +12,14 @@ void set_world(Level *level, GameManager *manager, char *id)
     if (!json_data_str || furi_string_empty(json_data_str))
     {
         FURI_LOG_E("Game", "Failed to load json data from file");
-        draw_tree_world(level);
+        draw_town_world(level);
         return;
     }
 
     if (!draw_json_world_furi(level, json_data_str))
     {
         FURI_LOG_E("Game", "Failed to draw world");
-        draw_tree_world(level);
+        draw_town_world(level);
         furi_string_free(json_data_str);
     }
     else
@@ -33,7 +33,7 @@ void set_world(Level *level, GameManager *manager, char *id)
         if (!enemy_data_str || furi_string_empty(enemy_data_str))
         {
             FURI_LOG_E("Game", "Failed to get enemy data");
-            draw_tree_world(level);
+            draw_town_world(level);
             return;
         }
         // Loop through the array
@@ -73,7 +73,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
         if (!world_data)
         {
             FURI_LOG_E("Game", "Failed to fetch world data");
-            draw_tree_world(level);
+            draw_town_world(level);
             return;
         }
         furi_string_free(world_data);

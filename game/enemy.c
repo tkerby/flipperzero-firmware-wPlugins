@@ -512,7 +512,6 @@ const EntityDescription *enemy(
     GameManager *manager,
     const char *id,
     int index,
-    Vector size,
     Vector start_position,
     Vector end_position,
     float move_timer, // Wait duration before moving again
@@ -521,11 +520,18 @@ const EntityDescription *enemy(
     float strength,
     float health)
 {
+    SpriteContext *sprite_context = get_sprite_context(id);
+    if (!sprite_context)
+    {
+        FURI_LOG_E("Game", "Failed to get SpriteContext");
+        return NULL;
+    }
+
     // Allocate a new EnemyContext with provided parameters
     enemy_context_generic = enemy_generic_alloc(
         id,
         index,
-        size,
+        (Vector){sprite_context->width, sprite_context->height},
         start_position,
         end_position,
         move_timer, // Set wait duration
@@ -538,19 +544,9 @@ const EntityDescription *enemy(
         FURI_LOG_E("Game", "Failed to allocate EnemyContext");
         return NULL;
     }
-    char right_edited[128];
-    char left_edited[128];
 
-    // Convert the float values to integers and use them in the filename
-    int size_x_int = (int)size.x;
-    int size_y_int = (int)size.y;
-
-    // Format the strings without the decimal points
-    snprintf(right_edited, sizeof(right_edited), "player_right_%s_%dx%dpx.fxbm", id, size_x_int, size_y_int);
-    snprintf(left_edited, sizeof(left_edited), "player_left_%s_%dx%dpx.fxbm", id, size_x_int, size_y_int);
-
-    enemy_context_generic->sprite_right = game_manager_sprite_load(manager, right_edited);
-    enemy_context_generic->sprite_left = game_manager_sprite_load(manager, left_edited);
+    enemy_context_generic->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+    enemy_context_generic->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
     // Set initial direction based on start and end positions
     if (start_position.x < end_position.x)
@@ -592,13 +588,8 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
         FURI_LOG_E("Game", "GameManager is NULL");
         return;
     }
-    // parameters: id, index, size.x, size.y, start_position.x, start_position.y, end_position.x, end_position.y, move_timer, speed, attack_timer, strength, health
     char *id = get_json_value("id", json);
     char *_index = get_json_value("index", json);
-    //
-    char *size = get_json_value("size", json);
-    char *size_x = get_json_value("width", size);
-    char *size_y = get_json_value("height", size);
     //
     char *start_position = get_json_value("start_position", json);
     char *start_position_x = get_json_value("x", start_position);
@@ -615,7 +606,7 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
     char *health = get_json_value("health", json);
     //
 
-    if (!id || !_index || !size_x || !size_y || !start_position_x || !start_position_y || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
+    if (!id || !_index || !start_position || !start_position_x || !start_position_y || !end_position || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
     {
         FURI_LOG_E("Game", "Failed to parse JSON values");
         return;
@@ -628,7 +619,6 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
                                                                                        manager,
                                                                                        id,
                                                                                        atoi(_index),
-                                                                                       (Vector){strtod(size_x, NULL), strtod(size_y, NULL)},
                                                                                        (Vector){strtod(start_position_x, NULL), strtod(start_position_y, NULL)},
                                                                                        (Vector){strtod(end_position_x, NULL), strtod(end_position_y, NULL)},
                                                                                        strtod(move_timer, NULL),
@@ -641,9 +631,6 @@ void spawn_enemy_json(Level *level, GameManager *manager, char *json)
 
     free(id);
     free(_index);
-    free(size);
-    free(size_x);
-    free(size_y);
     free(start_position);
     free(start_position_x);
     free(start_position_y);
@@ -678,10 +665,6 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
     FuriString *id = get_json_value_furi("id", json);
     FuriString *_index = get_json_value_furi("index", json);
     //
-    FuriString *size = get_json_value_furi("size", json);
-    FuriString *size_x = get_json_value_furi("width", size);
-    FuriString *size_y = get_json_value_furi("height", size);
-    //
     FuriString *start_position = get_json_value_furi("start_position", json);
     FuriString *start_position_x = get_json_value_furi("x", start_position);
     FuriString *start_position_y = get_json_value_furi("y", start_position);
@@ -697,7 +680,7 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
     FuriString *health = get_json_value_furi("health", json);
     //
 
-    if (!id || !_index || !size_x || !size_y || !start_position_x || !start_position_y || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
+    if (!id || !_index || !start_position || !start_position_x || !start_position_y || !end_position || !end_position_x || !end_position_y || !move_timer || !speed || !attack_timer || !strength || !health)
     {
         FURI_LOG_E("Game", "Failed to parse JSON values");
         return;
@@ -710,7 +693,6 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
                                                                                        manager,
                                                                                        furi_string_get_cstr(id),
                                                                                        atoi(furi_string_get_cstr(_index)),
-                                                                                       (Vector){strtod(furi_string_get_cstr(size_x), NULL), strtod(furi_string_get_cstr(size_y), NULL)},
                                                                                        (Vector){strtod(furi_string_get_cstr(start_position_x), NULL), strtod(furi_string_get_cstr(start_position_y), NULL)},
                                                                                        (Vector){strtod(furi_string_get_cstr(end_position_x), NULL), strtod(furi_string_get_cstr(end_position_y), NULL)},
                                                                                        strtod(furi_string_get_cstr(move_timer), NULL),
@@ -723,9 +705,6 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
 
     furi_string_free(id);
     furi_string_free(_index);
-    furi_string_free(size);
-    furi_string_free(size_x);
-    furi_string_free(size_y);
     furi_string_free(start_position);
     furi_string_free(start_position_x);
     furi_string_free(start_position_y);

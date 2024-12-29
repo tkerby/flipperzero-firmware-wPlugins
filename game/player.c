@@ -207,3 +207,67 @@ const EntityDescription player_desc = {
     .event = NULL,                         // called when entity receives an event
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
+
+static SpriteContext *sprite_generic_alloc(const char *id, uint8_t width, uint8_t height)
+{
+    SpriteContext *ctx = malloc(sizeof(SpriteContext));
+    if (!ctx)
+    {
+        FURI_LOG_E("Game", "Failed to allocate SpriteContext");
+        return NULL;
+    }
+    snprintf(ctx->id, sizeof(ctx->id), "%s", id);
+    ctx->width = width;
+    ctx->height = height;
+    snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
+    snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
+    return ctx;
+}
+
+SpriteContext *get_sprite_context(const char *name)
+{
+    if (strcmp(name, "axe") == 0)
+    {
+        return sprite_generic_alloc("axe", 15, 11);
+    }
+    else if (strcmp(name, "bow") == 0)
+    {
+        return sprite_generic_alloc("bow", 13, 11);
+    }
+    else if (strcmp(name, "naked") == 0)
+    {
+        return sprite_generic_alloc("naked", 10, 10);
+    }
+    else if (strcmp(name, "sword") == 0)
+    {
+        return sprite_generic_alloc("sword", 15, 11);
+    }
+
+    // If no match is found
+    FURI_LOG_E("Game", "Sprite not found: %s", name);
+    return NULL;
+}
+
+SpriteContext *get_sprite_context_furi(const FuriString *name)
+{
+    if (furi_string_cmp(name, "axe") == 0)
+    {
+        return sprite_generic_alloc("axe", 15, 11);
+    }
+    else if (furi_string_cmp(name, "bow") == 0)
+    {
+        return sprite_generic_alloc("bow", 13, 11);
+    }
+    else if (furi_string_cmp(name, "naked") == 0)
+    {
+        return sprite_generic_alloc("naked", 10, 10);
+    }
+    else if (furi_string_cmp(name, "sword") == 0)
+    {
+        return sprite_generic_alloc("sword", 15, 11);
+    }
+
+    // If no match is found
+    FURI_LOG_E("Game", "Sprite not found: %s", furi_string_get_cstr(name));
+    return NULL;
+}

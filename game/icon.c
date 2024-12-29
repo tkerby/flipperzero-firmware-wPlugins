@@ -114,7 +114,7 @@ const EntityDescription icon_desc = {
     .context_size = sizeof(IconContext),
 };
 
-IconContext *icon_generic_alloc(const char *id, const Icon *icon, uint8_t width, uint8_t height)
+static IconContext *icon_generic_alloc(const char *id, const Icon *icon, uint8_t width, uint8_t height)
 {
     IconContext *ctx = malloc(sizeof(IconContext));
     if (!ctx)
@@ -262,7 +262,7 @@ IconContext *get_icon_context(const char *name)
     return NULL;
 }
 
-IconContext *get_icon_context_furi(FuriString *name)
+IconContext *get_icon_context_furi(const FuriString *name)
 {
     if (furi_string_cmp(name, "earth") == 0)
     {

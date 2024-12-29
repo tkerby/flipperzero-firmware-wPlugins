@@ -60,5 +60,16 @@ typedef struct
     int current_level;
 } GameContext;
 
+typedef struct
+{
+    char id[16];
+    char left_file_name[64];
+    char right_file_name[64];
+    uint8_t width;
+    uint8_t height;
+} SpriteContext;
+
 extern const EntityDescription player_desc;
 void player_spawn(Level *level, GameManager *manager);
+SpriteContext *get_sprite_context(const char *name);
+SpriteContext *get_sprite_context_furi(const FuriString *name);

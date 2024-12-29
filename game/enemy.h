@@ -47,10 +47,9 @@ const EntityDescription *enemy(
     GameManager *manager,
     const char *id,
     int index,
-    Vector size,
     Vector start_position,
     Vector end_position,
-    float move_timer,
+    float move_timer, // Wait duration before moving again
     float speed,
     float attack_timer,
     float strength,
