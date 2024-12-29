@@ -1,6 +1,6 @@
 #include <flip_storage/flip_wifi_storage.h>
 
-char *app_ids[8] = {
+static char *app_ids[8] = {
     "flip_wifi",
     "flip_store",
     "flip_social",
@@ -8,7 +8,7 @@ char *app_ids[8] = {
     "flip_weather",
     "flip_library",
     "web_crawler",
-    "flip_rss"};
+    "flip_world"};
 
 // Function to save the playlist
 void save_playlist(WiFiPlaylist *playlist)
@@ -21,7 +21,7 @@ void save_playlist(WiFiPlaylist *playlist)
 
     // Create the directory for saving settings
     char directory_path[128];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi");
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
 
     // Open storage
     Storage *storage = furi_record_open(RECORD_STORAGE);
@@ -50,30 +50,36 @@ void save_playlist(WiFiPlaylist *playlist)
         return;
     }
 
+    FuriString *json_result = furi_string_alloc();
+    if (!json_result)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate FuriString");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return;
+    }
+    furi_string_cat(json_result, "{\"ssids\":[\n");
     for (size_t i = 0; i < playlist->count; i++)
     {
-        if (!playlist->ssids[i] || !playlist->passwords[i])
+        furi_string_cat_printf(json_result, "{\"ssid\":\"%s\",\"password\":\"%s\"}", playlist->ssids[i], playlist->passwords[i]);
+        if (i < playlist->count - 1)
         {
-            FURI_LOG_E(TAG, "Invalid SSID or password at index %zu", i);
-            continue;
-        }
-        size_t ssid_length = strlen(playlist->ssids[i]);
-        size_t password_length = strlen(playlist->passwords[i]);
-        if (storage_file_write(file, playlist->ssids[i], ssid_length) != ssid_length ||
-            storage_file_write(file, ",", 1) != 1 ||
-            storage_file_write(file, playlist->passwords[i], password_length) != password_length ||
-            storage_file_write(file, "\n", 1) != 1)
-        {
-            FURI_LOG_E(TAG, "Failed to write playlist");
+            furi_string_cat(json_result, ",\n");
         }
     }
-
+    furi_string_cat(json_result, "\n]}");
+    size_t json_length = furi_string_size(json_result);
+    if (storage_file_write(file, furi_string_get_cstr(json_result), json_length) != json_length)
+    {
+        FURI_LOG_E(TAG, "Failed to write playlist to file");
+    }
+    furi_string_free(json_result);
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
 }
 
-// Function to load the playlist
 bool load_playlist(WiFiPlaylist *playlist)
 {
     if (!playlist)
@@ -82,151 +88,40 @@ bool load_playlist(WiFiPlaylist *playlist)
         return false;
     }
 
+    FuriString *json_result = flipper_http_load_from_file(WIFI_SSID_LIST_PATH);
+    if (!json_result)
+    {
+        FURI_LOG_E(TAG, "Failed to load playlist from file");
+        return false;
+    }
+
     // Initialize playlist count
     playlist->count = 0;
 
-    // Allocate memory for SSIDs and passwords if not already allocated
-    for (size_t i = 0; i < MAX_WIFI_NETWORKS; i++)
+    // Parse the JSON result
+    for (size_t i = 0; i < MAX_SAVED_NETWORKS; i++)
     {
-        if (!playlist->ssids[i])
+        FuriString *json_data = get_json_array_value_furi("ssids", i, json_result);
+        if (!json_data)
         {
-            playlist->ssids[i] = malloc(64); // Adjust size as needed
-            if (!playlist->ssids[i])
-            {
-                FURI_LOG_E(TAG, "Memory allocation failed for ssids[%zu]", i);
-                // Handle memory allocation failure (e.g., clean up and return)
-                return false;
-            }
+            break;
         }
-
-        if (!playlist->passwords[i])
+        FuriString *ssid = get_json_value_furi("ssid", json_data);
+        FuriString *password = get_json_value_furi("password", json_data);
+        if (!ssid || !password)
         {
-            playlist->passwords[i] = malloc(64); // Adjust size as needed
-            if (!playlist->passwords[i])
-            {
-                FURI_LOG_E(TAG, "Memory allocation failed for passwords[%zu]", i);
-                // Handle memory allocation failure (e.g., clean up and return)
-                return false;
-            }
+            FURI_LOG_E(TAG, "Failed to get SSID or Password from JSON");
+            furi_string_free(json_data);
+            break;
         }
+        snprintf(playlist->ssids[i], MAX_SSID_LENGTH, "%s", furi_string_get_cstr(ssid));
+        snprintf(playlist->passwords[i], MAX_SSID_LENGTH, "%s", furi_string_get_cstr(password));
+        playlist->count++;
+        furi_string_free(json_data);
+        furi_string_free(ssid);
+        furi_string_free(password);
     }
-
-    // Open the settings file
-    Storage *storage = furi_record_open(RECORD_STORAGE);
-    if (!storage)
-    {
-        FURI_LOG_E(TAG, "Failed to open storage record");
-        return false;
-    }
-
-    File *file = storage_file_alloc(storage);
-    if (!file)
-    {
-        FURI_LOG_E(TAG, "Failed to allocate file handle");
-        furi_record_close(RECORD_STORAGE);
-        return false;
-    }
-
-    if (!storage_file_open(file, WIFI_SSID_LIST_PATH, FSAM_READ, FSOM_OPEN_EXISTING))
-    {
-        FURI_LOG_E(TAG, "Failed to open settings file for reading: %s", WIFI_SSID_LIST_PATH);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
-        return false; // Return false if the file does not exist
-    }
-
-    // Buffer to hold each line
-    char line_buffer[128];
-    size_t line_pos = 0;
-    char ch;
-
-    while (storage_file_read(file, &ch, 1) == 1)
-    {
-        if (ch == '\n')
-        {
-            // Null-terminate the line
-            line_buffer[line_pos] = '\0';
-
-            // Split the line into SSID and Password
-            char *comma_pos = strchr(line_buffer, ',');
-            if (comma_pos)
-            {
-                *comma_pos = '\0'; // Replace comma with null character
-
-                // Copy SSID
-                strncpy(playlist->ssids[playlist->count], line_buffer, 63);
-                playlist->ssids[playlist->count][63] = '\0'; // Ensure null-termination
-
-                // Copy Password
-                strncpy(playlist->passwords[playlist->count], comma_pos + 1, 63);
-                playlist->passwords[playlist->count][63] = '\0'; // Ensure null-termination
-
-                playlist->count++;
-
-                if (playlist->count >= MAX_WIFI_NETWORKS)
-                {
-                    FURI_LOG_W(TAG, "Reached maximum number of WiFi networks: %d", MAX_WIFI_NETWORKS);
-                    break;
-                }
-            }
-            else
-            {
-                FURI_LOG_E(TAG, "Invalid line format (no comma found): %s", line_buffer);
-            }
-
-            // Reset line buffer position for the next line
-            line_pos = 0;
-        }
-        else
-        {
-            if (line_pos < sizeof(line_buffer) - 1)
-            {
-                line_buffer[line_pos++] = ch;
-            }
-            else
-            {
-                FURI_LOG_E(TAG, "Line buffer overflow");
-                // Optionally handle line overflow (e.g., skip the rest of the line)
-                line_pos = 0;
-            }
-        }
-    }
-
-    // Handle the last line if it does not end with a newline
-    if (line_pos > 0)
-    {
-        line_buffer[line_pos] = '\0';
-        char *comma_pos = strchr(line_buffer, ',');
-        if (comma_pos)
-        {
-            *comma_pos = '\0'; // Replace comma with null character
-
-            // Copy SSID
-            strncpy(playlist->ssids[playlist->count], line_buffer, 63);
-            playlist->ssids[playlist->count][63] = '\0'; // Ensure null-termination
-
-            // Copy Password
-            strncpy(playlist->passwords[playlist->count], comma_pos + 1, 63);
-            playlist->passwords[playlist->count][63] = '\0'; // Ensure null-termination
-
-            playlist->count++;
-
-            if (playlist->count >= MAX_WIFI_NETWORKS)
-            {
-                FURI_LOG_W(TAG, "Reached maximum number of WiFi networks: %d", MAX_WIFI_NETWORKS);
-            }
-        }
-        else
-        {
-            FURI_LOG_E(TAG, "Invalid line format (no comma found): %s", line_buffer);
-        }
-    }
-
-    // Close and free file resources
-    storage_file_close(file);
-    storage_file_free(file);
-    furi_record_close(RECORD_STORAGE);
-
+    furi_string_free(json_result);
     return true;
 }
 
@@ -429,4 +324,99 @@ void save_settings(const char *ssid, const char *password)
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
     }
+}
+bool save_char(
+    const char *path_name, const char *value)
+{
+    if (!value)
+    {
+        return false;
+    }
+    // Create the directory for saving settings
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    if (!storage)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to open storage record");
+        return false;
+    }
+    storage_common_mkdir(storage, directory_path);
+
+    // Open the settings file
+    File *file = storage_file_alloc(storage);
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data/%s.txt", path_name);
+
+    // Open the file in write mode
+    if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to open file for writing: %s", file_path);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Write the data to the file
+    size_t data_size = strlen(value) + 1; // Include null terminator
+    if (storage_file_write(file, value, data_size) != data_size)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to append data to file");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
+}
+
+bool load_char(
+    const char *path_name,
+    char *value,
+    size_t value_size)
+{
+    if (!value)
+    {
+        return false;
+    }
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    File *file = storage_file_alloc(storage);
+
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data/%s.txt", path_name);
+
+    // Open the file for reading
+    if (!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING))
+    {
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL; // Return false if the file does not exist
+    }
+
+    // Read data into the buffer
+    size_t read_count = storage_file_read(file, value, value_size);
+    if (storage_file_get_error(file) != FSE_OK)
+    {
+        FURI_LOG_E(HTTP_TAG, "Error reading from file.");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    // Ensure null-termination
+    value[read_count - 1] = '\0';
+
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
 }
