@@ -39,6 +39,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     furi_string_free(world_list);
 
     game_context->current_level = 0;
+    FURI_LOG_I("Game", "Level count: %d", game_context->level_count);
 }
 
 /*
@@ -53,11 +54,16 @@ static void game_stop(void *ctx)
         FURI_LOG_E("Game", "Invalid game context");
         return;
     }
-    // GameContext *game_context = ctx;
-    // if (game_context->player_context)
-    // {
-    //     save_player_context(game_context->player_context);
-    // }
+
+    GameContext *game_context = ctx;
+    if (game_context && game_context->player_context)
+    {
+        easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
+        FURI_LOG_I("Game", "Saving player context");
+        save_player_context(game_context->player_context);
+        FURI_LOG_I("Game", "Player context saved");
+        easy_flipper_dialog("Game Saved", "Hit BACK to exit.");
+    }
 }
 
 /*

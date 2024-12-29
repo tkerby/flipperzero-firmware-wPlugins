@@ -204,6 +204,37 @@ bool save_player_context(PlayerContext *player_context)
     return true;
 }
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+
+// Helper function to load a string safely
+bool load_string(const char *path_name, char *buffer, size_t buffer_size)
+{
+    if (!path_name || !buffer || buffer_size == 0)
+    {
+        FURI_LOG_E(TAG, "Invalid arguments to load_string");
+        return false;
+    }
+
+    // Initialize buffer to zero
+    memset(buffer, 0, buffer_size);
+
+    if (!load_char(path_name, buffer, buffer_size))
+    {
+        FURI_LOG_E(TAG, "Failed to load string from path: %s", path_name);
+        return false;
+    }
+
+    // Ensure null-termination
+    buffer[buffer_size - 1] = '\0';
+
+    return true;
+}
+
 // Helper function to load an integer
 bool load_number(const char *path_name, int *value)
 {
@@ -214,11 +245,15 @@ bool load_number(const char *path_name, int *value)
     }
 
     char buffer[32];
+    memset(buffer, 0, sizeof(buffer)); // Initialize buffer
+
     if (!load_char(path_name, buffer, sizeof(buffer)))
     {
         FURI_LOG_E(TAG, "Failed to load number from path: %s", path_name);
         return false;
     }
+
+    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
 
     *value = atoi(buffer);
     return true;
@@ -234,15 +269,21 @@ bool load_float(const char *path_name, float *value)
     }
 
     char buffer[32];
+    memset(buffer, 0, sizeof(buffer)); // Initialize buffer
+
     if (!load_char(path_name, buffer, sizeof(buffer)))
     {
         FURI_LOG_E(TAG, "Failed to load float from path: %s", path_name);
         return false;
     }
 
+    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
+
     *value = strtof(buffer, NULL);
     return true;
 }
+
+// Helper function to load an int8_t
 bool load_int8(const char *path_name, int8_t *value)
 {
     if (!path_name || !value)
@@ -252,11 +293,15 @@ bool load_int8(const char *path_name, int8_t *value)
     }
 
     char buffer[32];
+    memset(buffer, 0, sizeof(buffer)); // Initialize buffer
+
     if (!load_char(path_name, buffer, sizeof(buffer)))
     {
         FURI_LOG_E(TAG, "Failed to load int8 from path: %s", path_name);
         return false;
     }
+
+    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
 
     long temp = strtol(buffer, NULL, 10);
     if (temp < INT8_MIN || temp > INT8_MAX)
@@ -268,6 +313,8 @@ bool load_int8(const char *path_name, int8_t *value)
     *value = (int8_t)temp;
     return true;
 }
+
+// Helper function to load a uint32_t
 bool load_uint32(const char *path_name, uint32_t *value)
 {
     if (!path_name || !value)
@@ -277,11 +324,15 @@ bool load_uint32(const char *path_name, uint32_t *value)
     }
 
     char buffer[32];
+    memset(buffer, 0, sizeof(buffer)); // Initialize buffer
+
     if (!load_char(path_name, buffer, sizeof(buffer)))
     {
         FURI_LOG_E(TAG, "Failed to load uint32 from path: %s", path_name);
         return false;
     }
+
+    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null-termination
 
     *value = (uint32_t)strtoul(buffer, NULL, 10);
     return true;
@@ -298,7 +349,7 @@ bool load_player_context(PlayerContext *player_context)
     // Load each field and check for success
 
     // 1. Username (String)
-    if (!load_char("player/username", player_context->username, sizeof(player_context->username)))
+    if (!load_string("player/username", player_context->username, sizeof(player_context->username)))
     {
         FURI_LOG_E(TAG, "Failed to load player username");
         return false;
@@ -369,14 +420,13 @@ bool load_player_context(PlayerContext *player_context)
 
     // 11. Direction (enum PlayerDirection)
     {
-        char direction_str[2];
-        if (!load_char("player/direction", direction_str, sizeof(direction_str)))
+        int direction_int = 0;
+        if (!load_number("player/direction", &direction_int))
         {
             FURI_LOG_E(TAG, "Failed to load player direction");
             return false;
         }
 
-        int direction_int = atoi(direction_str);
         switch (direction_int)
         {
         case 0:
@@ -400,14 +450,13 @@ bool load_player_context(PlayerContext *player_context)
 
     // 12. State (enum PlayerState)
     {
-        char state_str[2];
-        if (!load_char("player/state", state_str, sizeof(state_str)))
+        int state_int = 0;
+        if (!load_number("player/state", &state_int))
         {
             FURI_LOG_E(TAG, "Failed to load player state");
             return false;
         }
 
-        int state_int = atoi(state_str);
         switch (state_int)
         {
         case 0:
