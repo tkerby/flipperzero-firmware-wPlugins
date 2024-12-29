@@ -104,20 +104,21 @@ void draw_icon_half_world(Canvas *canvas, bool right, const Icon *icon)
 }
 char g_temp_spawn_name[32];
 // Draw an icon at a specific position (with collision detection)
-void spawn_icon(Level *level, const Icon *icon, float x, float y, uint8_t width, uint8_t height)
+void spawn_icon(Level *level, const char *icon_id, float x, float y)
 {
-    snprintf(g_temp_spawn_name, sizeof(g_temp_spawn_name), "%s", icon_get_id(icon));
+    snprintf(g_temp_spawn_name, sizeof(g_temp_spawn_name), "%s", icon_id);
     Entity *e = level_add_entity(level, &icon_desc);
-    IconContext *icon_ctx = entity_context_get(e);
-    icon_ctx->icon = icon;
-    icon_ctx->width = width;
-    icon_ctx->height = height;
-    snprintf(icon_ctx->id, sizeof(icon_ctx->id), "%s", g_temp_spawn_name);
+    IconContext *icon_ctx = get_icon_context(icon_id);
+    if (!icon_ctx)
+    {
+        FURI_LOG_E("Game", "Failed to get icon context");
+        return;
+    }
     // Set the entity position to the center of the icon
-    entity_pos_set(e, (Vector){x + (width / 2), y + (height / 2)});
+    entity_pos_set(e, (Vector){x + (icon_ctx->width / 2), y + (icon_ctx->height / 2)});
 }
 // Draw a line of icons at a specific position (with collision detection)
-void spawn_icon_line(Level *level, const Icon *icon, float x, float y, uint8_t width, uint8_t height, uint8_t amount, bool horizontal)
+void spawn_icon_line(Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal)
 {
     for (int i = 0; i < amount; i++)
     {
@@ -129,7 +130,7 @@ void spawn_icon_line(Level *level, const Icon *icon, float x, float y, uint8_t w
                 break;
             }
 
-            spawn_icon(level, icon, x + (i * 17), y, width, height);
+            spawn_icon(level, icon_id, x + (i * 17), y);
         }
         else
         {
@@ -139,7 +140,7 @@ void spawn_icon_line(Level *level, const Icon *icon, float x, float y, uint8_t w
                 break;
             }
 
-            spawn_icon(level, icon, x, y + (i * 17), width, height);
+            spawn_icon(level, icon_id, x, y + (i * 17));
         }
     }
 }

@@ -47,44 +47,24 @@ bool draw_json_world(Level *level, const char *json_data)
             return false;
         }
 
-        IconContext *icon_context = get_icon_context(icon);
-        if (!icon_context)
-        {
-            FURI_LOG_E("Game", "Failed Icon: %s", icon);
-
-            free(data);
-            free(icon);
-            free(x);
-            free(y);
-            free(amount);
-            free(horizontal);
-
-            level_clear(level);
-            return false;
-        }
-
         int count = atoi(amount);
         if (count < 2)
         {
             // Just one icon
             spawn_icon(
                 level,
-                icon_context->icon,
+                icon,
                 atoi(x),
-                atoi(y),
-                icon_context->width,
-                icon_context->height);
+                atoi(y));
         }
         else
         {
             bool is_horizontal = (strcmp(horizontal, "true") == 0);
             spawn_icon_line(
                 level,
-                icon_context->icon,
+                icon,
                 atoi(x),
                 atoi(y),
-                icon_context->width,
-                icon_context->height,
                 count,
                 is_horizontal);
         }
@@ -94,7 +74,6 @@ bool draw_json_world(Level *level, const char *json_data)
         free(y);
         free(amount);
         free(horizontal);
-        free(icon_context);
         levels_added++;
     }
     return levels_added > 0;
@@ -139,44 +118,24 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
             return false;
         }
 
-        IconContext *icon_context = get_icon_context_furi(icon);
-        if (!icon_context)
-        {
-            FURI_LOG_E("Game", "Failed Icon: %s", furi_string_get_cstr(icon));
-
-            furi_string_free(data);
-            furi_string_free(icon);
-            furi_string_free(x);
-            furi_string_free(y);
-            furi_string_free(amount);
-            furi_string_free(horizontal);
-
-            level_clear(level);
-            return false;
-        }
-
         int count = atoi(furi_string_get_cstr(amount));
         if (count < 2)
         {
             // Just one icon
             spawn_icon(
                 level,
-                icon_context->icon,
+                furi_string_get_cstr(icon),
                 atoi(furi_string_get_cstr(x)),
-                atoi(furi_string_get_cstr(y)),
-                icon_context->width,
-                icon_context->height);
+                atoi(furi_string_get_cstr(y)));
         }
         else
         {
             bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
             spawn_icon_line(
                 level,
-                icon_context->icon,
+                furi_string_get_cstr(icon),
                 atoi(furi_string_get_cstr(x)),
                 atoi(furi_string_get_cstr(y)),
-                icon_context->width,
-                icon_context->height,
                 count,
                 is_horizontal);
         }
@@ -187,7 +146,6 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
         furi_string_free(y);
         furi_string_free(amount);
         furi_string_free(horizontal);
-        free(icon_context);
         levels_added++;
     }
     return levels_added > 0;
@@ -195,182 +153,132 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
 
 void draw_tree_world(Level *level)
 {
-    IconContext *tree_icon = get_icon_context("tree");
-    if (!tree_icon)
-    {
-        FURI_LOG_E("Game", "Failed to get tree icon context");
-        return;
-    }
     // Spawn two full left/up tree lines
     for (int i = 0; i < 2; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, tree_icon->icon, 5, 2 + i * 17, tree_icon->width, tree_icon->height, 22, true);
+        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
         // Vertical line of 11 icons
-        spawn_icon_line(level, tree_icon->icon, 5 + i * 17, 2, tree_icon->width, tree_icon->height, 11, false);
+        spawn_icon_line(level, "tree", 5 + i * 17, 2, 11, false);
     }
 
     // Spawn two full down tree lines
     for (int i = 9; i < 11; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, tree_icon->icon, 5, 2 + i * 17, tree_icon->width, tree_icon->height, 22, true);
+        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
     }
 
     // Spawn two full right tree lines
     for (int i = 20; i < 22; i++)
     {
         // Vertical line of 8 icons starting further down (y=50)
-        spawn_icon_line(level, tree_icon->icon, 5 + i * 17, 50, tree_icon->width, tree_icon->height, 8, false);
+        spawn_icon_line(level, "tree", 5 + i * 17, 50, 8, false);
     }
 
     // Labyrinth lines
     // Third line (14 left, then a gap, then 3 middle)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 2 * 17, tree_icon->width, tree_icon->height, 14, true);
-    spawn_icon_line(level, tree_icon->icon, 5 + 16 * 17, 2 + 2 * 17, tree_icon->width, tree_icon->height, 3, true);
+    spawn_icon_line(level, "tree", 5, 2 + 2 * 17, 14, true);
+    spawn_icon_line(level, "tree", 5 + 16 * 17, 2 + 2 * 17, 3, true);
 
     // Fourth line (3 left, 6 middle, 4 right)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 3 * 17, tree_icon->width, tree_icon->height, 3, true);           // 3 left
-    spawn_icon_line(level, tree_icon->icon, 5 + 7 * 17, 2 + 3 * 17, tree_icon->width, tree_icon->height, 6, true);  // 6 middle
-    spawn_icon_line(level, tree_icon->icon, 5 + 15 * 17, 2 + 3 * 17, tree_icon->width, tree_icon->height, 4, true); // 4 right
+    spawn_icon_line(level, "tree", 5, 2 + 3 * 17, 3, true);           // 3 left
+    spawn_icon_line(level, "tree", 5 + 7 * 17, 2 + 3 * 17, 6, true);  // 6 middle
+    spawn_icon_line(level, "tree", 5 + 15 * 17, 2 + 3 * 17, 4, true); // 4 right
 
     // Fifth line (6 left, 7 middle)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 4 * 17, tree_icon->width, tree_icon->height, 6, true);
-    spawn_icon_line(level, tree_icon->icon, 5 + 7 * 17, 2 + 4 * 17, tree_icon->width, tree_icon->height, 7, true);
+    spawn_icon_line(level, "tree", 5, 2 + 4 * 17, 6, true);
+    spawn_icon_line(level, "tree", 5 + 7 * 17, 2 + 4 * 17, 7, true);
 
     // Sixth line (5 left, 3 middle, 7 right)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 5 * 17, tree_icon->width, tree_icon->height, 5, true);           // 5 left
-    spawn_icon_line(level, tree_icon->icon, 5 + 7 * 17, 2 + 5 * 17, tree_icon->width, tree_icon->height, 3, true);  // 3 middle
-    spawn_icon_line(level, tree_icon->icon, 5 + 15 * 17, 2 + 5 * 17, tree_icon->width, tree_icon->height, 7, true); // 7 right
+    spawn_icon_line(level, "tree", 5, 2 + 5 * 17, 5, true);           // 5 left
+    spawn_icon_line(level, "tree", 5 + 7 * 17, 2 + 5 * 17, 3, true);  // 3 middle
+    spawn_icon_line(level, "tree", 5 + 15 * 17, 2 + 5 * 17, 7, true); // 7 right
 
     // Seventh line (0 left, 7 middle, 4 right)
-    spawn_icon_line(level, tree_icon->icon, 5 + 6 * 17, 2 + 6 * 17, tree_icon->width, tree_icon->height, 7, true);  // 7 middle
-    spawn_icon_line(level, tree_icon->icon, 5 + 14 * 17, 2 + 6 * 17, tree_icon->width, tree_icon->height, 4, true); // 4 right
+    spawn_icon_line(level, "tree", 5 + 6 * 17, 2 + 6 * 17, 7, true);  // 7 middle
+    spawn_icon_line(level, "tree", 5 + 14 * 17, 2 + 6 * 17, 4, true); // 4 right
 
     // Eighth line (4 left, 3 middle, 4 right)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 7 * 17, tree_icon->width, tree_icon->height, 4, true);           // 4 left
-    spawn_icon_line(level, tree_icon->icon, 5 + 7 * 17, 2 + 7 * 17, tree_icon->width, tree_icon->height, 3, true);  // 3 middle
-    spawn_icon_line(level, tree_icon->icon, 5 + 15 * 17, 2 + 7 * 17, tree_icon->width, tree_icon->height, 4, true); // 4 right
+    spawn_icon_line(level, "tree", 5, 2 + 7 * 17, 4, true);           // 4 left
+    spawn_icon_line(level, "tree", 5 + 7 * 17, 2 + 7 * 17, 3, true);  // 3 middle
+    spawn_icon_line(level, "tree", 5 + 15 * 17, 2 + 7 * 17, 4, true); // 4 right
 
     // Ninth line (3 left, 1 middle, 3 right)
-    spawn_icon_line(level, tree_icon->icon, 5, 2 + 8 * 17, tree_icon->width, tree_icon->height, 3, true);           // 3 left
-    spawn_icon_line(level, tree_icon->icon, 5 + 5 * 17, 2 + 8 * 17, tree_icon->width, tree_icon->height, 1, true);  // 1 middle
-    spawn_icon_line(level, tree_icon->icon, 5 + 11 * 17, 2 + 8 * 17, tree_icon->width, tree_icon->height, 3, true); // 3 right
-
-    free(tree_icon);
+    spawn_icon_line(level, "tree", 5, 2 + 8 * 17, 3, true);           // 3 left
+    spawn_icon_line(level, "tree", 5 + 5 * 17, 2 + 8 * 17, 1, true);  // 1 middle
+    spawn_icon_line(level, "tree", 5 + 11 * 17, 2 + 8 * 17, 3, true); // 3 right
 }
 
 void draw_town_world(Level *level)
 {
-    // define all the icons
-    IconContext *house_icon = get_icon_context("house");
-    IconContext *fence_icon = get_icon_context("fence");
-    IconContext *fence_end_icon = get_icon_context("fence_end");
-    IconContext *plant_icon = get_icon_context("plant");
-    IconContext *flower_icon = get_icon_context("flower");
-    IconContext *man_icon = get_icon_context("man");
-    IconContext *woman_icon = get_icon_context("woman");
-    IconContext *lake_top_left_icon = get_icon_context("lake_top_left");
-    IconContext *lake_top_icon = get_icon_context("lake_top");
-    IconContext *lake_top_right_icon = get_icon_context("lake_top_right");
-    IconContext *lake_left_icon = get_icon_context("lake_left");
-    IconContext *lake_right_icon = get_icon_context("lake_right");
-    IconContext *lake_bottom_left_icon = get_icon_context("lake_bottom_left");
-    IconContext *lake_bottom_icon = get_icon_context("lake_bottom");
-    IconContext *lake_bottom_right_icon = get_icon_context("lake_bottom_right");
-    IconContext *tree_icon = get_icon_context("tree");
-
-    // check if any of the icons are NULL
-    if (!house_icon || !fence_icon || !fence_end_icon || !plant_icon || !flower_icon ||
-        !man_icon || !woman_icon || !lake_top_left_icon || !lake_top_icon || !lake_top_right_icon ||
-        !lake_left_icon || !lake_right_icon || !lake_bottom_left_icon || !lake_bottom_icon || !lake_bottom_right_icon || !tree_icon)
-    {
-        FURI_LOG_E("Game", "Failed to get icon context");
-        return;
-    }
 
     // house-fence group 1
-    spawn_icon(level, house_icon->icon, 148, 36, house_icon->width, house_icon->height);
-    spawn_icon(level, fence_icon->icon, 148, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_icon->icon, 164, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_end_icon->icon, 180, 72, fence_end_icon->width, fence_end_icon->height);
+    spawn_icon(level, "house", 148, 36);
+    spawn_icon(level, "fence", 148, 72);
+    spawn_icon(level, "fence", 164, 72);
+    spawn_icon(level, "fence_end", 180, 72);
 
     // house-fence group 4 (the left of group 1)
-    spawn_icon(level, house_icon->icon, 96, 36, house_icon->width, house_icon->height);
-    spawn_icon(level, fence_icon->icon, 96, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_icon->icon, 110, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_end_icon->icon, 126, 72, fence_end_icon->width, fence_end_icon->height);
+    spawn_icon(level, "house", 96, 36);
+    spawn_icon(level, "fence", 96, 72);
+    spawn_icon(level, "fence", 110, 72);
+    spawn_icon(level, "fence_end", 126, 72);
 
     // house-fence group 5 (the left of group 4)
-    spawn_icon(level, house_icon->icon, 40, 36, house_icon->width, house_icon->height);
-    spawn_icon(level, fence_icon->icon, 40, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_icon->icon, 56, 72, fence_icon->width, fence_icon->height);
-    spawn_icon(level, fence_end_icon->icon, 72, 72, fence_end_icon->width, fence_end_icon->height);
+    spawn_icon(level, "house", 40, 36);
+    spawn_icon(level, "fence", 40, 72);
+    spawn_icon(level, "fence", 56, 72);
+    spawn_icon(level, "fence_end", 72, 72);
 
     // line of fences on the 8th row (using spawn_icon_line)
-    spawn_icon_line(level, fence_icon->icon, 8, 100, fence_icon->width, fence_icon->height, 10, true);
+    spawn_icon_line(level, "fence", 8, 100, 10, true);
 
     // plants spaced out underneath the fences
-    spawn_icon_line(level, plant_icon->icon, 40, 110, plant_icon->width, plant_icon->height, 6, true);
-    spawn_icon_line(level, flower_icon->icon, 40, 140, flower_icon->width, flower_icon->height, 6, true);
+    spawn_icon_line(level, "plant", 40, 110, 6, true);
+    spawn_icon_line(level, "flower", 40, 140, 6, true);
 
     // man and woman
-    spawn_icon(level, man_icon->icon, 156, 110, man_icon->width, man_icon->height);
-    spawn_icon(level, woman_icon->icon, 164, 110, woman_icon->width, woman_icon->height);
+    spawn_icon(level, "man", 156, 110);
+    spawn_icon(level, "woman", 164, 110);
 
     // lake
     // Top row
-    spawn_icon(level, lake_top_left_icon->icon, 240, 52, lake_top_left_icon->width, lake_top_left_icon->height);
-    spawn_icon(level, lake_top_icon->icon, 264, 52, lake_top_icon->width, lake_top_icon->height);
-    spawn_icon(level, lake_top_right_icon->icon, 295, 52, lake_top_right_icon->width, lake_top_right_icon->height);
+    spawn_icon(level, "lake_top_left", 240, 52);
+    spawn_icon(level, "lake_top", 264, 52);
+    spawn_icon(level, "lake_top_right", 295, 52);
 
     // Middle row
-    spawn_icon(level, lake_left_icon->icon, 231, 74, lake_left_icon->width, lake_left_icon->height);
-    spawn_icon(level, lake_right_icon->icon, 317, 74, lake_right_icon->width, lake_right_icon->height);
+    spawn_icon(level, "lake_left", 231, 74);
+    spawn_icon(level, "lake_right", 317, 74);
 
     // Bottom row
-    spawn_icon(level, lake_bottom_left_icon->icon, 240, 105, lake_bottom_left_icon->width, lake_bottom_left_icon->height);
-    spawn_icon(level, lake_bottom_icon->icon, 264, 124, lake_bottom_icon->width, lake_bottom_icon->height);
-    spawn_icon(level, lake_bottom_right_icon->icon, 295, 105, lake_bottom_right_icon->width, lake_bottom_right_icon->height);
+    spawn_icon(level, "lake_bottom_left", 240, 105);
+    spawn_icon(level, "lake_bottom", 264, 124);
+    spawn_icon(level, "lake_bottom_right", 295, 105);
 
     // Spawn two full left/up tree lines
     for (int i = 0; i < 2; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, tree_icon->icon, 5, 2 + i * 17, tree_icon->width, tree_icon->height, 22, true);
+        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
         // Vertical line of 11 icons
-        spawn_icon_line(level, tree_icon->icon, 5 + i * 17, 2, tree_icon->width, tree_icon->height, 11, false);
+        spawn_icon_line(level, "tree", 5 + i * 17, 2, 11, false);
     }
 
     // Spawn two full down tree lines
     for (int i = 9; i < 11; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, tree_icon->icon, 5, 2 + i * 17, tree_icon->width, tree_icon->height, 22, true);
+        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
     }
 
     // Spawn two full right tree lines
     for (int i = 20; i < 22; i++)
     {
         // Vertical line of 8 icons starting further down (y=50)
-        spawn_icon_line(level, tree_icon->icon, 5 + i * 17, 50, tree_icon->width, tree_icon->height, 8, false);
+        spawn_icon_line(level, "tree", 5 + i * 17, 50, 8, false);
     }
-    free(house_icon);
-    free(fence_icon);
-    free(fence_end_icon);
-    free(plant_icon);
-    free(flower_icon);
-    free(man_icon);
-    free(woman_icon);
-    free(lake_top_left_icon);
-    free(lake_top_icon);
-    free(lake_top_right_icon);
-    free(lake_left_icon);
-    free(lake_right_icon);
-    free(lake_bottom_left_icon);
-    free(lake_bottom_icon);
-    free(lake_bottom_right_icon);
-    free(tree_icon);
 }
 
 FuriString *fetch_world(const char *name)
