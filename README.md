@@ -1,5 +1,6 @@
 # fmatrix v0.3
 fmatrix is a simple Flipper Zero app that displays the famous "matrix rain" effect.
+(suggestions appreciated and welcome!)
 
 ## Menu breakdown
 
