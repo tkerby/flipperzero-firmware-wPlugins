@@ -10,6 +10,8 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 本应用使用 flipper zero 设备内建 NFC 外设及系统固件提供的 ISO/IEC 14443 (Type 4A) 协议栈与卡片通讯，应用层协议参考 EMV 标准以及交通运输部 JT/T 978 标准。
 
+参考：[卡片协议分析记录](docs/card_data_format.md)
+
 内置 GB2312 12px 不等宽汉字库，无需中文固件，应用内信息及站台名为中文显示；内置交通线路及站台数据库，支持情况如下。
 
 [支持的城市及线路](docs/supported_cities.md)
@@ -40,7 +42,7 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ### 交易记录
 
-展示10条交易信息，按照从最近到最早排序，包含交易类型、交易金额、交易序号、时间（月日时分）信息。
+展示 10 条交易信息，按照从最近到最早排序，包含交易类型、交易金额、交易序号、时间（月日时分）信息。
 
 导航键上下：滚动记录列表
 
@@ -52,14 +54,13 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ### 行程记录
 
-展示30条行程信息，按照从最近到最早排序，包含站台名、时间（月日时分）信息。
+展示 30 条行程信息，按照从最近到最早排序，包含站台名、时间（月日时分）信息。
 
 导航键上下：滚动记录列表
 
 导航键右：转到交易记录查询
 
 ![](docs/assets/travels.png)
-
 
 ## 🔨 Build
 
@@ -87,3 +88,10 @@ v0.1: 上传 github 项目
 - 本项目以 GPL-3.0 License 作为开源协议，这意味着你需要遵守相应的规则
 - 本项目仅适用于学习研究，任何人不得以此用于盈利
 - 使用本项目造成的任何后果与本人无关
+
+## 🎉Thakns
+
+以下项目为本项目提供了部分技术参考和灵感，在此鸣谢。
+
+- [Trip Reader 读卡识途](https://www.domosekai.com/reader/index.html)
+- [NFSee](https://github.com/nfcim/nfsee)
