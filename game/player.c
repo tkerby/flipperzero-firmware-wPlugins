@@ -44,62 +44,65 @@ void player_spawn(Level *level, GameManager *manager)
     // Set player position.
     entity_pos_set(game_context->players[0], (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
-    // Add collision box to player entity
-    // Box is centered in player x and y, and its size is 10x10
-    entity_collider_add_rect(game_context->players[0], 10, 10);
+    // Box is centered in player x and y, and its size
+    entity_collider_add_rect(game_context->players[0], 13, 11);
 
-    // Get player context
-    PlayerContext *player_context = entity_context_get(game_context->players[0]);
-    if (!player_context)
+    if (!player_context_loaded)
     {
-        FURI_LOG_E(TAG, "Failed to get player context");
-        return;
-    }
-
-    FURI_LOG_I(TAG, "Loading player context");
-    if (!load_player_context(player_context))
-    {
-        FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
-
-        // Initialize default player context
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
-        player_context->direction = PLAYER_RIGHT; // default direction
-        player_context->health = 100;
-        player_context->strength = 10;
-        player_context->level = 1;
-        player_context->xp = 0;
-        player_context->start_position = entity_pos_get(game_context->players[0]);
-        player_context->attack_timer = 0.1f;
-        player_context->elapsed_attack_timer = player_context->attack_timer;
-        player_context->health_regen = 1; // 1 health per second
-        player_context->elapsed_health_regen = 0;
-        player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
-
-        // Set player username
-        if (!load_char("Flip-Social-Username", player_context->username, sizeof(player_context->username)))
+        player_context_loaded = true;
+        // Get player context
+        PlayerContext *player_context = entity_context_get(game_context->players[0]);
+        if (!player_context)
         {
-            // If loading username fails, default to "Player"
-            snprintf(player_context->username, sizeof(player_context->username), "Player");
+            FURI_LOG_E(TAG, "Failed to get player context");
+            return;
         }
 
+        FURI_LOG_I(TAG, "Loading player context");
+        if (!load_player_context(player_context))
+        {
+            FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
+
+            // Initialize default player context
+            player_context->sprite_right = game_manager_sprite_load(manager, "player_right_axe_15x11px.fxbm");
+            player_context->sprite_left = game_manager_sprite_load(manager, "player_left_axe_15x11px.fxbm");
+            player_context->direction = PLAYER_RIGHT; // default direction
+            player_context->health = 100;
+            player_context->strength = 10;
+            player_context->level = 1;
+            player_context->xp = 0;
+            player_context->start_position = entity_pos_get(game_context->players[0]);
+            player_context->attack_timer = 0.1f;
+            player_context->elapsed_attack_timer = player_context->attack_timer;
+            player_context->health_regen = 1; // 1 health per second
+            player_context->elapsed_health_regen = 0;
+            player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+
+            // Set player username
+            if (!load_char("Flip-Social-Username", player_context->username, sizeof(player_context->username)))
+            {
+                // If loading username fails, default to "Player"
+                snprintf(player_context->username, sizeof(player_context->username), "Player");
+            }
+
+            game_context->player_context = player_context;
+
+            // Save the initialized context
+            if (!save_player_context(player_context))
+            {
+                FURI_LOG_E(TAG, "Failed to save player context after initialization");
+            }
+
+            return;
+        }
+        FURI_LOG_I(TAG, "Player context loaded successfully");
+        // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
+        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_axe_15x11px.fxbm");
+        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_axe_15x11px.fxbm");
+
+        // Assign loaded player context to game context
         game_context->player_context = player_context;
-
-        // Save the initialized context
-        if (!save_player_context(player_context))
-        {
-            FURI_LOG_E(TAG, "Failed to save player context after initialization");
-        }
-
-        return;
     }
-    FURI_LOG_I(TAG, "Player context loaded successfully");
-    // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_naked_10x10px.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_naked_10x10px.fxbm");
-
-    // Assign loaded player context to game context
-    game_context->player_context = player_context;
 }
 
 // Modify player_update to track direction
@@ -173,6 +176,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         // otherwise the "OK" button will be used to attack
         if (game_context->enemy_count == 0)
         {
+            FURI_LOG_I(TAG, "Switching levels");
+            save_player_context(player);
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
         }

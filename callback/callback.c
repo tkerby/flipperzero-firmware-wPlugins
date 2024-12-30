@@ -583,6 +583,7 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         game_thread_running = false;
         furi_thread_flags_set(thread_id, WorkerEvtStop);
         furi_thread_free(thread_id);
+        player_context_loaded = false;
     }
 
     if (should_free_submenu_settings)

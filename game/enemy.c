@@ -221,9 +221,9 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 // Increase healthy by 10% of the enemy's strength
                 game_context->player_context->health += enemy_context->strength * 0.1f;
-                if (game_context->player_context->health > 100)
+                if (game_context->player_context->health > game_context->player_context->max_health)
                 {
-                    game_context->player_context->health = 100;
+                    game_context->player_context->health = game_context->player_context->max_health;
                 }
 
                 // Decrease enemy health by player strength
@@ -235,7 +235,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     enemy_context->state = ENEMY_DEAD;
 
                     // Reset enemy position and health
-                    enemy_context->health = 100;
+                    enemy_context->health = 100; // this needs to be set to the enemy's max health
 
                     // remove from game context and set in safe zone
                     game_context->enemies[enemy_context->index] = NULL;
@@ -284,7 +284,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                     // Reset player position and health
                     entity_pos_set(other, game_context->player_context->start_position);
-                    game_context->player_context->health = 100;
+                    game_context->player_context->health = game_context->player_context->max_health;
 
                     // subtract player's XP by the enemy's strength
                     game_context->player_context->xp -= enemy_context->strength;
@@ -333,12 +333,12 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             }
 
             // Move the player and enemy away from each other
-            player_pos.x -= direction_vector.x * enemy_context->radius;
-            player_pos.y -= direction_vector.y * enemy_context->radius;
+            player_pos.x -= direction_vector.x * (enemy_context->radius / 2);
+            player_pos.y -= direction_vector.y * (enemy_context->radius / 2);
             entity_pos_set(other, player_pos);
 
-            enemy_pos.x += direction_vector.x * enemy_context->radius;
-            enemy_pos.y += direction_vector.y * enemy_context->radius;
+            enemy_pos.x += direction_vector.x * (enemy_context->radius / 2);
+            enemy_pos.y += direction_vector.y * (enemy_context->radius / 2);
             entity_pos_set(self, enemy_pos);
 
             // Reset player's movement direction to prevent immediate re-collision
