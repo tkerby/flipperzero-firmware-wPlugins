@@ -596,7 +596,7 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
 
     if (app_instance)
     {
-        free(app_instance);
+        // free(app_instance); // no need to free since it's a reference to app
         app_instance = NULL;
     }
 }
@@ -1058,13 +1058,7 @@ void callback_submenu_choices(void *context, uint32_t index)
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
             return;
         }
-        app_instance = malloc(sizeof(FlipWorldApp));
-        if (!app_instance)
-        {
-            FURI_LOG_E(TAG, "Failed to allocate FlipWorldApp");
-            return;
-        }
-        memcpy(app_instance, app, sizeof(FlipWorldApp));
+        app_instance = app;
         // check if logged in
         if (is_logged_in() || is_logged_in_to_flip_social())
         {
@@ -1369,6 +1363,7 @@ static void flip_world_game_fps_change(VariableItem *item)
     uint8_t index = variable_item_get_current_value_index(item);
     game_fps_index = index;
     variable_item_set_current_value_text(item, game_fps_choices[index]);
+    variable_item_set_current_value_index(item, index);
 
     // save the fps
     save_char("Game-FPS", game_fps_choices[index]);
@@ -1376,7 +1371,9 @@ static void flip_world_game_fps_change(VariableItem *item)
 static void flip_world_game_screen_always_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
+    game_screen_always_on_index = index;
     variable_item_set_current_value_text(item, game_screen_always_on_choices[index]);
+    variable_item_set_current_value_index(item, index);
 
     // save the screen always on
     save_char("Game-Screen-Always-On", game_screen_always_on_choices[index]);
