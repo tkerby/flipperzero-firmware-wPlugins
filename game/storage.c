@@ -1,13 +1,4 @@
 #include <game/storage.h>
-#include <stdio.h>
-#include <furi.h>
-#include <furi_hal.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
 
 bool save_uint32(const char *path_name, uint32_t value)
 {

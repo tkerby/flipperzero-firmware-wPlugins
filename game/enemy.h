@@ -55,5 +55,4 @@ const EntityDescription *enemy(
     float strength,
     float health);
 
-void spawn_enemy_json(Level *level, GameManager *manager, char *json);
 void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json);

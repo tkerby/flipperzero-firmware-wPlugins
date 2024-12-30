@@ -3,9 +3,6 @@
 #include <flip_world.h>
 #include <game/game.h>
 
-#define PLAYER_COLLISION_VERTICAL 0   // was 5
-#define PLAYER_COLLISION_HORIZONTAL 0 // was 5
-
 // Maximum enemies
 #define MAX_ENEMIES 10
 
@@ -72,4 +69,3 @@ typedef struct
 extern const EntityDescription player_desc;
 void player_spawn(Level *level, GameManager *manager);
 SpriteContext *get_sprite_context(const char *name);
-SpriteContext *get_sprite_context_furi(const FuriString *name);

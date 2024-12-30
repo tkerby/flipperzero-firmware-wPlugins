@@ -87,21 +87,6 @@ void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, con
         }
     }
 }
-// Draw a half section of icons (16 width)
-void draw_icon_half_world(Canvas *canvas, bool right, const Icon *icon)
-{
-    for (int i = 0; i < 10; i++)
-    {
-        if (right)
-        {
-            draw_icon_line(canvas, (Vector){WORLD_WIDTH / 2 + 6, i * 19 + 2}, 11, true, icon);
-        }
-        else
-        {
-            draw_icon_line(canvas, (Vector){0, i * 19 + 2}, 11, true, icon);
-        }
-    }
-}
 char g_temp_spawn_name[32];
 // Draw an icon at a specific position (with collision detection)
 void spawn_icon(Level *level, const char *icon_id, float x, float y)

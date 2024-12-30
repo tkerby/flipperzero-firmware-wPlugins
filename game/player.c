@@ -277,27 +277,3 @@ SpriteContext *get_sprite_context(const char *name)
     FURI_LOG_E("Game", "Sprite not found: %s", name);
     return NULL;
 }
-
-SpriteContext *get_sprite_context_furi(const FuriString *name)
-{
-    if (furi_string_cmp(name, "axe") == 0)
-    {
-        return sprite_generic_alloc("axe", 15, 11);
-    }
-    else if (furi_string_cmp(name, "bow") == 0)
-    {
-        return sprite_generic_alloc("bow", 13, 11);
-    }
-    else if (furi_string_cmp(name, "naked") == 0)
-    {
-        return sprite_generic_alloc("naked", 10, 10);
-    }
-    else if (furi_string_cmp(name, "sword") == 0)
-    {
-        return sprite_generic_alloc("sword", 15, 11);
-    }
-
-    // If no match is found
-    FURI_LOG_E("Game", "Sprite not found: %s", furi_string_get_cstr(name));
-    return NULL;
-}

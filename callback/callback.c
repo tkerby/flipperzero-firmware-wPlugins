@@ -1,4 +1,10 @@
 #include <callback/callback.h>
+#include <furi.h>
+#include "engine/engine.h"
+#include "engine/game_engine.h"
+#include "engine/game_manager_i.h"
+#include "engine/level_i.h"
+#include "engine/entity_i.h"
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
@@ -634,7 +640,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
         view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
         return "app_instance is NULL";
     }
-    FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
+    FuriThread *thread = furi_thread_alloc_ex("game", 2048, game_app, app_instance);
     if (!thread)
     {
         view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
@@ -805,7 +811,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "app_instance is NULL";
             }
-            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
+            FuriThread *thread = furi_thread_alloc_ex("game", 2048, game_app, app_instance);
             if (!thread)
             {
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
@@ -976,7 +982,7 @@ static char *flip_world_parse_game(DataLoaderModel *model)
                 view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "app_instance is NULL";
             }
-            FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
+            FuriThread *thread = furi_thread_alloc_ex("game", 2048, game_app, app_instance);
             if (!thread)
             {
                 FURI_LOG_E(TAG, "Failed to allocate game thread");
@@ -1013,7 +1019,7 @@ static char *flip_world_parse_game(DataLoaderModel *model)
             view_dispatcher_switch_to_view(app_instance->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
             return "app_instance is NULL";
         }
-        FuriThread *thread = furi_thread_alloc_ex("game", 4096, game_app, app_instance);
+        FuriThread *thread = furi_thread_alloc_ex("game", 2048, game_app, app_instance);
         if (!thread)
         {
             FURI_LOG_E(TAG, "Failed to allocate game thread");
