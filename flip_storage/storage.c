@@ -249,7 +249,7 @@ bool load_char(
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
 
-    return true;
+    return strlen(value) > 0;
 }
 
 bool save_world(
