@@ -8,6 +8,7 @@ void set_world(Level *level, GameManager *manager, char *id)
              STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_json_data.json",
              id, id);
 
+    FURI_LOG_I("Game", "Loading world data from %s", file_path);
     FuriString *json_data_str = flipper_http_load_from_file(file_path);
     if (!json_data_str || furi_string_empty(json_data_str))
     {
@@ -15,7 +16,13 @@ void set_world(Level *level, GameManager *manager, char *id)
         draw_town_world(level);
         return;
     }
+    size_t heap_size = memmgr_get_free_heap();
+    size_t total_heap_size = memmgr_get_total_heap();
 
+    FURI_LOG_I(TAG, "Heap size: %d", heap_size);
+    FURI_LOG_I(TAG, "Total heap size: %d", total_heap_size);
+
+    FURI_LOG_I("Game", "Drawing world");
     if (!draw_json_world_furi(level, json_data_str))
     {
         FURI_LOG_E("Game", "Failed to draw world");
@@ -24,11 +31,12 @@ void set_world(Level *level, GameManager *manager, char *id)
     }
     else
     {
+        FURI_LOG_I("Game", "Drawing enemies");
         furi_string_free(json_data_str);
         snprintf(file_path, sizeof(file_path),
                  STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_enemy_data.json",
                  id, id);
-
+        FURI_LOG_I("Game", "Loading enemy data from %s", file_path);
         FuriString *enemy_data_str = flipper_http_load_from_file(file_path);
         if (!enemy_data_str || furi_string_empty(enemy_data_str))
         {
@@ -36,6 +44,7 @@ void set_world(Level *level, GameManager *manager, char *id)
             draw_town_world(level);
             return;
         }
+        FURI_LOG_I("Game", "Looping through enemy data");
         // Loop through the array
         for (int i = 0; i < MAX_ENEMIES; i++)
         {
@@ -43,6 +52,8 @@ void set_world(Level *level, GameManager *manager, char *id)
             if (!single_enemy_data || furi_string_empty(single_enemy_data))
             {
                 // No more enemy elements found
+                if (single_enemy_data)
+                    furi_string_free(single_enemy_data);
                 break;
             }
 
@@ -50,6 +61,7 @@ void set_world(Level *level, GameManager *manager, char *id)
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);
+        FURI_LOG_I("Game", "Finished loading world data");
     }
 }
 
@@ -63,7 +75,13 @@ static void level_start(Level *level, GameManager *manager, void *context)
 
     level_clear(level);
     player_spawn(level, manager);
+
     LevelContext *level_context = context;
+    if (!level_context)
+    {
+        FURI_LOG_E("Game", "Level context is NULL");
+        return;
+    }
 
     // check if the world exists
     if (!world_exists(level_context->id))
@@ -79,10 +97,14 @@ static void level_start(Level *level, GameManager *manager, void *context)
         furi_string_free(world_data);
 
         set_world(level, manager, level_context->id);
+
+        FURI_LOG_I("Game", "World set.");
     }
     else
     {
+        FURI_LOG_I("Game", "World exists.. loading now");
         set_world(level, manager, level_context->id);
+        FURI_LOG_I("Game", "World set.");
     }
 }
 

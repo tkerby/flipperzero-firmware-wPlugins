@@ -5,4 +5,3 @@ int game_fps_index = 1;
 char *game_screen_always_on_choices[] = {"No", "Yes"};
 int game_screen_always_on_index = 1;
 FlipWorldApp *app_instance = NULL;
-bool player_context_loaded = false;

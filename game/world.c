@@ -79,12 +79,18 @@ bool draw_json_world(Level *level, const char *json_data)
     return levels_added > 0;
 }
 
-bool draw_json_world_furi(Level *level, FuriString *json_data)
+bool draw_json_world_furi(Level *level, const FuriString *json_data)
 {
+    if (!json_data)
+    {
+        FURI_LOG_E("Game", "JSON data is NULL");
+        return false;
+    }
     int levels_added = 0;
-
+    FURI_LOG_I("Game", "Looping through world data");
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
+        FURI_LOG_I("Game", "Looping through world data: %d", i);
         FuriString *data = get_json_array_value_furi("json_data", i, json_data);
         if (!data)
         {
@@ -148,6 +154,7 @@ bool draw_json_world_furi(Level *level, FuriString *json_data)
         furi_string_free(horizontal);
         levels_added++;
     }
+    FURI_LOG_I("Game", "Finished loading world data");
     return levels_added > 0;
 }
 

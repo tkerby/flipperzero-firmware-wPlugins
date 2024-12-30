@@ -56,7 +56,12 @@ static void game_stop(void *ctx)
     }
 
     GameContext *game_context = ctx;
-    if (game_context && game_context->player_context)
+    if (!game_context)
+    {
+        FURI_LOG_E("Game", "Game context is NULL");
+        return;
+    }
+    if (game_context->player_context)
     {
         easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
         FURI_LOG_I("Game", "Saving player context");

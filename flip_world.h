@@ -80,4 +80,3 @@ extern int game_fps_index;
 extern char *game_screen_always_on_choices[];
 extern int game_screen_always_on_index;
 extern FlipWorldApp *app_instance;
-extern bool player_context_loaded;

@@ -333,12 +333,12 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             }
 
             // Move the player and enemy away from each other
-            player_pos.x -= direction_vector.x * (enemy_context->radius / 2);
-            player_pos.y -= direction_vector.y * (enemy_context->radius / 2);
+            player_pos.x -= direction_vector.x * 3;
+            player_pos.y -= direction_vector.y * 3;
             entity_pos_set(other, player_pos);
 
-            enemy_pos.x += direction_vector.x * (enemy_context->radius / 2);
-            enemy_pos.y += direction_vector.y * (enemy_context->radius / 2);
+            enemy_pos.x += direction_vector.x * 3;
+            enemy_pos.y += direction_vector.y * 3;
             entity_pos_set(self, enemy_pos);
 
             // Reset player's movement direction to prevent immediate re-collision
