@@ -481,5 +481,5 @@ bool load_char(const char* path_name, char* value, size_t value_size) {
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
 
-    return true;
+    return strlen(value) > 0;
 }
