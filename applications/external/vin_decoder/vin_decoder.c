@@ -5,13 +5,13 @@
 #include <gui/modules/widget.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
-#include <ctype.h> 
+#include <ctype.h>
 
 typedef enum {
     VinDecoderMainMenuScene,
     VinDecoderVinInputScene,
     VinDecoderVinMessageScene,
-    VinDecoderAboutScene, 
+    VinDecoderAboutScene,
     VinDecoderSceneCount,
 } VinDecoderScene;
 
@@ -27,7 +27,7 @@ typedef struct VinDecoderApp {
     Submenu* submenu;
     Widget* widget;
     TextInput* text_input;
-    char* vin; 
+    char* vin;
     uint8_t vin_size;
 } VinDecoderApp;
 
@@ -38,7 +38,7 @@ typedef enum {
 
 typedef enum {
     VinDecoderMainMenuSceneVinInputEvent,
-    VinDecoderMainMenuSceneAboutEvent, 
+    VinDecoderMainMenuSceneAboutEvent,
 } VinDecoderMainMenuEvent;
 
 typedef enum {
@@ -55,9 +55,10 @@ void vin_decoder_menu_callback(void* context, uint32_t index) {
     VinDecoderApp* app = context;
     switch(index) {
     case VinDecoderMainMenuSceneVinInput:
-        scene_manager_handle_custom_event(app->scene_manager, VinDecoderMainMenuSceneVinInputEvent);
+        scene_manager_handle_custom_event(
+            app->scene_manager, VinDecoderMainMenuSceneVinInputEvent);
         break;
-    case VinDecoderMainMenuSceneAbout: 
+    case VinDecoderMainMenuSceneAbout:
         scene_manager_handle_custom_event(app->scene_manager, VinDecoderMainMenuSceneAboutEvent);
         break;
     }
@@ -68,17 +69,9 @@ void vin_decoder_main_menu_scene_on_enter(void* context) {
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "VIN Decoder App");
     submenu_add_item(
-        app->submenu,
-        "Enter VIN",
-        VinDecoderMainMenuSceneVinInput,
-        vin_decoder_menu_callback,
-        app);
+        app->submenu, "Enter VIN", VinDecoderMainMenuSceneVinInput, vin_decoder_menu_callback, app);
     submenu_add_item(
-        app->submenu,
-        "About",
-        VinDecoderMainMenuSceneAbout,
-        vin_decoder_menu_callback,
-        app);
+        app->submenu, "About", VinDecoderMainMenuSceneAbout, vin_decoder_menu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, VinDecoderSubmenuView);
 }
 
@@ -92,7 +85,7 @@ bool vin_decoder_main_menu_scene_on_event(void* context, SceneManagerEvent event
             scene_manager_next_scene(app->scene_manager, VinDecoderVinInputScene);
             consumed = true;
             break;
-        case VinDecoderMainMenuSceneAboutEvent: 
+        case VinDecoderMainMenuSceneAboutEvent:
             scene_manager_next_scene(app->scene_manager, VinDecoderAboutScene);
             consumed = true;
             break;
@@ -112,16 +105,14 @@ void vin_decoder_main_menu_scene_on_exit(void* context) {
 void vin_decoder_text_input_callback(void* context) {
     VinDecoderApp* app = context;
 
-
     if(strlen(app->vin) > 17) {
-        app->vin[17] = '\0'; 
+        app->vin[17] = '\0';
     }
 
-   
     for(int i = 0; app->vin[i] != '\0'; i++) {
         app->vin[i] = toupper(app->vin[i]);
     }
-    
+
     scene_manager_handle_custom_event(app->scene_manager, VinDecoderVinInputSceneSaveEvent);
 }
 
@@ -132,14 +123,9 @@ void vin_decoder_vin_input_scene_on_enter(void* context) {
     text_input_set_header_text(app->text_input, "Enter your 17-character VIN");
 
     text_input_set_result_callback(
-        app->text_input,
-        vin_decoder_text_input_callback,
-        app,
-        app->vin,
-        app->vin_size,
-        clear_text);
+        app->text_input, vin_decoder_text_input_callback, app, app->vin, app->vin_size, clear_text);
 
-    app->vin[17] = '\0'; 
+    app->vin[17] = '\0';
 
     view_dispatcher_switch_to_view(app->view_dispatcher, VinDecoderTextInputView);
 }
@@ -164,25 +150,23 @@ void vin_decoder_vin_message_scene_on_enter(void* context) {
     VinDecoderApp* app = context;
     widget_reset(app->widget);
     FuriString* message = furi_string_alloc();
-    
 
-    int year = get_vehicle_year(app->vin[9]); 
-    
-    const char* manufacturer = get_vehicle_manufacturer(app->vin); 
+    int year = get_vehicle_year(app->vin[9]);
 
+    const char* manufacturer = get_vehicle_manufacturer(app->vin);
 
-    furi_string_printf(message, "Your VIN is:\n%s\nManufacturer:\n%s\nYear: %d", app->vin, manufacturer, year);
+    furi_string_printf(
+        message, "Your VIN is:\n%s\nManufacturer:\n%s\nYear: %d", app->vin, manufacturer, year);
     widget_add_string_multiline_element(
         app->widget, 5, 30, AlignLeft, AlignCenter, FontSecondary, furi_string_get_cstr(message));
     furi_string_free(message);
     view_dispatcher_switch_to_view(app->view_dispatcher, VinDecoderWidgetView);
 }
 
-
 bool vin_decoder_vin_message_scene_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
-    return false; 
+    return false;
 }
 
 void vin_decoder_vin_message_scene_on_exit(void* context) {
@@ -194,9 +178,16 @@ void vin_decoder_about_scene_on_enter(void* context) {
     VinDecoderApp* app = context;
     widget_reset(app->widget);
     FuriString* about_message = furi_string_alloc();
-    furi_string_printf(about_message, "VIN Decoder App\nVersion 0.1\nAuthor:evillero\n\nwww.github.com/evillero");
+    furi_string_printf(
+        about_message, "VIN Decoder App\nVersion 0.1\nAuthor:evillero\n\nwww.github.com/evillero");
     widget_add_string_multiline_element(
-        app->widget, 5, 30, AlignLeft, AlignCenter, FontSecondary, furi_string_get_cstr(about_message));
+        app->widget,
+        5,
+        30,
+        AlignLeft,
+        AlignCenter,
+        FontSecondary,
+        furi_string_get_cstr(about_message));
     furi_string_free(about_message);
     view_dispatcher_switch_to_view(app->view_dispatcher, VinDecoderWidgetView);
 }
@@ -204,7 +195,7 @@ void vin_decoder_about_scene_on_enter(void* context) {
 bool vin_decoder_about_scene_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
-    return false; 
+    return false;
 }
 
 void vin_decoder_about_scene_on_exit(void* context) {
@@ -216,21 +207,21 @@ void (*const vin_decoder_scene_on_enter_handlers[])(void*) = {
     vin_decoder_main_menu_scene_on_enter,
     vin_decoder_vin_input_scene_on_enter,
     vin_decoder_vin_message_scene_on_enter,
-    vin_decoder_about_scene_on_enter, 
+    vin_decoder_about_scene_on_enter,
 };
 
 bool (*const vin_decoder_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     vin_decoder_main_menu_scene_on_event,
     vin_decoder_vin_input_scene_on_event,
     vin_decoder_vin_message_scene_on_event,
-    vin_decoder_about_scene_on_event, 
+    vin_decoder_about_scene_on_event,
 };
 
 void (*const vin_decoder_scene_on_exit_handlers[])(void*) = {
     vin_decoder_main_menu_scene_on_exit,
     vin_decoder_vin_input_scene_on_exit,
     vin_decoder_vin_message_scene_on_exit,
-    vin_decoder_about_scene_on_exit, 
+    vin_decoder_about_scene_on_exit,
 };
 
 static const SceneManagerHandlers vin_decoder_scene_manager_handlers = {
@@ -254,15 +245,17 @@ bool vin_decoder_back_event_callback(void* context) {
 
 static VinDecoderApp* vin_decoder_app_alloc() {
     VinDecoderApp* app = malloc(sizeof(VinDecoderApp));
-    app->vin_size = 18; 
+    app->vin_size = 18;
     app->vin = malloc(app->vin_size);
     app->scene_manager = scene_manager_alloc(&vin_decoder_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, vin_decoder_custom_callback);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, vin_decoder_back_event_callback);
-    
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, vin_decoder_back_event_callback);
+
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, VinDecoderSubmenuView, submenu_get_view(app->submenu));
@@ -272,7 +265,7 @@ static VinDecoderApp* vin_decoder_app_alloc() {
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, VinDecoderTextInputView, text_input_get_view(app->text_input));
-    
+
     return app;
 }
 
@@ -286,41 +279,70 @@ static void vin_decoder_app_free(VinDecoderApp* app) {
     submenu_free(app->submenu);
     widget_free(app->widget);
     text_input_free(app->text_input);
-    free(app->vin); 
+    free(app->vin);
     free(app);
 }
 
 int get_vehicle_year(char vin_char) {
     switch(vin_char) {
-        case 'V': return 1997;
-        case 'W': return 1998;
-        case 'X': return 1999;
-        case 'Y': return 2000;
-        case '1': return 2001;
-        case '2': return 2002;
-        case '3': return 2003;
-        case '4': return 2004;
-        case '5': return 2005;
-        case '6': return 2006;
-        case '7': return 2007;
-        case '8': return 2008;
-        case '9': return 2009;
-        case 'A': return 2010;
-        case 'B': return 2011;
-        case 'C': return 2012;
-        case 'D': return 2013;
-        case 'E': return 2014;
-        case 'F': return 2015;
-        case 'G': return 2016;
-        case 'H': return 2017;
-        case 'J': return 2018;
-        case 'K': return 2019;
-        case 'L': return 2020;
-        case 'M': return 2021;
-        case 'N': return 2022;
-        case 'P': return 2023;
-        case 'R': return 2024;
-        default: return -1; 
+    case 'V':
+        return 1997;
+    case 'W':
+        return 1998;
+    case 'X':
+        return 1999;
+    case 'Y':
+        return 2000;
+    case '1':
+        return 2001;
+    case '2':
+        return 2002;
+    case '3':
+        return 2003;
+    case '4':
+        return 2004;
+    case '5':
+        return 2005;
+    case '6':
+        return 2006;
+    case '7':
+        return 2007;
+    case '8':
+        return 2008;
+    case '9':
+        return 2009;
+    case 'A':
+        return 2010;
+    case 'B':
+        return 2011;
+    case 'C':
+        return 2012;
+    case 'D':
+        return 2013;
+    case 'E':
+        return 2014;
+    case 'F':
+        return 2015;
+    case 'G':
+        return 2016;
+    case 'H':
+        return 2017;
+    case 'J':
+        return 2018;
+    case 'K':
+        return 2019;
+    case 'L':
+        return 2020;
+    case 'M':
+        return 2021;
+    case 'N':
+        return 2022;
+    case 'P':
+        return 2023;
+    case 'R':
+        return 2024;
+    default:
+        return -1;
     }
 }
 
@@ -771,16 +793,14 @@ const char* get_vehicle_manufacturer(const char* vin) {
         {"ZA9", "Lamborghini"},
         {"ZHW", "Lamborghini Mid"},
         {"ZPB", "Lamborghini SUV"},
-        {"", "Unknown"} 
-    };
+        {"", "Unknown"}};
 
-
-    for (int i = 0; manufacturers[i][0][0] != '\0'; i++) {
-        if (strncmp(vin, manufacturers[i][0], 3) == 0) {
+    for(int i = 0; manufacturers[i][0][0] != '\0'; i++) {
+        if(strncmp(vin, manufacturers[i][0], 3) == 0) {
             return manufacturers[i][1];
         }
     }
-    return "Unknown"; 
+    return "Unknown";
 }
 
 int32_t vin_decoder_app(void* p) {
@@ -795,4 +815,3 @@ int32_t vin_decoder_app(void* p) {
     vin_decoder_app_free(app);
     return 0;
 }
-
