@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM1229-1805-0.420.0-be72ff0](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1230-1901-0.420.0-34729c2](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-29 18:05 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-29 18:05 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2024-12-30 19:01 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2024-12-30 19:01 EST`
 - UL: [Desktop: add input events sub check (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/38326877eab18cb3c4150df51c32afe5ed459f0b)
 - Updated: [FlipSocial v1.0 (By jblanked)](https://github.com/jblanked/FlipSocial)
 - Hoping everyone has a wonderful holiday season! Thank you to all our supporters and our community that keeps on making the Flipper Zero better!
