@@ -6,11 +6,10 @@
 
 LIST_DEF(EntityList, Entity*, M_POD_OPLIST);
 #define M_OPL_EntityList_t() LIST_OPLIST(EntityList)
-#define FOREACH(name, list) for                                                \
-    M_EACH(name, list, EntityList_t)
+#define FOREACH(name, list) for \
+        M_EACH(name, list, EntityList_t)
 
-typedef struct
-{
+typedef struct {
     Entity* player;
     Entity* target;
     EntityList_t enemies;
@@ -20,9 +19,7 @@ typedef struct
 
 } GameLevelContext;
 
-void
-pause_game(Level* level);
-void
-resume_game(Level* level);
+void pause_game(Level* level);
+void resume_game(Level* level);
 
 extern const LevelBehaviour level_game;

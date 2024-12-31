@@ -8,15 +8,11 @@
 
 #define ENEMY_SIZE 6
 
-static Vector
-random_pos(void)
-{
-    return (Vector){ rand() % 120 + 4, rand() % 58 + 4 };
+static Vector random_pos(void) {
+    return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 
-void
-spawn_enemy(GameManager* manager)
-{
+void spawn_enemy(GameManager* manager) {
     GameContext* game_context = game_manager_game_context_get(manager);
     Level* level = game_manager_current_level_get(manager);
     Entity* enemy = level_add_entity(level, &enemy_description);
@@ -37,29 +33,27 @@ spawn_enemy(GameManager* manager)
     enemy_context->direction = (EnemyDirection)(rand() % 4);
 
     float speed;
-    switch (game_context->difficulty) {
-        case DifficultyEasy:
-            speed = 0.25f;
-            break;
-        case DifficultyHard:
-            speed = 1.0f;
-            break;
-        case DifficultyInsane:
-            speed = 1.5f;
-            break;
-        default:
-            speed = 0.5f;
-            break;
+    switch(game_context->difficulty) {
+    case DifficultyEasy:
+        speed = 0.25f;
+        break;
+    case DifficultyHard:
+        speed = 1.0f;
+        break;
+    case DifficultyInsane:
+        speed = 1.5f;
+        break;
+    default:
+        speed = 0.5f;
+        break;
     }
     enemy_context->speed = speed;
 }
 
-static void
-enemy_update(Entity* self, GameManager* manager, void* context)
-{
+static void enemy_update(Entity* self, GameManager* manager, void* context) {
     Level* level = game_manager_current_level_get(manager);
     GameLevelContext* level_context = level_context_get(level);
-    if (level_context->is_paused) {
+    if(level_context->is_paused) {
         return;
     }
 
@@ -67,33 +61,27 @@ enemy_update(Entity* self, GameManager* manager, void* context)
     Vector pos = entity_pos_get(self);
 
     // Control player movement
-    if (enemy_context->direction == EnemyDirectionUp)
-        pos.y -= enemy_context->speed;
-    if (enemy_context->direction == EnemyDirectionDown)
-        pos.y += enemy_context->speed;
-    if (enemy_context->direction == EnemyDirectionLeft)
-        pos.x -= enemy_context->speed;
-    if (enemy_context->direction == EnemyDirectionRight)
-        pos.x += enemy_context->speed;
+    if(enemy_context->direction == EnemyDirectionUp) pos.y -= enemy_context->speed;
+    if(enemy_context->direction == EnemyDirectionDown) pos.y += enemy_context->speed;
+    if(enemy_context->direction == EnemyDirectionLeft) pos.x -= enemy_context->speed;
+    if(enemy_context->direction == EnemyDirectionRight) pos.x += enemy_context->speed;
 
     // Clamp player position to screen bounds, and set it
     pos.x = CLAMP(pos.x, 125, 3);
     pos.y = CLAMP(pos.y, 61, 3);
     entity_pos_set(self, pos);
 
-    if (enemy_context->direction == EnemyDirectionUp && pos.y <= 3.0f)
+    if(enemy_context->direction == EnemyDirectionUp && pos.y <= 3.0f)
         enemy_context->direction = EnemyDirectionDown;
-    else if (enemy_context->direction == EnemyDirectionDown && pos.y >= 61.0f)
+    else if(enemy_context->direction == EnemyDirectionDown && pos.y >= 61.0f)
         enemy_context->direction = EnemyDirectionUp;
-    else if (enemy_context->direction == EnemyDirectionLeft && pos.x <= 3.0f)
+    else if(enemy_context->direction == EnemyDirectionLeft && pos.x <= 3.0f)
         enemy_context->direction = EnemyDirectionRight;
-    else if (enemy_context->direction == EnemyDirectionRight && pos.x >= 125.0f)
+    else if(enemy_context->direction == EnemyDirectionRight && pos.x >= 125.0f)
         enemy_context->direction = EnemyDirectionLeft;
 }
 
-static void
-enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
-{
+static void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(context);
     UNUSED(manager);
 
@@ -105,16 +93,11 @@ enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
     canvas_draw_sprite(canvas, enemy_context->sprite, pos.x - 3, pos.y - 3);
 }
 
-static void
-enemy_collision(Entity* self,
-                Entity* other,
-                GameManager* manager,
-                void* context)
-{
+static void enemy_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
     UNUSED(self);
     UNUSED(context);
 
-    if (entity_description_get(other) != &player_description) {
+    if(entity_description_get(other) != &player_description) {
         return;
     }
 

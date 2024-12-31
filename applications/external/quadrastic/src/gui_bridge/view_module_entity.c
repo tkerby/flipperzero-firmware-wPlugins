@@ -5,8 +5,7 @@
 #include "input_converter.h"
 #include "view_i.h" // IWYU pragma: keep
 
-typedef struct
-{
+typedef struct {
     const ViewModuleDescription* description;
     void* view_module;
 
@@ -17,9 +16,7 @@ typedef struct
 
 } ViewModuleContext;
 
-static void
-view_module_stop(Entity* self, GameManager* manager, void* _entity_context)
-{
+static void view_module_stop(Entity* self, GameManager* manager, void* _entity_context) {
     UNUSED(self);
     UNUSED(manager);
     ViewModuleContext* view_module_context = _entity_context;
@@ -27,28 +24,24 @@ view_module_stop(Entity* self, GameManager* manager, void* _entity_context)
     input_converter_free(view_module_context->input_converter);
 }
 
-static void
-view_module_update(Entity* self, GameManager* manager, void* _entity_context)
-{
+static void view_module_update(Entity* self, GameManager* manager, void* _entity_context) {
     UNUSED(self);
     ViewModuleContext* entity_context = _entity_context;
 
     InputState input = game_manager_input_get(manager);
     input_converter_process_state(entity_context->input_converter, &input);
 
-    View* view =
-      entity_context->description->get_view(entity_context->view_module);
+    View* view = entity_context->description->get_view(entity_context->view_module);
 
     InputEvent event;
-    while (input_converter_get_event(entity_context->input_converter, &event) ==
-           FuriStatusOk) {
-        if (event.key == InputKeyBack &&
-            (event.type == InputTypeShort || event.type == InputTypeLong) &&
-            entity_context->back_callback != NULL) {
-            bool is_consumed = entity_context->back_callback(
-              entity_context->back_callback_context);
+    while(input_converter_get_event(entity_context->input_converter, &event) == FuriStatusOk) {
+        if(event.key == InputKeyBack &&
+           (event.type == InputTypeShort || event.type == InputTypeLong) &&
+           entity_context->back_callback != NULL) {
+            bool is_consumed =
+                entity_context->back_callback(entity_context->back_callback_context);
 
-            if (is_consumed) {
+            if(is_consumed) {
                 continue;
             }
         }
@@ -57,17 +50,12 @@ view_module_update(Entity* self, GameManager* manager, void* _entity_context)
 }
 
 static void
-view_module_render(Entity* self,
-                   GameManager* manager,
-                   Canvas* canvas,
-                   void* _entity_context)
-{
+    view_module_render(Entity* self, GameManager* manager, Canvas* canvas, void* _entity_context) {
     UNUSED(self);
     UNUSED(manager);
 
     ViewModuleContext* entity_context = _entity_context;
-    View* view =
-      entity_context->description->get_view(entity_context->view_module);
+    View* view = entity_context->description->get_view(entity_context->view_module);
     view->draw_callback(canvas, view_get_model(view));
 }
 
@@ -81,11 +69,10 @@ const EntityDescription view_module_description = {
     .context_size = sizeof(ViewModuleContext),
 };
 
-Entity*
-view_module_add_to_level(Level* level,
-                         GameManager* manager,
-                         const ViewModuleDescription* module_description)
-{
+Entity* view_module_add_to_level(
+    Level* level,
+    GameManager* manager,
+    const ViewModuleDescription* module_description) {
     UNUSED(manager);
     furi_check(module_description);
 
@@ -107,18 +94,15 @@ view_module_add_to_level(Level* level,
     return entity;
 }
 
-void*
-view_module_get_module(Entity* entity)
-{
+void* view_module_get_module(Entity* entity) {
     ViewModuleContext* view_module_context = entity_context_get(entity);
     return view_module_context->view_module;
 }
 
-void
-view_module_set_back_callback(Entity* entity,
-                              ViewModuleBackCallback back_callback,
-                              void* context)
-{
+void view_module_set_back_callback(
+    Entity* entity,
+    ViewModuleBackCallback back_callback,
+    void* context) {
     ViewModuleContext* view_module_context = entity_context_get(entity);
     view_module_context->back_callback = back_callback;
     view_module_context->back_callback_context = context;

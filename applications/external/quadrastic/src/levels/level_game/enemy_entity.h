@@ -4,22 +4,19 @@
 
 typedef struct Sprite Sprite;
 
-typedef enum
-{
+typedef enum {
     EnemyDirectionUp,
     EnemyDirectionDown,
     EnemyDirectionLeft,
     EnemyDirectionRight,
 } EnemyDirection;
 
-typedef struct
-{
+typedef struct {
     Sprite* sprite;
     EnemyDirection direction;
     float speed;
 } EnemyContext;
 
-void
-spawn_enemy(GameManager* manager);
+void spawn_enemy(GameManager* manager);
 
 extern const EntityDescription enemy_description;

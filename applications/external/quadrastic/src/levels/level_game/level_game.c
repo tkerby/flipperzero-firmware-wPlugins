@@ -18,29 +18,24 @@
 #include "player_entity.h"
 
 #define TARGET_ANIMATION_DURATION 30.0f
-#define TARGET_SIZE 1
-#define TARGET_RADIUS 1
-#define TARGET_ANIMATION_RADIUS 10
+#define TARGET_SIZE               1
+#define TARGET_RADIUS             1
+#define TARGET_ANIMATION_RADIUS   10
 
-static Vector
-random_pos(void)
-{
-    return (Vector){ rand() % 120 + 4, rand() % 58 + 4 };
+static Vector random_pos(void) {
+    return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 
 /****** Entities: Target ******/
 
-typedef struct
-{
+typedef struct {
     Sprite* sprite;
     float time;
 } TargetContext;
 
 static const EntityDescription target_description;
 
-static Entity*
-create_target(Level* level, GameManager* manager)
-{
+static Entity* create_target(Level* level, GameManager* manager) {
     Entity* target = level_add_entity(level, &target_description);
 
     // Set target position
@@ -56,9 +51,7 @@ create_target(Level* level, GameManager* manager)
     return target;
 }
 
-static void
-reset_target(Entity* target)
-{
+static void reset_target(Entity* target) {
     // Set player position.
     entity_pos_set(target, random_pos());
 
@@ -67,23 +60,19 @@ reset_target(Entity* target)
     target_context->time = 0.0f;
 }
 
-static void
-target_update(Entity* self, GameManager* manager, void* context)
-{
+static void target_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(self);
     UNUSED(manager);
 
     // Start level animation
     TargetContext* target = context;
-    if (target->time >= TARGET_ANIMATION_DURATION) {
+    if(target->time >= TARGET_ANIMATION_DURATION) {
         return;
     }
     target->time += 1.0f;
 }
 
-static void
-target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
-{
+static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(context);
     UNUSED(manager);
 
@@ -91,11 +80,10 @@ target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
     Vector pos = entity_pos_get(self);
 
     TargetContext* target = context;
-    if (target->time < TARGET_ANIMATION_DURATION) {
+    if(target->time < TARGET_ANIMATION_DURATION) {
         float step = TARGET_ANIMATION_RADIUS / TARGET_ANIMATION_DURATION;
-        float radius = CLAMP(TARGET_ANIMATION_RADIUS - target->time * step,
-                             TARGET_ANIMATION_RADIUS,
-                             TARGET_RADIUS);
+        float radius = CLAMP(
+            TARGET_ANIMATION_RADIUS - target->time * step, TARGET_ANIMATION_RADIUS, TARGET_RADIUS);
         canvas_draw_circle(canvas, pos.x, pos.y, radius);
         canvas_draw_dot(canvas, pos.x, pos.y);
         return;
@@ -106,15 +94,10 @@ target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
     canvas_draw_sprite(canvas, target_context->sprite, pos.x - 1, pos.y - 1);
 }
 
-static void
-target_collision(Entity* self,
-                 Entity* other,
-                 GameManager* manager,
-                 void* context)
-{
+static void target_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
     UNUSED(context);
 
-    if (entity_description_get(other) != &player_description) {
+    if(entity_description_get(other) != &player_description) {
         return;
     }
 
@@ -142,9 +125,7 @@ static const EntityDescription target_description = {
 
 /***** Level *****/
 
-static void
-level_game_alloc(Level* level, GameManager* manager, void* context)
-{
+static void level_game_alloc(Level* level, GameManager* manager, void* context) {
     GameLevelContext* level_context = context;
 
     // Add entities to the level
@@ -155,9 +136,7 @@ level_game_alloc(Level* level, GameManager* manager, void* context)
     level_context->pause_menu = NULL;
 }
 
-static void
-level_game_start(Level* level, GameManager* manager, void* context)
-{
+static void level_game_start(Level* level, GameManager* manager, void* context) {
     UNUSED(level);
 
     dolphin_deed(DolphinDeedPluginGameStart);
@@ -172,14 +151,11 @@ level_game_start(Level* level, GameManager* manager, void* context)
     FURI_LOG_D(GAME_NAME, "Game level started");
 }
 
-static void
-level_game_stop(Level* level, GameManager* manager, void* context)
-{
+static void level_game_stop(Level* level, GameManager* manager, void* context) {
     UNUSED(manager);
 
     GameLevelContext* level_context = context;
-    FOREACH(item, level_context->enemies)
-    {
+    FOREACH(item, level_context->enemies) {
         level_remove_entity(level, *item);
     }
     EntityList_clear(level_context->enemies);
@@ -187,26 +163,21 @@ level_game_stop(Level* level, GameManager* manager, void* context)
     resume_game(level);
 }
 
-void
-pause_game(Level* level)
-{
+void pause_game(Level* level) {
     GameLevelContext* level_context = level_context_get(level);
-    if (level_context->is_paused) {
+    if(level_context->is_paused) {
         return;
     }
 
     level_context->is_paused = true;
-    level_context->pause_menu =
-      level_add_entity(level, &context_menu_description);
+    level_context->pause_menu = level_add_entity(level, &context_menu_description);
     context_menu_back_callback_set(
-      level_context->pause_menu, (ContextMenuBackCallback)resume_game, level);
+        level_context->pause_menu, (ContextMenuBackCallback)resume_game, level);
 }
 
-void
-resume_game(Level* level)
-{
+void resume_game(Level* level) {
     GameLevelContext* level_context = level_context_get(level);
-    if (!level_context->is_paused) {
+    if(!level_context->is_paused) {
         return;
     }
 

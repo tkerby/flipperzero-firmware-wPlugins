@@ -6,8 +6,7 @@
 
 #define GAME_NAME "Quadrastic"
 
-typedef enum
-{
+typedef enum {
     DifficultyEasy,
     DifficultyNormal,
     DifficultyHard,
@@ -15,20 +14,17 @@ typedef enum
     DifficultyCount,
 } Difficulty;
 
-typedef enum
-{
+typedef enum {
     StateOff,
     StateOn,
     StateCount,
 } State;
 
-typedef enum
-{
+typedef enum {
     GameEventStopAnimation,
 } GameEvent;
 
-typedef struct
-{
+typedef struct {
     Level* menu;
     Level* game;
     Level* game_over;
@@ -38,8 +34,7 @@ typedef struct
 
 typedef struct NotificationApp NotificationApp;
 
-typedef struct
-{
+typedef struct {
     NotificationApp* notification;
 
     Levels levels;
