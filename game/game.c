@@ -63,7 +63,15 @@ static void game_stop(void *ctx)
     }
     if (game_context->player_context)
     {
-        easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
+        FURI_LOG_I("Game", "Game ending");
+        if (!game_context->ended_early)
+        {
+            easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
+        }
+        else
+        {
+            easy_flipper_dialog("Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
+        }
         FURI_LOG_I("Game", "Saving player context");
         save_player_context(game_context->player_context);
         FURI_LOG_I("Game", "Player context saved");

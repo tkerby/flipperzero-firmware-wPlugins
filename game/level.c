@@ -16,11 +16,15 @@ void set_world(Level *level, GameManager *manager, char *id)
         draw_town_world(level);
         return;
     }
-    size_t heap_size = memmgr_get_free_heap();
-    size_t total_heap_size = memmgr_get_total_heap();
 
-    FURI_LOG_I(TAG, "Heap size: %d", heap_size);
-    FURI_LOG_I(TAG, "Total heap size: %d", total_heap_size);
+    if (!is_enough_heap(28400))
+    {
+        FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
+        GameContext *game_context = game_manager_game_context_get(manager);
+        game_context->ended_early = true;
+        game_manager_game_stop(manager); // end game early
+        return;
+    }
 
     FURI_LOG_I("Game", "Drawing world");
     if (!draw_json_world_furi(level, json_data_str))

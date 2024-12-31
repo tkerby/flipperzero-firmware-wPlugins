@@ -1053,6 +1053,11 @@ void callback_submenu_choices(void *context, uint32_t index)
     {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true, true);
+        if (!is_enough_heap(60000))
+        {
+            easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
+            return;
+        }
         if (!flipper_http_init(flipper_http_rx_callback, app))
         {
             FURI_LOG_E(TAG, "Failed to initialize FlipperHTTP");
@@ -1062,11 +1067,6 @@ void callback_submenu_choices(void *context, uint32_t index)
         // check if logged in
         if (is_logged_in() || is_logged_in_to_flip_social())
         {
-            size_t heap_size = memmgr_get_free_heap();
-            size_t total_heap_size = memmgr_get_total_heap();
-
-            FURI_LOG_I(TAG, "Heap size: %d", heap_size);
-            FURI_LOG_I(TAG, "Total heap size: %d", total_heap_size);
 
             flip_world_world_list_switch_to_view(app_instance);
         }

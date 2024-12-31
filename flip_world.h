@@ -80,3 +80,5 @@ extern int game_fps_index;
 extern char *game_screen_always_on_choices[];
 extern int game_screen_always_on_index;
 extern FlipWorldApp *app_instance;
+
+bool is_enough_heap(size_t heap_size);

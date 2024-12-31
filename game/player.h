@@ -55,6 +55,7 @@ typedef struct
     int level_count;
     int enemy_count;
     int current_level;
+    bool ended_early;
 } GameContext;
 
 typedef struct
