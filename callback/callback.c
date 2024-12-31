@@ -640,9 +640,8 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         app_instance = NULL;
     }
 }
-static bool flip_world_fetch_world_list(DataLoaderModel *model)
+static bool fetch_world_list()
 {
-    UNUSED(model);
     // Create the directory for saving worlds
     char directory_path[128];
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
@@ -661,6 +660,11 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
 
     fhttp.save_received_data = true;
     return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
+}
+static bool flip_world_fetch_world_list(DataLoaderModel *model)
+{
+    UNUSED(model);
+    return fetch_world_list();
 }
 static char *flip_world_parse_world_list(DataLoaderModel *model)
 {
@@ -765,46 +769,14 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
         }
         else
         {
-            // Create the directory for saving worlds
-            char directory_path[128];
-            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-
-            // Create the directory
-            Storage *storage = furi_record_open(RECORD_STORAGE);
-            storage_common_mkdir(storage, directory_path);
-
-            // free storage
-            furi_record_close(RECORD_STORAGE);
-
-            snprintf(
-                fhttp.file_path,
-                sizeof(fhttp.file_path),
-                STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
             model->title = "Fetching World List..";
-            fhttp.save_received_data = true;
-            return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
+            return fetch_world_list();
         }
     }
     else if (model->request_index == 2)
     {
-        // Create the directory for saving worlds
-        char directory_path[128];
-        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-
-        // Create the directory
-        Storage *storage = furi_record_open(RECORD_STORAGE);
-        storage_common_mkdir(storage, directory_path);
-
-        // free storage
-        furi_record_close(RECORD_STORAGE);
-
-        snprintf(
-            fhttp.file_path,
-            sizeof(fhttp.file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
         model->title = "Fetching World List..";
-        fhttp.save_received_data = true;
-        return flipper_http_get_request_with_headers("https://www.flipsocial.net/api/world/v2/list/10/", "{\"Content-Type\":\"application/json\"}");
+        return fetch_world_list();
     }
     else if (model->request_index == 3)
     {
