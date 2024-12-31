@@ -153,6 +153,62 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     draw_username(canvas, posi, game_context->player_context->username);
 }
 
+static void send_attack_notification(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
+{
+    if (!game_context || !enemy_context)
+    {
+        FURI_LOG_E("Game", "Send attack notification: Invalid parameters");
+        return;
+    }
+
+    bool vibration_allowed = strstr(yes_or_no_choices[game_vibration_on_index], "Yes") != NULL;
+    bool sound_allowed = strstr(yes_or_no_choices[game_sound_on_index], "Yes") != NULL;
+
+    if (player_attacked)
+    {
+        if (vibration_allowed && sound_allowed)
+        {
+            notification_message(game_context->notifications, &sequence_success);
+        }
+        else if (vibration_allowed && !sound_allowed)
+        {
+            notification_message(game_context->notifications, &sequence_single_vibro);
+        }
+        else if (!vibration_allowed && sound_allowed)
+        {
+            // change this to sound later
+            notification_message(game_context->notifications, &sequence_blink_blue_100);
+        }
+        else
+        {
+            notification_message(game_context->notifications, &sequence_blink_blue_100);
+        }
+        FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
+    }
+    else
+    {
+        if (vibration_allowed && sound_allowed)
+        {
+            notification_message(game_context->notifications, &sequence_error);
+        }
+        else if (vibration_allowed && !sound_allowed)
+        {
+            notification_message(game_context->notifications, &sequence_single_vibro);
+        }
+        else if (!vibration_allowed && sound_allowed)
+        {
+            // change this to sound later
+            notification_message(game_context->notifications, &sequence_blink_red_100);
+        }
+        else
+        {
+            notification_message(game_context->notifications, &sequence_blink_red_100);
+        }
+
+        FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
+    }
+}
+
 // Enemy collision function
 static void enemy_collision(Entity *self, Entity *other, GameManager *manager, void *context)
 {
@@ -210,7 +266,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
-                FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
+                send_attack_notification(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
                 game_context->player_context->elapsed_attack_timer = 0.0f;
@@ -269,7 +325,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
+                send_attack_notification(game_context, enemy_context, false);
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;

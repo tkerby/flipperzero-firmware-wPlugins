@@ -39,7 +39,7 @@ static int32_t game_app(void *p)
     GameEngineSettings settings = game_engine_settings_init();
     settings.target_fps = game_fps_choices_2[game_fps_index];
     settings.show_fps = game.show_fps;
-    settings.always_backlight = strstr(game_screen_always_on_choices[game_screen_always_on_index], "Yes") != NULL;
+    settings.always_backlight = strstr(yes_or_no_choices[game_screen_always_on_index], "Yes") != NULL;
     settings.frame_callback = frame_cb;
     settings.context = game_manager;
     GameEngine *engine = game_engine_alloc(settings);
@@ -158,6 +158,8 @@ static void flip_world_game_fps_change(VariableItem *item);
 static void game_settings_item_selected(void *context, uint32_t index);
 static void user_settings_item_selected(void *context, uint32_t index);
 static void flip_world_game_screen_always_on_change(VariableItem *item);
+static void flip_world_game_sound_on_change(VariableItem *item);
+static void flip_world_game_vibration_on_change(VariableItem *item);
 
 uint32_t callback_to_submenu(void *context)
 {
@@ -364,7 +366,19 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             {
                 app->variable_item_game_screen_always_on = variable_item_list_add(app->variable_item_list, "Keep Screen On?", 2, flip_world_game_screen_always_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, 1);
-                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, game_screen_always_on_choices[1]);
+                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, yes_or_no_choices[1]);
+            }
+            if (!app->variable_item_game_sound_on)
+            {
+                app->variable_item_game_sound_on = variable_item_list_add(app->variable_item_list, "Sound On?", 2, flip_world_game_sound_on_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_sound_on, 0);
+                variable_item_set_current_value_text(app->variable_item_game_sound_on, yes_or_no_choices[0]);
+            }
+            if (!app->variable_item_game_vibration_on)
+            {
+                app->variable_item_game_vibration_on = variable_item_list_add(app->variable_item_list, "Vibration On?", 2, flip_world_game_vibration_on_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_vibration_on, 0);
+                variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[0]);
             }
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
@@ -381,8 +395,24 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             {
                 int index = strcmp(_game_screen_always_on, "No") == 0 ? 0 : strcmp(_game_screen_always_on, "Yes") == 0 ? 1
                                                                                                                        : 0;
-                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, game_screen_always_on_choices[index]);
+                variable_item_set_current_value_text(app->variable_item_game_screen_always_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, index);
+            }
+            char _game_sound_on[8];
+            if (load_char("Game-Sound-On", _game_sound_on, sizeof(_game_sound_on)))
+            {
+                int index = strcmp(_game_sound_on, "No") == 0 ? 0 : strcmp(_game_sound_on, "Yes") == 0 ? 1
+                                                                                                       : 0;
+                variable_item_set_current_value_text(app->variable_item_game_sound_on, yes_or_no_choices[index]);
+                variable_item_set_current_value_index(app->variable_item_game_sound_on, index);
+            }
+            char _game_vibration_on[8];
+            if (load_char("Game-Vibration-On", _game_vibration_on, sizeof(_game_vibration_on)))
+            {
+                int index = strcmp(_game_vibration_on, "No") == 0 ? 0 : strcmp(_game_vibration_on, "Yes") == 0 ? 1
+                                                                                                               : 0;
+                variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[index]);
+                variable_item_set_current_value_index(app->variable_item_game_vibration_on, index);
             }
             break;
         case FlipWorldSubmenuIndexUserSettings:
@@ -539,6 +569,16 @@ static void free_variable_item_list(void *context)
     {
         free(app->variable_item_game_download_world);
         app->variable_item_game_download_world = NULL;
+    }
+    if (app->variable_item_game_sound_on)
+    {
+        free(app->variable_item_game_sound_on);
+        app->variable_item_game_sound_on = NULL;
+    }
+    if (app->variable_item_game_vibration_on)
+    {
+        free(app->variable_item_game_vibration_on);
+        app->variable_item_game_vibration_on = NULL;
     }
     if (app->variable_item_user_username)
     {
@@ -1372,11 +1412,31 @@ static void flip_world_game_screen_always_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     game_screen_always_on_index = index;
-    variable_item_set_current_value_text(item, game_screen_always_on_choices[index]);
+    variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
 
     // save the screen always on
-    save_char("Game-Screen-Always-On", game_screen_always_on_choices[index]);
+    save_char("Game-Screen-Always-On", yes_or_no_choices[index]);
+}
+static void flip_world_game_sound_on_change(VariableItem *item)
+{
+    uint8_t index = variable_item_get_current_value_index(item);
+    game_sound_on_index = index;
+    variable_item_set_current_value_text(item, yes_or_no_choices[index]);
+    variable_item_set_current_value_index(item, index);
+
+    // save the screen always on
+    save_char("Game-Sound-On", yes_or_no_choices[index]);
+}
+static void flip_world_game_vibration_on_change(VariableItem *item)
+{
+    uint8_t index = variable_item_get_current_value_index(item);
+    game_vibration_on_index = index;
+    variable_item_set_current_value_text(item, yes_or_no_choices[index]);
+    variable_item_set_current_value_index(item, index);
+
+    // save the screen always on
+    save_char("Game-Vibration-On", yes_or_no_choices[index]);
 }
 
 static bool flip_world_fetch_worlds(DataLoaderModel *model)

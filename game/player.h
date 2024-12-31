@@ -2,6 +2,7 @@
 #include "engine/engine.h"
 #include <flip_world.h>
 #include <game/game.h>
+#include <notification/notification_messages.h>
 
 // Maximum enemies
 #define MAX_ENEMIES 2
@@ -57,6 +58,7 @@ typedef struct
     int enemy_count;
     int current_level;
     bool ended_early;
+    NotificationApp *notifications;
 } GameContext;
 
 typedef struct

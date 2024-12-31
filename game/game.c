@@ -40,6 +40,9 @@ static void game_start(GameManager *game_manager, void *ctx)
 
     game_context->current_level = 0;
     FURI_LOG_I("Game", "Level count: %d", game_context->level_count);
+
+    // Notifications - for LED light access
+    game_context->notifications = furi_record_open(RECORD_NOTIFICATION);
 }
 
 /*
@@ -61,6 +64,8 @@ static void game_stop(void *ctx)
         FURI_LOG_E("Game", "Game context is NULL");
         return;
     }
+    // close the notifications
+    furi_record_close(RECORD_NOTIFICATION);
     if (game_context->player_context)
     {
         FURI_LOG_I("Game", "Game ending");
