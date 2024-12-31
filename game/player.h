@@ -4,7 +4,8 @@
 #include <game/game.h>
 
 // Maximum enemies
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 2
+#define MAX_LEVELS 5
 
 typedef enum
 {
@@ -47,9 +48,9 @@ typedef struct
 typedef struct
 {
     PlayerContext *player_context;
-    Level *levels[10];
+    Level *levels[MAX_LEVELS];
     Entity *enemies[MAX_ENEMIES];
-    Entity *players[1];
+    Entity *player;
     GameKey user_input;
     float fps;
     int level_count;

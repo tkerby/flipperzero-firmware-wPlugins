@@ -149,7 +149,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     draw_user_stats(canvas, (Vector){0, 50}, manager);
 
     // draw player username from GameContext
-    Vector posi = entity_pos_get(game_context->players[0]);
+    Vector posi = entity_pos_get(game_context->player);
     draw_username(canvas, posi, game_context->player_context->username);
 }
 
@@ -205,8 +205,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             player_is_facing_enemy = true;
         }
 
-        // Handle Player Attacking Enemy
-        if (player_is_facing_enemy && game_context->user_input == GameKeyOk)
+        // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
+        if (player_is_facing_enemy && game_context->user_input == GameKeyOk && !enemy_is_facing_player)
         {
             if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
@@ -264,7 +264,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 FURI_LOG_I("Game", "Player attack on enemy '%s' is on cooldown: %f seconds remaining", enemy_context->id, (double)(game_context->player_context->attack_timer - game_context->player_context->elapsed_attack_timer));
             }
         }
-        // Handle Enemy Attacking Player
+        // Handle Enemy Attacking Player (enemy facing player)
         else if (enemy_is_facing_player)
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
@@ -333,12 +333,10 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             }
 
             // Move the player and enemy away from each other
-            player_pos.x -= direction_vector.x * 3;
             player_pos.y -= direction_vector.y * 3;
             entity_pos_set(other, player_pos);
 
             enemy_pos.x += direction_vector.x * 3;
-            enemy_pos.y += direction_vector.y * 3;
             entity_pos_set(self, enemy_pos);
 
             // Reset player's movement direction to prevent immediate re-collision
@@ -346,8 +344,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             game_context->player_context->dy = 0;
         }
 
-        // Reset enemy's position and state
-        entity_pos_set(self, enemy_context->start_position);
+        // Reset enemy's state
         enemy_context->state = ENEMY_IDLE;
         enemy_context->elapsed_move_timer = 0.0f;
 

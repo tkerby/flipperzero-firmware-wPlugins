@@ -34,21 +34,21 @@ void player_spawn(Level *level, GameManager *manager)
         return;
     }
 
-    game_context->players[0] = level_add_entity(level, &player_desc);
-    if (!game_context->players[0])
+    game_context->player = level_add_entity(level, &player_desc);
+    if (!game_context->player)
     {
         FURI_LOG_E(TAG, "Failed to add player entity to level");
         return;
     }
 
     // Set player position.
-    entity_pos_set(game_context->players[0], (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
+    entity_pos_set(game_context->player, (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
     // Box is centered in player x and y, and its size
-    entity_collider_add_rect(game_context->players[0], 13, 11);
+    entity_collider_add_rect(game_context->player, 13, 11);
 
     // Get player context
-    PlayerContext *player_context = entity_context_get(game_context->players[0]);
+    PlayerContext *player_context = entity_context_get(game_context->player);
     if (!player_context)
     {
         FURI_LOG_E(TAG, "Failed to get player context");
@@ -68,7 +68,7 @@ void player_spawn(Level *level, GameManager *manager)
         player_context->strength = 10;
         player_context->level = 1;
         player_context->xp = 0;
-        player_context->start_position = entity_pos_get(game_context->players[0]);
+        player_context->start_position = entity_pos_get(game_context->player);
         player_context->attack_timer = 0.1f;
         player_context->elapsed_attack_timer = player_context->attack_timer;
         player_context->health_regen = 1; // 1 health per second
