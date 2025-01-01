@@ -14,6 +14,10 @@ int32_t flip_world_main(void *p)
         return -1;
     }
 
+    // initialize the VGM
+    furi_hal_gpio_init_simple(&gpio_ext_pc1, GpioModeOutputPushPull);
+    furi_hal_gpio_write(&gpio_ext_pc1, false); // pull pin 15 low
+
     // check if board is connected (Derek Jamison)
     // initialize the http
     if (flipper_http_init(flipper_http_rx_callback, app))

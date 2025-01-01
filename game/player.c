@@ -4,19 +4,22 @@
 
 static Level *get_next_level(GameManager *manager)
 {
-    Level *current_level = game_manager_current_level_get(manager);
     GameContext *game_context = game_manager_game_context_get(manager);
-    for (int i = 0; i < game_context->level_count; i++)
+    if (!game_context)
     {
-        if (game_context->levels[i] == current_level)
+        FURI_LOG_E(TAG, "Failed to get game context");
+        return NULL;
+    }
+    game_context->current_level = game_context->current_level == 0 ? 1 : 0;
+    if (!game_context->levels[game_context->current_level])
+    {
+        if (!allocate_level(manager, game_context->current_level))
         {
-            // check if i+1 is out of bounds, if so, return the first level
-            game_context->current_level = (i + 1) % game_context->level_count;
-            return game_context->levels[(i + 1) % game_context->level_count] ? game_context->levels[(i + 1) % game_context->level_count] : game_context->levels[0];
+            FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
+            return NULL;
         }
     }
-    game_context->current_level = 0;
-    return game_context->levels[0] ? game_context->levels[0] : game_manager_add_level(manager, generic_level("town_world", 0));
+    return game_context->levels[game_context->current_level];
 }
 
 void player_spawn(Level *level, GameManager *manager)
@@ -100,6 +103,37 @@ void player_spawn(Level *level, GameManager *manager)
     game_context->player_context = player_context;
 }
 
+// code from Derek Jamison
+// eventually we'll add dynamic positioning based on how much pitch/roll is detected
+// instead of assigning a fixed value
+static int player_x_from_pitch(float pitch)
+{
+    if (pitch > 5.0) // was 9.0
+    {
+        return 1;
+    }
+    else if (pitch < -5.0) // was -9.0
+    {
+        return -1;
+    }
+    return 0;
+}
+
+static int player_y_from_roll(float roll)
+{
+    if (roll > 5.0)
+    {
+        return 1;
+    }
+    else if (roll < -10.0) // was -20
+    {
+        return -1;
+    }
+    return 0;
+}
+
+static bool is_new_level = false;
+
 // Modify player_update to track direction
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
@@ -107,6 +141,58 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // Store previous direction
+    int prev_dx = player->dx;
+    int prev_dy = player->dy;
+
+    // Reset movement deltas each frame
+    player->dx = 0;
+    player->dy = 0;
+
+    if (game_context->imu_present)
+    {
+        player->dx = player_x_from_pitch(-imu_pitch_get(game_context->imu));
+        player->dy = player_y_from_roll(-imu_roll_get(game_context->imu));
+
+        switch (player_x_from_pitch(-imu_pitch_get(game_context->imu)))
+        {
+        case -1:
+            player->direction = PLAYER_LEFT;
+            player->dx = -1;
+            pos.x -= 1;
+            break;
+        case 1:
+            player->direction = PLAYER_RIGHT;
+            player->dx = 1;
+            pos.x += 1;
+            break;
+        default:
+            break;
+        };
+        switch (player_y_from_roll(-imu_roll_get(game_context->imu)))
+        {
+        case -1:
+            player->direction = PLAYER_UP;
+            player->dy = -1;
+            pos.y -= 1;
+            break;
+        case 1:
+            player->direction = PLAYER_DOWN;
+            player->dy = 1;
+            pos.y += 1;
+            break;
+        default:
+            break;
+        };
+    }
+
+    if (is_new_level)
+    {
+        // remove previous level if it exists
+        free_last_level(manager);
+        is_new_level = false;
+    }
 
     // apply health regeneration
     player->elapsed_health_regen += 1.0f / game_context->fps;
@@ -118,14 +204,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     // Increment the elapsed_attack_timer for the player
     player->elapsed_attack_timer += 1.0f / game_context->fps;
-
-    // Store previous direction
-    int prev_dx = player->dx;
-    int prev_dy = player->dy;
-
-    // Reset movement deltas each frame
-    player->dx = 0;
-    player->dy = 0;
 
     // Handle movement input
     if (input.held & GameKeyUp)
@@ -175,11 +253,12 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             save_player_context(player);
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
+            is_new_level = true;
         }
         else
         {
             game_context->user_input = GameKeyOk;
-            furi_delay_ms(100);
+            // furi_delay_ms(100);
         }
         return;
     }

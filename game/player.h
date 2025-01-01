@@ -3,6 +3,7 @@
 #include <flip_world.h>
 #include <game/game.h>
 #include <notification/notification_messages.h>
+#include "engine/sensors/imu.h"
 
 // Maximum enemies
 #define MAX_ENEMIES 2
@@ -59,6 +60,8 @@ typedef struct
     int current_level;
     bool ended_early;
     NotificationApp *notifications;
+    Imu *imu;
+    bool imu_present;
 } GameContext;
 
 typedef struct

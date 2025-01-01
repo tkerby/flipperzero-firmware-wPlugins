@@ -13,36 +13,15 @@ static void game_start(GameManager *game_manager, void *ctx)
     GameContext *game_context = ctx;
     game_context->fps = game_fps_choices_2[game_fps_index];
     game_context->player_context = NULL;
-
-    // open the world list from storage, then create a level for each world
-    char file_path[128];
-    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
-    FuriString *world_list = flipper_http_load_from_file(file_path);
-    if (!world_list)
-    {
-        FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
-        game_context->level_count = 1;
-        return;
-    }
-    for (int i = 0; i < 10; i++)
-    {
-        FuriString *world_name = get_json_array_value_furi("worlds", i, world_list);
-        if (!world_name)
-        {
-            break;
-        }
-        game_context->levels[i] = game_manager_add_level(game_manager, generic_level(furi_string_get_cstr(world_name), i));
-        furi_string_free(world_name);
-        game_context->level_count++;
-    }
-    furi_string_free(world_list);
-
     game_context->current_level = 0;
-    FURI_LOG_I("Game", "Level count: %d", game_context->level_count);
+    allocate_level(game_manager, 0);
 
     // Notifications - for LED light access
     game_context->notifications = furi_record_open(RECORD_NOTIFICATION);
+
+    // imu
+    game_context->imu = imu_alloc();
+    game_context->imu_present = imu_present(game_context->imu);
 }
 
 /*
@@ -63,6 +42,11 @@ static void game_stop(void *ctx)
     {
         FURI_LOG_E("Game", "Game context is NULL");
         return;
+    }
+    if (game_context->imu)
+    {
+        imu_free(game_context->imu);
+        game_context->imu = NULL;
     }
     // close the notifications
     furi_record_close(RECORD_NOTIFICATION);

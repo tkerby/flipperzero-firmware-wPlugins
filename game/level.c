@@ -1,7 +1,61 @@
 #include <game/level.h>
 #include <flip_storage/storage.h>
 #include <game/storage.h>
-void set_world(Level *level, GameManager *manager, char *id)
+bool allocate_level(GameManager *manager, int index)
+{
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!game_context)
+    {
+        FURI_LOG_E("Game", "Game context is NULL");
+        return false;
+    }
+    // open the world list from storage, then create a level for each world
+    char file_path[128];
+    snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+    FuriString *world_list = flipper_http_load_from_file(file_path);
+    if (!world_list)
+    {
+        FURI_LOG_E("Game", "Failed to load world list");
+        game_context->levels[0] = game_manager_add_level(manager, generic_level("town_world_v2", 0));
+        game_context->level_count = 1;
+        return false;
+    }
+    FuriString *world_name = get_json_array_value_furi("worlds", index, world_list);
+    if (!world_name)
+    {
+        FURI_LOG_E("Game", "Failed to get world name");
+        furi_string_free(world_list);
+        return false;
+    }
+    game_context->levels[game_context->current_level] = game_manager_add_level(manager, generic_level(furi_string_get_cstr(world_name), index));
+    furi_string_free(world_name);
+    furi_string_free(world_list);
+    return true;
+}
+void free_last_level(GameManager *manager)
+{
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!game_context)
+    {
+        FURI_LOG_E("Game", "Game context is NULL");
+        return;
+    }
+    if (game_context->current_level == 1)
+    {
+        if (game_context->levels[0])
+        {
+            level_free(game_context->levels[0]);
+        }
+    }
+    else
+    {
+        if (game_context->levels[1])
+        {
+            level_free(game_context->levels[1]);
+        }
+    }
+}
+static void set_world(Level *level, GameManager *manager, char *id)
 {
     char file_path[256];
     snprintf(file_path, sizeof(file_path),
@@ -68,7 +122,6 @@ void set_world(Level *level, GameManager *manager, char *id)
         FURI_LOG_I("Game", "Finished loading world data");
     }
 }
-
 static void level_start(Level *level, GameManager *manager, void *context)
 {
     if (!level || !context || !manager)
@@ -140,7 +193,7 @@ static void level_generic_free()
     }
 }
 
-static void level_free(Level *level, GameManager *manager, void *context)
+static void free_level(Level *level, GameManager *manager, void *context)
 {
     UNUSED(level);
     UNUSED(manager);
@@ -169,7 +222,7 @@ static void level_alloc_generic_world(Level *level, GameManager *manager, void *
 
 const LevelBehaviour _generic_level = {
     .alloc = level_alloc_generic_world,
-    .free = level_free,
+    .free = free_level,
     .start = level_start,
     .stop = NULL,
     .context_size = sizeof(LevelContext),
