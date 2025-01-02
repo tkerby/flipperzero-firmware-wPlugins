@@ -1,4 +1,5 @@
 #include <alloc/alloc.h>
+#include <callback/callback.h>
 
 /**
  * @brief Navigation callback for exiting the application
@@ -90,5 +91,6 @@ void flip_world_app_free(FlipWorldApp *app)
     furi_record_close(RECORD_GUI);
 
     // free the app
-    free(app);
+    if (app)
+        free(app);
 }

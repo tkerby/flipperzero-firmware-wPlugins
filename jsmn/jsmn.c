@@ -422,7 +422,7 @@ int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 }
 
 // Helper function to create a JSON object
-char *jsmn(const char *key, const char *value)
+char *get_json(const char *key, const char *value)
 {
     int length = strlen(key) + strlen(value) + 8;         // Calculate required length
     char *result = (char *)malloc(length * sizeof(char)); // Allocate memory
@@ -602,7 +602,6 @@ char *get_json_array_value(char *key, uint32_t index, const char *json_data)
 
     if (index >= (uint32_t)tokens[0].size)
     {
-        FURI_LOG_E("JSMM.H", "Index %lu out of bounds for array with size %u.", index, tokens[0].size);
         free(tokens);
         free(array_str);
         return NULL;
