@@ -133,8 +133,6 @@ static int player_y_from_roll(float roll)
     return 0;
 }
 
-static bool is_new_level = false;
-
 // Modify player_update to track direction
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
@@ -247,12 +245,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             save_player_context(player);
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
-            is_new_level = true;
         }
         else
         {
             game_context->user_input = GameKeyOk;
-            // furi_delay_ms(100);
         }
         return;
     }
@@ -296,9 +292,6 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         pos.x - camera_x - 5, // Center the sprite horizontally
         pos.y - camera_y - 5  // Center the sprite vertically
     );
-
-    // draw username over player's head
-    // draw_username(canvas, pos, player->username);
 }
 
 const EntityDescription player_desc = {

@@ -202,7 +202,7 @@ bool save_player_context(PlayerContext *player_context)
 }
 
 // Helper function to load an integer
-bool load_number(const char *path_name, int *value)
+static bool load_number(const char *path_name, int *value)
 {
     if (!path_name || !value)
     {
@@ -223,7 +223,7 @@ bool load_number(const char *path_name, int *value)
 }
 
 // Helper function to load a float
-bool load_float(const char *path_name, float *value)
+static bool load_float(const char *path_name, float *value)
 {
     if (!path_name || !value)
     {
@@ -251,7 +251,7 @@ bool load_float(const char *path_name, float *value)
 }
 
 // Helper function to load an int8_t
-bool load_int8(const char *path_name, int8_t *value)
+static bool load_int8(const char *path_name, int8_t *value)
 {
     if (!path_name || !value)
     {
@@ -286,7 +286,7 @@ bool load_int8(const char *path_name, int8_t *value)
 }
 
 // Helper function to load a uint32_t
-bool load_uint32(const char *path_name, uint32_t *value)
+static bool load_uint32(const char *path_name, uint32_t *value)
 {
     if (!path_name || !value)
     {

@@ -4,11 +4,7 @@
 bool allocate_level(GameManager *manager, int index)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
-    if (!game_context)
-    {
-        FURI_LOG_E("Game", "Game context is NULL");
-        return false;
-    }
+
     // open the world list from storage, then create a level for each world
     char file_path[128];
     snprintf(file_path, sizeof(file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
@@ -39,7 +35,6 @@ static void set_world(Level *level, GameManager *manager, char *id)
              STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_json_data.json",
              id, id);
 
-    FURI_LOG_I("Game", "Loading world data from %s", file_path);
     FuriString *json_data_str = flipper_http_load_from_file(file_path);
     if (!json_data_str || furi_string_empty(json_data_str))
     {
@@ -72,7 +67,7 @@ static void set_world(Level *level, GameManager *manager, char *id)
         snprintf(file_path, sizeof(file_path),
                  STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_enemy_data.json",
                  id, id);
-        FURI_LOG_I("Game", "Loading enemy data from %s", file_path);
+
         FuriString *enemy_data_str = flipper_http_load_from_file(file_path);
         if (!enemy_data_str || furi_string_empty(enemy_data_str))
         {
@@ -80,7 +75,7 @@ static void set_world(Level *level, GameManager *manager, char *id)
             draw_town_world(level);
             return;
         }
-        FURI_LOG_I("Game", "Looping through enemy data");
+
         // Loop through the array
         for (int i = 0; i < MAX_ENEMIES; i++)
         {
