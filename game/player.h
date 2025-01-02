@@ -2,7 +2,6 @@
 #include "engine/engine.h"
 #include <flip_world.h>
 #include <game/game.h>
-#include <notification/notification_messages.h>
 #include "engine/sensors/imu.h"
 
 // Maximum enemies

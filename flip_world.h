@@ -8,7 +8,6 @@
 #include <gui/view.h>
 #include <gui/modules/submenu.h>
 #include <gui/view_dispatcher.h>
-#include <dialogs/dialogs.h>
 
 #define TAG "FlipWorld"
 #define VERSION 0.2
@@ -79,7 +78,6 @@ extern const float game_fps_choices_2[];
 extern int game_fps_index;
 extern char *yes_or_no_choices[];
 extern int game_screen_always_on_index;
-extern FlipWorldApp *app_instance;
 extern int game_sound_on_index;
 extern int game_vibration_on_index;
 bool is_enough_heap(size_t heap_size);

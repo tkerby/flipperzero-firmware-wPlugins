@@ -142,11 +142,9 @@ void _flipper_http_rx_callback(
 /**
  * @brief      Initialize UART.
  * @return     true if the UART was initialized successfully, false otherwise.
- * @param      callback  The callback function to handle received data (ex. flipper_http_rx_callback).
- * @param      context   The context to pass to the callback.
  * @note       The received data will be handled asynchronously via the callback.
  */
-bool flipper_http_init(FlipperHTTP_Callback callback, void *context);
+bool flipper_http_init();
 
 // Deinitialize UART
 /**

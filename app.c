@@ -20,7 +20,7 @@ int32_t flip_world_main(void *p)
 
     // check if board is connected (Derek Jamison)
     // initialize the http
-    if (flipper_http_init(flipper_http_rx_callback, app))
+    if (flipper_http_init())
     {
         if (!flipper_http_ping())
         {

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <notification/notification_messages.h>
 
 static EnemyContext *enemy_context_generic;
 

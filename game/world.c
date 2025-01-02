@@ -165,14 +165,8 @@ FuriString *fetch_world(const char *name)
         FURI_LOG_E("Game", "World name is NULL");
         return NULL;
     }
-    if (!app_instance)
-    {
-        // as long as the game is running, app_instance should be non-NULL
-        FURI_LOG_E("Game", "App instance is NULL");
-        return NULL;
-    }
 
-    if (!flipper_http_init(flipper_http_rx_callback, app_instance))
+    if (!flipper_http_init())
     {
         FURI_LOG_E("Game", "Failed to initialize HTTP");
         return NULL;

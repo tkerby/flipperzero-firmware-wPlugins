@@ -276,22 +276,11 @@ void _flipper_http_rx_callback(
 /**
  * @brief      Initialize UART.
  * @return     true if the UART was initialized successfully, false otherwise.
- * @param      callback  The callback function to handle received data (ex. flipper_http_rx_callback).
  * @param      context   The context to pass to the callback.
  * @note       The received data will be handled asynchronously via the callback.
  */
-bool flipper_http_init(FlipperHTTP_Callback callback, void *context)
+bool flipper_http_init()
 {
-    if (!context)
-    {
-        FURI_LOG_E(HTTP_TAG, "Invalid context provided to flipper_http_init.");
-        return false;
-    }
-    if (!callback)
-    {
-        FURI_LOG_E(HTTP_TAG, "Invalid callback provided to flipper_http_init.");
-        return false;
-    }
     fhttp.flipper_http_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     if (!fhttp.flipper_http_stream)
     {
@@ -312,8 +301,8 @@ bool flipper_http_init(FlipperHTTP_Callback callback, void *context)
     furi_thread_set_context(fhttp.rx_thread, &fhttp);
     furi_thread_set_callback(fhttp.rx_thread, flipper_http_worker);
 
-    fhttp.handle_rx_line_cb = callback;
-    fhttp.callback_context = context;
+    fhttp.handle_rx_line_cb = flipper_http_rx_callback;
+    fhttp.callback_context = NULL;
 
     furi_thread_start(fhttp.rx_thread);
     fhttp.rx_thread_id = furi_thread_get_id(fhttp.rx_thread);
@@ -1097,11 +1086,12 @@ static char *trim(const char *str)
  */
 void flipper_http_rx_callback(const char *line, void *context)
 {
-    if (!line || !context)
+    if (!line)
     {
         FURI_LOG_E(HTTP_TAG, "Invalid arguments provided to flipper_http_rx_callback.");
         return;
     }
+    UNUSED(context);
 
     // Trim the received line to check if it's empty
     char *trimmed_line = trim(line);
