@@ -16,9 +16,6 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->current_level = 0;
     allocate_level(game_manager, 0);
 
-    // Notifications - for LED light access
-    game_context->notifications = furi_record_open(RECORD_NOTIFICATION);
-
     // imu
     game_context->imu = imu_alloc();
     game_context->imu_present = imu_present(game_context->imu);
@@ -43,13 +40,10 @@ static void game_stop(void *ctx)
         FURI_LOG_E("Game", "Game context is NULL");
         return;
     }
-    if (game_context->imu)
-    {
-        imu_free(game_context->imu);
-        game_context->imu = NULL;
-    }
-    // close the notifications
-    furi_record_close(RECORD_NOTIFICATION);
+
+    imu_free(game_context->imu);
+    game_context->imu = NULL;
+
     if (game_context->player_context)
     {
         FURI_LOG_I("Game", "Game ending");

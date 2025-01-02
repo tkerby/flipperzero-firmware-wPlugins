@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define EPSILON 0.1f
-
 static EnemyContext *enemy_context_generic;
 
 // Allocation function
@@ -161,27 +159,29 @@ static void send_attack_notification(GameContext *game_context, EnemyContext *en
         return;
     }
 
-    bool vibration_allowed = strstr(yes_or_no_choices[game_vibration_on_index], "Yes") != NULL;
-    bool sound_allowed = strstr(yes_or_no_choices[game_sound_on_index], "Yes") != NULL;
+    NotificationApp *notifications = furi_record_open(RECORD_NOTIFICATION);
+
+    const bool vibration_allowed = strstr(yes_or_no_choices[game_vibration_on_index], "Yes") != NULL;
+    const bool sound_allowed = strstr(yes_or_no_choices[game_sound_on_index], "Yes") != NULL;
 
     if (player_attacked)
     {
         if (vibration_allowed && sound_allowed)
         {
-            notification_message(game_context->notifications, &sequence_success);
+            notification_message(notifications, &sequence_success);
         }
         else if (vibration_allowed && !sound_allowed)
         {
-            notification_message(game_context->notifications, &sequence_single_vibro);
+            notification_message(notifications, &sequence_single_vibro);
         }
         else if (!vibration_allowed && sound_allowed)
         {
             // change this to sound later
-            notification_message(game_context->notifications, &sequence_blink_blue_100);
+            notification_message(notifications, &sequence_blink_blue_100);
         }
         else
         {
-            notification_message(game_context->notifications, &sequence_blink_blue_100);
+            notification_message(notifications, &sequence_blink_blue_100);
         }
         FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
     }
@@ -189,24 +189,27 @@ static void send_attack_notification(GameContext *game_context, EnemyContext *en
     {
         if (vibration_allowed && sound_allowed)
         {
-            notification_message(game_context->notifications, &sequence_error);
+            notification_message(notifications, &sequence_error);
         }
         else if (vibration_allowed && !sound_allowed)
         {
-            notification_message(game_context->notifications, &sequence_single_vibro);
+            notification_message(notifications, &sequence_single_vibro);
         }
         else if (!vibration_allowed && sound_allowed)
         {
             // change this to sound later
-            notification_message(game_context->notifications, &sequence_blink_red_100);
+            notification_message(notifications, &sequence_blink_red_100);
         }
         else
         {
-            notification_message(game_context->notifications, &sequence_blink_red_100);
+            notification_message(notifications, &sequence_blink_red_100);
         }
 
         FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
     }
+
+    // close the notifications
+    furi_record_close(RECORD_NOTIFICATION);
 }
 
 // Enemy collision function
@@ -448,8 +451,8 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         {
             // Determine the next state based on the current position
             Vector current_pos = entity_pos_get(self);
-            if (fabs(current_pos.x - enemy_context->start_position.x) < (double)EPSILON &&
-                fabs(current_pos.y - enemy_context->start_position.y) < (double)EPSILON)
+            if (fabs(current_pos.x - enemy_context->start_position.x) < (double)1.0 &&
+                fabs(current_pos.y - enemy_context->start_position.y) < (double)1.0)
             {
                 enemy_context->state = ENEMY_MOVING_TO_END;
             }
@@ -523,8 +526,8 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         entity_pos_set(self, new_pos);
 
         // Check if the enemy has reached or surpassed the target_position
-        bool reached_x = fabs(new_pos.x - target_position.x) < (double)EPSILON;
-        bool reached_y = fabs(new_pos.y - target_position.y) < (double)EPSILON;
+        bool reached_x = fabs(new_pos.x - target_position.x) < (double)1.0;
+        bool reached_y = fabs(new_pos.y - target_position.y) < (double)1.0;
 
         // If reached the target position on both axes, transition to IDLE
         if (reached_x && reached_y)

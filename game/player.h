@@ -59,7 +59,6 @@ typedef struct
     int enemy_count;
     int current_level;
     bool ended_early;
-    NotificationApp *notifications;
     Imu *imu;
     bool imu_present;
 } GameContext;

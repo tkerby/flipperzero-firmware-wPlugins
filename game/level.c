@@ -77,6 +77,7 @@ static void set_world(Level *level, GameManager *manager, char *id)
         GameContext *game_context = game_manager_game_context_get(manager);
         game_context->ended_early = true;
         game_manager_game_stop(manager); // end game early
+        furi_string_free(json_data_str);
         return;
     }
 

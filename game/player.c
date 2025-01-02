@@ -99,6 +99,8 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->sprite_right = game_manager_sprite_load(manager, "player_right_axe_15x11px.fxbm");
     player_context->sprite_left = game_manager_sprite_load(manager, "player_left_axe_15x11px.fxbm");
 
+    player_context->start_position = entity_pos_get(game_context->player);
+
     // Assign loaded player context to game context
     game_context->player_context = player_context;
 }
