@@ -682,6 +682,8 @@ static bool start_game_thread(void *context)
     furi_thread_start(thread);
     thread_id = furi_thread_get_id(thread);
     game_thread_running = true;
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
     return true;
 }
 static bool flip_world_fetch_world_list(DataLoaderModel *model)
@@ -700,13 +702,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
         furi_thread_free(thread_id);
     }
     FlipWorldApp *app = (FlipWorldApp *)model->parser_context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "app is NULL");
-        easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        return "app is NULL";
-    }
+
     if (!start_game_thread(app))
     {
         FURI_LOG_E(TAG, "Failed to start game thread");
@@ -863,13 +859,7 @@ static bool flip_world_fetch_game(DataLoaderModel *model)
 static char *flip_world_parse_game(DataLoaderModel *model)
 {
     FlipWorldApp *app = (FlipWorldApp *)model->parser_context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "app is NULL");
-        easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        return "app is NULL";
-    }
+
     if (model->request_index == 0)
     {
         if (!fhttp.last_response)
