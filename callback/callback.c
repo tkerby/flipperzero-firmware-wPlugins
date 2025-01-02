@@ -688,8 +688,8 @@ static bool start_game_thread(void *context)
     furi_thread_start(thread);
     thread_id = furi_thread_get_id(thread);
     game_thread_running = true;
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-    view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
+    // view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+    // view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
     return true;
 }
 static bool flip_world_fetch_world_list(DataLoaderModel *model)
@@ -698,13 +698,6 @@ static bool flip_world_fetch_world_list(DataLoaderModel *model)
 }
 static char *flip_world_parse_world_list(DataLoaderModel *model)
 {
-    // free game thread
-    if (game_thread_running)
-    {
-        game_thread_running = false;
-        furi_thread_flags_set(thread_id, WorkerEvtStop);
-        furi_thread_free(thread_id);
-    }
     FlipWorldApp *app = (FlipWorldApp *)model->parser_context;
 
     if (!start_game_thread(app))
@@ -716,7 +709,7 @@ static char *flip_world_parse_world_list(DataLoaderModel *model)
     }
     return "Game starting... please wait :D";
 }
-static void flip_world_world_list_switch_to_view(FlipWorldApp *app)
+void flip_world_world_list_switch_to_view(FlipWorldApp *app)
 {
     return flip_world_generic_switch_to_view(app, "Fetching World List..", flip_world_fetch_world_list, flip_world_parse_world_list, 1, callback_to_submenu, FlipWorldViewLoader);
 }
@@ -1024,8 +1017,62 @@ void callback_submenu_choices(void *context, uint32_t index)
         // check if logged in
         if (is_logged_in() || is_logged_in_to_flip_social())
         {
+            FlipperHTTP *fhttp = flipper_http_alloc();
+            if (!fhttp)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+                easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
+                return;
+            }
+            bool fetch_world_list_i()
+            {
+                return fetch_world_list(fhttp);
+            }
+            bool parse_world_list_i()
+            {
+                return fhttp->state != ISSUE;
+            }
 
-            flip_world_world_list_switch_to_view(app);
+            Loading *loading;
+            int32_t loading_view_id = 987654321; // Random ID
+
+            loading = loading_alloc();
+            if (!loading)
+            {
+                FURI_LOG_E(HTTP_TAG, "Failed to allocate loading");
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+                flipper_http_free(fhttp);
+                return;
+            }
+
+            view_dispatcher_add_view(app->view_dispatcher, loading_view_id, loading_get_view(loading));
+
+            // Switch to the loading view
+            view_dispatcher_switch_to_view(app->view_dispatcher, loading_view_id);
+
+            // Make the request
+            if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i))
+            {
+                FURI_LOG_E(HTTP_TAG, "Failed to make request");
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
+                loading_free(loading);
+                flipper_http_free(fhttp);
+            }
+            else
+            {
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
+                loading_free(loading);
+                flipper_http_free(fhttp);
+
+                if (!start_game_thread(app))
+                {
+                    FURI_LOG_E(TAG, "Failed to start game thread");
+                    easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+                    return;
+                }
+            }
         }
         else
         {

@@ -133,9 +133,11 @@ static int player_y_from_roll(float roll)
     return 0;
 }
 
-// Modify player_update to track direction
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
+    if (!self || !manager || !context)
+        return;
+
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
@@ -154,43 +156,42 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         player->dx = player_x_from_pitch(-imu_pitch_get(game_context->imu));
         player->dy = player_y_from_roll(-imu_roll_get(game_context->imu));
 
-        switch (player_x_from_pitch(-imu_pitch_get(game_context->imu)))
+        switch (player->dx)
         {
         case -1:
             player->direction = PLAYER_LEFT;
-            player->dx = -1;
             pos.x -= 1;
             break;
         case 1:
             player->direction = PLAYER_RIGHT;
-            player->dx = 1;
             pos.x += 1;
             break;
         default:
             break;
-        };
-        switch (player_y_from_roll(-imu_roll_get(game_context->imu)))
+        }
+
+        switch (player->dy)
         {
         case -1:
             player->direction = PLAYER_UP;
-            player->dy = -1;
             pos.y -= 1;
             break;
         case 1:
             player->direction = PLAYER_DOWN;
-            player->dy = 1;
             pos.y += 1;
             break;
         default:
             break;
-        };
+        }
     }
 
-    // apply health regeneration
+    // Apply health regeneration
     player->elapsed_health_regen += 1.0f / game_context->fps;
     if (player->elapsed_health_regen >= 1.0f && player->health < player->max_health)
     {
-        player->health += (player->health_regen + player->health > player->max_health) ? player->max_health - player->health : player->health_regen;
+        player->health += (player->health_regen + player->health > player->max_health)
+                              ? (player->max_health - player->health)
+                              : player->health_regen;
         player->elapsed_health_regen = 0;
     }
 
@@ -235,8 +236,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     entity_pos_set(self, pos);
 
     // switch levels if holding OK
-    if (input.held & GameKeyOk)
+    if (input.pressed & GameKeyOk)
     {
+        FURI_LOG_I(TAG, "Player is pressing OK");
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
         if (game_context->enemy_count == 0)
@@ -248,9 +250,11 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         }
         else
         {
+            FURI_LOG_I(TAG, "Player is attacking");
             game_context->user_input = GameKeyOk;
+            // furi_delay_ms(100);
         }
-        return;
+        FURI_LOG_I(TAG, "Player is done pressing OK");
     }
 
     // If the player is not moving, retain the last movement direction
@@ -275,8 +279,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
-    // Get player context
     UNUSED(manager);
+    if (!self || !context || !canvas)
+        return;
+    // Get player context
     PlayerContext *player = context;
 
     // Get player position

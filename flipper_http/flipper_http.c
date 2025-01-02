@@ -421,7 +421,7 @@ FlipperHTTP *flipper_http_alloc()
 
     fhttp->state = IDLE;
 
-    FURI_LOG_I(HTTP_TAG, "UART initialized successfully.");
+    // FURI_LOG_I(HTTP_TAG, "UART initialized successfully.");
     return fhttp;
 }
 
@@ -480,7 +480,7 @@ void flipper_http_free(FlipperHTTP *fhttp)
     free(fhttp);
     fhttp = NULL;
 
-    FURI_LOG_I("FlipperHTTP", "UART deinitialized successfully.");
+    // FURI_LOG_I("FlipperHTTP", "UART deinitialized successfully.");
 }
 
 // Function to send data over UART with newline termination
@@ -530,7 +530,7 @@ bool flipper_http_send_data(FlipperHTTP *fhttp, const char *data)
     furi_hal_serial_tx(fhttp->serial_handle, (const uint8_t *)send_buffer, send_length);
 
     // Uncomment below line to log the data sent over UART
-    FURI_LOG_I("FlipperHTTP", "Sent data over UART: %s", send_buffer);
+    // FURI_LOG_I("FlipperHTTP", "Sent data over UART: %s", send_buffer);
     fhttp->state = IDLE;
     return true;
 }
@@ -1290,8 +1290,6 @@ void flipper_http_rx_callback(const char *line, void *context)
         return;
     }
 
-    FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
-
     // Trim the received line to check if it's empty
     char *trimmed_line = trim(line);
     if (trimmed_line != NULL && trimmed_line[0] != '\0')
@@ -1313,7 +1311,7 @@ void flipper_http_rx_callback(const char *line, void *context)
     }
 
     // Uncomment below line to log the data received over UART
-    FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
+    // FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
 
     // Check if we've started receiving data from a GET request
     if (fhttp->started_receiving_get)

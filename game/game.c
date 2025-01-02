@@ -14,6 +14,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->fps = game_fps_choices_2[game_fps_index];
     game_context->player_context = NULL;
     game_context->current_level = 0;
+    game_context->ended_early = false;
     if (!allocate_level(game_manager, 0))
     {
         FURI_LOG_E("Game", "Failed to allocate level 0");

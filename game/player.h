@@ -6,7 +6,7 @@
 
 // Maximum enemies
 #define MAX_ENEMIES 2
-#define MAX_LEVELS 5
+#define MAX_LEVELS 10
 
 typedef enum
 {

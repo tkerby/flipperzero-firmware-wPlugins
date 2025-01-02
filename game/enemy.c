@@ -212,7 +212,7 @@ static void send_attack_notification(GameContext *game_context, EnemyContext *en
 // Enemy collision function
 static void enemy_collision(Entity *self, Entity *other, GameManager *manager, void *context)
 {
-    if (!self || !other || !context)
+    if (!self || !other || !context || !manager)
     {
         FURI_LOG_E("Game", "Enemy collision: Invalid parameters");
         return;
