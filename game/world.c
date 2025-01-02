@@ -166,36 +166,38 @@ FuriString *fetch_world(const char *name)
         return NULL;
     }
 
-    if (!flipper_http_init())
+    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (!fhttp)
     {
-        FURI_LOG_E("Game", "Failed to initialize HTTP");
+        FURI_LOG_E("Game", "Failed to allocate HTTP");
         return NULL;
     }
+
     char url[256];
     snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v2/get/world/%s/", name);
-    snprintf(fhttp.file_path, sizeof(fhttp.file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
-    fhttp.save_received_data = true;
-    if (!flipper_http_get_request_with_headers(url, "{\"Content-Type\": \"application/json\"}"))
+    snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+    fhttp->save_received_data = true;
+    if (!flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\": \"application/json\"}"))
     {
         FURI_LOG_E("Game", "Failed to send HTTP request");
-        flipper_http_deinit();
+        flipper_http_free(fhttp);
         return NULL;
     }
-    fhttp.state = RECEIVING;
-    furi_timer_start(fhttp.get_timeout_timer, TIMEOUT_DURATION_TICKS);
-    while (fhttp.state == RECEIVING && furi_timer_is_running(fhttp.get_timeout_timer) > 0)
+    fhttp->state = RECEIVING;
+    furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
+    while (fhttp->state == RECEIVING && furi_timer_is_running(fhttp->get_timeout_timer) > 0)
     {
         // Wait for the request to be received
         furi_delay_ms(100);
     }
-    furi_timer_stop(fhttp.get_timeout_timer);
-    if (fhttp.state != IDLE)
+    furi_timer_stop(fhttp->get_timeout_timer);
+    if (fhttp->state != IDLE)
     {
         FURI_LOG_E("Game", "Failed to receive world data");
-        flipper_http_deinit();
+        flipper_http_free(fhttp);
         return NULL;
     }
-    flipper_http_deinit();
+    flipper_http_free(fhttp);
     FuriString *returned_data = load_furi_world(name);
     if (!returned_data)
     {
