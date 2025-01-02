@@ -1,4 +1,4 @@
-## [0.2] - 2025-01-02
+## 0.2 (2025-01-02)
 Added
 - **Video Game Module Support:** Added support for the Video Game Module (requires FlipperHTTP flash).
 - **Enemies:** Introduced various enemy types to enhance gameplay.
@@ -13,6 +13,6 @@ Changed
 - **Collisions:** Improved collision mechanics for more accurate interactions.
 - **Default Character Icon:** Updated the default icon representing the player's character.
 
-## [0.1] - 2024-12-21
+## 0.1 (2024-12-21)
 Added
 - **Initial Release:** Launched the first version of the game with basic features.
