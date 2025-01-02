@@ -1065,14 +1065,15 @@ void callback_submenu_choices(void *context, uint32_t index)
                 view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
                 loading_free(loading);
                 flipper_http_free(fhttp);
-
-                if (!start_game_thread(app))
-                {
-                    FURI_LOG_E(TAG, "Failed to start game thread");
-                    easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-                    return;
-                }
             }
+            if (!start_game_thread(app))
+            {
+                FURI_LOG_E(TAG, "Failed to start game thread");
+                easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+                return;
+            }
+
+            easy_flipper_dialog("Starting Game", "Please wait...");
         }
         else
         {

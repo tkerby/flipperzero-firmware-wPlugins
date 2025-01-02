@@ -310,7 +310,7 @@ const EntityDescription player_desc = {
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
-static SpriteContext *sprite_generic_alloc(const char *id, uint8_t width, uint8_t height)
+static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_t width, uint8_t height)
 {
     SpriteContext *ctx = malloc(sizeof(SpriteContext));
     if (!ctx)
@@ -321,8 +321,16 @@ static SpriteContext *sprite_generic_alloc(const char *id, uint8_t width, uint8_
     snprintf(ctx->id, sizeof(ctx->id), "%s", id);
     ctx->width = width;
     ctx->height = height;
-    snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
-    snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
+    if (!is_enemy)
+    {
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
+    }
+    else
+    {
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "enemy_right_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "enemy_left_%s_%dx%dpx.fxbm", id, width, height);
+    }
     return ctx;
 }
 
@@ -330,19 +338,31 @@ SpriteContext *get_sprite_context(const char *name)
 {
     if (strcmp(name, "axe") == 0)
     {
-        return sprite_generic_alloc("axe", 15, 11);
+        return sprite_generic_alloc("axe", false, 15, 11);
     }
     else if (strcmp(name, "bow") == 0)
     {
-        return sprite_generic_alloc("bow", 13, 11);
+        return sprite_generic_alloc("bow", false, 13, 11);
     }
     else if (strcmp(name, "naked") == 0)
     {
-        return sprite_generic_alloc("naked", 10, 10);
+        return sprite_generic_alloc("naked", false, 10, 10);
     }
     else if (strcmp(name, "sword") == 0)
     {
-        return sprite_generic_alloc("sword", 15, 11);
+        return sprite_generic_alloc("sword", false, 15, 11);
+    }
+    else if (strcmp(name, "cyclops") == 0)
+    {
+        return sprite_generic_alloc("cyclops", true, 10, 11);
+    }
+    else if (strcmp(name, "ghost") == 0)
+    {
+        return sprite_generic_alloc("ghost", true, 15, 15);
+    }
+    else if (strcmp(name, "ogre") == 0)
+    {
+        return sprite_generic_alloc("ogre", true, 10, 13);
     }
 
     // If no match is found
