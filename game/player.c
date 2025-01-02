@@ -21,26 +21,6 @@ static Level *get_next_level(GameManager *manager)
     return game_context->levels[game_context->current_level];
 }
 
-// Define constants for XP scaling
-#define XP_BASE 100          // Base XP for level 2
-#define XP_GROWTH_FACTOR 1.5 // Growth factor per level
-#define MAX_LEVEL 100        // Maximum level supported
-
-// Function to get the current level based on XP iteratively
-int get_player_level_iterative(uint32_t xp)
-{
-    int level = 1;
-    uint32_t xp_required = XP_BASE;
-
-    while (level < MAX_LEVEL && xp >= xp_required)
-    {
-        level++;
-        xp_required = (uint32_t)(xp_required * XP_GROWTH_FACTOR);
-    }
-
-    return level;
-}
-
 void player_spawn(Level *level, GameManager *manager)
 {
     if (!level || !manager)
@@ -122,11 +102,26 @@ void player_spawn(Level *level, GameManager *manager)
     player_context->start_position = entity_pos_get(game_context->player);
 
     // Update player stats based on XP using iterative method
+    // Function to get the current level based on XP iteratively
+    int get_player_level_iterative(uint32_t xp)
+    {
+        int level = 1;
+        uint32_t xp_required = 100; // Base XP for level 2
+
+        while (level < 100 && xp >= xp_required) // Maximum level supported
+        {
+            level++;
+            xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
+        }
+
+        return level;
+    }
+
     // Determine the player's level based on XP
     player_context->level = get_player_level_iterative(player_context->xp);
 
     // Update strength and max health based on the new level
-    player_context->strength = 10 + (player_context->level * 5);           // 5 strength per level
+    player_context->strength = 10 + (player_context->level * 1);           // 1 strength per level
     player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
 
     // Assign loaded player context to game context
