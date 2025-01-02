@@ -68,6 +68,7 @@ const uint32_t MSIRangeTable[16UL] = {
     0UL}; /* 0UL values are incorrect cases */
 
 char* time; // Current time period text
+float scale; // Current scale
 double freq; // Current samplerate
 uint8_t pause = 0; // Whether we want to pause output or not
 enum measureenum type; // Type of measurement we are performing
@@ -297,7 +298,7 @@ void AdcDmaTransferHalf_Callback() {
 
 void Activate_ADC(void) {
     __IO uint32_t wait_loop_index = 0U;
-#if defined(USE_TIMEOUT) && (USE_TIMEOUT == 1)
+#if(USE_TIMEOUT == 1)
     uint32_t Timeout = 0U; /* Variable used for timeout management */
 #endif /* USE_TIMEOUT */
     if(LL_ADC_IsEnabled(ADC1) == 0) {
@@ -310,12 +311,12 @@ void Activate_ADC(void) {
         }
         LL_ADC_StartCalibration(ADC1, LL_ADC_SINGLE_ENDED);
 
-#if defined(USE_TIMEOUT) && (USE_TIMEOUT == 1)
+#if(USE_TIMEOUT == 1)
         Timeout = ADC_CALIBRATION_TIMEOUT_MS;
 #endif /* USE_TIMEOUT */
 
         while(LL_ADC_IsCalibrationOnGoing(ADC1) != 0) {
-#if defined(USE_TIMEOUT) && (USE_TIMEOUT == 1)
+#if(USE_TIMEOUT == 1)
             if(LL_SYSTICK_IsActiveCounterFlag()) {
                 if(Timeout-- == 0) {
                 }
@@ -327,11 +328,11 @@ void Activate_ADC(void) {
             wait_loop_index--;
         }
         LL_ADC_Enable(ADC1);
-#if defined(USE_TIMEOUT) && (USE_TIMEOUT == 1)
+#if(USE_TIMEOUT == 1)
         Timeout = ADC_ENABLE_TIMEOUT_MS;
 #endif /* USE_TIMEOUT */
         while(LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0) {
-#if defined(USE_TIMEOUT) && (USE_TIMEOUT == 1)
+#if(USE_TIMEOUT == 1)
             /* Check Systick counter flag to decrement the time-out value */
             if(LL_SYSTICK_IsActiveCounterFlag()) {
                 if(Timeout-- == 0) {
@@ -390,6 +391,13 @@ void iterative_cooley_tukey(float complex* X, int N) {
     }
 }
 
+// Found from:
+// https://stackoverflow.com/questions/427477/fastest-way-to-clamp-a-real-fixed-floating-point-value
+double clamp(double d, double min, double max) {
+    const double t = d < min ? min : d;
+    return t > max ? max : t;
+}
+
 // Used to draw to display
 static void app_draw_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
@@ -408,9 +416,9 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
     }
 
     if(pause)
-        canvas_draw_icon(canvas, 115, 0, &I_pause_10x10);
+        canvas_draw_icon(canvas, 116, 1, &I_pause_10x10);
     else
-        canvas_draw_icon(canvas, 115, 0, &I_play_10x10);
+        canvas_draw_icon(canvas, 116, 1, &I_play_10x10);
 
     // Calculate voltage measurements
     for(uint32_t x = 0; x < adc_buffer; x++) {
@@ -422,9 +430,12 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
 
     switch(type) {
     case m_time: {
+        // Display current scale
+        snprintf(buf1, 50, "%.0fx", (double)scale);
+        canvas_draw_str(canvas, 95, 10, buf1);
         // Display current time period
         snprintf(buf1, 50, "Time: %s", time);
-        canvas_draw_str(canvas, 10, 10, buf1);
+        canvas_draw_str(canvas, 2, 10, buf1);
         // Shift waveform across a virtual 0 line, so it crosses 0
         for(uint32_t x = 0; x < adc_buffer; x++) {
             index_crossings[x] = -1;
@@ -458,7 +469,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
         avg /= countv;
         // Display frequency of waveform
         snprintf(buf1, 50, "Freq: %.1f Hz", (double)((float)freq / avg));
-        canvas_draw_str(canvas, 10, 20, buf1);
+        canvas_draw_str(canvas, 2, 20, buf1);
     } break;
     case m_fft: {
         for(uint32_t i = 0; i < adc_buffer; i++) {
@@ -482,16 +493,19 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
 
         // Display frequency of waveform
         snprintf(buf1, 50, "Freq: %.1fHz", (double)idx * ((double)freq / (double)adc_buffer));
-        canvas_draw_str(canvas, 10, 10, buf1);
+        canvas_draw_str(canvas, 2, 10, buf1);
     } break;
     case m_voltage: {
+        // Display current scale
+        snprintf(buf1, 50, "%.0fx", (double)scale);
+        canvas_draw_str(canvas, 95, 10, buf1);
         // Display max, min, peak-to-peak voltages
         snprintf(buf1, 50, "Max: %.2fV", (double)max);
-        canvas_draw_str(canvas, 10, 10, buf1);
+        canvas_draw_str(canvas, 2, 10, buf1);
         snprintf(buf1, 50, "Min: %.2fV", (double)min);
-        canvas_draw_str(canvas, 10, 20, buf1);
+        canvas_draw_str(canvas, 2, 20, buf1);
         snprintf(buf1, 50, "Vpp: %.2fV", (double)(max - min));
-        canvas_draw_str(canvas, 10, 30, buf1);
+        canvas_draw_str(canvas, 2, 30, buf1);
     } break;
     default:
         break;
@@ -499,13 +513,17 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
 
     if(type != m_fft) {
         // Draw lines between each data point
+        // y should range from 0 to 63
         for(uint32_t x = 1; x < adc_buffer; x++) {
-            uint32_t prev = 64 - (mvoltDisplay[x - 1] / (VDDA_APPLI / 64));
-            uint32_t cur = 64 - (mvoltDisplay[x] / (VDDA_APPLI / 64));
-            canvas_draw_line(canvas, x - 1, prev, x, cur);
+            int32_t prev =
+                63 - (uint32_t)(((float)mvoltDisplay[x - 1] / (float)VDDA_APPLI) * scale * 63.0f);
+            int32_t cur =
+                63 - (uint32_t)(((float)mvoltDisplay[x] / (float)VDDA_APPLI) * scale * 63.0f);
+            if(!(prev < 0 && cur < 0))
+                canvas_draw_line(canvas, x - 1, clamp(prev, 0, 63), x, clamp(cur, 0, 63));
         }
     } else {
-        // Draw FFT data
+        // Process FFT data - excluding bin 0
         float max = 0;
         for(uint32_t i = 1; i < adc_buffer / 2; i += adc_buffer / 2 / 128) {
             float sum = 0;
@@ -517,20 +535,25 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             }
         }
 
-        uint32_t xpos = 1;
+        uint32_t xpos = 0;
+        // xpos: 0 to 126 for window size 256
+        // xpos: 0 to 127 for window size 512
+        // xpos: 0 to 127 for window size 1024
+        // y should range from 0 to 63
         for(uint32_t i = 1; i < adc_buffer / 2; i += adc_buffer / 2 / 128) {
             float sum = 0;
             for(uint32_t i2 = i; i2 < i + (adc_buffer / 2 / 128); i2++) {
                 sum += fft_power[i2];
             }
-            canvas_draw_line(canvas, xpos, 64 - 0, xpos, 64 - ((sum / max) * 64));
+            canvas_draw_line(canvas, xpos, 63, xpos, 63 - (uint32_t)(((sum / max) * 63.0f)));
             xpos++;
         }
     }
 
+    // Removing graph lines, to use extra pixel
     // Draw graph lines
-    canvas_draw_line(canvas, 0, 0, 0, 63);
-    canvas_draw_line(canvas, 0, 63, 128, 63);
+    //canvas_draw_line(canvas, 0, 0, 0, 63);
+    //canvas_draw_line(canvas, 0, 63, 127, 63);
 }
 
 static void app_input_callback(InputEvent* input_event, void* ctx) {
@@ -561,6 +584,9 @@ void scope_scene_run_on_enter(void* context) {
             break;
         }
     }
+
+    // Obtain scale value
+    scale = app->scale;
 
     // Currently un-paused
     pause = 0;
