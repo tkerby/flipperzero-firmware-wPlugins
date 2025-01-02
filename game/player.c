@@ -63,8 +63,8 @@ void player_spawn(Level *level, GameManager *manager)
         FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
 
         // Initialize default player context
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_axe_15x11px.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_axe_15x11px.fxbm");
+        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
+        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
         player_context->direction = PLAYER_RIGHT; // default direction
         player_context->health = 100;
         player_context->strength = 10;
@@ -96,8 +96,8 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_axe_15x11px.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_axe_15x11px.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
+    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
 
     player_context->start_position = entity_pos_get(game_context->player);
 
@@ -133,11 +133,11 @@ void player_spawn(Level *level, GameManager *manager)
 // instead of assigning a fixed value
 static int player_x_from_pitch(float pitch)
 {
-    if (pitch > 5.0) // was 9.0
+    if (pitch > 6.0)
     {
         return 1;
     }
-    else if (pitch < -5.0) // was -9.0
+    else if (pitch < -8.0)
     {
         return -1;
     }
@@ -146,11 +146,11 @@ static int player_x_from_pitch(float pitch)
 
 static int player_y_from_roll(float roll)
 {
-    if (roll > 5.0)
+    if (roll > 9.0)
     {
         return 1;
     }
-    else if (roll < -10.0) // was -20
+    else if (roll < -20.0)
     {
         return -1;
     }
