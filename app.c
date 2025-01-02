@@ -1,4 +1,5 @@
 #include <alloc/alloc.h>
+#include <flip_storage/storage.h>
 
 // Entry point for the FlipWorld application
 int32_t flip_world_main(void *p)
@@ -63,7 +64,7 @@ int32_t flip_world_main(void *p)
             storage_common_mkdir(storage, directory_path);
 
             // copy the whole folder
-            char source_path[256];
+            char source_path[128];
             snprintf(source_path, sizeof(source_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
 
             if (storage_common_migrate(storage, source_path, directory_path) != FSE_OK)
@@ -109,7 +110,7 @@ int32_t flip_world_main(void *p)
     else
     {
         // transfer files over into the data folder (to bs used to load the player context)
-        char directory_path[256];
+        char directory_path[128];
         snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data");
 
         // Create the directory
@@ -117,7 +118,7 @@ int32_t flip_world_main(void *p)
         storage_common_mkdir(storage, directory_path);
 
         // copy the whole folder
-        char source_path[256];
+        char source_path[128];
         snprintf(source_path, sizeof(source_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
 
         if (storage_common_migrate(storage, source_path, directory_path) != FSE_OK)

@@ -2,12 +2,6 @@
 #include <font/font.h>
 #include <flipper_http/flipper_http.h>
 #include <easy_flipper/easy_flipper.h>
-#include <furi.h>
-#include <furi_hal.h>
-#include <gui/gui.h>
-#include <gui/view.h>
-#include <gui/modules/submenu.h>
-#include <gui/view_dispatcher.h>
 
 #define TAG "FlipWorld"
 #define VERSION 0.2

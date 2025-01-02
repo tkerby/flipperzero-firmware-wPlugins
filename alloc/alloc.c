@@ -1,4 +1,5 @@
 #include <alloc/alloc.h>
+#include <callback/callback.h>
 
 /**
  * @brief Navigation callback for exiting the application

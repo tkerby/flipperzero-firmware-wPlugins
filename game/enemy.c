@@ -108,8 +108,7 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
 // Enemy render function
 static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
-    UNUSED(manager);
-    if (!self || !context || !canvas)
+    if (!self || !context || !canvas || !manager)
         return;
 
     EnemyContext *enemy_context = (EnemyContext *)context;
