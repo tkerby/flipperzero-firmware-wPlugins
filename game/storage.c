@@ -1,6 +1,6 @@
 #include <game/storage.h>
 
-bool save_uint32(const char *path_name, uint32_t value)
+static bool save_uint32(const char *path_name, uint32_t value)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lu", value);
@@ -8,7 +8,7 @@ bool save_uint32(const char *path_name, uint32_t value)
 }
 
 // Helper function to save an int8_t
-bool save_int8(const char *path_name, int8_t value)
+static bool save_int8(const char *path_name, int8_t value)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%d", value);
@@ -16,7 +16,7 @@ bool save_int8(const char *path_name, int8_t value)
 }
 
 // Helper function to save a float
-bool save_float(const char *path_name, float value)
+static bool save_float(const char *path_name, float value)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%.6f", (double)value); // Limit to 6 decimal places
@@ -201,24 +201,6 @@ bool save_player_context(PlayerContext *player_context)
     return true;
 }
 
-// Helper function to load a string safely
-bool load_string(const char *path_name, char *buffer, size_t buffer_size)
-{
-    if (!path_name || !buffer || buffer_size == 0)
-    {
-        FURI_LOG_E(TAG, "Invalid arguments to load_string");
-        return false;
-    }
-
-    if (!load_char(path_name, buffer, buffer_size))
-    {
-        FURI_LOG_E(TAG, "Failed to load string from path: %s", path_name);
-        return false;
-    }
-
-    return true;
-}
-
 // Helper function to load an integer
 bool load_number(const char *path_name, int *value)
 {
@@ -331,371 +313,6 @@ bool load_uint32(const char *path_name, uint32_t *value)
     return true;
 }
 
-// 1. Username (String)
-static bool load_player_username(char *username, size_t username_size)
-{
-    if (!username || username_size == 0)
-    {
-        FURI_LOG_E(TAG, "Invalid username buffer");
-        return false;
-    }
-
-    // Try to load the string
-    if (!load_string("player/username", username, username_size))
-    {
-        // If loading failed, log a warning and set a default
-        FURI_LOG_W(TAG, "No data or parse error for username. Using default: 'Unknown'");
-        memset(username, 0, username_size);
-        strncpy(username, "Unknown", username_size - 1);
-    }
-
-    // Always return true unless pointer was invalid
-    return true;
-}
-
-// 2. Level (uint32_t)
-static bool load_player_level(uint32_t *level)
-{
-    if (!level)
-    {
-        FURI_LOG_E(TAG, "Invalid level pointer");
-        return false;
-    }
-
-    uint32_t temp = 1; // Default
-    if (!load_uint32("player/level", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for level. Using default: 1");
-        temp = 1;
-    }
-
-    *level = temp;
-    return true;
-}
-
-// 3. XP (uint32_t)
-static bool load_player_xp(uint32_t *xp)
-{
-    if (!xp)
-    {
-        FURI_LOG_E(TAG, "Invalid xp pointer");
-        return false;
-    }
-
-    uint32_t temp = 0; // Default
-    if (!load_uint32("player/xp", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for xp. Using default: 0");
-        temp = 0;
-    }
-
-    *xp = temp;
-    return true;
-}
-
-// 4. Health (uint32_t)
-static bool load_player_health(uint32_t *health)
-{
-    if (!health)
-    {
-        FURI_LOG_E(TAG, "Invalid health pointer");
-        return false;
-    }
-
-    uint32_t temp = 100; // Default
-    if (!load_uint32("player/health", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for health. Using default: 100");
-        temp = 100;
-    }
-
-    *health = temp;
-    return true;
-}
-
-// 5. Strength (uint32_t)
-static bool load_player_strength(uint32_t *strength)
-{
-    if (!strength)
-    {
-        FURI_LOG_E(TAG, "Invalid strength pointer");
-        return false;
-    }
-
-    uint32_t temp = 10; // Default
-    if (!load_uint32("player/strength", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for strength. Using default: 10");
-        temp = 10;
-    }
-
-    *strength = temp;
-    return true;
-}
-
-// 6. Max Health (uint32_t)
-static bool load_player_max_health(uint32_t *max_health)
-{
-    if (!max_health)
-    {
-        FURI_LOG_E(TAG, "Invalid max_health pointer");
-        return false;
-    }
-
-    uint32_t temp = 100; // Default
-    if (!load_uint32("player/max_health", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for max_health. Using default: 100");
-        temp = 100;
-    }
-
-    *max_health = temp;
-    return true;
-}
-
-// 7. Health Regen (uint32_t)
-static bool load_player_health_regen(uint32_t *health_regen)
-{
-    if (!health_regen)
-    {
-        FURI_LOG_E(TAG, "Invalid health_regen pointer");
-        return false;
-    }
-
-    uint32_t temp = 1; // Default
-    if (!load_uint32("player/health_regen", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for health_regen. Using default: 0");
-        temp = 1;
-    }
-
-    *health_regen = temp;
-    return true;
-}
-
-// 8. Elapsed Health Regen (float)
-static bool load_player_elapsed_health_regen(float *elapsed_health_regen)
-{
-    if (!elapsed_health_regen)
-    {
-        FURI_LOG_E(TAG, "Invalid elapsed_health_regen pointer");
-        return false;
-    }
-
-    float temp = 0.0f; // Default
-    if (!load_float("player/elapsed_health_regen", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for elapsed_health_regen. Using default: 0.0f");
-        temp = 0.0f;
-    }
-
-    *elapsed_health_regen = temp;
-    return true;
-}
-
-// 9. Attack Timer (float)
-static bool load_player_attack_timer(float *attack_timer)
-{
-    if (!attack_timer)
-    {
-        FURI_LOG_E(TAG, "Invalid attack_timer pointer");
-        return false;
-    }
-
-    float temp = 0.1f; // Default
-    if (!load_float("player/attack_timer", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for attack_timer. Using default: 0.0f");
-        temp = 0.1f;
-    }
-
-    *attack_timer = temp;
-    return true;
-}
-
-// 10. Elapsed Attack Timer (float)
-static bool load_player_elapsed_attack_timer(float *elapsed_attack_timer)
-{
-    if (!elapsed_attack_timer)
-    {
-        FURI_LOG_E(TAG, "Invalid elapsed_attack_timer pointer");
-        return false;
-    }
-
-    float temp = 0.0f; // Default
-    if (!load_float("player/elapsed_attack_timer", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for elapsed_attack_timer. Using default: 0.0f");
-        temp = 0.0f;
-    }
-
-    *elapsed_attack_timer = temp;
-    return true;
-}
-
-// 11. Direction (enum PlayerDirection)
-static bool load_player_direction(PlayerDirection *direction)
-{
-    if (!direction)
-    {
-        FURI_LOG_E(TAG, "Invalid direction pointer");
-        return false;
-    }
-
-    // Default to 3 -> PLAYER_RIGHT (adjust if you prefer another default)
-    int direction_int = 3;
-    if (!load_number("player/direction", &direction_int))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for direction. Defaulting to PLAYER_RIGHT");
-        direction_int = 3;
-    }
-
-    switch (direction_int)
-    {
-    case 0:
-        *direction = PLAYER_UP;
-        break;
-    case 1:
-        *direction = PLAYER_DOWN;
-        break;
-    case 2:
-        *direction = PLAYER_LEFT;
-        break;
-    case 3:
-        *direction = PLAYER_RIGHT;
-        break;
-    default:
-        FURI_LOG_W(TAG, "Invalid direction value: %d. Defaulting to PLAYER_RIGHT", direction_int);
-        *direction = PLAYER_RIGHT;
-        break;
-    }
-
-    return true;
-}
-
-// 12. State (enum PlayerState)
-static bool load_player_state(PlayerState *state)
-{
-    if (!state)
-    {
-        FURI_LOG_E(TAG, "Invalid state pointer");
-        return false;
-    }
-
-    // Default to 0 -> PLAYER_IDLE
-    int state_int = 0;
-    if (!load_number("player/state", &state_int))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for state. Defaulting to PLAYER_IDLE");
-        state_int = 0;
-    }
-
-    switch (state_int)
-    {
-    case 0:
-        *state = PLAYER_IDLE;
-        break;
-    case 1:
-        *state = PLAYER_MOVING;
-        break;
-    case 2:
-        *state = PLAYER_ATTACKING;
-        break;
-    case 3:
-        *state = PLAYER_ATTACKED;
-        break;
-    case 4:
-        *state = PLAYER_DEAD;
-        break;
-    default:
-        FURI_LOG_W(TAG, "Invalid state value: %d. Defaulting to PLAYER_IDLE", state_int);
-        *state = PLAYER_IDLE;
-        break;
-    }
-
-    return true;
-}
-
-// 13. Start Position X (float)
-static bool load_player_start_position_x(float *start_position_x)
-{
-    if (!start_position_x)
-    {
-        FURI_LOG_E(TAG, "Invalid start_position_x pointer");
-        return false;
-    }
-
-    float temp = 192.0f; // Default
-    if (!load_float("player/start_position_x", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for start_position_x. Using default: 0.0f");
-        temp = 192.0f;
-    }
-
-    *start_position_x = temp;
-    return true;
-}
-
-// 14. Start Position Y (float)
-static bool load_player_start_position_y(float *start_position_y)
-{
-    if (!start_position_y)
-    {
-        FURI_LOG_E(TAG, "Invalid start_position_y pointer");
-        return false;
-    }
-
-    float temp = 96.0f; // Default
-    if (!load_float("player/start_position_y", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for start_position_y. Using default: 0.0f");
-        temp = 96.0f;
-    }
-
-    *start_position_y = temp;
-    return true;
-}
-
-// 15. dx (int8_t)
-static bool load_player_dx(int8_t *dx)
-{
-    if (!dx)
-    {
-        FURI_LOG_E(TAG, "Invalid dx pointer");
-        return false;
-    }
-
-    int8_t temp = 1; // Default
-    if (!load_int8("player/dx", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for dx. Using default: 0");
-        temp = 1;
-    }
-
-    *dx = temp;
-    return true;
-}
-
-// 16. dy (int8_t)
-static bool load_player_dy(int8_t *dy)
-{
-    if (!dy)
-    {
-        FURI_LOG_E(TAG, "Invalid dy pointer");
-        return false;
-    }
-
-    int8_t temp = 0; // Default
-    if (!load_int8("player/dy", &temp))
-    {
-        FURI_LOG_W(TAG, "No data or parse error for dy. Using default: 0");
-        temp = 0;
-    }
-
-    *dy = temp;
-    return true;
-}
-
 bool load_player_context(PlayerContext *player_context)
 {
     if (!player_context)
@@ -705,115 +322,229 @@ bool load_player_context(PlayerContext *player_context)
     }
 
     // 1. Username (String)
-    if (!load_player_username(player_context->username, sizeof(player_context->username)))
+    if (!load_char("player/username", player_context->username, sizeof(player_context->username)))
     {
-        FURI_LOG_E(TAG, "Failed to load player username");
-        return false;
+        FURI_LOG_E(TAG, "No data or parse error for username. Using default: 'Unknown'");
+        memset(player_context->username, 0, sizeof(player_context->username));
+        strncpy(player_context->username, "Unknown", sizeof(player_context->username) - 1);
     }
 
     // 2. Level (uint32_t)
-    if (!load_player_level(&player_context->level))
     {
-        FURI_LOG_E(TAG, "Failed to load player level");
-        return false;
+        uint32_t temp = 1; // Default
+        if (!load_char("player/level", (char *)&temp, sizeof(temp)))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for level. Using default: 1");
+        }
+        else
+        {
+            // char buffer[64];
+            if (load_uint32("player/level", &temp))
+            {
+                player_context->level = temp;
+            }
+            else
+            {
+                FURI_LOG_E(TAG, "Failed to parse level. Using default: 1");
+                player_context->level = 1;
+            }
+        }
+        player_context->level = temp;
     }
 
     // 3. XP (uint32_t)
-    if (!load_player_xp(&player_context->xp))
     {
-        FURI_LOG_E(TAG, "Failed to load player xp");
-        return false;
+        uint32_t temp = 0; // Default
+        if (!load_uint32("player/xp", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for xp. Using default: 0");
+            temp = 0;
+        }
+        player_context->xp = temp;
     }
 
     // 4. Health (uint32_t)
-    if (!load_player_health(&player_context->health))
     {
-        FURI_LOG_E(TAG, "Failed to load player health");
-        return false;
+        uint32_t temp = 100; // Default
+        if (!load_uint32("player/health", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for health. Using default: 100");
+            temp = 100;
+        }
+        player_context->health = temp;
     }
 
     // 5. Strength (uint32_t)
-    if (!load_player_strength(&player_context->strength))
     {
-        FURI_LOG_E(TAG, "Failed to load player strength");
-        return false;
+        uint32_t temp = 10; // Default
+        if (!load_uint32("player/strength", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for strength. Using default: 10");
+            temp = 10;
+        }
+        player_context->strength = temp;
     }
 
     // 6. Max Health (uint32_t)
-    if (!load_player_max_health(&player_context->max_health))
     {
-        FURI_LOG_E(TAG, "Failed to load player max health");
-        return false;
+        uint32_t temp = 100; // Default
+        if (!load_uint32("player/max_health", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for max_health. Using default: 100");
+            temp = 100;
+        }
+        player_context->max_health = temp;
     }
 
     // 7. Health Regen (uint32_t)
-    if (!load_player_health_regen(&player_context->health_regen))
     {
-        FURI_LOG_E(TAG, "Failed to load player health regen");
-        return false;
+        uint32_t temp = 1; // Default
+        if (!load_uint32("player/health_regen", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for health_regen. Using default: 1");
+            temp = 1;
+        }
+        player_context->health_regen = temp;
     }
 
     // 8. Elapsed Health Regen (float)
-    if (!load_player_elapsed_health_regen(&player_context->elapsed_health_regen))
     {
-        FURI_LOG_E(TAG, "Failed to load player elapsed health regen");
-        return false;
+        float temp = 0.0f; // Default
+        if (!load_float("player/elapsed_health_regen", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for elapsed_health_regen. Using default: 0.0f");
+            temp = 0.0f;
+        }
+        player_context->elapsed_health_regen = temp;
     }
 
     // 9. Attack Timer (float)
-    if (!load_player_attack_timer(&player_context->attack_timer))
     {
-        FURI_LOG_E(TAG, "Failed to load player attack timer");
-        return false;
+        float temp = 0.1f; // Default
+        if (!load_float("player/attack_timer", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for attack_timer. Using default: 0.1f");
+            temp = 0.1f;
+        }
+        player_context->attack_timer = temp;
     }
 
     // 10. Elapsed Attack Timer (float)
-    if (!load_player_elapsed_attack_timer(&player_context->elapsed_attack_timer))
     {
-        FURI_LOG_E(TAG, "Failed to load player elapsed attack timer");
-        return false;
+        float temp = 0.0f; // Default
+        if (!load_float("player/elapsed_attack_timer", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for elapsed_attack_timer. Using default: 0.0f");
+            temp = 0.0f;
+        }
+        player_context->elapsed_attack_timer = temp;
     }
 
     // 11. Direction (enum PlayerDirection)
-    if (!load_player_direction(&player_context->direction))
     {
-        FURI_LOG_E(TAG, "Failed to load player direction");
-        return false;
+        int direction_int = 3; // Default to PLAYER_RIGHT
+        if (!load_number("player/direction", &direction_int))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for direction. Defaulting to PLAYER_RIGHT");
+            direction_int = 3;
+        }
+
+        switch (direction_int)
+        {
+        case 0:
+            player_context->direction = PLAYER_UP;
+            break;
+        case 1:
+            player_context->direction = PLAYER_DOWN;
+            break;
+        case 2:
+            player_context->direction = PLAYER_LEFT;
+            break;
+        case 3:
+            player_context->direction = PLAYER_RIGHT;
+            break;
+        default:
+            FURI_LOG_E(TAG, "Invalid direction value: %d. Defaulting to PLAYER_RIGHT", direction_int);
+            player_context->direction = PLAYER_RIGHT;
+            break;
+        }
     }
 
     // 12. State (enum PlayerState)
-    if (!load_player_state(&player_context->state))
     {
-        FURI_LOG_E(TAG, "Failed to load player state");
-        return false;
+        int state_int = 0; // Default to PLAYER_IDLE
+        if (!load_number("player/state", &state_int))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for state. Defaulting to PLAYER_IDLE");
+            state_int = 0;
+        }
+
+        switch (state_int)
+        {
+        case 0:
+            player_context->state = PLAYER_IDLE;
+            break;
+        case 1:
+            player_context->state = PLAYER_MOVING;
+            break;
+        case 2:
+            player_context->state = PLAYER_ATTACKING;
+            break;
+        case 3:
+            player_context->state = PLAYER_ATTACKED;
+            break;
+        case 4:
+            player_context->state = PLAYER_DEAD;
+            break;
+        default:
+            FURI_LOG_E(TAG, "Invalid state value: %d. Defaulting to PLAYER_IDLE", state_int);
+            player_context->state = PLAYER_IDLE;
+            break;
+        }
     }
 
     // 13. Start Position X (float)
-    if (!load_player_start_position_x(&player_context->start_position.x))
     {
-        FURI_LOG_E(TAG, "Failed to load player start position x");
-        return false;
+        float temp = 192.0f; // Default
+        if (!load_float("player/start_position_x", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for start_position_x. Using default: 192.0f");
+            temp = 192.0f;
+        }
+        player_context->start_position.x = temp;
     }
 
     // 14. Start Position Y (float)
-    if (!load_player_start_position_y(&player_context->start_position.y))
     {
-        FURI_LOG_E(TAG, "Failed to load player start position y");
-        return false;
+        float temp = 96.0f; // Default
+        if (!load_float("player/start_position_y", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for start_position_y. Using default: 96.0f");
+            temp = 96.0f;
+        }
+        player_context->start_position.y = temp;
     }
 
     // 15. dx (int8_t)
-    if (!load_player_dx(&player_context->dx))
     {
-        FURI_LOG_E(TAG, "Failed to load player dx");
-        return false;
+        int8_t temp = 1; // Default
+        if (!load_int8("player/dx", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for dx. Using default: 1");
+            temp = 1;
+        }
+        player_context->dx = temp;
     }
 
     // 16. dy (int8_t)
-    if (!load_player_dy(&player_context->dy))
     {
-        FURI_LOG_E(TAG, "Failed to load player dy");
-        return false;
+        int8_t temp = 0; // Default
+        if (!load_int8("player/dy", &temp))
+        {
+            FURI_LOG_E(TAG, "No data or parse error for dy. Using default: 0");
+            temp = 0;
+        }
+        player_context->dy = temp;
     }
 
     return true;

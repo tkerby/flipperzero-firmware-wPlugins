@@ -1,7 +1,6 @@
 #include <game/player.h>
 #include <game/storage.h>
 /****** Entities: Player ******/
-
 static Level *get_next_level(GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
