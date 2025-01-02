@@ -32,29 +32,6 @@ bool allocate_level(GameManager *manager, int index)
     furi_string_free(world_list);
     return true;
 }
-void free_last_level(GameManager *manager)
-{
-    GameContext *game_context = game_manager_game_context_get(manager);
-    if (!game_context)
-    {
-        FURI_LOG_E("Game", "Game context is NULL");
-        return;
-    }
-    if (game_context->current_level == 1)
-    {
-        if (game_context->levels[0])
-        {
-            level_free(game_context->levels[0]);
-        }
-    }
-    else
-    {
-        if (game_context->levels[1])
-        {
-            level_free(game_context->levels[1]);
-        }
-    }
-}
 static void set_world(Level *level, GameManager *manager, char *id)
 {
     char file_path[256];

@@ -14,7 +14,13 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->fps = game_fps_choices_2[game_fps_index];
     game_context->player_context = NULL;
     game_context->current_level = 0;
-    allocate_level(game_manager, 0);
+    if (!allocate_level(game_manager, 0))
+    {
+        FURI_LOG_E("Game", "Failed to allocate level 0");
+        return;
+    }
+    game_context->level_count = 1;
+    game_context->levels[1] = NULL;
 
     // imu
     game_context->imu = imu_alloc();

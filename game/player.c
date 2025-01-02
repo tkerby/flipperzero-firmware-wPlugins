@@ -188,13 +188,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         };
     }
 
-    if (is_new_level)
-    {
-        // remove previous level if it exists
-        free_last_level(manager);
-        is_new_level = false;
-    }
-
     // apply health regeneration
     player->elapsed_health_regen += 1.0f / game_context->fps;
     if (player->elapsed_health_regen >= 1.0f && player->health < player->max_health)
