@@ -21,6 +21,48 @@ void draw_background(Canvas* canvas, Vector pos) {
     draw_bounds(canvas);
 }
 
+// Draw the user stats (health, xp, and level)
+void draw_user_stats(Canvas* canvas, Vector pos, GameManager* manager) {
+    GameContext* game_context = game_manager_game_context_get(manager);
+    PlayerContext* player = game_context->player_context;
+
+    // first draw a black rectangle to make the text more readable
+    canvas_invert_color(canvas);
+    canvas_draw_box(canvas, pos.x - 1, pos.y - 7, 34, 21);
+    canvas_invert_color(canvas);
+
+    char health[32];
+    char xp[32];
+    char level[32];
+
+    snprintf(health, sizeof(health), "HP : %ld", player->health);
+    snprintf(xp, sizeof(xp), "XP : %ld", player->xp);
+    snprintf(level, sizeof(level), "LVL: %ld", player->level);
+
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    canvas_draw_str(canvas, pos.x, pos.y, health);
+    canvas_draw_str(canvas, pos.x, pos.y + 7, xp);
+    canvas_draw_str(canvas, pos.x, pos.y + 14, level);
+}
+
+void draw_username(Canvas* canvas, Vector pos, char* username) {
+    // first draw a black rectangle to make the text more readable
+    // draw box around the username
+    canvas_invert_color(canvas);
+    canvas_draw_box(
+        canvas,
+        pos.x - camera_x - (strlen(username) * 2) - 1,
+        pos.y - camera_y - 14,
+        strlen(username) * 4 + 1,
+        8);
+    canvas_invert_color(canvas);
+
+    // draw username over player's head
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    canvas_draw_str(
+        canvas, pos.x - camera_x - (strlen(username) * 2), pos.y - camera_y - 7, username);
+}
+
 // Draw a line of icons (16 width)
 void draw_icon_line(Canvas* canvas, Vector pos, int amount, bool horizontal, const Icon* icon) {
     for(int i = 0; i < amount; i++) {
@@ -41,34 +83,19 @@ void draw_icon_line(Canvas* canvas, Vector pos, int amount, bool horizontal, con
         }
     }
 }
-// Draw a half section of icons (16 width)
-void draw_icon_half_world(Canvas* canvas, bool right, const Icon* icon) {
-    for(int i = 0; i < 10; i++) {
-        if(right) {
-            draw_icon_line(canvas, (Vector){WORLD_WIDTH / 2 + 6, i * 19 + 2}, 11, true, icon);
-        } else {
-            draw_icon_line(canvas, (Vector){0, i * 19 + 2}, 11, true, icon);
-        }
-    }
-}
+char g_temp_spawn_name[32];
 // Draw an icon at a specific position (with collision detection)
-void spawn_icon(Level* level, const Icon* icon, float x, float y, uint8_t width, uint8_t height) {
+void spawn_icon(Level* level, const char* icon_id, float x, float y) {
+    snprintf(g_temp_spawn_name, sizeof(g_temp_spawn_name), "%s", icon_id);
     Entity* e = level_add_entity(level, &icon_desc);
-    IconContext* icon_ctx = entity_context_get(e);
-    icon_ctx->icon = icon;
-    icon_ctx->width = width;
-    icon_ctx->height = height;
-    // Set the entity position to the center of the icon
-    entity_pos_set(e, (Vector){x + (width / 2), y + (height / 2)});
+    entity_pos_set(e, (Vector){x, y});
 }
 // Draw a line of icons at a specific position (with collision detection)
 void spawn_icon_line(
     Level* level,
-    const Icon* icon,
+    const char* icon_id,
     float x,
     float y,
-    uint8_t width,
-    uint8_t height,
     uint8_t amount,
     bool horizontal) {
     for(int i = 0; i < amount; i++) {
@@ -78,14 +105,14 @@ void spawn_icon_line(
                 break;
             }
 
-            spawn_icon(level, icon, x + (i * 17), y, width, height);
+            spawn_icon(level, icon_id, x + (i * 17), y);
         } else {
             // check if element is outside the world
             if(y + (i * 17) > WORLD_HEIGHT) {
                 break;
             }
 
-            spawn_icon(level, icon, x, y + (i * 17), width, height);
+            spawn_icon(level, icon_id, x, y + (i * 17));
         }
     }
 }

@@ -26,12 +26,6 @@ bool save_char(const char* path_name, const char* value);
 
 bool load_char(const char* path_name, char* value, size_t value_size);
 
-bool save_world(const char* name, const char* world_data);
-
-bool save_world_furi(FuriString* name, FuriString* world_data);
-
-bool load_world(const char* name, char* json_data, size_t json_data_size);
-
 FuriString* load_furi_world(const char* name);
 
 bool world_exists(const char* name);

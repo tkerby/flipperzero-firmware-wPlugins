@@ -2,17 +2,10 @@
 #include <font/font.h>
 #include <flipper_http/flipper_http.h>
 #include <easy_flipper/easy_flipper.h>
-#include <furi.h>
-#include <furi_hal.h>
-#include <gui/gui.h>
-#include <gui/view.h>
-#include <gui/modules/submenu.h>
-#include <gui/view_dispatcher.h>
-#include <notification/notification.h>
-#include <dialogs/dialogs.h>
 
 #define TAG         "FlipWorld"
-#define VERSION_TAG "FlipWorld v0.1"
+#define VERSION     0.2
+#define VERSION_TAG "FlipWorld v0.2"
 
 // Define the submenu items for our FlipWorld application
 typedef enum {
@@ -58,6 +51,8 @@ typedef struct {
     VariableItem* variable_item_game_fps; // The variable item for Game FPS
     VariableItem* variable_item_game_screen_always_on; // The variable item for Screen always on
     VariableItem* variable_item_game_download_world; // The variable item for Download world
+    VariableItem* variable_item_game_sound_on; // The variable item for Sound on
+    VariableItem* variable_item_game_vibration_on; // The variable item for Vibration on
     //
     VariableItem* variable_item_user_username; // The variable item for the User username
     VariableItem* variable_item_user_password; // The variable item for the User password
@@ -66,12 +61,13 @@ typedef struct {
     char* text_input_buffer; // Buffer for the text input
     char* text_input_temp_buffer; // Temporary buffer for the text input
     uint32_t text_input_buffer_size; // Size of the text input buffer
-
 } FlipWorldApp;
 
 extern char* game_fps_choices[];
 extern const float game_fps_choices_2[];
 extern int game_fps_index;
-extern char* game_screen_always_on_choices[];
+extern char* yes_or_no_choices[];
 extern int game_screen_always_on_index;
-extern FlipWorldApp* app_instance;
+extern int game_sound_on_index;
+extern int game_vibration_on_index;
+bool is_enough_heap(size_t heap_size);

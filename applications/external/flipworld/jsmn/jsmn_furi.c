@@ -353,11 +353,8 @@ int jsmn_parse_furi(
     return count;
 }
 
-// The rest of your code (e.g., get_json_value_furi, get_json_array_value_furi, etc.)
-// remains unchanged and can still rely on these updated parsing functions.
-
 // Helper function to create a JSON object: {"key":"value"}
-FuriString* jsmn_create_object(const FuriString* key, const FuriString* value) {
+FuriString* get_json_furi(const FuriString* key, const FuriString* value) {
     FuriString* result = furi_string_alloc();
     furi_string_printf(
         result, "{\"%s\":\"%s\"}", furi_string_get_cstr(key), furi_string_get_cstr(value));
@@ -503,8 +500,6 @@ FuriString*
     }
 
     if(index >= (uint32_t)tokens[0].size) {
-        FURI_LOG_E(
-            "JSMM.H", "Index %lu out of bounds for array with size %u.", index, tokens[0].size);
         free(tokens);
         furi_string_free(array_str);
         return NULL;

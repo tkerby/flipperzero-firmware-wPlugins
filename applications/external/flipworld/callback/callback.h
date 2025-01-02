@@ -2,14 +2,6 @@
 #include <flip_world.h>
 #include <flip_storage/storage.h>
 
-//
-#include <furi.h>
-#include "engine/engine.h"
-#include "engine/game_engine.h"
-#include "engine/game_manager_i.h"
-#include "engine/level_i.h"
-#include "engine/entity_i.h"
-
 void free_all_views(
     void* context,
     bool should_free_variable_item_list,
@@ -28,12 +20,6 @@ enum DataState {
     DataStateError,
 };
 
-// typedef enum FlipWorldCustomEvent FlipWorldCustomEvent;
-// enum FlipWorldCustomEvent
-// {
-//     FlipWorldCustomEventProcess,
-// };
-
 typedef struct DataLoaderModel DataLoaderModel;
 typedef bool (*DataLoaderFetch)(DataLoaderModel* model);
 typedef char* (*DataLoaderParser)(DataLoaderModel* model);
@@ -48,6 +34,7 @@ struct DataLoaderModel {
     size_t request_count;
     ViewNavigationCallback back_callback;
     FuriTimer* timer;
+    FlipperHTTP* fhttp;
 };
 void flip_world_generic_switch_to_view(
     FlipWorldApp* app,
