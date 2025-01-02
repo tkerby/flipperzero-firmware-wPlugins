@@ -1,6 +1,5 @@
 # 北京
 prefix-len: 2 4
-type: mtr
 
 01: 1
 02: 2
