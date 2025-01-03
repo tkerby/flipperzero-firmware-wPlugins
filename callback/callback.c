@@ -1954,7 +1954,10 @@ void flip_world_generic_switch_to_view(FlipWorldApp *app, char *title, DataLoade
             model->data_text = NULL;
             //
             model->parser_context = app;
-            model->fhttp = flipper_http_alloc();
+            if (!model->fhttp)
+            {
+                model->fhttp = flipper_http_alloc();
+            }
         },
         true);
 
