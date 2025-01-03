@@ -62,7 +62,7 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ![](docs/assets/travels.png)
 
-## 🔨 Build
+## 🔨 Building
 
 克隆本项目，并使用 [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) 进行编译（项目基于[mntm-008](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-008) SDK 开发，需手动指定 SDK 版本）。
 
@@ -79,7 +79,7 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 - 公交线路解析
 - 读取日志功能
 
-## 📝Changelog
+## 📝Changelogs
 
 v0.1: 上传 github 项目
 
