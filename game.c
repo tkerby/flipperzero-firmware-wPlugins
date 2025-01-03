@@ -194,7 +194,7 @@ void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* inpu
         targetY = CLAMP(pos->y - jumpHeight, WORLD_BORDER_BOTTOM_Y, WORLD_BORDER_TOP_Y);
 
         //Set player sprite to jumping
-        playerCtx->sprite = jumpingSprite;
+        //playerCtx->sprite = jumpingSprite;
         return;
     }
 
