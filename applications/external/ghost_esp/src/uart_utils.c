@@ -488,6 +488,12 @@ bool uart_is_esp_connected(UartContext* uart) {
         return false;
     }
 
+    // Check if ESP check is disabled
+    if(uart->state && uart->state->settings.disable_esp_check_index) {
+        FURI_LOG_D("UART", "ESP connection check disabled by setting");
+        return true;
+    }
+
     // Temporarily disable callbacks
     furi_hal_serial_async_rx_stop(uart->serial_handle);
 

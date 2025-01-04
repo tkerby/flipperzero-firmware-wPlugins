@@ -18,6 +18,7 @@ typedef enum {
     SETTING_CLEAR_NVS,
     SETTING_CLEAR_PCAPS,
     SETTING_CLEAR_WARDRIVE,
+    SETTING_DISABLE_ESP_CHECK,
     SETTINGS_COUNT
 } SettingKey;
 
@@ -57,6 +58,7 @@ typedef struct {
     uint8_t reboot_esp_index;
     uint8_t clear_logs_index;
     uint8_t clear_nvs_index;
+    uint8_t disable_esp_check_index;
 } Settings;
 
 // Add this to settings_def.h

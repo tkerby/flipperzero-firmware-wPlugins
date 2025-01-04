@@ -75,11 +75,16 @@ const SettingMetadata SETTING_METADATA[SETTINGS_COUNT] = {
         {.name = "Clear PCAPs",
          .data.action = {.name = "Clear PCAPs", .command = NULL, .callback = &clear_pcap_files},
          .is_action = true},
-    [SETTING_CLEAR_WARDRIVE] = {
-        .name = "Clear Wardrives",
-        .data.action =
-            {.name = "Clear Wardrives", .command = NULL, .callback = &clear_wardrive_files},
-        .is_action = true}};
+    [SETTING_CLEAR_WARDRIVE] =
+        {.name = "Clear Wardrives",
+         .data.action =
+             {.name = "Clear Wardrives", .command = NULL, .callback = &clear_wardrive_files},
+         .is_action = true},
+    [SETTING_DISABLE_ESP_CHECK] = {
+        .name = "Disable ESP Check",
+        .data.setting =
+            {.max_value = 1, .value_names = SETTING_VALUE_NAMES_BOOL, .uart_command = NULL},
+        .is_action = false}};
 
 bool setting_is_visible(SettingKey key) {
     if(key == SETTING_ENABLE_FILTERING) {
