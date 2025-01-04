@@ -26,7 +26,7 @@ bool enemyBulletsDirection[MAX_BULLETS];
 //Configurable values
 //TODO Reloading with faster shooting.
 
-#define DEBUGGING
+//#define DEBUGGING
 
 #define TRAINING_RESET_VALUE 100
 #ifdef DEBUGGING
@@ -333,8 +333,7 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if(/*(input->held & GameKeyOk) && */ (currentTick - lastShotTick >= shootingDelay) &&
-       canShoot) {
+    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -568,7 +567,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     //TODO Is this necessary?: (Switch to left/right when jumping up as part of jump animation)
     if(input.pressed & GameKeyDown && playerCtx->sprite != playerCtx->sprite_left_recoil &&
        playerCtx->sprite != playerCtx->sprite_right_recoil) {
-        //playerCtx->sprite = playerCtx->sprite_forward;
+#ifdef DEBUGGING
         if(trainCount < TRAINING_RESET_VALUE) {
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance == NULL) continue;
@@ -581,6 +580,9 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 break;
             }
         }
+#else
+        playerCtx->sprite = playerCtx->sprite_forward;
+#endif
     }
 
     // Clamp player position to screen bounds
@@ -596,8 +598,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
 
     // Control game exit
     if(input.pressed & GameKeyBack) {
-        //Only reaches if player is alive. Send them to the main menu
-        //game_manager_game_stop(manager);
+#ifdef DEBUGGING
         if(trainCount < TRAINING_RESET_VALUE) {
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance == NULL) continue;
@@ -609,6 +610,10 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 break;
             }
         }
+#else
+        //Only reaches if player is alive. Send them to the main menu
+        game_manager_game_stop(manager);
+#endif
     }
 }
 
@@ -656,6 +661,7 @@ void global_update(Entity* self, GameManager* manager, void* context) {
            roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
             level_remove_entity(gameLevel, bullets[i]);
             bullets[i] = NULL;
+#ifdef DEBUGGING
             if(successfulJumpCycles > 2 && trainCount != 1000) {
                 //STOP training
                 trainCount = 1000;
@@ -668,6 +674,7 @@ void global_update(Entity* self, GameManager* manager, void* context) {
                 successfulJumpCycles++;
                 FURI_LOG_I("DEADZONE", "Err reduced by 20: %f", lastErr);
             }
+#endif
         }
     }
 
@@ -861,6 +868,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
         float distYSqToPlayer = (playerPos.y - pos.y) * (playerPos.y - pos.y);
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
+        UNUSED(distanceToPlayer);
 
         Vector closestBullet = (Vector){200.0F, 200.0F};
         for(int i = 0; i < MAX_BULLETS; i++) {
@@ -887,6 +895,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         if(enemy != NULL) {
             double features[5];
             featureCalculation(self, features);
+#ifdef DEBUGGING
             //FURI_LOG_I("DEADZONE", "The dist to bullet is: %f", (double)features[0]);
             if(trainCount < TRAINING_RESET_VALUE) {
                 bool shouldJump = fabs(features[0] - features[2]) < 20 && features[0] != -1;
@@ -897,11 +906,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                 genann_train(enemy->ai, features, outputs, LEARNING_RATE);
                 trainCount++;
             }
-
-            if(roundf(pos.y) == WORLD_BORDER_BOTTOM_Y) {
-                //update_weights(game_ai_weights, game_ai_features, lastAction, 10.0f);
-            }
-
+#endif
             /*bool jumped = false;
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance != self) continue;
@@ -968,6 +973,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             enum EnemyAction action = secondAction != EnemyActionStand ? secondAction :
                                                                          firstAction;
 
+#ifdef DEBUGGING
             if(trainCount < TRAINING_RESET_VALUE) {
                 if(fabs(features[0] - features[2]) < 15 && action != EnemyActionJump) {
                     //Correct jumping state
@@ -997,6 +1003,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                 trainCount = 0;
                 lastErr = 0;
             }
+#endif
 
             lastAction = action;
             switch(action) {
