@@ -30,7 +30,7 @@ void draw_callback(Canvas* canvas, void* context) {
     
    
     const char* app_name = "Roman Decoder"; 
-    canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, app_name);
+    canvas_draw_str_aligned(canvas, 60, 10, AlignCenter, AlignCenter, app_name);
 
     
     canvas_set_bitmap_mode(canvas, true);
