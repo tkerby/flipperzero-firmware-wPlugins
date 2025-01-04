@@ -25,8 +25,20 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 //Configurable values
 //TODO Reloading with faster shooting.
+
+#define DEBUGGING
+
+#define TRAINING_RESET_VALUE 100
+#ifdef DEBUGGING
+uint32_t shootingDelay = 6500;
+#else
 uint32_t shootingDelay = 500;
+#endif
+#ifdef DEBUGGING
+uint32_t enemyShootingDelay = 6000;
+#else
 uint32_t enemyShootingDelay = 1500;
+#endif
 float bulletMoveSpeed = 0.55f;
 float speed = 0.6f;
 float enemySpeed = 0.13f;
@@ -45,9 +57,11 @@ int16_t transitionRightTicks = 0;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
+#define LEARNING_RATE 0.05f
+
 #ifdef DEBUGGING
-int ENEMY_LIVES = 30;
-int health = 100;
+int ENEMY_LIVES = 100;
+int health = 200;
 #else
 int ENEMY_LIVES = STARTING_ENEMY_HEALTH;
 int health = STARTING_PLAYER_HEALTH;
@@ -93,6 +107,40 @@ static Vector random_pos(void) {
     return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 }
 */
+
+void featureCalculation(Entity* enemy, double* features) {
+    //Pre processing
+    Vector enemyPos = entity_pos_get(enemy);
+    Vector closestBullet = (Vector){-1.0F, -1.0F};
+    for(int i = 0; i < MAX_BULLETS; i++) {
+        if(bullets[i] == NULL) continue;
+        Vector bulletPos = entity_pos_get(bullets[i]);
+        float distXSq = (bulletPos.x - enemyPos.x) * (bulletPos.x - enemyPos.x);
+        float distYSq = (bulletPos.y - enemyPos.y) * (bulletPos.y - enemyPos.y);
+        float distance = sqrtf(distXSq + distYSq);
+
+        float closestBulletDistX = (closestBullet.x - enemyPos.x) * (closestBullet.x - enemyPos.x);
+        float closestBulletDistY = (closestBullet.y - enemyPos.y) * (closestBullet.y - enemyPos.y);
+        float closestBulletDist = sqrtf(closestBulletDistX + closestBulletDistY);
+        if(distance <= closestBulletDist) {
+            closestBullet = bulletPos;
+        }
+    }
+
+    float distToBullet = fabs(enemyPos.x - closestBullet.x);
+    UNUSED(distToBullet);
+    float distToPlayer = fabs(entity_pos_get(globalPlayer).x - enemyPos.x);
+    /*return (Vector){
+        distToBullet < 25 && closestBullet.x != -1 ? 0.5 : -0.5,
+        distToPlayer > 90 ? 0.5 :
+        distToPlayer < 65 ? -0.5 :
+                            0};*/
+    features[0] = closestBullet.x;
+    features[1] = closestBullet.y;
+    features[2] = enemyPos.x;
+    features[3] = enemyPos.y;
+    features[4] = distToPlayer;
+}
 
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -150,6 +198,61 @@ void enemy_spawn(
         enemies[i].spawnTime = furi_get_tick();
         enemies[i].mercyTicks = mercyTicks;
         enemies[i].lastShot = furi_get_tick() + 2000;
+        enemies[i].ai = genann_init(5, 2, 15, 2);
+
+        double weights[362] = {
+            0.226409,  0.268792,  0.462289,  0.107297,  -0.006758, -0.491368, -0.451068, -0.267161,
+            -0.285436, -0.285914, 0.333097,  -0.362451, -0.212848, 0.395701,  -0.290229, 0.490438,
+            -0.042899, 0.451248,  -0.431080, 0.186390,  -0.063223, -0.509010, 0.007649,  0.095175,
+            -0.414880, 0.099654,  -0.035782, -0.396215, 0.338234,  -0.494474, -0.222023, -0.091676,
+            -0.335384, -0.444136, -0.377813, 0.444023,  -0.364012, -0.400617, 0.450545,  0.127066,
+            -0.229777, -0.346571, -0.066315, 0.751485,  -0.178302, 0.339927,  -0.122488, 0.456789,
+            -0.134740, 0.107734,  -0.335763, -1.116590, -0.135493, -0.368667, 0.040381,  -0.088017,
+            -0.424452, -0.175063, 0.297495,  0.450491,  0.089436,  0.419278,  -0.271802, 0.213183,
+            -0.017692, 0.010840,  -0.317622, 0.051958,  -0.557679, -0.392417, -0.785579, -1.219056,
+            0.292143,  -0.101738, 0.105616,  -0.226466, -0.398386, 0.065294,  -0.448426, -0.103761,
+            0.198751,  -0.347099, 0.294456,  0.092711,  -0.383366, 0.212600,  0.042372,  -0.504524,
+            0.067993,  -0.185861, 1.103913,  -0.660966, 0.346752,  -0.664331, -0.474754, 0.455617,
+            0.300919,  0.026157,  -0.189773, 0.342382,  -1.085806, -0.851300, 0.302623,  -0.219559,
+            -0.027721, 0.139915,  0.852105,  -2.268763, 0.054006,  -0.641483, -0.331565, 0.059930,
+            -0.403168, -0.116639, 0.624315,  -0.055035, -0.496349, -0.175561, -0.020988, -0.270041,
+            -0.256507, -0.308748, 0.824737,  -1.548700, -0.494925, -0.578608, -0.105978, -0.019450,
+            -0.442901, 0.124253,  0.081015,  0.129442,  -0.474773, -0.819088, 0.405788,  -0.444668,
+            -0.155328, 0.408472,  0.671445,  -2.380961, -0.195457, -0.126481, -0.168835, 0.100084,
+            -0.034022, 0.333235,  -0.108913, 0.356546,  -0.339009, -0.034980, 0.118545,  0.478602,
+            -0.166463, 0.233579,  1.076242,  -0.359646, 0.479183,  -0.563340, -0.279116, 0.368250,
+            -0.139772, 0.357644,  -0.319847, -0.165932, -0.960265, -1.260443, -0.421939, 0.234696,
+            0.152264,  0.482531,  1.264831,  -0.796035, -0.145103, -1.076213, -0.228577, 0.193847,
+            -0.403165, -0.098832, 0.135107,  -0.094424, -0.885660, -0.590713, -0.360195, -0.388541,
+            -0.043622, 0.086037,  0.359798,  -1.392439, 0.438639,  -0.800281, 0.269881,  0.320851,
+            0.324700,  0.225588,  -0.349118, 0.255533,  -0.358827, -0.945519, -0.342831, 0.414656,
+            0.258488,  0.207167,  0.156535,  -1.323227, -0.287665, -0.527171, -0.218238, -0.380022,
+            -0.032190, 0.447766,  -0.418408, -0.020913, -0.954437, -0.838485, 0.317570,  0.106358,
+            0.068577,  -0.085219, 1.146716,  -0.722223, -0.016367, -1.049473, -0.472906, 0.408251,
+            -0.369407, -0.259705, -0.340264, -0.498245, -0.691266, -0.558752, 0.157543,  0.492918,
+            0.308035,  0.127870,  0.917246,  -0.017343, -0.121023, -1.146187, 0.494160,  0.278263,
+            0.203987,  -0.419360, -0.385779, -0.387958, -1.028847, -0.872891, 0.262359,  -0.362893,
+            -0.194513, -0.114334, 0.931189,  -0.722764, -0.319995, -0.527780, -0.068619, -0.425929,
+            0.256320,  0.480641,  -0.732865, 0.136107,  -1.242456, -0.391987, -0.120990, -0.472046,
+            0.085961,  0.038079,  0.462364,  -1.623666, 0.170796,  -0.599832, -0.205591, -0.380911,
+            -0.064044, -0.080865, 0.213942,  -0.158855, -0.840867, -0.818363, 0.374552,  -0.077628,
+            0.214637,  -0.395527, 0.971118,  -0.642512, -0.220213, -0.966670, 0.289494,  0.239901,
+            -0.053469, 0.456824,  0.156758,  0.012216,  -1.044596, -1.053266, 0.265781,  -0.052867,
+            0.171821,  0.164914,  0.233097,  -2.733220, -0.158545, -0.448137, -0.329886, 0.240294,
+            0.368689,  0.104424,  0.834357,  0.435598,  0.218894,  -0.276858, 0.156540,  -0.411588,
+            0.359536,  -0.362781, 1.313216,  -0.419396, 0.267775,  -0.629433, -0.327155, -0.063460,
+            -0.165845, 0.303552,  -0.161947, -0.483245, -0.863209, -1.157557, -0.031172, 0.262868,
+            -0.424300, 0.257120,  0.906641,  0.104407,  0.338958,  0.202972,  0.372778,  0.015913,
+            0.068704,  0.177207,  0.173126,  0.103119,  -0.020823, 0.125812,  0.223043,  0.060970,
+            0.652505,  0.033537,  1.390213,  0.879808,  3.005649,  1.686152,  3.203962,  0.257860,
+            0.725549,  1.387875,  1.385051,  0.786731,  -0.008892, 0.815875,  1.736890,  0.715506,
+            4.206503,  0.408027};
+
+        for(int j = 0; j < enemies[i].ai->total_weights; j++) {
+            enemies[i].ai->weight[j] = weights[j];
+        }
+        FURI_LOG_I("DEADZONE", "Loaded the weights!");
+        //genann_randomize(enemies[i].ai);
         break;
     }
 
@@ -217,6 +320,7 @@ void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* inpu
 }
 
 void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* pos) {
+    UNUSED(input);
     //If we are not facing right or left, we cannot shoot
     bool canShoot = playerCtx->sprite != playerCtx->sprite_jump &&
                     playerCtx->sprite != playerCtx->sprite_stand &&
@@ -229,7 +333,8 @@ void player_shoot_handler(PlayerContext* playerCtx, InputState* input, Vector* p
 
     uint32_t currentTick = furi_get_tick();
     //Shooting action
-    if((input->held & GameKeyOk) && (currentTick - lastShotTick >= shootingDelay) && canShoot) {
+    if(/*(input->held & GameKeyOk) && */ (currentTick - lastShotTick >= shootingDelay) &&
+       canShoot) {
         lastShotTick = currentTick;
         //Spawn bullet
         int bulletIndex = -1;
@@ -336,6 +441,11 @@ bool damage_player(Entity* self) {
     notification_message(notifications, &sequence_blink_red_100);
     return health == 0;
 }
+
+int trainCount = 1000;
+
+double err = 100;
+double lastErr = 0;
 
 void player_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
@@ -458,7 +568,19 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     //TODO Is this necessary?: (Switch to left/right when jumping up as part of jump animation)
     if(input.pressed & GameKeyDown && playerCtx->sprite != playerCtx->sprite_left_recoil &&
        playerCtx->sprite != playerCtx->sprite_right_recoil) {
-        playerCtx->sprite = playerCtx->sprite_forward;
+        //playerCtx->sprite = playerCtx->sprite_forward;
+        if(trainCount < TRAINING_RESET_VALUE) {
+            for(int i = 0; i < MAX_ENEMIES; i++) {
+                if(enemies[i].instance == NULL) continue;
+                double features[5];
+                featureCalculation(enemies[i].instance, features);
+                double outputs[2] = {EnemyActionRetreat, EnemyActionStand};
+                genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
+                trainCount++;
+                enemies[i].lives += 20;
+                break;
+            }
+        }
     }
 
     // Clamp player position to screen bounds
@@ -475,9 +597,22 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     // Control game exit
     if(input.pressed & GameKeyBack) {
         //Only reaches if player is alive. Send them to the main menu
-        game_manager_game_stop(manager);
+        //game_manager_game_stop(manager);
+        if(trainCount < TRAINING_RESET_VALUE) {
+            for(int i = 0; i < MAX_ENEMIES; i++) {
+                if(enemies[i].instance == NULL) continue;
+                double features[5];
+                featureCalculation(enemies[i].instance, features);
+                double outputs[2] = {EnemyActionRetreat, EnemyActionAttack};
+                genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
+                enemies[i].lives += 20;
+                break;
+            }
+        }
     }
 }
+
+int successfulJumpCycles = 0;
 
 void global_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(self);
@@ -513,6 +648,7 @@ void global_update(Entity* self, GameManager* manager, void* context) {
         float deltaX = bulletsDirection[i] ? bulletMoveSpeed : -bulletMoveSpeed;
         bulletPos.x =
             CLAMP(bulletPos.x + deltaX, WORLD_BORDER_RIGHT_X + 5, WORLD_BORDER_LEFT_X - 5);
+        //bulletPos.y += 0.07;
         entity_pos_set(bullets[i], bulletPos);
 
         //Once bullet reaches end, destroy it
@@ -520,6 +656,18 @@ void global_update(Entity* self, GameManager* manager, void* context) {
            roundf(bulletPos.x) <= WORLD_BORDER_LEFT_X) {
             level_remove_entity(gameLevel, bullets[i]);
             bullets[i] = NULL;
+            if(successfulJumpCycles > 2 && trainCount != 1000) {
+                //STOP training
+                trainCount = 1000;
+                FURI_LOG_I("DEADZONE", "Finished training! Weights:");
+                for(int i = 0; i < enemies[0].ai->total_weights; i++) {
+                    FURI_LOG_I("DEADZONE", "Weights: %f", enemies[0].ai->weight[i]);
+                }
+            } else {
+                lastErr -= 20;
+                successfulJumpCycles++;
+                FURI_LOG_I("DEADZONE", "Err reduced by 20: %f", lastErr);
+            }
         }
     }
 
@@ -598,16 +746,13 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     tutorial_level_player_render(manager, canvas, player);
 
 #ifdef DEBUGGING
-    canvas_printf(
-        canvas,
-        20,
-        50,
-        "Weights: %.1f, %.1f",
-        (double)game_ai_weights[0],
-        (double)game_ai_weights[1]);
-
-    canvas_printf(
-        canvas, 40, 60, "%.1f, %.1f", (double)game_ai_weights[2], (double)game_ai_weights[3]);
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(enemies[i].instance == NULL) continue;
+        for(int j = 0; j < enemies[i].ai->total_weights; j++) {
+            //canvas_printf(canvas, 20 + j * 5, 50, "Weights: %.1f", enemies[i].ai->weight[j]);
+        }
+        break;
+    }
 #endif
 }
 
@@ -681,6 +826,13 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                     }
 
                     if(enemies[i].instance != NULL) {
+                        /*double features[5];
+                        featureCalculation(self, features);
+                        double outputs[2] = {EnemyActionRetreat, EnemyActionAttack};
+                        genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
+                        trainCount++;*/
+
+                /*
                         update_weights(
                             game_ai_weights,
                             game_ai_features,
@@ -688,7 +840,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                             -400 / abs((int)roundf(
                                        entity_pos_get(enemies[i].instance).x -
                                        entity_pos_get(globalPlayer).x)));
-                    }
+                  */  }
                 }
 
                 //Play sound of getting hit
@@ -703,24 +855,12 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy NPC behavior
 
     uint32_t currentTick = furi_get_tick();
-    if(currentTick - lastBehaviorTick > 200) {
+    if(currentTick - lastBehaviorTick > 100) {
         lastBehaviorTick = currentTick;
         Vector playerPos = entity_pos_get(globalPlayer);
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
         float distYSqToPlayer = (playerPos.y - pos.y) * (playerPos.y - pos.y);
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
-
-        if(roundf(distanceToPlayer) > 80.0f) {
-            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, -300);
-        } else if(roundf(distanceToPlayer) < 45.0f) {
-            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, -300);
-        } else if(roundf(distanceToPlayer) > 45.0f) {
-            update_weights(game_ai_weights, game_ai_features, EnemyActionAttack, 300);
-        }
-
-        if(roundf(pos.y) == WORLD_BORDER_BOTTOM_Y) {
-            update_weights(game_ai_weights, game_ai_features, lastAction, 10.0f);
-        }
 
         Vector closestBullet = (Vector){200.0F, 200.0F};
         for(int i = 0; i < MAX_BULLETS; i++) {
@@ -738,14 +878,38 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             }
         }
 
-        bool jumped = false;
+        Enemy* enemy = NULL;
         for(int i = 0; i < MAX_ENEMIES; i++) {
             if(enemies[i].instance != self) continue;
-            jumped = enemies[i].jumping;
+            enemy = &enemies[i];
             break;
         }
+        if(enemy != NULL) {
+            double features[5];
+            featureCalculation(self, features);
+            //FURI_LOG_I("DEADZONE", "The dist to bullet is: %f", (double)features[0]);
+            if(trainCount < TRAINING_RESET_VALUE) {
+                bool shouldJump = fabs(features[0] - features[2]) < 20 && features[0] != -1;
+                bool attack = distanceToPlayer > 85;
+                double outputs[2] = {
+                    attack ? EnemyActionAttack : EnemyActionRetreat,
+                    shouldJump ? EnemyActionAttack : EnemyActionRetreat};
+                genann_train(enemy->ai, features, outputs, LEARNING_RATE);
+                trainCount++;
+            }
 
-        if(closestBullet.x > pos.x && (closestBullet.x - pos.x) < 0.9F) {
+            if(roundf(pos.y) == WORLD_BORDER_BOTTOM_Y) {
+                //update_weights(game_ai_weights, game_ai_features, lastAction, 10.0f);
+            }
+
+            /*bool jumped = false;
+            for(int i = 0; i < MAX_ENEMIES; i++) {
+                if(enemies[i].instance != self) continue;
+                jumped = enemies[i].jumping;
+                break;
+             }/
+
+            if(closestBullet.x > pos.x && (closestBullet.x - pos.x) < 0.9F) {
             update_weights(
                 game_ai_weights,
                 game_ai_features,
@@ -761,76 +925,145 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                 500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
         }
 
-        enum EnemyAction action = (enum EnemyAction)decide_action(
+            enum EnemyAction action = (enum EnemyAction)decide_action(
             pos.x,
             pos.y,
             closestBullet.x,
             closestBullet.y,
             playerPos.x,
             playerPos.y,
-            game_ai_weights);
+            game_ai_weights);*/
 
-        lastAction = action;
-        switch(action) {
-        case EnemyActionAttack:
-            Enemy* enemy = NULL;
-            for(int i = 0; i < MAX_ENEMIES; i++) {
-                if(enemies[i].instance != self) continue;
-                enemy = &enemies[i];
+            //featureCalculation(self, features);
+
+            const double* outputs = genann_run(enemy->ai, features);
+
+            int actionValue = (int)round(outputs[0]);
+            enum EnemyAction firstAction;
+            switch(actionValue) {
+            case EnemyActionAttack:
+                firstAction = EnemyActionAttack;
+                break;
+            case EnemyActionRetreat:
+                firstAction = EnemyActionRetreat;
+                break;
+            default:
+                firstAction = EnemyActionRetreat;
+                break;
+            }
+            actionValue = (int)round(outputs[1]);
+            enum EnemyAction secondAction;
+            switch(actionValue) {
+            case EnemyActionAttack:
+                secondAction = EnemyActionJump;
+                break;
+            case EnemyActionRetreat:
+                secondAction = EnemyActionStand;
+                break;
+            default:
+                secondAction = EnemyActionJump;
                 break;
             }
 
-            bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
+            enum EnemyAction action = secondAction != EnemyActionStand ? secondAction :
+                                                                         firstAction;
 
-            if(enemyCtx->sprite == enemyCtx->sprite_left) {
+            if(trainCount < TRAINING_RESET_VALUE) {
+                if(fabs(features[0] - features[2]) < 15 && action != EnemyActionJump) {
+                    //Correct jumping state
+                    lastErr += 2;
+                } else if(distanceToPlayer > 85 && action != EnemyActionAttack) {
+                    lastErr += (double)0.5;
+                } else if(distanceToPlayer < 55 && action != EnemyActionRetreat) {
+                    lastErr += (double)0.5;
+                }
+            }
+
+            if(trainCount == 1) {
+                enemy->lastAI = genann_copy(enemy->ai);
+            }
+
+            if(trainCount == TRAINING_RESET_VALUE) {
+                FURI_LOG_I("DEADZONE", "Error value: %f, previous one: %f.", lastErr, err);
+                if(lastErr < err) {
+                    //Continue using this model, it has improved
+                    //lastErr = err;
+                    err = lastErr;
+                } else {
+                    //More errors, revert.
+                    genann_free(enemy->ai);
+                    enemy->ai = enemy->lastAI;
+                }
+                trainCount = 0;
+                lastErr = 0;
+            }
+
+            lastAction = action;
+            switch(action) {
+            case EnemyActionAttack:
+                Enemy* enemy = NULL;
+                for(int i = 0; i < MAX_ENEMIES; i++) {
+                    if(enemies[i].instance != self) continue;
+                    enemy = &enemies[i];
+                    break;
+                }
+
+                bool gracePeriod = furi_get_tick() < (enemy->spawnTime + enemy->mercyTicks);
+
+                if(enemyCtx->sprite == enemyCtx->sprite_left) {
+                    pos.x = CLAMP(
+                        lerp(
+                            pos.x,
+                            playerPos.x + ((pos.x - playerPos.x > 0) ? 30 : -30),
+                            enemySpeed),
+                        WORLD_BORDER_RIGHT_X,
+                        //Prevent from approaching too much during player spawning / grace period
+                        gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
+                } else {
+                    pos.x = CLAMP(
+                        lerp(pos.x, pos.x + (pos.x - playerPos.x), enemySpeed),
+                        WORLD_BORDER_RIGHT_X,
+                        WORLD_BORDER_LEFT_X);
+                    break;
+                }
+                break;
+            case EnemyActionRetreat:
                 pos.x = CLAMP(
-                    lerp(pos.x, playerPos.x + ((pos.x - playerPos.x > 0) ? 30 : -30), enemySpeed),
-                    WORLD_BORDER_RIGHT_X,
-                    //Prevent from approaching too much during player spawning / grace period
-                    gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
-            } else {
-                pos.x = CLAMP(
-                    lerp(pos.x, pos.x + (pos.x - playerPos.x), enemySpeed),
+                    lerp(
+                        pos.x,
+                        pos.x + (enemyCtx->sprite == enemyCtx->sprite_left ?
+                                     (pos.x - playerPos.x) :
+                                     (playerPos.x - pos.x)),
+                        enemySpeed),
                     WORLD_BORDER_RIGHT_X,
                     WORLD_BORDER_LEFT_X);
                 break;
-            }
-            break;
-        case EnemyActionRetreat:
-            pos.x = CLAMP(
-                lerp(
-                    pos.x,
-                    pos.x + (enemyCtx->sprite == enemyCtx->sprite_left ? (pos.x - playerPos.x) :
-                                                                         (playerPos.x - pos.x)),
-                    enemySpeed),
-                WORLD_BORDER_RIGHT_X,
-                WORLD_BORDER_LEFT_X);
-            break;
-        case EnemyActionStand:
-            break;
-        case EnemyActionJump:
-            //Prevent from jumping during start of first level (player spawning)
-            if(furi_get_tick() - firstMobSpawnTicks < 3000) {
+            case EnemyActionStand:
                 break;
-            }
-            for(int i = 0; i < MAX_ENEMIES; i++) {
-                if(enemies[i].instance != self) continue;
-                //Is on ground and can jump
-                if(!enemies[i].jumping) {
-                    enemies[i].jumping = true;
-                    //Enemies have a higher jump height
-                    enemies[i].targetY = CLAMP(
-                        WORLD_BORDER_BOTTOM_Y - (enemyJumpHeight),
-                        WORLD_BORDER_BOTTOM_Y,
-                        WORLD_BORDER_TOP_Y);
-                    return;
+            case EnemyActionJump:
+                FURI_LOG_I("DEADZONE", "PLEASE JUMP!");
+                //Prevent from jumping during start of first level (player spawning)
+                if(furi_get_tick() - firstMobSpawnTicks < 3000) {
+                    break;
+                }
+                for(int i = 0; i < MAX_ENEMIES; i++) {
+                    if(enemies[i].instance != self) continue;
+                    //Is on ground and can jump
+                    if(!enemies[i].jumping) {
+                        enemies[i].jumping = true;
+                        //Enemies have a higher jump height
+                        enemies[i].targetY = CLAMP(
+                            WORLD_BORDER_BOTTOM_Y - (enemyJumpHeight),
+                            WORLD_BORDER_BOTTOM_Y,
+                            WORLD_BORDER_TOP_Y);
+                        return;
+                    }
+                    break;
                 }
                 break;
             }
-            break;
         }
     }
-
     //Gravity & movement interpolation
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != self) continue;
@@ -926,7 +1159,6 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     //level_add_entity(level, &target_desc);
 
     //level_add_entity(level, &target_enemy_desc);
-
     gameLevel = level;
 }
 

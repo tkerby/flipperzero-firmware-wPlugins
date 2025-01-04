@@ -2,6 +2,8 @@
 #include <furi.h>
 #include <engine/game_engine.h>
 #include <engine/game_manager_i.h>
+#include <genann.h>
+#include <storage/storage.h>
 
 #include "game_menu.h"
 #include "reinforcement_learning_logic.h"
@@ -46,6 +48,8 @@ typedef struct {
     uint32_t spawnTime;
     uint32_t mercyTicks;
     uint32_t lastShot;
+    genann* ai;
+    genann* lastAI;
 } Enemy;
 
 #define MAX_ENEMIES 30
