@@ -26,28 +26,29 @@ bool enemyBulletsDirection[MAX_BULLETS];
 //Configurable values
 //TODO Reloading with faster shooting.
 
-#define DEBUGGING
+//#define DEBUGGING
 //#define MINIMAL_DEBUGGING
 
-#define SIZE_OF_WEIGHTS 362
-#define NPC_API_WEIGHT_UNIQUENESS
+#define SIZE_OF_WEIGHTS          362
+#define NPC_ANN_BEHAVIOR_LATENCY 0
+#define NPC_ANN_WEIGHT_UNIQUENESS
 
 #define TRAINING_RESET_VALUE 100
 #ifdef DEBUGGING
 uint32_t shootingDelay = 600;
 #else
-uint32_t shootingDelay = 500;
+uint32_t shootingDelay = 450;
 #endif
 #ifdef DEBUGGING
-uint32_t enemyShootingDelay = 700;
+uint32_t enemyShootingDelay = 600;
 #else
 uint32_t enemyShootingDelay = 1500;
 #endif
-float bulletMoveSpeed = 0.55f;
+float bulletMoveSpeed = 0.7f;
 float speed = 0.6f;
-float enemySpeed = 0.13f;
+float enemySpeed = 0.19f;
 float jumpHeight = 22.0F;
-float jumpSpeed = 0.074f;
+float jumpSpeed = 0.08f;
 float enemyJumpHeight = 22.0F + 10.0F;
 //Tracking player data
 uint32_t kills = 0;
@@ -210,7 +211,7 @@ void enemy_spawn(
         enemies[i].lastShot = furi_get_tick() + 2000;
         enemies[i].ai = genann_init(5, 2, 15, 2);
 
-#ifdef NPC_API_WEIGHT_UNIQUENESS
+#ifdef NPC_ANN_WEIGHT_UNIQUENESS
 #ifndef DEBUGGING
         double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
         double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
@@ -858,7 +859,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy NPC behavior
 
     uint32_t currentTick = furi_get_tick();
-    if(currentTick - lastBehaviorTick > 0) {
+    if(currentTick - lastBehaviorTick > NPC_ANN_BEHAVIOR_LATENCY) {
         lastBehaviorTick = currentTick;
         Vector playerPos = entity_pos_get(globalPlayer);
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
@@ -1297,8 +1298,8 @@ static void game_stop(void* ctx) {
     Yor game configuration, do not rename this variable, but you can change it's content here.  
 */
 const Game game = {
-    .target_fps = 125, // target fps, game will try to keep this value
-    .show_fps = false, // show fps counter on the screen
+    .target_fps = 110, // target fps, game will try to keep this value
+    .show_fps = true, // show fps counter on the screen
     .always_backlight = false, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
     .stop = game_stop, // will be called once, when game stops
