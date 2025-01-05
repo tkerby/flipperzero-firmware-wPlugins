@@ -18,7 +18,6 @@ typedef struct {
     uint32_t last_input_time;     
 } inputDemo;
 
-
 const char* roman_chars[] = {"M", "D", "C", "L", "X", "V", "I"};
 const int roman_chars_count = sizeof(roman_chars) / sizeof(roman_chars[0]);
 
@@ -28,14 +27,11 @@ void draw_callback(Canvas* canvas, void* context) {
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontPrimary);
     
-   
     const char* app_name = "Roman Decoder"; 
     canvas_draw_str_aligned(canvas, 60, 10, AlignCenter, AlignCenter, app_name);
 
-    
     canvas_set_bitmap_mode(canvas, true);
 
-    
     canvas_draw_str(canvas, 23, 35, "M");
     canvas_draw_str(canvas, 38, 35, "D");
     canvas_draw_str(canvas, 49, 35, "C");
@@ -44,15 +40,11 @@ void draw_callback(Canvas* canvas, void* context) {
     canvas_draw_str(canvas, 83, 35, "V");
     canvas_draw_str(canvas, 96, 35, "I");
 
-    
     int underscore_positions[] = {23, 38, 49, 61, 71, 83, 96};
     int underscore_x = underscore_positions[app->current_char_index];
     canvas_draw_str(canvas, underscore_x, 35 + 4, "_"); 
 
-    
     canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, app->pressedKey);
-    
-  
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignCenter, app->displayString);
 }
 
@@ -94,9 +86,21 @@ int roman_to_integer(const char* s) {
     return total;
 }
 
+void safe_strcat(char* dest, const char* src, size_t dest_size) {
+    size_t dest_len = strlen(dest);
+    size_t src_len = strlen(src);
+
+    if (dest_len + src_len >= dest_size) {
+        src_len = dest_size - dest_len - 1;  
+    }
+
+    strncpy(dest + dest_len, src, src_len);
+    dest[dest_len + src_len] = '\0'; 
+}
+
 void handle_ok_key(inputDemo* app) {
     if (strlen(app->pressedKey) < MAX_ROMAN_LENGTH) {
-        strcat(app->pressedKey, roman_chars[app->current_char_index]);
+        safe_strcat(app->pressedKey, roman_chars[app->current_char_index], sizeof(app->pressedKey));
         int decimal = roman_to_integer(app->pressedKey);
         if (decimal == -1) {
             snprintf(app->displayString, sizeof(app->displayString), "Invalid input!");
@@ -111,25 +115,20 @@ void handle_ok_key(inputDemo* app) {
 int32_t roman_decoder_main(void*) {
     inputDemo app;
 
-    
     app.current_char_index = 0; 
     app.pressedKey[0] = '\0';    
     app.displayString[0] = '\0'; 
     app.last_input_time = 0;     
 
-    
     app.view_port = view_port_alloc();
     app.input_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
 
-  
     view_port_draw_callback_set(app.view_port, draw_callback, &app);
     view_port_input_callback_set(app.view_port, input_callback, &app);
 
-   
     app.gui = furi_record_open("gui");
     gui_add_view_port(app.gui, app.view_port, GuiLayerFullscreen);
 
-  
     InputEvent input;
     FURI_LOG_I(TAG, "Start the main loop.");
     while(1) {
@@ -183,7 +182,6 @@ int32_t roman_decoder_main(void*) {
         }
     }
 
-    
     view_port_enabled_set(app.view_port, false);
     gui_remove_view_port(app.gui, app.view_port);
     furi_record_close("gui");
