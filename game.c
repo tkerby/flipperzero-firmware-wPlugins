@@ -2,12 +2,12 @@
 
 /****** Entities: Player ******/
 
-//Useful for the reinforcement learning
+//Possible actions (for the ANN)
 enum EnemyAction {
     EnemyActionAttack,
     EnemyActionRetreat,
-    EnemyActionStand,
-    EnemyActionJump
+    EnemyActionJump,
+    EnemyActionStand
 };
 
 Enemy enemies[MAX_ENEMIES];
@@ -25,10 +25,12 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 //Configurable values
 //TODO Reloading with faster shooting.
+
+#define DEBUGGING
+//#define MINIMAL_DEBUGGING
+
 #define SIZE_OF_WEIGHTS 362
 #define NPC_API_WEIGHT_UNIQUENESS
-//#define MINIMAL_DEBUGGING
-//#define DEBUGGING
 
 #define TRAINING_RESET_VALUE 100
 #ifdef DEBUGGING
@@ -59,7 +61,7 @@ int16_t transitionRightTicks = 0;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
-#define LEARNING_RATE 0.1f
+#define LEARNING_RATE (double)0.0001
 
 #ifdef DEBUGGING
 int ENEMY_LIVES = 100;
@@ -95,6 +97,12 @@ enum EnemyAction lastAction = EnemyActionStand;
 
 float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
+}
+
+void nn_train(genann* ai, double* inputs, enum EnemyAction* desired_outputs, double learningRate) {
+    //With the second output, we subtract 2, to keep the inputs in range of 0-1
+    double outputs[2] = {desired_outputs[0], desired_outputs[1] - 2};
+    genann_train(ai, inputs, outputs, learningRate);
 }
 
 static void frame_cb(GameEngine* engine, Canvas* canvas, InputState input, void* context) {
@@ -192,10 +200,8 @@ void enemy_spawn(
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
         enemyIndex = i;
-        //FURI_LOG_I("deadzone", "PRE ALLOCATION!");
         enemies[i].instance = level_add_entity(level, &enemy_desc);
         enemies[i].direction = right;
-        //FURI_LOG_I("deadzone", "ALLOCATING ENEMY TO MEMORY!");
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
         enemies[i].lives = ENEMY_LIVES;
@@ -205,6 +211,7 @@ void enemy_spawn(
         enemies[i].ai = genann_init(5, 2, 15, 2);
 
 #ifdef NPC_API_WEIGHT_UNIQUENESS
+#ifndef DEBUGGING
         double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
         double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
 
@@ -232,6 +239,7 @@ void enemy_spawn(
             }
         }
 
+#endif
 #else
         double weights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
 
@@ -258,16 +266,13 @@ void enemy_spawn(
     // Set enemy position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(enemies[enemyIndex].instance, spawnPosition);
-    //FURI_LOG_I("deadzone", "SET ENEMY POS");
 
     // Add collision box to player entity
     // Box is centered in player x and y, and it's size is 16x16
     entity_collider_add_rect(enemies[enemyIndex].instance, 16, 16);
-    //FURI_LOG_I("deadzone", "SET ENEMY RECT");
 
     // Get enemy context
     PlayerContext* player_context = entity_context_get(enemies[enemyIndex].instance);
-    //FURI_LOG_I("deadzone", "GET PLAYER CTX FOR ENEMY");
 
     // Load enemy sprite
     player_context->sprite_left = game_manager_sprite_load(manager, "enemy_left.fxbm");
@@ -277,7 +282,6 @@ void enemy_spawn(
     } else {
         player_context->sprite = player_context->sprite_left;
     }
-    //FURI_LOG_I("deadzone", "DONE SPAWNING");
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
@@ -443,8 +447,12 @@ int trainCount = 0;
 int trainCount = 1000;
 #endif
 
+#define IS_TRAINING               trainCount < TRAINING_RESET_VALUE
+#define DONE_TRAINING             trainCount == TRAINING_RESET_VALUE
+#define RECENTLY_STARTED_TRAINING trainCount == 1
+
 double err = 100;
-double lastErr = 0;
+double recentErr = 0;
 
 void player_update(Entity* self, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
@@ -465,7 +473,6 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
         float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
         float distance = sqrtf(distXSq + distYSq);
-        //FURI_LOG_I("deadzone","Enemy bullet dist: %f, %f",(double)sqrtf(distXSq),(double)sqrtf(distYSq));
         if(distance < BULLET_DISTANCE_THRESHOLD ||
            (playerCtx->sprite == playerCtx->sprite_jump && sqrtf(distXSq) < 6 &&
             (distYSq > 0 ? distYSq < 8 : sqrtf(distYSq) < 7))) {
@@ -563,20 +570,19 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         }
     }
 
-    //TODO Add more animation states for turning around, so it's smoother.
-    //TODO Is this necessary?: (Switch to left/right when jumping up as part of jump animation)
-    if(input.pressed & GameKeyDown && playerCtx->sprite != playerCtx->sprite_left_recoil &&
-       playerCtx->sprite != playerCtx->sprite_right_recoil) {
+    bool canPressDown = playerCtx->sprite != playerCtx->sprite_left_recoil &&
+                        playerCtx->sprite != playerCtx->sprite_right_recoil;
+
+    if(input.pressed & GameKeyDown && canPressDown) {
 #ifdef DEBUGGING
-        if(trainCount < TRAINING_RESET_VALUE) {
+        if(IS_TRAINING) {
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance == NULL) continue;
                 double features[5];
                 featureCalculation(enemies[i].instance, features);
-                double outputs[2] = {EnemyActionRetreat, EnemyActionRetreat};
-                genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
+                enum EnemyAction outputs[2] = {EnemyActionRetreat, EnemyActionStand};
+                nn_train(enemies[i].ai, features, outputs, LEARNING_RATE);
                 trainCount++;
-                enemies[i].lives += 20;
                 break;
             }
         }
@@ -599,14 +605,13 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     // Control game exit
     if(input.pressed & GameKeyBack) {
 #ifdef DEBUGGING
-        if(trainCount < TRAINING_RESET_VALUE) {
+        if(IS_TRAINING) {
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance == NULL) continue;
                 double features[5];
                 featureCalculation(enemies[i].instance, features);
-                double outputs[2] = {EnemyActionRetreat, EnemyActionAttack};
-                genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
-                enemies[i].lives += 20;
+                enum EnemyAction outputs[2] = {EnemyActionRetreat, EnemyActionJump};
+                nn_train(enemies[i].ai, features, outputs, LEARNING_RATE);
                 break;
             }
         }
@@ -662,7 +667,7 @@ void global_update(Entity* self, GameManager* manager, void* context) {
             level_remove_entity(gameLevel, bullets[i]);
             bullets[i] = NULL;
 #ifdef DEBUGGING
-            if(successfulJumpCycles > 2 && trainCount != 1000) {
+            if(successfulJumpCycles > 7 && trainCount != 1000) {
                 //STOP training
                 trainCount = 1000;
                 FURI_LOG_I("DEADZONE", "Finished training! Weights:");
@@ -670,9 +675,8 @@ void global_update(Entity* self, GameManager* manager, void* context) {
                     FURI_LOG_I("DEADZONE", "Weights: %f", enemies[0].ai->weight[i]);
                 }
             } else {
-                lastErr -= 20;
+                recentErr -= 20;
                 successfulJumpCycles++;
-                FURI_LOG_I("DEADZONE", "Err reduced by 20: %f", lastErr);
             }
 #endif
         }
@@ -808,7 +812,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         float distXSq = (bulletPos.x - pos.x) * (bulletPos.x - pos.x);
         float distYSq = (bulletPos.y - pos.y) * (bulletPos.y - pos.y);
         float distance = sqrtf(distXSq + distYSq);
-        //FURI_LOG_I("deadzone", "Bullet dist: %f", (double)distance);
         if(distance < BULLET_DISTANCE_THRESHOLD) {
             //Self destruction of bullet and entity
             level_remove_entity(gameLevel, bullets[i]);
@@ -841,23 +844,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                     if(kills == 1) {
                         firstKillTick = furi_get_tick();
                     }
-
-                    if(enemies[i].instance != NULL) {
-                        /*double features[5];
-                        featureCalculation(self, features);
-                        double outputs[2] = {EnemyActionRetreat, EnemyActionAttack};
-                        genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
-                        trainCount++;*/
-
-                /*
-                        update_weights(
-                            game_ai_weights,
-                            game_ai_features,
-                            enemies[i].jumping ? EnemyActionJump : lastAction,
-                            -400 / abs((int)roundf(
-                                       entity_pos_get(enemies[i].instance).x -
-                                       entity_pos_get(globalPlayer).x)));
-                  */  }
                 }
 
                 //Play sound of getting hit
@@ -906,51 +892,16 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             double features[5];
             featureCalculation(self, features);
 #ifdef DEBUGGING
-            //FURI_LOG_I("DEADZONE", "The dist to bullet is: %f", (double)features[0]);
-            if(trainCount < TRAINING_RESET_VALUE) {
-                bool shouldJump = fabs(features[0] - features[2]) < 13 && features[0] != -1;
+            if(IS_TRAINING) {
+                bool shouldJump = fabs(features[0] - features[2]) < 17 && features[0] != -1;
                 bool attack = distanceToPlayer > 85;
-                double outputs[2] = {
+                enum EnemyAction outputs[2] = {
                     attack ? EnemyActionAttack : EnemyActionRetreat,
-                    shouldJump ? EnemyActionAttack : EnemyActionRetreat};
-                genann_train(enemy->ai, features, outputs, LEARNING_RATE);
+                    shouldJump ? EnemyActionJump : EnemyActionStand};
+                nn_train(enemy->ai, features, outputs, LEARNING_RATE);
                 trainCount++;
             }
 #endif
-            /*bool jumped = false;
-            for(int i = 0; i < MAX_ENEMIES; i++) {
-                if(enemies[i].instance != self) continue;
-                jumped = enemies[i].jumping;
-                break;
-             }/
-
-            if(closestBullet.x > pos.x && (closestBullet.x - pos.x) < 0.9F) {
-            update_weights(
-                game_ai_weights,
-                game_ai_features,
-                jumped ? EnemyActionJump : lastAction,
-                500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
-        }
-
-        if(closestBullet.y < pos.y && (pos.y - closestBullet.y) < 1.0f) {
-            update_weights(
-                game_ai_weights,
-                game_ai_features,
-                EnemyActionJump,
-                500 / abs((int)roundf(pos.x - entity_pos_get(globalPlayer).x)));
-        }
-
-            enum EnemyAction action = (enum EnemyAction)decide_action(
-            pos.x,
-            pos.y,
-            closestBullet.x,
-            closestBullet.y,
-            playerPos.x,
-            playerPos.y,
-            game_ai_weights);*/
-
-            //featureCalculation(self, features);
-
             const double* outputs = genann_run(enemy->ai, features);
 
             int actionValue = (int)round(outputs[0]);
@@ -984,34 +935,38 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                                                                          firstAction;
 
 #ifdef DEBUGGING
-            if(trainCount < TRAINING_RESET_VALUE) {
+            if(IS_TRAINING) {
                 if(fabs(features[0] - features[2]) < 15 && action != EnemyActionJump) {
                     //Correct jumping state
-                    lastErr += 2;
+                    recentErr += 2;
                 } else if(distanceToPlayer > 85 && action != EnemyActionAttack) {
-                    lastErr += (double)0.5;
+                    recentErr += (double)0.5;
                 } else if(distanceToPlayer < 55 && action != EnemyActionRetreat) {
-                    lastErr += (double)0.5;
+                    recentErr += (double)0.5;
                 }
             }
 
-            if(trainCount == 1) {
+            if(RECENTLY_STARTED_TRAINING) {
                 enemy->lastAI = genann_copy(enemy->ai);
             }
 
-            if(trainCount == TRAINING_RESET_VALUE) {
-                FURI_LOG_I("DEADZONE", "Error value: %f, previous one: %f.", lastErr, err);
-                if(lastErr < err) {
+            if(DONE_TRAINING) {
+                if(recentErr < err) {
                     //Continue using this model, it has improved
-                    //lastErr = err;
-                    err = lastErr;
+                    err = recentErr;
+                    FURI_LOG_I(
+                        "DEADZONE",
+                        "The errors in the ANN model have reduced. We will continue with the current model. (Errors: %f)",
+                        recentErr,
+                        err);
+
                 } else {
                     //More errors, revert.
                     genann_free(enemy->ai);
                     enemy->ai = enemy->lastAI;
                 }
                 trainCount = 0;
-                lastErr = 0;
+                recentErr = 0;
             }
 #endif
 
@@ -1058,7 +1013,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             case EnemyActionStand:
                 break;
             case EnemyActionJump:
-                FURI_LOG_I("DEADZONE", "PLEASE JUMP!");
                 //Prevent from jumping during start of first level (player spawning)
                 if(furi_get_tick() - firstMobSpawnTicks < 3000) {
                     break;
