@@ -957,8 +957,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                     FURI_LOG_I(
                         "DEADZONE",
                         "The errors in the ANN model have reduced. We will continue with the current model. (Errors: %f)",
-                        recentErr,
-                        err);
+                        recentErr);
 
                 } else {
                     //More errors, revert.
