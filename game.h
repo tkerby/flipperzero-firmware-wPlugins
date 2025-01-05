@@ -10,6 +10,8 @@
 #include "game_level.h"
 #include "tutorial_level.h"
 
+#include "npc_ai_variants.h"
+
 /* Global game defines go here */
 
 #define WORLD_BORDER_LEFT_X   6

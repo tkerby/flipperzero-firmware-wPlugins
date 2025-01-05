@@ -25,17 +25,19 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 //Configurable values
 //TODO Reloading with faster shooting.
-
+#define SIZE_OF_WEIGHTS 362
+#define NPC_API_WEIGHT_UNIQUENESS
+//#define MINIMAL_DEBUGGING
 //#define DEBUGGING
 
 #define TRAINING_RESET_VALUE 100
 #ifdef DEBUGGING
-uint32_t shootingDelay = 6500;
+uint32_t shootingDelay = 600;
 #else
 uint32_t shootingDelay = 500;
 #endif
 #ifdef DEBUGGING
-uint32_t enemyShootingDelay = 6000;
+uint32_t enemyShootingDelay = 700;
 #else
 uint32_t enemyShootingDelay = 1500;
 #endif
@@ -57,7 +59,7 @@ int16_t transitionRightTicks = 0;
 //Internal vars
 int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
-#define LEARNING_RATE 0.05f
+#define LEARNING_RATE 0.1f
 
 #ifdef DEBUGGING
 int ENEMY_LIVES = 100;
@@ -178,6 +180,8 @@ void player_spawn(Level* level, GameManager* manager) {
     gameBeginningTick = furi_get_tick();
 }
 
+int npcAIModelIndex = -1;
+
 void enemy_spawn(
     Level* level,
     GameManager* manager,
@@ -200,59 +204,51 @@ void enemy_spawn(
         enemies[i].lastShot = furi_get_tick() + 2000;
         enemies[i].ai = genann_init(5, 2, 15, 2);
 
-        double weights[362] = {
-            0.226409,  0.268792,  0.462289,  0.107297,  -0.006758, -0.491368, -0.451068, -0.267161,
-            -0.285436, -0.285914, 0.333097,  -0.362451, -0.212848, 0.395701,  -0.290229, 0.490438,
-            -0.042899, 0.451248,  -0.431080, 0.186390,  -0.063223, -0.509010, 0.007649,  0.095175,
-            -0.414880, 0.099654,  -0.035782, -0.396215, 0.338234,  -0.494474, -0.222023, -0.091676,
-            -0.335384, -0.444136, -0.377813, 0.444023,  -0.364012, -0.400617, 0.450545,  0.127066,
-            -0.229777, -0.346571, -0.066315, 0.751485,  -0.178302, 0.339927,  -0.122488, 0.456789,
-            -0.134740, 0.107734,  -0.335763, -1.116590, -0.135493, -0.368667, 0.040381,  -0.088017,
-            -0.424452, -0.175063, 0.297495,  0.450491,  0.089436,  0.419278,  -0.271802, 0.213183,
-            -0.017692, 0.010840,  -0.317622, 0.051958,  -0.557679, -0.392417, -0.785579, -1.219056,
-            0.292143,  -0.101738, 0.105616,  -0.226466, -0.398386, 0.065294,  -0.448426, -0.103761,
-            0.198751,  -0.347099, 0.294456,  0.092711,  -0.383366, 0.212600,  0.042372,  -0.504524,
-            0.067993,  -0.185861, 1.103913,  -0.660966, 0.346752,  -0.664331, -0.474754, 0.455617,
-            0.300919,  0.026157,  -0.189773, 0.342382,  -1.085806, -0.851300, 0.302623,  -0.219559,
-            -0.027721, 0.139915,  0.852105,  -2.268763, 0.054006,  -0.641483, -0.331565, 0.059930,
-            -0.403168, -0.116639, 0.624315,  -0.055035, -0.496349, -0.175561, -0.020988, -0.270041,
-            -0.256507, -0.308748, 0.824737,  -1.548700, -0.494925, -0.578608, -0.105978, -0.019450,
-            -0.442901, 0.124253,  0.081015,  0.129442,  -0.474773, -0.819088, 0.405788,  -0.444668,
-            -0.155328, 0.408472,  0.671445,  -2.380961, -0.195457, -0.126481, -0.168835, 0.100084,
-            -0.034022, 0.333235,  -0.108913, 0.356546,  -0.339009, -0.034980, 0.118545,  0.478602,
-            -0.166463, 0.233579,  1.076242,  -0.359646, 0.479183,  -0.563340, -0.279116, 0.368250,
-            -0.139772, 0.357644,  -0.319847, -0.165932, -0.960265, -1.260443, -0.421939, 0.234696,
-            0.152264,  0.482531,  1.264831,  -0.796035, -0.145103, -1.076213, -0.228577, 0.193847,
-            -0.403165, -0.098832, 0.135107,  -0.094424, -0.885660, -0.590713, -0.360195, -0.388541,
-            -0.043622, 0.086037,  0.359798,  -1.392439, 0.438639,  -0.800281, 0.269881,  0.320851,
-            0.324700,  0.225588,  -0.349118, 0.255533,  -0.358827, -0.945519, -0.342831, 0.414656,
-            0.258488,  0.207167,  0.156535,  -1.323227, -0.287665, -0.527171, -0.218238, -0.380022,
-            -0.032190, 0.447766,  -0.418408, -0.020913, -0.954437, -0.838485, 0.317570,  0.106358,
-            0.068577,  -0.085219, 1.146716,  -0.722223, -0.016367, -1.049473, -0.472906, 0.408251,
-            -0.369407, -0.259705, -0.340264, -0.498245, -0.691266, -0.558752, 0.157543,  0.492918,
-            0.308035,  0.127870,  0.917246,  -0.017343, -0.121023, -1.146187, 0.494160,  0.278263,
-            0.203987,  -0.419360, -0.385779, -0.387958, -1.028847, -0.872891, 0.262359,  -0.362893,
-            -0.194513, -0.114334, 0.931189,  -0.722764, -0.319995, -0.527780, -0.068619, -0.425929,
-            0.256320,  0.480641,  -0.732865, 0.136107,  -1.242456, -0.391987, -0.120990, -0.472046,
-            0.085961,  0.038079,  0.462364,  -1.623666, 0.170796,  -0.599832, -0.205591, -0.380911,
-            -0.064044, -0.080865, 0.213942,  -0.158855, -0.840867, -0.818363, 0.374552,  -0.077628,
-            0.214637,  -0.395527, 0.971118,  -0.642512, -0.220213, -0.966670, 0.289494,  0.239901,
-            -0.053469, 0.456824,  0.156758,  0.012216,  -1.044596, -1.053266, 0.265781,  -0.052867,
-            0.171821,  0.164914,  0.233097,  -2.733220, -0.158545, -0.448137, -0.329886, 0.240294,
-            0.368689,  0.104424,  0.834357,  0.435598,  0.218894,  -0.276858, 0.156540,  -0.411588,
-            0.359536,  -0.362781, 1.313216,  -0.419396, 0.267775,  -0.629433, -0.327155, -0.063460,
-            -0.165845, 0.303552,  -0.161947, -0.483245, -0.863209, -1.157557, -0.031172, 0.262868,
-            -0.424300, 0.257120,  0.906641,  0.104407,  0.338958,  0.202972,  0.372778,  0.015913,
-            0.068704,  0.177207,  0.173126,  0.103119,  -0.020823, 0.125812,  0.223043,  0.060970,
-            0.652505,  0.033537,  1.390213,  0.879808,  3.005649,  1.686152,  3.203962,  0.257860,
-            0.725549,  1.387875,  1.385051,  0.786731,  -0.008892, 0.815875,  1.736890,  0.715506,
-            4.206503,  0.408027};
+#ifdef NPC_API_WEIGHT_UNIQUENESS
+        double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+        double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+
+        if(npcAIModelIndex == -1) {
+            //Start off with random model, then always change, so that two following NPCs are never the same.
+            npcAIModelIndex = (randValue > (double)0.7) ? 0 : (randValue2 > (double)0.5) ? 1 : 0;
+        } else {
+            npcAIModelIndex++;
+        }
+
+        //These are the best weights
+        for(int j = 0; j < enemies[i].ai->total_weights; j++) {
+            if(npcAIModelIndex % 3 == 0) {
+                //Utilize the best weights one in three times per NPC (33.333%)
+                static double bestWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
+                enemies[i].ai->weight[j] = bestWeights[j];
+            } else if(npcAIModelIndex % 3 == 1) {
+                //Close up NPC has 15% chance
+                static double closeUpNPCWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_CLOSEUP_NPC;
+                enemies[i].ai->weight[j] = closeUpNPCWeights[j];
+            } else {
+                //Non jumping NPC has 51% chance
+                static double nonJumpingNPCWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_NONJUMPING_NPC;
+                enemies[i].ai->weight[j] = nonJumpingNPCWeights[j];
+            }
+        }
+
+#else
+        double weights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
 
         for(int j = 0; j < enemies[i].ai->total_weights; j++) {
-            enemies[i].ai->weight[j] = weights[j];
+            // Introduce some randomness to each NPC
+            //was 0.98
+            if(((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) > (double)0.99) {
+                enemies[i].ai->weight[j] =
+                    ((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) - (double)0.5;
+            } else {
+                enemies[i].ai->weight[j] = weights[j];
+            }
         }
+
+#endif
+
         FURI_LOG_I("DEADZONE", "Loaded the weights!");
-        //genann_randomize(enemies[i].ai);
         break;
     }
 
@@ -441,7 +437,11 @@ bool damage_player(Entity* self) {
     return health == 0;
 }
 
+#ifdef DEBUGGING
+int trainCount = 0;
+#else
 int trainCount = 1000;
+#endif
 
 double err = 100;
 double lastErr = 0;
@@ -573,7 +573,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
                 if(enemies[i].instance == NULL) continue;
                 double features[5];
                 featureCalculation(enemies[i].instance, features);
-                double outputs[2] = {EnemyActionRetreat, EnemyActionStand};
+                double outputs[2] = {EnemyActionRetreat, EnemyActionRetreat};
                 genann_train(enemies[i].ai, features, outputs, LEARNING_RATE);
                 trainCount++;
                 enemies[i].lives += 20;
@@ -823,6 +823,16 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                     //Ran out of lives
                     level_remove_entity(gameLevel, self);
 
+#ifdef MINIMAL_DEBUGGING
+                    //Print weights
+                    FURI_LOG_I("DEADZONE", "Finished randomness tweaking of weights:");
+                    for(int j = 0; j < enemies[i].ai->total_weights; j++) {
+                        FURI_LOG_I("DEADZONE", "Weights: %f", enemies[i].ai->weight[j]);
+                    }
+#endif
+
+                    genann_free(enemies[i].lastAI);
+                    genann_free(enemies[i].ai);
                     //Replace damage sound with death sound
                     damageSound = &sequence_success;
 
@@ -862,7 +872,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
     //Enemy NPC behavior
 
     uint32_t currentTick = furi_get_tick();
-    if(currentTick - lastBehaviorTick > 100) {
+    if(currentTick - lastBehaviorTick > 0) {
         lastBehaviorTick = currentTick;
         Vector playerPos = entity_pos_get(globalPlayer);
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
@@ -898,7 +908,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
 #ifdef DEBUGGING
             //FURI_LOG_I("DEADZONE", "The dist to bullet is: %f", (double)features[0]);
             if(trainCount < TRAINING_RESET_VALUE) {
-                bool shouldJump = fabs(features[0] - features[2]) < 20 && features[0] != -1;
+                bool shouldJump = fabs(features[0] - features[2]) < 13 && features[0] != -1;
                 bool attack = distanceToPlayer > 85;
                 double outputs[2] = {
                     attack ? EnemyActionAttack : EnemyActionRetreat,
@@ -1028,7 +1038,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
                         gracePeriod ? (WORLD_BORDER_RIGHT_X - 14) : WORLD_BORDER_LEFT_X);
                 } else {
                     pos.x = CLAMP(
-                        lerp(pos.x, pos.x + (pos.x - playerPos.x), enemySpeed),
+                        lerp(pos.x, pos.x + (pos.x - playerPos.x < 0) ? 30 : -30, enemySpeed),
                         WORLD_BORDER_RIGHT_X,
                         WORLD_BORDER_LEFT_X);
                     break;
