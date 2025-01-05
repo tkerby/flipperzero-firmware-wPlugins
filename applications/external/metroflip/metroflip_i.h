@@ -9,6 +9,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <metroflip_icons.h>
+#include "api/nfc/mf_classic_key_cache.h"
 
 #include <gui/modules/submenu.h>
 #include <gui/modules/popup.h>
@@ -59,6 +60,7 @@ typedef struct {
     NfcPoller* poller;
     NfcScanner* scanner;
     NfcDevice* nfc_device;
+    MfClassicKeyCache* mfc_key_cache;
 
     // card details:
     uint32_t balance_lari;
@@ -112,6 +114,14 @@ typedef enum {
     MetroflipViewWidget,
     MetroflipViewUart,
 } MetroflipView;
+
+typedef enum {
+    SUCCESSFUL,
+    INCOMPLETE_KEYFILE,
+    MISSING_KEYFILE
+} KeyfileManager;
+
+KeyfileManager manage_keyfiles(char uid_str[]);
 
 void metroflip_app_blink_start(Metroflip* metroflip);
 void metroflip_app_blink_stop(Metroflip* metroflip);
