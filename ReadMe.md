@@ -33,7 +33,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-03 12:53 EST`
 - Updated: [Count Down Timer v1.5 (By 0w0mewo)](https://github.com/0w0mewo/fpz_cntdown_timer)
 - Updated: [Oscilloscope v0.4 (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
-- Updated: [FlipWorld v0.2 (By jblanked)](https://github.com/jblanked/FlipWorld)
 - Updated: [Ghost ESP v1.1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
 - Updated: [Metroflip v0.4.5 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [FlipWorld v0.3 (By jblanked)](https://github.com/jblanked/FlipWorld)
