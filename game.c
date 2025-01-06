@@ -2,7 +2,7 @@
 
 /****** Entities: Player ******/
 
-//Possible actions (for the ANN)
+// Possible actions (for the ANN)
 enum EnemyAction {
     EnemyActionAttack,
     EnemyActionRetreat,
@@ -31,7 +31,9 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 #define SIZE_OF_WEIGHTS          362
 #define NPC_ANN_BEHAVIOR_LATENCY 0
+#ifdef DEBUGGING
 #define NPC_ANN_WEIGHT_UNIQUENESS
+#endif
 
 #define TRAINING_RESET_VALUE 100
 #ifdef DEBUGGING
@@ -209,10 +211,10 @@ void enemy_spawn(
         enemies[i].spawnTime = furi_get_tick();
         enemies[i].mercyTicks = mercyTicks;
         enemies[i].lastShot = furi_get_tick() + 2000;
+
         enemies[i].ai = genann_init(5, 2, 15, 2);
 
 #ifdef NPC_ANN_WEIGHT_UNIQUENESS
-#ifndef DEBUGGING
         double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
         double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
 
@@ -239,8 +241,6 @@ void enemy_spawn(
                 enemies[i].ai->weight[j] = nonJumpingNPCWeights[j];
             }
         }
-
-#endif
 #else
         double weights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
 
@@ -604,6 +604,8 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     entity_pos_set(self, pos);
 
     // Control game exit
+
+    //When the Back key is pressed
     if(input.pressed & GameKeyBack) {
 #ifdef DEBUGGING
         if(IS_TRAINING) {
@@ -865,7 +867,6 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
         float distYSqToPlayer = (playerPos.y - pos.y) * (playerPos.y - pos.y);
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
-        UNUSED(distanceToPlayer);
 
         Vector closestBullet = (Vector){200.0F, 200.0F};
         for(int i = 0; i < MAX_BULLETS; i++) {
@@ -892,10 +893,16 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         if(enemy != NULL) {
             double features[5];
             featureCalculation(self, features);
+            double closestBulletX = features[0];
+            double closestBulletY = features[1];
+            double enemyX = features[2];
+            double enemyY = features[3];
+            double xDistToPlayer = features[4];
 #ifdef DEBUGGING
             if(IS_TRAINING) {
-                bool shouldJump = fabs(features[0] - features[2]) < 17 && features[0] != -1;
-                bool attack = distanceToPlayer > 85;
+                bool shouldJump = fabs(enemyX - closestBulletX) < 17 &&
+                                  features[0] != -1; //Is there even a bullet?
+                bool attack = xDistToPlayer > 85; //Should we approach the player?
                 enum EnemyAction outputs[2] = {
                     attack ? EnemyActionAttack : EnemyActionRetreat,
                     shouldJump ? EnemyActionJump : EnemyActionStand};
