@@ -87,6 +87,8 @@ static void strobometer_app_run(StrobometerAppContext* context) {
 
     view_port_enabled_set(context->view_port, true);
 
+    bool frequency_changed = false;
+
     for(bool is_running = true; is_running;) {
         InputEvent event;
 
@@ -111,14 +113,21 @@ static void strobometer_app_run(StrobometerAppContext* context) {
 
         if(event.key == InputKeyUp) {
             context->frequency += (int)pow(10, context->selected);
+            frequency_changed = true;
         } else if(event.key == InputKeyDown) {
             context->frequency -= (int)pow(10, context->selected);
+            frequency_changed = true;
         }
 
         if(context->frequency < 0) {
             context->frequency = pow(10, context->places) - 1;
         } else if(context->frequency > pow(10, context->places) - 1) {
             context->frequency = 0;
+        }
+
+        if(frequency_changed) {
+            furi_hal_pwm_set_params(STROBOSCOPE_PIN, context->frequency / 60, 10);
+            frequency_changed = false;
         }
 
         if(event.type != InputTypePress) {
