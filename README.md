@@ -4,11 +4,19 @@
 
 Flipper StroboMeter is an application designed to measure the RPM (revolutions per minute) of a rotating object using the Flipper Zero device. By connecting an LED to Pin 4(A4) and GND and setting the RPM, you can emit a strobe light at that specific frequency. By going through different frequencies and seeing where the strobe effect syncs up with the frequency of the motion and the motion seems to freeze, you can measure that frequency.
 
+## Screenshots
+
+![Setting Frequency](../Screenshots/screenshot_idle.png)
+_Main screen of the Flipper StroboMeter application._
+
+![Outputting Signal](../Screenshots/screenshot_running.png)
+_PWM signal output via GPIO_
+
 ## Instructions
 
-1. **Prepare the Rotating Object:**
+1. **Prepare the Measurement:**
 
-   - Identify a visible mark or feature on the rotating object that you can use as a reference point. For better visibility you can also attach a small piece of tape to the axis.
+   - Identify a visible mark or feature on the rotating object that you can use as a reference point. For better visibility you can also attach a small piece of tape to it.
 
 2. **Setting the frequency:**
 
