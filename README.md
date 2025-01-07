@@ -31,3 +31,8 @@ Flipper StroboMeter is an application designed to measure the RPM (revolutions p
 You can also use the Stroboscope to measure the frequency of any cyclical motion, not only rotation (for example speakers).
 
 Feel free open up an issue on GitHub if you have any suggestions!
+
+**Disclaimer:**
+Do not use LEDs without a resistor. As they are semiconductors they don't limit the current, but their resistance is actually lowered as they heat up, drawing more current and eventually breaking.
+I repeat DO NOT use LEDs without a resistor.
+Now that I am no longer responsible for your actions, please proceed as you wish :)
