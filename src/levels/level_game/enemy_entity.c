@@ -6,12 +6,42 @@
 #include "level_game.h"
 #include "player_entity.h"
 
-#define ENEMY_SIZE 6
-
 static Vector
-random_pos(void)
+random_pos(Entity* player_entity)
 {
-    return (Vector){ rand() % 120 + 4, rand() % 58 + 4 };
+    const int full_size = ceilf(ENEMY_SIZE);
+    const int half_size = ceilf(HALF_ENEMY_SIZE);
+
+    Vector player_pos = entity_pos_get(player_entity);
+
+    Vector pos;
+
+    do {
+        pos.x = half_size + rand() % (SCREEN_WIDTH - full_size);
+    } while (fabsf(pos.x - player_pos.x) < 3 * ENEMY_SIZE);
+    do {
+        pos.y = half_size + rand() % (SCREEN_HEIGHT - full_size);
+    } while (fabsf(pos.y - player_pos.y) < 3 * ENEMY_SIZE);
+
+    return pos;
+}
+
+static EnemyDirection
+random_direction(Vector enemy_pos, Entity* player_entity)
+{
+    Vector player_pos = entity_pos_get(player_entity);
+
+    EnemyDirection direction = rand() % 4;
+    if (direction == EnemyDirectionUp && enemy_pos.y > player_pos.y)
+        direction = EnemyDirectionDown;
+    else if (direction == EnemyDirectionDown && enemy_pos.y < player_pos.y)
+        direction = EnemyDirectionUp;
+    else if (direction == EnemyDirectionLeft && enemy_pos.x > player_pos.x)
+        direction = EnemyDirectionRight;
+    else if (direction == EnemyDirectionRight && enemy_pos.x < player_pos.x)
+        direction = EnemyDirectionLeft;
+
+    return direction;
 }
 
 void
@@ -19,22 +49,26 @@ spawn_enemy(GameManager* manager)
 {
     GameContext* game_context = game_manager_game_context_get(manager);
     Level* level = game_manager_current_level_get(manager);
+
+    // Add enemyh to level
     Entity* enemy = level_add_entity(level, &enemy_description);
+    EnemyContext* enemy_context = entity_context_get(enemy);
 
     // Add to enemies list
     GameLevelContext* level_context = level_context_get(level);
     EntityList_push_back(level_context->enemies, enemy);
 
     // Set enemy position
-    entity_pos_set(enemy, random_pos());
+    Vector enemy_pos = random_pos(level_context->player);
+    entity_pos_set(enemy, enemy_pos);
+    enemy_context->direction =
+      random_direction(enemy_pos, level_context->player);
 
     // Add collision rect to enemy entity
     entity_collider_add_rect(enemy, ENEMY_SIZE, ENEMY_SIZE);
 
     // Load target sprite
-    EnemyContext* enemy_context = entity_context_get(enemy);
     enemy_context->sprite = game_manager_sprite_load(manager, "enemy.fxbm");
-    enemy_context->direction = (EnemyDirection)(rand() % 4);
 
     float speed;
     switch (game_context->difficulty) {
@@ -45,7 +79,7 @@ spawn_enemy(GameManager* manager)
             speed = 1.0f;
             break;
         case DifficultyInsane:
-            speed = 1.5f;
+            speed = 0.5f * (1 + rand() % 3);
             break;
         default:
             speed = 0.5f;
@@ -57,6 +91,7 @@ spawn_enemy(GameManager* manager)
 static void
 enemy_update(Entity* self, GameManager* manager, void* context)
 {
+    // Check pause
     Level* level = game_manager_current_level_get(manager);
     GameLevelContext* level_context = level_context_get(level);
     if (level_context->is_paused) {
@@ -76,18 +111,23 @@ enemy_update(Entity* self, GameManager* manager, void* context)
     if (enemy_context->direction == EnemyDirectionRight)
         pos.x += enemy_context->speed;
 
-    // Clamp player position to screen bounds, and set it
-    pos.x = CLAMP(pos.x, 125, 3);
-    pos.y = CLAMP(pos.y, 61, 3);
+    // Clamp enemy position to screen bounds, and set it
+    pos.x = CLAMP(pos.x, SCREEN_WIDTH - HALF_ENEMY_SIZE, HALF_ENEMY_SIZE);
+    pos.y = CLAMP(pos.y, SCREEN_HEIGHT - HALF_ENEMY_SIZE, HALF_ENEMY_SIZE);
     entity_pos_set(self, pos);
 
-    if (enemy_context->direction == EnemyDirectionUp && pos.y <= 3.0f)
+    // Switching direction
+    if (enemy_context->direction == EnemyDirectionUp &&
+        pos.y <= HALF_ENEMY_SIZE)
         enemy_context->direction = EnemyDirectionDown;
-    else if (enemy_context->direction == EnemyDirectionDown && pos.y >= 61.0f)
+    else if (enemy_context->direction == EnemyDirectionDown &&
+             pos.y >= SCREEN_HEIGHT - HALF_ENEMY_SIZE)
         enemy_context->direction = EnemyDirectionUp;
-    else if (enemy_context->direction == EnemyDirectionLeft && pos.x <= 3.0f)
+    else if (enemy_context->direction == EnemyDirectionLeft &&
+             pos.x <= HALF_ENEMY_SIZE)
         enemy_context->direction = EnemyDirectionRight;
-    else if (enemy_context->direction == EnemyDirectionRight && pos.x >= 125.0f)
+    else if (enemy_context->direction == EnemyDirectionRight &&
+             pos.x >= SCREEN_WIDTH - HALF_ENEMY_SIZE)
         enemy_context->direction = EnemyDirectionLeft;
 }
 
@@ -102,7 +142,10 @@ enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context)
 
     // Draw enemy
     EnemyContext* enemy_context = entity_context_get(self);
-    canvas_draw_sprite(canvas, enemy_context->sprite, pos.x - 3, pos.y - 3);
+    canvas_draw_sprite(canvas,
+                       enemy_context->sprite,
+                       pos.x - HALF_ENEMY_SIZE,
+                       pos.y - HALF_ENEMY_SIZE);
 }
 
 static void
