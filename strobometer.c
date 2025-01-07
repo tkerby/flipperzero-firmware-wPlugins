@@ -125,8 +125,10 @@ static void strobometer_app_run(StrobometerAppContext* context) {
             context->frequency = 0;
         }
 
+        //TODO Maybe make the duty cycle adjustable/frequency dependent
+
         if(frequency_changed) {
-            furi_hal_pwm_set_params(STROBOSCOPE_PIN, context->frequency / 60, 10);
+            furi_hal_pwm_set_params(STROBOSCOPE_PIN, context->frequency / 60, 3);
             frequency_changed = false;
         }
 
@@ -141,7 +143,7 @@ static void strobometer_app_run(StrobometerAppContext* context) {
         if(event.key == InputKeyOk) {
             context->output = !context->output;
             if(context->output) {
-                furi_hal_pwm_start(STROBOSCOPE_PIN, context->frequency / 60, 10);
+                furi_hal_pwm_start(STROBOSCOPE_PIN, context->frequency / 60, 3);
             } else {
                 furi_hal_pwm_stop(STROBOSCOPE_PIN);
             }
