@@ -1,17 +1,17 @@
 # For details & more options, see documentation/AppManifests.md in firmware repo
 
 App(
-    appid="stroboscope",  # Must be unique
-    name="Stroboscope",  # Displayed in menus
+    appid="strobometer",  # Must be unique
+    name="StroboMeter",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="stroboscope_app",
+    entry_point="strobometer_app",
     stack_size=2 * 1024,
     fap_category="GPIO",
     # Optional values
-    # fap_version="0.1",
-    fap_icon="stroboscope.png",  # 10x10 1-bit PNG
-    # fap_description="A simple app",
-    # fap_author="J. Doe",
-    # fap_weburl="https://github.com/user/stroboscope",
+    fap_version="1.0",
+    fap_icon="strobometer.png",  # 10x10 1-bit PNG
+    fap_description="A stroboscope application to measure the speed of cyclical motion.",
+    fap_author="L. Jakschik",
+    fap_weburl="https://github.com/user/stroboscope",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
