@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../../engine/entity.h"
+#include "src/engine/entity.h"
+
+#define ENEMY_SIZE      6.0f
+#define HALF_ENEMY_SIZE 3.0f
 
 typedef struct Sprite Sprite;
 
