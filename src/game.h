@@ -4,6 +4,9 @@
 
 #include "engine/engine.h" // IWYU pragma: keep
 
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
 #define GAME_NAME "Quadrastic"
 
 typedef enum
