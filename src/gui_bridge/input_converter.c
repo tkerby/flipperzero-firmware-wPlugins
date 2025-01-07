@@ -22,6 +22,7 @@ struct InputConverter
 {
     size_t holded_frames_for_key[InputKeyMAX];
     FuriMessageQueue* queue;
+    bool skip_next_input;
 };
 
 static void
@@ -141,11 +142,26 @@ input_converter_free(InputConverter* input_converter)
 }
 
 void
+input_converter_reset(InputConverter* input_converter)
+{
+    for (InputKey i = 0; i < InputKeyMAX; ++i) {
+        input_converter->holded_frames_for_key[i] = 0;
+    }
+    furi_message_queue_reset(input_converter->queue);
+    input_converter->skip_next_input = true;
+}
+
+void
 input_converter_process_state(InputConverter* input_converter,
                               InputState* input_state)
 {
     furi_check(input_converter);
     furi_check(input_state);
+
+    if (input_converter->skip_next_input) {
+        input_converter->skip_next_input = false;
+        return;
+    }
 
     // Process new state
     for (size_t key_index = 0; key_index < sizeof(game_keys); ++key_index) {

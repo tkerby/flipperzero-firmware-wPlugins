@@ -15,6 +15,9 @@ void
 input_converter_free(InputConverter* input_converter);
 
 void
+input_converter_reset(InputConverter* input_converter);
+
+void
 input_converter_process_state(InputConverter* input_converter,
                               InputState* input_state);
 
