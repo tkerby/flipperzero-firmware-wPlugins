@@ -1,6 +1,10 @@
+// SPDX-License-Identifier: BSD-2-Clause
+// Copyright (c) 2024 KBEmbedded
+
 #include <furi.h>
 
 #include <gblink/include/gblink.h>
+#include <gblink/include/gblink_pinconf.h>
 #include <protocols/printer/include/printer_proto.h>
 #include "printer_i.h"
 
@@ -23,7 +27,7 @@ static int32_t printer_callback_thread(void *context)
 		if (flags & THREAD_FLAGS_EXIT)
 			break;
 		if (flags & THREAD_FLAGS_DATA)
-			printer->callback(printer->cb_context, printer->image, reason_data);
+			printer->callback(printer->cb_context, printer->image, reason_line_xfer);
 		if (flags & THREAD_FLAGS_PRINT)
 			printer->callback(printer->cb_context, printer->image, reason_print);
 	}
@@ -48,7 +52,7 @@ void *printer_alloc(void)
 	furi_thread_start(printer->thread);
 
 	printer->packet = malloc(sizeof(struct packet));
-	printer->image = printer_image_buffer_alloc();
+	printer->image = malloc(sizeof(struct gb_image));
 
 	printer->gblink_handle = gblink_alloc();
 
@@ -93,24 +97,12 @@ void printer_callback_set(void *printer_handle, void (*callback)(void *context, 
 	printer->callback = callback;
 }
 
-int printer_pin_set_default(void *printer_handle, gblink_pinouts pinout)
+void *printer_gblink_handle_get(void *printer_handle)
 {
 	struct printer_proto *printer = printer_handle;
-	return gblink_pin_set_default(printer->gblink_handle, pinout);
-}
 
-int printer_pin_set(void *printer_handle, gblink_bus_pins pin, const GpioPin *gpio)
-{
-	struct printer_proto *printer = printer_handle;
-	return gblink_pin_set(printer->gblink_handle, pin, gpio);
+	return printer->gblink_handle;
 }
-
-const GpioPin *printer_pin_get(void *printer_handle, gblink_bus_pins pin)
-{
-	struct printer_proto *printer = printer_handle;
-	return gblink_pin_get(printer->gblink_handle, pin);
-}
-
 
 void printer_stop(void *printer_handle)
 {
@@ -131,16 +123,4 @@ void printer_stop(void *printer_handle)
 	 * not be necessary to actually to know the mode. We should be able to
 	 * just stop?
 	 */
-}
-
-
-struct gb_image *printer_image_buffer_alloc(void)
-{
-	struct gb_image *image = malloc(sizeof(struct gb_image) + PRINT_FULL_SZ);
-	return image;
-}
-
-void printer_image_buffer_free(struct gb_image *image)
-{
-	free(image);
 }
