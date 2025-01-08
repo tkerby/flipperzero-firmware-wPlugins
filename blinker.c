@@ -30,13 +30,20 @@ typedef struct {
     uint32_t blink_interval;
     uint32_t duration;
     uint32_t min_interval;
+    uint32_t max_interval;
     Mode mode;
 } BlinkerApp;
 
 static void update_main_view(BlinkerApp* app) {
     dialog_ex_set_header(app->dialog, "Blinker", 64, 20, AlignCenter, AlignCenter);
     char text[64];
-    snprintf(text, sizeof(text), "Dur: %lds Min: %ld", app->duration, app->min_interval);
+    snprintf(
+        text, 
+        sizeof(text), 
+        "Dur: %lds Min: %ld Max: %ld", 
+        app->duration,
+        app->min_interval,
+        app->max_interval);
     dialog_ex_set_text(app->dialog, text, 64, 32, AlignCenter, AlignCenter);
     dialog_ex_set_left_button_text(app->dialog, "Min");
     dialog_ex_set_center_button_text(app->dialog, "Flash");
@@ -47,10 +54,16 @@ static void update_main_view(BlinkerApp* app) {
 static void number_input_callback(void* context, int32_t value) {
     BlinkerApp* app = context;
     
-    if (app->mode == Min) {
-        app->min_interval = value;
-    } else if (app->mode == Dur) {
-        app->duration = value;
+    switch(app->mode) {
+        case Min:
+            app->min_interval = value;
+            break;
+        case Max:
+            app->max_interval = value;
+            break;
+        case Dur:
+            app->duration = value;
+            break;
     }
     
     app->current_view = BlinkerViewDialog;
@@ -71,7 +84,7 @@ static void timer_callback(void* context) {
     uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000;
     
     if(elapsed_time <= app->duration) {
-        uint32_t range = 500 - app->min_interval;
+        uint32_t range = app->max_interval - app->min_interval;  // Use max_interval
         app->blink_interval = app->min_interval + (elapsed_time * range / app->duration);
         furi_timer_stop(app->timer);
         furi_timer_start(app->timer, app->blink_interval);
@@ -88,7 +101,7 @@ static void dialog_callback(DialogExResult result, void* context) {
     case DialogExResultLeft:
     case DialogExPressLeft:
         app->mode = Min;
-        show_number_input(app, "Min interval (ms)", app->min_interval, 50, 450);
+        show_number_input(app, "Min interval (ms)", app->min_interval, 50, 2000);
         break;
 
     case DialogExResultRight:
@@ -143,6 +156,7 @@ int32_t blinker_main(void* p) {
     app->blink_interval = 100; // Default value - not important
     app->duration = 20; // Default value
     app->min_interval = 100; // Default value
+    app->max_interval = 2000;  // Default value
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
