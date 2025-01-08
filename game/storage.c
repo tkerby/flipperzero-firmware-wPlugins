@@ -201,6 +201,197 @@ bool save_player_context(PlayerContext *player_context)
     return true;
 }
 
+bool save_player_context_api(PlayerContext *player_context)
+{
+    if (!player_context)
+    {
+        FURI_LOG_E(TAG, "Invalid player context");
+        return false;
+    }
+
+    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+        return false;
+    }
+
+    // create JSON for all the player context data
+    FuriString *json = furi_string_alloc();
+    if (!json)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate JSON string");
+        return false;
+    }
+
+    // opening brace
+    furi_string_cat_str(json, "{");
+
+    // 1. Username (String)
+    furi_string_cat_str(json, "\"username\":\"");
+    furi_string_cat_str(json, player_context->username);
+    furi_string_cat_str(json, "\",");
+
+    // 2. Level (uint32_t)
+    furi_string_cat_str(json, "\"level\":");
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->level);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 3. XP (uint32_t)
+    furi_string_cat_str(json, "\"xp\":");
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->xp);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 4. Health (uint32_t)
+    furi_string_cat_str(json, "\"health\":");
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->health);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 5. Strength (uint32_t)
+    furi_string_cat_str(json, "\"strength\":");
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->strength);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 6. Max Health (uint32_t)
+    furi_string_cat_str(json, "\"max_health\":");
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->max_health);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 7. Health Regen (uint32_t)
+    furi_string_cat_str(json, "\"health_regen\":");
+    snprintf(buffer, sizeof(buffer), "%lu", player_context->health_regen);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 8. Elapsed Health Regen (float)
+    furi_string_cat_str(json, "\"elapsed_health_regen\":");
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)player_context->elapsed_health_regen);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 9. Attack Timer (float)
+    furi_string_cat_str(json, "\"attack_timer\":");
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)player_context->attack_timer);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 10. Elapsed Attack Timer (float)
+    furi_string_cat_str(json, "\"elapsed_attack_timer\":");
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)player_context->elapsed_attack_timer);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 11. Direction (enum PlayerDirection)
+    furi_string_cat_str(json, "\"direction\":");
+    switch (player_context->direction)
+    {
+    case PLAYER_UP:
+        furi_string_cat_str(json, "\"up\",");
+        break;
+    case PLAYER_DOWN:
+        furi_string_cat_str(json, "\"down\",");
+        break;
+    case PLAYER_LEFT:
+        furi_string_cat_str(json, "\"left\",");
+        break;
+    case PLAYER_RIGHT:
+    default:
+        furi_string_cat_str(json, "\"right\",");
+        break;
+    }
+
+    // 12. State (enum PlayerState)
+    furi_string_cat_str(json, "\"state\":");
+    switch (player_context->state)
+    {
+    case PLAYER_IDLE:
+        furi_string_cat_str(json, "\"idle\",");
+        break;
+    case PLAYER_MOVING:
+        furi_string_cat_str(json, "\"moving\",");
+        break;
+    case PLAYER_ATTACKING:
+        furi_string_cat_str(json, "\"attacking\",");
+        break;
+    case PLAYER_ATTACKED:
+        furi_string_cat_str(json, "\"attacked\",");
+        break;
+    case PLAYER_DEAD:
+        furi_string_cat_str(json, "\"dead\",");
+        break;
+    default:
+        furi_string_cat_str(json, "\"unknown\",");
+        break;
+    }
+
+    // 13. Start Position X (float)
+    furi_string_cat_str(json, "\"start_position_x\":");
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)player_context->start_position.x);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 14. Start Position Y (float)
+    furi_string_cat_str(json, "\"start_position_y\":");
+    snprintf(buffer, sizeof(buffer), "%.6f", (double)player_context->start_position.y);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 15. dx (int8_t)
+    furi_string_cat_str(json, "\"dx\":");
+    snprintf(buffer, sizeof(buffer), "%d", player_context->dx);
+    furi_string_cat_str(json, buffer);
+    furi_string_cat_str(json, ",");
+
+    // 16. dy (int8_t)
+    furi_string_cat_str(json, "\"dy\":");
+    snprintf(buffer, sizeof(buffer), "%d", player_context->dy);
+    furi_string_cat_str(json, buffer);
+
+    // closing brace
+    furi_string_cat_str(json, "}");
+
+    // save the json to API
+
+    // create new JSON with username key (of just username), and game_stats key (of the all of the data)
+    FuriString *json_data = furi_string_alloc();
+    if (!json_data)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate JSON string");
+        furi_string_free(json);
+        return false;
+    }
+
+    furi_string_cat_str(json_data, "{\"username\":\"");
+    furi_string_cat_str(json_data, player_context->username);
+    furi_string_cat_str(json_data, "\",\"game_stats\":");
+    furi_string_cat(json_data, json);
+    furi_string_cat_str(json_data, "}");
+
+    furi_string_free(json);
+
+    // save the json_data to the API
+    if (!flipper_http_post_request_with_headers(fhttp, "https://www.flipsocial.net/api/user/update-game-stats/", "{\"Content-Type\":\"application/json\"}", furi_string_get_cstr(json_data)))
+    {
+        FURI_LOG_E(TAG, "Failed to save player context to API");
+        furi_string_free(json_data);
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while (fhttp->state != IDLE)
+    {
+        furi_delay_ms(100);
+    }
+    furi_string_free(json_data);
+    flipper_http_free(fhttp);
+    return true;
+}
+
 // Helper function to load an integer
 static bool load_number(const char *path_name, int *value)
 {
