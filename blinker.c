@@ -11,6 +11,7 @@ typedef struct {
     Submenu* submenu;
     Widget* widget;
     FuriTimer* timer;
+    bool is_in_menu;  // Add state tracking
 } BlinkerApp;
 
 typedef enum {
@@ -36,6 +37,7 @@ static void submenu_callback(void* context, uint32_t index) {
     UNUSED(index);
     widget_reset(app->widget);
     widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
+    app->is_in_menu = false;  // Track that we're leaving menu
     view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewWidget);
     
     // Start the blinking timer
@@ -45,17 +47,24 @@ static void submenu_callback(void* context, uint32_t index) {
 static bool navigation_callback(void* context) {
     BlinkerApp* app = context;
     
-    // Stop the LED and timer when returning to menu
-    furi_timer_stop(app->timer);
-    furi_hal_light_set(LightRed, 0x00);
+    if(!app->is_in_menu) {
+        // If not in menu, stop timer and LED, return to menu
+        furi_timer_stop(app->timer);
+        furi_hal_light_set(LightRed, 0x00);
+        app->is_in_menu = true;  // Track that we're returning to menu
+        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewSubmenu);
+        return true;  // Handled - don't exit app
+    }
     
-    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewSubmenu);
-    return true;
+    return false;  // Not handled - exit app when in menu
 }
 
 int32_t blinker_main(void* p) {
     UNUSED(p);
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
+    
+    // Initialize state
+    app->is_in_menu = true;
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
