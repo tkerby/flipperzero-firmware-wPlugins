@@ -23,6 +23,7 @@ bool allocate_level(GameManager *manager, int index)
         furi_string_free(world_list);
         return false;
     }
+    FURI_LOG_I("Game", "Allocating level %d for world %s", index, furi_string_get_cstr(world_name));
     game_context->levels[game_context->current_level] = game_manager_add_level(manager, generic_level(furi_string_get_cstr(world_name), index));
     furi_string_free(world_name);
     furi_string_free(world_list);
