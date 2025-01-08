@@ -12,9 +12,9 @@ typedef struct {
 } BlinkerApp;
 
 typedef enum {
-    BlinkerViewSubmenu,    // Changed from ViewSubmenu
-    BlinkerViewWidget,     // Changed from ViewWidget
-} BlinkerView;            // Changed from View
+    BlinkerViewSubmenu,
+    BlinkerViewWidget,
+} BlinkerView;
 
 static void submenu_callback(void* context, uint32_t index) {
     BlinkerApp* app = context;
