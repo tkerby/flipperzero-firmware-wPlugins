@@ -122,9 +122,6 @@ static bool back_button(void* context) {
     if(app->current_view == BlinkerViewWidget) {
         furi_timer_stop(app->timer);
         furi_hal_light_set(LightRed, 0x00);
-        app->current_view = BlinkerViewDialog;
-        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
-        return true;
     }
     
     if(app->current_view != BlinkerViewDialog) {
