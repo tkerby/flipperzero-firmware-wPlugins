@@ -23,7 +23,26 @@ typedef struct {
     uint32_t start_timestamp;
     uint32_t current_interval;
     uint32_t duration;
+    uint32_t min;
 } BlinkerApp;
+
+static void update_main_view(BlinkerApp* app) {
+    dialog_ex_set_header(app->dialog, "Blinker", 64, 20, AlignCenter, AlignCenter);
+
+    char duration_text[64];
+    snprintf(
+        duration_text,
+        sizeof(duration_text),
+        "Dur: %lds Min: %ld",
+        app->duration,
+        app->min
+    );
+    dialog_ex_set_text(app->dialog, duration_text, 64, 32, AlignCenter, AlignCenter);
+
+    dialog_ex_set_left_button_text(app->dialog, "Min.");
+    dialog_ex_set_center_button_text(app->dialog, "Flash");
+    dialog_ex_set_right_button_text(app->dialog, "Dur.");    
+}
 
 static void timer_callback(void* context) {
     BlinkerApp* app = context;
@@ -57,26 +76,21 @@ static void timer_callback(void* context) {
     }
 }
 
-
-static void update_main_view(BlinkerApp* app) {
-    dialog_ex_set_header(app->dialog, "Blinker", 64, 20, AlignCenter, AlignCenter);
-    dialog_ex_set_center_button_text(app->dialog, "Start");
-    dialog_ex_set_right_button_text(app->dialog, "Dur.");
-    char duration_text[32];
-    snprintf(duration_text, sizeof(duration_text), "Duration: %lds", app->duration);
-    dialog_ex_set_text(app->dialog, duration_text, 64, 32, AlignCenter, AlignCenter);
-}
-
-
+// TODO: basically the same as range_callback, merge them
 static void duration_callback(void* context, int32_t value) {
     BlinkerApp* app = context;
-
     app->duration = value;
     app->current_view = BlinkerViewDialog;
-    
-    // Update the main view to show new duration
     update_main_view(app);
-    
+    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
+}
+
+static void range_callback(void* context, int32_t value) {
+    BlinkerApp* app = context;
+    app->min = value;
+
+    app->current_view = BlinkerViewDialog;
+    update_main_view(app);
     view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
 }
 
@@ -107,6 +121,20 @@ static void dialog_callback(DialogExResult result, void* context) {
     BlinkerApp* app = context;
     
     switch(result) {
+    case DialogExResultLeft:
+        // Left button - edit component A (min value)
+        app->current_view = BlinkerViewNumber;
+        number_input_set_header_text(app->number_input, "Min value (sec)");
+        number_input_set_result_callback(
+            app->number_input,
+            range_callback,
+            app,        // Context
+            app->min,   // Current value
+            100,        // Min value
+            4000        // Max value
+        );
+        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewNumber);
+        break;
     case DialogExResultCenter:
         // Start blinking (middle button)
         widget_reset(app->widget);
@@ -118,19 +146,17 @@ static void dialog_callback(DialogExResult result, void* context) {
         furi_timer_start(app->timer, app->current_interval);
         break;
     case DialogExResultRight:
-        // Set duration (right button)
+        // Right button - set duration
         app->current_view = BlinkerViewNumber;
-
-        NumberInput* number_input = app->number_input;
-
-        number_input_set_header_text(number_input, "Blink duration (sec)");
+        number_input_set_header_text(app->number_input, "Duration (sec)");
         number_input_set_result_callback(
-            number_input,
+            app->number_input,
             duration_callback,
             app,           // Context
             app->duration, // Current value
-            5,            // Min value
-            120);         // Max value
+            5,             // Min value
+            120            // Max value
+        );
         view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewNumber);
         break;
     default:
@@ -147,6 +173,7 @@ int32_t blinker_main(void* p) {
     app->start_timestamp = 0; // Default value - not important
     app->current_interval = 100; // Default value - not important
     app->duration = 20; // Default value
+    app->min = 100; // Default value
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
@@ -154,7 +181,7 @@ int32_t blinker_main(void* p) {
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     // Initialize views
-    app->dialog = dialog_ex_alloc();  // Changed from submenu
+    app->dialog = dialog_ex_alloc();
     app->widget = widget_alloc();
     app->number_input = number_input_alloc();
 
