@@ -4,7 +4,7 @@
 
 #include <furi.h>
 
-#include "../../game.h"
+#include "src/game.h"
 
 static void about_update(Entity* self, GameManager* manager, void* _entity_context) {
     UNUSED(self);
@@ -30,7 +30,7 @@ static void
     const size_t logo_size = 10;
     const size_t space = 3;
     size_t title_width = logo_size + space + canvas_string_width(canvas, GAME_NAME);
-    int32_t logo_x = canvas_width(canvas) / 2 - title_width / 2;
+    int32_t logo_x = SCREEN_WIDTH / 2 - title_width / 2;
     int32_t title_x = logo_x + logo_size + space;
     int32_t font_height = canvas_current_font_height(canvas);
     int32_t first_line_y = 17;

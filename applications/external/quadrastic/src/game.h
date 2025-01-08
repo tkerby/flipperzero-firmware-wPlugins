@@ -24,7 +24,7 @@ typedef enum {
 } State;
 
 typedef enum {
-    GameEventStopAnimation,
+    GameEventSkipAnimation,
 } GameEvent;
 
 typedef struct {

@@ -9,7 +9,7 @@ typedef struct {
     float time;
 } TargetContext;
 
-Entity* create_target(Level* level, GameManager* manager);
+Entity* target_create(Level* level, GameManager* manager);
 
 void target_reset(Entity* self, GameManager* manager);
 

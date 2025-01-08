@@ -18,6 +18,7 @@ typedef struct {
 } GameLevelContext;
 
 void pause_game(Level* level);
+
 void resume_game(Level* level);
 
 extern const LevelBehaviour level_game;

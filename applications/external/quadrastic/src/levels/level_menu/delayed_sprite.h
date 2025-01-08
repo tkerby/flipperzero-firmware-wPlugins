@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../engine/entity.h"
+#include "src/engine/entity.h"
 
 typedef struct Sprite Sprite;
 
@@ -10,8 +10,8 @@ typedef struct {
     float time;
 } DelayedSpriteContext;
 
-void delayed_sprite_init(
-    Entity* entity,
+Entity* delayed_sprite_add_to_level(
+    Level* level,
     GameManager* manager,
     Vector pos,
     float delay,

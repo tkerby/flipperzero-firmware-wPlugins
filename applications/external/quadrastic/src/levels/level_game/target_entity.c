@@ -32,7 +32,7 @@ static Vector random_pos(Entity* player_entity) {
     return pos;
 }
 
-Entity* create_target(Level* level, GameManager* manager) {
+Entity* target_create(Level* level, GameManager* manager) {
     Entity* target = level_add_entity(level, &target_description);
 
     // Set target position
@@ -114,7 +114,7 @@ static void
 
     // Move target to new random position
     target_reset(self, manager);
-    spawn_enemy(manager);
+    enemy_spawn(manager);
 
     // Notify
     game_notify(game_context, &sequence_earn_point);

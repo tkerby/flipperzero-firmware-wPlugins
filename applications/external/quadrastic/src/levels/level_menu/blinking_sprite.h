@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../engine/entity.h"
+#include "src/engine/entity.h"
 
 typedef struct Sprite Sprite;
 
@@ -12,8 +12,8 @@ typedef struct {
     float time;
 } BlinkingSpriteContext;
 
-void blinking_sprite_init(
-    Entity* entity,
+Entity* blinking_sprite_add_to_level(
+    Level* level,
     GameManager* manager,
     Vector pos,
     float delay,

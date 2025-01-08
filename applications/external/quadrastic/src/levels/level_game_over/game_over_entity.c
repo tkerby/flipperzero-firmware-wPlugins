@@ -23,12 +23,10 @@ static void
 
     furi_check(entity_context->logo_sprite);
 
-    const uint32_t screen_height = 64;
-    const uint32_t screen_width = 128;
     const uint32_t text_height = 7;
-    uint32_t x = screen_width / 2.0 - sprite_get_width(entity_context->logo_sprite) / 2.0;
+    uint32_t x = SCREEN_WIDTH / 2.0 - sprite_get_width(entity_context->logo_sprite) / 2.0;
     uint32_t y =
-        (screen_height - text_height) / 2.0 - sprite_get_height(entity_context->logo_sprite) / 2.0;
+        (SCREEN_HEIGHT - text_height) / 2.0 - sprite_get_height(entity_context->logo_sprite) / 2.0;
 
     canvas_draw_sprite(canvas, entity_context->logo_sprite, x, y);
 
@@ -40,8 +38,9 @@ static void
 
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 0, 64, AlignLeft, AlignBottom, score_str);
-    canvas_draw_str_aligned(canvas, 128, 64, AlignRight, AlignBottom, best_score_str);
+    canvas_draw_str_aligned(canvas, 0, SCREEN_HEIGHT, AlignLeft, AlignBottom, score_str);
+    canvas_draw_str_aligned(
+        canvas, SCREEN_WIDTH, SCREEN_HEIGHT, AlignRight, AlignBottom, best_score_str);
 }
 
 const EntityDescription game_over_description = {

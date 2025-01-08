@@ -10,6 +10,7 @@ typedef struct {
 } PlayerContext;
 
 Entity* player_spawn(Level* level, GameManager* manager);
+
 void player_respawn(Entity* player);
 
 extern const EntityDescription player_description;

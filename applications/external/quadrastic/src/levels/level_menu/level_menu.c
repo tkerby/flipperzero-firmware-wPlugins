@@ -2,9 +2,9 @@
 
 #include <stddef.h>
 
-#include "../../engine/vector.h"
+#include "src/engine/vector.h"
 
-#include "../../game.h"
+#include "src/game.h"
 
 #include "blinking_sprite.h"
 #include "delayed_sprite.h"
@@ -19,15 +19,14 @@ typedef struct {
 
 } LevelMenuContext;
 
-static void level_menu_alloc(Level* level, GameManager* manager, void* context) {
-    LevelMenuContext* menu_context = context;
+static void level_menu_alloc(Level* level, GameManager* manager, void* _level_context) {
+    LevelMenuContext* menu_context = _level_context;
 
-    static const float initial_amimation_duration = 45.0f;
+    const float initial_amimation_duration = 45.0f;
 
     // Quadrastic logo
-    menu_context->quadrastic_logo = level_add_entity(level, &moving_sprite_description);
-    moving_sprite_init(
-        menu_context->quadrastic_logo,
+    menu_context->quadrastic_logo = moving_sprite_add_to_level(
+        level,
         manager,
         (Vector){.x = 9, .y = 64},
         (Vector){.x = 9, .y = 2},
@@ -35,9 +34,8 @@ static void level_menu_alloc(Level* level, GameManager* manager, void* context) 
         "quadrastic.fxbm");
 
     // Press ok logo
-    menu_context->press_ok = level_add_entity(level, &blinking_sprite_description);
-    blinking_sprite_init(
-        menu_context->press_ok,
+    menu_context->press_ok = blinking_sprite_add_to_level(
+        level,
         manager,
         (Vector){.x = 31, .y = 33},
         initial_amimation_duration,
@@ -46,18 +44,12 @@ static void level_menu_alloc(Level* level, GameManager* manager, void* context) 
         "press_ok.fxbm");
 
     // Settings button
-    menu_context->left_button = level_add_entity(level, &delayed_sprite_description);
-    delayed_sprite_init(
-        menu_context->left_button,
-        manager,
-        (Vector){.x = 0, .y = 57},
-        initial_amimation_duration,
-        "left_button.fxbm");
+    menu_context->left_button = delayed_sprite_add_to_level(
+        level, manager, (Vector){.x = 0, .y = 57}, initial_amimation_duration, "left_button.fxbm");
 
     // About button
-    menu_context->right_button = level_add_entity(level, &delayed_sprite_description);
-    delayed_sprite_init(
-        menu_context->right_button,
+    menu_context->right_button = delayed_sprite_add_to_level(
+        level,
         manager,
         (Vector){.x = 115, .y = 57},
         initial_amimation_duration,
@@ -67,10 +59,10 @@ static void level_menu_alloc(Level* level, GameManager* manager, void* context) 
     level_add_entity(level, &menu_description);
 }
 
-static void level_menu_start(Level* level, GameManager* manager, void* context) {
+static void level_menu_start(Level* level, GameManager* manager, void* _level_context) {
     UNUSED(level);
     UNUSED(manager);
-    UNUSED(context);
+    UNUSED(_level_context);
 
     FURI_LOG_D(GAME_NAME, "Menu level started");
 }

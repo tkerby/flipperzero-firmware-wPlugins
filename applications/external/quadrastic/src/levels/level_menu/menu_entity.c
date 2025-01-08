@@ -1,8 +1,10 @@
-#include "../../engine/entity.h"
-#include "../../engine/game_manager.h"
-#include "../../engine/level.h"
+#include "menu_entity.h"
 
-#include "../../game.h"
+#include "src/engine/entity.h"
+#include "src/engine/game_manager.h"
+#include "src/engine/level.h"
+
+#include "src/game.h"
 
 static void menu_update(Entity* self, GameManager* manager, void* _entity_context) {
     UNUSED(self);
@@ -16,13 +18,13 @@ static void menu_update(Entity* self, GameManager* manager, void* _entity_contex
         game_manager_game_stop(manager);
     } else if(input.pressed & GameKeyOk) {
         game_manager_next_level_set(manager, game_context->levels.game);
-        level_send_event(level, self, NULL, GameEventStopAnimation, (EntityEventValue){0});
+        level_send_event(level, self, NULL, GameEventSkipAnimation, (EntityEventValue){0});
     } else if(input.pressed & GameKeyLeft) {
         game_manager_next_level_set(manager, game_context->levels.settings);
-        level_send_event(level, self, NULL, GameEventStopAnimation, (EntityEventValue){0});
+        level_send_event(level, self, NULL, GameEventSkipAnimation, (EntityEventValue){0});
     } else if(input.pressed & GameKeyRight) {
         game_manager_next_level_set(manager, game_context->levels.about);
-        level_send_event(level, self, NULL, GameEventStopAnimation, (EntityEventValue){0});
+        level_send_event(level, self, NULL, GameEventSkipAnimation, (EntityEventValue){0});
     }
 }
 

@@ -20,6 +20,6 @@ typedef struct {
     float speed;
 } EnemyContext;
 
-void spawn_enemy(GameManager* manager);
+void enemy_spawn(GameManager* manager);
 
 extern const EntityDescription enemy_description;

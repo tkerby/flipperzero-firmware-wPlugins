@@ -1,6 +1,6 @@
 #include "view_module_entity.h"
 
-#include "../engine/game_manager.h"
+#include "src/engine/game_manager.h"
 
 #include "input_converter.h"
 #include "view_i.h" // IWYU pragma: keep
@@ -19,9 +19,16 @@ typedef struct {
 static void view_module_stop(Entity* self, GameManager* manager, void* _entity_context) {
     UNUSED(self);
     UNUSED(manager);
+
     ViewModuleContext* view_module_context = _entity_context;
     view_module_context->description->free(view_module_context->view_module);
     input_converter_free(view_module_context->input_converter);
+}
+
+static bool need_call_back_callback(ViewModuleContext* entity_context, InputEvent* event) {
+    return event->key == InputKeyBack &&
+           (event->type == InputTypeShort || event->type == InputTypeLong) &&
+           entity_context->back_callback != NULL;
 }
 
 static void view_module_update(Entity* self, GameManager* manager, void* _entity_context) {
@@ -35,16 +42,14 @@ static void view_module_update(Entity* self, GameManager* manager, void* _entity
 
     InputEvent event;
     while(input_converter_get_event(entity_context->input_converter, &event) == FuriStatusOk) {
-        if(event.key == InputKeyBack &&
-           (event.type == InputTypeShort || event.type == InputTypeLong) &&
-           entity_context->back_callback != NULL) {
+        if(need_call_back_callback(entity_context, &event)) {
             bool is_consumed =
                 entity_context->back_callback(entity_context->back_callback_context);
-
             if(is_consumed) {
                 continue;
             }
         }
+
         view->input_callback(&event, view->context);
     }
 }
@@ -58,16 +63,6 @@ static void
     View* view = entity_context->description->get_view(entity_context->view_module);
     view->draw_callback(canvas, view_get_model(view));
 }
-
-const EntityDescription view_module_description = {
-    .start = NULL,
-    .stop = view_module_stop,
-    .update = view_module_update,
-    .render = view_module_render,
-    .collision = NULL,
-    .event = NULL,
-    .context_size = sizeof(ViewModuleContext),
-};
 
 Entity* view_module_add_to_level(
     Level* level,
@@ -107,3 +102,13 @@ void view_module_set_back_callback(
     view_module_context->back_callback = back_callback;
     view_module_context->back_callback_context = context;
 }
+
+const EntityDescription view_module_description = {
+    .start = NULL,
+    .stop = view_module_stop,
+    .update = view_module_update,
+    .render = view_module_render,
+    .collision = NULL,
+    .event = NULL,
+    .context_size = sizeof(ViewModuleContext),
+};
