@@ -1,0 +1,9 @@
+App(
+    appid="blinker",
+    name="LED Blinker",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="blinker_main",
+    stack_size=1 * 1024,
+    fap_category="Custom",
+    fap_icon="blinker.png",
+)
