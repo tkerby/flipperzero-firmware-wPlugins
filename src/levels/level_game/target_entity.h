@@ -11,7 +11,7 @@ typedef struct
 } TargetContext;
 
 Entity*
-create_target(Level* level, GameManager* manager);
+target_create(Level* level, GameManager* manager);
 
 void
 target_reset(Entity* self, GameManager* manager);

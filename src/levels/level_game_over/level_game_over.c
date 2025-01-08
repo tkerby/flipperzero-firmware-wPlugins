@@ -4,8 +4,8 @@
 
 #include <furi.h>
 
-#include "../../game.h"
-#include "../../game_settings.h"
+#include "src/game.h"
+#include "src/game_settings.h"
 
 #include "game_over_entity.h"
 

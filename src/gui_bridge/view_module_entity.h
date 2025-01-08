@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../engine/entity.h"
+#include "src/engine/entity.h"
 
 #include "view_module_descriptions.h"
 
@@ -19,3 +19,5 @@ void
 view_module_set_back_callback(Entity* entity,
                               ViewModuleBackCallback back_callback,
                               void* context);
+
+extern const EntityDescription view_module_description;

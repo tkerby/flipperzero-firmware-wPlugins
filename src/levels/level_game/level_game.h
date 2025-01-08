@@ -20,6 +20,7 @@ typedef struct
 
 void
 pause_game(Level* level);
+
 void
 resume_game(Level* level);
 

@@ -264,11 +264,19 @@ context_menu_input_process(ContextMenuContext* context_menu, InputEvent* event)
     return consumed;
 }
 
+static bool
+need_call_back_callback(ContextMenuContext* entity_context, InputEvent* event)
+{
+    return event->key == InputKeyBack && event->type == InputTypeShort &&
+           entity_context->back_callback != NULL;
+}
+
 static void
 context_menu_update(Entity* self, GameManager* manager, void* _entity_context)
 {
     UNUSED(self);
 
+    // Check pause
     Level* level = game_manager_current_level_get(manager);
     GameLevelContext* level_context = level_context_get(level);
     if (!level_context->is_paused) {
@@ -277,14 +285,15 @@ context_menu_update(Entity* self, GameManager* manager, void* _entity_context)
 
     ContextMenuContext* entity_context = _entity_context;
 
+    // Get input state and convert to input events
     InputState input = game_manager_input_get(manager);
     input_converter_process_state(entity_context->input_converter, &input);
 
+    // Process events
     InputEvent event;
     while (input_converter_get_event(entity_context->input_converter, &event) ==
            FuriStatusOk) {
-        if (event.key == InputKeyBack && event.type == InputTypeShort &&
-            entity_context->back_callback != NULL) {
+        if (need_call_back_callback(entity_context, &event)) {
             entity_context->back_callback(
               entity_context->back_callback_context);
             return;

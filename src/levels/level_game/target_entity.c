@@ -35,7 +35,7 @@ random_pos(Entity* player_entity)
 }
 
 Entity*
-create_target(Level* level, GameManager* manager)
+target_create(Level* level, GameManager* manager)
 {
     Entity* target = level_add_entity(level, &target_description);
 
@@ -130,7 +130,7 @@ target_collision(Entity* self,
 
     // Move target to new random position
     target_reset(self, manager);
-    spawn_enemy(manager);
+    enemy_spawn(manager);
 
     // Notify
     game_notify(game_context, &sequence_earn_point);

@@ -44,7 +44,7 @@ level_game_alloc(Level* level, GameManager* manager, void* _level_context)
 
     // Add entities to the level
     level_context->player = player_spawn(level, manager);
-    level_context->target = create_target(level, manager);
+    level_context->target = target_create(level, manager);
     EntityList_init(level_context->enemies);
 
     // Pause menu initialization

@@ -1,14 +1,14 @@
+#include "level_settings.h"
+
 #include <stddef.h>
 
 #include <gui/modules/variable_item_list.h>
 
-#include "../../game.h"
-#include "../../game_settings.h"
+#include "src/game.h"
+#include "src/game_settings.h"
 
-#include "../../gui_bridge/view_module_descriptions.h"
-#include "../../gui_bridge/view_module_entity.h"
-
-#include "level_settings.h"
+#include "src/gui_bridge/view_module_descriptions.h"
+#include "src/gui_bridge/view_module_entity.h"
 
 const char* const difficulty_text[DifficultyCount] = {
     "Easy",
@@ -112,6 +112,11 @@ level_settings_start(Level* level, GameManager* manager, void* context)
     UNUSED(level);
     UNUSED(manager);
     UNUSED(context);
+
+    Entity* entity = level_entity_get(level, &view_module_description, 0);
+
+    VariableItemList* variable_item_list = view_module_get_module(entity);
+    variable_item_list_set_selected_item(variable_item_list, 0);
 
     FURI_LOG_D(GAME_NAME, "Settings level started");
 }

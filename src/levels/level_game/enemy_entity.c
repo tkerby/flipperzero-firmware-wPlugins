@@ -1,7 +1,7 @@
 #include "enemy_entity.h"
 
-#include "../../engine/game_manager.h"
-#include "../../game.h"
+#include "src/engine/game_manager.h"
+#include "src/game.h"
 
 #include "level_game.h"
 #include "player_entity.h"
@@ -45,7 +45,7 @@ random_direction(Vector enemy_pos, Entity* player_entity)
 }
 
 void
-spawn_enemy(GameManager* manager)
+enemy_spawn(GameManager* manager)
 {
     GameContext* game_context = game_manager_game_context_get(manager);
     Level* level = game_manager_current_level_get(manager);
@@ -79,7 +79,7 @@ spawn_enemy(GameManager* manager)
             speed = 1.0f;
             break;
         case DifficultyInsane:
-            speed = 0.5f * (1 + rand() % 3);
+            speed = 0.25f * (4 + rand() % 4);
             break;
         default:
             speed = 0.5f;

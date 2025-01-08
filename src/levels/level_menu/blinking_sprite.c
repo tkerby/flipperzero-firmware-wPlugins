@@ -1,18 +1,19 @@
 #include "blinking_sprite.h"
 
-#include "../../engine/game_manager.h"
+#include "src/engine/game_manager.h"
 
-#include "../../game.h"
+#include "src/game.h"
 
-void
-blinking_sprite_init(Entity* entity,
-                     GameManager* manager,
-                     Vector pos,
-                     float delay,
-                     float show_duration,
-                     float hide_duration,
-                     const char* sprite_name)
+Entity*
+blinking_sprite_add_to_level(Level* level,
+                             GameManager* manager,
+                             Vector pos,
+                             float delay,
+                             float show_duration,
+                             float hide_duration,
+                             const char* sprite_name)
 {
+    Entity* entity = level_add_entity(level, &blinking_sprite_description);
     BlinkingSpriteContext* entity_context = entity_context_get(entity);
     entity_pos_set(entity, pos);
     entity_context->delay = delay;
@@ -20,6 +21,7 @@ blinking_sprite_init(Entity* entity,
     entity_context->hide_duration = hide_duration;
     entity_context->time = 0;
     entity_context->sprite = game_manager_sprite_load(manager, sprite_name);
+    return entity;
 }
 
 static void
@@ -69,7 +71,7 @@ blinking_sprite_event(Entity* self,
     UNUSED(manager);
 
     BlinkingSpriteContext* entity_context = _entity_context;
-    if (event.type == GameEventStopAnimation) {
+    if (event.type == GameEventSkipAnimation) {
         entity_context->time = entity_context->delay;
     }
 }

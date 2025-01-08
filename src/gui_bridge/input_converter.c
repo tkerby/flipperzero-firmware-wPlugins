@@ -2,17 +2,13 @@
 
 #include <furi/core/message_queue.h>
 
-#include "../game.h"
+#include "src/game.h"
 
 // #define FRAME_IN_MS (1000 / 30)
 // #define CHECK_PERIOD_IN_MS 150
 
 #define CHECK_PERIOD_IN_FRAMES 5 // (int)(CHECK_PERIOD_IN_MS / FRAME_IN_MS)
 #define LONG_PRESS_IN_FRAMES 10  // (int)(CHECK_PERIOD_IN_MS * 2 / FRAME_IN_MS)
-
-const InputKey input_keys[InputKeyMAX] = { InputKeyUp,    InputKeyDown,
-                                           InputKeyRight, InputKeyLeft,
-                                           InputKeyOk,    InputKeyBack };
 
 const GameKey game_keys[InputKeyMAX] = {
     GameKeyUp, GameKeyDown, GameKeyRight, GameKeyLeft, GameKeyOk, GameKeyBack
@@ -166,7 +162,7 @@ input_converter_process_state(InputConverter* input_converter,
     // Process new state
     for (size_t key_index = 0; key_index < sizeof(game_keys); ++key_index) {
         GameKey game_key = game_keys[key_index];
-        InputKey input_key = input_keys[key_index];
+        InputKey input_key = (InputKey)key_index;
         process_pressed(input_converter, input_state, game_key, input_key);
         process_holded(input_converter, input_state, game_key, input_key);
         process_released(input_converter, input_state, game_key, input_key);

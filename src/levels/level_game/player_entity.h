@@ -12,6 +12,7 @@ typedef struct
 
 Entity*
 player_spawn(Level* level, GameManager* manager);
+
 void
 player_respawn(Entity* player);
 

@@ -23,6 +23,6 @@ typedef struct
 } EnemyContext;
 
 void
-spawn_enemy(GameManager* manager);
+enemy_spawn(GameManager* manager);
 
 extern const EntityDescription enemy_description;
