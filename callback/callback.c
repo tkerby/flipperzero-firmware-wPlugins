@@ -5,6 +5,7 @@
 #include "engine/game_manager_i.h"
 #include "engine/level_i.h"
 #include "engine/entity_i.h"
+#include "game/storage.h"
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
@@ -688,6 +689,7 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
 }
+
 static bool start_game_thread(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -1041,10 +1043,6 @@ void callback_submenu_choices(void *context, uint32_t index)
             {
                 return fetch_player_stats(fhttp);
             }
-            bool parse_player_stats_i()
-            {
-                return fhttp->state != ISSUE;
-            }
 
             Loading *loading;
             int32_t loading_view_id = 987654321; // Random ID
@@ -1065,7 +1063,7 @@ void callback_submenu_choices(void *context, uint32_t index)
 
             // Make the request
             if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) ||
-                !flipper_http_process_response_async(fhttp, fetch_player_stats_i, parse_player_stats_i))
+                !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
             {
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);

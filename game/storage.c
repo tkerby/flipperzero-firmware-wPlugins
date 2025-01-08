@@ -549,6 +549,155 @@ bool load_player_context(PlayerContext *player_context)
 
     return true;
 }
+// loads from STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json
+// then gets each key-value pair and saves it as it's own file so it can be loaded separately using
+// load_player_context
+bool set_player_context()
+{
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path),
+             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
+
+    FuriString *player_stats = flipper_http_load_from_file(file_path);
+    if (!player_stats)
+    {
+        FURI_LOG_E(TAG, "Failed to load player stats from file: %s", file_path);
+        return false;
+    }
+
+    // Get the key one-by-one and save it to a separate file
+
+    // 1. Username (String)
+    FuriString *username = get_json_value_furi("username", player_stats);
+    if (username)
+    {
+        save_char("player/username", furi_string_get_cstr(username));
+        furi_string_free(username);
+    }
+
+    // 2. Level (uint32_t)
+    FuriString *level = get_json_value_furi("level", player_stats);
+    if (level)
+    {
+        save_uint32("player/level", atoi(furi_string_get_cstr(level)));
+        furi_string_free(level);
+    }
+
+    // 3. XP (uint32_t)
+    FuriString *xp = get_json_value_furi("xp", player_stats);
+    if (xp)
+    {
+        save_uint32("player/xp", atoi(furi_string_get_cstr(xp)));
+        furi_string_free(xp);
+    }
+
+    // 4. Health (uint32_t)
+    FuriString *health = get_json_value_furi("health", player_stats);
+    if (health)
+    {
+        save_uint32("player/health", atoi(furi_string_get_cstr(health)));
+        furi_string_free(health);
+    }
+
+    // 5. Strength (uint32_t)
+    FuriString *strength = get_json_value_furi("strength", player_stats);
+    if (strength)
+    {
+        save_uint32("player/strength", atoi(furi_string_get_cstr(strength)));
+        furi_string_free(strength);
+    }
+
+    // 6. Max Health (uint32_t)
+    FuriString *max_health = get_json_value_furi("max_health", player_stats);
+    if (max_health)
+    {
+        save_uint32("player/max_health", atoi(furi_string_get_cstr(max_health)));
+        furi_string_free(max_health);
+    }
+
+    // 7. Health Regen (uint32_t)
+    FuriString *health_regen = get_json_value_furi("health_regen", player_stats);
+    if (health_regen)
+    {
+        save_uint32("player/health_regen", atoi(furi_string_get_cstr(health_regen)));
+        furi_string_free(health_regen);
+    }
+
+    // 8. Elapsed Health Regen (float)
+    FuriString *elapsed_health_regen = get_json_value_furi("elapsed_health_regen", player_stats);
+    if (elapsed_health_regen)
+    {
+        save_float("player/elapsed_health_regen", strtof(furi_string_get_cstr(elapsed_health_regen), NULL));
+        furi_string_free(elapsed_health_regen);
+    }
+
+    // 9. Attack Timer (float)
+    FuriString *attack_timer = get_json_value_furi("attack_timer", player_stats);
+    if (attack_timer)
+    {
+        save_float("player/attack_timer", strtof(furi_string_get_cstr(attack_timer), NULL));
+        furi_string_free(attack_timer);
+    }
+
+    // 10. Elapsed Attack Timer (float)
+    FuriString *elapsed_attack_timer = get_json_value_furi("elapsed_attack_timer", player_stats);
+    if (elapsed_attack_timer)
+    {
+        save_float("player/elapsed_attack_timer", strtof(furi_string_get_cstr(elapsed_attack_timer), NULL));
+        furi_string_free(elapsed_attack_timer);
+    }
+
+    // 11. Direction (enum PlayerDirection)
+    FuriString *direction = get_json_value_furi("direction", player_stats);
+    if (direction)
+    {
+        save_char("player/direction", furi_string_get_cstr(direction));
+        furi_string_free(direction);
+    }
+
+    // 12. State (enum PlayerState)
+    FuriString *state = get_json_value_furi("state", player_stats);
+    if (state)
+    {
+        save_char("player/state", furi_string_get_cstr(state));
+        furi_string_free(state);
+    }
+
+    // 13. Start Position X (float)
+    FuriString *start_position_x = get_json_value_furi("start_position_x", player_stats);
+    if (start_position_x)
+    {
+        save_float("player/start_position_x", strtof(furi_string_get_cstr(start_position_x), NULL));
+        furi_string_free(start_position_x);
+    }
+
+    // 14. Start Position Y (float)
+    FuriString *start_position_y = get_json_value_furi("start_position_y", player_stats);
+    if (start_position_y)
+    {
+        save_float("player/start_position_y", strtof(furi_string_get_cstr(start_position_y), NULL));
+        furi_string_free(start_position_y);
+    }
+
+    // 15. dx (int8_t)
+    FuriString *dx = get_json_value_furi("dx", player_stats);
+    if (dx)
+    {
+        save_int8("player/dx", atoi(furi_string_get_cstr(dx)));
+        furi_string_free(dx);
+    }
+
+    // 16. dy (int8_t)
+    FuriString *dy = get_json_value_furi("dy", player_stats);
+    if (dy)
+    {
+        save_int8("player/dy", atoi(furi_string_get_cstr(dy)));
+        furi_string_free(dy);
+    }
+
+    furi_string_free(player_stats);
+    return true;
+}
 
 static inline void furi_string_remove_str(FuriString *string, const char *needle)
 {
