@@ -12,109 +12,73 @@ typedef enum {
     BlinkerViewNumber,
 } BlinkerView;
 
+typedef enum {
+    Min,
+    Max,
+    Dur,
+} Mode;
+
 typedef struct {
     Gui* gui;
-    BlinkerView current_view;
     ViewDispatcher* view_dispatcher;
     DialogEx* dialog;
     Widget* widget;
     NumberInput* number_input;
     FuriTimer* timer;
-    uint32_t start_timestamp;
-    uint32_t current_interval;
+    BlinkerView current_view;
+    uint32_t start_time;
+    uint32_t blink_interval;
     uint32_t duration;
-    uint32_t min;
+    uint32_t min_interval;
+    Mode mode;
 } BlinkerApp;
 
 static void update_main_view(BlinkerApp* app) {
     dialog_ex_set_header(app->dialog, "Blinker", 64, 20, AlignCenter, AlignCenter);
-
-    char duration_text[64];
-    snprintf(
-        duration_text,
-        sizeof(duration_text),
-        "Dur: %lds Min: %ld",
-        app->duration,
-        app->min
-    );
-    dialog_ex_set_text(app->dialog, duration_text, 64, 32, AlignCenter, AlignCenter);
-
-    dialog_ex_set_left_button_text(app->dialog, "Min.");
+    char text[64];
+    snprintf(text, sizeof(text), "Dur: %lds Min: %ld", app->duration, app->min_interval);
+    dialog_ex_set_text(app->dialog, text, 64, 32, AlignCenter, AlignCenter);
+    dialog_ex_set_left_button_text(app->dialog, "Min");
     dialog_ex_set_center_button_text(app->dialog, "Flash");
-    dialog_ex_set_right_button_text(app->dialog, "Dur.");    
+    dialog_ex_set_right_button_text(app->dialog, "Dur");
+}
+
+
+static void number_input_callback(void* context, int32_t value) {
+    BlinkerApp* app = context;
+    
+    if (app->mode == Min) {
+        app->min_interval = value;
+    } else if (app->mode == Dur) {
+        app->duration = value;
+    }
+    
+    app->current_view = BlinkerViewDialog;
+    update_main_view(app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
+}
+
+static void show_number_input(BlinkerApp* app, const char* header, uint32_t current, uint32_t min, uint32_t max) {
+    app->current_view = BlinkerViewNumber;
+    number_input_set_header_text(app->number_input, header);
+    number_input_set_result_callback(app->number_input, number_input_callback, app, current, min, max);
+    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewNumber);
 }
 
 static void timer_callback(void* context) {
     BlinkerApp* app = context;
-
     static bool led_state = false;
-
-    uint32_t current_time = furi_get_tick();
-    uint32_t elapsed_time = (current_time - app->start_timestamp) / 1000; // Convert to seconds
-
-    uint32_t min_sleep = 50; // Minimum sleep time in ms
-    uint32_t max_sleep = 500; // Maximum sleep time in ms
-
-    // Calculate new interval based on elapsed time
-    if(elapsed_time < app->duration) {
-        // First phase; gradually increase interval from `min_sleep` to `max_sleep`
-        app->current_interval = min_sleep + (elapsed_time * ((max_sleep - min_sleep) / app->duration)); // Linear increase
+    uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000;
+    
+    if(elapsed_time <= app->duration) {
+        uint32_t range = 500 - app->min_interval;
+        app->blink_interval = app->min_interval + (elapsed_time * range / app->duration);
         furi_timer_stop(app->timer);
-        furi_timer_start(app->timer, app->current_interval);
-    } else if(elapsed_time == app->duration) {
-        // Second phase; set final interval to `max_sleep` and keep it constant
-        app->current_interval = max_sleep;
-        furi_timer_stop(app->timer);
-        furi_timer_start(app->timer, app->current_interval);
+        furi_timer_start(app->timer, app->blink_interval);
     }
     
     led_state = !led_state;
-    if(led_state) {
-        furi_hal_light_set(LightRed, 0xFF);
-    } else {
-        furi_hal_light_set(LightRed, 0x00);
-    }
-}
-
-// TODO: basically the same as range_callback, merge them
-static void duration_callback(void* context, int32_t value) {
-    BlinkerApp* app = context;
-    app->duration = value;
-    app->current_view = BlinkerViewDialog;
-    update_main_view(app);
-    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
-}
-
-static void range_callback(void* context, int32_t value) {
-    BlinkerApp* app = context;
-    app->min = value;
-
-    app->current_view = BlinkerViewDialog;
-    update_main_view(app);
-    view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
-}
-
-static bool back_button(void* context) {
-    BlinkerApp* app = context;
-    
-    if(app->current_view == BlinkerViewWidget) {
-        // If in widget view, stop timer and LED, return to menu
-        furi_timer_stop(app->timer);
-        furi_hal_light_set(LightRed, 0x00);
-        app->current_view = BlinkerViewDialog;
-        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
-        return true;
-    } else if(app->current_view == BlinkerViewNumber) {
-        app->current_view = BlinkerViewDialog;
-        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
-        return true;
-    } else if(app->current_view == BlinkerViewDialog) {
-        // We're in the main dialog view, allow exit
-        view_dispatcher_stop(app->view_dispatcher);
-        return true;
-    }
-    
-    return false;
+    furi_hal_light_set(LightRed, led_state ? 0xFF : 0x00);
 }
 
 static void dialog_callback(DialogExResult result, void* context) {
@@ -122,46 +86,54 @@ static void dialog_callback(DialogExResult result, void* context) {
     
     switch(result) {
     case DialogExResultLeft:
-        // Left button - edit component A (min value)
-        app->current_view = BlinkerViewNumber;
-        number_input_set_header_text(app->number_input, "Min value (sec)");
-        number_input_set_result_callback(
-            app->number_input,
-            range_callback,
-            app,        // Context
-            app->min,   // Current value
-            100,        // Min value
-            4000        // Max value
-        );
-        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewNumber);
+    case DialogExPressLeft:
+        app->mode = Min;
+        show_number_input(app, "Min interval (ms)", app->min_interval, 50, 450);
         break;
+
+    case DialogExResultRight:
+    case DialogExPressRight:
+        app->mode = Dur;
+        show_number_input(app, "Duration (sec)", app->duration, 5, 120);
+        break;
+
     case DialogExResultCenter:
-        // Start blinking (middle button)
+    case DialogExPressCenter:
         widget_reset(app->widget);
         widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
         app->current_view = BlinkerViewWidget;
+        app->start_time = furi_get_tick();
+        app->blink_interval = app->min_interval;
+        furi_timer_start(app->timer, app->blink_interval);
         view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewWidget);
-        app->start_timestamp = furi_get_tick();
-        app->current_interval = 50;
-        furi_timer_start(app->timer, app->current_interval);
         break;
-    case DialogExResultRight:
-        // Right button - set duration
-        app->current_view = BlinkerViewNumber;
-        number_input_set_header_text(app->number_input, "Duration (sec)");
-        number_input_set_result_callback(
-            app->number_input,
-            duration_callback,
-            app,           // Context
-            app->duration, // Current value
-            5,             // Min value
-            120            // Max value
-        );
-        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewNumber);
-        break;
-    default:
+
+    case DialogExReleaseLeft:
+    case DialogExReleaseRight:
+    case DialogExReleaseCenter:
+        // Handle button releases - no action needed
         break;
     }
+}
+
+static bool back_button(void* context) {
+    BlinkerApp* app = context;
+    
+    if(app->current_view == BlinkerViewWidget) {
+        furi_timer_stop(app->timer);
+        furi_hal_light_set(LightRed, 0x00);
+        app->current_view = BlinkerViewDialog;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
+        return true;
+    }
+    
+    if(app->current_view != BlinkerViewDialog) {
+        app->current_view = BlinkerViewDialog;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewDialog);
+        return true;
+    }
+    
+    return false;
 }
 
 int32_t blinker_main(void* p) {
@@ -170,10 +142,10 @@ int32_t blinker_main(void* p) {
     
     // Initialize state
     app->current_view = BlinkerViewDialog;  // Changed from Submenu
-    app->start_timestamp = 0; // Default value - not important
-    app->current_interval = 100; // Default value - not important
+    app->start_time = 0; // Default value - not important
+    app->blink_interval = 100; // Default value - not important
     app->duration = 20; // Default value
-    app->min = 100; // Default value
+    app->min_interval = 100; // Default value
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
