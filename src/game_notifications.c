@@ -10,10 +10,50 @@ const NotificationSequence sequence_earn_point = {
     &message_sound_off, &message_vibro_off, &message_green_0, NULL,
 };
 
+const NotificationSequence sequence_game_over = {
+    &message_red_255,
+    &message_vibro_on,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_note_ds4,
+    &message_delay_10,
+    &message_sound_off,
+    &message_delay_10,
+
+    &message_vibro_off,
+    &message_red_0,
+
+    NULL,
+};
+
 void
 game_notify(GameContext* game_context, const NotificationSequence* sequence)
 {
-    static const NotificationMessage* notification[20];
+    static const NotificationMessage* notification[30];
 
     size_t input_index = 0;
     size_t result_index = 0;
@@ -39,7 +79,10 @@ game_notify(GameContext* game_context, const NotificationSequence* sequence)
         notification[result_index] = item;
         ++result_index;
     }
-    notification[result_index] = NULL;
+
+    for (size_t index = result_index; index < sizeof(notification); ++index) {
+        notification[index] = NULL;
+    }
 
     notification_message(game_context->notification,
                          (const NotificationSequence*)notification);
