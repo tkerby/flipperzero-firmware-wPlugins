@@ -17,15 +17,37 @@ typedef struct {
     Widget* widget;
     FuriTimer* timer;
     BlinkerView current_view;
+    uint32_t start_timestamp;
+    uint32_t current_interval;
 } BlinkerApp;
 
-static void blink_timer_callback(void* context) {
-    UNUSED(context);
+static void timer_callback(void* context) {
+    BlinkerApp* app = context;
 
     static bool led_state = false;
-    led_state = !led_state;
+
+    uint32_t current_time = furi_get_tick();
+    uint32_t elapsed_time = (current_time - app->start_timestamp) / 1000; // Convert to seconds
+
+    uint32_t duration = 20; // Duration of the first phase in seconds
+
+    uint32_t min_sleep = 50; // Minimum sleep time in ms
+    uint32_t max_sleep = 500; // Maximum sleep time in ms
+
+    // Calculate new interval based on elapsed time
+    if(elapsed_time < duration) {
+        // First phase; gradually increase interval from `min_sleep` to `max_sleep`
+        app->current_interval = min_sleep + (elapsed_time * ((max_sleep - min_sleep) / duration)); // Linear increase
+        furi_timer_stop(app->timer);
+        furi_timer_start(app->timer, app->current_interval);
+    } else if(elapsed_time == duration) {
+        // Second phase; set final interval to `max_sleep` and keep it constant
+        app->current_interval = max_sleep;
+        furi_timer_stop(app->timer);
+        furi_timer_start(app->timer, app->current_interval);
+    }
     
-    // TODO: change color to red and off
+    led_state = !led_state;
     if(led_state) {
         furi_hal_light_set(LightRed, 0xFF);
     } else {
@@ -43,10 +65,13 @@ static void start_blink_callback(void* context, uint32_t index) {
     app->current_view = BlinkerViewWidget;
     view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewWidget);
     
-    furi_timer_start(app->timer, 500); // 500ms = 2 times per second
+    // Initialize blinking parameters
+    app->start_timestamp = furi_get_tick();
+    app->current_interval = 100; // Start at 100ms (5 Hz)
+    furi_timer_start(app->timer, app->current_interval);
 }
 
-static bool handle_back_event(void* context) {
+static bool back_button(void* context) {
     BlinkerApp* app = context;
     
     if(app->current_view == BlinkerViewWidget) {
@@ -70,6 +95,8 @@ int32_t blinker_main(void* p) {
     
     // Initialize state
     app->current_view = BlinkerViewSubmenu;
+    app->start_timestamp = 0; // Default value - not important
+    app->current_interval = 100; // Default value - not important
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
@@ -86,10 +113,11 @@ int32_t blinker_main(void* p) {
     view_dispatcher_add_view(app->view_dispatcher, BlinkerViewSubmenu, submenu_get_view(app->submenu));
     view_dispatcher_add_view(app->view_dispatcher, BlinkerViewWidget, widget_get_view(app->widget));
 
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, handle_back_event);
+    // On back button press
+    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, back_button);
 
     // Create and configure timer
-    app->timer = furi_timer_alloc(blink_timer_callback, FuriTimerTypePeriodic, app);
+    app->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, app);
 
     // Run application
     view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewSubmenu);
