@@ -80,7 +80,7 @@ game_notify(GameContext* game_context, const NotificationSequence* sequence)
         ++result_index;
     }
 
-    for (size_t index = result_index; index < sizeof(notification); ++index) {
+    for (size_t index = result_index; index < 30; ++index) {
         notification[index] = NULL;
     }
 
