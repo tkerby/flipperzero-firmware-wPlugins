@@ -16,11 +16,12 @@ typedef struct {
     Submenu* submenu;
     Widget* widget;
     FuriTimer* timer;
-    BlinkerView current_view;  // Changed from bool is_in_menu to BlinkerView
+    BlinkerView current_view;
 } BlinkerApp;
 
 static void blink_timer_callback(void* context) {
     UNUSED(context);
+
     static bool led_state = false;
     led_state = !led_state;
     
@@ -32,31 +33,35 @@ static void blink_timer_callback(void* context) {
     }
 }
 
-static void submenu_callback(void* context, uint32_t index) {
+static void start_blink_callback(void* context, uint32_t index) {
     BlinkerApp* app = context;
     UNUSED(index);
+    
     widget_reset(app->widget);
     widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
-    app->current_view = BlinkerViewWidget;  // Update current view
+    
+    app->current_view = BlinkerViewWidget;
     view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewWidget);
     
-    // Start the blinking timer
     furi_timer_start(app->timer, 500); // 500ms = 2 times per second
 }
 
-static bool navigation_callback(void* context) {
+static bool handle_back_event(void* context) {
     BlinkerApp* app = context;
     
     if(app->current_view == BlinkerViewWidget) {
         // If in widget view, stop timer and LED, return to menu
         furi_timer_stop(app->timer);
+        // TODO: look at what values do i want the LED to be configured to
         furi_hal_light_set(LightRed, 0x00);
-        app->current_view = BlinkerViewSubmenu;  // Update current view
+        
+        app->current_view = BlinkerViewSubmenu;
         view_dispatcher_switch_to_view(app->view_dispatcher, BlinkerViewSubmenu);
-        return true;  // Handled - don't exit app
+        
+        return true;  // Exit to main menu
     }
     
-    return false;  // Not handled - exit app when in menu
+    return false;  // Exit the app
 }
 
 int32_t blinker_main(void* p) {
@@ -64,7 +69,7 @@ int32_t blinker_main(void* p) {
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
     
     // Initialize state
-    app->current_view = BlinkerViewSubmenu;  // Set initial view
+    app->current_view = BlinkerViewSubmenu;
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
@@ -75,14 +80,13 @@ int32_t blinker_main(void* p) {
     app->submenu = submenu_alloc();
     app->widget = widget_alloc();
 
-    // Add menu item and views
-    submenu_add_item(app->submenu, "Start", 0, submenu_callback, app);
+    submenu_add_item(app->submenu, "Start", 0, start_blink_callback, app);
+    
+    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_add_view(app->view_dispatcher, BlinkerViewSubmenu, submenu_get_view(app->submenu));
     view_dispatcher_add_view(app->view_dispatcher, BlinkerViewWidget, widget_get_view(app->widget));
 
-    // Configure navigation
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, navigation_callback);
-    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
+    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, handle_back_event);
 
     // Create and configure timer
     app->timer = furi_timer_alloc(blink_timer_callback, FuriTimerTypePeriodic, app);
