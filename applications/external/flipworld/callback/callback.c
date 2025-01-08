@@ -669,7 +669,7 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         fhttp,
-        "https://www.flipsocial.net/api/world/v2/list/10/",
+        "https://www.flipsocial.net/api/world/v3/list/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
 static bool start_game_thread(void* context) {
@@ -872,7 +872,7 @@ static bool flip_world_fetch_game(DataLoaderModel* model) {
         snprintf(
             url,
             sizeof(url),
-            "https://www.flipsocial.net/api/world/v2/get/world/%s/",
+            "https://www.flipsocial.net/api/world/v3/get/world/%s/",
             furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
@@ -1440,7 +1440,7 @@ static bool flip_world_fetch_worlds(DataLoaderModel* model) {
     model->fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         model->fhttp,
-        "https://www.flipsocial.net/api/world/v2/get/10/",
+        "https://www.flipsocial.net/api/world/v3/get/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
 static char* flip_world_parse_worlds(DataLoaderModel* model) {

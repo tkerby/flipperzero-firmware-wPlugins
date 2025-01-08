@@ -7,14 +7,18 @@ static Level* get_next_level(GameManager* manager) {
         FURI_LOG_E(TAG, "Failed to get game context");
         return NULL;
     }
-    game_context->current_level = game_context->current_level == 0 ? 1 : 0;
-    if(!game_context->levels[game_context->current_level]) {
-        if(!allocate_level(manager, game_context->current_level)) {
-            FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
-            return NULL;
+    for(int i = game_context->current_level + 1; i < game_context->level_count; i++) {
+        if(!game_context->levels[i]) {
+            if(!allocate_level(manager, i)) {
+                FURI_LOG_E(TAG, "Failed to allocate level %d", i);
+                return NULL;
+            }
         }
+        game_context->current_level = i;
+        return game_context->levels[i];
     }
-    return game_context->levels[game_context->current_level];
+    FURI_LOG_I(TAG, "No more levels to load");
+    return NULL;
 }
 
 void player_spawn(Level* level, GameManager* manager) {
@@ -238,7 +242,6 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 
     // switch levels if holding OK
     if(input.pressed & GameKeyOk) {
-        FURI_LOG_I(TAG, "Player is pressing OK");
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
         if(game_context->enemy_count == 0) {
@@ -247,11 +250,9 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
         } else {
-            FURI_LOG_I(TAG, "Player is attacking");
             game_context->user_input = GameKeyOk;
             // furi_delay_ms(100);
         }
-        FURI_LOG_I(TAG, "Player is done pressing OK");
     }
 
     // If the player is not moving, retain the last movement direction

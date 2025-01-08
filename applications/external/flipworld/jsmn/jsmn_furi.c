@@ -415,7 +415,7 @@ FuriString* get_json_value_furi(const char* key, const FuriString* json_data) {
         return NULL;
     }
     uint32_t max_tokens = json_token_count_furi(json_data);
-    if(!jsmn_memory_check(max_tokens)) {
+    if(!jsmn_memory_check(sizeof(jsmntok_t) * max_tokens)) {
         FURI_LOG_E("JSMM.H", "Insufficient memory for JSON tokens.");
         return NULL;
     }
@@ -478,7 +478,7 @@ FuriString*
         return NULL;
     }
     uint32_t max_tokens = json_token_count_furi(array_str);
-    if(!jsmn_memory_check(max_tokens)) {
+    if(!jsmn_memory_check(sizeof(jsmntok_t) * max_tokens)) {
         FURI_LOG_E("JSMM.H", "Insufficient memory for JSON tokens.");
         furi_string_free(array_str);
         return NULL;
@@ -552,7 +552,7 @@ FuriString**
     }
 
     uint32_t max_tokens = json_token_count_furi(array_str);
-    if(!jsmn_memory_check(max_tokens)) {
+    if(!jsmn_memory_check(sizeof(jsmntok_t) * max_tokens)) {
         FURI_LOG_E("JSMM.H", "Insufficient memory for JSON tokens.");
         furi_string_free(array_str);
         return NULL;

@@ -14,12 +14,28 @@ static void game_start(GameManager* game_manager, void* ctx) {
     game_context->player_context = NULL;
     game_context->current_level = 0;
     game_context->ended_early = false;
-    if(!allocate_level(game_manager, 0)) {
-        FURI_LOG_E("Game", "Failed to allocate level 0");
-        return;
+    game_context->level_count = 0;
+
+    // set all levels to NULL
+    for(int i = 0; i < MAX_LEVELS; i++) {
+        game_context->levels[i] = NULL;
     }
-    game_context->level_count = 1;
-    game_context->levels[1] = NULL;
+
+    // attempt to allocate all levels
+    for(int i = 0; i < MAX_LEVELS; i++) {
+        if(!allocate_level(game_manager, i)) {
+            if(i == 0) {
+                FURI_LOG_E("Game", "Failed to allocate level %d, loading default level", i);
+                game_context->levels[0] =
+                    game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
+                game_context->level_count = 1;
+                break;
+            }
+            FURI_LOG_E("Game", "No more levels to load");
+            break;
+        }
+        game_context->level_count++;
+    }
 
     // imu
     game_context->imu = imu_alloc();

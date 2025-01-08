@@ -151,7 +151,7 @@ FuriString* fetch_world(const char* name) {
     }
 
     char url[256];
-    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v2/get/world/%s/", name);
+    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v3/get/world/%s/", name);
     snprintf(
         fhttp->file_path,
         sizeof(fhttp->file_path),
