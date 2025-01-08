@@ -244,18 +244,18 @@ IconContext *get_icon_context(const char *name)
     {
         return icon_generic_alloc("lake_top_right", &I_icon_lake_top_right_24x22px, 24, 22);
     }
-    // else if (strcmp(name, "rock_large") == 0)
-    // {
-    //     return icon_generic_alloc("rock_large", &I_icon_rock_large_18x19px, 18, 19);
-    // }
-    // else if (strcmp(name, "rock_medium") == 0)
-    // {
-    //     return icon_generic_alloc("rock_medium", &I_icon_rock_medium_16x14px, 16, 14);
-    // }
-    // else if (strcmp(name, "rock_small") == 0)
-    // {
-    //     return icon_generic_alloc("rock_small", &I_icon_rock_small_10x8px, 10, 8);
-    // }
+    else if (strcmp(name, "rock_large") == 0)
+    {
+        return icon_generic_alloc("rock_large", &I_icon_rock_large_18x19px, 18, 19);
+    }
+    else if (strcmp(name, "rock_medium") == 0)
+    {
+        return icon_generic_alloc("rock_medium", &I_icon_rock_medium_16x14px, 16, 14);
+    }
+    else if (strcmp(name, "rock_small") == 0)
+    {
+        return icon_generic_alloc("rock_small", &I_icon_rock_small_10x8px, 10, 8);
+    }
 
     // If no match is found
     FURI_LOG_E("Game", "Icon not found: %s", name);
@@ -376,18 +376,18 @@ const char *icon_get_id(const Icon *icon)
     {
         return "lake_top_right";
     }
-    // else if (icon == &I_icon_rock_large_18x19px)
-    // {
-    //     return "rock_large";
-    // }
-    // else if (icon == &I_icon_rock_medium_16x14px)
-    // {
-    //     return "rock_medium";
-    // }
-    // else if (icon == &I_icon_rock_small_10x8px)
-    // {
-    //     return "rock_small";
-    // }
+    else if (icon == &I_icon_rock_large_18x19px)
+    {
+        return "rock_large";
+    }
+    else if (icon == &I_icon_rock_medium_16x14px)
+    {
+        return "rock_medium";
+    }
+    else if (icon == &I_icon_rock_small_10x8px)
+    {
+        return "rock_small";
+    }
 
     // If no match is found
     FURI_LOG_E("Game", "Icon ID not found for given icon pointer.");
