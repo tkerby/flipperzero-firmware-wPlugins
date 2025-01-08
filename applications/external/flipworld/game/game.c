@@ -73,7 +73,7 @@ static void game_stop(void* ctx) {
                 "Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
         }
         FURI_LOG_I("Game", "Saving player context");
-        save_player_context(game_context->player_context);
+        save_player_context_api(game_context->player_context);
         FURI_LOG_I("Game", "Player context saved");
         easy_flipper_dialog("Game Saved", "Hit BACK to exit.");
     }
