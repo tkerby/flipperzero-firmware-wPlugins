@@ -2,6 +2,7 @@
 
 #include "src/engine/game_manager.h"
 #include "src/game.h"
+#include "src/game_notifications.h"
 
 #include "level_game.h"
 #include "player_entity.h"
@@ -137,6 +138,7 @@ static void enemy_collision(Entity* self, Entity* other, GameManager* manager, v
 
     // Game over
     GameContext* game_context = game_manager_game_context_get(manager);
+    game_notify(game_context, &sequence_game_over);
     game_manager_next_level_set(manager, game_context->levels.game_over);
 }
 
