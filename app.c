@@ -5,7 +5,7 @@
 #define TAG "FlipRPI"
 #define VERSION_TAG TAG " v1.0"
 
-#define MAX_COMMANDS 57
+#define MAX_COMMANDS 56
 
 // Define the submenu items for our FlipRPI application
 typedef enum
@@ -86,7 +86,7 @@ const char *commands[MAX_COMMANDS] = {
     "python3 -m venv",
     "rm",
     "sudo",
-    "sudo raspi-config",
+    // "sudo raspi-config",
     "sudo apt",
     "sudo apt update",
     "sudo apt upgrade",
