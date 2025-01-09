@@ -39,7 +39,7 @@ int32_t flip_world_main(void *p)
     while (fhttp->state == INACTIVE && --counter > 0)
     {
         FURI_LOG_D(TAG, "Waiting for PONG");
-        furi_delay_ms(100); // this causes a BusFault
+        furi_delay_ms(100);
     }
 
     flipper_http_free(fhttp);
