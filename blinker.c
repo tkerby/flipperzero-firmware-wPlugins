@@ -36,15 +36,14 @@ static bool back_button_callback(void* context) {
 }
 
 static void exec_view(BlinkerApp* app) { 
-    app->current_view = Exec;
-
     widget_reset(app->widget);
     widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
     
     app->start_time = furi_get_tick();
     furi_timer_start(app->timer, app->min_interval);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, Exec);
+    app->current_view = Exec;
+    view_dispatcher_switch_to_view(app->view_dispatcher, app->current_view);
 }
 
 static void number_picker_callback(void* context, int32_t value) {
@@ -53,18 +52,18 @@ static void number_picker_callback(void* context, int32_t value) {
     switch(app->mode) {
     case Min:
         app->min_interval = value;
-        // app->mode = Max;
-        // show_number_input(app, "Max interval (ms)", app->max_interval, value + 100, 4000);
+        app->mode = Max;
+        number_picker_view(app, "Max interval (ms)", app->max_interval, 50, 2000);
         break;
     case Max:
         app->max_interval = value;
+        main_view(app);
         break;
     case Dur:
         app->duration = value;
+        main_view(app);
         break;
     }
-
-    main_view(app);
 }
 
 static void number_picker_view(BlinkerApp* app, const char* header, uint32_t current, uint32_t min, uint32_t max) {
