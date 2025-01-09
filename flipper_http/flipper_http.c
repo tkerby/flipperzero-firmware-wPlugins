@@ -1410,10 +1410,9 @@ void flipper_http_rx_callback(const char *line, void *context)
             strstr(trimmed_line, "[DELETE/END]") == NULL)
         {
             strncpy(fhttp->last_response, trimmed_line, RX_BUF_SIZE);
-            if (furi_string_size(fhttp->last_response_str) > MAX_FILE_SHOW)
+            if (strlen(furi_string_get_cstr(fhttp->last_response_str)) > MAX_FILE_SHOW)
             {
-                // truncate the oldest data
-                furi_string_left(fhttp->last_response_str, furi_string_size(fhttp->last_response_str) - MAX_FILE_SHOW);
+                furi_string_reset(fhttp->last_response_str);
             }
             furi_string_cat(fhttp->last_response_str, "\n");
             furi_string_cat(fhttp->last_response_str, line);

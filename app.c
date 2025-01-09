@@ -5,7 +5,7 @@
 #define TAG "FlipRPI"
 #define VERSION_TAG TAG " v1.0"
 
-#define MAX_COMMANDS 56
+#define MAX_COMMANDS 54
 
 // Define the submenu items for our FlipRPI application
 typedef enum
@@ -62,13 +62,13 @@ const char *commands[MAX_COMMANDS] = {
     "cmake",
     "cmake .."
     "cp",
-    "echo",
+    //"echo",
     "git",
     "git clone",
     "git clone https://github.com/",
     "git pull",
     "git push",
-    "grep",
+    //"grep",
     "htop",
     "ifconfig",
     "ip",
@@ -132,19 +132,19 @@ static void update_text_box(FlipRPIApp *app)
 {
     furi_check(app, "FlipRPIApp is NULL");
     furi_check(app->textbox, "Text_box is NULL");
-    if (!app->fhttp->last_response_str || furi_string_utf8_length(app->fhttp->last_response_str) == 0)
+    if (!app->fhttp->last_response_str || furi_string_size(app->fhttp->last_response_str) == 0)
     {
         text_box_reset(app->textbox);
         text_box_set_focus(app->textbox, TextBoxFocusEnd);
         text_box_set_font(app->textbox, TextBoxFontText);
         text_box_set_text(app->textbox, "Awaiting data...");
     }
-    else if (furi_string_utf8_length(app->fhttp->last_response_str) != last_response_len)
+    else if (furi_string_size(app->fhttp->last_response_str) != last_response_len)
     {
         text_box_reset(app->textbox);
         text_box_set_focus(app->textbox, TextBoxFocusEnd);
         text_box_set_font(app->textbox, TextBoxFontText);
-        last_response_len = furi_string_utf8_length(app->fhttp->last_response_str);
+        last_response_len = furi_string_size(app->fhttp->last_response_str);
         text_box_set_text(app->textbox, furi_string_get_cstr(app->fhttp->last_response_str));
     }
 }
