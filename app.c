@@ -49,9 +49,7 @@ int32_t flip_world_main(void *p)
     }
 
     // save app version
-    char app_version[16];
-    snprintf(app_version, sizeof(app_version), "%f", (double)VERSION);
-    save_char("app_version", app_version);
+    save_char("app_version", "0.2.1");
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
