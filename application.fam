@@ -7,7 +7,7 @@ App(
     fap_icon="app.png",
     fap_category="GPIO",
     fap_icon_assets="assets",
-    fap_description="Use your Flipper Zero to control your Raspberry Pi."
+    fap_description="Use your Flipper Zero to control your Raspberry Pi.",
     fap_weburl="https://github.com/jblanked/FlipRPI",
     fap_version="1.0",
 )
