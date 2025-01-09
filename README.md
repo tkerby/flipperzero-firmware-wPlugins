@@ -9,7 +9,7 @@ Use your Flipper Zero to control your Raspberry Pi.
 
 ## Installation
 1. Insert the MicroSD card into your computer using the card reader.
-2. Download the Raspberry Pi Imager from the [official website](https://www.raspberrypi.com/software/). Then, install the software by following the on-screen instructions for your operating system.
+2. Download the Raspberry Pi Imager from the official website: https://www.raspberrypi.com/software/. Then, install the software by following the on-screen instructions for your operating system.
 3. Open Raspberry Pi Imager after installation.
 4. Click **CHOOSE OS**. Then go to **Raspberry Pi OS (other)** and select **Raspberry Pi OS Lite (64-bit)**.
 5. Click **CHOOSE STORAGE** and select your MicroSD card.
