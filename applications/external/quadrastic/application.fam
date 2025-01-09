@@ -15,6 +15,6 @@ App(
     fap_category="Games",
     fap_author="ivanbarsukov",
     fap_weburl="https://github.com/ivanbarsukov/flipperzero-quadrastic",
-    fap_version="1.0.0",
+    fap_version="1.0.2",
     fap_description="Quadrastic a simple addicting game based off a favorite PSP homebrew game called Squarez.",
 )
