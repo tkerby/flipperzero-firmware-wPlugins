@@ -36,7 +36,7 @@ int32_t flip_world_main(void* p) {
     uint32_t counter = 10;
     while(fhttp->state == INACTIVE && --counter > 0) {
         FURI_LOG_D(TAG, "Waiting for PONG");
-        furi_delay_ms(100);
+        furi_delay_ms(100); // this causes a BusFault
     }
 
     flipper_http_free(fhttp);
@@ -47,7 +47,9 @@ int32_t flip_world_main(void* p) {
     }
 
     // save app version
-    save_char("app_version", "0.2.1");
+    char app_version[16];
+    snprintf(app_version, sizeof(app_version), "%f", (double)VERSION);
+    save_char("app_version", app_version);
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
