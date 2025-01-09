@@ -35,12 +35,12 @@ typedef struct {
 } BlinkerApp;
 
 static void update_main_view(BlinkerApp* app) {
-    dialog_ex_set_header(app->dialog, "Blinker", 64, 20, AlignCenter, AlignCenter);
+    dialog_ex_set_header(app->dialog, "Blinker", 64, 14, AlignCenter, AlignCenter);
     char text[64];
     snprintf(
         text, 
         sizeof(text), 
-        "Dur: %lds Min: %ld Max: %ld", 
+        "Dur: %ld s\nRange: %ld - %ld ms", 
         app->duration,
         app->min_interval,
         app->max_interval);
@@ -49,7 +49,6 @@ static void update_main_view(BlinkerApp* app) {
     dialog_ex_set_center_button_text(app->dialog, "Flash");
     dialog_ex_set_right_button_text(app->dialog, "Dur");
 }
-
 
 static void number_input_callback(void* context, int32_t value) {
     BlinkerApp* app = context;
@@ -151,12 +150,12 @@ int32_t blinker_main(void* p) {
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
     
     // Initialize state
-    app->current_view = BlinkerViewDialog;  // Changed from Submenu
-    app->start_time = 0; // Default value - not important
-    app->blink_interval = 100; // Default value - not important
+    app->current_view = BlinkerViewDialog;
     app->duration = 20; // Default value
     app->min_interval = 100; // Default value
     app->max_interval = 2000;  // Default value
+    app->start_time = 0; // Default value - not important
+    app->blink_interval = 100; // Default value - not important
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);
