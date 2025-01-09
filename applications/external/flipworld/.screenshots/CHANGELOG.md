@@ -1,3 +1,6 @@
+## 0.2.1 (2025-01-09)
+- Removed data migration
+
 ## 0.2 (2025-01-02)
 Added
 - **Video Game Module Support:** Added support for the Video Game Module (requires FlipperHTTP flash).

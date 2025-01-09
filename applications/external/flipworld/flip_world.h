@@ -4,8 +4,8 @@
 #include <easy_flipper/easy_flipper.h>
 
 #define TAG         "FlipWorld"
-#define VERSION     0.3
-#define VERSION_TAG "FlipWorld v0.3"
+#define VERSION     0.21
+#define VERSION_TAG "FlipWorld v0.2.1"
 
 // Define the submenu items for our FlipWorld application
 typedef enum {
