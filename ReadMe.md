@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0107-1515-0.420.0-37a1fe9](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0108-2220-0.420.0-4d74a1b](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-07 15:15 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-07 15:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-08 22:20 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-08 22:20 EST`
 - Updated: [Count Down Timer v1.5 (By 0w0mewo)](https://github.com/0w0mewo/fpz_cntdown_timer)
 - Updated: [Oscilloscope v0.4 (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
 - Updated: [Ghost ESP v1.1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
