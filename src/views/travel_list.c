@@ -1,5 +1,6 @@
 #include "travel_list.h"
 #include "../view_modules/elements.h"
+#include "assets_icons.h"
 
 struct TravelListView {
     View* view;
@@ -150,6 +151,16 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
                     canvas_set_color(canvas, ColorBlack);
                 }
 
+                // 进出站图标
+                const Icon* icon = NULL;
+                if(travel->type == 0x03)
+                    icon = &I_ButtonUp_7x4;
+                else if(travel->type == 0x04)
+                    icon = &I_ButtonDown_7x4;
+                if(icon != NULL)
+                    canvas_draw_icon(
+                        canvas, 2, (item_position * item_height) + item_height - 7, icon);
+
                 // 线路名+站台名
                 if(furi_string_size(travel_ext->line_name) != 0) {
                     // 线路名有效
@@ -158,6 +169,7 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
                         furi_string_set(temp_str, travel_ext->station_name);
                     } else {
                         //站台名无效
+                        furi_string_set(temp_str, travel_ext->line_name);
                         furi_string_cat_str(temp_str, "(未知站台)");
                     }
                 } else {
@@ -168,7 +180,7 @@ static void travel_list_view_draw_cb(Canvas* canvas, void* _model) {
                 elements_draw_str_utf8(
                     canvas,
                     2,
-                    (item_position * item_height) + item_height - 6,
+                    (item_position * item_height) + item_height - 9,
                     furi_string_get_cstr(temp_str));
 
                 // 行程时间

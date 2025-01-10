@@ -73,7 +73,6 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 - 变长站台 id 反查
 - 深圳地铁站台信息 Terminal ID 反查
 - 行程记录详情界面
-- 行程记录列表近出站图标
 - 交易记录详情界面
 - 行程记录列表文字滚动显示
 - 开屏欢迎画面
