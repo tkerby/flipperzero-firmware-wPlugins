@@ -36,3 +36,9 @@ All contributions are welcome! Fork the repository and submit your edits. If you
 
 Known Bugs:
 - Sometimes not all of the data isn't sent over the UART (yes/no lines mainly but sometimes the terminal user-tag)
+
+Wiring: (Raspberry Pi Zero 2 W -> Flipper)
+- TX (GPIO 14 - Pin 8) -> Pin 14 (RX)
+- RX (GPIO 15 - Pin 10) -> Pin 13 (TX)
+- GND (Pin 6) -> Pin 11 (GND)
+- Do NOT connect 3v3 or 5v (power via USB cable or battery pack instead)
