@@ -133,7 +133,6 @@ $ ./fbt dolphin_ext
 - Assets: Includes SubGHz Remote config for Riding_Dirty [from UberGuidoZ](https://github.com/UberGuidoZ/Flipper)
 - Assets: Includes SubGHz SexToy files [from UberGuidoZ](https://github.com/UberGuidoZ/Flipper)
 - Assets: Includes Tama P1 Rom Game file. [this rom](https://tinyurl.com/tamap1)
-- Assets: Includes WAV files for Unlock/Lock Gatekeeper Systems wheels found on some Shopping Carts/Trolleys (Thanks to lukejtaylor) (May not work off lipper)
 - Assets: Includes Wifi Marauder scripts for: [Create EAPOLpacketsSniffer.json #714 (By grugnoymeme)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/714) & Wifi Scripts for Beacon Spam themed for Aperature Science, Funny and RM.
 - BadUSB: Added ignore DUCKY_LANG cmd to retain compatibility with existing scripts [(Thanks to v1nc)](https://github.com/v1nc/flipperzero-firmware)
 - BadUSB: [Assets for CVE-2024-1086 on LINUX targets (By hed0rah & ComradeOrion)](https://github.com/Notselwyn/CVE-2024-1086)
