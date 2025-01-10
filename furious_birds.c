@@ -45,6 +45,7 @@
 enum GameState {
     GameStateAiming,
     GameStateFlying,
+    GameStateLoosing,
 };
 
 typedef struct {
@@ -69,9 +70,9 @@ typedef struct {
     double_t diff;
     int8_t diff_int;
     uint8_t red_speed;
-    uint8_t level;
-    // uint8_t remaining_attempts;
-    uint8_t score;
+    uint32_t level;
+    uint8_t remaining_attempts;
+    uint32_t score;
 } AppModel;
 
 typedef struct {
@@ -94,33 +95,10 @@ typedef enum {
 
 void draw_red(Canvas* canvas, AppModel* model) {
     canvas_draw_icon(canvas, model->red->x - RED_CENTER_X, model->red->y - RED_CENTER_Y, &I_Red);
-    // canvas_draw_dot(canvas, state->red->x, state->red->y);
 }
 
 void draw_slingshot(Canvas* canvas) {
     canvas_draw_icon(canvas, SLINGSHOT_X - SLINGSHOT_CENTER_X, SLINGSHOT_Y, &I_Slingshot);
-    // canvas_draw_dot(canvas, SLINGSHOT_X, SLINGSHOT_Y);
-}
-void draw_stats(Canvas* canvas, AppModel* model) {
-    FuriString* xstr = furi_string_alloc();
-    furi_string_printf(xstr, "score: %d", model->score);
-    canvas_draw_str(canvas, 0, 8, furi_string_get_cstr(xstr));
-    furi_string_printf(xstr, "level: %d", model->level);
-    canvas_draw_str(canvas, 0, 16, furi_string_get_cstr(xstr));
-    // furi_string_printf(xstr, "attempts: %d", model->remaining_attempts);
-    // canvas_draw_str(canvas, 0, 24, furi_string_get_cstr(xstr));
-    furi_string_free(xstr);
-}
-
-void draw_debug_info(Canvas* canvas, AppModel* model) {
-    FuriString* xstr = furi_string_alloc();
-    furi_string_printf(xstr, "red y_float: %f", model->red->y_float);
-    canvas_draw_str(canvas, 0, 8, furi_string_get_cstr(xstr));
-    furi_string_printf(xstr, "red y: %d", model->red->y);
-    canvas_draw_str(canvas, 0, 16, furi_string_get_cstr(xstr));
-    furi_string_printf(xstr, "angle: %d", model->angle);
-    canvas_draw_str(canvas, 0, 24, furi_string_get_cstr(xstr));
-    furi_string_free(xstr);
 }
 
 uint8_t distance_between(Pig* pig1, Pig* pig2) {
@@ -130,16 +108,6 @@ uint8_t distance_between(Pig* pig1, Pig* pig2) {
 
 uint8_t distance_between_red_and_pig(Red* red, Pig* pig) {
     return sqrt((red->x - pig->x) * (red->x - pig->x) + (red->y - pig->y) * (red->y - pig->y));
-}
-
-void draw_pigs(Canvas* canvas, AppModel* model) {
-    for(uint8_t i = 0; i < model->pig_count; i++) {
-        Pig* pig = model->pigs[i];
-        if(pig->visible) {
-            canvas_draw_icon(canvas, pig->x - PIG_CENTER_X, pig->y - PIG_CENTER_Y, &I_Pig);
-            // canvas_draw_dot(canvas, pig->x, pig->y);
-        }
-    }
 }
 
 double_t degree_to_radian(int8_t degree) {
@@ -152,18 +120,12 @@ uint8_t calculate_red_start_y(AppModel* model) {
     return SLINGSHOT_Y + model->diff_int;
 }
 
-void recalculate_start_position(AppModel* model) {
-    model->angle_radians = degree_to_radian(model->angle);
-    model->red->y = calculate_red_start_y(model);
-    model->red->y_float = model->red->y;
-}
-
-void draw_aiming_line(Canvas* canvas, AppModel* model) {
-    if(model->state == GameStateAiming) {
-        uint8_t x = AIMING_LINE_LENGTH * cos(model->angle_radians);
-        int8_t y = AIMING_LINE_LENGTH * sin(model->angle_radians);
-        canvas_draw_line(canvas, SLINGSHOT_X, SLINGSHOT_Y, SLINGSHOT_X + x, SLINGSHOT_Y - y);
-    }
+Red* init_red(AppModel* model) {
+    Red* red = malloc(sizeof(Red));
+    red->x = RED_START_X;
+    red->y = calculate_red_start_y(model);
+    red->y_float = red->y;
+    return red;
 }
 
 Pig* create_random_pig(uint8_t i, Pig* pigs[]) {
@@ -189,6 +151,56 @@ Pig* create_random_pig(uint8_t i, Pig* pigs[]) {
     return pig;
 }
 
+void reset_game(AppModel* model) {
+    model->angle = ANGLE_START;
+    model->angle_radians = degree_to_radian(model->angle);
+    model->state = GameStateAiming;
+    model->red = init_red(model);
+    model->pig_count = PIG_MIN_COUNT;
+    model->score = 0;
+    model->level = 0;
+    for(uint8_t i = 0; i < model->pig_count; i++) {
+        model->pigs[i] = create_random_pig(i, model->pigs);
+    }
+    model->diff = tan(model->angle_radians);
+    model->diff_int = RED_TO_SLINGSHOT_X * model->diff;
+    model->remaining_attempts = ATTTEMPT_COUNT;
+}
+
+void draw_stats(Canvas* canvas, AppModel* model) {
+    FuriString* xstr = furi_string_alloc();
+    furi_string_printf(xstr, "score: %ld", model->score);
+    canvas_draw_str(canvas, 0, 8, furi_string_get_cstr(xstr));
+    furi_string_printf(xstr, "level: %ld", model->level);
+    canvas_draw_str(canvas, 0, 16, furi_string_get_cstr(xstr));
+    furi_string_printf(xstr, "attempts: %d", model->remaining_attempts);
+    canvas_draw_str(canvas, 0, 24, furi_string_get_cstr(xstr));
+    furi_string_free(xstr);
+}
+
+void draw_pigs(Canvas* canvas, AppModel* model) {
+    for(uint8_t i = 0; i < model->pig_count; i++) {
+        Pig* pig = model->pigs[i];
+        if(pig->visible) {
+            canvas_draw_icon(canvas, pig->x - PIG_CENTER_X, pig->y - PIG_CENTER_Y, &I_Pig);
+        }
+    }
+}
+
+void recalculate_start_position(AppModel* model) {
+    model->angle_radians = degree_to_radian(model->angle);
+    model->red->y = calculate_red_start_y(model);
+    model->red->y_float = model->red->y;
+}
+
+void draw_aiming_line(Canvas* canvas, AppModel* model) {
+    if(model->state == GameStateAiming) {
+        uint8_t x = AIMING_LINE_LENGTH * cos(model->angle_radians);
+        int8_t y = AIMING_LINE_LENGTH * sin(model->angle_radians);
+        canvas_draw_line(canvas, SLINGSHOT_X, SLINGSHOT_Y, SLINGSHOT_X + x, SLINGSHOT_Y - y);
+    }
+}
+
 void next_level(AppModel* model) {
     model->level++;
     model->state = GameStateAiming;
@@ -197,7 +209,7 @@ void next_level(AppModel* model) {
     model->angle_radians = degree_to_radian(model->angle);
     model->red->y = calculate_red_start_y(model);
     model->red->y_float = model->red->y;
-    // model->remaining_attempts = ATTTEMPT_COUNT;
+    model->remaining_attempts = ATTTEMPT_COUNT;
     for(uint8_t i = 0; i < model->pig_count; i++) {
         free(model->pigs[i]);
     }
@@ -214,7 +226,7 @@ void next_attempt(AppModel* model) {
     model->red->x = RED_START_X;
     model->red->y = calculate_red_start_y(model);
     model->red->y_float = model->red->y;
-    // model->remaining_attempts--;
+    model->remaining_attempts--;
 }
 
 static void game_draw_callback(Canvas* canvas, void* _model) {
@@ -226,7 +238,6 @@ static void game_draw_callback(Canvas* canvas, void* _model) {
     draw_aiming_line(canvas, model);
     draw_pigs(canvas, model);
     draw_stats(canvas, model);
-    // draw_debug_info(canvas, model);
     draw_red(canvas, model);
 }
 
@@ -309,6 +320,9 @@ static int32_t furious_birds_worker(void* context) {
                                 next_level(model);
                             } else {
                                 next_attempt(model);
+                                if(model->remaining_attempts == 0) {
+                                    reset_game(model);
+                                }
                             }
                         }
                     }
@@ -324,14 +338,6 @@ static void furious_birds_timer_callback(void* context) {
     furi_assert(context);
     App* app = context;
     furi_thread_flags_set(furi_thread_get_id(app->worker_thread), WorkerEventTick);
-}
-
-Red* init_red(AppModel* model) {
-    Red* red = malloc(sizeof(Red));
-    red->x = RED_START_X;
-    red->y = calculate_red_start_y(model);
-    red->y_float = red->y;
-    return red;
 }
 
 App* app_alloc() {
@@ -356,17 +362,7 @@ App* app_alloc() {
         AppModel * model,
         {
             app->model = model;
-            model->angle = ANGLE_START;
-            model->angle_radians = degree_to_radian(model->angle);
-            model->state = GameStateAiming;
-            model->red = init_red(model);
-            model->pig_count = PIG_MIN_COUNT;
-            for(uint8_t i = 0; i < model->pig_count; i++) {
-                model->pigs[i] = create_random_pig(i, model->pigs);
-            }
-            model->diff = tan(model->angle_radians);
-            model->diff_int = RED_TO_SLINGSHOT_X * model->diff;
-            // model->remaining_attempts = ATTTEMPT_COUNT;
+            reset_game(model);
         },
         true);
 
