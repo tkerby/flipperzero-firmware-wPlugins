@@ -9,9 +9,10 @@ TUnionMessageExt* t_union_msgext_alloc() {
     msg_ext->city_name = furi_string_alloc();
 
     for(uint8_t i = 0; i < T_UNION_RECORD_TRAVELS_MAX; i++) {
-        msg_ext->travels_ext[i].city_name = furi_string_alloc();
-        msg_ext->travels_ext[i].station_name = furi_string_alloc();
-        msg_ext->travels_ext[i].line_name = furi_string_alloc();
+        TUnionTravelExt* travel_ext = &msg_ext->travels_ext[i];
+        travel_ext->city_name = furi_string_alloc();
+        travel_ext->station_name = furi_string_alloc();
+        travel_ext->line_name = furi_string_alloc();
     }
 
     return msg_ext;
@@ -24,9 +25,10 @@ void t_union_msgext_free(TUnionMessageExt* msg_ext) {
     furi_string_free(msg_ext->city_name);
 
     for(uint8_t i = 0; i < T_UNION_RECORD_TRAVELS_MAX; i++) {
-        furi_string_free(msg_ext->travels_ext[i].city_name);
-        furi_string_free(msg_ext->travels_ext[i].station_name);
-        furi_string_free(msg_ext->travels_ext[i].line_name);
+        TUnionTravelExt* travel_ext = &msg_ext->travels_ext[i];
+        furi_string_free(travel_ext->city_name);
+        furi_string_free(travel_ext->station_name);
+        furi_string_free(travel_ext->line_name);
     }
 
     free(msg_ext);
@@ -40,9 +42,13 @@ void t_union_msgext_reset(TUnionMessageExt* msg_ext) {
     furi_string_reset(msg_ext->city_name);
 
     for(uint8_t i = 0; i < T_UNION_RECORD_TRAVELS_MAX; i++) {
-        furi_string_reset(msg_ext->travels_ext[i].city_name);
-        furi_string_reset(msg_ext->travels_ext[i].station_name);
-        furi_string_reset(msg_ext->travels_ext[i].line_name);
-        msg_ext->travels_ext[i].line_type = LineTypeUnknown;
+        TUnionTravelExt* travel_ext = &msg_ext->travels_ext[i];
+        furi_string_reset(travel_ext->city_name);
+        furi_string_reset(travel_ext->station_name);
+        furi_string_reset(travel_ext->line_name);
+        travel_ext->line_type = LineTypeUnknown;
+        travel_ext->transfer = false;
+        travel_ext->night = false;
+        travel_ext->roaming = false;
     }
 }

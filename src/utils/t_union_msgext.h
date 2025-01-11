@@ -18,6 +18,9 @@ typedef struct {
     FuriString* line_name; // 线路名
     FuriString* station_name; // 站台名
     LineType line_type; // 线路类型
+    bool transfer; // 换乘标识
+    bool night; // 夜间标识
+    bool roaming; // 漫游标识
 } TUnionTravelExt;
 
 // 扩展数据
