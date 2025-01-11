@@ -15,7 +15,7 @@ FlipWiFiApp* flip_wifi_app_alloc() {
     if(!easy_flipper_set_submenu(
            &app->submenu_main,
            FlipWiFiViewSubmenuMain,
-           "FlipWiFi v1.3",
+           "FlipWiFi v1.3.1",
            callback_exit_app,
            &app->view_dispatcher)) {
         return NULL;
