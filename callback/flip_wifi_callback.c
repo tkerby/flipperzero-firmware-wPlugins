@@ -637,23 +637,13 @@ static bool flip_wifi_handle_scan(void *context)
     {
         FURI_LOG_E(TAG, "Failed to load received data from file.");
         fhttp.state = ISSUE;
-        easy_flipper_dialog("[ERROR]", "Failed to load received data from file.");
-        return false;
-    }
-    char *data_cstr = (char *)furi_string_get_cstr(scan_data);
-    if (data_cstr == NULL)
-    {
-        FURI_LOG_E(TAG, "Failed to get C-string from FuriString.");
-        furi_string_free(scan_data);
-        fhttp.state = ISSUE;
-        free(data_cstr);
-        easy_flipper_dialog("[ERROR]", "Failed to get C-string from FuriString.");
+        easy_flipper_dialog("[ERROR]", "Failed to load data from /apps_data/flip_wifi/data/scan.txt");
         return false;
     }
 
     uint32_t ssid_count = 0;
 
-    char *current_position = data_cstr;
+    char *current_position = (char *)furi_string_get_cstr(scan_data);
     char *next_comma = NULL;
 
     // Manually split the string on commas
@@ -679,7 +669,6 @@ static bool flip_wifi_handle_scan(void *context)
         {
             FURI_LOG_E(TAG, "Memory allocation failed");
             easy_flipper_dialog("[ERROR]", "Memory allocation failed");
-            free(data_cstr);
             furi_string_free(scan_data);
             return false;
         }
@@ -736,7 +725,6 @@ static bool flip_wifi_handle_scan(void *context)
         snprintf(ssid, sizeof(ssid), "%s", ssid_item);
         submenu_add_item(app->submenu_wifi, ssid, FlipWiFiSubmenuIndexWiFiScanStart + i, callback_submenu_choices, app);
     }
-    free(data_cstr);
     furi_string_free(scan_data);
     return true;
 }
@@ -767,6 +755,12 @@ void callback_submenu_choices(void *context, uint32_t index)
         {
             return flip_wifi_handle_scan(app);
         }
+        // ensure directory is there for saving scan data
+        char directory_path[128];
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
+        Storage *storage = furi_record_open(RECORD_STORAGE);
+        storage_common_mkdir(storage, directory_path);
+        furi_record_close(RECORD_STORAGE);
         // scan for wifi ad parse the results
         flipper_http_loading_task(flipper_http_scan_wifi, _flip_wifi_handle_scan, FlipWiFiViewSubmenu, FlipWiFiViewSubmenuMain, &app->view_dispatcher);
         flipper_http_deinit();
@@ -1012,11 +1006,12 @@ void flip_wifi_text_updated_add_password(void *context)
 
     // store the entered text
     strncpy(app->uart_text_input_buffer, app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size);
-
-    save_char("wifi-password", app->uart_text_input_buffer);
-
     // Ensure null-termination
     app->uart_text_input_buffer[app->uart_text_input_buffer_size - 1] = '\0';
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
+
+    save_char("wifi-password", app->uart_text_input_buffer);
 
     char wifi_ssid[64];
     if (!load_char("wifi-ssid", wifi_ssid, sizeof(wifi_ssid)))

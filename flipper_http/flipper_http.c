@@ -642,21 +642,8 @@ bool flipper_http_parse_json_array(const char *key, int index, const char *json_
  */
 bool flipper_http_scan_wifi()
 {
-    if (!flipper_http_send_data("[WIFI/SCAN]"))
-    {
-        FURI_LOG_E("FlipperHTTP", "Failed to send WiFi scan command.");
-        return false;
-    }
     // custom for FlipWiFi app
     fhttp.just_started_get = true;
-
-    // Create the directory for saving settings
-    char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
-
-    // Create the directory
-    Storage *storage = furi_record_open(RECORD_STORAGE);
-    storage_common_mkdir(storage, directory_path);
 
     snprintf(
         fhttp.file_path,
@@ -664,11 +651,17 @@ bool flipper_http_scan_wifi()
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data/scan.txt");
 
     // ensure the file is empty
+    Storage *storage = furi_record_open(RECORD_STORAGE);
     storage_simply_remove_recursive(storage, fhttp.file_path);
     furi_record_close(RECORD_STORAGE);
 
     fhttp.save_received_data = true;
 
+    if (!flipper_http_send_data("[WIFI/SCAN]"))
+    {
+        FURI_LOG_E("FlipperHTTP", "Failed to send WiFi scan command.");
+        return false;
+    }
     // The response will be handled asynchronously via the callback
     return true;
 }
