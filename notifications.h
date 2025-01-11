@@ -40,7 +40,7 @@ const NotificationSequence notification_game_start_sound = {
 
 const NotificationSequence notification_game_start_mute = {
     &message_vibro_on,
-    &message_delay_500,
+    &message_delay_100,
     &message_vibro_off,
     NULL,
 };

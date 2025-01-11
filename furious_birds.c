@@ -53,7 +53,6 @@
 #define SCREEN_HEIGHT 64
 
 enum GameState {
-    GameStateLogo,
     GameStateAiming,
     GameStateFlying,
     GameStateLoosing,
@@ -92,7 +91,8 @@ typedef struct {
 typedef struct {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
-    View* view;
+    View* logo_view;
+    View* game_view;
     FuriThread* worker_thread;
     FuriTimer* timer;
     AppModel* model;
@@ -105,6 +105,11 @@ typedef enum {
     WorkerEventStop = (1 << 1),
     WorkerEventTick = (1 << 2),
 } WorkerEventFlags;
+
+typedef enum {
+    AppLogoView,
+    AppGameView,
+} AppView;
 
 #define WORKER_EVENTS_MASK (WorkerEventStop | WorkerEventTick)
 
@@ -284,26 +289,36 @@ void draw_final_score(Canvas* canvas, AppModel* model) {
         moves);
 }
 
+static void logo_draw_callback(Canvas* canvas, void* _model) {
+    UNUSED(_model);
+    canvas_draw_icon(canvas, 0, 0, &I_Logo);
+}
+
 static void game_draw_callback(Canvas* canvas, void* _model) {
     AppModel* model = (AppModel*)_model;
     canvas_clear(canvas);
     canvas_set_bitmap_mode(canvas, true);
     canvas_set_color(canvas, ColorBlack);
 
-    if(model->state == GameStateLogo) {
-        canvas_draw_icon(canvas, 0, 0, &I_Logo);
-    } else {
-        draw_slingshot(canvas);
-        if(model->state == GameStateAiming) {
-            draw_aiming_line(canvas, model);
-        }
-        draw_pigs(canvas, model);
-        draw_stats(canvas, model);
-        draw_red(canvas, model);
-        if(model->state == GameStateLoosing) {
-            draw_final_score(canvas, model);
-        }
+    draw_slingshot(canvas);
+    if(model->state == GameStateAiming) {
+        draw_aiming_line(canvas, model);
     }
+    draw_pigs(canvas, model);
+    draw_stats(canvas, model);
+    draw_red(canvas, model);
+    if(model->state == GameStateLoosing) {
+        draw_final_score(canvas, model);
+    }
+}
+static bool logo_input_callback(InputEvent* event, void* ctx) {
+    App* app = ctx;
+    furi_assert(app);
+    if(event->type == InputTypeShort) {
+        view_dispatcher_switch_to_view(app->view_dispatcher, AppGameView);
+    }
+
+    return true;
 }
 
 static bool game_input_callback(InputEvent* event, void* ctx) {
@@ -311,28 +326,20 @@ static bool game_input_callback(InputEvent* event, void* ctx) {
     furi_assert(app);
     AppModel* model = app->model;
 
-    if(model->state == GameStateLogo) {
-        if(event->type == InputTypeShort) {
-            model->state = GameStateAiming;
-        }
-    } else if(model->state == GameStateAiming) {
+    if(model->state == GameStateAiming) {
         if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
             if(event->key == InputKeyDown && model->angle > ANGLE_MIN) {
                 model->angle -= AIMING_SPEED;
                 recalculate_start_position(model);
-                return true;
             } else if(event->key == InputKeyUp && model->angle < ANGLE_MAX) {
                 model->angle += AIMING_SPEED;
                 recalculate_start_position(model);
-                return true;
             } else if(event->key == InputKeyOk) {
                 notification_message(
                     app->notification, notification_red_start[app->settings->sound]);
                 model->state = GameStateFlying;
-                return true;
             } else if(event->key == InputKeyBack) {
                 view_dispatcher_stop(app->view_dispatcher);
-                return true;
             }
         }
     } else if(model->state == GameStateLoosing) {
@@ -342,7 +349,7 @@ static bool game_input_callback(InputEvent* event, void* ctx) {
         }
     }
 
-    return false;
+    return true;
 }
 
 bool reached_border(Red* red) {
@@ -371,7 +378,7 @@ static int32_t furious_birds_worker(void* context) {
         if(events & WorkerEventStop) break;
         if(events & WorkerEventTick) {
             with_view_model(
-                app->view,
+                app->game_view,
                 AppModel * model,
                 {
                     if(model->state == GameStateFlying) {
@@ -433,31 +440,38 @@ App* app_alloc() {
 
     // View dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     // Views
-    app->view = view_alloc();
-    view_set_context(app->view, app);
-    view_set_draw_callback(app->view, game_draw_callback);
-    view_set_input_callback(app->view, game_input_callback);
-    view_allocate_model(app->view, ViewModelTypeLocking, sizeof(AppModel));
+    View* logo_view = view_alloc();
+    app->logo_view = logo_view;
+    view_set_context(logo_view, app);
+    view_set_draw_callback(logo_view, logo_draw_callback);
+    view_set_input_callback(logo_view, logo_input_callback);
+
+    // Main game view
+    View* game_view = view_alloc();
+    app->game_view = game_view;
+    view_set_context(game_view, app);
+    view_set_draw_callback(game_view, game_draw_callback);
+    view_set_input_callback(game_view, game_input_callback);
+    view_allocate_model(game_view, ViewModelTypeLocking, sizeof(AppModel));
     with_view_model(
-        app->view,
+        game_view,
         AppModel * model,
         {
             app->model = model;
             reset_game(model);
-            model->state = GameStateLogo;
         },
         true);
+
+    view_dispatcher_add_view(app->view_dispatcher, AppLogoView, app->logo_view);
+    view_dispatcher_add_view(app->view_dispatcher, AppGameView, app->game_view);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppLogoView);
 
     AppSettings* settings = malloc(sizeof(AppSettings));
     settings->sound = false;
     app->settings = settings;
-
-    view_dispatcher_add_view(app->view_dispatcher, 0, app->view);
-    view_dispatcher_switch_to_view(app->view_dispatcher, 0);
 
     app->worker_thread =
         furi_thread_alloc_ex("FuriousBirdsWorker", 1024, furious_birds_worker, app);
@@ -493,8 +507,10 @@ void app_free(App* app) {
     free(app->settings);
 
     // Free views
-    view_dispatcher_remove_view(app->view_dispatcher, 0);
-    view_free(app->view);
+    view_dispatcher_remove_view(app->view_dispatcher, AppLogoView);
+    view_dispatcher_remove_view(app->view_dispatcher, AppGameView);
+    view_free(app->logo_view);
+    view_free(app->game_view);
     view_dispatcher_free(app->view_dispatcher);
 
     // Close gui record
