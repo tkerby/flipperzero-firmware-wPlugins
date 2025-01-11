@@ -539,14 +539,14 @@ NfcCommand picopass_poller_write_key_handler(PicopassPoller* instance) {
         const uint8_t* new_key = instance->event_data.req_write_key.key;
         bool is_elite_key = instance->event_data.req_write_key.is_elite_key;
 
-        const uint8_t* csn = picopass_data->card_data[PICOPASS_CSN_BLOCK_INDEX].data;
-        const uint8_t* config_block = picopass_data->card_data[PICOPASS_CONFIG_BLOCK_INDEX].data;
-        uint8_t fuses = config_block[7];
-        const uint8_t* old_key = picopass_data->card_data[PICOPASS_SECURE_KD_BLOCK_INDEX].data;
+        const uint8_t* csn = instance->serial_num.data;
+        const uint8_t* old_key = instance->div_key;
 
         PicopassBlock new_block = {};
         loclass_iclass_calc_div_key(csn, new_key, new_block.data, is_elite_key);
 
+        const uint8_t* config_block = picopass_data->card_data[PICOPASS_CONFIG_BLOCK_INDEX].data;
+        uint8_t fuses = config_block[7];
         if((fuses & 0x80) == 0x80) {
             FURI_LOG_D(TAG, "Plain write for personalized mode key change");
         } else {
