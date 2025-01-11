@@ -98,12 +98,16 @@ static int32_t tum_query_worker_thread_cb(void* ctx) {
         furi_string_reset(line_label);
 
         // 是否换乘
-        if(index > 0 && travel->sub_type == 0x01 && travel->type == 0x03) {
+        if(index > 0 && travel->sub_type == 0x01 && travel->type == 0x03 &&
+           furi_string_size(travel_ext->line_name) != 0) {
             TUnionTravel* travel_fore = &msg->travels[index - 1];
-            if(strcmp(travel->area_id, travel_fore->area_id) == 0) {
-                TUnionTravelExt* travel_ext_fore = &msg_ext->travels_ext[index - 1];
-                if(!furi_string_equal(travel_ext->line_name, travel_ext_fore->line_name))
-                    travel_ext->transfer = true;
+            TUnionTravelExt* travel_ext_fore = &msg_ext->travels_ext[index - 1];
+
+            if(furi_string_equal(travel_ext->line_name, travel_ext_fore->line_name)) {
+                // 同名线路跨城市换乘
+                if(strcmp(travel->area_id, travel_fore->area_id) != 0) travel_ext->transfer = true;
+            } else {
+                travel_ext->transfer = true;
             }
         }
     }

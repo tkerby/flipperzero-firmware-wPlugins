@@ -206,16 +206,31 @@ bool tum_db_query_station_name(
         "%s/stations/%s/L-%s.txt", STORAGE_APP_ASSETS_PATH_PREFIX, city_id, line_label);
     FuriString* real_station_id = furi_string_alloc();
     FlipperFormat* file = flipper_format_file_alloc(storage);
-    uint32_t station_id_len = 0;
+    uint32_t station_id_len_lst[4] = {0};
+    uint32_t station_id_len_cnt = 0;
 
     do {
         if(!flipper_format_file_open_existing(file, furi_string_get_cstr(file_name))) break;
 
-        if(!flipper_format_read_uint32(file, "len", &station_id_len, 1)) break;
-        furi_string_set_strn(real_station_id, station_id, station_id_len);
-        if(!flipper_format_read_string(file, furi_string_get_cstr(real_station_id), station_name))
-            break;
-        parsed = true;
+        // 读站台id长度
+        if(!flipper_format_get_value_count(file, "len", &station_id_len_cnt)) break;
+        if(station_id_len_cnt > 4) break;
+        if(!flipper_format_read_uint32(file, "len", station_id_len_lst, station_id_len_cnt)) break;
+
+        // 站台id反查站台名
+        for(uint8_t station_id_len_idx = 0; station_id_len_idx < station_id_len_cnt;
+            station_id_len_idx++) {
+            uint32_t station_id_len = station_id_len_lst[station_id_len_idx];
+            furi_string_set_strn(real_station_id, station_id, station_id_len);
+            if(flipper_format_read_string(
+                   file, furi_string_get_cstr(real_station_id), station_name)) {
+                parsed = true;
+                break;
+            }
+            furi_string_reset(real_station_id);
+            flipper_format_rewind(file);
+        }
+
     } while(false);
 
     furi_string_free(file_name);
