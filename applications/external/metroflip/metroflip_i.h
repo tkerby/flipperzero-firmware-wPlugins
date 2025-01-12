@@ -40,7 +40,9 @@
 
 #include "scenes/metroflip_scene.h"
 
-#include "scenes/navigo_structs.h"
+#include "api/calypso/calypso_i.h"
+
+#define KEY_MASK_BIT_CHECK(key_mask_1, key_mask_2) (((key_mask_1) & (key_mask_2)) == (key_mask_1))
 
 typedef struct {
     Gui* gui;
@@ -71,8 +73,8 @@ typedef struct {
     char currency[4];
     char card_type[32];
 
-    // Navigo specific context
-    NavigoContext* navigo_context;
+    // Calypso specific context
+    CalypsoContext* calypso_context;
 } Metroflip;
 
 enum MetroflipCustomEvent {
@@ -121,7 +123,13 @@ typedef enum {
     MISSING_KEYFILE
 } KeyfileManager;
 
-KeyfileManager manage_keyfiles(char uid_str[]);
+KeyfileManager manage_keyfiles(
+    char uid_str[],
+    const uint8_t* uid,
+    size_t uid_len,
+    MfClassicKeyCache* instance,
+    uint64_t key_mask_a_required,
+    uint64_t key_mask_b_required);
 
 void metroflip_app_blink_start(Metroflip* metroflip);
 void metroflip_app_blink_stop(Metroflip* metroflip);
@@ -134,7 +142,18 @@ void metroflip_app_blink_stop(Metroflip* metroflip);
 
 void metroflip_exit_widget_callback(GuiButtonType result, InputType type, void* context);
 
-///////////////////////////////// Calypso /////////////////////////////////
+void uid_to_string(const uint8_t* uid, size_t uid_len, char* uid_str, size_t max_len);
+
+void handle_keyfile_case(
+    Metroflip* app,
+    const char* message_title,
+    const char* log_message,
+    FuriString* parsed_data,
+    char card_type[]);
+
+char* bit_slice(const char* bit_representation, int start, int end);
+
+///////////////////////////////// Calypso / EN1545 /////////////////////////////////
 
 #define Metroflip_POLLER_MAX_BUFFER_SIZE 1024
 
