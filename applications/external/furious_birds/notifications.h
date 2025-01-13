@@ -2,52 +2,24 @@
 #include <notification/notification_messages.h>
 #include <notification/notification_messages_notes.h>
 
-const NotificationSequence notification_game_start_sound = {
-
-    &message_note_ds5,  &message_delay_250, &message_note_cs5,
-    &message_delay_250, &message_note_fs4,  &message_delay_500,
-    &message_sound_off, &message_delay_25,
-
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-
-    &message_sound_off, &message_delay_50,
-
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-    &message_note_as4,  &message_delay_25,  &message_note_fs5,
-    &message_delay_25,  &message_note_as4,  &message_delay_25,
-    &message_note_fs5,  &message_delay_25,  &message_note_as4,
-    &message_delay_25,  &message_note_fs5,  &message_delay_25,
-    &message_note_as4,  &message_delay_25,  NULL,
-};
-
-const NotificationSequence notification_game_start_mute = {
+const NotificationSequence notification_logo_mute = {
     &message_vibro_on,
     &message_delay_100,
+    &message_vibro_off,
+    &message_delay_50,
+    &message_vibro_on,
+    &message_delay_50,
+    &message_vibro_off,
+    &message_delay_50,
+    &message_vibro_on,
+    &message_delay_25,
     &message_vibro_off,
     NULL,
 };
 
-const NotificationSequence* notification_game_start[] = {
-    &notification_game_start_mute,
-    &notification_game_start_sound,
+const NotificationSequence* notification_logo[] = {
+    &notification_logo_mute,
+    &notification_logo_mute,
 };
 
 const NotificationSequence notification_red_start_sound = {
