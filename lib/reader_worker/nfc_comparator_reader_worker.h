@@ -21,3 +21,6 @@ typedef struct {
    NfcPoller* nfc_poller;
    NfcScanner* nfc_scanner;
 } NfcComparatorReaderWorker;
+
+NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc();
+void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* nfc_comparator_reader_worker);

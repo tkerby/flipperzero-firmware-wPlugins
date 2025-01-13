@@ -18,8 +18,3 @@ void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* nfc_comparator
    nfc_scanner_free(nfc_comparator_reader_worker->nfc_scanner);
    free(nfc_comparator_reader_worker);
 }
-
-void nfc_comparator_reader_worker_start(NfcComparatorReaderWorker* nfc_comparator_reader_worker) {
-   furi_assert(nfc_comparator_reader_worker);
-   nfc_poller_start(nfc_comparator_reader_worker->nfc_poller);
-}
