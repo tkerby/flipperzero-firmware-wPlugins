@@ -10,7 +10,7 @@ typedef enum {
    NfcComparatorReaderWorkerState_Scanning,
    NfcComparatorReaderWorkerState_Polling,
    NfcComparatorReaderWorkerState_Stopped
-};
+} NfcComparatorReaderWorkerState;
 
 typedef struct {
    Nfc* nfc;
