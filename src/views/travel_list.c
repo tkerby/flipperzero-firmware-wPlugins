@@ -68,7 +68,13 @@ void travel_list_process_down(TravelListView* instance) {
 }
 
 void travel_list_process_ok(TravelListView* instance) {
-    UNUSED(instance);
+    size_t items_size = 0;
+    with_view_model(
+        instance->view,
+        RecordListViewModel * model,
+        { items_size = model->message->travel_cnt; },
+        false);
+    if(items_size > 0) instance->cb(TUM_CustomEventSwitchToTravelDetail, instance->ctx);
 }
 
 void travel_list_process_right(TravelListView* instance) {

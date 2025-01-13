@@ -23,6 +23,8 @@
 #include "views/card_info.h"
 #include "views/transaction_list.h"
 #include "views/travel_list.h"
+#include "views/transaction_detail.h"
+#include "views/travel_detail.h"
 
 #include "protocol/t_union_poller.h"
 #include "protocol/t_union_msg.h"
@@ -47,6 +49,8 @@ struct TUM_App {
     CardInfoView* card_info;
     TransactionListView* transaction_list;
     TravelListView* travel_list;
+    TransactionDetailView* transaction_detail;
+    TravelDetailView* travel_detail;
 
     Nfc* nfc;
     TUnionPoller* poller;
@@ -66,6 +70,8 @@ typedef enum {
     TUM_ViewCardInfo,
     TUM_ViewTransactionList,
     TUM_ViewTravelList,
+    TUM_ViewTransactionDetail,
+    TUM_ViewTravelDetail,
 } TUM_View;
 
 static const NotificationSequence tum_sequence_blink_start_cyan = {

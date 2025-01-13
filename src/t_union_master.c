@@ -70,6 +70,16 @@ TUM_App* tum_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, TUM_ViewTravelList, travel_list_get_view(app->travel_list));
 
+    app->transaction_detail = transaction_detail_alloc(app->card_message, app->card_message_ext);
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        TUM_ViewTransactionDetail,
+        transaction_detail_get_view(app->transaction_detail));
+
+    app->travel_detail = travel_detail_alloc(app->card_message, app->card_message_ext);
+    view_dispatcher_add_view(
+        app->view_dispatcher, TUM_ViewTravelDetail, travel_detail_get_view(app->travel_detail));
+
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
     app->query_worker = tum_query_worker_alloc(app->card_message, app->card_message_ext);
@@ -99,6 +109,12 @@ void tum_app_free(TUM_App* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, TUM_ViewTravelList);
     travel_list_free(app->travel_list);
+
+    view_dispatcher_remove_view(app->view_dispatcher, TUM_ViewTransactionDetail);
+    transaction_detail_free(app->transaction_detail);
+
+    view_dispatcher_remove_view(app->view_dispatcher, TUM_ViewTravelDetail);
+    travel_detail_free(app->travel_detail);
 
     cfont_free();
 

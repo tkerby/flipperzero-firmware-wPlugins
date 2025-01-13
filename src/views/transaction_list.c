@@ -66,7 +66,13 @@ void transaction_list_process_down(TransactionListView* instance) {
 }
 
 void transaction_list_process_ok(TransactionListView* instance) {
-    instance->cb(TUM_CustomEventSwitchToTransactionDetail, instance->ctx);
+    size_t items_size = 0;
+    with_view_model(
+        instance->view,
+        RecordListViewModel * model,
+        { items_size = model->message->transaction_cnt; },
+        false);
+    if(items_size > 0) instance->cb(TUM_CustomEventSwitchToTransactionDetail, instance->ctx);
 }
 
 void transaction_list_process_left(TransactionListView* instance) {

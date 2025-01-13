@@ -7,6 +7,10 @@ void tum_scene_travel_list_cb(TUM_CustomEvent event, void* ctx) {
         view_dispatcher_send_custom_event(
             app->view_dispatcher, TUM_CustomEventSwitchToTransaction);
         break;
+    case TUM_CustomEventSwitchToTravelDetail:
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, TUM_CustomEventSwitchToTravelDetail);
+        break;
     default:
     }
 }
@@ -37,6 +41,10 @@ bool tum_scene_travel_list_on_event(void* ctx, SceneManagerEvent event) {
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, TUM_SceneBaseInfo);
     } else if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
+        case TUM_CustomEventSwitchToTravelDetail:
+            tum_scene_travel_list_save_status(app);
+            scene_manager_next_scene(app->scene_manager, TUM_SceneTravelDetail);
+            break;
         case TUM_CustomEventSwitchToTransaction:
             consumed = true;
             tum_scene_travel_list_save_status(app);

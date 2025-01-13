@@ -46,9 +46,8 @@ bool tum_scene_transaction_list_on_event(void* ctx, SceneManagerEvent event) {
     } else if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case TUM_CustomEventSwitchToTransactionDetail:
-            uint8_t index =
-                scene_manager_get_scene_state(app->scene_manager, TUM_SceneTransactionList);
-            FURI_LOG_D("Test", "idx=%d", index);
+            tum_scene_transaction_list_save_status(app);
+            scene_manager_next_scene(app->scene_manager, TUM_SceneTransactionDetail);
             break;
         case TUM_CustomEventSwitchToBaseinfo:
             consumed = true;
