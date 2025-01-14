@@ -2,16 +2,16 @@
 
 App(
     appid="flipper_ascii",  # Must be unique
-    name="App flipper_ascii",  # Displayed in menus
+    name="ASCII Table",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flipper_ascii_app",
     stack_size=2 * 1024,
-    fap_category="Examples",
+    fap_category="Tools",
     # Optional values
     # fap_version="0.1",
     fap_icon="flipper_ascii.png",  # 10x10 1-bit PNG
-    # fap_description="A simple app",
-    # fap_author="J. Doe",
-    # fap_weburl="https://github.com/user/flipper_ascii",
+    fap_description="An ASCII table for your flipper!",
+    fap_author="x10102",
+    fap_weburl="https://github.com/user/x10102/flipper_ascii",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
