@@ -14,7 +14,7 @@
 #include <dialogs/dialogs.h>
 
 //! -------------- DEBUG --------------
-#include <notification/notification_messages.h>
+//#include <notification/notification_messages.h>
 //! ------------ DEBUG END ------------
 
 #define TAG "FlipperDoc"
@@ -41,7 +41,7 @@ typedef struct {
     char text_input_array[50];
 
     //! -------------- DEBUG --------------
-    NotificationApp* notification;
+    //NotificationApp* notification;
     //! ------------ DEBUG END ------------
 } Doc;
 
