@@ -25,7 +25,7 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
       nfc_comparator_main_menu_menu_callback,
       nfc_comparator,
       !nfc_comparator->loaded_nfc_card,
-      "No NFC card selected");
+      "No NFC\ncard selected");
 
    submenu_add_item(
       nfc_comparator->submenu,
@@ -43,10 +43,13 @@ bool nfc_comparator_main_menu_scene_on_event(void* context, SceneManagerEvent ev
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
-      // case NfcComparatorMainMenu_Start:
-      //    scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Emulation);
-      //    consumed = true;
-      //    break;
+      case NfcComparatorMainMenu_Start: {
+         NfcComparatorReaderWorker* worker = nfc_comparator_reader_worker_alloc();
+         nfc_comparator_reader_worker_set_compare_nfc_device(worker, nfc_comparator->loaded_nfc_card);
+         nfc_comparator_reader_worker_task(worker);
+         consumed = true;
+         break;
+      }
       case NfcComparatorMainMenu_SelectNfcCard:
          scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_SelectNfcCard);
          consumed = true;

@@ -13,14 +13,25 @@ typedef enum {
 } NfcComparatorReaderWorkerState;
 
 typedef struct {
+   bool uid;
+   bool protocol;
+} NfcComparatorReaderWorkerCompareChecks;
+
+typedef struct {
    Nfc* nfc;
    FuriThread* thread;
-   NfcProtocol protocol;
+   NfcProtocol* protocol;
    NfcComparatorReaderWorkerState state;
-   NfcDevice* nfc_device;
+   NfcDevice* loaded_nfc_card;
    NfcPoller* nfc_poller;
    NfcScanner* nfc_scanner;
+   NfcComparatorReaderWorkerCompareChecks compare_checks;
 } NfcComparatorReaderWorker;
 
 NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc();
-void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* nfc_comparator_reader_worker);
+void nfc_comparator_reader_worker_free(void* context);
+
+void nfc_comparator_reader_worker_scanner_callback(NfcScannerEvent event, void* context);
+NfcCommand nfc_comparator_reader_worker_poller_callback(NfcGenericEvent event, void* context);
+int32_t nfc_comparator_reader_worker_task(void* context);
+void nfc_comparator_reader_worker_set_compare_nfc_device(void* context, NfcDevice* nfc_device);
