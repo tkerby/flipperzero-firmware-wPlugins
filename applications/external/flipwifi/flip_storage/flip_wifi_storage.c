@@ -20,9 +20,7 @@ void save_playlist(WiFiPlaylist* playlist) {
     // Create the directory for saving settings
     char directory_path[128];
     snprintf(
-        directory_path,
-        sizeof(directory_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi");
 
     // Open storage
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -32,6 +30,11 @@ void save_playlist(WiFiPlaylist* playlist) {
     }
 
     // Create the directory
+    storage_common_mkdir(storage, directory_path);
+    snprintf(
+        directory_path,
+        sizeof(directory_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
     storage_common_mkdir(storage, directory_path);
 
     // Open the settings file
@@ -313,9 +316,7 @@ bool save_char(const char* path_name, const char* value) {
     // Create the directory for saving settings
     char directory_path[256];
     snprintf(
-        directory_path,
-        sizeof(directory_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi");
 
     // Create the directory
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -323,6 +324,11 @@ bool save_char(const char* path_name, const char* value) {
         FURI_LOG_E(HTTP_TAG, "Failed to open storage record");
         return false;
     }
+    storage_common_mkdir(storage, directory_path);
+    snprintf(
+        directory_path,
+        sizeof(directory_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
     storage_common_mkdir(storage, directory_path);
 
     // Open the settings file

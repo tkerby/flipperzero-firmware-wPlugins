@@ -762,13 +762,19 @@ void callback_submenu_choices(void* context, uint32_t index) {
         bool _flip_wifi_handle_scan() {
             return flip_wifi_handle_scan(app);
         }
-        // ensure directory is there for saving scan data
+        Storage* storage = furi_record_open(RECORD_STORAGE);
+        // ensure flip_wifi directory is there
         char directory_path[128];
         snprintf(
             directory_path,
             sizeof(directory_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi");
+        storage_common_mkdir(storage, directory_path);
+        // ensure directory is there for saving data
+        snprintf(
+            directory_path,
+            sizeof(directory_path),
             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_wifi/data");
-        Storage* storage = furi_record_open(RECORD_STORAGE);
         storage_common_mkdir(storage, directory_path);
         furi_record_close(RECORD_STORAGE);
         // scan for wifi ad parse the results
