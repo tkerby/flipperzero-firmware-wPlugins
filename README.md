@@ -52,6 +52,16 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ![](docs/assets/transactions.png)
 
+### 交易详情
+
+显示所选交易记录的类型、金额、序号、时间戳、终端 id 信息
+
+导航键上下：详情信息翻页
+
+导航键返回：回到交易记录列表
+
+![](docs/assets/transaction_detail.png)
+
 ### 行程记录
 
 展示 30 条行程信息，按照从最近到最早排序，包含站台名、时间（月日时分）信息。
@@ -74,7 +84,6 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 - 深圳地铁站台信息 Terminal ID 反查
 - 行程记录详情界面
-- 交易记录详情界面
 - 行程记录列表文字滚动显示
 - 开屏欢迎画面
 - 北京卡优惠信息

@@ -1,5 +1,6 @@
 #include "transaction_detail.h"
 #include "../view_modules/elements.h"
+#include "assets_icons.h"
 
 struct TransactionDetailView {
     View* view;
@@ -19,12 +20,7 @@ void transaction_detail_process_up(TransactionDetailView* instance) {
         instance->view,
         RecordListViewModel * model,
         {
-            const size_t items_size = model->message->transaction_cnt;
-
-            if(model->index > 0)
-                model->index--;
-            else
-                model->index = items_size - 1;
+            if(model->index > 0) model->index--;
         },
         true);
 }
@@ -34,18 +30,9 @@ void transaction_detail_process_down(TransactionDetailView* instance) {
         instance->view,
         RecordListViewModel * model,
         {
-            const size_t items_size = model->message->transaction_cnt;
-
-            if(model->index < items_size - 1)
-                model->index++;
-            else
-                model->index = 0;
+            if(model->index < model->message->transaction_cnt - 1) model->index++;
         },
         true);
-}
-
-void transaction_detail_process_ok(TransactionDetailView* instance) {
-    UNUSED(instance);
 }
 
 void transaction_detail_process_left(TransactionDetailView* instance) {
@@ -72,10 +59,79 @@ void transaction_detail_reset(TransactionDetailView* instance) {
 
 static void transaction_detail_view_draw_cb(Canvas* canvas, void* _model) {
     RecordListViewModel* model = _model;
+    TUnionMessage* msg = model->message;
+    TUnionTransaction* curr_transcation = &msg->transactions[model->index];
 
-    FuriString* temp_str = furi_string_alloc_printf("transaction detail idx=%d", model->index);
+    FuriString* temp_str = furi_string_alloc();
+
+    // 翻页箭头
+    if(model->index != 0) {
+        canvas_draw_icon(canvas, 118, 3, &I_ButtonUp_7x4);
+    }
+    if(model->index != msg->transaction_cnt - 1) {
+        canvas_draw_icon(canvas, 118, 60, &I_ButtonDown_7x4);
+    }
+
+    canvas_draw_box(canvas, 0, 0, 116, 16);
+    canvas_set_color(canvas, ColorWhite);
+    // 交易类型
+    if(curr_transcation->type == 9) {
+        if(curr_transcation->money != 0)
+            furi_string_set(temp_str, "消费");
+        else
+            furi_string_set(temp_str, "区间记账");
+    } else if(curr_transcation->type == 2)
+        furi_string_set(temp_str, "充值");
+    else
+        furi_string_set(temp_str, "其他");
+    elements_draw_str_utf8(canvas, 2, 14, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
+
+    // 交易金额
+    canvas_set_font(canvas, FontPrimary);
+    furi_string_printf(
+        temp_str,
+        "%c%lu.%lu",
+        (curr_transcation->type == 2) ? '+' : '-',
+        curr_transcation->money / 100,
+        curr_transcation->money % 100);
+    canvas_draw_str(canvas, 52, 12, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
+
+    // 交易序号
+    furi_string_printf(temp_str, "#%u", curr_transcation->seqense);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 8, furi_string_get_cstr(temp_str));
+    canvas_draw_str(canvas, 80, 12, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
+
+    canvas_set_color(canvas, ColorBlack);
+
+    // 时间戳
+    furi_string_printf(
+        temp_str,
+        "%04u-%02u-%02u %02u:%02u:%02u",
+        curr_transcation->year,
+        curr_transcation->month,
+        curr_transcation->day,
+        curr_transcation->hour,
+        curr_transcation->month,
+        curr_transcation->second);
+    canvas_draw_str(canvas, 2, 26, furi_string_get_cstr(temp_str));
+    furi_string_reset(temp_str);
+
+    // 终端id
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 2, 40, "Terminal ID");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 50, curr_transcation->terminal_id);
+
+    // type值
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 80, 40, "Type");
+    canvas_set_font(canvas, FontSecondary);
+    furi_string_printf(temp_str, "%02u", curr_transcation->type);
+    canvas_draw_str(canvas, 80, 50, furi_string_get_cstr(temp_str));
+
     furi_string_free(temp_str);
 }
 
@@ -93,10 +149,6 @@ static bool transaction_detail_view_input_cb(InputEvent* event, void* ctx) {
         case InputKeyDown:
             consumed = true;
             transaction_detail_process_down(instance);
-            break;
-        case InputKeyOk:
-            consumed = true;
-            transaction_detail_process_ok(instance);
             break;
         case InputKeyRight:
             consumed = true;

@@ -167,7 +167,7 @@ static void transaction_list_view_draw_cb(Canvas* canvas, void* _model) {
                 } else if(transaction->type == 2)
                     furi_string_set(temp_str, "充值");
                 else
-                    furi_string_set(temp_str, "未知");
+                    furi_string_set(temp_str, "其他");
                 elements_draw_str_utf8(
                     canvas,
                     2,
@@ -176,8 +176,8 @@ static void transaction_list_view_draw_cb(Canvas* canvas, void* _model) {
                 furi_string_reset(temp_str);
 
                 // 交易金额
-                canvas_set_font(canvas, FontPrimary);
                 if(transaction->money != 0) {
+                    canvas_set_font(canvas, FontPrimary);
                     furi_string_printf(
                         temp_str,
                         "%c%lu.%lu",
