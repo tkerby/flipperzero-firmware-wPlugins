@@ -39,14 +39,21 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
 
 bool nfc_comparator_main_menu_scene_on_event(void* context, SceneManagerEvent event) {
    NfcComparator* nfc_comparator = context;
-   UNUSED(nfc_comparator);
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
       case NfcComparatorMainMenu_Start: {
          NfcComparatorReaderWorker* worker = nfc_comparator_reader_worker_alloc();
-         nfc_comparator_reader_worker_set_compare_nfc_device(worker, nfc_comparator->loaded_nfc_card);
-         nfc_comparator_reader_worker_task(worker);
+         nfc_comparator_reader_worker_set_compare_nfc_device(
+            worker, nfc_comparator->loaded_nfc_card);
+         nfc_comparator_reader_worker_start(worker);
+         while(!nfc_comparator_reader_worker_is_done(worker)) {
+            furi_delay_ms(100);
+         }
+         nfc_comparator_reader_worker_stop(worker);
+         nfc_comparator->compare_results = nfc_comparator_reader_worker_get_compare_checks(worker);
+         nfc_comparator_reader_worker_free(worker);
+         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Results);
          consumed = true;
          break;
       }
