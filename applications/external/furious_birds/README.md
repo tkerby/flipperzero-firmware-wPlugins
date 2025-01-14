@@ -7,6 +7,6 @@ Next level has even more pigs to eliminate. And you have just 3 attempts!
 ![Game play](screenshots/game.png)
 ![Game results](screenshots/game_over.png)
 
-#### License
+## License
 [MIT](LICENSE)
 Copyright 2025 Dmitry Ermashev
