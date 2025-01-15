@@ -1015,7 +1015,7 @@ void callback_submenu_choices(void *context, uint32_t index)
     {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true, true);
-        if (!is_enough_heap(60000))
+        if (!is_enough_heap(45000)) // lowered from 60k to 45k since we saved 15k bytes
         {
             easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
             return;
