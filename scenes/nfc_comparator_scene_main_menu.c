@@ -2,7 +2,7 @@
 #include "../nfc_comparator.h"
 
 typedef enum {
-   NfcComparatorMainMenu_Start,
+   NfcComparatorMainMenu_StartComparator,
    NfcComparatorMainMenu_SelectNfcCard
 } NfcComparatorMainMenuMenuSelection;
 
@@ -20,8 +20,8 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
 
    submenu_add_lockable_item(
       nfc_comparator->submenu,
-      "Start",
-      NfcComparatorMainMenu_Start,
+      "Start Comparator",
+      NfcComparatorMainMenu_StartComparator,
       nfc_comparator_main_menu_menu_callback,
       nfc_comparator,
       !nfc_comparator->loaded_nfc_card,
@@ -34,6 +34,8 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
       nfc_comparator_main_menu_menu_callback,
       nfc_comparator);
 
+   submenu_add_item(nfc_comparator->submenu, "By acegoal07", 0, NULL, NULL);
+
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Submenu);
 }
 
@@ -42,21 +44,10 @@ bool nfc_comparator_main_menu_scene_on_event(void* context, SceneManagerEvent ev
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
-      case NfcComparatorMainMenu_Start: {
-         NfcComparatorReaderWorker* worker = nfc_comparator_reader_worker_alloc();
-         nfc_comparator_reader_worker_set_compare_nfc_device(
-            worker, nfc_comparator->loaded_nfc_card);
-         nfc_comparator_reader_worker_start(worker);
-         while(!nfc_comparator_reader_worker_is_done(worker)) {
-            furi_delay_ms(100);
-         }
-         nfc_comparator_reader_worker_stop(worker);
-         nfc_comparator->compare_results = nfc_comparator_reader_worker_get_compare_checks(worker);
-         nfc_comparator_reader_worker_free(worker);
-         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Results);
+      case NfcComparatorMainMenu_StartComparator:
+         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Comparator);
          consumed = true;
          break;
-      }
       case NfcComparatorMainMenu_SelectNfcCard:
          scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_SelectNfcCard);
          consumed = true;

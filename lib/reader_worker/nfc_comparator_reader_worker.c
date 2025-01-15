@@ -11,6 +11,7 @@ NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc() {
       4096,
       nfc_comparator_reader_worker_task,
       nfc_comparator_reader_worker);
+   nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Stopped;
    return nfc_comparator_reader_worker;
 }
 
@@ -18,7 +19,6 @@ void nfc_comparator_reader_worker_free(void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
    furi_assert(nfc_comparator_reader_worker);
    nfc_free(nfc_comparator_reader_worker->nfc);
-   nfc_device_free(nfc_comparator_reader_worker->loaded_nfc_card);
    nfc_scanner_free(nfc_comparator_reader_worker->nfc_scanner);
    furi_thread_free(nfc_comparator_reader_worker->thread);
    free(nfc_comparator_reader_worker);
@@ -26,6 +26,7 @@ void nfc_comparator_reader_worker_free(void* context) {
 
 void nfc_comparator_reader_worker_scanner_callback(NfcScannerEvent event, void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
+   furi_assert(nfc_comparator_reader_worker);
    switch(event.type) {
    case NfcScannerEventTypeDetected:
       nfc_comparator_reader_worker->protocol = event.data.protocols;
@@ -38,6 +39,7 @@ void nfc_comparator_reader_worker_scanner_callback(NfcScannerEvent event, void* 
 
 NfcCommand nfc_comparator_reader_worker_poller_callback(NfcGenericEvent event, void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
+   furi_assert(nfc_comparator_reader_worker);
    UNUSED(event);
    NfcCommand command = NfcCommandStop;
    nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Comparing;
@@ -70,78 +72,90 @@ int32_t nfc_comparator_reader_worker_task(void* context) {
    while(nfc_comparator_reader_worker->state == NfcComparatorReaderWorkerState_Polling) {
       furi_delay_ms(100);
    }
+
    nfc_poller_stop(nfc_poller);
 
-   NfcDeviceData* nfc_device_data = (NfcDeviceData*)nfc_poller_get_data(nfc_poller);
    NfcDevice* data = nfc_device_alloc();
-   nfc_device_set_data(data, nfc_comparator_reader_worker->protocol[0], nfc_device_data);
+   nfc_device_set_data(
+      data,
+      nfc_comparator_reader_worker->protocol[0],
+      (NfcDeviceData*)nfc_poller_get_data(nfc_poller));
 
-   if(nfc_device_get_protocol_name(nfc_device_get_protocol(data)) ==
-      nfc_device_get_protocol_name(
-         nfc_device_get_protocol(nfc_comparator_reader_worker->loaded_nfc_card))) {
-      nfc_comparator_reader_worker->compare_checks->protocol = true;
-   } else {
-      nfc_comparator_reader_worker->compare_checks->protocol = false;
-   }
+   nfc_comparator_reader_worker->compare_checks.protocol =
+      nfc_device_get_protocol_name(nfc_device_get_protocol(data)) ==
+            nfc_device_get_protocol_name(
+               nfc_device_get_protocol(nfc_comparator_reader_worker->loaded_nfc_card)) ?
+         true :
+         false;
 
    nfc_poller_free(nfc_poller);
 
    size_t poller_uid_len = 0;
-   const uint8_t* uid = nfc_device_get_uid(data, &poller_uid_len);
+   const uint8_t* poller_uid = nfc_device_get_uid(data, &poller_uid_len);
    FuriString* poller_uid_str = furi_string_alloc();
    for(size_t i = 0; i < poller_uid_len; i++) {
-      char uid_str[3];
-      snprintf(uid_str, sizeof(uid_str), "%02X", uid[i]);
-      furi_string_cat(poller_uid_str, uid_str);
+      furi_string_utf8_push(poller_uid_str, poller_uid[i]);
    }
+
+   nfc_device_free(data);
 
    size_t loaded_uid_len = 0;
    const uint8_t* loaded_uid =
       nfc_device_get_uid(nfc_comparator_reader_worker->loaded_nfc_card, &loaded_uid_len);
    FuriString* loaded_uid_str = furi_string_alloc();
    for(size_t i = 0; i < loaded_uid_len; i++) {
-      char uid_str[3];
-      snprintf(uid_str, sizeof(uid_str), "%02X", loaded_uid[i]);
-      furi_string_cat(loaded_uid_str, uid_str);
+      furi_string_utf8_push(loaded_uid_str, loaded_uid[i]);
    }
 
-   if(furi_string_cmpi(poller_uid_str, loaded_uid_str) == 0) {
-      nfc_comparator_reader_worker->compare_checks->uid = true;
-   } else {
-      nfc_comparator_reader_worker->compare_checks->uid = false;
-   }
+   nfc_comparator_reader_worker->compare_checks.uid =
+      furi_string_cmpi(loaded_uid_str, poller_uid_str) == 0 ? true : false;
 
    furi_string_free(poller_uid_str);
    furi_string_free(loaded_uid_str);
+
+   nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Stopped;
 
    return 0;
 }
 
 void nfc_comparator_reader_worker_set_compare_nfc_device(void* context, NfcDevice* nfc_device) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
+   furi_assert(nfc_comparator_reader_worker);
    nfc_comparator_reader_worker->loaded_nfc_card = nfc_device;
 }
 
-bool nfc_comparator_reader_worker_is_done(void* context) {
+bool nfc_comparator_reader_worker_is_running(void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
-   return nfc_comparator_reader_worker->state == NfcComparatorReaderWorkerState_Stopped;
+   return nfc_comparator_reader_worker->state != NfcComparatorReaderWorkerState_Stopped;
 }
 
-NfcComparatorReaderWorkerCompareChecks*
-   nfc_comparator_reader_worker_get_compare_checks(void* context) {
-   NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
-   return nfc_comparator_reader_worker->compare_checks;
-}
-
-void nfc_comparator_reader_worker_start(void* context) {
+NfcComparatorReaderWorkerState nfc_comparator_reader_worker_get_state(void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
    furi_assert(nfc_comparator_reader_worker);
-   furi_thread_start(nfc_comparator_reader_worker->thread);
+   return nfc_comparator_reader_worker->state;
 }
 
 void nfc_comparator_reader_worker_stop(void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
    furi_assert(nfc_comparator_reader_worker);
-   nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Stopped;
+   if(nfc_comparator_reader_worker->state != NfcComparatorReaderWorkerState_Stopped) {
+      nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Stopped;
+   }
    furi_thread_join(nfc_comparator_reader_worker->thread);
+}
+
+void nfc_comparator_reader_worker_start(void* context) {
+   NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
+   furi_assert(nfc_comparator_reader_worker);
+   if(nfc_comparator_reader_worker->state == NfcComparatorReaderWorkerState_Stopped) {
+      nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Scanning;
+      furi_thread_start(nfc_comparator_reader_worker->thread);
+   }
+}
+
+NfcComparatorReaderWorkerCompareChecks
+   nfc_comparator_reader_worker_get_compare_checks(void* context) {
+   NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
+   furi_assert(nfc_comparator_reader_worker);
+   return nfc_comparator_reader_worker->compare_checks;
 }

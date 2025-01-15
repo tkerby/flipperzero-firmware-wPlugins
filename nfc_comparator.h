@@ -41,7 +41,6 @@ typedef struct {
    FuriString* file_browser_output;
    Popup* popup;
    NfcDevice* loaded_nfc_card;
-   NfcComparatorReaderWorkerCompareChecks* compare_results;
 } NfcComparator;
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
