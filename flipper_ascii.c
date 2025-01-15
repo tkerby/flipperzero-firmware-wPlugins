@@ -44,9 +44,16 @@ void draw_callback(Canvas *canvas, void *ctx) {
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
-
+    
     char buffer[10];
     for(uint8_t i = 0; i < 6; i++) {
+        if(i % 2 == 1) {
+            canvas_set_color(canvas, ColorBlack);
+            canvas_draw_box(canvas, 0, 10*i+2, 128, 9);
+            canvas_set_color(canvas, ColorWhite);
+        } else {
+            canvas_set_color(canvas, ColorBlack);
+        }
         // Draw the decimal number
         snprintf(buffer, 10, "%d", i+state->index);
         canvas_draw_str_aligned(canvas, 2, 10*(i+1), AlignLeft, AlignBottom, buffer);
@@ -57,7 +64,6 @@ void draw_callback(Canvas *canvas, void *ctx) {
         ascii_to_str(i+state->index, buffer);
         canvas_draw_str_aligned(canvas, 76, 10*(i+1), AlignCenter, AlignBottom, buffer);
     }
-    
 }
 
 // Just place the event in the queue to be handled by the main loop
