@@ -56,34 +56,26 @@ If an enemy attacks you, your health decreases by the enemy's strength (attack p
 ## Roadmap
 
 **v0.2**
-
 - Game Mechanics
 - Video Game Module support
 
 **v0.3**
-
 - Stability patch
 
 **v0.4**
-
-- ???
+- New game features
 
 **v0.5**
-
 - ???
 
 **v0.6**
-
 - ???
 
 **v0.7**
-
 - ???
 
 **v0.8**
-
 - Multiplayer support
 
 **v1.0**
-
 - Official release
