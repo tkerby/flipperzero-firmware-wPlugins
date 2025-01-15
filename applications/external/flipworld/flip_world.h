@@ -3,9 +3,14 @@
 #include <flipper_http/flipper_http.h>
 #include <easy_flipper/easy_flipper.h>
 
+// added by Derek Jamison to lower memory usage
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
+//
+
 #define TAG         "FlipWorld"
-#define VERSION     0.21
-#define VERSION_TAG "FlipWorld v0.2.1"
+#define VERSION     0.3
+#define VERSION_TAG "FlipWorld v0.3"
 
 // Define the submenu items for our FlipWorld application
 typedef enum {

@@ -1,10 +1,10 @@
 #include <callback/callback.h>
-#include <furi.h>
 #include "engine/engine.h"
 #include "engine/game_engine.h"
 #include "engine/game_manager_i.h"
 #include "engine/level_i.h"
 #include "engine/entity_i.h"
+#include "game/storage.h"
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
@@ -163,12 +163,13 @@ static uint32_t callback_to_settings(void* context) {
 static void flip_world_view_about_draw_callback(Canvas* canvas, void* model) {
     UNUSED(model);
     canvas_clear(canvas);
-    canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
+    // canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
     canvas_draw_str(canvas, 0, 10, VERSION_TAG);
-    canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
-    canvas_draw_str(canvas, 0, 20, "- @JBlanked @codeallnight");
+    // canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 30, "- github.com/JBlanked/FlipWorld");
+    canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
+    canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
+    canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
 
     canvas_draw_str_multi(
         canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
@@ -672,6 +673,32 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
         "https://www.flipsocial.net/api/world/v3/list/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
+// we will load the palyer stats from the API and save them
+// in player_spawn game method, it will load the player stats that we saved
+static bool fetch_player_stats(FlipperHTTP* fhttp) {
+    if(!fhttp) {
+        FURI_LOG_E(TAG, "fhttp is NULL");
+        easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
+        return false;
+    }
+    char username[64];
+    if(!load_char("Flip-Social-Username", username, sizeof(username))) {
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
+        return false;
+    }
+    char url[128];
+    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/user/game-stats/%s/", username);
+    snprintf(
+        fhttp->file_path,
+        sizeof(fhttp->file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
+
+    fhttp->save_received_data = true;
+    return flipper_http_get_request_with_headers(
+        fhttp, url, "{\"Content-Type\":\"application/json\"}");
+}
+
 static bool start_game_thread(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
@@ -695,34 +722,7 @@ static bool start_game_thread(void* context) {
     furi_thread_start(thread);
     thread_id = furi_thread_get_id(thread);
     game_thread_running = true;
-    // view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-    // view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventPlay);
     return true;
-}
-static bool flip_world_fetch_world_list(DataLoaderModel* model) {
-    return fetch_world_list(model->fhttp);
-}
-static char* flip_world_parse_world_list(DataLoaderModel* model) {
-    FlipWorldApp* app = (FlipWorldApp*)model->parser_context;
-
-    if(!start_game_thread(app)) {
-        FURI_LOG_E(TAG, "Failed to start game thread");
-        easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-        view_dispatcher_switch_to_view(
-            app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
-        return "Failed to start game thread";
-    }
-    return "Game starting... please wait :D";
-}
-void flip_world_world_list_switch_to_view(FlipWorldApp* app) {
-    return flip_world_generic_switch_to_view(
-        app,
-        "Fetching World List..",
-        flip_world_fetch_world_list,
-        flip_world_parse_world_list,
-        1,
-        callback_to_submenu,
-        FlipWorldViewLoader);
 }
 // combine register, login, and world list fetch into one function to switch to the loader view
 static bool flip_world_fetch_game(DataLoaderModel* model) {
@@ -1043,7 +1043,8 @@ void callback_submenu_choices(void* context, uint32_t index) {
     switch(index) {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true, true);
-        if(!is_enough_heap(60000)) {
+        if(!is_enough_heap(45000)) // lowered from 60k to 45k since we saved 15k bytes
+        {
             easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
             return;
         }
@@ -1061,6 +1062,10 @@ void callback_submenu_choices(void* context, uint32_t index) {
             }
             bool parse_world_list_i() {
                 return fhttp->state != ISSUE;
+            }
+
+            bool fetch_player_stats_i() {
+                return fetch_player_stats(fhttp);
             }
 
             Loading* loading;
@@ -1082,7 +1087,9 @@ void callback_submenu_choices(void* context, uint32_t index) {
 
             // Make the request
             if(!flipper_http_process_response_async(
-                   fhttp, fetch_world_list_i, parse_world_list_i)) {
+                   fhttp, fetch_world_list_i, parse_world_list_i) ||
+               !flipper_http_process_response_async(
+                   fhttp, fetch_player_stats_i, set_player_context)) {
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
                 view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
