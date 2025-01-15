@@ -6,6 +6,8 @@
 
 #define TAG "flipAscii"
 #define MSG_QUEUE_SIZE 8
+#define REPEAT_HOLD_COUNT 4
+#define MAX_INDEX 121
 
 static const char* CODE_NAMES[] = {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ",
 "ACK", "BEL", "BS", "TAB", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1",
@@ -18,6 +20,8 @@ typedef struct app_state_t {
     ViewPort *view_port;
     uint8_t index;
     uint16_t repeat_count;
+    InputKey input_last;
+    bool exit_flag;
 } AppState;
 
 // Buffer must fit at least 7 chars
@@ -59,9 +63,9 @@ void draw_callback(Canvas *canvas, void *ctx) {
 // Just place the event in the queue to be handled by the main loop
 void input_callback(InputEvent *evt, void *ctx) {
     furi_assert(ctx);
-    FuriMessageQueue *q = ctx;
+    FuriMessageQueue* event_queue = ctx;
 
-    furi_message_queue_put(q, evt, FuriWaitForever);
+    furi_message_queue_put(event_queue, evt, FuriWaitForever);
 }
 
 AppState* flipper_ascii_app_alloc() {
@@ -72,6 +76,55 @@ AppState* flipper_ascii_app_alloc() {
     s->index = 0;
     s->repeat_count = 0;
     return s;
+}
+
+void handle_input_event(AppState *state, InputEvent *evt) {
+    state->input_last = evt->key;
+    if(evt->type == InputTypeRelease) {
+        state->repeat_count = 0;
+        return;
+    }
+    if(evt->type == InputTypeRepeat && evt->key == state->input_last) {
+        
+        if(state->repeat_count > REPEAT_HOLD_COUNT && state->index <= MAX_INDEX)
+            state->index++;
+        else
+            state->repeat_count++;
+        return;
+    }
+    if(evt->type == InputTypePress)
+        switch (evt->key)
+        {
+        case InputKeyUp:
+            if(state->index > 0)
+                state->index--;
+            break;
+
+        case InputKeyDown:
+            if(state->index <= MAX_INDEX)
+                state->index++;
+            break;
+
+        case InputKeyLeft:
+            if(state->index >= 10)
+                state->index -= 10;
+            else
+                state->index = 0;
+            break;
+
+        case InputKeyRight:
+            if(state->index <= MAX_INDEX - 10)
+                state->index += 10;
+            else
+                state->index = MAX_INDEX;
+            break;
+        
+        case InputKeyBack:
+            state->exit_flag = true;
+            break;
+
+        default: break;
+    }
 }
 
 void flipper_ascii_app_dealloc(AppState* state) {
@@ -86,40 +139,18 @@ void flipper_ascii_app_dealloc(AppState* state) {
 
 int32_t flipper_ascii_app(void* p) {
     UNUSED(p);
-    UNUSED(CODE_NAMES);
-    bool exit_flag = false;
-    InputEvent event;
+
     AppState *state = flipper_ascii_app_alloc();
+    InputEvent event;
 
     view_port_draw_callback_set(state->view_port, draw_callback, state);
     view_port_input_callback_set(state->view_port, input_callback, state->evt_queue);
 
     gui_add_view_port(state->gui, state->view_port, GuiLayerFullscreen);
 
-    while(!exit_flag) {
+    while(!state->exit_flag) {
         furi_check(furi_message_queue_get(state->evt_queue, &event, FuriWaitForever) == FuriStatusOk);
-        FURI_LOG_I(TAG, "Event received");
-        if(event.type != InputTypePress)
-            continue;
-        switch (event.key)
-        {
-        case InputKeyBack:
-            exit_flag = true;
-            break;
-        
-        case InputKeyUp:
-            if(state->index > 0)
-                state->index--;
-            break;
-
-        case InputKeyDown:
-            if(state->index < 122)
-                state->index++;
-            break;
-
-        default:
-            break;
-        }
+        handle_input_event(state, &event);
     }
 
     gui_remove_view_port(state->gui, state->view_port);
