@@ -11,6 +11,7 @@
 #include <gui/scene_manager.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/file_browser.h>
+#include <gui/modules/popup.h>
 
 #include <nfc_device.h>
 #include <nfc_listener.h>
@@ -28,7 +29,8 @@
 
 typedef enum {
    NfcComparatorView_Submenu,
-   NfcComparatorView_FileBrowser
+   NfcComparatorView_FileBrowser,
+   NfcComparatorView_Popup
 } NfcComparatorViews;
 
 typedef struct {
@@ -37,6 +39,7 @@ typedef struct {
    Submenu* submenu;
    FileBrowser* file_browser;
    FuriString* file_browser_output;
+   Popup* popup;
    NfcDevice* loaded_nfc_card;
 } NfcComparator;
 

@@ -24,6 +24,8 @@ static NfcComparator* nfc_comparator_alloc() {
    nfc_comparator->file_browser_output = furi_string_alloc();
    nfc_comparator->file_browser = file_browser_alloc(nfc_comparator->file_browser_output);
 
+   nfc_comparator->popup = popup_alloc();
+
    view_dispatcher_set_event_callback_context(nfc_comparator->view_dispatcher, nfc_comparator);
    view_dispatcher_set_custom_event_callback(
       nfc_comparator->view_dispatcher, nfc_comparator_custom_callback);
@@ -38,6 +40,10 @@ static NfcComparator* nfc_comparator_alloc() {
       nfc_comparator->view_dispatcher,
       NfcComparatorView_FileBrowser,
       file_browser_get_view(nfc_comparator->file_browser));
+   view_dispatcher_add_view(
+      nfc_comparator->view_dispatcher,
+      NfcComparatorView_Popup,
+      popup_get_view(nfc_comparator->popup));
 
    return nfc_comparator;
 }
@@ -47,6 +53,7 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
 
    view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_Submenu);
    view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_FileBrowser);
+   view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_Popup);
 
    scene_manager_free(nfc_comparator->scene_manager);
    view_dispatcher_free(nfc_comparator->view_dispatcher);
@@ -54,7 +61,10 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
    submenu_free(nfc_comparator->submenu);
    file_browser_free(nfc_comparator->file_browser);
    furi_string_free(nfc_comparator->file_browser_output);
-   nfc_device_free(nfc_comparator->loaded_nfc_card);
+   if(nfc_comparator->loaded_nfc_card) {
+      nfc_device_free(nfc_comparator->loaded_nfc_card);
+   }
+   popup_free(nfc_comparator->popup);
 
    free(nfc_comparator);
 }
