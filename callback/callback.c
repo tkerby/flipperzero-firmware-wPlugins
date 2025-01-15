@@ -1,5 +1,4 @@
 #include <callback/callback.h>
-#include <furi.h>
 #include "engine/engine.h"
 #include "engine/game_engine.h"
 #include "engine/game_manager_i.h"
@@ -182,12 +181,13 @@ static void flip_world_view_about_draw_callback(Canvas *canvas, void *model)
 {
     UNUSED(model);
     canvas_clear(canvas);
-    canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
+    // canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
     canvas_draw_str(canvas, 0, 10, VERSION_TAG);
-    canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
-    canvas_draw_str(canvas, 0, 20, "- @JBlanked @codeallnight");
+    // canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 30, "- github.com/JBlanked/FlipWorld");
+    canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
+    canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
+    canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
 
     canvas_draw_str_multi(canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
 }

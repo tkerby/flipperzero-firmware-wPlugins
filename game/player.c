@@ -275,6 +275,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             save_player_context(player);
             game_manager_next_level_set(manager, get_next_level(manager));
             furi_delay_ms(500);
+            return;
         }
         else
         {
