@@ -16,7 +16,7 @@
 #define FACE_DEFAULT_WIDTH 54
 
 const char* WEEKDAYS[] =
-    {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
 const char* MONTHS[] =
     {"JAN", "FEB", "MAR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
@@ -190,11 +190,22 @@ void draw_analog_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t 
     canvas_draw_disc(canvas, cfg->ofs_x, OFS_Y, 2);
 }
 
+// Using Zeller's Congruence for the Julian calendar
+int get_weekday(int year, int month, int day) {
+    if(month < 3) {
+        month += 12;
+        year -= 1;
+    }
+    int K = year % 100;
+    int J = year / 100;
+    return (day + 13 * (month + 1) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;
+}
+
 void draw_date(Canvas* canvas, DateTime* dt) {
     static char day[3];
     snprintf(day, 3, "%2u", dt->day % 32);
     const char* month = MONTHS[(dt->month - 1) % 12];
-    const char* weekday = WEEKDAYS[(dt->weekday - 1) % 7];
+    const char* weekday = WEEKDAYS[get_weekday(dt->year, dt->month, dt->day) % 7];
     int8_t ofs_x = 2;
     Align d_align = AlignLeft;
     Align m_align = AlignRight;
