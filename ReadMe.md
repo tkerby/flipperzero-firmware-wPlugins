@@ -4,7 +4,7 @@
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://lh3.googleusercontent.com/d/1jMPWENvOTabzjJALFj82U72LGsRWuUuQ' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0108-2246-0.420.0-6b6e4e8.tgz&channel=RM0108-2246-0.420.0-6b6e4e8&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0115-2126-0.420.0-73cef7f.tgz&channel=RM0115-2126-0.420.0-73cef7f&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -31,32 +31,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-15 16:50 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-15 16:50 EST`
-- Updated: [Cross Remote v3.0 (By leedave)](https://github.com/leedave/flipper-zero-cross-remote)
-- Added: [FlipRPI v1.0 (By jblanked)](https://github.com/jblanked/FlipRPI) `Req: ESP32S2` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- OFW: [nfc: Fix MFUL PWD_AUTH command creation #4051 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/4051)
-- OFW: [u2f: Fix leaking message digest contexts #4052 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/4052)
-- Updated: [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps) [This version shows friendly resistance values, supports Pink color bands, and adds three missing Temp Coefficients (+-1, +-20, +-250) (By shalebridge)](https://github.com/shalebridge/flipper-resistance-calculator)
-- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
-- Updated: [Pokemon Trading v2.3 (By EstebanFuentealba & kbembedded)](https://github.com/EstebanFuentealba/Flipper-Zero-Game-Boy-Trading-Pokemons)
-- OFW: [nfc: Fix MIFARE Plus detection #4049 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/4049)
-- OFW: [Rename FuriHalDebuging.md to FuriHalDebugging.md #4047 (By NotLukas001)](https://github.com/flipperdevices/flipperzero-firmware/pull/4047)
-- Infrared: [Update universal bluray remote (By jaylikesbunda)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/81f1d29e042e5575d01079e5037994db3d872dc5)
-- BadKB: [Added german Mac keyboard Layout (By Cloudy261)](https://github.com/Next-Flip/Momentum-Firmware/pull/325)
-- Added: [Furious Birds v0.1 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
-- NFC: [Fix issue with MFC key recovery state machine performing key reuse early (By noproto) (From Xero FW)](https://github.com/noproto/xero-firmware/commit/56fe7b09ae896ffdeb76522a56ab41b8a31dcc55)
-- [Game Mode menu default games list updated to include the latest Games (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/05bd1197ed7134260db009a9c9debbee8d29126c)
-- Added: [Roman Decoder v0.1 (By evillero)](https://github.com/evillero/roman_decoder)
-- Updated: [Furious Birds v1.0 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
-- Updated: [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps) [Updates (By shalebridge)](https://github.com/shalebridge/flipper-resistance-calculator)
-- Updated: [FlipWifi v1.3.1 (By jblanked)](https://github.com/jblanked/FlipWiFi)
-- Updated: [FlipSocial v1.0.3 (By jblanked)](https://github.com/jblanked/FlipSocial)
-- Updated: [Web Crawler v1.0 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
-- Updated: [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
-- Updated: [Bad USB JS Demo (By jamisonDerek)](https://github.com/jamisonderek/flipper-zero-tutorials/commit/1993ee28660a5473f3a869a7cffd3b1791374f42)
-- Updated: [FlipWorld v0.3 (By jblanked)](https://github.com/jblanked/FlipWorld)
-- Updated: [Metroflip v0.4.8 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [FlipperZero Clock v1.3 (By mdaskalov)](https://github.com/mdaskalov/flipperzero-clock)
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043)
 
 <a name="release">
@@ -691,4 +665,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0108-2246-0.420.0-6b6e4e8.tgz&channel=RM0108-2246-0.420.0-6b6e4e8&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0115-2126-0.420.0-73cef7f.tgz&channel=RM0115-2126-0.420.0-73cef7f&version=0.420.0)
