@@ -1,6 +1,6 @@
 # FlipWorld
 
-The first open-world multiplayer game for the Flipper Zero, best played with the VGM.
+The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
 ## Requirements
 
