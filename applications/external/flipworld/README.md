@@ -23,7 +23,7 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 - **Press/Hold RIGHT**: Turn right if not already facing right, then walk right if the button is still pressed.
 - **Press/Hold UP**: Walk up.
 - **Press/Hold DOWN**: Walk down.
-- **Press/Hold UP**: Attack/Teleport (set to attack until all enemies are defeated).
+- **Press/Hold OK**: Attack/Teleport (set to attack until all enemies are defeated).
 
 **Player Attributes**
 
@@ -42,7 +42,10 @@ Enemies have similar attributes to players but do not have XP or health regenera
 
 **Attacks**
 
-If an enemy attacks you, your health decreases by the enemy's strength (attack power). Additionally, if an enemy defeats you, your XP decreases by the amount of the enemy's strength. Conversely, when you successfully attack an enemy, you gain 10% of the enemy's strength as health and increase your XP by the enemy's full strength.
+If an enemy attacks you, your health decreases by the enemy's strength (attack power). Additionally, if an enemy defeats you, your XP decreases by the enemy's strength. Conversely, when you successfully attack an enemy, you gain health equal to 10% of the enemy's strength and increase your XP by the enemy's full strength.
+
+An enemy attack registers if the enemy is facing you and collides with you. However, to attack an enemy successfully, the enemy must be facing away from you, and you must collide with them while pressing `OK`.
+
 
 ## Short Tutorial
 
