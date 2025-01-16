@@ -1,17 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="flipper_ascii",  # Must be unique
-    name="ASCII Table",  # Displayed in menus
+    appid="flipper_ascii",
+    name="ASCII Table",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flipper_ascii_app",
-    stack_size=1024,
-    fap_category="Tools",
-    # Optional values
-    fap_version="1.0.0",
-    fap_icon="flipper_ascii.png",  # 10x10 1-bit PNG
-    fap_description="An ASCII table for your flipper!",
+    stack_size=1 * 1024,
+    fap_icon="flipper_ascii.png",
+    fap_icon_assets="images",
+    fap_category="Tools/Educational",
     fap_author="x10102",
-    fap_weburl="https://github.com/user/x10102/flipper_ascii",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_weburl="https://github.com/x10102/flipper_ascii",
+    fap_version="1.0",
+    fap_description="An ASCII table for your flipper!",
 )
