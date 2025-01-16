@@ -1,4 +1,4 @@
-![screenshot](https://github.com/x10102/flipper_ascii/blob/master/images/screen1.png)
+![screenshot](https://github.com/x10102/flipper_ascii/blob/master/screen1.png)
 
 # Flipper ASCII
 A pocket ASCII table for your Flipper Zero. [You never know when you might need one ;)](https://www.youtube.com/watch?v=NttUBB98zg4)
