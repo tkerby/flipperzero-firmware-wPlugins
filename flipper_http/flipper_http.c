@@ -645,6 +645,8 @@ bool flipper_http_scan_wifi()
     // custom for FlipWiFi app
     fhttp.just_started_get = true;
 
+    // ensure the data folder exists
+
     snprintf(
         fhttp.file_path,
         sizeof(fhttp.file_path),
@@ -679,6 +681,10 @@ bool flipper_http_save_wifi(const char *ssid, const char *password)
         FURI_LOG_E("FlipperHTTP", "Invalid arguments provided to flipper_http_save_wifi.");
         return false;
     }
+
+    // custom for FlipWiFi app
+    fhttp.just_started_get = true;
+
     char buffer[256];
     int ret = snprintf(
         buffer, sizeof(buffer), "[WIFI/SAVE]{\"ssid\":\"%s\",\"password\":\"%s\"}", ssid, password);
@@ -693,6 +699,8 @@ bool flipper_http_save_wifi(const char *ssid, const char *password)
         FURI_LOG_E("FlipperHTTP", "Failed to send WiFi save command.");
         return false;
     }
+
+    fhttp.state = RECEIVING;
 
     // The response will be handled asynchronously via the callback
     return true;

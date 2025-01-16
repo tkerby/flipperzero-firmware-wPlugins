@@ -133,7 +133,7 @@ static bool flip_wifi_alloc_widgets(void *context, uint32_t widget)
     case FlipWiFiViewAbout:
         if (!app->widget_info)
         {
-            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.3\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
+            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.3.2\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
             {
                 return false;
             }
@@ -563,19 +563,35 @@ static bool flip_wifi_view_input_callback_saved(InputEvent *event, void *context
         // save the settings
         save_settings(wifi_playlist->ssids[ssid_index], wifi_playlist->passwords[ssid_index]);
 
-        flipper_http_save_wifi(wifi_playlist->ssids[ssid_index], wifi_playlist->passwords[ssid_index]);
+        // initialize uart
+        if (!flipper_http_init(flipper_http_rx_callback, app))
+        {
+            easy_flipper_dialog("[ERROR]", "Failed to initialize flipper http");
+            return false;
+        }
 
-        flipper_http_connect_wifi();
+        // clear response
+        if (fhttp.last_response)
+            snprintf(fhttp.last_response, RX_BUF_SIZE, "%s", "");
+
+        if (!flipper_http_save_wifi(wifi_playlist->ssids[ssid_index], wifi_playlist->passwords[ssid_index]))
+        {
+            easy_flipper_dialog("[ERROR]", "Failed to save WiFi settings");
+            return false;
+        }
+
+        while (!fhttp.last_response || strlen(fhttp.last_response) == 0)
+        {
+            furi_delay_ms(100);
+        }
+
+        flipper_http_deinit();
 
         easy_flipper_dialog("[SUCCESS]", "All FlipperHTTP apps will now\nuse the selected network.");
         return true;
     }
     else if (event->type == InputTypePress && event->key == InputKeyLeft)
     {
-        // delete the selected ssid and password
-        free(wifi_playlist->ssids[ssid_index]);
-        free(wifi_playlist->passwords[ssid_index]);
-        free(ssid_list[ssid_index]);
         // shift the remaining ssids and passwords
         for (uint32_t i = ssid_index; i < wifi_playlist->count - 1; i++)
         {
@@ -590,6 +606,10 @@ static bool flip_wifi_view_input_callback_saved(InputEvent *event, void *context
             ssid_list[i] = ssid_list[i + 1];
         }
         wifi_playlist->count--;
+
+        // delete the last ssid and password
+        wifi_playlist->ssids[wifi_playlist->count][0] = '\0';
+        wifi_playlist->passwords[wifi_playlist->count][0] = '\0';
 
         // save the playlist to storage
         save_playlist(wifi_playlist);
