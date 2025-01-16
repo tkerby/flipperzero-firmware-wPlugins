@@ -7,7 +7,7 @@
 #define TAG "flipAscii"
 #define MSG_QUEUE_SIZE 8
 #define REPEAT_HOLD_COUNT 4
-#define MAX_INDEX 121
+#define MAX_INDEX 122
 
 static const char* CODE_NAMES[] = {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ",
 "ACK", "BEL", "BS", "TAB", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1",
@@ -107,7 +107,7 @@ void handle_input_event(AppState *state, InputEvent *evt) {
             break;
 
         case InputKeyDown:
-            if(state->index <= MAX_INDEX)
+            if(state->index < MAX_INDEX)
                 state->index++;
             break;
 
