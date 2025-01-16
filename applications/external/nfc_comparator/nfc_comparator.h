@@ -28,19 +28,19 @@
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
 
 typedef enum {
-   NfcComparatorView_Submenu,
-   NfcComparatorView_FileBrowser,
-   NfcComparatorView_Popup
+    NfcComparatorView_Submenu,
+    NfcComparatorView_FileBrowser,
+    NfcComparatorView_Popup
 } NfcComparatorViews;
 
 typedef struct {
-   SceneManager* scene_manager;
-   ViewDispatcher* view_dispatcher;
-   Submenu* submenu;
-   FileBrowser* file_browser;
-   FuriString* file_browser_output;
-   Popup* popup;
-   NfcDevice* loaded_nfc_card;
+    SceneManager* scene_manager;
+    ViewDispatcher* view_dispatcher;
+    Submenu* submenu;
+    FileBrowser* file_browser;
+    FuriString* file_browser_output;
+    Popup* popup;
+    NfcDevice* loaded_nfc_card;
 } NfcComparator;
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
