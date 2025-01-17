@@ -9,8 +9,8 @@
 //
 
 #define TAG "FlipWorld"
-#define VERSION 0.3
-#define VERSION_TAG "FlipWorld v0.3"
+#define VERSION 0.4
+#define VERSION_TAG "FlipWorld v0.4"
 
 // Define the submenu items for our FlipWorld application
 typedef enum
@@ -62,6 +62,7 @@ typedef struct
     VariableItem *variable_item_game_download_world;   // The variable item for Download world
     VariableItem *variable_item_game_sound_on;         // The variable item for Sound on
     VariableItem *variable_item_game_vibration_on;     // The variable item for Vibration on
+    VariableItem *variable_item_game_player_sprite;    // The variable item for Player sprite
     //
     VariableItem *variable_item_user_username; // The variable item for the User username
     VariableItem *variable_item_user_password; // The variable item for the User password
@@ -79,4 +80,6 @@ extern char *yes_or_no_choices[];
 extern int game_screen_always_on_index;
 extern int game_sound_on_index;
 extern int game_vibration_on_index;
+extern char *game_player_sprite_choices[];
+extern int game_player_sprite_index;
 bool is_enough_heap(size_t heap_size);

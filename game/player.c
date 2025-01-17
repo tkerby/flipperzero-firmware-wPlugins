@@ -9,6 +9,20 @@ static Level *get_next_level(GameManager *manager)
         FURI_LOG_E(TAG, "Failed to get game context");
         return NULL;
     }
+    // check if there are more levels to load
+    if (game_context->current_level + 1 >= game_context->level_count)
+    {
+        game_context->current_level = 0;
+        if (!game_context->levels[game_context->current_level])
+        {
+            if (!allocate_level(manager, game_context->current_level))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
+                return NULL;
+            }
+        }
+        return game_context->levels[game_context->current_level];
+    }
     for (int i = game_context->current_level + 1; i < game_context->level_count; i++)
     {
         if (!game_context->levels[i])
@@ -62,14 +76,21 @@ void player_spawn(Level *level, GameManager *manager)
         return;
     }
 
+    SpriteContext *sprite_context = get_sprite_context(game_player_sprite_choices[game_player_sprite_index]);
+    if (!sprite_context)
+    {
+        FURI_LOG_E(TAG, "Failed to get sprite context");
+        return;
+    }
+
     // player context must be set each level or NULL pointer will be dereferenced
     if (!load_player_context(player_context))
     {
         FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
 
         // Initialize default player context
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
+        player_context->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+        player_context->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
         player_context->direction = PLAYER_RIGHT; // default direction
         player_context->health = 100;
         player_context->strength = 10;
@@ -85,8 +106,12 @@ void player_spawn(Level *level, GameManager *manager)
         // Set player username
         if (!load_char("Flip-Social-Username", player_context->username, sizeof(player_context->username)))
         {
-            // If loading username fails, default to "Player"
-            snprintf(player_context->username, sizeof(player_context->username), "Player");
+            // check if data/player/username
+            if (!load_char("player/username", player_context->username, sizeof(player_context->username)))
+            {
+                // If loading username fails, default to "Player"
+                snprintf(player_context->username, sizeof(player_context->username), "Player");
+            }
         }
 
         game_context->player_context = player_context;
@@ -101,8 +126,8 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
+    player_context->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+    player_context->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
     player_context->start_position = entity_pos_get(game_context->player);
 
@@ -269,15 +294,14 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
-        if (game_context->enemy_count == 0)
+        if (game_context->enemy_count == 0 && !game_context->is_switching_level)
         {
-            FURI_LOG_I(TAG, "Switching levels");
+            game_context->is_switching_level = true;
             save_player_context(player);
             game_manager_next_level_set(manager, get_next_level(manager));
-            furi_delay_ms(500);
             return;
         }
-        else
+        else if (game_context->enemy_count > 0)
         {
             game_context->user_input = GameKeyOk;
             // furi_delay_ms(100);
@@ -306,9 +330,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
-    UNUSED(manager);
-    if (!self || !context || !canvas)
+    if (!self || !context || !canvas || !manager)
         return;
+
     // Get player context
     PlayerContext *player = context;
 

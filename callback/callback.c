@@ -160,6 +160,7 @@ static void user_settings_item_selected(void *context, uint32_t index);
 static void screen_on_change(VariableItem *item);
 static void sound_on_change(VariableItem *item);
 static void vibration_on_change(VariableItem *item);
+static void player_on_change(VariableItem *item);
 
 uint32_t callback_to_submenu(void *context)
 {
@@ -357,6 +358,12 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 app->variable_item_game_download_world = variable_item_list_add(app->variable_item_list, "Install Official World Pack", 0, NULL, NULL);
                 variable_item_set_current_value_text(app->variable_item_game_download_world, "");
             }
+            if (!app->variable_item_game_player_sprite)
+            {
+                app->variable_item_game_player_sprite = variable_item_list_add(app->variable_item_list, "Weapon", 4, player_on_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_player_sprite, 1);
+                variable_item_set_current_value_text(app->variable_item_game_player_sprite, game_player_sprite_choices[1]);
+            }
             if (!app->variable_item_game_fps)
             {
                 app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, fps_change, NULL);
@@ -380,6 +387,18 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 app->variable_item_game_vibration_on = variable_item_list_add(app->variable_item_list, "Vibration On?", 2, vibration_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, 0);
                 variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[0]);
+            }
+            char _game_player_sprite[8];
+            if (load_char("Game-Player-Sprite", _game_player_sprite, sizeof(_game_player_sprite)))
+            {
+                int index = strcmp(_game_player_sprite, "naked") == 0 ? 0 : strcmp(_game_player_sprite, "sword") == 0 ? 1
+                                                                        : strcmp(_game_player_sprite, "axe") == 0     ? 2
+                                                                        : strcmp(_game_player_sprite, "bow") == 0     ? 3
+                                                                                                                      : 0;
+                variable_item_set_current_value_index(app->variable_item_game_player_sprite, index);
+                variable_item_set_current_value_text(
+                    app->variable_item_game_player_sprite,
+                    strcmp(game_player_sprite_choices[index], "naked") == 0 ? "None" : game_player_sprite_choices[index]);
             }
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
@@ -580,6 +599,11 @@ static void free_variable_item_list(void *context)
     {
         free(app->variable_item_game_vibration_on);
         app->variable_item_game_vibration_on = NULL;
+    }
+    if (app->variable_item_game_player_sprite)
+    {
+        free(app->variable_item_game_player_sprite);
+        app->variable_item_game_player_sprite = NULL;
     }
     if (app->variable_item_user_username)
     {
@@ -1383,8 +1407,6 @@ static void fps_change(VariableItem *item)
     game_fps_index = index;
     variable_item_set_current_value_text(item, game_fps_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the fps
     save_char("Game-FPS", game_fps_choices[index]);
 }
 static void screen_on_change(VariableItem *item)
@@ -1393,8 +1415,6 @@ static void screen_on_change(VariableItem *item)
     game_screen_always_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Screen-Always-On", yes_or_no_choices[index]);
 }
 static void sound_on_change(VariableItem *item)
@@ -1403,8 +1423,6 @@ static void sound_on_change(VariableItem *item)
     game_sound_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Sound-On", yes_or_no_choices[index]);
 }
 static void vibration_on_change(VariableItem *item)
@@ -1413,9 +1431,15 @@ static void vibration_on_change(VariableItem *item)
     game_vibration_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Vibration-On", yes_or_no_choices[index]);
+}
+static void player_on_change(VariableItem *item)
+{
+    uint8_t index = variable_item_get_current_value_index(item);
+    game_player_sprite_index = index;
+    variable_item_set_current_value_text(item, strcmp(game_player_sprite_choices[index], "naked") == 0 ? "None" : game_player_sprite_choices[index]);
+    variable_item_set_current_value_index(item, index);
+    save_char("Game-Player-Sprite", game_player_sprite_choices[index]);
 }
 
 static bool _fetch_worlds(DataLoaderModel *model)
@@ -1461,9 +1485,15 @@ static void game_settings_item_selected(void *context, uint32_t index)
     {
     case 0: // Download all world data s one huge json
         switch_to_view_get_worlds(app);
-    case 1: // Change FPS
+    case 1: // Player Sprite
         break;
-    case 2: // Screen Always On
+    case 2: // Change FPS
+        break;
+    case 3: // Screen Always On
+        break;
+    case 4: // Sound On
+        break;
+    case 5: // Vibration On
         break;
     }
 }

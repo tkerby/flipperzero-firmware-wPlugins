@@ -146,6 +146,16 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     // draw player username from GameContext
     Vector posi = entity_pos_get(game_context->player);
     draw_username(canvas, posi, game_context->player_context->username);
+
+    if (game_context->is_switching_level)
+    {
+        // draw switch world icon
+        canvas_draw_icon(
+            canvas,
+            0,
+            0,
+            &I_icon_world_change_128x64px);
+    }
 }
 
 static void send_attack_notification(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)

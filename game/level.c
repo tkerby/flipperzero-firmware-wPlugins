@@ -98,9 +98,16 @@ static void set_world(Level *level, GameManager *manager, char *id)
 }
 static void level_start(Level *level, GameManager *manager, void *context)
 {
-    if (!level || !context || !manager)
+    if (!manager)
+    {
+        FURI_LOG_E("Game", "Manager is NULL");
+        return;
+    }
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!level || !context)
     {
         FURI_LOG_E("Game", "Level, context, or manager is NULL");
+        game_context->is_switching_level = false;
         return;
     }
 
@@ -111,6 +118,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     if (!level_context)
     {
         FURI_LOG_E("Game", "Level context is NULL");
+        game_context->is_switching_level = false;
         return;
     }
 
@@ -123,19 +131,24 @@ static void level_start(Level *level, GameManager *manager, void *context)
         {
             FURI_LOG_E("Game", "Failed to fetch world data");
             draw_town_world(level);
+            game_context->is_switching_level = false;
+            furi_delay_ms(1000);
             return;
         }
         furi_string_free(world_data);
 
         set_world(level, manager, level_context->id);
-
         FURI_LOG_I("Game", "World set.");
+        furi_delay_ms(1000);
+        game_context->is_switching_level = false;
     }
     else
     {
         FURI_LOG_I("Game", "World exists.. loading now");
         set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
+        furi_delay_ms(1000);
+        game_context->is_switching_level = false;
     }
 }
 

@@ -60,6 +60,7 @@ typedef struct
     bool ended_early;
     Imu *imu;
     bool imu_present;
+    bool is_switching_level;
 } GameContext;
 
 typedef struct
