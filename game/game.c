@@ -72,7 +72,7 @@ static void game_stop(void *ctx)
         FURI_LOG_I("Game", "Game ending");
         if (!game_context->ended_early)
         {
-            easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
+            easy_flipper_dialog("Game Over", "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
         }
         else
         {

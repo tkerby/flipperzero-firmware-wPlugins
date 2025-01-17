@@ -65,7 +65,6 @@ typedef struct
     //
     uint32_t elapsed_button_timer;
     uint32_t last_button;
-    uint32_t button_cooldown;
 } GameContext;
 
 typedef struct
