@@ -255,43 +255,61 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // Handle movement input
     if (input.held & GameKeyUp)
     {
+        if (game_context->last_button == GameKeyUp)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
         pos.y -= 2;
         player->dy = -1;
         player->direction = PLAYER_UP;
-        game_context->user_input = GameKeyUp;
+        game_context->last_button = GameKeyUp;
     }
     if (input.held & GameKeyDown)
     {
+        if (game_context->last_button == GameKeyDown)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
         pos.y += 2;
         player->dy = 1;
         player->direction = PLAYER_DOWN;
-        game_context->user_input = GameKeyDown;
+        game_context->last_button = GameKeyDown;
     }
     if (input.held & GameKeyLeft)
     {
+        if (game_context->last_button == GameKeyLeft)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
         pos.x -= 2;
         player->dx = -1;
         player->direction = PLAYER_LEFT;
-        game_context->user_input = GameKeyLeft;
+        game_context->last_button = GameKeyLeft;
     }
     if (input.held & GameKeyRight)
     {
+        if (game_context->last_button == GameKeyRight)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
         pos.x += 2;
         player->dx = 1;
         player->direction = PLAYER_RIGHT;
-        game_context->user_input = GameKeyRight;
+        game_context->last_button = GameKeyRight;
     }
-
-    // Clamp the player's position to stay within world bounds
-    pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
-    pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
-
-    // Update player position
-    entity_pos_set(self, pos);
-
-    // switch levels if holding OK
-    if (input.pressed & GameKeyOk)
+    if (input.held & GameKeyOk)
     {
+        if (game_context->last_button == GameKeyOk)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        game_context->last_button = GameKeyOk;
+
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
         if (game_context->enemy_count == 0 && !game_context->is_switching_level)
@@ -301,12 +319,46 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             game_manager_next_level_set(manager, get_next_level(manager));
             return;
         }
-        else if (game_context->enemy_count > 0)
+
+        // if the OK button is held for 1 seconds,show the menu
+        if (game_context->elapsed_button_timer > (1 * game_context->fps))
         {
-            game_context->user_input = GameKeyOk;
-            // furi_delay_ms(100);
+            game_context->is_menu_open = true;
+            FURI_LOG_I(TAG, "Menu opened");
         }
     }
+    if (input.held & GameKeyBack)
+    {
+        if (game_context->last_button == GameKeyBack)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        game_context->last_button = GameKeyBack;
+
+        if (game_context->is_menu_open)
+        {
+            game_context->is_menu_open = false;
+            FURI_LOG_I(TAG, "Menu closed");
+        }
+
+        // if the back button is held for 2 seconds, stop the game
+        if (game_context->elapsed_button_timer > (2 * game_context->fps))
+        {
+            if (!game_context->is_menu_open)
+            {
+                game_manager_game_stop(manager);
+                return;
+            }
+        }
+    }
+
+    // Clamp the player's position to stay within world bounds
+    pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
+    pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
+
+    // Update player position
+    entity_pos_set(self, pos);
 
     // If the player is not moving, retain the last movement direction
     if (player->dx == 0 && player->dy == 0)
@@ -314,17 +366,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         player->dx = prev_dx;
         player->dy = prev_dy;
         player->state = PLAYER_IDLE;
-        game_context->user_input = -1; // reset user input
     }
     else
     {
         player->state = PLAYER_MOVING;
-    }
-
-    // Handle back button to stop the game
-    if (input.pressed & GameKeyBack)
-    {
-        game_manager_game_stop(manager);
     }
 }
 

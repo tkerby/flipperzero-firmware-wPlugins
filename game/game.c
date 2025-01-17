@@ -30,12 +30,10 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             if (i == 0)
             {
-                FURI_LOG_E("Game", "Failed to allocate level %d, loading default level", i);
                 game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
                 game_context->level_count = 1;
                 break;
             }
-            FURI_LOG_E("Game", "No more levels to load");
             break;
         }
         game_context->level_count++;

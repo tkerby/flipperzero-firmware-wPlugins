@@ -52,7 +52,6 @@ typedef struct
     Level *levels[MAX_LEVELS];
     Entity *enemies[MAX_ENEMIES];
     Entity *player;
-    GameKey user_input;
     float fps;
     int level_count;
     int enemy_count;
@@ -60,7 +59,13 @@ typedef struct
     bool ended_early;
     Imu *imu;
     bool imu_present;
+    //
     bool is_switching_level;
+    bool is_menu_open;
+    //
+    uint32_t elapsed_button_timer;
+    uint32_t last_button;
+    uint32_t button_cooldown;
 } GameContext;
 
 typedef struct

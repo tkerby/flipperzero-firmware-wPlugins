@@ -156,6 +156,16 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
             0,
             &I_icon_world_change_128x64px);
     }
+
+    if (game_context->is_menu_open)
+    {
+        // draw menu icon
+        canvas_draw_icon(
+            canvas,
+            0,
+            0,
+            &I_icon_menu_128x64px);
+    }
 }
 
 static void send_attack_notification(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
@@ -234,6 +244,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         // Retrieve enemy context
         EnemyContext *enemy_context = (EnemyContext *)context;
         GameContext *game_context = game_manager_game_context_get(manager);
+        // InputState input = game_manager_input_get(manager);
         if (!enemy_context)
         {
             FURI_LOG_E("Game", "Enemy collision: EnemyContext is NULL");
@@ -272,7 +283,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
-        if (player_is_facing_enemy && game_context->user_input == GameKeyOk && !enemy_is_facing_player)
+        if (player_is_facing_enemy && game_context->last_button == GameKeyOk && !enemy_is_facing_player)
         {
             if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
