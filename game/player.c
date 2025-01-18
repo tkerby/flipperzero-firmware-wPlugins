@@ -385,8 +385,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             FURI_LOG_I(TAG, "Menu closed");
         }
 
-        // if the back button is held for 2 seconds, stop the game
-        if (game_context->elapsed_button_timer > (2 * game_context->fps))
+        // if the back button is held for 1 seconds, stop the game
+        if (game_context->elapsed_button_timer > (1 * game_context->fps))
         {
             if (!game_context->is_menu_open)
             {
