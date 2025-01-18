@@ -25,10 +25,10 @@
 #include <gui/elements.h>
 #include <gui/modules/variable_item_list.h>
 
-#include "../../engine/game_manager.h"
-#include "../../game.h"
-#include "../../gui_bridge/input_converter.h"
-#include "../../levels/level_game/level_game.h"
+#include "src/engine/game_manager.h"
+#include "src/game.h"
+#include "src/gui_bridge/input_converter.h"
+#include "src/levels/level_game/level_game.h"
 
 #define ITEM_TEXT_PADDING_X 6
 #define ITEM_TEXT_PADDING_Y 4

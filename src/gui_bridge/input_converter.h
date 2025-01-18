@@ -21,7 +21,7 @@
 
 #include <input/input.h>
 
-#include "../engine/game_engine.h"
+#include "src/engine/game_engine.h"
 
 typedef struct InputConverter InputConverter;
 

@@ -19,7 +19,7 @@
 
 #include <furi/core/message_queue.h>
 
-#include "../game.h"
+#include "src/game.h"
 
 // #define FRAME_IN_MS (1000 / 30)
 // #define CHECK_PERIOD_IN_MS 150

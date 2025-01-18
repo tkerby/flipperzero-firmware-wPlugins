@@ -17,10 +17,10 @@
 
 #include "moving_sprite.h"
 
-#include "../../engine/entity.h"
-#include "../../engine/game_manager.h"
+#include "src/engine/entity.h"
+#include "src/engine/game_manager.h"
 
-#include "../../game.h"
+#include "src/game.h"
 
 Entity*
 moving_sprite_add_to_level(Level* level,

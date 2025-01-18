@@ -21,11 +21,11 @@
 
 #include <gui/modules/variable_item_list.h>
 
-#include "../../game.h"
-#include "../../game_settings.h"
+#include "src/game.h"
+#include "src/game_settings.h"
 
-#include "../../gui_bridge/view_module_descriptions.h"
-#include "../../gui_bridge/view_module_entity.h"
+#include "src/gui_bridge/view_module_descriptions.h"
+#include "src/gui_bridge/view_module_entity.h"
 
 const char* const difficulty_text[DifficultyCount] = {
     "Easy",

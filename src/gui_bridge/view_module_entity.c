@@ -17,7 +17,7 @@
 
 #include "view_module_entity.h"
 
-#include "../engine/game_manager.h"
+#include "src/engine/game_manager.h"
 
 #include "input_converter.h"
 #include "view_i.h" // IWYU pragma: keep

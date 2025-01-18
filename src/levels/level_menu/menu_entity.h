@@ -17,6 +17,6 @@
 
 #pragma once
 
-#include "../../engine/entity.h"
+#include "src/engine/entity.h"
 
 extern const EntityDescription menu_description;

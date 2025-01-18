@@ -19,9 +19,9 @@
 
 #include <stddef.h>
 
-#include "../../engine/vector.h"
+#include "src/engine/vector.h"
 
-#include "../../game.h"
+#include "src/game.h"
 
 #include "blinking_sprite.h"
 #include "delayed_sprite.h"

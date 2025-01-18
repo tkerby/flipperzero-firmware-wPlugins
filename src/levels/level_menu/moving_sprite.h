@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "../../engine/entity.h"
-#include "../../engine/vector.h"
+#include "src/engine/entity.h"
+#include "src/engine/vector.h"
 
 typedef struct Sprite Sprite;
 

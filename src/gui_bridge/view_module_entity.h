@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "../engine/entity.h"
+#include "src/engine/entity.h"
 
 #include "view_module_descriptions.h"
 

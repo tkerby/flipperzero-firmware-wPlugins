@@ -23,7 +23,7 @@
 
 #include <dolphin/dolphin.h>
 
-#include "../../game.h"
+#include "src/game.h"
 
 #include "context_menu.h"
 
