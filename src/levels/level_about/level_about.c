@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 
-#include "src/game.h"
+#include "../../game.h"
 
 #include "about_entity.h"
 

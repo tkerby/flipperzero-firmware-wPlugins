@@ -17,11 +17,11 @@
 
 #include "target_entity.h"
 
-#include "src/engine/game_manager.h"
-#include "src/engine/level.h"
+#include "../../engine/game_manager.h"
+#include "../../engine/level.h"
 
-#include "src/game.h"
-#include "src/game_notifications.h"
+#include "../../game.h"
+#include "../../game_notifications.h"
 
 #include "enemy_entity.h"
 #include "level_game.h"

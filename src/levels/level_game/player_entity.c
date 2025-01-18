@@ -17,8 +17,8 @@
 
 #include "player_entity.h"
 
-#include "src/engine/game_manager.h"
-#include "src/game.h"
+#include "../../engine/game_manager.h"
+#include "../../game.h"
 
 #include "level_game.h"
 

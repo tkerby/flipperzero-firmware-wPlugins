@@ -17,6 +17,6 @@
 
 #pragma once
 
-#include "src/engine/level.h"
+#include "../../engine/level.h"
 
 extern const LevelBehaviour level_settings;

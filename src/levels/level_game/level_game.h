@@ -19,7 +19,7 @@
 
 #include <m-list.h>
 
-#include "src/engine/level.h"
+#include "../../engine/level.h"
 
 LIST_DEF(EntityList, Entity*, M_POD_OPLIST);
 #define M_OPL_EntityList_t() LIST_OPLIST(EntityList)

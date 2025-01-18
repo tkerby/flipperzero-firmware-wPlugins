@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "src/engine/entity.h"
+#include "../../engine/entity.h"
 
 typedef void (*ContextMenuBackCallback)(void* context);
 typedef void (*ContextMenuItemCallback)(void* context, uint32_t index);

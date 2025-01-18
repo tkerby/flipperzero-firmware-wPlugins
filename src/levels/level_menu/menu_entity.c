@@ -17,11 +17,11 @@
 
 #include "menu_entity.h"
 
-#include "src/engine/entity.h"
-#include "src/engine/game_manager.h"
-#include "src/engine/level.h"
+#include "../../engine/entity.h"
+#include "../../engine/game_manager.h"
+#include "../../engine/level.h"
 
-#include "src/game.h"
+#include "../../game.h"
 
 static void
 menu_update(Entity* self, GameManager* manager, void* _entity_context)

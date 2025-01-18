@@ -21,7 +21,7 @@
 
 #include <furi.h>
 
-#include "src/game.h"
+#include "../../game.h"
 
 static void
 about_update(Entity* self, GameManager* manager, void* _entity_context)

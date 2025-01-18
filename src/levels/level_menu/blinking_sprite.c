@@ -17,9 +17,9 @@
 
 #include "blinking_sprite.h"
 
-#include "src/engine/game_manager.h"
+#include "../../engine/game_manager.h"
 
-#include "src/game.h"
+#include "../../game.h"
 
 Entity*
 blinking_sprite_add_to_level(Level* level,

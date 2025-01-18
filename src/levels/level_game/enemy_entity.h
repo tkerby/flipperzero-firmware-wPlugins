@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "src/engine/entity.h"
+#include "../../engine/entity.h"
 
 #define ENEMY_SIZE 6.0f
 #define HALF_ENEMY_SIZE 3.0f
