@@ -260,9 +260,18 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         else
             game_context->elapsed_button_timer = 0;
 
-        pos.y -= 2;
-        player->dy = -1;
-        player->direction = PLAYER_UP;
+        if (!game_context->is_menu_open)
+        {
+            pos.y -= 2;
+            player->dy = -1;
+            player->direction = PLAYER_UP;
+        }
+        else
+        {
+            // next menu view
+            // we can only go up to info from settings
+            game_context->menu_screen = GAME_MENU_INFO;
+        }
         game_context->last_button = GameKeyUp;
     }
     if (input.held & GameKeyDown)
@@ -272,9 +281,18 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         else
             game_context->elapsed_button_timer = 0;
 
-        pos.y += 2;
-        player->dy = 1;
-        player->direction = PLAYER_DOWN;
+        if (!game_context->is_menu_open)
+        {
+            pos.y += 2;
+            player->dy = 1;
+            player->direction = PLAYER_DOWN;
+        }
+        else
+        {
+            // next menu view
+            // we can only go down to more from info
+            game_context->menu_screen = GAME_MENU_MORE;
+        }
         game_context->last_button = GameKeyDown;
     }
     if (input.held & GameKeyLeft)
@@ -284,9 +302,20 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         else
             game_context->elapsed_button_timer = 0;
 
-        pos.x -= 2;
-        player->dx = -1;
-        player->direction = PLAYER_LEFT;
+        if (!game_context->is_menu_open)
+        {
+            pos.x -= 2;
+            player->dx = -1;
+            player->direction = PLAYER_LEFT;
+        }
+        else
+        {
+            // if the menu is open, move the selection left
+            if (game_context->menu_selection < 1)
+            {
+                game_context->menu_selection += 1;
+            }
+        }
         game_context->last_button = GameKeyLeft;
     }
     if (input.held & GameKeyRight)
@@ -296,9 +325,20 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         else
             game_context->elapsed_button_timer = 0;
 
-        pos.x += 2;
-        player->dx = 1;
-        player->direction = PLAYER_RIGHT;
+        if (!game_context->is_menu_open)
+        {
+            pos.x += 2;
+            player->dx = 1;
+            player->direction = PLAYER_RIGHT;
+        }
+        else
+        {
+            // if the menu is open, move the selection right
+            if (game_context->menu_selection < 1)
+            {
+                game_context->menu_selection += 1;
+            }
+        }
         game_context->last_button = GameKeyRight;
     }
     if (input.held & GameKeyOk)
@@ -323,6 +363,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         // if the OK button is held for 1 seconds,show the menu
         if (game_context->elapsed_button_timer > (1 * game_context->fps))
         {
+            // open up menu on the INFO screen
+            game_context->menu_screen = GAME_MENU_INFO;
+            game_context->menu_selection = 0;
             game_context->is_menu_open = true;
             FURI_LOG_I(TAG, "Menu opened");
         }

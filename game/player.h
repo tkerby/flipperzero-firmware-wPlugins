@@ -46,6 +46,13 @@ typedef struct
     char username[32];          // player username
 } PlayerContext;
 
+// two screens for the game menu
+typedef enum
+{
+    GAME_MENU_INFO, // level, health, xp, etc.
+    GAME_MENU_MORE, // more settings
+} GameMenuScreen;
+
 typedef struct
 {
     PlayerContext *player_context;
@@ -65,6 +72,9 @@ typedef struct
     //
     uint32_t elapsed_button_timer;
     uint32_t last_button;
+    //
+    GameMenuScreen menu_screen;
+    uint8_t menu_selection;
 } GameContext;
 
 typedef struct
