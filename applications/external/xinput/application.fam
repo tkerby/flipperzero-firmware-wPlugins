@@ -1,18 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="xinput_controller",  # Must be unique
-    name="USB Game Controller",  # Displayed in menus
+    appid="xinput_controller",
+    name="XBox360 USB Game Controller",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="xinput_app",
     stack_size=2 * 1024,
+    fap_icon="icon.png",
+    fap_icon_assets="images",
     fap_category="USB",
-    requires=["gui"],
-    # Optional values
+    fap_author="expected-ingot",  #  crapbass
+    fap_weburl="https://github.com/expected-ingot/flipper-xinput",
     fap_version="0.1",
-    fap_icon="icon.png",  # 10x10 1-bit PNG
-    fap_description="An app that emulates XInput controllers",
-    fap_author="crapbass",
-    fap_weburl="https://github.com/expected-ingot",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_description="An app that emulates XInput controllers. Simple Xbox 360 controller emulator for the Flipper Zero",
 )
