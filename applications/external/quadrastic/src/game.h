@@ -26,6 +26,8 @@
 
 #define GAME_NAME "Quadrastic"
 
+#define WIN_SCORE 15
+
 typedef enum {
     DifficultyEasy,
     DifficultyNormal,

@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 
+#include <dolphin/dolphin.h>
 #include <furi.h>
 
 #include "src/game.h"
@@ -55,6 +56,10 @@ static void level_game_over_start(Level* level, GameManager* manager, void* _lev
 
     entity_context->score = game_context->score;
     entity_context->max_score = game_context->best_score;
+
+    if(entity_context->score >= WIN_SCORE) {
+        dolphin_deed(DolphinDeedPluginGameWin);
+    }
 
     FURI_LOG_D(GAME_NAME, "Game over level started");
 }
