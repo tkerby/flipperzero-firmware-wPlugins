@@ -45,6 +45,13 @@ Full control over the built-in speaker module.
 Musical Notes
 ~~~~~~~~~~~~~
 
+Constant values for all musical notes between C\ :sub:`0` and B\ :sub:`8`.
+
+.. warning::
+
+   You won't be able to find these constants in the REPL using autocompletion from version 1.7.0 onwards.
+   But the constants are still available. You just have to type the full name by hand.
+
 ..
    for octave in range(9):
       for name in ['C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS', 'A', 'AS', 'B']:

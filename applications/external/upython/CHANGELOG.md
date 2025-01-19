@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0]
+
+### Changed
+
+* The `SPEAKER_NOTE_*` constants are replaced by an attribute delegator function to save space.
+
+### Fixed
+
+* [#6](https://github.com/ofabel/mp-flipper/issues/6): Update to latest SDK version.
+
 ## [1.6.0] - 2024-11-17
 
 ### Added
@@ -162,7 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Basic build setup
 * Minimal working example
 
-[Unreleased]: https://github.com/ofabel/mp-flipper/compare/v1.6.0...dev
+[Unreleased]: https://github.com/ofabel/mp-flipper/compare/v1.7.0...dev
+[1.7.0]: https://github.com/ofabel/mp-flipper/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ofabel/mp-flipper/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ofabel/mp-flipper/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ofabel/mp-flipper/compare/v1.3.0...v1.4.0
