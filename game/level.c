@@ -41,8 +41,6 @@ static void set_world(Level *level, GameManager *manager, char *id)
     {
         FURI_LOG_E("Game", "Failed to load json data from file");
         draw_town_world(level);
-        // add background
-        add_background(level);
         return;
     }
 
@@ -62,8 +60,6 @@ static void set_world(Level *level, GameManager *manager, char *id)
         FURI_LOG_E("Game", "Failed to draw world");
         draw_town_world(level);
         furi_string_free(json_data_str);
-        // add background
-        add_background(level);
     }
     else
     {
@@ -97,8 +93,6 @@ static void set_world(Level *level, GameManager *manager, char *id)
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);
-        // add background
-        add_background(level);
         FURI_LOG_I("Game", "Finished loading world data");
     }
 }
@@ -118,7 +112,6 @@ static void level_start(Level *level, GameManager *manager, void *context)
     }
 
     level_clear(level);
-    player_spawn(level, manager);
 
     LevelContext *level_context = context;
     if (!level_context)
@@ -138,14 +131,15 @@ static void level_start(Level *level, GameManager *manager, void *context)
             FURI_LOG_E("Game", "Failed to fetch world data");
             draw_town_world(level);
             game_context->is_switching_level = false;
-            furi_delay_ms(1000);
+            // furi_delay_ms(1000);
+            player_spawn(level, manager);
             return;
         }
         furi_string_free(world_data);
 
         set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
-        furi_delay_ms(1000);
+        // furi_delay_ms(1000);
         game_context->is_switching_level = false;
     }
     else
@@ -153,9 +147,11 @@ static void level_start(Level *level, GameManager *manager, void *context)
         FURI_LOG_I("Game", "World exists.. loading now");
         set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
-        furi_delay_ms(1000);
+        // furi_delay_ms(1000);
         game_context->is_switching_level = false;
     }
+
+    player_spawn(level, manager);
 }
 
 static LevelContext *level_context_generic;

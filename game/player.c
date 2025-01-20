@@ -398,8 +398,13 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Get player position
     Vector pos = entity_pos_get(self);
 
-    // Draw background (updates camera_x and camera_y)
-    draw_background(canvas, pos);
+    // Calculate camera offset to center the player
+    camera_x = pos.x - (SCREEN_WIDTH / 2);
+    camera_y = pos.y - (SCREEN_HEIGHT / 2);
+
+    // Clamp camera position to prevent showing areas outside the world
+    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
+    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
     // Draw player sprite relative to camera, centered on the player's position
     canvas_draw_sprite(
@@ -408,6 +413,12 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         pos.x - camera_x - 5, // Center the sprite horizontally
         pos.y - camera_y - 5  // Center the sprite vertically
     );
+
+    // Draw the outer bounds adjusted by camera offset
+    draw_bounds(canvas);
+
+    // Draw the user stats (health, xp, and level)
+    background_render(canvas, manager);
 }
 
 const EntityDescription player_desc = {

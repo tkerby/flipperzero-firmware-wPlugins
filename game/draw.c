@@ -4,24 +4,6 @@
 int camera_x = 0;
 int camera_y = 0;
 
-// Background rendering function (no collision detection)
-void draw_background(Canvas *canvas, Vector pos)
-{
-    // Clear the canvas
-    canvas_clear(canvas);
-
-    // Calculate camera offset to center the player
-    camera_x = pos.x - (SCREEN_WIDTH / 2);
-    camera_y = pos.y - (SCREEN_HEIGHT / 2);
-
-    // Clamp camera position to prevent showing areas outside the world
-    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
-    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
-
-    // Draw the outer bounds adjusted by camera offset
-    draw_bounds(canvas);
-}
-
 // Draw the user stats (health, xp, and level)
 void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager)
 {
@@ -195,9 +177,9 @@ static void draw_menu(GameManager *manager, Canvas *canvas)
     }
 }
 
-static void background_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
+void background_render(Canvas *canvas, GameManager *manager)
 {
-    if (!self || !context || !canvas || !manager)
+    if (!canvas || !manager)
         return;
 
     GameContext *game_context = game_manager_game_context_get(manager);
@@ -224,21 +206,3 @@ static void background_render(Entity *self, GameManager *manager, Canvas *canvas
         draw_menu(manager, canvas);
     }
 };
-
-// -------------- Entity description --------------
-const EntityDescription background_desc = {
-    .start = NULL,
-    .stop = NULL,
-    .update = NULL,
-    .render = background_render,
-    .collision = NULL,
-    .event = NULL,
-    .context_size = 0,
-};
-
-// we can return the same entity description for all backgrounds
-// since they all have the same rendering function
-Entity *add_background(Level *level)
-{
-    return level_add_entity(level, &background_desc);
-}
