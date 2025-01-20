@@ -2,8 +2,6 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#include <string.h>
-
 #include "nfc_comparator_icons.h"
 
 #include <gui/gui.h>
@@ -40,7 +38,7 @@ typedef struct {
    FileBrowser* file_browser;
    FuriString* file_browser_output;
    Popup* popup;
-   NfcDevice* loaded_nfc_card;
+   NfcComparatorReaderWorker* worker;
 } NfcComparator;
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
