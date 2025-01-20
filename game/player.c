@@ -1,5 +1,8 @@
 #include <game/player.h>
 #include <game/storage.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 /****** Entities: Player ******/
 static Level *next_level(GameManager *manager)
 {
@@ -36,7 +39,6 @@ static Level *next_level(GameManager *manager)
         game_context->current_level = i;
         return game_context->levels[i];
     }
-    FURI_LOG_I(TAG, "No more levels to load");
     return NULL;
 }
 
@@ -132,7 +134,6 @@ void player_spawn(Level *level, GameManager *manager)
     pctx->start_position = entity_pos_get(game_context->player);
 
     // Update player stats based on XP using iterative method
-    // Function to get the current level based on XP iteratively
     int get_player_level_iterative(uint32_t xp)
     {
         int level = 1;
@@ -158,33 +159,36 @@ void player_spawn(Level *level, GameManager *manager)
     game_context->player_context = pctx;
 }
 
-// code from Derek Jamison
-// eventually we'll add dynamic positioning based on how much pitch/roll is detected
-// instead of assigning a fixed value
-static int vgm_x(float pitch)
+static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 {
-    if (pitch > 6.0)
+    const float pitch = -imu_pitch_get(imu);
+    const float roll = -imu_roll_get(imu);
+    const float min_x = atof_(vgm_levels[vgm_x_index]) + 5.0; // minimum of 3
+    const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
+    if (pitch > min_x)
     {
-        return 1;
+        pos->x += abs((int)round(pitch / min_x));
+        player->dx = 1;
+        player->direction = PLAYER_RIGHT;
     }
-    else if (pitch < -8.0)
+    else if (pitch < -min_x)
     {
-        return -1;
+        pos->x += -abs((int)round(pitch / min_x));
+        player->dx = -1;
+        player->direction = PLAYER_LEFT;
     }
-    return 0;
-}
-
-static int vgm_y(float roll)
-{
-    if (roll > 9.0)
+    if (roll > min_y)
     {
-        return 1;
+        pos->y += abs((int)round(roll / min_y));
+        player->dy = 1;
+        player->direction = PLAYER_DOWN;
     }
-    else if (roll < -20.0)
+    else if (roll < -min_y)
     {
-        return -1;
+        pos->y += -abs((int)round(roll / min_y));
+        player->dy = -1;
+        player->direction = PLAYER_UP;
     }
-    return 0;
 }
 
 static void player_update(Entity *self, GameManager *manager, void *context)
@@ -207,36 +211,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     if (game_context->imu_present)
     {
-        player->dx = vgm_x(-imu_pitch_get(game_context->imu));
-        player->dy = vgm_y(-imu_roll_get(game_context->imu));
-
-        switch (player->dx)
-        {
-        case -1:
-            player->direction = PLAYER_LEFT;
-            pos.x -= 1;
-            break;
-        case 1:
-            player->direction = PLAYER_RIGHT;
-            pos.x += 1;
-            break;
-        default:
-            break;
-        }
-
-        switch (player->dy)
-        {
-        case -1:
-            player->direction = PLAYER_UP;
-            pos.y -= 1;
-            break;
-        case 1:
-            player->direction = PLAYER_DOWN;
-            pos.y += 1;
-            break;
-        default:
-            break;
-        }
+        vgm_direction(game_context->imu, player, &pos);
     }
 
     // Apply health regeneration
@@ -367,7 +342,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             game_context->menu_screen = GAME_MENU_INFO;
             game_context->menu_selection = 0;
             game_context->is_menu_open = true;
-            FURI_LOG_I(TAG, "Menu opened");
         }
     }
     if (input.held & GameKeyBack)
@@ -382,7 +356,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         if (game_context->is_menu_open)
         {
             game_context->is_menu_open = false;
-            FURI_LOG_I(TAG, "Menu closed");
         }
 
         // if the back button is held for 1 seconds, stop the game
@@ -411,9 +384,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         player->state = PLAYER_IDLE;
     }
     else
-    {
         player->state = PLAYER_MOVING;
-    }
 }
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
@@ -475,31 +446,31 @@ static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_
 
 SpriteContext *get_sprite_context(const char *name)
 {
-    if (strcmp(name, "axe") == 0)
+    if (is_str(name, "axe"))
     {
         return sprite_generic_alloc("axe", false, 15, 11);
     }
-    else if (strcmp(name, "bow") == 0)
+    else if (is_str(name, "bow"))
     {
         return sprite_generic_alloc("bow", false, 13, 11);
     }
-    else if (strcmp(name, "naked") == 0)
+    else if (is_str(name, "naked"))
     {
         return sprite_generic_alloc("naked", false, 10, 10);
     }
-    else if (strcmp(name, "sword") == 0)
+    else if (is_str(name, "sword"))
     {
         return sprite_generic_alloc("sword", false, 15, 11);
     }
-    else if (strcmp(name, "cyclops") == 0)
+    else if (is_str(name, "cyclops"))
     {
         return sprite_generic_alloc("cyclops", true, 10, 11);
     }
-    else if (strcmp(name, "ghost") == 0)
+    else if (is_str(name, "ghost"))
     {
         return sprite_generic_alloc("ghost", true, 15, 15);
     }
-    else if (strcmp(name, "ogre") == 0)
+    else if (is_str(name, "ogre"))
     {
         return sprite_generic_alloc("ogre", true, 10, 13);
     }

@@ -66,6 +66,8 @@ typedef struct
     VariableItem *variable_item_game_sound_on;         // The variable item for Sound on
     VariableItem *variable_item_game_vibration_on;     // The variable item for Vibration on
     VariableItem *variable_item_game_player_sprite;    // The variable item for Player sprite
+    VariableItem *variable_item_game_vgm_x;            // The variable item for VGM X
+    VariableItem *variable_item_game_vgm_y;            // The variable item for VGM Y
     //
     VariableItem *variable_item_user_username; // The variable item for the User username
     VariableItem *variable_item_user_password; // The variable item for the User password
@@ -76,8 +78,7 @@ typedef struct
     uint32_t text_input_buffer_size; // Size of the text input buffer
 } FlipWorldApp;
 
-extern char *fps_choices[];
-extern const float fps_choices_2[];
+extern char *fps_choices_str[];
 extern int fps_index;
 extern char *yes_or_no_choices[];
 extern int screen_always_on_index;
@@ -85,4 +86,10 @@ extern int sound_on_index;
 extern int vibration_on_index;
 extern char *player_sprite_choices[];
 extern int player_sprite_index;
+extern char *vgm_levels[];
+extern int vgm_x_index;
+extern int vgm_y_index;
+float atof_(const char *nptr);
+float atof_furi(const FuriString *nptr);
+bool is_str(const char *src, const char *dst);
 bool is_enough_heap(size_t heap_size);

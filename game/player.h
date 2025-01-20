@@ -5,7 +5,7 @@
 #include "engine/sensors/imu.h"
 
 // Maximum enemies
-#define MAX_ENEMIES 2
+#define MAX_ENEMIES 10
 #define MAX_LEVELS 10
 
 typedef enum

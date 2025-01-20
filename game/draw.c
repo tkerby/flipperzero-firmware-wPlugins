@@ -87,11 +87,11 @@ void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, con
         }
     }
 }
-char g_temp_spawn_name[32];
+char g_name[32];
 // Draw an icon at a specific position (with collision detection)
 void spawn_icon(Level *level, const char *icon_id, float x, float y)
 {
-    snprintf(g_temp_spawn_name, sizeof(g_temp_spawn_name), "%s", icon_id);
+    snprintf(g_name, sizeof(g_name), "%s", icon_id);
     Entity *e = level_add_entity(level, &icon_desc);
     entity_pos_set(e, (Vector){x, y});
 }

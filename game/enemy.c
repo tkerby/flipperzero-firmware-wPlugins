@@ -762,13 +762,13 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
                                                                                        manager,
                                                                                        furi_string_get_cstr(id),
                                                                                        atoi(furi_string_get_cstr(_index)),
-                                                                                       (Vector){strtod(furi_string_get_cstr(start_position_x), NULL), strtod(furi_string_get_cstr(start_position_y), NULL)},
-                                                                                       (Vector){strtod(furi_string_get_cstr(end_position_x), NULL), strtod(furi_string_get_cstr(end_position_y), NULL)},
-                                                                                       strtod(furi_string_get_cstr(move_timer), NULL),
-                                                                                       strtod(furi_string_get_cstr(speed), NULL),
-                                                                                       strtod(furi_string_get_cstr(attack_timer), NULL),
-                                                                                       strtod(furi_string_get_cstr(strength), NULL),
-                                                                                       strtod(furi_string_get_cstr(health), NULL)));
+                                                                                       (Vector){atof_furi(start_position_x), atof_furi(start_position_y)},
+                                                                                       (Vector){atof_furi(end_position_x), atof_furi(end_position_y)},
+                                                                                       atof_furi(move_timer),
+                                                                                       atof_furi(speed),
+                                                                                       atof_furi(attack_timer),
+                                                                                       atof_furi(strength),
+                                                                                       atof_furi(health)));
         game_context->enemy_count++;
     }
 
