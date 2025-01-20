@@ -3,7 +3,7 @@ App(
     name="NFC Comparator",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="nfc_comparator_main",
-    stack_size=4 * 1024,
+    stack_size=2 * 1024,
     fap_private_libs=[
         Lib(
             name="reader_worker",
@@ -14,6 +14,6 @@ App(
     fap_category="NFC",
     fap_author="acegoal07",
     fap_weburl="https://github.com/acegoal07/FlipperZero_NFC_Comparator",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_description="A tool to check if a physical NFC card is the same as a saved one. DOES NOT COMPARE CARD CONTENTS! As of the moment it just checks the UID and protocol.",
 )

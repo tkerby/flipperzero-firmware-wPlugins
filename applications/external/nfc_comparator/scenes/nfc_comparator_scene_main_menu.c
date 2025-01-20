@@ -24,7 +24,7 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
         NfcComparatorMainMenu_StartComparator,
         nfc_comparator_main_menu_menu_callback,
         nfc_comparator,
-        !nfc_comparator->loaded_nfc_card,
+        furi_string_empty(nfc_comparator->file_browser_output),
         "No NFC\ncard selected");
 
     submenu_add_item(

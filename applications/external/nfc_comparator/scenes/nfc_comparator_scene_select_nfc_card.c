@@ -2,11 +2,6 @@
 
 void nfc_comparator_select_nfc_card_menu_callback(void* context) {
     NfcComparator* nfc_comparator = context;
-    nfc_comparator->loaded_nfc_card = nfc_device_alloc();
-    nfc_device_load(
-        nfc_comparator->loaded_nfc_card,
-        furi_string_get_cstr(nfc_comparator->file_browser_output));
-    furi_string_reset(nfc_comparator->file_browser_output);
     scene_manager_previous_scene(nfc_comparator->scene_manager);
 }
 

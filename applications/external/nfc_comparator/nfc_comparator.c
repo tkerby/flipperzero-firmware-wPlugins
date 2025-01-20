@@ -62,9 +62,6 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
     submenu_free(nfc_comparator->submenu);
     file_browser_free(nfc_comparator->file_browser);
     furi_string_free(nfc_comparator->file_browser_output);
-    if(nfc_comparator->loaded_nfc_card) {
-        nfc_device_free(nfc_comparator->loaded_nfc_card);
-    }
     popup_free(nfc_comparator->popup);
 
     free(nfc_comparator);

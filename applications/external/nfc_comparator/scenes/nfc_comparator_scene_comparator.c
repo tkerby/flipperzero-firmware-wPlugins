@@ -1,11 +1,6 @@
 
 #include "../nfc_comparator.h"
 
-void nfc_comparator_comparator_menu_callback(void* context, uint32_t index) {
-    NfcComparator* nfc_comparator = context;
-    scene_manager_handle_custom_event(nfc_comparator->scene_manager, index);
-}
-
 void nfc_comparator_comparator_scene_on_enter(void* context) {
     NfcComparator* nfc_comparator = context;
     furi_assert(nfc_comparator);
@@ -14,7 +9,8 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
     view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Popup);
 
     NfcComparatorReaderWorker* worker = nfc_comparator_reader_worker_alloc();
-    nfc_comparator_reader_worker_set_compare_nfc_device(worker, nfc_comparator->loaded_nfc_card);
+    nfc_comparator_reader_worker_set_loaded_nfc_card(
+        worker, furi_string_get_cstr(nfc_comparator->file_browser_output));
     nfc_comparator_reader_worker_start(worker);
 
     while(nfc_comparator_reader_worker_is_running(worker)) {
@@ -33,6 +29,7 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
         }
         furi_delay_ms(100);
     }
+
     nfc_comparator_reader_worker_stop(worker);
 
     popup_set_header(nfc_comparator->popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
@@ -44,8 +41,9 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
     FuriString* comparator = furi_string_alloc();
     furi_string_printf(
         comparator,
-        "UID: %s\nProtocol: %s",
+        "UID: %s\nUID length: %s\nProtocol: %s",
         checks.uid ? "Match" : "Mismatch",
+        checks.uid_length ? "Match" : "Mismatch",
         checks.protocol ? "Match" : "Mismatch");
 
     char result_buffer[158];
@@ -53,14 +51,13 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
 
     furi_string_free(comparator);
 
-    popup_set_text(nfc_comparator->popup, result_buffer, 64, 30, AlignCenter, AlignCenter);
+    popup_set_text(nfc_comparator->popup, result_buffer, 64, 35, AlignCenter, AlignCenter);
 }
 
 bool nfc_comparator_comparator_scene_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
     UNUSED(event);
-    bool consumed = false;
-    return consumed;
+    UNUSED(context);
+    return false;
 }
 
 void nfc_comparator_comparator_scene_on_exit(void* context) {
