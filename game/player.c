@@ -1,7 +1,7 @@
 #include <game/player.h>
 #include <game/storage.h>
 /****** Entities: Player ******/
-static Level *get_next_level(GameManager *manager)
+static Level *next_level(GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     if (!game_context)
@@ -69,14 +69,14 @@ void player_spawn(Level *level, GameManager *manager)
     entity_collider_add_rect(game_context->player, 13, 11);
 
     // Get player context
-    PlayerContext *player_context = entity_context_get(game_context->player);
-    if (!player_context)
+    PlayerContext *pctx = entity_context_get(game_context->player);
+    if (!pctx)
     {
         FURI_LOG_E(TAG, "Failed to get player context");
         return;
     }
 
-    SpriteContext *sprite_context = get_sprite_context(game_player_sprite_choices[game_player_sprite_index]);
+    SpriteContext *sprite_context = get_sprite_context(player_sprite_choices[player_sprite_index]);
     if (!sprite_context)
     {
         FURI_LOG_E(TAG, "Failed to get sprite context");
@@ -84,40 +84,40 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // player context must be set each level or NULL pointer will be dereferenced
-    if (!load_player_context(player_context))
+    if (!load_player_context(pctx))
     {
         FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
 
         // Initialize default player context
-        player_context->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
-        player_context->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
-        player_context->direction = PLAYER_RIGHT; // default direction
-        player_context->health = 100;
-        player_context->strength = 10;
-        player_context->level = 1;
-        player_context->xp = 0;
-        player_context->start_position = entity_pos_get(game_context->player);
-        player_context->attack_timer = 0.1f;
-        player_context->elapsed_attack_timer = player_context->attack_timer;
-        player_context->health_regen = 1; // 1 health per second
-        player_context->elapsed_health_regen = 0;
-        player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+        pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+        pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
+        pctx->direction = PLAYER_RIGHT; // default direction
+        pctx->health = 100;
+        pctx->strength = 10;
+        pctx->level = 1;
+        pctx->xp = 0;
+        pctx->start_position = entity_pos_get(game_context->player);
+        pctx->attack_timer = 0.1f;
+        pctx->elapsed_attack_timer = pctx->attack_timer;
+        pctx->health_regen = 1; // 1 health per second
+        pctx->elapsed_health_regen = 0;
+        pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
         // Set player username
-        if (!load_char("Flip-Social-Username", player_context->username, sizeof(player_context->username)))
+        if (!load_char("Flip-Social-Username", pctx->username, sizeof(pctx->username)))
         {
             // check if data/player/username
-            if (!load_char("player/username", player_context->username, sizeof(player_context->username)))
+            if (!load_char("player/username", pctx->username, sizeof(pctx->username)))
             {
                 // If loading username fails, default to "Player"
-                snprintf(player_context->username, sizeof(player_context->username), "Player");
+                snprintf(pctx->username, sizeof(pctx->username), "Player");
             }
         }
 
-        game_context->player_context = player_context;
+        game_context->player_context = pctx;
 
         // Save the initialized context
-        if (!save_player_context(player_context))
+        if (!save_player_context(pctx))
         {
             FURI_LOG_E(TAG, "Failed to save player context after initialization");
         }
@@ -126,10 +126,10 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
-    player_context->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
+    pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+    pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
-    player_context->start_position = entity_pos_get(game_context->player);
+    pctx->start_position = entity_pos_get(game_context->player);
 
     // Update player stats based on XP using iterative method
     // Function to get the current level based on XP iteratively
@@ -148,20 +148,20 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Determine the player's level based on XP
-    player_context->level = get_player_level_iterative(player_context->xp);
+    pctx->level = get_player_level_iterative(pctx->xp);
 
     // Update strength and max health based on the new level
-    player_context->strength = 10 + (player_context->level * 1);           // 1 strength per level
-    player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+    pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
+    pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
     // Assign loaded player context to game context
-    game_context->player_context = player_context;
+    game_context->player_context = pctx;
 }
 
 // code from Derek Jamison
 // eventually we'll add dynamic positioning based on how much pitch/roll is detected
 // instead of assigning a fixed value
-static int player_x_from_pitch(float pitch)
+static int vgm_x(float pitch)
 {
     if (pitch > 6.0)
     {
@@ -174,7 +174,7 @@ static int player_x_from_pitch(float pitch)
     return 0;
 }
 
-static int player_y_from_roll(float roll)
+static int vgm_y(float roll)
 {
     if (roll > 9.0)
     {
@@ -207,8 +207,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     if (game_context->imu_present)
     {
-        player->dx = player_x_from_pitch(-imu_pitch_get(game_context->imu));
-        player->dy = player_y_from_roll(-imu_roll_get(game_context->imu));
+        player->dx = vgm_x(-imu_pitch_get(game_context->imu));
+        player->dy = vgm_y(-imu_roll_get(game_context->imu));
 
         switch (player->dx)
         {
@@ -356,7 +356,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             game_context->is_switching_level = true;
             save_player_context(player);
-            game_manager_next_level_set(manager, get_next_level(manager));
+            game_manager_next_level_set(manager, next_level(manager));
             return;
         }
 

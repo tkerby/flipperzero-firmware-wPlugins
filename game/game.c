@@ -11,7 +11,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
-    game_context->fps = game_fps_choices_2[game_fps_index];
+    game_context->fps = fps_choices_2[fps_index];
     game_context->player_context = NULL;
     game_context->current_level = 0;
     game_context->ended_early = false;

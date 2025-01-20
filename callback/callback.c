@@ -37,9 +37,9 @@ static int32_t game_app(void *p)
 
     // Setup game engine settings...
     GameEngineSettings settings = game_engine_settings_init();
-    settings.target_fps = game_fps_choices_2[game_fps_index];
+    settings.target_fps = fps_choices_2[fps_index];
     settings.show_fps = game.show_fps;
-    settings.always_backlight = strstr(yes_or_no_choices[game_screen_always_on_index], "Yes") != NULL;
+    settings.always_backlight = strstr(yes_or_no_choices[screen_always_on_index], "Yes") != NULL;
     settings.frame_callback = frame_cb;
     settings.context = game_manager;
     GameEngine *engine = game_engine_alloc(settings);
@@ -91,11 +91,11 @@ static int32_t game_app(void *p)
     return 0;
 }
 
-static void flip_world_request_error_draw(Canvas *canvas, DataLoaderModel *model)
+static void error_draw(Canvas *canvas, DataLoaderModel *model)
 {
     if (canvas == NULL)
     {
-        FURI_LOG_E(TAG, "flip_world_request_error_draw - canvas is NULL");
+        FURI_LOG_E(TAG, "error_draw - canvas is NULL");
         DEV_CRASH();
         return;
     }
@@ -149,10 +149,10 @@ static bool alloc_text_input_view(void *context, char *title);
 static bool alloc_variable_item_list(void *context, uint32_t view_id);
 //
 static void wifi_settings_item_selected(void *context, uint32_t index);
-static void text_updated_wifi_ssid(void *context);
-static void text_updated_wifi_pass(void *context);
-static void text_updated_username(void *context);
-static void text_updated_password(void *context);
+static void updated_wifi_ssid(void *context);
+static void updated_wifi_pass(void *context);
+static void updated_username(void *context);
+static void updated_password(void *context);
 //
 static void fps_change(VariableItem *item);
 static void game_settings_item_selected(void *context, uint32_t index);
@@ -178,7 +178,7 @@ static uint32_t callback_to_settings(void *context)
     return FlipWorldViewSettings;
 }
 
-static void flip_world_view_about_draw_callback(Canvas *canvas, void *model)
+static void about_draw_callback(Canvas *canvas, void *model)
 {
     UNUSED(model);
     canvas_clear(canvas);
@@ -204,7 +204,7 @@ static bool alloc_about_view(void *context)
     }
     if (!app->view_about)
     {
-        if (!easy_flipper_set_view(&app->view_about, FlipWorldViewAbout, flip_world_view_about_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
+        if (!easy_flipper_set_view(&app->view_about, FlipWorldViewAbout, about_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
         {
             return false;
         }
@@ -252,9 +252,9 @@ static bool alloc_text_input_view(void *context, char *title)
                 title,
                 app->text_input_temp_buffer,
                 app->text_input_buffer_size,
-                strcmp(title, "SSID") == 0 ? text_updated_wifi_ssid : strcmp(title, "Password") == 0     ? text_updated_wifi_pass
-                                                                  : strcmp(title, "Username-Login") == 0 ? text_updated_username
-                                                                                                         : text_updated_password,
+                strcmp(title, "SSID") == 0 ? updated_wifi_ssid : strcmp(title, "Password") == 0     ? updated_wifi_pass
+                                                             : strcmp(title, "Username-Login") == 0 ? updated_username
+                                                                                                    : updated_password,
                 callback_to_wifi_settings,
                 &app->view_dispatcher,
                 app))
@@ -362,13 +362,13 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             {
                 app->variable_item_game_player_sprite = variable_item_list_add(app->variable_item_list, "Weapon", 4, player_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_player_sprite, 1);
-                variable_item_set_current_value_text(app->variable_item_game_player_sprite, game_player_sprite_choices[1]);
+                variable_item_set_current_value_text(app->variable_item_game_player_sprite, player_sprite_choices[1]);
             }
             if (!app->variable_item_game_fps)
             {
                 app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, fps_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_fps, 0);
-                variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[0]);
+                variable_item_set_current_value_text(app->variable_item_game_fps, fps_choices[0]);
             }
             if (!app->variable_item_game_screen_always_on)
             {
@@ -398,7 +398,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                 variable_item_set_current_value_index(app->variable_item_game_player_sprite, index);
                 variable_item_set_current_value_text(
                     app->variable_item_game_player_sprite,
-                    strcmp(game_player_sprite_choices[index], "naked") == 0 ? "None" : game_player_sprite_choices[index]);
+                    strcmp(player_sprite_choices[index], "naked") == 0 ? "None" : player_sprite_choices[index]);
             }
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
@@ -407,7 +407,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
                                                            : strcmp(_game_fps, "120") == 0  ? 2
                                                            : strcmp(_game_fps, "240") == 0  ? 3
                                                                                             : 0;
-                variable_item_set_current_value_text(app->variable_item_game_fps, game_fps_choices[index]);
+                variable_item_set_current_value_text(app->variable_item_game_fps, fps_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_fps, index);
             }
             char _game_screen_always_on[8];
@@ -1166,7 +1166,7 @@ void callback_submenu_choices(void *context, uint32_t index)
     }
 }
 
-static void text_updated_wifi_ssid(void *context)
+static void updated_wifi_ssid(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -1226,7 +1226,7 @@ static void text_updated_wifi_ssid(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-static void text_updated_wifi_pass(void *context)
+static void updated_wifi_pass(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -1286,7 +1286,7 @@ static void text_updated_wifi_pass(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-static void text_updated_username(void *context)
+static void updated_username(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -1311,7 +1311,7 @@ static void text_updated_username(void *context)
     }
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
-static void text_updated_password(void *context)
+static void updated_password(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -1404,15 +1404,15 @@ static void wifi_settings_item_selected(void *context, uint32_t index)
 static void fps_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_fps_index = index;
-    variable_item_set_current_value_text(item, game_fps_choices[index]);
+    fps_index = index;
+    variable_item_set_current_value_text(item, fps_choices[index]);
     variable_item_set_current_value_index(item, index);
-    save_char("Game-FPS", game_fps_choices[index]);
+    save_char("Game-FPS", fps_choices[index]);
 }
 static void screen_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_screen_always_on_index = index;
+    screen_always_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
     save_char("Game-Screen-Always-On", yes_or_no_choices[index]);
@@ -1420,7 +1420,7 @@ static void screen_on_change(VariableItem *item)
 static void sound_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_sound_on_index = index;
+    sound_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
     save_char("Game-Sound-On", yes_or_no_choices[index]);
@@ -1428,7 +1428,7 @@ static void sound_on_change(VariableItem *item)
 static void vibration_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_vibration_on_index = index;
+    vibration_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
     save_char("Game-Vibration-On", yes_or_no_choices[index]);
@@ -1436,10 +1436,10 @@ static void vibration_on_change(VariableItem *item)
 static void player_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_player_sprite_index = index;
-    variable_item_set_current_value_text(item, strcmp(game_player_sprite_choices[index], "naked") == 0 ? "None" : game_player_sprite_choices[index]);
+    player_sprite_index = index;
+    variable_item_set_current_value_text(item, strcmp(player_sprite_choices[index], "naked") == 0 ? "None" : player_sprite_choices[index]);
     variable_item_set_current_value_index(item, index);
-    save_char("Game-Player-Sprite", game_player_sprite_choices[index]);
+    save_char("Game-Player-Sprite", player_sprite_choices[index]);
 }
 
 static bool _fetch_worlds(DataLoaderModel *model)
@@ -1659,7 +1659,7 @@ void loader_draw_callback(Canvas *canvas, void *model)
 
     if (data_state == DataStateError || data_state == DataStateParseError)
     {
-        flip_world_request_error_draw(canvas, data_loader_model);
+        error_draw(canvas, data_loader_model);
         return;
     }
 
@@ -1696,11 +1696,11 @@ void loader_draw_callback(Canvas *canvas, void *model)
     }
 }
 
-static void flip_world_loader_process_callback(void *context)
+static void loader_process_callback(void *context)
 {
     if (context == NULL)
     {
-        FURI_LOG_E(TAG, "flip_world_loader_process_callback - context is NULL");
+        FURI_LOG_E(TAG, "loader_process_callback - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1842,11 +1842,11 @@ static void flip_world_loader_process_callback(void *context)
     }
 }
 
-static void flip_world_loader_timer_callback(void *context)
+static void loader_timer_callback(void *context)
 {
     if (context == NULL)
     {
-        FURI_LOG_E(TAG, "flip_world_loader_timer_callback - context is NULL");
+        FURI_LOG_E(TAG, "loader_timer_callback - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1854,11 +1854,11 @@ static void flip_world_loader_timer_callback(void *context)
     view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventProcess);
 }
 
-static void flip_world_loader_on_enter(void *context)
+static void loader_on_enter(void *context)
 {
     if (context == NULL)
     {
-        FURI_LOG_E(TAG, "flip_world_loader_on_enter - context is NULL");
+        FURI_LOG_E(TAG, "loader_on_enter - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1871,18 +1871,18 @@ static void flip_world_loader_on_enter(void *context)
             view_set_previous_callback(view, model->back_callback);
             if (model->timer == NULL)
             {
-                model->timer = furi_timer_alloc(flip_world_loader_timer_callback, FuriTimerTypePeriodic, app);
+                model->timer = furi_timer_alloc(loader_timer_callback, FuriTimerTypePeriodic, app);
             }
             furi_timer_start(model->timer, 250);
         },
         true);
 }
 
-static void flip_world_loader_on_exit(void *context)
+static void loader_on_exit(void *context)
 {
     if (context == NULL)
     {
-        FURI_LOG_E(TAG, "flip_world_loader_on_exit - context is NULL");
+        FURI_LOG_E(TAG, "loader_on_exit - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1909,8 +1909,8 @@ void loader_init(View *view)
         return;
     }
     view_allocate_model(view, ViewModelTypeLocking, sizeof(DataLoaderModel));
-    view_set_enter_callback(view, flip_world_loader_on_enter);
-    view_set_exit_callback(view, flip_world_loader_on_exit);
+    view_set_enter_callback(view, loader_on_enter);
+    view_set_exit_callback(view, loader_on_exit);
 }
 
 void loader_free_model(View *view)
@@ -1957,7 +1957,7 @@ bool custom_event_callback(void *context, uint32_t index)
     switch (index)
     {
     case FlipWorldCustomEventProcess:
-        flip_world_loader_process_callback(context);
+        loader_process_callback(context);
         return true;
     default:
         FURI_LOG_DEV(TAG, "custom_event_callback. Unknown index: %ld", index);

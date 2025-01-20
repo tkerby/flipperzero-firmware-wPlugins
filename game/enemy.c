@@ -236,7 +236,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     }
 }
 
-static void send_attack_notification(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
+static void atk_notify(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
 {
     if (!game_context || !enemy_context)
     {
@@ -246,8 +246,8 @@ static void send_attack_notification(GameContext *game_context, EnemyContext *en
 
     NotificationApp *notifications = furi_record_open(RECORD_NOTIFICATION);
 
-    const bool vibration_allowed = strstr(yes_or_no_choices[game_vibration_on_index], "Yes") != NULL;
-    const bool sound_allowed = strstr(yes_or_no_choices[game_sound_on_index], "Yes") != NULL;
+    const bool vibration_allowed = strstr(yes_or_no_choices[vibration_on_index], "Yes") != NULL;
+    const bool sound_allowed = strstr(yes_or_no_choices[sound_on_index], "Yes") != NULL;
 
     if (player_attacked)
     {
@@ -355,7 +355,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
-                send_attack_notification(game_context, enemy_context, true);
+                atk_notify(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
                 game_context->player_context->elapsed_attack_timer = 0.0f;
@@ -414,7 +414,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                send_attack_notification(game_context, enemy_context, false);
+                atk_notify(game_context, enemy_context, false);
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;

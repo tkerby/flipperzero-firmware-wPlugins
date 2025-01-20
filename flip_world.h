@@ -76,13 +76,13 @@ typedef struct
     uint32_t text_input_buffer_size; // Size of the text input buffer
 } FlipWorldApp;
 
-extern char *game_fps_choices[];
-extern const float game_fps_choices_2[];
-extern int game_fps_index;
+extern char *fps_choices[];
+extern const float fps_choices_2[];
+extern int fps_index;
 extern char *yes_or_no_choices[];
-extern int game_screen_always_on_index;
-extern int game_sound_on_index;
-extern int game_vibration_on_index;
-extern char *game_player_sprite_choices[];
-extern int game_player_sprite_index;
+extern int screen_always_on_index;
+extern int sound_on_index;
+extern int vibration_on_index;
+extern char *player_sprite_choices[];
+extern int player_sprite_index;
 bool is_enough_heap(size_t heap_size);
