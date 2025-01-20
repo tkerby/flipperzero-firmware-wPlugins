@@ -6,7 +6,8 @@ enum SubmenuIndex {
     SubmenuIndexSavedRemotes,
     SubmenuIndexGpioSettings,
     SubmenuIndexLearnNewRemoteRaw,
-    SubmenuIndexDebug
+    SubmenuIndexDebug,
+    SubmenuIndexEasyLearn,
 };
 
 static void infrared_scene_start_submenu_callback(void* context, uint32_t index) {
@@ -44,6 +45,19 @@ void infrared_scene_start_on_enter(void* context) {
         infrared_scene_start_submenu_callback,
         infrared);
 
+    char easy_learn_text[24];
+    snprintf(
+        easy_learn_text,
+        sizeof(easy_learn_text),
+        "Easy Learn [%s]",
+        infrared->app_state.is_easy_mode ? "X" : " ");
+    submenu_add_item(
+        submenu,
+        easy_learn_text,
+        SubmenuIndexEasyLearn,
+        infrared_scene_start_submenu_callback,
+        infrared);
+
     submenu_add_lockable_item(
         submenu,
         "Learn New Remote RAW",
@@ -64,7 +78,12 @@ void infrared_scene_start_on_enter(void* context) {
     const uint32_t submenu_index =
         scene_manager_get_scene_state(scene_manager, InfraredSceneStart);
     submenu_set_selected_item(submenu, submenu_index);
-    scene_manager_set_scene_state(scene_manager, InfraredSceneStart, SubmenuIndexUniversalRemotes);
+
+    // Only reset menu position if we're not coming from a toggle
+    if(submenu_index == 0) {
+        scene_manager_set_scene_state(
+            scene_manager, InfraredSceneStart, SubmenuIndexUniversalRemotes);
+    }
 
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewSubmenu);
 }
@@ -72,39 +91,48 @@ void infrared_scene_start_on_enter(void* context) {
 bool infrared_scene_start_on_event(void* context, SceneManagerEvent event) {
     InfraredApp* infrared = context;
     SceneManager* scene_manager = infrared->scene_manager;
+    Submenu* submenu = infrared->submenu;
 
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        const uint32_t submenu_index = event.event;
-        scene_manager_set_scene_state(scene_manager, InfraredSceneStart, submenu_index);
-        if(submenu_index == SubmenuIndexUniversalRemotes) {
-            // Set file_path only once here so repeated usages of
-            // "Load from Library File" have file browser focused on
-            // last selected file, feels more intuitive
-            furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
-            scene_manager_next_scene(scene_manager, InfraredSceneUniversal);
-        } else if(
-            submenu_index == SubmenuIndexLearnNewRemote ||
-            submenu_index == SubmenuIndexLearnNewRemoteRaw) {
-            // enable automatic signal decoding if "Learn New Remote"
-            // disable automatic signal decoding if "Learn New Remote (RAW)"
-            infrared_worker_rx_enable_signal_decoding(
-                infrared->worker, submenu_index == SubmenuIndexLearnNewRemote);
-            infrared->app_state.is_learning_new_remote = true;
-            scene_manager_next_scene(scene_manager, InfraredSceneLearn);
-        } else if(submenu_index == SubmenuIndexSavedRemotes) {
-            furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
-            scene_manager_next_scene(scene_manager, InfraredSceneRemoteList);
-        } else if(submenu_index == SubmenuIndexGpioSettings) {
-            scene_manager_next_scene(scene_manager, InfraredSceneGpioSettings);
-        } else if(submenu_index == SubmenuIndexDebug) {
-            scene_manager_next_scene(scene_manager, InfraredSceneDebug);
+        if(event.event == SubmenuIndexEasyLearn) {
+            infrared->app_state.is_easy_mode = !infrared->app_state.is_easy_mode;
+            infrared_save_settings(infrared);
+
+            // Update the menu item text without scene transition
+            char easy_learn_text[24];
+            snprintf(
+                easy_learn_text,
+                sizeof(easy_learn_text),
+                "Easy Learn [%s]",
+                infrared->app_state.is_easy_mode ? "X" : " ");
+            submenu_change_item_label(submenu, SubmenuIndexEasyLearn, easy_learn_text);
+
+            consumed = true;
+        } else {
+            scene_manager_set_scene_state(scene_manager, InfraredSceneStart, event.event);
+            if(event.event == SubmenuIndexUniversalRemotes) {
+                furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
+                scene_manager_next_scene(scene_manager, InfraredSceneUniversal);
+            } else if(
+                event.event == SubmenuIndexLearnNewRemote ||
+                event.event == SubmenuIndexLearnNewRemoteRaw) {
+                infrared_worker_rx_enable_signal_decoding(
+                    infrared->worker, event.event == SubmenuIndexLearnNewRemote);
+                infrared->app_state.is_learning_new_remote = true;
+                scene_manager_next_scene(scene_manager, InfraredSceneLearn);
+            } else if(event.event == SubmenuIndexSavedRemotes) {
+                furi_string_set(infrared->file_path, INFRARED_APP_FOLDER);
+                scene_manager_next_scene(scene_manager, InfraredSceneRemoteList);
+            } else if(event.event == SubmenuIndexGpioSettings) {
+                scene_manager_next_scene(scene_manager, InfraredSceneGpioSettings);
+            } else if(event.event == SubmenuIndexDebug) {
+                scene_manager_next_scene(scene_manager, InfraredSceneDebug);
+            }
+            consumed = true;
         }
-
-        consumed = true;
     }
-
     return consumed;
 }
 
