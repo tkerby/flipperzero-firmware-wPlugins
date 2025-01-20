@@ -15,6 +15,8 @@
 #include <nfc_listener.h>
 #include <nfc_scanner.h>
 
+#include <notification/notification_messages.h>
+
 #include <storage/storage.h>
 
 #include <toolbox/stream/stream.h>
@@ -24,6 +26,8 @@
 #include "scenes/nfc_comparator_scene.h"
 
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
+
+#define NFC_ITEM_LOCATION "/ext/nfc/"
 
 typedef enum {
    NfcComparatorView_Submenu,
@@ -39,6 +43,14 @@ typedef struct {
    FuriString* file_browser_output;
    Popup* popup;
    NfcComparatorReaderWorker* worker;
+   NotificationApp* notification_app;
 } NfcComparator;
 
-#define NFC_ITEM_LOCATION "/ext/nfc/"
+typedef enum {
+   NfcComparatorLedState_Running,
+   NfcComparatorLedState_complete,
+   NfcComparatorLedState_error
+} NfcComparatorLedState;
+
+void start_led(NfcComparator* nfc_comparator, NfcComparatorLedState state);
+void stop_led(NfcComparator* nfc_comparator);
