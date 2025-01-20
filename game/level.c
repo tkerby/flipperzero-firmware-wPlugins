@@ -41,6 +41,8 @@ static void set_world(Level *level, GameManager *manager, char *id)
     {
         FURI_LOG_E("Game", "Failed to load json data from file");
         draw_town_world(level);
+        // add background
+        add_background(level);
         return;
     }
 
@@ -60,6 +62,8 @@ static void set_world(Level *level, GameManager *manager, char *id)
         FURI_LOG_E("Game", "Failed to draw world");
         draw_town_world(level);
         furi_string_free(json_data_str);
+        // add background
+        add_background(level);
     }
     else
     {
@@ -93,6 +97,8 @@ static void set_world(Level *level, GameManager *manager, char *id)
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);
+        // add background
+        add_background(level);
         FURI_LOG_I("Game", "Finished loading world data");
     }
 }
