@@ -53,6 +53,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Game Mode menu default games list updated to include [Drifter v0.1 (By jean-edouard)](https://github.com/jean-edouard/drifter)
 - Updated: [IR Easy Learn (By jaylikesbunda)](https://github.com/Next-Flip/Momentum-Firmware/pull/350/commits/ec1b9996919fe20ab60993a2d8a37a065bc9640f)
 - Updated: [Nightstand Clock v1.2 (By nymda)](https://github.com/nymda/FlipperNightStand) [Show battery percentage and show AM/PM in timer mode (By 956MB)](https://github.com/Next-Flip/Momentum-Apps/pull/42)
+- Updated: [NFC Maker v1.3 (by Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
+- Updated: [XBox360 USB Game Controller v0.2 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput) [USB Game Controller: Restore prev profile (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/b83dbad6c635741953e6dc41556fbc046d2764ab)
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043)
 
 <a name="release">
@@ -561,7 +563,7 @@ $ ./fbt dolphin_ext
 - [NFC Comparator v1.1 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - [NFC E-Ink Tags v1.0.3 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-good-faps/pull/245)
 - [NFC Magic v1.14 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
-- [NFC Maker v1.2 (by Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
+- [NFC Maker v1.3 (by Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
 - [NFC Playlist v2.8 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
@@ -672,7 +674,7 @@ $ ./fbt dolphin_ext
 - [Wii EC Analyzer v1.1 (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [Wire Tester v1.1 (By unixispower)](https://gitlab.com/unixispower/flipper-wire-tester)
 - [WS2812B LED Tester v1.9 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/ws2812b_tester)
-- [XBox360 USB Game Controller v0.1 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput)
+- [XBox360 USB Game Controller v0.2 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput)
 - [XRemote v1.3 (By kala13x)](https://github.com/kala13x/flipper-xremote)
 - [YuriCable Pro Max v0.4 (By arag0re)](https://github.com/arag0re/fz-yuricable-pro-max)
 

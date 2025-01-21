@@ -613,6 +613,8 @@ int32_t xinput_app(void* p) {
 
     bool running = true;
 
+    FuriHalUsbInterface* usb_mode_prev = furi_hal_usb_get_config();
+    furi_hal_usb_unlock();
     furi_check(furi_hal_usb_set_config(&usb_xbox, NULL));
     while(true) {
         while(!hid_connected) {
@@ -678,16 +680,14 @@ int32_t xinput_app(void* p) {
         view_port_update(view_port);
         hid_send_report();
     }
+    furi_check(furi_hal_usb_set_config(usb_mode_prev, NULL));
+
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
     view_port_free(view_port);
     furi_message_queue_free(event_queue);
 
     furi_record_close(RECORD_GUI);
-    furi_check(furi_hal_usb_set_config(NULL, NULL));
-
-    // reboot the system to get usb working again
-    furi_hal_power_reset();
 
     return 0;
 }
