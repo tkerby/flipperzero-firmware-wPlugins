@@ -24,6 +24,7 @@ GamesMenuList Version 0
 /ext/apps/Games/dice_rm.fap
 /ext/apps/Games/dnd_dice_app.fap
 /ext/apps/Games/doom.fap
+/ext/apps/Games/drifter.fap
 /ext/apps/Games/dvd_bouncer.fap
 /ext/apps/Games/eightball.fap
 /ext/apps/Games/etchasketch.fap
