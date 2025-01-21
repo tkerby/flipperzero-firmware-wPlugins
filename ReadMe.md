@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0120-2111-0.420.0-c84c3f2](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0121-1500-0.420.0-8f39cff](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-20 21:11 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-20 21:11 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-21 15:00 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-21 15:00 EST`
 - Updated: [FlipWifi v1.3.2 (By jblanked)](https://github.com/jblanked/FlipWiFi)
 - Added: [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
 - Added: [NFC Comparator v1.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
