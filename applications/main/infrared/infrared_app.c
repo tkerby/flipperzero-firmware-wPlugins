@@ -1,8 +1,9 @@
 #include "infrared_app_i.h"
 
 #include <furi_hal_power.h>
-
+#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <toolbox/path.h>
 #include <toolbox/saved_struct.h>
 #include <dolphin/dolphin.h>
@@ -439,7 +440,6 @@ InfraredErrorCode infrared_tx_send_once_button_index(InfraredApp* infrared, size
 
     return error;
 }
-
 void infrared_blocking_task_start(InfraredApp* infrared, FuriThreadCallback callback) {
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewLoading);
     furi_thread_set_callback(infrared->task_thread, callback);
@@ -505,40 +505,89 @@ void infrared_enable_otg(InfraredApp* infrared, bool enable) {
     infrared->app_state.is_otg_enabled = enable;
 }
 
-static void infrared_load_settings(InfraredApp* infrared) {
-    InfraredSettings settings = {0};
+bool infrared_load_settings(InfraredApp* app) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    bool success = false;
 
-    if(!saved_struct_load(
-           INFRARED_SETTINGS_PATH,
-           &settings,
-           sizeof(InfraredSettings),
-           INFRARED_SETTINGS_MAGIC,
-           INFRARED_SETTINGS_VERSION)) {
-        FURI_LOG_D(TAG, "Failed to load settings, using defaults");
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, INFRARED_SETTINGS_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        uint8_t magic = 0;
+        if(storage_file_read(file, &magic, sizeof(magic)) == sizeof(magic)) {
+            if(magic == INFRARED_SETTINGS_MAGIC) {
+                uint32_t version = 0;
+                if(storage_file_read(file, &version, sizeof(version)) == sizeof(version)) {
+                    if(version == 1) {
+                        // Load v1 structure
+                        struct {
+                            FuriHalInfraredTxPin tx_pin;
+                            bool otg_enabled;
+                        } v1_settings;
+
+                        if(storage_file_read(file, &v1_settings, sizeof(v1_settings)) ==
+                           sizeof(v1_settings)) {
+                            // Migrate to v2
+                            app->app_state.tx_pin = v1_settings.tx_pin;
+                            app->app_state.is_otg_enabled = v1_settings.otg_enabled;
+                            app->app_state.is_easy_mode = false; // Default for migrated settings
+                            success = true;
+                        }
+                    } else if(version == 2) {
+                        // Current version - load directly
+                        InfraredSettings settings;
+                        if(storage_file_read(file, &settings, sizeof(InfraredSettings)) ==
+                           sizeof(InfraredSettings)) {
+                            app->app_state.tx_pin = settings.tx_pin;
+                            app->app_state.is_otg_enabled = settings.otg_enabled;
+                            app->app_state.is_easy_mode = settings.easy_mode;
+                            success = true;
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    infrared_set_tx_pin(infrared, settings.tx_pin);
-    if(settings.tx_pin < FuriHalInfraredTxPinMax) {
-        infrared_enable_otg(infrared, settings.otg_enabled);
+    if(!success) {
+        // Load defaults if anything fails
+        app->app_state.tx_pin = FuriHalInfraredTxPinInternal;
+        app->app_state.is_otg_enabled = false;
+        app->app_state.is_easy_mode = false;
     }
-    infrared->app_state.is_easy_mode = settings.easy_mode;
+
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return success;
 }
 
-void infrared_save_settings(InfraredApp* infrared) {
-    InfraredSettings settings = {
-        .tx_pin = infrared->app_state.tx_pin,
-        .otg_enabled = infrared->app_state.is_otg_enabled,
-        .easy_mode = infrared->app_state.is_easy_mode,
-    };
+bool infrared_save_settings(InfraredApp* app) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    bool success = false;
 
-    if(!saved_struct_save(
-           INFRARED_SETTINGS_PATH,
-           &settings,
-           sizeof(InfraredSettings),
-           INFRARED_SETTINGS_MAGIC,
-           INFRARED_SETTINGS_VERSION)) {
-        FURI_LOG_E(TAG, "Failed to save settings");
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, INFRARED_SETTINGS_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        // Write magic
+        uint8_t magic = INFRARED_SETTINGS_MAGIC;
+        if(storage_file_write(file, &magic, sizeof(magic)) == sizeof(magic)) {
+            // Write version
+            uint32_t version = INFRARED_SETTINGS_VERSION;
+            if(storage_file_write(file, &version, sizeof(version)) == sizeof(version)) {
+                // Write settings
+                InfraredSettings settings = {
+                    .tx_pin = app->app_state.tx_pin,
+                    .otg_enabled = app->app_state.is_otg_enabled,
+                    .easy_mode = app->app_state.is_easy_mode,
+                };
+                if(storage_file_write(file, &settings, sizeof(InfraredSettings)) ==
+                   sizeof(InfraredSettings)) {
+                    success = true;
+                }
+            }
+        }
     }
+
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return success;
 }
 
 void infrared_signal_received_callback(void* context, InfraredWorkerSignal* received_signal) {
