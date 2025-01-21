@@ -6,6 +6,7 @@
 #include "settings_def.h"
 #include "confirmation_view.h"
 
+// Struct definitions must come before they are used
 typedef struct {
     const char* label; // Display label in menu
     const char* command; // UART command to send
@@ -22,11 +23,22 @@ typedef struct {
 } MenuCommand;
 
 typedef struct {
+    const char* label;
+    const char* command;
+    const char* capture_prefix;
+} SniffCommandDef;
+
+typedef struct {
+    const char* label;
+    const char* command;
+} BeaconSpamDef;
+
+typedef struct {
     AppState* state;
     const MenuCommand* command;
 } MenuCommandContext;
 
-// Function declarations
+// Forward declarations of static functions
 static void show_menu(
     AppState* state,
     const MenuCommand* commands,
@@ -37,8 +49,35 @@ static void show_menu(
 static void show_command_details(AppState* state, const MenuCommand* command);
 static bool menu_input_handler(InputEvent* event, void* context);
 static void text_input_result_callback(void* context);
+static void confirmation_ok_callback(void* context);
+static void confirmation_cancel_callback(void* context);
+static void app_info_ok_callback(void* context);
+static void execute_menu_command(AppState* state, const MenuCommand* command);
+static void error_callback(void* context);
 
-// WiFi menu command definitions - grouped by function
+// Remove redundant declarations of public functions since they're already in menu.h
+
+// Sniff command definitions
+static const SniffCommandDef sniff_commands[] = {
+    {"< Sniff WPS >", "capture -wps\n", "wps_capture"},
+    {"< Sniff Raw Packets >", "capture -raw\n", "raw_capture"},
+    {"< Sniff Probes >", "capture -p\n", "probe_capture"},
+    {"< Sniff Deauth >", "capture -deauth\n", "deauth_capture"},
+    {"< Sniff Beacons >", "capture -beacon\n", "beacon_capture"},
+    {"< Sniff EAPOL >", "capture -eapol\n", "eapol_capture"},
+};
+
+// Beacon spam command definitions
+static const BeaconSpamDef beacon_spam_commands[] = {
+    {"< Beacon Spam (List) >", "beaconspam -l\n"},
+    {"< Beacon Spam (Random) >", "beaconspam -r\n"},
+    {"< Beacon Spam (Rickroll) >", "beaconspam -rr\n"},
+    {"< Beacon Spam (Custom) >", "beaconspam"},
+};
+
+static size_t current_sniff_index = 0;
+static size_t current_beacon_index = 0;
+
 // WiFi menu command definitions
 static const MenuCommand wifi_commands[] = {
     // Scanning Operations
@@ -95,7 +134,6 @@ static const MenuCommand wifi_commands[] = {
                         "- Network details\n"
                         "- Channel info\n"
                         "- Security type\n",
-
     },
     {
         .label = "List Stations",
@@ -132,78 +170,47 @@ static const MenuCommand wifi_commands[] = {
                         "for targeting with\n"
                         "other commands.\n",
     },
-
-    // Beacon Spam Operations
+    // Variable Sniff Command
     {
-        .label = "Beacon Spam (List)",
+        .label = "< Sniff WPS >",
+        .command = "capture -wps\n",
+        .capture_prefix = "wps_capture",
+        .file_ext = "pcap",
+        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Variable Sniff",
+        .details_text = "Use Left/Right to change:\n"
+                        "- WPS traffic\n"
+                        "- Raw packets\n"
+                        "- Probe requests\n"
+                        "- Deauth frames\n"
+                        "- Beacon frames\n"
+                        "- EAPOL/Handshakes\n",
+    },
+    // Variable Beacon Spam Command
+    {
+        .label = "< Beacon Spam (List) >",
         .command = "beaconspam -l\n",
         .capture_prefix = NULL,
         .file_ext = NULL,
         .folder = NULL,
         .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "List Beacon Spam",
-        .details_text = "Broadcasts fake APs\n"
-                        "using names from a\n"
-                        "predefined list.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Beacon Spam (Random)",
-        .command = "beaconspam -r\n",
-        .capture_prefix = NULL,
-        .file_ext = NULL,
-        .folder = NULL,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Random Beacon Spam",
-        .details_text = "Broadcasts fake APs\n"
-                        "with randomly generated\n"
-                        "network names.\n"
-                        "Range: ~50-100m\n",
-
-    },
-    {
-        .label = "Beacon Spam (Rickroll)",
-        .command = "beaconspam -rr\n",
-        .capture_prefix = NULL,
-        .file_ext = NULL,
-        .folder = NULL,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Rickroll Beacons",
-        .details_text = "Broadcasts fake APs\n"
-                        "with names from Rick\n"
-                        "Astley lyrics.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Custom Beacon Spam",
-        .command = "beaconspam",
-        .capture_prefix = NULL,
-        .file_ext = NULL,
-        .folder = NULL,
-        .needs_input = true,
         .input_text = "SSID Name",
         .needs_confirmation = false,
         .confirm_header = NULL,
         .confirm_text = NULL,
-        .details_header = "Custom Beacons",
-        .details_text = "Broadcasts fake APs\n"
-                        "using your custom\n"
-                        "network name.\n"
+        .details_header = "Variable Beacon Spam",
+        .details_text = "Use Left/Right to change:\n"
+                        "- List mode\n"
+                        "- Random names\n"
+                        "- Rickroll mode\n"
+                        "- Custom SSID\n"
                         "Range: ~50-100m\n",
     },
-
     // Attack Operations
     {
         .label = "Deauth",
@@ -220,127 +227,6 @@ static const MenuCommand wifi_commands[] = {
         .details_text = "Sends deauth frames to\n"
                         "disconnect clients from\n"
                         "selected network.\n"
-                        "Range: ~50-100m\n",
-    },
-
-    // Capture Operations
-    {
-        .label = "Sniff Raw Packets",
-        .command = "capture -raw\n",
-        .capture_prefix = "raw_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Raw Packet Capture",
-        .details_text = "Captures all WiFi\n"
-                        "traffic to a PCAP file\n"
-                        "for later analysis.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff Probes",
-        .command = "capture -p\n",
-        .capture_prefix = "probe_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Probe Capture",
-        .details_text = "Captures probe requests\n"
-                        "from client devices to\n"
-                        "a PCAP file.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff WPS",
-        .command = "capture -wps\n",
-        .capture_prefix = "wps_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "WPS Capture",
-        .details_text = "Captures WPS traffic\n"
-                        "to a PCAP file for\n"
-                        "later analysis.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff Deauth",
-        .command = "capture -deauth\n",
-        .capture_prefix = "deauth_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Deauth Capture",
-        .details_text = "Records deauth and\n"
-                        "disassoc frames.\n"
-                        "Saves to PCAP file.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff Beacons",
-        .command = "capture -beacon\n",
-        .capture_prefix = "beacon_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Beacon Capture",
-        .details_text = "Captures beacon\n"
-                        "frames from APs.\n"
-                        "Saves to PCAP file.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff Pwnagotchi",
-        .command = "capture -pwn\n",
-        .capture_prefix = "pwn_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "Pwnagotchi Capture",
-        .details_text = "Captures packets from\n"
-                        "Pwnagotchi devices.\n"
-                        "Saves to PCAP file.\n"
-                        "Range: ~50-100m\n",
-    },
-    {
-        .label = "Sniff EAPOL",
-        .command = "capture -eapol\n",
-        .capture_prefix = "eapol_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = false,
-        .confirm_header = NULL,
-        .confirm_text = NULL,
-        .details_header = "EAPOL Capture",
-        .details_text = "Captures EAPOL/4-way\n"
-                        "handshake frames.\n"
-                        "Saves to PCAP file.\n"
                         "Range: ~50-100m\n",
     },
 
@@ -781,6 +667,14 @@ static void error_callback(void* context) {
     state->current_view = state->previous_view;
 }
 
+// Text input callback implementation
+static void text_input_result_callback(void* context) {
+    AppState* input_state = (AppState*)context;
+    send_uart_command_with_text(input_state->uart_command, input_state->input_buffer, input_state);
+    uart_receive_data(
+        input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
+}
+
 static void execute_menu_command(AppState* state, const MenuCommand* command) {
     // Check ESP connection first
     if(!uart_is_esp_connected(state->uart_context)) {
@@ -797,7 +691,18 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
         view_dispatcher_switch_to_view(state->view_dispatcher, 7);
         state->current_view = 7;
-        return; // Important: Return here to prevent further execution
+        return;
+    }
+
+    // For commands needing input
+    if(command->needs_input) {
+        state->uart_command = command->command;
+        text_input_reset(state->text_input);
+        text_input_set_header_text(state->text_input, command->input_text);
+        text_input_set_result_callback(
+            state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
+        view_dispatcher_switch_to_view(state->view_dispatcher, 6);
+        return;
     }
 
     // For commands needing confirmation
@@ -813,23 +718,68 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
             state->confirmation_view, confirmation_cancel_callback, cmd_ctx);
 
         view_dispatcher_switch_to_view(state->view_dispatcher, 7);
-        return; // Important: Return here
+        return;
     }
 
-    // For commands needing input
-    if(command->needs_input) {
-        state->uart_command = command->command;
-        text_input_reset(state->text_input);
-        text_input_set_header_text(state->text_input, command->input_text);
-        text_input_set_result_callback(
-            state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
-        view_dispatcher_switch_to_view(state->view_dispatcher, 6);
-        return; // Important: Return here
+    // Handle variable sniff command
+    if(state->current_view == 1 && state->current_index == 5) {
+        const SniffCommandDef* current_sniff = &sniff_commands[current_sniff_index];
+        // Handle capture commands
+        if(current_sniff->capture_prefix) {
+            bool file_opened = uart_receive_data(
+                state->uart_context,
+                state->view_dispatcher,
+                state,
+                current_sniff->capture_prefix,
+                "pcap",
+                GHOST_ESP_APP_FOLDER_PCAPS);
+
+            if(!file_opened) {
+                FURI_LOG_E("Capture", "Failed to open capture file");
+                return;
+            }
+
+            furi_delay_ms(10);
+            send_uart_command(current_sniff->command, state);
+            return;
+        }
+
+        uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
+
+        furi_delay_ms(5);
+        send_uart_command(current_sniff->command, state);
+        return;
+    }
+
+    // Handle variable beacon spam command
+    if(state->current_view == 1 && state->current_index == 6) { // Adjust index if needed
+        const BeaconSpamDef* current_beacon = &beacon_spam_commands[current_beacon_index];
+
+        // If it's custom mode (last index), handle text input
+        if(current_beacon_index == COUNT_OF(beacon_spam_commands) - 1) {
+            state->uart_command = current_beacon->command;
+            text_input_reset(state->text_input);
+            text_input_set_header_text(state->text_input, "SSID Name");
+            text_input_set_result_callback(
+                state->text_input,
+                text_input_result_callback,
+                state,
+                state->input_buffer,
+                128,
+                true);
+            view_dispatcher_switch_to_view(state->view_dispatcher, 6);
+            return;
+        }
+
+        // For other modes, send command directly
+        uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
+        furi_delay_ms(5);
+        send_uart_command(current_beacon->command, state);
+        return;
     }
 
     // Handle capture commands
     if(command->capture_prefix || command->file_ext || command->folder) {
-        // First open the capture file and switch view
         bool file_opened = uart_receive_data(
             state->uart_context,
             state->view_dispatcher,
@@ -843,23 +793,59 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
             return;
         }
 
-        // Then send command to start capture only after file is ready
-        furi_delay_ms(10); // Small delay to ensure file is ready
+        furi_delay_ms(10);
         send_uart_command(command->command, state);
-        return; // Important: Return here
+        return;
     }
-    uart_receive_data(
-        state->uart_context,
-        state->view_dispatcher,
-        state,
-        "", // No capture prefix
-        "", // No file extension
-        ""); // No folder
+
+    uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
 
     furi_delay_ms(5);
-
     send_uart_command(command->command, state);
 }
+
+// Menu display function implementation
+static void show_menu(
+    AppState* state,
+    const MenuCommand* commands,
+    size_t command_count,
+    const char* header,
+    Submenu* menu,
+    uint8_t view_id) {
+    submenu_reset(menu);
+    submenu_set_header(menu, header);
+
+    for(size_t i = 0; i < command_count; i++) {
+        submenu_add_item(menu, commands[i].label, i, submenu_callback, state);
+    }
+
+    // Set up view with input handler
+    View* menu_view = submenu_get_view(menu);
+    view_set_context(menu_view, state);
+    view_set_input_callback(menu_view, menu_input_handler);
+
+    // Restore last selection based on menu type
+    uint32_t last_index = 0;
+    switch(view_id) {
+    case 1:
+        last_index = state->last_wifi_index;
+        break;
+    case 2:
+        last_index = state->last_ble_index;
+        break;
+    case 3:
+        last_index = state->last_gps_index;
+        break;
+    }
+    if(last_index < command_count) {
+        submenu_set_selected_item(menu, last_index);
+    }
+
+    view_dispatcher_switch_to_view(state->view_dispatcher, view_id);
+    state->current_view = view_id;
+    state->previous_view = view_id;
+}
+
 // Menu display functions
 void show_wifi_menu(AppState* state) {
     show_menu(
@@ -894,15 +880,6 @@ void handle_gps_menu(AppState* state, uint32_t index) {
         state->last_gps_index = index; // Save the selection
         execute_menu_command(state, &gps_commands[index]);
     }
-}
-
-// Callback for text input results
-static void text_input_result_callback(void* context) {
-    AppState* input_state = (AppState*)context;
-    send_uart_command_with_text(
-        input_state->uart_command, input_state->input_buffer, (AppState*)input_state);
-    uart_receive_data(
-        input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
 }
 
 void submenu_callback(void* context, uint32_t index) {
@@ -1133,47 +1110,6 @@ bool back_event_callback(void* context) {
     return true;
 }
 
-static void show_menu(
-    AppState* state,
-    const MenuCommand* commands,
-    size_t command_count,
-    const char* header,
-    Submenu* menu,
-    uint8_t view_id) {
-    submenu_reset(menu);
-    submenu_set_header(menu, header);
-
-    for(size_t i = 0; i < command_count; i++) {
-        submenu_add_item(menu, commands[i].label, i, submenu_callback, state);
-    }
-
-    // Set up view with input handler
-    View* menu_view = submenu_get_view(menu);
-    view_set_context(menu_view, state);
-    view_set_input_callback(menu_view, menu_input_handler);
-
-    // Restore last selection based on menu type
-    uint32_t last_index = 0;
-    switch(view_id) {
-    case 1:
-        last_index = state->last_wifi_index;
-        break;
-    case 2:
-        last_index = state->last_ble_index;
-        break;
-    case 3:
-        last_index = state->last_gps_index;
-        break;
-    }
-    if(last_index < command_count) {
-        submenu_set_selected_item(menu, last_index);
-    }
-
-    view_dispatcher_switch_to_view(state->view_dispatcher, view_id);
-    state->current_view = view_id;
-    state->previous_view = view_id;
-}
-
 void show_main_menu(AppState* state) {
     main_menu_reset(state->main_menu);
     main_menu_set_header(state->main_menu, "");
@@ -1263,6 +1199,34 @@ static bool menu_input_handler(InputEvent* event, void* context) {
 
         case InputKeyRight:
         case InputKeyLeft:
+            // Handle sniff command cycling
+            if(state->current_view == 1 && current_index == 5) {
+                if(event->key == InputKeyRight) {
+                    current_sniff_index = (current_sniff_index + 1) % COUNT_OF(sniff_commands);
+                } else {
+                    current_sniff_index = (current_sniff_index == 0) ?
+                                              (size_t)(COUNT_OF(sniff_commands) - 1) :
+                                              (current_sniff_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu, current_index, sniff_commands[current_sniff_index].label);
+                consumed = true;
+            }
+            // Handle beacon spam command cycling
+            else if(state->current_view == 1 && current_index == 6) { // Adjust index based on menu position
+                if(event->key == InputKeyRight) {
+                    current_beacon_index =
+                        (current_beacon_index + 1) % COUNT_OF(beacon_spam_commands);
+                } else {
+                    current_beacon_index = (current_beacon_index == 0) ?
+                                               (size_t)(COUNT_OF(beacon_spam_commands) - 1) :
+                                               (current_beacon_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu, current_index, beacon_spam_commands[current_beacon_index].label);
+                consumed = true;
+            }
+            break;
         case InputKeyMAX:
             break;
         }
