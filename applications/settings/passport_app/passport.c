@@ -233,6 +233,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_AKTET:
             canvas_draw_icon(canvas, 11, 2, &I_Akira_Tetsuo);
             break;
+        case PIMG_ANDROID:
+            canvas_draw_icon(canvas, 11, 2, &I_Android);
+            break;
         case PIMG_BLBalalaika:
             canvas_draw_icon(canvas, 11, 2, &I_Black_Lagoon_Balalaika);
             break;
@@ -325,6 +328,15 @@ static void render_callback(Canvas* const canvas, void* ctx) {
             break;
         case PIMG_GOKUSSJ3:
             canvas_draw_icon(canvas, 11, 2, &I_g0ku_3);
+            break;
+        case PIMG_GTAVFRANKLIN:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Franklin);
+            break;
+        case PIMG_GTAVMICHAEL:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Michael);
+            break;
+        case PIMG_GTAVTREVOR:
+            canvas_draw_icon(canvas, 11, 2, &I_GTAV_Trevor);
             break;
         case PIMG_GUYFAWKES:
             canvas_draw_icon(canvas, 11, 2, &I_Guy_Fawkes_Mask);
