@@ -4,9 +4,9 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-// World size (3x3)
-#define WORLD_WIDTH 384
-#define WORLD_HEIGHT 192
+// World size (6x6)
+#define WORLD_WIDTH 768
+#define WORLD_HEIGHT 384
 
 // Maximum number of world objects
 #define MAX_WORLD_OBJECTS 25 // any more than that and we may run out of heap when switching worlds

@@ -183,10 +183,10 @@ IconContext *get_icon_context(const char *name)
     {
         return icon_generic_alloc("woman", &I_icon_woman_9x16, 9, 16);
     }
-    // else if (is_str(name, "chest_closed") )
-    // {
-    //     return icon_generic_alloc("chest_closed", &I_icon_chest_closed_16x13px, 16, 13);
-    // }
+    else if (is_str(name, "chest_closed"))
+    {
+        return icon_generic_alloc("chest_closed", &I_icon_chest_closed_16x13px, 16, 13);
+    }
     // else if (is_str(name, "chest_open") )
     // {
     //     return icon_generic_alloc("chest_open", &I_icon_chest_open_16x16px, 16, 16);
@@ -229,7 +229,6 @@ IconContext *get_icon_context(const char *name)
     }
     else if (is_str(name, "lake_right"))
     {
-        // Assuming 11x31
         return icon_generic_alloc("lake_right", &I_icon_lake_right_11x31, 11, 31);
     }
     else if (is_str(name, "lake_top"))
@@ -316,10 +315,10 @@ const char *icon_get_id(const Icon *icon)
     {
         return "woman";
     }
-    // else if (icon == &I_icon_chest_closed_16x13px)
-    // {
-    //     return "chest_closed";
-    // }
+    else if (icon == &I_icon_chest_closed_16x13px)
+    {
+        return "chest_closed";
+    }
     // else if (icon == &I_icon_chest_open_16x16px)
     // {
     //     return "chest_open";

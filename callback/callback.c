@@ -748,7 +748,7 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v3/list/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v4/list/10/", "{\"Content-Type\":\"application/json\"}");
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -777,6 +777,61 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
 }
+
+// static bool fetch_app_update(FlipperHTTP *fhttp)
+// {
+//     if (!fhttp)
+//     {
+//         FURI_LOG_E(TAG, "fhttp is NULL");
+//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
+//         return false;
+//     }
+
+//     return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/app/last-updated/flip_world/", "{\"Content-Type\":\"application/json\"}");
+// }
+
+// static bool parse_app_update(FlipperHTTP *fhttp)
+// {
+//     if (!fhttp)
+//     {
+//         FURI_LOG_E(TAG, "fhttp is NULL");
+//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
+//         return false;
+//     }
+//     if (fhttp->last_response == NULL || strlen(fhttp->last_response) == 0)
+//     {
+//         FURI_LOG_E(TAG, "fhttp->last_response is NULL or empty");
+//         easy_flipper_dialog("Error", "fhttp->last_response is NULL or empty. Press BACK to return.");
+//         return false;
+//     }
+//     bool last_update_available = false;
+//     char last_updated_old[32];
+//     // load the previous last_updated
+//     if (!load_char("last_updated", last_updated_old, sizeof(last_updated_old)))
+//     {
+//         FURI_LOG_E(TAG, "Failed to load last_updated");
+//         // it's okay, we'll just update it
+//     }
+//     // save the new last_updated
+//     save_char("last_updated", fhttp->last_response);
+
+//     // compare the two
+//     if (strlen(last_updated_old) == 0 || !is_str(last_updated_old, fhttp->last_response))
+//     {
+//         last_update_available = true;
+//     }
+
+//     if (last_update_available)
+//     {
+//         easy_flipper_dialog("Update Available", "An update is available. Press OK to update.");
+//         return true;
+//     }
+//     else
+//     {
+//         easy_flipper_dialog("No Update Available", "No update is available. Press OK to continue.");
+//         return false;
+//     }
+// }
 
 static bool start_game_thread(void *context)
 {
@@ -931,7 +986,7 @@ static bool _fetch_game(DataLoaderModel *model)
 
         model->fhttp->save_received_data = true;
         char url[128];
-        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v3/get/world/%s/", furi_string_get_cstr(first_world));
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v4/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
         return flipper_http_get_request_with_headers(model->fhttp, url, "{\"Content-Type\":\"application/json\"}");
@@ -1542,7 +1597,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
         sizeof(model->fhttp->file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v3/get/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v4/get/10/", "{\"Content-Type\":\"application/json\"}");
 }
 static char *_parse_worlds(DataLoaderModel *model)
 {

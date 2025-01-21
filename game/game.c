@@ -13,9 +13,10 @@ static void game_start(GameManager *game_manager, void *ctx)
     GameContext *game_context = ctx;
     game_context->fps = atof_(fps_choices_str[fps_index]);
     game_context->player_context = NULL;
-    game_context->current_level = 0;
     game_context->ended_early = false;
+    game_context->current_level = 0;
     game_context->level_count = 0;
+    game_context->enemy_count = 0;
 
     // set all levels to NULL
     for (int i = 0; i < MAX_LEVELS; i++)
@@ -36,7 +37,10 @@ static void game_start(GameManager *game_manager, void *ctx)
             }
             break;
         }
-        game_context->level_count++;
+        else
+        {
+            game_context->level_count++;
+        }
     }
 
     // imu

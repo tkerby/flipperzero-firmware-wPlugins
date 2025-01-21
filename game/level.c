@@ -98,9 +98,9 @@ static void set_world(Level *level, GameManager *manager, char *id)
 }
 static void level_start(Level *level, GameManager *manager, void *context)
 {
-    if (!manager)
+    if (!manager || !level || !context)
     {
-        FURI_LOG_E("Game", "Manager is NULL");
+        FURI_LOG_E("Game", "Manager, level, or context is NULL");
         return;
     }
     GameContext *game_context = game_manager_game_context_get(manager);
