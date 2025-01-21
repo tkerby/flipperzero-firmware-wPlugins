@@ -3,6 +3,7 @@
 - Added New controls (HOLD OK to access the In-Game menu, PRESS BACK to exit the menu, and HOLD BACK to leave the game).
 - Added option to choose player weapon in the Game Settings.
 - Added transition icon for switching worlds.
+- Doubled the size of each world (from 384x192 to 768x384).
 
 ## 0.3 (2025-01-14)
 - Added new worlds.

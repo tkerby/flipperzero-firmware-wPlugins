@@ -75,6 +75,9 @@ typedef struct
     //
     GameMenuScreen menu_screen;
     uint8_t menu_selection;
+    //
+    int icon_count;
+    int icon_offset;
 } GameContext;
 
 typedef struct

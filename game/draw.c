@@ -71,14 +71,16 @@ void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, con
 }
 char g_name[32];
 // Draw an icon at a specific position (with collision detection)
-void spawn_icon(Level *level, const char *icon_id, float x, float y)
+void spawn_icon(GameManager *manager, Level *level, const char *icon_id, float x, float y)
 {
     snprintf(g_name, sizeof(g_name), "%s", icon_id);
     Entity *e = level_add_entity(level, &icon_desc);
     entity_pos_set(e, (Vector){x, y});
+    GameContext *game_context = game_manager_game_context_get(manager);
+    game_context->icon_count++;
 }
 // Draw a line of icons at a specific position (with collision detection)
-void spawn_icon_line(Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal)
+void spawn_icon_line(GameManager *manager, Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal)
 {
     for (int i = 0; i < amount; i++)
     {
@@ -90,7 +92,7 @@ void spawn_icon_line(Level *level, const char *icon_id, float x, float y, uint8_
                 break;
             }
 
-            spawn_icon(level, icon_id, x + (i * 17), y);
+            spawn_icon(manager, level, icon_id, x + (i * 17), y);
         }
         else
         {
@@ -100,7 +102,7 @@ void spawn_icon_line(Level *level, const char *icon_id, float x, float y, uint8_
                 break;
             }
 
-            spawn_icon(level, icon_id, x, y + (i * 17));
+            spawn_icon(manager, level, icon_id, x, y + (i * 17));
         }
     }
 }

@@ -211,6 +211,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     if (game_context->imu_present)
     {
+        // update position using the IMU
         vgm_direction(game_context->imu, player, &pos);
     }
 
@@ -237,7 +238,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.y -= 2;
+            pos.y -= (2 + game_context->icon_offset);
             player->dy = -1;
             player->direction = PLAYER_UP;
         }
@@ -258,7 +259,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.y += 2;
+            pos.y += (2 + game_context->icon_offset);
             player->dy = 1;
             player->direction = PLAYER_DOWN;
         }
@@ -279,7 +280,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.x -= 2;
+            pos.x -= (2 + game_context->icon_offset);
             player->dx = -1;
             player->direction = PLAYER_LEFT;
         }
@@ -302,7 +303,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.x += 2;
+            pos.x += (2 + game_context->icon_offset);
             player->dx = 1;
             player->direction = PLAYER_RIGHT;
         }
@@ -415,7 +416,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     );
 
     // Draw the outer bounds adjusted by camera offset
-    draw_bounds(canvas);
+    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
     // Draw the user stats (health, xp, and level)
     background_render(canvas, manager);

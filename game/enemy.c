@@ -50,13 +50,11 @@ static EnemyContext *enemy_generic_alloc(
 // Free function
 static void enemy_generic_free(void *context)
 {
-    if (!context)
+    if (context)
     {
-        FURI_LOG_E("Game", "Enemy generic free: Invalid context");
-        return;
+        free(context);
+        context = NULL;
     }
-    free(context);
-    context = NULL;
     if (enemy_context_generic)
     {
         free(enemy_context_generic);
@@ -305,8 +303,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     enemy_context->state = ENEMY_ATTACKED;
 
                     // Bounce the enemy back by X units opposite their last movement direction
-                    enemy_pos.x -= game_context->player_context->dx * enemy_context->radius;
-                    enemy_pos.y -= game_context->player_context->dy * enemy_context->radius;
+                    enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(self, enemy_pos);
 
                     // Reset enemy's movement direction to prevent immediate re-collision
@@ -354,8 +352,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     game_context->player_context->state = PLAYER_ATTACKED;
 
                     // Bounce the player back by X units opposite their last movement direction
-                    player_pos.x -= game_context->player_context->dx * enemy_context->radius;
-                    player_pos.y -= game_context->player_context->dy * enemy_context->radius;
+                    player_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    player_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(other, player_pos);
 
                     // Reset player's movement direction to prevent immediate re-collision
@@ -363,37 +361,27 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     game_context->player_context->dy = 0;
                 }
             }
-            else
-            {
-                FURI_LOG_I("Game", "Enemy '%s' attack on player is on cooldown: %f seconds remaining", enemy_context->id, (double)(enemy_context->attack_timer - enemy_context->elapsed_attack_timer));
-            }
         }
         else // handle other collisions
         {
-            // bounce player and enemy away from each other
+            // Bounce player in the direction they came
             Vector player_pos = entity_pos_get(other);
-            Vector enemy_pos = entity_pos_get(self);
-
-            // Calculate the direction vector from player to enemy
-            Vector direction_vector = {
-                enemy_pos.x - player_pos.x,
-                enemy_pos.y - player_pos.y};
-
-            // Normalize the direction vector
-            float length = sqrt(direction_vector.x * direction_vector.x + direction_vector.y * direction_vector.y);
-            if (length != 0)
+            switch (game_context->player_context->direction)
             {
-                direction_vector.x /= length;
-                direction_vector.y /= length;
-            }
-
-            // Move the player and enemy away from each other
-            player_pos.y -= direction_vector.y * 3;
+            case PLAYER_UP:
+                player_pos.y += enemy_context->size.y;
+                break;
+            case PLAYER_DOWN:
+                player_pos.y -= enemy_context->size.y;
+                break;
+            case PLAYER_LEFT:
+                player_pos.x += enemy_context->size.x;
+                break;
+            case PLAYER_RIGHT:
+                player_pos.x -= enemy_context->size.x;
+                break;
+            };
             entity_pos_set(other, player_pos);
-
-            enemy_pos.x += direction_vector.x * 3;
-            entity_pos_set(self, enemy_pos);
-
             // Reset player's movement direction to prevent immediate re-collision
             game_context->player_context->dx = 0;
             game_context->player_context->dy = 0;
@@ -625,22 +613,12 @@ const EntityDescription *enemy(
 
 void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
 {
-    if (!level)
+    if (!level || !manager || !json)
     {
-        FURI_LOG_E("Game", "Level is NULL");
+        FURI_LOG_E("Game", "Level, GameManager, or JSON is NULL");
         return;
     }
-    if (!json)
-    {
-        FURI_LOG_E("Game", "JSON is NULL");
-        return;
-    }
-    if (!manager)
-    {
-        FURI_LOG_E("Game", "GameManager is NULL");
-        return;
-    }
-    // parameters: id, index, size.x, size.y, start_position.x, start_position.y, end_position.x, end_position.y, move_timer, speed, attack_timer, strength, health
+
     FuriString *id = get_json_value_furi("id", json);
     FuriString *_index = get_json_value_furi("index", json);
     //

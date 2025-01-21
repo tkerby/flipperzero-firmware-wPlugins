@@ -5,22 +5,31 @@ static void icon_collision(Entity *self, Entity *other, GameManager *manager, vo
     UNUSED(manager);
     UNUSED(self);
     IconContext *ictx = (IconContext *)context;
-    if (!ictx)
-    {
-        FURI_LOG_E("Game", "Icon context is NULL");
-        return;
-    }
-
-    if (entity_description_get(other) == &player_desc)
+    if (ictx && entity_description_get(other) == &player_desc)
     {
         PlayerContext *player = (PlayerContext *)entity_context_get(other);
         if (player)
         {
-            Vector pos = entity_pos_get(other);
-            // Bounce back by 2
-            pos.x -= player->dx * 2;
-            pos.y -= player->dy * 2;
-            entity_pos_set(other, pos);
+            Vector player_pos = entity_pos_get(other);
+
+            // Bounce player in the direction they came
+            switch (player->direction)
+            {
+            case PLAYER_UP:
+                player_pos.y += ictx->size.y;
+                break;
+            case PLAYER_DOWN:
+                player_pos.y -= ictx->size.y;
+                break;
+            case PLAYER_LEFT:
+                player_pos.x += ictx->size.x;
+                break;
+            case PLAYER_RIGHT:
+                player_pos.x -= ictx->size.x;
+                break;
+            };
+
+            entity_pos_set(other, player_pos);
 
             // Reset movement to prevent re-collision
             player->dx = 0;
@@ -33,19 +42,17 @@ static void icon_render(Entity *self, GameManager *manager, Canvas *canvas, void
 {
     UNUSED(manager);
     IconContext *ictx = (IconContext *)context;
-    if (!ictx)
+    if (ictx)
     {
-        FURI_LOG_E("Game", "Icon context is NULL");
-        return;
-    }
-    Vector pos = entity_pos_get(self);
+        Vector pos = entity_pos_get(self);
 
-    // Draw the icon, centered
-    canvas_draw_icon(
-        canvas,
-        pos.x - camera_x - ictx->width / 2,
-        pos.y - camera_y - ictx->height / 2,
-        ictx->icon);
+        // Draw the icon, centered
+        canvas_draw_icon(
+            canvas,
+            pos.x - camera_x - ictx->size.x / 2,
+            pos.y - camera_y - ictx->size.y / 2,
+            ictx->icon);
+    }
 }
 
 static void icon_start(Entity *self, GameManager *manager, void *context)
@@ -73,20 +80,18 @@ static void icon_start(Entity *self, GameManager *manager, void *context)
     }
 
     ictx_self->icon = loaded_data->icon;
-    ictx_self->width = loaded_data->width;
-    ictx_self->height = loaded_data->height;
+    ictx_self->size = (Vector){loaded_data->size.x, loaded_data->size.y};
     ictx->icon = loaded_data->icon;
-    ictx->width = loaded_data->width;
-    ictx->height = loaded_data->height;
+    ictx->size = (Vector){loaded_data->size.x, loaded_data->size.y};
 
     Vector pos = entity_pos_get(self);
-    pos.x += ictx_self->width / 2;
-    pos.y += ictx_self->height / 2;
+    pos.x += ictx_self->size.x / 2;
+    pos.y += ictx_self->size.y / 2;
     entity_pos_set(self, pos);
 
     entity_collider_add_circle(
         self,
-        (ictx_self->width + ictx_self->height) / 4);
+        (ictx_self->size.x + ictx_self->size.y) / 4);
 
     free(loaded_data);
 }
@@ -96,7 +101,6 @@ static void icon_free(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(self);
     UNUSED(manager);
-    UNUSED(context);
     if (context)
     {
         free(context);
@@ -124,8 +128,7 @@ static IconContext *icon_generic_alloc(const char *id, const Icon *icon, uint8_t
     }
     snprintf(ctx->id, sizeof(ctx->id), "%s", id);
     ctx->icon = icon;
-    ctx->width = width;
-    ctx->height = height;
+    ctx->size = (Vector){width, height};
     return ctx;
 }
 
@@ -183,10 +186,10 @@ IconContext *get_icon_context(const char *name)
     {
         return icon_generic_alloc("woman", &I_icon_woman_9x16, 9, 16);
     }
-    else if (is_str(name, "chest_closed"))
-    {
-        return icon_generic_alloc("chest_closed", &I_icon_chest_closed_16x13px, 16, 13);
-    }
+    // else if (is_str(name, "chest_closed"))
+    // {
+    //     return icon_generic_alloc("chest_closed", &I_icon_chest_closed_16x13px, 16, 13);
+    // }
     // else if (is_str(name, "chest_open") )
     // {
     //     return icon_generic_alloc("chest_open", &I_icon_chest_open_16x16px, 16, 16);
@@ -315,10 +318,10 @@ const char *icon_get_id(const Icon *icon)
     {
         return "woman";
     }
-    else if (icon == &I_icon_chest_closed_16x13px)
-    {
-        return "chest_closed";
-    }
+    // else if (icon == &I_icon_chest_closed_16x13px)
+    // {
+    //     return "chest_closed";
+    // }
     // else if (icon == &I_icon_chest_open_16x16px)
     // {
     //     return "chest_open";
