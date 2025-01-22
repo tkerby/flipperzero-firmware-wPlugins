@@ -7,6 +7,7 @@ const char* const easy_mode_button_names[] = {"Power", "Vol_up", "Vol_dn", "Mute
                                               "Right", "Menu",   "Back",   "Play",    "Pause",
                                               "Stop",  "Next",   "Prev",   "FF",      "Rew",
                                               "Input", "Exit",   "Eject",  "Subtitle"};
+const size_t easy_mode_button_count = COUNT_OF(easy_mode_button_names);
 
 static void infrared_scene_learn_dialog_result_callback(DialogExResult result, void* context) {
     InfraredApp* infrared = context;
@@ -20,13 +21,14 @@ static bool infrared_scene_learn_get_next_name(
     if(!infrared->remote) return false;
 
     // Search through remaining button names to find one that doesn't exist
-    for(int32_t i = start_index; i < (int32_t)EASY_MODE_BUTTON_COUNT; i++) {
-        const char* name = easy_mode_button_names[i];
+    FuriString* name = furi_string_alloc();
+    for(int32_t i = start_index; i < (int32_t)easy_mode_button_count; i++) {
+        furi_string_set(name, easy_mode_button_names[i]);
         bool name_exists = false;
 
         // Check if this name already exists in remote
         for(size_t j = 0; j < infrared_remote_get_signal_count(infrared->remote); j++) {
-            if(strcmp(name, infrared_remote_get_signal_name(infrared->remote, j)) == 0) {
+            if(furi_string_cmpi(name, infrared_remote_get_signal_name(infrared->remote, j)) == 0) {
                 name_exists = true;
                 break;
             }
@@ -38,6 +40,7 @@ static bool infrared_scene_learn_get_next_name(
             return true;
         }
     }
+    furi_string_free(name);
 
     return false;
 }
@@ -51,7 +54,7 @@ static void infrared_scene_learn_update_button_name(InfraredApp* infrared, bool 
         button_index = infrared->app_state.current_button_index;
         if(increment) {
             // Only increment if we haven't reached the last button
-            if(button_index + 1 < (int32_t)EASY_MODE_BUTTON_COUNT) {
+            if(button_index + 1 < (int32_t)easy_mode_button_count) {
                 button_index++;
                 infrared->app_state.current_button_index = button_index;
             }
@@ -72,16 +75,15 @@ static void infrared_scene_learn_update_button_name(InfraredApp* infrared, bool 
 
     // Ensure button_index is valid
     if(button_index < 0) button_index = 0;
-    if(button_index >= (int32_t)EASY_MODE_BUTTON_COUNT) {
-        button_index = (int32_t)EASY_MODE_BUTTON_COUNT - 1;
+    if(button_index >= (int32_t)easy_mode_button_count) {
+        button_index = (int32_t)easy_mode_button_count - 1;
     }
 
     // Now we know button_index is valid, use it to get the name
     const char* button_name = easy_mode_button_names[button_index];
-
-    infrared_text_store_set(
-        infrared, 0, "Point remote at IR port\nand press the %s button", button_name);
-    dialog_ex_set_text(dialog_ex, infrared->text_store[0], 5, 10, AlignLeft, AlignCenter);
+    dialog_ex_set_text(
+        dialog_ex, "Point remote at IR port\nand press button:", 5, 10, AlignLeft, AlignCenter);
+    dialog_ex_set_header(dialog_ex, button_name, 78, 11, AlignLeft, AlignTop);
 
     // For existing remotes, check if there are any more buttons to add
     bool has_more_buttons = false;
@@ -90,7 +92,7 @@ static void infrared_scene_learn_update_button_name(InfraredApp* infrared, bool 
         has_more_buttons =
             infrared_scene_learn_get_next_name(infrared, button_index + 1, &next_index);
     } else {
-        has_more_buttons = (button_index + 1 < (int32_t)EASY_MODE_BUTTON_COUNT);
+        has_more_buttons = (button_index + 1 < (int32_t)easy_mode_button_count);
     }
 
     // Show/hide skip button based on whether there are more buttons
@@ -109,7 +111,7 @@ void infrared_scene_learn_on_enter(void* context) {
     // Initialize or validate current_button_index
     if(infrared->app_state.is_learning_new_remote) {
         // If index is beyond our predefined names, reset it
-        if(infrared->app_state.current_button_index >= (int32_t)EASY_MODE_BUTTON_COUNT) {
+        if(infrared->app_state.current_button_index >= (int32_t)easy_mode_button_count) {
             infrared->app_state.current_button_index = 0;
         }
     } else {
@@ -156,7 +158,9 @@ bool infrared_scene_learn_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == InfraredCustomEventTypeSignalReceived) {
+            infrared_play_notification_message(infrared, InfraredNotificationMessageSuccess);
             scene_manager_next_scene(infrared->scene_manager, InfraredSceneLearnSuccess);
+            dolphin_deed(DolphinDeedIrLearnSuccess);
             consumed = true;
         } else if(event.event == DialogExResultCenter && infrared->app_state.is_easy_mode) {
             // Update with increment when skipping
@@ -178,16 +182,9 @@ bool infrared_scene_learn_on_event(void* context, SceneManagerEvent event) {
 
 void infrared_scene_learn_on_exit(void* context) {
     InfraredApp* infrared = context;
-
-    // Reset dialog
-    dialog_ex_reset(infrared->dialog_ex);
-
-    // Stop worker and clear callback
-    infrared_worker_rx_stop(infrared->worker);
+    DialogEx* dialog_ex = infrared->dialog_ex;
     infrared_worker_rx_set_received_signal_callback(infrared->worker, NULL, NULL);
-
-    // Clear any stored text
-    infrared_text_store_clear(infrared, 0);
-
+    infrared_worker_rx_stop(infrared->worker);
     infrared_play_notification_message(infrared, InfraredNotificationMessageBlinkStop);
+    dialog_ex_reset(dialog_ex);
 }

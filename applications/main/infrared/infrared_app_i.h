@@ -53,8 +53,8 @@
 #define INFRARED_LOG_TAG             "InfraredApp"
 
 /* Button names for easy mode */
-#define EASY_MODE_BUTTON_COUNT 23 // Number of buttons in the array
 extern const char* const easy_mode_button_names[];
+extern const size_t easy_mode_button_count; // Number of buttons in the array
 
 /**
  * @brief Enumeration of invalid remote button indices.
@@ -93,8 +93,7 @@ typedef struct {
     InfraredEditTarget edit_target : 8; /**< Selected editing target (a remote or a button). */
     InfraredEditMode edit_mode     : 8; /**< Selected editing operation (rename or delete). */
     int32_t current_button_index; /**< Selected button index (move destination). */
-    int32_t
-        existing_remote_button_index; /**< Current button index for existing remotes in easy mode. */
+    int32_t existing_remote_button_index; /**< Existing remote's current button index (easy mode). */
     int32_t prev_button_index; /**< Previous button index (move source). */
     uint32_t last_transmit_time; /**< Lat time a signal was transmitted. */
     FuriHalInfraredTxPin tx_pin;
@@ -325,7 +324,7 @@ void infrared_enable_otg(InfraredApp* infrared, bool enable);
  *
  * @param[in] infrared pointer to the application instance.
  */
-bool infrared_save_settings(InfraredApp* infrared);
+void infrared_save_settings(InfraredApp* infrared);
 
 /**
  * @brief Common received signal callback.

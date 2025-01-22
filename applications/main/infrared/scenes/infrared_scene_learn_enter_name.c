@@ -17,8 +17,8 @@ void infrared_scene_learn_enter_name_on_enter(void* context) {
 
         // Ensure button_index is valid
         if(button_index < 0) button_index = 0;
-        if(button_index >= (int32_t)EASY_MODE_BUTTON_COUNT) {
-            button_index = (int32_t)EASY_MODE_BUTTON_COUNT - 1;
+        if(button_index >= (int32_t)easy_mode_button_count) {
+            button_index = (int32_t)easy_mode_button_count - 1;
         }
 
         // Always use predefined names in easy mode
@@ -44,7 +44,7 @@ void infrared_scene_learn_enter_name_on_enter(void* context) {
         context,
         infrared->text_store[0],
         INFRARED_MAX_BUTTON_NAME_LENGTH,
-        !infrared->app_state.is_easy_mode); // Only allow editing in normal mode
+        true);
 
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewTextInput);
 }
