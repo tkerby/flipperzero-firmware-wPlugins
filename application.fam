@@ -15,5 +15,8 @@ App(
         Lib(
             name="reader_worker",
         ),
+        Lib(
+            name="led_worker",
+        ),
     ],
 )

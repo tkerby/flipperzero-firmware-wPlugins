@@ -1,6 +1,4 @@
 #pragma once
-#include <furi.h>
-#include <furi_hal.h>
 
 #include "nfc_comparator_icons.h"
 
@@ -26,6 +24,7 @@
 #include "scenes/nfc_comparator_scene.h"
 
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
+#include "lib/led_worker/nfc_comparator_led_worker.h"
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
 
@@ -45,12 +44,3 @@ typedef struct {
    NfcComparatorReaderWorker* worker;
    NotificationApp* notification_app;
 } NfcComparator;
-
-typedef enum {
-   NfcComparatorLedState_Running,
-   NfcComparatorLedState_complete,
-   NfcComparatorLedState_error
-} NfcComparatorLedState;
-
-void start_led(NfcComparator* nfc_comparator, NfcComparatorLedState state);
-void stop_led(NfcComparator* nfc_comparator);

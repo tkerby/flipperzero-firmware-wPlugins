@@ -13,7 +13,7 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
       worker, furi_string_get_cstr(nfc_comparator->file_browser_output));
    nfc_comparator_reader_worker_start(worker);
 
-   start_led(nfc_comparator, NfcComparatorLedState_Running);
+   start_led(nfc_comparator->notification_app, NfcComparatorLedState_Running);
 
    while(nfc_comparator_reader_worker_get_state(worker) !=
          NfcComparatorReaderWorkerState_Stopped) {
@@ -35,7 +35,7 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
 
    nfc_comparator_reader_worker_stop(worker);
 
-   start_led(nfc_comparator, NfcComparatorLedState_complete);
+   start_led(nfc_comparator->notification_app, NfcComparatorLedState_complete);
 
    popup_set_header(nfc_comparator->popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
 
@@ -68,5 +68,5 @@ bool nfc_comparator_comparator_scene_on_event(void* context, SceneManagerEvent e
 void nfc_comparator_comparator_scene_on_exit(void* context) {
    NfcComparator* nfc_comparator = context;
    popup_reset(nfc_comparator->popup);
-   stop_led(nfc_comparator);
+   stop_led(nfc_comparator->notification_app);
 }
