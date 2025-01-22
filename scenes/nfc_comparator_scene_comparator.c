@@ -1,4 +1,3 @@
-
 #include "../nfc_comparator.h"
 
 void nfc_comparator_comparator_scene_on_enter(void* context) {

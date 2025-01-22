@@ -1,4 +1,3 @@
-
 #include "../nfc_comparator.h"
 
 typedef enum {
