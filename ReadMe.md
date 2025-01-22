@@ -4,7 +4,7 @@
 &nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://lh3.googleusercontent.com/d/1jMPWENvOTabzjJALFj82U72LGsRWuUuQ' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0115-2126-0.420.0-73cef7f.tgz&channel=RM0115-2126-0.420.0-73cef7f&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0122-1815-0.420.0-2b43189.tgz&channel=RM0122-1815-0.420.0-2b43189&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -31,37 +31,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-22 17:55 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-22 17:55 EST`
-- Updated: [FlipWifi v1.3.2 (By jblanked)](https://github.com/jblanked/FlipWiFi)
-- Added: [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
-- Added: [NFC Comparator v1.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [Web Crawler v1.0.1 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero)
-- Updated: [NFC/RFID Detector v1.4 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2795) Duped to be in NFC and RFID app folders (By RogueMaster)
-- OFW: [Infrared: increase max carrier limit #4070 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/4070)
-- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Bump API 79.2 for OFW 1.2.0-rc
-- Updated: [Key Copier v1.1 (By zinongli)](https://github.com/zinongli/KeyCopier)
-- Updated: [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
-- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)
-- Added: [XBox360 USB Game Controller v0.1 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput)
-- OFW: PR: [NFC: FeliCa Protocol Expose Read Block API and Allow Specifying Service #4074 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4074)
-- Updated: [Metroflip v0.4.9 (By luu176)](https://github.com/luu176/Metroflip) [Suica Widget with raw block readings (By zinongli)](https://github.com/zinongli/Metroflip/commit/9940ea93f0052a8057977aa9fe84dce06c247682)
-- Infrared: [IR Easy Learn (By jaylikesbunda)](https://github.com/Next-Flip/Momentum-Firmware/pull/350)
-- Added: [Drifter v0.1 (By jean-edouard)](https://github.com/jean-edouard/drifter)
-- Game Mode menu default games list updated to include [Drifter v0.1 (By jean-edouard)](https://github.com/jean-edouard/drifter)
-- Updated: [Nightstand Clock v1.2 (By nymda)](https://github.com/nymda/FlipperNightStand) [Show battery percentage and show AM/PM in timer mode (By 956MB)](https://github.com/Next-Flip/Momentum-Apps/pull/42)
-- Updated: [NFC Maker v1.3 (by Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
-- Updated: [XBox360 USB Game Controller v0.2 (By expected-ingot)](https://github.com/expected-ingot/flipper-xinput) [USB Game Controller: Restore prev profile (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/b83dbad6c635741953e6dc41556fbc046d2764ab)
-- Updated: [Ghost ESP v1.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
-- [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): [Android Build (By evillero)](https://github.com/evillero/Android-Asset-Pack) added & included with Manifest Switcher build.
-- [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): [GTA Build (By evillero)](https://github.com/evillero/GTA-Asset-Pack) added & included with Manifest Switcher build.
-- Passport updated to include 4 new passport images (By RogueMaster) Android & GTAV image assets (By evillero)
-- Updated: [SD Card Assets](https://www.patreon.com/RogueMaster/membership)
-- Updated: [IR: Update universals for audio, blueray & tv (By jaylikesbunda)](https://github.com/Next-Flip/Momentum-Firmware/pull/358) With Script Updates & Fixes (By Willy-JL)
-- Updated: [FM Radio v1.1.1 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-firmware-wPlugins/tree/420/applications/external/fm_radio) [Fix icon, use API buttons (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/83d9bd743905904c6413fc762d1bfbb6202172b0)
-- Updated: [IR Easy Learn (By jaylikesbunda & Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/350/commits/ec1b9996919fe20ab60993a2d8a37a065bc9640f)
-- Infrared: [Apps Update to use new settings loading (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/337177af6444a1d55c2e9a7002c5b5c08c8eee55)
-- Updated: [NFC Comparator v1.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043)
 
 <a name="release">
@@ -701,4 +670,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0115-2126-0.420.0-73cef7f.tgz&channel=RM0115-2126-0.420.0-73cef7f&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0122-1815-0.420.0-2b43189.tgz&channel=RM0122-1815-0.420.0-2b43189&version=0.420.0)
