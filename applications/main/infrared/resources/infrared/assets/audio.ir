@@ -8259,14 +8259,6 @@ protocol: NEC
 address: 00 00 00 00
 command: 19 00 00 00
 #
-# Model: Como audio
-#
-name: Power
-type: parsed
-protocol: NEC
-address: 77 00 00 00
-command: F1 00 00 00
-#
 name: Mute
 type: parsed
 protocol: NEC
@@ -9317,7 +9309,7 @@ protocol: NECext
 address: 87 7C 00 00
 command: 1A E5 00 00
 #
-## Model: AEG
+# Model: AEG
 name: Prev
 type: parsed
 protocol: NECext
