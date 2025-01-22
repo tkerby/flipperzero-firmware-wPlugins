@@ -8,54 +8,59 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Popup);
 
    NfcComparatorReaderWorker* worker = nfc_comparator_reader_worker_alloc();
-   nfc_comparator_reader_worker_set_loaded_nfc_card(
-      worker, furi_string_get_cstr(nfc_comparator->file_browser_output));
-   nfc_comparator_reader_worker_start(worker);
+   if(!nfc_comparator_reader_worker_set_loaded_nfc_card(
+         worker, furi_string_get_cstr(nfc_comparator->file_browser_output))) {
+      nfc_comparator_reader_worker_free(worker);
+      popup_set_header(
+         nfc_comparator->popup, "Failed to load\nselected card", 64, 5, AlignCenter, AlignTop);
+   } else {
+      nfc_comparator_reader_worker_start(worker);
 
-   start_led(nfc_comparator->notification_app, NfcComparatorLedState_Running);
+      start_led(nfc_comparator->notification_app, NfcComparatorLedState_Running);
 
-   while(nfc_comparator_reader_worker_get_state(worker) !=
-         NfcComparatorReaderWorkerState_Stopped) {
-      switch(nfc_comparator_reader_worker_get_state(worker)) {
-      case NfcComparatorReaderWorkerState_Scanning:
-         popup_set_header(nfc_comparator->popup, "Scanning....", 64, 5, AlignCenter, AlignTop);
-         break;
-      case NfcComparatorReaderWorkerState_Polling:
-         popup_set_header(nfc_comparator->popup, "Polling....", 64, 5, AlignCenter, AlignTop);
-         break;
-      case NfcComparatorReaderWorkerState_Comparing:
-         popup_set_header(nfc_comparator->popup, "Comparing....", 64, 5, AlignCenter, AlignTop);
-         break;
-      default:
-         break;
+      while(nfc_comparator_reader_worker_get_state(worker) !=
+            NfcComparatorReaderWorkerState_Stopped) {
+         switch(nfc_comparator_reader_worker_get_state(worker)) {
+         case NfcComparatorReaderWorkerState_Scanning:
+            popup_set_header(nfc_comparator->popup, "Scanning....", 64, 5, AlignCenter, AlignTop);
+            break;
+         case NfcComparatorReaderWorkerState_Polling:
+            popup_set_header(nfc_comparator->popup, "Polling....", 64, 5, AlignCenter, AlignTop);
+            break;
+         case NfcComparatorReaderWorkerState_Comparing:
+            popup_set_header(nfc_comparator->popup, "Comparing....", 64, 5, AlignCenter, AlignTop);
+            break;
+         default:
+            break;
+         }
+         furi_delay_ms(100);
       }
-      furi_delay_ms(100);
+
+      nfc_comparator_reader_worker_stop(worker);
+
+      start_led(nfc_comparator->notification_app, NfcComparatorLedState_complete);
+
+      popup_set_header(nfc_comparator->popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
+
+      NfcComparatorReaderWorkerCompareChecks checks =
+         nfc_comparator_reader_worker_get_compare_checks(worker);
+      nfc_comparator_reader_worker_free(worker);
+
+      FuriString* comparator = furi_string_alloc();
+      furi_string_printf(
+         comparator,
+         "UID: %s\nUID length: %s\nProtocol: %s",
+         checks.uid ? "Match" : "Mismatch",
+         checks.uid_length ? "Match" : "Mismatch",
+         checks.protocol ? "Match" : "Mismatch");
+
+      char result_buffer[162];
+      strncpy(result_buffer, furi_string_get_cstr(comparator), sizeof(result_buffer) - 1);
+
+      furi_string_free(comparator);
+
+      popup_set_text(nfc_comparator->popup, result_buffer, 64, 35, AlignCenter, AlignCenter);
    }
-
-   nfc_comparator_reader_worker_stop(worker);
-
-   start_led(nfc_comparator->notification_app, NfcComparatorLedState_complete);
-
-   popup_set_header(nfc_comparator->popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
-
-   NfcComparatorReaderWorkerCompareChecks checks =
-      nfc_comparator_reader_worker_get_compare_checks(worker);
-   nfc_comparator_reader_worker_free(worker);
-
-   FuriString* comparator = furi_string_alloc();
-   furi_string_printf(
-      comparator,
-      "UID: %s\nUID length: %s\nProtocol: %s",
-      checks.uid ? "Match" : "Mismatch",
-      checks.uid_length ? "Match" : "Mismatch",
-      checks.protocol ? "Match" : "Mismatch");
-
-   char result_buffer[162];
-   strncpy(result_buffer, furi_string_get_cstr(comparator), sizeof(result_buffer) - 1);
-
-   furi_string_free(comparator);
-
-   popup_set_text(nfc_comparator->popup, result_buffer, 64, 35, AlignCenter, AlignCenter);
 }
 
 bool nfc_comparator_comparator_scene_on_event(void* context, SceneManagerEvent event) {
