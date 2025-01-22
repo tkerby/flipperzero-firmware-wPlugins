@@ -150,11 +150,6 @@ void nfc_comparator_reader_worker_set_loaded_nfc_card(void* context, const char*
    nfc_device_load(nfc_comparator_reader_worker->loaded_nfc_card, path_to_nfc_card);
 }
 
-bool nfc_comparator_reader_worker_is_running(void* context) {
-   NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
-   return nfc_comparator_reader_worker->state != NfcComparatorReaderWorkerState_Stopped;
-}
-
 NfcComparatorReaderWorkerState nfc_comparator_reader_worker_get_state(void* context) {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
    furi_assert(nfc_comparator_reader_worker);

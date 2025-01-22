@@ -1,4 +1,3 @@
-
 #include "../nfc_comparator.h"
 
 void nfc_comparator_comparator_scene_on_enter(void* context) {
@@ -13,7 +12,10 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
         worker, furi_string_get_cstr(nfc_comparator->file_browser_output));
     nfc_comparator_reader_worker_start(worker);
 
-    while(nfc_comparator_reader_worker_is_running(worker)) {
+    start_led(nfc_comparator->notification_app, NfcComparatorLedState_Running);
+
+    while(nfc_comparator_reader_worker_get_state(worker) !=
+          NfcComparatorReaderWorkerState_Stopped) {
         switch(nfc_comparator_reader_worker_get_state(worker)) {
         case NfcComparatorReaderWorkerState_Scanning:
             popup_set_header(nfc_comparator->popup, "Scanning....", 64, 5, AlignCenter, AlignTop);
@@ -32,6 +34,8 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
 
     nfc_comparator_reader_worker_stop(worker);
 
+    start_led(nfc_comparator->notification_app, NfcComparatorLedState_complete);
+
     popup_set_header(nfc_comparator->popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
 
     NfcComparatorReaderWorkerCompareChecks checks =
@@ -46,7 +50,7 @@ void nfc_comparator_comparator_scene_on_enter(void* context) {
         checks.uid_length ? "Match" : "Mismatch",
         checks.protocol ? "Match" : "Mismatch");
 
-    char result_buffer[158];
+    char result_buffer[162];
     strncpy(result_buffer, furi_string_get_cstr(comparator), sizeof(result_buffer) - 1);
 
     furi_string_free(comparator);
@@ -63,4 +67,5 @@ bool nfc_comparator_comparator_scene_on_event(void* context, SceneManagerEvent e
 void nfc_comparator_comparator_scene_on_exit(void* context) {
     NfcComparator* nfc_comparator = context;
     popup_reset(nfc_comparator->popup);
+    stop_led(nfc_comparator->notification_app);
 }

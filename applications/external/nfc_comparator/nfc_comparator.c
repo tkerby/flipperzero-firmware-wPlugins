@@ -27,6 +27,8 @@ static NfcComparator* nfc_comparator_alloc() {
 
     nfc_comparator->popup = popup_alloc();
 
+    nfc_comparator->notification_app = furi_record_open(RECORD_NOTIFICATION);
+
     view_dispatcher_set_event_callback_context(nfc_comparator->view_dispatcher, nfc_comparator);
     view_dispatcher_set_custom_event_callback(
         nfc_comparator->view_dispatcher, nfc_comparator_custom_callback);
@@ -63,6 +65,7 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
     file_browser_free(nfc_comparator->file_browser);
     furi_string_free(nfc_comparator->file_browser_output);
     popup_free(nfc_comparator->popup);
+    furi_record_close(RECORD_NOTIFICATION);
 
     free(nfc_comparator);
 }
