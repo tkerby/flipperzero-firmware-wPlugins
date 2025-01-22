@@ -1,16 +1,6 @@
 // app.c
-#include <jsmn.h> // Include cJSON
-#include <uart_text_input.h> // Include the text input widget
-#include <flip_social_e.h> // Include the FlipSocialApp structure
-#include <flip_social_storage.h> // Include the storage functions
-#include "flip_social_draw.h"
-#include "flip_social_feed.h"
-#include "flip_social_explore.h"
-#include "flip_social_friends.h"
-#include "flip_social_messages.h"
-#include <flip_social_callback.h> // Include the callback functions
-#include <flip_social_i.h> // Include the initialization functions
-#include <flip_social_free.h> // Include the cleanup functions
+#include <flip_social.h> // Include the FlipSocialApp structure
+#include <alloc/flip_social_alloc.h> // Include the allocation functions
 
 /**
  * @brief Entry point for the Hello World application.
@@ -25,18 +15,55 @@ int32_t main_flip_social(void* p) {
     app_instance = flip_social_app_alloc();
     if(!app_instance) {
         // Allocation failed
+        FURI_LOG_E(TAG, "Failed to allocate FlipSocialApp");
         return -1; // Indicate failure
     }
 
-    if(!flipper_http_ping()) {
-        FURI_LOG_E(TAG, "Failed to ping the device");
-        return -1;
+    // check if board is connected (Derek Jamison)
+    uint8_t counter = 10;
+    // initialize the http
+    if(flipper_http_init(flipper_http_rx_callback, app_instance)) {
+        fhttp.state = INACTIVE; // set inactive for the ping
+
+        if(!flipper_http_ping()) {
+            FURI_LOG_E(TAG, "Failed to ping the device");
+            return -1;
+        }
+
+        // Try to wait for pong response.
+        while(fhttp.state == INACTIVE && --counter > 0) {
+            FURI_LOG_D(TAG, "Waiting for PONG");
+            furi_delay_ms(100);
+        }
+
+        if(counter == 0) {
+            easy_flipper_dialog(
+                "FlipperHTTP Error",
+                "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+        } else {
+            save_char("is_connected", "true");
+        }
+
+        flipper_http_deinit();
+    } else {
+        easy_flipper_dialog(
+            "FlipperHTTP Error",
+            "The UART is likely busy.\nEnsure you have the correct\nflash for your board then\nrestart your Flipper Zero.");
     }
 
-    // send settings and connect wifi
-    if(!flipper_http_connect_wifi()) {
-        FURI_LOG_E(TAG, "Failed to connect to WiFi");
-        return -1;
+    // if counter is not 0, check notifications
+    if(counter != 0) {
+        char is_connected[5];
+        char is_logged_in[5];
+        char is_notifications[5];
+        load_char("is_connected", is_connected, 5);
+        load_char("is_logged_in", is_logged_in, 5);
+        load_char("user_notifications", is_notifications, 5);
+
+        if(strcmp(is_connected, "true") == 0 && strcmp(is_notifications, "on") == 0 &&
+           strcmp(is_logged_in, "true") == 0) {
+            flip_social_home_notification();
+        }
     }
 
     // Run the view dispatcher

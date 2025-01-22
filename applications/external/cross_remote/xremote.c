@@ -52,6 +52,8 @@ XRemote* xremote_app_alloc() {
     app->sg_timing = 500;
     app->sg_timing_char = "500";
     app->stop_transmit = false;
+    app->loop_transmit = 0;
+    app->transmit_item = 0;
 
     // Load configs
     xremote_read_settings(app);

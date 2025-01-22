@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,77.3,,
+Version,+,79.2,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/main/archive/helpers/archive_helpers_ext.h,,
 Header,+,applications/main/subghz/subghz_fap.h,,
@@ -1109,6 +1109,7 @@ Function,+,felica_get_uid,const uint8_t*,"const FelicaData*, size_t*"
 Function,+,felica_is_equal,_Bool,"const FelicaData*, const FelicaData*"
 Function,+,felica_load,_Bool,"FelicaData*, FlipperFormat*, uint32_t"
 Function,+,felica_poller_activate,FelicaError,"FelicaPoller*, FelicaData*"
+Function,+,felica_poller_read_blocks,FelicaError,"FelicaPoller*, const uint8_t, const uint8_t*, uint16_t, FelicaPollerReadCommandResponse**"
 Function,+,felica_poller_sync_read,FelicaError,"Nfc*, FelicaData*, const FelicaCardKey*"
 Function,+,felica_reset,void,FelicaData*
 Function,+,felica_save,_Bool,"const FelicaData*, FlipperFormat*"
@@ -1230,6 +1231,7 @@ Function,+,flipper_format_update_uint32,_Bool,"FlipperFormat*, const char*, cons
 Function,+,flipper_format_write_bool,_Bool,"FlipperFormat*, const char*, const _Bool*, const uint16_t"
 Function,+,flipper_format_write_comment,_Bool,"FlipperFormat*, FuriString*"
 Function,+,flipper_format_write_comment_cstr,_Bool,"FlipperFormat*, const char*"
+Function,+,flipper_format_write_empty_line,_Bool,FlipperFormat*
 Function,+,flipper_format_write_float,_Bool,"FlipperFormat*, const char*, const float*, const uint16_t"
 Function,+,flipper_format_write_header,_Bool,"FlipperFormat*, FuriString*, const uint32_t"
 Function,+,flipper_format_write_header_cstr,_Bool,"FlipperFormat*, const char*, const uint32_t"
@@ -1348,7 +1350,6 @@ Function,+,furi_hal_bt_lock_core2,void,
 Function,+,furi_hal_bt_nvm_sram_sem_acquire,void,
 Function,+,furi_hal_bt_nvm_sram_sem_release,void,
 Function,+,furi_hal_bt_reinit,void,
-Function,+,furi_hal_bt_reverse_mac_addr,void,uint8_t[( 6 )]
 Function,+,furi_hal_bt_set_key_storage_change_callback,void,"BleGlueKeyStorageChangedCallback, void*"
 Function,+,furi_hal_bt_start_advertising,void,
 Function,+,furi_hal_bt_start_app,FuriHalBleProfileBase*,"const FuriHalBleProfileTemplate*, FuriHalBleProfileParams, GapEventCallback, void*"
@@ -1699,6 +1700,7 @@ Function,+,furi_hal_serial_get_gpio_pin,const GpioPin*,"FuriHalSerialHandle*, Fu
 Function,+,furi_hal_serial_init,void,"FuriHalSerialHandle*, uint32_t"
 Function,+,furi_hal_serial_is_baud_rate_supported,_Bool,"FuriHalSerialHandle*, uint32_t"
 Function,+,furi_hal_serial_resume,void,FuriHalSerialHandle*
+Function,+,furi_hal_serial_send_break,void,FuriHalSerialHandle*
 Function,+,furi_hal_serial_set_br,void,"FuriHalSerialHandle*, uint32_t"
 Function,+,furi_hal_serial_suspend,void,FuriHalSerialHandle*
 Function,+,furi_hal_serial_tx,void,"FuriHalSerialHandle*, const uint8_t*, size_t"
@@ -3417,7 +3419,7 @@ Function,+,strint_to_int64,StrintParseError,"const char*, char**, int64_t*, uint
 Function,+,strint_to_uint16,StrintParseError,"const char*, char**, uint16_t*, uint8_t"
 Function,+,strint_to_uint32,StrintParseError,"const char*, char**, uint32_t*, uint8_t"
 Function,+,strint_to_uint64,StrintParseError,"const char*, char**, uint64_t*, uint8_t"
-Function,-,strlcat,size_t,"char*, const char*, size_t"
+Function,+,strlcat,size_t,"char*, const char*, size_t"
 Function,+,strlcpy,size_t,"char*, const char*, size_t"
 Function,+,strlen,size_t,const char*
 Function,-,strlwr,char*,char*

@@ -1,6 +1,6 @@
 #include "../nfc_maker.h"
 
-size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
+static void nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
     // NDEF Docs: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/protocols/nfc/index.html#nfc-data-exchange-format-ndef
     uint8_t tnf = 0x00;
     const char* type = "";
@@ -14,7 +14,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x02; // Media-type [RFC 2046]
         type = "application/vnd.bluetooth.ep.oob";
 
-        data_len = MAC_INPUT_LEN;
+        data_len = sizeof(app->mac_buf);
         payload_len = data_len + 2;
         payload = payload_it = malloc(payload_len);
 
@@ -36,15 +36,15 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
             vcard,
             "FN:%s%s%s\r\n",
             app->small_buf1,
-            strnlen(app->small_buf2, SMALL_INPUT_LEN) ? " " : "",
+            app->small_buf2[0] ? " " : "",
             app->small_buf2);
-        if(strnlen(app->mail_buf, MAIL_INPUT_LEN)) {
+        if(app->mail_buf[0]) {
             furi_string_cat_printf(vcard, "EMAIL:%s\r\n", app->mail_buf);
         }
-        if(strnlen(app->phone_buf, PHONE_INPUT_LEN)) {
+        if(app->phone_buf[0]) {
             furi_string_cat_printf(vcard, "TEL:%s\r\n", app->phone_buf);
         }
-        if(strnlen(app->big_buf, BIG_INPUT_LEN)) {
+        if(app->big_buf[0]) {
             furi_string_cat_printf(vcard, "URL:%s\r\n", app->big_buf);
         }
         furi_string_cat_printf(vcard, "END:VCARD\r\n");
@@ -60,7 +60,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x01; // NFC Forum well-known type [NFC RTD]
         type = "U";
 
-        data_len = strnlen(app->big_buf, BIG_INPUT_LEN);
+        data_len = strlen(app->big_buf);
         payload_len = data_len + 1;
         payload = payload_it = malloc(payload_len);
 
@@ -73,7 +73,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x01; // NFC Forum well-known type [NFC RTD]
         type = "U";
 
-        data_len = strnlen(app->mail_buf, MAIL_INPUT_LEN);
+        data_len = strlen(app->mail_buf);
         payload_len = data_len + 1;
         payload = payload_it = malloc(payload_len);
 
@@ -86,7 +86,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x01; // NFC Forum well-known type [NFC RTD]
         type = "U";
 
-        data_len = strnlen(app->phone_buf, PHONE_INPUT_LEN);
+        data_len = strlen(app->phone_buf);
         payload_len = data_len + 1;
         payload = payload_it = malloc(payload_len);
 
@@ -99,7 +99,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x01; // NFC Forum well-known type [NFC RTD]
         type = "T";
 
-        data_len = strnlen(app->big_buf, BIG_INPUT_LEN);
+        data_len = strlen(app->big_buf);
         payload_len = data_len + 3;
         payload = payload_it = malloc(payload_len);
 
@@ -114,7 +114,7 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
         tnf = 0x01; // NFC Forum well-known type [NFC RTD]
         type = "U";
 
-        data_len = strnlen(app->big_buf, BIG_INPUT_LEN);
+        data_len = strlen(app->big_buf);
         payload_len = data_len + 1;
         payload = payload_it = malloc(payload_len);
 
@@ -129,8 +129,8 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
 
         // https://android.googlesource.com/platform/packages/apps/Nfc/+/refs/heads/main/src/com/android/nfc/NfcWifiProtectedSetup.java
         // https://github.com/bparmentier/WiFiKeyShare/blob/master/app/src/main/java/be/brunoparmentier/wifikeyshare/utils/NfcUtils.java
-        uint8_t ssid_len = strnlen(app->small_buf1, SMALL_INPUT_LEN);
-        uint8_t pass_len = strnlen(app->small_buf2, SMALL_INPUT_LEN);
+        uint8_t ssid_len = strlen(app->small_buf1);
+        uint8_t pass_len = strlen(app->small_buf2);
         uint8_t data_len = ssid_len + pass_len;
         payload_len = data_len + 39;
         payload = payload_it = malloc(payload_len);
@@ -231,12 +231,19 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
     header_len += type_len; // Payload type
 
     // Start consolidating into NDEF buffer
-    memset(app->ndef_buffer, 0, MAX_NDEF_LEN);
-    uint8_t* buf = app->ndef_buffer;
+    size_t record_len = header_len + payload_len;
+    app->ndef_size = 1 // TLV type
+                     + (record_len < 0xFF ? 1 : 3) // TLV length
+                     + record_len // NDEF Record
+                     + 1 // Record terminator
+        ;
+    if(app->ndef_buffer) {
+        free(app->ndef_buffer);
+    }
+    uint8_t* buf = app->ndef_buffer = malloc(app->ndef_size);
 
     // NDEF TLV block
     *buf++ = 0x03; // TLV type
-    size_t record_len = header_len + payload_len;
     if(record_len < 0xFF) {
         *buf++ = record_len; // TLV length
     } else {
@@ -267,7 +274,8 @@ size_t nfc_maker_scene_save_generate_populate_ndef_buffer(NfcMaker* app) {
     // Record terminator
     *buf++ = 0xFE;
 
-    return buf - app->ndef_buffer; // Size of NDEF data
+    // Double check size of NDEF data
+    furi_check(app->ndef_size == (size_t)(buf - app->ndef_buffer));
 }
 
 void nfc_maker_scene_save_generate_submenu_callback(void* context, uint32_t index) {
@@ -278,7 +286,7 @@ void nfc_maker_scene_save_generate_submenu_callback(void* context, uint32_t inde
 void nfc_maker_scene_save_generate_on_enter(void* context) {
     NfcMaker* app = context;
     Submenu* submenu = app->submenu;
-    size_t ndef_size = nfc_maker_scene_save_generate_populate_ndef_buffer(app);
+    nfc_maker_scene_save_generate_populate_ndef_buffer(app);
 
     submenu_set_header(submenu, "Tag Type:");
 
@@ -289,7 +297,7 @@ void nfc_maker_scene_save_generate_on_enter(void* context) {
             ntag,
             nfc_maker_scene_save_generate_submenu_callback,
             app,
-            ndef_size > ntag_sizes[ntag],
+            app->ndef_size > ntag_sizes[ntag],
             "Data is\ntoo large!");
     }
 
@@ -316,11 +324,15 @@ bool nfc_maker_scene_save_generate_on_event(void* context, SceneManagerEvent eve
             MIN(ntag_sizes[event.event], // Known size
                 data->page[3].data[2] * NTAG_DATA_AREA_UNIT_SIZE // Capability Container
             );
-        memcpy(&data->page[4].data[0], app->ndef_buffer, size);
+        furi_check(app->ndef_size <= size);
+        memcpy(&data->page[4].data[0], app->ndef_buffer, app->ndef_size);
+        free(app->ndef_buffer);
+        app->ndef_buffer = NULL;
+
         nfc_device_set_data(app->nfc_device, NfcProtocolMfUltralight, data);
         mf_ultralight_free(data);
 
-        scene_manager_next_scene(app->scene_manager, NfcMakerSceneSaveName);
+        scene_manager_next_scene(app->scene_manager, NfcMakerSceneSaveUidMful);
     }
 
     return consumed;

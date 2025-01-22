@@ -1,11 +1,9 @@
-# FlipWiFi
-
 FlipWiFi is the companion app for the popular FlipperHTTP flash, originally introduced in the https://github.com/jblanked/WebCrawler-FlipperZero/tree/main/assets/FlipperHTTP. It allows you to scan and save WiFi networks for use across all FlipperHTTP apps.
 
 ## Requirements
 
-- WiFi Dev Board for Flipper Zero with FlipperHTTP Flash: https://github.com/jblanked/WebCrawler-FlipperZero/tree/main/assets/FlipperHTTP
-- WiFi Access Point
+- WiFi Developer Board, Raspberry Pi, or ESP32 Device with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
+- 2.4 GHz WiFi Access Point
 
 ## Features
 
@@ -14,9 +12,9 @@ FlipWiFi is the companion app for the popular FlipperHTTP flash, originally intr
 
 ## Setup
 
-FlipWiFi automatically allocates the necessary resources and initializes settings upon launch. If WiFi settings have been previously configured, they are loaded automatically for easy access. You can also edit the list of WiFi settings by downloading and modifying the "wifi_list.txt" file located in the "/SD/apps_data/flip_wifi/" directory. To use the app:
+FlipWiFi automatically allocates the necessary resources and initializes settings upon launch. If WiFi settings have been previously configured, they are loaded automatically for easy access. You can also edit the list of WiFi settings by downloading and modifying the "wifi_list.txt" file located in the "/SD/apps_data/flip_wifi/data" directory. To use the app:
 
-1. **Flash the WiFi Dev Board**: Follow the instructions to flash the WiFi Dev Board with FlipperHTTP: https://github.com/jblanked/WebCrawler-FlipperZero/tree/main/assets/FlipperHTTP
-2. **Install the App**: Download FlipWiFi from the App Store.
+1. **Flash the WiFi Developer Board**: Follow the instructions to flash the WiFi Dev Board with FlipperHTTP: https://github.com/jblanked/FlipperHTTP
+2. **Install the App**: Download FlipWiFi from the Flipper Lab.
 3. **Launch FlipWiFi**: Open the app on your Flipper Zero.
 4. Connect, review, and save WiFi networks.

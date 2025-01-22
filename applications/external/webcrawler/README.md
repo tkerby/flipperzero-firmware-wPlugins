@@ -1,17 +1,15 @@
-## Overview
-
-**Web Crawler** is a custom application designed for the Flipper Zero device, allowing users to configure and manage HTTP requests directly from their Flipper Zero.
+Browse the web, fetch API data, and more on your Flipper Zero.
 
 ## Requirements
-- WiFi Dev Board for Flipper Zero with FlipperHTTP Flash: https://github.com/jblanked/FlipperHTTP
-- WiFi Access Point
+- WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with FlipperHTTP version 1.6 or higher: https://github.com/jblanked/FlipperHTTP
+- 2.4 GHz WiFi Access Point
 
 ## Installation
 - Download from the Official Flipper App Store: https://lab.flipper.net/apps/web_crawler
 - Video tutorial: https://www.youtube.com/watch?v=lkui2Smckq4
 
 ## Features
-- **Configurable Request**: Specify the URL of the website you want to send a HTTP request to.
+- **Configurable Request**: Specify the URL of the website you want to send a HTTP request to or download (tested up to 427Mb)
 - **Wi-Fi Configuration**: Enter your Wi-Fi SSID and password to enable network communication.
 - **File Management**: Automatically saves and manages received data on the device's storage, allowing users to view, rename, and delete the received data at any time.
 
@@ -32,6 +30,9 @@
    - https://httpbin.org/post Returns POST data.
    - https://httpbin.org/put Returns PUT data.
    - https://httpbin.org/delete Returns DELETE data.
+   - https://httpbin.org/bytes/1024 Returns BYTES data (DOWNLOAD method)
+   - https://proof.ovh.net/files/1Mb.dat Returns BYTES data (DOWNLOAD method - it can download the whole file)
+   - https://proof.ovh.net/files/10Mb.dat Returns BYTES data (DOWNLOAD method - it can download the whole file)
 
 5. **Running the Request**: Select **Run** from the main submenu to start the HTTP request process. The app will:
    - **Send Request**: Transmit the HTTP request via serial to the WiFi Dev Board.
@@ -48,7 +49,7 @@
    - Enter the complete URL of the website you intend to crawl (e.g., https://www.example.com/).
 
 2. **HTTP Method**
-   - Choose between GET, POST, DELETE, and PUT.
+   - Choose between GET, POST, DELETE, PUT, DOWNLOAD, and BROWSE.
 
 3. **Headers**
    - Add your required headers to be used in your HTTP requests
@@ -68,16 +69,5 @@
 8. **Rename File**
    - Provide your desired file name. After saving, the app will rename your file with the new name.
 
-
-## Saving Settings
-After entering the desired configuration parameters, the app automatically saves these settings for use during the HTTP request process. You can update these settings at any time by navigating back to the **Settings** menu.
-
-## Logging and Debugging
-The Web Crawler app uses logging to help identify issues:
-
-- **Info Logs**: Provide general information about the app's operations (e.g., UART initialization, sending settings).
-- **Error Logs**: Indicate problems encountered during execution (e.g., failed to open settings file).
-
-Connect your Flipper Zero to a computer and use a serial terminal to view these logs for detailed troubleshooting.
 
 *Happy Crawling! 🕷️* 

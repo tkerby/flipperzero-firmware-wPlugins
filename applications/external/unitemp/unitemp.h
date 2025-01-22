@@ -40,7 +40,7 @@
 //Имя приложения
 #define APP_NAME              "Unitemp"
 //Версия приложения
-#define UNITEMP_APP_VER       "1.4-store"
+#define UNITEMP_APP_VER       FAP_VERSION
 //Путь хранения файлов плагина
 #define APP_PATH_FOLDER       "/ext/apps_data/unitemp"
 //Имя файла с настройками
@@ -103,6 +103,7 @@ typedef struct {
     //Система
     bool processing; //Флаг работы приложения. При ложном значении приложение закрывается
     bool sensors_ready; //Флаг готовности датчиков к опросу
+    bool sensors_update; // Флаг допустимости опроса датчиков
     //Основные настройки
     UnitempSettings settings;
     //Массив указателей на датчики
@@ -176,7 +177,9 @@ void unitemp_pascalToHPa(Sensor* sensor);
 /**
  * 
  * Mod BySepa - linktr.ee/BySepa
+ * @brief Конвертация давления из паскалей в дюйм рт.ст.
  * 
+ * @param sensor Указатель на датчик
  */
 void unitemp_pascalToInHg(Sensor* sensor);
 

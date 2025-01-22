@@ -15,6 +15,8 @@
 #include <lib/flipper_format/flipper_format.h>
 #include <toolbox/name_generator.h>
 #include <applications/main/nfc/nfc_app_i.h>
+#include <lib/nfc/protocols/mf_ultralight/mf_ultralight.h>
+#include <lib/nfc/helpers/nfc_data_generator.h>
 #include <furi_hal_bt.h>
 
 #define MAC_INPUT_LEN   GAP_MAC_ADDR_SIZE
@@ -37,7 +39,6 @@ typedef enum {
 extern const NfcDataGeneratorType ntag_generators[NtagMAX];
 extern const char* ntag_names[NtagMAX];
 extern const size_t ntag_sizes[NtagMAX];
-#define MAX_NDEF_LEN ntag_sizes[NtagI2C2K]
 
 typedef enum {
     WifiAuthenticationOpen = 0x01,
@@ -66,6 +67,7 @@ typedef struct {
 
     NfcDevice* nfc_device;
     uint8_t* ndef_buffer;
+    size_t ndef_size;
 
     uint8_t mac_buf[MAC_INPUT_LEN];
     char mail_buf[MAIL_INPUT_LEN];
@@ -75,6 +77,8 @@ typedef struct {
     char small_buf1[SMALL_INPUT_LEN];
     char small_buf2[SMALL_INPUT_LEN];
     char save_buf[BIG_INPUT_LEN];
+
+    uint8_t uid_buf[10];
 } NfcMaker;
 
 typedef enum {
@@ -83,3 +87,9 @@ typedef enum {
     NfcMakerViewByteInput,
     NfcMakerViewPopup,
 } NfcMakerView;
+
+#ifdef FW_ORIGIN_Official
+#define submenu_add_lockable_item(                                             \
+    submenu, label, index, callback, callback_context, locked, locked_message) \
+    if(!(locked)) submenu_add_item(submenu, label, index, callback, callback_context)
+#endif

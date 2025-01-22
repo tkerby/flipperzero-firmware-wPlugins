@@ -13,7 +13,7 @@
 #include <gui/icon.h>
 #include <infrared_transmit.h>
 
-#include <infrared/infrared_app.h>
+#include <infrared/infrared_settings.h>
 #include <toolbox/saved_struct.h>
 
 #include <input/input.h>
@@ -634,12 +634,7 @@ int32_t flipvalo_app() {
 
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
     InfraredSettings settings = {0};
-    saved_struct_load(
-        INFRARED_SETTINGS_PATH,
-        &settings,
-        sizeof(InfraredSettings),
-        INFRARED_SETTINGS_MAGIC,
-        INFRARED_SETTINGS_VERSION);
+    infrared_settings_load(&settings);
     if(settings.tx_pin < FuriHalInfraredTxPinMax) {
         furi_hal_infrared_set_tx_output(settings.tx_pin);
         if(settings.otg_enabled != otg_was_enabled) {

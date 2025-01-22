@@ -1,3 +1,12 @@
+## 1.7
+
+* Replaced speaker note constants with an attribute delegator function to save space.
+* Update to latest SDK version.
+
+## 1.6
+
+* Added extra functions for the **random** module.
+
 ## 1.5
 
 * Added **io** module for basic file system operations.

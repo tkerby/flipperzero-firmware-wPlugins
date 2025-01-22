@@ -23,9 +23,9 @@ A Flipper Zero application for interfacing with the Ghost ESP32 firmware
 - **AirTag Scanning**: Find and scan nearby AirTags
 - **Raw Packet Capture**: Capture raw Bluetooth packets for analysis
 
-### 🌍 GPS Features (COMING SOON…)
-- **Street Detection**: Identify streets and routes
-- **WarDriving Capabilities**: Enable WarDriving for location-based data collection
+### 🌍 GPS
+- **GPS Information**: View real-time GPS data including position, altitude, speed and signal quality
+- **Wardriving Capabilities**: Enable Wardriving for location-based data collection
 
 ### ⚙️ Configuration Options
 - **RGB LED Control**: Customize RGB LED settings

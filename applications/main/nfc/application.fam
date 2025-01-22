@@ -130,6 +130,15 @@ App(
 )
 
 App(
+    appid="andalucia_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="andalucia_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/andalucia.c"],
+)
+
+App(
     appid="aime_parser",
     apptype=FlipperAppType.PLUGIN,
     entry_point="aime_plugin_ep",
@@ -340,6 +349,15 @@ App(
 )
 
 App(
+    appid="ventra_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="ventra_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/ventra.c"],
+)
+
+App(
     appid="nfc_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
@@ -353,6 +371,6 @@ App(
     targets=["f7"],
     apptype=FlipperAppType.STARTUP,
     entry_point="nfc_on_system_start",
-    sources=["nfc_start.c"],
+    sources=["nfc_cli.c"],
     order=30,
 )

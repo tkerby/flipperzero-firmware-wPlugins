@@ -1,5 +1,7 @@
 #include "infrared_app_i.h"
 
+#include "infrared_settings.h"
+
 #include <furi_hal_power.h>
 
 #include <string.h>
@@ -79,6 +81,19 @@ static void infrared_rpc_command_callback(const RpcAppSystemEvent* event, void* 
             view_dispatcher_send_custom_event(
                 infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPressIndex);
         }
+    } else if(event->type == RpcAppEventTypeButtonPressRelease) {
+        furi_assert(
+            event->data.type == RpcAppSystemEventDataTypeString ||
+            event->data.type == RpcAppSystemEventDataTypeInt32);
+        if(event->data.type == RpcAppSystemEventDataTypeString) {
+            furi_string_set(infrared->button_name, event->data.string);
+            view_dispatcher_send_custom_event(
+                infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPressReleaseName);
+        } else {
+            infrared->app_state.current_button_index = event->data.i32;
+            view_dispatcher_send_custom_event(
+                infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonPressReleaseIndex);
+        }
     } else if(event->type == RpcAppEventTypeButtonRelease) {
         view_dispatcher_send_custom_event(
             infrared->view_dispatcher, InfraredCustomEventTypeRpcButtonRelease);
@@ -140,6 +155,9 @@ static InfraredApp* infrared_alloc(void) {
     InfraredAppState* app_state = &infrared->app_state;
     app_state->is_learning_new_remote = false;
     app_state->is_debug_enabled = furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug);
+    app_state->is_transmitting = false;
+    app_state->is_otg_enabled = false;
+    app_state->is_easy_mode = false;
     app_state->edit_target = InfraredEditTargetNone;
     app_state->edit_mode = InfraredEditModeNone;
     app_state->current_button_index = InfraredButtonIndexNone;
@@ -377,18 +395,16 @@ void infrared_tx_start(InfraredApp* infrared) {
     infrared->app_state.is_transmitting = true;
 }
 
-void infrared_tx_start_button_index(InfraredApp* infrared, size_t button_index) {
+InfraredErrorCode infrared_tx_start_button_index(InfraredApp* infrared, size_t button_index) {
     furi_assert(button_index < infrared_remote_get_signal_count(infrared->remote));
 
-    if(infrared_remote_load_signal(infrared->remote, infrared->current_signal, button_index) ==
-       InfraredErrorCodeNone) {
+    InfraredErrorCode error =
+        infrared_remote_load_signal(infrared->remote, infrared->current_signal, button_index);
+
+    if(!INFRARED_ERROR_PRESENT(error)) {
         infrared_tx_start(infrared);
-    } else {
-        infrared_show_error_message(
-            infrared,
-            "Failed to load\n\"%s\"",
-            infrared_remote_get_signal_name(infrared->remote, button_index));
     }
+    return error;
 }
 
 void infrared_tx_stop(InfraredApp* infrared) {
@@ -405,6 +421,26 @@ void infrared_tx_stop(InfraredApp* infrared) {
     infrared->app_state.last_transmit_time = furi_get_tick();
 }
 
+void infrared_tx_send_once(InfraredApp* infrared) {
+    if(infrared->app_state.is_transmitting) {
+        return;
+    }
+
+    dolphin_deed(DolphinDeedIrSend);
+    infrared_signal_transmit(infrared->current_signal);
+}
+
+InfraredErrorCode infrared_tx_send_once_button_index(InfraredApp* infrared, size_t button_index) {
+    furi_assert(button_index < infrared_remote_get_signal_count(infrared->remote));
+
+    InfraredErrorCode error = infrared_remote_load_signal(
+        infrared->remote, infrared->current_signal, infrared->app_state.current_button_index);
+    if(!INFRARED_ERROR_PRESENT(error)) {
+        infrared_tx_send_once(infrared);
+    }
+
+    return error;
+}
 void infrared_blocking_task_start(InfraredApp* infrared, FuriThreadCallback callback) {
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewLoading);
     furi_thread_set_callback(infrared->task_thread, callback);
@@ -473,33 +509,26 @@ void infrared_enable_otg(InfraredApp* infrared, bool enable) {
 static void infrared_load_settings(InfraredApp* infrared) {
     InfraredSettings settings = {0};
 
-    if(!saved_struct_load(
-           INFRARED_SETTINGS_PATH,
-           &settings,
-           sizeof(InfraredSettings),
-           INFRARED_SETTINGS_MAGIC,
-           INFRARED_SETTINGS_VERSION)) {
+    if(!infrared_settings_load(&settings)) {
         FURI_LOG_D(TAG, "Failed to load settings, using defaults");
+        // infrared_save_settings(infrared);
     }
 
     infrared_set_tx_pin(infrared, settings.tx_pin);
     if(settings.tx_pin < FuriHalInfraredTxPinMax) {
         infrared_enable_otg(infrared, settings.otg_enabled);
     }
+    infrared->app_state.is_easy_mode = settings.easy_mode;
 }
 
 void infrared_save_settings(InfraredApp* infrared) {
     InfraredSettings settings = {
         .tx_pin = infrared->app_state.tx_pin,
         .otg_enabled = infrared->app_state.is_otg_enabled,
+        .easy_mode = infrared->app_state.is_easy_mode,
     };
 
-    if(!saved_struct_save(
-           INFRARED_SETTINGS_PATH,
-           &settings,
-           sizeof(InfraredSettings),
-           INFRARED_SETTINGS_MAGIC,
-           INFRARED_SETTINGS_VERSION)) {
+    if(!infrared_settings_save(&settings)) {
         FURI_LOG_E(TAG, "Failed to save settings");
     }
 }
@@ -568,7 +597,7 @@ int32_t infrared_app(void* p) {
                 is_remote_loaded = false;
                 bool wrong_file_type = INFRARED_ERROR_CHECK(error, InfraredErrorCodeWrongFileType);
                 const char* format = wrong_file_type ?
-                                         "Library file\n\"%s\" can't be openned as a remote" :
+                                         "Library file\n\"%s\" can't be opened as a remote" :
                                          "Failed to load\n\"%s\"";
 
                 infrared_show_error_message(infrared, format, file_path);

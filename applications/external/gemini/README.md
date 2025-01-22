@@ -1,8 +1,8 @@
 # Gemini-Flipper
 
-Currently in development, anyone who wants to join and help improve it can make their PR and also for those C developers who want to help create the native Flipper app and make it accessible to everyone from https://lab.flipper.net/apps is welcome 
+Currently in development (Beta phase), anyone who wants to join and help improve it can make their PR and also C developers who want to help improve the Flipper native app are welcome.
 
-You can find the first version in the release section.
+You can find the first version in the releases section or at https://lab.flipper.net/apps/gemini_ia you can find the latest stable version.
 
 Special thanks to Derek Jamison who created a large part and I would dare say the entire application in C thanks to his work and effort (I only made some small changes that I would never have achieved without his help and tutorials) he deserves all the recognition for this 👏👏 https://github.com/jamisonderek
 
@@ -14,7 +14,7 @@ Currently the code takes the api key in plain text stored in:
 
 "/ext/apps_data/gemini_ia/key.txt" <-- You need to create it manually
 
-(You can get the Gemini Api Key using this link: English:https://ai.google.dev/gemini-api/docs/api-key You only need a Gmail account)
+You can get the Gemini Api Key using this link: https://ai.google.dev/gemini-api/docs/api-key You only need a Gmail account
 
 it reads the .txt file and sends it via serial command to the esp32 as soon as the app is initialized (it would be nice to implement some kind of encryption to the api key but it is important that it is sent in plain text and unencrypted to the esp32 because that is how the firmware can read and implement it)
 
@@ -22,44 +22,24 @@ If you previously connected to a Wi-Fi network it will automatically reconnect a
 
 I added the source code for the new firmware for the esp32 and also the precompiled binary for the ESP-Flasher app (you can find the binary in the releases section)
 
+## How to get started
+
+You can watch a video by Derek Jamison who did an excellent job explaining how to get started with the app https://www.youtube.com/watch?v=j92i2CGUWC4 and you can also support his channel by liking and subscribing. It's really worth it, he's a great teacher for those of us who are starting to create our own apps.
+
 ## How to flash the firmware using ESP-Flasher
 
 Check the folder "Gemini IA Precompiled binaries" there is a tutorial on how to do it there
 
 ## TO DO
 
-- [x] Remove unnecessary files
-
-- [x] Create a Dev branch to avoid conflicts with the Main branch
-
-- [x] Rewrite javascript app to work with new firmware
-
-- [x] Javascript: Change menu to leave only the "connect to a new AP" option the "saved APs" option is deprecated, now the list of saved APs is sent in the background to the ESP32 after setting the name so it will detect if any of the networks are available and automatically connect to it, otherwise it will prompt the user to enter the username and password of the AP they want to connect to and save the data for this new AP for the future
-
-- [x] Rewrite ESP32 firmware should now work with all ESP32 models using ESP-TOOLS
-
-- [x] improve handling of how APs are saved, currently it saves them but rewrites the old one
-
-- [x] improve handling of how saved APs are sent to the esp32 to avoid re-entering the SSID and password (Improving the previous point this should fix itself)
-
-- [x] upload firmware binary for esp32 (nothing to do here just upload binary)
-
-## Screenshots
-
-![image](https://github.com/user-attachments/assets/3878b4a2-223d-4d23-b395-2d25cf710fed)
-
-![image](https://github.com/user-attachments/assets/777e2d55-f9fd-4c63-bb47-450b020b80e0)
+Make the board automatically reboot when closing the app (the implementation is already applied in the esp32 firmware but it still needs to be implemented in the Flipper app)
 
 ## Native App
 
-The native app is under development. Currently it just shows the main menu and then every option shows "Under Construction".
-
-~~Changes: Now you can not only set your name and chat, but you can also change the name if you want. We still need to implement the feature to connect to a new AP (currently it only connects to those already saved in "/ext/apps_data/gemini_ia/SavedAPs.txt"). Side note: I'll make a little tutorial on how to use the app once everything is stable and ready for everyone to use.~~
-
-Changes: The native app is now 100% working, the only problem is that I still can't get the board to reboot when closing the app (so you don't have any issues when reopening the app) <-- every time you want to enter the app you'll have to press the reset button on your esp32 board first (a tutorial coming soon)
+The native app is now 100% working, the only problem is that I still can't get the board to reboot when closing the app (so you don't have any issues when reopening the app) <-- every time you want to enter the app you'll have to press the reset button on your esp32 board first (a tutorial coming soon)
 
 ## Contributors
 
-<a href="https://github.com/d4rks1d33/Gemini-Flipper/graphs/contributors">
-<img src="https://contrib.rocks/image?repo=d4rks1d33/Gemini-Flipper&max=50&columns=4&anon=1" />
-</a>
+https://github.com/d4rks1d33
+
+https://github.com/jamisonderek

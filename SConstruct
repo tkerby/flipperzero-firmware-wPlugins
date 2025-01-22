@@ -345,6 +345,8 @@ black_commandline = [
 black_base_args = [
     "--include",
     '"(\\.scons|\\.py|SConscript|SConstruct|\\.fam)$"',
+    "--exclude",
+    '"(upython/flipperzero/random\\.py)$"',
 ]
 
 distenv.PhonyTarget(

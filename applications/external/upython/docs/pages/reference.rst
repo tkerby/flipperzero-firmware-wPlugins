@@ -45,6 +45,13 @@ Full control over the built-in speaker module.
 Musical Notes
 ~~~~~~~~~~~~~
 
+Constant values for all musical notes between C\ :sub:`0` and B\ :sub:`8`.
+
+.. warning::
+
+   You won't be able to find these constants in the REPL using autocompletion from version 1.7.0 onwards.
+   But the constants are still available. You just have to type the full name by hand.
+
 ..
    for octave in range(9):
       for name in ['C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS', 'A', 'AS', 'B']:
@@ -452,7 +459,7 @@ Functions
 I/O
 ---
 
-Read and write files on the SD card.
+Read and write SD card files.
 
 Constants
 ~~~~~~~~~
@@ -474,6 +481,22 @@ Classes
 
 .. autoclass:: io.TextFileIO
    :members: name, read, readline, readlines, readable, writable, write, flush, seek, tell, close, __enter__, __exit__, __del__
+
+Random
+------
+
+Generate pseudo-random number for various use cases. 
+
+Functions
+~~~~~~~~~
+
+.. autofunction:: random.random
+.. autofunction:: random.uniform
+.. autofunction:: random.randrange
+.. autofunction:: random.getrandbits
+.. autofunction:: random.randint
+.. autofunction:: random.choice
+.. autofunction:: random.seed
 
 Built-In
 --------

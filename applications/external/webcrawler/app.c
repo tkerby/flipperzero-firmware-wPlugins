@@ -1,10 +1,5 @@
-#include <uart_text_input.h>
-#include <web_crawler_e.h>
-#include <flipper_http.h>
-#include <web_crawler_storage.h>
-#include <web_crawler_free.h>
-#include <web_crawler_callback.h>
-#include <web_crawler_i.h>
+#include <web_crawler.h>
+#include <alloc/web_crawler_alloc.h>
 /**
  * @brief      Entry point for the WebCrawler application.
  * @param      p  Input parameter - unused
@@ -19,15 +14,33 @@ int32_t web_crawler_app(void* p) {
         return -1;
     }
 
-    if(!flipper_http_ping()) {
-        FURI_LOG_E(TAG, "Failed to ping the device");
+    // check if board is connected (Derek Jamison)
+    FlipperHTTP* fhttp = flipper_http_alloc();
+    if(!fhttp) {
+        easy_flipper_dialog(
+            "FlipperHTTP Error",
+            "The UART is likely busy.\nEnsure you have the correct\nflash for your board then\nrestart your Flipper Zero.");
         return -1;
     }
 
-    // send settings and connect wifi
-    if(!flipper_http_connect_wifi()) {
-        FURI_LOG_E(TAG, "Failed to connect to WiFi");
+    if(!flipper_http_ping(fhttp)) {
+        FURI_LOG_E(TAG, "Failed to ping the device");
+        flipper_http_free(fhttp);
         return -1;
+    }
+
+    // Try to wait for pong response.
+    uint32_t counter = 10;
+    while(fhttp->state == INACTIVE && --counter > 0) {
+        FURI_LOG_D(TAG, "Waiting for PONG");
+        furi_delay_ms(100); // this causes a BusFault
+    }
+
+    flipper_http_free(fhttp);
+    if(counter == 0) {
+        easy_flipper_dialog(
+            "FlipperHTTP Error",
+            "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
     }
 
     // Run the application

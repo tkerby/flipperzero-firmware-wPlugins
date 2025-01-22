@@ -67,8 +67,8 @@ Doc* doc_alloc() {
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, doc_back_event_callback);
 
     //! -------------- DEBUG --------------
-    app->notification = furi_record_open(RECORD_NOTIFICATION);
-    notification_message(app->notification, &sequence_display_backlight_on);
+    //app->notification = furi_record_open(RECORD_NOTIFICATION);
+    //notification_message(app->notification, &sequence_display_backlight_on);
     //! ------------ DEBUG END ------------
 
     //? -------------- Views --------------
@@ -89,8 +89,8 @@ Doc* doc_alloc() {
 
 void doc_free(Doc* app) {
     //! -------------- DEBUG --------------
-    furi_record_close(RECORD_NOTIFICATION);
-    app->notification = NULL;
+    //furi_record_close(RECORD_NOTIFICATION);
+    //app->notification = NULL;
     //! ------------ DEBUG END ------------
 
     //? -------------- Views --------------

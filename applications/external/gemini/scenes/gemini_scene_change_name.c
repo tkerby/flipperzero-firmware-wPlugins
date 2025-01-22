@@ -32,7 +32,6 @@ void gemini_scene_change_name_on_enter(void* context) {
     gemini_app_send_new_name_command(app);
 
     text_input_set_header_text(app->text_input, "Enter your name");
-    text_input_set_minimum_length(app->text_input, 1);
     text_buffer[0] = '\0';
     text_input_set_result_callback(
         app->text_input,

@@ -251,7 +251,7 @@ static void unitemp_sensors_update_callback(void* context) {
         view_dispatcher_stop(app->view_dispatcher);
         return;
     }
-    if(app->sensors_ready) {
+    if((app->sensors_ready) && (app->sensors_update)) {
         unitemp_sensors_updateValues();
     }
     view_port_update(app->view_port);
@@ -269,6 +269,8 @@ static bool unitemp_alloc(void) {
     //Разрешение работы приложения
     app->processing = true;
 
+    app->sensors_ready = false;
+
     //Открытие хранилища (?)
     app->storage = furi_record_open(RECORD_STORAGE);
     storage_common_copy(app->storage, EXT_PATH("unitemp"), APP_PATH_FOLDER);
@@ -285,6 +287,7 @@ static bool unitemp_alloc(void) {
     app->settings.heat_index = false;
 
     app->gui = furi_record_open(RECORD_GUI);
+
     //Диспетчер окон
     app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_enable_queue(app->view_dispatcher);
@@ -376,14 +379,18 @@ int32_t unitemp_app() {
 
     //Загрузка настроек из SD-карты
     unitemp_loadSettings();
+
     //Применение настроек
     if(app->settings.infinityBacklight == true) {
         //Постоянное свечение подсветки
         notification_message(app->notifications, &sequence_display_backlight_enforce_on);
     }
+
     app->settings.lastOTGState = furi_hal_power_is_otg_enabled();
+
     //Загрузка датчиков из SD-карты
     unitemp_sensors_load();
+
     //Инициализация датчиков
     unitemp_sensors_init();
 
@@ -393,11 +400,14 @@ int32_t unitemp_app() {
 
     //Деинициализация датчиков
     unitemp_sensors_deInit();
+
     //Автоматическое управление подсветкой
     if(app->settings.infinityBacklight == true)
         notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+
     //Освобождение памяти
     unitemp_free();
+
     //Выход
     return 0;
 }

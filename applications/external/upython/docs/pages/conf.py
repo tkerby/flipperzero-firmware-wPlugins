@@ -25,13 +25,18 @@ import io
 
 copy_dict(flipperzero.io, io)
 
+import flipperzero.random
+import random
+
+copy_dict(flipperzero.random, random)
+
 now = datetime.datetime.now()
 
 project = "uPython"
 copyright = str(now.year) + ", Oliver Fabel"
 author = "Oliver Fabel"
-release = "1.5.0"
-version = "1.5"
+release = "1.7.0"
+version = "1.7"
 language = "en"
 
 extensions = ["sphinx.ext.autodoc", "myst_parser"]

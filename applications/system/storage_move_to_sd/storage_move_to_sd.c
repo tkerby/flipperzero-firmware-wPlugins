@@ -59,15 +59,15 @@ static void storage_move_to_sd_remove_region() {
     if(!furi_hal_is_normal_boot()) return;
     Storage* storage = furi_record_open(RECORD_STORAGE);
 
-    if(storage_common_exists(storage, EXT_PATH("apps/Misc/totp.conf"))) {
-        storage_common_rename(
-            storage,
-            EXT_PATH("apps/Misc/totp.conf"),
-            EXT_PATH("apps_data/authenticator/totp.conf"));
+    // CLEAR GARBAGE / INTERNAL SPACE
+    if(storage_common_exists(storage, INT_PATH(".momentum_firstboot.flag"))) {
+        storage_common_remove(storage, INT_PATH(".momentum_firstboot.flag"));
     }
-    if(storage_common_exists(storage, EXT_PATH("apps/Misc/barcodegen.save"))) {
-        storage_common_remove(storage, EXT_PATH("apps/Misc/barcodegen.save"));
-        storage_common_remove(storage, EXT_PATH("apps/Misc"));
+    if(storage_common_exists(storage, INT_PATH(".momentum_settings.txt"))) {
+        storage_common_remove(storage, INT_PATH(".momentum_settings.txt"));
+    }
+    if(storage_common_exists(storage, EXT_PATH("dolphin/firstboot.bin"))) {
+        storage_common_remove(storage, EXT_PATH("dolphin/firstboot.bin"));
     }
 
     furi_record_close(RECORD_STORAGE);
