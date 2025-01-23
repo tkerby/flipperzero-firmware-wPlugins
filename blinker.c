@@ -7,8 +7,7 @@ static void led_timer_callback(void* context) {
     static bool led_state = false;
     
     led_state = !led_state;
-    furi_hal_light_set(LightRed, led_state ? 0xFF : 0x00);
-    // TODO: use furi_hal_light_blink_start -> maybe i wont need this timer?
+    furi_hal_light_set(LightRed, led_state ? 255 : 0);
 }
 
 static void updating_timer_callback(void* context) {
@@ -21,7 +20,7 @@ static void updating_timer_callback(void* context) {
         furi_timer_stop(app->updating_timer);
     }
 
-    // TODO: add explanation
+    // Gradually decrease the interval from max to min during the duration, thanks to elapsed time.
     uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
     // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
     uint32_t blink_interval = 60 * 1000 / (interval * 2);
@@ -41,7 +40,7 @@ static bool back_button_callback(void* context) {
     if(app->current_view == Exec) {
         furi_timer_stop(app->led_timer);
         furi_timer_stop(app->updating_timer);
-        furi_hal_light_set(LightRed, 0x00);
+        furi_hal_light_set(LightRed, 0);
     }
     
     if(app->current_view != Main) {
@@ -56,7 +55,7 @@ static bool back_button_callback(void* context) {
 static void exec_view(BlinkerApp* app) { 
     app->start_time = furi_get_tick();
     furi_timer_start(app->led_timer, app->max_interval);
-    furi_timer_start(app->updating_timer, 1000); // Update each second.
+    furi_timer_start(app->updating_timer, 5 * 1000); // Update each 5 second.
     updating_timer_callback(app);
 
     app->current_view = Exec;
@@ -145,9 +144,9 @@ int32_t blinker_main(void* p) {
     UNUSED(p);
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
 
-    furi_hal_light_set(LightRed, 0x00);
-    furi_hal_light_set(LightGreen, 0x00);
-    furi_hal_light_set(LightBlue, 0x00);
+    furi_hal_light_set(LightRed, 0);
+    furi_hal_light_set(LightGreen, 0);
+    furi_hal_light_set(LightBlue, 0);
     
     // Default values
     app->duration = 20;
