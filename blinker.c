@@ -5,13 +5,16 @@ static void timer_callback(void* context) {
     BlinkerApp* app = context;
 
     static bool led_state = false;
-    uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000;
+    uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
     
-    if(elapsed_time <= app->duration) {
-        uint32_t range = app->max_interval - app->min_interval;
-        uint32_t blink_interval = app->min_interval + (elapsed_time * range / app->duration);
-        furi_timer_stop(app->timer);
-        furi_timer_start(app->timer, blink_interval);
+    if(elapsed_time <= app->duration * 60) { // duration is in minutes
+        // uint32_t range = app->max_interval - app->min_interval;
+        // uint32_t blink_interval = app->min_interval + (elapsed_time * range / app->duration);
+
+        uint32_t diff = (app->max_interval - app->min_interval) / 60 * 1000 / 2;
+        // Equation: bpm to seconds, then to milliseconds, one half for on, one half for off
+        uint32_t blink_interval = (app->max_interval / 60 * 1000 / 2) - (elapsed_time * diff / app->duration);
+        furi_timer_restart(app->timer, blink_interval);
     }
     
     led_state = !led_state;
@@ -50,13 +53,13 @@ static void number_picker_callback(void* context, int32_t value) {
     BlinkerApp* app = context;
 
     switch(app->mode) {
-    case Min:
-        app->min_interval = value;
-        app->mode = Max;
-        number_picker_view(app, "Max interval (ms)", app->max_interval, 50, 2000);
-        break;
     case Max:
         app->max_interval = value;
+        app->mode = Min;
+        number_picker_view(app, "Min interval (bpm)", app->min_interval, 1, 200);
+        break;
+    case Min:
+        app->min_interval = value;
         main_view(app);
         break;
     case Dur:
@@ -80,14 +83,14 @@ static void main_callback(DialogExResult result, void* context) {
     switch(result) {
     case DialogExResultLeft:
     case DialogExPressLeft:
-        app->mode = Min;
-        number_picker_view(app, "Min interval (ms)", app->min_interval, 50, 2000);
+        app->mode = Max;
+        number_picker_view(app, "Max interval (bpm)", app->max_interval, 1, 200);
         break;
 
     case DialogExResultRight:
     case DialogExPressRight:
         app->mode = Dur;
-        number_picker_view(app, "Duration (sec)", app->duration, 5, 120);
+        number_picker_view(app, "Duration (min)", app->duration, 1, 60);
         break;
 
     case DialogExResultCenter:
@@ -110,15 +113,15 @@ static void main_view(BlinkerApp* app) {
     snprintf(
         text, 
         sizeof(text), 
-        "Dur: %ld s\nRange: %ld - %ld ms", 
+        "Duration: %ld min\nInterval: %ld - %ld bpm", 
         app->duration,
-        app->min_interval,
-        app->max_interval);
+        app->max_interval,
+        app->min_interval);
     dialog_ex_set_text(app->dialog, text, 64, 32, AlignCenter, AlignCenter);
 
-    dialog_ex_set_left_button_text(app->dialog, "Rng");
+    dialog_ex_set_left_button_text(app->dialog, "Int.");
     dialog_ex_set_center_button_text(app->dialog, "Flash");
-    dialog_ex_set_right_button_text(app->dialog, "Dur");
+    dialog_ex_set_right_button_text(app->dialog, "Dur.");
 
     app->current_view = Main;
     view_dispatcher_switch_to_view(app->view_dispatcher, app->current_view);
@@ -130,8 +133,8 @@ int32_t blinker_main(void* p) {
     
     // Default values
     app->duration = 20;
-    app->min_interval = 100;
-    app->max_interval = 2000;
+    app->max_interval = 120;
+    app->min_interval = 60;
 
     // Initialize GUI and dispatcher
     app->gui = furi_record_open(RECORD_GUI);

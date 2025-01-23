@@ -22,21 +22,21 @@ typedef enum {
     Dur,
 } Modes;
 
-// Main application structure
 typedef struct {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     Views current_view;
-    Modes mode;
+
     FuriTimer* timer;
     DialogEx* dialog;
     NumberInput* number_input;
     Widget* widget;
+
+    Modes mode;
     uint32_t duration;
     uint32_t min_interval;
     uint32_t max_interval;
     uint32_t start_time;
-    uint32_t blink_interval;
 } BlinkerApp;
 
 static void main_view(BlinkerApp* app);
