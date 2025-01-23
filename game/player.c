@@ -167,25 +167,25 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
     const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
     if (pitch > min_x)
     {
-        pos->x += abs((int)round(pitch / min_x));
+        pos->x += abs((int)round((pitch / min_x) / 2));
         player->dx = 1;
         player->direction = PLAYER_RIGHT;
     }
     else if (pitch < -min_x)
     {
-        pos->x += -abs((int)round(pitch / min_x));
+        pos->x += -abs((int)round((pitch / min_x) / 2));
         player->dx = -1;
         player->direction = PLAYER_LEFT;
     }
     if (roll > min_y)
     {
-        pos->y += abs((int)round(roll / min_y));
+        pos->y += abs((int)round((roll / min_y) / 2));
         player->dy = 1;
         player->direction = PLAYER_DOWN;
     }
     else if (roll < -min_y)
     {
-        pos->y += -abs((int)round(roll / min_y));
+        pos->y += -abs((int)round((roll / min_y) / 2));
         player->dy = -1;
         player->direction = PLAYER_UP;
     }
