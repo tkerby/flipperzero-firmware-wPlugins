@@ -8,6 +8,7 @@ static void led_timer_callback(void* context) {
     
     led_state = !led_state;
     furi_hal_light_set(LightRed, led_state ? 0xFF : 0x00);
+    // TODO: use furi_hal_light_blink_start -> maybe i wont need this timer?
 }
 
 static void updating_timer_callback(void* context) {
@@ -23,7 +24,7 @@ static void updating_timer_callback(void* context) {
     // TODO: add explanation
     uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
     // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
-    uint32_t blink_interval = 60000 / (interval * 2);
+    uint32_t blink_interval = 60 * 1000 / (interval * 2);
         
     char text[32];
     snprintf(text, sizeof(text), "BPM: %lu", interval);
@@ -143,6 +144,10 @@ static void main_view(BlinkerApp* app) {
 int32_t blinker_main(void* p) {
     UNUSED(p);
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
+
+    furi_hal_light_set(LightRed, 0x00);
+    furi_hal_light_set(LightGreen, 0x00);
+    furi_hal_light_set(LightBlue, 0x00);
     
     // Default values
     app->duration = 20;
