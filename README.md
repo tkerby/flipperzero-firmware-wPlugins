@@ -4,10 +4,10 @@ Flipper Zero App, which blinks LED with decreasing cadency.
 
 Based on the following [HN thread](https://news.ycombinator.com/item?id=38274782).
 
-**Main screen:**
+## Main screen:
 ![Blinker menu](pictures/blinker_menu.png)
 
-**Configure interval and duration:**
+## Configure interval and duration:
 ![Blinker number menu](pictures/blinker_number_menu.png)
 
 It is possible to configure following:
@@ -15,7 +15,7 @@ It is possible to configure following:
 * `duration`: Period of time during which the cadence should change.
 * `min interval`: Eventual cadence.
 
-**Start blinking:**
+## Start blinking:
 ![Start blinking](pictures/blinker_blinking.png)
 
 While the following screen is rendered, the LED light on Flipper Zero blinks in red color with the same `bpm` as shown on the screen.
