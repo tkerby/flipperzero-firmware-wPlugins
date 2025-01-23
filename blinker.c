@@ -1,15 +1,15 @@
 #include "blinker.h"
 
 
-static void led_timer_callback(void* context) {
-    UNUSED(context);
+// static void led_timer_callback(void* context) {
+//     UNUSED(context);
 
-    static bool led_state = false;
+//     static bool led_state = false;
     
-    led_state = !led_state;
-    furi_hal_light_set(LightRed, led_state ? 0xFF : 0x00);
-    // TODO: use furi_hal_light_blink_start -> maybe i wont need this timer?
-}
+//     led_state = !led_state;
+//     furi_hal_light_set(LightRed, led_state ? 0xFF : 0x00);
+//     // TODO: use furi_hal_light_blink_start -> maybe i wont need this timer?
+// }
 
 static void updating_timer_callback(void* context) {
     BlinkerApp* app = context;
@@ -32,16 +32,17 @@ static void updating_timer_callback(void* context) {
     widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
     widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
 
-    furi_timer_restart(app->led_timer, blink_interval);
+    // furi_timer_restart(app->led_timer, blink_interval);
+    furi_hal_light_blink_start(LightRed, 255, 10, blink_interval - 10);
 }
 
 static bool back_button_callback(void* context) {
     BlinkerApp* app = context;
     
     if(app->current_view == Exec) {
-        furi_timer_stop(app->led_timer);
+        // furi_timer_stop(app->led_timer);
         furi_timer_stop(app->updating_timer);
-        furi_hal_light_set(LightRed, 0x00);
+        furi_hal_light_blink_stop();
     }
     
     if(app->current_view != Main) {
@@ -55,7 +56,7 @@ static bool back_button_callback(void* context) {
 
 static void exec_view(BlinkerApp* app) { 
     app->start_time = furi_get_tick();
-    furi_timer_start(app->led_timer, app->max_interval);
+    // furi_timer_start(app->led_timer, app->max_interval);
     furi_timer_start(app->updating_timer, 1000); // Update each second.
     updating_timer_callback(app);
 
@@ -145,9 +146,9 @@ int32_t blinker_main(void* p) {
     UNUSED(p);
     BlinkerApp* app = malloc(sizeof(BlinkerApp));
 
-    furi_hal_light_set(LightRed, 0x00);
-    furi_hal_light_set(LightGreen, 0x00);
-    furi_hal_light_set(LightBlue, 0x00);
+    furi_hal_light_set(LightRed, 0);
+    furi_hal_light_set(LightGreen, 0);
+    furi_hal_light_set(LightBlue, 0);
     
     // Default values
     app->duration = 20;
@@ -162,7 +163,7 @@ int32_t blinker_main(void* p) {
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, back_button_callback);
 
     // Create and configure timers
-    app->led_timer = furi_timer_alloc(led_timer_callback, FuriTimerTypePeriodic, app);
+    // app->led_timer = furi_timer_alloc(led_timer_callback, FuriTimerTypePeriodic, app);
     app->updating_timer = furi_timer_alloc(updating_timer_callback, FuriTimerTypePeriodic, app);
 
     // Initialize views
@@ -182,7 +183,7 @@ int32_t blinker_main(void* p) {
     view_dispatcher_run(app->view_dispatcher);
 
     // Cleanup
-    furi_timer_free(app->led_timer);
+    // furi_timer_free(app->led_timer);
     furi_timer_free(app->updating_timer);
     view_dispatcher_remove_view(app->view_dispatcher, Main);
     view_dispatcher_remove_view(app->view_dispatcher, NumberPicker);

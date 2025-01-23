@@ -46,7 +46,7 @@ static void exec_view(BlinkerApp* app);
 
 static void main_callback(DialogExResult result, void* context);
 static void number_picker_callback(void* context, int32_t value);
-static void led_timer_callback(void* context);
+// static void led_timer_callback(void* context);
 static void updating_timer_callback(void* context);
 static bool back_button_callback(void* context);
 
