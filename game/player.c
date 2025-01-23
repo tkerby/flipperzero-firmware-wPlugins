@@ -159,6 +159,12 @@ void player_spawn(Level *level, GameManager *manager)
     game_context->player_context = pctx;
 }
 
+static int vgm_increase(float value, float increase)
+{
+    const int val = abs((int)(round(value + increase) / (double)1.5));
+    return val < 1 ? 1 : val;
+}
+
 static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 {
     const float pitch = -imu_pitch_get(imu);
@@ -167,25 +173,25 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
     const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
     if (pitch > min_x)
     {
-        pos->x += abs((int)round((pitch / min_x) / 1.5));
+        pos->x += vgm_increase(pitch, min_x);
         player->dx = 1;
         player->direction = PLAYER_RIGHT;
     }
     else if (pitch < -min_x)
     {
-        pos->x += -abs((int)round((pitch / min_x) / 1.5));
+        pos->x += -vgm_increase(pitch, min_x);
         player->dx = -1;
         player->direction = PLAYER_LEFT;
     }
     if (roll > min_y)
     {
-        pos->y += abs((int)round((roll / min_y) / 1.5));
+        pos->y += vgm_increase(roll, min_y);
         player->dy = 1;
         player->direction = PLAYER_DOWN;
     }
     else if (roll < -min_y)
     {
-        pos->y += -abs((int)round((roll / min_y) / 1.5));
+        pos->y += -vgm_increase(roll, min_y);
         player->dy = -1;
         player->direction = PLAYER_UP;
     }
