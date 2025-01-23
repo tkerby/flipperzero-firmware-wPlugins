@@ -82,7 +82,7 @@ static void infrared_scene_learn_update_button_name(InfraredApp* infrared, bool 
     // Now we know button_index is valid, use it to get the name
     const char* button_name = easy_mode_button_names[button_index];
     dialog_ex_set_text(
-        dialog_ex, "Point remote at IR port\nand press button:", 5, 10, AlignLeft, AlignCenter);
+        dialog_ex, "Point the remote at IR port\nand press button:", 5, 10, AlignLeft, AlignCenter);
     dialog_ex_set_header(dialog_ex, button_name, 78, 11, AlignLeft, AlignTop);
 
     // For existing remotes, check if there are any more buttons to add
@@ -130,21 +130,25 @@ void infrared_scene_learn_on_enter(void* context) {
     infrared_worker_rx_start(worker);
     infrared_play_notification_message(infrared, InfraredNotificationMessageBlinkStartRead);
 
-    dialog_ex_set_icon(dialog_ex, 0, 32, &I_InfraredLearnShort_128x31);
+    dialog_ex_set_icon(dialog_ex, 0, 22, &I_InfraredLearnShort_128x31);
     dialog_ex_set_header(dialog_ex, NULL, 0, 0, AlignCenter, AlignCenter);
 
     if(infrared->app_state.is_easy_mode) {
         infrared_scene_learn_update_button_name(infrared, false);
-        dialog_ex_set_icon(dialog_ex, 0, 22, &I_InfraredLearnShort_128x31);
     } else {
         dialog_ex_set_text(
             dialog_ex,
-            "Point the remote at IR port\nand push the button",
+            "Point the remote at IR port\nand press the button",
             5,
-            13,
+            10,
             AlignLeft,
             AlignCenter);
     }
+
+    dialog_ex_set_left_button_text(
+        dialog_ex, infrared->app_state.is_easy_mode ? "Manual" : "Easy");
+    dialog_ex_set_right_button_text(
+        dialog_ex, infrared->app_state.is_decode_enabled ? "RAW" : "Decode");
 
     dialog_ex_set_context(dialog_ex, context);
     dialog_ex_set_result_callback(dialog_ex, infrared_scene_learn_dialog_result_callback);
@@ -165,6 +169,21 @@ bool infrared_scene_learn_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == DialogExResultCenter && infrared->app_state.is_easy_mode) {
             // Update with increment when skipping
             infrared_scene_learn_update_button_name(infrared, true);
+            consumed = true;
+        } else if(event.event == DialogExResultLeft) {
+            // Toggle Easy Learn
+            infrared->app_state.is_easy_mode = !infrared->app_state.is_easy_mode;
+            infrared_save_settings(infrared);
+            scene_manager_previous_scene(infrared->scene_manager);
+            scene_manager_next_scene(infrared->scene_manager, InfraredSceneLearn);
+            consumed = true;
+        } else if(event.event == DialogExResultRight) {
+            // Toggle signal decoding
+            infrared->app_state.is_decode_enabled = !infrared->app_state.is_decode_enabled;
+            infrared_worker_rx_enable_signal_decoding(
+                infrared->worker, infrared->app_state.is_decode_enabled);
+            dialog_ex_set_right_button_text(
+                infrared->dialog_ex, infrared->app_state.is_decode_enabled ? "RAW" : "Decode");
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
