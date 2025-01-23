@@ -7,13 +7,18 @@ static void timer_callback(void* context) {
     static bool led_state = false;
     uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
     
-    if(elapsed_time <= app->duration * 60) { // duration is in minutes
-        // uint32_t range = app->max_interval - app->min_interval;
-        // uint32_t blink_interval = app->min_interval + (elapsed_time * range / app->duration);
-
-        uint32_t diff = (app->max_interval - app->min_interval) / 60 * 1000 / 2;
-        // Equation: bpm to seconds, then to milliseconds, one half for on, one half for off
-        uint32_t blink_interval = (app->max_interval / 60 * 1000 / 2) - (elapsed_time * diff / app->duration);
+    if(elapsed_time <= app->duration * 60) { // duration is in minutes, so i need to change it to seconds
+        // TODO: add explanation
+        uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
+        // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
+        uint32_t blink_interval = 60000 / (interval * 2);
+        if (elapsed_time % 5 == 0) {
+            char text[32];
+            snprintf(text, sizeof(text), "BPM: %lu", interval);
+            widget_reset(app->widget);
+            widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
+            widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
+        }
         furi_timer_restart(app->timer, blink_interval);
     }
     
@@ -39,9 +44,6 @@ static bool back_button_callback(void* context) {
 }
 
 static void exec_view(BlinkerApp* app) { 
-    widget_reset(app->widget);
-    widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
-    
     app->start_time = furi_get_tick();
     furi_timer_start(app->timer, app->min_interval);
 
