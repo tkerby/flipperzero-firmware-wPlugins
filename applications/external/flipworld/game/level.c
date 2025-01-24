@@ -44,7 +44,7 @@ static void set_world(Level* level, GameManager* manager, char* id) {
     FuriString* json_data_str = flipper_http_load_from_file(file_path);
     if(!json_data_str || furi_string_empty(json_data_str)) {
         FURI_LOG_E("Game", "Failed to load json data from file");
-        draw_town_world(level);
+        draw_town_world(manager, level);
         return;
     }
 
@@ -58,9 +58,9 @@ static void set_world(Level* level, GameManager* manager, char* id) {
     }
 
     FURI_LOG_I("Game", "Drawing world");
-    if(!draw_json_world_furi(level, json_data_str)) {
+    if(!draw_json_world_furi(manager, level, json_data_str)) {
         FURI_LOG_E("Game", "Failed to draw world");
-        draw_town_world(level);
+        draw_town_world(manager, level);
         furi_string_free(json_data_str);
     } else {
         FURI_LOG_I("Game", "Drawing enemies");
@@ -75,7 +75,7 @@ static void set_world(Level* level, GameManager* manager, char* id) {
         FuriString* enemy_data_str = flipper_http_load_from_file(file_path);
         if(!enemy_data_str || furi_string_empty(enemy_data_str)) {
             FURI_LOG_E("Game", "Failed to get enemy data");
-            draw_town_world(level);
+            draw_town_world(manager, level);
             return;
         }
 
@@ -97,17 +97,23 @@ static void set_world(Level* level, GameManager* manager, char* id) {
     }
 }
 static void level_start(Level* level, GameManager* manager, void* context) {
-    if(!level || !context || !manager) {
+    if(!manager || !level || !context) {
+        FURI_LOG_E("Game", "Manager, level, or context is NULL");
+        return;
+    }
+    GameContext* game_context = game_manager_game_context_get(manager);
+    if(!level || !context) {
         FURI_LOG_E("Game", "Level, context, or manager is NULL");
+        game_context->is_switching_level = false;
         return;
     }
 
     level_clear(level);
-    player_spawn(level, manager);
 
     LevelContext* level_context = context;
     if(!level_context) {
         FURI_LOG_E("Game", "Level context is NULL");
+        game_context->is_switching_level = false;
         return;
     }
 
@@ -117,19 +123,36 @@ static void level_start(Level* level, GameManager* manager, void* context) {
         FuriString* world_data = fetch_world(level_context->id);
         if(!world_data) {
             FURI_LOG_E("Game", "Failed to fetch world data");
-            draw_town_world(level);
+            draw_town_world(manager, level);
+            game_context->is_switching_level = false;
+            // furi_delay_ms(1000);
+            player_spawn(level, manager);
             return;
         }
         furi_string_free(world_data);
 
         set_world(level, manager, level_context->id);
-
         FURI_LOG_I("Game", "World set.");
+        // furi_delay_ms(1000);
+        game_context->is_switching_level = false;
     } else {
         FURI_LOG_I("Game", "World exists.. loading now");
         set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
+        // furi_delay_ms(1000);
+        game_context->is_switching_level = false;
     }
+    /*
+       adjust the player's position n such based on icon count
+       the more icons to draw, the slower the player moves
+       so we'll increase the player's speed as the icon count increases
+       by 0.1 for every 8 icons
+   */
+    game_context->icon_offset = 0;
+    if(!game_context->imu_present) {
+        game_context->icon_offset += ((game_context->icon_count / 8) / 10);
+    }
+    player_spawn(level, manager);
 }
 
 static LevelContext* level_context_generic;

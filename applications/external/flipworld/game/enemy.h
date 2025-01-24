@@ -40,16 +40,4 @@ typedef struct {
     float health; // Health of the enemy
 } EnemyContext;
 
-const EntityDescription* enemy(
-    GameManager* manager,
-    const char* id,
-    int index,
-    Vector start_position,
-    Vector end_position,
-    float move_timer, // Wait duration before moving again
-    float speed,
-    float attack_timer,
-    float strength,
-    float health);
-
 void spawn_enemy_json_furi(Level* level, GameManager* manager, FuriString* json);

@@ -26,6 +26,14 @@
 #include <jsmn/jsmn_furi.h>
 #include <jsmn/jsmn.h>
 
+// added by Derek Jamison to lower memory usage
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
+
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
+//
+
 #define EASY_TAG "EasyFlipper"
 
 void easy_flipper_dialog(char* header, char* text);

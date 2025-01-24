@@ -5,7 +5,7 @@
 #include "engine/sensors/imu.h"
 
 // Maximum enemies
-#define MAX_ENEMIES 2
+#define MAX_ENEMIES 10
 #define MAX_LEVELS  10
 
 typedef enum {
@@ -24,6 +24,7 @@ typedef enum {
 } PlayerDirection;
 
 typedef struct {
+    Vector old_position; // previous position of the player
     PlayerDirection direction; // direction the player is facing
     PlayerState state; // current state of the player
     Vector start_position; // starting position of the player
@@ -43,12 +44,17 @@ typedef struct {
     char username[32]; // player username
 } PlayerContext;
 
+// two screens for the game menu
+typedef enum {
+    GAME_MENU_INFO, // level, health, xp, etc.
+    GAME_MENU_MORE, // more settings
+} GameMenuScreen;
+
 typedef struct {
     PlayerContext* player_context;
     Level* levels[MAX_LEVELS];
     Entity* enemies[MAX_ENEMIES];
     Entity* player;
-    GameKey user_input;
     float fps;
     int level_count;
     int enemy_count;
@@ -56,6 +62,18 @@ typedef struct {
     bool ended_early;
     Imu* imu;
     bool imu_present;
+    //
+    bool is_switching_level;
+    bool is_menu_open;
+    //
+    uint32_t elapsed_button_timer;
+    uint32_t last_button;
+    //
+    GameMenuScreen menu_screen;
+    uint8_t menu_selection;
+    //
+    int icon_count;
+    int icon_offset;
 } GameContext;
 
 typedef struct {

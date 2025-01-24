@@ -15,6 +15,14 @@
 #include <storage/storage.h>
 #include <cfw/cfw.h>
 
+// added by Derek Jamison to lower memory usage
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
+
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
+//
+
 // STORAGE_EXT_PATH_PREFIX is defined in the Furi SDK as /ext
 
 #define HTTP_TAG               "FlipWorld" // change this to your app name

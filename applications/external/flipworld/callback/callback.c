@@ -35,10 +35,9 @@ static int32_t game_app(void* p) {
 
     // Setup game engine settings...
     GameEngineSettings settings = game_engine_settings_init();
-    settings.target_fps = game_fps_choices_2[game_fps_index];
+    settings.target_fps = atof_(fps_choices_str[fps_index]);
     settings.show_fps = game.show_fps;
-    settings.always_backlight = strstr(yes_or_no_choices[game_screen_always_on_index], "Yes") !=
-                                NULL;
+    settings.always_backlight = strstr(yes_or_no_choices[screen_always_on_index], "Yes") != NULL;
     settings.frame_callback = frame_cb;
     settings.context = game_manager;
     GameEngine* engine = game_engine_alloc(settings);
@@ -86,9 +85,9 @@ static int32_t game_app(void* p) {
     return 0;
 }
 
-static void flip_world_request_error_draw(Canvas* canvas, DataLoaderModel* model) {
+static void error_draw(Canvas* canvas, DataLoaderModel* model) {
     if(canvas == NULL) {
-        FURI_LOG_E(TAG, "flip_world_request_error_draw - canvas is NULL");
+        FURI_LOG_E(TAG, "error_draw - canvas is NULL");
         DEV_CRASH();
         return;
     }
@@ -134,18 +133,21 @@ static bool alloc_about_view(void* context);
 static bool alloc_text_input_view(void* context, char* title);
 static bool alloc_variable_item_list(void* context, uint32_t view_id);
 //
-static void wifi_settings_item_selected(void* context, uint32_t index);
-static void text_updated_wifi_ssid(void* context);
-static void text_updated_wifi_pass(void* context);
-static void text_updated_username(void* context);
-static void text_updated_password(void* context);
+static void wifi_settings_select(void* context, uint32_t index);
+static void updated_wifi_ssid(void* context);
+static void updated_wifi_pass(void* context);
+static void updated_username(void* context);
+static void updated_password(void* context);
 //
-static void flip_world_game_fps_change(VariableItem* item);
-static void game_settings_item_selected(void* context, uint32_t index);
-static void user_settings_item_selected(void* context, uint32_t index);
-static void flip_world_game_screen_always_on_change(VariableItem* item);
-static void flip_world_game_sound_on_change(VariableItem* item);
-static void flip_world_game_vibration_on_change(VariableItem* item);
+static void fps_change(VariableItem* item);
+static void game_settings_select(void* context, uint32_t index);
+static void user_settings_select(void* context, uint32_t index);
+static void screen_on_change(VariableItem* item);
+static void sound_on_change(VariableItem* item);
+static void vibration_on_change(VariableItem* item);
+static void player_on_change(VariableItem* item);
+static void vgm_x_change(VariableItem* item);
+static void vgm_y_change(VariableItem* item);
 
 uint32_t callback_to_submenu(void* context) {
     UNUSED(context);
@@ -160,7 +162,7 @@ static uint32_t callback_to_settings(void* context) {
     return FlipWorldViewSettings;
 }
 
-static void flip_world_view_about_draw_callback(Canvas* canvas, void* model) {
+static void about_draw_callback(Canvas* canvas, void* model) {
     UNUSED(model);
     canvas_clear(canvas);
     // canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
@@ -186,7 +188,7 @@ static bool alloc_about_view(void* context) {
         if(!easy_flipper_set_view(
                &app->view_about,
                FlipWorldViewAbout,
-               flip_world_view_about_draw_callback,
+               about_draw_callback,
                NULL,
                callback_to_submenu,
                &app->view_dispatcher,
@@ -228,10 +230,10 @@ static bool alloc_text_input_view(void* context, char* title) {
                title,
                app->text_input_temp_buffer,
                app->text_input_buffer_size,
-               strcmp(title, "SSID") == 0           ? text_updated_wifi_ssid :
-               strcmp(title, "Password") == 0       ? text_updated_wifi_pass :
-               strcmp(title, "Username-Login") == 0 ? text_updated_username :
-                                                      text_updated_password,
+               is_str(title, "SSID")           ? updated_wifi_ssid :
+               is_str(title, "Password")       ? updated_wifi_pass :
+               is_str(title, "Username-Login") ? updated_username :
+                                                 updated_password,
                callback_to_wifi_settings,
                &app->view_dispatcher,
                app)) {
@@ -253,13 +255,13 @@ static bool alloc_text_input_view(void* context, char* title) {
                sizeof(username),
                password,
                sizeof(password))) {
-            if(strcmp(title, "SSID") == 0) {
+            if(is_str(title, "SSID")) {
                 strncpy(app->text_input_temp_buffer, ssid, app->text_input_buffer_size);
-            } else if(strcmp(title, "Password") == 0) {
+            } else if(is_str(title, "Password")) {
                 strncpy(app->text_input_temp_buffer, pass, app->text_input_buffer_size);
-            } else if(strcmp(title, "Username-Login") == 0) {
+            } else if(is_str(title, "Username-Login")) {
                 strncpy(app->text_input_temp_buffer, username, app->text_input_buffer_size);
-            } else if(strcmp(title, "Password-Login") == 0) {
+            } else if(is_str(title, "Password-Login")) {
                 strncpy(app->text_input_temp_buffer, password, app->text_input_buffer_size);
             }
         }
@@ -282,7 +284,7 @@ static bool alloc_variable_item_list(void* context, uint32_t view_id) {
             if(!easy_flipper_set_variable_item_list(
                    &app->variable_item_list,
                    FlipWorldViewVariableItemList,
-                   wifi_settings_item_selected,
+                   wifi_settings_select,
                    callback_to_settings,
                    &app->view_dispatcher,
                    app)) {
@@ -326,7 +328,7 @@ static bool alloc_variable_item_list(void* context, uint32_t view_id) {
             if(!easy_flipper_set_variable_item_list(
                    &app->variable_item_list,
                    FlipWorldViewVariableItemList,
-                   game_settings_item_selected,
+                   game_settings_select,
                    callback_to_settings,
                    &app->view_dispatcher,
                    app)) {
@@ -344,61 +346,128 @@ static bool alloc_variable_item_list(void* context, uint32_t view_id) {
                     app->variable_item_list, "Install Official World Pack", 0, NULL, NULL);
                 variable_item_set_current_value_text(app->variable_item_game_download_world, "");
             }
+            if(!app->variable_item_game_player_sprite) {
+                app->variable_item_game_player_sprite = variable_item_list_add(
+                    app->variable_item_list, "Weapon", 4, player_on_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_player_sprite, 1);
+                variable_item_set_current_value_text(
+                    app->variable_item_game_player_sprite, player_sprite_choices[1]);
+            }
             if(!app->variable_item_game_fps) {
-                app->variable_item_game_fps = variable_item_list_add(
-                    app->variable_item_list, "FPS", 4, flip_world_game_fps_change, NULL);
+                app->variable_item_game_fps =
+                    variable_item_list_add(app->variable_item_list, "FPS", 4, fps_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_fps, 0);
                 variable_item_set_current_value_text(
-                    app->variable_item_game_fps, game_fps_choices[0]);
+                    app->variable_item_game_fps, fps_choices_str[0]);
+            }
+            if(!app->variable_item_game_vgm_x) {
+                app->variable_item_game_vgm_x = variable_item_list_add(
+                    app->variable_item_list, "VGM Horizontal", 12, vgm_x_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_vgm_x, 2);
+                variable_item_set_current_value_text(app->variable_item_game_vgm_x, vgm_levels[2]);
+            }
+            if(!app->variable_item_game_vgm_y) {
+                app->variable_item_game_vgm_y = variable_item_list_add(
+                    app->variable_item_list, "VGM Vertical", 12, vgm_y_change, NULL);
+                variable_item_set_current_value_index(app->variable_item_game_vgm_y, 2);
+                variable_item_set_current_value_text(app->variable_item_game_vgm_y, vgm_levels[2]);
             }
             if(!app->variable_item_game_screen_always_on) {
                 app->variable_item_game_screen_always_on = variable_item_list_add(
-                    app->variable_item_list,
-                    "Keep Screen On?",
-                    2,
-                    flip_world_game_screen_always_on_change,
-                    NULL);
+                    app->variable_item_list, "Keep Screen On?", 2, screen_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, 1);
                 variable_item_set_current_value_text(
                     app->variable_item_game_screen_always_on, yes_or_no_choices[1]);
             }
             if(!app->variable_item_game_sound_on) {
                 app->variable_item_game_sound_on = variable_item_list_add(
-                    app->variable_item_list, "Sound On?", 2, flip_world_game_sound_on_change, NULL);
+                    app->variable_item_list, "Sound On?", 2, sound_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_sound_on, 0);
                 variable_item_set_current_value_text(
                     app->variable_item_game_sound_on, yes_or_no_choices[0]);
             }
             if(!app->variable_item_game_vibration_on) {
                 app->variable_item_game_vibration_on = variable_item_list_add(
-                    app->variable_item_list,
-                    "Vibration On?",
-                    2,
-                    flip_world_game_vibration_on_change,
-                    NULL);
+                    app->variable_item_list, "Vibration On?", 2, vibration_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, 0);
                 variable_item_set_current_value_text(
                     app->variable_item_game_vibration_on, yes_or_no_choices[0]);
             }
+            char _game_player_sprite[8];
+            if(load_char("Game-Player-Sprite", _game_player_sprite, sizeof(_game_player_sprite))) {
+                int index = is_str(_game_player_sprite, "naked") ? 0 :
+                            is_str(_game_player_sprite, "sword") ? 1 :
+                            is_str(_game_player_sprite, "axe")   ? 2 :
+                            is_str(_game_player_sprite, "bow")   ? 3 :
+                                                                   0;
+                variable_item_set_current_value_index(
+                    app->variable_item_game_player_sprite, index);
+                variable_item_set_current_value_text(
+                    app->variable_item_game_player_sprite,
+                    is_str(player_sprite_choices[index], "naked") ? "None" :
+                                                                    player_sprite_choices[index]);
+            }
             char _game_fps[8];
             if(load_char("Game-FPS", _game_fps, sizeof(_game_fps))) {
-                int index = strcmp(_game_fps, "30") == 0  ? 0 :
-                            strcmp(_game_fps, "60") == 0  ? 1 :
-                            strcmp(_game_fps, "120") == 0 ? 2 :
-                            strcmp(_game_fps, "240") == 0 ? 3 :
-                                                            0;
+                int index = is_str(_game_fps, "30")  ? 0 :
+                            is_str(_game_fps, "60")  ? 1 :
+                            is_str(_game_fps, "120") ? 2 :
+                            is_str(_game_fps, "240") ? 3 :
+                                                       0;
                 variable_item_set_current_value_text(
-                    app->variable_item_game_fps, game_fps_choices[index]);
+                    app->variable_item_game_fps, fps_choices_str[index]);
                 variable_item_set_current_value_index(app->variable_item_game_fps, index);
+            }
+            char _game_vgm_x[8];
+            if(load_char("Game-VGM-X", _game_vgm_x, sizeof(_game_vgm_x))) {
+                int vgm_x = atoi(_game_vgm_x);
+                int index = vgm_x == -2 ? 0 :
+                            vgm_x == -1 ? 1 :
+                            vgm_x == 0  ? 2 :
+                            vgm_x == 1  ? 3 :
+                            vgm_x == 2  ? 4 :
+                            vgm_x == 3  ? 5 :
+                            vgm_x == 4  ? 6 :
+                            vgm_x == 5  ? 7 :
+                            vgm_x == 6  ? 8 :
+                            vgm_x == 7  ? 9 :
+                            vgm_x == 8  ? 10 :
+                            vgm_x == 9  ? 11 :
+                            vgm_x == 10 ? 12 :
+                                          2;
+                variable_item_set_current_value_index(app->variable_item_game_vgm_x, index);
+                variable_item_set_current_value_text(
+                    app->variable_item_game_vgm_x, vgm_levels[index]);
+            }
+            char _game_vgm_y[8];
+            if(load_char("Game-VGM-Y", _game_vgm_y, sizeof(_game_vgm_y))) {
+                int vgm_y = atoi(_game_vgm_y);
+                int index = vgm_y == -2 ? 0 :
+                            vgm_y == -1 ? 1 :
+                            vgm_y == 0  ? 2 :
+                            vgm_y == 1  ? 3 :
+                            vgm_y == 2  ? 4 :
+                            vgm_y == 3  ? 5 :
+                            vgm_y == 4  ? 6 :
+                            vgm_y == 5  ? 7 :
+                            vgm_y == 6  ? 8 :
+                            vgm_y == 7  ? 9 :
+                            vgm_y == 8  ? 10 :
+                            vgm_y == 9  ? 11 :
+                            vgm_y == 10 ? 12 :
+                                          2;
+                variable_item_set_current_value_index(app->variable_item_game_vgm_y, index);
+                variable_item_set_current_value_text(
+                    app->variable_item_game_vgm_y, vgm_levels[index]);
             }
             char _game_screen_always_on[8];
             if(load_char(
                    "Game-Screen-Always-On",
                    _game_screen_always_on,
                    sizeof(_game_screen_always_on))) {
-                int index = strcmp(_game_screen_always_on, "No") == 0  ? 0 :
-                            strcmp(_game_screen_always_on, "Yes") == 0 ? 1 :
-                                                                         0;
+                int index = is_str(_game_screen_always_on, "No")  ? 0 :
+                            is_str(_game_screen_always_on, "Yes") ? 1 :
+                                                                    0;
                 variable_item_set_current_value_text(
                     app->variable_item_game_screen_always_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(
@@ -406,18 +475,18 @@ static bool alloc_variable_item_list(void* context, uint32_t view_id) {
             }
             char _game_sound_on[8];
             if(load_char("Game-Sound-On", _game_sound_on, sizeof(_game_sound_on))) {
-                int index = strcmp(_game_sound_on, "No") == 0  ? 0 :
-                            strcmp(_game_sound_on, "Yes") == 0 ? 1 :
-                                                                 0;
+                int index = is_str(_game_sound_on, "No")  ? 0 :
+                            is_str(_game_sound_on, "Yes") ? 1 :
+                                                            0;
                 variable_item_set_current_value_text(
                     app->variable_item_game_sound_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_sound_on, index);
             }
             char _game_vibration_on[8];
             if(load_char("Game-Vibration-On", _game_vibration_on, sizeof(_game_vibration_on))) {
-                int index = strcmp(_game_vibration_on, "No") == 0  ? 0 :
-                            strcmp(_game_vibration_on, "Yes") == 0 ? 1 :
-                                                                     0;
+                int index = is_str(_game_vibration_on, "No")  ? 0 :
+                            is_str(_game_vibration_on, "Yes") ? 1 :
+                                                                0;
                 variable_item_set_current_value_text(
                     app->variable_item_game_vibration_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, index);
@@ -427,7 +496,7 @@ static bool alloc_variable_item_list(void* context, uint32_t view_id) {
             if(!easy_flipper_set_variable_item_list(
                    &app->variable_item_list,
                    FlipWorldViewVariableItemList,
-                   user_settings_item_selected,
+                   user_settings_select,
                    callback_to_settings,
                    &app->view_dispatcher,
                    app)) {
@@ -595,6 +664,18 @@ static void free_variable_item_list(void* context) {
         free(app->variable_item_game_vibration_on);
         app->variable_item_game_vibration_on = NULL;
     }
+    if(app->variable_item_game_player_sprite) {
+        free(app->variable_item_game_player_sprite);
+        app->variable_item_game_player_sprite = NULL;
+    }
+    if(app->variable_item_game_vgm_x) {
+        free(app->variable_item_game_vgm_x);
+        app->variable_item_game_vgm_x = NULL;
+    }
+    if(app->variable_item_game_vgm_y) {
+        free(app->variable_item_game_vgm_y);
+        app->variable_item_game_vgm_y = NULL;
+    }
     if(app->variable_item_user_username) {
         free(app->variable_item_user_username);
         app->variable_item_user_username = NULL;
@@ -670,7 +751,7 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         fhttp,
-        "https://www.flipsocial.net/api/world/v3/list/10/",
+        "https://www.flipsocial.net/api/world/v4/list/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
 // we will load the palyer stats from the API and save them
@@ -699,6 +780,61 @@ static bool fetch_player_stats(FlipperHTTP* fhttp) {
         fhttp, url, "{\"Content-Type\":\"application/json\"}");
 }
 
+// static bool fetch_app_update(FlipperHTTP *fhttp)
+// {
+//     if (!fhttp)
+//     {
+//         FURI_LOG_E(TAG, "fhttp is NULL");
+//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
+//         return false;
+//     }
+
+//     return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/app/last-updated/flip_world/", "{\"Content-Type\":\"application/json\"}");
+// }
+
+// static bool parse_app_update(FlipperHTTP *fhttp)
+// {
+//     if (!fhttp)
+//     {
+//         FURI_LOG_E(TAG, "fhttp is NULL");
+//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
+//         return false;
+//     }
+//     if (fhttp->last_response == NULL || strlen(fhttp->last_response) == 0)
+//     {
+//         FURI_LOG_E(TAG, "fhttp->last_response is NULL or empty");
+//         easy_flipper_dialog("Error", "fhttp->last_response is NULL or empty. Press BACK to return.");
+//         return false;
+//     }
+//     bool last_update_available = false;
+//     char last_updated_old[32];
+//     // load the previous last_updated
+//     if (!load_char("last_updated", last_updated_old, sizeof(last_updated_old)))
+//     {
+//         FURI_LOG_E(TAG, "Failed to load last_updated");
+//         // it's okay, we'll just update it
+//     }
+//     // save the new last_updated
+//     save_char("last_updated", fhttp->last_response);
+
+//     // compare the two
+//     if (strlen(last_updated_old) == 0 || !is_str(last_updated_old, fhttp->last_response))
+//     {
+//         last_update_available = true;
+//     }
+
+//     if (last_update_available)
+//     {
+//         easy_flipper_dialog("Update Available", "An update is available. Press OK to update.");
+//         return true;
+//     }
+//     else
+//     {
+//         easy_flipper_dialog("No Update Available", "No update is available. Press OK to continue.");
+//         return false;
+//     }
+// }
+
 static bool start_game_thread(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
@@ -725,7 +861,7 @@ static bool start_game_thread(void* context) {
     return true;
 }
 // combine register, login, and world list fetch into one function to switch to the loader view
-static bool flip_world_fetch_game(DataLoaderModel* model) {
+static bool _fetch_game(DataLoaderModel* model) {
     FlipWorldApp* app = (FlipWorldApp*)model->parser_context;
     if(!app) {
         FURI_LOG_E(TAG, "app is NULL");
@@ -778,7 +914,7 @@ static bool flip_world_fetch_game(DataLoaderModel* model) {
                 FlipWorldViewSubmenu); // just go back to the main menu for now
             return false;
         }
-        if(strcmp(is_logged_in, "false") == 0 && strcmp(model->title, "Registering...") == 0) {
+        if(is_str(is_logged_in, "false") && is_str(model->title, "Registering...")) {
             // register
             char username[64];
             char password[64];
@@ -872,7 +1008,7 @@ static bool flip_world_fetch_game(DataLoaderModel* model) {
         snprintf(
             url,
             sizeof(url),
-            "https://www.flipsocial.net/api/world/v3/get/world/%s/",
+            "https://www.flipsocial.net/api/world/v4/get/world/%s/",
             furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
@@ -882,7 +1018,7 @@ static bool flip_world_fetch_game(DataLoaderModel* model) {
     FURI_LOG_E(TAG, "Unknown request index");
     return false;
 }
-static char* flip_world_parse_game(DataLoaderModel* model) {
+static char* _parse_game(DataLoaderModel* model) {
     FlipWorldApp* app = (FlipWorldApp*)model->parser_context;
 
     if(model->request_index == 0) {
@@ -928,7 +1064,7 @@ static char* flip_world_parse_game(DataLoaderModel* model) {
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
         return "Failed to login...";
     } else if(model->request_index == 1) {
-        if(strcmp(model->title, "Registering...") == 0) {
+        if(is_str(model->title, "Registering...")) {
             // check registration response
             if(model->fhttp->last_response != NULL &&
                (strstr(model->fhttp->last_response, "[SUCCESS]") != NULL ||
@@ -1023,12 +1159,12 @@ static char* flip_world_parse_game(DataLoaderModel* model) {
         app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
     return "Unknown error";
 }
-void flip_world_switch_to_view_get_game(FlipWorldApp* app) {
-    flip_world_generic_switch_to_view(
+static void switch_to_view_get_game(FlipWorldApp* app) {
+    generic_switch_to_view(
         app,
         "Starting Game..",
-        flip_world_fetch_game,
-        flip_world_parse_game,
+        _fetch_game,
+        _parse_game,
         5,
         callback_to_submenu,
         FlipWorldViewLoader);
@@ -1109,7 +1245,7 @@ void callback_submenu_choices(void* context, uint32_t index) {
 
             easy_flipper_dialog("Starting Game", "Please wait...");
         } else {
-            flip_world_switch_to_view_get_game(app);
+            switch_to_view_get_game(app);
         }
         break;
     case FlipWorldSubmenuIndexAbout:
@@ -1157,7 +1293,7 @@ void callback_submenu_choices(void* context, uint32_t index) {
     }
 }
 
-static void text_updated_wifi_ssid(void* context) {
+static void updated_wifi_ssid(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1212,7 +1348,7 @@ static void text_updated_wifi_ssid(void* context) {
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-static void text_updated_wifi_pass(void* context) {
+static void updated_wifi_pass(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1267,7 +1403,7 @@ static void text_updated_wifi_pass(void* context) {
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-static void text_updated_username(void* context) {
+static void updated_username(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1291,7 +1427,7 @@ static void text_updated_username(void* context) {
     view_dispatcher_switch_to_view(
         app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
-static void text_updated_password(void* context) {
+static void updated_password(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1329,7 +1465,7 @@ static void text_updated_password(void* context) {
         app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
 
-static void wifi_settings_item_selected(void* context, uint32_t index) {
+static void wifi_settings_select(void* context, uint32_t index) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1387,44 +1523,59 @@ static void wifi_settings_item_selected(void* context, uint32_t index) {
         break;
     }
 }
-static void flip_world_game_fps_change(VariableItem* item) {
+static void fps_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_fps_index = index;
-    variable_item_set_current_value_text(item, game_fps_choices[index]);
+    fps_index = index;
+    variable_item_set_current_value_text(item, fps_choices_str[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the fps
-    save_char("Game-FPS", game_fps_choices[index]);
+    save_char("Game-FPS", fps_choices_str[index]);
 }
-static void flip_world_game_screen_always_on_change(VariableItem* item) {
+static void screen_on_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_screen_always_on_index = index;
+    screen_always_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Screen-Always-On", yes_or_no_choices[index]);
 }
-static void flip_world_game_sound_on_change(VariableItem* item) {
+static void sound_on_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_sound_on_index = index;
+    sound_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Sound-On", yes_or_no_choices[index]);
 }
-static void flip_world_game_vibration_on_change(VariableItem* item) {
+static void vibration_on_change(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
-    game_vibration_on_index = index;
+    vibration_on_index = index;
     variable_item_set_current_value_text(item, yes_or_no_choices[index]);
     variable_item_set_current_value_index(item, index);
-
-    // save the screen always on
     save_char("Game-Vibration-On", yes_or_no_choices[index]);
 }
+static void player_on_change(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    player_sprite_index = index;
+    variable_item_set_current_value_text(
+        item,
+        is_str(player_sprite_choices[index], "naked") ? "None" : player_sprite_choices[index]);
+    variable_item_set_current_value_index(item, index);
+    save_char("Game-Player-Sprite", player_sprite_choices[index]);
+}
+static void vgm_x_change(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    vgm_x_index = index;
+    variable_item_set_current_value_text(item, vgm_levels[index]);
+    variable_item_set_current_value_index(item, index);
+    save_char("Game-VGM-X", vgm_levels[index]);
+}
+static void vgm_y_change(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    vgm_y_index = index;
+    variable_item_set_current_value_text(item, vgm_levels[index]);
+    variable_item_set_current_value_index(item, index);
+    save_char("Game-VGM-Y", vgm_levels[index]);
+}
 
-static bool flip_world_fetch_worlds(DataLoaderModel* model) {
+static bool _fetch_worlds(DataLoaderModel* model) {
     if(!model || !model->fhttp) {
         FURI_LOG_E(TAG, "model or fhttp is NULL");
         return false;
@@ -1447,39 +1598,49 @@ static bool flip_world_fetch_worlds(DataLoaderModel* model) {
     model->fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         model->fhttp,
-        "https://www.flipsocial.net/api/world/v3/get/10/",
+        "https://www.flipsocial.net/api/world/v4/get/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
-static char* flip_world_parse_worlds(DataLoaderModel* model) {
+static char* _parse_worlds(DataLoaderModel* model) {
     UNUSED(model);
     return "World Pack Installed";
 }
-static void flip_world_switch_to_view_get_worlds(FlipWorldApp* app) {
-    flip_world_generic_switch_to_view(
+static void switch_to_view_get_worlds(FlipWorldApp* app) {
+    generic_switch_to_view(
         app,
         "Fetching World Pack..",
-        flip_world_fetch_worlds,
-        flip_world_parse_worlds,
+        _fetch_worlds,
+        _parse_worlds,
         1,
         callback_to_submenu,
         FlipWorldViewLoader);
 }
-static void game_settings_item_selected(void* context, uint32_t index) {
+static void game_settings_select(void* context, uint32_t index) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return;
     }
     switch(index) {
-    case 0: // Download all world data s one huge json
-        flip_world_switch_to_view_get_worlds(app);
-    case 1: // Change FPS
+    case 0: // Download all world data as one huge json
+        switch_to_view_get_worlds(app);
+    case 1: // Player Sprite
         break;
-    case 2: // Screen Always On
+    case 2: // Change FPS
+        break;
+    case 3: // VGM X
+        break;
+    case 4: // VGM Y
+        break;
+    case 5: // Screen Always On
+        break;
+    case 6: // Sound On
+        break;
+    case 7: // Vibration On
         break;
     }
 }
-static void user_settings_item_selected(void* context, uint32_t index) {
+static void user_settings_select(void* context, uint32_t index) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
@@ -1505,14 +1666,14 @@ static void user_settings_item_selected(void* context, uint32_t index) {
     }
 }
 
-static void flip_world_widget_set_text(char* message, Widget** widget) {
+static void widget_set_text(char* message, Widget** widget) {
     if(widget == NULL) {
-        FURI_LOG_E(TAG, "flip_world_set_widget_text - widget is NULL");
+        FURI_LOG_E(TAG, "set_widget_text - widget is NULL");
         DEV_CRASH();
         return;
     }
     if(message == NULL) {
-        FURI_LOG_E(TAG, "flip_world_set_widget_text - message is NULL");
+        FURI_LOG_E(TAG, "set_widget_text - message is NULL");
         DEV_CRASH();
         return;
     }
@@ -1595,9 +1756,9 @@ static void flip_world_widget_set_text(char* message, Widget** widget) {
     widget_add_text_scroll_element(*widget, 0, 0, 128, 64, formatted_message);
 }
 
-void flip_world_loader_draw_callback(Canvas* canvas, void* model) {
+void loader_draw_callback(Canvas* canvas, void* model) {
     if(!canvas || !model) {
-        FURI_LOG_E(TAG, "flip_world_loader_draw_callback - canvas or model is NULL");
+        FURI_LOG_E(TAG, "loader_draw_callback - canvas or model is NULL");
         return;
     }
 
@@ -1619,7 +1780,7 @@ void flip_world_loader_draw_callback(Canvas* canvas, void* model) {
     }
 
     if(data_state == DataStateError || data_state == DataStateParseError) {
-        flip_world_request_error_draw(canvas, data_loader_model);
+        error_draw(canvas, data_loader_model);
         return;
     }
 
@@ -1651,9 +1812,9 @@ void flip_world_loader_draw_callback(Canvas* canvas, void* model) {
     }
 }
 
-static void flip_world_loader_process_callback(void* context) {
+static void loader_process_callback(void* context) {
     if(context == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_process_callback - context is NULL");
+        FURI_LOG_E(TAG, "loader_process_callback - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1702,19 +1863,19 @@ static void flip_world_loader_process_callback(void* context) {
         if(loader_model->fhttp->state == IDLE && loader_model->fhttp->last_response != NULL) {
             if(strstr(loader_model->fhttp->last_response, "[PONG]") != NULL) {
                 FURI_LOG_DEV(TAG, "PONG received.");
-            } else if(strncmp(loader_model->fhttp->last_response, "[SUCCESS]", 9) == 0) {
+            } else if(strncmp(loader_model->fhttp->last_response, "[SUCCESS]", 9)) {
                 FURI_LOG_DEV(
                     TAG,
                     "SUCCESS received. %s",
                     loader_model->fhttp->last_response ? loader_model->fhttp->last_response :
                                                          "NULL");
-            } else if(strncmp(loader_model->fhttp->last_response, "[ERROR]", 9) == 0) {
+            } else if(strncmp(loader_model->fhttp->last_response, "[ERROR]", 9)) {
                 FURI_LOG_DEV(
                     TAG,
                     "ERROR received. %s",
                     loader_model->fhttp->last_response ? loader_model->fhttp->last_response :
                                                          "NULL");
-            } else if(strlen(loader_model->fhttp->last_response) == 0) {
+            } else if(strlen(loader_model->fhttp->last_response)) {
                 // Still waiting on response
             } else {
                 with_view_model(
@@ -1772,7 +1933,7 @@ static void flip_world_loader_process_callback(void* context) {
                 if(++model->request_index < model->request_count) {
                     model->data_state = DataStateInitial;
                 } else {
-                    flip_world_widget_set_text(
+                    widget_set_text(
                         model->data_text != NULL ? model->data_text : "", &app->widget_result);
                     if(model->data_text != NULL) {
                         free(model->data_text);
@@ -1788,9 +1949,9 @@ static void flip_world_loader_process_callback(void* context) {
     }
 }
 
-static void flip_world_loader_timer_callback(void* context) {
+static void loader_timer_callback(void* context) {
     if(context == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_timer_callback - context is NULL");
+        FURI_LOG_E(TAG, "loader_timer_callback - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1798,9 +1959,9 @@ static void flip_world_loader_timer_callback(void* context) {
     view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventProcess);
 }
 
-static void flip_world_loader_on_enter(void* context) {
+static void loader_on_enter(void* context) {
     if(context == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_on_enter - context is NULL");
+        FURI_LOG_E(TAG, "loader_on_enter - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1812,17 +1973,16 @@ static void flip_world_loader_on_enter(void* context) {
         {
             view_set_previous_callback(view, model->back_callback);
             if(model->timer == NULL) {
-                model->timer =
-                    furi_timer_alloc(flip_world_loader_timer_callback, FuriTimerTypePeriodic, app);
+                model->timer = furi_timer_alloc(loader_timer_callback, FuriTimerTypePeriodic, app);
             }
             furi_timer_start(model->timer, 250);
         },
         true);
 }
 
-static void flip_world_loader_on_exit(void* context) {
+static void loader_on_exit(void* context) {
     if(context == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_on_exit - context is NULL");
+        FURI_LOG_E(TAG, "loader_on_exit - context is NULL");
         DEV_CRASH();
         return;
     }
@@ -1839,20 +1999,20 @@ static void flip_world_loader_on_exit(void* context) {
         false);
 }
 
-void flip_world_loader_init(View* view) {
+void loader_init(View* view) {
     if(view == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_init - view is NULL");
+        FURI_LOG_E(TAG, "loader_init - view is NULL");
         DEV_CRASH();
         return;
     }
     view_allocate_model(view, ViewModelTypeLocking, sizeof(DataLoaderModel));
-    view_set_enter_callback(view, flip_world_loader_on_enter);
-    view_set_exit_callback(view, flip_world_loader_on_exit);
+    view_set_enter_callback(view, loader_on_enter);
+    view_set_exit_callback(view, loader_on_exit);
 }
 
-void flip_world_loader_free_model(View* view) {
+void loader_free_model(View* view) {
     if(view == NULL) {
-        FURI_LOG_E(TAG, "flip_world_loader_free_model - view is NULL");
+        FURI_LOG_E(TAG, "loader_free_model - view is NULL");
         DEV_CRASH();
         return;
     }
@@ -1877,24 +2037,24 @@ void flip_world_loader_free_model(View* view) {
         false);
 }
 
-bool flip_world_custom_event_callback(void* context, uint32_t index) {
+bool custom_event_callback(void* context, uint32_t index) {
     if(context == NULL) {
-        FURI_LOG_E(TAG, "flip_world_custom_event_callback - context is NULL");
+        FURI_LOG_E(TAG, "custom_event_callback - context is NULL");
         DEV_CRASH();
         return false;
     }
 
     switch(index) {
     case FlipWorldCustomEventProcess:
-        flip_world_loader_process_callback(context);
+        loader_process_callback(context);
         return true;
     default:
-        FURI_LOG_DEV(TAG, "flip_world_custom_event_callback. Unknown index: %ld", index);
+        FURI_LOG_DEV(TAG, "custom_event_callback. Unknown index: %ld", index);
         return false;
     }
 }
 
-void flip_world_generic_switch_to_view(
+void generic_switch_to_view(
     FlipWorldApp* app,
     char* title,
     DataLoaderFetch fetcher,
@@ -1903,14 +2063,14 @@ void flip_world_generic_switch_to_view(
     ViewNavigationCallback back,
     uint32_t view_id) {
     if(app == NULL) {
-        FURI_LOG_E(TAG, "flip_world_generic_switch_to_view - app is NULL");
+        FURI_LOG_E(TAG, "generic_switch_to_view - app is NULL");
         DEV_CRASH();
         return;
     }
 
     View* view = app->view_loader;
     if(view == NULL) {
-        FURI_LOG_E(TAG, "flip_world_generic_switch_to_view - view is NULL");
+        FURI_LOG_E(TAG, "generic_switch_to_view - view is NULL");
         DEV_CRASH();
         return;
     }

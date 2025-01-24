@@ -5,8 +5,7 @@
 typedef struct {
     char id[32];
     const Icon* icon;
-    uint8_t width;
-    uint8_t height;
+    Vector size;
 } IconContext;
 
 extern const EntityDescription icon_desc;
