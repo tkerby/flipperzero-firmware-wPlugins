@@ -10,26 +10,8 @@ static void icon_collision(Entity *self, Entity *other, GameManager *manager, vo
         PlayerContext *player = (PlayerContext *)entity_context_get(other);
         if (player)
         {
-            Vector player_pos = entity_pos_get(other);
-
-            // Bounce player in the direction they came
-            switch (player->direction)
-            {
-            case PLAYER_UP:
-                player_pos.y += ictx->size.y;
-                break;
-            case PLAYER_DOWN:
-                player_pos.y -= ictx->size.y;
-                break;
-            case PLAYER_LEFT:
-                player_pos.x += ictx->size.x;
-                break;
-            case PLAYER_RIGHT:
-                player_pos.x -= ictx->size.x;
-                break;
-            };
-
-            entity_pos_set(other, player_pos);
+            // Set the player's old position to prevent collision
+            entity_pos_set(other, player->old_position);
 
             // Reset movement to prevent re-collision
             player->dx = 0;

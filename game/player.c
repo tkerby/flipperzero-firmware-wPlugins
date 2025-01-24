@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <engine/entity_i.h>
 /****** Entities: Player ******/
 static Level *next_level(GameManager *manager)
 {
@@ -161,7 +162,7 @@ void player_spawn(Level *level, GameManager *manager)
 
 static int vgm_increase(float value, float increase)
 {
-    const int val = abs((int)(round(value + increase) / (double)1.5));
+    const int val = abs((int)(round(value + increase) / 2));
     return val < 1 ? 1 : val;
 }
 
@@ -205,6 +206,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
+    player->old_position = pos;
     GameContext *game_context = game_manager_game_context_get(manager);
 
     // Store previous direction

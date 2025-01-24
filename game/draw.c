@@ -20,8 +20,12 @@ void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager)
     char level[32];
 
     snprintf(health, sizeof(health), "HP : %ld", player->health);
-    snprintf(xp, sizeof(xp), "XP : %ld", player->xp);
     snprintf(level, sizeof(level), "LVL: %ld", player->level);
+
+    if (player->xp < 10000)
+        snprintf(xp, sizeof(xp), "XP : %ld", player->xp);
+    else
+        snprintf(xp, sizeof(xp), "XP : %ldK", player->xp / 1000);
 
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
     canvas_draw_str(canvas, pos.x, pos.y, health);
@@ -163,7 +167,7 @@ static void draw_menu(GameManager *manager, Canvas *canvas)
         }
 
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 7, 16, "FlipWorld v0.4");
+        canvas_draw_str(canvas, 7, 16, VERSION_TAG);
         canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
         canvas_draw_str_multi(canvas, 7, 25, "Developed by\nJBlanked and Derek \nJamison. Graphics\nfrom Pr3!\n\nwww.github.com/jblanked");
 

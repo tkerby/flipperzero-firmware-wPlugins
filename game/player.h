@@ -27,6 +27,7 @@ typedef enum
 
 typedef struct
 {
+    Vector old_position;        // previous position of the player
     PlayerDirection direction;  // direction the player is facing
     PlayerState state;          // current state of the player
     Vector start_position;      // starting position of the player

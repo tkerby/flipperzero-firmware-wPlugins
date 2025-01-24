@@ -364,24 +364,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
         else // handle other collisions
         {
-            // Bounce player in the direction they came
-            Vector player_pos = entity_pos_get(other);
-            switch (game_context->player_context->direction)
-            {
-            case PLAYER_UP:
-                player_pos.y += enemy_context->size.y;
-                break;
-            case PLAYER_DOWN:
-                player_pos.y -= enemy_context->size.y;
-                break;
-            case PLAYER_LEFT:
-                player_pos.x += enemy_context->size.x;
-                break;
-            case PLAYER_RIGHT:
-                player_pos.x -= enemy_context->size.x;
-                break;
-            };
-            entity_pos_set(other, player_pos);
+            // Set the player's old position to prevent collision
+            entity_pos_set(other, game_context->player_context->old_position);
             // Reset player's movement direction to prevent immediate re-collision
             game_context->player_context->dx = 0;
             game_context->player_context->dy = 0;
@@ -395,7 +379,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             // Reset player's position and health
             entity_pos_set(other, game_context->player_context->start_position);
-            game_context->player_context->health = 100;
+            game_context->player_context->health = game_context->player_context->max_health;
         }
     }
 }

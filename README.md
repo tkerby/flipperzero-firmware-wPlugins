@@ -70,9 +70,10 @@ An enemy attack registers if the enemy is facing you and collides with you. Howe
 
 **v0.4**
 - New game features
+- World expansion
+- Stability patch
 
 **v0.5**
-- World expansion
 - New game features
 - Custom Controller Support
 
