@@ -42,7 +42,7 @@ Enemies have similar attributes to players but do not have XP or health regenera
 
 If an enemy attacks you, your health decreases by the enemy's strength (attack power). Additionally, if an enemy defeats you, your XP decreases by the enemy's strength. Conversely, when you successfully attack an enemy, you gain health equal to 10% of the enemy's strength and increase your XP by the enemy's full strength.
 
-An enemy attack registers if the enemy is facing you and collides with you. However, to attack an enemy successfully, the enemy must be facing away from you, and you must collide with them while pressing `OK`.
+An enemy attack registers if the enemy is facing you and collides with you. However, to attack an enemy successfully, the enemy must be facing away from you, and you must collide with them while pressing "OK".
 
 ## Short Tutorial
 
