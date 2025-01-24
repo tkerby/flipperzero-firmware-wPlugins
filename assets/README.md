@@ -1,4 +1,4 @@
-The first open-world multiplayer game for the Flipper Zero, best played with the VGM.
+The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
 ## Requirements
 
@@ -13,7 +13,7 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 
 - **WiFi**: Enter your SSID and password to connect to your 2.4 GHz network.
 - **User**: Add or update your username and password (this is the same login information as your FlipSocial account).
-- **Game**: Install the Official World Pack, set your FPS (30, 60, 120, or 240), and select whether you want the screen backlight to always be on, the sound to be on, and the vibration to be on.
+- **Game**: Install the Official World Pack, choose your weapon, set your FPS (30, 60, 120, or 240), and select whether you want the screen backlight to always be on, the sound to be on, and the vibration to be on.
 
 **Controls**
 
@@ -21,7 +21,10 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 - **Press/Hold RIGHT**: Turn right if not already facing right, then walk right if the button is still pressed.
 - **Press/Hold UP**: Walk up.
 - **Press/Hold DOWN**: Walk down.
-- **Press/Hold OK**: Attack/Teleport (set to attack until all enemies are defeated).
+- **Press OK**: Attack/Teleport (set to attack until all enemies are defeated).
+- **HOLD OK**: In-Game Menu.
+- **Press BACK**: Leave the menu.
+- **HOLD BACK**: Exit the game.
 
 **Player Attributes**
 
@@ -64,9 +67,12 @@ An enemy attack registers if the enemy is facing you and collides with you. Howe
 
 **v0.4**
 - New game features
+- Stability patch
+- World expansion
 
 **v0.5**
-- ???
+- New game features
+- Custom Controller Support
 
 **v0.6**
 - ???

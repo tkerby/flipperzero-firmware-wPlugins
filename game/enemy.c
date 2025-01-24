@@ -50,13 +50,11 @@ static EnemyContext *enemy_generic_alloc(
 // Free function
 static void enemy_generic_free(void *context)
 {
-    if (!context)
+    if (context)
     {
-        FURI_LOG_E("Game", "Enemy generic free: Invalid context");
-        return;
+        free(context);
+        context = NULL;
     }
-    free(context);
-    context = NULL;
     if (enemy_context_generic)
     {
         free(enemy_context_generic);
@@ -112,7 +110,6 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         return;
 
     EnemyContext *enemy_context = (EnemyContext *)context;
-    GameContext *game_context = game_manager_game_context_get(manager);
 
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
@@ -135,20 +132,16 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         pos.x - camera_x - (enemy_context->size.x / 2),
         pos.y - camera_y - (enemy_context->size.y / 2));
 
-    // instead of username, draw health
+    // draw health of enemy
     char health_str[32];
     snprintf(health_str, sizeof(health_str), "%.0f", (double)enemy_context->health);
     draw_username(canvas, pos, health_str);
 
     // Draw user stats (this has to be done for all enemies)
     draw_user_stats(canvas, (Vector){0, 50}, manager);
-
-    // draw player username from GameContext
-    Vector posi = entity_pos_get(game_context->player);
-    draw_username(canvas, posi, game_context->player_context->username);
 }
 
-static void send_attack_notification(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
+static void atk_notify(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
 {
     if (!game_context || !enemy_context)
     {
@@ -158,8 +151,8 @@ static void send_attack_notification(GameContext *game_context, EnemyContext *en
 
     NotificationApp *notifications = furi_record_open(RECORD_NOTIFICATION);
 
-    const bool vibration_allowed = strstr(yes_or_no_choices[game_vibration_on_index], "Yes") != NULL;
-    const bool sound_allowed = strstr(yes_or_no_choices[game_sound_on_index], "Yes") != NULL;
+    const bool vibration_allowed = strstr(yes_or_no_choices[vibration_on_index], "Yes") != NULL;
+    const bool sound_allowed = strstr(yes_or_no_choices[sound_on_index], "Yes") != NULL;
 
     if (player_attacked)
     {
@@ -224,6 +217,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         // Retrieve enemy context
         EnemyContext *enemy_context = (EnemyContext *)context;
         GameContext *game_context = game_manager_game_context_get(manager);
+        // InputState input = game_manager_input_get(manager);
         if (!enemy_context)
         {
             FURI_LOG_E("Game", "Enemy collision: EnemyContext is NULL");
@@ -262,11 +256,14 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
-        if (player_is_facing_enemy && game_context->user_input == GameKeyOk && !enemy_is_facing_player)
+        if (player_is_facing_enemy && game_context->last_button == GameKeyOk && !enemy_is_facing_player)
         {
+            // Reset last button
+            game_context->last_button = -1;
+
             if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
             {
-                send_attack_notification(game_context, enemy_context, true);
+                atk_notify(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
                 game_context->player_context->elapsed_attack_timer = 0.0f;
@@ -306,8 +303,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     enemy_context->state = ENEMY_ATTACKED;
 
                     // Bounce the enemy back by X units opposite their last movement direction
-                    enemy_pos.x -= game_context->player_context->dx * enemy_context->radius;
-                    enemy_pos.y -= game_context->player_context->dy * enemy_context->radius;
+                    enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(self, enemy_pos);
 
                     // Reset enemy's movement direction to prevent immediate re-collision
@@ -325,7 +322,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                send_attack_notification(game_context, enemy_context, false);
+                atk_notify(game_context, enemy_context, false);
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;
@@ -355,8 +352,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     game_context->player_context->state = PLAYER_ATTACKED;
 
                     // Bounce the player back by X units opposite their last movement direction
-                    player_pos.x -= game_context->player_context->dx * enemy_context->radius;
-                    player_pos.y -= game_context->player_context->dy * enemy_context->radius;
+                    player_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    player_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(other, player_pos);
 
                     // Reset player's movement direction to prevent immediate re-collision
@@ -364,37 +361,11 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     game_context->player_context->dy = 0;
                 }
             }
-            else
-            {
-                FURI_LOG_I("Game", "Enemy '%s' attack on player is on cooldown: %f seconds remaining", enemy_context->id, (double)(enemy_context->attack_timer - enemy_context->elapsed_attack_timer));
-            }
         }
         else // handle other collisions
         {
-            // bounce player and enemy away from each other
-            Vector player_pos = entity_pos_get(other);
-            Vector enemy_pos = entity_pos_get(self);
-
-            // Calculate the direction vector from player to enemy
-            Vector direction_vector = {
-                enemy_pos.x - player_pos.x,
-                enemy_pos.y - player_pos.y};
-
-            // Normalize the direction vector
-            float length = sqrt(direction_vector.x * direction_vector.x + direction_vector.y * direction_vector.y);
-            if (length != 0)
-            {
-                direction_vector.x /= length;
-                direction_vector.y /= length;
-            }
-
-            // Move the player and enemy away from each other
-            player_pos.y -= direction_vector.y * 3;
-            entity_pos_set(other, player_pos);
-
-            enemy_pos.x += direction_vector.x * 3;
-            entity_pos_set(self, enemy_pos);
-
+            // Set the player's old position to prevent collision
+            entity_pos_set(other, game_context->player_context->old_position);
             // Reset player's movement direction to prevent immediate re-collision
             game_context->player_context->dx = 0;
             game_context->player_context->dy = 0;
@@ -408,7 +379,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             // Reset player's position and health
             entity_pos_set(other, game_context->player_context->start_position);
-            game_context->player_context->health = 100;
+            game_context->player_context->health = game_context->player_context->max_health;
         }
     }
 }
@@ -626,22 +597,12 @@ const EntityDescription *enemy(
 
 void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
 {
-    if (!level)
+    if (!level || !manager || !json)
     {
-        FURI_LOG_E("Game", "Level is NULL");
+        FURI_LOG_E("Game", "Level, GameManager, or JSON is NULL");
         return;
     }
-    if (!json)
-    {
-        FURI_LOG_E("Game", "JSON is NULL");
-        return;
-    }
-    if (!manager)
-    {
-        FURI_LOG_E("Game", "GameManager is NULL");
-        return;
-    }
-    // parameters: id, index, size.x, size.y, start_position.x, start_position.y, end_position.x, end_position.y, move_timer, speed, attack_timer, strength, health
+
     FuriString *id = get_json_value_furi("id", json);
     FuriString *_index = get_json_value_furi("index", json);
     //
@@ -673,13 +634,13 @@ void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
                                                                                        manager,
                                                                                        furi_string_get_cstr(id),
                                                                                        atoi(furi_string_get_cstr(_index)),
-                                                                                       (Vector){strtod(furi_string_get_cstr(start_position_x), NULL), strtod(furi_string_get_cstr(start_position_y), NULL)},
-                                                                                       (Vector){strtod(furi_string_get_cstr(end_position_x), NULL), strtod(furi_string_get_cstr(end_position_y), NULL)},
-                                                                                       strtod(furi_string_get_cstr(move_timer), NULL),
-                                                                                       strtod(furi_string_get_cstr(speed), NULL),
-                                                                                       strtod(furi_string_get_cstr(attack_timer), NULL),
-                                                                                       strtod(furi_string_get_cstr(strength), NULL),
-                                                                                       strtod(furi_string_get_cstr(health), NULL)));
+                                                                                       (Vector){atof_furi(start_position_x), atof_furi(start_position_y)},
+                                                                                       (Vector){atof_furi(end_position_x), atof_furi(end_position_y)},
+                                                                                       atof_furi(move_timer),
+                                                                                       atof_furi(speed),
+                                                                                       atof_furi(attack_timer),
+                                                                                       atof_furi(strength),
+                                                                                       atof_furi(health)));
         game_context->enemy_count++;
     }
 

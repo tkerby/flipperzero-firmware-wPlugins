@@ -4,6 +4,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+// added by Derek Jamison to lower memory usage
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
+
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
+//
+
 typedef enum
 {
     JSMN_UNDEFINED = 0,

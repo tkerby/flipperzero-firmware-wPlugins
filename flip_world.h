@@ -6,11 +6,14 @@
 // added by Derek Jamison to lower memory usage
 #undef FURI_LOG_E
 #define FURI_LOG_E(tag, msg, ...)
+
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
 //
 
 #define TAG "FlipWorld"
-#define VERSION 0.3
-#define VERSION_TAG "FlipWorld v0.3"
+#define VERSION 0.4
+#define VERSION_TAG TAG " " FAP_VERSION
 
 // Define the submenu items for our FlipWorld application
 typedef enum
@@ -62,6 +65,9 @@ typedef struct
     VariableItem *variable_item_game_download_world;   // The variable item for Download world
     VariableItem *variable_item_game_sound_on;         // The variable item for Sound on
     VariableItem *variable_item_game_vibration_on;     // The variable item for Vibration on
+    VariableItem *variable_item_game_player_sprite;    // The variable item for Player sprite
+    VariableItem *variable_item_game_vgm_x;            // The variable item for VGM X
+    VariableItem *variable_item_game_vgm_y;            // The variable item for VGM Y
     //
     VariableItem *variable_item_user_username; // The variable item for the User username
     VariableItem *variable_item_user_password; // The variable item for the User password
@@ -72,11 +78,18 @@ typedef struct
     uint32_t text_input_buffer_size; // Size of the text input buffer
 } FlipWorldApp;
 
-extern char *game_fps_choices[];
-extern const float game_fps_choices_2[];
-extern int game_fps_index;
+extern char *fps_choices_str[];
+extern int fps_index;
 extern char *yes_or_no_choices[];
-extern int game_screen_always_on_index;
-extern int game_sound_on_index;
-extern int game_vibration_on_index;
+extern int screen_always_on_index;
+extern int sound_on_index;
+extern int vibration_on_index;
+extern char *player_sprite_choices[];
+extern int player_sprite_index;
+extern char *vgm_levels[];
+extern int vgm_x_index;
+extern int vgm_y_index;
+float atof_(const char *nptr);
+float atof_furi(const FuriString *nptr);
+bool is_str(const char *src, const char *dst);
 bool is_enough_heap(size_t heap_size);
