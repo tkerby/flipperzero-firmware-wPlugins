@@ -5,14 +5,13 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 
 ## 📸 Screenshots
 
-<img src="screenshots/screenshot_1.png" width=33% height=25%> 
-<img height="160vh" width="5" src="https://upload.wikimedia.org/wikipedia/commons/3/3d/1_120_transparent.png">
-<img src="screenshots/screenshot_2.png" width=33% height=25%> 
-<img height="160vh" width="5" src="https://upload.wikimedia.org/wikipedia/commons/3/3d/1_120_transparent.png">
-<img src="screenshots/screenshot_3.png" width=33% height=25%> 
-<img height="160vh" width="5" src="https://upload.wikimedia.org/wikipedia/commons/3/3d/1_120_transparent.png">
-<img src="screenshots/screenshot_4.png" width=33% height=25%> 
-<img height="160vh" width="5" src="https://upload.wikimedia.org/wikipedia/commons/3/3d/1_120_transparent.png">
+![Screenshot 1](screenshots/screenshot_1.png "Screenshot 1")
+![Screenshot 2](screenshots/screenshot_2.png "Screenshot 2")
+![Screenshot 3](screenshots/screenshot_3.png "Screenshot 3")
+![Screenshot 4](screenshots/screenshot_4.png "Screenshot 4")
+
+
+
 
 
 ## Build the program
