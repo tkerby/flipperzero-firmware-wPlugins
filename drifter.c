@@ -32,7 +32,7 @@
 #define GAP_DEC 0.004L        // Gap reduction each tick
 #define GAP_MIN 20.0L         // Minimum gap size
 #define SCORE_INC_START 0.07L // Initial score increment
-#define SCORE_INC_MULT 1.05L  // Score increment multiplier each tick without keypress
+#define SCORE_INC_MULT 1.04L  // Score increment multiplier each tick without keypress
 #define SPEED_DIV 200.0L      // Horizontal speed will increase by length-of-button-push in ms divided by this
 #define CHANGE_DIR 21         // How often to change direction, less is more
 //#define SHOW_MULTIPLIER     // Un-comment to show the score multiplier in the top-right corner
@@ -81,8 +81,8 @@ static uint32_t load_highscore() {
 
   File* file = storage_file_alloc(storage);
   if (storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-    char line[8];
-    storage_file_read(file, line, 8);
+    char line[9];
+    storage_file_read(file, line, 9);
     ret = atoi(line);
   }
 
@@ -98,8 +98,8 @@ void save_highscore(uint32_t score) {
 
   File* file = storage_file_alloc(storage);
   if (storage_file_open(file, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-    char line[8];
-    snprintf(line, 8, "%ld", score);
+    char line[9];
+    snprintf(line, 9, "%ld", score);
     storage_file_write(file, line, strlen(line));
     storage_file_write(file, "\n", 1);
   } else {
@@ -134,7 +134,7 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
       {
 	drifter_state->dead = 1;
 	canvas_invert_color(canvas);
-	canvas_draw_box(canvas, 0, 10, 91, 11);
+	canvas_draw_box(canvas, 0, 10, 97, 11);
 	canvas_invert_color(canvas);
 	if (drifter_state->score > drifter_state->highscore) {
 	  canvas_draw_str(canvas, 0, 18, "New High Score!");
@@ -156,14 +156,14 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
   canvas_draw_box(canvas, boat+1, 58, 2, 5);
   canvas_draw_line(canvas, boat+3, 60, boat+3, 63);
   canvas_invert_color(canvas);
-  canvas_draw_box(canvas, 0, 0, 42, 8);
+  canvas_draw_box(canvas, 0, 0, 48, 8);
 #ifdef SHOW_MULTIPLIER
   canvas_draw_box(canvas, XMAX-41, 0, 42, 8);
 #endif
   canvas_invert_color(canvas);
   uint32_t score = drifter_state->score;
-  char s[8] = { 0 };
-  snprintf(s, 8, "%07ld", score);
+  char s[9] = { 0 };
+  snprintf(s, 9, "%08ld", score);
   canvas_draw_str(canvas, 0, 7, s);
 #ifdef SHOW_MULTIPLIER
   double multiplier = drifter_state->increment;
@@ -225,13 +225,28 @@ static void drifter_game_init_game(DrifterState* const drifter_state) {
 
 static void drifter_game_process_game_step(DrifterState* const drifter_state) {
   UNUSED(drifter_state);
-  if (drifter_state->dead) {
+
+  static uint8_t already_dead = 0;
+
+  // Just died
+  if (!already_dead && drifter_state->dead) {
     uint32_t score = drifter_state->score;
     if (score > drifter_state->highscore) {
       drifter_state->highscore = score;
       save_highscore(score);
     }
+    already_dead = 1;
     return;
+  }
+
+  // Long dead
+  if (drifter_state->dead) {
+    return;
+  }
+
+  // Back to life
+  if (already_dead && !drifter_state->dead) {
+    already_dead = 0;
   }
   uint8_t head = drifter_state->head;
   uint8_t new = drifter_state->map[head];
@@ -263,8 +278,8 @@ static void drifter_game_process_game_step(DrifterState* const drifter_state) {
     drifter_state->speed = 0;
   }
   drifter_state->score += drifter_state->increment;
-  if (drifter_state->score > 9999999) {
-    drifter_state->score = 9999999;
+  if (drifter_state->score > 99999999) {
+    drifter_state->score = 99999999;
   }
   // Increase the speed increment by mulitplying by SCORE_INC_MULT + some gap-related amount
   drifter_state->increment *= SCORE_INC_MULT * ((GAP_START-drifter_state->gap)/100+1);
