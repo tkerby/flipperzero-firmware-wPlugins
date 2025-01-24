@@ -503,11 +503,9 @@ void picopass_device_set_loading_callback(
 }
 
 void picopass_device_decrypt(uint8_t* enc_data, uint8_t* dec_data) {
-    uint8_t key[32] = {0};
-    memcpy(key, picopass_iclass_decryptionkey, sizeof(picopass_iclass_decryptionkey));
     mbedtls_des3_context ctx;
     mbedtls_des3_init(&ctx);
-    mbedtls_des3_set2key_dec(&ctx, key);
+    mbedtls_des3_set2key_dec(&ctx, picopass_iclass_decryptionkey);
     mbedtls_des3_crypt_ecb(&ctx, enc_data, dec_data);
     mbedtls_des3_free(&ctx);
 }
