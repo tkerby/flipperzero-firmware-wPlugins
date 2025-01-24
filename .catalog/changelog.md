@@ -1,3 +1,6 @@
+## 1.18
+ - Added Save SR as legacy from saved menu
+ - Fix write key 'retry' when presented with new card
 ## 1.17
  - CVE-2024-41566: When keys are unknown emulate with a dummy MAC and ignore reader MACs
 ## 1.16
