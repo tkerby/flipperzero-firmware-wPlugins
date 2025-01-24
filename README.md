@@ -32,3 +32,5 @@ If you don't want to build this application, just simply copy **flipper_cigarett
 - add content for "about"
 - include counter for cigarettes smoked
 - cancer progress-bar
+
+xoxo - MAZ <3
