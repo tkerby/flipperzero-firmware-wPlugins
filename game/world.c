@@ -1,14 +1,8 @@
 #include <game/world.h>
 #include <game/storage.h>
 #include <flip_storage/storage.h>
-void draw_bounds(Canvas *canvas)
-{
-    // Draw the outer bounds adjusted by camera offset
-    // we draw this last to ensure users can see the bounds
-    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
-}
 
-bool draw_json_world_furi(Level *level, const FuriString *json_data)
+bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *json_data)
 {
     if (!json_data)
     {
@@ -58,6 +52,7 @@ bool draw_json_world_furi(Level *level, const FuriString *json_data)
         {
             // Just one icon
             spawn_icon(
+                manager,
                 level,
                 furi_string_get_cstr(icon),
                 atoi(furi_string_get_cstr(x)),
@@ -67,6 +62,7 @@ bool draw_json_world_furi(Level *level, const FuriString *json_data)
         {
             bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
             spawn_icon_line(
+                manager,
                 level,
                 furi_string_get_cstr(icon),
                 atoi(furi_string_get_cstr(x)),
@@ -87,74 +83,74 @@ bool draw_json_world_furi(Level *level, const FuriString *json_data)
     return levels_added > 0;
 }
 
-void draw_town_world(Level *level)
+void draw_town_world(GameManager *manager, Level *level)
 {
 
     // house-fence group 1
-    spawn_icon(level, "house", 164, 40);
-    spawn_icon(level, "fence", 148, 64);
-    spawn_icon(level, "fence", 164, 64);
-    spawn_icon(level, "fence_end", 180, 64);
+    spawn_icon(manager, level, "house", 164, 40);
+    spawn_icon(manager, level, "fence", 148, 64);
+    spawn_icon(manager, level, "fence", 164, 64);
+    spawn_icon(manager, level, "fence_end", 180, 64);
 
     // house-fence group 4 (the left of group 1)
-    spawn_icon(level, "house", 110, 40);
-    spawn_icon(level, "fence", 96, 64);
-    spawn_icon(level, "fence", 110, 64);
-    spawn_icon(level, "fence_end", 126, 64);
+    spawn_icon(manager, level, "house", 110, 40);
+    spawn_icon(manager, level, "fence", 96, 64);
+    spawn_icon(manager, level, "fence", 110, 64);
+    spawn_icon(manager, level, "fence_end", 126, 64);
 
     // house-fence group 5 (the left of group 4)
-    spawn_icon(level, "house", 56, 40);
-    spawn_icon(level, "fence", 40, 64);
-    spawn_icon(level, "fence", 56, 64);
-    spawn_icon(level, "fence_end", 72, 64);
+    spawn_icon(manager, level, "house", 56, 40);
+    spawn_icon(manager, level, "fence", 40, 64);
+    spawn_icon(manager, level, "fence", 56, 64);
+    spawn_icon(manager, level, "fence_end", 72, 64);
 
     // line of fences on the 8th row (using spawn_icon_line)
-    spawn_icon_line(level, "fence", 8, 96, 10, true);
+    spawn_icon_line(manager, level, "fence", 8, 96, 10, true);
 
     // plants spaced out underneath the fences
-    spawn_icon_line(level, "plant", 40, 110, 6, true);
-    spawn_icon_line(level, "flower", 40, 140, 6, true);
+    spawn_icon_line(manager, level, "plant", 40, 110, 6, true);
+    spawn_icon_line(manager, level, "flower", 40, 140, 6, true);
 
     // man and woman
-    spawn_icon(level, "man", 156, 110);
-    spawn_icon(level, "woman", 164, 110);
+    spawn_icon(manager, level, "man", 156, 110);
+    spawn_icon(manager, level, "woman", 164, 110);
 
     // lake
     // Top row
-    spawn_icon(level, "lake_top_left", 240, 62);
-    spawn_icon(level, "lake_top", 264, 57);
-    spawn_icon(level, "lake_top_right", 295, 62);
+    spawn_icon(manager, level, "lake_top_left", 240, 62);
+    spawn_icon(manager, level, "lake_top", 264, 57);
+    spawn_icon(manager, level, "lake_top_right", 295, 62);
 
     // Middle row
-    spawn_icon(level, "lake_left", 231, 84);
-    spawn_icon(level, "lake_right", 304, 84);
+    spawn_icon(manager, level, "lake_left", 231, 84);
+    spawn_icon(manager, level, "lake_right", 304, 84);
 
     // Bottom row
-    spawn_icon(level, "lake_bottom_left", 240, 115);
-    spawn_icon(level, "lake_bottom", 264, 120);
-    spawn_icon(level, "lake_bottom_right", 295, 115);
+    spawn_icon(manager, level, "lake_bottom_left", 240, 115);
+    spawn_icon(manager, level, "lake_bottom", 264, 120);
+    spawn_icon(manager, level, "lake_bottom_right", 295, 115);
 
     // Spawn two full left/up tree lines
     for (int i = 0; i < 2; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
+        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
         // Vertical line of 11 icons
-        spawn_icon_line(level, "tree", 5 + i * 17, 2, 11, false);
+        spawn_icon_line(manager, level, "tree", 5 + i * 17, 2, 11, false);
     }
 
     // Spawn two full down tree lines
     for (int i = 9; i < 11; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(level, "tree", 5, 2 + i * 17, 22, true);
+        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
     }
 
     // Spawn two full right tree lines
     for (int i = 20; i < 22; i++)
     {
         // Vertical line of 8 icons starting further down (y=50)
-        spawn_icon_line(level, "tree", 5 + i * 17, 50, 8, false);
+        spawn_icon_line(manager, level, "tree", 5 + i * 17, 50, 8, false);
     }
 }
 
@@ -174,7 +170,7 @@ FuriString *fetch_world(const char *name)
     }
 
     char url[256];
-    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v3/get/world/%s/", name);
+    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v4/get/world/%s/", name);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
     fhttp->save_received_data = true;
     if (!flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\": \"application/json\"}"))

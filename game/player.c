@@ -1,13 +1,31 @@
 #include <game/player.h>
 #include <game/storage.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <engine/entity_i.h>
 /****** Entities: Player ******/
-static Level *get_next_level(GameManager *manager)
+static Level *next_level(GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     if (!game_context)
     {
         FURI_LOG_E(TAG, "Failed to get game context");
         return NULL;
+    }
+    // check if there are more levels to load
+    if (game_context->current_level + 1 >= game_context->level_count)
+    {
+        game_context->current_level = 0;
+        if (!game_context->levels[game_context->current_level])
+        {
+            if (!allocate_level(manager, game_context->current_level))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
+                return NULL;
+            }
+        }
+        return game_context->levels[game_context->current_level];
     }
     for (int i = game_context->current_level + 1; i < game_context->level_count; i++)
     {
@@ -22,7 +40,6 @@ static Level *get_next_level(GameManager *manager)
         game_context->current_level = i;
         return game_context->levels[i];
     }
-    FURI_LOG_I(TAG, "No more levels to load");
     return NULL;
 }
 
@@ -55,44 +72,55 @@ void player_spawn(Level *level, GameManager *manager)
     entity_collider_add_rect(game_context->player, 13, 11);
 
     // Get player context
-    PlayerContext *player_context = entity_context_get(game_context->player);
-    if (!player_context)
+    PlayerContext *pctx = entity_context_get(game_context->player);
+    if (!pctx)
     {
         FURI_LOG_E(TAG, "Failed to get player context");
         return;
     }
 
+    SpriteContext *sprite_context = get_sprite_context(player_sprite_choices[player_sprite_index]);
+    if (!sprite_context)
+    {
+        FURI_LOG_E(TAG, "Failed to get sprite context");
+        return;
+    }
+
     // player context must be set each level or NULL pointer will be dereferenced
-    if (!load_player_context(player_context))
+    if (!load_player_context(pctx))
     {
         FURI_LOG_E(TAG, "Loading player context failed. Initializing default values.");
 
         // Initialize default player context
-        player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
-        player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
-        player_context->direction = PLAYER_RIGHT; // default direction
-        player_context->health = 100;
-        player_context->strength = 10;
-        player_context->level = 1;
-        player_context->xp = 0;
-        player_context->start_position = entity_pos_get(game_context->player);
-        player_context->attack_timer = 0.1f;
-        player_context->elapsed_attack_timer = player_context->attack_timer;
-        player_context->health_regen = 1; // 1 health per second
-        player_context->elapsed_health_regen = 0;
-        player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+        pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+        pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
+        pctx->direction = PLAYER_RIGHT; // default direction
+        pctx->health = 100;
+        pctx->strength = 10;
+        pctx->level = 1;
+        pctx->xp = 0;
+        pctx->start_position = entity_pos_get(game_context->player);
+        pctx->attack_timer = 0.1f;
+        pctx->elapsed_attack_timer = pctx->attack_timer;
+        pctx->health_regen = 1; // 1 health per second
+        pctx->elapsed_health_regen = 0;
+        pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
         // Set player username
-        if (!load_char("Flip-Social-Username", player_context->username, sizeof(player_context->username)))
+        if (!load_char("Flip-Social-Username", pctx->username, sizeof(pctx->username)))
         {
-            // If loading username fails, default to "Player"
-            snprintf(player_context->username, sizeof(player_context->username), "Player");
+            // check if data/player/username
+            if (!load_char("player/username", pctx->username, sizeof(pctx->username)))
+            {
+                // If loading username fails, default to "Player"
+                snprintf(pctx->username, sizeof(pctx->username), "Player");
+            }
         }
 
-        game_context->player_context = player_context;
+        game_context->player_context = pctx;
 
         // Save the initialized context
-        if (!save_player_context(player_context))
+        if (!save_player_context(pctx))
         {
             FURI_LOG_E(TAG, "Failed to save player context after initialization");
         }
@@ -101,13 +129,12 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
-    player_context->sprite_right = game_manager_sprite_load(manager, "player_right_sword_15x11px.fxbm");
-    player_context->sprite_left = game_manager_sprite_load(manager, "player_left_sword_15x11px.fxbm");
+    pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
+    pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
-    player_context->start_position = entity_pos_get(game_context->player);
+    pctx->start_position = entity_pos_get(game_context->player);
 
     // Update player stats based on XP using iterative method
-    // Function to get the current level based on XP iteratively
     int get_player_level_iterative(uint32_t xp)
     {
         int level = 1;
@@ -123,43 +150,52 @@ void player_spawn(Level *level, GameManager *manager)
     }
 
     // Determine the player's level based on XP
-    player_context->level = get_player_level_iterative(player_context->xp);
+    pctx->level = get_player_level_iterative(pctx->xp);
 
     // Update strength and max health based on the new level
-    player_context->strength = 10 + (player_context->level * 1);           // 1 strength per level
-    player_context->max_health = 100 + ((player_context->level - 1) * 10); // 10 health per level
+    pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
+    pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
     // Assign loaded player context to game context
-    game_context->player_context = player_context;
+    game_context->player_context = pctx;
 }
 
-// code from Derek Jamison
-// eventually we'll add dynamic positioning based on how much pitch/roll is detected
-// instead of assigning a fixed value
-static int player_x_from_pitch(float pitch)
+static int vgm_increase(float value, float increase)
 {
-    if (pitch > 6.0)
-    {
-        return 1;
-    }
-    else if (pitch < -8.0)
-    {
-        return -1;
-    }
-    return 0;
+    const int val = abs((int)(round(value + increase) / 2));
+    return val < 1 ? 1 : val;
 }
 
-static int player_y_from_roll(float roll)
+static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 {
-    if (roll > 9.0)
+    const float pitch = -imu_pitch_get(imu);
+    const float roll = -imu_roll_get(imu);
+    const float min_x = atof_(vgm_levels[vgm_x_index]) + 5.0; // minimum of 3
+    const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
+    if (pitch > min_x)
     {
-        return 1;
+        pos->x += vgm_increase(pitch, min_x);
+        player->dx = 1;
+        player->direction = PLAYER_RIGHT;
     }
-    else if (roll < -20.0)
+    else if (pitch < -min_x)
     {
-        return -1;
+        pos->x += -vgm_increase(pitch, min_x);
+        player->dx = -1;
+        player->direction = PLAYER_LEFT;
     }
-    return 0;
+    if (roll > min_y)
+    {
+        pos->y += vgm_increase(roll, min_y);
+        player->dy = 1;
+        player->direction = PLAYER_DOWN;
+    }
+    else if (roll < -min_y)
+    {
+        pos->y += -vgm_increase(roll, min_y);
+        player->dy = -1;
+        player->direction = PLAYER_UP;
+    }
 }
 
 static void player_update(Entity *self, GameManager *manager, void *context)
@@ -170,6 +206,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
+    player->old_position = pos;
     GameContext *game_context = game_manager_game_context_get(manager);
 
     // Store previous direction
@@ -182,36 +219,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     if (game_context->imu_present)
     {
-        player->dx = player_x_from_pitch(-imu_pitch_get(game_context->imu));
-        player->dy = player_y_from_roll(-imu_roll_get(game_context->imu));
-
-        switch (player->dx)
-        {
-        case -1:
-            player->direction = PLAYER_LEFT;
-            pos.x -= 1;
-            break;
-        case 1:
-            player->direction = PLAYER_RIGHT;
-            pos.x += 1;
-            break;
-        default:
-            break;
-        }
-
-        switch (player->dy)
-        {
-        case -1:
-            player->direction = PLAYER_UP;
-            pos.y -= 1;
-            break;
-        case 1:
-            player->direction = PLAYER_DOWN;
-            pos.y += 1;
-            break;
-        default:
-            break;
-        }
+        // update position using the IMU
+        vgm_direction(game_context->imu, player, &pos);
     }
 
     // Apply health regeneration
@@ -230,31 +239,143 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // Handle movement input
     if (input.held & GameKeyUp)
     {
-        pos.y -= 2;
-        player->dy = -1;
-        player->direction = PLAYER_UP;
-        game_context->user_input = GameKeyUp;
+        if (game_context->last_button == GameKeyUp)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        if (!game_context->is_menu_open)
+        {
+            pos.y -= (2 + game_context->icon_offset);
+            player->dy = -1;
+            player->direction = PLAYER_UP;
+        }
+        else
+        {
+            // next menu view
+            // we can only go up to info from settings
+            game_context->menu_screen = GAME_MENU_INFO;
+        }
+        game_context->last_button = GameKeyUp;
     }
     if (input.held & GameKeyDown)
     {
-        pos.y += 2;
-        player->dy = 1;
-        player->direction = PLAYER_DOWN;
-        game_context->user_input = GameKeyDown;
+        if (game_context->last_button == GameKeyDown)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        if (!game_context->is_menu_open)
+        {
+            pos.y += (2 + game_context->icon_offset);
+            player->dy = 1;
+            player->direction = PLAYER_DOWN;
+        }
+        else
+        {
+            // next menu view
+            // we can only go down to more from info
+            game_context->menu_screen = GAME_MENU_MORE;
+        }
+        game_context->last_button = GameKeyDown;
     }
     if (input.held & GameKeyLeft)
     {
-        pos.x -= 2;
-        player->dx = -1;
-        player->direction = PLAYER_LEFT;
-        game_context->user_input = GameKeyLeft;
+        if (game_context->last_button == GameKeyLeft)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        if (!game_context->is_menu_open)
+        {
+            pos.x -= (2 + game_context->icon_offset);
+            player->dx = -1;
+            player->direction = PLAYER_LEFT;
+        }
+        else
+        {
+            // if the menu is open, move the selection left
+            if (game_context->menu_selection < 1)
+            {
+                game_context->menu_selection += 1;
+            }
+        }
+        game_context->last_button = GameKeyLeft;
     }
     if (input.held & GameKeyRight)
     {
-        pos.x += 2;
-        player->dx = 1;
-        player->direction = PLAYER_RIGHT;
-        game_context->user_input = GameKeyRight;
+        if (game_context->last_button == GameKeyRight)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        if (!game_context->is_menu_open)
+        {
+            pos.x += (2 + game_context->icon_offset);
+            player->dx = 1;
+            player->direction = PLAYER_RIGHT;
+        }
+        else
+        {
+            // if the menu is open, move the selection right
+            if (game_context->menu_selection < 1)
+            {
+                game_context->menu_selection += 1;
+            }
+        }
+        game_context->last_button = GameKeyRight;
+    }
+    if (input.held & GameKeyOk)
+    {
+        if (game_context->last_button == GameKeyOk)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        game_context->last_button = GameKeyOk;
+
+        // if all enemies are dead, allow the "OK" button to switch levels
+        // otherwise the "OK" button will be used to attack
+        if (game_context->enemy_count == 0 && !game_context->is_switching_level)
+        {
+            game_context->is_switching_level = true;
+            save_player_context(player);
+            game_manager_next_level_set(manager, next_level(manager));
+            return;
+        }
+
+        // if the OK button is held for 1 seconds,show the menu
+        if (game_context->elapsed_button_timer > (1 * game_context->fps))
+        {
+            // open up menu on the INFO screen
+            game_context->menu_screen = GAME_MENU_INFO;
+            game_context->menu_selection = 0;
+            game_context->is_menu_open = true;
+        }
+    }
+    if (input.held & GameKeyBack)
+    {
+        if (game_context->last_button == GameKeyBack)
+            game_context->elapsed_button_timer += 1;
+        else
+            game_context->elapsed_button_timer = 0;
+
+        game_context->last_button = GameKeyBack;
+
+        if (game_context->is_menu_open)
+        {
+            game_context->is_menu_open = false;
+        }
+
+        // if the back button is held for 1 seconds, stop the game
+        if (game_context->elapsed_button_timer > (1 * game_context->fps))
+        {
+            if (!game_context->is_menu_open)
+            {
+                game_manager_game_stop(manager);
+                return;
+            }
+        }
     }
 
     // Clamp the player's position to stay within world bounds
@@ -264,59 +385,35 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // Update player position
     entity_pos_set(self, pos);
 
-    // switch levels if holding OK
-    if (input.pressed & GameKeyOk)
-    {
-        // if all enemies are dead, allow the "OK" button to switch levels
-        // otherwise the "OK" button will be used to attack
-        if (game_context->enemy_count == 0)
-        {
-            FURI_LOG_I(TAG, "Switching levels");
-            save_player_context(player);
-            game_manager_next_level_set(manager, get_next_level(manager));
-            furi_delay_ms(500);
-            return;
-        }
-        else
-        {
-            game_context->user_input = GameKeyOk;
-            // furi_delay_ms(100);
-        }
-    }
-
     // If the player is not moving, retain the last movement direction
     if (player->dx == 0 && player->dy == 0)
     {
         player->dx = prev_dx;
         player->dy = prev_dy;
         player->state = PLAYER_IDLE;
-        game_context->user_input = -1; // reset user input
     }
     else
-    {
         player->state = PLAYER_MOVING;
-    }
-
-    // Handle back button to stop the game
-    if (input.pressed & GameKeyBack)
-    {
-        game_manager_game_stop(manager);
-    }
 }
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
 {
-    UNUSED(manager);
-    if (!self || !context || !canvas)
+    if (!self || !context || !canvas || !manager)
         return;
+
     // Get player context
     PlayerContext *player = context;
 
     // Get player position
     Vector pos = entity_pos_get(self);
 
-    // Draw background (updates camera_x and camera_y)
-    draw_background(canvas, pos);
+    // Calculate camera offset to center the player
+    camera_x = pos.x - (SCREEN_WIDTH / 2);
+    camera_y = pos.y - (SCREEN_HEIGHT / 2);
+
+    // Clamp camera position to prevent showing areas outside the world
+    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
+    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
     // Draw player sprite relative to camera, centered on the player's position
     canvas_draw_sprite(
@@ -325,6 +422,12 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         pos.x - camera_x - 5, // Center the sprite horizontally
         pos.y - camera_y - 5  // Center the sprite vertically
     );
+
+    // Draw the outer bounds adjusted by camera offset
+    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
+
+    // Draw the user stats (health, xp, and level)
+    background_render(canvas, manager);
 }
 
 const EntityDescription player_desc = {
@@ -363,31 +466,31 @@ static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_
 
 SpriteContext *get_sprite_context(const char *name)
 {
-    if (strcmp(name, "axe") == 0)
+    if (is_str(name, "axe"))
     {
         return sprite_generic_alloc("axe", false, 15, 11);
     }
-    else if (strcmp(name, "bow") == 0)
+    else if (is_str(name, "bow"))
     {
         return sprite_generic_alloc("bow", false, 13, 11);
     }
-    else if (strcmp(name, "naked") == 0)
+    else if (is_str(name, "naked"))
     {
         return sprite_generic_alloc("naked", false, 10, 10);
     }
-    else if (strcmp(name, "sword") == 0)
+    else if (is_str(name, "sword"))
     {
         return sprite_generic_alloc("sword", false, 15, 11);
     }
-    else if (strcmp(name, "cyclops") == 0)
+    else if (is_str(name, "cyclops"))
     {
         return sprite_generic_alloc("cyclops", true, 10, 11);
     }
-    else if (strcmp(name, "ghost") == 0)
+    else if (is_str(name, "ghost"))
     {
         return sprite_generic_alloc("ghost", true, 15, 15);
     }
-    else if (strcmp(name, "ogre") == 0)
+    else if (is_str(name, "ogre"))
     {
         return sprite_generic_alloc("ogre", true, 10, 13);
     }

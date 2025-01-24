@@ -11,11 +11,12 @@ static void game_start(GameManager *game_manager, void *ctx)
     // Do some initialization here, for example you can load score from storage.
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
-    game_context->fps = game_fps_choices_2[game_fps_index];
+    game_context->fps = atof_(fps_choices_str[fps_index]);
     game_context->player_context = NULL;
-    game_context->current_level = 0;
     game_context->ended_early = false;
+    game_context->current_level = 0;
     game_context->level_count = 0;
+    game_context->enemy_count = 0;
 
     // set all levels to NULL
     for (int i = 0; i < MAX_LEVELS; i++)
@@ -30,15 +31,16 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             if (i == 0)
             {
-                FURI_LOG_E("Game", "Failed to allocate level %d, loading default level", i);
                 game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
                 game_context->level_count = 1;
                 break;
             }
-            FURI_LOG_E("Game", "No more levels to load");
             break;
         }
-        game_context->level_count++;
+        else
+        {
+            game_context->level_count++;
+        }
     }
 
     // imu
@@ -74,7 +76,7 @@ static void game_stop(void *ctx)
         FURI_LOG_I("Game", "Game ending");
         if (!game_context->ended_early)
         {
-            easy_flipper_dialog("Game Over", "Thanks for playing Flip World!\nHit BACK then wait for\nthe game to save.");
+            easy_flipper_dialog("Game Over", "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
         }
         else
         {
