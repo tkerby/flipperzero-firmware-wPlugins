@@ -60,21 +60,26 @@ static bool picopass_device_save_file_seader(
         if(!flipper_format_write_hex(file, "Credential", pacs->credential, PICOPASS_BLOCK_LEN))
             break;
 
-        // Seader only captures 64 byte SIO so I'm going to leave it at that
-        uint8_t sio[64];
+        uint8_t start_block = 0;
 
         // TODO: save SR vs SE more properly
         if(pacs->sio) { // SR
-            for(uint8_t i = 0; i < 8; i++) {
-                memcpy(sio + (i * 8), card_data[10 + i].data, PICOPASS_BLOCK_LEN);
-            }
-            if(!flipper_format_write_hex(file, "SIO", sio, sizeof(sio))) break;
+            start_block = 10;
         } else if(pacs->se_enabled) { //SE
-            for(uint8_t i = 0; i < 8; i++) {
-                memcpy(sio + (i * 8), card_data[6 + i].data, PICOPASS_BLOCK_LEN);
-            }
-            if(!flipper_format_write_hex(file, "SIO", sio, sizeof(sio))) break;
+            start_block = 6;
         }
+
+        uint8_t sio[128];
+        size_t sio_length = card_data[start_block].data[1];
+        size_t block_count = (sio_length + PICOPASS_BLOCK_LEN - 1) / PICOPASS_BLOCK_LEN;
+        for(uint8_t i = 0; i < block_count; i++) {
+            memcpy(
+                sio + (i * PICOPASS_BLOCK_LEN),
+                card_data[start_block + i].data,
+                PICOPASS_BLOCK_LEN);
+        }
+        if(!flipper_format_write_hex(file, "SIO", sio, block_count * PICOPASS_BLOCK_LEN)) break;
+
         if(!flipper_format_write_hex(
                file, "Diversifier", card_data[PICOPASS_CSN_BLOCK_INDEX].data, PICOPASS_BLOCK_LEN))
             break;
