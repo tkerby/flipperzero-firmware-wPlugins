@@ -87,7 +87,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
 
     }
 
-    elements_button_down(canvas, "about");
+    //elements_button_down(canvas, "about");
 
 
 
