@@ -5,11 +5,13 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 
 ## 📸 Screenshots
 
-![Screenshot 1](screenshots/screenshot_1.png "Screenshot 1")
-![Screenshot 2](screenshots/screenshot_2.png "Screenshot 2")
-![Screenshot 3](screenshots/screenshot_3.png "Screenshot 3")
-![Screenshot 4](screenshots/screenshot_4.png "Screenshot 4")
 
+<p  align="center">
+<img src="screenshots/screenshot_1.png" width="40%" hspace="5">
+<img src="screenshots/screenshot_2.png" width="40%" hspace="0">
+<img src="screenshots/screenshot_3.png" width="40%" hspace="5">
+<img src="screenshots/screenshot_4.png" width="40%" hspace="0">
+</p>
 
 
 
@@ -32,5 +34,7 @@ If you don't want to build this application, just simply copy **flipper_cigarett
 - add content for "about"
 - include counter for cigarettes smoked
 - cancer progress-bar
+- add different cigarettes to choose from
 
 xoxo - MAZ <3
+
