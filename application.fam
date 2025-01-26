@@ -11,6 +11,6 @@ App(
     ],
     fap_icon_assets="images",
     fap_author="MAZ",
-    fap_version="0.1",
+    fap_version="0.1.1",
     fap_description="A well needed smoke break.",
 )
