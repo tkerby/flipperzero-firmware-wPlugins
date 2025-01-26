@@ -392,9 +392,9 @@ static bool logo_input_callback(InputEvent* event, void* ctx) {
             } else if(event->key == InputKeyBack) {
                 view_dispatcher_stop(app->view_dispatcher);
             } else if(event->key == InputKeyUp && app->logo_model->choise > 0) {
-                app->logo_model->choise--;
+                with_view_model(app->logo_view, LogoModel * model, { model->choise--; }, true);
             } else if(event->key == InputKeyDown && app->logo_model->choise < 2) {
-                app->logo_model->choise++;
+                with_view_model(app->logo_view, LogoModel * model, { model->choise++; }, true);
             }
         }
     }
@@ -603,7 +603,7 @@ App* app_alloc() {
         0,
         128,
         64,
-        "Well-known birds and pigs game. Aim the bird on a pigs and catch the all in three attempts\n\nauthor: @bmstr-ru\nhttps://github.com/bmstr-ru/furious-birds");
+        "Well-known birds and pigs game. Aim the bird on pigs and catch them all in three attempts\n\nauthor: @bmstr-ru\nhttps://github.com/bmstr-ru/furious-birds");
     view_set_previous_callback(widget_get_view(app->widget_about), navigation_menu_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, AppAboutView, widget_get_view(app->widget_about));
