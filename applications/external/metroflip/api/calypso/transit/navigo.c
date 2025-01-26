@@ -571,11 +571,24 @@ void show_navigo_special_event_info(NavigoCardSpecialEvent* event, FuriString* p
 }
 
 void show_navigo_contract_info(NavigoCardContract* contract, FuriString* parsed_data) {
+    // Core type and ticket info
     furi_string_cat_printf(parsed_data, "Type: %s\n", get_navigo_tariff(contract->tariff));
     if(contract->counter_present) {
         furi_string_cat_printf(parsed_data, "Remaining Tickets: %d\n", contract->counter.count);
         furi_string_cat_printf(parsed_data, "Last load: %d\n", contract->counter.last_load);
     }
+
+    // Validity period
+    furi_string_cat_printf(parsed_data, "Valid from: ");
+    locale_format_datetime_cat(parsed_data, &contract->start_date, false);
+    furi_string_cat_printf(parsed_data, "\n");
+    if(contract->end_date_available) {
+        furi_string_cat_printf(parsed_data, "\nto: ");
+        locale_format_datetime_cat(parsed_data, &contract->end_date, false);
+        furi_string_cat_printf(parsed_data, "\n");
+    }
+
+    // Serial number (if available)
     if(contract->serial_number_available) {
         furi_string_cat_printf(parsed_data, "TCN Number: %d\n", contract->serial_number);
     }
