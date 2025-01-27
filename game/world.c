@@ -68,7 +68,9 @@ bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *
                 atoi(furi_string_get_cstr(x)),
                 atoi(furi_string_get_cstr(y)),
                 count,
-                is_horizontal);
+                is_horizontal,
+                17 // set as 17 for now
+            );
         }
 
         furi_string_free(data);
@@ -105,11 +107,11 @@ void draw_town_world(GameManager *manager, Level *level)
     spawn_icon(manager, level, "fence_end", 72, 64);
 
     // line of fences on the 8th row (using spawn_icon_line)
-    spawn_icon_line(manager, level, "fence", 8, 96, 10, true);
+    spawn_icon_line(manager, level, "fence", 8, 96, 10, true, 17);
 
     // plants spaced out underneath the fences
-    spawn_icon_line(manager, level, "plant", 40, 110, 6, true);
-    spawn_icon_line(manager, level, "flower", 40, 140, 6, true);
+    spawn_icon_line(manager, level, "plant", 40, 110, 6, true, 17);
+    spawn_icon_line(manager, level, "flower", 40, 140, 6, true, 17);
 
     // man and woman
     spawn_icon(manager, level, "man", 156, 110);
@@ -134,23 +136,23 @@ void draw_town_world(GameManager *manager, Level *level)
     for (int i = 0; i < 2; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
+        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true, 17);
         // Vertical line of 11 icons
-        spawn_icon_line(manager, level, "tree", 5 + i * 17, 2, 11, false);
+        spawn_icon_line(manager, level, "tree", 5 + i * 17, 2, 11, false, 17);
     }
 
     // Spawn two full down tree lines
     for (int i = 9; i < 11; i++)
     {
         // Horizontal line of 22 icons
-        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
+        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true, 17);
     }
 
     // Spawn two full right tree lines
     for (int i = 20; i < 22; i++)
     {
         // Vertical line of 8 icons starting further down (y=50)
-        spawn_icon_line(manager, level, "tree", 5 + i * 17, 50, 8, false);
+        spawn_icon_line(manager, level, "tree", 5 + i * 17, 50, 8, false, 17);
     }
 }
 

@@ -57,29 +57,29 @@ void spawn_icon(GameManager *manager, Level *level, const char *icon_id, float x
     game_context->icon_count++;
 }
 // Draw a line of icons at a specific position (with collision detection)
-void spawn_icon_line(GameManager *manager, Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal)
+void spawn_icon_line(GameManager *manager, Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal, uint8_t spacing)
 {
     for (int i = 0; i < amount; i++)
     {
         if (horizontal)
         {
             // check if element is outside the world
-            if (x + (i * 17) > WORLD_WIDTH)
+            if (x + (i * spacing) > WORLD_WIDTH)
             {
                 break;
             }
 
-            spawn_icon(manager, level, icon_id, x + (i * 17), y);
+            spawn_icon(manager, level, icon_id, x + (i * spacing), y);
         }
         else
         {
             // check if element is outside the world
-            if (y + (i * 17) > WORLD_HEIGHT)
+            if (y + (i * spacing) > WORLD_HEIGHT)
             {
                 break;
             }
 
-            spawn_icon(manager, level, icon_id, x, y + (i * 17));
+            spawn_icon(manager, level, icon_id, x, y + (i * spacing));
         }
     }
 }
