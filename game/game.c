@@ -20,9 +20,7 @@ static void game_start(GameManager *game_manager, void *ctx)
 
     // set all levels to NULL
     for (int i = 0; i < MAX_LEVELS; i++)
-    {
         game_context->levels[i] = NULL;
-    }
 
     // attempt to allocate all levels
     for (int i = 0; i < MAX_LEVELS; i++)
@@ -38,9 +36,7 @@ static void game_start(GameManager *game_manager, void *ctx)
             break;
         }
         else
-        {
             game_context->level_count++;
-        }
     }
 
     // imu
@@ -55,36 +51,18 @@ static void game_start(GameManager *game_manager, void *ctx)
 */
 static void game_stop(void *ctx)
 {
-    if (!ctx)
-    {
-        FURI_LOG_E("Game", "Invalid game context");
-        return;
-    }
-
+    furi_check(ctx);
     GameContext *game_context = ctx;
-    if (!game_context)
-    {
-        FURI_LOG_E("Game", "Game context is NULL");
-        return;
-    }
-
     imu_free(game_context->imu);
     game_context->imu = NULL;
 
     if (game_context->player_context)
     {
-        FURI_LOG_I("Game", "Game ending");
         if (!game_context->ended_early)
-        {
             easy_flipper_dialog("Game Over", "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
-        }
         else
-        {
             easy_flipper_dialog("Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
-        }
-        FURI_LOG_I("Game", "Saving player context");
         save_player_context_api(game_context->player_context);
-        FURI_LOG_I("Game", "Player context saved");
         easy_flipper_dialog("Game Saved", "Hit BACK to exit.");
     }
 }

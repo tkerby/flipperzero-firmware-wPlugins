@@ -1,3 +1,7 @@
+## 0.5 (2025-01-27)
+- Fixed saving errors.
+- Improved memory allocation.
+
 ## 0.4 (2025-01-23)
 - Added an In-Game menu.
 - Added New controls (HOLD OK to access the In-Game menu, PRESS BACK to exit the menu, and HOLD BACK to leave the game).
