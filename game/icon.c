@@ -116,22 +116,10 @@ static IconContext *icon_generic_alloc(const char *id, const Icon *icon, uint8_t
 
 IconContext *get_icon_context(const char *name)
 {
-    // if (is_str(name, "earth") )
-    // {
-    //     return icon_generic_alloc("earth", &I_icon_earth_15x16, 15, 16);
-    // }
-    // else if (is_str(name, "home") )
-    // {
-    //     return icon_generic_alloc("home", &I_icon_home_15x16, 15, 16);
-    // }
     if (is_str(name, "house"))
     {
         return icon_generic_alloc("house", &I_icon_house_48x32px, 48, 32);
     }
-    // else if (is_str(name, "house_3d") )
-    // {
-    //     return icon_generic_alloc("house_3d", &I_icon_house_3d_34x45px, 34, 45);
-    // }
     // else if (is_str(name, "info") )
     // {
     //     return icon_generic_alloc("info", &I_icon_info_15x16, 15, 16);
@@ -248,22 +236,10 @@ IconContext *get_icon_context(const char *name)
 
 const char *icon_get_id(const Icon *icon)
 {
-    // if (icon == &I_icon_earth_15x16)
-    // {
-    //     return "earth";
-    // }
-    // else if (icon == &I_icon_home_15x16)
-    // {
-    //     return "home";
-    // }
     if (icon == &I_icon_house_48x32px)
     {
         return "house";
     }
-    // else if (icon == &I_icon_house_3d_34x45px)
-    // {
-    //     return "house_3d";
-    // }
     // else if (icon == &I_icon_info_15x16)
     // {
     //     return "info";

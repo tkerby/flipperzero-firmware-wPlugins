@@ -46,33 +46,6 @@ void draw_username(Canvas *canvas, Vector pos, char *username)
     canvas_draw_str(canvas, pos.x - camera_x - (strlen(username) * 2), pos.y - camera_y - 7, username);
 }
 
-// Draw a line of icons (16 width)
-void draw_icon_line(Canvas *canvas, Vector pos, int amount, bool horizontal, const Icon *icon)
-{
-    for (int i = 0; i < amount; i++)
-    {
-        if (horizontal)
-        {
-            // check if element is outside the world
-            if (pos.x + (i * 17) > WORLD_WIDTH)
-            {
-                break;
-            }
-
-            canvas_draw_icon(canvas, pos.x + (i * 17) - camera_x, pos.y - camera_y, icon);
-        }
-        else
-        {
-            // check if element is outside the world
-            if (pos.y + (i * 17) > WORLD_HEIGHT)
-            {
-                break;
-            }
-
-            canvas_draw_icon(canvas, pos.x - camera_x, pos.y + (i * 17) - camera_y, icon);
-        }
-    }
-}
 char g_name[32];
 // Draw an icon at a specific position (with collision detection)
 void spawn_icon(GameManager *manager, Level *level, const char *icon_id, float x, float y)
