@@ -12,7 +12,7 @@
 #include <stdlib.h>
 
 #include "drivers/sk6805.h"
-#include <assets_icons.h>
+//#include <assets_icons.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 

@@ -27,7 +27,6 @@
 #if !defined(_CRT_SECURE_NO_DEPRECATE) && defined(_MSC_VER)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
-
 #ifdef __GNUC__
 #pragma GCC visibility push(default)
 #endif
@@ -36,7 +35,7 @@
 /* disable warning about single line comments in system headers */
 #pragma warning(disable : 4001)
 #endif
-
+#include <furi.h>
 #include <ctype.h>
 #include <float.h>
 #include <limits.h>
@@ -336,8 +335,12 @@ static cJSON_bool parse_number(cJSON* const item, parse_buffer* const input_buff
     unsigned char number_c_string[64];
     unsigned char decimal_point = get_decimal_point();
     size_t i = 0;
+    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+    FURI_LOG_E(__FUNCTION__,"PARSE NUMBER");
 
     if((input_buffer == NULL) || (input_buffer->content == NULL)) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"NUMBER NULL");
         return false;
     }
 
@@ -373,9 +376,12 @@ static cJSON_bool parse_number(cJSON* const item, parse_buffer* const input_buff
     }
 loop_end:
     number_c_string[i] = '\0';
-
+    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+    FURI_LOG_E(__FUNCTION__,"LOOP_END");
     number = string_to_double((const char*)number_c_string, (char**)&after_end);
     if(number_c_string == after_end) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"AFTER END");
         return false; /* parse_error */
     }
 
@@ -735,8 +741,12 @@ static cJSON_bool parse_string(cJSON* const item, parse_buffer* const input_buff
               (*input_end != '\"')) {
             /* is escape sequence */
             if(input_end[0] == '\\') {
+              FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+              FURI_LOG_E(__FUNCTION__,"BACKSLASH");
                 if((size_t)(input_end + 1 - input_buffer->content) >= input_buffer->length) {
                     /* prevent buffer overflow when last input character is a backslash */
+                    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+                    FURI_LOG_E(__FUNCTION__,"BUFFERLENGTH");
                     goto fail;
                 }
                 skipped_bytes++;
@@ -744,8 +754,11 @@ static cJSON_bool parse_string(cJSON* const item, parse_buffer* const input_buff
             }
             input_end++;
         }
+
         if(((size_t)(input_end - input_buffer->content) >= input_buffer->length) ||
            (*input_end != '\"')) {
+             FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+             FURI_LOG_E(__FUNCTION__,"NOEND");
             goto fail; /* string ended unexpectedly */
         }
 
@@ -1034,8 +1047,10 @@ cJSON_ParseWithLengthOpts(
     {
         goto fail;
     }
+    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
 
     if(!parse_value(item, buffer_skip_whitespace(skip_utf8_bom(&buffer)))) {
+        FURI_LOG_E(__FUNCTION__,"buffer: %s ", buffer.content);
         /* parse failure. ep is set. */
         goto fail;
     }
@@ -1203,6 +1218,9 @@ cJSON_PrintPreallocated(cJSON* item, char* buffer, const int length, const cJSON
 /* Parser core - when encountering text, process appropriately. */
 static cJSON_bool parse_value(cJSON* const item, parse_buffer* const input_buffer) {
     if((input_buffer == NULL) || (input_buffer->content == NULL)) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"input_buffer == NULL");
+
         return false; /* no input */
     }
 
@@ -1231,20 +1249,30 @@ static cJSON_bool parse_value(cJSON* const item, parse_buffer* const input_buffe
     }
     /* string */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '\"')) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"can_access_at_index \"");
+
         return parse_string(item, input_buffer);
     }
     /* number */
     if(can_access_at_index(input_buffer, 0) && ((buffer_at_offset(input_buffer)[0] == '-') ||
                                                 ((buffer_at_offset(input_buffer)[0] >= '0') &&
                                                  (buffer_at_offset(input_buffer)[0] <= '9')))) {
+
         return parse_number(item, input_buffer);
     }
     /* array */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '[')) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"can_access_at_index [");
+
         return parse_array(item, input_buffer);
     }
     /* object */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '{')) {
+      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
+      FURI_LOG_E(__FUNCTION__,"can_access_at_index {");
+
         return parse_object(item, input_buffer);
     }
 

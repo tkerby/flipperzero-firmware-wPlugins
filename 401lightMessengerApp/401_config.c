@@ -96,7 +96,7 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
     FURI_LOG_I(TAG, "[config_to_json] cJSON_Print");
 
     // Convert cJSON object to string
-    char* string = cJSON_Print(json);
+    char* string = cJSON_PrintUnformatted(json);
     if(string == NULL) {
         cJSON_Delete(json);
         return L401_ERR_INTERNAL;
@@ -135,13 +135,13 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     }
 
     cJSON* json = cJSON_Parse(jsontxt);
-    if(json == NULL) {
+    /*if(json == NULL) {
         const char* error_ptr = cJSON_GetErrorPtr();
         if(error_ptr != NULL) {
             FURI_LOG_E(TAG, "cJSON Parse error: Error before: %s\n", error_ptr);
         }
         return L401_ERR_PARSE;
-    }
+    }*/
 
     cJSON* json_version = cJSON_GetObjectItemCaseSensitive(json, "version");
     cJSON* json_text = cJSON_GetObjectItemCaseSensitive(json, "text");

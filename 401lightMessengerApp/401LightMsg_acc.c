@@ -9,8 +9,8 @@
 #include "401LightMsg_config.h"
 #include "bmp.h"
 #include "font.h"
-#include "gui/gui_i.h"
-#include "gui/view_dispatcher_i.h"
+#include "gui/gui.h"
+#include "gui/view_dispatcher.h"
 #define PI  3.14159
 #define PI3 PI / 3
 
@@ -164,7 +164,7 @@ int32_t app_acc_worker(void* ctx) {
     AppContext* app = (AppContext*)ctx; // Main app struct
     AppAcc* appAcc = (AppAcc*)app->sceneAcc;
     AppData* appData = (AppData*)app->data;
-    Canvas* canvas = app->view_dispatcher->gui->canvas;
+    //Canvas* canvas = app->view_dispatcher->gui->canvas;
     Configuration* light_msg_data = (Configuration*)appData->config;
     bitmapMatrix* bitmapMatrix = appAcc->bitmapMatrix;
 
@@ -186,11 +186,6 @@ int32_t app_acc_worker(void* ctx) {
 
     // The shader updating function is the callback associated to the "color"
     color_animation_callback shader = appData->shader;
-
-    canvas_clear(canvas);
-    canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_swipe);
-    canvas_draw_icon(canvas, 43, 46, &I_401_lghtmsg_arrow);
-    canvas_commit(canvas);
 
     while(running) {
         // Checks if the thread must be ended.
@@ -288,6 +283,14 @@ int32_t app_acc_worker(void* ctx) {
     return 0;
 }
 
+void app_acc_render_callback(Canvas* canvas, void* model) {
+      UNUSED(model);
+      canvas_clear(canvas);
+      canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_swipe);
+      canvas_draw_icon(canvas, 43, 46, &I_401_lghtmsg_arrow);
+      canvas_commit(canvas);
+}
+
 /**
  * Allocates an instance of AppAcc.
  *
@@ -317,6 +320,7 @@ AppAcc* app_acc_alloc(void* ctx) {
 
     view_set_context(appAcc->view, appAcc);
     view_set_input_callback(appAcc->view, app_acc_input_callback);
+    view_set_draw_callback(appAcc->view, app_acc_render_callback);
 
     return appAcc;
 }
@@ -463,8 +467,8 @@ void app_scene_acc_on_exit(void* ctx) {
     furi_assert(ctx);
     AppContext* app = ctx;
     AppAcc* appAcc = (AppAcc*)app->sceneAcc;
-    Canvas* canvas = app->view_dispatcher->gui->canvas;
-    canvas_reset(canvas);
+    //Canvas* canvas = app->view_dispatcher->gui->canvas;
+    //canvas_reset(canvas);
 
     if(appAcc->accThread != NULL) {
         furi_thread_flags_set(furi_thread_get_id(appAcc->accThread), 1);

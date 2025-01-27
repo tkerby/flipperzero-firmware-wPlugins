@@ -7,11 +7,12 @@
 #ifndef _401LIGHTMSG_SCENE_ACC_H
 #define _401LIGHTMSG_SCENE_ACC_H
 #include "bmp.h"
-#include "drivers/sk6805.h"
 #include "font.h"
-#include <dialogs/dialogs.h>
-#include <furi.h>
 #include <furi_hal.h>
+#include <furi.h>
+#include "drivers/sk6805.h"
+#include <dialogs/dialogs.h>
+#include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <stdbool.h>
 #include <stdint.h>

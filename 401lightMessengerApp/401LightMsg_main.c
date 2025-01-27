@@ -6,7 +6,7 @@
  */
 #include "401LightMsg_main.h"
 
-#include <assets_icons.h>
+//#include <assets_icons.h>
 static const char* TAG = "401_LightMsg";
 /**
  * Handles input events for the app.

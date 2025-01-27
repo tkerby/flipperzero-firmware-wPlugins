@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <assets_icons.h>
+//#include <assets_icons.h>
 #include <401_light_msg_icons.h>
 #include "401_err.h"
 

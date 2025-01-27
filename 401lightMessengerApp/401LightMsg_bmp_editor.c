@@ -70,7 +70,7 @@ void bmp_compute_model(AppBmpEditor* BmpEditor, bmpEditorData* BmpEditorData) {
         ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) *
          BmpEditorData->bmp_h) +
         (BmpEditorData->bmp_frame_spacing * 2) + 1;
-    BmpEditorData->bmp_frame_x = (GUI_DISPLAY_WIDTH - BmpEditorData->bmp_frame_w) >> 1;
+    BmpEditorData->bmp_frame_x = (128 - BmpEditorData->bmp_frame_w) >> 1;
     BmpEditorData->bmp_frame_y = 0;
 }
 
