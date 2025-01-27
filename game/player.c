@@ -95,6 +95,7 @@ void player_spawn(Level *level, GameManager *manager)
         pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
         pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
         pctx->direction = PLAYER_RIGHT; // default direction
+        pctx->left = false;             // default sprite direction
         pctx->health = 100;
         pctx->strength = 10;
         pctx->level = 1;
@@ -155,6 +156,9 @@ void player_spawn(Level *level, GameManager *manager)
     // Update strength and max health based on the new level
     pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
     pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
+
+    // set the player's left sprite direction
+    pctx->left = pctx->direction == PLAYER_LEFT ? true : false;
 
     // Assign loaded player context to game context
     game_context->player_context = pctx;
@@ -415,13 +419,27 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
     camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
-    // Draw player sprite relative to camera, centered on the player's position
-    canvas_draw_sprite(
-        canvas,
-        player->direction == PLAYER_RIGHT ? player->sprite_right : player->sprite_left,
-        pos.x - camera_x - 5, // Center the sprite horizontally
-        pos.y - camera_y - 5  // Center the sprite vertically
-    );
+    // if player is moving right or left, draw the corresponding sprite
+    if (player->direction == PLAYER_RIGHT || player->direction == PLAYER_LEFT)
+    {
+        canvas_draw_sprite(
+            canvas,
+            player->direction == PLAYER_RIGHT ? player->sprite_right : player->sprite_left,
+            pos.x - camera_x - 5, // Center the sprite horizontally
+            pos.y - camera_y - 5  // Center the sprite vertically
+        );
+        player->left = false;
+    }
+    else // otherwise
+    {
+        // Default to last sprite direction
+        canvas_draw_sprite(
+            canvas,
+            player->left ? player->sprite_left : player->sprite_right,
+            pos.x - camera_x - 5, // Center the sprite horizontally
+            pos.y - camera_y - 5  // Center the sprite vertically
+        );
+    }
 
     // Draw the outer bounds adjusted by camera offset
     canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);

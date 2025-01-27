@@ -45,6 +45,7 @@ typedef struct
     float attack_timer;         // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
     char username[32];          // player username
+    bool left;                  // track player sprite direction
 } PlayerContext;
 
 // two screens for the game menu
