@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0125-2301-0.420.0-a5a760a](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0126-2336-0.420.0-3bbf39e](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-25 23:01 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-25 23:01 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-26 23:36 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-26 23:36 EST`
 - [IR: Easy Learn & Learn RAW toggles in Learn screen (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d04186c3ec4e6efba1b0c6370572a2969cbbcbb6)
 - Updated: [Drifter v0.1 (By jean-edouard)](https://github.com/jean-edouard/drifter)
 - Updated: [FlipWorld v0.4 (By jblanked)](https://github.com/jblanked/FlipWorld)
@@ -39,7 +39,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Furious Birds v1.0 (By bmstr-ru)](https://github.com/bmstr-ru/furious-birds)
 - Updated: [Metroflip v0.4.11 (By luu176)](https://github.com/luu176/Metroflip)
 - Added: [Cigarette v0.1.2 (By fuckmaz)](https://github.com/fuckmaz/flipper-cigarette)
-- Added: [Game of Life v1.3 (By Mad-MO)](https://github.com/Mad-MO/FlipperGoL)
+- Updated: [Game of Life v1.3 (By Mad-MO)](https://github.com/Mad-MO/FlipperGoL)
 - Updated: [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - Updated: [NFC E-Ink Tags v1.0.4 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-good-faps/pull/245)
 - Updated: [Ghost ESP v1.2.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app)
