@@ -112,10 +112,6 @@ IconContext *get_icon_context(const char *name)
         return icon_generic_alloc("man", &I_icon_man_7x16, 7, 16);
     else if (is_str(name, "plant"))
         return icon_generic_alloc("plant", &I_icon_plant_16x16, 16, 16);
-    // else if (is_str(name, "plant_fern") )
-    //     return icon_generic_alloc("plant_fern", &I_icon_plant_fern_18x16px, 18, 16);
-    // else if (is_str(name, "plant_pointy") )
-    //     return icon_generic_alloc("plant_pointy", &I_icon_plant_pointy_13x16px, 13, 16);
     else if (is_str(name, "tree"))
         return icon_generic_alloc("tree", &I_icon_tree_16x16, 16, 16);
     else if (is_str(name, "woman"))
@@ -166,10 +162,6 @@ const char *icon_get_id(const Icon *icon)
         return "man";
     else if (icon == &I_icon_plant_16x16)
         return "plant";
-    // else if (icon == &I_icon_plant_fern_18x16px)
-    //     return "plant_fern";
-    // else if (icon == &I_icon_plant_pointy_13x16px)
-    //     return "plant_pointy";
     else if (icon == &I_icon_tree_16x16)
         return "tree";
     else if (icon == &I_icon_woman_9x16)
