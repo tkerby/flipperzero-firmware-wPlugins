@@ -9,6 +9,9 @@
 
 #undef FURI_LOG_I
 #define FURI_LOG_I(tag, msg, ...)
+
+#undef FURI_LOG_D
+#define FURI_LOG_D(tag, msg, ...)
 //
 
 #define TAG "FlipWorld"

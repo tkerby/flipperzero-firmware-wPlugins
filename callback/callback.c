@@ -184,9 +184,7 @@ static void about_draw_callback(Canvas *canvas, void *model)
 {
     UNUSED(model);
     canvas_clear(canvas);
-    // canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
     canvas_draw_str(canvas, 0, 10, VERSION_TAG);
-    // canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
     canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
     canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
     canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
