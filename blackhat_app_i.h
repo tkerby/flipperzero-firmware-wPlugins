@@ -28,6 +28,7 @@
 #define LIST_AP_CMD "bh wifi list"
 #define DEV_CMD "bh wifi dev"
 #define START_AP_CMD "bh wifi ap"
+#define START_KISMET_CMD "bh kismet"
 #define GET_IP_CMD "bh wifi ip"
 #define START_SSH_CMD "bh ssh"
 #define ST_EVIL_TWIN_CMD "bh evil_twin"
