@@ -729,15 +729,14 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
         return false;
     }
-    // Create the directory for saving worlds
-    char directory_path[128];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
 
-    // Create the directory
+    // ensure flip_world directory exists
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
     Storage *storage = furi_record_open(RECORD_STORAGE);
     storage_common_mkdir(storage, directory_path);
-
-    // free storage
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+    storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 
     snprintf(
@@ -767,11 +766,22 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
     }
     char url[128];
     snprintf(url, sizeof(url), "https://www.flipsocial.net/api/user/game-stats/%s/", username);
+
+    // ensure the folders exist
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data");
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player");
+    storage_common_mkdir(storage, directory_path);
+    furi_record_close(RECORD_STORAGE);
+
     snprintf(
         fhttp->file_path,
         sizeof(fhttp->file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
-
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
 }
@@ -1156,7 +1166,7 @@ void callback_submenu_choices(void *context, uint32_t index)
     {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true, true);
-        if (!is_enough_heap(45000)) // lowered from 60k to 45k since we saved 15k bytes
+        if (!is_enough_heap(50000))
         {
             easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
             return;
@@ -1582,12 +1592,11 @@ static bool _fetch_worlds(DataLoaderModel *model)
         FURI_LOG_E(TAG, "model or fhttp is NULL");
         return false;
     }
-    // Create the directory for saving settings
-    char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-
-    // Create the directory
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
     Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
     snprintf(
