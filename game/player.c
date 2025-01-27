@@ -68,9 +68,6 @@ void player_spawn(Level *level, GameManager *manager)
     // Set player position.
     entity_pos_set(game_context->player, (Vector){WORLD_WIDTH / 2, WORLD_HEIGHT / 2});
 
-    // Box is centered in player x and y, and its size
-    entity_collider_add_rect(game_context->player, 13, 11);
-
     // Get player context
     PlayerContext *pctx = entity_context_get(game_context->player);
     if (!pctx)
@@ -85,6 +82,9 @@ void player_spawn(Level *level, GameManager *manager)
         FURI_LOG_E(TAG, "Failed to get sprite context");
         return;
     }
+
+    // add a collider to the player entity
+    entity_collider_add_rect(game_context->player, sprite_context->width, sprite_context->height);
 
     // player context must be set each level or NULL pointer will be dereferenced
     if (!load_player_context(pctx))
@@ -129,7 +129,7 @@ void player_spawn(Level *level, GameManager *manager)
         return;
     }
 
-    // Load player sprite (we'll add this to the JSON later when players can choose their sprite)
+    // Load player sprite
     pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
     pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
