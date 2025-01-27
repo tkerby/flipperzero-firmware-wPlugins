@@ -62,6 +62,7 @@ typedef struct {
   uint32_t highscore;
 
   uint8_t dead;
+  uint8_t verydead;
 } DrifterState;
 
 typedef enum {
@@ -205,6 +206,7 @@ static void drifter_game_init_state(DrifterState* const drifter_state) {
   drifter_state->increment = SCORE_INC_START;
 
   drifter_state->dead = 0;
+  drifter_state->verydead = 0;
 }
 
 static void drifter_game_init_game(DrifterState* const drifter_state) {
@@ -226,28 +228,20 @@ static void drifter_game_init_game(DrifterState* const drifter_state) {
 static void drifter_game_process_game_step(DrifterState* const drifter_state) {
   UNUSED(drifter_state);
 
-  static uint8_t already_dead = 0;
-
   // Just died
-  if (!already_dead && drifter_state->dead) {
+  if (drifter_state->dead && !drifter_state->verydead) {
     uint32_t score = drifter_state->score;
     if (score > drifter_state->highscore) {
       drifter_state->highscore = score;
       save_highscore(score);
     }
-    already_dead = 1;
-    return;
+    drifter_state->verydead = 1;
   }
 
-  // Long dead
   if (drifter_state->dead) {
     return;
   }
 
-  // Back to life
-  if (already_dead && !drifter_state->dead) {
-    already_dead = 0;
-  }
   uint8_t head = drifter_state->head;
   uint8_t new = drifter_state->map[head];
   if (head == 0) {
