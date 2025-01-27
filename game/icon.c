@@ -120,10 +120,6 @@ IconContext *get_icon_context(const char *name)
     {
         return icon_generic_alloc("house", &I_icon_house_48x32px, 48, 32);
     }
-    // else if (is_str(name, "info") )
-    // {
-    //     return icon_generic_alloc("info", &I_icon_info_15x16, 15, 16);
-    // }
     else if (is_str(name, "man"))
     {
         return icon_generic_alloc("man", &I_icon_man_7x16, 7, 16);
@@ -144,14 +140,6 @@ IconContext *get_icon_context(const char *name)
     {
         return icon_generic_alloc("tree", &I_icon_tree_16x16, 16, 16);
     }
-    // else if (is_str(name, "tree_29x30") )
-    // {
-    //     return icon_generic_alloc("tree_29x30", &I_icon_tree_29x30px, 29, 30);
-    // }
-    // else if (is_str(name, "tree_48x48") )
-    // {
-    //     return icon_generic_alloc("tree_48x48", &I_icon_tree_48x48px, 48, 48);
-    // }
     else if (is_str(name, "woman"))
     {
         return icon_generic_alloc("woman", &I_icon_woman_9x16, 9, 16);
@@ -240,10 +228,6 @@ const char *icon_get_id(const Icon *icon)
     {
         return "house";
     }
-    // else if (icon == &I_icon_info_15x16)
-    // {
-    //     return "info";
-    // }
     else if (icon == &I_icon_man_7x16)
     {
         return "man";
@@ -264,14 +248,6 @@ const char *icon_get_id(const Icon *icon)
     {
         return "tree";
     }
-    // else if (icon == &I_icon_tree_29x30px)
-    // {
-    //     return "tree_29x30";
-    // }
-    // else if (icon == &I_icon_tree_48x48px)
-    // {
-    //     return "tree_48x48";
-    // }
     else if (icon == &I_icon_woman_9x16)
     {
         return "woman";
