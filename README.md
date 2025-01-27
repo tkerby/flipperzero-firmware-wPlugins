@@ -20,14 +20,14 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 
 Assuming the toolchain is already installed, copy **flipper_cigarette** directory to **applications_user**
 
-Plug your **Flipper Zero** and build the flipper cigarette:
+Plug in your **Flipper Zero** and build the app:
 ```
 ./fbt launch_app APPSRC=applications_user/flipper_cigarette
 ```
 
-The program will automatically be launched after compilation
+The app will automatically be launched after compilation.
 
-If you don't want to build this application, just simply copy **flipper_cigarette.fap** on your **Flipper Zero** 
+If you don't want to build this application yourself just copy **flipper_cigarette.fap** from the latest release onto your **Flipper Zero** 
 
 ## TODO
 
