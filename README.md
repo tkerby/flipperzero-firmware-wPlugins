@@ -37,7 +37,7 @@ Here is the list of displays wich app supports now:
 **Waveshare emulation by Proxmark**:
 1. On Flipper select Emulate->Waveshare
 2. Put Flipper close to Proxmark
-3. On proxmark use such command  `hf waveshare loadbmp -f <path_to_file.bmp> -m 0`
+3. On proxmark use such command  `` `hf waveshare loadbmp -f <path_to_file.bmp> -m 0` ``
 
 ## Writing
 
