@@ -123,12 +123,8 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
   for (int i = 0; i <= YMAX; ++i) {
     uint8_t val = drifter_state->map[pos];
     uint8_t gap = drifter_state->gap;
-    if (val > 0) {
-      canvas_draw_line(canvas, 0, i, val, i);
-    }
-    if (val < XMAX) {
-      canvas_draw_line(canvas, val + gap, i, XMAX, i);
-    }
+    canvas_draw_line(canvas, 0, i, val, i);
+    canvas_draw_line(canvas, val + gap, i, XMAX, i);
     // Handle collisions here instead of adding a loop to game step function
     if (((i >= 58 && i <= 59) && (val >= boat+1 || val + gap <= boat+2)) ||
 	((i >= 60 && i <= 63) && (val >= boat+0 || val + gap <= boat+3)))
