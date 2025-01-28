@@ -1,2 +1,2 @@
-# VGM-Library
- Collection of files for the Video Game Module
+## VGM-Library
+Collection of files for the Video Game Module
