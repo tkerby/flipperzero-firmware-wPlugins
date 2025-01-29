@@ -22,3 +22,5 @@ While the following screen is shown, the LED on Flipper Zero blinks in red color
 
 ## Development
 Use [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) to flash the code to Flipper. Execute `ufbt` or `ufbt launch`.
+
+I used the following [website](https://www.moodlight.org/#0) to verify with my __caveman eye__ that the frequency of blinking LED matches the config.
