@@ -14,12 +14,12 @@ namespace VGMGameEngine
 #define BUTTON_START 6
 
     /*
-    # Wiring (HW504 -> Pico):
-    # SW -> GP17 (Pin 22 - TX)
-    # VRx -> GP27 (Pin 32 - ADC1)
-    # VRy -> GP26 (Pin 31 - ADC0)
+    # Wiring (HW504 -> VGM):
+    # SW -> GP21
+    # VRx -> GP27
+    # VRy -> GP26
     # GND -> GND
-    # 5V -> VSYS (Pin 39)
+    # 5V -> 3v3
     */
 
 #define HW_LEFT_BUTTON 0
@@ -41,7 +41,7 @@ namespace VGMGameEngine
         int orientation;
         int button;
 
-        HW504(int x_pin = 26, int y_pin = 27, int button_pin = 17, int orientation = HW_ORIENTATION_NORMAL);
+        HW504(int x_pin = 26, int y_pin = 27, int button_pin = 21, int orientation = HW_ORIENTATION_NORMAL);
         Vector axes();                             // Read the raw ADC values from both axes and transform them based on the current orientation.
         bool value(int button = HW_CENTER_BUTTON); // Return the state of a button based on the transformed x,y axis values.
 
@@ -49,6 +49,16 @@ namespace VGMGameEngine
         int _button(); // Read the button value from the joystick
         int _x_axis(); // Return the transformed x-axis value
         int _y_axis(); // Return the transformed y-axis value
+    };
+
+    class ButtonUART
+    {
+    public:
+        ButtonUART();
+        bool value(int button = BUTTON_CENTER);
+
+    private:
+        SerialPIO *serial;
     };
 
     class Input
@@ -59,14 +69,16 @@ namespace VGMGameEngine
         float elapsed_time;
         bool was_pressed;
         HW504 *hw;
+        ButtonUART *bt;
         Input();
         Input(int pin, int button);
         Input(HW504 *hw, int button);
+        Input(ButtonUART *bt, int button);
         bool is_pressed();
         bool is_held(int duration = 3);
         void run();
 
-        operator bool() const; // Allow testing “if (input)” to check for a valid input.
+        operator bool() const;
     };
 
 }

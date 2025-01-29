@@ -75,8 +75,36 @@ namespace VGMGameEngine
         }
     }
 
+    ButtonUART::ButtonUART()
+    {
+        this->serial = new SerialPIO(0, 1);
+        this->serial->begin(115200);
+    }
+
+    bool ButtonUART::value(int button)
+    {
+        // read one byte and compare it to the button value
+        char incomingChar = this->serial->read();
+        if (button == BUTTON_UP && strcmp(&incomingChar, "0") == 0)
+            return true;
+        else if (button == BUTTON_DOWN && strcmp(&incomingChar, "1") == 0)
+            return true;
+        else if (button == BUTTON_LEFT && strcmp(&incomingChar, "2") == 0)
+            return true;
+        else if (button == BUTTON_RIGHT && strcmp(&incomingChar, "3") == 0)
+            return true;
+        else if (button == BUTTON_CENTER && strcmp(&incomingChar, "4") == 0)
+            return true;
+        else if (button == BUTTON_BACK && strcmp(&incomingChar, "5") == 0)
+            return true;
+        else if (button == BUTTON_START && strcmp(&incomingChar, "6") == 0)
+            return true;
+
+        return false;
+    }
+
     Input::Input()
-        : pin(-1), button(-1), elapsed_time(0), was_pressed(false), hw(nullptr)
+        : pin(-1), button(-1), elapsed_time(0), was_pressed(false), hw(nullptr), bt(nullptr)
     {
     }
 
@@ -87,6 +115,7 @@ namespace VGMGameEngine
         this->elapsed_time = 0;
         this->was_pressed = false;
         this->hw = nullptr;
+        this->bt = nullptr;
         pinMode(this->pin, INPUT_PULLUP);
     }
 
@@ -97,11 +126,23 @@ namespace VGMGameEngine
         this->elapsed_time = 0;
         this->was_pressed = false;
         this->hw = hw;
+        this->bt = nullptr;
+    }
+
+    Input::Input(ButtonUART *bt, int button)
+    {
+        this->pin = -1;
+        this->button = button;
+        this->elapsed_time = 0;
+        this->was_pressed = false;
+        this->hw = nullptr;
+        this->bt = bt;
     }
 
     bool Input::is_pressed()
     {
-        return this->hw ? this->hw->value(this->button) : digitalRead(this->pin) == LOW;
+        return this->hw ? this->hw->value(this->button) : this->bt ? this->bt->value(this->button)
+                                                                   : digitalRead(this->pin) == LOW;
     }
 
     bool Input::is_held(int duration)
@@ -123,7 +164,8 @@ namespace VGMGameEngine
     }
     Input::operator bool() const
     {
-        return !this->hw ? this->pin != -1 : this->hw != nullptr;
+        return this->hw ? this->hw != nullptr : this->bt ? this->bt != nullptr
+                                                         : this->pin != -1;
     }
 
 }
