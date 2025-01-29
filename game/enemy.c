@@ -301,8 +301,8 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 {
                     FURI_LOG_I("Game", "Enemy '%s' took %f damage from player", enemy_context->id, (double)game_context->player_context->strength);
                     enemy_context->state = ENEMY_ATTACKED;
-
-                    // Bounce the enemy back by X units opposite their last movement direction
+                    // Vector old_pos = entity_pos_get(self);
+                    //  Bounce the enemy back by X units opposite their last movement direction
                     enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
                     enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(self, enemy_pos);
