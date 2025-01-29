@@ -145,8 +145,8 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
 	if (drifter_state->score > drifter_state->highscore) {
 	  canvas_draw_str(canvas, 0, 18, "New High Score!");
 	} else {
-	  char msg[20];
-	  snprintf(msg, 20, "High Score: %ld", drifter_state->highscore);
+	  char msg[21];
+	  snprintf(msg, 21, "High Score: %ld", drifter_state->highscore);
 	  canvas_draw_str(canvas, 0, 18, msg);
 	}
       }
