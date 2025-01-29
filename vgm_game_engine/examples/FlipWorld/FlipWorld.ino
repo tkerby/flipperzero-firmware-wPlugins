@@ -4,7 +4,7 @@
 #include "icon.h"
 #include "assets.h"
 /*
-    Board Manager: Raspberry Pi Pico (even if using the Pico W)
+    Board Manager: Raspberry Pi Pico
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
     CPU Speed: 200MHz
 */
@@ -26,21 +26,21 @@ void setup()
     game->input_add(new Input(19, BUTTON_LEFT));
 
     // Create and add a level to the game.
-    Level *level = new Level("Level 1", Vector(768, 384), game);
+    Level *level = new Level("Level 1", Vector(768, 384), game, NULL, NULL, 400);
     game->level_add(level);
 
     // set game position to center of player
-    game->pos = Vector(384, 172);
+    game->pos = Vector(384, 192);
     game->old_pos = game->pos;
 
     // spawn icons from json
-    // icon_spawn_json(level, shadow_woods_v4);
+    icon_spawn_json(level, shadow_woods_v4);
 
     // spawn enemys from json
     enemy_spawn_json(level, shadow_woods_v4);
 
     // Add the player entity to the level
-    player_spawn(level, "sword", Vector(384, 152));
+    player_spawn(level, "sword", Vector(384, 192));
 
     // Create the game engine (with 30 frames per second target).
     GameEngine *engine = new GameEngine("Pico Game Engine", 30, game);
