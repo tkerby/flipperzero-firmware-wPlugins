@@ -1,5 +1,5 @@
 ## Screensavers
-The current screensavers are compiled examples from the [PicoDVI-Adafruit Fork](https://reference.arduino.cc/reference/en/libraries/picodvi-adafruit-fork/), edited and adapted for the Video Game Module.
+The current screensavers are compiled examples from the [PicoDVI-Adafruit Fork](https://learn.adafruit.com/picodvi-arduino-library-video-out-for-rp2040-boards/screensavers), edited and adapted for the Video Game Module.
 
 ### Installation
 1. Download your preferred screensaver.
