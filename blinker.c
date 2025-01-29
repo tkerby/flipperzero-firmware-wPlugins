@@ -1,45 +1,44 @@
 #include "blinker.h"
 
 
-static void led_timer_callback(void* context) {
-    UNUSED(context);
+static void timer_callback(void* context) {
+    BlinkerApp* app = context;
 
     static bool led_state = false;
     
     led_state = !led_state;
     furi_hal_light_set(LightRed, led_state ? 255 : 0);
-}
 
-static void updating_timer_callback(void* context) {
-    BlinkerApp* app = context;
-
+    static uint32_t last_check = 0; // Initially set to constant 0.
+    uint32_t current_time = furi_get_tick() / 1000; // seconds
     uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
-    
-    // Stop after duration expires.
-    if(elapsed_time >= app->duration * 60) { // duration is in minutes, so i need to change it to seconds
-        furi_timer_stop(app->updating_timer);
+
+    // Execute on first run and afterwards every 5 seconds.
+    // Do not run after 'duration' has passed.
+    if ((last_check == 0 || last_check + 5 < current_time) && (elapsed_time - 5 < app->duration * 60)) {
+        last_check = current_time;
+
+        // Gradually decrease the interval from max to min during the duration, thanks to elapsed time.
+        uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
+        // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
+        uint32_t blink_interval = 60 * 1000 / (interval * 2);
+            
+        char text[32];
+        snprintf(text, sizeof(text), "BPM: %lu", interval);
+        widget_reset(app->widget);
+        widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
+        widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
+
+        furi_timer_restart(app->timer, blink_interval);
     }
 
-    // Gradually decrease the interval from max to min during the duration, thanks to elapsed time.
-    uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
-    // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
-    uint32_t blink_interval = 60 * 1000 / (interval * 2);
-        
-    char text[32];
-    snprintf(text, sizeof(text), "BPM: %lu", interval);
-    widget_reset(app->widget);
-    widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
-    widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
-
-    furi_timer_restart(app->led_timer, blink_interval);
 }
 
 static bool back_button_callback(void* context) {
     BlinkerApp* app = context;
     
     if(app->current_view == Exec) {
-        furi_timer_stop(app->led_timer);
-        furi_timer_stop(app->updating_timer);
+        furi_timer_stop(app->timer);
         furi_hal_light_set(LightRed, 0);
     }
     
@@ -54,9 +53,8 @@ static bool back_button_callback(void* context) {
 
 static void exec_view(BlinkerApp* app) { 
     app->start_time = furi_get_tick();
-    furi_timer_start(app->led_timer, app->max_interval);
-    furi_timer_start(app->updating_timer, 5 * 1000); // Update each 5 second.
-    updating_timer_callback(app);
+    furi_timer_start(app->timer, app->max_interval);
+    timer_callback(app);
 
     app->current_view = Exec;
     view_dispatcher_switch_to_view(app->view_dispatcher, app->current_view);
@@ -160,9 +158,8 @@ int32_t blinker_main(void* p) {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, back_button_callback);
 
-    // Create and configure timers
-    app->led_timer = furi_timer_alloc(led_timer_callback, FuriTimerTypePeriodic, app);
-    app->updating_timer = furi_timer_alloc(updating_timer_callback, FuriTimerTypePeriodic, app);
+    // Create and configure timer
+    app->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, app);
 
     // Initialize views
     app->dialog = dialog_ex_alloc();
@@ -181,8 +178,7 @@ int32_t blinker_main(void* p) {
     view_dispatcher_run(app->view_dispatcher);
 
     // Cleanup
-    furi_timer_free(app->led_timer);
-    furi_timer_free(app->updating_timer);
+    furi_timer_free(app->timer);
     view_dispatcher_remove_view(app->view_dispatcher, Main);
     view_dispatcher_remove_view(app->view_dispatcher, NumberPicker);
     view_dispatcher_remove_view(app->view_dispatcher, Exec);

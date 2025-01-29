@@ -27,8 +27,7 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Views current_view;
 
-    FuriTimer* led_timer;
-    FuriTimer* updating_timer;
+    FuriTimer* timer;
     DialogEx* dialog;
     NumberInput* number_input;
     Widget* widget;
@@ -46,8 +45,7 @@ static void exec_view(BlinkerApp* app);
 
 static void main_callback(DialogExResult result, void* context);
 static void number_picker_callback(void* context, int32_t value);
-static void led_timer_callback(void* context);
-static void updating_timer_callback(void* context);
+static void timer_callback(void* context);
 static bool back_button_callback(void* context);
 
 int32_t blinker_main(void* p);
