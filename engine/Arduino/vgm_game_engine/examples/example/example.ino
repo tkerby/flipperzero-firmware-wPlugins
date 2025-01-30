@@ -1,9 +1,9 @@
 #include <Arduino.h>
-#include "VGMGameEngine.h" // https://github.com/jblanked/pico-game-engine/tree/main/C%2B%2B
+#include "VGMGameEngine.h"
 /*
-    Board Manager: Raspberry Pi Pico (even if you are using the Pico W)
+    Board Manager: Raspberry Pi Pico
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
-    CPU Speed: 133MHz (or overclocked to 200MHz)
+    CPU Speed: 200MHz
 */
 
 /* Update the player entity using current game input */
@@ -58,22 +58,8 @@ void player_render(Entity *player, Draw *draw, Game *game)
     game->draw->text(Vector(110, 10), "VGM Game Engine");
 }
 
-void led(bool state, int duration = 250)
-{
-    digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
-    delay(duration);
-}
 void setup()
 {
-    // Blink the onboard LED as an initial indicator
-    pinMode(LED_BUILTIN, OUTPUT);
-    led(true);
-    led(false);
-    led(true);
-    led(false);
-    led(true);
-    led(false);
-
     // Setup file system (must be called in setup)
     setup_fs();
 
@@ -83,17 +69,17 @@ void setup()
     // set world size
     game->world_size = game->size;
 
-    // Add input buttons (using the D-pad mapping)
-    game->input_add(new Input(16, BUTTON_UP));
-    game->input_add(new Input(17, BUTTON_RIGHT));
-    game->input_add(new Input(18, BUTTON_DOWN));
-    game->input_add(new Input(19, BUTTON_LEFT));
+    // UART buttons
+    ButtonUART *uart = new ButtonUART();
+
+    // Add input buttons
+    game->input_add(new Input(uart));
 
     // Create and add a level to the game.
     Level *level = new Level("Level 1", Vector(320, 240), game);
     game->level_add(level);
 
-    uint8_t player_left_naked_10x10px[200] = {
+    uint8_t player_10x10px[200] = {
         0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00,
@@ -120,7 +106,7 @@ void setup()
         ENTITY_PLAYER,
         Vector(160, 120), // Initial position
         Vector(10, 10),
-        player_left_naked_10x10px,
+        player_10x10px,
         NULL,          // No sprite left
         NULL,          // No sprite right
         NULL,          // No custom initialization routine
@@ -135,14 +121,6 @@ void setup()
 
     // Create the game engine (with 30 frames per second target).
     GameEngine *engine = new GameEngine("VGM Game Engine", 30, game);
-
-    // LED blinking sequence.
-    led(true);
-    led(false);
-    led(true);
-    led(false);
-    led(true);
-    led(false);
 
     // Run the game engine's main loop.
     engine->run();
