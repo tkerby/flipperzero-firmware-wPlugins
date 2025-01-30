@@ -745,7 +745,7 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v4/list/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}");
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -994,7 +994,7 @@ static bool _fetch_game(DataLoaderModel *model)
 
         model->fhttp->save_received_data = true;
         char url[128];
-        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v4/get/world/%s/", furi_string_get_cstr(first_world));
+        snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v5/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
         return flipper_http_get_request_with_headers(model->fhttp, url, "{\"Content-Type\":\"application/json\"}");
@@ -1604,7 +1604,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
         sizeof(model->fhttp->file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v4/get/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}");
 }
 static char *_parse_worlds(DataLoaderModel *model)
 {
