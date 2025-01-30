@@ -471,7 +471,7 @@ static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_
     ctx->height = height;
     if (!is_enemy)
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "eNTITY_right_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
         snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
     }
     else
