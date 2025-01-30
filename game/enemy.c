@@ -38,10 +38,10 @@ static EnemyContext *enemy_generic_alloc(
     enemy_context_generic->strength = strength;
     enemy_context_generic->health = health;
     // Initialize other fields as needed
-    enemy_context_generic->sprite_right = NULL;         // Assign appropriate sprite
-    enemy_context_generic->sprite_left = NULL;          // Assign appropriate sprite
-    enemy_context_generic->direction = ENEMY_RIGHT;     // Default direction
-    enemy_context_generic->state = ENEMY_MOVING_TO_END; // Start in IDLE state
+    enemy_context_generic->sprite_right = NULL;          // Assign appropriate sprite
+    enemy_context_generic->sprite_left = NULL;           // Assign appropriate sprite
+    enemy_context_generic->direction = ENTITY_RIGHT;     // Default direction
+    enemy_context_generic->state = ENTITY_MOVING_TO_END; // Start in IDLE state
     // Set radius based on size, for example, average of size.x and size.y divided by 2
     enemy_context_generic->radius = (size.x + size.y) / 4.0f;
     return enemy_context_generic;
@@ -116,7 +116,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
 
     // Choose sprite based on direction
     Sprite *current_sprite = NULL;
-    if (enemy_context->direction == ENEMY_LEFT)
+    if (enemy_context->direction == ENTITY_LEFT)
     {
         current_sprite = enemy_context->sprite_left;
     }
@@ -238,19 +238,19 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         bool player_is_facing_enemy = false;
 
         // Determine if the enemy is facing the player
-        if ((enemy_context->direction == ENEMY_LEFT && player_pos.x < enemy_pos.x) ||
-            (enemy_context->direction == ENEMY_RIGHT && player_pos.x > enemy_pos.x) ||
-            (enemy_context->direction == ENEMY_UP && player_pos.y < enemy_pos.y) ||
-            (enemy_context->direction == ENEMY_DOWN && player_pos.y > enemy_pos.y))
+        if ((enemy_context->direction == ENTITY_LEFT && player_pos.x < enemy_pos.x) ||
+            (enemy_context->direction == ENTITY_RIGHT && player_pos.x > enemy_pos.x) ||
+            (enemy_context->direction == ENTITY_UP && player_pos.y < enemy_pos.y) ||
+            (enemy_context->direction == ENTITY_DOWN && player_pos.y > enemy_pos.y))
         {
             enemy_is_facing_player = true;
         }
 
         // Determine if the player is facing the enemy
-        if ((game_context->player_context->direction == PLAYER_LEFT && enemy_pos.x < player_pos.x) ||
-            (game_context->player_context->direction == PLAYER_RIGHT && enemy_pos.x > player_pos.x) ||
-            (game_context->player_context->direction == PLAYER_UP && enemy_pos.y < player_pos.y) ||
-            (game_context->player_context->direction == PLAYER_DOWN && enemy_pos.y > player_pos.y))
+        if ((game_context->player_context->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x) ||
+            (game_context->player_context->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x) ||
+            (game_context->player_context->direction == ENTITY_UP && enemy_pos.y < player_pos.y) ||
+            (game_context->player_context->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y))
         {
             player_is_facing_enemy = true;
         }
@@ -285,7 +285,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 if (enemy_context->health <= 0)
                 {
                     FURI_LOG_I("Game", "Enemy '%s' is dead.. resetting enemy position and health", enemy_context->id);
-                    enemy_context->state = ENEMY_DEAD;
+                    enemy_context->state = ENTITY_DEAD;
 
                     // Reset enemy position and health
                     enemy_context->health = 100; // this needs to be set to the enemy's max health
@@ -300,7 +300,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 else
                 {
                     FURI_LOG_I("Game", "Enemy '%s' took %f damage from player", enemy_context->id, (double)game_context->player_context->strength);
-                    enemy_context->state = ENEMY_ATTACKED;
+                    enemy_context->state = ENTITY_ATTACKED;
                     // Vector old_pos = entity_pos_get(self);
                     //  Bounce the enemy back by X units opposite their last movement direction
                     enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
@@ -333,7 +333,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 if (game_context->player_context->health <= 0)
                 {
                     FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
-                    game_context->player_context->state = PLAYER_DEAD;
+                    game_context->player_context->state = ENTITY_DEAD;
 
                     // Reset player position and health
                     entity_pos_set(other, game_context->player_context->start_position);
@@ -349,7 +349,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 else
                 {
                     FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
-                    game_context->player_context->state = PLAYER_ATTACKED;
+                    game_context->player_context->state = ENTITY_ATTACKED;
 
                     // Bounce the player back by X units opposite their last movement direction
                     player_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
@@ -372,10 +372,10 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Reset enemy's state
-        enemy_context->state = ENEMY_IDLE;
+        enemy_context->state = ENTITY_IDLE;
         enemy_context->elapsed_move_timer = 0.0f;
 
-        if (game_context->player_context->state == PLAYER_DEAD)
+        if (game_context->player_context->state == ENTITY_DEAD)
         {
             // Reset player's position and health
             entity_pos_set(other, game_context->player_context->start_position);
@@ -385,13 +385,13 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 }
 
 // Enemy update function
-static void enemy_update(Entity *self, GameManager *manager, void *context)
+static void entity_update(Entity *self, GameManager *manager, void *context)
 {
     if (!self || !context || !manager)
         return;
 
     EnemyContext *enemy_context = (EnemyContext *)context;
-    if (!enemy_context || enemy_context->state == ENEMY_DEAD)
+    if (!enemy_context || enemy_context->state == ENTITY_DEAD)
     {
         return;
     }
@@ -410,7 +410,7 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
 
     switch (enemy_context->state)
     {
-    case ENEMY_IDLE:
+    case ENTITY_IDLE:
         // Increment the elapsed_move_timer
         enemy_context->elapsed_move_timer += delta_time;
 
@@ -422,21 +422,21 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
             if (fabs(current_pos.x - enemy_context->start_position.x) < (double)1.0 &&
                 fabs(current_pos.y - enemy_context->start_position.y) < (double)1.0)
             {
-                enemy_context->state = ENEMY_MOVING_TO_END;
+                enemy_context->state = ENTITY_MOVING_TO_END;
             }
             else
             {
-                enemy_context->state = ENEMY_MOVING_TO_START;
+                enemy_context->state = ENTITY_MOVING_TO_START;
             }
             enemy_context->elapsed_move_timer = 0.0f;
         }
         break;
 
-    case ENEMY_MOVING_TO_END:
-    case ENEMY_MOVING_TO_START:
+    case ENTITY_MOVING_TO_END:
+    case ENTITY_MOVING_TO_START:
     {
         // Determine the target position based on the current state
-        Vector target_position = (enemy_context->state == ENEMY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
+        Vector target_position = (enemy_context->state == ENTITY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
 
         // Get current position
         Vector current_pos = entity_pos_get(self);
@@ -446,23 +446,23 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         if (current_pos.x < target_position.x)
         {
             direction_vector.x = 1.0f;
-            enemy_context->direction = ENEMY_RIGHT;
+            enemy_context->direction = ENTITY_RIGHT;
         }
         else if (current_pos.x > target_position.x)
         {
             direction_vector.x = -1.0f;
-            enemy_context->direction = ENEMY_LEFT;
+            enemy_context->direction = ENTITY_LEFT;
         }
 
         if (current_pos.y < target_position.y)
         {
             direction_vector.y = 1.0f;
-            enemy_context->direction = ENEMY_DOWN;
+            enemy_context->direction = ENTITY_DOWN;
         }
         else if (current_pos.y > target_position.y)
         {
             direction_vector.y = -1.0f;
-            enemy_context->direction = ENEMY_UP;
+            enemy_context->direction = ENTITY_UP;
         }
 
         // Normalize direction vector
@@ -500,7 +500,7 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         // If reached the target position on both axes, transition to IDLE
         if (reached_x && reached_y)
         {
-            enemy_context->state = ENEMY_IDLE;
+            enemy_context->state = ENTITY_IDLE;
             enemy_context->elapsed_move_timer = 0.0f;
         }
     }
@@ -524,7 +524,7 @@ static void enemy_free(Entity *self, GameManager *manager, void *context)
 static const EntityDescription _generic_enemy = {
     .start = enemy_start,
     .stop = enemy_free,
-    .update = enemy_update,
+    .update = entity_update,
     .render = enemy_render,
     .collision = enemy_collision,
     .event = NULL,
@@ -575,21 +575,21 @@ const EntityDescription *enemy(
     // Set initial direction based on start and end positions
     if (start_position.x < end_position.x)
     {
-        enemy_context_generic->direction = ENEMY_RIGHT;
+        enemy_context_generic->direction = ENTITY_RIGHT;
     }
     else
     {
-        enemy_context_generic->direction = ENEMY_LEFT;
+        enemy_context_generic->direction = ENTITY_LEFT;
     }
 
     // Set initial state based on movement
     if (start_position.x != end_position.x || start_position.y != end_position.y)
     {
-        enemy_context_generic->state = ENEMY_MOVING_TO_END;
+        enemy_context_generic->state = ENTITY_MOVING_TO_END;
     }
     else
     {
-        enemy_context_generic->state = ENEMY_IDLE;
+        enemy_context_generic->state = ENTITY_IDLE;
     }
 
     return &_generic_enemy;

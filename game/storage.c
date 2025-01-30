@@ -116,16 +116,16 @@ bool save_player_context(PlayerContext *player_context)
         char direction_str[2];
         switch (player_context->direction)
         {
-        case PLAYER_UP:
+        case ENTITY_UP:
             strncpy(direction_str, "0", sizeof(direction_str));
             break;
-        case PLAYER_DOWN:
+        case ENTITY_DOWN:
             strncpy(direction_str, "1", sizeof(direction_str));
             break;
-        case PLAYER_LEFT:
+        case ENTITY_LEFT:
             strncpy(direction_str, "2", sizeof(direction_str));
             break;
-        case PLAYER_RIGHT:
+        case ENTITY_RIGHT:
         default:
             strncpy(direction_str, "3", sizeof(direction_str));
             break;
@@ -144,19 +144,19 @@ bool save_player_context(PlayerContext *player_context)
         char state_str[2];
         switch (player_context->state)
         {
-        case PLAYER_IDLE:
+        case ENTITY_IDLE:
             strncpy(state_str, "0", sizeof(state_str));
             break;
-        case PLAYER_MOVING:
+        case ENTITY_MOVING:
             strncpy(state_str, "1", sizeof(state_str));
             break;
-        case PLAYER_ATTACKING:
+        case ENTITY_ATTACKING:
             strncpy(state_str, "2", sizeof(state_str));
             break;
-        case PLAYER_ATTACKED:
+        case ENTITY_ATTACKED:
             strncpy(state_str, "3", sizeof(state_str));
             break;
-        case PLAYER_DEAD:
+        case ENTITY_DEAD:
             strncpy(state_str, "4", sizeof(state_str));
             break;
         default:
@@ -293,16 +293,16 @@ bool save_player_context_api(PlayerContext *player_context)
     furi_string_cat_str(json, "\"direction\":");
     switch (player_context->direction)
     {
-    case PLAYER_UP:
+    case ENTITY_UP:
         furi_string_cat_str(json, "\"up\",");
         break;
-    case PLAYER_DOWN:
+    case ENTITY_DOWN:
         furi_string_cat_str(json, "\"down\",");
         break;
-    case PLAYER_LEFT:
+    case ENTITY_LEFT:
         furi_string_cat_str(json, "\"left\",");
         break;
-    case PLAYER_RIGHT:
+    case ENTITY_RIGHT:
     default:
         furi_string_cat_str(json, "\"right\",");
         break;
@@ -312,19 +312,19 @@ bool save_player_context_api(PlayerContext *player_context)
     furi_string_cat_str(json, "\"state\":");
     switch (player_context->state)
     {
-    case PLAYER_IDLE:
+    case ENTITY_IDLE:
         furi_string_cat_str(json, "\"idle\",");
         break;
-    case PLAYER_MOVING:
+    case ENTITY_MOVING:
         furi_string_cat_str(json, "\"moving\",");
         break;
-    case PLAYER_ATTACKING:
+    case ENTITY_ATTACKING:
         furi_string_cat_str(json, "\"attacking\",");
         break;
-    case PLAYER_ATTACKED:
+    case ENTITY_ATTACKED:
         furi_string_cat_str(json, "\"attacked\",");
         break;
-    case PLAYER_DEAD:
+    case ENTITY_DEAD:
         furi_string_cat_str(json, "\"dead\",");
         break;
     default:
@@ -635,63 +635,63 @@ bool load_player_context(PlayerContext *player_context)
 
     // 11. Direction (enum PlayerDirection)
     {
-        int direction_int = 3; // Default to PLAYER_RIGHT
+        int direction_int = 3; // Default to ENTITY_RIGHT
         if (!load_number("player/direction", &direction_int))
         {
-            FURI_LOG_E(TAG, "No data or parse error for direction. Defaulting to PLAYER_RIGHT");
+            FURI_LOG_E(TAG, "No data or parse error for direction. Defaulting to ENTITY_RIGHT");
             direction_int = 3;
         }
 
         switch (direction_int)
         {
         case 0:
-            player_context->direction = PLAYER_UP;
+            player_context->direction = ENTITY_UP;
             break;
         case 1:
-            player_context->direction = PLAYER_DOWN;
+            player_context->direction = ENTITY_DOWN;
             break;
         case 2:
-            player_context->direction = PLAYER_LEFT;
+            player_context->direction = ENTITY_LEFT;
             break;
         case 3:
-            player_context->direction = PLAYER_RIGHT;
+            player_context->direction = ENTITY_RIGHT;
             break;
         default:
-            FURI_LOG_E(TAG, "Invalid direction value: %d. Defaulting to PLAYER_RIGHT", direction_int);
-            player_context->direction = PLAYER_RIGHT;
+            FURI_LOG_E(TAG, "Invalid direction value: %d. Defaulting to ENTITY_RIGHT", direction_int);
+            player_context->direction = ENTITY_RIGHT;
             break;
         }
     }
 
     // 12. State (enum PlayerState)
     {
-        int state_int = 0; // Default to PLAYER_IDLE
+        int state_int = 0; // Default to ENTITY_IDLE
         if (!load_number("player/state", &state_int))
         {
-            FURI_LOG_E(TAG, "No data or parse error for state. Defaulting to PLAYER_IDLE");
+            FURI_LOG_E(TAG, "No data or parse error for state. Defaulting to ENTITY_IDLE");
             state_int = 0;
         }
 
         switch (state_int)
         {
         case 0:
-            player_context->state = PLAYER_IDLE;
+            player_context->state = ENTITY_IDLE;
             break;
         case 1:
-            player_context->state = PLAYER_MOVING;
+            player_context->state = ENTITY_MOVING;
             break;
         case 2:
-            player_context->state = PLAYER_ATTACKING;
+            player_context->state = ENTITY_ATTACKING;
             break;
         case 3:
-            player_context->state = PLAYER_ATTACKED;
+            player_context->state = ENTITY_ATTACKED;
             break;
         case 4:
-            player_context->state = PLAYER_DEAD;
+            player_context->state = ENTITY_DEAD;
             break;
         default:
-            FURI_LOG_E(TAG, "Invalid state value: %d. Defaulting to PLAYER_IDLE", state_int);
-            player_context->state = PLAYER_IDLE;
+            FURI_LOG_E(TAG, "Invalid state value: %d. Defaulting to ENTITY_IDLE", state_int);
+            player_context->state = ENTITY_IDLE;
             break;
         }
     }

@@ -2,25 +2,6 @@
 #include <game/game.h>
 #include "flip_world.h"
 
-typedef enum
-{
-    ENEMY_IDLE,
-    ENEMY_MOVING,
-    ENEMY_MOVING_TO_START,
-    ENEMY_MOVING_TO_END,
-    ENEMY_ATTACKING,
-    ENEMY_ATTACKED,
-    ENEMY_DEAD
-} EnemyState;
-
-typedef enum
-{
-    ENEMY_UP,
-    ENEMY_DOWN,
-    ENEMY_LEFT,
-    ENEMY_RIGHT
-} EnemyDirection;
-
 // EnemyContext definition
 typedef struct
 {
@@ -29,8 +10,8 @@ typedef struct
     Vector size;                // Size of the enemy
     Sprite *sprite_right;       // Enemy sprite when looking right
     Sprite *sprite_left;        // Enemy sprite when looking left
-    EnemyDirection direction;   // Direction the enemy is facing
-    EnemyState state;           // Current state of the enemy
+    EntityDirection direction;  // Direction the enemy is facing
+    EntityState state;          // Current state of the enemy
     Vector start_position;      // Start position of the enemy
     Vector end_position;        // End position of the enemy
     float move_timer;           // Timer for the enemy movement

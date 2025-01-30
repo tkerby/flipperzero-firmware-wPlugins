@@ -4,32 +4,15 @@
 #include <game/game.h>
 #include "engine/sensors/imu.h"
 
-// Maximum enemies
 #define MAX_ENEMIES 10
 #define MAX_LEVELS 10
-
-typedef enum
-{
-    PLAYER_IDLE,
-    PLAYER_MOVING,
-    PLAYER_ATTACKING,
-    PLAYER_ATTACKED,
-    PLAYER_DEAD,
-} PlayerState;
-
-typedef enum
-{
-    PLAYER_UP,
-    PLAYER_DOWN,
-    PLAYER_LEFT,
-    PLAYER_RIGHT
-} PlayerDirection;
+#define MAX_NPCS 10
 
 typedef struct
 {
     Vector old_position;        // previous position of the player
-    PlayerDirection direction;  // direction the player is facing
-    PlayerState state;          // current state of the player
+    EntityDirection direction;  // direction the player is facing
+    EntityState state;          // current state of the player
     Vector start_position;      // starting position of the player
     Sprite *sprite_right;       // player sprite looking right
     Sprite *sprite_left;        // player sprite looking left
@@ -60,10 +43,12 @@ typedef struct
     PlayerContext *player_context;
     Level *levels[MAX_LEVELS];
     Entity *enemies[MAX_ENEMIES];
+    Entity *npcs[MAX_NPCS];
     Entity *player;
     float fps;
     int level_count;
     int enemy_count;
+    int npc_count;
     int current_level;
     bool ended_early;
     Imu *imu;

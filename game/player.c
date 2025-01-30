@@ -94,7 +94,7 @@ void player_spawn(Level *level, GameManager *manager)
         // Initialize default player context
         pctx->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
         pctx->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
-        pctx->direction = PLAYER_RIGHT; // default direction
+        pctx->direction = ENTITY_RIGHT; // default direction
         pctx->left = false;             // default sprite direction
         pctx->health = 100;
         pctx->strength = 10;
@@ -158,7 +158,7 @@ void player_spawn(Level *level, GameManager *manager)
     pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
     // set the player's left sprite direction
-    pctx->left = pctx->direction == PLAYER_LEFT ? true : false;
+    pctx->left = pctx->direction == ENTITY_LEFT ? true : false;
 
     // Assign loaded player context to game context
     game_context->player_context = pctx;
@@ -180,25 +180,25 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
     {
         pos->x += vgm_increase(pitch, min_x);
         player->dx = 1;
-        player->direction = PLAYER_RIGHT;
+        player->direction = ENTITY_RIGHT;
     }
     else if (pitch < -min_x)
     {
         pos->x += -vgm_increase(pitch, min_x);
         player->dx = -1;
-        player->direction = PLAYER_LEFT;
+        player->direction = ENTITY_LEFT;
     }
     if (roll > min_y)
     {
         pos->y += vgm_increase(roll, min_y);
         player->dy = 1;
-        player->direction = PLAYER_DOWN;
+        player->direction = ENTITY_DOWN;
     }
     else if (roll < -min_y)
     {
         pos->y += -vgm_increase(roll, min_y);
         player->dy = -1;
-        player->direction = PLAYER_UP;
+        player->direction = ENTITY_UP;
     }
 }
 
@@ -252,7 +252,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             pos.y -= (2 + game_context->icon_offset);
             player->dy = -1;
-            player->direction = PLAYER_UP;
+            player->direction = ENTITY_UP;
         }
         else
         {
@@ -273,7 +273,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             pos.y += (2 + game_context->icon_offset);
             player->dy = 1;
-            player->direction = PLAYER_DOWN;
+            player->direction = ENTITY_DOWN;
         }
         else
         {
@@ -294,7 +294,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             pos.x -= (2 + game_context->icon_offset);
             player->dx = -1;
-            player->direction = PLAYER_LEFT;
+            player->direction = ENTITY_LEFT;
         }
         else
         {
@@ -317,7 +317,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             pos.x += (2 + game_context->icon_offset);
             player->dx = 1;
-            player->direction = PLAYER_RIGHT;
+            player->direction = ENTITY_RIGHT;
         }
         else
         {
@@ -394,10 +394,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     {
         player->dx = prev_dx;
         player->dy = prev_dy;
-        player->state = PLAYER_IDLE;
+        player->state = ENTITY_IDLE;
     }
     else
-        player->state = PLAYER_MOVING;
+        player->state = ENTITY_MOVING;
 }
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
@@ -420,11 +420,11 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
     // if player is moving right or left, draw the corresponding sprite
-    if (player->direction == PLAYER_RIGHT || player->direction == PLAYER_LEFT)
+    if (player->direction == ENTITY_RIGHT || player->direction == ENTITY_LEFT)
     {
         canvas_draw_sprite(
             canvas,
-            player->direction == PLAYER_RIGHT ? player->sprite_right : player->sprite_left,
+            player->direction == ENTITY_RIGHT ? player->sprite_right : player->sprite_left,
             pos.x - camera_x - 5, // Center the sprite horizontally
             pos.y - camera_y - 5  // Center the sprite vertically
         );
@@ -471,7 +471,7 @@ static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_
     ctx->height = height;
     if (!is_enemy)
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "eNTITY_right_%s_%dx%dpx.fxbm", id, width, height);
         snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
     }
     else
@@ -485,33 +485,19 @@ static SpriteContext *sprite_generic_alloc(const char *id, bool is_enemy, uint8_
 SpriteContext *get_sprite_context(const char *name)
 {
     if (is_str(name, "axe"))
-    {
         return sprite_generic_alloc("axe", false, 15, 11);
-    }
     else if (is_str(name, "bow"))
-    {
         return sprite_generic_alloc("bow", false, 13, 11);
-    }
     else if (is_str(name, "naked"))
-    {
         return sprite_generic_alloc("naked", false, 10, 10);
-    }
     else if (is_str(name, "sword"))
-    {
         return sprite_generic_alloc("sword", false, 15, 11);
-    }
     else if (is_str(name, "cyclops"))
-    {
         return sprite_generic_alloc("cyclops", true, 10, 11);
-    }
     else if (is_str(name, "ghost"))
-    {
         return sprite_generic_alloc("ghost", true, 15, 15);
-    }
     else if (is_str(name, "ogre"))
-    {
         return sprite_generic_alloc("ogre", true, 10, 13);
-    }
 
     // If no match is found
     FURI_LOG_E("Game", "Sprite not found: %s", name);
