@@ -1,3 +1,4 @@
+#include <gui/view_holder.h>
 #include <game/game.h>
 #include <game/storage.h>
 
@@ -70,7 +71,28 @@ static void game_stop(void *ctx)
             easy_flipper_dialog("Game Over", "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
         else
             easy_flipper_dialog("Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
+
+        TextBox* text_box = text_box_alloc();
+        text_box_set_text(
+            text_box, "Thanks for playing!\n\nPlease wait while your\n game is saved.");
+        ViewHolder* view_holder = view_holder_alloc();
+        Gui* gui = furi_record_open(RECORD_GUI);
+        view_holder_attach_to_gui(view_holder, gui);
+        view_holder_set_view(view_holder, text_box_get_view(text_box));
+        uint32_t tick_count = furi_get_tick();
+
         save_player_context_api(game_context->player_context);
+
+        const uint32_t delay = 3000;
+        tick_count = (tick_count + delay) - furi_get_tick();
+        if(tick_count < delay) {
+            furi_delay_ms(tick_count);
+        }
+        view_holder_set_view(view_holder, NULL);
+        view_holder_free(view_holder);
+        text_box_free(text_box);
+        furi_record_close(RECORD_GUI);
+
         easy_flipper_dialog("Game Saved", "Hit BACK to exit.");
     }
 }
