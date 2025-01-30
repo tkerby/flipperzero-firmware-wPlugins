@@ -17,10 +17,19 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->current_level = 0;
     game_context->level_count = 0;
     game_context->enemy_count = 0;
+    game_context->npc_count = 0;
 
     // set all levels to NULL
     for (int i = 0; i < MAX_LEVELS; i++)
         game_context->levels[i] = NULL;
+
+    // set all enemies to NULL
+    for (int i = 0; i < MAX_ENEMIES; i++)
+        game_context->enemies[i] = NULL;
+
+    // set all npcs to NULL
+    for (int i = 0; i < MAX_NPCS; i++)
+        game_context->npcs[i] = NULL;
 
     // attempt to allocate all levels
     for (int i = 0; i < MAX_LEVELS; i++)
@@ -29,9 +38,8 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             if (i == 0)
             {
-                game_context->levels[0] = game_manager_add_level(game_manager, generic_level("town_world_v2", 0));
+                game_context->levels[0] = game_manager_add_level(game_manager, training_world());
                 game_context->level_count = 1;
-                break;
             }
             break;
         }
