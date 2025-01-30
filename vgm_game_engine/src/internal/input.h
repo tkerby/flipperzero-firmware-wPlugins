@@ -55,7 +55,8 @@ namespace VGMGameEngine
     {
     public:
         ButtonUART();
-        bool value(int button = BUTTON_CENTER);
+        void run();
+        int last_button;
 
     private:
         SerialPIO *serial;
@@ -73,7 +74,7 @@ namespace VGMGameEngine
         Input();
         Input(int pin, int button);
         Input(HW504 *hw, int button);
-        Input(ButtonUART *bt, int button);
+        Input(ButtonUART *bt);
         bool is_pressed();
         bool is_held(int duration = 3);
         void run();

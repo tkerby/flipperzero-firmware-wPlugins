@@ -1,5 +1,5 @@
 #include "input.h"
-
+#include <string.h>
 namespace VGMGameEngine
 {
 
@@ -81,26 +81,38 @@ namespace VGMGameEngine
         this->serial->begin(115200);
     }
 
-    bool ButtonUART::value(int button)
+    void ButtonUART::run()
     {
-        // read one byte and compare it to the button value
-        char incomingChar = this->serial->read();
-        if (button == BUTTON_UP && strcmp(&incomingChar, "0") == 0)
-            return true;
-        else if (button == BUTTON_DOWN && strcmp(&incomingChar, "1") == 0)
-            return true;
-        else if (button == BUTTON_LEFT && strcmp(&incomingChar, "2") == 0)
-            return true;
-        else if (button == BUTTON_RIGHT && strcmp(&incomingChar, "3") == 0)
-            return true;
-        else if (button == BUTTON_CENTER && strcmp(&incomingChar, "4") == 0)
-            return true;
-        else if (button == BUTTON_BACK && strcmp(&incomingChar, "5") == 0)
-            return true;
-        else if (button == BUTTON_START && strcmp(&incomingChar, "6") == 0)
-            return true;
-
-        return false;
+        // Check if data is available to read
+        if (this->serial->available() > 0)
+        {
+            // Read the incoming byte as a character
+            char incomingChar = this->serial->read();
+            switch ((int)incomingChar)
+            {
+            case 48:
+                this->last_button = BUTTON_UP;
+                break;
+            case 49:
+                this->last_button = BUTTON_DOWN;
+                break;
+            case 50:
+                this->last_button = BUTTON_LEFT;
+                break;
+            case 51:
+                this->last_button = BUTTON_RIGHT;
+                break;
+            case 52:
+                this->last_button = BUTTON_CENTER;
+                break;
+            case 53:
+                this->last_button = BUTTON_BACK;
+                break;
+            case 54:
+                this->last_button = BUTTON_START;
+                break;
+            }
+        }
     }
 
     Input::Input()
@@ -129,10 +141,10 @@ namespace VGMGameEngine
         this->bt = nullptr;
     }
 
-    Input::Input(ButtonUART *bt, int button)
+    Input::Input(ButtonUART *bt)
     {
         this->pin = -1;
-        this->button = button;
+        this->button = -1; // not needed
         this->elapsed_time = 0;
         this->was_pressed = false;
         this->hw = nullptr;
@@ -141,8 +153,11 @@ namespace VGMGameEngine
 
     bool Input::is_pressed()
     {
-        return this->hw ? this->hw->value(this->button) : this->bt ? this->bt->value(this->button)
-                                                                   : digitalRead(this->pin) == LOW;
+        if (this->hw)
+            return this->hw->value(this->button);
+        else if (!this->bt)
+            return digitalRead(this->pin) == LOW;
+        return false;
     }
 
     bool Input::is_held(int duration)
@@ -152,6 +167,8 @@ namespace VGMGameEngine
 
     void Input::run()
     {
+        if (this->bt)
+            this->bt->run();
         if (this->is_pressed())
             this->elapsed_time++;
         else
@@ -167,5 +184,4 @@ namespace VGMGameEngine
         return this->hw ? this->hw != nullptr : this->bt ? this->bt != nullptr
                                                          : this->pin != -1;
     }
-
 }

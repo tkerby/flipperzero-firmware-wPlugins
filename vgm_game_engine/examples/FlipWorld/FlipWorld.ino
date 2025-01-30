@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "VGMGameEngine.h" // https://github.com/jblanked/pico-game-engine/tree/main/C%2B%2B
+#include "VGMGameEngine.h"
 #include "player.h"
 #include "icon.h"
 #include "assets.h"
@@ -19,11 +19,11 @@ void setup()
     // set world size
     game->world_size = Vector(768, 384);
 
-    // Add input buttons (using the D-pad mapping)
-    game->input_add(new Input(16, BUTTON_UP));
-    game->input_add(new Input(17, BUTTON_RIGHT));
-    game->input_add(new Input(18, BUTTON_DOWN));
-    game->input_add(new Input(19, BUTTON_LEFT));
+    // UART buttons
+    ButtonUART *uart = new ButtonUART();
+
+    // Add input buttons
+    game->input_add(new Input(uart));
 
     // Create and add a level to the game.
     Level *level = new Level("Level 1", Vector(768, 384), game, NULL, NULL, 400);

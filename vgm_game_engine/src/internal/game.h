@@ -48,6 +48,7 @@ namespace VGMGameEngine
         Input *button_right;  // Input for right button
         Input *button_center; // Input for center button
         Input *button_back;   // Input for back button
+        Input *uart;          // Input for UART
 
         int input;         // Last input (e.g., one of the BUTTON_ constants)
         Draw *draw;        // Draw object for rendering
@@ -63,6 +64,9 @@ namespace VGMGameEngine
     private:
         void (*_start)();
         void (*_stop)();
+
+        bool is_uart_input = false;
+        int button_uart = -1;
     };
 
 }

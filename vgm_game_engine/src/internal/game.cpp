@@ -8,9 +8,9 @@ namespace VGMGameEngine
     Game::Game()
         : current_level(nullptr),
           button_up(nullptr), button_down(nullptr), button_left(nullptr),
-          button_right(nullptr), button_center(nullptr), button_back(nullptr),
+          button_right(nullptr), button_center(nullptr), button_back(nullptr), uart(nullptr),
           camera(0, 0), old_pos(0, 0), pos(0, 0), size(0, 0), world_size(0, 0),
-          is_active(false), input(-1),
+          is_active(false), input(-1), is_uart_input(false),
           _start(nullptr), _stop(nullptr),
           fg_color(TFT_RED), bg_color(TFT_BLACK) // Initialize default colors
     {
@@ -37,9 +37,9 @@ namespace VGMGameEngine
           fg_color(fg_color), bg_color(bg_color),
           current_level(nullptr),
           button_up(nullptr), button_down(nullptr), button_left(nullptr),
-          button_right(nullptr), button_center(nullptr), button_back(nullptr),
+          button_right(nullptr), button_center(nullptr), button_back(nullptr), uart(nullptr),
           camera(0, 0), pos(0, 0), old_pos(0, 0), world_size(size.x, size.y),
-          is_active(false), input(-1)
+          is_active(false), input(-1), is_uart_input(false)
     {
         for (int i = 0; i < MAX_LEVELS; i++)
         {
@@ -78,6 +78,8 @@ namespace VGMGameEngine
             delete button_center;
         if (button_back)
             delete button_back;
+        if (uart)
+            delete uart;
     }
 
     void Game::clamp(float &value, float min, float max)
@@ -90,7 +92,12 @@ namespace VGMGameEngine
 
     void Game::input_add(Input *input)
     {
-        if (input->button == BUTTON_UP)
+        if (input->button == -1)
+        {
+            this->uart = input;
+            this->is_uart_input = true;
+        }
+        else if (input->button == BUTTON_UP)
             this->button_up = input;
         else if (input->button == BUTTON_DOWN)
             this->button_down = input;
@@ -106,7 +113,9 @@ namespace VGMGameEngine
 
     void Game::input_remove(Input *input)
     {
-        if (input->button == BUTTON_UP && this->button_up == input)
+        if (input->button == -1 && this->uart == input)
+            this->uart = nullptr;
+        else if (input->button == BUTTON_UP && this->button_up == input)
             this->button_up = nullptr;
         else if (input->button == BUTTON_DOWN && this->button_down == input)
             this->button_down = nullptr;
@@ -171,33 +180,40 @@ namespace VGMGameEngine
 
     void Game::manage_input()
     {
-        if (this->button_up && this->button_up->is_pressed())
+        if (this->is_uart_input)
         {
-            this->input = BUTTON_UP;
-        }
-        else if (this->button_down && this->button_down->is_pressed())
-        {
-            this->input = BUTTON_DOWN;
-        }
-        else if (this->button_left && this->button_left->is_pressed())
-        {
-            this->input = BUTTON_LEFT;
-        }
-        else if (this->button_right && this->button_right->is_pressed())
-        {
-            this->input = BUTTON_RIGHT;
-        }
-        else if (this->button_center && this->button_center->is_pressed())
-        {
-            this->input = BUTTON_CENTER;
-        }
-        else if (this->button_back && this->button_back->is_pressed())
-        {
-            this->input = BUTTON_BACK;
+            this->input = this->uart->bt->last_button;
         }
         else
         {
-            this->input = -1;
+            if (this->button_up && this->button_up->is_pressed())
+            {
+                this->input = BUTTON_UP;
+            }
+            else if (this->button_down && this->button_down->is_pressed())
+            {
+                this->input = BUTTON_DOWN;
+            }
+            else if (this->button_left && this->button_left->is_pressed())
+            {
+                this->input = BUTTON_LEFT;
+            }
+            else if (this->button_right && this->button_right->is_pressed())
+            {
+                this->input = BUTTON_RIGHT;
+            }
+            else if (this->button_center && this->button_center->is_pressed())
+            {
+                this->input = BUTTON_CENTER;
+            }
+            else if (this->button_back && this->button_back->is_pressed())
+            {
+                this->input = BUTTON_BACK;
+            }
+            else
+            {
+                this->input = -1;
+            }
         }
     }
 
@@ -290,20 +306,29 @@ namespace VGMGameEngine
 
     void Game::update()
     {
+        if (!this->is_active)
+            return;
 
         // Update input states
-        if (this->button_up)
-            this->button_up->run();
-        if (this->button_down)
-            this->button_down->run();
-        if (this->button_left)
-            this->button_left->run();
-        if (this->button_right)
-            this->button_right->run();
-        if (this->button_center)
-            this->button_center->run();
-        if (this->button_back)
-            this->button_back->run();
+        if (this->is_uart_input)
+        {
+            this->uart->run();
+        }
+        else
+        {
+            if (this->button_up)
+                this->button_up->run();
+            if (this->button_down)
+                this->button_down->run();
+            if (this->button_left)
+                this->button_left->run();
+            if (this->button_right)
+                this->button_right->run();
+            if (this->button_center)
+                this->button_center->run();
+            if (this->button_back)
+                this->button_back->run();
+        }
 
         // Manage input after updating
         this->manage_input();
