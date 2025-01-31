@@ -47,7 +47,7 @@ static void
     }
 }
 
-void scheduler_tx(SchedulerApp* app, const char* file_path) {
+int32_t scheduler_tx(SchedulerApp* app) {
     furi_assert(app);
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* fff_head = flipper_format_file_alloc(storage);
@@ -65,16 +65,16 @@ void scheduler_tx(SchedulerApp* app, const char* file_path) {
     subghz_devices_reset(device);
 
     if(filetype == SchedulerFileTypePlaylist) {
-        flipper_format_file_open_existing(fff_head, file_path);
+        flipper_format_file_open_existing(fff_head, furi_string_get_cstr(app->file_path));
         flipper_format_read_string(fff_head, "sub", data);
     } else {
-        furi_string_set_str(data, file_path);
+        furi_string_set_str(data, furi_string_get_cstr(app->file_path));
     }
 
     do {
         if(!flipper_format_file_open_existing(fff_file, furi_string_get_cstr(data))) {
             FURI_LOG_E(TAG, "Error loading file!");
-            return;
+            return -1;
         }
 
         flipper_format_read_uint32(fff_file, "Frequency", &frequency, 1);
@@ -122,4 +122,6 @@ void scheduler_tx(SchedulerApp* app, const char* file_path) {
     furi_string_free(data);
     subghz_environment_free(environment);
     furi_record_close(RECORD_STORAGE);
+
+    return 0;
 }
