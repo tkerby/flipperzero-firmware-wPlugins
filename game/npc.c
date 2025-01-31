@@ -73,6 +73,7 @@ static void npc_start(Entity *self, GameManager *manager, void *context)
     EntityContext *npc_context = (EntityContext *)context;
     // Copy fields from generic context
     snprintf(npc_context->id, sizeof(npc_context->id), "%s", npc_context_generic->id);
+    snprintf(npc_context->message, sizeof(npc_context->message), "%s", npc_context_generic->message);
     npc_context->index = npc_context_generic->index;
     npc_context->size = npc_context_generic->size;
     npc_context->start_position = npc_context_generic->start_position;
