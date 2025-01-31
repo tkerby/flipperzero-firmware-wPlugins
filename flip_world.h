@@ -1,7 +1,7 @@
 #pragma once
-#include <font/font.h>
-#include <flipper_http/flipper_http.h>
 #include <easy_flipper/easy_flipper.h>
+#include <flipper_http/flipper_http.h>
+#include <font/font.h>
 
 // added by Derek Jamison to lower memory usage
 #undef FURI_LOG_E
@@ -14,15 +14,15 @@
 #define FURI_LOG_D(tag, msg, ...)
 //
 
-#define TAG "FlipWorld"
-#define VERSION 0.5
+#define TAG         "FlipWorld"
+#define VERSION     0.5
 #define VERSION_TAG TAG " " FAP_VERSION
 
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
     FlipWorldSubmenuIndexRun, // Click to run the FlipWorld application
-    FlipWorldSubmenuIndexAbout,
+    FlipWorldSubmenuIndexMessage,
     FlipWorldSubmenuIndexSettings,
     FlipWorldSubmenuIndexWiFiSettings,
     FlipWorldSubmenuIndexGameSettings,
@@ -33,7 +33,7 @@ typedef enum
 typedef enum
 {
     FlipWorldViewSubmenu,          // The submenu
-    FlipWorldViewAbout,            // The about screen
+    FlipWorldViewMessage,          // The about, loading screen
     FlipWorldViewSettings,         // The settings screen
     FlipWorldViewVariableItemList, // The variable item list screen
     FlipWorldViewTextInput,        // The text input screen
@@ -56,7 +56,7 @@ typedef struct
     Widget *widget_result;
     //
     ViewDispatcher *view_dispatcher;       // Switches between our views
-    View *view_about;                      // The about screen
+    View *view_message;                    // The about, loading screen
     Submenu *submenu;                      // The submenu
     Submenu *submenu_settings;             // The settings submenu
     VariableItemList *variable_item_list;  // The variable item list (settngs)

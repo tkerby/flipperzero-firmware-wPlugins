@@ -1,6 +1,7 @@
 #include <gui/view_holder.h>
 #include <game/game.h>
 #include <game/storage.h>
+#include <alloc/alloc.h>
 
 /****** Game ******/
 /*
@@ -53,6 +54,16 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->imu_present = imu_present(game_context->imu);
 }
 
+static void thanks(Canvas *canvas, void *context)
+{
+    UNUSED(context);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 35, 8, "Saving game");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 0, 50, "Please wait while your");
+    canvas_draw_str(canvas, 0, 60, "game is saved.");
+}
+
 /*
     Write here the stop code for your game, for example, freeing memory, if it was allocated.
     You don't need to free level, sprites or entities, it will be done automatically.
@@ -68,32 +79,35 @@ static void game_stop(void *ctx)
     if (game_context->player_context)
     {
         if (!game_context->ended_early)
-            easy_flipper_dialog("Game Over", "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
+            easy_flipper_dialog(
+                "Game Over",
+                "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
         else
-            easy_flipper_dialog("Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
+            easy_flipper_dialog(
+                "Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
 
-        TextBox* text_box = text_box_alloc();
-        text_box_set_text(
-            text_box, "Thanks for playing!\n\nPlease wait while your\n game is saved.");
-        ViewHolder* view_holder = view_holder_alloc();
-        Gui* gui = furi_record_open(RECORD_GUI);
-        view_holder_attach_to_gui(view_holder, gui);
-        view_holder_set_view(view_holder, text_box_get_view(text_box));
+        ViewPort *view_port = view_port_alloc();
+        view_port_draw_callback_set(view_port, thanks, NULL);
+        Gui *gui = furi_record_open(RECORD_GUI);
+        gui_add_view_port(gui, view_port, GuiLayerFullscreen);
         uint32_t tick_count = furi_get_tick();
+        furi_delay_ms(800);
 
         save_player_context_api(game_context->player_context);
 
-        const uint32_t delay = 3000;
+        const uint32_t delay = 2500;
         tick_count = (tick_count + delay) - furi_get_tick();
-        if(tick_count < delay) {
+        if (tick_count <= delay)
+        {
             furi_delay_ms(tick_count);
         }
-        view_holder_set_view(view_holder, NULL);
-        view_holder_free(view_holder);
-        text_box_free(text_box);
-        furi_record_close(RECORD_GUI);
 
         easy_flipper_dialog("Game Saved", "Hit BACK to exit.");
+
+        flip_world_show_submenu();
+
+        gui_remove_view_port(gui, view_port);
+        furi_record_close(RECORD_GUI);
     }
 }
 
@@ -102,10 +116,10 @@ static void game_stop(void *ctx)
 */
 
 const Game game = {
-    .target_fps = 0,                     // set to 0 because we set this in game_app (callback.c line 22)
-    .show_fps = false,                   // show fps counter on the screen
-    .always_backlight = true,            // keep display backlight always on
-    .start = game_start,                 // will be called once, when game starts
-    .stop = game_stop,                   // will be called once, when game stops
+    .target_fps = 0,          // set to 0 because we set this in game_app (callback.c line 22)
+    .show_fps = false,        // show fps counter on the screen
+    .always_backlight = true, // keep display backlight always on
+    .start = game_start,      // will be called once, when game starts
+    .stop = game_stop,        // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };

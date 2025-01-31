@@ -5,12 +5,13 @@
 #include "engine/level_i.h"
 #include "engine/entity_i.h"
 #include "game/storage.h"
+#include "alloc/alloc.h"
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
 #ifdef DEVELOPMENT
 #define FURI_LOG_DEV(tag, format, ...) furi_log_print_format(FuriLogLevelInfo, tag, format, ##__VA_ARGS__)
-#define DEV_CRASH() furi_crash()
+#define DEV_CRASH()                    furi_crash()
 #else
 #define FURI_LOG_DEV(tag, format, ...)
 #define DEV_CRASH()
@@ -144,7 +145,7 @@ static void error_draw(Canvas *canvas, DataLoaderModel *model)
     }
 }
 
-static bool alloc_about_view(void *context);
+static bool alloc_message_view(void *context, MessageState state);
 static bool alloc_text_input_view(void *context, char *title);
 static bool alloc_variable_item_list(void *context, uint32_t view_id);
 //
@@ -180,21 +181,32 @@ static uint32_t callback_to_settings(void *context)
     return FlipWorldViewSettings;
 }
 
-static void about_draw_callback(Canvas *canvas, void *model)
+static void message_draw_callback(Canvas *canvas, void *model)
 {
-    UNUSED(model);
+    MessageModel *message_model = model;
     canvas_clear(canvas);
-    canvas_draw_str(canvas, 0, 10, VERSION_TAG);
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
-    canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
-    canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
+    if (message_model->message_state == MessageStateAbout)
+    {
+        canvas_draw_str(canvas, 0, 10, VERSION_TAG);
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+        canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
+        canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
+        canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
 
-    canvas_draw_str_multi(canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
+        canvas_draw_str_multi(canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
+    }
+    else if (message_model->message_state == MessageStateLoading)
+    {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Starting FlipWorld");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 0, 50, "Please wait while your");
+        canvas_draw_str(canvas, 0, 60, "game is started.");
+    }
 }
 
 // alloc
-static bool alloc_about_view(void *context)
+static bool alloc_message_view(void *context, MessageState state)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -202,16 +214,19 @@ static bool alloc_about_view(void *context)
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return false;
     }
-    if (!app->view_about)
+    if (!app->view_message)
     {
-        if (!easy_flipper_set_view(&app->view_about, FlipWorldViewAbout, about_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
+        if (!easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, (state == MessageStateLoading) ? NULL : callback_to_submenu, &app->view_dispatcher, app))
         {
             return false;
         }
-        if (!app->view_about)
+        if (!app->view_message)
         {
             return false;
         }
+        view_allocate_model(app->view_message, ViewModelTypeLockFree, sizeof(MessageModel));
+        MessageModel *model = view_get_model(app->view_message);
+        model->message_state = state;
     }
     return true;
 }
@@ -415,7 +430,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
             {
-                int index = is_str(_game_fps, "30") ? 0 : is_str(_game_fps, "60") ? 1
+                                int index = is_str(_game_fps, "30") ? 0 : is_str(_game_fps, "60") ? 1
                                                       : is_str(_game_fps, "120")  ? 2
                                                       : is_str(_game_fps, "240")  ? 3
                                                                                   : 0;
@@ -426,19 +441,20 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             if (load_char("Game-VGM-X", _game_vgm_x, sizeof(_game_vgm_x)))
             {
                 int vgm_x = atoi(_game_vgm_x);
-                int index = vgm_x == -2 ? 0 : vgm_x == -1 ? 1
-                                          : vgm_x == 0    ? 2
-                                          : vgm_x == 1    ? 3
-                                          : vgm_x == 2    ? 4
-                                          : vgm_x == 3    ? 5
-                                          : vgm_x == 4    ? 6
-                                          : vgm_x == 5    ? 7
-                                          : vgm_x == 6    ? 8
-                                          : vgm_x == 7    ? 9
-                                          : vgm_x == 8    ? 10
-                                          : vgm_x == 9    ? 11
-                                          : vgm_x == 10   ? 12
-                                                          : 2;
+                int index = vgm_x == -2 ? 0 :
+                            vgm_x == -1 ? 1 :
+                            vgm_x == 0  ? 2 :
+                            vgm_x == 1  ? 3 :
+                            vgm_x == 2  ? 4 :
+                            vgm_x == 3  ? 5 :
+                            vgm_x == 4  ? 6 :
+                            vgm_x == 5  ? 7 :
+                            vgm_x == 6  ? 8 :
+                            vgm_x == 7  ? 9 :
+                            vgm_x == 8  ? 10 :
+                            vgm_x == 9  ? 11 :
+                            vgm_x == 10 ? 12 :
+                                          2;
                 variable_item_set_current_value_index(app->variable_item_game_vgm_x, index);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_x, vgm_levels[index]);
             }
@@ -446,43 +462,41 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             if (load_char("Game-VGM-Y", _game_vgm_y, sizeof(_game_vgm_y)))
             {
                 int vgm_y = atoi(_game_vgm_y);
-                int index = vgm_y == -2 ? 0 : vgm_y == -1 ? 1
-                                          : vgm_y == 0    ? 2
-                                          : vgm_y == 1    ? 3
-                                          : vgm_y == 2    ? 4
-                                          : vgm_y == 3    ? 5
-                                          : vgm_y == 4    ? 6
-                                          : vgm_y == 5    ? 7
-                                          : vgm_y == 6    ? 8
-                                          : vgm_y == 7    ? 9
-                                          : vgm_y == 8    ? 10
-                                          : vgm_y == 9    ? 11
-                                          : vgm_y == 10   ? 12
-                                                          : 2;
+                int index = vgm_y == -2 ? 0 :
+                            vgm_y == -1 ? 1 :
+                            vgm_y == 0  ? 2 :
+                            vgm_y == 1  ? 3 :
+                            vgm_y == 2  ? 4 :
+                            vgm_y == 3  ? 5 :
+                            vgm_y == 4  ? 6 :
+                            vgm_y == 5  ? 7 :
+                            vgm_y == 6  ? 8 :
+                            vgm_y == 7  ? 9 :
+                            vgm_y == 8  ? 10 :
+                            vgm_y == 9  ? 11 :
+                            vgm_y == 10 ? 12 :
+                                          2;
                 variable_item_set_current_value_index(app->variable_item_game_vgm_y, index);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_y, vgm_levels[index]);
             }
             char _game_screen_always_on[8];
             if (load_char("Game-Screen-Always-On", _game_screen_always_on, sizeof(_game_screen_always_on)))
             {
-                int index = is_str(_game_screen_always_on, "No") ? 0 : is_str(_game_screen_always_on, "Yes") ? 1
-                                                                                                             : 0;
+                int index = is_str(_game_screen_always_on, "No") ? 0 : is_str(_game_screen_always_on, "Yes") ? 1 : 0;
                 variable_item_set_current_value_text(app->variable_item_game_screen_always_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, index);
             }
             char _game_sound_on[8];
             if (load_char("Game-Sound-On", _game_sound_on, sizeof(_game_sound_on)))
             {
-                int index = is_str(_game_sound_on, "No") ? 0 : is_str(_game_sound_on, "Yes") ? 1
-                                                                                             : 0;
+                int index = is_str(_game_sound_on, "No") ? 0 : is_str(_game_sound_on, "Yes") ? 1 : 0;
                 variable_item_set_current_value_text(app->variable_item_game_sound_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_sound_on, index);
             }
             char _game_vibration_on[8];
             if (load_char("Game-Vibration-On", _game_vibration_on, sizeof(_game_vibration_on)))
             {
-                int index = is_str(_game_vibration_on, "No") ? 0 : is_str(_game_vibration_on, "Yes") ? 1
-                                                                                                     : 0;
+                int index = is_str(_game_vibration_on, "No") ? 0 : is_str(_game_vibration_on, "Yes") ? 1 : 0;
                 variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, index);
             }
@@ -562,7 +576,7 @@ static bool alloc_submenu_settings(void *context)
     return true;
 }
 // free
-static void free_about_view(void *context)
+static void free_message_view(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -570,11 +584,11 @@ static void free_about_view(void *context)
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return;
     }
-    if (app->view_about)
+    if (app->view_message)
     {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewAbout);
-        view_free(app->view_about);
-        app->view_about = NULL;
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMessage);
+        view_free(app->view_message);
+        app->view_message = NULL;
     }
 }
 
@@ -693,7 +707,7 @@ static void free_submenu_settings(void *context)
         app->submenu_settings = NULL;
     }
 }
-static FuriThreadId thread_id;
+static FuriThread *game_thread;
 static bool game_thread_running = false;
 void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings)
 {
@@ -707,19 +721,23 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
     {
         free_variable_item_list(app);
     }
-    free_about_view(app);
+    free_message_view(app);
     free_text_input_view(app);
 
     // free game thread
     if (game_thread_running)
     {
         game_thread_running = false;
-        furi_thread_flags_set(thread_id, WorkerEvtStop);
-        furi_thread_free(thread_id);
+        if (game_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
+            furi_thread_join(game_thread);
+            furi_thread_free(game_thread);
+            game_thread = NULL;
+        }
     }
 
-    if (should_free_submenu_settings)
-        free_submenu_settings(app);
+    if (should_free_submenu_settings) free_submenu_settings(app);
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -739,10 +757,7 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 
-    snprintf(
-        fhttp->file_path,
-        sizeof(fhttp->file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+    snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}");
@@ -778,10 +793,7 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 
-    snprintf(
-        fhttp->file_path,
-        sizeof(fhttp->file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
+    snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
 }
@@ -854,8 +866,12 @@ static bool start_game_thread(void *context)
     if (game_thread_running)
     {
         game_thread_running = false;
-        furi_thread_flags_set(thread_id, WorkerEvtStop);
-        furi_thread_free(thread_id);
+        if (game_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
+            furi_thread_join(game_thread);
+            furi_thread_free(game_thread);
+        }
     }
     // start game thread
     FuriThread *thread = furi_thread_alloc_ex("game", 2048, game_app, app);
@@ -866,7 +882,7 @@ static bool start_game_thread(void *context)
         return false;
     }
     furi_thread_start(thread);
-    thread_id = furi_thread_get_id(thread);
+    game_thread = thread;
     game_thread_running = true;
     return true;
 }
@@ -888,14 +904,16 @@ static bool _fetch_game(DataLoaderModel *model)
         if (!load_char("Flip-Social-Username", username, sizeof(username)))
         {
             FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             easy_flipper_dialog("Error", "Failed to load saved username\nGo to user settings to update.");
             return false;
         }
         if (!load_char("Flip-Social-Password", password, sizeof(password)))
         {
             FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             easy_flipper_dialog("Error", "Failed to load saved password\nGo to settings to update.");
             return false;
         }
@@ -911,7 +929,8 @@ static bool _fetch_game(DataLoaderModel *model)
         {
             FURI_LOG_E(TAG, "Failed to load is_logged_in");
             easy_flipper_dialog("Error", "Failed to load is_logged_in\nGo to user settings to update.");
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             return false;
         }
         if (is_str(is_logged_in, "false") && is_str(model->title, "Registering..."))
@@ -923,14 +942,16 @@ static bool _fetch_game(DataLoaderModel *model)
             {
                 FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
                 easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return false;
             }
             if (!load_char("Flip-Social-Password", password, sizeof(password)))
             {
                 FURI_LOG_E(TAG, "Failed to load Flip-Social-Password");
                 easy_flipper_dialog("Error", "Failed to load saved password. Go to settings to update.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return false;
             }
             char payload[172];
@@ -951,15 +972,13 @@ static bool _fetch_game(DataLoaderModel *model)
     }
     else if (model->request_index == 3)
     {
-        snprintf(
-            model->fhttp->file_path,
-            sizeof(model->fhttp->file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
+        snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
         FuriString *world_list = flipper_http_load_from_file(model->fhttp->file_path);
         if (!world_list)
         {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to load world list");
             easy_flipper_dialog("Error", "Failed to load world list. Go to game settings to download packs.");
             return false;
@@ -967,7 +986,8 @@ static bool _fetch_game(DataLoaderModel *model)
         FuriString *first_world = get_json_array_value_furi("worlds", 0, world_list);
         if (!first_world)
         {
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             FURI_LOG_E(TAG, "Failed to get first world");
             easy_flipper_dialog("Error", "Failed to get first world. Go to game settings to download packs.");
             furi_string_free(world_list);
@@ -982,15 +1002,13 @@ static bool _fetch_game(DataLoaderModel *model)
             {
                 FURI_LOG_E(TAG, "Failed to start game thread");
                 easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Failed to start game thread";
             }
             return true;
         }
-        snprintf(
-            model->fhttp->file_path,
-            sizeof(model->fhttp->file_path),
-            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(first_world));
+        snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", furi_string_get_cstr(first_world));
 
         model->fhttp->save_received_data = true;
         char url[128];
@@ -1102,19 +1120,22 @@ static char *_parse_game(DataLoaderModel *model)
             else if (strstr(model->fhttp->last_response, "Username or password not provided") != NULL)
             {
                 easy_flipper_dialog("Error", "Please enter your credentials.\nPress BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Please enter your credentials.";
             }
             else if (strstr(model->fhttp->last_response, "User already exists") != NULL || strstr(model->fhttp->last_response, "Multiple users found") != NULL)
             {
                 easy_flipper_dialog("Error", "Registration failed...\nUsername already exists.\nPress BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Username already exists.";
             }
             else
             {
                 easy_flipper_dialog("Error", "Registration failed...\nUpdate your credentials.\nPress BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Registration failed...";
             }
         }
@@ -1124,7 +1145,8 @@ static char *_parse_game(DataLoaderModel *model)
             {
                 FURI_LOG_E(TAG, "Failed to start game thread");
                 easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu); // just go back to the main menu for now
                 return "Failed to start game thread";
             }
             return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
@@ -1140,7 +1162,8 @@ static char *_parse_game(DataLoaderModel *model)
         {
             FURI_LOG_E(TAG, "Failed to start game thread");
             easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu); // just go back to the main menu for now
+            view_dispatcher_switch_to_view(app->view_dispatcher,
+                                           FlipWorldViewSubmenu); // just go back to the main menu for now
             return "Failed to start game thread";
         }
         return "Thanks for playing FlipWorld!\n\n\n\nPress BACK to return if this\ndoesn't automatically close.";
@@ -1195,62 +1218,53 @@ void callback_submenu_choices(void *context, uint32_t index)
                 return fetch_player_stats(fhttp);
             }
 
-            Loading *loading;
-            int32_t loading_view_id = 987654321; // Random ID
-
-            loading = loading_alloc();
-            if (!loading)
+            if (!alloc_message_view(app, MessageStateLoading))
             {
-                FURI_LOG_E(HTTP_TAG, "Failed to allocate loading");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                flipper_http_free(fhttp);
+                FURI_LOG_E(TAG, "Failed to allocate message view");
                 return;
             }
-
-            view_dispatcher_add_view(app->view_dispatcher, loading_view_id, loading_get_view(loading));
-
-            // Switch to the loading view
-            view_dispatcher_switch_to_view(app->view_dispatcher, loading_view_id);
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 
             // Make the request
-            if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) ||
-                !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
+            if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) || !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
             {
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
-                loading_free(loading);
                 flipper_http_free(fhttp);
             }
             else
             {
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
-                loading_free(loading);
                 flipper_http_free(fhttp);
             }
+
+            if (!alloc_submenu_settings(app))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate settings view");
+                return;
+            }
+
             if (!start_game_thread(app))
             {
                 FURI_LOG_E(TAG, "Failed to start game thread");
                 easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
                 return;
             }
-
-            easy_flipper_dialog("Starting Game", "Please wait...");
+            
         }
         else
         {
             switch_to_view_get_game(app);
         }
         break;
-    case FlipWorldSubmenuIndexAbout:
+    case FlipWorldSubmenuIndexMessage:
+        // About menu.
         free_all_views(app, true, true);
-        if (!alloc_about_view(app))
+        if (!alloc_message_view(app, MessageStateAbout))
         {
-            FURI_LOG_E(TAG, "Failed to allocate about view");
+            FURI_LOG_E(TAG, "Failed to allocate message view");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewAbout);
+
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
         break;
     case FlipWorldSubmenuIndexSettings:
         free_all_views(app, true, true);
@@ -1599,10 +1613,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
-    snprintf(
-        model->fhttp->file_path,
-        sizeof(model->fhttp->file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
+    snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}");
 }
@@ -1856,7 +1867,14 @@ static void loader_process_callback(void *context)
 
     DataState current_data_state;
     DataLoaderModel *loader_model = NULL;
-    with_view_model(view, DataLoaderModel * model, { current_data_state = model->data_state; loader_model = model; }, false);
+    with_view_model(
+        view,
+        DataLoaderModel * model,
+        {
+            current_data_state = model->data_state;
+            loader_model = model;
+        },
+        false);
     if (!loader_model || !loader_model->fhttp)
     {
         FURI_LOG_E(TAG, "Model or fhttp is NULL");
