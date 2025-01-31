@@ -29,13 +29,12 @@ static void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     NfcHidApp* app = ctx;
 
     if (event.type == NfcScannerEventTypeDetected) {
-        app->running = false;
-
-        // TODO
+        app->uid_len = event.data.protocol_num;
+        app->new_uid = true;
     }
 }
 
-static NfcHidApp* nfchid_alloc() {
+static NfcHidApp* nfc_hid_alloc() {
     NfcHidApp* app = malloc(sizeof(NfcHidApp));
 
     app->view_port = view_port_alloc();
@@ -61,11 +60,12 @@ static NfcHidApp* nfchid_alloc() {
     nfc_scanner_start(app->scanner, nfc_hid_scanner_callback, app);
 
     app->running = true;
+    app->new_uid = false;
 
     return app;
 }
 
-static void nfchid_free(NfcHidApp* app) {
+static void nfc_hid_free(NfcHidApp* app) {
     // Stop and free nfc scanner
     nfc_scanner_stop(app->scanner);
     nfc_scanner_free(app->scanner);
@@ -85,19 +85,33 @@ static void nfchid_free(NfcHidApp* app) {
 int32_t nfc_hid_app(void* p) {
     UNUSED(p);
 
-    NfcHidApp* app = nfchid_alloc();
+    NfcHidApp* app = nfc_hid_alloc();
 
     while(app->running) {
-        furi_hal_hid_kb_press(HID_KEYBOARD_C);
-        furi_delay_ms(200);
-        furi_hal_hid_kb_release(HID_KEYBOARD_C);
-        furi_delay_ms(200);
+        // NfcProtocol proto = nfc_device_get_protocol(app->device);
+
+        if (app->new_uid) {
+            const uint8_t* uid = nfc_device_get_uid(app->device, &app->uid_len);
+
+            if (memcmp(uid, app->uid, app->uid_len)) {
+                continue;
+            }
+
+            memcpy(&uid, app->uid, app->uid_len);
+
+            furi_hal_hid_kb_press(HID_KEYBOARD_C);
+            furi_delay_ms(200);
+            furi_hal_hid_kb_release(HID_KEYBOARD_C);
+            furi_delay_ms(200);
+
+            app->new_uid = false;
+        }
 
         // Refresh UI
         view_port_update(app->view_port);
     }
 
-    nfchid_free(app);
+    nfc_hid_free(app);
 
     return 0;
 }

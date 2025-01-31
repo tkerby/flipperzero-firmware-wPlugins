@@ -5,9 +5,13 @@
 
 #define VERSION "1.0.0"
 #define TAG "NFC_HID"
+#define MAX_NFC_UID_SIZE 32
 
 struct NfcHidApp {
     bool running;
+    bool new_uid;
+    uint8_t* uid[MAX_NFC_UID_SIZE];
+    size_t uid_len;
 
     ViewPort* view_port;
     Gui* gui;
