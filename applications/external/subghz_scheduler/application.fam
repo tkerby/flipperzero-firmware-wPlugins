@@ -1,16 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="subghz_scheduler",  # Must be unique
-    name="Sub-GHz Scheduler",  # Displayed in menus
+    appid="subghz_scheduler",
+    name="Sub-GHz Scheduler",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="scheduler_app",
     stack_size=3 * 1024,
+    fap_icon="icons/icon.png",
+    fap_icon_assets="images",
     fap_category="Sub-GHz",
-    fap_version="1.0",
-    fap_icon="icons/icon.png",  # 10x10 1-bit PNG
-    fap_icon_assets="images",  # Image assets to compile for this application
-    fap_author="Patrick Edwards",
+    fap_author="shalebridge / Patrick Edwards",
     fap_weburl="https://github.com/shalebridge/flipper-subghz-scheduler",
+    fap_version="1.0",
     fap_description="An app to send a SUB or playlist file repeatedly at a given interval.",
 )
