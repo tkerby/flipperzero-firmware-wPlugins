@@ -12,7 +12,6 @@
 static void scheduler_scene_start_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
     SchedulerApp* app = context;
-    UNUSED(index);
 
     if(index == SchedulerStartRunEvent) {
         view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartRunEvent);
@@ -89,11 +88,9 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
                     app->dialogs, "Please select\nplaylist (*.txt) or\n *.sub file!");
             } else {
                 scene_manager_next_scene(app->scene_manager, SchedulerSceneRunSchedule);
-                FURI_LOG_I(TAG, "Run Scheduler");
             }
         } else if(event.event == SchedulerStartEventSelectPlaylist) {
             scene_manager_next_scene(app->scene_manager, SchedulerSceneLoadFile);
-            FURI_LOG_I(TAG, "Select file");
         }
         consumed = true;
     }

@@ -35,7 +35,9 @@ static void
     transmit(SchedulerApp* app, const SubGhzDevice* device, SubGhzTransmitter* transmitter) {
     uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
     for(uint_fast8_t i = 0; i <= repeats; ++i) {
-        FURI_LOG_I(TAG, "Tx %d of %d", i + 1, repeats + 1);
+#ifdef FURI_DEBUG
+        FURI_LOG_D(TAG, "Scheduled Tx %d of %d", i + 1, repeats + 1);
+#endif
         if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
             while(!subghz_devices_is_async_complete_tx(device)) {
                 furi_delay_ms(10);
@@ -63,7 +65,6 @@ void scheduler_tx(SchedulerApp* app, const char* file_path) {
     subghz_devices_reset(device);
 
     if(filetype == SchedulerFileTypePlaylist) {
-        FURI_LOG_W(TAG, "Filepath: %s", file_path);
         flipper_format_file_open_existing(fff_head, file_path);
         flipper_format_read_string(fff_head, "sub", data);
     } else {
@@ -75,7 +76,6 @@ void scheduler_tx(SchedulerApp* app, const char* file_path) {
             FURI_LOG_E(TAG, "Error loading file!");
             return;
         }
-        FURI_LOG_W(TAG, "File: %s", file_path);
 
         flipper_format_read_uint32(fff_file, "Frequency", &frequency, 1);
         flipper_format_read_string(fff_file, "Preset", preset);
