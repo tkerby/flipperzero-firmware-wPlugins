@@ -7,16 +7,12 @@ static void nfc_hid_render_callback(Canvas* canvas, void* ctx) {
     canvas_clear(canvas);
 
     canvas_set_font(canvas, FontPrimary);
-
     canvas_draw_str(canvas, 0, 10, "NFC HID Scanner");
 
     canvas_set_font(canvas, FontSecondary);
-
     canvas_draw_str(canvas, 0, 10, "v");
     canvas_draw_str(canvas, 96, 10, VERSION);
-
     canvas_draw_str(canvas, 0, 40, "Scan a NFC Card");
-
     canvas_draw_str(canvas, 0, 63, "Press [back] to exit");
 }
 
@@ -57,6 +53,7 @@ static NfcHidApp* nfchid_alloc() {
     // Enable nfc scanner
     app->nfc = nfc_alloc();
     app->scanner = nfc_scanner_alloc(app->nfc);
+    app->device = nfc_device_alloc();
 
     // Register callbacks
     view_port_draw_callback_set(app->view_port, nfc_hid_render_callback, NULL);

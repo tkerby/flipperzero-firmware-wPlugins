@@ -16,6 +16,7 @@ struct NfcHidApp {
 
     Nfc* nfc;
 	NfcScanner* scanner;
+    NfcDevice* device;
 };
 
 typedef struct NfcHidApp NfcHidApp;
