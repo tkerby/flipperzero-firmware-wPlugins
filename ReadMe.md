@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0126-2336-0.420.0-3bbf39e](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0131-1705-0.420.0-e33c1f4](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-26 23:36 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-26 23:36 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-01-31 17:05 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-01-31 17:05 EST`
 - [IR: Easy Learn & Learn RAW toggles in Learn screen (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d04186c3ec4e6efba1b0c6370572a2969cbbcbb6)
 - Updated: [FlipWorld v0.4 (By jblanked)](https://github.com/jblanked/FlipWorld)
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
