@@ -38,8 +38,8 @@ static EntityContext *enemy_generic_alloc(
     enemy_context_generic->strength = strength;
     enemy_context_generic->health = health;
     // Initialize other fields as needed
-    enemy_context_generic->sprite_right = NULL;          // Assign appropriate sprite
-    enemy_context_generic->sprite_left = NULL;           // Assign appropriate sprite
+    enemy_context_generic->sprite_right = NULL;          // sprite is assigned later
+    enemy_context_generic->sprite_left = NULL;           // sprite is assigned later
     enemy_context_generic->direction = ENTITY_RIGHT;     // Default direction
     enemy_context_generic->state = ENTITY_MOVING_TO_END; // Start in IDLE state
     // Set radius based on size, for example, average of size.x and size.y divided by 2
@@ -569,6 +569,7 @@ const EntityDescription *enemy(
         return NULL;
     }
 
+    // assign sprites to the context
     enemy_context_generic->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
     enemy_context_generic->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 

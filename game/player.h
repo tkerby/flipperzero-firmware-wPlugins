@@ -59,6 +59,7 @@ typedef enum
 {
     GAME_MENU_INFO, // level, health, xp, etc.
     GAME_MENU_MORE, // more settings
+    GAME_MENU_NPC,  // NPC dialog
 } GameMenuScreen;
 
 typedef struct
@@ -88,6 +89,8 @@ typedef struct
     //
     int icon_count;
     int icon_offset;
+    //
+    char message[64];
 } GameContext;
 
 typedef struct

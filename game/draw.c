@@ -151,6 +151,11 @@ static void draw_menu(GameManager *manager, Canvas *canvas)
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 86, 42, "More");
         break;
+    case GAME_MENU_NPC:
+        // draw NPC dialog
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+        canvas_draw_str(canvas, 7, 16, game_context->message);
+        break;
     default:
         break;
     }
@@ -162,26 +167,28 @@ void background_render(Canvas *canvas, GameManager *manager)
         return;
 
     GameContext *game_context = game_manager_game_context_get(manager);
-
-    // get player position
-    Vector posi = entity_pos_get(game_context->player);
-
-    // draw username over player's head
-    draw_username(canvas, posi, game_context->player_context->username);
-
-    // draw switch world icon
-    if (game_context->is_switching_level)
+    if (!game_context->is_menu_open)
     {
-        canvas_draw_icon(
-            canvas,
-            0,
-            0,
-            &I_icon_world_change_128x64px);
+
+        // get player position
+        Vector posi = entity_pos_get(game_context->player);
+
+        // draw username over player's head
+        draw_username(canvas, posi, game_context->player_context->username);
+
+        // draw switch world icon
+        if (game_context->is_switching_level)
+        {
+            canvas_draw_icon(
+                canvas,
+                0,
+                0,
+                &I_icon_world_change_128x64px);
+        }
     }
-
-    // draw menu
-    if (game_context->is_menu_open)
+    else
     {
+        // draw menu
         draw_menu(manager, canvas);
     }
 };

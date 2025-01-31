@@ -9,7 +9,8 @@ static EntityContext *npc_generic_alloc(
     Vector start_position,
     Vector end_position,
     float move_timer, // Wait duration before moving again
-    float speed)
+    float speed,
+    const char *message)
 {
     if (!npc_context_generic)
     {
@@ -28,9 +29,10 @@ static EntityContext *npc_generic_alloc(
     npc_context_generic->move_timer = move_timer;   // Set wait duration
     npc_context_generic->elapsed_move_timer = 0.0f; // Initialize elapsed timer
     npc_context_generic->speed = speed;
+    snprintf(npc_context_generic->message, sizeof(npc_context_generic->message), "%s", message);
     // Initialize other fields as needed
-    npc_context_generic->sprite_right = NULL;          // Assign appropriate sprite
-    npc_context_generic->sprite_left = NULL;           // Assign appropriate sprite
+    npc_context_generic->sprite_right = NULL;          // sprite is assigned later
+    npc_context_generic->sprite_left = NULL;           // sprite is assigned later
     npc_context_generic->direction = ENTITY_RIGHT;     // Default direction
     npc_context_generic->state = ENTITY_MOVING_TO_END; // Start in IDLE state
     // Set radius based on size, for example, average of size.x and size.y divided by 2
@@ -121,7 +123,58 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
         pos.y - camera_y - (npc_context->size.y / 2));
 }
 
-// skip collision function for now
+// NPC collision function
+static void npc_collision(Entity *self, Entity *other, GameManager *manager, void *context)
+{
+    if (!self || !other || !context || !manager)
+    {
+        FURI_LOG_E("Game", "NPC collision: Invalid parameters");
+        return;
+    }
+
+    // Check if the NPC collided with the player
+    if (entity_description_get(other) == &player_desc)
+    {
+        // Retrieve NPC context
+        EntityContext *npc_context = (EntityContext *)context;
+        GameContext *game_context = game_manager_game_context_get(manager);
+        furi_check(npc_context);
+        furi_check(game_context);
+
+        // Get positions of the NPC and the player
+        Vector npc_pos = entity_pos_get(self);
+        Vector player_pos = entity_pos_get(other);
+
+        // Determine if the NPC is facing the player or player is facing the NPC
+        bool player_is_facing_npc = false;
+
+        // Determine if the player is facing the NPC
+        if ((game_context->player_context->direction == ENTITY_LEFT && npc_pos.x < player_pos.x) ||
+            (game_context->player_context->direction == ENTITY_RIGHT && npc_pos.x > player_pos.x) ||
+            (game_context->player_context->direction == ENTITY_UP && npc_pos.y < player_pos.y) ||
+            (game_context->player_context->direction == ENTITY_DOWN && npc_pos.y > player_pos.y))
+        {
+            player_is_facing_npc = true;
+        }
+
+        // bounce the player back to where it came from
+        // Set the player's old position to prevent collision
+        entity_pos_set(other, game_context->player_context->old_position);
+        // Reset player's movement direction to prevent immediate re-collision
+        game_context->player_context->dx = 0;
+        game_context->player_context->dy = 0;
+
+        // Press OK and facing NPC
+        if (player_is_facing_npc && game_context->last_button == GameKeyOk)
+        {
+            // show the NPC dialog on the game menu
+            game_context->menu_screen = GAME_MENU_NPC;
+            game_context->menu_selection = 0;
+            snprintf(game_context->message, sizeof(game_context->message), "%s", npc_context->message);
+            game_context->is_menu_open = true;
+        }
+    }
+}
 
 // NPC update function
 static void npc_update(Entity *self, GameManager *manager, void *context)
@@ -262,7 +315,7 @@ static const EntityDescription _generic_npc = {
     .stop = npc_free,
     .update = npc_update,
     .render = npc_render,
-    .collision = NULL,
+    .collision = npc_collision,
     .event = NULL,
     .context_size = sizeof(EntityContext),
 };
@@ -275,7 +328,8 @@ const EntityDescription *npc(
     Vector start_position,
     Vector end_position,
     float move_timer, // Wait duration before moving again
-    float speed)
+    float speed,
+    const char *message)
 {
     SpriteContext *sprite_context = get_sprite_context(id);
     if (!sprite_context)
@@ -292,13 +346,15 @@ const EntityDescription *npc(
         start_position,
         end_position,
         move_timer,
-        speed);
+        speed,
+        message);
     if (!npc_context_generic)
     {
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
 
+    // assign sprites to the context
     npc_context_generic->sprite_right = game_manager_sprite_load(manager, sprite_context->right_file_name);
     npc_context_generic->sprite_left = game_manager_sprite_load(manager, sprite_context->left_file_name);
 
@@ -347,8 +403,9 @@ void spawn_npc(Level *level, GameManager *manager, FuriString *json)
     FuriString *move_timer = get_json_value_furi("move_timer", json);
     FuriString *speed = get_json_value_furi("speed", json);
     //
+    FuriString *message = get_json_value_furi("message", json);
 
-    if (!id || !_index || !start_position || !start_position_x || !start_position_y || !end_position || !end_position_x || !end_position_y || !move_timer || !speed)
+    if (!id || !_index || !start_position || !start_position_x || !start_position_y || !end_position || !end_position_x || !end_position_y || !move_timer || !speed || !message)
     {
         FURI_LOG_E("Game", "Failed to get JSON values");
         return;
@@ -364,7 +421,8 @@ void spawn_npc(Level *level, GameManager *manager, FuriString *json)
                                                                                   (Vector){atof_furi(start_position_x), atof_furi(start_position_y)},
                                                                                   (Vector){atof_furi(end_position_x), atof_furi(end_position_y)},
                                                                                   atof_furi(move_timer),
-                                                                                  atof_furi(speed)));
+                                                                                  atof_furi(speed),
+                                                                                  furi_string_get_cstr(message)));
         game_context->npc_count++;
     }
 
