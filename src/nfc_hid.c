@@ -29,8 +29,8 @@ static void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     NfcHidApp* app = ctx;
 
     if (event.type == NfcScannerEventTypeDetected) {
-        app->uid_len = event.data.protocol_num;
         app->new_uid = true;
+        // TODO
     }
 }
 
@@ -49,7 +49,7 @@ static NfcHidApp* nfc_hid_alloc() {
     // Set USB mode to hid
     furi_hal_usb_set_config(&usb_hid, NULL);
 
-    // Enable nfc scanner
+    // Enable nfc
     app->nfc = nfc_alloc();
     app->scanner = nfc_scanner_alloc(app->nfc);
     app->device = nfc_device_alloc();
@@ -66,7 +66,8 @@ static NfcHidApp* nfc_hid_alloc() {
 }
 
 static void nfc_hid_free(NfcHidApp* app) {
-    // Stop and free nfc scanner
+    // Stop and free nfc
+    nfc_device_free(app->device);
     nfc_scanner_stop(app->scanner);
     nfc_scanner_free(app->scanner);
     nfc_free(app->nfc);
@@ -88,24 +89,10 @@ int32_t nfc_hid_app(void* p) {
     NfcHidApp* app = nfc_hid_alloc();
 
     while(app->running) {
-        // NfcProtocol proto = nfc_device_get_protocol(app->device);
-
-        if (app->new_uid) {
-            const uint8_t* uid = nfc_device_get_uid(app->device, &app->uid_len);
-
-            if (memcmp(uid, app->uid, app->uid_len)) {
-                continue;
-            }
-
-            memcpy(&uid, app->uid, app->uid_len);
-
-            furi_hal_hid_kb_press(HID_KEYBOARD_C);
-            furi_delay_ms(200);
-            furi_hal_hid_kb_release(HID_KEYBOARD_C);
-            furi_delay_ms(200);
-
-            app->new_uid = false;
-        }
+        furi_hal_hid_kb_press(HID_KEYBOARD_C);
+        furi_delay_ms(500);
+        furi_hal_hid_kb_release(HID_KEYBOARD_C);
+        furi_delay_ms(500);
 
         // Refresh UI
         view_port_update(app->view_port);
