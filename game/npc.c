@@ -321,7 +321,7 @@ const EntityDescription *npc(
     {
         npc_context_generic->state = ENTITY_IDLE;
     }
-
+    free(sprite_context);
     return &_generic_npc;
 }
 

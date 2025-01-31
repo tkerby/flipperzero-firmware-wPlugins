@@ -591,7 +591,7 @@ const EntityDescription *enemy(
     {
         enemy_context_generic->state = ENTITY_IDLE;
     }
-
+    free(sprite_context);
     return &_generic_enemy;
 }
 

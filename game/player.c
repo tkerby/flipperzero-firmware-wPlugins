@@ -125,7 +125,7 @@ void player_spawn(Level *level, GameManager *manager)
         {
             FURI_LOG_E(TAG, "Failed to save player context after initialization");
         }
-
+        free(sprite_context);
         return;
     }
 
@@ -162,6 +162,7 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Assign loaded player context to game context
     game_context->player_context = pctx;
+    free(sprite_context);
 }
 
 static int vgm_increase(float value, float increase)
