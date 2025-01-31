@@ -51,6 +51,7 @@ typedef struct {
     uint8_t head;
     int8_t dir;
     double gap;
+    uint8_t game_mode; // 0=the boat moves - 1=the walls move
 
     double boat;
     double speed;
@@ -124,11 +125,15 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
     for(int i = 0; i <= YMAX; ++i) {
         uint8_t val = drifter_state->map[pos];
         uint8_t gap = drifter_state->gap;
-        if(val > 0) {
-            canvas_draw_line(canvas, 0, i, val, i);
+        int8_t gap_start = val;
+        if(drifter_state->game_mode == 1) {
+            gap_start -= boat - 62;
         }
-        if(val < XMAX) {
-            canvas_draw_line(canvas, val + gap, i, XMAX, i);
+        if(gap_start >= 0) {
+            canvas_draw_line(canvas, 0, i, gap_start, i);
+        }
+        if(gap_start + gap <= XMAX) {
+            canvas_draw_line(canvas, gap_start + gap, i, XMAX, i);
         }
         // Handle collisions here instead of adding a loop to game step function
         if(((i >= 58 && i <= 59) && (val >= boat + 1 || val + gap <= boat + 2)) ||
@@ -140,8 +145,8 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
             if(drifter_state->score > drifter_state->highscore) {
                 canvas_draw_str(canvas, 0, 18, "New High Score!");
             } else {
-                char msg[20];
-                snprintf(msg, 20, "High Score: %ld", drifter_state->highscore);
+                char msg[21];
+                snprintf(msg, 21, "High Score: %ld", drifter_state->highscore);
                 canvas_draw_str(canvas, 0, 18, msg);
             }
         }
@@ -153,6 +158,9 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
         }
     }
 
+    if(drifter_state->game_mode == 1) {
+        boat = 62;
+    }
     canvas_draw_line(canvas, boat, 60, boat, 63);
     canvas_draw_box(canvas, boat + 1, 58, 2, 5);
     canvas_draw_line(canvas, boat + 3, 60, boat + 3, 63);
@@ -300,6 +308,7 @@ int32_t drifter_app(void* p) {
     UNUSED(p);
 
     DrifterState* drifter_state = malloc(sizeof(DrifterState));
+    drifter_state->game_mode = 0;
     drifter_game_init_game(drifter_state);
 
     DrifterEvent event;
@@ -337,6 +346,9 @@ int32_t drifter_app(void* p) {
                     }
                 } else if(event.input.type == InputTypeRelease) {
                     switch(event.input.key) {
+                    case InputKeyDown:
+                        drifter_state->game_mode = !drifter_state->game_mode;
+                        break;
                     case InputKeyRight:
                         factor = 1;
                         __attribute__((fallthrough));
