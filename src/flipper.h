@@ -18,5 +18,6 @@
 #include <hid_usage_keyboard.h>
 #include <nfc/nfc_device.h>
 #include <nfc/nfc_listener.h>
+#include <nfc/nfc_scanner.h>
 
 #endif

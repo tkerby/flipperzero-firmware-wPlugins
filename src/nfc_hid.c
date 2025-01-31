@@ -29,6 +29,16 @@ static void nfc_hid_input_callback(InputEvent* input_event, void* ctx) {
     }
 }
 
+static void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
+    NfcHidApp* app = ctx;
+
+    if (event.type == NfcScannerEventTypeDetected) {
+        app->running = false;
+
+        // TODO
+    }
+}
+
 static NfcHidApp* nfchid_alloc() {
     NfcHidApp* app = malloc(sizeof(NfcHidApp));
 
@@ -44,9 +54,14 @@ static NfcHidApp* nfchid_alloc() {
     // Set USB mode to hid
     furi_hal_usb_set_config(&usb_hid, NULL);
 
+    // Enable nfc scanner
+    app->nfc = nfc_alloc();
+    app->scanner = nfc_scanner_alloc(app->nfc);
+
     // Register callbacks
     view_port_draw_callback_set(app->view_port, nfc_hid_render_callback, NULL);
     view_port_input_callback_set(app->view_port, nfc_hid_input_callback, app);
+    nfc_scanner_start(app->scanner, nfc_hid_scanner_callback, app);
 
     app->running = true;
 
@@ -54,6 +69,11 @@ static NfcHidApp* nfchid_alloc() {
 }
 
 static void nfchid_free(NfcHidApp* app) {
+    // Stop and free nfc scanner
+    nfc_scanner_stop(app->scanner);
+    nfc_scanner_free(app->scanner);
+    nfc_free(app->nfc);
+
     // Restore previous USB Mode
     furi_hal_usb_set_config(app->usb_mode_prev, NULL);
 
