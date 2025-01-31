@@ -1,8 +1,8 @@
 #include <game/npc.h>
-static NPCContext *npc_context_generic;
+static EntityContext *npc_context_generic;
 
 // Allocation function
-static NPCContext *npc_generic_alloc(
+static EntityContext *npc_generic_alloc(
     const char *id,
     int index,
     Vector size,
@@ -13,11 +13,11 @@ static NPCContext *npc_generic_alloc(
 {
     if (!npc_context_generic)
     {
-        npc_context_generic = malloc(sizeof(NPCContext));
+        npc_context_generic = malloc(sizeof(EntityContext));
     }
     if (!npc_context_generic)
     {
-        FURI_LOG_E("Game", "Failed to allocate NPCContext");
+        FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
     snprintf(npc_context_generic->id, sizeof(npc_context_generic->id), "%s", id);
@@ -68,7 +68,7 @@ static void npc_start(Entity *self, GameManager *manager, void *context)
         return;
     }
 
-    NPCContext *npc_context = (NPCContext *)context;
+    EntityContext *npc_context = (EntityContext *)context;
     // Copy fields from generic context
     snprintf(npc_context->id, sizeof(npc_context->id), "%s", npc_context_generic->id);
     npc_context->index = npc_context_generic->index;
@@ -97,7 +97,7 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
     if (!self || !context || !canvas || !manager)
         return;
 
-    NPCContext *npc_context = (NPCContext *)context;
+    EntityContext *npc_context = (EntityContext *)context;
 
     // Get the position of the NPC
     Vector pos = entity_pos_get(self);
@@ -129,7 +129,7 @@ static void npc_update(Entity *self, GameManager *manager, void *context)
     if (!self || !context || !manager)
         return;
 
-    NPCContext *npc_context = (NPCContext *)context;
+    EntityContext *npc_context = (EntityContext *)context;
     if (!npc_context || npc_context->state == ENTITY_DEAD)
     {
         return;
@@ -264,7 +264,7 @@ static const EntityDescription _generic_npc = {
     .render = npc_render,
     .collision = NULL,
     .event = NULL,
-    .context_size = sizeof(NPCContext),
+    .context_size = sizeof(EntityContext),
 };
 
 // Spawn function to return the entity description
@@ -284,7 +284,7 @@ const EntityDescription *npc(
         return NULL;
     }
 
-    // Allocate a new NPCContext with provided parameters
+    // Allocate a new EntityContext with provided parameters
     npc_context_generic = npc_generic_alloc(
         id,
         index,
@@ -295,7 +295,7 @@ const EntityDescription *npc(
         speed);
     if (!npc_context_generic)
     {
-        FURI_LOG_E("Game", "Failed to allocate NPCContext");
+        FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
 

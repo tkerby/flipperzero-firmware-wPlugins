@@ -8,6 +8,29 @@
 #define MAX_LEVELS 10
 #define MAX_NPCS 10
 
+// EntityContext definition
+typedef struct
+{
+    char id[64];                // Unique ID for the entity type
+    int index;                  // Index for the specific entity instance
+    Vector size;                // Size of the entity
+    Sprite *sprite_right;       // Entity sprite when looking right
+    Sprite *sprite_left;        // Entity sprite when looking left
+    EntityDirection direction;  // Direction the entity is facing
+    EntityState state;          // Current state of the entity
+    Vector start_position;      // Start position of the entity
+    Vector end_position;        // End position of the entity
+    float move_timer;           // Timer for the entity movement
+    float elapsed_move_timer;   // Elapsed time for the entity movement
+    float radius;               // Collision radius for the entity
+    float speed;                // Speed of the entity
+    float attack_timer;         // Cooldown duration between attacks
+    float elapsed_attack_timer; // Time elapsed since the last attack
+    float strength;             // Damage the entity deals
+    float health;               // Health of the entity
+    char message[64];           // Message to display when interacting with the entity
+} EntityContext;
+
 typedef struct
 {
     Vector old_position;        // previous position of the player

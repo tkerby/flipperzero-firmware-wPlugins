@@ -89,7 +89,7 @@ void set_world(Level *level, GameManager *manager, char *id)
                 break;
             }
 
-            spawn_enemy_json_furi(level, manager, single_enemy_data);
+            spawn_enemy(level, manager, single_enemy_data);
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);

@@ -2,10 +2,10 @@
 #include <game/enemy.h>
 #include <notification/notification_messages.h>
 
-static EnemyContext *enemy_context_generic;
+static EntityContext *enemy_context_generic;
 
 // Allocation function
-static EnemyContext *enemy_generic_alloc(
+static EntityContext *enemy_generic_alloc(
     const char *id,
     int index,
     Vector size,
@@ -19,11 +19,11 @@ static EnemyContext *enemy_generic_alloc(
 {
     if (!enemy_context_generic)
     {
-        enemy_context_generic = malloc(sizeof(EnemyContext));
+        enemy_context_generic = malloc(sizeof(EntityContext));
     }
     if (!enemy_context_generic)
     {
-        FURI_LOG_E("Game", "Failed to allocate EnemyContext");
+        FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
     snprintf(enemy_context_generic->id, sizeof(enemy_context_generic->id), "%s", id);
@@ -77,7 +77,7 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
         return;
     }
 
-    EnemyContext *enemy_context = (EnemyContext *)context;
+    EntityContext *enemy_context = (EntityContext *)context;
     // Copy fields from generic context
     snprintf(enemy_context->id, sizeof(enemy_context->id), "%s", enemy_context_generic->id);
     enemy_context->index = enemy_context_generic->index;
@@ -109,7 +109,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     if (!self || !context || !canvas || !manager)
         return;
 
-    EnemyContext *enemy_context = (EnemyContext *)context;
+    EntityContext *enemy_context = (EntityContext *)context;
 
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
@@ -141,7 +141,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     draw_user_stats(canvas, (Vector){0, 50}, manager);
 }
 
-static void atk_notify(GameContext *game_context, EnemyContext *enemy_context, bool player_attacked)
+static void atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
 {
     if (!game_context || !enemy_context)
     {
@@ -215,12 +215,12 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     if (entity_description_get(other) == &player_desc)
     {
         // Retrieve enemy context
-        EnemyContext *enemy_context = (EnemyContext *)context;
+        EntityContext *enemy_context = (EntityContext *)context;
         GameContext *game_context = game_manager_game_context_get(manager);
         // InputState input = game_manager_input_get(manager);
         if (!enemy_context)
         {
-            FURI_LOG_E("Game", "Enemy collision: EnemyContext is NULL");
+            FURI_LOG_E("Game", "Enemy collision: EntityContext is NULL");
             return;
         }
         if (!game_context)
@@ -385,12 +385,12 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 }
 
 // Enemy update function
-static void entity_update(Entity *self, GameManager *manager, void *context)
+static void enemy_update(Entity *self, GameManager *manager, void *context)
 {
     if (!self || !context || !manager)
         return;
 
-    EnemyContext *enemy_context = (EnemyContext *)context;
+    EntityContext *enemy_context = (EntityContext *)context;
     if (!enemy_context || enemy_context->state == ENTITY_DEAD)
     {
         return;
@@ -524,11 +524,11 @@ static void enemy_free(Entity *self, GameManager *manager, void *context)
 static const EntityDescription _generic_enemy = {
     .start = enemy_start,
     .stop = enemy_free,
-    .update = entity_update,
+    .update = enemy_update,
     .render = enemy_render,
     .collision = enemy_collision,
     .event = NULL,
-    .context_size = sizeof(EnemyContext),
+    .context_size = sizeof(EntityContext),
 };
 
 // Enemy function to return the entity description
@@ -551,7 +551,7 @@ const EntityDescription *enemy(
         return NULL;
     }
 
-    // Allocate a new EnemyContext with provided parameters
+    // Allocate a new EntityContext with provided parameters
     enemy_context_generic = enemy_generic_alloc(
         id,
         index,
@@ -565,7 +565,7 @@ const EntityDescription *enemy(
         health);
     if (!enemy_context_generic)
     {
-        FURI_LOG_E("Game", "Failed to allocate EnemyContext");
+        FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
 
@@ -595,7 +595,7 @@ const EntityDescription *enemy(
     return &_generic_enemy;
 }
 
-void spawn_enemy_json_furi(Level *level, GameManager *manager, FuriString *json)
+void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
 {
     if (!level || !manager || !json)
     {
