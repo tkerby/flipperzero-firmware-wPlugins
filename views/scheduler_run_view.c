@@ -137,8 +137,7 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
         } else {
             update_countdown(app);
             notification_message(app->notifications, &sequence_blink_green_100);
-            //scheduler_tx(app, furi_string_get_cstr(app->file_path));
-            scheduler_tx_playlist(app, furi_string_get_cstr(app->file_path));
+            scheduler_tx(app, furi_string_get_cstr(app->file_path));
         }
         consumed = true;
     }
