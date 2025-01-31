@@ -1,7 +1,6 @@
 <h1 align="center"><a href='https://rogue-master.net'><img src="https://lh3.googleusercontent.com/d/1EqKVTt3clsfM8pFoZVfl4kPzm9oNqWkY" width="40%"></a>
 <br><a href='https://discord.gg/gF2bBUzAFe' target='_blank'><img src='https://lh3.googleusercontent.com/d/1Ytf8DOQZuFhzWUL2Vm-TTPVrdwRt5wi-' alt='Discord' title='Discord'></a>
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
-&nbsp;<a href='https://shop.rogue-master.net/' target='_blank'><img src='https://lh3.googleusercontent.com/d/1jMPWENvOTabzjJALFj82U72LGsRWuUuQ' alt='RM Merch'' title='RM Merch'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
 # Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0122-1815-0.420.0-2b43189.tgz&channel=RM0122-1815-0.420.0-2b43189&version=0.420.0)
@@ -17,7 +16,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="support"></a>
 
-- [Rogue Master Merch! `For All F0 Accessories and Boards`](https://shop.rogue-master.net)
 - Keep Your Flipper Up To Date With [PATREON membership](https://www.patreon.com/RogueMaster/membership)
 - [PATREON for daily compiled releases](https://www.patreon.com/RogueMaster) for nearly ALL updates. GitHub releases will occur weekly or with OFW version updates.
 - [Contact me on Discord/Patreon to RENAME your Flipper or for GIF conversion for Flipper Zero](https://www.patreon.com/RogueMaster/membership)
