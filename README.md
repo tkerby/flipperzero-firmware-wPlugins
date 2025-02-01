@@ -1,10 +1,8 @@
 # FlipWorld
-
 The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
 ## Requirements
-
-- WiFi Developer Board, Raspberry Pi, or ESP32 device with the FlipperHTTP flash: [FlipperHTTP GitHub](https://github.com/jblanked/FlipperHTTP)
+- WiFi Developer Board, Raspberry Pi, or ESP32 device with the [FlipperHTTP flash](https://github.com/jblanked/FlipperHTTP).
 - 2.4 GHz WiFi access point
 
 ## How It Works
@@ -23,7 +21,7 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 - **Press/Hold RIGHT**: Turn right if not already facing right, then walk right if the button is still pressed.
 - **Press/Hold UP**: Walk up.
 - **Press/Hold DOWN**: Walk down.
-- **Press OK**: Attack/Teleport (set to attack until all enemies are defeated).
+- **Press OK**: Interact/Attack/Teleport (set to attack until all enemies are defeated and interact when colliding with NPCs)
 - **HOLD OK**: In-Game Menu.
 - **Press BACK**: Leave the menu.
 - **HOLD BACK**: Exit the game.
@@ -49,6 +47,9 @@ If an enemy attacks you, your health decreases by the enemy's strength (attack p
 
 An enemy attack registers if the enemy is facing you and collides with you. However, to attack an enemy successfully, the enemy must be facing away from you, and you must collide with them while pressing `OK`.
 
+**NPCs**
+
+NPCs are friendly characters that players can interact with. Currently, you can interact with them by clicking `OK` while colliding with them.
 
 ## Short Tutorial
 
@@ -70,15 +71,16 @@ An enemy attack registers if the enemy is facing you and collides with you. Howe
 
 **v0.4**
 - New game features
-- World expansion
 - Stability patch
+- World expansion
 
 **v0.5**
-- New game features
-- Custom Controller Support
+- Stability patch
+- NPCs
 
 **v0.6**
-- ???
+- New game features
+- Custom Controller Support
 
 **v0.7**
 - ???

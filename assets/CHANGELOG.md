@@ -1,6 +1,7 @@
-## 0.5 (2025-01-27)
+## 0.5 (2025-01-31)
 - Fixed saving errors.
 - Improved memory allocation.
+- Added NPCs.
 
 ## 0.4 (2025-01-23)
 - Added an In-Game menu.
