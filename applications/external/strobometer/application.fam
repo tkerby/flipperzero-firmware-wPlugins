@@ -1,0 +1,17 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="strobometer",  # Must be unique
+    name="StroboMeter",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="strobometer_app",
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    # Optional values
+    fap_version="1.0",
+    fap_icon="strobometer.png",  # 10x10 1-bit PNG
+    fap_description="A stroboscope application to measure the frequency of cyclical motion.",
+    fap_author="L. Jakschik",
+    fap_weburl="https://github.com/LeanderJDev/FlipperStroboMeterApp",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
