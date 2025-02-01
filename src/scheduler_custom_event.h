@@ -1,7 +1,10 @@
 #pragma once
 
 typedef enum {
-    SchedulerStartEventSelectPlaylist = 2,
+    SchedulerStartEventSetInterval,
+    SchedulerStartEventSetRepeats,
+    SchedulerStartEventSetImmediate,
+    SchedulerStartEventSelectFile,
     SchedulerStartRunEvent,
     SchedulerCustomEventErrorBack,
 } SchedulerCustomEvent;

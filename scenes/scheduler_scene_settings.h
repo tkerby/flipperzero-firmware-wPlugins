@@ -1,5 +1,16 @@
 #pragma once
 
+enum SchedulerImmediateMode {
+    SchedulerImmediateModeOff,
+    SchedulerImmediateModeOn,
+    SchedulerImmediateModeSettingsNum,
+};
+
+static const char* const immediate_mode_text[SchedulerImmediateModeSettingsNum] = {
+    "OFF",
+    "ON",
+};
+
 enum Intervals {
     Interval10Sec,
     Interval30Sec,

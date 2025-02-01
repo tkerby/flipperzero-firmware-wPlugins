@@ -11,6 +11,7 @@ struct Scheduler {
     uint8_t tx_delay;
     char* file_name;
     FileTxType file_type;
+    bool immediate_mode;
 };
 
 static const uint32_t interval_second_value[] =
@@ -57,12 +58,20 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
     furi_assert(scheduler);
     uint32_t current_time = furi_hal_rtc_get_timestamp();
     uint32_t interval = interval_second_value[scheduler->interval];
+
+    // For immediate/non immediate modes
+    if(!scheduler->immediate_mode && (scheduler->previous_run_time == 0)) {
+        scheduler->previous_run_time = current_time;
+        scheduler->countdown = interval;
+        return false; // Don't trigger immediately
+    }
+
     if((current_time - scheduler->previous_run_time) >= interval) {
         scheduler->countdown = interval;
         scheduler->previous_run_time = furi_hal_rtc_get_timestamp();
         return true;
     }
-    scheduler->countdown--;
+    --scheduler->countdown;
     return false;
 }
 
@@ -100,6 +109,16 @@ const char* scheduler_get_file_name(Scheduler* scheduler) {
 FileTxType scheduler_get_file_type(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->file_type;
+}
+
+void scheduler_set_immediate_mode(Scheduler* scheduler, bool mode) {
+    furi_assert(scheduler);
+    scheduler->immediate_mode = mode;
+}
+
+bool scheduler_get_immediate_mode(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->immediate_mode;
 }
 
 void scheduler_reset(Scheduler* scheduler) {

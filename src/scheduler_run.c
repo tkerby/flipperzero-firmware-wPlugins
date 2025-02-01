@@ -33,6 +33,8 @@ static FuriHalSubGhzPreset scheduler_get_subghz_preset_name(const char* preset_n
 
 static void
     transmit(SchedulerApp* app, const SubGhzDevice* device, SubGhzTransmitter* transmitter) {
+    notification_message(app->notifications, &sequence_blink_stop);
+    notification_message(app->notifications, &sequence_blink_start_cyan);
     uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
     for(uint_fast8_t i = 0; i <= repeats; ++i) {
 #ifdef FURI_DEBUG
@@ -40,11 +42,12 @@ static void
 #endif
         if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
             while(!subghz_devices_is_async_complete_tx(device)) {
-                furi_delay_ms(10);
+                furi_delay_ms(100);
             }
             subghz_devices_stop_async_tx(device);
         }
     }
+    notification_message(app->notifications, &sequence_blink_stop);
 }
 
 int32_t scheduler_tx(SchedulerApp* app) {
@@ -103,6 +106,7 @@ int32_t scheduler_tx(SchedulerApp* app) {
         frequency = subghz_devices_set_frequency(device, frequency);
 
         transmit(app, device, transmitter);
+
         subghz_transmitter_free(transmitter);
         if(filetype == SchedulerFileTypePlaylist) {
             furi_delay_ms(100);

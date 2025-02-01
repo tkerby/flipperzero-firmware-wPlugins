@@ -106,24 +106,25 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
 
+static void update_countdown(SchedulerApp* app) {
+    char countdown[16];
+    scheduler_get_countdown_fmt(app->scheduler, countdown, sizeof(countdown));
+    scheduler_update_widgets(app, countdown);
+}
+
 void scheduler_scene_run_on_enter(void* context) {
     SchedulerApp* app = context;
-    scheduler_update_widgets(app, "00:00:00");
     furi_hal_power_suppress_charge_enter();
+    scheduler_reset(app->scheduler);
+    update_countdown(app);
     subghz_devices_init();
 }
 
 void scheduler_scene_run_on_exit(void* context) {
     SchedulerApp* app = context;
     scheduler_reset(app->scheduler);
-    furi_hal_power_suppress_charge_exit();
     subghz_devices_deinit();
-}
-
-static void update_countdown(SchedulerApp* app) {
-    char countdown[16];
-    scheduler_get_countdown_fmt(app->scheduler, countdown, sizeof(countdown));
-    scheduler_update_widgets(app, countdown);
+    furi_hal_power_suppress_charge_exit();
 }
 
 bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
@@ -131,13 +132,12 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeTick) {
-        if(!scheduler_time_to_trigger(app->scheduler)) {
+        if(scheduler_time_to_trigger(app->scheduler)) {
             update_countdown(app);
-            notification_message(app->notifications, &sequence_blink_red_10);
+            scheduler_tx(app);
         } else {
             update_countdown(app);
-            notification_message(app->notifications, &sequence_blink_green_100);
-            scheduler_tx(app);
+            notification_message(app->notifications, &sequence_blink_red_10);
         }
         consumed = true;
     }

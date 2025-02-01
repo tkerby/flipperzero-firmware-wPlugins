@@ -15,8 +15,8 @@ static void scheduler_scene_start_var_list_enter_callback(void* context, uint32_
 
     if(index == SchedulerStartRunEvent) {
         view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartRunEvent);
-    } else if(index == SchedulerStartEventSelectPlaylist) {
-        view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartEventSelectPlaylist);
+    } else if(index == SchedulerStartEventSelectFile) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, SchedulerStartEventSelectFile);
     }
 }
 
@@ -34,6 +34,13 @@ static void scheduler_scene_start_set_repeats(VariableItem* item) {
     scheduler_set_tx_repeats(app->scheduler, index);
 }
 
+static void scheduler_scene_start_set_immediate(VariableItem* item) {
+    SchedulerApp* app = variable_item_get_context(item);
+    bool index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, immediate_mode_text[index]);
+    scheduler_set_immediate_mode(app->scheduler, index);
+}
+
 void scheduler_scene_start_on_enter(void* context) {
     SchedulerApp* app = context;
     VariableItemList* var_item_list = app->var_item_list;
@@ -47,7 +54,6 @@ void scheduler_scene_start_on_enter(void* context) {
 
     item = variable_item_list_add(
         var_item_list, "Interval:", INTERVAL_COUNT, scheduler_scene_start_set_interval, app);
-
     value_index = scheduler_get_interval(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, interval_text[value_index]);
@@ -55,21 +61,33 @@ void scheduler_scene_start_on_enter(void* context) {
 
     item = variable_item_list_add(
         var_item_list, "Repeats:", REPEATS_COUNT, scheduler_scene_start_set_repeats, app);
-
     value_index = scheduler_get_tx_repeats(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, tx_repeats_text[value_index]);
+    value_index = variable_item_get_current_value_index(item);
 
-    variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
+    item = variable_item_list_add(
+        var_item_list,
+        "Immediate:",
+        SchedulerImmediateModeSettingsNum,
+        scheduler_scene_start_set_immediate,
+        app);
 
+    bool mode = scheduler_get_immediate_mode(app->scheduler);
+    variable_item_set_current_value_index(item, mode);
+    variable_item_set_current_value_text(item, immediate_mode_text[mode]);
+    scheduler_set_immediate_mode(app->scheduler, mode);
+
+    item = variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
     if(check_file_extension(furi_string_get_cstr(app->file_path))) {
-        item = variable_item_list_add(var_item_list, "Start: ", 0, NULL, NULL);
         if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
             variable_item_set_current_value_text(item, "[Single]");
         } else {
             variable_item_set_current_value_text(item, "[Playlist]");
         }
     }
+
+    item = variable_item_list_add(var_item_list, "Start", 0, NULL, NULL);
 
     variable_item_list_set_selected_item(
         var_item_list, scene_manager_get_scene_state(app->scene_manager, SchedulerSceneStart));
@@ -89,7 +107,7 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
             } else {
                 scene_manager_next_scene(app->scene_manager, SchedulerSceneRunSchedule);
             }
-        } else if(event.event == SchedulerStartEventSelectPlaylist) {
+        } else if(event.event == SchedulerStartEventSelectFile) {
             scene_manager_next_scene(app->scene_manager, SchedulerSceneLoadFile);
         }
         consumed = true;
