@@ -50,7 +50,7 @@ void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     if (event.type == NfcScannerEventTypeDetected) {
         app->poller = nfc_poller_alloc(
             app->nfc,
-            event.data.protocols[0]);
+            event.data.protocols[0]); // TODO
         nfc_poller_start(app->poller, nfc_hid_poller_callback, app);
     }
 }
