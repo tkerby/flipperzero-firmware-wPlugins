@@ -75,8 +75,7 @@ static void icon_free(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(self);
     UNUSED(manager);
-    if (context)
-        free(context);
+    UNUSED(context);
 }
 
 // -------------- Entity description --------------

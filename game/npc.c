@@ -40,21 +40,6 @@ static EntityContext *npc_generic_alloc(
     return npc_context_generic;
 }
 
-// Free function
-static void npc_generic_free(void *context)
-{
-    if (context)
-    {
-        free(context);
-        context = NULL;
-    }
-    if (npc_context_generic)
-    {
-        free(npc_context_generic);
-        npc_context_generic = NULL;
-    }
-}
-
 // NPC start function
 static void npc_start(Entity *self, GameManager *manager, void *context)
 {
@@ -306,8 +291,12 @@ static void npc_free(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(self);
     UNUSED(manager);
-    if (context)
-        npc_generic_free(context);
+    UNUSED(context);
+    if (npc_context_generic)
+    {
+        free(npc_context_generic);
+        npc_context_generic = NULL;
+    }
 }
 
 // NPC Behavior structure

@@ -47,21 +47,6 @@ static EntityContext *enemy_generic_alloc(
     return enemy_context_generic;
 }
 
-// Free function
-static void enemy_generic_free(void *context)
-{
-    if (context)
-    {
-        free(context);
-        context = NULL;
-    }
-    if (enemy_context_generic)
-    {
-        free(enemy_context_generic);
-        enemy_context_generic = NULL;
-    }
-}
-
 // Enemy start function
 static void enemy_start(Entity *self, GameManager *manager, void *context)
 {
@@ -210,24 +195,13 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         FURI_LOG_E("Game", "Enemy collision: Invalid parameters");
         return;
     }
-
+    EntityContext *enemy_context = (EntityContext *)context;
+    furi_check(enemy_context, "Enemy collision: EntityContext is NULL");
+    GameContext *game_context = game_manager_game_context_get(manager);
+    furi_check(game_context, "Enemy collision: GameContext is NULL");
     // Check if the enemy collided with the player
     if (entity_description_get(other) == &player_desc)
     {
-        // Retrieve enemy context
-        EntityContext *enemy_context = (EntityContext *)context;
-        GameContext *game_context = game_manager_game_context_get(manager);
-        // InputState input = game_manager_input_get(manager);
-        if (!enemy_context)
-        {
-            FURI_LOG_E("Game", "Enemy collision: EntityContext is NULL");
-            return;
-        }
-        if (!game_context)
-        {
-            FURI_LOG_E("Game", "Enemy collision: GameContext is NULL");
-            return;
-        }
 
         // Get positions of the enemy and the player
         Vector enemy_pos = entity_pos_get(self);
@@ -382,6 +356,30 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             game_context->player_context->health = game_context->player_context->max_health;
         }
     }
+    // if not player than must be an icon or npc; so push back
+    else
+    {
+        // push enemy back
+        Vector enemy_pos = entity_pos_get(self);
+        switch (enemy_context->direction)
+        {
+        case ENTITY_LEFT:
+            enemy_pos.x += (enemy_context->size.x + game_context->icon_offset);
+            break;
+        case ENTITY_RIGHT:
+            enemy_pos.x -= (enemy_context->size.x + game_context->icon_offset);
+            break;
+        case ENTITY_UP:
+            enemy_pos.y += (enemy_context->size.y + game_context->icon_offset);
+            break;
+        case ENTITY_DOWN:
+            enemy_pos.y -= (enemy_context->size.y + game_context->icon_offset);
+            break;
+        default:
+            break;
+        }
+        entity_pos_set(self, enemy_pos);
+    }
 }
 
 // Enemy update function
@@ -516,8 +514,12 @@ static void enemy_free(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(self);
     UNUSED(manager);
-    if (context)
-        enemy_generic_free(context);
+    UNUSED(context);
+    if (enemy_context_generic)
+    {
+        free(enemy_context_generic);
+        enemy_context_generic = NULL;
+    }
 }
 
 // Enemy behavior structure
