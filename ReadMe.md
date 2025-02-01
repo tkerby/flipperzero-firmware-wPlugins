@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0131-1705-0.420.0-e33c1f4](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0201-1705-0.420.0-59c7540](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-01 16:32 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-01 16:32 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-01 17:05 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-01 17:05 EST`
 - [IR: Easy Learn & Learn RAW toggles in Learn screen (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d04186c3ec4e6efba1b0c6370572a2969cbbcbb6)
 - Updated: [FlipWorld v0.4 (By jblanked)](https://github.com/jblanked/FlipWorld)
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
@@ -48,7 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SPI Terminal v0.2 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal)
 - Added: [StroboMeter v1.0 (By LeanderJDev)](https://github.com/LeanderJDev/FlipperStroboMeterApp)
 - Added: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- OFW: PR: [NFC: Parser for Disney Infinity (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4087)
+- OFW: PR: [NFC: Parser for Disney Infinity #4087 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4087)
 - OFW: PR: [ST25TB poller mode check #4084 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/4084)
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043)
 
