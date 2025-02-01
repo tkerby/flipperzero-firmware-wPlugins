@@ -26,8 +26,14 @@ typedef struct {
     FuriString* debug_terminal_data;
 } FlipperSPITerminalAppConfigDebug;
 
+typedef enum {
+    TerminalBufferBehaviourClear,
+    TerminalBufferBehaviourKeep
+} TerminalBufferBehaviour;
+
 typedef struct {
     TerminalDisplayMode display_mode;
+    TerminalBufferBehaviour terminal_buffer_behaviour;
     size_t rx_dma_buffer_size;
     LL_SPI_InitTypeDef spi;
     FlipperSPITerminalAppConfigDebug debug;
