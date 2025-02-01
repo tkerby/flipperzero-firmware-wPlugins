@@ -12,6 +12,12 @@ https://github.com/flipperdevices/flipperzero-firmware/blob/dev/applications/exa
 
 #include <furi_hal_power.h>
 #include <furi_hal_pwm.h>
+#include <furi_hal_resources.h>
+#include <furi_hal_bus.h>
+
+#include <stm32wbxx_ll_tim.h>
+#include <stm32wbxx_ll_lptim.h>
+#include <stm32wbxx_ll_rcc.h>
 
 #include <gui/gui.h>
 #include <gui/view_port.h>
@@ -82,6 +88,12 @@ static void strobometer_app_input_callback(InputEvent* event, void* ctx) {
     furi_message_queue_put(context->event_queue, event, FuriWaitForever);
 }
 
+// Define custom PWM functions for PA4 that allow fractional frequencies
+void hal_pwm_start(uint32_t freq_rpm, uint8_t duty_cycle);
+void hal_pwm_set_params(uint32_t freq_rpm, uint8_t duty_cycle);
+void hal_pwm_stop();
+bool hal_pwm_is_running();
+
 static void strobometer_app_run(StrobometerAppContext* context) {
     furi_hal_power_enable_otg();
 
@@ -128,7 +140,7 @@ static void strobometer_app_run(StrobometerAppContext* context) {
         //TODO Maybe make the duty cycle adjustable/frequency dependent
 
         if(frequency_changed) {
-            furi_hal_pwm_set_params(STROBOSCOPE_PIN, context->frequency / 60, 3);
+            hal_pwm_set_params(context->frequency, 3);
             frequency_changed = false;
         }
 
@@ -143,17 +155,17 @@ static void strobometer_app_run(StrobometerAppContext* context) {
         if(event.key == InputKeyOk) {
             context->output = !context->output;
             if(context->output) {
-                furi_hal_pwm_start(STROBOSCOPE_PIN, context->frequency / 60, 3);
+                hal_pwm_start(context->frequency, 3);
             } else {
-                furi_hal_pwm_stop(STROBOSCOPE_PIN);
+                hal_pwm_stop();
             }
         }
 
         view_port_update(context->view_port);
     }
 
-    if(furi_hal_pwm_is_running(STROBOSCOPE_PIN)) {
-        furi_hal_pwm_stop(STROBOSCOPE_PIN);
+    if(hal_pwm_is_running()) {
+        hal_pwm_stop();
     }
 
     furi_hal_power_disable_otg();
@@ -207,4 +219,77 @@ int32_t strobometer_app(void* p) {
     strobometer_app_context_free(context);
 
     return 0;
+}
+
+// Custom PWM functions
+
+const uint32_t lptim_psc_table[] = {
+    LL_LPTIM_PRESCALER_DIV1,
+    LL_LPTIM_PRESCALER_DIV2,
+    LL_LPTIM_PRESCALER_DIV4,
+    LL_LPTIM_PRESCALER_DIV8,
+    LL_LPTIM_PRESCALER_DIV16,
+    LL_LPTIM_PRESCALER_DIV32,
+    LL_LPTIM_PRESCALER_DIV64,
+    LL_LPTIM_PRESCALER_DIV128,
+};
+
+void hal_pwm_start(uint32_t freq_rpm, uint8_t duty_cycle) {
+    furi_hal_gpio_init_ex(
+        &gpio_ext_pa4,
+        GpioModeAltFunctionPushPull,
+        GpioPullNo,
+        GpioSpeedVeryHigh,
+        GpioAltFn14LPTIM2);
+
+    furi_hal_bus_enable(FuriHalBusLPTIM2);
+
+    LL_LPTIM_SetUpdateMode(LPTIM2, LL_LPTIM_UPDATE_MODE_ENDOFPERIOD);
+    LL_RCC_SetLPTIMClockSource(LL_RCC_LPTIM2_CLKSOURCE_PCLK1);
+    LL_LPTIM_SetClockSource(LPTIM2, LL_LPTIM_CLK_SOURCE_INTERNAL);
+    LL_LPTIM_ConfigOutput(
+        LPTIM2, LL_LPTIM_OUTPUT_WAVEFORM_PWM, LL_LPTIM_OUTPUT_POLARITY_INVERSE);
+    LL_LPTIM_SetCounterMode(LPTIM2, LL_LPTIM_COUNTER_MODE_INTERNAL);
+
+    LL_LPTIM_Enable(LPTIM2);
+
+    hal_pwm_set_params(freq_rpm, duty_cycle);
+
+    LL_LPTIM_StartCounter(LPTIM2, LL_LPTIM_OPERATING_MODE_CONTINUOUS);
+}
+
+void hal_pwm_set_params(uint32_t freq_rpm, uint8_t duty_cycle) {
+    furi_assert(freq_rpm > 0);
+    float freq_Hz = freq_rpm / 60.0f; // Convert RPM to Hz
+    float freq_div = 32768LU / freq_Hz; // Use LSE clock frequency
+    uint32_t prescaler = 0;
+    float period = 0;
+
+    do {
+        period = freq_div / (1UL << prescaler);
+        if(period <= 0xFFFF) {
+            break;
+        }
+        prescaler++;
+        if(prescaler > 7) {
+            furi_assert(0 && "Frequency out of range for LSE clock");
+        }
+    } while(1);
+
+    uint32_t compare = (uint32_t)(period * duty_cycle / 100.0f);
+
+    LL_LPTIM_SetPrescaler(LPTIM2, lptim_psc_table[prescaler]);
+    LL_LPTIM_SetAutoReload(LPTIM2, (uint32_t)period);
+    LL_LPTIM_SetCompare(LPTIM2, compare);
+
+    LL_RCC_SetLPTIMClockSource(LL_RCC_LPTIM2_CLKSOURCE_LSE);
+}
+
+void hal_pwm_stop() {
+    furi_hal_gpio_init_simple(&gpio_ext_pa4, GpioModeAnalog);
+    furi_hal_bus_disable(FuriHalBusLPTIM2);
+}
+
+bool hal_pwm_is_running() {
+    return furi_hal_bus_is_enabled(FuriHalBusLPTIM2);
 }
