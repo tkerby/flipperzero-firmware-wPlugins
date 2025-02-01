@@ -76,7 +76,24 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ## 🔨 Building
 
-克隆本项目，并使用 [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) 进行编译（项目基于[mntm-008](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-008) SDK 开发，需手动指定 SDK 版本）。
+使用 [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) 进行构建
+
+项目基于[mntm-009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009) SDK 开发，需手动指定 SDK 版本
+
+```bash
+# 克隆本项目(或下载源码包)
+git clone https://github.com/SocialSisterYi/T-Union_Master
+cd T-Union_Master
+
+# 安装ufbt
+pip install ufbt
+
+# 安装指定的SDK
+ufbt update -t f7 -u https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-009/flipper-z-f7-sdk-mntm-009.zip
+
+# 构建项目
+ufbt
+```
 
 通过 qFlipper 或 `ufbt launch` 上传至 flipper zero
 
