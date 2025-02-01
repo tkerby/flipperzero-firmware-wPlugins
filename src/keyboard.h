@@ -7,6 +7,7 @@
 
 uint16_t get_key(char c);
 void capslock();
+void numlock();
 void write_char(char c);
 void write_string(char* str, size_t len);
 

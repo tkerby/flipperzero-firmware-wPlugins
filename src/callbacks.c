@@ -32,10 +32,10 @@ void nfc_hid_input_callback(InputEvent* input_event, void* ctx) {
 }
 
 void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
+    furi_assert(ctx);
     NfcHidApp* app = ctx;
-    app->running = false;
 
     if (event.type == NfcScannerEventTypeDetected) {
-        app->running = false;
+        app->scanned = true;
     }
 }

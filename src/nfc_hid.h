@@ -6,9 +6,7 @@
 #include "keyboard.h"
 
 NfcHidApp* nfc_hid_alloc();
-
 void nfc_hid_free(NfcHidApp* app);
-
 int32_t nfc_hid_app(void* p);
 
 #endif

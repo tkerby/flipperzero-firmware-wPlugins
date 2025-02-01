@@ -34,6 +34,13 @@ void capslock() {
     furi_delay_ms(KB_PRESS_DELAY);
 }
 
+void numlock() {
+    furi_hal_hid_kb_press(HID_KEYPAD_NUMLOCK);
+    furi_delay_ms(KB_PRESS_DELAY);
+    furi_hal_hid_kb_release(HID_KEYPAD_NUMLOCK);
+    furi_delay_ms(KB_PRESS_DELAY);
+}
+
 void write_char(char c) {
     uint16_t key = get_key(c);
     bool uppercase = is_uppercase(c);
