@@ -9,9 +9,10 @@
 
 struct NfcHidApp {
     bool running;
-    bool scanned;
-    uint8_t* uid[MAX_NFC_UID_SIZE];
+    bool detected;
+    uint8_t* uid;
     size_t uid_len;
+    FuriString* uid_str;
 
     ViewPort* view_port;
     Gui* gui;
@@ -20,6 +21,7 @@ struct NfcHidApp {
 
     Nfc* nfc;
 	NfcScanner* scanner;
+    NfcPoller* poller;
     NfcDevice* device;
 };
 

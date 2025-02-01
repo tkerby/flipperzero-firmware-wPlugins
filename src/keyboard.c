@@ -63,7 +63,7 @@ void write_char(char c) {
     }
 }
 
-void write_string(char* str, size_t len) {
+void write_string(const char* str, size_t len) {
     for (size_t i = 0; i < len; i++) {
         write_char(str[i]);
     }

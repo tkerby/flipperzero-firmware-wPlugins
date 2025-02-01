@@ -13,11 +13,9 @@ void nfc_hid_render_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 96, 10, VERSION);
     canvas_draw_str(canvas, 0, 20, "Scan a NFC Card");
 
-    if (app->scanned) {
-        canvas_draw_str(canvas, 0, 30, "Scanned: Y");
-    } else {
-        canvas_draw_str(canvas, 0, 30, "Scanned: N");
-    }
+    canvas_draw_str(canvas, 0, 30, "UID: ");
+
+    canvas_draw_str(canvas, 40, 30, furi_string_get_cstr(app->uid_str));
 
     canvas_draw_str(canvas, 0, 63, "Press [back] to exit");
 }
@@ -31,11 +29,28 @@ void nfc_hid_input_callback(InputEvent* input_event, void* ctx) {
     }
 }
 
+NfcCommand nfc_hid_poller_callback(NfcGenericEvent event, void* ctx) {
+    furi_assert(ctx);
+    NfcHidApp* app = ctx;
+
+    nfc_device_set_data(
+        app->device,
+        event.protocol,
+        nfc_poller_get_data(app->poller));
+
+    app->detected = true;
+
+    return NfcCommandStop;
+}
+
 void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     furi_assert(ctx);
     NfcHidApp* app = ctx;
 
     if (event.type == NfcScannerEventTypeDetected) {
-        app->scanned = true;
+        app->poller = nfc_poller_alloc(
+            app->nfc,
+            event.data.protocols[0]);
+        nfc_poller_start(app->poller, nfc_hid_poller_callback, app);
     }
 }

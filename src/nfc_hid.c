@@ -22,8 +22,11 @@ NfcHidApp* nfc_hid_alloc() {
 
     // Set initial values
     app->running = true;
-    app->scanned = false;
+    app->detected = false;
+    app->uid = malloc(MAX_NFC_UID_SIZE);
     app->uid_len = 0;
+    app->uid_str = furi_string_alloc();
+    furi_string_set(app->uid_str, "N/A");
 
     // Register callbacks
     view_port_draw_callback_set(app->view_port, nfc_hid_render_callback, app);
@@ -47,6 +50,7 @@ void nfc_hid_free(NfcHidApp* app) {
     gui_remove_view_port(app->gui, app->view_port);
     view_port_free(app->view_port);
 
+    furi_string_free(app->uid_str);
     free(app);
 }
 
@@ -60,25 +64,35 @@ int32_t nfc_hid_app(void* p) {
         // Do something to receive callbacks
         furi_delay_ms(50);
 
-        if (app->scanned) {
+        if (app->detected) {
+            // Stop scanner to prevent multiple scans of same card
             nfc_scanner_stop(app->scanner);
+
             numlock();
 
             // Read uid
-            /*
             size_t uid_len = 0;
             const uint8_t* uid = nfc_device_get_uid(app->device, &uid_len);
 
+            nfc_device_clear(app->device);
+
             if (uid_len != 0 && !memcmp(app->uid, uid, uid_len)) {
-                memcpy(&uid, app->uid, app->uid_len);
+                app->uid_len = uid_len;
+                memcpy(app->uid, &uid, app->uid_len);
+
+                furi_string_set(app->uid_str, "");
+                convertToHexString(app->uid_str, app->uid, app->uid_len);
+
+                //write_string(furi_string_get_cstr(app->uid_str), furi_string_size(app->uid_str));
             }
-            */
+
+            free((uint8_t*)uid);
 
             numlock();
 
             // Restart scanner with delay
             furi_delay_ms(500);
-            app->scanned = false;
+            app->detected = false;
             nfc_scanner_start(app->scanner, nfc_hid_scanner_callback, app);
         }
 

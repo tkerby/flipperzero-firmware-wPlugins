@@ -20,5 +20,6 @@
 #include <nfc.h>
 #include <nfc_device.h>
 #include <nfc_scanner.h>
+#include <nfc_poller.h>
 
 #endif
