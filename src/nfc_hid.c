@@ -1,40 +1,6 @@
 #include "nfc_hid.h"
 
-/** Draws the UI */
-static void nfc_hid_render_callback(Canvas* canvas, void* ctx) {
-    UNUSED(ctx);
-
-    canvas_clear(canvas);
-
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 0, 10, "NFC HID Scanner");
-
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 0, 10, "v");
-    canvas_draw_str(canvas, 96, 10, VERSION);
-    canvas_draw_str(canvas, 0, 40, "Scan a NFC Card");
-    canvas_draw_str(canvas, 0, 63, "Press [back] to exit");
-}
-
-/** Callback for User inputs (buttons) */
-static void nfc_hid_input_callback(InputEvent* input_event, void* ctx) {
-    NfcHidApp* app = ctx;
-
-    if (input_event->type == InputTypePress && input_event->key == InputKeyBack) {
-        app->running = false;
-    }
-}
-
-static void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
-    NfcHidApp* app = ctx;
-
-    if (event.type == NfcScannerEventTypeDetected) {
-        app->new_uid = true;
-        // TODO
-    }
-}
-
-static NfcHidApp* nfc_hid_alloc() {
+NfcHidApp* nfc_hid_alloc() {
     NfcHidApp* app = malloc(sizeof(NfcHidApp));
 
     app->view_port = view_port_alloc();
@@ -61,11 +27,12 @@ static NfcHidApp* nfc_hid_alloc() {
 
     app->running = true;
     app->new_uid = false;
+    app->uid_len = 0;
 
     return app;
 }
 
-static void nfc_hid_free(NfcHidApp* app) {
+void nfc_hid_free(NfcHidApp* app) {
     // Stop and free nfc
     nfc_device_free(app->device);
     nfc_scanner_stop(app->scanner);
@@ -88,11 +55,39 @@ int32_t nfc_hid_app(void* p) {
 
     NfcHidApp* app = nfc_hid_alloc();
 
-    while(app->running) {
+    while (app->running) {
         furi_hal_hid_kb_press(HID_KEYBOARD_C);
         furi_delay_ms(500);
         furi_hal_hid_kb_release(HID_KEYBOARD_C);
         furi_delay_ms(500);
+
+        /*
+        if (app->new_uid) {
+            // Stop the scanner
+            //nfc_scanner_stop(app->scanner);
+
+            furi_hal_hid_kb_press(HID_KEYBOARD_C);
+            furi_delay_ms(500);
+            furi_hal_hid_kb_release(HID_KEYBOARD_C);
+            furi_delay_ms(500);
+
+            // Read uid
+            size_t uid_len = 0;
+            const uint8_t* uid = nfc_device_get_uid(app->device, &uid_len);
+
+            if (uid_len != 0 && !memcmp(app->uid, uid, uid_len)) {
+                memcpy(&uid, app->uid, app->uid_len);
+
+                furi_hal_hid_kb_press(HID_KEYBOARD_C);
+                furi_delay_ms(500);
+                furi_hal_hid_kb_release(HID_KEYBOARD_C);
+                furi_delay_ms(500);
+            }
+
+            // Restart scanner
+            app->new_uid = false;
+            //nfc_scanner_start(app->scanner, nfc_hid_scanner_callback, app);
+        }*/
 
         // Refresh UI
         view_port_update(app->view_port);
