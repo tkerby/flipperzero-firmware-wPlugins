@@ -14,8 +14,8 @@
 #define FURI_LOG_D(tag, msg, ...)
 //
 
-#define TAG         "FlipWorld"
-#define VERSION     0.5
+#define TAG "FlipWorld"
+#define VERSION 0.5
 #define VERSION_TAG TAG " " FAP_VERSION
 
 // Define the submenu items for our FlipWorld application

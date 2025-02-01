@@ -445,7 +445,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // Draw the outer bounds adjusted by camera offset
     canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
-    // Draw the user stats (health, xp, and level)
+    // render background
     background_render(canvas, manager);
 }
 

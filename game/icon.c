@@ -24,9 +24,14 @@ static void icon_render(Entity *self, GameManager *manager, Canvas *canvas, void
 {
     UNUSED(manager);
     IconContext *ictx = (IconContext *)context;
+    furi_check(ictx, "Icon context is NULL");
     Vector pos = entity_pos_get(self);
-    if (ictx)
-        canvas_draw_icon(canvas, pos.x - camera_x - ictx->size.x / 2, pos.y - camera_y - ictx->size.y / 2, ictx->icon);
+    int x_pos = pos.x - camera_x - ictx->size.x / 2;
+    int y_pos = pos.y - camera_y - ictx->size.y / 2;
+    // check if position is within the screen
+    if (x_pos + ictx->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + ictx->size.y < 0 || y_pos > SCREEN_HEIGHT)
+        return;
+    canvas_draw_icon(canvas, x_pos, y_pos, ictx->icon);
 }
 
 static void icon_start(Entity *self, GameManager *manager, void *context)

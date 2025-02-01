@@ -99,6 +99,14 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
 
+    // Get the camera position
+    int x_pos = pos.x - camera_x - enemy_context->size.x / 2;
+    int y_pos = pos.y - camera_y - enemy_context->size.y / 2;
+
+    // check if position is within the screen
+    if (x_pos + enemy_context->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + enemy_context->size.y < 0 || y_pos > SCREEN_HEIGHT)
+        return;
+
     // Choose sprite based on direction
     Sprite *current_sprite = NULL;
     if (enemy_context->direction == ENTITY_LEFT)
@@ -121,9 +129,6 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     char health_str[32];
     snprintf(health_str, sizeof(health_str), "%.0f", (double)enemy_context->health);
     draw_username(canvas, pos, health_str);
-
-    // Draw user stats (this has to be done for all enemies)
-    draw_user_stats(canvas, (Vector){0, 50}, manager);
 }
 
 static void atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)

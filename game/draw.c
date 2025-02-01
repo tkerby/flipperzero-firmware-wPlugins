@@ -185,6 +185,9 @@ void background_render(Canvas *canvas, GameManager *manager)
                 0,
                 &I_icon_world_change_128x64px);
         }
+
+        // Draw user stats
+        draw_user_stats(canvas, (Vector){0, 50}, manager);
     }
     else
     {
