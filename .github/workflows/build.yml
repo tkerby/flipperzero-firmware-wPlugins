@@ -24,7 +24,7 @@ jobs:
           sdk-hw-target: f7
           sdk-url: "https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-009/flipper-z-f7-sdk-mntm-009.zip"
       - name: Upload app artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           # See ufbt action docs for other output variables
           name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
