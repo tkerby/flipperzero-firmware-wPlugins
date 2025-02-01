@@ -76,6 +76,12 @@ static void game_stop(void *ctx)
     imu_free(game_context->imu);
     game_context->imu = NULL;
 
+    // clear current level early
+    if (game_context->levels[game_context->current_level])
+    {
+        level_clear(game_context->levels[game_context->current_level]);
+    }
+
     if (game_context->player_context)
     {
         if (!game_context->ended_early)
@@ -116,10 +122,10 @@ static void game_stop(void *ctx)
 */
 
 const Game game = {
-    .target_fps = 0,          // set to 0 because we set this in game_app (callback.c line 22)
-    .show_fps = false,        // show fps counter on the screen
-    .always_backlight = true, // keep display backlight always on
-    .start = game_start,      // will be called once, when game starts
-    .stop = game_stop,        // will be called once, when game stops
+    .target_fps = 0,                     // set to 0 because we set this in game_app (callback.c line 22)
+    .show_fps = false,                   // show fps counter on the screen
+    .always_backlight = true,            // keep display backlight always on
+    .start = game_start,                 // will be called once, when game starts
+    .stop = game_stop,                   // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };
