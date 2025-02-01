@@ -9,7 +9,7 @@
 
 struct NfcHidApp {
     bool running;
-    bool new_uid;
+    bool scanned;
     uint8_t* uid[MAX_NFC_UID_SIZE];
     size_t uid_len;
 

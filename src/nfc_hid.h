@@ -3,6 +3,7 @@
 
 #include "app.h"
 #include "callbacks.h"
+#include "keyboard.h"
 
 NfcHidApp* nfc_hid_alloc();
 
