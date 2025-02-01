@@ -30,12 +30,14 @@ bool save_player_context(PlayerContext *player_context)
         return false;
     }
 
-    // Create the directory for saving settings
-    char directory_path[256];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player");
-
-    // Create the directory
+    // ensure the folders exist
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
     Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data");
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player");
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
 
@@ -114,16 +116,16 @@ bool save_player_context(PlayerContext *player_context)
         char direction_str[2];
         switch (player_context->direction)
         {
-        case PLAYER_UP:
+        case ENTITY_UP:
             strncpy(direction_str, "0", sizeof(direction_str));
             break;
-        case PLAYER_DOWN:
+        case ENTITY_DOWN:
             strncpy(direction_str, "1", sizeof(direction_str));
             break;
-        case PLAYER_LEFT:
+        case ENTITY_LEFT:
             strncpy(direction_str, "2", sizeof(direction_str));
             break;
-        case PLAYER_RIGHT:
+        case ENTITY_RIGHT:
         default:
             strncpy(direction_str, "3", sizeof(direction_str));
             break;
@@ -142,19 +144,19 @@ bool save_player_context(PlayerContext *player_context)
         char state_str[2];
         switch (player_context->state)
         {
-        case PLAYER_IDLE:
+        case ENTITY_IDLE:
             strncpy(state_str, "0", sizeof(state_str));
             break;
-        case PLAYER_MOVING:
+        case ENTITY_MOVING:
             strncpy(state_str, "1", sizeof(state_str));
             break;
-        case PLAYER_ATTACKING:
+        case ENTITY_ATTACKING:
             strncpy(state_str, "2", sizeof(state_str));
             break;
-        case PLAYER_ATTACKED:
+        case ENTITY_ATTACKED:
             strncpy(state_str, "3", sizeof(state_str));
             break;
-        case PLAYER_DEAD:
+        case ENTITY_DEAD:
             strncpy(state_str, "4", sizeof(state_str));
             break;
         default:
@@ -291,16 +293,16 @@ bool save_player_context_api(PlayerContext *player_context)
     furi_string_cat_str(json, "\"direction\":");
     switch (player_context->direction)
     {
-    case PLAYER_UP:
+    case ENTITY_UP:
         furi_string_cat_str(json, "\"up\",");
         break;
-    case PLAYER_DOWN:
+    case ENTITY_DOWN:
         furi_string_cat_str(json, "\"down\",");
         break;
-    case PLAYER_LEFT:
+    case ENTITY_LEFT:
         furi_string_cat_str(json, "\"left\",");
         break;
-    case PLAYER_RIGHT:
+    case ENTITY_RIGHT:
     default:
         furi_string_cat_str(json, "\"right\",");
         break;
@@ -310,19 +312,19 @@ bool save_player_context_api(PlayerContext *player_context)
     furi_string_cat_str(json, "\"state\":");
     switch (player_context->state)
     {
-    case PLAYER_IDLE:
+    case ENTITY_IDLE:
         furi_string_cat_str(json, "\"idle\",");
         break;
-    case PLAYER_MOVING:
+    case ENTITY_MOVING:
         furi_string_cat_str(json, "\"moving\",");
         break;
-    case PLAYER_ATTACKING:
+    case ENTITY_ATTACKING:
         furi_string_cat_str(json, "\"attacking\",");
         break;
-    case PLAYER_ATTACKED:
+    case ENTITY_ATTACKED:
         furi_string_cat_str(json, "\"attacked\",");
         break;
-    case PLAYER_DEAD:
+    case ENTITY_DEAD:
         furi_string_cat_str(json, "\"dead\",");
         break;
     default:
@@ -633,63 +635,63 @@ bool load_player_context(PlayerContext *player_context)
 
     // 11. Direction (enum PlayerDirection)
     {
-        int direction_int = 3; // Default to PLAYER_RIGHT
+        int direction_int = 3; // Default to ENTITY_RIGHT
         if (!load_number("player/direction", &direction_int))
         {
-            FURI_LOG_E(TAG, "No data or parse error for direction. Defaulting to PLAYER_RIGHT");
+            FURI_LOG_E(TAG, "No data or parse error for direction. Defaulting to ENTITY_RIGHT");
             direction_int = 3;
         }
 
         switch (direction_int)
         {
         case 0:
-            player_context->direction = PLAYER_UP;
+            player_context->direction = ENTITY_UP;
             break;
         case 1:
-            player_context->direction = PLAYER_DOWN;
+            player_context->direction = ENTITY_DOWN;
             break;
         case 2:
-            player_context->direction = PLAYER_LEFT;
+            player_context->direction = ENTITY_LEFT;
             break;
         case 3:
-            player_context->direction = PLAYER_RIGHT;
+            player_context->direction = ENTITY_RIGHT;
             break;
         default:
-            FURI_LOG_E(TAG, "Invalid direction value: %d. Defaulting to PLAYER_RIGHT", direction_int);
-            player_context->direction = PLAYER_RIGHT;
+            FURI_LOG_E(TAG, "Invalid direction value: %d. Defaulting to ENTITY_RIGHT", direction_int);
+            player_context->direction = ENTITY_RIGHT;
             break;
         }
     }
 
     // 12. State (enum PlayerState)
     {
-        int state_int = 0; // Default to PLAYER_IDLE
+        int state_int = 0; // Default to ENTITY_IDLE
         if (!load_number("player/state", &state_int))
         {
-            FURI_LOG_E(TAG, "No data or parse error for state. Defaulting to PLAYER_IDLE");
+            FURI_LOG_E(TAG, "No data or parse error for state. Defaulting to ENTITY_IDLE");
             state_int = 0;
         }
 
         switch (state_int)
         {
         case 0:
-            player_context->state = PLAYER_IDLE;
+            player_context->state = ENTITY_IDLE;
             break;
         case 1:
-            player_context->state = PLAYER_MOVING;
+            player_context->state = ENTITY_MOVING;
             break;
         case 2:
-            player_context->state = PLAYER_ATTACKING;
+            player_context->state = ENTITY_ATTACKING;
             break;
         case 3:
-            player_context->state = PLAYER_ATTACKED;
+            player_context->state = ENTITY_ATTACKED;
             break;
         case 4:
-            player_context->state = PLAYER_DEAD;
+            player_context->state = ENTITY_DEAD;
             break;
         default:
-            FURI_LOG_E(TAG, "Invalid state value: %d. Defaulting to PLAYER_IDLE", state_int);
-            player_context->state = PLAYER_IDLE;
+            FURI_LOG_E(TAG, "Invalid state value: %d. Defaulting to ENTITY_IDLE", state_int);
+            player_context->state = ENTITY_IDLE;
             break;
         }
     }
@@ -895,62 +897,9 @@ static inline void furi_string_remove_str(FuriString *string, const char *needle
     furi_string_replace_str(string, needle, "", 0);
 }
 
-static FuriString *enemy_data(const FuriString *world_data)
+static FuriString *json_data(const FuriString *world_data, const char *key)
 {
-    size_t enemy_data_pos = furi_string_search_str(world_data, "enemy_data", 0);
-    if (enemy_data_pos == FURI_STRING_FAILURE)
-    {
-        FURI_LOG_E("Game", "Failed to find enemy_data in world data");
-
-        return NULL;
-    }
-
-    size_t bracket_start = furi_string_search_char(world_data, '[', enemy_data_pos);
-    if (bracket_start == FURI_STRING_FAILURE)
-    {
-        FURI_LOG_E("Game", "Failed to find start of enemy_data array");
-
-        return NULL;
-    }
-
-    size_t bracket_end = furi_string_search_char(world_data, ']', bracket_start);
-    if (bracket_end == FURI_STRING_FAILURE)
-    {
-        FURI_LOG_E("Game", "Failed to find end of enemy_data array");
-
-        return NULL;
-    }
-
-    FuriString *enemy_data_str = furi_string_alloc();
-    if (!enemy_data_str)
-    {
-        FURI_LOG_E("Game", "Failed to allocate enemy_data string");
-
-        return NULL;
-    }
-
-    furi_string_cat_str(enemy_data_str, "{\"enemy_data\":");
-
-    {
-        FuriString *temp_sub = furi_string_alloc();
-
-        furi_string_set_strn(
-            temp_sub,
-            furi_string_get_cstr(world_data) + bracket_start,
-            (bracket_end + 1) - bracket_start);
-
-        furi_string_cat(enemy_data_str, temp_sub);
-        furi_string_free(temp_sub);
-    }
-
-    furi_string_cat_str(enemy_data_str, "}");
-
-    return enemy_data_str;
-}
-
-static FuriString *json_data(const FuriString *world_data)
-{
-    size_t json_data_pos = furi_string_search_str(world_data, "json_data", 0);
+    size_t json_data_pos = furi_string_search_str(world_data, key, 0);
     if (json_data_pos == FURI_STRING_FAILURE)
     {
         FURI_LOG_E("Game", "Failed to find json_data in world data");
@@ -982,7 +931,9 @@ static FuriString *json_data(const FuriString *world_data)
         return NULL;
     }
 
-    furi_string_cat_str(json_data_str, "{\"json_data\":");
+    furi_string_cat_str(json_data_str, "{\"");
+    furi_string_cat_str(json_data_str, key);
+    furi_string_cat_str(json_data_str, "\":");
 
     {
         FuriString *temp_sub = furi_string_alloc();
@@ -1008,7 +959,7 @@ bool separate_world_data(char *id, FuriString *world_data)
         FURI_LOG_E("Game", "Invalid parameters");
         return false;
     }
-    FuriString *file_json_data = json_data(world_data);
+    FuriString *file_json_data = json_data(world_data, "json_data");
     if (!file_json_data || furi_string_size(file_json_data) == 0)
     {
         FURI_LOG_E("Game", "Failed to get json data in separate_world_data");
@@ -1049,10 +1000,48 @@ bool separate_world_data(char *id, FuriString *world_data)
     furi_string_replace_at(file_json_data, furi_string_size(file_json_data) - 1, 1, "");
     // include the comma at the end of the json_data array
     furi_string_cat_str(file_json_data, ",");
+
     furi_string_remove_str(world_data, furi_string_get_cstr(file_json_data));
     furi_string_free(file_json_data);
 
-    FuriString *file_enemy_data = enemy_data(world_data);
+    // save npc_data to disk
+    FuriString *file_npc_data = json_data(world_data, "npc_data");
+    if (!file_npc_data)
+    {
+        FURI_LOG_E("Game", "Failed to get npc data");
+        return false;
+    }
+
+    snprintf(file_path, sizeof(file_path),
+             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
+             id, id);
+
+    if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+    {
+        FURI_LOG_E("Game", "Failed to open file for writing: %s", file_path);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        furi_string_free(file_npc_data);
+        return false;
+    }
+
+    data_size = furi_string_size(file_npc_data);
+    if (storage_file_write(file, furi_string_get_cstr(file_npc_data), data_size) != data_size)
+    {
+        FURI_LOG_E("Game", "Failed to write npc_data");
+    }
+    storage_file_close(file);
+
+    furi_string_replace_at(file_npc_data, 0, 1, "");
+    furi_string_replace_at(file_npc_data, furi_string_size(file_npc_data) - 1, 1, "");
+    // include the comma at the end of the npc_data array
+    furi_string_cat_str(file_npc_data, ",");
+
+    furi_string_remove_str(world_data, furi_string_get_cstr(file_npc_data));
+    furi_string_free(file_npc_data);
+
+    // Save enemy_data to disk
+    FuriString *file_enemy_data = json_data(world_data, "enemy_data");
     if (!file_enemy_data)
     {
         FURI_LOG_E("Game", "Failed to get enemy data");
@@ -1077,12 +1066,11 @@ bool separate_world_data(char *id, FuriString *world_data)
     {
         FURI_LOG_E("Game", "Failed to write enemy_data");
     }
+    furi_string_free(file_enemy_data);
 
     // Clean up
-    furi_string_free(file_enemy_data);
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
-
     return true;
 }

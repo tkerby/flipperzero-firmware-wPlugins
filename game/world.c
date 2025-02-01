@@ -68,7 +68,9 @@ bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *
                 atoi(furi_string_get_cstr(x)),
                 atoi(furi_string_get_cstr(y)),
                 count,
-                is_horizontal);
+                is_horizontal,
+                17 // set as 17 for now
+            );
         }
 
         furi_string_free(data);
@@ -83,75 +85,49 @@ bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *
     return levels_added > 0;
 }
 
-void draw_town_world(GameManager *manager, Level *level)
+static void draw_town_world(Level *level, GameManager *manager, void *context)
 {
-
-    // house-fence group 1
-    spawn_icon(manager, level, "house", 164, 40);
-    spawn_icon(manager, level, "fence", 148, 64);
-    spawn_icon(manager, level, "fence", 164, 64);
-    spawn_icon(manager, level, "fence_end", 180, 64);
-
-    // house-fence group 4 (the left of group 1)
-    spawn_icon(manager, level, "house", 110, 40);
-    spawn_icon(manager, level, "fence", 96, 64);
-    spawn_icon(manager, level, "fence", 110, 64);
-    spawn_icon(manager, level, "fence_end", 126, 64);
-
-    // house-fence group 5 (the left of group 4)
-    spawn_icon(manager, level, "house", 56, 40);
-    spawn_icon(manager, level, "fence", 40, 64);
-    spawn_icon(manager, level, "fence", 56, 64);
-    spawn_icon(manager, level, "fence_end", 72, 64);
-
-    // line of fences on the 8th row (using spawn_icon_line)
-    spawn_icon_line(manager, level, "fence", 8, 96, 10, true);
-
-    // plants spaced out underneath the fences
-    spawn_icon_line(manager, level, "plant", 40, 110, 6, true);
-    spawn_icon_line(manager, level, "flower", 40, 140, 6, true);
-
-    // man and woman
-    spawn_icon(manager, level, "man", 156, 110);
-    spawn_icon(manager, level, "woman", 164, 110);
-
-    // lake
-    // Top row
-    spawn_icon(manager, level, "lake_top_left", 240, 62);
-    spawn_icon(manager, level, "lake_top", 264, 57);
-    spawn_icon(manager, level, "lake_top_right", 295, 62);
-
-    // Middle row
-    spawn_icon(manager, level, "lake_left", 231, 84);
-    spawn_icon(manager, level, "lake_right", 304, 84);
-
-    // Bottom row
-    spawn_icon(manager, level, "lake_bottom_left", 240, 115);
-    spawn_icon(manager, level, "lake_bottom", 264, 120);
-    spawn_icon(manager, level, "lake_bottom_right", 295, 115);
-
-    // Spawn two full left/up tree lines
-    for (int i = 0; i < 2; i++)
+    UNUSED(context);
+    if (!manager || !level)
     {
-        // Horizontal line of 22 icons
-        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
-        // Vertical line of 11 icons
-        spawn_icon_line(manager, level, "tree", 5 + i * 17, 2, 11, false);
+        FURI_LOG_E("Game", "Manager or level is NULL");
+        return;
     }
-
-    // Spawn two full down tree lines
-    for (int i = 9; i < 11; i++)
+    GameContext *game_context = game_manager_game_context_get(manager);
+    level_clear(level);
+    FuriString *json_data_str = furi_string_alloc();
+    furi_string_cat_str(json_data_str, "{\"name\":\"shadow_woods_v5\",\"author\":\"ChatGPT\",\"json_data\":[{\"icon\":\"rock_medium\",\"x\":100,\"y\":100,\"amount\":10,\"horizontal\":true},{\"icon\":\"rock_medium\",\"x\":400,\"y\":300,\"amount\":6,\"horizontal\":true},{\"icon\":\"rock_small\",\"x\":600,\"y\":200,\"amount\":8,\"horizontal\":true},{\"icon\":\"fence\",\"x\":50,\"y\":50,\"amount\":10,\"horizontal\":true},{\"icon\":\"fence\",\"x\":250,\"y\":150,\"amount\":12,\"horizontal\":true},{\"icon\":\"fence\",\"x\":550,\"y\":350,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":400,\"y\":70,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":200,\"y\":200,\"amount\":6,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":44,\"horizontal\":true},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":347,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":364,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":735,\"y\":37,\"amount\":18,\"horizontal\":false},{\"icon\":\"tree\",\"x\":752,\"y\":37,\"amount\":18,\"horizontal\":false}],\"enemy_data\":[{\"id\":\"cyclops\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":390,\"y\":210},\"move_timer\":2,\"speed\":30,\"attack_timer\":0.4,\"strength\":10,\"health\":100},{\"id\":\"ogre\",\"index\":1,\"start_position\":{\"x\":200,\"y\":320},\"end_position\":{\"x\":220,\"y\":320},\"move_timer\":0.5,\"speed\":45,\"attack_timer\":0.6,\"strength\":20,\"health\":200},{\"id\":\"ghost\",\"index\":2,\"start_position\":{\"x\":100,\"y\":80},\"end_position\":{\"x\":180,\"y\":85},\"move_timer\":2.2,\"speed\":55,\"attack_timer\":0.5,\"strength\":30,\"health\":300},{\"id\":\"ogre\",\"index\":3,\"start_position\":{\"x\":400,\"y\":50},\"end_position\":{\"x\":490,\"y\":50},\"move_timer\":1.7,\"speed\":35,\"attack_timer\":1.0,\"strength\":20,\"health\":200}],\"npc_data\":[{\"id\":\"funny\",\"index\":0,\"start_position\":{\"x\":350,\"y\":180},\"end_position\":{\"x\":350,\"y\":180},\"move_timer\":0,\"speed\":0,\"message\":\"Hello there!\"}]}");
+    if (!separate_world_data("shadow_woods_v5", json_data_str))
     {
-        // Horizontal line of 22 icons
-        spawn_icon_line(manager, level, "tree", 5, 2 + i * 17, 22, true);
+        FURI_LOG_E("Game", "Failed to separate world data");
     }
-
-    // Spawn two full right tree lines
-    for (int i = 20; i < 22; i++)
+    furi_string_free(json_data_str);
+    set_world(level, manager, "shadow_woods_v5");
+    /*
+      adjust the player's position n such based on icon count
+      the more icons to draw, the slower the player moves
+      so we'll increase the player's speed as the icon count increases
+      by 0.1 for every 8 icons
+  */
+    game_context->icon_offset = 0;
+    if (!game_context->imu_present)
     {
-        // Vertical line of 8 icons starting further down (y=50)
-        spawn_icon_line(manager, level, "tree", 5 + i * 17, 50, 8, false);
+        game_context->icon_offset += ((game_context->icon_count / 8) / 10);
     }
+    player_spawn(level, manager);
+}
+
+static const LevelBehaviour _training_world = {
+    .alloc = NULL,
+    .free = NULL,
+    .start = draw_town_world,
+    .stop = NULL,
+    .context_size = 0,
+};
+
+const LevelBehaviour *training_world()
+{
+    return &_training_world;
 }
 
 FuriString *fetch_world(const char *name)
@@ -170,7 +146,7 @@ FuriString *fetch_world(const char *name)
     }
 
     char url[256];
-    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v4/get/world/%s/", name);
+    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v5/get/world/%s/", name);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
     fhttp->save_received_data = true;
     if (!flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\": \"application/json\"}"))
