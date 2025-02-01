@@ -1,6 +1,6 @@
 #include "elements.h"
 #include <gui/canvas.h>
-#include <assets_icons.h>
+#include <t_union_master_icons.h>
 
 struct Icon {
     const uint16_t width;

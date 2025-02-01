@@ -1,7 +1,6 @@
 #include "travel_list.h"
 #include "../view_modules/elements.h"
-#include "assets_icons.h"
-#include "t_union_master_icons.h"
+#include <t_union_master_icons.h>
 
 struct TravelListView {
     View* view;

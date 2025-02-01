@@ -11,7 +11,7 @@
 #include <notification/notification_messages.h>
 #include <storage/storage.h>
 
-#include <assets_icons.h>
+#include <t_union_master_icons.h>
 
 #include "scene/t_union_master_scene.h"
 #include "t_union_custom_events.h"

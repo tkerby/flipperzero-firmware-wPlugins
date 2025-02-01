@@ -1,7 +1,7 @@
 #include "submenu.h"
 #include "../font_provider/c_font.h"
 
-#include <assets_icons.h>
+#include <t_union_master_icons.h>
 #include "elements.h"
 #include <furi.h>
 #include <m-array.h>

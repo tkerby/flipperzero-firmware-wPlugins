@@ -19,14 +19,13 @@ void tum_scene_start_on_enter(void* ctx) {
     Submenu* submenu = app->submenu;
 
     submenu_set_header(submenu, "T-Union Master");
+    submenu_add_item(submenu, "Read", SubmenuIndexReadCard, tum_scene_start_submenu_callback, app);
     submenu_add_item(
-        submenu, "贴卡查询", SubmenuIndexReadCard, tum_scene_start_submenu_callback, app);
+        submenu, "History", SubmenuIndexHistory, tum_scene_start_submenu_callback, app);
     submenu_add_item(
-        submenu, "历史记录", SubmenuIndexHistory, tum_scene_start_submenu_callback, app);
-    submenu_add_item(
-        submenu, "应用设置", SubmenuIndexSetting, tum_scene_start_submenu_callback, app);
-    submenu_add_item(submenu, "关于", SubmenuIndexAbout, tum_scene_start_submenu_callback, app);
-    submenu_add_item(submenu, "测试Test", SubmenuIndexTest, tum_scene_start_submenu_callback, app);
+        submenu, "Settings", SubmenuIndexSetting, tum_scene_start_submenu_callback, app);
+    submenu_add_item(submenu, "About", SubmenuIndexAbout, tum_scene_start_submenu_callback, app);
+    submenu_add_item(submenu, "Test", SubmenuIndexTest, tum_scene_start_submenu_callback, app);
 
     submenu_set_selected_item(
         submenu, scene_manager_get_scene_state(app->scene_manager, TUM_SceneStart));
