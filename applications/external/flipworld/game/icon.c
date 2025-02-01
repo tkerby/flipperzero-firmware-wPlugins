@@ -20,16 +20,15 @@ static void icon_collision(Entity* self, Entity* other, GameManager* manager, vo
 static void icon_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(manager);
     IconContext* ictx = (IconContext*)context;
-    if(ictx) {
-        Vector pos = entity_pos_get(self);
-
-        // Draw the icon, centered
-        canvas_draw_icon(
-            canvas,
-            pos.x - camera_x - ictx->size.x / 2,
-            pos.y - camera_y - ictx->size.y / 2,
-            ictx->icon);
-    }
+    furi_check(ictx, "Icon context is NULL");
+    Vector pos = entity_pos_get(self);
+    int x_pos = pos.x - camera_x - ictx->size.x / 2;
+    int y_pos = pos.y - camera_y - ictx->size.y / 2;
+    // check if position is within the screen
+    if(x_pos + ictx->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + ictx->size.y < 0 ||
+       y_pos > SCREEN_HEIGHT)
+        return;
+    canvas_draw_icon(canvas, x_pos, y_pos, ictx->icon);
 }
 
 static void icon_start(Entity* self, GameManager* manager, void* context) {
@@ -71,9 +70,7 @@ static void icon_start(Entity* self, GameManager* manager, void* context) {
 static void icon_free(Entity* self, GameManager* manager, void* context) {
     UNUSED(self);
     UNUSED(manager);
-    if(context) {
-        free(context);
-    }
+    UNUSED(context);
 }
 
 // -------------- Entity description --------------
@@ -101,98 +98,48 @@ static IconContext*
 }
 
 IconContext* get_icon_context(const char* name) {
-    // if (is_str(name, "earth") )
-    // {
-    //     return icon_generic_alloc("earth", &I_icon_earth_15x16, 15, 16);
-    // }
-    // else if (is_str(name, "home") )
-    // {
-    //     return icon_generic_alloc("home", &I_icon_home_15x16, 15, 16);
-    // }
-    if(is_str(name, "house")) {
+    if(is_str(name, "house"))
         return icon_generic_alloc("house", &I_icon_house_48x32px, 48, 32);
-    }
-    // else if (is_str(name, "house_3d") )
-    // {
-    //     return icon_generic_alloc("house_3d", &I_icon_house_3d_34x45px, 34, 45);
-    // }
-    // else if (is_str(name, "info") )
-    // {
-    //     return icon_generic_alloc("info", &I_icon_info_15x16, 15, 16);
-    // }
-    else if(is_str(name, "man")) {
+    else if(is_str(name, "man"))
         return icon_generic_alloc("man", &I_icon_man_7x16, 7, 16);
-    } else if(is_str(name, "plant")) {
+    else if(is_str(name, "plant"))
         return icon_generic_alloc("plant", &I_icon_plant_16x16, 16, 16);
-    }
-    // else if (is_str(name, "plant_fern") )
-    // {
-    //     return icon_generic_alloc("plant_fern", &I_icon_plant_fern_18x16px, 18, 16);
-    // }
-    // else if (is_str(name, "plant_pointy") )
-    // {
-    //     return icon_generic_alloc("plant_pointy", &I_icon_plant_pointy_13x16px, 13, 16);
-    // }
-    else if(is_str(name, "tree")) {
+    else if(is_str(name, "tree"))
         return icon_generic_alloc("tree", &I_icon_tree_16x16, 16, 16);
-    }
-    // else if (is_str(name, "tree_29x30") )
-    // {
-    //     return icon_generic_alloc("tree_29x30", &I_icon_tree_29x30px, 29, 30);
-    // }
-    // else if (is_str(name, "tree_48x48") )
-    // {
-    //     return icon_generic_alloc("tree_48x48", &I_icon_tree_48x48px, 48, 48);
-    // }
-    else if(is_str(name, "woman")) {
+    else if(is_str(name, "woman"))
         return icon_generic_alloc("woman", &I_icon_woman_9x16, 9, 16);
-    }
-    // else if (is_str(name, "chest_closed"))
-    // {
-    //     return icon_generic_alloc("chest_closed", &I_icon_chest_closed_16x13px, 16, 13);
-    // }
-    // else if (is_str(name, "chest_open") )
-    // {
-    //     return icon_generic_alloc("chest_open", &I_icon_chest_open_16x16px, 16, 16);
-    // }
-    else if(is_str(name, "fence")) {
+    else if(is_str(name, "fence"))
         return icon_generic_alloc("fence", &I_icon_fence_16x8px, 16, 8);
-    } else if(is_str(name, "fence_end")) {
+    else if(is_str(name, "fence_end"))
         return icon_generic_alloc("fence_end", &I_icon_fence_end_16x8px, 16, 8);
-    }
     // else if (is_str(name, "fence_vertical_end") )
-    // {
     //     return icon_generic_alloc("fence_vertical_end", &I_icon_fence_vertical_end_6x8px, 6, 8);
-    // }
     // else if (is_str(name, "fence_vertical_start") )
-    // {
     //     return icon_generic_alloc("fence_vertical_start", &I_icon_fence_vertical_start_6x15px, 6, 15);
-    // }
-    else if(is_str(name, "flower")) {
+    else if(is_str(name, "flower"))
         return icon_generic_alloc("flower", &I_icon_flower_16x16, 16, 16);
-    } else if(is_str(name, "lake_bottom")) {
+    else if(is_str(name, "lake_bottom"))
         return icon_generic_alloc("lake_bottom", &I_icon_lake_bottom_31x12px, 31, 12);
-    } else if(is_str(name, "lake_bottom_left")) {
+    else if(is_str(name, "lake_bottom_left"))
         return icon_generic_alloc("lake_bottom_left", &I_icon_lake_bottom_left_24x22px, 24, 22);
-    } else if(is_str(name, "lake_bottom_right")) {
+    else if(is_str(name, "lake_bottom_right"))
         return icon_generic_alloc("lake_bottom_right", &I_icon_lake_bottom_right_24x22px, 24, 22);
-    } else if(is_str(name, "lake_left")) {
+    else if(is_str(name, "lake_left"))
         return icon_generic_alloc("lake_left", &I_icon_lake_left_11x31px, 11, 31);
-    } else if(is_str(name, "lake_right")) {
+    else if(is_str(name, "lake_right"))
         return icon_generic_alloc("lake_right", &I_icon_lake_right_11x31, 11, 31);
-    } else if(is_str(name, "lake_top")) {
+    else if(is_str(name, "lake_top"))
         return icon_generic_alloc("lake_top", &I_icon_lake_top_31x12px, 31, 12);
-    } else if(is_str(name, "lake_top_left")) {
+    else if(is_str(name, "lake_top_left"))
         return icon_generic_alloc("lake_top_left", &I_icon_lake_top_left_24x22px, 24, 22);
-    } else if(is_str(name, "lake_top_right")) {
+    else if(is_str(name, "lake_top_right"))
         return icon_generic_alloc("lake_top_right", &I_icon_lake_top_right_24x22px, 24, 22);
-    } else if(is_str(name, "rock_large")) {
+    else if(is_str(name, "rock_large"))
         return icon_generic_alloc("rock_large", &I_icon_rock_large_18x19px, 18, 19);
-    } else if(is_str(name, "rock_medium")) {
+    else if(is_str(name, "rock_medium"))
         return icon_generic_alloc("rock_medium", &I_icon_rock_medium_16x14px, 16, 14);
-    } else if(is_str(name, "rock_small")) {
+    else if(is_str(name, "rock_small"))
         return icon_generic_alloc("rock_small", &I_icon_rock_small_10x8px, 10, 8);
-    }
 
     // If no match is found
     FURI_LOG_E("Game", "Icon not found: %s", name);
@@ -200,98 +147,48 @@ IconContext* get_icon_context(const char* name) {
 }
 
 const char* icon_get_id(const Icon* icon) {
-    // if (icon == &I_icon_earth_15x16)
-    // {
-    //     return "earth";
-    // }
-    // else if (icon == &I_icon_home_15x16)
-    // {
-    //     return "home";
-    // }
-    if(icon == &I_icon_house_48x32px) {
+    if(icon == &I_icon_house_48x32px)
         return "house";
-    }
-    // else if (icon == &I_icon_house_3d_34x45px)
-    // {
-    //     return "house_3d";
-    // }
-    // else if (icon == &I_icon_info_15x16)
-    // {
-    //     return "info";
-    // }
-    else if(icon == &I_icon_man_7x16) {
+    else if(icon == &I_icon_man_7x16)
         return "man";
-    } else if(icon == &I_icon_plant_16x16) {
+    else if(icon == &I_icon_plant_16x16)
         return "plant";
-    }
-    // else if (icon == &I_icon_plant_fern_18x16px)
-    // {
-    //     return "plant_fern";
-    // }
-    // else if (icon == &I_icon_plant_pointy_13x16px)
-    // {
-    //     return "plant_pointy";
-    // }
-    else if(icon == &I_icon_tree_16x16) {
+    else if(icon == &I_icon_tree_16x16)
         return "tree";
-    }
-    // else if (icon == &I_icon_tree_29x30px)
-    // {
-    //     return "tree_29x30";
-    // }
-    // else if (icon == &I_icon_tree_48x48px)
-    // {
-    //     return "tree_48x48";
-    // }
-    else if(icon == &I_icon_woman_9x16) {
+    else if(icon == &I_icon_woman_9x16)
         return "woman";
-    }
-    // else if (icon == &I_icon_chest_closed_16x13px)
-    // {
-    //     return "chest_closed";
-    // }
-    // else if (icon == &I_icon_chest_open_16x16px)
-    // {
-    //     return "chest_open";
-    // }
-    else if(icon == &I_icon_fence_16x8px) {
+    else if(icon == &I_icon_fence_16x8px)
         return "fence";
-    } else if(icon == &I_icon_fence_end_16x8px) {
+    else if(icon == &I_icon_fence_end_16x8px)
         return "fence_end";
-    }
     // else if (icon == &I_icon_fence_vertical_end_6x8px)
-    // {
     //     return "fence_vertical_end";
-    // }
     // else if (icon == &I_icon_fence_vertical_start_6x15px)
-    // {
     //     return "fence_vertical_start";
-    // }
-    else if(icon == &I_icon_flower_16x16) {
+    else if(icon == &I_icon_flower_16x16)
         return "flower";
-    } else if(icon == &I_icon_lake_bottom_31x12px) {
+    else if(icon == &I_icon_lake_bottom_31x12px)
         return "lake_bottom";
-    } else if(icon == &I_icon_lake_bottom_left_24x22px) {
+    else if(icon == &I_icon_lake_bottom_left_24x22px)
         return "lake_bottom_left";
-    } else if(icon == &I_icon_lake_bottom_right_24x22px) {
+    else if(icon == &I_icon_lake_bottom_right_24x22px)
         return "lake_bottom_right";
-    } else if(icon == &I_icon_lake_left_11x31px) {
+    else if(icon == &I_icon_lake_left_11x31px)
         return "lake_left";
-    } else if(icon == &I_icon_lake_right_11x31) {
+    else if(icon == &I_icon_lake_right_11x31)
         return "lake_right";
-    } else if(icon == &I_icon_lake_top_31x12px) {
+    else if(icon == &I_icon_lake_top_31x12px)
         return "lake_top";
-    } else if(icon == &I_icon_lake_top_left_24x22px) {
+    else if(icon == &I_icon_lake_top_left_24x22px)
         return "lake_top_left";
-    } else if(icon == &I_icon_lake_top_right_24x22px) {
+    else if(icon == &I_icon_lake_top_right_24x22px)
         return "lake_top_right";
-    } else if(icon == &I_icon_rock_large_18x19px) {
+    else if(icon == &I_icon_rock_large_18x19px)
         return "rock_large";
-    } else if(icon == &I_icon_rock_medium_16x14px) {
+    else if(icon == &I_icon_rock_medium_16x14px)
         return "rock_medium";
-    } else if(icon == &I_icon_rock_small_10x8px) {
+    else if(icon == &I_icon_rock_small_10x8px)
         return "rock_small";
-    }
 
     // If no match is found
     FURI_LOG_E("Game", "Icon ID not found for given icon pointer.");

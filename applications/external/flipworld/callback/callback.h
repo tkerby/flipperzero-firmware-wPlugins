@@ -20,6 +20,16 @@ enum DataState {
     DataStateError,
 };
 
+typedef enum MessageState MessageState;
+enum MessageState {
+    MessageStateAbout,
+    MessageStateLoading,
+};
+typedef struct MessageModel MessageModel;
+struct MessageModel {
+    MessageState message_state;
+};
+
 typedef struct DataLoaderModel DataLoaderModel;
 typedef bool (*DataLoaderFetch)(DataLoaderModel* model);
 typedef char* (*DataLoaderParser)(DataLoaderModel* model);

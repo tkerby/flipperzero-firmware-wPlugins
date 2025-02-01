@@ -50,26 +50,6 @@ void draw_username(Canvas* canvas, Vector pos, char* username) {
         canvas, pos.x - camera_x - (strlen(username) * 2), pos.y - camera_y - 7, username);
 }
 
-// Draw a line of icons (16 width)
-void draw_icon_line(Canvas* canvas, Vector pos, int amount, bool horizontal, const Icon* icon) {
-    for(int i = 0; i < amount; i++) {
-        if(horizontal) {
-            // check if element is outside the world
-            if(pos.x + (i * 17) > WORLD_WIDTH) {
-                break;
-            }
-
-            canvas_draw_icon(canvas, pos.x + (i * 17) - camera_x, pos.y - camera_y, icon);
-        } else {
-            // check if element is outside the world
-            if(pos.y + (i * 17) > WORLD_HEIGHT) {
-                break;
-            }
-
-            canvas_draw_icon(canvas, pos.x - camera_x, pos.y + (i * 17) - camera_y, icon);
-        }
-    }
-}
 char g_name[32];
 // Draw an icon at a specific position (with collision detection)
 void spawn_icon(GameManager* manager, Level* level, const char* icon_id, float x, float y) {
@@ -87,22 +67,23 @@ void spawn_icon_line(
     float x,
     float y,
     uint8_t amount,
-    bool horizontal) {
+    bool horizontal,
+    uint8_t spacing) {
     for(int i = 0; i < amount; i++) {
         if(horizontal) {
             // check if element is outside the world
-            if(x + (i * 17) > WORLD_WIDTH) {
+            if(x + (i * spacing) > WORLD_WIDTH) {
                 break;
             }
 
-            spawn_icon(manager, level, icon_id, x + (i * 17), y);
+            spawn_icon(manager, level, icon_id, x + (i * spacing), y);
         } else {
             // check if element is outside the world
-            if(y + (i * 17) > WORLD_HEIGHT) {
+            if(y + (i * spacing) > WORLD_HEIGHT) {
                 break;
             }
 
-            spawn_icon(manager, level, icon_id, x, y + (i * 17));
+            spawn_icon(manager, level, icon_id, x, y + (i * spacing));
         }
     }
 }
@@ -172,6 +153,11 @@ static void draw_menu(GameManager* manager, Canvas* canvas) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 86, 42, "More");
         break;
+    case GAME_MENU_NPC:
+        // draw NPC dialog
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+        canvas_draw_str(canvas, 7, 16, game_context->message);
+        break;
     default:
         break;
     }
@@ -181,20 +167,22 @@ void background_render(Canvas* canvas, GameManager* manager) {
     if(!canvas || !manager) return;
 
     GameContext* game_context = game_manager_game_context_get(manager);
+    if(!game_context->is_menu_open) {
+        // get player position
+        Vector posi = entity_pos_get(game_context->player);
 
-    // get player position
-    Vector posi = entity_pos_get(game_context->player);
+        // draw username over player's head
+        draw_username(canvas, posi, game_context->player_context->username);
 
-    // draw username over player's head
-    draw_username(canvas, posi, game_context->player_context->username);
+        // draw switch world icon
+        if(game_context->is_switching_level) {
+            canvas_draw_icon(canvas, 0, 0, &I_icon_world_change_128x64px);
+        }
 
-    // draw switch world icon
-    if(game_context->is_switching_level) {
-        canvas_draw_icon(canvas, 0, 0, &I_icon_world_change_128x64px);
-    }
-
-    // draw menu
-    if(game_context->is_menu_open) {
+        // Draw user stats
+        draw_user_stats(canvas, (Vector){0, 50}, manager);
+    } else {
+        // draw menu
         draw_menu(manager, canvas);
     }
 }

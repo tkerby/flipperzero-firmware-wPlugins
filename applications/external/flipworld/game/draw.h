@@ -8,7 +8,6 @@ extern int camera_x;
 extern int camera_y;
 void draw_user_stats(Canvas* canvas, Vector pos, GameManager* manager);
 void draw_username(Canvas* canvas, Vector pos, char* username);
-void draw_icon_line(Canvas* canvas, Vector pos, int amount, bool horizontal, const Icon* icon);
 void spawn_icon(GameManager* manager, Level* level, const char* icon_id, float x, float y);
 void spawn_icon_line(
     GameManager* manager,
@@ -17,6 +16,7 @@ void spawn_icon_line(
     float x,
     float y,
     uint8_t amount,
-    bool horizontal);
+    bool horizontal,
+    uint8_t spacing);
 extern char g_name[32];
 void background_render(Canvas* canvas, GameManager* manager);

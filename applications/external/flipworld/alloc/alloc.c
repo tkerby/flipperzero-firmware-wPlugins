@@ -11,9 +11,18 @@ static uint32_t callback_exit_app(void* context) {
     return VIEW_NONE; // Return VIEW_NONE to exit the app
 }
 
+void* global_app;
+void flip_world_show_submenu() {
+    FlipWorldApp* app = (FlipWorldApp*)global_app;
+    if(app->submenu) {
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
+    }
+}
+
 // Function to allocate resources for the FlipWorldApp
 FlipWorldApp* flip_world_app_alloc() {
     FlipWorldApp* app = (FlipWorldApp*)malloc(sizeof(FlipWorldApp));
+    global_app = app;
 
     Gui* gui = furi_record_open(RECORD_GUI);
 
@@ -55,7 +64,7 @@ FlipWorldApp* flip_world_app_alloc() {
     submenu_add_item(
         app->submenu, "Play", FlipWorldSubmenuIndexRun, callback_submenu_choices, app);
     submenu_add_item(
-        app->submenu, "About", FlipWorldSubmenuIndexAbout, callback_submenu_choices, app);
+        app->submenu, "About", FlipWorldSubmenuIndexMessage, callback_submenu_choices, app);
     submenu_add_item(
         app->submenu, "Settings", FlipWorldSubmenuIndexSettings, callback_submenu_choices, app);
     //

@@ -5,6 +5,7 @@
 #include "engine/level_i.h"
 #include "engine/entity_i.h"
 #include "game/storage.h"
+#include "alloc/alloc.h"
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
@@ -129,7 +130,7 @@ static void error_draw(Canvas* canvas, DataLoaderModel* model) {
     }
 }
 
-static bool alloc_about_view(void* context);
+static bool alloc_message_view(void* context, MessageState state);
 static bool alloc_text_input_view(void* context, char* title);
 static bool alloc_variable_item_list(void* context, uint32_t view_id);
 //
@@ -162,42 +163,51 @@ static uint32_t callback_to_settings(void* context) {
     return FlipWorldViewSettings;
 }
 
-static void about_draw_callback(Canvas* canvas, void* model) {
-    UNUSED(model);
+static void message_draw_callback(Canvas* canvas, void* model) {
+    MessageModel* message_model = model;
     canvas_clear(canvas);
-    // canvas_set_font_custom(canvas, FONT_SIZE_XLARGE);
-    canvas_draw_str(canvas, 0, 10, VERSION_TAG);
-    // canvas_set_font_custom(canvas, FONT_SIZE_MEDIUM);
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
-    canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
-    canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
+    if(message_model->message_state == MessageStateAbout) {
+        canvas_draw_str(canvas, 0, 10, VERSION_TAG);
+        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+        canvas_draw_str(canvas, 0, 20, "Dev: JBlanked, codeallnight");
+        canvas_draw_str(canvas, 0, 30, "GFX: the1anonlypr3");
+        canvas_draw_str(canvas, 0, 40, "github.com/jblanked/FlipWorld");
 
-    canvas_draw_str_multi(
-        canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
+        canvas_draw_str_multi(
+            canvas, 0, 55, "The first open world multiplayer\ngame on the Flipper Zero.");
+    } else if(message_model->message_state == MessageStateLoading) {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Starting FlipWorld");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 0, 50, "Please wait while your");
+        canvas_draw_str(canvas, 0, 60, "game is started.");
+    }
 }
 
 // alloc
-static bool alloc_about_view(void* context) {
+static bool alloc_message_view(void* context, MessageState state) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return false;
     }
-    if(!app->view_about) {
+    if(!app->view_message) {
         if(!easy_flipper_set_view(
-               &app->view_about,
-               FlipWorldViewAbout,
-               about_draw_callback,
+               &app->view_message,
+               FlipWorldViewMessage,
+               message_draw_callback,
                NULL,
-               callback_to_submenu,
+               (state == MessageStateLoading) ? NULL : callback_to_submenu,
                &app->view_dispatcher,
                app)) {
             return false;
         }
-        if(!app->view_about) {
+        if(!app->view_message) {
             return false;
         }
+        view_allocate_model(app->view_message, ViewModelTypeLockFree, sizeof(MessageModel));
+        MessageModel* model = view_get_model(app->view_message);
+        model->message_state = state;
     }
     return true;
 }
@@ -592,16 +602,16 @@ static bool alloc_submenu_settings(void* context) {
     return true;
 }
 // free
-static void free_about_view(void* context) {
+static void free_message_view(void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
         FURI_LOG_E(TAG, "FlipWorldApp is NULL");
         return;
     }
-    if(app->view_about) {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewAbout);
-        view_free(app->view_about);
-        app->view_about = NULL;
+    if(app->view_message) {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewMessage);
+        view_free(app->view_message);
+        app->view_message = NULL;
     }
 }
 
@@ -697,7 +707,7 @@ static void free_submenu_settings(void* context) {
         app->submenu_settings = NULL;
     }
 }
-static FuriThreadId thread_id;
+static FuriThread* game_thread;
 static bool game_thread_running = false;
 void free_all_views(
     void* context,
@@ -711,14 +721,18 @@ void free_all_views(
     if(should_free_variable_item_list) {
         free_variable_item_list(app);
     }
-    free_about_view(app);
+    free_message_view(app);
     free_text_input_view(app);
 
     // free game thread
     if(game_thread_running) {
         game_thread_running = false;
-        furi_thread_flags_set(thread_id, WorkerEvtStop);
-        furi_thread_free(thread_id);
+        if(game_thread) {
+            furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
+            furi_thread_join(game_thread);
+            furi_thread_free(game_thread);
+            game_thread = NULL;
+        }
     }
 
     if(should_free_submenu_settings) free_submenu_settings(app);
@@ -729,18 +743,18 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
         return false;
     }
-    // Create the directory for saving worlds
+
+    // ensure flip_world directory exists
     char directory_path[128];
+    snprintf(
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
     snprintf(
         directory_path,
         sizeof(directory_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-
-    // Create the directory
-    Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_common_mkdir(storage, directory_path);
-
-    // free storage
     furi_record_close(RECORD_STORAGE);
 
     snprintf(
@@ -751,7 +765,7 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         fhttp,
-        "https://www.flipsocial.net/api/world/v4/list/10/",
+        "https://www.flipsocial.net/api/world/v5/list/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
 // we will load the palyer stats from the API and save them
@@ -770,11 +784,29 @@ static bool fetch_player_stats(FlipperHTTP* fhttp) {
     }
     char url[128];
     snprintf(url, sizeof(url), "https://www.flipsocial.net/api/user/game-stats/%s/", username);
+
+    // ensure the folders exist
+    char directory_path[128];
+    snprintf(
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(
+        directory_path,
+        sizeof(directory_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data");
+    storage_common_mkdir(storage, directory_path);
+    snprintf(
+        directory_path,
+        sizeof(directory_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player");
+    storage_common_mkdir(storage, directory_path);
+    furi_record_close(RECORD_STORAGE);
+
     snprintf(
         fhttp->file_path,
         sizeof(fhttp->file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
-
     fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         fhttp, url, "{\"Content-Type\":\"application/json\"}");
@@ -845,8 +877,11 @@ static bool start_game_thread(void* context) {
     // free game thread
     if(game_thread_running) {
         game_thread_running = false;
-        furi_thread_flags_set(thread_id, WorkerEvtStop);
-        furi_thread_free(thread_id);
+        if(game_thread) {
+            furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
+            furi_thread_join(game_thread);
+            furi_thread_free(game_thread);
+        }
     }
     // start game thread
     FuriThread* thread = furi_thread_alloc_ex("game", 2048, game_app, app);
@@ -856,7 +891,7 @@ static bool start_game_thread(void* context) {
         return false;
     }
     furi_thread_start(thread);
-    thread_id = furi_thread_get_id(thread);
+    game_thread = thread;
     game_thread_running = true;
     return true;
 }
@@ -1008,7 +1043,7 @@ static bool _fetch_game(DataLoaderModel* model) {
         snprintf(
             url,
             sizeof(url),
-            "https://www.flipsocial.net/api/world/v4/get/world/%s/",
+            "https://www.flipsocial.net/api/world/v5/get/world/%s/",
             furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
@@ -1179,8 +1214,7 @@ void callback_submenu_choices(void* context, uint32_t index) {
     switch(index) {
     case FlipWorldSubmenuIndexRun:
         free_all_views(app, true, true);
-        if(!is_enough_heap(45000)) // lowered from 60k to 45k since we saved 15k bytes
-        {
+        if(!is_enough_heap(60000)) {
             easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
             return;
         }
@@ -1204,22 +1238,11 @@ void callback_submenu_choices(void* context, uint32_t index) {
                 return fetch_player_stats(fhttp);
             }
 
-            Loading* loading;
-            int32_t loading_view_id = 987654321; // Random ID
-
-            loading = loading_alloc();
-            if(!loading) {
-                FURI_LOG_E(HTTP_TAG, "Failed to allocate loading");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                flipper_http_free(fhttp);
+            if(!alloc_message_view(app, MessageStateLoading)) {
+                FURI_LOG_E(TAG, "Failed to allocate message view");
                 return;
             }
-
-            view_dispatcher_add_view(
-                app->view_dispatcher, loading_view_id, loading_get_view(loading));
-
-            // Switch to the loading view
-            view_dispatcher_switch_to_view(app->view_dispatcher, loading_view_id);
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 
             // Make the request
             if(!flipper_http_process_response_async(
@@ -1227,34 +1250,35 @@ void callback_submenu_choices(void* context, uint32_t index) {
                !flipper_http_process_response_async(
                    fhttp, fetch_player_stats_i, set_player_context)) {
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
-                loading_free(loading);
                 flipper_http_free(fhttp);
             } else {
-                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-                view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
-                loading_free(loading);
                 flipper_http_free(fhttp);
             }
+
+            if(!alloc_submenu_settings(app)) {
+                FURI_LOG_E(TAG, "Failed to allocate settings view");
+                return;
+            }
+
             if(!start_game_thread(app)) {
                 FURI_LOG_E(TAG, "Failed to start game thread");
                 easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
                 return;
             }
 
-            easy_flipper_dialog("Starting Game", "Please wait...");
         } else {
             switch_to_view_get_game(app);
         }
         break;
-    case FlipWorldSubmenuIndexAbout:
+    case FlipWorldSubmenuIndexMessage:
+        // About menu.
         free_all_views(app, true, true);
-        if(!alloc_about_view(app)) {
-            FURI_LOG_E(TAG, "Failed to allocate about view");
+        if(!alloc_message_view(app, MessageStateAbout)) {
+            FURI_LOG_E(TAG, "Failed to allocate message view");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewAbout);
+
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
         break;
     case FlipWorldSubmenuIndexSettings:
         free_all_views(app, true, true);
@@ -1580,15 +1604,15 @@ static bool _fetch_worlds(DataLoaderModel* model) {
         FURI_LOG_E(TAG, "model or fhttp is NULL");
         return false;
     }
-    // Create the directory for saving settings
-    char directory_path[256];
+    char directory_path[128];
+    snprintf(
+        directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
     snprintf(
         directory_path,
         sizeof(directory_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-
-    // Create the directory
-    Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_common_mkdir(storage, directory_path);
     furi_record_close(RECORD_STORAGE);
     snprintf(
@@ -1598,7 +1622,7 @@ static bool _fetch_worlds(DataLoaderModel* model) {
     model->fhttp->save_received_data = true;
     return flipper_http_get_request_with_headers(
         model->fhttp,
-        "https://www.flipsocial.net/api/world/v4/get/10/",
+        "https://www.flipsocial.net/api/world/v5/get/10/",
         "{\"Content-Type\":\"application/json\"}");
 }
 static char* _parse_worlds(DataLoaderModel* model) {

@@ -13,8 +13,7 @@ bool allocate_level(GameManager* manager, int index) {
     FuriString* world_list = flipper_http_load_from_file(file_path);
     if(!world_list) {
         FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] =
-            game_manager_add_level(manager, generic_level("town_world_v2", 0));
+        game_context->levels[0] = game_manager_add_level(manager, training_world());
         game_context->level_count = 1;
         return false;
     }
@@ -32,7 +31,7 @@ bool allocate_level(GameManager* manager, int index) {
     furi_string_free(world_list);
     return true;
 }
-static void set_world(Level* level, GameManager* manager, char* id) {
+void set_world(Level* level, GameManager* manager, char* id) {
     char file_path[256];
     snprintf(
         file_path,
@@ -44,7 +43,7 @@ static void set_world(Level* level, GameManager* manager, char* id) {
     FuriString* json_data_str = flipper_http_load_from_file(file_path);
     if(!json_data_str || furi_string_empty(json_data_str)) {
         FURI_LOG_E("Game", "Failed to load json data from file");
-        draw_town_world(manager, level);
+        // draw_town_world(manager, level);
         return;
     }
 
@@ -60,7 +59,7 @@ static void set_world(Level* level, GameManager* manager, char* id) {
     FURI_LOG_I("Game", "Drawing world");
     if(!draw_json_world_furi(manager, level, json_data_str)) {
         FURI_LOG_E("Game", "Failed to draw world");
-        draw_town_world(manager, level);
+        // draw_town_world(manager, level);
         furi_string_free(json_data_str);
     } else {
         FURI_LOG_I("Game", "Drawing enemies");
@@ -75,7 +74,7 @@ static void set_world(Level* level, GameManager* manager, char* id) {
         FuriString* enemy_data_str = flipper_http_load_from_file(file_path);
         if(!enemy_data_str || furi_string_empty(enemy_data_str)) {
             FURI_LOG_E("Game", "Failed to get enemy data");
-            draw_town_world(manager, level);
+            // draw_town_world(manager, level);
             return;
         }
 
@@ -89,11 +88,42 @@ static void set_world(Level* level, GameManager* manager, char* id) {
                 break;
             }
 
-            spawn_enemy_json_furi(level, manager, single_enemy_data);
+            spawn_enemy(level, manager, single_enemy_data);
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);
-        FURI_LOG_I("Game", "Finished loading world data");
+
+        // Draw NPCs
+        FURI_LOG_I("Game", "Drawing NPCs");
+        snprintf(
+            file_path,
+            sizeof(file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
+            id,
+            id);
+
+        FuriString* npc_data_str = flipper_http_load_from_file(file_path);
+        if(!npc_data_str || furi_string_empty(npc_data_str)) {
+            FURI_LOG_E("Game", "Failed to get npc data");
+            // draw_town_world(manager, level);
+            return;
+        }
+
+        // Loop through the array
+        for(int i = 0; i < MAX_NPCS; i++) {
+            FuriString* single_npc_data = get_json_array_value_furi("npc_data", i, npc_data_str);
+            if(!single_npc_data || furi_string_empty(single_npc_data)) {
+                // No more npc elements found
+                if(single_npc_data) furi_string_free(single_npc_data);
+                break;
+            }
+
+            spawn_npc(level, manager, single_npc_data);
+            furi_string_free(single_npc_data);
+        }
+        furi_string_free(npc_data_str);
+
+        FURI_LOG_I("Game", "World drawn");
     }
 }
 static void level_start(Level* level, GameManager* manager, void* context) {
@@ -123,7 +153,7 @@ static void level_start(Level* level, GameManager* manager, void* context) {
         FuriString* world_data = fetch_world(level_context->id);
         if(!world_data) {
             FURI_LOG_E("Game", "Failed to fetch world data");
-            draw_town_world(manager, level);
+            // draw_town_world(manager, level);
             game_context->is_switching_level = false;
             // furi_delay_ms(1000);
             player_spawn(level, manager);
