@@ -1192,7 +1192,11 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
                     }
                     furi_string_cat_printf(parsed_data, "\n");
                     if(service_code_index == 0) {
-                        FURI_LOG_I(TAG, "Service code %d, adding entry %x", service_code_index, model->size);
+                        FURI_LOG_I(
+                            TAG,
+                            "Service code %d, adding entry %x",
+                            service_code_index,
+                            model->size);
                         suica_add_entry(model, block_data);
                     }
                 }
