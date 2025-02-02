@@ -1,6 +1,6 @@
 # Flipper Cigarette
 
-Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one) 🚬🚬🚬
+Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one)
 
 
 ## Screenshots
