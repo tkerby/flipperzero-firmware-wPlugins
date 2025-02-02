@@ -80,7 +80,7 @@ This is a list of metro cards and transit systems that need support or have part
 | **Opus**           | 🇨🇦 Montreal, QC, Canada                    | Calypso           |
 | **Rav-Kav**        | 🇮🇱 Israel                                  | Calypso           |
 | **SmartRider**     | :australia: Western Australia, Australia   | Mifare Classic    |
-| **Suica**     | :japan: Tokyo Japan   | FeliCa    |
+| **Suica**     | 🇯🇵 Tokyo Japan   | FeliCa    |
 | **Troika**         | 🇷🇺 Moscow, Russia                          | Mifare Classic    |
 
 
