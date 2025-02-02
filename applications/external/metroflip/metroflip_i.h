@@ -9,11 +9,6 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include "api/nfc/mf_classic_key_cache.h"
-#if __has_include(<metroflip_icons.h>)
-#include <metroflip_icons.h>
-#else
-extern const Icon I_RFIDDolphinReceive_97x61;
-#endif
 #include <flipper_application/plugins/composite_resolver.h>
 #include <loader/firmware_api/firmware_api.h>
 #include <flipper_application/plugins/plugin_manager.h>
@@ -52,6 +47,7 @@ extern const Icon I_RFIDDolphinReceive_97x61;
 #include "scenes/metroflip_scene.h"
 
 #include "api/calypso/calypso_i.h"
+#include "api/suica/suica_structs.h"
 
 #define KEY_MASK_BIT_CHECK(key_mask_1, key_mask_2) (((key_mask_1) & (key_mask_2)) == (key_mask_1))
 
@@ -97,6 +93,9 @@ typedef struct {
 
     // Calypso specific context
     CalypsoContext* calypso_context;
+
+    // Suica specific context
+    SuicaContext* suica_context;
 } Metroflip;
 
 enum MetroflipCustomEvent {
@@ -137,6 +136,7 @@ typedef enum {
     MetroflipViewTextBox,
     MetroflipViewWidget,
     MetroflipViewUart,
+    MetroflipViewCanvas,
 } MetroflipView;
 
 typedef enum {
