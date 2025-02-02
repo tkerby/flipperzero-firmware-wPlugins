@@ -37,3 +37,6 @@ Big update!
 - Unified Calypso Parser: A new unified Calypso parser has been introduced (thanks to DocSystem), streamlining Calypso card support.
 - RavKav Moved to Calypso Parser: RavKav has been moved to the new unified Calypso parser (credit to luu176).
 
+## v0.5.1
+
+- Suica Parser (By [@zinongli](https://github.com/zinongli))
