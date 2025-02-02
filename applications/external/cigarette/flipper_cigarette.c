@@ -82,6 +82,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
         elements_button_left(canvas, "another one");
     }
 
+    // TODO: open about-view
     //elements_button_down(canvas, "about");
 
     // Cigarette
@@ -142,7 +143,7 @@ static void app_input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put(event_queue, input_event, FuriWaitForever);
 }
 
-int32_t flipper_cigarette_main(void* p) {
+int32_t cigarette_main(void* p) {
     UNUSED(p);
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
 

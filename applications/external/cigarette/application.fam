@@ -2,7 +2,7 @@ App(
     appid="cigarette",
     name="Cigarette",
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="flipper_cigarette_main",
+    entry_point="cigarette_main",
     fap_icon="flipper_cigarette_10px.png",
     stack_size=1 * 1024,
     fap_icon_assets="images",
