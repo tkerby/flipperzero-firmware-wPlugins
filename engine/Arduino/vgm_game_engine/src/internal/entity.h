@@ -68,6 +68,7 @@ namespace VGMGameEngine
         float elapsed_attack_timer; // Time elapsed since the last attack
         float strength;             // Damage the entity deals
         float health;               // Health of the entity
+        float max_health;           // Maximum health of the entity
         float level;                // Level of the entity
         float xp;                   // Experience points of the entity
 
