@@ -62,6 +62,7 @@ void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
                 NfcProtocolMfClassic);
             nfc_poller_start(app->poller, nfc_hid_poller_callback, app);
         } else {
+            nfc_device_clear(app->device);
             furi_string_set(app->uid_str, "No MfClassic");
         }
     }

@@ -10,8 +10,6 @@
 struct NfcHidApp {
     bool running;
     bool detected;
-    uint8_t* uid;
-    size_t uid_len;
     FuriString* uid_str;
 
     ViewPort* view_port;
