@@ -46,3 +46,5 @@ The **Flipper Cigarette** app will automatically be launched on your Flipper aft
 
 xoxo - maz <3
 
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/fuckmaz/flipper_cigarette.svg?background=%23000000&axis=%23ffffff&line=%23f848dd)](https://starchart.cc/fuckmaz/flipper_cigarette)
