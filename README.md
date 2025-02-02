@@ -21,7 +21,7 @@ Download the **flipper_cigarette.fap** from the [latest release](https://www.fli
 
 ## Build
 
-Clone both the repository for the firmware and  and copy **flipper_cigarette** directory to the **applications_user** folders within the firmware
+Clone both the repository for the firmware and  and copy **flipper_cigarette** directory to the **applications_user** folders within the firmware:
 
 ```
 git clone https://github.com/flipperdevices/flipperzero-firmware.git
