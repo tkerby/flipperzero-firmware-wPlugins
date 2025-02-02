@@ -1,8 +1,8 @@
 App(
-    appid="flipper_cigarette",
-    name="Flipper Cigarette",
+    appid="cigarette",
+    name="Cigarette",
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="flipper_cigarette_main",
+    entry_point="cigarette_main",
     fap_category="Games",
     fap_icon="flipper_cigarette_10px.png",
     stack_size=1 * 1024,
