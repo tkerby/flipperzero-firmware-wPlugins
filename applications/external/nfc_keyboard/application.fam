@@ -1,0 +1,12 @@
+App(
+    appid="nfc_keyboard",
+    name="NFC Keyboard",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="nfc_hid_app",
+    stack_size=2 * 1024,
+    cdefines=["APP_USB_KEYBOARD"],
+    requires=["gui"],
+    order=60,
+    fap_icon="usb_keyboard_10px.png",
+    fap_category="NFC",
+)
