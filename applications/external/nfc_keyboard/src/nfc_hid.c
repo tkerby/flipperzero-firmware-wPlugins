@@ -58,11 +58,11 @@ int32_t nfc_hid_app(void* p) {
 
     NfcHidApp* app = nfc_hid_alloc();
 
-    while (app->running) {
+    while(app->running) {
         // Do something to receive callbacks
         furi_delay_ms(50);
 
-        if (app->detected) {
+        if(app->detected) {
             // Stop scanner to prevent multiple scans of same card
             nfc_scanner_stop(app->scanner);
 

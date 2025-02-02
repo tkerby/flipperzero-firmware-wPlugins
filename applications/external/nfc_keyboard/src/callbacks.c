@@ -24,7 +24,7 @@ void nfc_hid_input_callback(InputEvent* input_event, void* ctx) {
     furi_assert(ctx);
     NfcHidApp* app = ctx;
 
-    if (input_event->type == InputTypePress && input_event->key == InputKeyBack) {
+    if(input_event->type == InputTypePress && input_event->key == InputKeyBack) {
         app->running = false;
     }
 }
@@ -33,10 +33,7 @@ NfcCommand nfc_hid_poller_callback(NfcGenericEvent event, void* ctx) {
     furi_assert(ctx);
     NfcHidApp* app = ctx;
 
-    nfc_device_set_data(
-        app->device,
-        event.protocol,
-        nfc_poller_get_data(app->poller));
+    nfc_device_set_data(app->device, event.protocol, nfc_poller_get_data(app->poller));
 
     app->detected = true;
 
@@ -47,19 +44,17 @@ void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     furi_assert(ctx);
     NfcHidApp* app = ctx;
 
-    if (event.type == NfcScannerEventTypeDetected) {
+    if(event.type == NfcScannerEventTypeDetected) {
         bool hasMifareClassic = false;
-        for (size_t i = 0; i < event.data.protocol_num; i++) {
-            if (event.data.protocols[i] == NfcProtocolMfClassic) {
+        for(size_t i = 0; i < event.data.protocol_num; i++) {
+            if(event.data.protocols[i] == NfcProtocolMfClassic) {
                 hasMifareClassic = true;
                 break;
             }
         }
 
-        if (hasMifareClassic) {
-            app->poller = nfc_poller_alloc(
-                app->nfc,
-                NfcProtocolMfClassic);
+        if(hasMifareClassic) {
+            app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
             nfc_poller_start(app->poller, nfc_hid_poller_callback, app);
         } else {
             nfc_device_clear(app->device);

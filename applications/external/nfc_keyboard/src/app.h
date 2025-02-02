@@ -3,8 +3,8 @@
 
 #include "flipper.h"
 
-#define VERSION "1.0.0"
-#define TAG "NFC_HID"
+#define VERSION          FAP_VERSION
+#define TAG              "NFC_HID"
 #define MAX_NFC_UID_SIZE 32
 
 struct NfcHidApp {
@@ -18,7 +18,7 @@ struct NfcHidApp {
     FuriHalUsbInterface* usb_mode_prev;
 
     Nfc* nfc;
-	NfcScanner* scanner;
+    NfcScanner* scanner;
     NfcPoller* poller;
     NfcDevice* device;
 };

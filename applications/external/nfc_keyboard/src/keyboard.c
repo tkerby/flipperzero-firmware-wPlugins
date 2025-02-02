@@ -1,15 +1,15 @@
 #include "keyboard.h"
 
 uint16_t get_key(char c) {
-    if (c >= 'A' && c <= 'Z') {
+    if(c >= 'A' && c <= 'Z') {
         return HID_KEYBOARD_A + (c - 'A');
     }
 
-    if (c >= 'a' && c <= 'z') {
+    if(c >= 'a' && c <= 'z') {
         return HID_KEYBOARD_A + (c - 'a');
     }
 
-    switch (c) {
+    switch(c) {
     case '0':
         return HID_KEYBOARD_0;
     case '1':
@@ -61,11 +61,11 @@ void write_char(char c) {
     uint16_t key = get_key(c);
     bool uppercase = is_uppercase(c);
 
-    if (c == 0) {
+    if(c == 0) {
         return;
     }
 
-    if (uppercase) {
+    if(uppercase) {
         capslock();
     }
 
@@ -74,13 +74,13 @@ void write_char(char c) {
     furi_hal_hid_kb_release(key);
     furi_delay_ms(KB_PRESS_DELAY);
 
-    if (uppercase) {
+    if(uppercase) {
         capslock();
     }
 }
 
 void write_string(const char* str, size_t len) {
-    for (size_t i = 0; i < len; i++) {
+    for(size_t i = 0; i < len; i++) {
         write_char(str[i]);
     }
 }
