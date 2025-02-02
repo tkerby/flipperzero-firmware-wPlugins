@@ -3,7 +3,7 @@
 Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one) 🚬🚬🚬
 
 
-## 📸 Screenshots
+## Screenshots
 
 
 <p  align="center">
@@ -14,20 +14,28 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 </p>
 
 
+## Installation
+
+Download the **flipper_cigarette.fap** from the [latest release](https://www.flipperzero.one) and copy it to the **apps/Games** on your **Flipper Zero** 
 
 
-## Build the program
+## Build
 
-Assuming the toolchain is already installed, copy **flipper_cigarette** directory to **applications_user**
+Clone both the repository for the firmware and  and copy **flipper_cigarette** directory to the **applications_user** folders within the firmware
 
-Plug in your **Flipper Zero** and build the app:
 ```
+git clone https://github.com/flipperdevices/flipperzero-firmware.git
+git clone https://github.com/fuckmaz/flipper_cigarette.git flipperzero-firmware/applications_user/flipper_cigarette
+```
+
+Plug in your **Flipper Zero** and build the app from within the firmware base-directory:
+```
+cd flipperzero-firmware
 ./fbt launch_app APPSRC=applications_user/flipper_cigarette
 ```
 
-The app will automatically be launched after compilation.
+The **Flipper Cigarette** app will automatically be launched on your Flipper after compilation is done.
 
-If you don't want to build this application yourself just copy **flipper_cigarette.fap** from the latest release onto your **Flipper Zero** 
 
 ## TODO
 
@@ -36,5 +44,5 @@ If you don't want to build this application yourself just copy **flipper_cigaret
 - cancer progress-bar
 - add different cigarettes to choose from
 
-xoxo - MAZ <3
+xoxo - maz <3
 
