@@ -62,7 +62,6 @@ int32_t nfc_hid_app(void* p) {
         // Do something to receive callbacks
         furi_delay_ms(50);
 
-
         if (app->detected) {
             // Stop scanner to prevent multiple scans of same card
             nfc_scanner_stop(app->scanner);
@@ -76,15 +75,15 @@ int32_t nfc_hid_app(void* p) {
             furi_string_set(app->uid_str, "");
             convertToHexString(app->uid_str, uid, uid_len);
 
-            //write_string(furi_string_get_cstr(app->uid_str), furi_string_size(app->uid_str));
+            furi_delay_ms(50);
+            write_string(furi_string_get_cstr(app->uid_str), furi_string_size(app->uid_str));
 
             nfc_device_clear(app->device);
             free((uint8_t*)uid);
 
-            numlock();
-
             // Restart scanner with delay
-            furi_delay_ms(500);
+            furi_delay_ms(2000);
+            numlock();
             app->detected = false;
             nfc_scanner_start(app->scanner, nfc_hid_scanner_callback, app);
         }

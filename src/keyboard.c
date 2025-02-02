@@ -9,11 +9,27 @@ uint16_t get_key(char c) {
         return HID_KEYBOARD_A + (c - 'a');
     }
 
-    if (c >= '0' && c <= '9') {
-        return HID_KEYBOARD_0 + (c - '0');
-    }
-
     switch (c) {
+    case '0':
+        return HID_KEYBOARD_0;
+    case '1':
+        return HID_KEYBOARD_1;
+    case '2':
+        return HID_KEYBOARD_2;
+    case '3':
+        return HID_KEYBOARD_3;
+    case '4':
+        return HID_KEYBOARD_4;
+    case '5':
+        return HID_KEYBOARD_5;
+    case '6':
+        return HID_KEYBOARD_6;
+    case '7':
+        return HID_KEYBOARD_7;
+    case '8':
+        return HID_KEYBOARD_8;
+    case '9':
+        return HID_KEYBOARD_9;
     case ' ':
         return HID_KEYBOARD_SPACEBAR;
     case '\n':
