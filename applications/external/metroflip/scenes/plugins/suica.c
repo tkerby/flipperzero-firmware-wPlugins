@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../metroflip_i.h"
+#include "../../metroflip_i.h"
 #include <flipper_application.h>
 
 #include <lib/nfc/protocols/felica/felica.h>
@@ -24,15 +24,17 @@
 #include <lib/nfc/helpers/felica_crc.h>
 #include <lib/bit_lib/bit_lib.h>
 
-#include <applications/services/locale/locale.h>
-#include <datetime.h>
+#include <locale/locale.h>
+#include <datetime/datetime.h>
+#include "../../api/metroflip/metroflip_api.h"
+#include "../../metroflip_plugins.h"
 
 #define SERVICE_CODE_HISTORY_IN_LE  (0x090FU)
 #define SERVICE_CODE_TAPS_LOG_IN_LE (0x108FU)
 #define BLOCK_COUNT                 1
 #define TAG                         "Metroflip:Scene:Suica"
 
-static NfcCommand metroflip_scene_suica_poller_callback(NfcGenericEvent event, void* context) {
+static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(event.protocol == NfcProtocolFelica);
     NfcCommand command = NfcCommandContinue;
     MetroflipPollerEventType stage = MetroflipPollerEventTypeStart;
@@ -108,8 +110,7 @@ static NfcCommand metroflip_scene_suica_poller_callback(NfcGenericEvent event, v
     return command;
 }
 
-void metroflip_scene_suica_on_enter(void* context) {
-    Metroflip* app = context;
+static void suica_on_enter(Metroflip* app) {
     dolphin_deed(DolphinDeedNfcRead);
 
     // Setup view
@@ -121,13 +122,12 @@ void metroflip_scene_suica_on_enter(void* context) {
     view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewPopup);
     nfc_scanner_alloc(app->nfc);
     app->poller = nfc_poller_alloc(app->nfc, NfcProtocolFelica);
-    nfc_poller_start(app->poller, metroflip_scene_suica_poller_callback, app);
+    nfc_poller_start(app->poller, suica_poller_callback, app);
 
     metroflip_app_blink_start(app);
 }
 
-bool metroflip_scene_suica_on_event(void* context, SceneManagerEvent event) {
-    Metroflip* app = context;
+static bool suica_on_event(Metroflip* app, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
@@ -156,12 +156,32 @@ bool metroflip_scene_suica_on_event(void* context, SceneManagerEvent event) {
     return consumed;
 }
 
-void metroflip_scene_suica_on_exit(void* context) {
-    Metroflip* app = context;
+static void suica_on_exit(Metroflip* app) {
     widget_reset(app->widget);
     metroflip_app_blink_stop(app);
     if(app->poller) {
         nfc_poller_stop(app->poller);
         nfc_poller_free(app->poller);
     }
+}
+
+/* Actual implementation of app<>plugin interface */
+static const MetroflipPlugin suica_plugin = {
+    .card_name = "Suica",
+    .plugin_on_enter = suica_on_enter,
+    .plugin_on_event = suica_on_event,
+    .plugin_on_exit = suica_on_exit,
+
+};
+
+/* Plugin descriptor to comply with basic plugin specification */
+static const FlipperAppPluginDescriptor suica_plugin_descriptor = {
+    .appid = METROFLIP_SUPPORTED_CARD_PLUGIN_APP_ID,
+    .ep_api_version = METROFLIP_SUPPORTED_CARD_PLUGIN_API_VERSION,
+    .entry_point = &suica_plugin,
+};
+
+/* Plugin entry point - must return a pointer to const descriptor  */
+const FlipperAppPluginDescriptor* suica_plugin_ep(void) {
+    return &suica_plugin_descriptor;
 }
