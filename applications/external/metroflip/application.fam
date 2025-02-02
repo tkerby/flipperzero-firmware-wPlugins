@@ -10,7 +10,95 @@ App(
     fap_category="NFC",
     fap_author="luu176",
     fap_weburl="https://github.com/luu176/Metroflip",
-    fap_version="0.4.11",
+    fap_version="0.4.12",
     fap_description="An implementation of metrodroid on the flipper",
     #  v0.4.9: [Suica Widget with raw block readings (By zinongli)](https://github.com/zinongli/Metroflip/commit/9940ea93f0052a8057977aa9fe84dce06c247682) Works With OFW PR [NFC: FeliCa Protocol Expose Read Block API and Allow Specifying Service #4074 (By zinongli)](https://github.com/flipperdevices/flipperzero-firmware/pull/4074)
+)
+
+App(
+    appid="charliecard_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="charliecard_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/charliecard.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="calypso_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="calypso_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/calypso.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="metromoney_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="metromoney_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/metromoney.c"],
+)
+
+App(
+    appid="bip_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="bip_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/bip.c"],
+)
+
+App(
+    appid="clipper_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="clipper_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/clipper.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="itso_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="itso_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/itso.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="myki_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="myki_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/myki.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="opal_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="opal_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/opal.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="smartrider_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="smartrider_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/smartrider.c"],
+    fal_embedded=True,
+)
+
+App(
+    appid="troika_plugin",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="troika_plugin_ep",
+    requires=["metroflip"],
+    sources=["scenes/plugins/troika.c"],
+    fal_embedded=True,
 )
