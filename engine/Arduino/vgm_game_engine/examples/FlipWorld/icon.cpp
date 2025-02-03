@@ -64,6 +64,7 @@ static void icon_collision(Entity *self, Entity *other, Game *game)
     {
         clear_player_username(other, game, true);
         other->position_set(other->old_position);
+        clear_screan(game);
     }
 }
 
@@ -121,7 +122,6 @@ static void icon_spawn_line(Level *level, const char *name, Vector pos, int amou
     }
 }
 
-// icon.cpp
 void icon_spawn_json(Level *level, const char *json)
 {
     // Check heap

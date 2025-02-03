@@ -39,10 +39,10 @@ static void enemy_update(Entity *self, Game *game)
     }
 
     // float delta_time = 1.0 / game->fps;
-    float delta_time = 1.0 / 30;
+    float delta_time = 1.0 / 30; // 30 frames per second
 
     // Increment the elapsed_attack_timer for the enemy
-    self->elapsed_attack_timer += 1.0 / 30; // 30 frames per second
+    self->elapsed_attack_timer += delta_time;
 
     switch (self->state)
     {
@@ -68,30 +68,36 @@ static void enemy_update(Entity *self, Game *game)
         break;
     case ENTITY_MOVING_TO_END:
     case ENTITY_MOVING_TO_START:
+    case ENTITY_ATTACKED:
+        // determine the direction vector
+        Vector direction_vector = {0, 0};
+
+        // if attacked, change state to moving based on the direction
+        if (self->state == ENTITY_ATTACKED)
+        {
+            self->state = self->position.x < self->old_position.x ? ENTITY_MOVING_TO_END : ENTITY_MOVING_TO_START;
+        }
+
         // Determine the target position based on the current state
         Vector target_position = self->state == ENTITY_MOVING_TO_END ? self->end_position : self->start_position;
 
-        // Get current position
-        Vector current_position = self->position;
-        Vector direction_vector = {0, 0};
-
         // Calculate direction towards the target
-        if (current_position.x < target_position.x)
+        if (self->position.x < target_position.x)
         {
             direction_vector.x = 1;
             self->direction = ENTITY_RIGHT;
         }
-        else if (current_position.x > target_position.x)
+        else if (self->position.x > target_position.x)
         {
             direction_vector.x = -1;
             self->direction = ENTITY_LEFT;
         }
-        else if (current_position.y < target_position.y)
+        else if (self->position.y < target_position.y)
         {
             direction_vector.y = 1;
             self->direction = ENTITY_DOWN;
         }
-        else if (current_position.y > target_position.y)
+        else if (self->position.y > target_position.y)
         {
             direction_vector.y = -1;
             self->direction = ENTITY_UP;
@@ -106,7 +112,7 @@ static void enemy_update(Entity *self, Game *game)
         }
 
         // Update position based on direction and speed
-        Vector new_pos = current_position;
+        Vector new_pos = self->position;
         new_pos.x += direction_vector.x * self->speed * delta_time;
         new_pos.y += direction_vector.y * self->speed * delta_time;
 
@@ -123,12 +129,6 @@ static void enemy_update(Entity *self, Game *game)
 
         // Set the new position
         self->position_set(new_pos);
-
-        // force update/redraw of all entities in the level
-        for (int i = 0; i < game->current_level->entity_count; i++)
-        {
-            game->current_level->entities[i]->position_changed = true;
-        }
 
         // Check if the enemy has reached or surpassed the target_position
         bool reached_x = fabs(new_pos.x - target_position.x) < 1;
@@ -164,6 +164,10 @@ static void draw_username(Game *game, Vector pos, const char *username)
 
 static void enemy_render(Entity *self, Draw *draw, Game *game)
 {
+    if (self->state == ENTITY_DEAD)
+    {
+        return;
+    }
     char health_str[32];
     snprintf(health_str, sizeof(health_str), "%.0f", (double)self->health);
 
@@ -191,6 +195,10 @@ static void enemy_render(Entity *self, Draw *draw, Game *game)
 
     // draw health of enemy
     draw_username(game, self->position, health_str);
+}
+void clear_screan(Game *game)
+{
+    game->draw->clear(Vector(0, 0), Vector(game->size.x, game->size.y), TFT_WHITE); // clear the screen
 }
 int last_button = -1;
 // Enemy collision function: when this is called, the enemy has collided with another entity
@@ -251,18 +259,9 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
                 self->health -= other->strength;
 
                 // check if enemy is dead
-                if (self->health <= 0)
+                if (self->health > 0)
                 {
-                    self->state = ENTITY_DEAD;
-                    self->position = Vector(-100, -100);
-                    self->health = self->max_health;
-                    self->elapsed_move_timer = 0;
-                    self->position_changed = true;
-                    self->position_set(self->position);
-                }
-                else
-                {
-                    self->state = ENTITY_IDLE;
+                    self->state = ENTITY_ATTACKED;
                     self->elapsed_move_timer = 0;
                     self->position_changed = true;
                     self->position_set(self->old_position);
@@ -282,15 +281,7 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
                 other->health -= self->strength;
 
                 // check if player is dead
-                if (other->health <= 0)
-                {
-                    other->state = ENTITY_DEAD;
-                    other->position = Vector(game->current_level->size.x / 2, game->current_level->size.y / 2);
-                    other->health = 0;
-                    clear_player_username(other, game, true);
-                    other->position_set(other->position);
-                }
-                else
+                if (other->health > 0)
                 {
                     other->state = ENTITY_ATTACKED;
                     clear_player_username(other, game, true);
@@ -303,10 +294,11 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
         if (other->health <= 0)
         {
             other->state = ENTITY_DEAD;
-            other->position = Vector(game->current_level->size.x / 2, game->current_level->size.y / 2);
+            other->position = other->start_position;
             other->health = other->max_health;
             clear_player_username(other, game, true);
             other->position_set(other->start_position);
+            clear_screan(game);
         }
 
         // check if enemy is dead
@@ -314,10 +306,11 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
         {
             self->state = ENTITY_DEAD;
             self->position = Vector(-100, -100);
-            self->health = self->max_health;
+            self->health = 0;
             self->elapsed_move_timer = 0;
-            self->position_changed = true;
+            clear_player_username(self, game, true);
             self->position_set(self->position);
+            clear_screan(game);
         }
     }
 }
@@ -396,7 +389,31 @@ void enemy_spawn_json(Level *level, const char *json)
     }
 }
 
-/* Update the player entity using current game input */
+// Update player stats based on XP using iterative method
+static int get_player_level_iterative(uint32_t xp)
+{
+    int level = 1;
+    uint32_t xp_required = 100; // Base XP for level 2
+
+    while (level < 100 && xp >= xp_required) // Maximum level supported
+    {
+        level++;
+        xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
+    }
+
+    return level;
+}
+
+static void update_stats(Entity *player)
+{
+    // Determine the player's level based on XP
+    player->level = get_player_level_iterative(player->xp);
+
+    // Update strength and max health based on the new level
+    player->strength = 10 + (player->level * 1);           // 1 strength per level
+    player->max_health = 100 + ((player->level - 1) * 10); // 10 health per level
+}
+
 static void player_update(Entity *self, Game *game)
 {
     // Apply health regeneration
@@ -414,31 +431,34 @@ static void player_update(Entity *self, Game *game)
     // Increment the elapsed_attack_timer for the player
     self->elapsed_attack_timer += 1.0 / 30; // 30 frames per second
 
+    // update plyer traits
+    update_stats(self);
+
     Vector oldPos = self->position;
     Vector newPos = oldPos;
 
     // Move according to input
     if (game->input == BUTTON_UP)
     {
-        newPos.y -= 10;
+        newPos.y -= 5;
         self->direction = ENTITY_UP;
         last_button = BUTTON_UP;
     }
     else if (game->input == BUTTON_DOWN)
     {
-        newPos.y += 10;
+        newPos.y += 5;
         self->direction = ENTITY_DOWN;
         last_button = BUTTON_DOWN;
     }
     else if (game->input == BUTTON_LEFT)
     {
-        newPos.x -= 10;
+        newPos.x -= 5;
         self->direction = ENTITY_LEFT;
         last_button = BUTTON_LEFT;
     }
     else if (game->input == BUTTON_RIGHT)
     {
-        newPos.x += 10;
+        newPos.x += 5;
         self->direction = ENTITY_RIGHT;
         last_button = BUTTON_RIGHT;
     }
@@ -452,13 +472,6 @@ static void player_update(Entity *self, Game *game)
 
     // Tentatively set new position
     self->position_set(newPos);
-
-    // Force update/redraw of all enemies in the level
-    for (int i = 0; i < game->current_level->entity_count; i++)
-    {
-        if (game->current_level->entities[i]->type == ENTITY_ENEMY)
-            game->current_level->entities[i]->position_changed = true;
-    }
 
     // check if new position is within the level boundaries
     if (newPos.x < 0 || newPos.x + self->size.x > game->current_level->size.x ||
