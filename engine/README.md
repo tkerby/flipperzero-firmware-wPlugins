@@ -33,4 +33,4 @@ Inside the `Arduino` directory, you will find a compiled FlipWorld example. Ther
 4. Drag and drop the downloaded file onto the device. It will automatically reboot and begin running the example.
 
 ## Usage
-You need to flash your Video Game Module with an example (or your own custom script) and install the app on your Flipper Zero. The Video Game Module handles video output and manages the game engine, while the Flipper Zero acts as a controller (almost the opposite of its previous use). Developers can create their own games or recreate their Flipper games with the advantage of increased memory and colorful graphics.
+You need to flash your Video Game Module with an example (or your own custom script) and install the app on your Flipper Zero. The Video Game Module handles video output and manages the game engine, while the Flipper Zero acts as a controller (almost the opposite of its previous use). Developers can create their own games or recreate their Flipper games with the advantages of increased memory, colorful graphics, and video output to their TV or monitor.
