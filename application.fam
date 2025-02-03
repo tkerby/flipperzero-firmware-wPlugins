@@ -12,4 +12,5 @@ App(
     fap_category="GPIO",
     fap_icon_assets="assets",
     fap_description="The most complete app to start exploring the GPIO functionalities",
+    fap_author="dun-crop"
 )

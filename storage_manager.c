@@ -17,7 +17,7 @@ uint8_t configuration_file_init(){
 
 uint8_t configuration_file_read(struct gpio_explorer_configure_struct* configuration){
     File *file = storage_file_alloc(storage);
-    char *buffer = malloc(READ_BUFFER_SIZE);
+    char *buffer = malloc(sizeof *buffer * READ_BUFFER_SIZE);
 
     if(!file || !buffer) {
         storage_file_close(file);
@@ -39,7 +39,7 @@ uint8_t configuration_file_read(struct gpio_explorer_configure_struct* configura
 
 uint8_t configuration_file_write(struct gpio_explorer_configure_struct* configuration){
     File *file = storage_file_alloc(storage);
-    char* buffer = malloc(READ_BUFFER_SIZE);
+    char* buffer = malloc(sizeof *buffer * READ_BUFFER_SIZE);
     if(!buffer||!file){
         storage_file_close(file);
         assert(0);

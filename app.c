@@ -51,7 +51,7 @@ int32_t main_gpio_explorer_app(void* _p) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static struct gpio_explorer_app_struct * gpio_explorer_app_alloc() {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)malloc(sizeof(struct gpio_explorer_app_struct ));
+    struct gpio_explorer_app_struct * app = malloc(sizeof(struct gpio_explorer_app_struct ));
 
     Gui* gui = furi_record_open(RECORD_GUI);
 
@@ -178,7 +178,7 @@ static struct gpio_explorer_app_struct * gpio_explorer_app_alloc() {
     view_allocate_model(app->view_led, ViewModelTypeLockFree, sizeof(struct gpio_explorer_led_struct));
     struct gpio_explorer_led_struct* led_model = view_get_model(app->view_led);
     led_model->led_pin_state = OFF;
-    led_model->led_pin_index = 0;
+    led_model->led_pin_index = app->configuration_settings->led_pin_index;
     view_dispatcher_add_view(app->view_dispatcher, GPIOExplorerViewLED, app->view_led);
 
     ////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ static struct gpio_explorer_app_struct * gpio_explorer_app_alloc() {
         0,
         128,
         64,
-        "GPIO Explorer\n---\nThis is the most complete\napp to start exploring the\nGPIO functionalities.\n\nauthor: @dun-crop\n");
+        "GPIO Explorer\n---\nThis is the most complete\napp to start exploring the\nGPIO functionalities.\n---\nYou can configure the pins\nthat you want to use from\nthe configure menu.\n---\nNOTE: ALWAYS PUT\nAT LEAST 100 Ohm\nRESISTORS BEFORE\nYOU CONNECT THE LEDS.\n---\nauthor: dun-crop\nGitHub: https://github.com/EvgeniGenchev07/\ngpio_explorer\nDiscord: @dun-crop");
     view_set_previous_callback(
         widget_get_view(app->widget_about), gpio_explorer_navigation_submenu_callback);
     view_dispatcher_add_view(
@@ -371,6 +371,8 @@ static uint32_t gpio_explorer_rgb_navigation_submenu_callback(void* _context) {
     furi_hal_gpio_write(pins[app->configuration_settings->rgb_pin_r_index], OFF);
     furi_hal_gpio_write(pins[app->configuration_settings->rgb_pin_g_index], OFF);
     furi_hal_gpio_write(pins[app->configuration_settings->rgb_pin_b_index], OFF);
+    struct gpio_explorer_rgb_struct* rgb_struct = view_get_model(app->view_rgb);
+    rgb_struct->rgb_pins_state = OFF;
     furi_hal_gpio_init_simple(pins[app->configuration_settings->rgb_pin_r_index], GpioModeAnalog);
     furi_hal_gpio_init_simple(pins[app->configuration_settings->rgb_pin_g_index], GpioModeAnalog);
     furi_hal_gpio_init_simple(pins[app->configuration_settings->rgb_pin_b_index], GpioModeAnalog);
@@ -387,7 +389,7 @@ static void view_rgb_init(struct gpio_explorer_app_struct * app) {
 }
 
 static void gpio_explorer_view_rgb_draw_callback(Canvas* canvas, void* model) {
-    struct gpio_explorer_rgb_struct* my_model = (struct gpio_explorer_rgb_struct*)model;
+    struct gpio_explorer_rgb_struct* my_model = model;
     canvas_draw_str(canvas, 1, 25, "Press < or > to change the color");
     FuriString* xstr = furi_string_alloc();
     furi_string_printf(xstr, "%s", rgb_colors[my_model->color_index]);
@@ -398,7 +400,7 @@ static void gpio_explorer_view_rgb_draw_callback(Canvas* canvas, void* model) {
 }
 
 static bool gpio_explorer_view_rgb_input_callback(InputEvent* event, void* context) {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     if(event->type == InputTypeShort) {
         if(event->key == InputKeyLeft) {
             bool redraw = true;
@@ -464,6 +466,8 @@ static bool gpio_explorer_view_rgb_input_callback(InputEvent* event, void* conte
 static uint32_t gpio_explorer_led_navigation_submenu_callback(void* _context) {
     struct gpio_explorer_app_struct * app = _context;
     furi_hal_gpio_write(pins[app->configuration_settings->led_pin_index], OFF);
+    struct gpio_explorer_led_struct* led_struct = view_get_model(app->view_led);
+    led_struct->led_pin_state = OFF;
     furi_hal_gpio_init_simple(pins[app->configuration_settings->led_pin_index], GpioModeAnalog);
     return gpio_explorer_navigation_submenu_callback(_context);
 }
@@ -474,7 +478,7 @@ static void view_led_init(struct gpio_explorer_app_struct * app) {
 }
 
 static void gpio_explorer_view_led_draw_callback(Canvas* canvas, void* model) {
-    struct gpio_explorer_led_struct* my_model = (struct gpio_explorer_led_struct*)model;
+    struct gpio_explorer_led_struct* my_model = model;
     FuriString* xstr = furi_string_alloc();
     furi_string_printf(xstr, "Pin state: %s", my_model->led_pin_state == 0 ? "LOW" : "HIGH");
     canvas_draw_str(canvas, 30, 15, furi_string_get_cstr(xstr));
@@ -486,7 +490,7 @@ static void gpio_explorer_view_led_draw_callback(Canvas* canvas, void* model) {
 }
 
 static bool gpio_explorer_view_led_input_callback(InputEvent* event, void* context) {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     if(event->type == InputTypePress) {
         if(event->key == InputKeyOk) {
             bool redraw = true;
@@ -529,7 +533,7 @@ static void view_gpio_reader_init(struct gpio_explorer_gpio_reader_struct* gpio_
 }
 
 static void gpio_explorer_view_gpio_reader_draw_callback(Canvas* canvas, void* model) {
-    struct gpio_explorer_gpio_reader_struct* my_model = (struct gpio_explorer_gpio_reader_struct*)model;
+    struct gpio_explorer_gpio_reader_struct* my_model = model;
     FuriString* xstr = furi_string_alloc();
     furi_string_printf(xstr, "Pin state: %s", my_model->curr_pin_state == 0 ? "LOW" : "HIGH");
     canvas_draw_str(canvas, 30, 15, furi_string_get_cstr(xstr));
@@ -540,7 +544,7 @@ static void gpio_explorer_view_gpio_reader_draw_callback(Canvas* canvas, void* m
 }
 
 static bool gpio_explorer_view_gpio_reader_input_callback(InputEvent* event, void* context) {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     if(event->type == InputTypeShort) {
         if(event->key == InputKeyLeft) {
             bool redraw = true;
@@ -574,7 +578,7 @@ static bool gpio_explorer_view_gpio_reader_input_callback(InputEvent* event, voi
 }
 
 static void gpio_explorer_view_gpio_reader_timer_callback(void* context) {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     bool redraw = true;
     with_view_model(
         app->view_gpio_reader,
@@ -585,7 +589,7 @@ static void gpio_explorer_view_gpio_reader_timer_callback(void* context) {
 
 static void gpio_explorer_view_gpio_reader_enter_callback(void* context) {
     uint32_t period = furi_ms_to_ticks(200);
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     furi_assert(app->timer == NULL);
     app->timer = furi_timer_alloc(
         gpio_explorer_view_gpio_reader_timer_callback, FuriTimerTypePeriodic, context);
@@ -593,7 +597,7 @@ static void gpio_explorer_view_gpio_reader_enter_callback(void* context) {
 }
 
 static void gpio_explorer_view_gpio_reader_exit_callback(void* context) {
-    struct gpio_explorer_app_struct * app = (struct gpio_explorer_app_struct *)context;
+    struct gpio_explorer_app_struct * app = context;
     furi_timer_stop(app->timer);
     furi_timer_free(app->timer);
     app->timer = NULL;
