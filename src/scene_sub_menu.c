@@ -10,11 +10,16 @@
 #define DATA_MODE_ITEM 2
 #define DATA_PIN_ITEM  3
 
-static char* GPIO_ONLY = "GPIO mode\nonly!";
 static char* run_mode_names[] = {"demo", "GPIO"};
-static char* run_mode_start_text[] = {"Start the simulation", "Start the receiver"};
 static char* data_mode_names[] = {"normal", "inverted"};
 static char* data_pin_names[] = {"A7", "A4", "B2", "C1", "C0"};
+
+#ifdef FW_ORIGIN_Momentum
+static char* GPIO_ONLY = "GPIO mode\nonly!";
+static char* run_mode_start_text[] = {"Start the simulation", "Start the receiver"};
+#else
+static char* start_mode_text = "Start in selected mode";
+#endif
 
 void lwc_run_mode_change_callback(VariableItem* item) {
     App* app = variable_item_get_context(item);
@@ -24,14 +29,15 @@ void lwc_run_mode_change_callback(VariableItem* item) {
     config->run_mode = (LWCRunMode)(index);
     variable_item_set_current_value_text(item, run_mode_names[index]);
 
-    VariableItem* start_item = variable_item_list_get(app->sub_menu, START_ITEM);
-    variable_item_set_item_label(start_item, run_mode_start_text[index]);
+#ifdef FW_ORIGIN_Momentum
+    VariableItem* start = variable_item_list_get(app->sub_menu, START_ITEM);
+    VariableItem* data_mode = variable_item_list_get(app->sub_menu, DATA_MODE_ITEM);
+    VariableItem* data_pin = variable_item_list_get(app->sub_menu, DATA_PIN_ITEM);
 
-    VariableItem* data_item = variable_item_list_get(app->sub_menu, DATA_MODE_ITEM);
-    variable_item_set_locked(data_item, (LWCRunMode)(index) == Demo, GPIO_ONLY);
-
-    VariableItem* data_pin_item = variable_item_list_get(app->sub_menu, DATA_PIN_ITEM);
-    variable_item_set_locked(data_pin_item, (LWCRunMode)(index) == Demo, GPIO_ONLY);
+    variable_item_set_locked(data_mode, (LWCRunMode)(index) == Demo, GPIO_ONLY);
+    variable_item_set_locked(data_pin, (LWCRunMode)(index) == Demo, GPIO_ONLY);
+    variable_item_set_item_label(start, run_mode_start_text[index]);
+#endif
 }
 
 void lwc_data_mode_change_callback(VariableItem* item) {
@@ -69,9 +75,12 @@ void lwc_sub_menu_scene_on_enter(void* context) {
 
     ProtoConfig* config = lwc_get_protocol_config(app->state);
 
+#ifdef FW_ORIGIN_Momentum
     variable_item_list_add(app->sub_menu, run_mode_start_text[config->run_mode], 0, NULL, app);
+#else
+    variable_item_list_add(app->sub_menu, start_mode_text, 0, NULL, app);
+#endif
 
-    variable_item_list_set_header(app->sub_menu, get_protocol_name(app->state->lwc_type));
     variable_item_list_set_enter_callback(app->sub_menu, lwc_enter_item_callback, app);
 
     VariableItem* run_mode = variable_item_list_add(
@@ -85,14 +94,19 @@ void lwc_sub_menu_scene_on_enter(void* context) {
 
     variable_item_set_current_value_index(data_mode, config->data_mode);
     variable_item_set_current_value_text(data_mode, data_mode_names[config->data_mode]);
-    variable_item_set_locked(data_mode, config->run_mode == Demo, GPIO_ONLY);
 
     VariableItem* data_pin = variable_item_list_add(
         app->sub_menu, "Data pin", __lwc_number_of_data_pins, lwc_data_pin_change_callback, app);
 
     variable_item_set_current_value_index(data_pin, config->data_pin);
     variable_item_set_current_value_text(data_pin, data_pin_names[config->data_pin]);
+
+#ifdef FW_ORIGIN_Momentum
+    variable_item_set_locked(data_mode, config->run_mode == Demo, GPIO_ONLY);
     variable_item_set_locked(data_pin, config->run_mode == Demo, GPIO_ONLY);
+
+    variable_item_list_set_header(app->sub_menu, get_protocol_name(app->state->lwc_type));
+#endif
 
     view_dispatcher_switch_to_view(app->view_dispatcher, LWCSubMenuView);
 }
