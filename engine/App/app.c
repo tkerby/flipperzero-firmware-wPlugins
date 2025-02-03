@@ -40,11 +40,7 @@ typedef enum
 static bool send_data(VGMGameRemote *app)
 {
     furi_check(app);
-    if (strlen(app->last_input) == 0)
-    {
-        return true; // nothing to send
-    }
-    return flipper_http_send_data(app->fhttp, app->last_input);
+    return strlen(app->last_input) == 0 || flipper_http_send_data(app->fhttp, app->last_input);
 }
 static void timer_callback(void *context)
 {
@@ -61,15 +57,9 @@ static void loader_process_callback(void *context)
 static bool custom_event_callback(void *context, uint32_t index)
 {
     furi_check(context, "custom_event_callback: Context is NULL");
-    switch (index)
-    {
-    case VGMGameRemoteCustomEventSend:
-        loader_process_callback(context);
-        return true;
-    default:
-        FURI_LOG_E(TAG, "custom_event_callback. Unknown index: %ld", index);
-        return false;
-    }
+    UNUSED(index);
+    loader_process_callback(context);
+    return true;
 }
 static void draw_callback(Canvas *canvas, void *model)
 {
@@ -81,45 +71,43 @@ static bool input_callback(InputEvent *event, void *context)
 {
     VGMGameRemote *app = (VGMGameRemote *)context;
     furi_check(app);
-
     if (event->key == InputKeyUp)
     {
         app->last_input[0] = '0';
         app->last_input[1] = '\0';
-        return send_data(app);
     }
     else if (event->key == InputKeyDown)
     {
         app->last_input[0] = '1';
         app->last_input[1] = '\0';
-        return send_data(app);
     }
     else if (event->key == InputKeyLeft)
     {
         app->last_input[0] = '2';
         app->last_input[1] = '\0';
-        return send_data(app);
     }
     else if (event->key == InputKeyRight)
     {
         app->last_input[0] = '3';
         app->last_input[1] = '\0';
-        return send_data(app);
     }
     else if (event->key == InputKeyOk)
     {
         app->last_input[0] = '4';
         app->last_input[1] = '\0';
-        return send_data(app);
     }
-    // else if (event->key == InputKeyBack)
-    // {
-    //     app->last_input[0] = '5';
-    //     app->last_input[1] = '\0';
-    //     send_data(app);
-    //
-    // }
-    return false;
+    // if held back button
+    else if (event->key == InputKeyBack)
+    {
+        if (event->type == InputTypeLong)
+            view_dispatcher_switch_to_view(app->view_dispatcher, VGMGameRemoteViewSubmenu);
+        else
+        {
+            app->last_input[0] = '5';
+            app->last_input[1] = '\0';
+        }
+    }
+    return app->choices_index == 0 ? true : send_data(app);
 }
 
 static void free_fhttp(VGMGameRemote *app)
@@ -176,7 +164,6 @@ static uint32_t callback_to_submenu(void *context)
 {
     VGMGameRemote *app = (VGMGameRemote *)context;
     furi_check(app);
-    free_timer(app);
     return VGMGameRemoteViewSubmenu;
 }
 
@@ -188,17 +175,8 @@ static uint32_t callback_exit_app(void *context)
 
 static void settings_item_selected(void *context, uint32_t index)
 {
-    VGMGameRemote *app = (VGMGameRemote *)context;
-    furi_check(app);
-    switch (index)
-    {
-    case 0: // button type
-        // do nothing
-        break;
-    default:
-        FURI_LOG_E(TAG, "Unknown configuration item index");
-        break;
-    }
+    UNUSED(context);
+    UNUSED(index);
 }
 
 static bool save_char(
@@ -359,6 +337,9 @@ static VGMGameRemote *app_alloc()
     submenu_add_item(app->submenu, "About", VGMGameRemoteSubmenuIndexAbout, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "Settings", VGMGameRemoteSubmenuIndexSettings, callback_submenu_choices, app);
 
+    app->timer = NULL;
+    app->fhttp = NULL;
+
     // Switch to the main view
     view_dispatcher_switch_to_view(app->view_dispatcher, VGMGameRemoteViewSubmenu);
 
@@ -368,11 +349,8 @@ static VGMGameRemote *app_alloc()
 // Function to free the resources used by VGMGameRemote
 static void app_free(VGMGameRemote *app)
 {
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "VGMGameRemote is NULL");
-        return;
-    }
+    furi_check(app);
+
     // Free View(s)
     if (app->view_main)
     {
