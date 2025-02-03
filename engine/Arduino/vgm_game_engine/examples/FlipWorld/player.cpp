@@ -496,8 +496,11 @@ static void player_update(Entity *self, Game *game)
 // Draw the user stats (health, xp, and level)
 static void draw_user_stats(Entity *self, Vector pos, Game *game)
 {
+    // clear the previous game stats
+    game->draw->clear(Vector(pos.x - 2, pos.y - 5), Vector(56, 40), TFT_WHITE); // clear the user stats in the previous game position
+
     // first draw a white rectangle to make the text more readable
-    game->draw->display->fillRect(pos.x - 2, pos.y - 5, 40, 32, TFT_WHITE);
+    game->draw->display->fillRect(pos.x - 2, pos.y - 5, 48, 32, TFT_WHITE);
 
     char health[32];
     char xp[32];
@@ -532,10 +535,7 @@ static void player_render(Entity *self, Draw *draw, Game *game)
 {
     clear_player_username(self, game);             // clear the username's previous position
     draw_username(game, self->position, "Player"); // draw the username at the new position
-
-    // clear the user stats previous position
-    draw->clear(Vector(3, 205), Vector(40, 32), TFT_WHITE);
-    draw_user_stats(self, Vector(5, 210), game); // draw the user stats at the new position
+    draw_user_stats(self, Vector(5, 210), game);   // draw the user stats at the new position
 }
 
 void player_spawn(Level *level, const char *name, Vector position)
