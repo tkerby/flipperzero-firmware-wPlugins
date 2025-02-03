@@ -73,13 +73,15 @@ void scheduler_scene_start_on_enter(void* context) {
         scheduler_scene_start_set_immediate,
         app);
 
-    bool mode = scheduler_get_immediate_mode(app->scheduler);
-    variable_item_set_current_value_index(item, mode);
-    variable_item_set_current_value_text(item, immediate_mode_text[mode]);
-    scheduler_set_immediate_mode(app->scheduler, mode);
+    value_index = scheduler_get_immediate_mode(app->scheduler);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, immediate_mode_text[value_index]);
+    scheduler_set_immediate_mode(app->scheduler, value_index);
 
     item = variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
     if(check_file_extension(furi_string_get_cstr(app->file_path))) {
+        scene_manager_set_scene_state(
+            app->scene_manager, SchedulerSceneStart, SchedulerStartRunEvent);
         if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
             variable_item_set_current_value_text(item, "[Single]");
         } else {
@@ -87,7 +89,7 @@ void scheduler_scene_start_on_enter(void* context) {
         }
     }
 
-    item = variable_item_list_add(var_item_list, "Start", 0, NULL, NULL);
+    variable_item_list_add(var_item_list, "Start", 0, NULL, app);
 
     variable_item_list_set_selected_item(
         var_item_list, scene_manager_get_scene_state(app->scene_manager, SchedulerSceneStart));

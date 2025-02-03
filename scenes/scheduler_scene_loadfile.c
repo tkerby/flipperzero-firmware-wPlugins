@@ -34,7 +34,7 @@ bool check_file_extension(const char* filename) {
     if(extension == NULL) {
         return false;
     } else {
-        return strcmp(extension, ".txt") == 0 || strcmp(extension, ".sub") == 0;
+        return !strcmp(extension, ".txt") || !strcmp(extension, ".sub");
     }
 }
 
