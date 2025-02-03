@@ -1,6 +1,11 @@
+
 # Flipper Cigarette
 
-Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one)
+<div align=center>
+<img src="screenshots/banner.gif" width="600" />
+</div>
+
+Finally a way to smoke a cigarette on the [Flipper Zero](https://www.flipperzero.one)
 
 
 ## Screenshots
@@ -12,6 +17,8 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 <img src="screenshots/screenshot_3.png" width="40%" hspace="5">
 <img src="screenshots/screenshot_4.png" width="40%" hspace="0">
 </p>
+
+
 
 
 ## Installation
