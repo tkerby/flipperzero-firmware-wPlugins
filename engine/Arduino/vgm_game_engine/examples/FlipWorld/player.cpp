@@ -1,7 +1,6 @@
 #include <ArduinoJson.h>
 #include "player.h"
 #include "sprites.h"
-
 typedef struct
 {
     const char *name;
@@ -41,6 +40,9 @@ static void enemy_update(Entity *self, Game *game)
 
     // float delta_time = 1.0 / game->fps;
     float delta_time = 1.0 / 30;
+
+    // Increment the elapsed_attack_timer for the enemy
+    self->elapsed_attack_timer += 1.0 / 30; // 30 frames per second
 
     switch (self->state)
     {
@@ -146,7 +148,13 @@ static void enemy_update(Entity *self, Game *game)
 
 static void draw_username(Game *game, Vector pos, const char *username)
 {
-    // first draw a white rectangle, as an "overlay", to make the text more readable
+    // skip if drawing the username is out of the screen
+    if (pos.x - game->pos.x - (strlen(username) * 2 + 8) < 0 || pos.x - game->pos.x + (strlen(username) * 2 + 8) > game->size.x ||
+        pos.y - game->pos.y - 10 < 0 || pos.y - game->pos.y > game->size.y)
+    {
+        return;
+    }
+
     // draw box around the username
     game->draw->display->fillRect(pos.x - game->pos.x - (strlen(username) * 2), pos.y - game->pos.y - 10, strlen(username) * 5 + 4, 10, TFT_WHITE);
 
@@ -156,6 +164,19 @@ static void draw_username(Game *game, Vector pos, const char *username)
 
 static void enemy_render(Entity *self, Draw *draw, Game *game)
 {
+    char health_str[32];
+    snprintf(health_str, sizeof(health_str), "%.0f", (double)self->health);
+
+    // clear the username's previous position
+    draw->clear(Vector(self->old_position.x - game->old_pos.x - (strlen(health_str) * 2), self->old_position.y - game->old_pos.y - 10), Vector(strlen(health_str) * 5 + 8, 10), TFT_WHITE);
+
+    // skip if enemy is out of the screen
+    if (self->position.x + self->size.x < game->pos.x || self->position.x > game->pos.x + game->size.x ||
+        self->position.y + self->size.y < game->pos.y || self->position.y > game->pos.y + game->size.y)
+    {
+        return;
+    }
+
     // Choose sprite based on direction
     if (self->direction == ENTITY_LEFT)
     {
@@ -168,16 +189,140 @@ static void enemy_render(Entity *self, Draw *draw, Game *game)
         self->size = self->sprite_right->size;
     }
 
-    // clear the username's previous position
-    draw->clear(Vector(self->old_position.x - game->old_pos.x - (strlen(self->name) * 2), self->old_position.y - game->old_pos.y - 10), Vector(strlen(self->name) * 5 + 8, 10), TFT_WHITE);
-
     // draw health of enemy
-    char health_str[32];
-    snprintf(health_str, sizeof(health_str), "%.0f", (double)self->health);
     draw_username(game, self->position, health_str);
 }
+int last_button = -1;
+// Enemy collision function: when this is called, the enemy has collided with another entity
+static void enemy_collision(Entity *self, Entity *other, Game *game)
+{
+    if (strcmp(other->name, "Player") == 0)
+    {
+        // Get positions of the enemy and the player
+        Vector enemy_pos = self->position;
+        Vector player_pos = other->position;
 
-void enemy_spawn(
+        // Determine if the enemy is facing the player or player is facing the enemy
+        bool enemy_is_facing_player = false;
+        bool player_is_facing_enemy = false;
+
+        if (self->direction == ENTITY_LEFT && player_pos.x < enemy_pos.x ||
+            self->direction == ENTITY_RIGHT && player_pos.x > enemy_pos.x ||
+            self->direction == ENTITY_UP && player_pos.y < enemy_pos.y ||
+            self->direction == ENTITY_DOWN && player_pos.y > enemy_pos.y)
+        {
+            enemy_is_facing_player = true;
+        }
+        if (other->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x ||
+            other->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x ||
+            other->direction == ENTITY_UP && enemy_pos.y < player_pos.y ||
+            other->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y)
+        {
+            player_is_facing_enemy = true;
+        }
+
+        // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
+        // we need to store the last button pressed to prevent multiple attacks
+        if (player_is_facing_enemy && last_button == BUTTON_CENTER && !enemy_is_facing_player)
+        {
+            // Reset last button
+            last_button = -1;
+
+            // check if enough time has passed since the last attack
+            if (other->elapsed_attack_timer >= other->attack_timer)
+            {
+                // Reset player's elapsed attack timer
+                other->elapsed_attack_timer = 0;
+                self->elapsed_attack_timer = 0; // Reset enemy's attack timer to block enemy attack
+
+                // Increase XP by the enemy's strength
+                other->xp += self->strength;
+
+                // Increase health by 10% of the enemy's strength
+                other->health += self->strength * 0.1;
+
+                // check max health
+                if (other->health > 100)
+                {
+                    other->health = 100;
+                }
+
+                // Decrease enemy health by player strength
+                self->health -= other->strength;
+
+                // check if enemy is dead
+                if (self->health <= 0)
+                {
+                    self->state = ENTITY_DEAD;
+                    self->position = Vector(-100, -100);
+                    self->health = self->max_health;
+                    self->elapsed_move_timer = 0;
+                    self->position_changed = true;
+                    self->position_set(self->position);
+                }
+                else
+                {
+                    self->state = ENTITY_IDLE;
+                    self->elapsed_move_timer = 0;
+                    self->position_changed = true;
+                    self->position_set(self->old_position);
+                }
+            }
+        }
+        // Handle Enemy Attacking Player (enemy facing player)
+        else if (enemy_is_facing_player)
+        {
+            // check if enough time has passed since the last attack
+            if (self->elapsed_attack_timer >= self->attack_timer)
+            {
+                // Reset enemy's elapsed attack timer
+                self->elapsed_attack_timer = 0;
+
+                // Decrease player health by enemy strength
+                other->health -= self->strength;
+
+                // check if player is dead
+                if (other->health <= 0)
+                {
+                    other->state = ENTITY_DEAD;
+                    other->position = Vector(game->current_level->size.x / 2, game->current_level->size.y / 2);
+                    other->health = 0;
+                    clear_player_username(other, game, true);
+                    other->position_set(other->position);
+                }
+                else
+                {
+                    other->state = ENTITY_ATTACKED;
+                    clear_player_username(other, game, true);
+                    other->position_set(other->old_position);
+                }
+            }
+        }
+
+        // check if player is dead
+        if (other->health <= 0)
+        {
+            other->state = ENTITY_DEAD;
+            other->position = Vector(game->current_level->size.x / 2, game->current_level->size.y / 2);
+            other->health = other->max_health;
+            clear_player_username(other, game, true);
+            other->position_set(other->start_position);
+        }
+
+        // check if enemy is dead
+        if (self->health <= 0)
+        {
+            self->state = ENTITY_DEAD;
+            self->position = Vector(-100, -100);
+            self->health = self->max_health;
+            self->elapsed_move_timer = 0;
+            self->position_changed = true;
+            self->position_set(self->position);
+        }
+    }
+}
+
+static void enemy_spawn(
     Level *level,
     const char *name,
     EntityDirection direction,
@@ -199,7 +344,7 @@ void enemy_spawn(
     if (enemy_left.data != NULL && enemy_right.data != NULL)
     {
         // Create the enemy entity
-        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, enemy_left.data, enemy_left.data, enemy_right.data, NULL, NULL, enemy_update, enemy_render, NULL);
+        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, enemy_left.data, enemy_left.data, enemy_right.data, NULL, NULL, enemy_update, enemy_render, enemy_collision);
         entity->direction = direction;
         entity->start_position = start_position;
         entity->end_position = end_position;
@@ -210,6 +355,7 @@ void enemy_spawn(
         entity->elapsed_attack_timer = elapsed_attack_timer;
         entity->strength = strength;
         entity->health = health;
+        entity->max_health = health;
 
         // Add the enemy entity to the level
         level->entity_add(entity);
@@ -253,6 +399,21 @@ void enemy_spawn_json(Level *level, const char *json)
 /* Update the player entity using current game input */
 static void player_update(Entity *self, Game *game)
 {
+    // Apply health regeneration
+    self->elapsed_health_regen += 1.0 / 30; // 30 frames per second
+    if (self->elapsed_health_regen >= 1 && self->health < self->max_health)
+    {
+        self->health += self->health_regen;
+        self->elapsed_health_regen = 0;
+        if (self->health > self->max_health)
+        {
+            self->health = self->max_health;
+        }
+    }
+
+    // Increment the elapsed_attack_timer for the player
+    self->elapsed_attack_timer += 1.0 / 30; // 30 frames per second
+
     Vector oldPos = self->position;
     Vector newPos = oldPos;
 
@@ -261,38 +422,30 @@ static void player_update(Entity *self, Game *game)
     {
         newPos.y -= 10;
         self->direction = ENTITY_UP;
+        last_button = BUTTON_UP;
     }
     else if (game->input == BUTTON_DOWN)
     {
         newPos.y += 10;
         self->direction = ENTITY_DOWN;
+        last_button = BUTTON_DOWN;
     }
     else if (game->input == BUTTON_LEFT)
     {
         newPos.x -= 10;
         self->direction = ENTITY_LEFT;
+        last_button = BUTTON_LEFT;
     }
     else if (game->input == BUTTON_RIGHT)
     {
         newPos.x += 10;
         self->direction = ENTITY_RIGHT;
+        last_button = BUTTON_RIGHT;
     }
-    // else
-    // {
-    //     // No input, so no movement
-
-    //     // Update camera position to center the player
-    //     float camera_x = self->position.x - (game->size.x / 2);
-    //     float camera_y = self->position.y - (game->size.y / 2);
-
-    //     // Clamp camera position to the world boundaries
-    //     camera_x = constrain(camera_x, 0, game->current_level->size.x - game->size.x);
-    //     camera_y = constrain(camera_y, 0, game->current_level->size.y - game->size.y);
-
-    //     // Set the new camera position
-    //     game->pos = Vector(camera_x, camera_y);
-    //     return;
-    // }
+    else if (game->input == BUTTON_CENTER)
+    {
+        last_button = BUTTON_CENTER;
+    }
 
     // reset input
     game->input = -1;
@@ -300,18 +453,19 @@ static void player_update(Entity *self, Game *game)
     // Tentatively set new position
     self->position_set(newPos);
 
-    // If we collided, revert to old position
-    if (game->current_level->has_collided(self))
+    // Force update/redraw of all enemies in the level
+    for (int i = 0; i < game->current_level->entity_count; i++)
     {
-        self->position_set(oldPos);
-    }
-    else
-    {
-        // Force update/redraw of all entities in the level
-        for (int i = 0; i < game->current_level->entity_count; i++)
-        {
+        if (game->current_level->entities[i]->type == ENTITY_ENEMY)
             game->current_level->entities[i]->position_changed = true;
-        }
+    }
+
+    // check if new position is within the level boundaries
+    if (newPos.x < 0 || newPos.x + self->size.x > game->current_level->size.x ||
+        newPos.y < 0 || newPos.y + self->size.y > game->current_level->size.y)
+    {
+        // restore old position
+        self->position_set(oldPos);
     }
 
     // Store the current camera position before updating
@@ -349,13 +503,13 @@ static void draw_user_stats(Entity *self, Vector pos, Game *game)
     char xp[32];
     char level[32];
 
-    snprintf(health, sizeof(health), "HP : %ld", self->health);
-    snprintf(level, sizeof(level), "LVL: %ld", self->level);
+    snprintf(health, sizeof(health), "HP : %.0f", (double)self->health);
+    snprintf(level, sizeof(level), "LVL: %.0f", (double)self->level);
 
     if (self->xp < 10000)
-        snprintf(xp, sizeof(xp), "XP : %ld", self->xp);
+        snprintf(xp, sizeof(xp), "XP : %.0f", (double)self->xp);
     else
-        snprintf(xp, sizeof(xp), "XP : %ldK", self->xp / 1000);
+        snprintf(xp, sizeof(xp), "XP : %.0fK", (double)self->xp / 1000);
 
     // draw items
     game->draw->text(Vector(pos.x, pos.y), health, TFT_RED);
@@ -363,13 +517,25 @@ static void draw_user_stats(Entity *self, Vector pos, Game *game)
     game->draw->text(Vector(pos.x, pos.y + 18), level, TFT_RED);
 }
 
-static void player_render(Entity *self, Draw *draw, Game *game)
+void clear_player_username(Entity *player, Game *game, bool clear_current)
 {
     // clear the username's previous position
-    draw->clear(Vector(self->old_position.x - game->old_pos.x - (strlen("Player") * 2), self->old_position.y - game->old_pos.y - 10), Vector(strlen("Player") * 5 + 8, 10), TFT_WHITE);
-    // draw the username at the new position
-    draw_username(game, self->position, "Player");
-    draw_user_stats(self, Vector(5, 210), game);
+    game->draw->clear(Vector(player->old_position.x - game->old_pos.x - (strlen("Player") * 2), player->old_position.y - game->old_pos.y - 10), Vector(strlen("Player") * 5 + 8, 10), TFT_WHITE);
+    if (clear_current)
+    {
+        // clear the username's current position
+        game->draw->clear(Vector(player->position.x - game->pos.x - (strlen("Player") * 2), player->position.y - game->pos.y - 10), Vector(strlen("Player") * 5 + 8, 10), TFT_WHITE);
+    }
+}
+
+static void player_render(Entity *self, Draw *draw, Game *game)
+{
+    clear_player_username(self, game);             // clear the username's previous position
+    draw_username(game, self->position, "Player"); // draw the username at the new position
+
+    // clear the user stats previous position
+    draw->clear(Vector(3, 205), Vector(40, 32), TFT_WHITE);
+    draw_user_stats(self, Vector(5, 210), game); // draw the user stats at the new position
 }
 
 void player_spawn(Level *level, const char *name, Vector position)
@@ -384,8 +550,11 @@ void player_spawn(Level *level, const char *name, Vector position)
         // Create the player entity
         Entity *player = new Entity("Player", ENTITY_PLAYER, position, player_left.size, player_left.data, player_left.data, player_right.data, NULL, NULL, player_update, player_render, NULL);
         player->level = 1;
-        player->xp = 0;
         player->health = 100;
+        player->max_health = 100;
+        player->strength = 10;
+        player->attack_timer = 1;
+        player->health_regen = 1;
         level->entity_add(player);
     }
 }
