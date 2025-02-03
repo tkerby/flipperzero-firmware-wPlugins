@@ -111,9 +111,6 @@ namespace VGMGameEngine
             case 54:
                 this->last_button = BUTTON_START;
                 break;
-            case 0:
-                this->last_button = this->last_button;
-                break;
             default:
                 this->last_button = -1;
                 break;
