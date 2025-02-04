@@ -1,14 +1,16 @@
 #pragma once
 
-enum SchedulerImmediateMode {
-    SchedulerImmediateModeOff,
-    SchedulerImmediateModeOn,
-    SchedulerImmediateModeSettingsNum,
-};
+typedef enum SchedulerMode {
+    SchedulerModeNormal,
+    SchedulerModeImmediate,
+    SchedulerModeOneShot,
+    SchedulerModeSettingsNum,
+} SchedulerMode;
 
-static const char* const immediate_mode_text[SchedulerImmediateModeSettingsNum] = {
-    "OFF",
-    "ON",
+static const char* const mode_text[SchedulerModeSettingsNum] = {
+    "Normal",
+    "Immed.",
+    "1-Shot",
 };
 
 enum Intervals {
