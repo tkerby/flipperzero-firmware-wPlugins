@@ -9,8 +9,9 @@ struct Scheduler {
     uint8_t interval;
     uint8_t tx_repeats;
     uint8_t tx_delay;
-    char* file_name;
     FileTxType file_type;
+    uint8_t list_count;
+    char* file_name;
     bool immediate_mode;
 };
 
@@ -43,15 +44,17 @@ static const char* extract_filename(const char* filepath) {
     return (filename != NULL) ? (filename + 1) : filepath;
 }
 
-void scheduler_set_file_name(Scheduler* scheduler, const char* file_name) {
+void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count) {
     furi_assert(scheduler);
     const char* name = extract_filename(file_name);
     scheduler->file_name = (char*)name;
-}
-
-void scheduler_set_file_type(Scheduler* scheduler, FileTxType file_type) {
-    furi_assert(scheduler);
-    scheduler->file_type = file_type;
+    if(list_count == 0) {
+        scheduler->file_type = SchedulerFileTypeSingle;
+        scheduler->list_count = 1;
+    } else {
+        scheduler->file_type = SchedulerFileTypePlaylist;
+        scheduler->list_count = list_count;
+    }
 }
 
 bool scheduler_time_to_trigger(Scheduler* scheduler) {
@@ -60,7 +63,7 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
     uint32_t interval = interval_second_value[scheduler->interval];
 
     // For immediate/non immediate modes
-    if(!scheduler->immediate_mode && (scheduler->previous_run_time == 0)) {
+    if(!scheduler->immediate_mode && !scheduler->previous_run_time) {
         scheduler->previous_run_time = current_time;
         scheduler->countdown = interval;
         return false; // Don't trigger immediately
@@ -68,7 +71,6 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
 
     if((current_time - scheduler->previous_run_time) >= interval) {
         scheduler->countdown = interval;
-        scheduler->previous_run_time = furi_hal_rtc_get_timestamp();
         return true;
     }
     --scheduler->countdown;
@@ -89,6 +91,11 @@ void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t siz
 uint32_t scheduler_get_previous_time(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->previous_run_time;
+}
+
+void scheduler_reset_previous_time(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    scheduler->previous_run_time = furi_hal_rtc_get_timestamp();
 }
 
 uint8_t scheduler_get_interval(Scheduler* scheduler) {
@@ -119,6 +126,11 @@ void scheduler_set_immediate_mode(Scheduler* scheduler, bool mode) {
 bool scheduler_get_immediate_mode(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->immediate_mode;
+}
+
+uint8_t scheduler_get_list_count(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->list_count;
 }
 
 void scheduler_reset(Scheduler* scheduler) {
