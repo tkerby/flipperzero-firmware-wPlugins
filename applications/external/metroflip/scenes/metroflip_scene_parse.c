@@ -4,7 +4,6 @@
 #include "../api/metroflip/metroflip_api.h"
 #define TAG "Metroflip:Scene:Parse"
 #include <stdio.h>
-#include "../api/metroflip/metroflip_api.h"
 
 void metroflip_scene_parse_on_enter(void* context) {
     Metroflip* app = context;

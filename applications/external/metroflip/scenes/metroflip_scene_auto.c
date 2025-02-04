@@ -206,15 +206,15 @@ bool metroflip_scene_auto_on_event(void* context, SceneManagerEvent event) {
                 consumed = true;
             } else if(
                 nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
-                NfcProtocolMfDesfire) {
-                app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfDesfire);
-                nfc_poller_start(app->poller, metroflip_scene_detect_desfire_poller_callback, app);
-                consumed = true;
-            } else if(
-                nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
                 NfcProtocolFelica) {
                 app->card_type = "suica";
                 scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
+                consumed = true;
+            } else if(
+                nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
+                NfcProtocolMfDesfire) {
+                app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfDesfire);
+                nfc_poller_start(app->poller, metroflip_scene_detect_desfire_poller_callback, app);
                 consumed = true;
             } else if(
                 nfc_detected_protocols_get_protocol(app->detected_protocols, 0) ==
