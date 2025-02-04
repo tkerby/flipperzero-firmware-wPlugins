@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "scenes/scheduler_scene_settings.h"
+
 typedef enum FileTxType {
     SchedulerFileTypePlaylist,
     SchedulerFileTypeSingle
@@ -25,8 +27,8 @@ uint8_t scheduler_get_tx_repeats(Scheduler* scheduler);
 const char* scheduler_get_file_name(Scheduler* scheduler);
 FileTxType scheduler_get_file_type(Scheduler* scheduler);
 
-void scheduler_set_immediate_mode(Scheduler* scheduler, bool mode);
-bool scheduler_get_immediate_mode(Scheduler* scheduler);
+void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode);
+SchedulerMode scheduler_get_mode(Scheduler* scheduler);
 uint8_t scheduler_get_list_count(Scheduler* scheduler);
 
 void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size);
