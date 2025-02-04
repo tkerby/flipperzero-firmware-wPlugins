@@ -7,8 +7,6 @@
 
 #define TAG "SubGHzSchedulerRunView"
 
-#define DEBUG
-
 #define GUI_DISPLAY_HEIGHT 64
 #define GUI_DISPLAY_WIDTH  128
 #define GUI_MARGIN         5
@@ -118,6 +116,7 @@ void scheduler_scene_run_on_enter(void* context) {
     scheduler_reset(app->scheduler);
     update_countdown(app);
     subghz_devices_init();
+    furi_delay_ms(100);
 }
 
 void scheduler_scene_run_on_exit(void* context) {
