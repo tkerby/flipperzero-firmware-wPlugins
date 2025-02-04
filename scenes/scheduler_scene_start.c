@@ -46,6 +46,7 @@ void scheduler_scene_start_on_enter(void* context) {
     VariableItemList* var_item_list = app->var_item_list;
     VariableItem* item;
     uint8_t value_index;
+    char buffer[20];
 
     scheduler_reset(app->scheduler);
 
@@ -85,7 +86,12 @@ void scheduler_scene_start_on_enter(void* context) {
         if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
             variable_item_set_current_value_text(item, "[Single]");
         } else {
-            variable_item_set_current_value_text(item, "[Playlist]");
+            snprintf(
+                buffer,
+                sizeof(buffer),
+                "[Playlist of %d]",
+                scheduler_get_list_count(app->scheduler));
+            variable_item_set_current_value_text(item, buffer);
         }
     }
 
