@@ -16,8 +16,7 @@ bool scheduler_time_to_trigger(Scheduler* scheduler);
 
 void scheduler_set_interval(Scheduler* scheduler, uint8_t interval);
 void scheduler_set_tx_repeats(Scheduler* scheduler, uint8_t tx_repeats);
-void scheduler_set_file_name(Scheduler* scheduler, const char* file_name);
-void scheduler_set_file_type(Scheduler* scheduler, FileTxType file_type);
+void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count);
 
 void scheduler_reset_previous_time(Scheduler* scheduler);
 uint32_t scheduler_get_previous_time(Scheduler* scheduler);
@@ -28,5 +27,6 @@ FileTxType scheduler_get_file_type(Scheduler* scheduler);
 
 void scheduler_set_immediate_mode(Scheduler* scheduler, bool mode);
 bool scheduler_get_immediate_mode(Scheduler* scheduler);
+uint8_t scheduler_get_list_count(Scheduler* scheduler);
 
 void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size);
