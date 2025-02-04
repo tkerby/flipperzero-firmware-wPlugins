@@ -8,6 +8,6 @@ enum gpio_explorer_view_enum {
     GPIOExplorerViewGPIOReader,
     GPIOExplorerViewLED,
     GPIOExplorerViewAbout,
-} ;
+};
 
 #endif //GPIO_EXPLORER_VIEW_ENUM

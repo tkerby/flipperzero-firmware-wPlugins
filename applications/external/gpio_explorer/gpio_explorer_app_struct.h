@@ -24,5 +24,5 @@ struct gpio_explorer_app_struct {
     Widget* widget_about;
     struct gpio_explorer_configure_struct* configuration_settings;
     FuriTimer* timer;
-} ;
+};
 #endif //GPIO_EXPLORER_APP_STRUCT_H
