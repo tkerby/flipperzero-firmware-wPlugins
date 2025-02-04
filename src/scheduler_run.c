@@ -11,6 +11,8 @@
 
 #include <subghz_protocol_registry.h>
 
+#include <input/input.h>
+
 #define TAG "SubGhzSchedulerRun"
 
 struct ScheduleTxRun {
@@ -170,6 +172,10 @@ static void
         app->thread = NULL;
         app->is_transmitting = false;
         scheduler_reset_previous_time(app->scheduler);
+        if(scheduler_get_mode(app->scheduler) == SchedulerModeOneShot) {
+            scene_manager_search_and_switch_to_another_scene(
+                app->scene_manager, SchedulerSceneStart);
+        }
     } else if(state == FuriThreadStateStopping) {
         //FURI_LOG_I(TAG, "Thread stopping");
     } else if(state == FuriThreadStateStarting) {
