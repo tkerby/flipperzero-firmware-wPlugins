@@ -50,8 +50,9 @@ static void
     notification_message(app->notifications, &sequence_blink_stop);
 }
 
-int32_t scheduler_tx(SchedulerApp* app) {
-    furi_assert(app);
+static int32_t scheduler_tx(void* context) {
+    furi_assert(context);
+    SchedulerApp* app = context;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* fff_head = flipper_format_file_alloc(storage);
     FlipperFormat* fff_file = flipper_format_file_alloc(storage);
@@ -109,7 +110,7 @@ int32_t scheduler_tx(SchedulerApp* app) {
 
         subghz_transmitter_free(transmitter);
         if(filetype == SchedulerFileTypePlaylist) {
-            furi_delay_ms(100);
+            furi_delay_ms(500);
         }
     } while(filetype == SchedulerFileTypePlaylist &&
             flipper_format_read_string(fff_head, "sub", data));
@@ -128,4 +129,32 @@ int32_t scheduler_tx(SchedulerApp* app) {
     furi_record_close(RECORD_STORAGE);
 
     return 0;
+}
+
+static void
+    scheduler_thread_state_callback(FuriThread* thread, FuriThreadState state, void* context) {
+    SchedulerApp* app = context;
+    furi_assert(app->thread == thread);
+
+    if(state == FuriThreadStateStopped) {
+        FURI_LOG_I(TAG, "Thread stopped");
+        furi_thread_free(thread);
+        app->thread = NULL;
+        app->is_transmitting = false;
+        scheduler_reset_previous_time(app->scheduler);
+    } else if(state == FuriThreadStateStopping) {
+        //FURI_LOG_I(TAG, "Thread stopping");
+    } else if(state == FuriThreadStateStarting) {
+        FURI_LOG_I(TAG, "Thread starting");
+        app->is_transmitting = true;
+    } else if(state == FuriThreadStateRunning) {
+        //FURI_LOG_I(TAG, "Thread running");
+    }
+}
+
+void scheduler_start_tx(SchedulerApp* app) {
+    app->thread = furi_thread_alloc_ex("SchedulerTxThread", 1024, scheduler_tx, app);
+    furi_thread_set_state_callback(app->thread, scheduler_thread_state_callback);
+    furi_thread_set_state_context(app->thread, app);
+    furi_thread_start(app->thread);
 }
