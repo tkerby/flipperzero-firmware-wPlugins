@@ -63,6 +63,6 @@ Build outputs are found in the `dist` directory for each application.
 - [x] Enable option to delay first transmission. Currently, Scheduler will send immediately when started.
 - [ ] Add adjustable delay between playlist transmissions. Currently hardcoded at `100ms`.
 - [x] Improve timing, synchronization, and implement threads during transmission. Currently blocking.
-- [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval.
+- [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys.
 - [ ] Add one-shot function (wait desired interval before sending once).
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`)
