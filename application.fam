@@ -6,5 +6,7 @@ App(
     stack_size=4 * 1024,
     fap_icon="app.png",
     fap_category="GPIO",
+    fap_author="dun-crop",
+    fap_version=(1,0),
     fap_description="The most complete app to start exploring the GPIO functionalities",
 )
