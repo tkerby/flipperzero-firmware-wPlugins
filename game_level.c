@@ -7,7 +7,7 @@ int welcomeTicks = 0;
 struct game_door doors[MAX_DOORS];
 
 #define OBSTACLE_SPEED 0.5f
-#define OBSTACLE_WIDTH 10.0f
+#define OBSTACLE_WIDTH 9.0f
 #define MAX_OBSTACLES  5
 struct game_obstacle obstacles[MAX_OBSTACLES];
 
@@ -16,6 +16,7 @@ bool canSpawnDoubleObstacles = true;
 int maxObstaclesFirst = 10;
 int maxObstaclesSecond = 25;
 int level = 0;
+bool startedNextContinuousTask = false;
 
 void emptyFunction() {
 }
@@ -37,25 +38,41 @@ void postObstacleDestructionTask() {
     if(canSpawnDoubleObstacles) {
         if(totalObstacles > maxObstaclesFirst) {
             x = rand() % (120 - 10 + 1) + 10;
-            obstacles[totalObstacles % MAX_OBSTACLES] = (struct game_obstacle){
-                x,
-                8,
-                OBSTACLE_WIDTH,
-                0,
-                x < 65,
-                true,
-                totalObstacles < (maxObstaclesFirst + maxObstaclesSecond) ?
-                    postObstacleDestructionTask :
-                    emptyFunction};
+            obstacles[totalObstacles % MAX_OBSTACLES] =
+                (struct game_obstacle){x,
+                                       8,
+                                       OBSTACLE_WIDTH,
+                                       0,
+                                       x < 65,
+                                       true,
+                                       totalObstacles < (maxObstaclesFirst + maxObstaclesSecond) ?
+                                           postObstacleDestructionTask :
+                                           emptyFunction};
             totalObstacles++;
         }
     }
 }
 
+uint32_t enemySpawnCount = 1;
+
+void postDoorEntryTask4() {
+    level++;
+
+    for(uint32_t i = 0; i < enemySpawnCount; i++) {
+        if(enemySpawnCount == 1) {
+            enemyShootingDelay = 800;
+        } else {
+            enemyShootingDelay -= 50;
+        }
+        enemy_spawn(gameLevel, globalGameManager, (Vector){10 + 30 * i, 30}, 500, true);
+    }
+    //Increase enemy shooting delay
+}
+
 void postDoorEntryTask3() {
     level++;
 
-    enemy_spawn(gameLevel, globalGameManager, (Vector){120, 30}, 500, false);
+    _enemy_spawn(gameLevel, globalGameManager, (Vector){120, 30}, 500, false, 4 * ENEMY_LIVES);
     //Increase enemy shooting delay
     enemyShootingDelay = 2200;
 
@@ -104,6 +121,9 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
 
     static bool completedFirstTask = false;
     static bool thirdTask = false;
+
+    static uint32_t nextKillCount = 0;
+
     if(kills == 3) {
         if(!completedFirstTask) {
             completedFirstTask = true;
@@ -122,6 +142,37 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
             thirdTask = true;
             doors[0] = (struct game_door){
                 30, 24, 25, 32, true, 0, "Enemies and Obstacles!", 34000, postDoorEntryTask3};
+        }
+    } else if(kills > 5) {
+        if(!startedNextContinuousTask) {
+            bool allObstaclesGone = true;
+            for(int i = 0; i < MAX_OBSTACLES; i++) {
+                struct game_obstacle obstacle = obstacles[i];
+                if(obstacle.visible) {
+                    allObstaclesGone = false;
+                    break;
+                }
+            }
+            if(allObstaclesGone) {
+                if(nextKillCount == 0) {
+                    nextKillCount = 6 + enemySpawnCount;
+                    doors[0] = (struct game_door){30,
+                                                  24,
+                                                  25,
+                                                  32,
+                                                  true,
+                                                  0,
+                                                  "Enemies and Obstacles!",
+                                                  34000,
+                                                  postDoorEntryTask4};
+                }
+                startedNextContinuousTask = true;
+            }
+        } else if(nextKillCount == kills) {
+            enemySpawnCount += 1;
+            nextKillCount += enemySpawnCount;
+            doors[0] = (struct game_door){
+                30, 24, 25, 32, true, 0, "Enemies and Obstacles!", 34000, postDoorEntryTask4};
         }
     }
 
@@ -177,9 +228,10 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
             }
         }
 
+        //Player Collision
         if(fabsf(pos->x - obstacle->x) < (OBSTACLE_WIDTH + 5) &&
            fabsf(pos->y - obstacle->y) < OBSTACLE_WIDTH) {
-            //Collision
+            //Make invisible
             obstacle->visible = false;
 
             //Damage player
@@ -189,6 +241,26 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
             void (*task)(void) = obstacle->destructionTask;
             if(task != NULL) {
                 task();
+            }
+        } else {
+            //Enemy collision: TODO Make this in an enemy update function
+            for(int k = 0; k < MAX_ENEMIES; k++) {
+                if(enemies[k].instance == NULL) continue;
+                Vector enemyPos = entity_pos_get(enemies[k].instance);
+                if(fabsf(enemyPos.x - obstacle->x) < (OBSTACLE_WIDTH + 5) &&
+                   fabsf(enemyPos.y - obstacle->y) < OBSTACLE_WIDTH) {
+                    //Make invisible
+                    obstacle->visible = false;
+                    //Damage enemy
+                    damage_enemy(&enemies[k]);
+
+                    //Destruction post task
+                    void (*task)(void) = obstacle->destructionTask;
+                    if(task != NULL) {
+                        task();
+                    }
+                }
+                break;
             }
         }
     }
@@ -249,9 +321,8 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
     for(int i = 0; i < MAX_OBSTACLES; i++) {
         struct game_obstacle* obstacle = &obstacles[i];
         if(obstacle == NULL || !obstacle->visible) continue;
-        //canvas_draw_disc(canvas, obstacle->x, obstacle->y, obstacle->width);
-        //canvas_draw_triangle(canvas, obstacle->x, obstacle->y, 14, 15, CanvasDirectionTopToBottom);
-        canvas_draw_box(canvas, obstacle->x, obstacle->y, obstacle->width, obstacle->width);
+        canvas_draw_disc(canvas, obstacle->x, obstacle->y, obstacle->width);
+        //canvas_draw_box(canvas, obstacle->x, obstacle->y, obstacle->width, obstacle->width);
     }
 
     if(totalObstacles >= 35 && level == 1) {

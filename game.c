@@ -44,7 +44,7 @@ uint32_t shootingDelay = 450;
 #ifdef DEBUGGING
 uint32_t enemyShootingDelay = 600;
 #else
-uint32_t enemyShootingDelay = 1500;
+uint32_t enemyShootingDelay = 600;
 #endif
 float bulletMoveSpeed = 0.7f;
 float speed = 0.6f;
@@ -193,12 +193,13 @@ void player_spawn(Level* level, GameManager* manager) {
 
 int npcAIModelIndex = -1;
 
-void enemy_spawn(
+void _enemy_spawn(
     Level* level,
     GameManager* manager,
     Vector spawnPosition,
     uint32_t mercyTicks,
-    bool right) {
+    bool right,
+    int startingLives) {
     int enemyIndex = -1;
     for(int i = 0; i < MAX_ENEMIES; i++) {
         if(enemies[i].instance != NULL) continue;
@@ -207,7 +208,7 @@ void enemy_spawn(
         enemies[i].direction = right;
         enemies[i].jumping = false;
         enemies[i].targetY = WORLD_BORDER_BOTTOM_Y;
-        enemies[i].lives = ENEMY_LIVES;
+        enemies[i].lives = startingLives;
         enemies[i].spawnTime = furi_get_tick();
         enemies[i].mercyTicks = mercyTicks;
         enemies[i].lastShot = furi_get_tick() + 2000;
@@ -283,6 +284,15 @@ void enemy_spawn(
     } else {
         player_context->sprite = player_context->sprite_left;
     }
+}
+
+void enemy_spawn(
+    Level* level,
+    GameManager* manager,
+    Vector spawnPosition,
+    uint32_t mercyTicks,
+    bool right) {
+    _enemy_spawn(level, manager, spawnPosition, mercyTicks, right, ENEMY_LIVES);
 }
 
 void player_jump_handler(PlayerContext* playerCtx, Vector* pos, InputState* input) {
@@ -415,6 +425,39 @@ void enemy_shoot_handler(Enemy* enemy, Vector* pos, uint32_t* enemyLastShotTick,
 }
 
 uint32_t lastSwitchRight = 0;
+
+bool damage_enemy(Enemy* enemy) {
+    const NotificationSequence* damageSound = &sequence_semi_success;
+
+    if(--enemy->lives == 0) {
+        //Ran out of lives
+        level_remove_entity(gameLevel, enemy->instance);
+
+#ifdef MINIMAL_DEBUGGING
+        //Print weights
+        FURI_LOG_I("DEADZONE", "Finished randomness tweaking of weights:");
+        for(int j = 0; j < enemies[i].ai->total_weights; j++) {
+            FURI_LOG_I("DEADZONE", "Weights: %f", enemies[i].ai->weight[j]);
+        }
+#endif
+
+        genann_free(enemy->lastAI);
+        genann_free(enemy->ai);
+        //Replace damage sound with death sound
+        damageSound = &sequence_success;
+
+        enemy->instance = NULL;
+        kills++;
+        if(kills == 1) {
+            firstKillTick = furi_get_tick();
+        }
+    }
+
+    //Play sound of getting hit
+    NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
+    notification_message(notifications, damageSound);
+    return enemy->lives == 0;
+}
 
 bool damage_player(Entity* self) {
     const NotificationSequence* damageSound = &sequence_single_vibro;
@@ -823,35 +866,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             for(int i = 0; i < MAX_ENEMIES; i++) {
                 if(enemies[i].instance != self) continue;
 
-                const NotificationSequence* damageSound = &sequence_semi_success;
-
-                if(--enemies[i].lives == 0) {
-                    //Ran out of lives
-                    level_remove_entity(gameLevel, self);
-
-#ifdef MINIMAL_DEBUGGING
-                    //Print weights
-                    FURI_LOG_I("DEADZONE", "Finished randomness tweaking of weights:");
-                    for(int j = 0; j < enemies[i].ai->total_weights; j++) {
-                        FURI_LOG_I("DEADZONE", "Weights: %f", enemies[i].ai->weight[j]);
-                    }
-#endif
-
-                    genann_free(enemies[i].lastAI);
-                    genann_free(enemies[i].ai);
-                    //Replace damage sound with death sound
-                    damageSound = &sequence_success;
-
-                    enemies[i].instance = NULL;
-                    kills++;
-                    if(kills == 1) {
-                        firstKillTick = furi_get_tick();
-                    }
-                }
-
-                //Play sound of getting hit
-                NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-                notification_message(notifications, damageSound);
+                damage_enemy(&enemies[i]);
                 break;
             }
             break;
@@ -867,6 +882,7 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
         float distXSqToPlayer = (playerPos.x - pos.x) * (playerPos.x - pos.x);
         float distYSqToPlayer = (playerPos.y - pos.y) * (playerPos.y - pos.y);
         float distanceToPlayer = sqrtf(distXSqToPlayer + distYSqToPlayer);
+        UNUSED(distanceToPlayer);
 
         Vector closestBullet = (Vector){200.0F, 200.0F};
         for(int i = 0; i < MAX_BULLETS; i++) {
@@ -895,9 +911,15 @@ void enemy_update(Entity* self, GameManager* manager, void* context) {
             featureCalculation(self, features);
             double closestBulletX = features[0];
             double closestBulletY = features[1];
+            UNUSED(closestBulletX);
+            UNUSED(closestBulletY);
             double enemyX = features[2];
             double enemyY = features[3];
+            UNUSED(enemyX);
+            UNUSED(enemyY);
             double xDistToPlayer = features[4];
+            UNUSED(xDistToPlayer);
+
 #ifdef DEBUGGING
             if(IS_TRAINING) {
                 bool shouldJump = fabs(enemyX - closestBulletX) < 17 &&
@@ -1306,7 +1328,7 @@ static void game_stop(void* ctx) {
 */
 const Game game = {
     .target_fps = 110, // target fps, game will try to keep this value
-    .show_fps = true, // show fps counter on the screen
+    .show_fps = false, // show fps counter on the screen
     .always_backlight = false, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
     .stop = game_stop, // will be called once, when game stops

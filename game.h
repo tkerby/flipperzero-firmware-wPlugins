@@ -94,7 +94,14 @@ void enemy_spawn(
     Vector spawnPosition,
     uint32_t mercyTicks,
     bool right);
-
+void _enemy_spawn(
+    Level* level,
+    GameManager* manager,
+    Vector spawnPosition,
+    uint32_t mercyTicks,
+    bool right,
+    int startingLives);
+bool damage_enemy(Enemy* enemy);
 bool damage_player(Entity* self);
 
 void player_update(Entity* self, GameManager* manager, void* context);
