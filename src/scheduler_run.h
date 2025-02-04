@@ -3,4 +3,5 @@
 #include <flipper_format_i.h>
 #include "scheduler_app_i.h"
 
-int32_t scheduler_tx(SchedulerApp* context);
+//FuriThreadCallback scheduler_tx(SchedulerApp* context);
+void scheduler_start_tx(SchedulerApp* context);
