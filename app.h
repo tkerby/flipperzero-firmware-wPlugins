@@ -51,5 +51,6 @@ static const GpioPin* const pins[] = {
     &gpio_ext_pc1,
     &gpio_ext_pc0};
 
+int32_t main_gpio_explorer_app(void* _p);
 
 #endif //APP_H

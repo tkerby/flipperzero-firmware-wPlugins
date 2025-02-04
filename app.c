@@ -4,7 +4,6 @@
 ////////////////// Prototypes /////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int32_t main_gpio_explorer_app(void* _p);
 static struct gpio_explorer_app_struct * gpio_explorer_app_alloc();
 static void gpio_explorer_app_free(struct gpio_explorer_app_struct * app);
 static uint32_t gpio_explorer_navigation_exit_callback(void* _context);
