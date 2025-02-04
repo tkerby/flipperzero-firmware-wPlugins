@@ -110,6 +110,7 @@ static int32_t scheduler_tx(void* context) {
         if(!flipper_format_file_open_existing(
                tx_run->fff_file, furi_string_get_cstr(tx_run->data))) {
             FURI_LOG_E(TAG, "Error loading file!");
+            tx_run_free(tx_run);
             return -1;
         }
 
