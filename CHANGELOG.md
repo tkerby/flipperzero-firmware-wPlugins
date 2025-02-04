@@ -1,2 +1,6 @@
 ## 1.0
- -initial release
+ - Official release
+## 0.9
+ - application.fam updated
+## 0.1
+ - Initial release
