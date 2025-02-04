@@ -3,10 +3,7 @@ App(
     name="GPIO Explorer",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="main_gpio_explorer_app",
-    stack_size=2 * 1024,
-    requires=[
-        "gui",
-    ],
+    stack_size=4 * 1024,
     fap_icon="app.png",
     fap_category="GPIO",
     fap_description="The most complete app to start exploring the GPIO functionalities",
