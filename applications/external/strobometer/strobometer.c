@@ -5,23 +5,23 @@ Simple strobometer which can be used to measure the speed of a rotating object.
 Parts of the code are taken from
 https://github.com/instantiator/flipper-zero-tutorial-app/
 https://github.com/flipperdevices/flipperzero-firmware/blob/dev/applications/examples/example_thermo/example_thermo.c
-
+https://github.com/flipperdevices/flipperzero-firmware/blob/7291e6bd46c564400cdd3e9e7434f2c6e3a5ff28/targets/f7/furi_hal/furi_hal_pwm.c
 */
 
 #include <furi.h>
 
 #include <furi_hal_power.h>
 #include <furi_hal_pwm.h>
-#include <furi_hal_resources.h>
 #include <furi_hal_bus.h>
 
-#include <stm32wbxx_ll_tim.h>
 #include <stm32wbxx_ll_lptim.h>
 #include <stm32wbxx_ll_rcc.h>
 
 #include <gui/gui.h>
 #include <gui/view_port.h>
 #include <gui/elements.h>
+
+#include <math.h>
 
 #define TAG "strobometer"
 
@@ -36,8 +36,8 @@ typedef struct {
     ViewPort* view_port;
     FuriMessageQueue* event_queue;
     int frequency; // frequency of the strobometer
-    unsigned short places;
-    unsigned short selected; // selected place in the frequency (0-(places-1))
+    unsigned short num_digits;
+    unsigned short selected; // selected place in the frequency (0-(num_digits-1))
     bool output; // output state of the strobometer
 } StrobometerAppContext;
 
@@ -62,7 +62,7 @@ static void strobometer_app_draw_callback(Canvas* canvas, void* ctx) {
     // canvas_draw_line(canvas, 0, 16, 128, 16);
 
     // Draw RPM Input View
-    for(int i = 0; i < context->places; i++) {
+    for(int i = 0; i < context->num_digits; i++) {
         snprintf(text_store, sizeof(text_store), "%i", context->frequency / (int)pow(10, i) % 10);
         input_box(
             canvas,
@@ -94,6 +94,10 @@ void hal_pwm_set_params(uint32_t freq_rpm, uint8_t duty_cycle);
 void hal_pwm_stop();
 bool hal_pwm_is_running();
 
+int duty_cycle_function(int frequency) {
+    return (int)((double)0.4342944819 * log((double)(frequency / 60.0)) - 1);
+}
+
 static void strobometer_app_run(StrobometerAppContext* context) {
     furi_hal_power_enable_otg();
 
@@ -106,7 +110,6 @@ static void strobometer_app_run(StrobometerAppContext* context) {
 
         const FuriStatus status =
             furi_message_queue_get(context->event_queue, &event, FuriWaitForever);
-
         if(status != FuriStatusOk) {
             continue;
         }
@@ -115,14 +118,13 @@ static void strobometer_app_run(StrobometerAppContext* context) {
             continue;
         }
 
-        // Change the selected digit
-
+        // Change the selected digit and frequency
         if(event.key == InputKeyLeft) {
-            context->selected = (context->selected + 1) % context->places;
+            context->selected = (context->selected + 1) % context->num_digits;
         } else if(event.key == InputKeyRight) {
-            context->selected = (context->selected + (context->places - 1)) % context->places;
+            context->selected =
+                (context->selected + (context->num_digits - 1)) % context->num_digits;
         }
-
         if(event.key == InputKeyUp) {
             context->frequency += (int)pow(10, context->selected);
             frequency_changed = true;
@@ -132,15 +134,12 @@ static void strobometer_app_run(StrobometerAppContext* context) {
         }
 
         if(context->frequency < 0) {
-            context->frequency = pow(10, context->places) - 1;
-        } else if(context->frequency > pow(10, context->places) - 1) {
+            context->frequency = pow(10, context->num_digits) - 1;
+        } else if(context->frequency > pow(10, context->num_digits) - 1) {
             context->frequency = 0;
         }
-
-        //TODO Maybe make the duty cycle adjustable/frequency dependent
-
         if(frequency_changed) {
-            hal_pwm_set_params(context->frequency, 3);
+            hal_pwm_set_params(context->frequency, duty_cycle_function(context->frequency));
             frequency_changed = false;
         }
 
@@ -148,14 +147,14 @@ static void strobometer_app_run(StrobometerAppContext* context) {
             continue;
         }
 
+        // Exit the app or start/stop the output
         if(event.key == InputKeyBack) {
             is_running = false;
         }
-
         if(event.key == InputKeyOk) {
             context->output = !context->output;
             if(context->output) {
-                hal_pwm_start(context->frequency, 3);
+                hal_pwm_start(context->frequency, duty_cycle_function(context->frequency));
             } else {
                 hal_pwm_stop();
             }
@@ -183,7 +182,10 @@ static StrobometerAppContext* strobometer_app_context_alloc(void) {
     context->gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(context->gui, context->view_port, GuiLayerFullscreen);
 
-    context->places = 6;
+    context->num_digits = 6;
+    context->frequency = 0;
+    context->selected = 0;
+    context->output = false;
 
     return context;
 }
@@ -210,7 +212,7 @@ int32_t strobometer_app(void* p) {
     UNUSED(p);
     strobometer_app_set_log_level();
 
-    FURI_LOG_I(TAG, "Test app starting...");
+    FURI_LOG_I(TAG, "Strobometer app starting...");
 
     StrobometerAppContext* context = strobometer_app_context_alloc();
 
