@@ -122,6 +122,9 @@ void scheduler_scene_run_on_enter(void* context) {
 
 void scheduler_scene_run_on_exit(void* context) {
     SchedulerApp* app = context;
+    if(app->thread) {
+        furi_thread_join(app->thread);
+    }
     scheduler_reset(app->scheduler);
     subghz_devices_deinit();
     furi_hal_power_suppress_charge_exit();
@@ -132,12 +135,14 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeTick) {
-        if(scheduler_time_to_trigger(app->scheduler)) {
-            update_countdown(app);
-            scheduler_tx(app);
-        } else {
-            update_countdown(app);
-            notification_message(app->notifications, &sequence_blink_red_10);
+        if(!app->is_transmitting) {
+            if(scheduler_time_to_trigger(app->scheduler)) {
+                update_countdown(app);
+                scheduler_start_tx(app);
+            } else {
+                update_countdown(app);
+                notification_message(app->notifications, &sequence_blink_red_10);
+            }
         }
         consumed = true;
     }
