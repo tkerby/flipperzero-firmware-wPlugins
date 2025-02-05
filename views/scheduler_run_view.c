@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <furi_hal.h>
 #include <lib/subghz/devices/devices.h>
+#include <string.h>
+#include <subghz_scheduler_icons.h>
 
 #include "src/scheduler_run.h"
 #include "src/scheduler_app_i.h"
@@ -15,7 +17,7 @@
 static void scheduler_update_widgets(void* context, char* time_til_next) {
     SchedulerApp* app = context;
     uint32_t value;
-    char* text;
+
     widget_reset(app->widget);
     widget_add_string_element(
         app->widget,
@@ -26,45 +28,38 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         FontPrimary,
         "Schedule Running");
 
-    value = scheduler_get_interval(app->scheduler);
-    text = (char*)interval_text[value];
+    value = scheduler_get_mode(app->scheduler);
+    widget_add_icon_element(app->widget, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
     widget_add_string_element(
         app->widget,
-        GUI_MARGIN,
-        GUI_TEXT_GAP * 2,
+        GUI_MARGIN + 10,
+        (GUI_TEXT_GAP * 2),
         AlignLeft,
         AlignCenter,
         FontSecondary,
-        "Time interval:");
+        mode_text[value]);
+
+    value = scheduler_get_interval(app->scheduler);
+    widget_add_icon_element(app->widget, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
     widget_add_string_element(
         app->widget,
-        GUI_DISPLAY_WIDTH - GUI_MARGIN,
-        GUI_TEXT_GAP * 2,
-        AlignRight,
+        GUI_MARGIN + 58,
+        (GUI_TEXT_GAP * 2),
+        AlignLeft,
         AlignCenter,
         FontSecondary,
-        text);
+        interval_text[value]);
 
     value = scheduler_get_tx_repeats(app->scheduler);
-    if(value > 0) {
-        text = (char*)tx_repeats_text[value];
-        widget_add_string_element(
-            app->widget,
-            GUI_MARGIN,
-            GUI_TEXT_GAP * 3,
-            AlignLeft,
-            AlignCenter,
-            FontSecondary,
-            "TX Repeats:");
-        widget_add_string_element(
-            app->widget,
-            GUI_DISPLAY_WIDTH - GUI_MARGIN,
-            GUI_TEXT_GAP * 3,
-            AlignRight,
-            AlignCenter,
-            FontSecondary,
-            text);
-    }
+    widget_add_icon_element(app->widget, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
+    widget_add_string_element(
+        app->widget,
+        GUI_MARGIN + 106,
+        (GUI_TEXT_GAP * 2),
+        AlignLeft,
+        AlignCenter,
+        FontSecondary,
+        tx_repeats_text[value]);
 
     widget_add_string_element(
         app->widget,
@@ -100,7 +95,17 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         FontSecondary,
         time_til_next);
 
+    /* Main Frame */
     widget_add_frame_element(app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
+    /* Header Underline */
+    widget_add_frame_element(app->widget, 0, 13, GUI_DISPLAY_WIDTH, 2, 0);
+    /* Mode Box */
+    widget_add_frame_element(app->widget, 0, 13, 49, 12, 0);
+    /* Interval Box */
+    widget_add_frame_element(app->widget, 48, 13, 48, 12, 0);
+    /* Repeats Box */
+    widget_add_frame_element(app->widget, 95, 13, 33, 12, 0);
+
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
 
