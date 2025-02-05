@@ -93,14 +93,14 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             cancer_pct = 100.0f;
         
         snprintf(buffer, sizeof(buffer), "darts smoked: %lu", stats_view.total_smokes);
-        canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, buffer);
+        canvas_draw_str_aligned(canvas, 64, 27, AlignCenter, AlignCenter, buffer);
         
         if(cancer_pct >= 100.0f) {
             canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "YOU DIED OF CANCER");
             canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "RIP BOZO");
         } else {
             snprintf(buffer, sizeof(buffer), "progress to cancer: %.1f%%", (double)cancer_pct);
-            canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, buffer);
+            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, buffer);
             
             if(cancer_pct >= 50.0f && cancer_pct < 100.0f) {
                 canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "SEEK HELP IMMEDIATELY");
