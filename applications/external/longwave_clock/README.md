@@ -1,5 +1,7 @@
 # Longwave Clock
 
+![](screenshots/animation.gif)
+
 This is a Flipper Zero app to receive and decode, or simulate, multiple time signal broadcasts with different protocols and time formats. For receiving via GPIO, an inexpensive receiver connected to a receiving pin is required.
 
 ## Protocol support
