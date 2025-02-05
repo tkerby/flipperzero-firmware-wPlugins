@@ -1,4 +1,5 @@
-# v2.0-alpha (2025-02-04)
+# v2.0 (2025-02-05)
+
 ## New Features
 - Updated running view.
 - Transmission now sends in thread instead of blocking.

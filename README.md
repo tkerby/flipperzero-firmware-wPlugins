@@ -89,4 +89,4 @@ Build outputs are found in the `dist` directory for each application.
 - [x] Add one-shot function (wait desired interval before sending once).
 - [ ] Add more interval options, or make the intervals continuously adjustable instead of discrete.
 - [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys.
-- [ ] More visual feedback of current transmission (like `SubGHz Playlist`)
+- [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
