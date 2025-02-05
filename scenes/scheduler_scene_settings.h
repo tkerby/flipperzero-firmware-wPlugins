@@ -50,7 +50,7 @@ static const char* const interval_text[INTERVAL_COUNT] = {
 
 #define REPEATS_COUNT 6
 static const char* const tx_repeats_text[REPEATS_COUNT] = {
-    "  ",
+    "x1",
     "x2",
     "x3",
     "x4",
