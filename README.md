@@ -1,8 +1,8 @@
 # Longwave Clock
 
-![](screenshots/v0.1/animation.gif)
-
 This is a Flipper Zero app to receive and decode, or simulate, multiple time signal broadcasts with different protocols and time formats. For receiving via GPIO, an inexpensive receiver connected to a receiving pin is required.
+
+![](screenshots/v0.1/animation.gif)
 
 ## Protocol support
 
@@ -67,3 +67,8 @@ Please check with the manufacturer, as yours might be different and you may caus
 - **GND** / unlabeled: flipper pin 11 (GND)
 - **PON** / **P**: power on, asks for "logic low", using flipper pin 11 (GND)
 - **OUT** / **T**: the data signal, using flipper pin 16 (C0)
+
+## Picture credits
+
+- The [Font “HaxrCorp 4089”](https://fontstruct.com/fontstructions/show/192981) by “sahwar” is licensed under a CC-BY-SA license.
+- The picture of a flipper zero is (C) [Flipper Devices Inc](https://flipperzero.one/).
