@@ -61,6 +61,15 @@ static void strobometer_app_draw_callback(Canvas* canvas, void* ctx) {
     // canvas_draw_str_aligned(canvas, middle_x, 12, AlignCenter, AlignBottom, "Strobometer");
     // canvas_draw_line(canvas, 0, 16, 128, 16);
 
+    // Draw Output Pin Info
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 17, 7, "A4");
+    canvas_draw_icon(canvas, 11, 0, &I_SmallArrowUp_3x5);
+
+    canvas_draw_str(canvas, 57, 7, "GND");
+    canvas_draw_icon(canvas, 51, 0, &I_SmallArrowUp_3x5);
+
+
     // Draw RPM Input View
     for(int i = 0; i < context->num_digits; i++) {
         snprintf(text_store, sizeof(text_store), "%i", context->frequency / (int)pow(10, i) % 10);
@@ -95,7 +104,7 @@ void hal_pwm_stop();
 bool hal_pwm_is_running();
 
 int duty_cycle_function(int frequency){
-    return (int)((double)0.4342944819 * log((double)(frequency / 60.0)) - 1);
+    return (int)ceil(0.4342944819f * logf(frequency) - 1);
 }
 
 static void strobometer_app_run(StrobometerAppContext* context) {
@@ -151,11 +160,17 @@ static void strobometer_app_run(StrobometerAppContext* context) {
             is_running = false;
         }
         if(event.key == InputKeyOk) {
-            context->output = !context->output;
             if(context->output) {
-                hal_pwm_start(context->frequency, duty_cycle_function(context->frequency));
-            } else {
-                hal_pwm_stop();
+                if(hal_pwm_is_running()){
+                    hal_pwm_stop();
+                }
+                context->output = 0;
+            }
+            else{
+                if(context->frequency > 0){
+                    hal_pwm_start(context->frequency, duty_cycle_function(context->frequency));
+                    context->output = 1;
+                }
             }
         }
 
