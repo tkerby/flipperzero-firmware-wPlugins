@@ -95,6 +95,7 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         FontSecondary,
         time_til_next);
 
+    // Clean this up
     /* Main Frame */
     widget_add_frame_element(app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
     /* Header Underline */
