@@ -34,6 +34,7 @@ typedef struct {
     int32_t counter, maxdrags;
     bool lit, done;
     IconAnimation* icon;
+    NotificationApp* notification;
 } Cigarette;
 
 static Cigarette cigarette = {.counter = 0, .maxdrags = 13, .lit = false, .done = false};
@@ -43,32 +44,19 @@ const NotificationMessage message_delay_15 = {
     .data.delay.length = 15,
 };
 
-static const NotificationSequence vibr1 = {
-    &message_note_ds4,
-    &message_delay_15,
-    &message_sound_off,
-    
-    &message_note_a5,
-    &message_delay_15,
-    &message_sound_off,
-
+static const NotificationSequence sequence_puff = {
     &message_vibro_on,
-    &message_delay_25,
+    &message_delay_50,
     &message_vibro_off,
-    
     NULL,
 };
 
-// Light up
-static const NotificationSequence vibr2 = {
-    &message_note_ds2,
-    &message_delay_25,
-    &message_sound_off,
-
+static const NotificationSequence sequence_light_up = {
+    &message_red_255,
     &message_vibro_on,
-    &message_delay_15,
+    &message_delay_100,
     &message_vibro_off,
-
+    &message_red_0,
     NULL,
 };
 
@@ -200,7 +188,7 @@ int32_t cigarette_main(void* p) {
     Gui* gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
 
-    NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
+    cigarette.notification = furi_record_open(RECORD_NOTIFICATION);
 
     stats_view.storage = furi_record_open(RECORD_STORAGE);
 
@@ -231,11 +219,11 @@ int32_t cigarette_main(void* p) {
                     icon_animation_stop(cigarette.icon);
                     break;
                 case InputKeyRight:
-                    if (cigarette.counter < cigarette.maxdrags && cigarette.lit == true) {
-                        cigarette.counter += 1;
+                    if (cigarette.lit && !cigarette.done) {
+                        cigarette.counter++;
+                        notification_message(cigarette.notification, &sequence_puff);
                         smoke_position.x += 5;
                         image_position.x += 5;
-                        notification_message(notification, &vibr2);
                     }
                     break;
                 case InputKeyUp:
@@ -249,17 +237,13 @@ int32_t cigarette_main(void* p) {
                     }
                     break;
                 case InputKeyOk:
-                    // Light Cigarette - play lighter animation
-                    if (cigarette.counter == 0){
-                        if (cigarette.lit == false){
-                            cigarette.lit = true;
-                            notification_message(notification, &vibr1);
 
-                        }
+                    if (cigarette.counter == 0 && !cigarette.lit) {
+                        cigarette.lit = true;
+                        notification_message(cigarette.notification, &sequence_light_up);
                         icon_animation_start(cigarette.icon);
+                        notification_message(cigarette.notification, &sequence_blink_red_10);
                     }
-
-                    
                     break;
                 default:
                     running = false;
