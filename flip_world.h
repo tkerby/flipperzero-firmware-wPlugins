@@ -21,7 +21,10 @@
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
-    FlipWorldSubmenuIndexRun, // Click to run the FlipWorld application
+    FlipWorldSubmenuIndexPvE,
+    FlipWorldSubmenuIndexStory,
+    FlipWorldSubmenuIndexPvP,
+    FlipWorldSubmenuIndexGameSubmenu,
     FlipWorldSubmenuIndexMessage,
     FlipWorldSubmenuIndexSettings,
     FlipWorldSubmenuIndexWiFiSettings,
@@ -33,6 +36,7 @@ typedef enum
 typedef enum
 {
     FlipWorldViewSubmenu,          // The submenu
+    FlipWorldViewGameSubmenu,      // The game submenu
     FlipWorldViewMessage,          // The about, loading screen
     FlipWorldViewSettings,         // The settings screen
     FlipWorldViewVariableItemList, // The variable item list screen
@@ -58,6 +62,7 @@ typedef struct
     ViewDispatcher *view_dispatcher;       // Switches between our views
     View *view_message;                    // The about, loading screen
     Submenu *submenu;                      // The submenu
+    Submenu *submenu_game;                 // The game submenu
     Submenu *submenu_settings;             // The settings submenu
     VariableItemList *variable_item_list;  // The variable item list (settngs)
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
