@@ -437,7 +437,7 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         Vector current_pos = entity_pos_get(self);
         if (enemy_context->state == ENTITY_ATTACKED)
         {
-            enemy_context->state = current_pos.x > (enemy_context->start_position.x - enemy_context->end_position.x) ? ENTITY_MOVING_TO_END : ENTITY_MOVING_TO_START;
+            enemy_context->state = current_pos.x < (enemy_context->start_position.x - enemy_context->end_position.x) ? ENTITY_MOVING_TO_END : ENTITY_MOVING_TO_START;
         }
 
         // Determine the target position based on the current state

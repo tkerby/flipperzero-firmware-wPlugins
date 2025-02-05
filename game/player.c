@@ -43,6 +43,21 @@ static Level *next_level(GameManager *manager)
     return NULL;
 }
 
+// Update player stats based on XP using iterative method
+static int get_player_level_iterative(uint32_t xp)
+{
+    int level = 1;
+    uint32_t xp_required = 100; // Base XP for level 2
+
+    while (level < 100 && xp >= xp_required) // Maximum level supported
+    {
+        level++;
+        xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
+    }
+
+    return level;
+}
+
 void player_spawn(Level *level, GameManager *manager)
 {
     if (!level || !manager)
@@ -135,21 +150,6 @@ void player_spawn(Level *level, GameManager *manager)
 
     pctx->start_position = entity_pos_get(game_context->player);
 
-    // Update player stats based on XP using iterative method
-    int get_player_level_iterative(uint32_t xp)
-    {
-        int level = 1;
-        uint32_t xp_required = 100; // Base XP for level 2
-
-        while (level < 100 && xp >= xp_required) // Maximum level supported
-        {
-            level++;
-            xp_required = (uint32_t)(xp_required * 1.5); // 1.5 growth factor per level
-        }
-
-        return level;
-    }
-
     // Determine the player's level based on XP
     pctx->level = get_player_level_iterative(pctx->xp);
 
@@ -213,6 +213,11 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     Vector pos = entity_pos_get(self);
     player->old_position = pos;
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // Determine the player's level based on XP
+    player->level = get_player_level_iterative(player->xp);
+    player->strength = 10 + (player->level * 1);           // 1 strength per level
+    player->max_health = 100 + ((player->level - 1) * 10); // 10 health per level
 
     // Store previous direction
     int prev_dx = player->dx;
