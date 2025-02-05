@@ -19,7 +19,7 @@ typedef enum SchedulerTxDelay {
     SchedulerTxDelay500 = 500,
     SchedulerTxDelay1000 = 1000
 } SchedulerTxDelay;
-static const char* const tx_delay_text[TX_DELAY_COUNT] = {"100ms", "250ms", "500ms", "1 sec"};
+static const char* const tx_delay_text[TX_DELAY_COUNT] = {"100ms", "250ms", "500ms", "1000ms"};
 static const uint16_t tx_delay_value[TX_DELAY_COUNT] =
     {SchedulerTxDelay100, SchedulerTxDelay250, SchedulerTxDelay500, SchedulerTxDelay1000};
 
