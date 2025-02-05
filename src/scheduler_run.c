@@ -151,9 +151,8 @@ static int32_t scheduler_tx(void* context) {
             transmit(app, device, transmitter);
 
             subghz_transmitter_free(transmitter);
-            if(tx_run->filetype == SchedulerFileTypePlaylist) {
-                furi_delay_ms(tx_run->tx_delay);
-            }
+
+            furi_delay_ms(tx_run->tx_delay);
         }
     } while(tx_run->filetype == SchedulerFileTypePlaylist &&
             flipper_format_read_string(tx_run->fff_head, "sub", tx_run->data));
