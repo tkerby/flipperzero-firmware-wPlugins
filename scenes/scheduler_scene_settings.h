@@ -6,12 +6,22 @@ typedef enum SchedulerMode {
     SchedulerModeOneShot,
     SchedulerModeSettingsNum,
 } SchedulerMode;
-
 static const char* const mode_text[SchedulerModeSettingsNum] = {
     "Normal",
     "Immed.",
     "1-Shot",
 };
+
+#define TX_DELAY_COUNT 4
+typedef enum SchedulerTxDelay {
+    SchedulerTxDelay100 = 100,
+    SchedulerTxDelay250 = 250,
+    SchedulerTxDelay500 = 500,
+    SchedulerTxDelay1000 = 1000
+} SchedulerTxDelay;
+static const char* const tx_delay_text[TX_DELAY_COUNT] = {"100ms", "250ms", "500ms", "1 sec"};
+static const uint16_t tx_delay_value[TX_DELAY_COUNT] =
+    {SchedulerTxDelay100, SchedulerTxDelay250, SchedulerTxDelay500, SchedulerTxDelay1000};
 
 enum Intervals {
     Interval10Sec,
@@ -47,6 +57,9 @@ static const char* const interval_text[INTERVAL_COUNT] = {
     "4 hrs",
     "8 hrs",
     "12 hrs"};
+
+static const uint32_t interval_second_value[] =
+    {10, 30, 60, 120, 300, 600, 1200, 1800, 2700, 3600, 7200, 14400, 28800, 43200};
 
 #define REPEATS_COUNT 6
 static const char* const tx_repeats_text[REPEATS_COUNT] = {

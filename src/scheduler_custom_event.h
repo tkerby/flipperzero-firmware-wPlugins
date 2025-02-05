@@ -4,6 +4,7 @@ typedef enum {
     SchedulerStartEventSetInterval,
     SchedulerStartEventSetRepeats,
     SchedulerStartEventSetImmediate,
+    SchedulerStartEventSetTxDelay,
     SchedulerStartEventSelectFile,
     SchedulerStartRunEvent,
     SchedulerCustomEventErrorBack,

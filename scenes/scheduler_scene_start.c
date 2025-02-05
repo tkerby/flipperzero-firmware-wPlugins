@@ -41,11 +41,18 @@ static void scheduler_scene_start_set_mode(VariableItem* item) {
     scheduler_set_mode(app->scheduler, index);
 }
 
+static void scheduler_scene_start_set_tx_delay(VariableItem* item) {
+    SchedulerApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, tx_delay_text[index]);
+    scheduler_set_tx_delay(app->scheduler, index);
+}
+
 void scheduler_scene_start_on_enter(void* context) {
     SchedulerApp* app = context;
     VariableItemList* var_item_list = app->var_item_list;
     VariableItem* item;
-    uint8_t value_index;
+    uint16_t value_index;
     char buffer[20];
 
     scheduler_reset(app->scheduler);
@@ -58,22 +65,27 @@ void scheduler_scene_start_on_enter(void* context) {
     value_index = scheduler_get_interval(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, interval_text[value_index]);
-    value_index = variable_item_get_current_value_index(item);
 
     item = variable_item_list_add(
         var_item_list, "Repeats:", REPEATS_COUNT, scheduler_scene_start_set_repeats, app);
     value_index = scheduler_get_tx_repeats(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, tx_repeats_text[value_index]);
-    value_index = variable_item_get_current_value_index(item);
+    scheduler_set_tx_repeats(app->scheduler, value_index);
 
     item = variable_item_list_add(
         var_item_list, "Mode:", SchedulerModeSettingsNum, scheduler_scene_start_set_mode, app);
-
     value_index = scheduler_get_mode(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, mode_text[value_index]);
     scheduler_set_mode(app->scheduler, value_index);
+
+    item = variable_item_list_add(
+        var_item_list, "TX Delay:", TX_DELAY_COUNT, scheduler_scene_start_set_tx_delay, app);
+    value_index = scheduler_get_tx_delay(app->scheduler);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, tx_delay_text[value_index]);
+    scheduler_set_tx_delay(app->scheduler, value_index);
 
     item = variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
     if(check_file_extension(furi_string_get_cstr(app->file_path))) {

@@ -26,6 +26,7 @@ struct ScheduleTxRun {
     FuriString* data;
     bool filetype;
     uint32_t frequency;
+    uint16_t tx_delay;
 };
 
 static ScheduleTxRun* tx_run_alloc() {
@@ -104,6 +105,7 @@ static int32_t scheduler_tx(void* context) {
         furi_string_set_str(tx_run->data, furi_string_get_cstr(app->file_path));
     }
 
+    tx_run->tx_delay = tx_delay_value[scheduler_get_tx_delay(app->scheduler)];
     do {
         if(!flipper_format_file_open_existing(
                tx_run->fff_file, furi_string_get_cstr(tx_run->data))) {
@@ -150,7 +152,7 @@ static int32_t scheduler_tx(void* context) {
 
             subghz_transmitter_free(transmitter);
             if(tx_run->filetype == SchedulerFileTypePlaylist) {
-                furi_delay_ms(500);
+                furi_delay_ms(tx_run->tx_delay);
             }
         }
     } while(tx_run->filetype == SchedulerFileTypePlaylist &&

@@ -12,23 +12,26 @@ typedef struct Scheduler Scheduler;
 
 Scheduler* scheduler_alloc();
 void scheduler_free(Scheduler* scheduler);
+
 void scheduler_reset(Scheduler* scheduler);
+void scheduler_reset_previous_time(Scheduler* scheduler);
 
 bool scheduler_time_to_trigger(Scheduler* scheduler);
 
 void scheduler_set_interval(Scheduler* scheduler, uint8_t interval);
 void scheduler_set_tx_repeats(Scheduler* scheduler, uint8_t tx_repeats);
+void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode);
+void scheduler_set_tx_delay(Scheduler* scheduler, uint16_t tx_delay);
 void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list_count);
 
-void scheduler_reset_previous_time(Scheduler* scheduler);
-uint32_t scheduler_get_previous_time(Scheduler* scheduler);
 uint8_t scheduler_get_interval(Scheduler* scheduler);
 uint8_t scheduler_get_tx_repeats(Scheduler* scheduler);
-const char* scheduler_get_file_name(Scheduler* scheduler);
+SchedulerMode scheduler_get_mode(Scheduler* scheduler);
+uint16_t scheduler_get_tx_delay(Scheduler* scheduler);
 FileTxType scheduler_get_file_type(Scheduler* scheduler);
 
-void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode);
-SchedulerMode scheduler_get_mode(Scheduler* scheduler);
+const char* scheduler_get_file_name(Scheduler* scheduler);
+uint32_t scheduler_get_previous_time(Scheduler* scheduler);
 uint8_t scheduler_get_list_count(Scheduler* scheduler);
 
 void scheduler_get_countdown_fmt(Scheduler* scheduler, char* buffer, uint8_t size);
