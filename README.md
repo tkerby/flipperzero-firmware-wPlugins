@@ -2,6 +2,7 @@
 
 A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub` or playlist `*.txt` files can be used.
 
+
 <table style="border:0px">
   <tr style="border:0px">
     <td style="border:0px" width="25%" align="left">
@@ -39,6 +40,19 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
    <ul>
     <li>100ms, 250ms, 500ms, 1 sec</li>
    </ul>
+  </td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v2.0/x1_tx100_select.png" width="100%"></td>
+  </tr>
+  <tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Run view displays:
+    <ul>
+      <li>TX mode</li>
+      <li>TX interval</li>
+      <li>TX Repeats</li>
+      <li>Selected file</li>
+      <li>TX interval countdown</li>
+    </ul>
   </td>
    <td style="border:0px" width="20%"><img src="./screenshots/v2.0/a_run_view.png" width="100%"></td>
   </tr>
