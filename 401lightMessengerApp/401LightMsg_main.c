@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -146,8 +146,6 @@ AppContext* app_alloc() {
     app_ctx->view_dispatcher = view_dispatcher_alloc();
 
     view_dispatcher_attach_to_gui(app_ctx->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
-    view_dispatcher_enable_queue(app_ctx->view_dispatcher);
-
     SK6805_init();
     // Initialize MainMenu
     app_ctx->mainmenu = submenu_alloc();
@@ -164,7 +162,6 @@ AppContext* app_alloc() {
         return app_ctx;
     }
     SK6805_init();
-    lis2dh12_init(&app_ctx->data->lis2dh12);
 
     res = config_alloc(&app_ctx->data->config);
     if(res != L401_OK) {

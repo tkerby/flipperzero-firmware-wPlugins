@@ -12,11 +12,13 @@
 #include <stdlib.h>
 
 #include "drivers/sk6805.h"
-//#include <assets_icons.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 
 #include <401_light_msg_icons.h>
+
+#define SPLASH_MAX_ABOUT_SCREENS      2
+#define SPLASH_MAX_FLASHLIGHT_SCREENS 3
 
 typedef struct AppSplash {
     View* view;
@@ -26,7 +28,7 @@ typedef struct AppSplash {
 
 typedef enum {
     AppSplashEventQuit,
-    AppSplashEventEaster,
+    AppSplashEventRoll,
 } AppSplashCustomEvents;
 
 bool app_splash_input_callback(InputEvent* input_event, void* ctx);

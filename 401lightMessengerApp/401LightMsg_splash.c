@@ -7,6 +7,7 @@
 #include "401LightMsg_splash.h"
 
 static const char* TAG = "401_LightMsgSplash";
+bool toggle = 0;
 /**
  * Handles input events for the splash scene. Sends custom events based on
  * the user's keypresses.
@@ -18,7 +19,13 @@ static const char* TAG = "401_LightMsgSplash";
 bool app_splash_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(input_event);
     AppContext* app = (AppContext*)ctx;
-    view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
+    if(input_event->type == InputTypeShort) {
+        if(input_event->key == InputKeyBack) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
+        } else {
+            view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventRoll);
+        }
+    }
     return true;
 }
 
@@ -39,20 +46,58 @@ void app_splash_render_callback(Canvas* canvas, void* _model) {
         break;
     case AppStateFlashlight:
         canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_flashlight);
-        for(i = 0; i < LIGHTMSG_LED_ROWS; i++) {
-            SK6805_set_led_color(i, 0xFF, 0xFF, 0xFF);
+        switch(model->screen) {
+        default:
+        case 0:
+            for(i = 0; i < LIGHTMSG_LED_ROWS; i++) {
+                SK6805_set_led_color(i, 0xFF, 0xFF, 0xFF);
+            }
+            break;
+        case 1:
+            for(i = 0; i < LIGHTMSG_LED_ROWS; i++) {
+                SK6805_set_led_color(i, 0xAA, 0xAA, 0xAA);
+            }
+            break;
+        case 2:
+            for(i = 0; i < LIGHTMSG_LED_ROWS; i++) {
+                SK6805_set_led_color(i, 0x44, 0x44, 0x44);
+            }
+            break;
         }
         SK6805_update();
         break;
+    case AppStateAbout:
     default:
-        canvas_draw_icon(canvas, 0, 0, &I_about_qr);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64 + 32, 1, AlignCenter, AlignTop, "Light");
-        canvas_draw_str_aligned(canvas, 64 + 32, 10, AlignCenter, AlignTop, "Messenger");
+        switch(model->screen) {
+        default:
+        case 0:
+            canvas_draw_icon(canvas, ((64 - 48) / 2), (64 - 48), &I_lab401);
+            canvas_set_font(canvas, FontPrimary);
+
+            canvas_draw_str_aligned(canvas, 64 + 32, 10, AlignCenter, AlignTop, "Light");
+            canvas_draw_str_aligned(canvas, 64 + 32, 20, AlignCenter, AlignTop, "Messenger");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "https://lab401.com");
+            canvas_draw_str_aligned(canvas, 64 + 32, 35, AlignCenter, AlignTop, "Brought to you");
+            canvas_draw_str_aligned(canvas, 64 + 32, 45, AlignCenter, AlignTop, "by Lab401");
+            //canvas_draw_str_aligned(canvas, 64 + 32, 45, AlignCenter, AlignTop, "with love <3");
+            break;
+        case 1:
+            canvas_draw_icon(canvas, ((64 - 52) / 2), (64 - 52), &I_cyberpunk_company);
+            canvas_set_font(canvas, FontPrimary);
+            canvas_draw_str_aligned(canvas, 64 + 32, 10, AlignCenter, AlignTop, "CYBERPUNK");
+            canvas_draw_str_aligned(canvas, 64 + 32, 20, AlignCenter, AlignTop, "COMPANY");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(
+                canvas, 64, 0, AlignCenter, AlignTop, "https://cyberpunk.company");
+            canvas_draw_str_aligned(canvas, 64 + 32, 35, AlignCenter, AlignTop, "Engineering");
+            canvas_draw_str_aligned(canvas, 64 + 32, 45, AlignCenter, AlignTop, "From Tixlegeek");
+
+            break;
+        }
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 64 + 32, 25, AlignCenter, AlignTop, "Brought to you");
-        canvas_draw_str_aligned(canvas, 64 + 32, 35, AlignCenter, AlignTop, "by Lab401");
-        canvas_draw_str_aligned(canvas, 64 + 32, 45, AlignCenter, AlignTop, "with love <3");
+        canvas_draw_str_aligned(canvas, 120, 55, AlignCenter, AlignTop, "next>");
+
         break;
     }
 }
@@ -68,7 +113,7 @@ AppSplash* app_splash_alloc(void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppSplash* appSplash = malloc(sizeof(AppSplash));
     appSplash->view = view_alloc();
-    view_allocate_model(appSplash->view, ViewModelTypeLocking, sizeof(AppStateCtx));
+    view_allocate_model(appSplash->view, ViewModelTypeLockFree, sizeof(AppStateCtx));
     view_set_context(appSplash->view, app);
     view_set_draw_callback(appSplash->view, app_splash_render_callback);
     view_set_input_callback(appSplash->view, app_splash_input_callback);
@@ -102,15 +147,33 @@ void app_scene_splash_on_enter(void* context) {
  * @param event The scene manager event.
  * @return true if the event was consumed, false otherwise.
  */
+
 bool app_scene_splash_on_event(void* context, SceneManagerEvent event) {
     AppContext* app = context;
     bool consumed = false;
-
-    if(event.type == SceneManagerEventTypeCustom && event.event == AppSplashEventQuit) {
-        scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
-        consumed = true;
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == AppSplashEventRoll) {
+            AppStateCtx* model =
+                (AppStateCtx*)view_get_model(app_splash_get_view(app->sceneSplash));
+            if(model->app_state == AppStateAbout) {
+                model->screen++;
+                if(model->screen >= SPLASH_MAX_ABOUT_SCREENS) model->screen = 0;
+                view_commit_model(app_splash_get_view(app->sceneSplash), true);
+                consumed = true;
+            } else if(model->app_state == AppStateFlashlight) {
+                model->screen++;
+                if(model->screen >= SPLASH_MAX_FLASHLIGHT_SCREENS) model->screen = 0;
+                view_commit_model(app_splash_get_view(app->sceneSplash), true);
+                consumed = true;
+            } else {
+                UNUSED(model);
+                view_dispatcher_send_custom_event(app->view_dispatcher, AppSplashEventQuit);
+            }
+        } else if(event.event == AppSplashEventQuit) {
+            scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
+            consumed = true;
+        }
     }
-
     return consumed;
 }
 /**

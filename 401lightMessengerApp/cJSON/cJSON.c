@@ -27,6 +27,7 @@
 #if !defined(_CRT_SECURE_NO_DEPRECATE) && defined(_MSC_VER)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
+
 #ifdef __GNUC__
 #pragma GCC visibility push(default)
 #endif
@@ -35,14 +36,14 @@
 /* disable warning about single line comments in system headers */
 #pragma warning(disable : 4001)
 #endif
-#include <furi.h>
+
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef ENABLE_LOCALES
 #include <locale.h>
@@ -331,16 +332,12 @@ double string_to_double(const char* str, char** endptr) {
 /* Parse the input text to generate a number, and populate the result into item. */
 static cJSON_bool parse_number(cJSON* const item, parse_buffer* const input_buffer) {
     double number = 0;
-    unsigned char* after_end = NULL;
+    unsigned char* volatile after_end = NULL;
     unsigned char number_c_string[64];
     unsigned char decimal_point = get_decimal_point();
     size_t i = 0;
-    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-    FURI_LOG_E(__FUNCTION__,"PARSE NUMBER");
 
     if((input_buffer == NULL) || (input_buffer->content == NULL)) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"NUMBER NULL");
         return false;
     }
 
@@ -376,12 +373,9 @@ static cJSON_bool parse_number(cJSON* const item, parse_buffer* const input_buff
     }
 loop_end:
     number_c_string[i] = '\0';
-    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-    FURI_LOG_E(__FUNCTION__,"LOOP_END");
+
     number = string_to_double((const char*)number_c_string, (char**)&after_end);
     if(number_c_string == after_end) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"AFTER END");
         return false; /* parse_error */
     }
 
@@ -553,14 +547,12 @@ static cJSON_bool print_number(const cJSON* const item, printbuffer* const outpu
         length = snprintf((char*)number_buffer, sizeof(number_buffer), "null");
     } else {
         /* Try 15 decimal places of precision to avoid nonsignificant nonzero digits */
-        /* WARNING: Updated so nothing comes out weird with %1.15g */
-        length = snprintf((char*)number_buffer, sizeof(number_buffer), "%1.3f", d);
+        length = snprintf((char*)number_buffer, sizeof(number_buffer), "%1.15g", d);
 
         /* Check whether the original double can be recovered */
-        /* WARNING: Updated so nothing comes out weird with %1.15g */
         if((sscanf((char*)number_buffer, "%lg", &test) != 1) || !compare_double((double)test, d)) {
             /* If not, print with 17 decimal places of precision */
-            length = snprintf((char*)number_buffer, sizeof(number_buffer), "%1.3f", d);
+            length = snprintf((char*)number_buffer, sizeof(number_buffer), "%1.17g", d);
         }
     }
 
@@ -741,12 +733,8 @@ static cJSON_bool parse_string(cJSON* const item, parse_buffer* const input_buff
               (*input_end != '\"')) {
             /* is escape sequence */
             if(input_end[0] == '\\') {
-              FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-              FURI_LOG_E(__FUNCTION__,"BACKSLASH");
                 if((size_t)(input_end + 1 - input_buffer->content) >= input_buffer->length) {
                     /* prevent buffer overflow when last input character is a backslash */
-                    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-                    FURI_LOG_E(__FUNCTION__,"BUFFERLENGTH");
                     goto fail;
                 }
                 skipped_bytes++;
@@ -754,11 +742,8 @@ static cJSON_bool parse_string(cJSON* const item, parse_buffer* const input_buff
             }
             input_end++;
         }
-
         if(((size_t)(input_end - input_buffer->content) >= input_buffer->length) ||
            (*input_end != '\"')) {
-             FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-             FURI_LOG_E(__FUNCTION__,"NOEND");
             goto fail; /* string ended unexpectedly */
         }
 
@@ -1047,10 +1032,8 @@ cJSON_ParseWithLengthOpts(
     {
         goto fail;
     }
-    FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
 
     if(!parse_value(item, buffer_skip_whitespace(skip_utf8_bom(&buffer)))) {
-        FURI_LOG_E(__FUNCTION__,"buffer: %s ", buffer.content);
         /* parse failure. ep is set. */
         goto fail;
     }
@@ -1218,9 +1201,6 @@ cJSON_PrintPreallocated(cJSON* item, char* buffer, const int length, const cJSON
 /* Parser core - when encountering text, process appropriately. */
 static cJSON_bool parse_value(cJSON* const item, parse_buffer* const input_buffer) {
     if((input_buffer == NULL) || (input_buffer->content == NULL)) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"input_buffer == NULL");
-
         return false; /* no input */
     }
 
@@ -1249,30 +1229,20 @@ static cJSON_bool parse_value(cJSON* const item, parse_buffer* const input_buffe
     }
     /* string */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '\"')) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"can_access_at_index \"");
-
         return parse_string(item, input_buffer);
     }
     /* number */
     if(can_access_at_index(input_buffer, 0) && ((buffer_at_offset(input_buffer)[0] == '-') ||
                                                 ((buffer_at_offset(input_buffer)[0] >= '0') &&
                                                  (buffer_at_offset(input_buffer)[0] <= '9')))) {
-
         return parse_number(item, input_buffer);
     }
     /* array */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '[')) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"can_access_at_index [");
-
         return parse_array(item, input_buffer);
     }
     /* object */
     if(can_access_at_index(input_buffer, 0) && (buffer_at_offset(input_buffer)[0] == '{')) {
-      FURI_LOG_W(__FUNCTION__,"ERROR LINE %d ", __LINE__);
-      FURI_LOG_E(__FUNCTION__,"can_access_at_index {");
-
         return parse_object(item, input_buffer);
     }
 
@@ -2100,9 +2070,9 @@ cJSON_ReplaceItemViaPointer(cJSON* const parent, cJSON* const item, cJSON* repla
         }
         parent->child = replacement;
     } else { /*
-       * To find the last item in array quickly, we use prev in array.
-       * We can't modify the last item's next pointer where this item was the parent's child
-       */
+         * To find the last item in array quickly, we use prev in array.
+         * We can't modify the last item's next pointer where this item was the parent's child
+         */
         if(replacement->prev != NULL) {
             replacement->prev->next = replacement;
         }
@@ -2745,7 +2715,7 @@ cJSON_Compare(const cJSON* const a, const cJSON* const b, const cJSON_bool case_
         }
 
         /* doing this twice, once on a and b to prevent true comparison if a subset of b
-         * TODO: Do this the proper way, this is just a fix for now */
+             * TODO: Do this the proper way, this is just a fix for now */
         cJSON_ArrayForEach(b_element, b) {
             a_element = get_object_item(a, b_element->string, case_sensitive);
             if(a_element == NULL) {

@@ -1,5 +1,5 @@
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -23,21 +23,6 @@
 #include <gui/modules/submenu.h>
 #include <locale/locale.h>
 #include <notification/notification_messages.h>
-
-typedef enum {
-    AppEventTypeTick,
-    AppEventTypeKey,
-    // You can add additional events here.
-} AppEventType;
-
-typedef enum {
-    AppCustomEventQuit
-} AppCustomEvent;
-
-typedef struct {
-    AppEventType type; // The reason for this event.
-    InputEvent input; // This data is specific to keypress data.
-} AppEvent;
 
 typedef enum {
     AppSceneMainMenu,
@@ -75,6 +60,7 @@ typedef enum {
 
 typedef struct {
     AppState app_state;
+    uint8_t screen;
     char message[64];
 } AppStateCtx;
 
@@ -83,7 +69,6 @@ typedef struct {
 #include "401LightMsg_main.h"
 #include "401LightMsg_set_text.h"
 #include "401LightMsg_splash.h"
-// #include "401LightMsg_file_browser.h"
 #include "401LightMsg_config.h"
 #include "401LightMsg_main_menu.h"
 
@@ -102,7 +87,6 @@ typedef struct {
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
     NotificationApp* notifications;
-
     l401_err err;
     AppSplash* sceneSplash;
     AppConfig* sceneConfig;

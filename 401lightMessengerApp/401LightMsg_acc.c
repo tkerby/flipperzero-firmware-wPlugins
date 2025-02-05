@@ -1,6 +1,6 @@
 
 /**
- *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2024 LAB401 GPLv3
+ *  ▌  ▞▚ ▛▚ ▌  ▞▚ ▟  Copyright© 2025 LAB401 GPLv3
  *  ▌  ▛▜ ▛▚ ▙▙ ▌▐ ▐  This program is free software
  *  ▀▀ ▘▝ ▀▘  ▘ ▝▘ ▀▘ See LICENSE.txt - lab401.com
  *    + Tixlegeek
@@ -15,6 +15,18 @@
 #define PI3 PI / 3
 
 static const char* TAG = "401_LightMsgAcc";
+
+
+/**
+
+  Why does this section seems so broken?
+  Here, you'll see things we usually don't see around here. Yes, i would have
+  liked to use high level API for signal handling, and cool integrated stuff...
+  But we're playing with tight timings, very touchy calibrations, and disgusting
+  optimisations. Sorry for that, if you can make it work correctly
+  with more pretty code, please have a shot at it! :)
+
+*/
 
 /**
  * Creates a bit array representation of the given text using the provided font.
@@ -186,6 +198,7 @@ int32_t app_acc_worker(void* ctx) {
 
     // The shader updating function is the callback associated to the "color"
     color_animation_callback shader = appData->shader;
+    lis2dh12_init(&app->data->lis2dh12);
 
     while(running) {
         // Checks if the thread must be ended.
@@ -284,11 +297,11 @@ int32_t app_acc_worker(void* ctx) {
 }
 
 void app_acc_render_callback(Canvas* canvas, void* model) {
-      UNUSED(model);
-      canvas_clear(canvas);
-      canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_swipe);
-      canvas_draw_icon(canvas, 43, 46, &I_401_lghtmsg_arrow);
-      canvas_commit(canvas);
+    UNUSED(model);
+    canvas_clear(canvas);
+    canvas_draw_icon(canvas, 0, 0, &I_401_lghtmsg_swipe);
+    canvas_draw_icon(canvas, 43, 46, &I_401_lghtmsg_arrow);
+    canvas_commit(canvas);
 }
 
 /**
@@ -409,7 +422,7 @@ void app_scene_acc_on_enter(void* ctx) {
 
     switch(appAcc->displayMode) {
     case APPACC_DISPLAYMODE_TEXT:
-        appAcc->bitmapMatrix = bitMatrix_text_create((char*)light_msg_data->text, Retro8x16);
+        appAcc->bitmapMatrix = bitMatrix_text_create((char*)light_msg_data->text, LightMsgSetFont);
         break;
 
     case APPACC_DISPLAYMODE_BITMAP:
