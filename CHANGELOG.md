@@ -9,6 +9,7 @@
 - If playlist selected, number of list items are displayed.
 ## Bug-fixes
 - Timing bug where 'previous_time' would be set before transmission completes. Very noticeable on longer playlists.
+- Repeats caused lockup in v1.0. TX repeats now functional.
 
 # Initial release - v1.0 (2025-01-29)
 
