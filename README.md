@@ -23,7 +23,7 @@ Finally a way to smoke a cigarette on the [Flipper Zero](https://www.flipperzero
 
 ## Installation
 
-Download the **flipper_cigarette.fap** from the [latest release](https://www.flipperzero.one) and copy it to the **apps/Games** on your **Flipper Zero** 
+Download the **flipper_cigarette.fap** from the [latest release](https://www.flipperzero.one) and copy it to the **apps/Games** directory on your **Flipper Zero** 
 
 
 ## Build
