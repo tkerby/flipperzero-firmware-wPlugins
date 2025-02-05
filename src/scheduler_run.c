@@ -76,18 +76,14 @@ static void
     transmit(SchedulerApp* app, const SubGhzDevice* device, SubGhzTransmitter* transmitter) {
     notification_message(app->notifications, &sequence_blink_stop);
     notification_message(app->notifications, &sequence_blink_start_cyan);
-    uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
-    for(uint_fast8_t i = 0; i <= repeats; ++i) {
-#ifdef FURI_DEBUG
-        FURI_LOG_D(TAG, "Scheduled Tx %d of %d", i + 1, repeats + 1);
-#endif
-        if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
-            while(!subghz_devices_is_async_complete_tx(device)) {
-                furi_delay_ms(100);
-            }
-            subghz_devices_stop_async_tx(device);
+
+    if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
+        while(!subghz_devices_is_async_complete_tx(device)) {
+            furi_delay_ms(100);
         }
+        subghz_devices_stop_async_tx(device);
     }
+
     notification_message(app->notifications, &sequence_blink_stop);
 }
 
@@ -132,24 +128,30 @@ static int32_t scheduler_tx(void* context) {
         }
         flipper_format_file_close(tx_run->fff_file);
 
-        subghz_environment_set_protocol_registry(
-            tx_run->environment, (void*)&subghz_protocol_registry);
-        SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(
-            tx_run->environment, furi_string_get_cstr(tx_run->protocol));
+        uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
+        for(uint_fast8_t i = 0; i <= repeats; ++i) {
+#ifdef FURI_DEBUG
+            FURI_LOG_I(TAG, "Scheduled Tx %d of %d", i + 1, repeats + 1);
+#endif
+            subghz_environment_set_protocol_registry(
+                tx_run->environment, (void*)&subghz_protocol_registry);
+            SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(
+                tx_run->environment, furi_string_get_cstr(tx_run->protocol));
 
-        subghz_transmitter_deserialize(transmitter, tx_run->fff_data);
+            subghz_transmitter_deserialize(transmitter, tx_run->fff_data);
 
-        FuriHalSubGhzPreset preset_enum =
-            scheduler_get_subghz_preset_name(furi_string_get_cstr(tx_run->preset));
-        subghz_devices_load_preset(device, preset_enum, NULL);
+            FuriHalSubGhzPreset preset_enum =
+                scheduler_get_subghz_preset_name(furi_string_get_cstr(tx_run->preset));
+            subghz_devices_load_preset(device, preset_enum, NULL);
 
-        tx_run->frequency = subghz_devices_set_frequency(device, tx_run->frequency);
+            tx_run->frequency = subghz_devices_set_frequency(device, tx_run->frequency);
 
-        transmit(app, device, transmitter);
+            transmit(app, device, transmitter);
 
-        subghz_transmitter_free(transmitter);
-        if(tx_run->filetype == SchedulerFileTypePlaylist) {
-            furi_delay_ms(500);
+            subghz_transmitter_free(transmitter);
+            if(tx_run->filetype == SchedulerFileTypePlaylist) {
+                furi_delay_ms(500);
+            }
         }
     } while(tx_run->filetype == SchedulerFileTypePlaylist &&
             flipper_format_read_string(tx_run->fff_head, "sub", tx_run->data));
@@ -173,16 +175,12 @@ static void
         app->is_transmitting = false;
         scheduler_reset_previous_time(app->scheduler);
         if(scheduler_get_mode(app->scheduler) == SchedulerModeOneShot) {
-            scene_manager_search_and_switch_to_another_scene(
+            scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, SchedulerSceneStart);
         }
-    } else if(state == FuriThreadStateStopping) {
-        //FURI_LOG_I(TAG, "Thread stopping");
     } else if(state == FuriThreadStateStarting) {
         FURI_LOG_I(TAG, "Thread starting");
         app->is_transmitting = true;
-    } else if(state == FuriThreadStateRunning) {
-        //FURI_LOG_I(TAG, "Thread running");
     }
 }
 
