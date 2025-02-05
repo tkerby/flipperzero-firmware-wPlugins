@@ -5,7 +5,7 @@
  *    + Tixlegeek
  */
 #include "401LightMsg_main_menu.h"
-static const char* TAG = "401_LightMsgMainMenu";
+//static const char* TAG = "401_LightMsgMainMenu";
 
 /**
  * Callback function for the main menu. Handles menu item selection and
@@ -105,6 +105,5 @@ void app_scene_mainmenu_on_exit(void* ctx) {
  * @return A pointer to the allocated AppMainMenu or NULL.
  */
 AppMainMenu* app_mainmenu_alloc() {
-    FURI_LOG_I(TAG, "app_mainmenu_alloc");
     return NULL;
 }

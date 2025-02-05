@@ -14,10 +14,8 @@
 #include "bmp.h"
 #include "drivers/sk6805.h"
 #include <401_light_msg_icons.h>
-//#include <assets_icons.h>
 #include <dialogs/dialogs.h>
 #include <gui/gui.h>
-//#include <gui/gui_i.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
 #include <gui/scene_manager.h>
@@ -93,8 +91,6 @@ typedef enum {
     AppBmpEditorEventToggle,
 } AppBmpEditorCustomEvents;
 
-bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* ctx);
-void app_scene_bmp_editor_render_callback(Canvas* canvas, void* ctx);
 AppBmpEditor* app_bmp_editor_alloc();
 void app_bmp_editor_free(void* ctx);
 View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor);

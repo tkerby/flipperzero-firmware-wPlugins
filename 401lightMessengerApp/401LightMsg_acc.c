@@ -13,9 +13,7 @@
 #include "gui/view_dispatcher.h"
 #define PI  3.14159
 #define PI3 PI / 3
-
 static const char* TAG = "401_LightMsgAcc";
-
 
 /**
 
@@ -35,7 +33,7 @@ static const char* TAG = "401_LightMsgAcc";
  * @param font The font to use for conversion.
  * @return A pointer to the created text bit array.
  */
-bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font) {
+static bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font) {
     furi_assert(text);
     furi_assert(font);
     uint8_t textLen = strlen(text);
@@ -47,8 +45,6 @@ bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font) {
     uint8_t letter = 0;
     size_t letterPtr = 0;
     size_t bitMatrixOffset = 0;
-    FURI_LOG_I(TAG, "[SCENE_ACC] bitMatrix_text_create");
-    FURI_LOG_I(TAG, "Font Size: %dx%d", fontWidth, fontHeight);
     bitMatrix = malloc(sizeof(bitmapMatrix));
     if(!bitMatrix) return NULL;
 
@@ -83,19 +79,7 @@ bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font) {
     }
     // complete the height
     bitMatrix->height++;
-    FURI_LOG_I(TAG, "[SCENE_ACC] bitMatrix_text_create END");
     return bitMatrix;
-}
-
-void hex_dump(void* ptr, size_t size) {
-    unsigned char* p = (unsigned char*)ptr;
-    for(size_t i = 0; i < size; i++) {
-        printf("%02x ", p[i]);
-        if((i + 1) % 16 == 0) {
-            printf("\n");
-        }
-    }
-    printf("\n");
 }
 
 /**
@@ -105,7 +89,7 @@ void hex_dump(void* ptr, size_t size) {
  * @param ctx The application ctx.
  * @return Always returns false.
  */
-bool app_acc_input_callback(InputEvent* input_event, void* ctx) {
+static bool app_acc_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(ctx);
     UNUSED(input_event);
 
@@ -117,7 +101,7 @@ bool app_acc_input_callback(InputEvent* input_event, void* ctx) {
  *
  * @param ctx The ctx.
  */
-void swipes_tick(void* ctx) {
+static void swipes_tick(void* ctx) {
     AppAcc* appAcc = (AppAcc*)ctx;
     appAcc->cycles++;
 }
@@ -128,7 +112,7 @@ void swipes_tick(void* ctx) {
  * @param ctx The ctx.
  * @param direction The swipe direction.
  */
-void swipes_init(void* ctx, uint8_t direction) {
+static void swipes_init(void* ctx, uint8_t direction) {
     AppContext* app = (AppContext*)ctx;
     AppAcc* appAcc = (AppAcc*)app->sceneAcc;
 
@@ -137,7 +121,7 @@ void swipes_init(void* ctx, uint8_t direction) {
             appAcc->cyclesAvg = (appAcc->cyclesAvg + appAcc->cycles) / 2;
         else
             appAcc->cyclesAvg = appAcc->cycles;
-        // The center is offseted on the first third of the swipe motion to comensate
+        // The center is offseted on the first third of the swipe motion to compensate
         // for the acceleration's interractions.
         appAcc->cyclesCenter = (uint16_t)((appAcc->cyclesAvg) / 3);
         appAcc->cycles = 0;
@@ -150,7 +134,7 @@ void swipes_init(void* ctx, uint8_t direction) {
  *
  * @param ctx The ctx.
  */
-void zmax_callback(void* ctx) {
+static void zmax_callback(void* ctx) {
     AppContext* app = (AppContext*)ctx; // Main app struct
     swipes_init(app, 1);
 }
@@ -160,7 +144,7 @@ void zmax_callback(void* ctx) {
  *
  * @param ctx The ctx.
  */
-void zmin_callback(void* ctx) {
+static void zmin_callback(void* ctx) {
     AppContext* app = (AppContext*)ctx; // Main app struct
     swipes_init(app, 0);
 }
@@ -171,7 +155,7 @@ void zmin_callback(void* ctx) {
  * @param ctx The ctx.
  * @return Always returns 0.
  */
-int32_t app_acc_worker(void* ctx) {
+static int32_t app_acc_worker(void* ctx) {
     assert(ctx);
     AppContext* app = (AppContext*)ctx; // Main app struct
     AppAcc* appAcc = (AppAcc*)app->sceneAcc;
@@ -203,7 +187,6 @@ int32_t app_acc_worker(void* ctx) {
     while(running) {
         // Checks if the thread must be ended.
         if(furi_thread_flags_get()) {
-            FURI_LOG_I(TAG, "Exit thread");
             running = false;
         }
         if(time++ == 4000) {
@@ -290,7 +273,6 @@ int32_t app_acc_worker(void* ctx) {
         SK6805_update();
         furi_delay_us(100);
     }
-    FURI_LOG_I(TAG, "Thread loop exit");
     SK6805_off();
     bitmapMatrix_free(appAcc->bitmapMatrix);
     return 0;
@@ -310,7 +292,6 @@ void app_acc_render_callback(Canvas* canvas, void* model) {
  * @return A pointer to the allocated AppAcc.
  */
 AppAcc* app_acc_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_acc_alloc");
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx; // Main app struct
     furi_assert(app->data);
@@ -345,12 +326,11 @@ AppAcc* app_acc_alloc(void* ctx) {
  * @return A pointer to the view.
  */
 View* app_acc_get_view(AppAcc* appAcc) {
-    FURI_LOG_I(TAG, "[SCENE_ACC] app_acc_get_view");
     furi_assert(appAcc);
     return appAcc->view;
 }
 
-bool set_bitmap_dialog(void* ctx) {
+static bool set_bitmap_dialog(void* ctx) {
     furi_assert(ctx);
     AppContext* app = (AppContext*)ctx; // Main app struct
     AppData* appData = (AppData*)app->data;
@@ -374,7 +354,6 @@ bool set_bitmap_dialog(void* ctx) {
         set = false;
     } else {
         int res = bmp_header_check_1bpp(furi_string_get_cstr(bitmapPath));
-        FURI_LOG_E(TAG, "FILE READ CHECK RES: %d", res);
         if(res == 0) {
             strncpy(
                 light_msg_data->bitmapPath,

@@ -31,8 +31,6 @@ typedef enum {
     AppSplashEventRoll,
 } AppSplashCustomEvents;
 
-bool app_splash_input_callback(InputEvent* input_event, void* ctx);
-void app_splash_render_callback(Canvas* canvas, void* ctx);
 AppSplash* app_splash_alloc();
 void app_splash_free(AppSplash* appSplash);
 View* app_splash_get_view(AppSplash* appSplash);

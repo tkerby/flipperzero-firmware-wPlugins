@@ -45,19 +45,9 @@ typedef struct AppAcc {
 
 #include "401LightMsg_main.h"
 
-bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* font);
-void swipes_tick(void* ctx);
-void swipes_init(void* ctx, uint8_t direction);
-void get_orientation(void* ctx);
-// INT1 & INT2 Callbacks corresponding to swipes ends
-void zmax_callback(void* ctx);
-void zmin_callback(void* ctx);
-
-int32_t app_acc_worker(void* context);
 AppAcc* app_acc_alloc();
 View* app_acc_get_view(AppAcc* appAcc);
-bool app_acc_input_callback(InputEvent* input_event, void* ctx);
-void app_acc_render_callback(Canvas* canvas, void* ctx);
+void app_acc_render_callback(Canvas* canvas, void* model);
 void app_acc_free(AppAcc* appAcc);
 
 void app_scene_acc_on_enter(void* context);

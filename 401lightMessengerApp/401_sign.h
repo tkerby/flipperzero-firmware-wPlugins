@@ -16,8 +16,6 @@
 #include <401_light_msg_icons.h>
 #include "401_err.h"
 
-void l401_sign_input_callback(InputEvent* input, void* ctx);
-void l401_sign_render_callback(Canvas* canvas, void* ctx);
 int32_t l401_sign_app(l401_err err);
 
 #endif /* end of include guard: L401_SIGN_H_ */

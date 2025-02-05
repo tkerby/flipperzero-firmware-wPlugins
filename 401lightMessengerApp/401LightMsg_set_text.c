@@ -57,7 +57,6 @@ bool app_scene_set_text_on_event(void* ctx, SceneManagerEvent event) {
         if(event.event == SetTextInputSaveEvent) {
             Configuration* light_msg_data = (Configuration*)app->data->config;
             char* text = light_msg_data->text;
-            FURI_LOG_I(TAG, "Text: %s", text);
             // Replace "_" with spaces
             while(*text) {
                 if(*text == '_') {

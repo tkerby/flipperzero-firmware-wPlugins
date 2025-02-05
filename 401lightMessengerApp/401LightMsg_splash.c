@@ -7,7 +7,7 @@
 #include "401LightMsg_splash.h"
 
 static const char* TAG = "401_LightMsgSplash";
-bool toggle = 0;
+
 /**
  * Handles input events for the splash scene. Sends custom events based on
  * the user's keypresses.
@@ -16,7 +16,7 @@ bool toggle = 0;
  * @param ctx The application context.
  * @return true if the event was consumed, false otherwise.
  */
-bool app_splash_input_callback(InputEvent* input_event, void* ctx) {
+static bool app_splash_input_callback(InputEvent* input_event, void* ctx) {
     UNUSED(input_event);
     AppContext* app = (AppContext*)ctx;
     if(input_event->type == InputTypeShort) {
@@ -36,7 +36,7 @@ bool app_splash_input_callback(InputEvent* input_event, void* ctx) {
  * @param ctx The application context.
  */
 // Invoked by the draw callback to render the AppSplash.
-void app_splash_render_callback(Canvas* canvas, void* _model) {
+static void app_splash_render_callback(Canvas* canvas, void* _model) {
     AppStateCtx* model = (AppStateCtx*)_model;
     uint8_t i = 0;
     canvas_clear(canvas);

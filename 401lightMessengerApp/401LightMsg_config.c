@@ -8,6 +8,7 @@
 #include "401_config.h"
 
 static const char* TAG = "401_LightMsgConfig";
+static uint32_t update_counter = 0;
 
 const LightMsg_Orientation lightmsg_orientation_value[] = {
     LightMsg_OrientationWheelUp,
@@ -38,6 +39,7 @@ const uint32_t lightmsg_colors_flat[] = {
     0x0000FF, // COLOR_BLUE
     0x770077, // COLOR_PURPLE
 };
+
 const char* const lightmsg_color_text[] = {
     "R3d", // flat color
     "0r4ng3", // flat color
@@ -53,6 +55,7 @@ const char* const lightmsg_color_text[] = {
 };
 
 // Animation values (callbacks)
+
 color_animation_callback lightmsg_color_value[] = {
     LightMsg_color_cb_flat, // flat color
     LightMsg_color_cb_flat, // flat color
@@ -67,7 +70,8 @@ color_animation_callback lightmsg_color_value[] = {
     LightMsg_color_cb_vaporwave, // animated colors
 };
 
-uint32_t LightMsg_color_pal_nyancat[] = {
+
+static uint32_t LightMsg_color_pal_nyancat[] = {
     lightmsg_colors_flat[COLOR_RED],
     lightmsg_colors_flat[COLOR_RED],
     lightmsg_colors_flat[COLOR_RED],
@@ -86,7 +90,7 @@ uint32_t LightMsg_color_pal_nyancat[] = {
     lightmsg_colors_flat[COLOR_PURPLE],
 };
 
-uint32_t LightMsg_color_pal_vaporwave[] = {
+static uint32_t LightMsg_color_pal_vaporwave[] = {
     0xf7b900,
     0xf88900,
     0xf95c00,
@@ -105,7 +109,7 @@ uint32_t LightMsg_color_pal_vaporwave[] = {
     0x00d3ff,
 };
 
-uint8_t sine_wave[256] = {
+static uint8_t sine_wave[256] = {
     0x80, 0x83, 0x86, 0x89, 0x8C, 0x90, 0x93, 0x96, 0x99, 0x9C, 0x9F, 0xA2, 0xA5, 0xA8, 0xAB,
     0xAE, 0xB1, 0xB3, 0xB6, 0xB9, 0xBC, 0xBF, 0xC1, 0xC4, 0xC7, 0xC9, 0xCC, 0xCE, 0xD1, 0xD3,
     0xD5, 0xD8, 0xDA, 0xDC, 0xDE, 0xE0, 0xE2, 0xE4, 0xE6, 0xE8, 0xEA, 0xEB, 0xED, 0xEF, 0xF0,
@@ -177,38 +181,12 @@ void LightMsg_color_cb_rainbow(uint16_t tick, uint32_t* result, void* ctx) {
     }
 }
 
-uint32_t update_counter = 0;
-
-/**
- * @brief Render callback for the app configuration.
- *
- * @param canvas The canvas to be used for rendering.
- * @param ctx The context passed to the callback.
- */
-void app_config_render_callback(Canvas* canvas, void* ctx) {
-    UNUSED(ctx);
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 15, 30, AlignLeft, AlignTop, "Config");
-}
-
-/**
- * @brief Update led according to update_counter
- *
- * @param ctx The context passed to the callback.
- */
-void on_tick(void* ctx) {
-    AppContext* app = ctx;
-    update_counter++;
-    update_led(app);
-}
-
 /**
  * @brief Update leds based on the current shader selected
  *
  * @param ctx The context passed to the callback.
  */
-void update_led(void* ctx) {
+static void update_led(void* ctx) {
     UNUSED(ctx);
     AppContext* app = ctx;
     AppData* appData = (AppData*)app->data;
@@ -227,6 +205,17 @@ void update_led(void* ctx) {
             (uint8_t)(((color) & 0xFF) * brightness));
     }
     SK6805_update();
+}
+
+/**
+ * @brief Update led according to update_counter
+ *
+ * @param ctx The context passed to the callback.
+ */
+static void on_tick(void* ctx) {
+    AppContext* app = ctx;
+    update_counter++;
+    update_led(app);
 }
 
 /**
@@ -321,20 +310,6 @@ AppConfig* app_config_alloc(void* ctx) {
     variable_item_set_current_value_text(item, lightmsg_color_text[light_msg_data->color]);
 
     return appConfig;
-}
-
-/**
- * @brief Callback function to handle input events for the app configuration.
- *
- * @param input_event The input event.
- * @param ctx The context passed to the callback.
- * @return Returns true if the event was handled, otherwise false.
- */
-bool app_config_input_callback(InputEvent* input_event, void* ctx) {
-    UNUSED(ctx);
-    UNUSED(input_event);
-    bool handled = false;
-    return handled;
 }
 
 /**

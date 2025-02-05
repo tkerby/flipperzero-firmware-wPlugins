@@ -5,14 +5,14 @@
  *    + Tixlegeek
  */
 #include "./401_sign.h"
-void l401_sign_input_callback(InputEvent* input, void* ctx) {
+static void l401_sign_input_callback(InputEvent* input, void* ctx) {
     FuriSemaphore* semaphore = ctx;
     if((input->type == InputTypeShort) && (input->key == InputKeyBack)) {
         furi_semaphore_release(semaphore);
     }
 }
 
-void l401_sign_render_callback(Canvas* canvas, void* status) {
+static void l401_sign_render_callback(Canvas* canvas, void* status) {
     l401_err* err = (l401_err*)status;
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, 128 / 2, 10, AlignLeft, AlignTop, "ERROR!");

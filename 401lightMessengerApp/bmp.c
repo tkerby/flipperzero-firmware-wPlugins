@@ -11,7 +11,7 @@
 #include <inttypes.h>
 static const char* TAG = "BITMAP";
 
-void bmp_debug(BMPFileHeader* fileHeader, BMPInfoHeader* infoHeader) {
+/*static void bmp_debug(BMPFileHeader* fileHeader, BMPInfoHeader* infoHeader) {
     FURI_LOG_I(TAG, "fileHeader:");
     FURI_LOG_I(TAG, ".....Tag: %04x", fileHeader->bfType);
     FURI_LOG_I(TAG, ".....Size: %ld", fileHeader->bfSize);
@@ -20,7 +20,7 @@ void bmp_debug(BMPFileHeader* fileHeader, BMPInfoHeader* infoHeader) {
     FURI_LOG_I(TAG, ".....Width: %ld", infoHeader->biWidth);
     FURI_LOG_I(TAG, ".....Height: %ld", infoHeader->biHeight);
     FURI_LOG_I(TAG, ".....Image size: %ld", infoHeader->biSizeImage);
-}
+}*/
 
 /**
  * Frees the memory occupied by the given bit array.
@@ -89,14 +89,12 @@ uint32_t swap_uint32(uint32_t val) {
 * @return 0 on success, non-zero on error.
 */
 int bmp_load(const char* path, BMPImage* bitmap) {
-    FURI_LOG_E(TAG, "ENTERING FUNCTION bmp_load");
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* bitmapFile = storage_file_alloc(storage);
     int err = BMP_OK;
     if(!storage_file_open(bitmapFile, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         err = BMP_ERR_INTERNAL;
         FURI_LOG_E(TAG, "could not open %s", path);
-
         goto fail;
     }
 
@@ -117,7 +115,7 @@ int bmp_load(const char* path, BMPImage* bitmap) {
         FURI_LOG_E(TAG, "bmp_read_info_header error");
         goto fail;
     }
-    bmp_debug(&(bitmap->file_header), &(bitmap->info_header));
+    //bmp_debug(&(bitmap->file_header), &(bitmap->info_header));
 
     if(bitmap->file_header.bfSize > BMP_FILE_MAX_SIZE) {
         FURI_LOG_E(TAG, "File too large");
@@ -180,7 +178,6 @@ bitmapMatrix* bmp_to_bitmapMatrix(const char* path) {
     }
 
     int err = bmp_load(path, &image);
-    FURI_LOG_E(TAG, "bmp_load: %d", err);
     if(err != BMP_OK) {
         bitmapMatrix_free(bitMatrix);
         return NULL;
@@ -226,7 +223,6 @@ bitmapMatrix* bmp_to_bitmapMatrix(const char* path) {
 * @return int 0 if both headers are successfully loaded, 1 otherwise.
 */
 int bmp_load_header(const char* path, BMPImage* bitmap) {
-    FURI_LOG_E(TAG, "ENTERING FUNCTION bmp_load_header");
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* bitmapFile = storage_file_alloc(storage);
     int err = BMP_OK;
@@ -253,10 +249,9 @@ fail:
 }
 
 int bmp_header_check_1bpp(const char* path) {
-    FURI_LOG_E(TAG, "ENTERING FUNCTION bmp_header_check_1bpp");
     BMPImage image;
     int err = bmp_load_header(path, &image);
-    bmp_debug(&image.file_header, &image.info_header);
+    //bmp_debug(&image.file_header, &image.info_header);
 
     if(err != BMP_OK) {
         return err;
@@ -281,7 +276,6 @@ int bmp_header_check_1bpp(const char* path) {
 }
 
 int bmp_write(const char* path, bitmapMatrix* bitmap) {
-    FURI_LOG_E(TAG, "ENTERING FUNCTION bmp_write");
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* bitmapFile = storage_file_alloc(storage);
     uint8_t width = bitmap->width;
@@ -331,7 +325,7 @@ int bmp_write(const char* path, bitmapMatrix* bitmap) {
         err = BMP_ERR_WRITE;
         goto fail;
     }
-    bmp_debug(&fileHeader, &infoHeader);
+    //bmp_debug(&fileHeader, &infoHeader);
     // Write the color palette (black and white)
     uint32_t palette[2] = {0x00000000, 0x00FFFFFF}; // Black (0x00RRGGBB), White (0x00RRGGBB)
     if(storage_file_write(bitmapFile, palette, sizeof(palette)) != sizeof(palette)) {

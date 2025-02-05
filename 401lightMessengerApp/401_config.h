@@ -23,7 +23,7 @@
 typedef void (*color_animation_callback)(uint16_t tick, uint32_t* result, void* ctx);
 typedef struct {
     char* version;
-    char text[LIGHTMSG_MAX_TEXT_LEN + 2];
+    char text[LIGHTMSG_MAX_TEXT_LEN + 1];
     char bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN + 1];
     uint8_t color;
     uint8_t brightness;
@@ -31,7 +31,6 @@ typedef struct {
     color_animation_callback cb;
 } Configuration;
 
-void debug_config(Configuration* config);
 l401_err config_alloc(Configuration** config);
 void config_default_init(Configuration* config);
 l401_err config_to_json(Configuration* config, char** jsontxt);

@@ -79,23 +79,13 @@ extern color_animation_callback lightmsg_color_value[];
 
 void LightMsg_color_cb_flat(uint16_t tick, uint32_t* result, void* ctx);
 void LightMsg_color_cb_nyancat(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_rainbow(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_sparkle(uint16_t tick, uint32_t* result, void* ctx);
 void LightMsg_color_cb_vaporwave(uint16_t tick, uint32_t* result, void* ctx);
-
-// Animation values (callbacks)
-
-void set_color_animation(void* ctx, uint8_t animation);
-void update_led(void* ctx);
-void on_change_orientation(VariableItem* item);
-void on_change_brightness(VariableItem* item);
-void on_change_color(VariableItem* item);
+void LightMsg_color_cb_sparkle(uint16_t tick, uint32_t* result, void* ctx);
+void LightMsg_color_cb_rainbow(uint16_t tick, uint32_t* result, void* ctx);
 
 AppConfig* app_config_alloc();
 void app_config_free(AppConfig* appConfig);
 View* app_config_get_view(AppConfig* appConfig);
-void app_config_render_callback(Canvas* canvas, void* ctx);
-bool app_config_input_callback(InputEvent* input_event, void* ctx);
 void app_scene_config_on_enter(void* ctx);
 bool app_scene_config_on_event(void* ctx, SceneManagerEvent event);
 void app_scene_config_on_exit(void* ctx);

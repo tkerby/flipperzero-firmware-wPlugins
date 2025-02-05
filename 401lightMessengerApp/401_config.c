@@ -9,18 +9,6 @@
 
 static const char* TAG = "401_Configuration";
 
-// Predefined configurations
-void debug_config(Configuration* config) {
-    FURI_LOG_I(TAG, "Configuration:");
-    FURI_LOG_I(TAG, "  Version: %s", config->version ? config->version : "NULL");
-    FURI_LOG_I(TAG, "  Text: %s", config->text ? config->text : "NULL");
-    FURI_LOG_I(TAG, "  bitmapPath: %s", config->bitmapPath ? config->bitmapPath : "NULL");
-    FURI_LOG_I(TAG, "  Color: %u", config->color);
-    FURI_LOG_I(TAG, "  Brightness: %u", config->brightness);
-    FURI_LOG_I(TAG, "  Orientation: %s", config->orientation ? "true" : "false");
-    FURI_LOG_I(TAG, "  Callback Address: %p", (void*)config->cb);
-}
-
 l401_err config_alloc(Configuration** config) {
     if(*config != NULL) {
         free(*config);
@@ -83,7 +71,6 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
         return L401_ERR_INTERNAL;
     }
 
-    FURI_LOG_I(TAG, "[config_to_json] cJSON add");
     // Add items to the cJSON object
     cJSON_AddStringToObject(json, "version", config->version);
     cJSON_AddStringToObject(json, "text", config->text);
@@ -93,7 +80,6 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
     cJSON_AddNumberToObject(
         json, "brightness", LightMsg_BrightnessBlinding); // (double)config->brightness);
     cJSON_AddBoolToObject(json, "orientation", config->orientation);
-    FURI_LOG_I(TAG, "[config_to_json] cJSON_Print");
 
     // Convert cJSON object to string
     char* string = cJSON_PrintUnformatted(json);
@@ -104,7 +90,6 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
 
     // Assign the string to the output
     *jsontxt = string;
-    FURI_LOG_I(TAG, "[config_to_json] cJSON_Delete");
     // Clean up
     cJSON_Delete(json);
 
@@ -135,13 +120,13 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     }
 
     cJSON* json = cJSON_Parse(jsontxt);
-    /*if(json == NULL) {
+    if(json == NULL) {
         const char* error_ptr = cJSON_GetErrorPtr();
         if(error_ptr != NULL) {
             FURI_LOG_E(TAG, "cJSON Parse error: Error before: %s\n", error_ptr);
         }
         return L401_ERR_PARSE;
-    }*/
+    }
 
     cJSON* json_version = cJSON_GetObjectItemCaseSensitive(json, "version");
     cJSON* json_text = cJSON_GetObjectItemCaseSensitive(json, "text");
@@ -158,15 +143,13 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
         return L401_ERR_MALFORMED;
     }
 
-    // Free existing memory if any
     free(config->version);
-    //  free(config->text);
 
     config->version = strdup(json_version->valuestring);
     strncpy(config->text, json_text->valuestring, LIGHTMSG_MAX_TEXT_LEN);
-    config->text[LIGHTMSG_MAX_TEXT_LEN + 1] = '\0';
+    config->text[LIGHTMSG_MAX_TEXT_LEN ] = '\0';
     strncpy(config->bitmapPath, json_bitmapPath->valuestring, LIGHTMSG_MAX_BITMAPPATH_LEN);
-    config->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN + 1] = '\0';
+    config->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN ] = '\0';
     // config->text = strdup(json_text->valuestring);
     config->color = (uint8_t)json_color->valuedouble;
     config->brightness = (uint8_t)json_brightness->valuedouble;
@@ -181,22 +164,15 @@ l401_err config_save_json(const char* filename, Configuration* config) {
     char* jsontxt = NULL;
     size_t bytes = 0;
     size_t jsontxt_len = 0;
-    FURI_LOG_I(TAG, "[config_save_json] config_to_json");
-
     l401_err res = config_to_json(config, &jsontxt);
     if(res != L401_OK) {
         FURI_LOG_E(TAG, "Error while converting conf to json: %d", (uint8_t)res);
         return res;
     }
-    FURI_LOG_I(TAG, "Json: \n%s", jsontxt);
 
     jsontxt_len = strlen(jsontxt);
-    FURI_LOG_I(TAG, "[config_save_json] furi_record_open");
     Storage* storage = furi_record_open(RECORD_STORAGE);
-    FURI_LOG_I(TAG, "[config_save_json] storage_file_alloc");
-
     File* configuration_file = storage_file_alloc(storage);
-    FURI_LOG_I(TAG, "[config_save_json] storage_file_open");
     if(!storage_file_open(configuration_file, filename, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         FURI_LOG_E(
             TAG,
@@ -221,7 +197,6 @@ l401_err config_save_json(const char* filename, Configuration* config) {
     }
 
 cleanup:
-    FURI_LOG_I(TAG, "[config_save_json] Cleanup");
     storage_file_close(configuration_file);
     storage_file_free(configuration_file);
     free(jsontxt);
@@ -242,7 +217,6 @@ l401_err config_read_json(const char* filename, Configuration* config) {
         jsontxt = (char*)malloc(configuration_file_size + 1);
         bytes = storage_file_read(configuration_file, jsontxt, configuration_file_size);
         jsontxt[bytes] = '\0';
-        FURI_LOG_I(TAG, "File content: %s %d/%d", jsontxt, bytes, configuration_file_size);
     }
 
     l401_err res = json_to_config(jsontxt, config);
@@ -260,8 +234,6 @@ l401_err config_init_dir(const char* filename) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FuriString* configuration_dirname = furi_string_alloc();
     path_extract_dirname(filename, configuration_dirname);
-    FURI_LOG_I(TAG, "File name: %s", filename);
-    FURI_LOG_I(TAG, "Dirname: %s", furi_string_get_cstr(configuration_dirname));
     if(storage_common_stat(storage, furi_string_get_cstr(configuration_dirname), NULL) ==
        FSE_NOT_EXIST) {
         FURI_LOG_I(TAG, "Directory doesn't exist. Will create new.");
@@ -280,8 +252,6 @@ l401_err config_init_dir(const char* filename) {
 l401_err config_load_json(const char* filename, Configuration* config) {
     furi_assert(filename);
     furi_assert(config);
-    FURI_LOG_I(TAG, "Before loading:");
-
     l401_err res = config_init_dir(filename);
     if(res != L401_OK) {
         FURI_LOG_E(TAG, "Error while loading from %s: %d", filename, res);
@@ -304,6 +274,5 @@ l401_err config_load_json(const char* filename, Configuration* config) {
     if(res != L401_OK) {
         FURI_LOG_E(TAG, "Could not get configuration from %s: %d", filename, res);
     }
-    FURI_LOG_I(TAG, "After loading:");
     return res;
 }
