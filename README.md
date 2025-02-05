@@ -12,7 +12,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
        <li>Hours: 1, 2, 4, 8, 12</li>
      </ul>
     </td>
-    <td style="border:0px" width="20%"><img src="./screenshots/v0/s_10min_x1.png" width="100%"></td>
+    <td style="border:0px" width="20%"><img src="./screenshots/v2.0/10s_x1_tx250_norm.png" width="100%"></td>
   </tr>
  <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
@@ -21,16 +21,26 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
   <li>x2, x3, x4, x5, x6</li>
   </ul>
   </td>
-  <td style="border:0px" width="20%"><img src="./screenshots/v0/pl_1min_x3.png" width="100%"></td>
- </tr>
-  <tr style="border:0px">
+  <td style="border:0px" width="20%"><img src="./screenshots/v2.0/20min_x3_tx250_immed.png" width="100%"></td>
+<tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
-   Delay between playlist transmissions:<br>
+    Transmission Modes:<br>
+  <ul>
+  <li>Normal: Transmit after intervals.</li>
+  <li>Immediate: Counts start as interval.</li>
+  <li>One-Shot: Wait interval and transmits once.</li>
+  </ul>
+  </td>
+  <td style="border:0px" width="20%"><img src="./screenshots/v2.0/x3_tx250_oneshot.png" width="100%"></td>
+ </tr>
+<tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Inter-transmission delay:<br>
    <ul>
-    <li>100ms - currently hardcoded</li>
+    <li>100ms, 250ms, 500ms, 1 sec</li>
    </ul>
   </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v0/1_s_run_30sec_x3.png" width="100%"></td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v2.0/a_run_view.png" width="100%"></td>
   </tr>
 </table>
 
