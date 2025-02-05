@@ -45,6 +45,7 @@ static bool load_protocol_from_file(SchedulerApp* app) {
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, NULL, &I_sub1_10px);
     browser_options.base_path = SUBGHZ_APP_FOLDER;
+    furi_string_set(app->file_path, SUBGHZ_APP_FOLDER);
 
     // Input events and views are managed by file_select
     bool res =
