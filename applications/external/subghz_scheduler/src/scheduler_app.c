@@ -32,7 +32,6 @@ SchedulerApp* scheduler_app_alloc(void) {
     expansion_disable(app->expansion);
 
     app->file_path = furi_string_alloc();
-    furi_string_set(app->file_path, SUBGHZ_APP_FOLDER);
 
     app->gui = furi_record_open(RECORD_GUI);
     app->dialogs = furi_record_open(RECORD_DIALOGS);

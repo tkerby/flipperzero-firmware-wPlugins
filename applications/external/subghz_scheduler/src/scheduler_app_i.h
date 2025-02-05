@@ -31,6 +31,8 @@ struct SchedulerApp {
     FuriThread* thread;
     Scheduler* scheduler;
     FuriString* file_path;
+
+    volatile bool is_transmitting;
 };
 
 typedef enum {
