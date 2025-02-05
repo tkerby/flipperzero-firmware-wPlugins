@@ -133,7 +133,8 @@ void show_ravkav_contract_info(RavKavCardContract* contract, FuriString* parsed_
 
 void show_ravkav_environment_info(RavKavCardEnv* environment, FuriString* parsed_data);
 
-/*******************/
+extern const Icon I_RFIDDolphinReceive_97x61;
+extern const Icon I_icon;
 
 extern const Icon I_Suica_AsakusaA;
 extern const Icon I_Suica_BigStar;
@@ -203,11 +204,10 @@ extern const Icon I_Suica_VendingFlap3;
 extern const Icon I_Suica_VendingFlapHollow;
 extern const Icon I_Suica_VendingMachine;
 extern const Icon I_Suica_VendingPage2Full;
+extern const Icon I_Suica_VendingThankYou;
 extern const Icon I_Suica_YenKanji;
 extern const Icon I_Suica_YenSign;
 extern const Icon I_Suica_YurakuchoY;
-extern const Icon I_RFIDDolphinReceive_97x61;
-extern const Icon I_icon;
 
 void render_section_header(
     FuriString* str,
