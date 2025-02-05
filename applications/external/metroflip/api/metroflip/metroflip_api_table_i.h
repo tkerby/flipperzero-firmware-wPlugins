@@ -144,4 +144,6 @@ static constexpr auto metroflip_api_table = sort(create_array_t<sym_entry>(
     API_VARIABLE(I_Suica_VendingPage2Full, Icon),
     API_VARIABLE(I_Suica_YenKanji, Icon),
     API_VARIABLE(I_Suica_YenSign, Icon),
-    API_VARIABLE(I_Suica_YurakuchoY, Icon)));
+    API_VARIABLE(I_Suica_YurakuchoY, Icon),
+    API_METHOD(render_section_header, void, (FuriString*, const char*, uint8_t, uint8_t)),
+    API_METHOD(mosgortrans_parse_transport_block, bool, (const MfClassicBlock*, FuriString*))));

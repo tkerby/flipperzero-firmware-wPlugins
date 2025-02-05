@@ -208,6 +208,15 @@ extern const Icon I_Suica_YenSign;
 extern const Icon I_Suica_YurakuchoY;
 extern const Icon I_RFIDDolphinReceive_97x61;
 extern const Icon I_icon;
+
+void render_section_header(
+    FuriString* str,
+    const char* name,
+    uint8_t prefix_separator_cnt,
+    uint8_t suffix_separator_cnt);
+bool mosgortrans_parse_transport_block(const MfClassicBlock* block, FuriString* result);
+
+/*******************/
 #ifdef __cplusplus
 }
 #endif

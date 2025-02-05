@@ -4,7 +4,7 @@
 #include <nfc/protocols/mf_classic/mf_classic_poller_sync.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 #include <nfc/protocols/mf_classic/mf_classic_poller.h>
-#include "../../api/mosgortrans/mosgortrans_util.h"
+#include "../../api/metroflip/metroflip_api.h"
 
 #include <dolphin/dolphin.h>
 #include <bit_lib.h>
@@ -285,7 +285,7 @@ static bool troika_on_event(Metroflip* app, SceneManagerEvent event) {
 static void troika_on_exit(Metroflip* app) {
     widget_reset(app->widget);
 
-    if(app->poller) {
+    if(app->poller && !app->data_loaded) {
         nfc_poller_stop(app->poller);
         nfc_poller_free(app->poller);
     }

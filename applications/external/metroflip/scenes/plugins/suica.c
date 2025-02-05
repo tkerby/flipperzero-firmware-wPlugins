@@ -1452,7 +1452,7 @@ static void suica_on_exit(Metroflip* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MetroflipViewCanvas);
     free(app->suica_context);
     metroflip_app_blink_stop(app);
-    if(app->poller) {
+    if(app->poller && !app->data_loaded) {
         nfc_poller_stop(app->poller);
         nfc_poller_free(app->poller);
     }
