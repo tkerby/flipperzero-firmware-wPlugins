@@ -4,7 +4,7 @@
 
 This module offers convenient functionality for those who want to customize their Flipper Zero with a POV light display. Its integration with the Flipper Zero is straightforward, and it is designed for easy use, providing an additional option for users looking to extend the capabilities of their device.
 
-![lm02](./README.assets/device.png)
+![lm02](./READMEassets/device.png)
 
 ## How it works?
 
@@ -15,9 +15,9 @@ This modules embeds an i2c **accelerometer**(LIS2XX12), and an array of **16 RGB
 Plug the device on the GPIO header of the flipper zero, then download an install the latest firmware's version on your flipper zero. 
 Once everything is installed, navigate to **/Apps/GPIO/401LightMessenger** to launch the application.
 
-![lm02](./README.assets/lm01.png)
+![lm02](./READMEassets/lm01.png)
 
-![lm02](./README.assets/lm02.png)
+![lm02](./READMEassets/lm02.png)
 
 Press any key to enter the main menu. From here, you can set and display text, draw images, and configure the module.
 
@@ -27,7 +27,7 @@ Press any key to enter the main menu. From here, you can set and display text, d
 
 Entering the "**Text**" application, you're prompted with a text-input, allowing you to set your own custom text.
 
-![text](./README.assets/doc_text.png)
+![text](./READMEassets/doc_text.png)
 
 Select "save" to save your text. The module should flash once, and the text "Swipe" appears on the screen. 
 
@@ -35,7 +35,7 @@ Select "save" to save your text. The module should flash once, and the text "Swi
 
 Entering the "**Bitmap**" application, you're invited to select a bitmap file to be displayed. 
 
-![lm_bmp02](./README.assets/doc_bitmap.png)
+![lm_bmp02](./READMEassets/doc_bitmap.png)
 
 
 
@@ -47,22 +47,22 @@ Only 1bpp bitmaps, with a hight of 16px can be displayed. Once selected, the tex
 
 Entering "**BitmapEditor**", you have two options: Create a new doodle, or edit one you've already created/imported. 
 
-![lm_bmp02](./README.assets/doc_bitmap_edit.png)
+![lm_bmp02](./READMEassets/doc_bitmap_edit.png)
 
 #### New bitmap
 
 When selecting "New", you shall enter the width of the doodle you want to draw. 
 
-![lm_bmp02](./README.assets/lm_bmpedit03.png)
+![lm_bmp02](./READMEassets/lm_bmpedit03.png)
 
 Choose the desired width by using left and right arrows, then press OK.
 You'll then have to choose a name for the new file. 
 
-![lm_bmp02](./README.assets/lm_bmpedit04.png)
+![lm_bmp02](./READMEassets/lm_bmpedit04.png)
 
 When done, select "**save**". To draw, just move the cursor using the arrows, and toggle pixels by pressing the "**Ok**" button. To save, press "**Return**"
 
-![lm_bmp02](./README.assets/lm_bmpedit05.png)
+![lm_bmp02](./READMEassets/lm_bmpedit05.png)
 
 #### Edit bitmap
 
@@ -71,14 +71,14 @@ The bitmap editor allows you to modify any bitmap files that meet the app's requ
 ### FlashLight
 
 With this amount of ultra-bright leds, it would have been sad to not propose a nice flashlight mode. You can access it by selecting the "**FlashLight**" mode.
- ![lm_bmp02](./README.assets/doc_flashlight.png)
+ ![lm_bmp02](./READMEassets/doc_flashlight.png)
 
 ### Configuration
 
 You can customize some aspects of the LightMessenger by entering "**Configuration**".
 
 
-![lm_bmp02](./README.assets/lm_config01.png)
+![lm_bmp02](./READMEassets/lm_config01.png)
 
 #### Orientation
 
@@ -93,14 +93,14 @@ Multiple color shaders are available:
 
 ## Swipe
 
-![lm_bmp02](./README.assets/lm_swipe.png)
+![lm_bmp02](./READMEassets/lm_swipe.png)
 
 When "**Swipe!**" shows up, things get serious. It's time to grab **firmly** your flipper zero, and wave it in the air. **Be aware of people/stuff around you!**
 The display is based on [PoV](https://en.wikipedia.org/wiki/Persistence_of_vision), so it's effect shows best in a dark/mood lighting condition. It may take a bit to really master the correct swipe motion.
 
 You can also photobomb if you build up enought skill. 
 
-![lm02](./README.assets/doc01.png)
+![lm02](./READMEassets/doc01.png)
 
 
 ## Contributing

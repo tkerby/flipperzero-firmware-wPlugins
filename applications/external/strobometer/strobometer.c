@@ -63,10 +63,10 @@ static void strobometer_app_draw_callback(Canvas* canvas, void* ctx) {
 
     // Draw Output Pin Info
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 10+6, 7, "A4");
+    canvas_draw_str(canvas, 10 + 6, 7, "A4");
     canvas_draw_icon(canvas, 10, 0, &I_SmallArrowUp_3x5);
 
-    canvas_draw_str(canvas, 49+6, 7, "GND");
+    canvas_draw_str(canvas, 49 + 6, 7, "GND");
     canvas_draw_icon(canvas, 49, 0, &I_SmallArrowUp_3x5);
 
     // Draw RPM Input View
