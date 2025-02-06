@@ -1,6 +1,6 @@
 # DEADZONE - Flipper Zero Game
 
-### Fight through tough challenges, dodge enemy fire, and jump over falling obstacles to survive and beat the final level in this action-packed platformer!
+### Fight through tough challenges, dodge enemy fire, and avoid the falling obstacles to survive in this action-packed platformer!
 
 ![image](screenshots/game_screenshot.png)
 
