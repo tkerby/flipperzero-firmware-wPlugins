@@ -36,6 +36,8 @@ typedef struct {
     uint8_t style; // 0 = regular, 1 = skinny
     IconAnimation* icon;
     NotificationApp* notification;
+    uint32_t smoke_end; // Tracks when to stop smoke
+    bool cough_used; // NEW - tracks if cough was used
 } Cigarette;
 
 static Cigarette cigarette = {.counter = 0, .maxdrags = 13, .lit = false, .done = false};
@@ -58,6 +60,27 @@ static const NotificationSequence sequence_light_up = {
     &message_delay_100,
     &message_vibro_off,
     &message_red_0,
+    NULL,
+};
+static const NotificationSequence sequence_cough = {
+    &message_red_255,
+    &message_vibro_on,
+    &message_delay_100,
+    &message_vibro_off,
+    &message_red_0,
+    &message_delay_50,
+    &message_delay_50,
+    &message_delay_50,
+    &message_delay_50,
+    &message_vibro_on,
+    &message_delay_50,
+    &message_vibro_off,
+    &message_delay_50,
+    &message_delay_50,
+    &message_red_255,
+    &message_delay_25,
+    &message_red_0,
+
     NULL,
 };
 
@@ -100,8 +123,10 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
         return;
     }    
 
-
-    if (cigarette.lit == true && cigarette.done == false) {
+    // Draw smoke only when smoke_end is active
+    if (cigarette.smoke_end) {
+        canvas_draw_icon_animation(canvas, smoke_position.x, smoke_position.y, cigarette.icon);
+    } else if (cigarette.lit && !cigarette.done) {
         elements_button_right(canvas, "puff");
         canvas_draw_icon_animation(canvas, smoke_position.x, smoke_position.y, cigarette.icon);
     }
@@ -165,7 +190,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             cigarette.done = true;
             break;
         default:
-            current_icon = &I_cigarette0_115x25;
+            current_icon = (cigarette.style == 0) ? &I_cigarette13_115x25 : &I_skinny13_112x20;
             break;
     }
     canvas_draw_icon(canvas, image_position.x, image_position.y, current_icon);
@@ -209,6 +234,12 @@ int32_t cigarette_main(void* p) {
 
     bool running = true;
     while(running) {
+        // Check if smoke needs to stop
+        if(cigarette.smoke_end && furi_get_tick() >= cigarette.smoke_end) {
+            icon_animation_stop(cigarette.icon);
+            cigarette.smoke_end = 0;
+        }
+        
         if(furi_message_queue_get(event_queue, &event, 100) == FuriStatusOk) {
             if((event.type == InputTypePress) || (event.type == InputTypeRepeat)) {
                 switch(event.key) {
@@ -217,24 +248,47 @@ int32_t cigarette_main(void* p) {
                         // Cycle through styles
                         cigarette.style = (cigarette.style - 1 + 2) % 2;
                     } else if(cigarette.done) {
+                        // Reset positions when getting new cig
                         stats_view.total_smokes++;
                         cigarette.counter = 0;
                         cigarette.lit = false;
                         cigarette.done = false;
-                        smoke_position.x = 0;
-                        image_position.x = 12;
+                        cigarette.cough_used = false; // RESET FLAG
+                        smoke_position.x = 0;  // Reset smoke position
+                        image_position.x = 12; // Reset cig position
                         icon_animation_stop(cigarette.icon);
                     }
                     break;
                 case InputKeyRight:
                     if(!stats_view.visible && !cigarette.lit && !cigarette.done) {
-                        // Cycle through styles
                         cigarette.style = (cigarette.style + 1) % 2;
-                    } else if (cigarette.lit && !cigarette.done) {
-                        cigarette.counter++;
-                        notification_message(cigarette.notification, &sequence_puff);
-                        smoke_position.x += 5;
-                        image_position.x += 5;
+                    } else if (cigarette.lit) {
+                        if(!cigarette.done) {
+                            cigarette.counter++;
+                            if(cigarette.counter > cigarette.maxdrags) {
+                                // Secret cough with 1s smoke
+                                icon_animation_start(cigarette.icon);
+                                cigarette.smoke_end = furi_get_tick() + 1000;
+                                notification_message(cigarette.notification, &sequence_cough);
+                                cigarette.counter = cigarette.maxdrags;
+                            } else {
+                                if(cigarette.counter == cigarette.maxdrags) {
+                                    cigarette.done = true;
+                                }
+                                notification_message(cigarette.notification, &sequence_puff);
+                                smoke_position.x += 5;
+                                image_position.x += 5;
+                            }
+                        } else {
+                            if(!cigarette.cough_used) { // CHECK FLAG
+                                // Cough puff with reset smoke position
+                                smoke_position.x = image_position.x -3; // Start from cig tip
+                                icon_animation_start(cigarette.icon);
+                                cigarette.smoke_end = furi_get_tick() + 1000;
+                                notification_message(cigarette.notification, &sequence_cough);
+                                cigarette.cough_used = true; // SET FLAG
+                            }
+                        }
                     }
                     break;
                 case InputKeyUp:
