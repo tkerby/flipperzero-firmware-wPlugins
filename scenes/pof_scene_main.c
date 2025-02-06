@@ -25,28 +25,33 @@ void pof_scene_main_on_update(void* context) {
     Submenu* submenu = pof->submenu;
     submenu_reset(pof->submenu);
 
-    int count = 0;
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-        if(virtual_portal->tokens[i]->loaded) {
-            PoFToken* pof_token = virtual_portal->tokens[i];
-            // Unload figure
-            submenu_add_item(
-                submenu,
-                pof_token->dev_name,
-                SubmenuIndexFigure1 + i,
-                pof_scene_main_submenu_callback,
-                pof);
-            count++;
+    if(pof->pof_usb) {
+        int count = 0;
+        for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+            if(virtual_portal->tokens[i]->loaded) {
+                PoFToken* pof_token = virtual_portal->tokens[i];
+                // Unload figure
+                submenu_add_item(
+                    submenu,
+                    pof_token->dev_name,
+                    SubmenuIndexFigure1 + i,
+                    pof_scene_main_submenu_callback,
+                    pof);
+                count++;
+            }
         }
-    }
 
-    if(count < POF_TOKEN_LIMIT) {
+        if(count < POF_TOKEN_LIMIT) {
+            submenu_add_item(
+                submenu, "<Load figure>", SubmenuIndexLoad, pof_scene_main_submenu_callback, pof);
+        }
+
+        submenu_set_selected_item(
+            submenu, scene_manager_get_scene_state(pof->scene_manager, PoFSceneMain));
+    } else {
         submenu_add_item(
-            submenu, "<Load figure>", SubmenuIndexLoad, pof_scene_main_submenu_callback, pof);
+            submenu, "Failed to start", SubmenuIndexLoad, pof_scene_main_submenu_callback, pof);
     }
-
-    submenu_set_selected_item(
-        submenu, scene_manager_get_scene_state(pof->scene_manager, PoFSceneMain));
     view_dispatcher_switch_to_view(pof->view_dispatcher, PoFViewSubmenu);
 }
 
@@ -61,10 +66,14 @@ bool pof_scene_main_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SubmenuIndexLoad) {
-            // Explicitly save state so that the correct item is
-            // reselected if the user cancels loading a file.
-            scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, SubmenuIndexLoad);
-            scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
+            if(pof->pof_usb) {
+                // Explicitly save state so that the correct item is
+                // reselected if the user cancels loading a file.
+                scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, SubmenuIndexLoad);
+                scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
+            } else {
+                // No-op
+            }
             consumed = true;
         } else {
             pof_token_clear(virtual_portal->tokens[event.event], true);
