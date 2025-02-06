@@ -700,10 +700,12 @@ void global_update(Entity* self, GameManager* manager, void* context) {
     InputState input = game_manager_input_get(manager);
     if(input.pressed & GameKeyBack) {
         if(health <= 0) {
+            game_manager_game_stop(manager);
+            /*
             //If dead, restart game
             health = STARTING_PLAYER_HEALTH;
             player_spawn(gameLevel, manager);
-            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
+            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});*/
         }
     }
 
@@ -1353,18 +1355,9 @@ static void game_start(GameManager* game_manager, void* ctx) {
     }
 }
 
-/* 
-    Write here the stop code for your game, for example: freeing memory, if it was allocated.
-    You don't need to free level, sprites or entities, it will be done automatically.
-    Also, you don't need to free game_context, it will be done automatically, after this function.
-*/
-
-//Declare method
-int32_t relaunch_game();
-
-static void game_stop(void* ctx) {
+void game_stop(void* ctx) {
     //Leave immediately if they want to quit.
-    if(game_menu_quit_selected) {
+    if(game_menu_quit_selected || health <= 0) {
         return;
     }
     // Do some deinitialization here, for example you can save score to storage.
@@ -1416,8 +1409,15 @@ static void game_stop(void* ctx) {
         furi_record_close(RECORD_GUI);
     }
 
-    //Do they want to quit? Or do we relaunch
-    if(!game_menu_quit_selected) {
+    //Do they want to quit?
+    if(game_menu_quit_selected) {
+        view_holder_set_view(view_holder, NULL);
+        // Delete everything to prevent memory leaks.
+        view_holder_free(view_holder);
+        submenu_free(submenu);
+        // End access to the GUI API.
+        furi_record_close(RECORD_GUI);
+    } else { //Or relaunch
         //Clear previous menu
         view_holder_set_view(view_holder, NULL);
         // Delete everything to prevent memory leaks.
@@ -1425,13 +1425,6 @@ static void game_stop(void* ctx) {
         submenu_free(submenu);
         furi_record_close(RECORD_GUI);
         relaunch_game();
-    } else {
-        view_holder_set_view(view_holder, NULL);
-        // Delete everything to prevent memory leaks.
-        view_holder_free(view_holder);
-        submenu_free(submenu);
-        // End access to the GUI API.
-        furi_record_close(RECORD_GUI);
     }
 }
 /*

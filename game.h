@@ -4,6 +4,7 @@
 #include <engine/game_manager_i.h>
 #include <genann.h>
 #include <storage/storage.h>
+
 #include "game_menu.h"
 #include "game_level.h"
 #include "tutorial_level.h"
@@ -117,6 +118,7 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
 void enemy_update(Entity* self, GameManager* manager, void* context);
 void hideBackgroundAssets();
 void computeBackgroundAssets();
+int32_t relaunch_game();
 
 typedef struct {
     Sprite* sprite;

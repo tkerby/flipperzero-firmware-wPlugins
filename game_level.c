@@ -81,7 +81,7 @@ void postDoorEntryTask4() {
 void postDoorEntryTask3() {
     playerLevel++;
 
-    _enemy_spawn(gameLevel, globalGameManager, (Vector){120, 30}, 500, false, 4 * ENEMY_LIVES);
+    _enemy_spawn(gameLevel, globalGameManager, (Vector){120, 30}, 500, false, 2 * ENEMY_LIVES);
     //Increase enemy shooting delay
     enemyShootingDelay = 2200;
 
