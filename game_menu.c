@@ -43,6 +43,7 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_quit_selected = false;
         game_menu_game_selected = true;
         //TODO value for play game.
+        showBackground = true;
         notification_message(notifications, &sequence_success);
         api_lock_unlock(game_menu_exit_lock);
     } else if(index == 1) {
@@ -50,6 +51,7 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_quit_selected = false;
         game_menu_game_selected = false;
         game_menu_tutorial_selected = true;
+        showBackground = false;
         notification_message(notifications, &sequence_success);
         api_lock_unlock(game_menu_exit_lock);
     } else if(index == 2) {
@@ -88,6 +90,7 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_tutorial_selected = false;
         game_menu_quit_selected = false;
         game_menu_game_selected = true;
+        showBackground = true;
         //TODO value for play game.
         notification_message(notifications, &sequence_success);
         api_lock_unlock(game_menu_exit_lock);
@@ -99,6 +102,7 @@ void game_menu_button_callback(void* game_manager, uint32_t index) {
         game_menu_quit_selected = false;
         game_menu_game_selected = false;
         game_menu_tutorial_selected = true;
+        showBackground = false;
         notification_message(notifications, &sequence_success);
         api_lock_unlock(game_menu_exit_lock);
     }

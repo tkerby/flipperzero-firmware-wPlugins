@@ -712,12 +712,16 @@ void global_update(Entity* self, GameManager* manager, void* context) {
     InputState input = game_manager_input_get(manager);
     if(input.pressed & GameKeyBack) {
         if(health <= 0) {
-            game_manager_game_stop(manager);
-            /*
-            //If dead, restart game
-            health = STARTING_PLAYER_HEALTH;
-            player_spawn(gameLevel, manager);
-            entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});*/
+            if(game_menu_tutorial_selected) {
+                //If dead, restart game during tutorial
+                hideBackgroundAssets();
+                health = STARTING_PLAYER_HEALTH;
+                player_spawn(gameLevel, manager);
+                entity_pos_set(globalPlayer, (Vector){WORLD_BORDER_LEFT_X, WORLD_BORDER_BOTTOM_Y});
+            } else {
+                //End game
+                game_manager_game_stop(manager);
+            }
         }
     }
 
@@ -1113,9 +1117,11 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 
     // Draw score
     //canvas_printf(canvas, 60, 7, "Enemy Lives: %d", enemies[0].lives);
-    canvas_printf(canvas, pos.x + 1, pos.y - 10, "%d", health);
-
-    //canvas_printf(canvas, 80, 7, "Health: %d", health);
+    if(game_menu_tutorial_selected) {
+        canvas_printf(canvas, 80, 7, "Health: %d", health);
+    } else {
+        canvas_printf(canvas, pos.x + 1, pos.y - 10, "%d", health);
+    }
 
     if(kills > 0) {
         //canvas_printf(canvas, 10, 7, "Kills: %d", kills);
@@ -1448,6 +1454,7 @@ static const EntityDescription target_enemy_desc = {
 
 static void tutorial_level_alloc(Level* level, GameManager* manager) {
     if(!game_menu_tutorial_selected) return;
+    showBackground = false;
     //Add enemy to level
     if(firstKillTick == 0) enemy_spawn(level, manager, (Vector){110, 49}, 3000, false);
 }
@@ -1456,6 +1463,7 @@ static void tutorial_level_alloc(Level* level, GameManager* manager) {
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
     if(game_menu_quit_selected) return;
+    showBackground = true;
     UNUSED(manager);
     UNUSED(context);
     level_add_entity(level, &global_desc);
