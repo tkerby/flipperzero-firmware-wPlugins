@@ -28,8 +28,8 @@
 #define STARTING_PLAYER_HEALTH 11
 #define STARTING_ENEMY_HEALTH  5
 
-#define BACKGROUND_ASSET_ROWS  3
-#define BACKGROUND_ASSET_COUNT 6 //Must be divisible by BACKGROUND_ASSET_ROWS
+#define BACKGROUND_ASSET_ROWS  1
+#define BACKGROUND_ASSET_COUNT 1 //Must be divisible by BACKGROUND_ASSET_ROWS
 
 #ifdef __cplusplus
 extern "C" {
@@ -119,6 +119,15 @@ void enemy_update(Entity* self, GameManager* manager, void* context);
 void hideBackgroundAssets();
 void computeBackgroundAssets();
 int32_t relaunch_game();
+
+void canvas_printf_blinking(
+    Canvas* canvas,
+    uint32_t x,
+    uint32_t y,
+    uint32_t shownTicks,
+    uint32_t hiddenTicks,
+    const char* format,
+    uint32_t* dataHolder);
 
 typedef struct {
     Sprite* sprite;

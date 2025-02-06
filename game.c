@@ -100,6 +100,14 @@ uint32_t lastBehaviorTick;
 
 enum EnemyAction lastAction = EnemyActionStand;
 
+struct BackgroundAsset {
+    uint32_t posX;
+    uint32_t posY;
+    int type;
+};
+
+struct BackgroundAsset backgroundAssets[BACKGROUND_ASSET_COUNT];
+
 float lerp(float y1, float y2, float t) {
     return y1 + t * (y2 - y1);
 }
@@ -144,7 +152,12 @@ void featureCalculation(Entity* enemy, double* features) {
 
     float distToBullet = fabs(enemyPos.x - closestBullet.x);
     UNUSED(distToBullet);
-    float distToPlayer = fabs(entity_pos_get(globalPlayer).x - enemyPos.x);
+    float distToPlayer;
+    if(health > 0) {
+        distToPlayer = fabs(entity_pos_get(globalPlayer).x - enemyPos.x);
+    } else {
+        distToPlayer = fabs((float)backgroundAssets[0].posX - enemyPos.x);
+    }
     /*return (Vector){
         distToBullet < 25 && closestBullet.x != -1 ? 0.5 : -0.5,
         distToPlayer > 90 ? 0.5 :
@@ -454,6 +467,9 @@ bool damage_player(Entity* self) {
     const NotificationSequence* damageSound = &sequence_single_vibro;
 
     if(--health == 0) {
+        backgroundAssets[0] =
+            (struct BackgroundAsset){entity_pos_get(self).x, WORLD_BORDER_BOTTOM_Y - 6, 1};
+
         //Ran out of lives
         level_remove_entity(gameLevel, self);
 
@@ -772,14 +788,6 @@ void global_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
-struct BackgroundAsset {
-    uint32_t posX;
-    uint32_t posY;
-    int type;
-};
-
-struct BackgroundAsset backgroundAssets[BACKGROUND_ASSET_COUNT];
-
 void hideBackgroundAssets() {
     for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
         backgroundAssets[i].type = -1;
@@ -804,11 +812,25 @@ void computeBackgroundAssets() {
     }
 }
 
+void canvas_printf_blinking(
+    Canvas* canvas,
+    uint32_t x,
+    uint32_t y,
+    uint32_t shownTicks,
+    uint32_t hiddenTicks,
+    const char* format,
+    uint32_t* dataHolder) {
+    if(furi_get_tick() - *dataHolder < shownTicks) {
+        canvas_printf(canvas, x, y, format);
+    } else if(furi_get_tick() - *dataHolder > (shownTicks + hiddenTicks)) {
+        *dataHolder = furi_get_tick();
+    }
+}
+
 void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(self);
     UNUSED(manager);
     UNUSED(context);
-    GameContext* game_context = game_manager_game_context_get(manager);
     //Draw background
     if(horizontalView) {
         canvas_draw_frame(canvas, 2, -4, 124, 61);
@@ -820,23 +842,20 @@ void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
         canvas_draw_line(canvas, 64 + 32, 26, 128, 57);
     }
 
-    //Draw background assets
-    for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
-        struct BackgroundAsset asset = backgroundAssets[i];
-        if(asset.type == -1) continue;
-        canvas_draw_sprite(
-            canvas,
-            asset.type == 0 ? game_context->backgroundAsset1 : game_context->backgroundAsset2,
-            asset.posX,
-            asset.posY);
-    }
-
     if(health <= 0) {
-        canvas_printf(canvas, 30, 10, "You're dead.");
+        static uint32_t lastBlink = 0;
+        canvas_printf_blinking(
+            canvas,
+            backgroundAssets[0].posX,
+            backgroundAssets[0].posY - 5,
+            1000,
+            500,
+            "R.I.P",
+            &lastBlink);
         if(canRespawn || game_menu_tutorial_selected) {
             canvas_printf(canvas, 20, 20, "Press Back to respawn.");
         } else {
-            canvas_printf(canvas, 35, 30, "Your Level: %d", playerLevel + 1);
+            canvas_printf(canvas, 30, 30, "Current Level: %d", playerLevel + 1);
             static int highestLevel;
             static bool queriedHighestLevel = false;
             if(!queriedHighestLevel) {
@@ -877,7 +896,7 @@ void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
                 furi_record_close(RECORD_STORAGE);
                 queriedHighestLevel = true;
             }
-            canvas_printf(canvas, 15, 20, "Highscore Level: %d", highestLevel + 1);
+            canvas_printf(canvas, 31, 20, "Record Level: %d", highestLevel + 1);
         }
     }
 }
@@ -947,9 +966,21 @@ void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* cont
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
 
     //This must be processed here, as the player object will be deinstantiated
-
     game_level_enemy_render(manager, canvas, context);
     game_level_player_render(manager, canvas, context);
+
+    GameContext* game_context = game_manager_game_context_get(manager);
+
+    //Draw background assets
+    for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
+        struct BackgroundAsset asset = backgroundAssets[i];
+        if(asset.type == -1) continue;
+        canvas_draw_sprite(
+            canvas,
+            asset.type == 0 ? game_context->backgroundAsset1 : game_context->backgroundAsset2,
+            asset.posX,
+            asset.posY);
+    }
 }
 
 void enemy_update(Entity* self, GameManager* manager, void* context) {
