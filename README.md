@@ -1,6 +1,6 @@
 # DeadZone - Flipper Zero Video Game
 
-### Fight through tough challenges, dodge enemy fire, and avoid the falling obstacles to survive!
+## Fight through tough challenges, dodge enemy fire, and avoid the falling obstacles to survive!
 
 ![image](screenshots/game_screenshot.png)
 
