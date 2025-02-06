@@ -1,17 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="portal_of_flipper",  # Must be unique
-    name="Portal Of Flipper",  # Displayed in menus
+    appid="portal_of_flipper",
+    name="Portal Of Flipper",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="portal_of_flipper_app",
     stack_size=5 * 1024,
+    fap_icon_assets="images",
+    fap_icon="portal_of_flipper.png",
     fap_category="USB",
-    # Optional values
-    # fap_version="0.1",
-    fap_icon="portal_of_flipper.png",  # 10x10 1-bit PNG
-    fap_description="USB emulator",
     fap_author="bettse",
     fap_weburl="https://gitlab.com/bettse/portal_of_flipper",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_version="0.1",
+    fap_description="USB emulator",
 )
