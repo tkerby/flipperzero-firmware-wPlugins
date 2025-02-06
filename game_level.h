@@ -4,11 +4,14 @@
 #include <engine/engine.h>
 #include <engine/entity.h>
 #include <engine/game_manager_i.h>
+#include <storage/storage.h>
 #include "game.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int playerLevel;
 
 struct game_obstacle {
     float x;
