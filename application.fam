@@ -1,6 +1,6 @@
 App(
     appid="deadzone",  # Unique application ID, change it to your own
-    name="DEADZONE",  # Game name, change it to your own
+    name="DeadZone",  # Game name, change it to your own
     apptype=FlipperAppType.EXTERNAL,
     entry_point="game_app",  # Do not touch this
     stack_size=4 * 1024,  # Game stack, change accordingly

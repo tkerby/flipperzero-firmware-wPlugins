@@ -291,7 +291,7 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
 
     if(started && furi_get_tick() - welcomeTicks < 3000 &&
        ((furi_get_tick() - welcomeTicks) / 1000) % 2 == 0) {
-        canvas_printf(canvas, 15, 37, "Welcome to DEADZONE!");
+        canvas_printf(canvas, 15, 37, "Welcome to DeadZone!");
     }
 
     bool renderedDoor = false;

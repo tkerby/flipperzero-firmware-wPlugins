@@ -1,4 +1,4 @@
-# DEADZONE - Flipper Zero Game
+# DeadZone - Flipper Zero Game
 
 ### Fight through tough challenges, dodge enemy fire, and jump over falling obstacles to survive and beat the final level in this action-packed platformer!
 
