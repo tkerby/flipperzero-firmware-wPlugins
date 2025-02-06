@@ -14,20 +14,20 @@ Inside the `Arduino` directory, you will find two compiled examples, FlipWorld a
 
 **Method 1**
 1. Install the Video Game Module Tool app on your Flipper Zero from the Apps catalog: [Video Game Module Tool](https://lab.flipper.net/apps/video_game_module_tool).
-2. Download the `FlipWorld-VGM-Engine.uf2` or `AirLabyrinth-VGM-Engine` file.
+2. Download the `FlipWorld-VGM-Engine.uf2`, `AirLabyrinth-VGM-Engine.uf2`, or `T-Rex-Runner-VGM-Engine.uf2` file.
 3. Disconnect your Video Game Module from your Flipper and connect your Flipper to your computer.
 4. Open qFlipper.
 5. Navigate to the `SD Card/apps_data/vgm/` directory. If the folder doesn’t exist, create it. Inside that folder, create a folder named `Engine`.
-6. Drag the `FlipWorld-VGM-Engine.uf2`/ `AirLabyrinth-VGM-Engine` file you downloaded into the `Engine` directory.
+6. Drag the file you downloaded earlier into the `Engine` directory.
 7. Disconnect your Flipper from your computer, then turn it off.
 8. Connect your Video Game Module to your Flipper, then turn your Flipper on.
 9. Open the Video Game Module Tool app on your Flipper. It should be located in the `Apps -> GPIO` folder from the main menu.
 10. In the Video Game Module Tool app, select `Install Firmware from File`, then choose `apps_data`.
-11. Scroll down and click on the `vgm` folder, then the `Engine` folder, and finally select `FlipWorld-VGM-Engine.uf2`/ `AirLabyrinth-VGM-Engine`.
+11. Scroll down and click on the `vgm` folder, then the `Engine` folder, and finally select the `.uf2` file.
 12. The app will begin flashing the firmware to your Video Game Module. Wait until the process is complete.
 
 **Method 2**
-1. Download the `FlipWorld-VGM-Engine.uf2` or `AirLabyrinth-VGM-Engine` file.
+1. Download the `FlipWorld-VGM-Engine.uf2`, `AirLabyrinth-VGM-Engine.uf2`, or `T-Rex-Runner-VGM-Engine.uf2` file.
 2. Press and hold the `BOOT` button on your Video Game Module for 2 seconds.
 3. While holding the `BOOT` button, connect the Video Game Module to your computer using a USB cable.
 4. Drag and drop the downloaded file onto the device. It will automatically reboot and begin running the example.
