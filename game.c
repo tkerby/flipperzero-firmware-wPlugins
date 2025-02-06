@@ -1053,7 +1053,7 @@ void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
             canvas_printf(canvas, 20, 20, "Press Back to respawn.");
         } else if(!showBackground) {
             canvas_printf(canvas, 28, 30, "Current Level: %d", playerLevel + 1);
-            canvas_printf(canvas, 47, 10, "Total Kills: %d", kills);
+            canvas_printf(canvas, 46, 10, "Total Kills: %d", kills);
             static int highestLevel;
             static bool queriedHighestLevel = false;
             if(!queriedHighestLevel) {
