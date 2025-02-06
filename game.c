@@ -219,27 +219,23 @@ void _enemy_spawn(
 
 #ifdef NPC_ANN_WEIGHT_UNIQUENESS
         double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
-        double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+        //double randValue2 = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
 
         if(npcAIModelIndex == -1) {
             //Start off with random model, then always change, so that two following NPCs are never the same.
-            npcAIModelIndex = (randValue > (double)0.7) ? 0 : (randValue2 > (double)0.5) ? 1 : 0;
+            npcAIModelIndex = (randValue > (double)0.7) ? 0 : 2;
         } else {
             npcAIModelIndex++;
         }
 
-        //These are the best weights
         for(int j = 0; j < enemies[i].ai->total_weights; j++) {
             if(npcAIModelIndex % 3 == 0) {
-                //Utilize the best weights one in three times per NPC (33.333%)
                 static double bestWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
                 enemies[i].ai->weight[j] = bestWeights[j];
             } else if(npcAIModelIndex % 3 == 1) {
-                //Close up NPC has 15% chance
                 static double closeUpNPCWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_CLOSEUP_NPC;
                 enemies[i].ai->weight[j] = closeUpNPCWeights[j];
             } else {
-                //Non jumping NPC has 51% chance
                 static double nonJumpingNPCWeights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_NONJUMPING_NPC;
                 enemies[i].ai->weight[j] = nonJumpingNPCWeights[j];
             }
@@ -248,14 +244,7 @@ void _enemy_spawn(
         double weights[SIZE_OF_WEIGHTS] = WEIGHTS_FOR_BEST_NPC;
 
         for(int j = 0; j < enemies[i].ai->total_weights; j++) {
-            // Introduce some randomness to each NPC
-            //was 0.98
-            if(((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) > (double)0.94) {
-                enemies[i].ai->weight[j] =
-                    ((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) - (double)0.5;
-            } else {
-                enemies[i].ai->weight[j] = weights[j];
-            }
+            enemies[i].ai->weight[j] = weights[j];
         }
 
 #endif

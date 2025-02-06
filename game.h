@@ -34,7 +34,9 @@
 extern "C" {
 #endif
 
+#define NPC_ANN_WEIGHT_UNIQUENESS
 //#define DEBUGGING
+//#define MINIMAL_DEBUGGING
 
 //Configurable variables
 

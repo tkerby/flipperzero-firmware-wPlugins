@@ -107,7 +107,7 @@ void postDoorEntryTask() {
         60, 16, OBSTACLE_WIDTH, 0, false, true, postObstacleDestructionTask};
     playerLevel++;
 
-    //TODO horizontalView = false;
+    horizontalView = true;
 }
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
@@ -326,11 +326,9 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
     }
 
     struct game_door* first_door = &doors[0];
-    if(first_door != NULL && first_door->visible && playerLevel == 1) {
+    if(playerLevel == 2) {
         canvas_draw_str_aligned(
             canvas, first_door->x, first_door->y - 15, AlignCenter, AlignTop, "Next level...");
-        horizontalGame = false;
-        //Spawn incoming thing.
     }
 
     for(int i = 0; i < MAX_OBSTACLES; i++) {
