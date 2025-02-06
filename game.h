@@ -4,7 +4,6 @@
 #include <engine/game_manager_i.h>
 #include <genann.h>
 #include <storage/storage.h>
-
 #include "game_menu.h"
 #include "game_level.h"
 #include "tutorial_level.h"
@@ -12,6 +11,8 @@
 #include "npc_ai_variants.h"
 
 /* Global game defines go here */
+//#define DEBUGGING
+//#define MINIMAL_DEBUGGING
 
 #define WORLD_BORDER_LEFT_X   6
 #define WORLD_BORDER_RIGHT_X  120
@@ -25,6 +26,9 @@
 
 #define STARTING_PLAYER_HEALTH 11
 #define STARTING_ENEMY_HEALTH  5
+
+#define BACKGROUND_ASSET_ROWS  3
+#define BACKGROUND_ASSET_COUNT 6 //Must be divisible by BACKGROUND_ASSET_ROWS
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,6 +71,7 @@ extern float jumpHeight;
 extern float jumpSpeed;
 extern float enemyJumpHeight;
 //Tracking player data
+extern bool canRespawn;
 extern int health;
 extern uint32_t kills;
 extern bool jumping;
@@ -108,6 +113,8 @@ void player_update(Entity* self, GameManager* manager, void* context);
 void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
 void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
 void enemy_update(Entity* self, GameManager* manager, void* context);
+void hideBackgroundAssets();
+void computeBackgroundAssets();
 
 typedef struct {
     Sprite* sprite;
@@ -127,6 +134,8 @@ typedef struct {
 
 typedef struct {
     uint32_t score;
+    Sprite* backgroundAsset1;
+    Sprite* backgroundAsset2;
 } GameContext;
 
 static const EntityDescription player_desc = {

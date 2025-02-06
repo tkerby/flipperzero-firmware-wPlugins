@@ -12,7 +12,7 @@ enum EnemyAction {
 
 Enemy enemies[MAX_ENEMIES];
 
-#define MAX_BULLETS 30
+#define MAX_BULLETS 50
 Entity* bullets[MAX_BULLETS];
 bool bulletsDirection[MAX_BULLETS];
 
@@ -25,9 +25,6 @@ bool enemyBulletsDirection[MAX_BULLETS];
 
 //Configurable values
 //TODO Reloading with faster shooting.
-
-//#define DEBUGGING
-//#define MINIMAL_DEBUGGING
 
 #define SIZE_OF_WEIGHTS          362
 #define NPC_ANN_BEHAVIOR_LATENCY 0
@@ -66,6 +63,11 @@ int firstMobSpawnTicks = 0;
 //While debugging we increase all lives for longer testing/gameplay.
 #define LEARNING_RATE (double)0.0001
 
+#ifdef DEBUGGING
+bool canRespawn = true;
+#else
+bool canRespawn = false;
+#endif
 #ifdef DEBUGGING
 int ENEMY_LIVES = 100;
 int health = 200;
@@ -248,7 +250,7 @@ void _enemy_spawn(
         for(int j = 0; j < enemies[i].ai->total_weights; j++) {
             // Introduce some randomness to each NPC
             //was 0.98
-            if(((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) > (double)0.99) {
+            if(((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) > (double)0.94) {
                 enemies[i].ai->weight[j] =
                     ((double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX) - (double)0.5;
             } else {
@@ -436,8 +438,8 @@ bool damage_enemy(Enemy* enemy) {
 #ifdef MINIMAL_DEBUGGING
         //Print weights
         FURI_LOG_I("DEADZONE", "Finished randomness tweaking of weights:");
-        for(int j = 0; j < enemies[i].ai->total_weights; j++) {
-            FURI_LOG_I("DEADZONE", "Weights: %f", enemies[i].ai->weight[j]);
+        for(int j = 0; j < enemy->ai->total_weights; j++) {
+            FURI_LOG_I("DEADZONE", "Weights: %f", enemy->ai->weight[j]);
         }
 #endif
 
@@ -668,15 +670,47 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
+const char* int_to_string(int value) {
+    static char buffer[12]; // Enough to hold any 32-bit int
+    int i = 0, is_negative = 0;
+
+    if(value < 0) {
+        is_negative = 1;
+        value = -value;
+    }
+
+    // Convert digits to string (in reverse order)
+    do {
+        buffer[i++] = (value % 10) + '0';
+        value /= 10;
+    } while(value > 0);
+
+    if(is_negative) {
+        buffer[i++] = '-';
+    }
+
+    buffer[i] = '\0';
+
+    // Reverse the string
+    for(int j = 0, k = i - 1; j < k; j++, k--) {
+        char temp = buffer[j];
+        buffer[j] = buffer[k];
+        buffer[k] = temp;
+    }
+
+    return buffer;
+}
+
 int successfulJumpCycles = 0;
 
 void global_update(Entity* self, GameManager* manager, void* context) {
     UNUSED(self);
     UNUSED(context);
+
     //Check player input when they're dead, since enemy is alive, processing must proceed here.
     InputState input = game_manager_input_get(manager);
     if(input.pressed & GameKeyBack) {
-        if(health == 0) {
+        if(health <= 0) {
             //If dead, restart game
             health = STARTING_PLAYER_HEALTH;
             player_spawn(gameLevel, manager);
@@ -747,14 +781,113 @@ void global_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
+struct BackgroundAsset {
+    uint32_t posX;
+    uint32_t posY;
+    int type;
+};
+
+struct BackgroundAsset backgroundAssets[BACKGROUND_ASSET_COUNT];
+
+void hideBackgroundAssets() {
+    for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
+        backgroundAssets[i].type = -1;
+    }
+}
+
+void computeBackgroundAssets() {
+    int counter = 0;
+    uint32_t y = WORLD_BORDER_TOP_Y + 5;
+    for(uint32_t k = 0; k < BACKGROUND_ASSET_ROWS; k++) {
+        double randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+        uint32_t x = 10;
+        for(int i = 0; i < (BACKGROUND_ASSET_COUNT / BACKGROUND_ASSET_ROWS); i++) {
+            randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+            randValue = (double)furi_hal_random_get() / FURI_HAL_RANDOM_MAX;
+            backgroundAssets[counter++] =
+                (struct BackgroundAsset){x, y, randValue > (double)0.8 ? 0 : 1};
+            x += 30 + randValue * 40;
+        }
+        y += 15 + randValue * 20;
+        y = MIN(y, (uint32_t)WORLD_BORDER_BOTTOM_Y - 20);
+    }
+}
+
 void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     UNUSED(self);
     UNUSED(manager);
     UNUSED(context);
-    UNUSED(context);
-    if(health == 0) {
+    GameContext* game_context = game_manager_game_context_get(manager);
+    //Draw background
+    if(horizontalView) {
+        canvas_draw_frame(canvas, 2, -4, 124, 61);
+        canvas_draw_line(canvas, 1, 57, 0, 60);
+        canvas_draw_line(canvas, 126, 57, 128, 61);
+    } else {
+        canvas_draw_frame(canvas, 32, -4, 64, 30);
+        canvas_draw_line(canvas, 32, 26, 0, 57);
+        canvas_draw_line(canvas, 64 + 32, 26, 128, 57);
+    }
+
+    //Draw background assets
+    for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
+        struct BackgroundAsset asset = backgroundAssets[i];
+        if(asset.type == -1) continue;
+        canvas_draw_sprite(
+            canvas,
+            asset.type == 0 ? game_context->backgroundAsset1 : game_context->backgroundAsset2,
+            asset.posX,
+            asset.posY);
+    }
+
+    if(health <= 0) {
         canvas_printf(canvas, 30, 10, "You're dead.");
-        canvas_printf(canvas, 20, 20, "Press Back to respawn.");
+        if(canRespawn || game_menu_tutorial_selected) {
+            canvas_printf(canvas, 20, 20, "Press Back to respawn.");
+        } else {
+            canvas_printf(canvas, 35, 30, "Your Level: %d", playerLevel + 1);
+            static int highestLevel;
+            static bool queriedHighestLevel = false;
+            if(!queriedHighestLevel) {
+                Storage* storage = furi_record_open(RECORD_STORAGE);
+                File* file = storage_file_alloc(storage);
+                char buffer[12];
+                if(storage_file_open(
+                       file, APP_DATA_PATH("game_data.deadzone"), FSAM_READ, FSOM_OPEN_ALWAYS)) {
+                    storage_file_read(file, buffer, 12);
+                    storage_file_close(file);
+                    highestLevel = atoi(buffer);
+                }
+                FURI_LOG_I(
+                    "DEADZONE",
+                    "The highest level was: %d, the current level is: %d, will overwrite(1=yes): %d",
+                    highestLevel,
+                    playerLevel,
+                    highestLevel < playerLevel ? 1 : 0);
+                if(highestLevel < playerLevel) {
+                    highestLevel = playerLevel;
+                    //Update highest level
+                    const char* newBuffer = int_to_string(highestLevel);
+                    if(storage_file_open(
+                           file,
+                           APP_DATA_PATH("game_data.deadzone"),
+                           FSAM_WRITE,
+                           FSOM_OPEN_ALWAYS)) {
+                        storage_file_write(file, newBuffer, 12);
+                    }
+                }
+
+                storage_file_close(file);
+
+                // Deallocate file
+                storage_file_free(file);
+
+                // Close storage
+                furi_record_close(RECORD_STORAGE);
+                queriedHighestLevel = true;
+            }
+            canvas_printf(canvas, 15, 20, "Highscore Level: %d", highestLevel + 1);
+        }
     }
 }
 
@@ -769,22 +902,6 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
     canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
-
-    /*if((transitionLeftTicks < TRANSITION_FRAMES && transitionLeftTicks != 0) ||
-       (transitionRightTicks < TRANSITION_FRAMES && transitionRightTicks != 0)) {
-        canvas_draw_line(canvas, pos.x - 3, pos.y, pos.x - 5, pos.y);
-        canvas_draw_line(canvas, pos.x + 3, pos.y, pos.x + 5, pos.y);
-    }*/
-
-    if(horizontalView) {
-        canvas_draw_frame(canvas, 2, -4, 124, 61);
-        canvas_draw_line(canvas, 1, 57, 0, 60);
-        canvas_draw_line(canvas, 126, 57, 128, 61);
-    } else {
-        canvas_draw_frame(canvas, 32, -4, 64, 30);
-        canvas_draw_line(canvas, 32, 26, 0, 57);
-        canvas_draw_line(canvas, 64 + 32, 26, 128, 57);
-    }
     //canvas_draw_frame(canvas, 0, -4, 135, 64);
 
     // Get game context
@@ -1160,6 +1277,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
 
     //level_add_entity(level, &target_enemy_desc);
     gameLevel = level;
+    hideBackgroundAssets();
 }
 
 /*
@@ -1184,6 +1302,10 @@ static void game_start_post_menu(GameManager* game_manager, void* ctx) {
     // For simplicity, we will just set it to 0.
     GameContext* game_context = ctx;
     game_context->score = 0;
+    game_context->backgroundAsset1 =
+        game_manager_sprite_load(game_manager, "background_asset_1.fxbm");
+    game_context->backgroundAsset2 =
+        game_manager_sprite_load(game_manager, "background_asset_2.fxbm");
 
     globalGameManager = game_manager;
 

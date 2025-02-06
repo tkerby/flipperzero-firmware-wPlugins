@@ -15,7 +15,7 @@ int totalObstacles = 0;
 bool canSpawnDoubleObstacles = true;
 int maxObstaclesFirst = 10;
 int maxObstaclesSecond = 25;
-int level = 0;
+int playerLevel = 0;
 bool startedNextContinuousTask = false;
 
 void emptyFunction() {
@@ -56,21 +56,30 @@ void postObstacleDestructionTask() {
 uint32_t enemySpawnCount = 1;
 
 void postDoorEntryTask4() {
-    level++;
+    playerLevel++;
 
     for(uint32_t i = 0; i < enemySpawnCount; i++) {
         if(enemySpawnCount == 1) {
             enemyShootingDelay = 800;
         } else {
             enemyShootingDelay -= 50;
+            shootingDelay -= 50;
         }
-        enemy_spawn(gameLevel, globalGameManager, (Vector){10 + 30 * i, 30}, 500, true);
+        enemy_spawn(
+            gameLevel,
+            globalGameManager,
+            (Vector){
+                MIN(10 + 80 * i, (uint32_t)WORLD_BORDER_RIGHT_X),
+                30,
+            },
+            800,
+            true);
     }
     //Increase enemy shooting delay
 }
 
 void postDoorEntryTask3() {
-    level++;
+    playerLevel++;
 
     _enemy_spawn(gameLevel, globalGameManager, (Vector){120, 30}, 500, false, 4 * ENEMY_LIVES);
     //Increase enemy shooting delay
@@ -85,7 +94,7 @@ void postDoorEntryTask3() {
 }
 
 void postDoorEntryTask2() {
-    level++;
+    playerLevel++;
     horizontalGame = true;
     horizontalView = true;
     enemy_spawn(gameLevel, globalGameManager, (Vector){10, 30}, 500, true);
@@ -96,7 +105,7 @@ void postDoorEntryTask2() {
 void postDoorEntryTask() {
     obstacles[0] = (struct game_obstacle){
         60, 16, OBSTACLE_WIDTH, 0, false, true, postObstacleDestructionTask};
-    level++;
+    playerLevel++;
 
     //TODO horizontalView = false;
 }
@@ -109,6 +118,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
     static bool hasProgressed = false;
     if(kills == 1) {
         if(!hasProgressed) {
+            playerLevel++;
             hasProgressed = true;
             enemy_spawn(gameLevel, manager, (Vector){120, 0}, 3000, false);
         }
@@ -126,6 +136,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
 
     if(kills == 3) {
         if(!completedFirstTask) {
+            playerLevel++;
             completedFirstTask = true;
             doors[0] = (struct game_door){
                 58, 24, 25, 32, true, 0, "Avoid the obstacles!", 34000, postDoorEntryTask};
@@ -169,7 +180,7 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
                 startedNextContinuousTask = true;
             }
         } else if(nextKillCount == kills) {
-            enemySpawnCount += 1;
+            enemySpawnCount++;
             nextKillCount += enemySpawnCount;
             doors[0] = (struct game_door){
                 30, 24, 25, 32, true, 0, "Enemies and Obstacles!", 34000, postDoorEntryTask4};
@@ -272,6 +283,10 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
     PlayerContext* playerCtx = context;
     UNUSED(playerCtx);
 
+#ifdef MINIMAL_DEBUGGING
+    canvas_printf(canvas, 30, 30, "Current Level: %d", playerLevel);
+#endif
+
     if(!started) {
         started = true;
         welcomeTicks = furi_get_tick();
@@ -311,7 +326,7 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
     }
 
     struct game_door* first_door = &doors[0];
-    if(first_door != NULL && first_door->visible && level == 0) {
+    if(first_door != NULL && first_door->visible && playerLevel == 1) {
         canvas_draw_str_aligned(
             canvas, first_door->x, first_door->y - 15, AlignCenter, AlignTop, "Next level...");
         horizontalGame = false;
@@ -325,7 +340,7 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         //canvas_draw_box(canvas, obstacle->x, obstacle->y, obstacle->width, obstacle->width);
     }
 
-    if(totalObstacles >= 35 && level == 1) {
+    if(totalObstacles >= 35 && playerLevel == 3) {
         bool allObstaclesGone = true;
         for(int i = 0; i < MAX_OBSTACLES; i++) {
             struct game_obstacle obstacle = obstacles[i];
@@ -346,7 +361,7 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         }
     }
 
-    if(level == 2 && !startedLevelTwo) {
+    if(playerLevel == 2 && !startedLevelTwo) {
         startedLevelTwo = true;
     }
 }
