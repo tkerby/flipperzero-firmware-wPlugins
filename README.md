@@ -1,8 +1,6 @@
 # DeadZone - Flipper Zero Video Game
 
-## Fight through tough challenges, dodge enemy fire, and avoid the falling obstacles to survive!
-
-![image](screenshots/game_screenshot.png)
+Fight through tough challenges, dodge enemy fire, and avoid the falling obstacles to survive!
 
 ## Controls
 Use the **Left**, **Right**, and **Up** arrow keys to move the player.\
