@@ -42,7 +42,7 @@ extern "C" {
 //Configurable variables
 
 //While debugging we increase all lives for longer testing/gameplay.
-
+static const EntityDescription global_desc;
 static const EntityDescription player_desc;
 static const EntityDescription enemy_desc;
 
@@ -80,8 +80,7 @@ extern uint32_t kills;
 extern bool jumping;
 extern float targetY;
 extern float targetX;
-extern bool horizontalGame;
-extern bool horizontalView;
+extern bool showBackground;
 #define TRANSITION_FRAMES 15
 
 extern int16_t transitionLeftTicks;
@@ -96,6 +95,8 @@ extern GameManager* globalGameManager;
 
 //Functions
 float lerp(float y1, float y2, float t);
+
+void renderSceneBackground(Canvas* canvas);
 void enemy_spawn(
     Level* level,
     GameManager* manager,
@@ -111,7 +112,8 @@ void _enemy_spawn(
     int startingLives);
 bool damage_enemy(Enemy* enemy);
 bool damage_player(Entity* self);
-
+void global_update(Entity* self, GameManager* manager, void* context);
+void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
 void player_update(Entity* self, GameManager* manager, void* context);
 void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
 void enemy_render(Entity* self, GameManager* manager, Canvas* canvas, void* context);
@@ -147,9 +149,20 @@ typedef struct {
 
 typedef struct {
     uint32_t score;
+    Sprite* sceneBackground;
     Sprite* backgroundAsset1;
     Sprite* backgroundAsset2;
 } GameContext;
+
+static const EntityDescription global_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = global_update, // called every frame
+    .render = global_render, // called every frame, after update
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size = 0, // size of entity context, will be automatically allocated and freed
+};
 
 static const EntityDescription player_desc = {
     .start = NULL, // called when entity is added to the level

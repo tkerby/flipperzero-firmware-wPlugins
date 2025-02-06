@@ -95,8 +95,6 @@ void postDoorEntryTask3() {
 
 void postDoorEntryTask2() {
     playerLevel++;
-    horizontalGame = true;
-    horizontalView = true;
     enemy_spawn(gameLevel, globalGameManager, (Vector){10, 30}, 500, true);
     //Increase enemy shooting delay
     enemyShootingDelay = 600;
@@ -106,8 +104,6 @@ void postDoorEntryTask() {
     obstacles[0] = (struct game_obstacle){
         60, 16, OBSTACLE_WIDTH, 0, false, true, postObstacleDestructionTask};
     playerLevel++;
-
-    horizontalView = true;
 }
 
 void game_level_player_update(Entity* self, GameManager* manager, void* context, Vector* pos) {
@@ -298,6 +294,8 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         canvas_printf(canvas, 15, 30, "Welcome to DEADZONE!");
     }
 
+    bool renderedDoor = false;
+
     for(int i = 0; i < MAX_DOORS; i++) {
         struct game_door door = doors[i];
         if(!door.visible) {
@@ -309,6 +307,8 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
             }
             continue;
         };
+        renderedDoor = true;
+        showBackground = false;
         canvas_draw_frame(canvas, door.x, door.y, door.width, door.height);
         canvas_draw_circle(canvas, door.x + 4, door.y + (door.height / 2.0f), 2);
         canvas_draw_line(
@@ -323,6 +323,10 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
             door.y + (door.height / 2.0f) - 1,
             door.x + (door.width / 2.0f),
             door.y + (door.height / 2.0f));
+    }
+
+    if(!renderedDoor) {
+        showBackground = true;
     }
 
     struct game_door* first_door = &doors[0];
