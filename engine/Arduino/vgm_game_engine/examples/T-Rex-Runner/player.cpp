@@ -43,21 +43,20 @@ static void furi_hal_random_fill_buf(void *buffer, size_t len)
 
 static void change_color(uint8_t *icon, int length, uint16_t newColor)
 {
-    // If 'length' is total bytes and each pixel is 2 bytes in little-endian
     for (int i = 0; i < length; i += 2)
     {
-        // Read current pixel as little-endian 16-bit
-        uint16_t pixel = (uint16_t)icon[i] | ((uint16_t)icon[i + 1] << 8);
+        // Read the pixel as 16-bit big-endian
+        uint16_t pixel = ((uint16_t)icon[i] << 8) | icon[i + 1];
 
-        // If it's black
+        // If it's black, replace it
         if (pixel == 0x0000)
         {
-            // Write the new color in little-endian
-            icon[i] = (uint8_t)(newColor & 0xFF);
-            icon[i + 1] = (uint8_t)((newColor >> 8) & 0xFF);
+            icon[i] = (uint8_t)(newColor >> 8);       // high byte
+            icon[i + 1] = (uint8_t)(newColor & 0xFF); // low byte
         }
     }
 }
+
 
 // ---------------------------------------------------------------------------------
 // GameState struct
