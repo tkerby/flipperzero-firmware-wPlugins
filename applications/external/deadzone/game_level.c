@@ -38,16 +38,16 @@ void postObstacleDestructionTask() {
     if(canSpawnDoubleObstacles) {
         if(totalObstacles > maxObstaclesFirst) {
             x = rand() % (120 - 10 + 1) + 10;
-            obstacles[totalObstacles % MAX_OBSTACLES] =
-                (struct game_obstacle){x,
-                                       8,
-                                       OBSTACLE_WIDTH,
-                                       0,
-                                       x < 65,
-                                       true,
-                                       totalObstacles < (maxObstaclesFirst + maxObstaclesSecond) ?
-                                           postObstacleDestructionTask :
-                                           emptyFunction};
+            obstacles[totalObstacles % MAX_OBSTACLES] = (struct game_obstacle){
+                x,
+                8,
+                OBSTACLE_WIDTH,
+                0,
+                x < 65,
+                true,
+                totalObstacles < (maxObstaclesFirst + maxObstaclesSecond) ?
+                    postObstacleDestructionTask :
+                    emptyFunction};
             totalObstacles++;
         }
     }
@@ -163,15 +163,16 @@ void game_level_player_update(Entity* self, GameManager* manager, void* context,
             if(allObstaclesGone) {
                 if(nextKillCount == 0) {
                     nextKillCount = 6 + enemySpawnCount;
-                    doors[0] = (struct game_door){30,
-                                                  24,
-                                                  25,
-                                                  32,
-                                                  true,
-                                                  0,
-                                                  "Enemies and Obstacles!",
-                                                  34000,
-                                                  postDoorEntryTask4};
+                    doors[0] = (struct game_door){
+                        30,
+                        24,
+                        25,
+                        32,
+                        true,
+                        0,
+                        "Enemies and Obstacles!",
+                        34000,
+                        postDoorEntryTask4};
                 }
                 startedNextContinuousTask = true;
             }
