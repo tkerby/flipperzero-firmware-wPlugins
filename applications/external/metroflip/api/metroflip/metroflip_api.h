@@ -173,6 +173,7 @@ extern const Icon I_Suica_MinusSign7;
 extern const Icon I_Suica_MinusSign8;
 extern const Icon I_Suica_MinusSign9;
 extern const Icon I_Suica_MitaI;
+extern const Icon I_Suica_MobileLogo;
 extern const Icon I_Suica_NambokuN;
 extern const Icon I_Suica_Nothing;
 extern const Icon I_Suica_OedoE;
@@ -217,6 +218,12 @@ extern const Icon I_Suica_VendingThankYou;
 extern const Icon I_Suica_YenKanji;
 extern const Icon I_Suica_YenSign;
 extern const Icon I_Suica_YurakuchoY;
+extern const Icon I_Suica_CardIcon;
+extern const Icon I_Suica_ShopIcon;
+extern const Icon I_Suica_VendingIcon;
+extern const Icon I_Suica_TrainIcon;
+extern const Icon I_Suica_BdayCakeIcon;
+extern const Icon I_Suica_UnknownIcon;
 
 void render_section_header(
     FuriString* str,
