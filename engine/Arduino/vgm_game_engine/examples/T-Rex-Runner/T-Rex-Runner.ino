@@ -5,7 +5,7 @@
 // Translated from https://github.com/xMasterX/all-the-plugins/tree/dev/apps_source_code/t-rex-runner
 // All credits to @Rrycbarm and @xMasterX
 /*
-    Board Manager: Raspberry Pi Pico (even if using the Pico W)
+    Board Manager: Raspberry Pi Pico
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
     CPU Speed: 200MHz
 */
