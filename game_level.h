@@ -11,8 +11,6 @@
 extern "C" {
 #endif
 
-extern int playerLevel;
-
 struct game_obstacle {
     float x;
     float y;
@@ -23,6 +21,12 @@ struct game_obstacle {
 
     void (*destructionTask)(void);
 };
+
+extern int playerLevel;
+#define OBSTACLE_SPEED 0.5f
+#define OBSTACLE_WIDTH 9.0f
+#define MAX_OBSTACLES  5
+extern struct game_obstacle obstacles[MAX_OBSTACLES];
 
 struct game_door {
     float x;
