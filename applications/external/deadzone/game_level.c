@@ -5,12 +5,7 @@ bool startedLevelTwo = false;
 int welcomeTicks = 0;
 #define MAX_DOORS 5
 struct game_door doors[MAX_DOORS];
-
-#define OBSTACLE_SPEED 0.5f
-#define OBSTACLE_WIDTH 9.0f
-#define MAX_OBSTACLES  5
 struct game_obstacle obstacles[MAX_OBSTACLES];
-
 int totalObstacles = 0;
 bool canSpawnDoubleObstacles = true;
 int maxObstaclesFirst = 10;

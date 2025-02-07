@@ -996,6 +996,10 @@ void renderSceneBackground(Canvas* canvas) {
                     genann_free(enemies[i].ai);
                     enemies[i].instance = NULL;
                 }
+
+                for(int j = 0; j < MAX_OBSTACLES; j++) {
+                    if(obstacles[j].visible) obstacles[j].visible = false;
+                }
             }
         }
     }
