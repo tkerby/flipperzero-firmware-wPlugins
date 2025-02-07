@@ -28,6 +28,7 @@ void metroflip_scene_load_on_enter(void* context) {
         do {
             if(!flipper_format_file_open_existing(format, furi_string_get_cstr(file_path))) break;
             if(!flipper_format_read_string(format, "Card Type", card_type)) break;
+            app->file_path = furi_string_get_cstr(file_path);
             if(furi_string_equal_str(card_type, "suica")) {
                 load_suica_data(app, format);
             }
@@ -39,7 +40,6 @@ void metroflip_scene_load_on_enter(void* context) {
     if(app->data_loaded) {
         // Direct to the parsing screen just like the auto scene does
         app->card_type = furi_string_get_cstr(card_type);
-        FURI_LOG_I(TAG, "Card type: %s", app->card_type);
         scene_manager_next_scene(app->scene_manager, MetroflipSceneParse);
     } else {
         scene_manager_next_scene(app->scene_manager, MetroflipSceneStart);
