@@ -14,7 +14,11 @@ Inside the `Arduino` directory, you will find two compiled examples, FlipWorld a
 
 **Method 1**
 1. Install the Video Game Module Tool app on your Flipper Zero from the Apps catalog: [Video Game Module Tool](https://lab.flipper.net/apps/video_game_module_tool).
-2. Download the `FlipWorld-VGM-Engine.uf2`, `AirLabyrinth-VGM-Engine.uf2`, or `T-Rex-Runner-VGM-Engine.uf2` file.
+2. Download one of the examples from the current directory:
+- FlipWorld: `FlipWorld-VGM-Engine.uf2`
+- Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
+- T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
+- FlappyBird: `FlappyBird-VGM-Engine.uf2`
 3. Disconnect your Video Game Module from your Flipper and connect your Flipper to your computer.
 4. Open qFlipper.
 5. Navigate to the `SD Card/apps_data/vgm/` directory. If the folder doesn’t exist, create it. Inside that folder, create a folder named `Engine`.
@@ -27,7 +31,11 @@ Inside the `Arduino` directory, you will find two compiled examples, FlipWorld a
 12. The app will begin flashing the firmware to your Video Game Module. Wait until the process is complete.
 
 **Method 2**
-1. Download the `FlipWorld-VGM-Engine.uf2`, `AirLabyrinth-VGM-Engine.uf2`, or `T-Rex-Runner-VGM-Engine.uf2` file.
+1. Download one of the examples from the current directory:
+- FlipWorld: `FlipWorld-VGM-Engine.uf2`
+- Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
+- T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
+- FlappyBird: `FlappyBird-VGM-Engine.uf2`
 2. Press and hold the `BOOT` button on your Video Game Module for 2 seconds.
 3. While holding the `BOOT` button, connect the Video Game Module to your computer using a USB cable.
 4. Drag and drop the downloaded file onto the device. It will automatically reboot and begin running the example.
