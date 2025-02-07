@@ -88,4 +88,4 @@ Build outputs are found in the `dist` directory for each application.
 - [ ] Add more interval options, or make the intervals continuously adjustable instead of discrete.
 - [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys.
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [ ] Add option to select relative or precise intervals. Intervals are currently relative (if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
+- [ ] Add option to select relative or precise intervals. Intervals are currently relative (from initial start, if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
