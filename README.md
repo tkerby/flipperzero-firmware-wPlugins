@@ -1,9 +1,14 @@
+
 # Flipper Cigarette
 
-Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one) 🚬🚬🚬
+<div align=center>
+<img src="screenshots/banner.gif" width="600" />
+</div>
+
+Finally a way to smoke a cigarette on the [Flipper Zero](https://www.flipperzero.one)
 
 
-## 📸 Screenshots
+## Screenshots
 
 
 <p  align="center">
@@ -16,18 +21,28 @@ Finally a way to smoke a cigarette on [Flipper Zero](https://www.flipperzero.one
 
 
 
-## Build the program
+## Installation
 
-Assuming the toolchain is already installed, copy **flipper_cigarette** directory to **applications_user**
+Download the **flipper_cigarette.fap** from the [latest release](https://www.flipperzero.one) and copy it to the **apps/Games** directory on your **Flipper Zero** 
 
-Plug your **Flipper Zero** and build the flipper cigarette:
+
+## Build
+
+Clone both the repository for the firmware and  and copy **flipper_cigarette** directory to the **applications_user** folders within the firmware:
+
 ```
+git clone https://github.com/flipperdevices/flipperzero-firmware.git
+git clone https://github.com/fuckmaz/flipper_cigarette.git flipperzero-firmware/applications_user/flipper_cigarette
+```
+
+Plug in your **Flipper Zero** and build the app from within the firmware base-directory:
+```
+cd flipperzero-firmware
 ./fbt launch_app APPSRC=applications_user/flipper_cigarette
 ```
 
-The program will automatically be launched after compilation
+The **Flipper Cigarette** app will automatically be launched on your Flipper after compilation is done.
 
-If you don't want to build this application, just simply copy **flipper_cigarette.fap** on your **Flipper Zero** 
 
 ## TODO
 
@@ -36,5 +51,7 @@ If you don't want to build this application, just simply copy **flipper_cigarett
 - cancer progress-bar
 - add different cigarettes to choose from
 
-xoxo - MAZ <3
+xoxo - maz <3
 
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/fuckmaz/flipper_cigarette.svg?background=%23000000&axis=%23ffffff&line=%23f848dd)](https://starchart.cc/fuckmaz/flipper_cigarette)
