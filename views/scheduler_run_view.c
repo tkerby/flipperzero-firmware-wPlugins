@@ -6,6 +6,7 @@
 
 #include "src/scheduler_run.h"
 #include "src/scheduler_app_i.h"
+#include "scheduler_run_view.h"
 
 #define TAG "SubGHzSchedulerRunView"
 
@@ -14,11 +15,80 @@
 #define GUI_MARGIN         5
 #define GUI_TEXT_GAP       10
 
-static void scheduler_update_widgets(void* context, char* time_til_next) {
-    SchedulerApp* app = context;
+#define GUI_TEXTBOX_HEIGHT 12
+#define GUI_TABLE_ROW_A    13
+#define GUI_TABLE_ROW_B    (GUI_TABLE_ROW_A + GUI_TEXTBOX_HEIGHT) - 1
+
+struct SchedulerUIRunState {
+    FuriString* header;
+    FuriString* mode;
+    FuriString* interval;
+    FuriString* tx_repeats;
+    FuriString* file_type;
+    FuriString* file_name;
+    FuriString* tx_countdown;
+
+    //FuriString* current_tx_file;
+    uint8_t list_count;
+    uint8_t progress;
+};
+
+SchedulerUIRunState* state;
+
+//void scheduler_set_current_tx_file(const char* file) {
+//    furi_string_set(state->current_tx_file, file);
+//}
+
+static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
     uint32_t value;
+    state = malloc(sizeof(SchedulerUIRunState));
+    state->header = furi_string_alloc_set("Schedule Running");
+
+    value = scheduler_get_mode(app->scheduler);
+    state->mode = furi_string_alloc_set(mode_text[value]);
+
+    value = scheduler_get_interval(app->scheduler);
+    state->interval = furi_string_alloc_set(interval_text[value]);
+
+    value = scheduler_get_tx_repeats(app->scheduler);
+    state->tx_repeats = furi_string_alloc_set(tx_repeats_text[value]);
+
+    value = scheduler_get_file_type(app->scheduler);
+    state->file_type = furi_string_alloc_set(file_type_text[value]);
+
+    state->file_name = furi_string_alloc_set(scheduler_get_file_name(app->scheduler));
+
+    state->tx_countdown = furi_string_alloc();
+    state->list_count = scheduler_get_list_count(app->scheduler);
+    state->progress = 0;
+}
+
+static void scheduler_ui_run_state_free() {
+    furi_string_free(state->header);
+    furi_string_free(state->mode);
+    furi_string_free(state->interval);
+    furi_string_free(state->tx_repeats);
+    furi_string_free(state->file_type);
+    furi_string_free(state->file_name);
+    furi_string_free(state->tx_countdown);
+    free(state);
+}
+
+void scheduler_update_progress(uint8_t x) {
+    state->progress = x * (128 - 10) / state->list_count;
+}
+
+void scheduler_update_widgets(void* context) {
+    SchedulerApp* app = context;
+    //uint32_t value;
 
     widget_reset(app->widget);
+    widget_add_frame_element(
+        app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5); /* Main Frame */
+
+    /* ============= HEADER ============= */
+    widget_add_frame_element(
+        app->widget, 0, GUI_TABLE_ROW_A, GUI_DISPLAY_WIDTH, 2, 0); /* Header Underline */
     widget_add_string_element(
         app->widget,
         GUI_DISPLAY_WIDTH / 2,
@@ -26,9 +96,11 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignCenter,
         AlignTop,
         FontPrimary,
-        "Schedule Running");
+        furi_string_get_cstr(state->header));
 
-    value = scheduler_get_mode(app->scheduler);
+    /* ============= MODE ============= */
+    widget_add_frame_element(
+        app->widget, 0, GUI_TABLE_ROW_A, 49, GUI_TEXTBOX_HEIGHT, 0); /* Mode Box */
     widget_add_icon_element(app->widget, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
     widget_add_string_element(
         app->widget,
@@ -37,9 +109,11 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignLeft,
         AlignCenter,
         FontSecondary,
-        mode_text[value]);
+        furi_string_get_cstr(state->mode));
 
-    value = scheduler_get_interval(app->scheduler);
+    /* ============= INTERVAL ============= */
+    widget_add_frame_element(
+        app->widget, 48, GUI_TABLE_ROW_A, 48, GUI_TEXTBOX_HEIGHT, 0); /* Interval Box */
     widget_add_icon_element(app->widget, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
     widget_add_string_element(
         app->widget,
@@ -48,9 +122,11 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignLeft,
         AlignCenter,
         FontSecondary,
-        interval_text[value]);
+        furi_string_get_cstr(state->interval));
 
-    value = scheduler_get_tx_repeats(app->scheduler);
+    /* ============= TX REPEATS ============= */
+    widget_add_frame_element(
+        app->widget, 95, GUI_TABLE_ROW_A, 33, GUI_TEXTBOX_HEIGHT, 0); /* Repeats Box */
     widget_add_icon_element(app->widget, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
     widget_add_string_element(
         app->widget,
@@ -59,8 +135,9 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignLeft,
         AlignCenter,
         FontSecondary,
-        tx_repeats_text[value]);
+        furi_string_get_cstr(state->tx_repeats));
 
+    /* ============= FILE NAME ============= */
     widget_add_string_element(
         app->widget,
         GUI_MARGIN,
@@ -76,8 +153,9 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignRight,
         AlignCenter,
         FontSecondary,
-        scheduler_get_file_name(app->scheduler));
+        furi_string_get_cstr(state->file_name));
 
+    /* ============= NEXT TX COUNTDOWN ============= */
     widget_add_string_element(
         app->widget,
         GUI_MARGIN,
@@ -93,19 +171,7 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
         AlignRight,
         AlignCenter,
         FontSecondary,
-        time_til_next);
-
-    // Clean this up
-    /* Main Frame */
-    widget_add_frame_element(app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
-    /* Header Underline */
-    widget_add_frame_element(app->widget, 0, 13, GUI_DISPLAY_WIDTH, 2, 0);
-    /* Mode Box */
-    widget_add_frame_element(app->widget, 0, 13, 49, 12, 0);
-    /* Interval Box */
-    widget_add_frame_element(app->widget, 48, 13, 48, 12, 0);
-    /* Repeats Box */
-    widget_add_frame_element(app->widget, 95, 13, 33, 12, 0);
+        furi_string_get_cstr(state->tx_countdown));
 
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
@@ -113,13 +179,15 @@ static void scheduler_update_widgets(void* context, char* time_til_next) {
 static void update_countdown(SchedulerApp* app) {
     char countdown[16];
     scheduler_get_countdown_fmt(app->scheduler, countdown, sizeof(countdown));
-    scheduler_update_widgets(app, countdown);
+    furi_string_set(state->tx_countdown, countdown);
+    scheduler_update_widgets(app);
 }
 
 void scheduler_scene_run_on_enter(void* context) {
     SchedulerApp* app = context;
     furi_hal_power_suppress_charge_enter();
     scheduler_reset(app->scheduler);
+    scheduler_ui_run_state_alloc(app);
     update_countdown(app);
     subghz_devices_init();
     furi_delay_ms(100);
@@ -132,6 +200,7 @@ void scheduler_scene_run_on_exit(void* context) {
     }
     scheduler_reset(app->scheduler);
     subghz_devices_deinit();
+    scheduler_ui_run_state_free();
     furi_hal_power_suppress_charge_exit();
 }
 

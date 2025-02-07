@@ -1,5 +1,12 @@
 #pragma once
 
+typedef enum FileTxType {
+    SchedulerFileTypeSingle,
+    SchedulerFileTypePlaylist,
+    SchedulerFileTypeNum
+} FileTxType;
+static const char* const file_type_text[SchedulerFileTypeNum] = {"Single", "Playlist"};
+
 typedef enum SchedulerMode {
     SchedulerModeNormal,
     SchedulerModeImmediate,

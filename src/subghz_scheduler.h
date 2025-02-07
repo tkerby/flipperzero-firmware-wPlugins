@@ -3,11 +3,6 @@
 
 #include "scenes/scheduler_scene_settings.h"
 
-typedef enum FileTxType {
-    SchedulerFileTypePlaylist,
-    SchedulerFileTypeSingle
-} FileTxType;
-
 typedef struct Scheduler Scheduler;
 
 Scheduler* scheduler_alloc();
