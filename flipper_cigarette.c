@@ -105,17 +105,18 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             cancer_pct = 100.0f;
         
         snprintf(buffer, sizeof(buffer), "darts smoked: %lu", stats_view.total_smokes);
-        canvas_draw_str_aligned(canvas, 64, 27, AlignCenter, AlignCenter, buffer);
+        canvas_draw_str_aligned(canvas, 64, 24, AlignCenter, AlignCenter, buffer);
         
         if(cancer_pct >= 100.0f) {
-            canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "YOU DIED OF CANCER");
-            canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "RIP BOZO");
+            canvas_draw_str_aligned(canvas, 64, 38, AlignCenter, AlignCenter, "YOU DIED OF CANCER");
+            canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignCenter, "RIP BOZO");
         } else {
-            snprintf(buffer, sizeof(buffer), "progress to cancer: %.1f%%", (double)cancer_pct);
-            canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, buffer);
-            
+            snprintf(buffer, sizeof(buffer), "%.1f%%", (double)cancer_pct);
+            canvas_draw_str_aligned(canvas, 64, 46, AlignCenter, AlignCenter, "cancer progress:");
+            elements_progress_bar_with_text(canvas, 4, 52, 120, cancer_pct/100, buffer);
+
             if(cancer_pct >= 50.0f && cancer_pct < 100.0f) {
-                canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "SEEK HELP IMMEDIATELY");
+                canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignCenter, "SEEK HELP IMMEDIATELY");
             }
         }
         
@@ -140,8 +141,7 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
         elements_button_left(canvas, "another one");
     }
 
-    // TODO: open about-view
-    //elements_button_down(canvas, "about");
+    //elements_button_up(canvas, "stats");
 
     // Cigarette icon selection based on style
     const Icon* current_icon = NULL;
