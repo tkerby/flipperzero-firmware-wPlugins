@@ -34,7 +34,7 @@ void setup()
     player_spawn(level);
 
     // Create the game engine (with 30 frames per second target).
-    GameEngine *engine = new GameEngine("Pico Game Engine", 30, game);
+    GameEngine *engine = new GameEngine("VGM Game Engine", 30, game);
 
     // Run the game engine's main loop.
     engine->run();
