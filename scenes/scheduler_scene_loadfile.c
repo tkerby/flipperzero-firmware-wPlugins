@@ -29,6 +29,15 @@ static int count_playlist_items(Storage* storage, const char* file_path) {
     return count;
 }
 
+bool check_file_extension(const char* filename) {
+    const char* extension = strrchr(filename, '.');
+    if(extension == NULL) {
+        return false;
+    } else {
+        return !strcmp(extension, ".txt") || !strcmp(extension, ".sub");
+    }
+}
+
 static bool load_protocol_from_file(SchedulerApp* app) {
     furi_assert(app);
     FuriString* file_path = furi_string_alloc();
