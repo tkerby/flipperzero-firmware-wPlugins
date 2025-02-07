@@ -2,11 +2,11 @@ import cv2
 import numpy as np
 
 # Load the image
-image = cv2.imread('scene_background.png')
+image = cv2.imread("scene_background.png")
 
 # If the image is loaded successfully
 if image is not None:
-   # Convert the image to grayscale (if it's a color image)
+    # Convert the image to grayscale (if it's a color image)
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Define the threshold to detect "dark" pixels
@@ -20,10 +20,12 @@ if image is not None:
     dark_pixel_coordinates = np.column_stack(np.where(dark_pixels_mask))
 
     # Print and save the coordinates to a file
-    with open('black_pixels.txt', 'w') as file:
+    with open("black_pixels.txt", "w") as file:
         for coord in dark_pixel_coordinates:
             file.write(f"{{{coord[1]}, {coord[0]}}},\n")  # Format as {x, y}
 
-    print(f"Found {len(dark_pixel_coordinates)} black pixels. Coordinates saved to 'black_pixels.txt'.")
+    print(
+        f"Found {len(dark_pixel_coordinates)} black pixels. Coordinates saved to 'black_pixels.txt'."
+    )
 else:
     print("Image not found!")
