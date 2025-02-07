@@ -88,7 +88,7 @@ void scheduler_scene_start_on_enter(void* context) {
     scheduler_set_tx_delay(app->scheduler, value_index);
 
     item = variable_item_list_add(var_item_list, "Select File", 0, NULL, app);
-    if(check_file_extension(furi_string_get_cstr(app->file_path))) {
+    if(!furi_string_empty(app->file_path)) {
         scene_manager_set_scene_state(
             app->scene_manager, SchedulerSceneStart, SchedulerStartRunEvent);
         if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
@@ -117,7 +117,7 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SchedulerStartRunEvent) {
-            if(!check_file_extension(furi_string_get_cstr(app->file_path))) {
+            if(furi_string_empty(app->file_path)) {
                 dialog_message_show_storage_error(
                     app->dialogs, "Please select\nplaylist (*.txt) or\n *.sub file!");
             } else {

@@ -29,21 +29,12 @@ static int count_playlist_items(Storage* storage, const char* file_path) {
     return count;
 }
 
-bool check_file_extension(const char* filename) {
-    const char* extension = strrchr(filename, '.');
-    if(extension == NULL) {
-        return false;
-    } else {
-        return !strcmp(extension, ".txt") || !strcmp(extension, ".sub");
-    }
-}
-
 static bool load_protocol_from_file(SchedulerApp* app) {
     furi_assert(app);
     FuriString* file_path = furi_string_alloc();
     Storage* storage = furi_record_open(RECORD_STORAGE);
     DialogsFileBrowserOptions browser_options;
-    dialog_file_browser_set_basic_options(&browser_options, NULL, &I_sub1_10px);
+    dialog_file_browser_set_basic_options(&browser_options, ".sub|.txt", &I_sub1_10px);
     browser_options.base_path = SUBGHZ_APP_FOLDER;
     furi_string_set(app->file_path, SUBGHZ_APP_FOLDER);
 
@@ -53,11 +44,8 @@ static bool load_protocol_from_file(SchedulerApp* app) {
 
     const char* filestr = furi_string_get_cstr(app->file_path);
     if(res) {
-        if(check_file_extension(filestr)) {
-            int8_t list_count = count_playlist_items(storage, filestr);
-
-            scheduler_set_file(app->scheduler, filestr, list_count);
-        }
+        int8_t list_count = count_playlist_items(storage, filestr);
+        scheduler_set_file(app->scheduler, filestr, list_count);
     }
 
     furi_record_close(RECORD_STORAGE);
