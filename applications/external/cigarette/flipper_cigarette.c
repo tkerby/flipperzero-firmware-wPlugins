@@ -89,7 +89,13 @@ typedef struct {
     Storage* storage;
 } StatsView;
 
+typedef struct {
+    bool visible;
+    Storage* storage;
+} AboutView;
+
 static StatsView stats_view = {.total_smokes = 0, .visible = false};
+static AboutView about_view = {.visible = false};
 
 static void app_draw_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
@@ -120,6 +126,17 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             }
         }
 
+        elements_button_up(canvas, "about");
+        elements_button_down(canvas, "back");
+        return;
+    }
+
+    if(about_view.visible) {
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "by maz");
+        canvas_draw_str_aligned(canvas, 64, 34, AlignCenter, AlignCenter, "special thanks to");
+        canvas_draw_str_aligned(canvas, 64, 44, AlignCenter, AlignCenter, "@jaylikesbunda");
+        canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignCenter, "xoxo");
+
         elements_button_down(canvas, "back");
         return;
     }
@@ -134,7 +151,8 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
 
     if(cigarette.lit == false && cigarette.done == false) {
         elements_button_center(canvas, "light up");
-        canvas_draw_str_aligned(canvas, 64, 15, AlignCenter, AlignCenter, "< switch style >");
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "< switch style >");
+        elements_button_up(canvas, "stats");
     }
 
     if(cigarette.done == true) {
@@ -293,12 +311,22 @@ int32_t cigarette_main(void* p) {
                     break;
                 case InputKeyUp:
                     if(event.type == InputTypePress) {
-                        stats_view.visible = !stats_view.visible;
+                        //stats_view.visible = !stats_view.visible;
+                        if(!stats_view.visible) {
+                            stats_view.visible = true;
+                        } else {
+                            about_view.visible = true;
+                            stats_view.visible = false;
+                        }
                     }
                     break;
                 case InputKeyDown:
                     if(stats_view.visible) {
                         stats_view.visible = false;
+                        //about_view.visible = true;
+                    } else if(about_view.visible) {
+                        stats_view.visible = true;
+                        about_view.visible = false;
                     }
                     break;
                 case InputKeyOk:
