@@ -1,3 +1,8 @@
+# v2.1 (2025-02-07)
+
+## Bug-fixes
+- Sending NULL to file browser extension filtering caused intermittent problems on OFW, but completely breaks on Momentum 009 with NULL dereference error. Fixed & tested on Original and M009 firmwares.
+
 # v2.0 (2025-02-05)
 
 ## New Features

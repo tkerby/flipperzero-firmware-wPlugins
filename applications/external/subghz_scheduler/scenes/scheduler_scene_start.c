@@ -93,7 +93,7 @@ void scheduler_scene_start_on_enter(void* context) {
             app->scene_manager, SchedulerSceneStart, SchedulerStartRunEvent);
         if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypeSingle) {
             variable_item_set_current_value_text(item, "[Single]");
-        } else {
+        } else if(scheduler_get_file_type(app->scheduler) == SchedulerFileTypePlaylist) {
             snprintf(
                 buffer,
                 sizeof(buffer),
