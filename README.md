@@ -5,10 +5,10 @@ A Flipper Zero application that blinks LEDs with a decreasing frequency over tim
 This project was inspired by a discussion in this [Hacker News thread](https://news.ycombinator.com/item?id=38274782).
 
 ## Main Screen
-![Blinker menu](pictures/blinker_menu.png)
+![Blinker menu](screenshots/blinker_menu.png)
 
 ## Configuration
-![Blinker number menu](pictures/blinker_number_menu.png)
+![Blinker number menu](screenshots/blinker_number_menu.png)
 
 The following parameters can be configured:
 * `Max interval`: Starting cadence in beats per minute (BPM)
@@ -16,7 +16,7 @@ The following parameters can be configured:
 * `Duration`: Time period (in minutes) over which the cadence gradually changes from max to min
 
 ## Operation
-![Start blinking](pictures/blinker_blinking.png)
+![Start blinking](screenshots/blinker_blinking.png)
 
 When running, all three LEDs (red, green, and blue) blink simultaneously, creating a white flash. The display shows the current BPM, which gradually decreases from max to min interval over the set duration.
 
