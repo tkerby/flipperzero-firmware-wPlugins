@@ -18,7 +18,7 @@ It is possible to configure following:
 ## Start blinking:
 ![Start blinking](pictures/blinker_blinking.png)
 
-While the following screen is shown, the LED on Flipper Zero blinks in red color with the same `bpm` as shown on the screen.
+While the following screen is shown, the LED on Flipper Zero blinks in white color with the same `bpm` as shown on the screen.
 
 ## Development
 Use [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) to flash the code to Flipper. Execute `ufbt` or `ufbt launch`.
