@@ -14,7 +14,7 @@ There are two installation methods; choose the one that is most convenient for y
 
 **Method 1**
 1. Install the Video Game Module Tool app on your Flipper Zero from the Apps catalog: [Video Game Module Tool](https://lab.flipper.net/apps/video_game_module_tool).
-2. Download one of the examples from the current directory:
+2. Download one of the examples from the `Arduino` directory:
 - FlipWorld: `FlipWorld-VGM-Engine.uf2`
 - Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
 - T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
@@ -34,7 +34,7 @@ There are two installation methods; choose the one that is most convenient for y
 12. The app will begin flashing the firmware to your Video Game Module. Wait until the process is complete.
 
 **Method 2**
-1. Download one of the examples from the current directory:
+1. Download one of the examples from the `Arduino` directory:
 - FlipWorld: `FlipWorld-VGM-Engine.uf2`
 - Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
 - T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
