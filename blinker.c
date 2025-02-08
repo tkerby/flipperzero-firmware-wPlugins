@@ -8,6 +8,8 @@ static void timer_callback(void* context) {
     
     led_state = !led_state;
     furi_hal_light_set(LightRed, led_state ? 255 : 0);
+    furi_hal_light_set(LightGreen, led_state ? 255 : 0);
+    furi_hal_light_set(LightBlue, led_state ? 255 : 0);
 
     if (!app->time_out) {
         uint32_t current_time = furi_get_tick() / 1000; // seconds
