@@ -1,8 +1,8 @@
 # Blinker
 
-A Flipper Zero application that blinks LEDs with decreasing cadence.
+A Flipper Zero application that blinks LEDs with a decreasing frequency over time. Unlike traditional Pomodoro timers, it provides visual feedback through LED blinks that gradually slow down.
 
-Based on this [HN thread discussion](https://news.ycombinator.com/item?id=38274782).
+This project was inspired by a discussion in this [Hacker News thread](https://news.ycombinator.com/item?id=38274782).
 
 ## Main Screen
 ![Blinker menu](pictures/blinker_menu.png)
