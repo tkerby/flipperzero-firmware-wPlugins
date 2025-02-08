@@ -23,7 +23,7 @@ When running, all three LEDs (red, green, and blue) blink simultaneously, creati
 ## Installation
 1. Clone this repository
 2. Install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt)
-3. Run `ufbt` to build or `ufbt launch` to build and launch on your Flipper
+3. Run `ufbt` to build or `ufbt launch` to build and launch on your Flipper - this will install the app on your Flipper
 
 ## Development
 For testing purposes, you can use [moodlight.org](https://www.moodlight.org/#0) to visually verify the blinking frequency matches your configured BPM.
