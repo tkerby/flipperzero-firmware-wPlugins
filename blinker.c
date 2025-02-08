@@ -5,33 +5,39 @@ static void timer_callback(void* context) {
     BlinkerApp* app = context;
 
     static bool led_state = false;
+    static bool time_out = false;
     
     led_state = !led_state;
     furi_hal_light_set(LightRed, led_state ? 255 : 0);
 
-    static uint32_t last_check = 0; // Initially set to constant 0.
-    uint32_t current_time = furi_get_tick() / 1000; // seconds
-    uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
+    if (!time_out) {
+        uint32_t current_time = furi_get_tick() / 1000; // seconds
+        uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
 
-    // Execute on first run and afterwards every 5 seconds.
-    // Do not run after 'duration' has passed.
-    if ((last_check == 0 || last_check + 5 < current_time) && (elapsed_time - 5 < app->duration * 60)) {
-        last_check = current_time;
+        if (elapsed_time >= app->duration * 60) {
+            time_out = true;
+            elapsed_time = app->duration * 60;
+        }
 
         // Gradually decrease the interval from max to min during the duration, thanks to elapsed time.
         uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
-        // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
-        uint32_t blink_interval = 60 * 1000 / (interval * 2);
-            
-        char text[32];
-        snprintf(text, sizeof(text), "BPM: %lu", interval);
-        widget_reset(app->widget);
-        widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
-        widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
+        // Execute on first run and afterwards every 5 seconds.
+        // Do not run after 'duration' has passed, which means after time_out.
+        if (app->last_check == 0 || app->last_check + 5 < current_time || time_out == true) {
+            app->last_check = current_time;
+        
+            // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
+            uint32_t blink_interval = 60 * 1000 / (interval * 2);
+                
+            char text[32];
+            snprintf(text, sizeof(text), "BPM: %lu", interval);
+            widget_reset(app->widget);
+            widget_add_string_element(app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Blinking");
+            widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, text);
 
-        furi_timer_restart(app->timer, blink_interval);
+            furi_timer_restart(app->timer, blink_interval);
+        }
     }
-
 }
 
 static bool back_button_callback(void* context) {
@@ -51,9 +57,11 @@ static bool back_button_callback(void* context) {
     return false;
 }
 
-static void exec_view(BlinkerApp* app) { 
+static void exec_view(BlinkerApp* app) {
     app->start_time = furi_get_tick();
-    furi_timer_start(app->timer, app->max_interval);
+    app->last_check = 0; // Initially set to constant 0.
+
+    furi_timer_start(app->timer, 60 * 1000 / (app->max_interval * 2));
     timer_callback(app);
 
     app->current_view = Exec;

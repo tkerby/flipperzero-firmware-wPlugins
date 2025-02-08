@@ -37,6 +37,7 @@ typedef struct {
     uint32_t min_interval;
     uint32_t max_interval;
     uint32_t start_time;
+    uint32_t last_check;
 } BlinkerApp;
 
 static void main_view(BlinkerApp* app);
