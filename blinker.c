@@ -47,6 +47,8 @@ static bool back_button_callback(void* context) {
     if(app->current_view == Exec) {
         furi_timer_stop(app->timer);
         furi_hal_light_set(LightRed, 0);
+        furi_hal_light_set(LightGreen, 0);
+        furi_hal_light_set(LightBlue, 0);
     }
     
     if(app->current_view != Main) {
