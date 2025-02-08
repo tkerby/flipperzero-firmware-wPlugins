@@ -45,6 +45,7 @@ enum Intervals {
     Interval4Hrs,
     Interval8Hrs,
     Interval12Hrs,
+    Interval24Hrs,
     IntervalSettingsNum
 };
 
@@ -63,10 +64,10 @@ static const char* const interval_text[INTERVAL_COUNT] = {
     "2 hrs",
     "4 hrs",
     "8 hrs",
-    "12 hrs"};
-
-static const uint32_t interval_second_value[] =
-    {10, 30, 60, 120, 300, 600, 1200, 1800, 2700, 3600, 7200, 14400, 28800, 43200};
+    "12 hrs",
+    "24 hrs"};
+static const uint32_t interval_second_value[INTERVAL_COUNT] =
+    {10, 30, 60, 120, 300, 600, 1200, 1800, 2700, 3600, 7200, 14400, 28800, 43200, 86400};
 
 #define REPEATS_COUNT 6
 static const char* const tx_repeats_text[REPEATS_COUNT] = {
