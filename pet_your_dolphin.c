@@ -17,6 +17,7 @@
 #define DAILY_PET_LIMIT 2
 #define MS_IN_HOUR  (60UL*60UL*1000UL)
 #define MS_IN_DAY   (24UL*MS_IN_HOUR)
+#define PETTING_DURATION 6000
 
 
 // This structure holds our dolphin-related data.
@@ -31,7 +32,7 @@ typedef struct {
     ViewPort* view_port;
     Gui* gui;
     bool running;
-    int32_t petting_elapsed_ms;
+    bool petting_in_progress;
     uint32_t petting_anim_start_tick;
     uint32_t idle_anim_start_tick;
     DolphinData* data;
@@ -68,13 +69,42 @@ static void render_callback(Canvas* canvas, void* ctx) {
     AppData* app = (AppData*)ctx;
     handle_reset(app);
 
+    canvas_set_bitmap_mode(canvas, 1);
     canvas_clear(canvas);
 
     uint32_t ticks = furi_get_tick();
     
     draw_base(canvas, ticks);
 
-    draw_happy_idle(canvas, ticks - app->idle_anim_start_tick);
+    if (app->petting_in_progress) {
+        if (ticks - app->petting_anim_start_tick >= PETTING_DURATION) {
+            // dolphin_deed(DolphinDeedPluginGameWin);
+            dolphin_deed(DolphinDeedTestLeft);
+            app->state.daily_pet_count++;
+            app->data->stats = dolphin_stats(app->data->dolphin);
+            FURI_LOG_I(TAG, "Dolphin Petted! daily pet count: %lu, butthurt: %lu",
+                app->state.daily_pet_count,
+                app->data->stats.butthurt);
+            pet_app_state_save(&app->state);
+            app->petting_in_progress = false;
+            app->idle_anim_start_tick = ticks;
+            draw_happy_idle(canvas, 0);
+        } else {
+            draw_petting(canvas, ticks - app->petting_anim_start_tick, PETTING_DURATION);
+        }
+    } else {
+        if (app->data->stats.butthurt > 8) {
+            draw_sad_idle(canvas, ticks - app->idle_anim_start_tick);
+        // } else if (app->data->stats.butthurt > 4) {
+        //     draw_neutral_idle(canvas, ticks - app->idle_anim_start_tick);
+        } else {
+            draw_happy_idle(canvas, ticks - app->idle_anim_start_tick);
+        }
+
+        if (true /*app->state.daily_pet_count < DAILY_PET_LIMIT*/) {
+            draw_pet_prompt(canvas, ticks - app->idle_anim_start_tick);
+        }
+    }
 }
 
 static void input_callback(InputEvent* input, void* ctx) {
@@ -102,7 +132,7 @@ AppData* pet_your_dolphin_app_alloc(void) {
             app->state.daily_pet_count);
     }
 
-    app->petting_elapsed_ms = -1;
+    app->petting_in_progress = false;
     app->petting_anim_start_tick = 0;
     app->idle_anim_start_tick = 0;
 
@@ -151,19 +181,14 @@ int32_t pet_your_dolphin(void* p) {
     while(app->running) {
         if(furi_message_queue_get(app->queue, &input, 100) == FuriStatusOk) {
             if(input.key == InputKeyOk && input.type == InputTypePress) {
-                if (app->state.daily_pet_count < DAILY_PET_LIMIT) {
-                    dolphin_deed(DolphinDeedPluginGameWin);
-                    furi_delay_ms(50);
-                    app->state.daily_pet_count++;
-                    app->data->stats = dolphin_stats(app->data->dolphin);
-                    FURI_LOG_I(TAG, "Dolphin Petted! daily pet count: %lu, butthurt: %lu",
-                        app->state.daily_pet_count,
-                        app->data->stats.butthurt);
-                    pet_app_state_save(&app->state);
-                } else {
+                if (!app->petting_in_progress /*&& app->state.daily_pet_count < DAILY_PET_LIMIT*/) {
+                    app->petting_in_progress = true;
+                    app->petting_anim_start_tick = furi_get_tick();
+                } else if(app->state.daily_pet_count >= DAILY_PET_LIMIT) {
                     FURI_LOG_I(TAG, "Daily petting limit reached");
+                } else {
+                    FURI_LOG_I(TAG, "Petting already in progress");
                 }
-                
             } else if(input.key == InputKeyBack && input.type == InputTypePress) {
                 FURI_LOG_I(TAG, "Exiting app.");
                 app->running = false;

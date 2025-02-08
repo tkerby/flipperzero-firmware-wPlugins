@@ -16,11 +16,59 @@ void draw_base(Canvas* canvas, uint32_t ticks) {
         A_base_animation.frames[frame_index]);
 }
 
-// void draw_petting(Canvas* canvas, uint32_t ticks) {
+void draw_hand(Canvas* canvas, uint32_t ticks) {
+    uint32_t frame_index = (ticks / 1000) % A_petting_hand.frame_count;
 
-// }
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_petting_hand_mask.width,
+        A_petting_hand_mask.height,
+        A_petting_hand_mask.frames[frame_index]);
+
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_petting_hand.width,
+        A_petting_hand.height,
+        A_petting_hand.frames[frame_index]);
+}
+
+void draw_petting_face(Canvas* canvas, uint32_t ticks, uint32_t petting_duration) {
+    const uint32_t petting_phase_location = ticks * 100 / petting_duration;
+    const uint32_t frame1_start = 60;
+    const uint32_t frame1_end = 90;
+    const uint8_t frame_index = petting_phase_location >= frame1_start && petting_phase_location < frame1_end ? 1 : 0;
+
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_petting_face_mask.width,
+        A_petting_face_mask.height,
+        A_petting_face_mask.frames[frame_index]);
+
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_petting_face.width,
+        A_petting_face.height,
+        A_petting_face.frames[frame_index]);
+}
+
+void draw_petting(Canvas* canvas, uint32_t ticks, uint32_t petting_duration) {
+    draw_petting_face(canvas, ticks, petting_duration);
+    draw_hand(canvas, ticks);
+}
+
 void draw_happy_idle(Canvas* canvas, uint32_t ticks) {
-    canvas_set_bitmap_mode(canvas, 1);
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_bitmap(
         canvas,
@@ -46,4 +94,39 @@ void draw_happy_idle(Canvas* canvas, uint32_t ticks) {
         A_happy_idle.width,
         A_happy_idle.height,
         A_happy_idle.frames[happy_frame]);
+}
+
+void draw_sad_idle(Canvas* canvas, uint32_t ticks) {
+    uint32_t frame_index = (ticks / 1000) % A_sad_idle.frame_count;
+
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        I_sad_face_mask.width,
+        I_sad_face_mask.height,
+        I_sad_face_mask.frames[0]);
+
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_sad_idle.width,
+        A_sad_idle.height,
+        A_sad_idle.frames[frame_index]);
+}
+
+void draw_pet_prompt(Canvas* canvas, uint32_t ticks) {
+    bool draw = (ticks / 2000) % 2;
+
+    if (draw) {
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_box(canvas, 98, 33, 30, 30);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_str(canvas, 103, 41, "Press");
+        canvas_draw_str(canvas, 108, 50, "OK");
+        canvas_draw_str(canvas, 103, 59, "to pet");
+    }
 }
