@@ -1,26 +1,29 @@
 # Blinker
 
-Flipper Zero App, which blinks LED with decreasing cadency.
+A Flipper Zero application that blinks LEDs with decreasing cadence.
 
-Based on the following [HN thread](https://news.ycombinator.com/item?id=38274782).
+Based on this [HN thread discussion](https://news.ycombinator.com/item?id=38274782).
 
-## Main screen:
+## Main Screen
 ![Blinker menu](pictures/blinker_menu.png)
 
-## Configure interval and duration:
+## Configuration
 ![Blinker number menu](pictures/blinker_number_menu.png)
 
-It is possible to configure following:
-* `max interval`: Initial cadence.
-* `duration`: Period of time during which the cadence should change.
-* `min interval`: Eventual cadence.
+The following parameters can be configured:
+* `Max interval`: Starting cadence in beats per minute (BPM)
+* `Min interval`: Target ending cadence in BPM
+* `Duration`: Time period (in minutes) over which the cadence gradually changes from max to min
 
-## Start blinking:
+## Operation
 ![Start blinking](pictures/blinker_blinking.png)
 
-While the following screen is shown, the LED on Flipper Zero blinks in white color with the same `bpm` as shown on the screen.
+When running, all three LEDs (red, green, and blue) blink simultaneously, creating a white flash. The display shows the current BPM, which gradually decreases from max to min interval over the set duration.
+
+## Installation
+1. Clone this repository
+2. Install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt)
+3. Run `ufbt` to build or `ufbt launch` to build and launch on your Flipper
 
 ## Development
-Use [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) to flash the code to Flipper. Execute `ufbt` or `ufbt launch`.
-
-I used the following [website](https://www.moodlight.org/#0) to verify with my __caveman eye__ that the frequency of blinking LED matches the config.
+For testing purposes, you can use [moodlight.org](https://www.moodlight.org/#0) to visually verify the blinking frequency matches your configured BPM.
