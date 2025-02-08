@@ -10,7 +10,7 @@ The Flipper Zero app allows you to use your d-pad as input in games created with
 The Arduino library is used to create and manage games. Copy the `vgm_game_engine` folder from the `Arduino` directory into your Arduino `libraries` folder (typically located at `User/Documents/Arduino/libraries`). To use the library, add `#include "VGMGameEngine.h"` at the top of your `.ino` file. Review the provided examples to understand how to use the library.
 
 ### Compiled Example
-Inside the `Arduino` directory, you will find two compiled examples, FlipWorld and Air Labyrinth. There are two installation methods; choose the one that is most convenient for you:
+There are two installation methods; choose the one that is most convenient for you:
 
 **Method 1**
 1. Install the Video Game Module Tool app on your Flipper Zero from the Apps catalog: [Video Game Module Tool](https://lab.flipper.net/apps/video_game_module_tool).
