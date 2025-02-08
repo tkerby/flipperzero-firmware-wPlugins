@@ -5,17 +5,16 @@ static void timer_callback(void* context) {
     BlinkerApp* app = context;
 
     static bool led_state = false;
-    static bool time_out = false;
     
     led_state = !led_state;
     furi_hal_light_set(LightRed, led_state ? 255 : 0);
 
-    if (!time_out) {
+    if (!app->time_out) {
         uint32_t current_time = furi_get_tick() / 1000; // seconds
         uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
 
         if (elapsed_time >= app->duration * 60) {
-            time_out = true;
+            app->time_out = true;
             elapsed_time = app->duration * 60;
         }
 
@@ -23,7 +22,7 @@ static void timer_callback(void* context) {
         uint32_t interval = app->max_interval - (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
         // Execute on first run and afterwards every 5 seconds.
         // Do not run after 'duration' has passed, which means after time_out.
-        if (app->last_check == 0 || app->last_check + 5 < current_time || time_out == true) {
+        if (app->last_check == 0 || app->last_check + 5 < current_time || app->time_out == true) {
             app->last_check = current_time;
         
             // Equation: 1 minute in miliseconds divided by number of cycles, multiplied by 2 (on and off)
@@ -60,6 +59,7 @@ static bool back_button_callback(void* context) {
 static void exec_view(BlinkerApp* app) {
     app->start_time = furi_get_tick();
     app->last_check = 0; // Initially set to constant 0.
+    app->time_out = false;
 
     furi_timer_start(app->timer, 60 * 1000 / (app->max_interval * 2));
     timer_callback(app);
