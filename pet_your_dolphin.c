@@ -1,6 +1,7 @@
 #include <furi.h>
 #include <furi_hal_rtc.h>
 #include <gui/gui.h>
+#include <gui/icon_i.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,6 +10,8 @@
 #include "dolphin/dolphin_i.h"
 
 #include "pet_app_state.h"
+#include "draw_animations.h"
+#include "compiled/assets_icons.h"
 
 #define TAG "Pet Your Dolphin"
 #define DAILY_PET_LIMIT 2
@@ -28,7 +31,9 @@ typedef struct {
     ViewPort* view_port;
     Gui* gui;
     bool running;
-    bool petting_in_progress;
+    int32_t petting_elapsed_ms;
+    uint32_t petting_anim_start_tick;
+    uint32_t idle_anim_start_tick;
     DolphinData* data;
     PetAppState state;
 } AppData;
@@ -63,11 +68,13 @@ static void render_callback(Canvas* canvas, void* ctx) {
     AppData* app = (AppData*)ctx;
     handle_reset(app);
 
-    if(app->state.daily_pet_count >= DAILY_PET_LIMIT) {
-        canvas_draw_str(canvas, 5, 40, "No more pets today!");
-    } else {
-        canvas_draw_str(canvas, 5, 40, "Press OK to pet!");
-    }
+    canvas_clear(canvas);
+
+    uint32_t ticks = furi_get_tick();
+    
+    draw_base(canvas, ticks);
+
+    draw_happy_idle(canvas, ticks - app->idle_anim_start_tick);
 }
 
 static void input_callback(InputEvent* input, void* ctx) {
@@ -94,6 +101,10 @@ AppData* pet_your_dolphin_app_alloc(void) {
             app->state.last_pet_year,
             app->state.daily_pet_count);
     }
+
+    app->petting_elapsed_ms = -1;
+    app->petting_anim_start_tick = 0;
+    app->idle_anim_start_tick = 0;
 
     app->queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     app->view_port = view_port_alloc();
