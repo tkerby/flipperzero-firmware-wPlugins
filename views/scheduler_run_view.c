@@ -80,7 +80,6 @@ void scheduler_update_progress(uint8_t x) {
 
 void scheduler_update_widgets(void* context) {
     SchedulerApp* app = context;
-    //uint32_t value;
 
     widget_reset(app->widget);
     widget_add_frame_element(
@@ -188,7 +187,6 @@ void scheduler_scene_run_on_enter(void* context) {
     furi_hal_power_suppress_charge_enter();
     scheduler_reset(app->scheduler);
     scheduler_ui_run_state_alloc(app);
-    update_countdown(app);
     subghz_devices_init();
     furi_delay_ms(100);
 }
@@ -210,15 +208,16 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeTick) {
         if(!app->is_transmitting) {
-            if(scheduler_time_to_trigger(app->scheduler)) {
-                update_countdown(app);
+            bool trig = scheduler_time_to_trigger(app->scheduler);
+            update_countdown(app);
+
+            if(trig) {
                 scheduler_start_tx(app);
             } else {
-                update_countdown(app);
                 notification_message(app->notifications, &sequence_blink_red_10);
             }
+            consumed = true;
         }
-        consumed = true;
     }
 
     return consumed;
