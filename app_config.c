@@ -26,15 +26,19 @@
 #define SECTION_APP    "app"
 #define SECTION_SENSOR "sensor"
 
-#define KEY_SENSOR_TYPE    "sensorType"
-#define KEY_I2C_ADDRESS    "i2cAddress"
-#define KEY_SHUNT_RESISTOR "shuntResistor"
+#define KEY_SENSOR_TYPE       "sensorType"
+#define KEY_I2C_ADDRESS       "i2cAddress"
+#define KEY_SHUNT_RESISTOR    "shuntResistor"
+#define KEY_VOLTAGE_PRECISION "voltagePrecision"
+#define KEY_CURRENT_PRECISION "currentPrecision"
 
 void app_config_init(AppConfig* config) {
     furi_check(config != NULL);
     config->sensor_type = SensorType_INA219;
     config->i2c_address = I2C_ADDRESS_MIN;
     config->shunt_resistor = 100000; // 100mOhm
+    config->voltage_precision = SensorPrecision_Medium;
+    config->current_precision = SensorPrecision_Medium;
 }
 
 const char* sensor_type_name(SensorType sensor_type) {
@@ -45,6 +49,21 @@ const char* sensor_type_name(SensorType sensor_type) {
         return "INA226";
     case SensorType_INA228:
         return "INA228";
+    default:
+        return "Unknown";
+    }
+}
+
+const char* sensor_precision_name(SensorPrecision sensor_mode) {
+    switch(sensor_mode) {
+    case SensorPrecision_Low:
+        return "Low";
+    case SensorPrecision_Medium:
+        return "Medium";
+    case SensorPrecision_High:
+        return "High";
+    case SensorPrecision_Max:
+        return "Max";
     default:
         return "Unknown";
     }
@@ -65,6 +84,10 @@ static FuriString* app_config_build(const AppConfig* config) {
     ini_add_keyval(s, KEY_SENSOR_TYPE, "%s", sensor_type_name(config->sensor_type));
     ini_add_keyval(s, KEY_I2C_ADDRESS, "0x%02X", config->i2c_address);
     ini_add_keyval(s, KEY_SHUNT_RESISTOR, "%f", config->shunt_resistor);
+    ini_add_keyval(
+        s, KEY_VOLTAGE_PRECISION, "%s", sensor_precision_name(config->voltage_precision));
+    ini_add_keyval(
+        s, KEY_CURRENT_PRECISION, "%s", sensor_precision_name(config->current_precision));
 
     return s;
 }
@@ -106,6 +129,36 @@ static void app_config_set(AppConfig* config, Slice section, Slice key, Slice va
                     TAG, "shunt_resistance=%.3fmOhm", config->shunt_resistor * (double)1000.0);
             } else {
                 FURI_LOG_E(TAG, "Failed to parse shunt resistance value");
+            }
+        } else if(key(KEY_VOLTAGE_PRECISION)) {
+            bool found = false;
+            for(SensorPrecision i = 0; i < SensorPrecision_count; i++) {
+                if(slice_equals_cstr(value, sensor_precision_name(i))) {
+                    config->voltage_precision = i;
+                    found = true;
+                    break;
+                }
+            }
+            if(found) {
+                FURI_LOG_I(
+                    TAG, "voltage_precision=%s", sensor_precision_name(config->voltage_precision));
+            } else {
+                FURI_LOG_E(TAG, "Unknown voltage precision");
+            }
+        } else if(key(KEY_CURRENT_PRECISION)) {
+            bool found = false;
+            for(SensorPrecision i = 0; i < SensorPrecision_count; i++) {
+                if(slice_equals_cstr(value, sensor_precision_name(i))) {
+                    config->current_precision = i;
+                    found = true;
+                    break;
+                }
+            }
+            if(found) {
+                FURI_LOG_I(
+                    TAG, "current_precision=%s", sensor_precision_name(config->current_precision));
+            } else {
+                FURI_LOG_E(TAG, "Unknown current precision");
             }
         }
     }

@@ -72,22 +72,34 @@ void app_restart_sensor_driver(App* app) {
         break;
 
     case SensorType_INA226:
+        Ina226ConvTime ina226_conv_time[SensorPrecision_count] = {
+            [SensorPrecision_Low] = Ina226ConvTime_140us,
+            [SensorPrecision_Medium] = Ina226ConvTime_588us,
+            [SensorPrecision_High] = Ina226ConvTime_2116us,
+            [SensorPrecision_Max] = Ina226ConvTime_8244us,
+        };
         Ina226Config ina226_config = {
             .i2c_address = app->config.i2c_address,
             .shunt_resistor = app->config.shunt_resistor,
-            .averaging = Ina226Averaging_64,
-            .vbus_conv_time = Ina226ConvTime_1100us,
-            .vshunt_conv_time = Ina226ConvTime_8244us,
+            .averaging = Ina226Averaging_1024,
+            .vbus_conv_time = ina226_conv_time[app->config.voltage_precision],
+            .vshunt_conv_time = ina226_conv_time[app->config.current_precision],
         };
         app->sensor = ina226_driver_alloc(&ina226_config);
         break;
     case SensorType_INA228:
+        Ina228ConvTime ina228_conv_time[SensorPrecision_count] = {
+            [SensorPrecision_Low] = Ina228ConvTime_50us,
+            [SensorPrecision_Medium] = Ina228ConvTime_280us,
+            [SensorPrecision_High] = Ina228ConvTime_1052us,
+            [SensorPrecision_Max] = Ina228ConvTime_4120us,
+        };
         Ina228Config ina228_config = {
             .i2c_address = app->config.i2c_address,
             .shunt_resistor = app->config.shunt_resistor,
-            .averaging = Ina228Averaging_128,
-            .vbus_conv_time = Ina228ConvTime_1052us,
-            .vshunt_conv_time = Ina228ConvTime_4120us,
+            .averaging = Ina228Averaging_1024,
+            .vbus_conv_time = ina228_conv_time[app->config.voltage_precision],
+            .vshunt_conv_time = ina228_conv_time[app->config.current_precision],
             .adc_range = Ina228AdcRange_160mV,
         };
         app->sensor = ina228_driver_alloc(&ina228_config);

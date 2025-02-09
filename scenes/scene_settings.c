@@ -22,6 +22,8 @@ typedef enum {
     MenuIndex_SensorType,
     MenuIndex_I2CAddress,
     MenuIndex_ShuntResistor,
+    MenuIndex_VoltagePrecision,
+    MenuIndex_CurrentPrecision,
     MenuIndex_WiringInfo,
 } MenuIndex;
 
@@ -43,6 +45,22 @@ static void on_i2c_address_changed(VariableItem* item) {
 
     App* app = (App*)variable_item_get_context(item);
     app->config.i2c_address = i2c_address;
+}
+
+static void on_voltage_precision_changed(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, sensor_precision_name(index));
+
+    App* app = (App*)variable_item_get_context(item);
+    app->config.voltage_precision = index;
+}
+
+static void on_current_precision_changed(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, sensor_precision_name(index));
+
+    App* app = (App*)variable_item_get_context(item);
+    app->config.current_precision = index;
 }
 
 static void scene_settings_enter_callback(void* context, uint32_t index) {
@@ -76,6 +94,16 @@ void scene_settings_init(App* app) {
     item = variable_item_list_add(list, "Shunt Resistor", 1, NULL, app);
     FuriString* text = format_resistance_value(app->config.shunt_resistor);
     variable_item_set_current_value_text(item, furi_string_get_cstr(text));
+
+    item = variable_item_list_add(
+        list, "V Precision", SensorPrecision_count, on_voltage_precision_changed, app);
+    variable_item_set_current_value_index(item, app->config.voltage_precision);
+    on_voltage_precision_changed(item);
+
+    item = variable_item_list_add(
+        list, "I Precision", SensorPrecision_count, on_current_precision_changed, app);
+    variable_item_set_current_value_index(item, app->config.current_precision);
+    on_current_precision_changed(item);
 
     item = variable_item_list_add(list, "Wiring info", 0, NULL, app);
 

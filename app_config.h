@@ -26,8 +26,19 @@ typedef enum {
     SensorType_count,
 } SensorType;
 
+typedef enum {
+    SensorPrecision_Low,
+    SensorPrecision_Medium,
+    SensorPrecision_High,
+    SensorPrecision_Max,
+    SensorPrecision_count,
+} SensorPrecision;
+
 // Returns the name of the sensor type
 const char* sensor_type_name(SensorType sensor_type);
+
+// Returns the name of the sensor mode
+const char* sensor_precision_name(SensorPrecision sensor_mode);
 
 #define I2C_ADDRESS_MIN   0x40
 #define I2C_ADDRESS_COUNT 16
@@ -40,6 +51,10 @@ typedef struct {
     uint8_t i2c_address;
     // Shunt resistor value in micro ohms
     double shunt_resistor;
+    // VBUS voltage measurement precision
+    SensorPrecision voltage_precision;
+    // Shunt current measurement precision
+    SensorPrecision current_precision;
 } AppConfig;
 
 // Initializes the application configuration and sets the default values
