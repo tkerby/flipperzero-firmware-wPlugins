@@ -82,7 +82,7 @@ void scheduler_scene_start_on_enter(void* context) {
 
     item = variable_item_list_add(
         var_item_list, "TX Delay:", TX_DELAY_COUNT, scheduler_scene_start_set_tx_delay, app);
-    value_index = scheduler_get_tx_delay(app->scheduler);
+    value_index = scheduler_get_tx_delay_index(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, tx_delay_text[value_index]);
     scheduler_set_tx_delay(app->scheduler, value_index);
@@ -102,7 +102,6 @@ void scheduler_scene_start_on_enter(void* context) {
             variable_item_set_current_value_text(item, buffer);
         }
     }
-
     variable_item_list_add(var_item_list, "Start", 0, NULL, app);
 
     variable_item_list_set_selected_item(
