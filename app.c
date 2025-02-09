@@ -74,6 +74,9 @@ void app_restart_sensor_driver(App* app) {
         Ina226Config ina226_config = {
             .i2c_address = app->config.i2c_address,
             .shunt_resistor = app->config.shunt_resistor,
+            .averaging = Ina226Averaging_64,
+            .vbus_conv_time = Ina226ConvTime_1100us,
+            .vshunt_conv_time = Ina226ConvTime_8244us,
         };
         app->sensor = ina226_driver_alloc(&ina226_config);
         break;

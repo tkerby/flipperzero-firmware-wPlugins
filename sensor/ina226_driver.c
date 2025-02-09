@@ -92,9 +92,9 @@ static bool ina226_driver_tick(SensorDriver* driver) {
             FURI_LOG_I(TAG, "No INA226 found at 0x%02X", drv->config.i2c_address);
         } else {
             // Configure INA226
-            uint16_t config_reg = (3 << 9) | // AVG, 64 samples
-                                  (4 << 6) | // VBUSCT, 1.1ms conversion time
-                                  (7 << 3) | // VSHCT, 8.224ms conversion time
+            uint16_t config_reg = (drv->config.averaging << 9) | // AVG
+                                  (drv->config.vbus_conv_time << 6) | // VBUSCT
+                                  (drv->config.vshunt_conv_time << 3) | // VSHCT
                                   (7 << 0); // Shunt and bus, continuous
 
             if(!ina226_write_reg(drv, INA226_REG_CONFIG, config_reg)) {
