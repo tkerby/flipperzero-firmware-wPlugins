@@ -1,3 +1,8 @@
+# v2.2 (2025-TBD)
+
+## New Features
+- Added 24-hour interval.
+
 # v2.1 (2025-02-07)
 
 ## Bug-fix

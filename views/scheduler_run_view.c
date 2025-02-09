@@ -187,6 +187,7 @@ void scheduler_scene_run_on_enter(void* context) {
     furi_hal_power_suppress_charge_enter();
     scheduler_reset(app->scheduler);
     scheduler_ui_run_state_alloc(app);
+    update_countdown(app);
     subghz_devices_init();
     furi_delay_ms(100);
 }
