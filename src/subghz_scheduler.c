@@ -17,6 +17,8 @@ struct Scheduler {
 
 Scheduler* scheduler_alloc() {
     Scheduler* scheduler = malloc(sizeof(Scheduler));
+    scheduler->tx_delay = SchedulerTxDelay100;
+    scheduler->tx_repeats = 0;
     return scheduler;
 }
 
@@ -51,9 +53,9 @@ void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode) {
     scheduler->mode = mode;
 }
 
-void scheduler_set_tx_delay(Scheduler* scheduler, uint16_t tx_delay) {
+void scheduler_set_tx_delay(Scheduler* scheduler, uint8_t tx_delay) {
     furi_assert(scheduler);
-    scheduler->tx_delay = tx_delay;
+    scheduler->tx_delay = tx_delay_value[tx_delay];
 }
 
 static const char* extract_filename(const char* filepath) {
@@ -89,7 +91,7 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
         scheduler->countdown = interval;
         return true;
     }
-    --scheduler->countdown;
+    scheduler->countdown--;
     return false;
 }
 
@@ -137,6 +139,22 @@ SchedulerMode scheduler_get_mode(Scheduler* scheduler) {
 uint16_t scheduler_get_tx_delay(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->tx_delay;
+}
+
+uint8_t scheduler_get_tx_delay_index(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    switch(scheduler->tx_delay) {
+    case SchedulerTxDelay100:
+        return 0;
+    case SchedulerTxDelay250:
+        return 1;
+    case SchedulerTxDelay500:
+        return 2;
+    case SchedulerTxDelay1000:
+        return 3;
+    default:
+        return 0;
+    }
 }
 
 uint8_t scheduler_get_list_count(Scheduler* scheduler) {
