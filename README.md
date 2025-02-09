@@ -10,7 +10,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
      <ul>
        <li>Seconds: 10 & 30</li>
        <li>Minutes: 1, 2, 5, 10, 20, 30, 45</li>
-       <li>Hours: 1, 2, 4, 8, 12</li>
+       <li>Hours: 1, 2, 4, 8, 12, 24</li>
      </ul>
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v2.0/10s_x1_tx250_norm.png" width="100%"></td>
