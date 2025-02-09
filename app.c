@@ -22,6 +22,7 @@
 #include "sensor/ina209_driver.h"
 #include "sensor/ina219_driver.h"
 #include "sensor/ina226_driver.h"
+#include "sensor/ina228_driver.h"
 
 static bool app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context != NULL);
@@ -79,6 +80,17 @@ void app_restart_sensor_driver(App* app) {
             .vshunt_conv_time = Ina226ConvTime_8244us,
         };
         app->sensor = ina226_driver_alloc(&ina226_config);
+        break;
+    case SensorType_INA228:
+        Ina228Config ina228_config = {
+            .i2c_address = app->config.i2c_address,
+            .shunt_resistor = app->config.shunt_resistor,
+            .averaging = Ina228Averaging_128,
+            .vbus_conv_time = Ina228ConvTime_1052us,
+            .vshunt_conv_time = Ina228ConvTime_4120us,
+            .adc_range = Ina228AdcRange_160mV,
+        };
+        app->sensor = ina228_driver_alloc(&ina228_config);
         break;
 
     default:
