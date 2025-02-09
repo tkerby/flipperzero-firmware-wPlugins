@@ -23,11 +23,13 @@
 
 #define INA226_I2C_TIMEOUT 100 // ms
 
-#define INA226_REG_CONFIG 0x00
-#define INA226_REG_SHUNT  0x01
-#define INA226_REG_BUS    0x02
-#define INA226_REG_POWER  0x03
-#define INA226_REG_MASK   0x06
+#define INA226_REG_CONFIG   0x00
+#define INA226_REG_SHUNT    0x01
+#define INA226_REG_BUS      0x02
+#define INA226_REG_POWER    0x03
+#define INA226_REG_MASK     0x06
+#define INA226_REG_MANUF_ID 0xFE
+#define INA226_REG_DIE_ID   0xFF
 
 #define INA226_REG_MASK_CVRF 0x0008
 
@@ -81,17 +83,26 @@ static bool ina226_driver_tick(SensorDriver* driver) {
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
     if(!drv->configured) {
-        // Configure INA226
-        uint16_t config_reg = (3 << 9) | // AVG, 64 samples
-                              (4 << 6) | // VBUSCT, 1.1ms conversion time
-                              (7 << 3) | // VSHCT, 8.224ms conversion time
-                              (7 << 0); // Shunt and bus, continuous
-
-        if(ina226_write_reg(drv, INA226_REG_CONFIG, config_reg)) {
-            FURI_LOG_I(TAG, "INA226 found at 0x%02X and configured", drv->config.i2c_address);
-            drv->configured = true;
-        } else {
+        uint16_t manuf_id_reg = 0;
+        uint16_t die_id_reg = 0;
+        if(!ina226_read_reg(drv, INA226_REG_MANUF_ID, &manuf_id_reg) ||
+           !ina226_read_reg(drv, INA226_REG_DIE_ID, &die_id_reg)) {
             FURI_LOG_I(TAG, "No I2C device found at 0x%02X", drv->config.i2c_address);
+        } else if(manuf_id_reg != 0x5449 || die_id_reg != 0x2260) {
+            FURI_LOG_I(TAG, "No INA226 found at 0x%02X", drv->config.i2c_address);
+        } else {
+            // Configure INA226
+            uint16_t config_reg = (3 << 9) | // AVG, 64 samples
+                                  (4 << 6) | // VBUSCT, 1.1ms conversion time
+                                  (7 << 3) | // VSHCT, 8.224ms conversion time
+                                  (7 << 0); // Shunt and bus, continuous
+
+            if(!ina226_write_reg(drv, INA226_REG_CONFIG, config_reg)) {
+                FURI_LOG_I(TAG, "Cannot configure INA226 0x%02X", drv->config.i2c_address);
+            } else {
+                FURI_LOG_I(TAG, "INA226 found at 0x%02X and configured", drv->config.i2c_address);
+                drv->configured = true;
+            }
         }
     } else {
         uint16_t mask_reg = 0;
