@@ -1,13 +1,14 @@
 App(
     appid="401_light_msg",
-    name="401/Light MESSENGER",
+    name="Lab401/Light Messenger",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="lightMsg_app",
     requires=["gui"],
     stack_size=4 * 1024,
-    fap_description="Lab401's LightMessenger companion app.",
-    fap_author="tixlegeek",
+    fap_description="Lab401's Light Messenger companion app.",
+    fap_author="Lab401 & tixlegeek",
     fap_icon="images/401_lghtmsg_icon_10px.png",
     fap_category="GPIO",
     fap_icon_assets="images",
+    fap_version="1.0",
 )
