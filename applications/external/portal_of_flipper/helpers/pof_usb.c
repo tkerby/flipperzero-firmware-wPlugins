@@ -79,6 +79,7 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
     uint32_t timeout = 100; // FuriWaitForever; //ms
+    FURI_LOG_D(TAG, "pof_thread_worker");
 
     while(true) {
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
@@ -422,11 +423,14 @@ PoFUsb* pof_usb_start(VirtualPortal* virtual_portal) {
         }
 
         free(pof_usb);
+        pof_usb = NULL;
         return NULL;
     }
     return pof_usb;
 }
 
 void pof_usb_stop(PoFUsb* pof_usb) {
-    furi_hal_usb_set_config(pof_usb->usb_prev, NULL);
+    if(pof_usb) {
+        furi_hal_usb_set_config(pof_usb->usb_prev, NULL);
+    }
 }
