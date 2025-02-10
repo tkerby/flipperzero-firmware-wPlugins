@@ -5,15 +5,17 @@ typedef enum FileTxType {
     SchedulerFileTypePlaylist,
     SchedulerFileTypeNum
 } FileTxType;
+#define FILE_TYPE_COUNT SchedulerFileTypeNum
 static const char* const file_type_text[SchedulerFileTypeNum] = {"Single", "Playlist"};
 
-typedef enum SchedulerMode {
-    SchedulerModeNormal,
-    SchedulerModeImmediate,
-    SchedulerModeOneShot,
-    SchedulerModeSettingsNum,
-} SchedulerMode;
-static const char* const mode_text[SchedulerModeSettingsNum] = {
+typedef enum SchedulerTxMode {
+    SchedulerTxModeNormal,
+    SchedulerTxModeImmediate,
+    SchedulerTxModeOneShot,
+    SchedulerTxModeSettingsNum,
+} SchedulerTxMode;
+#define TX_MODE_COUNT SchedulerTxModeSettingsNum
+static const char* const mode_text[SchedulerTxModeSettingsNum] = {
     "Normal",
     "Immed.",
     "1-Shot",

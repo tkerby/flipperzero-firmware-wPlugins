@@ -36,7 +36,7 @@ static void scheduler_scene_start_set_repeats(VariableItem* item) {
 
 static void scheduler_scene_start_set_mode(VariableItem* item) {
     SchedulerApp* app = variable_item_get_context(item);
-    SchedulerMode index = variable_item_get_current_value_index(item);
+    SchedulerTxMode index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, mode_text[index]);
     scheduler_set_mode(app->scheduler, index);
 }
@@ -74,7 +74,7 @@ void scheduler_scene_start_on_enter(void* context) {
     scheduler_set_tx_repeats(app->scheduler, value_index);
 
     item = variable_item_list_add(
-        var_item_list, "Mode:", SchedulerModeSettingsNum, scheduler_scene_start_set_mode, app);
+        var_item_list, "Mode:", SchedulerTxModeSettingsNum, scheduler_scene_start_set_mode, app);
     value_index = scheduler_get_mode(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, mode_text[value_index]);

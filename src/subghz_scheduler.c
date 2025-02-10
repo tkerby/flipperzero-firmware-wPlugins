@@ -12,7 +12,7 @@ struct Scheduler {
     FileTxType file_type;
     uint8_t list_count;
     char* file_name;
-    SchedulerMode mode;
+    SchedulerTxMode mode;
 };
 
 Scheduler* scheduler_alloc() {
@@ -48,7 +48,7 @@ void scheduler_set_tx_repeats(Scheduler* scheduler, uint8_t tx_repeats) {
     scheduler->tx_repeats = tx_repeats;
 }
 
-void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode) {
+void scheduler_set_mode(Scheduler* scheduler, SchedulerTxMode mode) {
     furi_assert(scheduler);
     scheduler->mode = mode;
 }
@@ -81,7 +81,7 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
     uint32_t current_time = furi_hal_rtc_get_timestamp();
     uint32_t interval = interval_second_value[scheduler->interval];
 
-    if((scheduler->mode != SchedulerModeImmediate) && !scheduler->previous_run_time) {
+    if((scheduler->mode != SchedulerTxModeImmediate) && !scheduler->previous_run_time) {
         scheduler->previous_run_time = current_time;
         scheduler->countdown = interval;
         return false; // Don't trigger immediately
@@ -138,7 +138,7 @@ FileTxType scheduler_get_file_type(Scheduler* scheduler) {
     return scheduler->file_type;
 }
 
-SchedulerMode scheduler_get_mode(Scheduler* scheduler) {
+SchedulerTxMode scheduler_get_mode(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->mode;
 }
