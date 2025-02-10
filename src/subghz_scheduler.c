@@ -87,11 +87,18 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
         return false; // Don't trigger immediately
     }
 
-    if((current_time - scheduler->previous_run_time) >= interval) {
-        scheduler->countdown = interval;
+    if(scheduler->countdown == 0) {
+        scheduler->previous_run_time = current_time;
+        scheduler->countdown = interval; // Reset countdown to full interval
         return true;
     }
-    scheduler->countdown--;
+
+    if((current_time - scheduler->previous_run_time) >= interval) {
+        scheduler->countdown = 0; // Ensure countdown hits 0 before triggering
+    } else {
+        scheduler->countdown--;
+    }
+
     return false;
 }
 

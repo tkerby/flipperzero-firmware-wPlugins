@@ -189,7 +189,6 @@ void scheduler_scene_run_on_enter(void* context) {
     scheduler_ui_run_state_alloc(app);
     update_countdown(app);
     subghz_devices_init();
-    furi_delay_ms(100);
 }
 
 void scheduler_scene_run_on_exit(void* context) {
@@ -209,8 +208,8 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeTick) {
         if(!app->is_transmitting) {
-            bool trig = scheduler_time_to_trigger(app->scheduler);
             update_countdown(app);
+            bool trig = scheduler_time_to_trigger(app->scheduler);
 
             if(trig) {
                 scheduler_start_tx(app);

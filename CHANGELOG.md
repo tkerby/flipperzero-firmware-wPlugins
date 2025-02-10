@@ -3,6 +3,9 @@
 ## New Features
 - Added 24-hour interval.
 
+## Bug-fix
+- Fixed TX Delay initial value index.
+
 # v2.1 (2025-02-07)
 
 ## Bug-fix
