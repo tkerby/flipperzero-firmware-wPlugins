@@ -1,6 +1,7 @@
-Space Impact II.depend
-Space Impact II.layout
-top_score.txt
-saved_level.txt
-bin/
-obj/
+dist/*
+.vscode
+.clang-format
+.clangd
+.editorconfig
+.env
+.ufbt

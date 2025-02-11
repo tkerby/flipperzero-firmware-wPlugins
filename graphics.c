@@ -1,6 +1,8 @@
+#include <string.h>
 #include "graphics.h"
 #include "font.h"
 #include "saves.h"
+#include "game_objects.h"
 
 /** Kirajzol egy objektumot, bemenetei: pixeltérkép, objektum, pozíció **/
 void DrawObject(Uint8* PixelMap, Object obj, Vec2 pos) {
@@ -59,7 +61,7 @@ void DrawText(Uint8* PixelMap, const char* Text, Vec2 Pos, int LineHeight) {
             Pos.x = PosX;
             Pos.y += LineHeight;
         } else {
-            DrawObject(PixelMap, NewObject(NewVec2(5, 8), Font[(unsigned char)*Text]), Pos); /* Jelenlegi karakter kirajzolása (a cast egy irreleváns figyelmeztetést szüntet meg) */
+            DrawObject(PixelMap, NewObject(NewVec2(5, 8), SpaceFont[(unsigned char)*Text]), Pos); /* Jelenlegi karakter kirajzolása (a cast egy irreleváns figyelmeztetést szüntet meg) */
             Pos.x += 6; /* Ugrás a következő helyre a sorban */
         }
         ++Text; /* Ugrás a következő karakterre */
@@ -190,23 +192,20 @@ Object GetObject(Uint16 ObjectID) {
     else { /* 256-tól 511-ig a dinamikusak jönnek */
         ObjectID %= 256; /* Innentől a dinamikus objektum azonosítója kell, a modulo egy esetleges túlindexelést véd */
         if (!DynamicObject[ObjectID]) { /* Ha még nincs betöltve */
-            FILE* ObjectData;
             Uint8 Size[2];
             Uint8* NewPixelMap;
             Uint16 Pixels, Bytes;
             /** Fájl megnyitása **/
-            char Path[13 /* Mappa */ + 3 /* Maximum háromjegyű azonosító */ + 1 /* Lezáró nulla */] = "data/objects/"; /* A beolvasandó fájl elérési útvonala, fájlnév nélkül */
-            FillFileName(Path, ObjectID); /* Fájlnév hozzáírása az útvonalhoz */
-            ObjectData = fopen(Path, "rb"); /* Objektumadatok megnyitása beolvasásra */
+            const Uint8 *ObjectData = getObjectData(ObjectID);
             if (!ObjectData) /* Ha nem talált fájlt, vagy nem fért hozzá */
                 return NewObject(NewVec2(0, 0), NULL); /* Adjon vissza üres objektumot */
             /** Beolvasás **/
-            fread(Size, sizeof(Uint8), 2, ObjectData); /* Olvassa be az objektum méreteit, mintha egy Uint8-akból álló Vec2 lenne */
+            memcpy(Size, ObjectData, 2 * sizeof(Uint8)); /* Olvassa be az objektum méreteit, mintha egy Uint8-akból álló Vec2 lenne */
+
             Pixels = (Uint16)Size[0] * (Uint16)Size[1]; /* Az objektum pixelszáma, X * Y */
             Bytes = Pixels / 8 + (Pixels % 8 != 0); /* A kibontatlan objektum bájtjai */
             NewPixelMap = (Uint8*)malloc(Pixels); /* Pixeltérkép lefoglalása */
-            fread(NewPixelMap, sizeof(Uint8), Bytes, ObjectData); /* Nyers beolvasás */
-            fclose(ObjectData); /* A fájl bezárása */
+            memcpy(NewPixelMap, &ObjectData[2], Bytes * sizeof(Uint8));
             UncompressPixelMap(NewPixelMap, Pixels, Bytes); /* Kibontás helyben */
             /** Tárolás **/
             DynamicObject[ObjectID] = (Object*)malloc(sizeof(Object)); /* Memória foglalása új objektumnak */
@@ -231,7 +230,7 @@ void FreeDynamicGraphics() {
 }
 
 /** Visszaad egy új vektort, hogy el lehessen kerülni a pedantic "ISO C90 forbids compound literals" figyelmeztetését **/
-inline Vec2 NewVec2(Sint16 x, Sint16 y) {
+Vec2 NewVec2(Sint16 x, Sint16 y) {
     Vec2 ret;
     ret.x = x;
     ret.y = y;
@@ -239,7 +238,7 @@ inline Vec2 NewVec2(Sint16 x, Sint16 y) {
 }
 
 /** Visszaad egy új objektumot, hogy el lehessen kerülni a pedantic "ISO C90 forbids compound literals" figyelmeztetését **/
-inline Object NewObject(Vec2 Size, Uint8* Samples) {
+Object NewObject(Vec2 Size, Uint8* Samples) {
     Object ret;
     ret.Size = Size;
     ret.Samples = Samples;

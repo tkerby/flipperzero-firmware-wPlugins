@@ -1,3 +1,4 @@
-extern Uint8 Font[128][40];
+#include "sdlint.h"
+extern Uint8 SpaceFont[128][40];
 
 void UncompressFont();

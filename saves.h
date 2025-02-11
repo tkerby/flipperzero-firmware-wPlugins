@@ -1,14 +1,14 @@
 #ifndef SAVES_H
 #define SAVES_H
+#include <stddef.h>
+#include "sdlint.h"
 
-#include <SDL.h>
-#include <stdio.h>
+#define SCORE_COUNT 10
 
-/* A mentési funkciók leírása a saves.c-ben található */
+/* A mentï¿½si funkciï¿½k leï¿½rï¿½sa a saves.c-ben talï¿½lhatï¿½ */
 void ReadSavedLevel(Uint8*);
 void ReadTopScore(unsigned int*);
 void SaveLevel(Uint8);
 void PlaceTopScore(unsigned int*, Uint16);
-void FillFileName(char*, Uint16);
 
 #endif /* SAVES_H */

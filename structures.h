@@ -2,7 +2,8 @@
 #define STRUCTURES_H
 
 #include <stdlib.h>
-#include <SDL.h>
+// #include <SDL.h>
+#include "sdlint.h"
 
 /** Enumerációk **/
 
@@ -99,7 +100,7 @@ typedef struct Shot {
 
 /** A táj láncolt listája **/
 typedef struct Scenery {
-    Graphics Model; /* Grafikai objektum azonosítója */
+    Uint16 Model; /* Grafikai objektum azonosítója */
     Vec2 Pos; /* Hely a szinten */
     struct Scenery *Next; /* Következõ elem */
 } Scenery, *SceneryList;

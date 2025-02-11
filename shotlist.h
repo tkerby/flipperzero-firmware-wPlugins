@@ -2,8 +2,9 @@
 #define SHOTLIST_H
 
 #include "structures.h"
+#include "sdlint.h"
 
-/** A lövéslista funkcióinak leírása a shotlist.c-ben található **/
+/** A lï¿½vï¿½slista funkciï¿½inak leï¿½rï¿½sa a shotlist.c-ben talï¿½lhatï¿½ **/
 void AddShot(ShotList*, Vec2, Sint8, Uint8, WeaponKind);
 void EmptyShotList(ShotList*);
 void RemoveShot(ShotList*, Shot*);

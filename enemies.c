@@ -1,9 +1,12 @@
 #include <string.h>
+#include "sdlint.h"
 #include "config.h"
 #include "enemies.h"
 #include "graphics.h"
 #include "saves.h"
 #include "shotlist.h"
+#include "enemy_objects.h"
+#include "level_objects.h"
 
 /** Ellenség hozzáadása a paraméterben kapott láncolt listához, pozícióban, azonosítóval, mozgásiránnyal **/
 void AddEnemy(EnemyListStart *Enemies, Vec2 Pos, Uint8 EnemyID, Sint8 MoveDir) {
@@ -179,27 +182,21 @@ void EnemyListTick(EnemyListStart *Enemies, PlayerObject *Player, Uint8 *PixelMa
     }
 }
 
-/** Szintfájl megnyitása **/
-FILE* GetLevel(Uint8 Level) {
-    char Path[12 /* Mappa */ + 3 /* Maximum háromjegyű azonosító */ + 1 /* Lezáró nulla */] = "data/levels/"; /* A beolvasandó fájl elérési útvonala, fájlnév nélkül */
-    FillFileName(Path, Level); /* Fájlnév hozzáírása az útvonalhoz */
-    return fopen(Path, "rb"); /* Szintadatok megnyitása beolvasásra */
-}
-
 /** Ellenségeket helyez el a szinten fix helyekre, bemenete a láncolt lista kezdete, és a szint száma **/
 void LevelSpawner(EnemyListStart *Enemies, Uint8 Level) {
     Uint8 EnemyCount;
-    FILE* LevelData = GetLevel(Level); /* Szintfájl megnyitása */
+    const Uint8 *LevelData = getLevelData(Level);
     if (!LevelData) /* Ha nem talált fájlt, vagy nem fért hozzá */
         return; /* Töltsön be üres pályát, majd a játékmechanika továbblép a következőre */
     EmptyEnemyList(Enemies); /* Kilépés esetén megmaradt ellenségek ürítése */
-    fread(&EnemyCount, sizeof(Uint8), 1, LevelData); /* Ellenségek számának beolvasása */
+    EnemyCount = LevelData[0];
+    const Uint8 *LevelDataEnemies = &(LevelData[1]);
     while (EnemyCount--) {
         Uint8 EnemyData[5]; /* Ellenségadatok tömbje */
-        fread(&EnemyData, sizeof(Uint8), 5, LevelData); /* Ami egy művelettel beolvasható */
+        memcpy(EnemyData, LevelDataEnemies, 5 * sizeof(Uint8));
         AddEnemy(Enemies, NewVec2(EnemyData[0] * 256 + EnemyData[1], EnemyData[2]), EnemyData[3], (Sint8)EnemyData[4] - 1); /* És így könnyebben hozzáadható a listához */
+        LevelDataEnemies += 5 * sizeof(Uint8);
     }
-    fclose(LevelData); /* A fájl bezárása */
 }
 
 Enemy* Enemies[256] = {NULL}; /* 256 dinamikus ellenség helye, amit fájlból tölt be a játék, ha hivatkozik rájuk bármi */
@@ -207,26 +204,28 @@ Enemy* Enemies[256] = {NULL}; /* 256 dinamikus ellenség helye, amit fájlból t
 /** Ellenségek adatbázisa, a bemenetben adott azonosító alapján küld vissza egy ellenségstruktúrát **/
 Enemy GetEnemy(Uint8 ID) {
     if (!Enemies[ID]) { /* Ha még nincs betöltve */
-        FILE* ObjectData;
         Uint8 i, ModelID;
         Uint8 MovesBetween[2]; /* A két koordináta, ami közt mozoghat fel-le */
-        char Path[13 /* Mappa */ + 3 /* Maximum háromjegyű azonosító */ + 1 /* Lezáró nulla */] = "data/enemies/"; /* A beolvasandó fájl elérési útvonala, fájlnév nélkül */
-        FillFileName(Path, ID); /* Fájlnév hozzáírása az útvonalhoz */
-        ObjectData = fopen(Path, "rb"); /* Ellenségadatok megnyitása beolvasásra */
-        if (!ObjectData) { /* Ha nem talált fájlt, vagy nem fért hozzá, adjon vissza egy semmit */
+        Enemies[ID] = (Enemy*)malloc(sizeof(Enemy)); /* Memória foglalása új ellenségnek */
+        const Uint8 *enemyData = getEnemyData(ID);
+        if (!enemyData) {
             Enemy Empty;
             memset(&Empty, 0, sizeof(Enemy)); /* Valóban semmi legyen az a semmi */
             return Empty;
         }
-        Enemies[ID] = (Enemy*)malloc(sizeof(Enemy)); /* Memória foglalása új ellenségnek */
-        fread(&ModelID, sizeof(Uint8), 1, ObjectData);
+        ModelID = enemyData[0];
         Enemies[ID]->Model = ModelID + 256; /* A modellre hivatkozás dinamikus legyen (lásd GetObject (graphics.c)) */
         Enemies[ID]->Size.x = Enemies[ID]->Size.y = 0; /* A méret beolvasás után lesz meghatározva */
-        fread(&Enemies[ID]->AnimCount, sizeof(Uint8), 7, ObjectData); /* Ameddig Uint8-ak vannak egymás után a struktúrában, egy művelettel olvasható mind */
-        fread(MovesBetween, sizeof(Uint8), 2, ObjectData); /* A két értéket egyszerre olvassa ki az előző olvasás mintájára */
+        Enemies[ID]->AnimCount = enemyData[1];  // fread(&Enemies[ID]->AnimCount, sizeof(Uint8), 7, ObjectData); /* Ameddig Uint8-ak vannak egymás után a struktúrában, egy művelettel olvasható mind */
+        Enemies[ID]->Lives = enemyData[2];
+        Enemies[ID]->Floats = enemyData[3];
+        Enemies[ID]->ShotTime = enemyData[4];
+        Enemies[ID]->MoveUp = enemyData[5];
+        Enemies[ID]->MoveDown = enemyData[6];
+        Enemies[ID]->MoveAnyway = enemyData[7];
+        memcpy(MovesBetween, &enemyData[8], 2 * sizeof(Uint8)); // fread(MovesBetween, sizeof(Uint8), 2, ObjectData); /* A két értéket egyszerre olvassa ki az előző olvasás mintájára */
         Enemies[ID]->MovesBetween.x = MovesBetween[0]; /* Uint8-ak fájlából Sint16-okat csak így lehet mindennel kompatibilisen beállítani */
         Enemies[ID]->MovesBetween.y = MovesBetween[1];
-        fclose(ObjectData); /* A fájl bezárása */
         /* Méret meghatározása */
         for (i = ModelID; i < ModelID + Enemies[ID]->AnimCount; ++i) { /* Mindkét dimenzióból a legnagyobbat keresi az összes animációs fázisból */
             Object AnimPhase = GetObject(Enemies[ID]->Model); /* Ha a modellt egyszer beolvasta, többször nem fogja */

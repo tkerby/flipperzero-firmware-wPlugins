@@ -2,8 +2,9 @@
 #define SCENERY_H
 
 #include "structures.h"
+#include "sdlint.h"
 
-/** A táj funkcióinak leírása a scenery.c-ben található **/
+/** A tï¿½j funkciï¿½inak leï¿½rï¿½sa a scenery.c-ben talï¿½lhatï¿½ **/
 void AddScenery(SceneryList*, Graphics, Vec2);
 void EmptyScenery(SceneryList*);
 void HandleScenery(SceneryList*, Uint8*, Uint8, PlayerObject*, Sint8);

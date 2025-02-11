@@ -1,24 +1,24 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include <SDL.h>
+#include "sdlint.h"
 
-/* Használható hangok flag-jei */
-#define SOUND_SHOT 0x00000001 /* Lövéshang */
-#define SOUND_DEATH 0x00000002 /* Halálhang */
-#define SOUND_BONUSWPN 0x00000004 /* Bónuszfegyverek hangja */
-#define SOUND_MENUBTN 0x10000000 /* Menühang */
+/* Hasznï¿½lhatï¿½ hangok flag-jei */
+#define SOUND_SHOT 0x00000001 /* Lï¿½vï¿½shang */
+#define SOUND_DEATH 0x00000002 /* Halï¿½lhang */
+#define SOUND_BONUSWPN 0x00000004 /* Bï¿½nuszfegyverek hangja */
+#define SOUND_MENUBTN 0x10000000 /* Menï¿½hang */
 
-/* Hangok frekvenciái */
-#define BUTTON_FREQ 1000 /* A gombnyomás hangjának frekvenciája */
-#define SHOT_FREQ_DISTORT 1500 /* A lövés torz komponense */
-#define SHOT_FREQ_CONTINOUS 6000 /* A lövés folyamatos komponense */
-#define DEATH_FREQ_DISTORT 4200 /* A halál torz komponense */
-#define DEATH_FREQ_CONTINOUS 5200 /* A halál folyamatos komponense */
-#define BONUS_FREQ_DISTORT 4900 /* A bónusz torz komponense */
-#define BONUS_FREQ_CONTINOUS 5250 /* A bónusz folyamatos komponense */
+/* Hangok frekvenciï¿½i */
+#define BUTTON_FREQ 1000 /* A gombnyomï¿½s hangjï¿½nak frekvenciï¿½ja */
+#define SHOT_FREQ_DISTORT 1500 /* A lï¿½vï¿½s torz komponense */
+#define SHOT_FREQ_CONTINOUS 6000 /* A lï¿½vï¿½s folyamatos komponense */
+#define DEATH_FREQ_DISTORT 4200 /* A halï¿½l torz komponense */
+#define DEATH_FREQ_CONTINOUS 5200 /* A halï¿½l folyamatos komponense */
+#define BONUS_FREQ_DISTORT 4900 /* A bï¿½nusz torz komponense */
+#define BONUS_FREQ_CONTINOUS 5250 /* A bï¿½nusz folyamatos komponense */
 
-/* A hangfunkciók leírása az audio.c-ben található */
+/* A hangfunkciï¿½k leï¿½rï¿½sa az audio.c-ben talï¿½lhatï¿½ */
 void AudioCallback(void*, Uint8*, int);
 
 #endif /* AUDIO_H */

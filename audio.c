@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 #include "audio.h"
 #include "config.h"
 
@@ -11,8 +12,9 @@ void FillStream(Sint16* stream, Sint32 freq_distort, Sint32 freq_sine, Sint32 pl
         stream[i] += (sin((playrem - i) * i / /* A varázslat (*i): felhúzza a frekvenciát minden előállításban */
             /* Megjegyzendő, hogy a varázslat igazából csak egy teljesen véletlen "mi lenne, ha..." próbálkozás eredménye.
                Aztán véletlenül pont azt a hangot adta ki, mint az eredeti játék. Ki gondolta volna? */
-            (double)SAMPLE_RATE * PIx2 * freq_distort) + /* Szinuszhullám előállítása: sin(idő*2*pi*frekvencia) */
-            sin((playrem - i) / (double)SAMPLE_RATE * PIx2 * freq_sine)) * VOLUME; /* Ugyanígy a másik komponenst is, csak varázslat nélkül */
+            // TODO: double calculation here?
+            SAMPLE_RATE * PIx2 * freq_distort) + /* Szinuszhullám előállítása: sin(idő*2*pi*frekvencia) */
+            sin((playrem - i) / SAMPLE_RATE * PIx2 * freq_sine)) * VOLUME; /* Ugyanígy a másik komponenst is, csak varázslat nélkül */
 }
 
 /** Hangmixer: amelyik flag épp be van állítva, azt rámixeli a kimenetre **/

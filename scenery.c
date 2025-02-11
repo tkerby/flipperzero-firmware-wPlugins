@@ -1,10 +1,12 @@
+#include <furi_hal_random.h>
 #include "enemies.h"
 #include "graphics.h"
 #include "scenery.h"
+#include "shotlist.h"
 
 /** Tájadat struktúra **/
 typedef struct SceneryData {
-    Graphics FirstObject; /* Az első objektum grafikai azonosítója */
+    Uint16 FirstObject; /* Az első objektum grafikai azonosítója */
     Uint8 Objects; /* Az objektumok száma, ennyi tartozik a szinthez az előzőleg megadott azonosítótól kezdve */
     Uint8 Upper; /* Fent jelenik meg */
 } SceneryData;
@@ -72,7 +74,8 @@ void HandleScenery(SceneryList *List, Uint8 *PixelMap, Uint8 Move, PlayerObject 
         while (LastX < 84) { /* Amíg nincs teljesen végigrajzolva a képernyő */
             Object Model;
             Scenery* NewScenery = (Scenery*)malloc(sizeof(Scenery)); /* Adjon hozzá újat */
-            NewScenery->Model = ScData[Level].FirstObject + rand() % ScData[Level].Objects; /* Véletlenszerű grafikai azonosító választása a szint objektumai közül */
+            NewScenery->Model = ScData[Level].FirstObject + furi_hal_random_get() % ScData[Level].Objects;
+            /* Véletlenszerű grafikai azonosító választása a szint objektumai közül */
             Model = GetObject(NewScenery->Model); /* Az objektumra szükség lesz, a méretei miatt */
             NewScenery->Pos = NewVec2(LastX, ScData[Level].Upper ? 0 : 48 - Model.Size.y); /* Elhelyezés a jelenlegi elemek után, pályától függően fel vagy le */
             NewScenery->Next = NULL; /* Nincs következő elem, lista vége jel */

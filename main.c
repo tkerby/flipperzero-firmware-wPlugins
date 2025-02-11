@@ -1,5 +1,14 @@
-#include <time.h>
-#include <SDL_gfxPrimitives.h>
+#include <stdlib.h>
+// #include <SDL_gfxPrimitives.h>
+#include <furi.h>
+#include <furi_hal.h>
+#include <furi_hal_random.h>
+#include <gui/gui.h>
+#include <input/input.h>
+#include <stdlib.h>
+#include <dolphin/dolphin.h>
+
+#include "sdlint.h"
 #include "config.h"
 #include "enemies.h"
 #include "graphics.h"
@@ -8,128 +17,209 @@
 #include "shotlist.h"
 #include "audio.h"
 #include "font.h"
+#include "level_objects.h"
 
 #define MENU_SCREEN_MAIN -1
 #define MENU_SCREEN_HIGH_SCORE -2
 #define MENU_SCREEN_PAUSE -3
 
-/** Képkockafrissítõ funkció **/
-Uint32 FrameUpdate(Uint32 ms, void *param) {
-    SDL_Event ev;
-    ev.type = SDL_USEREVENT; /* Felhasználói eseményt küld a fõprogramnak */
-    if (param == NULL) /* Ez biztos NULL, mert azt adjuk át main-ben, csak a fordító figyelmeztetését tünteti el (param használatlan) */
-        SDL_PushEvent(&ev);
-    return ms;
+typedef enum {
+    EVENT_KEYDOWN,
+    EVENT_KEYUP,
+    EVENT_USER,
+    EVENT_QUIT,
+} EventType;
+
+typedef enum {
+    KEY_DOWN,
+    KEY_UP,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_BACK,
+    KEY_SPACE,
+    KEY_SPECIAL,
+    KEY_ESCAPE, // Mapped to a long press on back key
+} InputEventKey;
+
+typedef struct {
+    EventType type;
+    InputEventKey key;
+} GameEvent;
+
+FuriMutex* mutex;
+Uint8 PixelMap[84 * 48]; /* Az elõzõ és mostani képkocka, ahol a kettõ nem egyezik, azt kell újrarajzolni */
+
+static void update_timer_callback(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
+
+    GameEvent event = {.type = EVENT_USER};
+    furi_message_queue_put(event_queue, &event, 0);
 }
 
-/** Kiragadott inicializálási lépések, hogy a kód ISO C90 maradhasson **/
-SDL_Surface* SDL_StartSurface(Vec2 FrameSize) { /* SDL inicializálása adott képméretre */
-    SDL_Surface* s;
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER); /* Kép, hang, és időzítő is kell */
-    s = SDL_SetVideoMode(FrameSize.x, FrameSize.y, 0, SDL_ANYFORMAT); /* Ablakméret átadása SDL-nek */
-    if (!s) /* Ha nem sikerült megnyitni az ablakot, ne fusson tovább */
-        exit(1);
-    return s;
+static void render_callback(Canvas* const canvas, void* ctx) {
+    furi_assert(ctx);
+    furi_mutex_acquire(mutex, FuriWaitForever);
+    canvas_draw_frame(canvas, 19, 5, 88, 52);
+    for (size_t i = 0; i < 84 * 48; i++) {
+        if (PixelMap[i] != 0)
+            canvas_draw_dot(canvas, 21 + i % 84, 7 + i / 84);
+    }
+    furi_mutex_release(mutex);
 }
 
-int main(int argc, char *argv[]) {
+static void input_callback(InputEvent* input_event, void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* event_queue = ctx;
+    GameEvent event;
+
+    switch(input_event->key) {
+        case InputKeyUp:
+            event.key = KEY_UP;
+            break;
+        case InputKeyDown:
+            event.key = KEY_DOWN;
+            break;
+        case InputKeyRight:
+            event.key = KEY_RIGHT;
+            break;
+        case InputKeyLeft:
+            event.key = KEY_LEFT;
+            break;
+        case InputKeyOk:
+            event.key = KEY_SPACE;
+            break;
+        case InputKeyBack:
+            event.key = KEY_SPECIAL;
+            break;
+        default:
+            return;
+    }
+
+    switch (input_event->type) {
+        case InputTypePress:
+            event.type = EVENT_KEYDOWN;
+            break;
+        case InputTypeRelease:
+            event.type = EVENT_KEYUP;
+            break;
+        case InputTypeLong:
+            if (input_event->key == InputKeyBack) {
+                event.type = EVENT_KEYDOWN;
+                event.key = KEY_ESCAPE;
+            }
+            break;
+        default:
+            return;
+    }
+    furi_message_queue_put(event_queue, &event, FuriWaitForever);
+}
+
+int app_entry(void* p) {
+    UNUSED(p);
+        mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(mutex == NULL) {
+        FURI_LOG_E("SnakeGame", "cannot create mutex\r\n");
+        return 255;
+    }
+    ViewPort* view_port = view_port_alloc();
+    FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(GameEvent));
+    view_port_draw_callback_set(view_port, render_callback, NULL);
+    view_port_input_callback_set(view_port, input_callback, event_queue);
+    Gui* gui = furi_record_open(RECORD_GUI);
+    gui_add_view_port(gui, view_port, GuiLayerFullscreen);
+
     /** SDL inicializálás **/
-    Vec2 FrameSize = {84 * UPSCALE_FACTOR, 48 * UPSCALE_FACTOR}; /* A skálázott képkocka méretei */
-    SDL_Event e;
-    SDL_Surface* s = SDL_StartSurface(FrameSize);
-    SDL_AudioSpec audio; /* SDL hangspecifikáció */
-    Sint32 AudioFlags = 0; /* Lejátszandó hangok flag-jei */
-    SDL_TimerID t; /* Képkockafrissítő időzítő */
+    // TODO: Do audio
+    // SDL_AudioSpec audio; /* SDL hangspecifikáció */
+    Sint32 AudioFlags = 0; /* Lejátszandó hangok flag-jei */ // TODO: Unused
 
     /** A játékhoz szükséges változók **/
     Uint8 run = 1; /* Kilépéskor hamisra vált, és a fõciklus kilép */
-    int i, j, k; /* Három iterátorváltozó, késõbb szükség lesz mindre */
-    Uint8 OldPixelMap[84 * 48], PixelMap[84 * 48]; /* Az elõzõ és mostani képkocka, ahol a kettõ nem egyezik, azt kell újrarajzolni */
+    #ifdef LEGACY_TOP_SCORE
+    int j; /* Három iterátorváltozó, késõbb szükség lesz mindre */
+    #endif /* LEGACY_TOP_SCORE */
+    int i; /* Három iterátorváltozó, késõbb szükség lesz mindre */
+    // Uint8 OldPixelMap[84 * 48];
     Uint8 IntroPhase = 12; /* A bevezető animációból hátralévő kockák */
     Uint8 FrameHold = 3; /* Ennyi képkockán át még tartsa a jelenlegit (csak a bevezető animációra érvényes) */
     PlayerObject Player; /* A játékos struktúrája */
     Sint8 Level = -1; /* Szint azonosítója, ha negatív, akkor menü */
     Uint8 MenuItem = 1; /* A menüben kiválasztott lehetõség */
     Uint8 SavedLevel = 0; /* Utoljára félbehagyott pálya */
-    Uint8 PlayerUp = 0, PlayerDown = 0, PlayerLeft = 0, PlayerRight = 0, PlayerShooting = 0; /* A játékos éppen mozog vagy lõ (gombot nyom) */
-    Uint8 PlayerShootTimer = 0; /* Lövés idõzítõ, 5 képkockánként indulhasson csak újabb lövés */
+    Uint8 PlayerUp = 0, PlayerDown = 0, PlayerLeft = 0, PlayerRight = 0, PlayerShooting = 0;
+    Uint8 PlayerShootTimer = 0;
     Uint8 LevelCount = 0; /* Hány szintet tartalmaz a játék adatmappája? */
-    FILE* LastLevel = GetLevel(0); /* Utolsó szint fájla, az utolsó szint meghatározásához szükséges */
+    const Uint8 *LastLevel = getLevelData(0);
     Shot *Shots = NULL; /* Egy láncolt lista, az összes lövést tartalmazza */
     EnemyList *Enemies = NULL; /* Ellenségek láncolt listája */
     Uint8 AnimPulse = 0; /* Animációk idõzítõje */
     Scenery *Scene = NULL; /* A táj objektumainak láncolt listája, az elsõ szinten még nincs */
     Uint8 MoveScene; /* A táj mozgatása - a szintek végén mindig megáll */
-    #ifdef LEGACY_TOP_SCORE
-    Uint8 TimeInScores = 0; /* A rekordképernyőn eltöltött idő, amiből az animáció képkockája számolódik */
-    #endif /* LEGACY_TOP_SCORE */
-    unsigned int TopScores[10]; /* A 10 legjobb pontszám, azért unsigned int, mert a Uint16-ra a %hu formátumjelző kellene, ami nem ANSI C */
+#ifdef LEGACY_TOP_SCORE
+    Uint8 TimeInScores = 0;
+
+#endif /* LEGACY_TOP_SCORE */
+    unsigned int TopScores[SCORE_COUNT]; /* A 10 legjobb pontszám, azért unsigned int, mert a Uint16-ra a %hu formátumjelző kellene, ami nem ANSI C */
     memset(TopScores, 0, sizeof(TopScores)); /* Alapértelmezetten mind 0 */
     ReadSavedLevel(&SavedLevel); /* Ha lett elmentve utolsó szint, olvassa be */
     ReadTopScore(TopScores); /* Ha vannak mentett rekordok, olvassa be őket */
-    while (LastLevel) { /* Ameddig még meg lehet nyitni a növekvő szintszámmal elnevezett fájlokat, a játék addig a szintig játszható */
-        fclose(LastLevel); /* Régi fájl bezárása, úgyse olvastuk, csak a létezés érdekelt */
+    while (LastLevel) {
         ++LevelCount; /* Ugrás a következő szintre */
-        LastLevel = GetLevel(LevelCount); /* Próbálkozás a következő szint fájlának megnyitásával */
+        LastLevel = getLevelData(LevelCount);
     }
 
-    /** SDL játékkezelés inicializálása **/
-    SDL_WM_SetCaption("Space Impact II", "Space Impact II"); /* Ablak neve */
-    t = SDL_AddTimer(1000 / FRAMERATE, FrameUpdate, NULL); /* Képfrissítés időzítése */
-
-    /** Pixeltérképek inicializálása **/
-    /* A kirajzolási idõket optimalizálja, ha az SDL csak a változott pixeleket kapja meg */
-    for (i = 0; i < 84 * 48; ++i)
-        OldPixelMap[i] = 1; /* A régi pixeltérkép legyen teljesen aktív (=fekete), hogy a háttérrel töltse ki az első képkocka */
-
+    // TODO: Do audio
     /** Hang inicializálása **/
-    audio.freq = SAMPLE_RATE; /* Mintavételezés az alapértelmezett frekvencián */
-    audio.format = AUDIO_S16; /* Előjeles 16 bites egész minták */
-    audio.channels = 1; /* Monó hang */
-    audio.samples = 1024; /* Ennyi mintára hívja meg a hangkezelőt */
-    audio.callback = AudioCallback; /* Hangkezelő függvény */
-    audio.userdata = &AudioFlags; /* A hangkezelő függvénynek folyamatosan átadott paraméter */
-    if (SDL_OpenAudio(&audio, NULL) >= 0) /* Ha sikerül inicializálni a hangot */
-        SDL_PauseAudio(0); /* Indítsa is el */
+    // audio.freq = SAMPLE_RATE; /* Mintavételezés az alapértelmezett frekvencián */
+    // audio.format = AUDIO_S16; /* Előjeles 16 bites egész minták */
+    // audio.channels = 1; /* Monó hang */
+    // audio.samples = 1024; /* Ennyi mintára hívja meg a hangkezelőt */
+    // audio.callback = AudioCallback; /* Hangkezelő függvény */
+    // audio.userdata = &AudioFlags; /* A hangkezelő függvénynek folyamatosan átadott paraméter */
+    // if (SDL_OpenAudio(&audio, NULL) >= 0) /* Ha sikerül inicializálni a hangot */
+    //     SDL_PauseAudio(0); /* Indítsa is el */
 
     /** Pixeltérképek kibontása **/
     UncompressFont();
     UncompressObjects();
 
-    /** Cheat **/
-    if (argc > 2) /* Amúgy csak azért létezik, mert a fordító rinyál a main paramétereinek használatlansága miatt, amik létét az SDL követeli */
-        if (strcmp(argv[1], "-lvl") == 0) /* Ezen attribútum után lehet beküldeni a kívánt pálya számát */
-            SavedLevel = atoi(argv[2]);
-
     /** Fõ loop **/
-    srand(time(NULL)); /* Legyen a random bónusz tényleg random */
+    furi_hal_random_init(); /* Legyen a random bónusz tényleg random */
+    FuriTimer* timer = furi_timer_alloc(update_timer_callback, FuriTimerTypePeriodic, event_queue);
+    furi_timer_start(timer, furi_kernel_get_tick_frequency() / FRAMERATE);
+    GameEvent event;
     while (run) {
-        SDL_WaitEvent(&e);
-        switch(e.type) {
+        FuriStatus event_status = furi_message_queue_get(event_queue, &event, FuriWaitForever);
+        if (event_status != FuriStatusOk)
+            continue;
+        furi_mutex_acquire(mutex, FuriWaitForever);
+
+        switch(event.type) {
         /** Billentyûleütések **/
-        case SDL_KEYDOWN:
+        case EVENT_KEYDOWN:
             if (IntroPhase) { /* Bevezető animáció félbeszakítása, ha megy */
                 IntroPhase = 0;
                 AudioFlags |= SOUND_MENUBTN; /* Bármilyen gombra adjon ki hangot, még ami nem is csinál semmit */
             #ifdef PAUSE
             /** Szünet képernyő **/
             } else if (Level == MENU_SCREEN_PAUSE) {
-                if (e.key.keysym.sym == SDLK_RETURN) {
+                if (event.key == KEY_SPACE) {
                     Level = MenuItem == 1 ? SavedLevel : MENU_SCREEN_MAIN;
-                } else if (e.key.keysym.sym == SDLK_UP || e.key.keysym.sym == SDLK_DOWN)
+                } else if (event.key == KEY_UP || event.key == KEY_DOWN)
                     MenuItem = 3 - MenuItem;
-                else if (e.key.keysym.sym == SDLK_ESCAPE)
+                else if (event.key == KEY_ESCAPE || event.key == KEY_SPECIAL)
                     Level = MENU_SCREEN_MAIN;
             #endif /* PAUSE */
             /** Rekord- és játék vége képernyõ **/
             } else if (Level == MENU_SCREEN_HIGH_SCORE || Level == LevelCount) {
-                if (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_ESCAPE) /* Enterre vagy Esc-re visszatér a főmenübe */
+                if (event.key == KEY_ESCAPE || event.key == KEY_SPECIAL)
                     Level = -1;
                 AudioFlags |= SOUND_MENUBTN; /* Bármilyen gombra adjon ki hangot, még ami nem is csinál semmit */
             /** Fõmenü **/
             } else if (Level == MENU_SCREEN_MAIN) {
                 AudioFlags |= SOUND_MENUBTN; /* Bármilyen gombra adjon ki hangot, még ami nem is csinál semmit */
-                if (e.key.keysym.sym == SDLK_RETURN) { /* Enter */
+                if (event.key == KEY_SPACE) { /* Enter */
                     if (SavedLevel == 0)
                         MenuItem++; /* A menü elemeit a folytatással kezdõdõ menühöz viszonyítja (új játék 1. hely helyett a 2., stb.) */
                     if (MenuItem == 3) {
@@ -160,34 +250,25 @@ int main(int argc, char *argv[]) {
                         MoveScene = 1; /* Tájmozgatás újraindítása */
                     }
                 }
-                else if (e.key.keysym.sym == SDLK_ESCAPE) /* Kilépés az Esc billentyûre is */
+                else if (event.key == KEY_ESCAPE || event.key == KEY_SPECIAL)
                     run = 0;
-                else if (e.key.keysym.sym == SDLK_UP) /* Fel nyíl: elõzõ menüelem, körkörösen */
+                else if (event.key == KEY_UP) /* Fel nyíl: elõzõ menüelem, körkörösen */
                     MenuItem = MenuItem == 1 ? (SavedLevel ? 3 : 2) : (MenuItem - 1);
-                else if (e.key.keysym.sym == SDLK_DOWN) /* Le nyíl: következõ menüelem, körkörösen */
+                else if (event.key == KEY_DOWN) /* Le nyíl: következõ menüelem, körkörösen */
                     MenuItem = MenuItem % (SavedLevel ? 3 : 2) + 1;
             /** Játék **/
             } else {
                 #ifdef GHOSTING
                 if (!PlayerUp && !PlayerDown && !PlayerLeft && !PlayerRight && !PlayerShooting)
                 #endif /* GHOSTING */
-                switch(e.key.keysym.sym) {
+                switch(event.key) {
                     /* Nyílgombok: játékos mozgatása */
-                    case SDLK_UP: PlayerUp = 1; break;
-                    case SDLK_DOWN: PlayerDown = 1; break;
-                    case SDLK_LEFT: PlayerLeft = 1; break;
-                    case SDLK_RIGHT: PlayerRight = 1; break;
-                    case SDLK_SPACE: PlayerShooting = 1; break; /* Space: tûz */
-                    case SDLK_LCTRL: /* Bal és jobb Ctrl: bónuszfegyver használata */
-                    case SDLK_RCTRL:
-                        if (Player.Bonus) { /* Csak ha van még bónuszból */
-                            /* Bónuszlövedék a játékos orrától: fal esetén a pálya tetején kezdődjön, sugár esetén lógjon bele a játékos orrába */
-                            AddShot(&Shots, NewVec2(Player.Pos.x + 9, Player.Weapon == Wall ? 5 : Player.Pos.y + 2), Player.Weapon == Beam ? 0 : 2, 1, Player.Weapon);
-                            --Player.Bonus; /* Bónusz elhasználása */
-                            AudioFlags |= SOUND_BONUSWPN; /* Bónuszfegyver hangjának kiadása */
-                        }
-                        break;
-                    case SDLK_ESCAPE:
+                    case KEY_UP: PlayerUp = 1; break;
+                    case KEY_DOWN: PlayerDown = 1; break;
+                    case KEY_LEFT: PlayerLeft = 1; break;
+                    case KEY_RIGHT: PlayerRight = 1; break;
+                    case KEY_SPACE: PlayerShooting = 1; break; /* Space: tûz */
+                    case KEY_ESCAPE:
                         SavedLevel = Level; /* Szint mentése */
                         SaveLevel(Level); /* Mentse el, hogy erről a szintről lépett ki a játékos */
                         #ifdef PAUSE
@@ -201,22 +282,28 @@ int main(int argc, char *argv[]) {
                 }
             }
             break;
-        case SDL_KEYUP: /* Nyomva tartott billentyûk felengedése esetén a nyomva tartást rögzítõ változók nullázása */
+        case EVENT_KEYUP: /* Nyomva tartott billentyûk felengedése esetén a nyomva tartást rögzítõ változók nullázása */
             /* Ilyenek csak játék alatt vannak, de nem kell ezt ellenõrizni, mert máshol nincs hatása az értékeknek */
             /* Egyébként ez switch volt, csak attól 4 bájttal nőne a generált kód */
-            if (e.key.keysym.sym == SDLK_UP)
+            if (event.key == KEY_UP)
                 PlayerUp = 0;
-            if (e.key.keysym.sym == SDLK_DOWN)
+            if (event.key == KEY_DOWN)
                 PlayerDown = 0;
-            if (e.key.keysym.sym == SDLK_LEFT)
+            if (event.key == KEY_LEFT)
                 PlayerLeft = 0;
-            if (e.key.keysym.sym == SDLK_RIGHT)
+            if (event.key == KEY_RIGHT)
                 PlayerRight = 0;
-            if (e.key.keysym.sym == SDLK_SPACE)
+            if (event.key == KEY_SPACE)
                 PlayerShooting = 0;
+            if (event.key == KEY_SPECIAL && Level != MENU_SCREEN_PAUSE && Player.Bonus) { // Moved bonus weapon here, so long press does not launch special weapon
+                /* Bónuszlövedék a játékos orrától: fal esetén a pálya tetején kezdődjön, sugár esetén lógjon bele a játékos orrába */
+                AddShot(&Shots, NewVec2(Player.Pos.x + 9, Player.Weapon == Wall ? 5 : Player.Pos.y + 2), Player.Weapon == Beam ? 0 : 2, 1, Player.Weapon);
+                --Player.Bonus; /* Bónusz elhasználása */
+                AudioFlags |= SOUND_BONUSWPN; /* Bónuszfegyver hangjának kiadása */
+            }
             break;
         /** Képkocka összeállítása **/
-        case SDL_USEREVENT:
+        case EVENT_USER:
             memset(PixelMap, 0, sizeof(PixelMap)); /* Kép ürítése */
             /** Bevezető animáció **/
             if (IntroPhase) {
@@ -273,7 +360,7 @@ int main(int argc, char *argv[]) {
                 #else
                 /* Helyezásek kiírása */
                 Vec2 Pos = {3, 3}; /* Kezdõpozíció */
-                for (i = 0; i < 10; i++) {
+                for (i = 0; i < SCORE_COUNT; i++) {
                     if (i == 5) /* Az 5. elemnél új oszlopot kell kezdeni felül */
                         Pos = NewVec2(47, 3);
                     DrawSmallNumber(PixelMap, i + 1, i == 9 ? 2 : 1, Pos); /* Helyezés */
@@ -376,36 +463,28 @@ int main(int argc, char *argv[]) {
                     AudioFlags |= SOUND_DEATH; /* Halálhang kiadása */
                 }
             }
-            /** Kirajzolás **/
-            for (i = 0; i < 84 * 48; i++) { /* Az eredeti kép méretei alapján */
-                if (PixelMap[i] != OldPixelMap[i]) { /* Csak a változásokkal írja felül a képet */
-                    int x = (i % 84) * UPSCALE_FACTOR; /* Oszlop szána */
-                    int y = (i / 84) * UPSCALE_FACTOR; /* Sor száma */
-                    for (k = 0; k < UPSCALE_FACTOR; k++)
-                        for (j = 0; j < UPSCALE_FACTOR; j++) /* A felskálázás miatt minden pixelre be kell járni egy négyzetet */
-                            if (PixelMap[i]) /* Aktív pixel esetén */
-                                pixelRGBA(s, x + j, y + k, 0, 0, 0, 255); /* Legyen a pont fekete, ezeknél a telefonoknál így volt */
-                            else /* Inaktív pixel esetén háttérszín */
-                                pixelRGBA(s, x + j, y + k, BACKLIGHT, 255);
-                    OldPixelMap[i] = PixelMap[i]; /* Az elõzõ képkocka tárolójába másolja át a mostanit */
-                }
-            }
-            SDL_Flip(s); /* Újrarajzolás */
+            view_port_update(view_port);
             break;
-        case SDL_QUIT: /* Az operációs rendszer kilépés parancsára álljon le a futás, függetlenül a játék fázisától */
+        case EVENT_QUIT: /* Az operációs rendszer kilépés parancsára álljon le a futás, függetlenül a játék fázisától */
             run = 0;
             break;
         }
+        furi_mutex_release(mutex);
     }
 
+    furi_timer_stop(timer);
+    view_port_enabled_set(view_port, false);
+    gui_remove_view_port(gui, view_port);
+    furi_record_close(RECORD_GUI);
+    view_port_free(view_port);
+    furi_message_queue_free(event_queue);
     /** Kilépés **/
     EmptyEnemyList(&Enemies); /* Megmaradt ellenségek felszabadítása */
     EmptyScenery(&Scene); /* Megmaradt pályaelemek felszabadítása */
     EmptyShotList(&Shots); /* Megmaradt lövések felszabadítása */
     FreeDynamicGraphics(); /* Dinamikus grafikai objektumok felszabadítása */
     FreeDynamicEnemies(); /* Dinamikus ellenségek felszabadítása */
-    SDL_RemoveTimer(t); /* Ez nem szükséges, csak a figyelmeztetést szünteti meg t felhasználatlanságára */
-    SDL_PauseAudio(1); /* Hang megállítása */
-    SDL_Quit();
+    // TODO: do audio
+    // SDL_PauseAudio(1); /* Hang megállítása */
     return 0;
 }

@@ -1,6 +1,7 @@
+#include <string.h>
 #include "graphics.h"
 
-Uint8 Font[128][40], /* ASCII tábla a telefon betûtípusában, 5*8-as méretben */
+Uint8 SpaceFont[128][40], /* ASCII tábla a telefon betûtípusában, 5*8-as méretben */
     CompressedFont[94][5] = { /* A betűtípus tömörített verziója, 34-gyel kevesebb bejegyzéssel, mivel az első 32 és a [127] nem karakter, a [32] pedig szóköz */
     {33,8,66,0,128},        /*  33: ! */    {82,148},               /*  34: " */    {82,190,175,169,64},    /*  35: # */
     {35,232,226,248,128},   /*  36: $ */    {198,68,68,76,96},      /*  37: % */    {100,168,138,201,160},  /*  38: & */
@@ -40,7 +41,7 @@ Uint8 Font[128][40], /* ASCII tábla a telefon betûtípusában, 5*8-as méretbe
 void UncompressFont() {
     Uint8 i;
     for (i = 33; i < 127; ++i) {
-        memcpy(Font[i], CompressedFont[i - 33], 5); /* Átmásolás a megfelelő tömörített helyről */
-        UncompressPixelMap(Font[i], 40, 5); /* Helyben kibontás */
+        memcpy(SpaceFont[i], CompressedFont[i - 33], 5); /* Átmásolás a megfelelő tömörített helyről */
+        UncompressPixelMap(SpaceFont[i], 40, 5); /* Helyben kibontás */
     }
 }

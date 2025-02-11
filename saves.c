@@ -1,38 +1,58 @@
 #include "saves.h"
+#include <storage/storage.h>
+
+#define SAVING_DIRECTORY "/ext/apps/Games"
+#define LEVEL_FILENAME SAVING_DIRECTORY "/SpaceImpactIILevel.save"
+#define TOPSCORE_FILENAME SAVING_DIRECTORY "/SpaceImpactIIScore.save"
 
 /** Beolvassa a mentett szintet, ha az el lett mentve **/
 void ReadSavedLevel(Uint8 *Level) {
-    FILE *f = fopen("saved_level.txt", "rt"); /* Fájl megnyitása olvasásra */
-    if (f) { /* Ha megnyitható a fájl, akkor próbál meg beolvasni */
-        fscanf(f, "%c", Level); /* A fájlban található egyetlen bájtot olvassa be */
-        fclose(f); /* Fájl bezárása */
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, LEVEL_FILENAME, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_read(file, Level, sizeof(*Level));
     }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 /** Beolvassa a mentett legjobb pontszámokat a paraméterben kapott tömbbe, ha el lettek mentve **/
 void ReadTopScore(unsigned int *Arr) {
-    FILE* f = fopen("top_score.txt", "rt"); /* Fájl megnyitása olvasásra */
-    if (f) { /* Ha megnyitható a fájl, akkor próbál meg beolvasni */
-        unsigned int* End = Arr + 10;
-        while (Arr != End) /* Egyesével beolvassa a 10 értéket */
-            fscanf(f, "%u", Arr++);
-        fclose(f); /* Fájl bezárása */
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, TOPSCORE_FILENAME, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_read(file, Arr, SCORE_COUNT * sizeof(*Arr));
     }
+    storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
 }
 
 /** A bemenetként kapott szint számát menti el **/
 void SaveLevel(Uint8 Level) {
-    FILE *f = fopen("saved_level.txt", "wt"); /* Fájl megnyitása írásra */
-    if (f) { /* Ha megnyitható a fájl, akkor próbál meg írni bele */
-        fprintf(f, "%c", Level); /* Bájtként írja ki */
-        fclose(f); /* Fájl bezárása */
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+
+    if(storage_common_stat(storage, SAVING_DIRECTORY, NULL) == FSE_NOT_EXIST) {
+        if(!storage_simply_mkdir(storage, SAVING_DIRECTORY)) {
+            furi_record_close(RECORD_STORAGE);
+            return;
+        }
     }
+
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, LEVEL_FILENAME, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_write(file, &Level, sizeof(Level));
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+
+    furi_record_close(RECORD_STORAGE);
 }
 
 /** A bemenetként kapott 10 elemû tömbbe úgy illeszti be a második paraméterben kapott elemet, hogy az csökkenõ sorrendû maradjon, majd kiírja fájlba **/
 void PlaceTopScore(unsigned int *Arr, Uint16 Entry) {
-    FILE* f = fopen("top_score.txt", "wt"); /* Fájl megnyitása írásra */
-    unsigned int *Start = Arr, *End = Arr + 10;
+    unsigned int *Start = Arr, *End = Arr + SCORE_COUNT;
     while (Arr != End) { /* A tömb elsõ olyan eleméntek keresése, ami az újnál kisebb */
         if (*Arr < Entry) {
             int j;
@@ -43,18 +63,21 @@ void PlaceTopScore(unsigned int *Arr, Uint16 Entry) {
         } else
             ++Arr; /* Ha még nincs elég hátul az új pont beszúrásához, menjen tovább */
     }
-    /* Mentés */
-    if (f) { /* Ha megnyílt a fájl, akkor próbál írni bele */
-        for (Arr = Start; Arr != End; ++Arr) /* Egyesével kiírja a 10 értéket */
-            fprintf(f, "%u ", *Arr);
-        fclose(f); /* Fájl bezárása */
-    }
-}
 
-/** Fájlnév hozzáfűzése egy elérési úthoz azonosító alapján **/
-void FillFileName(char* Path, Uint16 FileID) {
-    char Number[6]; /* Szövegként az azonosító, 100000 csak nem lesz */
-    itoa(FileID, Number, 10); /* Számból szöveg készítése */
-    strcat(Path, Number); /* Fájlnév hozzáfűzése az elérési úthoz */
-    strcat(Path, ".dat"); /* Kiterjesztés hozzáfűzése az elérési úthoz */
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if (storage_common_stat(storage, SAVING_DIRECTORY, NULL) == FSE_NOT_EXIST) {
+        if(!storage_simply_mkdir(storage, SAVING_DIRECTORY)) {
+            furi_record_close(RECORD_STORAGE);
+            return;
+        }
+    }
+
+    File* file = storage_file_alloc(storage);
+    if(storage_file_open(file, TOPSCORE_FILENAME, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_write(file, Start, SCORE_COUNT * sizeof(*Start));
+    }
+    storage_file_close(file);
+    storage_file_free(file);
+
+    furi_record_close(RECORD_STORAGE);
 }
