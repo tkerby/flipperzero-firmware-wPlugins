@@ -9,7 +9,7 @@ VIN Decoder is a mini flipper zero tool that allows you to decode VIN (Vehicle I
 0.1 - Initial release
 
 ## Author
-this app developed by @evillero
+by @evillero
 
 
 
