@@ -137,6 +137,11 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Query %d %d", arrayIndex, blockNum);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
+    if (!pof_token->loaded) {
+        response[0] = 'Q';
+        response[1] = 0x01;
+        return 2;
+    }
     NfcDevice* nfc_device = pof_token->nfc_device;
     const MfClassicData* data = nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
     const MfClassicBlock block = data->block[blockNum];
@@ -160,6 +165,12 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Write %d %d %s", arrayIndex, blockNum, display);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
+    if (!pof_token->loaded) {
+        response[0] = 'Q';
+        response[1] = 0x01;
+        return 2;
+    }
+
     NfcDevice* nfc_device = pof_token->nfc_device;
 
     MfClassicData* data = mf_classic_alloc();
