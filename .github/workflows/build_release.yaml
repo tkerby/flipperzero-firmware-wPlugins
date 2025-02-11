@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 jobs:
   build_fap:
@@ -21,7 +22,7 @@ jobs:
 
       - name: Copy app into applications_user
         run: |
-          cp -r pet-your-dolphin/* flipperzero-firmware/applications_user/
+          cp -r pet-your-dolphin flipperzero-firmware/applications_user/
 
       - name: Build .fap
         working-directory: flipperzero-firmware
