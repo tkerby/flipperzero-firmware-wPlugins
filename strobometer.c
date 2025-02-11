@@ -38,6 +38,7 @@ typedef struct {
     int frequency; // frequency of the strobometer
     unsigned short num_digits;
     unsigned short selected; // selected place in the frequency (0-(num_digits-1))
+    int max_frequency; // pow(10,num_digits)-1
     bool output; // output state of the strobometer
 } StrobometerAppContext;
 
@@ -107,6 +108,16 @@ int duty_cycle_function(int frequency){
     return (int)ceil(0.4342944819f * logf(frequency) - 1);
 }
 
+int changeFrequency(int frequency, int amount, int min, int max){
+    int result = frequency + amount;
+    if(result < min){
+        result = max;
+    } else if (result > max){
+        result = min;
+    }
+    return result;
+}
+
 static void strobometer_app_run(StrobometerAppContext* context) {
     furi_hal_power_enable_otg();
 
@@ -134,18 +145,13 @@ static void strobometer_app_run(StrobometerAppContext* context) {
             context->selected = (context->selected + (context->num_digits - 1)) % context->num_digits;
         }
         if(event.key == InputKeyUp) {
-            context->frequency += (int)pow(10, context->selected);
+            context->frequency = changeFrequency(context->frequency, (int)pow(10, context->selected), 1, context->max_frequency);
             frequency_changed = true;
         } else if(event.key == InputKeyDown) {
-            context->frequency -= (int)pow(10, context->selected);
+            context->frequency = changeFrequency(context->frequency, -1*(int)pow(10, context->selected), 1, context->max_frequency);;
             frequency_changed = true;
         }
 
-        if(context->frequency < 0) {
-            context->frequency = pow(10, context->num_digits) - 1;
-        } else if(context->frequency > pow(10, context->num_digits) - 1) {
-            context->frequency = 0;
-        }
         if(frequency_changed) {
             hal_pwm_set_params(context->frequency, duty_cycle_function(context->frequency));
             frequency_changed = false;
@@ -167,10 +173,8 @@ static void strobometer_app_run(StrobometerAppContext* context) {
                 context->output = 0;
             }
             else{
-                if(context->frequency > 0){
-                    hal_pwm_start(context->frequency, duty_cycle_function(context->frequency));
-                    context->output = 1;
-                }
+                hal_pwm_start(context->frequency, duty_cycle_function(context->frequency));
+                context->output = 1;
             }
         }
 
@@ -197,8 +201,9 @@ static StrobometerAppContext* strobometer_app_context_alloc(void) {
     gui_add_view_port(context->gui, context->view_port, GuiLayerFullscreen);
 
     context->num_digits = 6;
-    context->frequency = 0;
+    context->frequency = 1;
     context->selected = 0;
+    context->max_frequency = (int)pow(10, context->num_digits)-1;
     context->output = false;
 
     return context;
