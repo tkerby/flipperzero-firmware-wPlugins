@@ -96,6 +96,25 @@ void draw_happy_idle(Canvas* canvas, uint32_t ticks) {
         A_happy_idle.frames[happy_frame]);
 }
 
+void draw_neutral_idle(Canvas* canvas, uint32_t ticks) {
+    const uint32_t cycle_duration_ms = 10000;
+    const uint32_t frame0_duration_ms  = 9000;
+    uint32_t cycle_time = ticks % cycle_duration_ms;
+
+    // Choose the frame based on the elapsed time in the cycle.
+    uint8_t frame_index = (cycle_time < frame0_duration_ms) ? 0 : 1;
+
+    // Draw the overlay with the chosen frame.
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        A_neutral_idle.width,
+        A_neutral_idle.height,
+        A_neutral_idle.frames[frame_index]);
+}
+
 void draw_sad_idle(Canvas* canvas, uint32_t ticks) {
     uint32_t frame_index = (ticks / 1000) % A_sad_idle.frame_count;
 
@@ -118,15 +137,46 @@ void draw_sad_idle(Canvas* canvas, uint32_t ticks) {
         A_sad_idle.frames[frame_index]);
 }
 
-void draw_pet_prompt(Canvas* canvas, uint32_t ticks) {
+void draw_prompt_box(Canvas* canvas) {
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, 96, 32, 32, 32);
+    canvas_set_color(canvas, ColorBlack);
+}
+
+void draw_pet_prompt(Canvas* canvas, uint32_t ticks, bool pet_limit_reached) {
     bool draw = (ticks / 2000) % 2;
 
     if (draw) {
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_box(canvas, 98, 33, 30, 30);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 103, 41, "Press");
-        canvas_draw_str(canvas, 108, 50, "OK");
-        canvas_draw_str(canvas, 103, 59, "to pet");
+        draw_prompt_box(canvas);
+        canvas_draw_str(canvas, 100, 41, "Press");
+        canvas_draw_str(canvas, 106, 50, "OK");
+        canvas_draw_str(canvas, 100, 59, "to pet");
     }
+
+    if (pet_limit_reached) {
+        draw_prompt_box(canvas);
+        canvas_draw_str(canvas, 106, 41, "Out");
+        canvas_draw_str(canvas, 110, 50, "of");
+        canvas_draw_str(canvas, 105, 59, "pets");
+    }
+}
+
+void draw_speech_bubble(Canvas* canvas) {
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        I_speech_bubble_mask.width,
+        I_speech_bubble_mask.height,
+        I_speech_bubble_mask.frames[0]);
+
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_bitmap(
+        canvas,
+        0,
+        0,
+        I_speech_bubble.width,
+        I_speech_bubble.height,
+        I_speech_bubble.frames[0]);
 }

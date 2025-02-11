@@ -7,6 +7,6 @@ App(
     requires=["gui", "dolphin" ],
     stack_size=1 * 1024,
     order=30,
-    fap_icon="es_10px.png",
+    fap_icon="fap_icon.png",
     fap_category="Tools",
 )
