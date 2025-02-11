@@ -6,6 +6,9 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: "write"
+
 jobs:
   build_fap:
     runs-on: ubuntu-latest
