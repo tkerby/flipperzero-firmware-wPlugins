@@ -2,6 +2,7 @@
 
 /****** Entities: Player ******/
 
+static int target_buffer = 7;
 typedef struct {
     Sprite* sprite;
 } PlayerContext;
@@ -37,10 +38,11 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     Vector pos = entity_pos_get(self);
 
     // Control player movement
-    if(input.held & GameKeyUp) pos.y -= 2;
-    if(input.held & GameKeyDown) pos.y += 2;
-    if(input.held & GameKeyLeft) pos.x -= 2;
-    if(input.held & GameKeyRight) pos.x += 2;
+	//Commenting up and down movement
+    //if(input.held & GameKeyUp) pos.y -= 2;
+    //if(input.held & GameKeyDown) pos.y += 2;
+    if(input.held & GameKeyLeft) pos.x -= 3;
+    if(input.held & GameKeyRight) pos.x += 3;
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
     pos.x = CLAMP(pos.x, 123, 5);
@@ -87,7 +89,11 @@ static const EntityDescription player_desc = {
 /****** Entities: Target ******/
 
 static Vector random_pos(void) {
-    return (Vector){rand() % 120 + 4, rand() % 58 + 4};
+    //return (Vector){rand() % 120 + 4, rand() % 58 + 4};
+	//having target return a random x position in line with sprite
+	//magic number 32 found by trial and error based on the number provided in the original function
+	target_buffer--;
+    return (Vector){rand() % 20 * 120 / 20 + 4, 31};
 }
 
 static void target_start(Entity* self, GameManager* manager, void* context) {
@@ -98,6 +104,8 @@ static void target_start(Entity* self, GameManager* manager, void* context) {
     // Add collision circle to target entity
     // Circle is centered in target x and y, and it's radius is 3
     entity_collider_add_circle(self, 3);
+	Vector pos = entity_pos_get(self);
+	FURI_LOG_I("Target", "Drawing target at %d, %d",(int)pos.x, (int)pos.y);
 }
 
 static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -121,6 +129,8 @@ static void target_collision(Entity* self, Entity* other, GameManager* manager, 
 
         // Move target to new random position
         entity_pos_set(self, random_pos());
+		Vector pos = entity_pos_get(self);
+		FURI_LOG_I("Target", "Drawing target at %d, %d",(int)pos.x, (int)pos.y);
     }
 }
 
@@ -144,7 +154,10 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 
     // Add target entity to the level
-    level_add_entity(level, &target_desc);
+	for (; target_buffer > 0; target_buffer--)
+	{
+		level_add_entity(level, &target_desc);
+	}
 }
 
 /*
@@ -197,7 +210,7 @@ static void game_stop(void* ctx) {
 */
 const Game game = {
     .target_fps = 30, // target fps, game will try to keep this value
-    .show_fps = false, // show fps counter on the screen
+    .show_fps = true, // show fps counter on the screen
     .always_backlight = true, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
     .stop = game_stop, // will be called once, when game stops
