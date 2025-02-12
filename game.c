@@ -1,25 +1,33 @@
 #include "game.h"
 
 /****** Entities: Player ******/
+static const LevelBehaviour level;
 
-static int target_buffer = 7;
+// static int target_buffer = 7;
+static const int target_buffer_max = 12;
 typedef struct {
     Sprite* sprite;
 } PlayerContext;
 
+static bool direction = true;
+
 // Forward declaration of player_desc, because it's used in player_spawn function.
 static const EntityDescription player_desc;
+
+//Initial Player location upon game start:
+static Vector last_player_position = {64, 32}; // Defa
+
 
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
     // Set player position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
-    entity_pos_set(player, (Vector){64, 32});
+    entity_pos_set(player, last_player_position);
 
     // Add collision box to player entity
-    // Box is centered in player x and y, and it's size is 10x10
-    entity_collider_add_rect(player, 10, 10);
+    // Box is centered in player x and y, and it's size is 3x3 (because its eating dots)
+    entity_collider_add_rect(player, 3, 3);
 
     // Get player context
     PlayerContext* player_context = entity_context_get(player);
@@ -36,19 +44,50 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 
     // Get player position
     Vector pos = entity_pos_get(self);
+	
+    // Get player context
+    PlayerContext* player_context = (PlayerContext*)context;
 
+	char left_path[50] = "player_left_ .fxbm";
+	int left_path_index= 12;
+	char right_path[50] = "player_right_ .fxbm";
+	int right_path_index= 13;
     // Control player movement
-	//Commenting up and down movement
+	//Removing player up and down movement
     //if(input.held & GameKeyUp) pos.y -= 2;
     //if(input.held & GameKeyDown) pos.y += 2;
-    if(input.held & GameKeyLeft) pos.x -= 3;
-    if(input.held & GameKeyRight) pos.x += 3;
+	
+
+	if (input.held & GameKeyOk) {
+		direction = !direction;
+	}
+    if(!direction) {
+		pos.x -= 4; //offset by one so that sprite can cycle through animation
+		int frame = (int)pos.x % 3 + 1;//This references sprite files - out of range causes crashes
+		left_path[left_path_index] = '0' + frame; 
+		FURI_LOG_I("left_path", "left_path is %s", left_path);
+		player_context->sprite = game_manager_sprite_load(manager, left_path);
+	}
+    if(direction) 
+	{
+		pos.x += 4;
+		int frame = (int)(pos.x) % 3 + 1;
+		right_path[right_path_index] = '0' + frame;
+		FURI_LOG_I("right_path", "right path is %s", right_path);
+		player_context->sprite = game_manager_sprite_load(manager, right_path);
+	}
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
-    pos.x = CLAMP(pos.x, 123, 5);
+    pos.x = CLAMP(pos.x, 125, 3);
     pos.y = CLAMP(pos.y, 59, 5);
 
-    // Set new player position
+    // Set wraparound for player
+	if (pos.x < 5) {
+		pos.x=123;
+	}
+	if (pos.x > 123) {
+		pos.x = 5;
+	}
     entity_pos_set(self, pos);
 
     // Control game exit
@@ -86,26 +125,27 @@ static const EntityDescription player_desc = {
         sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
+
 /****** Entities: Target ******/
 
+static const EntityDescription target_desc;
+
+/*
 static Vector random_pos(void) {
     //return (Vector){rand() % 120 + 4, rand() % 58 + 4};
 	//having target return a random x position in line with sprite
 	//magic number 32 found by trial and error based on the number provided in the original function
-	target_buffer--;
-    return (Vector){rand() % 20 * 120 / 20 + 4, 31};
+    return (Vector){rand() % target_buffer_max * 120 / target_buffer_max + 4, 31};
 }
+*/
 
 static void target_start(Entity* self, GameManager* manager, void* context) {
     UNUSED(context);
     UNUSED(manager);
-    // Set target position
-    entity_pos_set(self, random_pos());
+    //entity_pos_set(self, random_pos());
     // Add collision circle to target entity
     // Circle is centered in target x and y, and it's radius is 3
     entity_collider_add_circle(self, 3);
-	Vector pos = entity_pos_get(self);
-	FURI_LOG_I("Target", "Drawing target at %d, %d",(int)pos.x, (int)pos.y);
 }
 
 static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
@@ -116,7 +156,7 @@ static void target_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     Vector pos = entity_pos_get(self);
 
     // Draw target
-    canvas_draw_disc(canvas, pos.x, pos.y, 3);
+    canvas_draw_disc(canvas, pos.x, pos.y, 1);
 }
 
 static void target_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
@@ -127,10 +167,19 @@ static void target_collision(Entity* self, Entity* other, GameManager* manager, 
         GameContext* game_context = game_manager_game_context_get(manager);
         game_context->score++;
 
+		last_player_position = entity_pos_get(other);
+
         // Move target to new random position
-        entity_pos_set(self, random_pos());
+		Level* current_level = game_manager_current_level_get(manager);
 		Vector pos = entity_pos_get(self);
-		FURI_LOG_I("Target", "Drawing target at %d, %d",(int)pos.x, (int)pos.y);
+		FURI_LOG_I("target_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
+		level_remove_entity(current_level, self);
+
+		FURI_LOG_I("target_collision", "Target count is %d", level_entity_count(current_level, &target_desc));
+		if (level_entity_count(current_level, &target_desc) == 0) {
+			Level* nextlevel = game_manager_add_level(manager, &level);
+			game_manager_next_level_set(manager, nextlevel);
+		}
     }
 }
 
@@ -144,6 +193,12 @@ static const EntityDescription target_desc = {
     .context_size = 0, // size of entity context, will be automatically allocated and freed
 };
 
+static void target_spawn(Level* level, Vector pos) {
+	Entity* target = level_add_entity(level, &target_desc);
+	FURI_LOG_I("before pos_set", "Spawning target at %d, %d",(int)pos.x, (int)pos.y);
+    entity_pos_set(target, pos);
+}
+
 /****** Level ******/
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
@@ -154,9 +209,13 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 
     // Add target entity to the level
-	for (; target_buffer > 0; target_buffer--)
+	for (int i = target_buffer_max; i > 0; i--)
 	{
-		level_add_entity(level, &target_desc);
+		Vector calc_pos = {
+			.x = (120 * (1 - ((double)i / target_buffer_max))) + 4,
+			.y = 30
+		};
+		target_spawn(level, calc_pos);
 	}
 }
 
@@ -209,7 +268,7 @@ static void game_stop(void* ctx) {
     Yor game configuration, do not rename this variable, but you can change it's content here.  
 */
 const Game game = {
-    .target_fps = 30, // target fps, game will try to keep this value
+    .target_fps = 10, // target fps, game will try to keep this value
     .show_fps = true, // show fps counter on the screen
     .always_backlight = true, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
