@@ -172,7 +172,6 @@ static void
         furi_thread_free(thread);
         app->thread = NULL;
         app->is_transmitting = false;
-        scheduler_reset_previous_time(app->scheduler);
         if(scheduler_get_mode(app->scheduler) == SchedulerTxModeOneShot) {
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, SchedulerSceneStart);

@@ -20,13 +20,14 @@
 #define GUI_TABLE_ROW_A    13
 #define GUI_TABLE_ROW_B    (GUI_TABLE_ROW_A + GUI_TEXTBOX_HEIGHT) - 1
 
+#define MAX_FILENAME_WIDTH_PX 95
+
 struct SchedulerRunView {
     View* view;
 };
 
 struct SchedulerUIRunState {
     SchedulerApp* app;
-
     FuriString* header;
     FuriString* mode;
     FuriString* interval;
@@ -34,13 +35,18 @@ struct SchedulerUIRunState {
     FuriString* file_type;
     FuriString* file_name;
     FuriString* tx_countdown;
-
-    //FuriTimer* scroll_timer;
-    //uint8_t scroll_counter;
     uint8_t tick_counter;
     uint8_t list_count;
 };
 SchedulerUIRunState* state;
+
+static uint8_t get_text_width_px(Canvas* canvas, FuriString* text) {
+    uint8_t pixels = 0;
+    for(uint8_t i = 0; i < furi_string_size(text); i++) {
+        pixels += canvas_glyph_width(canvas, furi_string_get_char(text, i));
+    }
+    return pixels;
+}
 
 static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
     UNUSED(context);
@@ -98,13 +104,19 @@ static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
         furi_string_get_cstr(state->tx_repeats));
 
     /* ============= FILE NAME ============= */
+    uint8_t file_name_width_px = get_text_width_px(canvas, state->file_name);
+    int8_t offset = 1;
+    if(file_name_width_px > MAX_FILENAME_WIDTH_PX) {
+        file_name_width_px = MAX_FILENAME_WIDTH_PX;
+        offset = 0;
+    }
     canvas_draw_str_aligned(
         canvas, GUI_MARGIN, (GUI_TEXT_GAP * 5) - 2, AlignLeft, AlignCenter, "File: ");
     elements_scrollable_text_line(
         canvas,
-        GUI_MARGIN + 22,
+        GUI_DISPLAY_WIDTH - GUI_MARGIN - file_name_width_px + offset,
         (GUI_TEXT_GAP * 5) + 1,
-        95,
+        file_name_width_px,
         state->file_name,
         state->tick_counter,
         false);
@@ -126,12 +138,6 @@ static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
         furi_string_get_cstr(state->tx_countdown));
 }
 
-//static void scheduler_scroll_timer_callback(void* context) {
-//    SchedulerApp* app = context;
-//    state->scroll_counter++;
-//    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
-//}
-
 static void update_countdown(Scheduler* scheduler) {
     char countdown[16];
     scheduler_get_countdown_fmt(scheduler, countdown, sizeof(countdown));
@@ -139,27 +145,16 @@ static void update_countdown(Scheduler* scheduler) {
 }
 
 static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
-    uint32_t value;
     state = malloc(sizeof(SchedulerUIRunState));
     state->header = furi_string_alloc_set("Schedule Running");
-
-    value = scheduler_get_mode(app->scheduler);
-    state->mode = furi_string_alloc_set(mode_text[value]);
-
-    value = scheduler_get_interval(app->scheduler);
-    state->interval = furi_string_alloc_set(interval_text[value]);
-
-    value = scheduler_get_tx_repeats(app->scheduler);
-    state->tx_repeats = furi_string_alloc_set(tx_repeats_text[value]);
-
-    value = scheduler_get_file_type(app->scheduler);
-    state->file_type = furi_string_alloc_set(file_type_text[value]);
-
+    state->mode = furi_string_alloc_set(mode_text[scheduler_get_mode(app->scheduler)]);
+    state->interval = furi_string_alloc_set(interval_text[scheduler_get_interval(app->scheduler)]);
+    state->tx_repeats =
+        furi_string_alloc_set(tx_repeats_text[scheduler_get_tx_repeats(app->scheduler)]);
+    state->file_type =
+        furi_string_alloc_set(file_type_text[scheduler_get_file_type(app->scheduler)]);
     state->file_name = furi_string_alloc_set(scheduler_get_file_name(app->scheduler));
     state->tx_countdown = furi_string_alloc();
-    //state->scroll_timer =
-    //    furi_timer_alloc(scheduler_scroll_timer_callback, FuriTimerTypePeriodic, app);
-
     state->list_count = scheduler_get_list_count(app->scheduler);
     state->app = app;
 }
@@ -172,7 +167,6 @@ static void scheduler_ui_run_state_free() {
     furi_string_free(state->file_type);
     furi_string_free(state->file_name);
     furi_string_free(state->tx_countdown);
-    //furi_timer_free(state->scroll_timer);
     free(state);
 }
 
@@ -182,7 +176,6 @@ void scheduler_scene_run_on_enter(void* context) {
     scheduler_reset(app->scheduler);
     scheduler_ui_run_state_alloc(app);
     subghz_devices_init();
-    //furi_timer_start(state->scroll_timer, 500);
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
 
@@ -191,7 +184,6 @@ void scheduler_scene_run_on_exit(void* context) {
     if(app->thread) {
         furi_thread_join(app->thread);
     }
-    //furi_timer_stop(state->scroll_timer);
     scheduler_reset(app->scheduler);
     subghz_devices_deinit();
     scheduler_ui_run_state_free();
