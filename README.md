@@ -4,6 +4,10 @@ Pixel-perfect clone of Nokia's Space Impact, one of the biggest classics in mobi
 All credit for the game goes to Bence Sgánetz, original creator of the clone. Port was made with effort to preserve as much of the
 original work as possible.
 
+# Installing
+* Connect your Flipper Zero to your computer
+* run `ufbt launch` in the project folder
+
 # TODO:
 * Audio
 
