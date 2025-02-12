@@ -12,11 +12,14 @@ struct Scheduler {
     FileTxType file_type;
     uint8_t list_count;
     char* file_name;
-    SchedulerMode mode;
+    SchedulerTxMode mode;
+    bool timing_mode;
 };
 
 Scheduler* scheduler_alloc() {
     Scheduler* scheduler = malloc(sizeof(Scheduler));
+    scheduler->tx_delay = SchedulerTxDelay100;
+    scheduler->tx_repeats = 0;
     return scheduler;
 }
 
@@ -41,19 +44,24 @@ void scheduler_set_interval(Scheduler* scheduler, uint8_t interval) {
     scheduler->countdown = interval_second_value[scheduler->interval];
 }
 
+void scheduler_set_timing_mode(Scheduler* scheduler, bool mode) {
+    furi_assert(scheduler);
+    scheduler->timing_mode = mode;
+}
+
 void scheduler_set_tx_repeats(Scheduler* scheduler, uint8_t tx_repeats) {
     furi_assert(scheduler);
     scheduler->tx_repeats = tx_repeats;
 }
 
-void scheduler_set_mode(Scheduler* scheduler, SchedulerMode mode) {
+void scheduler_set_mode(Scheduler* scheduler, SchedulerTxMode mode) {
     furi_assert(scheduler);
     scheduler->mode = mode;
 }
 
-void scheduler_set_tx_delay(Scheduler* scheduler, uint16_t tx_delay) {
+void scheduler_set_tx_delay(Scheduler* scheduler, uint8_t tx_delay) {
     furi_assert(scheduler);
-    scheduler->tx_delay = tx_delay;
+    scheduler->tx_delay = tx_delay_value[tx_delay];
 }
 
 static const char* extract_filename(const char* filepath) {
@@ -77,19 +85,20 @@ void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list
 bool scheduler_time_to_trigger(Scheduler* scheduler) {
     furi_assert(scheduler);
     uint32_t current_time = furi_hal_rtc_get_timestamp();
-    uint32_t interval = interval_second_value[scheduler->interval];
+    uint32_t interval = interval_second_value[scheduler->interval] - 1; // zero index the interval
 
-    if((scheduler->mode != SchedulerModeImmediate) && !scheduler->previous_run_time) {
+    if((scheduler->mode != SchedulerTxModeImmediate) && !scheduler->previous_run_time) {
         scheduler->previous_run_time = current_time;
         scheduler->countdown = interval;
         return false; // Don't trigger immediately
     }
 
-    if((current_time - scheduler->previous_run_time) >= interval) {
+    if(scheduler->countdown == 0) {
+        scheduler->previous_run_time = current_time;
         scheduler->countdown = interval;
         return true;
     }
-    --scheduler->countdown;
+    scheduler->countdown--;
     return false;
 }
 
@@ -129,7 +138,7 @@ FileTxType scheduler_get_file_type(Scheduler* scheduler) {
     return scheduler->file_type;
 }
 
-SchedulerMode scheduler_get_mode(Scheduler* scheduler) {
+SchedulerTxMode scheduler_get_mode(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->mode;
 }
@@ -139,7 +148,28 @@ uint16_t scheduler_get_tx_delay(Scheduler* scheduler) {
     return scheduler->tx_delay;
 }
 
+uint8_t scheduler_get_tx_delay_index(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    switch(scheduler->tx_delay) {
+    case SchedulerTxDelay100:
+        return 0;
+    case SchedulerTxDelay250:
+        return 1;
+    case SchedulerTxDelay500:
+        return 2;
+    case SchedulerTxDelay1000:
+        return 3;
+    default:
+        return 0;
+    }
+}
+
 uint8_t scheduler_get_list_count(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->list_count;
+}
+
+bool scheduler_get_timing_mode(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->timing_mode;
 }
