@@ -74,7 +74,7 @@ static bool ina228_read_reg(Ina228Driver* drv, uint8_t reg, uint16_t* value) {
         INA228_I2C_TIMEOUT);
 }
 
-static bool ina228_read_reg24(Ina228Driver* drv, uint8_t reg, uint32_t* value) {
+static bool ina228_read_reg24(Ina228Driver* drv, uint8_t reg, int32_t* value) {
     furi_check(drv != NULL);
 
     uint8_t bytes[3];
@@ -88,7 +88,13 @@ static bool ina228_read_reg24(Ina228Driver* drv, uint8_t reg, uint32_t* value) {
            INA228_I2C_TIMEOUT)) {
         return false;
     }
-    *value = (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
+
+    *value = (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
+
+    if(bytes[0] & 0x80) {
+        *value |= 0xFF000000;
+    }
+
     return true;
 }
 
@@ -131,13 +137,13 @@ static bool ina228_driver_tick(SensorDriver* driver) {
         }
     } else {
         uint16_t diag_alrt_reg = 0;
-        uint32_t bus_reg = 0;
-        uint32_t shunt_reg = 0;
+        int32_t vbus_reg = 0;
+        int32_t vshunt_reg = 0;
         uint16_t config_reg = 0;
 
         if(ina228_read_reg(drv, INA228_REG_DIAG_ALRT, &diag_alrt_reg) &&
-           ina228_read_reg24(drv, INA228_REG_VBUS, &bus_reg) &&
-           ina228_read_reg24(drv, INA228_REG_VSHUNT, &shunt_reg) &&
+           ina228_read_reg24(drv, INA228_REG_VBUS, &vbus_reg) &&
+           ina228_read_reg24(drv, INA228_REG_VSHUNT, &vshunt_reg) &&
            ina228_read_reg(drv, INA228_REG_CONFIG, &config_reg)) {
             // Conversion done (CNVR bit is set) ?
             if((diag_alrt_reg & INA228_REG_DIAG_ALRT_CNVRF) != 0) {
@@ -145,16 +151,16 @@ static bool ina228_driver_tick(SensorDriver* driver) {
                 double shunt_voltage;
                 if((config_reg & INA228_REG_CONFIG_ADCRANGE) != 0) {
                     // LSB = 312.5nV
-                    shunt_voltage = 312.5E-9 * ((int32_t)shunt_reg >> 4);
+                    shunt_voltage = 312.5E-9 * (vshunt_reg >> 4);
                 } else {
                     // LSB = 78.125nV
-                    shunt_voltage = 78.125E-9 * ((int32_t)shunt_reg >> 4);
+                    shunt_voltage = 78.125E-9 * (vshunt_reg >> 4);
                 }
 
                 // Calculate current, bus voltage and power
                 drv->state.current = shunt_voltage / drv->config.shunt_resistor;
                 // LSB = 195.3125uV
-                drv->state.voltage = 195.3125E-6 * ((int32_t)bus_reg >> 4);
+                drv->state.voltage = 195.3125E-6 * (vbus_reg >> 4);
 
                 drv->state.ready = true;
             }
