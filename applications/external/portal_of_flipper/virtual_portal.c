@@ -40,6 +40,7 @@ uint8_t virtual_portal_next_sequence(VirtualPortal* virtual_portal) {
 }
 
 int virtual_portal_activate(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
+    FURI_LOG_D(TAG, "process %c", message[0]);
     virtual_portal->active = (message[1] == 1);
 
     response[0] = message[0];
@@ -50,7 +51,7 @@ int virtual_portal_activate(VirtualPortal* virtual_portal, uint8_t* message, uin
 }
 
 int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
-    UNUSED(message);
+    FURI_LOG_D(TAG, "process %c", message[0]);
     virtual_portal->active = false;
     virtual_portal->sequence_number = 0;
 
@@ -90,7 +91,9 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response) {
     if(virtual_portal->active) {
-        notification_message(virtual_portal->notifications, &pof_sequence_cyan);
+        // Disable while I work on RGB
+        // notification_message(virtual_portal->notifications, &pof_sequence_cyan);
+        UNUSED(pof_sequence_cyan);
         return virtual_portal_status(virtual_portal, response);
     }
     return 0;
@@ -115,6 +118,40 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     return index;
 }
 
+int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
+    UNUSED(virtual_portal);
+
+    char display[33] = {0};
+    for(size_t i = 0; i < BLOCK_SIZE; i++) {
+        snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
+    }
+    FURI_LOG_I(TAG, "L %s", display);
+
+    uint8_t side = message[1]; // 0: left, 2: right
+    uint8_t brightness = 0;
+    switch(side) {
+    case 0:
+    case 2:
+        furi_hal_light_set(LightRed, message[2]);
+        furi_hal_light_set(LightGreen, message[3]);
+        furi_hal_light_set(LightBlue, message[4]);
+        break;
+    case 1:
+        brightness = message[2];
+        furi_hal_light_set(LightBacklight, brightness);
+        break;
+    case 3:
+        brightness = 0xff;
+        furi_hal_light_set(LightBacklight, brightness);
+        break;
+    }
+
+    // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
+    size_t index = 0;
+    response[index++] = 'J';
+    return index;
+}
+
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     UNUSED(virtual_portal);
 
@@ -122,7 +159,25 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
-    // FURI_LOG_I(TAG, "J %s", display);
+    FURI_LOG_I(TAG, "J %s", display);
+
+    uint8_t side = message[1]; // 0: left, 2: right
+    uint8_t r = message[2]; // 0: left, 2: right
+    uint8_t g = message[3]; // 0: left, 2: right
+    uint8_t b = message[4]; // 0: left, 2: right
+    uint16_t delay = message[6] << 8 | message[5];
+    switch(side) {
+    case 0:
+    case 2:
+        furi_hal_light_set(LightRed, r);
+        furi_hal_light_set(LightGreen, g);
+        furi_hal_light_set(LightBlue, b);
+        break;
+    }
+
+    // Delay response
+    // furi_delay_ms(delay); // causes issues
+    UNUSED(delay);
 
     // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
     size_t index = 0;
@@ -137,6 +192,11 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Query %d %d", arrayIndex, blockNum);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
+    if(!pof_token->loaded) {
+        response[0] = 'Q';
+        response[1] = 0x01;
+        return 2;
+    }
     NfcDevice* nfc_device = pof_token->nfc_device;
     const MfClassicData* data = nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
     const MfClassicBlock block = data->block[blockNum];
@@ -160,6 +220,12 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Write %d %d %s", arrayIndex, blockNum, display);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
+    if(!pof_token->loaded) {
+        response[0] = 'Q';
+        response[1] = 0x01;
+        return 2;
+    }
+
     NfcDevice* nfc_device = pof_token->nfc_device;
 
     MfClassicData* data = mf_classic_alloc();
@@ -185,30 +251,28 @@ int virtual_portal_process_message(
     memset(response, 0, 32);
     switch(message[0]) {
     case 'A':
-        FURI_LOG_D(TAG, "process %c", message[0]);
         return virtual_portal_activate(virtual_portal, message, response);
     case 'C': //Ring color R G B
+        furi_hal_light_set(LightRed, message[1]);
+        furi_hal_light_set(LightGreen, message[2]);
+        furi_hal_light_set(LightBlue, message[3]);
         return 0;
     case 'J':
         // https://github.com/flyandi/flipper_zero_rgb_led
         return virtual_portal_j(virtual_portal, message, response);
     case 'L':
-        return 0; //No response
+        return virtual_portal_l(virtual_portal, message, response);
     case 'M':
         return virtual_portal_m(virtual_portal, message, response);
     case 'Q': //Query
-        FURI_LOG_D(TAG, "process %c", message[0]);
         return virtual_portal_query(virtual_portal, message, response);
     case 'R':
-        FURI_LOG_D(TAG, "process %c", message[0]);
         return virtual_portal_reset(virtual_portal, message, response);
     case 'S': //Status
-        FURI_LOG_D(TAG, "process %c", message[0]);
         return virtual_portal_status(virtual_portal, response);
     case 'V':
         return 0;
     case 'W': //Write
-        FURI_LOG_D(TAG, "process %c", message[0]);
         return virtual_portal_write(virtual_portal, message, response);
     case 'Z':
         return 0;
