@@ -296,33 +296,38 @@ static void pof_usb_tx_ep_callback(usbd_device* dev, uint8_t event, uint8_t ep) 
 }
 
 static usbd_respond pof_usb_ep_config(usbd_device* dev, uint8_t cfg) {
+    PoFUsb* pof_usb = pof_cur;
     switch(cfg) {
     case 0: // deconfig
         usbd_ep_deconfig(dev, POF_USB_EP_OUT);
         usbd_ep_deconfig(dev, POF_USB_EP_IN);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN1);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN2);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT1);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT2);
-        usbd_ep_deconfig(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN);
         usbd_reg_endpoint(dev, POF_USB_EP_OUT, NULL);
         usbd_reg_endpoint(dev, POF_USB_EP_IN, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN1, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN2, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT1, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT2, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, NULL);
+        if (pof_usb->virtual_portal->type == PoFXbox360) {
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN1, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN2, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT1, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT2, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, NULL);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN1);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN2);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT1);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT2);
+            usbd_ep_deconfig(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN);
+        }
         return usbd_ack;
     case 1: // config
         usbd_ep_config(dev, POF_USB_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
         usbd_ep_config(dev, POF_USB_EP_OUT, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
         usbd_reg_endpoint(dev, POF_USB_EP_IN, pof_usb_tx_ep_callback);
         usbd_reg_endpoint(dev, POF_USB_EP_OUT, pof_usb_rx_ep_callback);
+        if (pof_usb->virtual_portal->type == PoFXbox360) {
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+        }
         return usbd_ack;
     }
     return usbd_fail;
