@@ -1,6 +1,6 @@
-# Flipper Zero Game Engine Example
+# Flipper Zero 1D Pacman
 
-This repository contains an example project showcasing the usage of the [Flipper Zero Game Engine](https://github.com/flipperdevices/flipperzero-game-engine).
+This repository contains an implementation of 1D Pacman using the [Flipper Zero Game Engine](https://github.com/flipperdevices/flipperzero-game-engine) as boilerplate.
 
 ## Cloning source code
 
@@ -8,6 +8,8 @@ Make sure you clone the source code with submodules:
 ```
 git clone https://github.com/flipperdevices/flipperzero-game-engine-example.git --recurse-submodules
 ```
+
+We have modified the game engine locally - the game engine referenced currently is out of date.
 
 ## Building
 
