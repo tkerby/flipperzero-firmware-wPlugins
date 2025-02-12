@@ -9,3 +9,7 @@ Warning: Some models from 2007 and later may use SMARTRA3, which requires a diff
 
 ## Disclaimer
 This tool is provided for educational and research purposes only. 
+
+## Links
+https://opengk.org/index.php?title=SMARTRA
+
