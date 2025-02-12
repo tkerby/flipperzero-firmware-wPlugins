@@ -79,7 +79,7 @@ void scheduler_set_file(Scheduler* scheduler, const char* file_name, int8_t list
 bool scheduler_time_to_trigger(Scheduler* scheduler) {
     furi_assert(scheduler);
     uint32_t current_time = furi_hal_rtc_get_timestamp();
-    uint32_t interval = interval_second_value[scheduler->interval];
+    uint32_t interval = interval_second_value[scheduler->interval] - 1; // zero index the interval
 
     if((scheduler->mode != SchedulerTxModeImmediate) && !scheduler->previous_run_time) {
         scheduler->previous_run_time = current_time;
@@ -89,16 +89,10 @@ bool scheduler_time_to_trigger(Scheduler* scheduler) {
 
     if(scheduler->countdown == 0) {
         scheduler->previous_run_time = current_time;
-        scheduler->countdown = interval; // Reset countdown to full interval
+        scheduler->countdown = interval;
         return true;
     }
-
-    if((current_time - scheduler->previous_run_time) >= interval) {
-        scheduler->countdown = 0; // Ensure countdown hits 0 before triggering
-    } else {
-        scheduler->countdown--;
-    }
-
+    scheduler->countdown--;
     return false;
 }
 

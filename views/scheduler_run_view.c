@@ -181,7 +181,7 @@ void scheduler_scene_run_on_enter(void* context) {
 
 void scheduler_scene_run_on_exit(void* context) {
     SchedulerApp* app = context;
-    if(app->thread) {
+    if(app->thread != NULL) {
         furi_thread_join(app->thread);
     }
     scheduler_reset(app->scheduler);
@@ -190,16 +190,22 @@ void scheduler_scene_run_on_exit(void* context) {
     furi_hal_power_suppress_charge_exit();
 }
 
+uint32_t prev_time = 0;
 bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     SchedulerApp* app = context;
     bool consumed = false;
 
+    bool update = (!app->is_transmitting | true) && !(state->tick_counter % 2);
+
     if(event.type == SceneManagerEventTypeTick) {
-        if(!app->is_transmitting && !(state->tick_counter % 2)) {
+        if(update) {
             update_countdown(app->scheduler);
             bool trig = scheduler_time_to_trigger(app->scheduler);
 
             if(trig) {
+                uint32_t delta = furi_hal_rtc_get_timestamp() - prev_time;
+                prev_time = furi_hal_rtc_get_timestamp();
+                FURI_LOG_W(TAG, "TIME DELTA: %lu", delta);
                 scheduler_start_tx(app);
             } else {
                 notification_message(app->notifications, &sequence_blink_red_10);
