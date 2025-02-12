@@ -13,6 +13,7 @@ struct Scheduler {
     uint8_t list_count;
     char* file_name;
     SchedulerTxMode mode;
+    bool timing_mode;
 };
 
 Scheduler* scheduler_alloc() {
@@ -41,6 +42,11 @@ void scheduler_set_interval(Scheduler* scheduler, uint8_t interval) {
     furi_assert(scheduler);
     scheduler->interval = interval;
     scheduler->countdown = interval_second_value[scheduler->interval];
+}
+
+void scheduler_set_timing_mode(Scheduler* scheduler, bool mode) {
+    furi_assert(scheduler);
+    scheduler->timing_mode = mode;
 }
 
 void scheduler_set_tx_repeats(Scheduler* scheduler, uint8_t tx_repeats) {
@@ -161,4 +167,9 @@ uint8_t scheduler_get_tx_delay_index(Scheduler* scheduler) {
 uint8_t scheduler_get_list_count(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->list_count;
+}
+
+bool scheduler_get_timing_mode(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->timing_mode;
 }

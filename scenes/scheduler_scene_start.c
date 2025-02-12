@@ -27,6 +27,13 @@ static void scheduler_scene_start_set_interval(VariableItem* item) {
     scheduler_set_interval(app->scheduler, index);
 }
 
+static void scheduler_scene_start_set_timing(VariableItem* item) {
+    SchedulerApp* app = variable_item_get_context(item);
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, timing_mode_text[index]);
+    scheduler_set_timing_mode(app->scheduler, index);
+}
+
 static void scheduler_scene_start_set_repeats(VariableItem* item) {
     SchedulerApp* app = variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
@@ -65,6 +72,12 @@ void scheduler_scene_start_on_enter(void* context) {
     value_index = scheduler_get_interval(app->scheduler);
     variable_item_set_current_value_index(item, value_index);
     variable_item_set_current_value_text(item, interval_text[value_index]);
+
+    item = variable_item_list_add(
+        var_item_list, "Timing:", TIMING_MODE_COUNT, scheduler_scene_start_set_timing, app);
+    value_index = scheduler_get_timing_mode(app->scheduler);
+    variable_item_set_current_value_index(item, value_index);
+    variable_item_set_current_value_text(item, timing_mode_text[value_index]);
 
     item = variable_item_list_add(
         var_item_list, "Repeats:", REPEATS_COUNT, scheduler_scene_start_set_repeats, app);

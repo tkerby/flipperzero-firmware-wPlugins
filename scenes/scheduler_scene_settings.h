@@ -21,6 +21,14 @@ static const char* const mode_text[SchedulerTxModeSettingsNum] = {
     "1-Shot",
 };
 
+typedef enum SchedulerTimingMode {
+    SchedulerTimingModeRelative,
+    SchedulerTimingModePrecise,
+    SchedulerTimingModeNum
+} SchedulerTimingMode;
+#define TIMING_MODE_COUNT SchedulerTimingModeNum
+static const char* const timing_mode_text[TIMING_MODE_COUNT] = {"Relative", "Precise"};
+
 #define TX_DELAY_COUNT 4
 typedef enum SchedulerTxDelay {
     SchedulerTxDelay100 = 100,
