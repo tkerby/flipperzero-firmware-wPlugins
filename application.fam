@@ -1,6 +1,6 @@
 App(
-    appid="game_engine_template", # Unique application ID, change it to your own
-    name="Game Engine Template", # Game name, change it to your own
+    appid="1d_pacman", # Unique application ID, change it to your own
+    name="1D Pacman", # Game name, change it to your own
     apptype=FlipperAppType.EXTERNAL,
     entry_point="game_app", # Do not touch this
     stack_size=4 * 1024, # Game stack, change accordingly
