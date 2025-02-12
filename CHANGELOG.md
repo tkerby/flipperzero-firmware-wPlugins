@@ -2,10 +2,14 @@
 
 ## New Features
 - Added 24-hour interval.
+- Added option to select interval timing:
+  - 'Precise' mode keeps the timer counting while transmitting, so each transmission begins exactly on the interval.
+  - 'Relative' mode stops the timer while transmitting, so each transmission waits the specified interval.
 
 ## Bug-fix
 - Fixed TX Delay initial value index.
-- Fixed long filename display overlap.
+- Fixed off-by-one-second timing discovered while working on 'precise' mode.
+- Fixed long filename display overlap on run screen.
 
 # v2.1 (2025-02-07)
 
