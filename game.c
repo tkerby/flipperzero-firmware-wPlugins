@@ -57,8 +57,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     //if(input.held & GameKeyUp) pos.y -= 2;
     //if(input.held & GameKeyDown) pos.y += 2;
 	
-
-	if (input.held & GameKeyOk) {
+	if (input.pressed & GameKeyOk) {
 		direction = !direction;
 	}
     if(!direction) {
