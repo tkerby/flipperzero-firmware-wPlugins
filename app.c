@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
   * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -150,9 +150,9 @@ static App* app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, AppViewNumberInput, number_input_get_view(app->number_input));
 
-    app->tina_gauge = tina_gauge_alloc();
+    app->current_gauge = current_gauge_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, AppViewTinaGauge, tina_gauge_get_view(app->tina_gauge));
+        app->view_dispatcher, AppViewCurrentGauge, current_gauge_get_view(app->current_gauge));
 
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, AppViewWiring, popup_get_view(app->popup));
@@ -177,8 +177,8 @@ static void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppViewWiring);
     popup_free(app->popup);
 
-    view_dispatcher_remove_view(app->view_dispatcher, AppViewTinaGauge);
-    tina_gauge_free(app->tina_gauge);
+    view_dispatcher_remove_view(app->view_dispatcher, AppViewCurrentGauge);
+    current_gauge_free(app->current_gauge);
 
     // Free sensor driver
     if(app->sensor != NULL) {

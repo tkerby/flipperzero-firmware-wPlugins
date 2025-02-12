@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
  * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -14,29 +14,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tina_gauge.h"
+#include "current_gauge.h"
 #include "utils.h"
 
 #include <gui/elements.h>
 
 typedef enum {
-    TinaGaugeRange_A,
-    TinaGaugeRange_mA,
-} TinaGaugeRange;
+    CurrentGaugeRange_A,
+    CurrentGaugeRange_mA,
+} CurrentGaugeRange;
 
-struct TinaGauge {
+struct CurrentGauge {
     View* view;
-    TinaGaugeCallback menu_callback;
+    GaugeCallback menu_callback;
     void* callback_context;
 };
 
 typedef struct {
-    TinaGaugeRange range;
+    CurrentGaugeRange range;
     SensorState sensor_state;
-} TinaGaugeModel;
+} GaugeModel;
 
-static void tina_gauge_draw_callback(Canvas* canvas, void* _model) {
-    TinaGaugeModel* model = (TinaGaugeModel*)_model;
+static void current_gauge_draw_callback(Canvas* canvas, void* _model) {
+    GaugeModel* model = (GaugeModel*)_model;
     furi_check(model);
 
     FuriString* value_text = furi_string_alloc();
@@ -76,7 +76,7 @@ static void tina_gauge_draw_callback(Canvas* canvas, void* _model) {
 
     if(model->sensor_state.ready) {
         // Current value
-        if(model->range == TinaGaugeRange_mA) {
+        if(model->range == CurrentGaugeRange_mA) {
             furi_string_printf(value_text, "%5.3f", (double)1000.0 * model->sensor_state.current);
             unit_text = "mA";
         } else {
@@ -111,8 +111,8 @@ static void tina_gauge_draw_callback(Canvas* canvas, void* _model) {
     furi_string_free(value_text);
 }
 
-bool tina_gauge_input_callback(InputEvent* event, void* context) {
-    TinaGauge* gauge = (TinaGauge*)context;
+bool current_gauge_input_callback(InputEvent* event, void* context) {
+    CurrentGauge* gauge = (CurrentGauge*)context;
     furi_check(gauge != NULL);
 
     if(event->type == InputTypeShort && event->key == InputKeyLeft) {
@@ -125,25 +125,25 @@ bool tina_gauge_input_callback(InputEvent* event, void* context) {
     return false;
 }
 
-TinaGauge* tina_gauge_alloc(void) {
-    TinaGauge* gauge = (TinaGauge*)malloc(sizeof(TinaGauge));
+CurrentGauge* current_gauge_alloc(void) {
+    CurrentGauge* gauge = (CurrentGauge*)malloc(sizeof(CurrentGauge));
 
     gauge->view = view_alloc();
     view_set_context(gauge->view, gauge);
-    view_allocate_model(gauge->view, ViewModelTypeLocking, sizeof(TinaGaugeModel));
-    view_set_draw_callback(gauge->view, tina_gauge_draw_callback);
-    view_set_input_callback(gauge->view, tina_gauge_input_callback);
+    view_allocate_model(gauge->view, ViewModelTypeLocking, sizeof(GaugeModel));
+    view_set_draw_callback(gauge->view, current_gauge_draw_callback);
+    view_set_input_callback(gauge->view, current_gauge_input_callback);
 
     return gauge;
 }
 
-View* tina_gauge_get_view(TinaGauge* gauge) {
+View* current_gauge_get_view(CurrentGauge* gauge) {
     furi_check(gauge != NULL);
 
     return gauge->view;
 }
 
-void tina_gauge_free(TinaGauge* gauge) {
+void current_gauge_free(CurrentGauge* gauge) {
     furi_check(gauge != NULL);
 
     view_free_model(gauge->view);
@@ -151,23 +151,23 @@ void tina_gauge_free(TinaGauge* gauge) {
     free(gauge);
 }
 
-void tina_gauge_update(TinaGauge* gauge, const SensorState* state) {
+void current_gauge_update(CurrentGauge* gauge, const SensorState* state) {
     with_view_model(
         gauge->view,
-        TinaGaugeModel * model,
+        GaugeModel * model,
         {
             model->sensor_state = *state;
 
             if(fabs(model->sensor_state.current) < (double)0.1) {
-                model->range = TinaGaugeRange_mA;
+                model->range = CurrentGaugeRange_mA;
             } else {
-                model->range = TinaGaugeRange_A;
+                model->range = CurrentGaugeRange_A;
             }
         },
         true);
 }
 
-void tina_gauge_set_menu_callback(TinaGauge* gauge, TinaGaugeCallback callback, void* context) {
+void current_gauge_set_menu_callback(CurrentGauge* gauge, GaugeCallback callback, void* context) {
     furi_check(gauge != NULL);
 
     gauge->menu_callback = callback;

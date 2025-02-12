@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
  * Copyright (c) 2025
  * 
  * This program is free software: you can redistribute it and/or modify  

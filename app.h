@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
  * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -26,12 +26,12 @@
 
 #include "app_common.h"
 #include "app_config.h"
-#include "views/tina_gauge.h"
+#include "views/current_gauge.h"
 
 typedef enum {
     AppViewNumberInput,
     AppViewVariableList,
-    AppViewTinaGauge,
+    AppViewCurrentGauge,
     AppViewWiring,
 } AppView;
 
@@ -43,7 +43,7 @@ typedef struct {
 
     VariableItemList* var_item_list;
     NumberInput* number_input;
-    TinaGauge* tina_gauge;
+    CurrentGauge* current_gauge;
     Popup* popup;
 
     AppConfig config;

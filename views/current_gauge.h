@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
  * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -20,23 +20,23 @@
 
 #include "sensor/sensor_driver.h"
 
-// Gauge screen showing the sensor state
-typedef struct TinaGauge TinaGauge;
+// Current gauge screen showing the sensor state
+typedef struct CurrentGauge CurrentGauge;
 
 // Callback invoked when the menu button is pressed
-typedef void (*TinaGaugeCallback)(void* context);
+typedef void (*GaugeCallback)(void* context);
 
 // Allocates gauge screen
-TinaGauge* tina_gauge_alloc(void);
+CurrentGauge* current_gauge_alloc(void);
 
 // Frees gauge screen
-void tina_gauge_free(TinaGauge* gauge);
+void current_gauge_free(CurrentGauge* gauge);
 
 // Returns the view of the gauge screen
-View* tina_gauge_get_view(TinaGauge* gauge);
+View* current_gauge_get_view(CurrentGauge* gauge);
 
 // Updates the gauge screen with the sensor state
-void tina_gauge_update(TinaGauge* gauge, const SensorState* state);
+void current_gauge_update(CurrentGauge* gauge, const SensorState* state);
 
 // Sets the callback invoked when the menu button is pressed
-void tina_gauge_set_menu_callback(TinaGauge* gauge, TinaGaugeCallback callback, void* context);
+void current_gauge_set_menu_callback(CurrentGauge* gauge, GaugeCallback callback, void* context);

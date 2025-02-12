@@ -1,5 +1,5 @@
 /* 
- * This file is part of the TINA application for Flipper Zero (https://github.com/cepetr/tina).
+ * This file is part of the INA Meter application for Flipper Zero (https://github.com/cepetr/flipper-tina).
  * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -26,9 +26,9 @@ static void scene_gauge_menu_callback(void* context) {
 void scene_gauge_on_enter(void* context) {
     App* app = (App*)context;
 
-    tina_gauge_set_menu_callback(app->tina_gauge, scene_gauge_menu_callback, app);
+    current_gauge_set_menu_callback(app->current_gauge, scene_gauge_menu_callback, app);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, AppViewTinaGauge);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppViewCurrentGauge);
 }
 
 bool scene_gauge_on_event(void* context, SceneManagerEvent event) {
@@ -40,7 +40,7 @@ bool scene_gauge_on_event(void* context, SceneManagerEvent event) {
         if(app->sensor != NULL) {
             SensorState state;
             app->sensor->get_state(app->sensor, &state);
-            tina_gauge_update(app->tina_gauge, &state);
+            current_gauge_update(app->current_gauge, &state);
         }
     }
 
