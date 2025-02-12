@@ -1,5 +1,5 @@
 # Smartra VIN2PIN
-Flipper Zero app calculator for SMARTRA2 immobilizer pins for Hyundai and KIA vehicles
+Flipper Zero app calculator for SMARTRA2 immobilizer pins for **Hyundai and KIA** vehicles
 
 ## Features
  - Supports most Hyundai/KIA models using SMARTRA2.
