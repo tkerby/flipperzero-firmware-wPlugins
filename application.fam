@@ -1,0 +1,17 @@
+App(
+    appid="smartra",
+    name="Smartra VIN2PIN",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="smartra_app",
+    stack_size=4 * 1024,
+    requires=[
+        "gui",
+    ],
+    order=10,
+    fap_icon="app.png",
+    fap_category="Tools",
+    fap_icon_assets="assets",
+    fap_description="Simple calculator for SMARTRA2 immobilizer pins for Hyundai/KIA vehicles",
+    fap_author="@evillero",
+    fap_version="1.0",
+)
