@@ -15,6 +15,17 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v2/10s_x1_tx250_norm.png" width="100%"></td>
   </tr>
+  <table style="border:0px">
+  <tr style="border:0px">
+    <td style="border:0px" width="25%" align="left">
+    Interval timing modes: <br>
+     <ul>
+       <li>Relative: Waits specified interval between last transmission and beginning of next.</li>
+       <li>Precise: All tranmissions begin on the interval regardless of transmit length.</li>
+     </ul>
+    </td>
+    <td style="border:0px" width="20%"><img src="./screenshots/v2/24hrs_x1_rel.png" width="100%"></td>
+  </tr>
  <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
     Data Tx Repeats:<br>
@@ -86,9 +97,10 @@ Build outputs are found in the `dist` directory for each application.
 
 # To-Do
 - [ ] Add 'alarm' mode, to set specific time for transmission.
-- [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys.
+- [ ] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys or custom app files.
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [ ] Add option to select relative or precise intervals. Intervals are currently relative (from initial start, if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
+- [x] Add option to select relative or precise intervals. Intervals are currently relative (from initial start, if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
 - [ ] Enable quitting from transmission. Currently, if back is pressed during playlist transmission, transmission will complete before exiting to main menu.
 - [x] Update UI from widgets to canvas.
 - [x] Fix long filename overlap.
+- [ ] Options to select notifications on transmit (vibro, backlight, etc).
