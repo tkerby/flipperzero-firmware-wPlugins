@@ -24,6 +24,15 @@ static Vector gen_target_pos(int index) {
     };
 }
 
+static const EntityDescription target_desc;
+static const EntityDescription food_desc;
+static bool is_level_empty(Level* level) {
+    int count = level_entity_count(level, &target_desc) + level_entity_count(level, &food_desc);
+
+    FURI_LOG_I("target_collision", "Total food + target count is %d", count);
+    return count == 0;
+}
+
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
@@ -133,8 +142,6 @@ static const EntityDescription player_desc = {
 
 /****** Entities: Target ******/
 
-static const EntityDescription target_desc;
-
 /*
 static Vector random_pos(void) {
     //return (Vector){rand() % 120 + 4, rand() % 58 + 4};
@@ -180,8 +187,7 @@ static void target_collision(Entity* self, Entity* other, GameManager* manager, 
 		FURI_LOG_I("target_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
 		level_remove_entity(current_level, self);
 
-		FURI_LOG_I("target_collision", "Target count is %d", level_entity_count(current_level, &target_desc));
-		if (level_entity_count(current_level, &target_desc) == 0) {
+		if (is_level_empty(current_level)) {
 			Level* nextlevel = game_manager_add_level(manager, &level);
 			game_manager_next_level_set(manager, nextlevel);
 		}
@@ -206,7 +212,6 @@ static void target_spawn(Level* level, Vector pos) {
 
 /****** Entities: Big Dot ******/
 
-static const EntityDescription food_desc;
 static void food_start();
 static void food_render();
 static void food_collision();
@@ -254,11 +259,10 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 		FURI_LOG_I("food_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
 		level_remove_entity(current_level, self);
 
-		// FURI_LOG_I("food_collision", "Target count is %d", level_entity_count(current_level, &food_desc));
-		// if (level_entity_count(current_level, &target_desc) == 0) {
-		// 	Level* nextlevel = game_manager_add_level(manager, &level);
-		// 	game_manager_next_level_set(manager, nextlevel);
-		// }
+		if (is_level_empty(current_level)) {
+			Level* nextlevel = game_manager_add_level(manager, &level);
+			game_manager_next_level_set(manager, nextlevel);
+		}
     }
 }
 
