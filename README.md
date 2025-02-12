@@ -91,4 +91,4 @@ Build outputs are found in the `dist` directory for each application.
 - [ ] Add option to select relative or precise intervals. Intervals are currently relative (from initial start, if the interval is 10 seconds, and the transmission takes 2 seconds, next TX will be 22 seconds later).
 - [ ] Enable quitting from transmission. Currently, if back is pressed during playlist transmission, transmission will complete before exiting to main menu.
 - [ ] Update UI from widgets to canvas viewport.
-- [ ] Fix long filename overlap.
+- [x] Fix long filename overlap.
