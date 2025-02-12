@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0210-1117-0.420.0-358602c](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Releas RM0212-1820-0.420.0-5d5af30](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-10 11:17 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-10 11:17 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-12 18:20 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-12 18:20 EST`
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - OFW: [Update mbedtls and expose AES #4092 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4092)
 - OFW: [ufbt: bumped gh upload action version in project template #4097 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4097)
