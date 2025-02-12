@@ -1,11 +1,10 @@
-# v2.2 (2025-TBD)
+# v2.2 (2025-02-11)
 
 ## New Features
 - Added 24-hour interval.
 - Added option to select interval timing:
-  - 'Precise' mode keeps the timer counting while transmitting, so each transmission begins exactly on the interval.
-  - 'Relative' mode stops the timer while transmitting, so each transmission waits the specified interval.
-
+  - 'Precise' mode: Interval is length of time from START of one transmission to START of next.
+  - 'Relative' mode: Interval is length of time from END of one transmission to START of next.
 ## Bug-fix
 - Fixed TX Delay initial value index.
 - Fixed off-by-one-second timing discovered while working on 'precise' mode.

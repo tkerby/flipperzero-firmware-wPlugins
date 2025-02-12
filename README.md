@@ -19,8 +19,8 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
     <td style="border:0px" width="25%" align="left">
     Interval timing modes: <br>
      <ul>
-       <li>Relative: Interval is length of time from [end] of first transmission to [beginning] of next.</li>
-       <li>Precise: Interval is length of time from [beginning] of first transmission to [beginning] of next.</li>
+       <li>Relative: Interval is length of time from `END` of one transmission to `START` of next.</li>
+       <li>Precise: Interval is length of time from `START` of one transmission to `START` of next.</li>
      </ul>
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v2/24hrs_x1_rel.png" width="100%"></td>
