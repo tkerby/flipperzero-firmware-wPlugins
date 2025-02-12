@@ -133,10 +133,6 @@ static int32_t scheduler_tx(void* context) {
 
         uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
         for(uint_fast8_t i = 0; i <= repeats; ++i) {
-#ifdef FURI_DEBUG
-            FURI_LOG_I(TAG, "Scheduled Tx %d of %d", i + 1, repeats + 1);
-#endif
-
             subghz_environment_set_protocol_registry(
                 tx_run->environment, (void*)&subghz_protocol_registry);
             SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(

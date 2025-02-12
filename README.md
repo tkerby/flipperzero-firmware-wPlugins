@@ -13,7 +13,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
        <li>Hours: 1, 2, 4, 8, 12, 24</li>
      </ul>
     </td>
-    <td style="border:0px" width="20%"><img src="./screenshots/v2.0/10s_x1_tx250_norm.png" width="100%"></td>
+    <td style="border:0px" width="20%"><img src="./screenshots/v2/10s_x1_tx250_norm.png" width="100%"></td>
   </tr>
  <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
@@ -22,7 +22,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
   <li>x2, x3, x4, x5, x6</li>
   </ul>
   </td>
-  <td style="border:0px" width="20%"><img src="./screenshots/v2.0/20min_x3_tx250_immed.png" width="100%"></td>
+  <td style="border:0px" width="20%"><img src="./screenshots/v2/20min_x3_tx250_immed.png" width="100%"></td>
 <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
     Transmission Modes:<br>
@@ -32,7 +32,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
   <li>One-Shot: Wait interval and transmits once.</li>
   </ul>
   </td>
-  <td style="border:0px" width="20%"><img src="./screenshots/v2.0/x3_tx250_oneshot.png" width="100%"></td>
+  <td style="border:0px" width="20%"><img src="./screenshots/v2/x3_tx250_oneshot.png" width="100%"></td>
  </tr>
 <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
@@ -41,7 +41,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
     <li>100ms, 250ms, 500ms, 1 sec</li>
    </ul>
   </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v2.0/x1_tx100_select.png" width="100%"></td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v2/x1_tx100_select.png" width="100%"></td>
   </tr>
   <tr style="border:0px">
   <td style="border:0px" width="25%" align="left">
@@ -54,7 +54,7 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
       <li>TX interval countdown</li>
     </ul>
   </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v2.0/a_run_view.png" width="100%"></td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v2/a_run_view.png" width="100%"></td>
   </tr>
 </table>
 

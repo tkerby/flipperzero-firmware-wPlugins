@@ -3,6 +3,7 @@
 #include <lib/subghz/devices/devices.h>
 #include <string.h>
 #include <subghz_scheduler_icons.h>
+#include <gui/elements.h>
 
 #include "src/scheduler_run.h"
 #include "src/scheduler_app_i.h"
@@ -19,7 +20,13 @@
 #define GUI_TABLE_ROW_A    13
 #define GUI_TABLE_ROW_B    (GUI_TABLE_ROW_A + GUI_TEXTBOX_HEIGHT) - 1
 
+struct SchedulerRunView {
+    View* view;
+};
+
 struct SchedulerUIRunState {
+    SchedulerApp* app;
+
     FuriString* header;
     FuriString* mode;
     FuriString* interval;
@@ -28,16 +35,108 @@ struct SchedulerUIRunState {
     FuriString* file_name;
     FuriString* tx_countdown;
 
-    //FuriString* current_tx_file;
+    //FuriTimer* scroll_timer;
+    //uint8_t scroll_counter;
+    uint8_t tick_counter;
     uint8_t list_count;
-    uint8_t progress;
 };
-
 SchedulerUIRunState* state;
 
-//void scheduler_set_current_tx_file(const char* file) {
-//    furi_string_set(state->current_tx_file, file);
+static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
+    UNUSED(context);
+
+    canvas_clear(canvas);
+    canvas_set_color(canvas, ColorBlack);
+
+    /* ============= MAIN FRAME ============= */
+    canvas_draw_rframe(canvas, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
+
+    /* ============= HEADER ============= */
+    canvas_draw_frame(canvas, 0, GUI_TABLE_ROW_A, GUI_DISPLAY_WIDTH, 2);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_DISPLAY_WIDTH / 2,
+        2,
+        AlignCenter,
+        AlignTop,
+        furi_string_get_cstr(state->header));
+
+    canvas_set_font(canvas, FontSecondary);
+
+    /* ============= MODE ============= */
+    canvas_draw_frame(canvas, 0, GUI_TABLE_ROW_A, 49, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_MARGIN + 10,
+        (GUI_TEXT_GAP * 2),
+        AlignLeft,
+        AlignCenter,
+        furi_string_get_cstr(state->mode));
+
+    /* ============= INTERVAL ============= */
+    canvas_draw_frame(canvas, 48, GUI_TABLE_ROW_A, 48, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_MARGIN + 58,
+        (GUI_TEXT_GAP * 2),
+        AlignLeft,
+        AlignCenter,
+        furi_string_get_cstr(state->interval));
+
+    /* ============= TX REPEATS ============= */
+    canvas_draw_frame(canvas, 95, GUI_TABLE_ROW_A, 33, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_MARGIN + 106,
+        (GUI_TEXT_GAP * 2),
+        AlignLeft,
+        AlignCenter,
+        furi_string_get_cstr(state->tx_repeats));
+
+    /* ============= FILE NAME ============= */
+    canvas_draw_str_aligned(
+        canvas, GUI_MARGIN, (GUI_TEXT_GAP * 5) - 2, AlignLeft, AlignCenter, "File: ");
+    elements_scrollable_text_line(
+        canvas,
+        GUI_MARGIN + 22,
+        (GUI_TEXT_GAP * 5) + 1,
+        95,
+        state->file_name,
+        state->tick_counter,
+        false);
+
+    /* ============= NEXT TX COUNTDOWN ============= */
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_MARGIN,
+        GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
+        AlignLeft,
+        AlignCenter,
+        "Next TX: ");
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_DISPLAY_WIDTH - GUI_MARGIN,
+        GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
+        AlignRight,
+        AlignCenter,
+        furi_string_get_cstr(state->tx_countdown));
+}
+
+//static void scheduler_scroll_timer_callback(void* context) {
+//    SchedulerApp* app = context;
+//    state->scroll_counter++;
+//    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 //}
+
+static void update_countdown(Scheduler* scheduler) {
+    char countdown[16];
+    scheduler_get_countdown_fmt(scheduler, countdown, sizeof(countdown));
+    furi_string_set(state->tx_countdown, countdown);
+}
 
 static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
     uint32_t value;
@@ -57,10 +156,12 @@ static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
     state->file_type = furi_string_alloc_set(file_type_text[value]);
 
     state->file_name = furi_string_alloc_set(scheduler_get_file_name(app->scheduler));
-
     state->tx_countdown = furi_string_alloc();
+    //state->scroll_timer =
+    //    furi_timer_alloc(scheduler_scroll_timer_callback, FuriTimerTypePeriodic, app);
+
     state->list_count = scheduler_get_list_count(app->scheduler);
-    state->progress = 0;
+    state->app = app;
 }
 
 static void scheduler_ui_run_state_free() {
@@ -71,115 +172,8 @@ static void scheduler_ui_run_state_free() {
     furi_string_free(state->file_type);
     furi_string_free(state->file_name);
     furi_string_free(state->tx_countdown);
+    //furi_timer_free(state->scroll_timer);
     free(state);
-}
-
-void scheduler_update_progress(uint8_t x) {
-    state->progress = x * (128 - 10) / state->list_count;
-}
-
-void scheduler_update_widgets(void* context) {
-    SchedulerApp* app = context;
-
-    widget_reset(app->widget);
-    widget_add_frame_element(
-        app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5); /* Main Frame */
-
-    /* ============= HEADER ============= */
-    widget_add_frame_element(
-        app->widget, 0, GUI_TABLE_ROW_A, GUI_DISPLAY_WIDTH, 2, 0); /* Header Underline */
-    widget_add_string_element(
-        app->widget,
-        GUI_DISPLAY_WIDTH / 2,
-        2,
-        AlignCenter,
-        AlignTop,
-        FontPrimary,
-        furi_string_get_cstr(state->header));
-
-    /* ============= MODE ============= */
-    widget_add_frame_element(
-        app->widget, 0, GUI_TABLE_ROW_A, 49, GUI_TEXTBOX_HEIGHT, 0); /* Mode Box */
-    widget_add_icon_element(app->widget, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN + 10,
-        (GUI_TEXT_GAP * 2),
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(state->mode));
-
-    /* ============= INTERVAL ============= */
-    widget_add_frame_element(
-        app->widget, 48, GUI_TABLE_ROW_A, 48, GUI_TEXTBOX_HEIGHT, 0); /* Interval Box */
-    widget_add_icon_element(app->widget, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN + 58,
-        (GUI_TEXT_GAP * 2),
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(state->interval));
-
-    /* ============= TX REPEATS ============= */
-    widget_add_frame_element(
-        app->widget, 95, GUI_TABLE_ROW_A, 33, GUI_TEXTBOX_HEIGHT, 0); /* Repeats Box */
-    widget_add_icon_element(app->widget, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN + 106,
-        (GUI_TEXT_GAP * 2),
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(state->tx_repeats));
-
-    /* ============= FILE NAME ============= */
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN,
-        (GUI_TEXT_GAP * 5) - 2,
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        "File: ");
-    widget_add_string_element(
-        app->widget,
-        GUI_DISPLAY_WIDTH - GUI_MARGIN,
-        (GUI_TEXT_GAP * 5) - 2,
-        AlignRight,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(state->file_name));
-
-    /* ============= NEXT TX COUNTDOWN ============= */
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN,
-        GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        "Next TX: ");
-    widget_add_string_element(
-        app->widget,
-        GUI_DISPLAY_WIDTH - GUI_MARGIN,
-        GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
-        AlignRight,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(state->tx_countdown));
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
-}
-
-static void update_countdown(SchedulerApp* app) {
-    char countdown[16];
-    scheduler_get_countdown_fmt(app->scheduler, countdown, sizeof(countdown));
-    furi_string_set(state->tx_countdown, countdown);
-    scheduler_update_widgets(app);
 }
 
 void scheduler_scene_run_on_enter(void* context) {
@@ -187,8 +181,9 @@ void scheduler_scene_run_on_enter(void* context) {
     furi_hal_power_suppress_charge_enter();
     scheduler_reset(app->scheduler);
     scheduler_ui_run_state_alloc(app);
-    update_countdown(app);
     subghz_devices_init();
+    //furi_timer_start(state->scroll_timer, 500);
+    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
 
 void scheduler_scene_run_on_exit(void* context) {
@@ -196,6 +191,7 @@ void scheduler_scene_run_on_exit(void* context) {
     if(app->thread) {
         furi_thread_join(app->thread);
     }
+    //furi_timer_stop(state->scroll_timer);
     scheduler_reset(app->scheduler);
     subghz_devices_deinit();
     scheduler_ui_run_state_free();
@@ -207,8 +203,8 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeTick) {
-        if(!app->is_transmitting) {
-            update_countdown(app);
+        if(!app->is_transmitting && !(state->tick_counter % 2)) {
+            update_countdown(app->scheduler);
             bool trig = scheduler_time_to_trigger(app->scheduler);
 
             if(trig) {
@@ -216,9 +212,30 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
             } else {
                 notification_message(app->notifications, &sequence_blink_red_10);
             }
-            consumed = true;
         }
+        view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
+        state->tick_counter++;
+        consumed = true;
     }
 
     return consumed;
+}
+
+SchedulerRunView* scheduler_run_view_alloc() {
+    SchedulerRunView* run_view = malloc(sizeof(SchedulerRunView));
+    run_view->view = view_alloc();
+    view_set_context(run_view->view, run_view);
+    view_set_draw_callback(run_view->view, scheduler_run_view_draw_callback);
+    return run_view;
+}
+
+void scheduler_run_view_free(SchedulerRunView* run_view) {
+    furi_assert(run_view);
+    view_free(run_view->view);
+    free(run_view);
+}
+
+View* scheduler_run_view_get_view(SchedulerRunView* run_view) {
+    furi_assert(run_view);
+    return run_view->view;
 }

@@ -5,6 +5,7 @@
 
 ## Bug-fix
 - Fixed TX Delay initial value index.
+- Fixed long filename display overlap.
 
 # v2.1 (2025-02-07)
 
