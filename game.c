@@ -75,6 +75,12 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 	if (input.pressed & GameKeyOk) {
 		direction = !direction;
 	}
+	if (input.held & GameKeyLeft) {
+		direction = false;
+	}
+	if (input.held & GameKeyRight) {
+		direction = true;
+	}
     if(!direction) {
 		pos.x -= 4; //offset by one so that sprite can cycle through animation
 		int frame = (int)pos.x % 3 + 1;//This references sprite files - out of range causes crashes
