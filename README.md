@@ -15,7 +15,6 @@ A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub
     </td>
     <td style="border:0px" width="20%"><img src="./screenshots/v2/10s_x1_tx250_norm.png" width="100%"></td>
   </tr>
-  <table style="border:0px">
   <tr style="border:0px">
     <td style="border:0px" width="25%" align="left">
     Interval timing modes: <br>
