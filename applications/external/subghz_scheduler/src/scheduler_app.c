@@ -35,6 +35,7 @@ SchedulerApp* scheduler_app_alloc(void) {
 
     app->gui = furi_record_open(RECORD_GUI);
     app->dialogs = furi_record_open(RECORD_DIALOGS);
+    app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
     app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&scheduler_scene_handlers, app);
@@ -45,10 +46,8 @@ SchedulerApp* scheduler_app_alloc(void) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, scheduler_app_back_event_callback);
     view_dispatcher_set_tick_event_callback(
-        app->view_dispatcher, scheduler_app_tick_event_callback, 1000);
+        app->view_dispatcher, scheduler_app_tick_event_callback, 500);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-
-    app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
     app->var_item_list = variable_item_list_alloc();
     view_dispatcher_add_view(
@@ -56,9 +55,11 @@ SchedulerApp* scheduler_app_alloc(void) {
         SchedulerAppViewVarItemList,
         variable_item_list_get_view(app->var_item_list));
 
-    app->widget = widget_alloc();
+    app->run_view = scheduler_run_view_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, SchedulerAppViewRunSchedule, widget_get_view(app->widget));
+        app->view_dispatcher,
+        SchedulerAppViewRunSchedule,
+        scheduler_run_view_get_view(app->run_view));
 
     app->scheduler = scheduler_alloc();
 
@@ -71,18 +72,15 @@ void scheduler_app_free(SchedulerApp* app) {
     furi_assert(app);
     scheduler_free(app->scheduler);
 
-    widget_free(app->widget);
-
     variable_item_list_free(app->var_item_list);
 
     view_dispatcher_remove_view(app->view_dispatcher, SchedulerAppViewVarItemList);
     view_dispatcher_remove_view(app->view_dispatcher, SchedulerAppViewRunSchedule);
 
-    furi_record_close(RECORD_NOTIFICATION);
-
     scene_manager_free(app->scene_manager);
     view_dispatcher_free(app->view_dispatcher);
 
+    furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_DIALOGS);
     furi_record_close(RECORD_GUI);
     furi_string_free(app->file_path);

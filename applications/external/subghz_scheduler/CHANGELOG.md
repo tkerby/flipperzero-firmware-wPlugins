@@ -1,6 +1,18 @@
+# v2.2 (2025-02-11)
+
+## New Features
+- Added 24-hour interval.
+- Added option to select interval timing:
+  - 'Precise' mode: Interval is length of time from START of one transmission to START of next.
+  - 'Relative' mode: Interval is length of time from END of one transmission to START of next.
+## Bug-fix
+- Fixed TX Delay initial value index.
+- Fixed off-by-one-second timing discovered while working on 'precise' mode.
+- Fixed long filename display overlap on run screen.
+
 # v2.1 (2025-02-07)
 
-## Bug-fixes
+## Bug-fix
 - Sending NULL to file browser extension filtering caused intermittent problems on OFW, but completely breaks on Momentum 009 with NULL dereference error. Fixed & tested on Original and M009 firmwares.
 
 # v2.0 (2025-02-05)

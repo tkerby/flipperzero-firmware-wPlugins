@@ -25,6 +25,7 @@ struct ScheduleTxRun {
     FuriString* preset;
     FuriString* data;
     bool filetype;
+    uint32_t ms_delay_delta;
     uint32_t frequency;
     uint16_t tx_delay;
 };
@@ -80,7 +81,7 @@ static void
 
     if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
         while(!subghz_devices_is_async_complete_tx(device)) {
-            furi_delay_ms(100);
+            furi_delay_ms(5);
         }
         subghz_devices_stop_async_tx(device);
     }
@@ -105,7 +106,7 @@ static int32_t scheduler_tx(void* context) {
         furi_string_set_str(tx_run->data, furi_string_get_cstr(app->file_path));
     }
 
-    tx_run->tx_delay = tx_delay_value[scheduler_get_tx_delay(app->scheduler)];
+    tx_run->tx_delay = scheduler_get_tx_delay(app->scheduler);
     do {
         if(!flipper_format_file_open_existing(
                tx_run->fff_file, furi_string_get_cstr(tx_run->data))) {
@@ -132,9 +133,6 @@ static int32_t scheduler_tx(void* context) {
 
         uint8_t repeats = scheduler_get_tx_repeats(app->scheduler);
         for(uint_fast8_t i = 0; i <= repeats; ++i) {
-#ifdef FURI_DEBUG
-            FURI_LOG_I(TAG, "Scheduled Tx %d of %d", i + 1, repeats + 1);
-#endif
             subghz_environment_set_protocol_registry(
                 tx_run->environment, (void*)&subghz_protocol_registry);
             SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(
@@ -175,8 +173,7 @@ static void scheduler_thread_state_callback(FuriThreadState state, void* context
         furi_thread_free(thread);
         app->thread = NULL;
         app->is_transmitting = false;
-        scheduler_reset_previous_time(app->scheduler);
-        if(scheduler_get_mode(app->scheduler) == SchedulerModeOneShot) {
+        if(scheduler_get_mode(app->scheduler) == SchedulerTxModeOneShot) {
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, SchedulerSceneStart);
         }

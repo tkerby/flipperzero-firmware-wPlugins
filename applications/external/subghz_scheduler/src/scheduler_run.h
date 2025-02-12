@@ -5,5 +5,4 @@
 
 typedef struct ScheduleTxRun ScheduleTxRun;
 
-//FuriThreadCallback scheduler_tx(SchedulerApp* context);
 void scheduler_start_tx(SchedulerApp* context);

@@ -3,9 +3,11 @@
 #include <lib/subghz/devices/devices.h>
 #include <string.h>
 #include <subghz_scheduler_icons.h>
+#include <gui/elements.h>
 
 #include "src/scheduler_run.h"
 #include "src/scheduler_app_i.h"
+#include "scheduler_run_view.h"
 
 #define TAG "SubGHzSchedulerRunView"
 
@@ -14,143 +16,225 @@
 #define GUI_MARGIN         5
 #define GUI_TEXT_GAP       10
 
-static void scheduler_update_widgets(void* context, char* time_til_next) {
-    SchedulerApp* app = context;
-    uint32_t value;
+#define GUI_TEXTBOX_HEIGHT 12
+#define GUI_TABLE_ROW_A    13
+#define GUI_TABLE_ROW_B    (GUI_TABLE_ROW_A + GUI_TEXTBOX_HEIGHT) - 1
 
-    widget_reset(app->widget);
-    widget_add_string_element(
-        app->widget,
+#define MAX_FILENAME_WIDTH_PX 95
+
+struct SchedulerRunView {
+    View* view;
+};
+
+struct SchedulerUIRunState {
+    SchedulerApp* app;
+    FuriString* header;
+    FuriString* mode;
+    FuriString* interval;
+    FuriString* tx_repeats;
+    FuriString* file_type;
+    FuriString* file_name;
+    FuriString* tx_countdown;
+    uint8_t tick_counter;
+    uint8_t list_count;
+};
+SchedulerUIRunState* state;
+
+static uint8_t get_text_width_px(Canvas* canvas, FuriString* text) {
+    uint8_t pixels = 0;
+    for(uint8_t i = 0; i < furi_string_size(text); i++) {
+        pixels += canvas_glyph_width(canvas, furi_string_get_char(text, i));
+    }
+    return pixels;
+}
+
+static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
+    UNUSED(context);
+
+    canvas_clear(canvas);
+    canvas_set_color(canvas, ColorBlack);
+
+    /* ============= MAIN FRAME ============= */
+    canvas_draw_rframe(canvas, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
+
+    /* ============= HEADER ============= */
+    canvas_draw_frame(canvas, 0, GUI_TABLE_ROW_A, GUI_DISPLAY_WIDTH, 2);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(
+        canvas,
         GUI_DISPLAY_WIDTH / 2,
         2,
         AlignCenter,
         AlignTop,
-        FontPrimary,
-        "Schedule Running");
+        furi_string_get_cstr(state->header));
 
-    value = scheduler_get_mode(app->scheduler);
-    widget_add_icon_element(app->widget, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
-    widget_add_string_element(
-        app->widget,
+    canvas_set_font(canvas, FontSecondary);
+
+    /* ============= MODE ============= */
+    canvas_draw_frame(canvas, 0, GUI_TABLE_ROW_A, 49, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN, (GUI_TEXT_GAP * 2) - 4, &I_mode_7px);
+    canvas_draw_str_aligned(
+        canvas,
         GUI_MARGIN + 10,
         (GUI_TEXT_GAP * 2),
         AlignLeft,
         AlignCenter,
-        FontSecondary,
-        mode_text[value]);
+        furi_string_get_cstr(state->mode));
 
-    value = scheduler_get_interval(app->scheduler);
-    widget_add_icon_element(app->widget, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
-    widget_add_string_element(
-        app->widget,
+    /* ============= INTERVAL ============= */
+    canvas_draw_frame(canvas, 48, GUI_TABLE_ROW_A, 48, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN + 48, (GUI_TEXT_GAP * 2) - 4, &I_time_7px);
+    canvas_draw_str_aligned(
+        canvas,
         GUI_MARGIN + 58,
         (GUI_TEXT_GAP * 2),
         AlignLeft,
         AlignCenter,
-        FontSecondary,
-        interval_text[value]);
+        furi_string_get_cstr(state->interval));
 
-    value = scheduler_get_tx_repeats(app->scheduler);
-    widget_add_icon_element(app->widget, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
-    widget_add_string_element(
-        app->widget,
+    /* ============= TX REPEATS ============= */
+    canvas_draw_frame(canvas, 95, GUI_TABLE_ROW_A, 33, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN + 96, (GUI_TEXT_GAP * 2) - 4, &I_rept_7px);
+    canvas_draw_str_aligned(
+        canvas,
         GUI_MARGIN + 106,
         (GUI_TEXT_GAP * 2),
         AlignLeft,
         AlignCenter,
-        FontSecondary,
-        tx_repeats_text[value]);
+        furi_string_get_cstr(state->tx_repeats));
 
-    widget_add_string_element(
-        app->widget,
-        GUI_MARGIN,
-        (GUI_TEXT_GAP * 5) - 2,
-        AlignLeft,
-        AlignCenter,
-        FontSecondary,
-        "File: ");
-    widget_add_string_element(
-        app->widget,
-        GUI_DISPLAY_WIDTH - GUI_MARGIN,
-        (GUI_TEXT_GAP * 5) - 2,
-        AlignRight,
-        AlignCenter,
-        FontSecondary,
-        scheduler_get_file_name(app->scheduler));
+    /* ============= FILE NAME ============= */
+    uint8_t file_name_width_px = get_text_width_px(canvas, state->file_name);
+    int8_t offset = 1;
+    if(file_name_width_px > MAX_FILENAME_WIDTH_PX) {
+        file_name_width_px = MAX_FILENAME_WIDTH_PX;
+        offset = 0;
+    }
+    canvas_draw_str_aligned(
+        canvas, GUI_MARGIN, (GUI_TEXT_GAP * 5) - 2, AlignLeft, AlignCenter, "File: ");
+    elements_scrollable_text_line(
+        canvas,
+        GUI_DISPLAY_WIDTH - GUI_MARGIN - file_name_width_px + offset,
+        (GUI_TEXT_GAP * 5) + 1,
+        file_name_width_px,
+        state->file_name,
+        state->tick_counter,
+        false);
 
-    widget_add_string_element(
-        app->widget,
+    /* ============= NEXT TX COUNTDOWN ============= */
+    canvas_draw_str_aligned(
+        canvas,
         GUI_MARGIN,
         GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
         AlignLeft,
         AlignCenter,
-        FontSecondary,
         "Next TX: ");
-    widget_add_string_element(
-        app->widget,
+    canvas_draw_str_aligned(
+        canvas,
         GUI_DISPLAY_WIDTH - GUI_MARGIN,
         GUI_DISPLAY_HEIGHT - GUI_MARGIN - 1,
         AlignRight,
         AlignCenter,
-        FontSecondary,
-        time_til_next);
-
-    // Clean this up
-    /* Main Frame */
-    widget_add_frame_element(app->widget, 0, 0, GUI_DISPLAY_WIDTH, GUI_DISPLAY_HEIGHT, 5);
-    /* Header Underline */
-    widget_add_frame_element(app->widget, 0, 13, GUI_DISPLAY_WIDTH, 2, 0);
-    /* Mode Box */
-    widget_add_frame_element(app->widget, 0, 13, 49, 12, 0);
-    /* Interval Box */
-    widget_add_frame_element(app->widget, 48, 13, 48, 12, 0);
-    /* Repeats Box */
-    widget_add_frame_element(app->widget, 95, 13, 33, 12, 0);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
+        furi_string_get_cstr(state->tx_countdown));
 }
 
-static void update_countdown(SchedulerApp* app) {
+static void update_countdown(Scheduler* scheduler) {
     char countdown[16];
-    scheduler_get_countdown_fmt(app->scheduler, countdown, sizeof(countdown));
-    scheduler_update_widgets(app, countdown);
+    scheduler_get_countdown_fmt(scheduler, countdown, sizeof(countdown));
+    furi_string_set(state->tx_countdown, countdown);
+}
+
+static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
+    state = malloc(sizeof(SchedulerUIRunState));
+    state->header = furi_string_alloc_set("Schedule Running");
+    state->mode = furi_string_alloc_set(mode_text[scheduler_get_mode(app->scheduler)]);
+    state->interval = furi_string_alloc_set(interval_text[scheduler_get_interval(app->scheduler)]);
+    state->tx_repeats =
+        furi_string_alloc_set(tx_repeats_text[scheduler_get_tx_repeats(app->scheduler)]);
+    state->file_type =
+        furi_string_alloc_set(file_type_text[scheduler_get_file_type(app->scheduler)]);
+    state->file_name = furi_string_alloc_set(scheduler_get_file_name(app->scheduler));
+    state->tx_countdown = furi_string_alloc();
+    state->list_count = scheduler_get_list_count(app->scheduler);
+    state->app = app;
+}
+
+static void scheduler_ui_run_state_free() {
+    furi_string_free(state->header);
+    furi_string_free(state->mode);
+    furi_string_free(state->interval);
+    furi_string_free(state->tx_repeats);
+    furi_string_free(state->file_type);
+    furi_string_free(state->file_name);
+    furi_string_free(state->tx_countdown);
+    free(state);
 }
 
 void scheduler_scene_run_on_enter(void* context) {
     SchedulerApp* app = context;
     furi_hal_power_suppress_charge_enter();
     scheduler_reset(app->scheduler);
-    update_countdown(app);
+    scheduler_ui_run_state_alloc(app);
     subghz_devices_init();
-    furi_delay_ms(100);
+    view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
 }
 
 void scheduler_scene_run_on_exit(void* context) {
     SchedulerApp* app = context;
-    if(app->thread) {
+    if(app->thread != NULL) {
         furi_thread_join(app->thread);
     }
     scheduler_reset(app->scheduler);
     subghz_devices_deinit();
+    scheduler_ui_run_state_free();
     furi_hal_power_suppress_charge_exit();
 }
 
 bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
     SchedulerApp* app = context;
+    //static uint32_t prev_time = 0;
+
     bool consumed = false;
+    bool update = (!app->is_transmitting | scheduler_get_timing_mode(app->scheduler)) &&
+                  !(state->tick_counter % 2);
 
     if(event.type == SceneManagerEventTypeTick) {
-        if(!app->is_transmitting) {
-            if(scheduler_time_to_trigger(app->scheduler)) {
-                update_countdown(app);
+        if(update) {
+            update_countdown(app->scheduler);
+            bool trig = scheduler_time_to_trigger(app->scheduler);
+
+            if(trig) {
+                //uint32_t delta = furi_hal_rtc_get_timestamp() - prev_time;
+                //prev_time = furi_hal_rtc_get_timestamp();
+                //FURI_LOG_W(TAG, "TIME DELTA: %lu", delta);
                 scheduler_start_tx(app);
             } else {
-                update_countdown(app);
                 notification_message(app->notifications, &sequence_blink_red_10);
             }
         }
+        view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerSceneRunSchedule);
+        state->tick_counter++;
         consumed = true;
     }
 
     return consumed;
+}
+
+SchedulerRunView* scheduler_run_view_alloc() {
+    SchedulerRunView* run_view = malloc(sizeof(SchedulerRunView));
+    run_view->view = view_alloc();
+    view_set_context(run_view->view, run_view);
+    view_set_draw_callback(run_view->view, scheduler_run_view_draw_callback);
+    return run_view;
+}
+
+void scheduler_run_view_free(SchedulerRunView* run_view) {
+    furi_assert(run_view);
+    view_free(run_view->view);
+    free(run_view);
+}
+
+View* scheduler_run_view_get_view(SchedulerRunView* run_view) {
+    furi_assert(run_view);
+    return run_view->view;
 }

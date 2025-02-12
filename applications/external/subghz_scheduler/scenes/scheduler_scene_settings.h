@@ -1,16 +1,33 @@
 #pragma once
 
-typedef enum SchedulerMode {
-    SchedulerModeNormal,
-    SchedulerModeImmediate,
-    SchedulerModeOneShot,
-    SchedulerModeSettingsNum,
-} SchedulerMode;
-static const char* const mode_text[SchedulerModeSettingsNum] = {
+typedef enum FileTxType {
+    SchedulerFileTypeSingle,
+    SchedulerFileTypePlaylist,
+    SchedulerFileTypeNum
+} FileTxType;
+#define FILE_TYPE_COUNT SchedulerFileTypeNum
+static const char* const file_type_text[SchedulerFileTypeNum] = {"Single", "Playlist"};
+
+typedef enum SchedulerTxMode {
+    SchedulerTxModeNormal,
+    SchedulerTxModeImmediate,
+    SchedulerTxModeOneShot,
+    SchedulerTxModeSettingsNum,
+} SchedulerTxMode;
+#define TX_MODE_COUNT SchedulerTxModeSettingsNum
+static const char* const mode_text[SchedulerTxModeSettingsNum] = {
     "Normal",
     "Immed.",
     "1-Shot",
 };
+
+typedef enum SchedulerTimingMode {
+    SchedulerTimingModeRelative,
+    SchedulerTimingModePrecise,
+    SchedulerTimingModeNum
+} SchedulerTimingMode;
+#define TIMING_MODE_COUNT SchedulerTimingModeNum
+static const char* const timing_mode_text[TIMING_MODE_COUNT] = {"Relative", "Precise"};
 
 #define TX_DELAY_COUNT 4
 typedef enum SchedulerTxDelay {
@@ -38,6 +55,7 @@ enum Intervals {
     Interval4Hrs,
     Interval8Hrs,
     Interval12Hrs,
+    Interval24Hrs,
     IntervalSettingsNum
 };
 
@@ -56,10 +74,10 @@ static const char* const interval_text[INTERVAL_COUNT] = {
     "2 hrs",
     "4 hrs",
     "8 hrs",
-    "12 hrs"};
-
-static const uint32_t interval_second_value[] =
-    {10, 30, 60, 120, 300, 600, 1200, 1800, 2700, 3600, 7200, 14400, 28800, 43200};
+    "12 hrs",
+    "24 hrs"};
+static const uint32_t interval_second_value[INTERVAL_COUNT] =
+    {10, 30, 60, 120, 300, 600, 1200, 1800, 2700, 3600, 7200, 14400, 28800, 43200, 86400};
 
 #define REPEATS_COUNT 6
 static const char* const tx_repeats_text[REPEATS_COUNT] = {
