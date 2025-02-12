@@ -90,7 +90,9 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response) {
     if(virtual_portal->active) {
-        notification_message(virtual_portal->notifications, &pof_sequence_cyan);
+        // Disable while I work on RGB
+        // notification_message(virtual_portal->notifications, &pof_sequence_cyan);
+        UNUSED(pof_sequence_cyan);
         return virtual_portal_status(virtual_portal, response);
     }
     return 0;
@@ -122,7 +124,26 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
-    // FURI_LOG_I(TAG, "J %s", display);
+    FURI_LOG_I(TAG, "J %s", display);
+
+    uint8_t side = message[1]; // 0: left, 2: right
+    uint8_t brightness = 0;
+    switch(side) {
+    case 0:
+    case 2:
+        furi_hal_light_set(LightRed, message[2]);
+        furi_hal_light_set(LightGreen, message[3]);
+        furi_hal_light_set(LightBlue, message[4]);
+        break;
+    case 1:
+        brightness = message[2];
+        furi_hal_light_set(LightBacklight, brightness);
+        break;
+    case 3:
+        brightness = 0xff;
+        furi_hal_light_set(LightBacklight, brightness);
+        break;
+    }
 
     // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
     size_t index = 0;
@@ -137,7 +158,7 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Query %d %d", arrayIndex, blockNum);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
-    if (!pof_token->loaded) {
+    if(!pof_token->loaded) {
         response[0] = 'Q';
         response[1] = 0x01;
         return 2;
@@ -165,7 +186,7 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Write %d %d %s", arrayIndex, blockNum, display);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
-    if (!pof_token->loaded) {
+    if(!pof_token->loaded) {
         response[0] = 'Q';
         response[1] = 0x01;
         return 2;
