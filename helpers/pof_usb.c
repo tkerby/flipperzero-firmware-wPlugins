@@ -144,6 +144,7 @@ static int32_t pof_thread_worker(void* context) {
                 if(send_len > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
+                pof_usb->dataAvailable = 0;
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
