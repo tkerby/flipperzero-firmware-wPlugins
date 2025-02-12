@@ -17,6 +17,12 @@ static const EntityDescription player_desc;
 //Initial Player location upon game start:
 static Vector last_player_position = {64, 32}; // Defa
 
+static Vector gen_target_pos(int index) {
+    return (Vector){
+        .x = (120 * (1 - ((double)index / target_buffer_max))) + 4,
+        .y = 30
+    };
+}
 
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -198,6 +204,74 @@ static void target_spawn(Level* level, Vector pos) {
     entity_pos_set(target, pos);
 }
 
+/****** Entities: Big Dot ******/
+
+static const EntityDescription food_desc;
+static void food_start();
+static void food_render();
+static void food_collision();
+
+static void food_spawn(Level* level, Vector pos) {
+	Entity* food = level_add_entity(level, &food_desc);
+	FURI_LOG_I("food_spawn", "Spawning food at %d, %d",(int)pos.x, (int)pos.y);
+    entity_pos_set(food, pos);
+}
+
+static void food_start(Entity* self, GameManager* manager, void* context) {
+    UNUSED(context);
+    UNUSED(manager);
+
+    entity_collider_add_circle(self, 3);
+}
+
+static void food_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    UNUSED(context);
+    UNUSED(manager);
+
+    // Get target position
+    Vector pos = entity_pos_get(self);
+
+    // Draw target
+    canvas_draw_disc(canvas, pos.x, pos.y, 2);
+}
+
+static void food_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
+    UNUSED(context);
+
+    // FIXME: remove
+    UNUSED(self);
+
+    // Check if target collided with player
+    if(entity_description_get(other) == &player_desc) {
+        // Increase score
+        GameContext* game_context = game_manager_game_context_get(manager);
+        game_context->score++;
+
+		last_player_position = entity_pos_get(other);
+
+		Level* current_level = game_manager_current_level_get(manager);
+		Vector pos = entity_pos_get(self);
+		FURI_LOG_I("food_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
+		level_remove_entity(current_level, self);
+
+		// FURI_LOG_I("food_collision", "Target count is %d", level_entity_count(current_level, &food_desc));
+		// if (level_entity_count(current_level, &target_desc) == 0) {
+		// 	Level* nextlevel = game_manager_add_level(manager, &level);
+		// 	game_manager_next_level_set(manager, nextlevel);
+		// }
+    }
+}
+
+static const EntityDescription food_desc = {
+    .start = food_start, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = NULL, // called every frame
+    .render = food_render, // called every frame, after update
+    .collision = food_collision, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size = 0, // size of entity context, will be automatically allocated and freed
+};
+
 /****** Level ******/
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
@@ -208,13 +282,17 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 
     // Add target entity to the level
+    // srand(time(0));
+    int food_index = rand() % target_buffer_max;
+
 	for (int i = target_buffer_max; i > 0; i--)
 	{
-		Vector calc_pos = {
-			.x = (120 * (1 - ((double)i / target_buffer_max))) + 4,
-			.y = 30
-		};
-		target_spawn(level, calc_pos);
+        Vector pos = gen_target_pos(i);
+        if (i == food_index) {
+            food_spawn(level, pos);
+        } else {
+            target_spawn(level, pos);
+        }
 	}
 }
 
