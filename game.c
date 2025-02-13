@@ -2,6 +2,10 @@
 #include "game.h"
 
 #define CENTER 33
+#define BASE_MULTIPLIER 1
+#define BASE_PTS_GHOST 10
+#define BASE_PTS_DOT 1
+#define BASE_PTS_LVL_SUCCESS 5
 
 /****** Entities: Player ******/
 static const LevelBehaviour level;
@@ -39,13 +43,10 @@ typedef struct {
     int frames;
 } Ghost;
 
-typedef enum {
-    StopGame,
-} GameEvent;
-
 typedef struct {
     Sprite* background_top;
     Sprite* background_bottom;
+    uint32_t multiplier;
 } LevelContext;
 
 static bool direction = true;
@@ -54,7 +55,7 @@ static bool direction = true;
 static const EntityDescription player_desc;
 
 //Initial Player location upon game start:
-static Vector last_player_position = {34, CENTER};
+static Vector default_player_position = {34, CENTER};
 static Vector default_ghost_position = {122, CENTER};
 
 static Vector gen_target_pos(int index) {
@@ -81,7 +82,7 @@ static void player_spawn(Level* level, GameManager* manager) {
 
     // Set player position.
     // Depends on your game logic, it can be done in start entity function, but also can be done here.
-    entity_pos_set(player, last_player_position);
+    entity_pos_set(player, default_player_position);
 
     // Add collision box to player entity
     entity_collider_add_rect(player, player_size, player_size);
@@ -120,7 +121,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 		player_context->speed = 4.0;
         game_context->high_score = MAX(game_context->score, game_context->high_score);
 		game_context->score = 0;
-		last_player_position = pos;
+
 		Level* nextlevel = game_manager_add_level(manager, &level);
 		game_manager_next_level_set(manager, nextlevel);
 		FURI_LOG_I("player_update", "Game Over is %d", GameOver);
@@ -186,8 +187,12 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     int width = canvas_printf_width(canvas, "High: %lu", game_context->high_score);
     canvas_printf(canvas, 128 - width, 7, "High: %lu", game_context->high_score);
 
+    Level* level = game_manager_current_level_get(manager);
+    LevelContext* level_context = level_context_get(level);
+    canvas_printf(canvas, 0, 15, "Mult: %lux", level_context->multiplier);
+
     if (player->speed == 0) {
-        canvas_printf(canvas, 0, 16, "Game Over");
+        canvas_printf(canvas, 0, 36, "Game Over");
 		GameOver = true;
     }
 }
@@ -329,6 +334,13 @@ static void ghost_collision(Entity* self, Entity* other, GameManager* manager, v
         Ghost* ghost = context;
         if (ghost->state == EDIBLE) {
             ghost_eaten_set(ghost, self);
+
+            GameContext* game_context = game_manager_game_context_get(manager);
+            Level* level = game_manager_current_level_get(manager);
+            LevelContext* level_context = level_context_get(level);
+
+            game_context->score += BASE_PTS_GHOST * level_context->multiplier;
+            level_context->multiplier++;
         } else if (ghost->state == NORMAL) {
             PlayerContext* player_context = entity_context_get(other);
             player_context->speed = 0;
@@ -367,7 +379,6 @@ static void target_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     // Get target position
     Vector pos = entity_pos_get(self);
 
-
     // Draw target
     canvas_draw_disc(canvas, pos.x, pos.y, 1);
 }
@@ -376,21 +387,22 @@ static void target_collision(Entity* self, Entity* other, GameManager* manager, 
     UNUSED(context);
     // Check if target collided with player
     if(entity_description_get(other) == &player_desc) {
-        // Increase score
         GameContext* game_context = game_manager_game_context_get(manager);
-        game_context->score++;
+		Level* level = game_manager_current_level_get(manager);
+        LevelContext* level_context = level_context_get(level);
 
-		last_player_position = entity_pos_get(other);
-
-        // Move target to new random position
-		Level* current_level = game_manager_current_level_get(manager);
 		Vector pos = entity_pos_get(self);
 		FURI_LOG_I("target_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
-		level_remove_entity(current_level, self);
+		level_remove_entity(level, self);
 
-		if (is_level_empty(current_level)) {
-            target_and_food_spawn(current_level);
-		}
+		if (is_level_empty(level)) {
+            game_context->score += BASE_PTS_LVL_SUCCESS * level_context->multiplier;
+            level_context->multiplier++;
+
+            target_and_food_spawn(level);
+		} else {
+            game_context->score += BASE_PTS_DOT * level_context->multiplier;
+        }
     }
 }
 
@@ -445,26 +457,28 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 
     // Check if target collided with player
     if(entity_description_get(other) == &player_desc) {
-        // Increase score
         GameContext* game_context = game_manager_game_context_get(manager);
-        game_context->score++;
+		Level* level = game_manager_current_level_get(manager);
+        LevelContext* level_context = level_context_get(level);
 
-		last_player_position = entity_pos_get(other);
-
-		Level* current_level = game_manager_current_level_get(manager);
 		Vector pos = entity_pos_get(self);
 		FURI_LOG_I("food_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
-		level_remove_entity(current_level, self);
+		level_remove_entity(level, self);
 
-        Entity* ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
+        Entity* ghost_entity = level_entity_get(level, &ghost_desc, 0);
         Ghost* ghost = entity_context_get(ghost_entity);
         if (ghost->state != EATEN) {
             ghost_edible_set(ghost);
         }
 
-		if (is_level_empty(current_level)) {
-            target_and_food_spawn(current_level);
-		}
+		if (is_level_empty(level)) {
+            game_context->score += BASE_PTS_LVL_SUCCESS * level_context->multiplier;
+            level_context->multiplier++;
+
+            target_and_food_spawn(level);
+		} else {
+            game_context->score += BASE_PTS_DOT * level_context->multiplier;
+        }
     }
 }
 
@@ -526,6 +540,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     LevelContext* level_context = level_context_get(level);
     level_context->background_top= game_manager_sprite_load(manager, "background_top.fxbm");
     level_context->background_bottom = game_manager_sprite_load(manager, "background_bottom.fxbm");
+    level_context->multiplier = BASE_MULTIPLIER;
     level_add_entity(level, &background_desc);
 
     // Add player entity to the level
