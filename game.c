@@ -44,6 +44,9 @@ static bool is_level_empty(Level* level) {
     return count == 0;
 }
 
+// Forward declaration, so we can reset when all targets and food have been eaten
+static void target_and_food_spawn(Level* level);
+
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
@@ -190,6 +193,12 @@ static void ghost_reset(Ghost* ghost) {
     ghost->frames = -1;
 }
 
+static void ghost_edible_set(Ghost* ghost) {
+    ghost->is_edible = true;
+    ghost->speed = 2.0;
+    ghost->frames = game.target_fps * 2;
+}
+
 static void ghost_spawn(Level* level, GameManager* manager) {
     Entity* entity = level_add_entity(level, &ghost_desc);
 
@@ -222,11 +231,7 @@ static void ghost_update(Entity* self, GameManager* manager, void* context) {
 
     // Ghost mode handling
     if (ghost->is_edible) {
-        if (ghost->frames == -1) {
-            // Ghost just became edible
-            ghost->speed = 2.0;
-            ghost->frames = game.target_fps * 2;
-        } else if (ghost->frames == 0) {
+        if (ghost->frames == 0) {
             // Timer is up
             ghost_reset(ghost);
         } else {
@@ -342,8 +347,7 @@ static void target_collision(Entity* self, Entity* other, GameManager* manager, 
 		level_remove_entity(current_level, self);
 
 		if (is_level_empty(current_level)) {
-			Level* nextlevel = game_manager_add_level(manager, &level);
-			game_manager_next_level_set(manager, nextlevel);
+            target_and_food_spawn(current_level);
 		}
     }
 }
@@ -415,14 +419,10 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 
         Entity* ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
         Ghost* ghost = entity_context_get(ghost_entity);
-        ghost->is_edible = true;
+        ghost_edible_set(ghost);
 
 		if (is_level_empty(current_level)) {
-			Level* nextlevel = game_manager_add_level(manager, &level);
-            // Entity* nextlevel_ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
-            // Ghost* nextlevel_ghost = entity_context_get(nextlevel_ghost_entity);
-            // nextlevel_ghost->is_edible = true;
-			game_manager_next_level_set(manager, nextlevel);
+            target_and_food_spawn(current_level);
 		}
     }
 }
@@ -438,6 +438,20 @@ static const EntityDescription food_desc = {
 };
 
 /****** Level ******/
+
+static void target_and_food_spawn(Level* level) {
+    int food_index = rand() % target_buffer_max;
+
+	for (int i = target_buffer_max; i > 0; i--)
+	{
+        Vector pos = gen_target_pos(i);
+        if (i == food_index) {
+            food_spawn(level, pos);
+        } else {
+            target_spawn(level, pos);
+        }
+	}
+}
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(manager);
