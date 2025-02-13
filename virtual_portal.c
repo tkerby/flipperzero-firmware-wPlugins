@@ -179,14 +179,15 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
 
 // 4d01ff0000d0077d6c2a77a400000000
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
-    UNUSED(virtual_portal);
     virtual_portal->speaker = (message[1] == 1);
 
+    /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
     FURI_LOG_I(TAG, "M %s", display);
+    */
 
     size_t index = 0;
     response[index++] = 'M';
