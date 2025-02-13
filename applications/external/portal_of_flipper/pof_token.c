@@ -17,6 +17,7 @@ PoFToken* pof_token_alloc() {
     pof_token->loaded = false;
     pof_token->change = false;
     pof_token->nfc_device = nfc_device_alloc();
+    memset(pof_token->UID, 0, sizeof(pof_token->UID));
     return pof_token;
 }
 
@@ -55,6 +56,9 @@ static bool pof_token_load_data(PoFToken* pof_token, FuriString* path, bool show
             break;
         }
 
+        size_t uid_len = 0;
+        const uint8_t* uid = nfc_device_get_uid(nfc_device, &uid_len);
+        memcpy(pof_token->UID, uid, sizeof(pof_token->UID));
         pof_token->loaded = true;
         pof_token->change = true;
     } while(false);
@@ -99,11 +103,17 @@ bool pof_file_select(PoFToken* pof_token) {
     furi_assert(pof_token);
 
     FuriString* pof_app_folder;
-    pof_app_folder = furi_string_alloc_set("/ext/nfc");
+
+    // If "Skylanders" folder exists
+    if(storage_dir_exists(pof_token->storage, "/ext/nfc/Skylanders")) {
+        pof_app_folder = furi_string_alloc_set("/ext/nfc/Skylanders");
+    } else {
+        pof_app_folder = furi_string_alloc_set("/ext/nfc");
+    }
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, ".nfc", &I_Nfc_10px);
-    browser_options.base_path = "/ext/nfc";
+    browser_options.base_path = furi_string_get_cstr(pof_app_folder);
 
     bool res = dialog_file_browser_show(
         pof_token->dialogs, pof_token->load_path, pof_app_folder, &browser_options);

@@ -24,16 +24,21 @@ void pof_scene_main_on_update(void* context) {
 
     Submenu* submenu = pof->submenu;
     submenu_reset(pof->submenu);
+    FuriString* token_name = furi_string_alloc();
 
     if(pof->pof_usb) {
         int count = 0;
         for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
             if(virtual_portal->tokens[i]->loaded) {
                 PoFToken* pof_token = virtual_portal->tokens[i];
+                furi_string_reset(token_name);
+                //TODO: only do if debug mode
+                furi_string_cat_printf(token_name, "%d: %s", i, pof_token->dev_name);
+
                 // Unload figure
                 submenu_add_item(
                     submenu,
-                    pof_token->dev_name,
+                    furi_string_get_cstr(token_name),
                     SubmenuIndexFigure1 + i,
                     pof_scene_main_submenu_callback,
                     pof);
@@ -52,6 +57,7 @@ void pof_scene_main_on_update(void* context) {
         submenu_add_item(
             submenu, "Failed to start", SubmenuIndexLoad, pof_scene_main_submenu_callback, pof);
     }
+    furi_string_free(token_name);
     view_dispatcher_switch_to_view(pof->view_dispatcher, PoFViewSubmenu);
 }
 

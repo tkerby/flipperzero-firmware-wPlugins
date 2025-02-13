@@ -32,6 +32,66 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
     free(virtual_portal);
 }
 
+void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_token) {
+    furi_assert(pof_token);
+    FURI_LOG_D(TAG, "virtual_portal_load_token");
+    PoFToken* target = NULL;
+    uint8_t empty[4] = {0, 0, 0, 0};
+
+    // first try to "reload" to the same slot it used before based on UID
+    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+        if(memcmp(virtual_portal->tokens[i]->UID, pof_token->UID, sizeof(pof_token->UID)) == 0) {
+            // Found match
+            if(virtual_portal->tokens[i]->loaded) {
+                // already loaded, no-op
+                return;
+            } else {
+                FURI_LOG_D(TAG, "Found matching UID at index %d", i);
+                target = virtual_portal->tokens[i];
+                break;
+            }
+        }
+    }
+
+    // otherwise load into first slot with no set UID
+    if(target == NULL) {
+        for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+            if(memcmp(virtual_portal->tokens[i]->UID, empty, sizeof(empty)) == 0) {
+                FURI_LOG_D(TAG, "Found empty UID at index %d", i);
+                // By definition an empty UID slot would not be loaded, so I'm not checking.  Fight me.
+                target = virtual_portal->tokens[i];
+                break;
+            }
+        }
+    }
+
+    // Re-use first unloaded slot
+    if(target == NULL) {
+        for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+            if(virtual_portal->tokens[i]->loaded == false) {
+                FURI_LOG_D(TAG, "Re-using previously used slot %d", i);
+                target = virtual_portal->tokens[i];
+                break;
+            }
+        }
+    }
+
+    if(target == NULL) {
+        FURI_LOG_W(TAG, "Failed to find slot to token into");
+        return;
+    }
+    furi_assert(target);
+
+    // TODO: make pof_token_copy()
+    target->change = pof_token->change;
+    target->loaded = pof_token->loaded;
+    memcpy(target->dev_name, pof_token->dev_name, sizeof(pof_token->dev_name));
+    memcpy(target->UID, pof_token->UID, sizeof(pof_token->UID));
+
+    const NfcDeviceData* data = nfc_device_get_data(pof_token->nfc_device, NfcProtocolMfClassic);
+    nfc_device_set_data(target->nfc_device, NfcProtocolMfClassic, data);
+}
+
 uint8_t virtual_portal_next_sequence(VirtualPortal* virtual_portal) {
     if(virtual_portal->sequence_number == 0xff) {
         virtual_portal->sequence_number = 0;
@@ -121,11 +181,14 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     UNUSED(virtual_portal);
 
+    /*
     char display[33] = {0};
+    memset(display, 0, sizeof(display));
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
     FURI_LOG_I(TAG, "L %s", display);
+    */
 
     uint8_t side = message[1]; // 0: left, 2: right
     uint8_t brightness = 0;
@@ -155,11 +218,14 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     UNUSED(virtual_portal);
 
+    /*
     char display[33] = {0};
+    memset(display, 0, sizeof(display));
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
     FURI_LOG_I(TAG, "J %s", display);
+    */
 
     uint8_t side = message[1]; // 0: left, 2: right
     uint8_t r = message[2]; // 0: left, 2: right
