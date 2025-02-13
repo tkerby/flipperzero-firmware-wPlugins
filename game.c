@@ -31,6 +31,8 @@ typedef struct {
     int num_sprites;
     float speed;
     GhostState state;
+    // when true, the eaten ghost is moving right
+    bool eaten_direction; // TODO: make this less hacky
     int frames;
 } Ghost;
 
@@ -217,7 +219,13 @@ static void ghost_edible_set(Ghost* ghost) {
     ghost->frames = game.target_fps * 2;
 }
 
-static void ghost_eaten_set(Ghost* ghost) {
+static void ghost_eaten_set(Ghost* ghost, Entity* ghost_entity) {
+    Vector pos = entity_pos_get(ghost_entity);
+    if (pos.x < 64) {
+        ghost->eaten_direction = true;
+    } else {
+        ghost->eaten_direction = false;
+    }
     ghost->state = EATEN;
     ghost->speed = 6.0;
 }
@@ -278,13 +286,18 @@ static void ghost_update(Entity* self, GameManager* manager, void* context) {
             ghost_pos.x -= ghost->speed;
         }
     } else {
-        ghost_pos.x -= ghost->speed;
+        // When ghost is eaten
+        if (ghost->eaten_direction) {
+            ghost_pos.x += ghost->speed;
+        } else {
+            ghost_pos.x -= ghost->speed;
+        }
     }
 
     // Ensure new ghost position is within bounds
     ghost_pos.x = CLAMP(ghost_pos.x, ghost_x_max, ghost_x_min);
 
-    if (ghost->state == EATEN && ghost_pos.x == 3) {
+    if (ghost->state == EATEN && (ghost_pos.x == ghost_x_min || ghost_pos.x == ghost_x_max)) {
         ghost_reset(ghost, manager);
     }
 
@@ -312,7 +325,7 @@ static void ghost_collision(Entity* self, Entity* other, GameManager* manager, v
     if(entity_description_get(other) == &player_desc) {
         Ghost* ghost = context;
         if (ghost->state == EDIBLE || ghost->state == EATEN) {
-            ghost_eaten_set(ghost);
+            ghost_eaten_set(ghost, self);
         } else {
             PlayerContext* player_context = entity_context_get(other);
             player_context->speed = 0;
@@ -522,23 +535,9 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
     // Add ghost entity to the level
     ghost_spawn(level, manager);
-
-
-    // Add target entity to the level
-    // srand(time(0));
-    int food_index = rand() % target_buffer_max;
-
-	for (int i = target_buffer_max; i > 0; i--)
-	{
-        Vector pos = gen_target_pos(i);
-        if (i == food_index) {
-            food_spawn(level, pos);
-        } else {
-            target_spawn(level, pos);
-        }
-	}
+    // Add target and food entities to the level
+    target_and_food_spawn(level);
 }
-
 
 /*
     Alloc/free is called once, when level is added/removed from the game. 
