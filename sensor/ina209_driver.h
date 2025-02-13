@@ -26,8 +26,8 @@
 typedef struct {
     // I2C address of the sensor
     uint8_t i2c_address;
-    // Shunt resistor in micro ohms
-    uint32_t shunt_resistor;
+    // Shunt resistor in ohms
+    double shunt_resistor;
 } Ina209Config;
 
 SensorDriver* ina209_driver_alloc(const Ina209Config* config);
