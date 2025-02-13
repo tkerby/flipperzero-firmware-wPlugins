@@ -1,5 +1,7 @@
 #include "game.h"
 
+#define CENTER 33
+
 /****** Entities: Player ******/
 static const LevelBehaviour level;
 static bool GameOver = false;
@@ -51,13 +53,13 @@ static bool direction = true;
 static const EntityDescription player_desc;
 
 //Initial Player location upon game start:
-static Vector last_player_position = {34, 32};
-static Vector default_ghost_position = {122, 32};
+static Vector last_player_position = {34, CENTER};
+static Vector default_ghost_position = {122, CENTER};
 
 static Vector gen_target_pos(int index) {
     return (Vector){
         .x = (120 * (1 - ((double)index / target_buffer_max))) + 4,
-        .y = 32
+        .y = CENTER
     };
 }
 
@@ -112,8 +114,8 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 	
 	if (input.pressed & GameKeyOk && GameOver) {
 		GameOver = false;
-		pos.x = 34;
-		pos.y = 32;
+		pos.x = CENTER;
+		pos.y = CENTER;
 		player_context->speed = 4.0;
         game_context->high_score = MAX(game_context->score, game_context->high_score);
 		game_context->score = 0;
@@ -347,14 +349,6 @@ static const EntityDescription ghost_desc = {
 
 /****** Entities: Target ******/
 
-/*
-static Vector random_pos(void) {
-    //return (Vector){rand() % 120 + 4, rand() % 58 + 4};
-	//having target return a random x position in line with sprite
-	//magic number 32 found by trial and error based on the number provided in the original function
-    return (Vector){rand() % target_buffer_max * 120 / target_buffer_max + 4, 31};
-}
-*/
 
 static void target_start(Entity* self, GameManager* manager, void* context) {
     UNUSED(context);
