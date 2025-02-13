@@ -21,12 +21,7 @@ extern "C" {
 typedef enum {
     MenuStyleList,
     MenuStyleWii,
-    MenuStyleDsi,
-    MenuStylePs4,
-    MenuStyleVertical,
-    MenuStyleC64,
     MenuStyleCompact,
-    MenuStyleTerminal,
     MenuStyleCount,
 } MenuStyle;
 
