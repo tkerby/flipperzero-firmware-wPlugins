@@ -138,12 +138,14 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
     response[0] = 'S';
 
+    bool update = false;
     for(size_t i = 0; i < POF_TOKEN_LIMIT; i++) {
         // Can't use bit_lib since it uses the opposite endian
         if(virtual_portal->tokens[i]->loaded) {
             response[1 + i / 4] |= 1 << (i * 2 + 0);
         }
         if(virtual_portal->tokens[i]->change) {
+            update = true;
             response[1 + i / 4] |= 1 << (i * 2 + 1);
         }
 
@@ -151,6 +153,16 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
     }
     response[5] = virtual_portal_next_sequence(virtual_portal);
     response[6] = 1;
+
+    // Let me know when a status that actually has a change is sent
+    if(update) {
+        char display[33] = {0};
+        memset(display, 0, sizeof(display));
+        for(size_t i = 0; i < BLOCK_SIZE; i++) {
+            snprintf(display + (i * 2), sizeof(display), "%02x", response[i]);
+        }
+        FURI_LOG_I(TAG, "> S %s", display);
+    }
 
     return 7;
 }
