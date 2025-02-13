@@ -5,4 +5,5 @@
 
 typedef struct {
     uint32_t score;
+    uint32_t high_score;
 } GameContext;

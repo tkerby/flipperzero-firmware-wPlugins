@@ -108,6 +108,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 		pos.x = 34;
 		pos.y = 32;
 		player_context->speed = 4.0;
+        game_context->high_score = MAX(game_context->score, game_context->high_score);
 		game_context->score = 0;
 		last_player_position = pos;
 		Level* nextlevel = game_manager_add_level(manager, &level);
@@ -172,6 +173,8 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
     // Draw score
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
+    int width = canvas_printf_width(canvas, "High: %lu", game_context->high_score);
+    canvas_printf(canvas, 128 - width, 7, "High: %lu", game_context->high_score);
 
     if (player->speed == 0) {
         canvas_printf(canvas, 0, 16, "Game Over");
@@ -527,6 +530,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
     // For simplicity, we will just set it to 0.
     GameContext* game_context = ctx;
     game_context->score = 0;
+    game_context->high_score = 0;
 
     // Add level to the game
     game_manager_add_level(game_manager, &level);
@@ -549,7 +553,7 @@ static void game_stop(void* ctx) {
 */
 const Game game = {
     .target_fps = 10, // target fps, game will try to keep this value
-    .show_fps = true, // show fps counter on the screen
+    .show_fps = false, // show fps counter on the screen
     .always_backlight = true, // keep display backlight always on
     .start = game_start, // will be called once, when game starts
     .stop = game_stop, // will be called once, when game stops
