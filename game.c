@@ -1,3 +1,4 @@
+#include <storage/storage.h>
 #include "game.h"
 
 #define CENTER 33
@@ -552,6 +553,32 @@ static const LevelBehaviour level = {
 
 /****** Game ******/
 
+static uint32_t read_high_score() {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+
+    if(!storage_file_open(file, APP_DATA_PATH("high_score.txt"), FSAM_READ, FSOM_OPEN_ALWAYS)) {
+        FURI_LOG_E("read_high_score", "Failed to open file");
+        return 0;
+    }
+
+    char saved_score_str[12];
+    size_t read_size = storage_file_read(file, saved_score_str, 12);
+    FURI_LOG_I("read_high_score", "bytes read: %u", read_size);
+
+    FURI_LOG_I("read_high_score", "Saved high score: %s", saved_score_str);
+
+    storage_file_close(file);
+
+    // Deallocate file
+    storage_file_free(file);
+
+    // Close storage
+    furi_record_close(RECORD_STORAGE);
+
+    return atoi(saved_score_str);
+}
+
 /* 
     Write here the start code for your game, for example: creating a level and so on.
     Game context is allocated (game.context_size) and passed to this function, you can use it to store your game data.
@@ -563,11 +590,34 @@ static void game_start(GameManager* game_manager, void* ctx) {
     // For simplicity, we will just set it to 0.
     GameContext* game_context = ctx;
     game_context->score = 0;
-    game_context->high_score = 0;
+    game_context->high_score = read_high_score();
 
     // Add level to the game
     game_manager_add_level(game_manager, &level);
 
+}
+
+static void persist_high_score(GameContext* game_context) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* file = storage_file_alloc(storage);
+
+    if(!storage_file_open(file, APP_DATA_PATH("high_score.txt"), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FURI_LOG_E("save_high_score", "Failed to open file");
+    }
+
+    FuriString* score_furi_str = furi_string_alloc();
+    furi_string_printf(score_furi_str, "%lu", MAX(game_context->score, game_context->high_score));
+    const char* score_str = furi_string_get_cstr(score_furi_str);
+    if(!storage_file_write(file, score_str, strlen(score_str))) {
+        FURI_LOG_E("save_high_score", "Failed to write to file");
+    }
+    storage_file_close(file);
+
+    // Deallocate file
+    storage_file_free(file);
+
+    // Close storage
+    furi_record_close(RECORD_STORAGE);
 }
 
 /* 
@@ -580,6 +630,7 @@ static void game_stop(void* ctx) {
     // Do some deinitialization here, for example you can save score to storage.
     // For simplicity, we will just print it.
     FURI_LOG_I("Game", "Your score: %lu", game_context->score);
+    persist_high_score(game_context);
 }
 
 /*
@@ -593,4 +644,3 @@ const Game game = {
     .stop = game_stop, // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };
-
