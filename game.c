@@ -11,13 +11,23 @@ typedef struct {
     float speed;
 } PlayerContext;
 
+typedef enum {
+    NORMAL,
+    EDIBLE,
+    EATEN,
+} GhostState;
+
 typedef struct {
     Sprite* sprite;
     int num_sprites;
     float speed;
-    bool is_edible;
+    GhostState state;
     int frames;
 } Ghost;
+
+typedef enum {
+    StopGame,
+} GameEvent;
 
 static bool direction = true;
 
@@ -186,17 +196,23 @@ static const EntityDescription player_desc = {
 
 static const EntityDescription ghost_desc;
 
-static void ghost_reset(Ghost* ghost) {
+static void ghost_reset(Ghost* ghost, GameManager* manager) {
+    ghost->sprite = game_manager_sprite_load(manager, "ghost_left_1.fxbm");
+    ghost->state = NORMAL;
     ghost->num_sprites = 2;
     ghost->speed = 4.2;
-    ghost->is_edible = false;
     ghost->frames = -1;
 }
 
 static void ghost_edible_set(Ghost* ghost) {
-    ghost->is_edible = true;
-    ghost->speed = 2.0;
+    ghost->state = EDIBLE;
+    ghost->speed = 1.0;
     ghost->frames = game.target_fps * 2;
+}
+
+static void ghost_eaten_set(Ghost* ghost) {
+    ghost->state = EATEN;
+    ghost->speed = 6.0;
 }
 
 static void ghost_spawn(Level* level, GameManager* manager) {
@@ -211,8 +227,7 @@ static void ghost_spawn(Level* level, GameManager* manager) {
     Ghost* ghost = entity_context_get(entity);
 
     // Load ghost sprite and set speed to 0
-    ghost->sprite = game_manager_sprite_load(manager, "ghost_left_1.fxbm");
-    ghost_reset(ghost);
+    ghost_reset(ghost, manager);
 }
 
 static void ghost_update(Entity* self, GameManager* manager, void* context) {
@@ -230,33 +245,41 @@ static void ghost_update(Entity* self, GameManager* manager, void* context) {
     Vector ghost_pos = entity_pos_get(self);
 
     // Ghost mode handling
-    if (ghost->is_edible) {
+    if (ghost->state == EDIBLE) {
         if (ghost->frames == 0) {
             // Timer is up
-            ghost_reset(ghost);
+            ghost_reset(ghost, manager);
         } else {
             // Ghost is stil edible
             ghost->frames--;
         }
+    } else if (ghost->state == EATEN) {
+        ghost->sprite = game_manager_sprite_load(manager, "ghost_eaten.fxbm");
     }
 
     // Set position based on ghost mode
-    if (ghost->is_edible) {
+    if (ghost->state == EDIBLE) {
         if (ghost_pos.x < player_pos.x) {
             ghost_pos.x -= ghost->speed;
         } else {
             ghost_pos.x += ghost->speed;
+        }
+    } else if (ghost->state == NORMAL) {
+        if (ghost_pos.x < player_pos.x) {
+            ghost_pos.x += ghost->speed;
+        } else {
+            ghost_pos.x -= ghost->speed;
         }
     } else {
-        if (ghost_pos.x < player_pos.x) {
-            ghost_pos.x += ghost->speed;
-        } else {
-            ghost_pos.x -= ghost->speed;
-        }
+        ghost_pos.x -= ghost->speed;
     }
 
     // Ensure new ghost position is within bounds
     ghost_pos.x = CLAMP(ghost_pos.x, 125, 3);
+
+    if (ghost->state == EATEN && ghost_pos.x == 3) {
+        ghost_reset(ghost, manager);
+    }
 
     entity_pos_set(self, ghost_pos);
 }
@@ -280,14 +303,17 @@ static void ghost_collision(Entity* self, Entity* other, GameManager* manager, v
     UNUSED(manager);
 
     if(entity_description_get(other) == &player_desc) {
-        PlayerContext* player_context = entity_context_get(other);
-        player_context->speed = 0;
-
         Ghost* ghost = context;
-        ghost->speed = 0;
+        if (ghost->state == EDIBLE || ghost->state == EATEN) {
+            ghost_eaten_set(ghost);
+        } else {
+            PlayerContext* player_context = entity_context_get(other);
+            player_context->speed = 0;
+            ghost->speed = 0;
+        }
     }
-
 }
+
 static const EntityDescription ghost_desc = {
     .start = NULL, // called when entity is added to the level
     .stop = NULL, // called when entity is removed from the level
@@ -400,9 +426,6 @@ static void food_render(Entity* self, GameManager* manager, Canvas* canvas, void
 
 static void food_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
     UNUSED(context);
-
-    // FIXME: remove
-    UNUSED(self);
 
     // Check if target collided with player
     if(entity_description_get(other) == &player_desc) {
