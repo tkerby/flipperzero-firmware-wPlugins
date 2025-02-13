@@ -220,7 +220,7 @@ static void ghost_spawn(Level* level, GameManager* manager) {
     entity_pos_set(entity, default_ghost_position);
 
     // Add collision box to ghost entity
-    entity_collider_add_rect(entity, ghost_size, ghost_size);
+    entity_collider_add_rect(entity, ghost_size - 1, ghost_size - 1);
 
     // Get ghost context
     Ghost* ghost = entity_context_get(entity);
