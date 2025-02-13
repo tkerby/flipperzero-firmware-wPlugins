@@ -457,7 +457,7 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 
         Entity* ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
         Ghost* ghost = entity_context_get(ghost_entity);
-        if (ghost->state == NORMAL) {
+        if (ghost->state != EATEN) {
             ghost_edible_set(ghost);
         }
 
