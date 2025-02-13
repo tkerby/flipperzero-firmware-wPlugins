@@ -149,7 +149,7 @@ static bool ina228_driver_tick(SensorDriver* driver) {
             if((diag_alrt_reg & INA228_REG_DIAG_ALRT_CNVRF) != 0) {
                 // Calculate voltage on shunt resistor
                 double shunt_voltage;
-                if((config_reg & INA228_REG_CONFIG_ADCRANGE) != 0) {
+                if((config_reg & INA228_REG_CONFIG_ADCRANGE) == 0) {
                     // LSB = 312.5nV
                     shunt_voltage = 312.5E-9 * (vshunt_reg >> 4);
                 } else {

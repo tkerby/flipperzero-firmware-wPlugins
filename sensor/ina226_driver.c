@@ -121,7 +121,7 @@ static bool ina226_driver_tick(SensorDriver* driver) {
 
                 // Calculate current, bus voltage and power
                 drv->state.current = shunt_voltage / drv->config.shunt_resistor;
-                drv->state.voltage = 1.25E-3 * (bus_reg >> 3); // LSB = 1.25mV
+                drv->state.voltage = 1.25E-3 * bus_reg; // LSB = 1.25mV
 
                 drv->state.ready = true;
             }
