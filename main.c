@@ -117,9 +117,10 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 
 int app_entry(void* p) {
     UNUSED(p);
-        mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+
+    mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(mutex == NULL) {
-        FURI_LOG_E("SnakeGame", "cannot create mutex\r\n");
+        FURI_LOG_E("Space Impact II", "cannot create mutex\r\n");
         return 255;
     }
     ViewPort* view_port = view_port_alloc();

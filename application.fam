@@ -5,7 +5,7 @@ App(
     name="Space Impact II",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="app_entry",
-    stack_size=5 * 1024,
+    stack_size=1024,
     fap_category="Games",
     # Optional values
     fap_version="1.0",
