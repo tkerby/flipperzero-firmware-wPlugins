@@ -15,6 +15,8 @@ typedef struct {
     Sprite* sprite;
     int num_sprites;
     float speed;
+    bool is_edible;
+    int frames;
 } Ghost;
 
 static bool direction = true;
@@ -181,6 +183,13 @@ static const EntityDescription player_desc = {
 
 static const EntityDescription ghost_desc;
 
+static void ghost_reset(Ghost* ghost) {
+    ghost->num_sprites = 2;
+    ghost->speed = 4.2;
+    ghost->is_edible = false;
+    ghost->frames = -1;
+}
+
 static void ghost_spawn(Level* level, GameManager* manager) {
     Entity* entity = level_add_entity(level, &ghost_desc);
 
@@ -190,12 +199,11 @@ static void ghost_spawn(Level* level, GameManager* manager) {
     entity_collider_add_rect(entity, 3, 3);
 
     // Get ghost context
-    Ghost* ghost= entity_context_get(entity);
+    Ghost* ghost = entity_context_get(entity);
 
     // Load ghost sprite and set speed to 0
     ghost->sprite = game_manager_sprite_load(manager, "ghost_left_1.fxbm");
-    ghost->num_sprites = 2;
-    ghost->speed = 4.2;
+    ghost_reset(ghost);
 }
 
 static void ghost_update(Entity* self, GameManager* manager, void* context) {
@@ -212,11 +220,38 @@ static void ghost_update(Entity* self, GameManager* manager, void* context) {
     Vector player_pos = entity_pos_get(player);
     Vector ghost_pos = entity_pos_get(self);
 
-    if (ghost_pos.x < player_pos.x) {
-        ghost_pos.x += ghost->speed;
-    } else {
-        ghost_pos.x -= ghost->speed;
+    // Ghost mode handling
+    if (ghost->is_edible) {
+        if (ghost->frames == -1) {
+            // Ghost just became edible
+            ghost->speed = 2.0;
+            ghost->frames = game.target_fps * 2;
+        } else if (ghost->frames == 0) {
+            // Timer is up
+            ghost_reset(ghost);
+        } else {
+            // Ghost is stil edible
+            ghost->frames--;
+        }
     }
+
+    // Set position based on ghost mode
+    if (ghost->is_edible) {
+        if (ghost_pos.x < player_pos.x) {
+            ghost_pos.x -= ghost->speed;
+        } else {
+            ghost_pos.x += ghost->speed;
+        }
+    } else {
+        if (ghost_pos.x < player_pos.x) {
+            ghost_pos.x += ghost->speed;
+        } else {
+            ghost_pos.x -= ghost->speed;
+        }
+    }
+
+    // Ensure new ghost position is within bounds
+    ghost_pos.x = CLAMP(ghost_pos.x, 125, 3);
 
     entity_pos_set(self, ghost_pos);
 }
@@ -378,8 +413,15 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 		FURI_LOG_I("food_collision", "Removing target at %d, %d",(int)pos.x, (int)pos.y);
 		level_remove_entity(current_level, self);
 
+        Entity* ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
+        Ghost* ghost = entity_context_get(ghost_entity);
+        ghost->is_edible = true;
+
 		if (is_level_empty(current_level)) {
 			Level* nextlevel = game_manager_add_level(manager, &level);
+            // Entity* nextlevel_ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
+            // Ghost* nextlevel_ghost = entity_context_get(nextlevel_ghost_entity);
+            // nextlevel_ghost->is_edible = true;
 			game_manager_next_level_set(manager, nextlevel);
 		}
     }
