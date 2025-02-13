@@ -38,6 +38,11 @@ typedef enum {
     StopGame,
 } GameEvent;
 
+typedef struct {
+    Sprite* background_top;
+    Sprite* background_bottom;
+} LevelContext;
+
 static bool direction = true;
 
 // Forward declaration of player_desc, because it's used in player_spawn function.
@@ -354,6 +359,7 @@ static void target_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     // Get target position
     Vector pos = entity_pos_get(self);
 
+
     // Draw target
     canvas_draw_disc(canvas, pos.x, pos.y, 1);
 }
@@ -477,15 +483,46 @@ static void target_and_food_spawn(Level* level) {
         }
 	}
 }
+/******* Background ********/
+  
+static void background_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    UNUSED(context);
+    UNUSED(manager);
+    UNUSED(self);
+
+
+    // Draw target
+    LevelContext* level_context = level_context_get(game_manager_current_level_get(manager));
+    canvas_draw_sprite(canvas, level_context->background_top, 0, 8);
+    canvas_draw_sprite(canvas, level_context->background_bottom, 0, 40);
+    
+}
+
+static const EntityDescription background_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = NULL, // called every frame
+    .render = background_render, // called every frame, after update
+    .collision = NULL, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size = 0, // size of entity context, will be automatically allocated and freed
+};
+/**End Background render */
 
 static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(manager);
     UNUSED(context);
 
+    LevelContext* level_context = level_context_get(level);
+    level_context->background_top= game_manager_sprite_load(manager, "background_top.fxbm");
+    level_context->background_bottom = game_manager_sprite_load(manager, "background_bottom.fxbm");
+    level_add_entity(level, &background_desc);
+
     // Add player entity to the level
     player_spawn(level, manager);
     // Add ghost entity to the level
     ghost_spawn(level, manager);
+
 
     // Add target entity to the level
     // srand(time(0));
@@ -502,6 +539,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
 	}
 }
 
+
 /*
     Alloc/free is called once, when level is added/removed from the game. 
     It useful if you have small amount of levels and entities, that can be allocated at once.
@@ -514,7 +552,7 @@ static const LevelBehaviour level = {
     .free = NULL, // called once, when level freed
     .start = NULL, // called when level is changed to this level
     .stop = NULL, // called when level is changed from this level
-    .context_size = 0, // size of level context, will be automatically allocated and freed
+    .context_size = sizeof(LevelContext), // size of level context, will be automatically allocated and freed
 };
 
 /****** Game ******/
@@ -534,6 +572,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
 
     // Add level to the game
     game_manager_add_level(game_manager, &level);
+
 }
 
 /* 
@@ -559,3 +598,4 @@ const Game game = {
     .stop = game_stop, // will be called once, when game stops
     .context_size = sizeof(GameContext), // size of game context
 };
+
