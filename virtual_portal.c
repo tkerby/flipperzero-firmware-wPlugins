@@ -121,11 +121,14 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     UNUSED(virtual_portal);
 
+    /*
     char display[33] = {0};
+    memset(display, 0, sizeof(display));
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
     FURI_LOG_I(TAG, "L %s", display);
+    */
 
     uint8_t side = message[1]; // 0: left, 2: right
     uint8_t brightness = 0;
@@ -155,11 +158,14 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     UNUSED(virtual_portal);
 
+    /*
     char display[33] = {0};
+    memset(display, 0, sizeof(display));
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[i]);
     }
     FURI_LOG_I(TAG, "J %s", display);
+    */
 
     uint8_t side = message[1]; // 0: left, 2: right
     uint8_t r = message[2]; // 0: left, 2: right
