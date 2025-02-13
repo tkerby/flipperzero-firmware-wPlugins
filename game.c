@@ -7,7 +7,14 @@ static const LevelBehaviour level;
 static const int target_buffer_max = 12;
 typedef struct {
     Sprite* sprite;
+    float speed;
 } PlayerContext;
+
+typedef struct {
+    Sprite* sprite;
+    int num_sprites;
+    float speed;
+} Ghost;
 
 static bool direction = true;
 
@@ -15,7 +22,8 @@ static bool direction = true;
 static const EntityDescription player_desc;
 
 //Initial Player location upon game start:
-static Vector last_player_position = {64, 32}; // Defa
+static Vector last_player_position = {64, 32};
+static Vector default_ghost_position = {122, 32};
 
 static Vector gen_target_pos(int index) {
     return (Vector){
@@ -49,6 +57,7 @@ static void player_spawn(Level* level, GameManager* manager) {
 
     // Load player sprite
     player_context->sprite = game_manager_sprite_load(manager, "player.fxbm");
+    player_context->speed = 4.0;
 }
 
 static void player_update(Entity* self, GameManager* manager, void* context) {
@@ -82,7 +91,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 		direction = true;
 	}
     if(!direction) {
-		pos.x -= 4; //offset by one so that sprite can cycle through animation
+		pos.x -= player_context->speed; //offset by one so that sprite can cycle through animation
 		int frame = (int)pos.x % 3 + 1;//This references sprite files - out of range causes crashes
 		left_path[left_path_index] = '0' + frame; 
 		FURI_LOG_I("left_path", "left_path is %s", left_path);
@@ -90,7 +99,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 	}
     if(direction) 
 	{
-		pos.x += 4;
+		pos.x += player_context->speed;
 		int frame = (int)(pos.x) % 3 + 1;
 		right_path[right_path_index] = '0' + frame;
 		FURI_LOG_I("right_path", "right path is %s", right_path);
@@ -132,6 +141,10 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
     // Draw score
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
+
+    if (player->speed == 0) {
+        canvas_printf(canvas, 0, 16, "Game Over");
+    }
 }
 
 static const EntityDescription player_desc = {
@@ -145,6 +158,87 @@ static const EntityDescription player_desc = {
         sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
+
+/****** Entities: Ghost ******/
+
+static const EntityDescription ghost_desc;
+
+static void ghost_spawn(Level* level, GameManager* manager) {
+    Entity* entity = level_add_entity(level, &ghost_desc);
+
+    entity_pos_set(entity, default_ghost_position);
+
+    // Add collision box to ghost entity
+    entity_collider_add_rect(entity, 3, 3);
+
+    // Get ghost context
+    Ghost* ghost= entity_context_get(entity);
+
+    // Load ghost sprite and set speed to 0
+    ghost->sprite = game_manager_sprite_load(manager, "ghost_left_1.fxbm");
+    ghost->num_sprites = 2;
+    ghost->speed = 4.2;
+}
+
+static void ghost_update(Entity* self, GameManager* manager, void* context) {
+    UNUSED(manager);
+
+    Ghost* ghost = context;
+
+    // Get player entity
+    Level* level = game_manager_current_level_get(manager);
+    Entity* player = level_entity_get(level, &player_desc, 0);
+    if (player == NULL) {
+        return;
+    }
+    Vector player_pos = entity_pos_get(player);
+    Vector ghost_pos = entity_pos_get(self);
+
+    if (ghost_pos.x < player_pos.x) {
+        ghost_pos.x += ghost->speed;
+    } else {
+        ghost_pos.x -= ghost->speed;
+    }
+
+    entity_pos_set(self, ghost_pos);
+}
+
+static void ghost_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    UNUSED(manager);
+
+    // Get ghost context
+    Ghost* ghost = context;
+
+    // Get ghost position
+    Vector pos = entity_pos_get(self);
+
+    // Draw ghost sprite
+    canvas_draw_sprite(canvas, ghost->sprite, pos.x - 5, pos.y - 5);
+}
+
+static void ghost_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
+    UNUSED(self);
+    UNUSED(context);
+    UNUSED(manager);
+
+    if(entity_description_get(other) == &player_desc) {
+        PlayerContext* player_context = entity_context_get(other);
+        player_context->speed = 0;
+
+        Ghost* ghost = context;
+        ghost->speed = 0;
+    }
+}
+static const EntityDescription ghost_desc = {
+    .start = NULL, // called when entity is added to the level
+    .stop = NULL, // called when entity is removed from the level
+    .update = ghost_update, // called every frame
+    .render = ghost_render, // called every frame, after update
+    .collision = ghost_collision, // called when entity collides with another entity
+    .event = NULL, // called when entity receives an event
+    .context_size =
+        sizeof(Ghost), // size of entity context, will be automatically allocated and freed
+};
 
 /****** Entities: Target ******/
 
@@ -290,6 +384,8 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
 
     // Add player entity to the level
     player_spawn(level, manager);
+    // Add ghost entity to the level
+    ghost_spawn(level, manager);
 
     // Add target entity to the level
     // srand(time(0));
