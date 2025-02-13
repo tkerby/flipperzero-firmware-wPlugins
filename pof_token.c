@@ -17,6 +17,7 @@ PoFToken* pof_token_alloc() {
     pof_token->loaded = false;
     pof_token->change = false;
     pof_token->nfc_device = nfc_device_alloc();
+    memset(pof_token->UID, 0, sizeof(pof_token->UID));
     return pof_token;
 }
 
@@ -55,6 +56,9 @@ static bool pof_token_load_data(PoFToken* pof_token, FuriString* path, bool show
             break;
         }
 
+        size_t uid_len = 0;
+        const uint8_t* uid = nfc_device_get_uid(nfc_device, &uid_len);
+        memcpy(pof_token->UID, uid, sizeof(pof_token->UID));
         pof_token->loaded = true;
         pof_token->change = true;
     } while(false);

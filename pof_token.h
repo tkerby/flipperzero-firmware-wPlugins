@@ -21,6 +21,7 @@ typedef struct {
     bool change;
     bool loaded;
     NfcDevice* nfc_device;
+    uint8_t UID[4];
 } PoFToken;
 
 PoFToken* pof_token_alloc();
