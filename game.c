@@ -324,9 +324,9 @@ static void ghost_collision(Entity* self, Entity* other, GameManager* manager, v
 
     if(entity_description_get(other) == &player_desc) {
         Ghost* ghost = context;
-        if (ghost->state == EDIBLE || ghost->state == EATEN) {
+        if (ghost->state == EDIBLE) {
             ghost_eaten_set(ghost, self);
-        } else {
+        } else if (ghost->state == NORMAL) {
             PlayerContext* player_context = entity_context_get(other);
             player_context->speed = 0;
             ghost->speed = 0;
@@ -463,7 +463,9 @@ static void food_collision(Entity* self, Entity* other, GameManager* manager, vo
 
         Entity* ghost_entity = level_entity_get(current_level, &ghost_desc, 0);
         Ghost* ghost = entity_context_get(ghost_entity);
-        ghost_edible_set(ghost);
+        if (ghost->state == NORMAL) {
+            ghost_edible_set(ghost);
+        }
 
 		if (is_level_empty(current_level)) {
             target_and_food_spawn(current_level);
