@@ -2,6 +2,7 @@
 
 /****** Entities: Player ******/
 static const LevelBehaviour level;
+static bool GameOver = false;
 
 // static int target_buffer = 7;
 static const int target_buffer_max = 12;
@@ -22,7 +23,7 @@ static bool direction = true;
 static const EntityDescription player_desc;
 
 //Initial Player location upon game start:
-static Vector last_player_position = {64, 32};
+static Vector last_player_position = {34, 32};
 static Vector default_ghost_position = {122, 32};
 
 static Vector gen_target_pos(int index) {
@@ -71,17 +72,33 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 	
     // Get player context
     PlayerContext* player_context = (PlayerContext*)context;
+	// Get game context
+	GameContext* game_context = game_manager_game_context_get(manager);
 
 	char left_path[50] = "player_left_ .fxbm";
 	int left_path_index= 12;
 	char right_path[50] = "player_right_ .fxbm";
 	int right_path_index= 13;
+	
     // Control player movement
 	//Removing player up and down movement
     //if(input.held & GameKeyUp) pos.y -= 2;
     //if(input.held & GameKeyDown) pos.y += 2;
 	
-	if (input.pressed & GameKeyOk) {
+	
+	if (input.pressed & GameKeyOk && GameOver) {
+		GameOver = false;
+		pos.x = 34;
+		pos.y = 32;
+		player_context->speed = 4.0;
+		game_context->score = 0;
+		last_player_position = pos;
+		Level* nextlevel = game_manager_add_level(manager, &level);
+		game_manager_next_level_set(manager, nextlevel);
+		FURI_LOG_I("player_update", "Game Over is %d", GameOver);
+		FURI_LOG_I("player_update", "Player position is %d, %d", (int)pos.x, (int)pos.y);
+	}
+	if (input.pressed & GameKeyOk && !GameOver) {
 		direction = !direction;
 	}
 	if (input.held & GameKeyLeft) {
@@ -144,6 +161,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
     if (player->speed == 0) {
         canvas_printf(canvas, 0, 16, "Game Over");
+		GameOver = true;
     }
 }
 
@@ -228,6 +246,7 @@ static void ghost_collision(Entity* self, Entity* other, GameManager* manager, v
         Ghost* ghost = context;
         ghost->speed = 0;
     }
+
 }
 static const EntityDescription ghost_desc = {
     .start = NULL, // called when entity is added to the level
