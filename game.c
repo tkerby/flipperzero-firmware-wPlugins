@@ -4,7 +4,16 @@
 static const LevelBehaviour level;
 static bool GameOver = false;
 
-// static int target_buffer = 7;
+static const int player_size = 6;
+static const int player_radius = player_size / 2;
+static const int player_x_max = 127 - player_radius;
+static const int player_x_min = player_radius + 1;
+
+static const int ghost_size = 6;
+static const int ghost_radius = ghost_size / 2;
+static const int ghost_x_max = 128 - ghost_radius;
+static const int ghost_x_min = ghost_radius;
+
 static const int target_buffer_max = 12;
 typedef struct {
     Sprite* sprite;
@@ -41,7 +50,7 @@ static Vector default_ghost_position = {122, 32};
 static Vector gen_target_pos(int index) {
     return (Vector){
         .x = (120 * (1 - ((double)index / target_buffer_max))) + 4,
-        .y = 30
+        .y = 32
     };
 }
 
@@ -65,8 +74,7 @@ static void player_spawn(Level* level, GameManager* manager) {
     entity_pos_set(player, last_player_position);
 
     // Add collision box to player entity
-    // Box is centered in player x and y, and it's size is 3x3 (because its eating dots)
-    entity_collider_add_rect(player, 3, 3);
+    entity_collider_add_rect(player, player_size, player_size);
 
     // Get player context
     PlayerContext* player_context = entity_context_get(player);
@@ -94,12 +102,6 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 	int left_path_index= 12;
 	char right_path[50] = "player_right_ .fxbm";
 	int right_path_index= 13;
-	
-    // Control player movement
-	//Removing player up and down movement
-    //if(input.held & GameKeyUp) pos.y -= 2;
-    //if(input.held & GameKeyDown) pos.y += 2;
-	
 	
 	if (input.pressed & GameKeyOk && GameOver) {
 		GameOver = false;
@@ -138,17 +140,14 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
 		player_context->sprite = game_manager_sprite_load(manager, right_path);
 	}
 
-    // Clamp player position to screen bounds, considering player sprite size (10x10)
-    pos.x = CLAMP(pos.x, 125, 3);
-    pos.y = CLAMP(pos.y, 59, 5);
-
     // Set wraparound for player
-	if (pos.x < 5) {
-		pos.x=123;
+	if (pos.x < player_x_min) {
+		pos.x = player_x_max;
 	}
-	if (pos.x > 123) {
-		pos.x = 5;
+	if (pos.x > player_x_max) {
+		pos.x = player_x_min;
 	}
+
     entity_pos_set(self, pos);
 
     // Control game exit
@@ -166,7 +165,7 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
-    canvas_draw_sprite(canvas, player->sprite, pos.x - 5, pos.y - 5);
+    canvas_draw_sprite(canvas, player->sprite, pos.x - player_radius, pos.y - player_radius);
 
     // Get game context
     GameContext* game_context = game_manager_game_context_get(manager);
@@ -221,7 +220,7 @@ static void ghost_spawn(Level* level, GameManager* manager) {
     entity_pos_set(entity, default_ghost_position);
 
     // Add collision box to ghost entity
-    entity_collider_add_rect(entity, 3, 3);
+    entity_collider_add_rect(entity, ghost_size, ghost_size);
 
     // Get ghost context
     Ghost* ghost = entity_context_get(entity);
@@ -275,7 +274,7 @@ static void ghost_update(Entity* self, GameManager* manager, void* context) {
     }
 
     // Ensure new ghost position is within bounds
-    ghost_pos.x = CLAMP(ghost_pos.x, 125, 3);
+    ghost_pos.x = CLAMP(ghost_pos.x, ghost_x_max, ghost_x_min);
 
     if (ghost->state == EATEN && ghost_pos.x == 3) {
         ghost_reset(ghost, manager);
@@ -294,7 +293,7 @@ static void ghost_render(Entity* self, GameManager* manager, Canvas* canvas, voi
     Vector pos = entity_pos_get(self);
 
     // Draw ghost sprite
-    canvas_draw_sprite(canvas, ghost->sprite, pos.x - 5, pos.y - 5);
+    canvas_draw_sprite(canvas, ghost->sprite, pos.x - ghost_radius, pos.y - ghost_radius);
 }
 
 static void ghost_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
