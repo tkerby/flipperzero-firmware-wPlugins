@@ -114,7 +114,6 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_D(TAG, "process %c", message[0]);
 
     virtual_portal->active = false;
-    virtual_portal->sequence_number = 0;
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         if(virtual_portal->tokens[i]->loaded) {
             virtual_portal->tokens[i]->change = true;
