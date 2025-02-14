@@ -114,6 +114,7 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_D(TAG, "process %c", message[0]);
 
     virtual_portal->active = false;
+    //virtual_portal->sequence_number = 0;
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         if(virtual_portal->tokens[i]->loaded) {
             virtual_portal->tokens[i]->change = true;
@@ -278,8 +279,9 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
     if(!pof_token->loaded) {
         response[0] = 'Q';
-        response[1] = 0x01;
-        return 2;
+        response[1] = 0x00 | arrayIndex;
+        response[2] = blockNum;
+        return 3;
     }
     NfcDevice* nfc_device = pof_token->nfc_device;
     const MfClassicData* data = nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
@@ -306,8 +308,9 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
     if(!pof_token->loaded) {
         response[0] = 'W';
-        response[1] = 0x01;
-        return 2;
+        response[1] = 0x00 | arrayIndex;
+        response[2] = blockNum;
+        return 3;
     }
 
     NfcDevice* nfc_device = pof_token->nfc_device;
