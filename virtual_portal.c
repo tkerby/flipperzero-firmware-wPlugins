@@ -305,7 +305,7 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
     if(!pof_token->loaded) {
-        response[0] = 'Q';
+        response[0] = 'W';
         response[1] = 0x01;
         return 2;
     }
