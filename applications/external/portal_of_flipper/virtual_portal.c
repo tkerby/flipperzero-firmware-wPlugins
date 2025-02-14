@@ -114,7 +114,6 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_D(TAG, "process %c", message[0]);
 
     virtual_portal->active = false;
-    virtual_portal->sequence_number = 0;
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         if(virtual_portal->tokens[i]->loaded) {
             virtual_portal->tokens[i]->change = true;
@@ -287,7 +286,7 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     const MfClassicBlock block = data->block[blockNum];
 
     response[0] = 'Q';
-    response[1] = 0x20 | arrayIndex;
+    response[1] = 0x10 | arrayIndex;
     response[2] = blockNum;
     memcpy(response + 3, block.data, BLOCK_SIZE);
     return 3 + BLOCK_SIZE;
@@ -306,7 +305,7 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
     if(!pof_token->loaded) {
-        response[0] = 'Q';
+        response[0] = 'W';
         response[1] = 0x01;
         return 2;
     }
@@ -323,7 +322,7 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     mf_classic_free(data);
 
     response[0] = 'W';
-    response[1] = index;
+    response[1] = 0x10 | arrayIndex;
     response[2] = blockNum;
     return 3;
 }
