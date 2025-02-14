@@ -78,7 +78,7 @@ static int32_t pof_thread_worker(void* context) {
 
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
-    uint32_t timeout = 100; // FuriWaitForever; //ms
+    uint32_t timeout = 30; // FuriWaitForever; //ms
     FURI_LOG_D(TAG, "pof_thread_worker");
 
     while(true) {
