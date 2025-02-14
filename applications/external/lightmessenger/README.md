@@ -96,11 +96,39 @@ Multiple color shaders are available:
 ![lm_bmp02](./READMEassets/lm_swipe.png)
 
 When "**Swipe!**" shows up, things get serious. It's time to grab **firmly** your flipper zero, and wave it in the air. **Be aware of people/stuff around you!**
-The display is based on [PoV](https://en.wikipedia.org/wiki/Persistence_of_vision), so it's effect shows best in a dark/mood lighting condition. It may take a bit to really master the correct swipe motion.
+The display is based on [PoV](https://en.wikipedia.org/wiki/Persistence_of_vision), so it's effect shows best in a dark/mood lighting condition. It may take a bit to really master the correct swipe motion
+
+> [!TIP]
+>
+> It's not about speed, it's about consistency!
+
+
 
 You can also photobomb if you build up enought skill. 
 
 ![lm02](./READMEassets/doc01.png)
+
+## Troubleshooting
+
+### It doesn't work?
+
+If you're having trouble getting the LightMessenger to work, try this:
+
+1. Disconnect the LightMessenger from the Flipper Zero.
+2. Restart the Flipper Zero by holding **Back + Left** for 3 seconds.
+3. Reconnect the LightMessenger and launch the application again.
+
+### It works, but it's not reliable
+
+The LightMessenger relies on physical interaction and may take some practice to master.
+
+You don’t need to be fast—just focus on making **consistent** motions while keeping the LightMessenger in a vertical position.
+
+During the first three swipes, the LightMessenger calibrates your movements, so no light will be emitted during this phase.
+
+### My arm hurts now
+
+Remember, it's not about speed—it's about consistency. Take your time, experiment, and practice until swiping feels natural.
 
 
 ## Contributing
