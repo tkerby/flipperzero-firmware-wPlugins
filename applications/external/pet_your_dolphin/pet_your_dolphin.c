@@ -13,16 +13,15 @@
 #include "draw_animations.h"
 #include "compiled/assets_icons.h"
 
-#define TAG "Pet Your Dolphin"
+#define TAG             "Pet Your Dolphin"
 #define DAILY_PET_LIMIT 2
-#define MS_IN_HOUR  (60UL*60UL*1000UL)
-#define MS_IN_DAY   (24UL*MS_IN_HOUR)
+#define MS_IN_HOUR      (60UL * 60UL * 1000UL)
+#define MS_IN_DAY       (24UL * MS_IN_HOUR)
 #ifndef TEST_MODE
-    #define PETTING_DURATION 6000
+#define PETTING_DURATION 6000
 #else
-    #define PETTING_DURATION 1500
+#define PETTING_DURATION 1500
 #endif
-
 
 // This structure holds our dolphin-related data.
 typedef struct {
@@ -47,10 +46,9 @@ static bool handle_reset(AppData* app) {
     DateTime now;
     furi_hal_rtc_get_datetime(&now);
 
-    bool is_new_day =
-        (now.day != app->state.last_pet_day) ||
-        (now.month != app->state.last_pet_month) ||
-        (now.year != app->state.last_pet_year);
+    bool is_new_day = (now.day != app->state.last_pet_day) ||
+                      (now.month != app->state.last_pet_month) ||
+                      (now.year != app->state.last_pet_year);
 
     if(is_new_day) {
         app->state.last_pet_day = now.day;
@@ -60,7 +58,9 @@ static bool handle_reset(AppData* app) {
         pet_app_state_save(&app->state);
 
         FURI_LOG_I(TAG, "Daily pet count reset.");
-        FURI_LOG_I(TAG, "Date updated to %i-%i-%i.",
+        FURI_LOG_I(
+            TAG,
+            "Date updated to %i-%i-%i.",
             app->state.last_pet_month,
             app->state.last_pet_day,
             app->state.last_pet_year);
@@ -77,21 +77,23 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_clear(canvas);
 
     uint32_t ticks = furi_get_tick();
-    
+
     draw_base(canvas, ticks);
 
-    if (app->petting_in_progress) {
-        if (ticks - app->petting_anim_start_tick >= PETTING_DURATION) {
-            #ifdef TEST_MODE
-                dolphin_deed(DolphinDeedTestLeft);
-                FURI_LOG_I(TAG, "[Test Mode] Butthurt incremented by 1");
-                FURI_LOG_I(TAG, "[Test Mode] Bypassing pet count update");
-            #else
-                dolphin_deed(DolphinDeedPluginGameWin);
-                app->state.daily_pet_count++;
-            #endif
+    if(app->petting_in_progress) {
+        if(ticks - app->petting_anim_start_tick >= PETTING_DURATION) {
+#ifdef TEST_MODE
+            dolphin_deed(DolphinDeedTestLeft);
+            FURI_LOG_I(TAG, "[Test Mode] Butthurt incremented by 1");
+            FURI_LOG_I(TAG, "[Test Mode] Bypassing pet count update");
+#else
+            dolphin_deed(DolphinDeedPluginGameWin);
+            app->state.daily_pet_count++;
+#endif
             app->data->stats = dolphin_stats(app->data->dolphin);
-            FURI_LOG_I(TAG, "Dolphin Petted! daily pet count: %lu, butthurt: %lu",
+            FURI_LOG_I(
+                TAG,
+                "Dolphin Petted! daily pet count: %lu, butthurt: %lu",
                 app->state.daily_pet_count,
                 app->data->stats.butthurt);
             pet_app_state_save(&app->state);
@@ -102,15 +104,15 @@ static void render_callback(Canvas* canvas, void* ctx) {
             draw_petting(canvas, ticks - app->petting_anim_start_tick, PETTING_DURATION);
         }
     } else {
-        if (app->data->stats.butthurt > 8) {
+        if(app->data->stats.butthurt > 8) {
             draw_sad_idle(canvas, ticks - app->idle_anim_start_tick);
-        } else if (app->data->stats.butthurt > 4) {
+        } else if(app->data->stats.butthurt > 4) {
             draw_neutral_idle(canvas, ticks - app->idle_anim_start_tick);
         } else {
             draw_happy_idle(canvas, ticks - app->idle_anim_start_tick);
         }
 
-        if (app->state.daily_pet_count < DAILY_PET_LIMIT) {
+        if(app->state.daily_pet_count < DAILY_PET_LIMIT) {
             draw_pet_prompt(canvas, ticks - app->idle_anim_start_tick, false);
         } else {
             draw_pet_prompt(canvas, ticks - app->idle_anim_start_tick, true);
@@ -143,13 +145,15 @@ AppData* pet_your_dolphin_app_alloc(void) {
     AppData* app = malloc(sizeof(AppData));
     memset(app, 0, sizeof(AppData));
 
-    if(!pet_app_state_load(&app->state)) {  // No previous state
+    if(!pet_app_state_load(&app->state)) { // No previous state
         app->state.last_pet_day = 0;
         app->state.last_pet_month = 0;
         app->state.last_pet_year = 0;
         app->state.daily_pet_count = 0;
     } else {
-        FURI_LOG_I(TAG, "Loaded app data. Prev date: %i-%i-%i, Prev pet count: %lu",
+        FURI_LOG_I(
+            TAG,
+            "Loaded app data. Prev date: %i-%i-%i, Prev pet count: %lu",
             app->state.last_pet_month,
             app->state.last_pet_day,
             app->state.last_pet_year,
@@ -171,12 +175,12 @@ AppData* pet_your_dolphin_app_alloc(void) {
     app->data = malloc(sizeof(DolphinData));
     memset(app->data, 0, sizeof(DolphinData));
 
-    #ifdef TEST_MODE
-        dolphin_deed(DolphinDeedTestRight);
-        app->state.daily_pet_count = 0;
-        FURI_LOG_I(TAG, "[TEST MODE] Butthurt level reset to 0.");
-        FURI_LOG_I(TAG, "[TEST MODE] Daily pet count reset to 0.");
-    #endif
+#ifdef TEST_MODE
+    dolphin_deed(DolphinDeedTestRight);
+    app->state.daily_pet_count = 0;
+    FURI_LOG_I(TAG, "[TEST MODE] Butthurt level reset to 0.");
+    FURI_LOG_I(TAG, "[TEST MODE] Daily pet count reset to 0.");
+#endif
 
     app->data->dolphin = furi_record_open(RECORD_DOLPHIN);
     app->data->stats = dolphin_stats(app->data->dolphin);
@@ -212,7 +216,7 @@ int32_t pet_your_dolphin(void* p) {
     while(app->running) {
         if(furi_message_queue_get(app->queue, &input, 100) == FuriStatusOk) {
             if(input.key == InputKeyOk && input.type == InputTypePress) {
-                if (!app->petting_in_progress && app->state.daily_pet_count < DAILY_PET_LIMIT) {
+                if(!app->petting_in_progress && app->state.daily_pet_count < DAILY_PET_LIMIT) {
                     app->petting_in_progress = true;
                     app->petting_anim_start_tick = furi_get_tick();
                 } else if(app->state.daily_pet_count >= DAILY_PET_LIMIT) {
@@ -224,15 +228,15 @@ int32_t pet_your_dolphin(void* p) {
                 FURI_LOG_I(TAG, "Exiting app.");
                 app->running = false;
             }
-            #ifdef TEST_MODE
-            else if (input.key == InputKeyUp) {  // Toggle to "pet limit reached" mode
-                if (app->state.daily_pet_count == 0) {
+#ifdef TEST_MODE
+            else if(input.key == InputKeyUp) { // Toggle to "pet limit reached" mode
+                if(app->state.daily_pet_count == 0) {
                     app->state.daily_pet_count = DAILY_PET_LIMIT;
                 } else {
                     app->state.daily_pet_count = 0;
                 }
             }
-            #endif
+#endif
         }
         view_port_update(app->view_port);
     }
