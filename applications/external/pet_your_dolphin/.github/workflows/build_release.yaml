@@ -1,0 +1,54 @@
+name: Build and Release FAP
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: "write"
+
+jobs:
+  build_fap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out project repo
+        uses: actions/checkout@v3
+        with:
+          path: "pet-your-dolphin"
+
+      - name: Clone Flipper Zero Firmware
+        run: |
+          git clone https://github.com/flipperdevices/flipperzero-firmware.git
+          cd flipperzero-firmware
+
+      - name: Copy app into applications_user
+        run: |
+          cp -r pet-your-dolphin flipperzero-firmware/applications_user/
+
+      - name: Build .fap
+        working-directory: flipperzero-firmware
+        run: |
+          ./fbt fap_pet_your_dolphin
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+            GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+            tag_name: "${{ github.ref_name }}"
+            release_name: "Release ${{ github.ref_name }}"
+            draft: false
+            prerelease: false
+  
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+            upload_url: "${{ steps.create_release.outputs.upload_url }}"
+            asset_path: "flipperzero-firmware/build/.extapps/pet_your_dolphin.fap"
+            asset_name: "pet_your_dolphin.fap"
+            asset_content_type: "application/octet-stream"
