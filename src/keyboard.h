@@ -3,7 +3,7 @@
 
 #include "flipper.h"
 
-#define KB_PRESS_DELAY 100
+#define KB_PRESS_DELAY 200
 
 uint16_t get_key(char c);
 void capslock();
