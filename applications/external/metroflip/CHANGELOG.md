@@ -40,3 +40,9 @@ Big update!
 ## v0.5.1
 
 - Suica Parser (By [@zinongli](https://github.com/zinongli))
+
+## v0.6
+
+- Added a load mode and a save mode to store card info
+- Fixed a major bug due to API symbol not existing
+
