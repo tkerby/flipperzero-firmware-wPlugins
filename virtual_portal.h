@@ -4,7 +4,7 @@
 #include <furi_hal_light.h>
 #include "pof_token.h"
 
-#define POF_TOKEN_LIMIT 7
+#define POF_TOKEN_LIMIT 16
 
 typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];

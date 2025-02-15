@@ -2,15 +2,7 @@
 #include "../pof_token.h"
 
 enum SubmenuIndex {
-    // SubmenuIndexFigure* need to match POF_TOKEN_LIMIT
-    SubmenuIndexFigure1,
-    SubmenuIndexFigure2,
-    SubmenuIndexFigure3,
-    SubmenuIndexFigure4,
-    SubmenuIndexFigure5,
-    SubmenuIndexFigure6,
-    SubmenuIndexFigure7,
-    SubmenuIndexLoad,
+    SubmenuIndexLoad = POF_TOKEN_LIMIT,
 };
 
 void pof_scene_main_submenu_callback(void* context, uint32_t index) {
@@ -39,7 +31,7 @@ void pof_scene_main_on_update(void* context) {
                 submenu_add_item(
                     submenu,
                     furi_string_get_cstr(token_name),
-                    SubmenuIndexFigure1 + i,
+                    i,
                     pof_scene_main_submenu_callback,
                     pof);
                 count++;
@@ -77,11 +69,10 @@ bool pof_scene_main_on_event(void* context, SceneManagerEvent event) {
                 // reselected if the user cancels loading a file.
                 scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, SubmenuIndexLoad);
                 scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
-            } else {
-                // No-op
             }
             consumed = true;
         } else {
+            scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, event.event);
             pof_token_clear(virtual_portal->tokens[event.event], true);
             pof_scene_main_on_update(context);
         }
