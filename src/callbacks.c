@@ -48,22 +48,26 @@ void nfc_hid_scanner_callback(NfcScannerEvent event, void* ctx) {
     NfcHidApp* app = ctx;
 
     if (event.type == NfcScannerEventTypeDetected) {
-        bool hasMifareClassic = false;
+        size_t hasKnownProtocol = 1000;
         for (size_t i = 0; i < event.data.protocol_num; i++) {
             if (event.data.protocols[i] == NfcProtocolMfClassic) {
-                hasMifareClassic = true;
+                hasKnownProtocol = i;
+                break;
+            }
+            if (event.data.protocols[i] == NfcProtocolMfUltralight) {
+                hasKnownProtocol = i;
                 break;
             }
         }
 
-        if (hasMifareClassic) {
+        if (hasKnownProtocol != 1000) {
             app->poller = nfc_poller_alloc(
                 app->nfc,
-                NfcProtocolMfClassic);
+                event.data.protocols[hasKnownProtocol]);
             nfc_poller_start(app->poller, nfc_hid_poller_callback, app);
         } else {
             nfc_device_clear(app->device);
-            furi_string_set(app->uid_str, "No MfClassic");
+            furi_string_set(app->uid_str, "No MfClassic or MfcUltralight");
         }
     }
 }
