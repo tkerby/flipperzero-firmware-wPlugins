@@ -15,11 +15,15 @@ int32_t lis2dh12_init(void* stmdev) {
     pin_int2_cfg.int_polarity = PARAM_INT_POLARITY;
     pin_int2_cfg.i2_ia1 = PROPERTY_DISABLE;
     pin_int2_cfg.i2_ia2 = PROPERTY_ENABLE;
+    pin_int2_cfg.not_used_01 = PROPERTY_DISABLE;
+    pin_int2_cfg.not_used_02 = PROPERTY_DISABLE;
     lis2dh12_pin_int2_config_set(stmdev, &pin_int2_cfg);
 
     pin_int1_cfg.i1_zyxda = PROPERTY_DISABLE;
     pin_int1_cfg.i1_ia1 = PROPERTY_ENABLE;
     pin_int1_cfg.i1_ia2 = PROPERTY_DISABLE;
+    pin_int1_cfg.not_used_01 = PROPERTY_DISABLE;
+    pin_int1_cfg.not_used_02 = PROPERTY_DISABLE;
     lis2dh12_pin_int1_config_set(stmdev, &pin_int1_cfg);
 
     // lis2dh12 general configuration
