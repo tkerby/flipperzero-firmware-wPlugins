@@ -5,12 +5,12 @@
 
 int32_t lis2dh12_init(void* stmdev) {
     // Interrupt registers
-    lis2dh12_int1_cfg_t int1_cfg;
-    lis2dh12_int2_cfg_t int2_cfg;
+    lis2dh12_int1_cfg_t int1_cfg = {0};
+    lis2dh12_int2_cfg_t int2_cfg = {0};
 
     // Pin registers
-    lis2dh12_ctrl_reg3_t pin_int1_cfg;
-    lis2dh12_ctrl_reg6_t pin_int2_cfg;
+    lis2dh12_ctrl_reg3_t pin_int1_cfg = {0};
+    lis2dh12_ctrl_reg6_t pin_int2_cfg = {0};
 
     pin_int2_cfg.int_polarity = PARAM_INT_POLARITY;
     pin_int2_cfg.i2_ia1 = PROPERTY_DISABLE;
