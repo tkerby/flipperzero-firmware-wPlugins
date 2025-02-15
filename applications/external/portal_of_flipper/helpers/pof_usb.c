@@ -79,9 +79,10 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
     uint32_t timeout = 30; // FuriWaitForever; //ms
-    FURI_LOG_D(TAG, "pof_thread_worker");
+    uint32_t lastStatus = 0x0;
 
     while(true) {
+        uint32_t now = furi_get_tick();
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
         if(flags & EventRx) { //fast flag
             UNUSED(pof_usb_receive);
@@ -109,6 +110,16 @@ static int32_t pof_thread_worker(void* context) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
                 pof_usb->dataAvailable = 0;
+            }
+
+            // Check next status time since the timeout based one might be starved by incoming packets.
+            if(now > lastStatus + timeout) {
+                lastStatus = now;
+                memset(tx_data, 0, sizeof(tx_data));
+                len_data = virtual_portal_send_status(virtual_portal, tx_data);
+                if(len_data > 0) {
+                    pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
+                }
             }
 
             flags &= ~EventRx; // clear flag
@@ -145,6 +156,7 @@ static int32_t pof_thread_worker(void* context) {
             if(len_data > 0) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
+            lastStatus = now;
         }
     }
 

@@ -142,11 +142,11 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
     for(size_t i = 0; i < POF_TOKEN_LIMIT; i++) {
         // Can't use bit_lib since it uses the opposite endian
         if(virtual_portal->tokens[i]->loaded) {
-            response[1 + i / 4] |= 1 << (i * 2 + 0);
+            response[1 + i / 4] |= 1 << ((i % 4) * 2 + 0);
         }
         if(virtual_portal->tokens[i]->change) {
             update = true;
-            response[1 + i / 4] |= 1 << (i * 2 + 1);
+            response[1 + i / 4] |= 1 << ((i % 4) * 2 + 1);
         }
 
         virtual_portal->tokens[i]->change = false;
