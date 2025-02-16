@@ -114,6 +114,7 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_D(TAG, "process %c", message[0]);
 
     virtual_portal->active = false;
+    virtual_portal->query = false;
     //virtual_portal->sequence_number = 0;
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         if(virtual_portal->tokens[i]->loaded) {
@@ -136,6 +137,9 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 }
 
 int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
+    if (virtual_portal->query) {
+        return 0;
+    }
     response[0] = 'S';
 
     bool update = false;
@@ -271,6 +275,7 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 }
 
 int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
+    virtual_portal->query = true;
     int index = message[1];
     int blockNum = message[2];
     int arrayIndex = index & 0x0f;
@@ -356,6 +361,7 @@ int virtual_portal_process_message(
     case 'R':
         return virtual_portal_reset(virtual_portal, message, response);
     case 'S': //Status
+        virtual_portal->query = false;
         return virtual_portal_status(virtual_portal, response);
     case 'V':
         return 0;

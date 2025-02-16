@@ -16,6 +16,7 @@ typedef struct {
     uint8_t sequence_number;
     bool active;
     bool speaker;
+    bool query;
     NotificationApp* notifications;
     PoFType type;
 } VirtualPortal;
