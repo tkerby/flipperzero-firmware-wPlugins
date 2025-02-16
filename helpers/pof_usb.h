@@ -18,6 +18,9 @@ typedef struct PoFUsb PoFUsb;
 PoFUsb* pof_usb_start(VirtualPortal* virtual_portal);
 void pof_usb_stop(PoFUsb* pof);
 
+PoFUsb* pof_usb_start_xbox360(VirtualPortal* virtual_portal);
+void pof_usb_stop_xbox360(PoFUsb* pof);
+
 /*descriptor type*/
 typedef enum {
     PoFDescriptorTypeDevice = 0x01,

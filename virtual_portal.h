@@ -6,11 +6,6 @@
 
 #define POF_TOKEN_LIMIT 16
 
-typedef enum {
-    PoFHID,
-    PoFXbox360,
-    PoFXboxOne
-} PoFType;
 
 typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];
@@ -18,7 +13,6 @@ typedef struct {
     bool active;
     bool speaker;
     NotificationApp* notifications;
-    PoFType type;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
