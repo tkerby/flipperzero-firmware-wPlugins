@@ -168,13 +168,10 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
 }
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response) {
-    if(virtual_portal->active) {
-        // Disable while I work on RGB
-        // notification_message(virtual_portal->notifications, &pof_sequence_cyan);
-        UNUSED(pof_sequence_cyan);
-        return virtual_portal_status(virtual_portal, response);
-    }
-    return 0;
+    // Disable while I work on RGB
+    // notification_message(virtual_portal->notifications, &pof_sequence_cyan);
+    UNUSED(pof_sequence_cyan);
+    return virtual_portal_status(virtual_portal, response);
 }
 
 // 4d01ff0000d0077d6c2a77a400000000
