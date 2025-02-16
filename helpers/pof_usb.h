@@ -13,6 +13,13 @@
 #define HID_REPORT_TYPE_OUTPUT  2
 #define HID_REPORT_TYPE_FEATURE 3
 
+
+#define POF_USB_EP_IN_SIZE  (64UL)
+#define POF_USB_EP_OUT_SIZE (64UL)
+
+#define POF_USB_RX_MAX_SIZE (POF_USB_EP_OUT_SIZE)
+#define POF_USB_TX_MAX_SIZE (POF_USB_EP_IN_SIZE)
+
 typedef struct PoFUsb PoFUsb;
 
 PoFUsb* pof_usb_start(VirtualPortal* virtual_portal);
@@ -79,3 +86,36 @@ typedef enum {
     PoFControlRequestsOut = (PoFControlTypeVendor | PoFControlRecipientDevice | PoFControlOut),
     PoFControlRequestsIn = (PoFControlTypeVendor | PoFControlRecipientDevice | PoFControlIn),
 } PoFControlRequests;
+
+
+typedef enum {
+    EventExit = (1 << 0),
+    EventReset = (1 << 1),
+    EventRx = (1 << 2),
+    EventTx = (1 << 3),
+    EventTxComplete = (1 << 4),
+    EventResetSio = (1 << 5),
+    EventTxImmediate = (1 << 6),
+
+    EventAll = EventExit | EventReset | EventRx | EventTx | EventTxComplete | EventResetSio |
+               EventTxImmediate,
+} PoFEvent;
+
+struct PoFUsb {
+    FuriHalUsbInterface usb;
+    FuriHalUsbInterface* usb_prev;
+
+    FuriThread* thread;
+    usbd_device* dev;
+    VirtualPortal* virtual_portal;
+    uint8_t data_recvest[8];
+    uint16_t data_recvest_len;
+
+    bool tx_complete;
+    bool tx_immediate;
+
+    uint8_t dataAvailable;
+    uint8_t data[POF_USB_RX_MAX_SIZE];
+
+    uint8_t tx_data[POF_USB_TX_MAX_SIZE];
+};
