@@ -90,12 +90,16 @@ bool pof_scene_main_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } else if (event.event == SubmenuIndexSwapHid) {
             pof_stop(pof);
-            pof->type = PoFXbox360;
+            pof->type = PoFHid;
             pof_start(pof);
+            pof_scene_main_on_update(context);
+            consumed = true;
         } else if (event.event == SubmenuIndexSwapXbox360) {
             pof_stop(pof);
             pof->type = PoFXbox360;
             pof_start(pof);
+            pof_scene_main_on_update(context);
+            consumed = true;
         } else {
             scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, event.event);
             pof_token_clear(virtual_portal->tokens[event.event], true);
