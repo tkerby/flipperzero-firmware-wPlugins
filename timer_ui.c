@@ -43,8 +43,8 @@ void draw_small_analog_clock(Canvas* canvas, time_t now) {
     int hour_y_end = center_y + (int)(hour_hand_length * sin(hour_angle));
     int minute_x_end = center_x + (int)(minute_hand_length * cos(minute_angle));
     int minute_y_end = center_y + (int)(minute_hand_length * sin(minute_angle));
-    draw_thick_line(canvas, center_x, center_y, hour_x_end, hour_y_end, 2);
-    draw_thick_line(canvas, center_x, center_y, minute_x_end, minute_y_end, 2);
+    draw_thick_line(canvas, center_x, center_y, hour_x_end, hour_y_end, 1);
+    draw_thick_line(canvas, center_x, center_y, minute_x_end, minute_y_end, 1);
 }
 
 void draw_callback(Canvas* canvas, void* ctx) {

@@ -52,6 +52,8 @@ void update_daily_record(PomodoroApp* app, time_t now) {
 void update_logic(PomodoroApp* app) {
     time_t now = furi_hal_rtc_get_timestamp();
     update_daily_record(app, now);
+    int hour, minute;
+    get_hour_minute(now, &hour, &minute);
 
     if(app->blinking) {
         uint32_t now_tick = furi_get_tick();
@@ -88,12 +90,15 @@ void update_logic(PomodoroApp* app) {
                 app->start_count++;
                 app->current_daily_record.start_count++;
                 app->state.phase = PomodoroPhaseWaitingRest;
-                time_t now = furi_hal_rtc_get_timestamp();
-                int hour, minute;
-                get_hour_minute(now, &hour, &minute);
-                int diff_to_50 = 50 - minute;
-                if(diff_to_50 < 0) diff_to_50 += 60;
-                app->state.next_rest_time = now + diff_to_50 * 60;
+                int current_total = hour * 60 + minute;
+                int target_total;
+                if(minute < 50) {
+                    target_total = hour * 60 + 50;
+                } else {
+                    target_total = (hour + 1) * 60;
+                }
+                int diff = target_total - current_total;
+                app->state.next_rest_time = now + diff * 60;
             } else if(app->current_alarm_type == AlarmTypeRest) {
                 app->rest_count++;
                 app->current_daily_record.rest_count++;
@@ -106,25 +111,23 @@ void update_logic(PomodoroApp* app) {
         }
     }
 
-    int hour, minute;
-    get_hour_minute(now, &hour, &minute);
     if(app->state.phase == PomodoroPhaseIdle) {
         if(minute == 0 && hour != app->state.last_hour_triggered) {
-            start_screen_blink(app, 3000);
             show_dialog(
                 app,
                 "Start Alarm",
                 "Time to start?\nPress UP to confirm.",
                 10 * 1000,
                 AlarmTypeStart);
+            start_screen_blink(app, 3000);
             app->state.last_hour_triggered = hour;
             app->hourly_alarm_active = true;
         }
     } else if(app->state.phase == PomodoroPhaseWaitingRest) {
         if(app->state.next_rest_time != 0 && now >= app->state.next_rest_time) {
-            start_screen_blink(app, 3000);
             show_dialog(
                 app, "Rest Alarm", "Time to rest?\nPress UP to confirm.", 10 * 1000, AlarmTypeRest);
+            start_screen_blink(app, 3000);
             app->state.phase = PomodoroPhaseIdle;
             app->state.next_rest_time = 0;
         }
