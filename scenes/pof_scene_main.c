@@ -3,18 +3,13 @@
 
 enum SubmenuIndex {
     SubmenuIndexLoad = POF_TOKEN_LIMIT,
+    SubmenuIndexSwapHid,
+    SubmenuIndexSwapXbox360
 };
 
 void pof_scene_main_submenu_callback(void* context, uint32_t index) {
     PoFApp* pof = context;
     view_dispatcher_send_custom_event(pof->view_dispatcher, index);
-}
-
-void pof_scene_main_submenu_type_callback(void* context, PoFType type) {
-    PoFApp* pof = context;
-    pof_stop(pof);
-    pof->type = type;
-    pof_start(pof);
 }
 
 void pof_scene_main_on_update(void* context) {
@@ -30,15 +25,15 @@ void pof_scene_main_on_update(void* context) {
             submenu_add_item(
             submenu,
             "Emulate Xbox 360",
-            PoFXbox360,
-            pof_scene_main_submenu_type_callback,
+            SubmenuIndexSwapXbox360,
+            pof_scene_main_submenu_callback,
             pof);
         } else if (pof->type == PoFXbox360) {
             submenu_add_item(
             submenu,
             "Emulate HID",
-            PoFHid,
-            pof_scene_main_submenu_type_callback,
+            SubmenuIndexSwapHid,
+            pof_scene_main_submenu_callback,
             pof);
         }
         int count = 0;
@@ -93,6 +88,14 @@ bool pof_scene_main_on_event(void* context, SceneManagerEvent event) {
                 scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
             }
             consumed = true;
+        } else if (event.event == SubmenuIndexSwapHid) {
+            pof_stop(pof);
+            pof->type = PoFXbox360;
+            pof_start(pof);
+        } else if (event.event == SubmenuIndexSwapXbox360) {
+            pof_stop(pof);
+            pof->type = PoFXbox360;
+            pof_start(pof);
         } else {
             scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, event.event);
             pof_token_clear(virtual_portal->tokens[event.event], true);
