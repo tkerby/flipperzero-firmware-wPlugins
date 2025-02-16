@@ -31,14 +31,14 @@ void pof_scene_main_on_update(void* context) {
             submenu,
             "Emulate Xbox 360",
             PoFXbox360,
-            pof_scene_main_submenu_callback,
+            pof_scene_main_submenu_type_callback,
             pof);
         } else if (pof->type == PoFXbox360) {
             submenu_add_item(
             submenu,
             "Emulate HID",
             PoFHid,
-            pof_scene_main_submenu_callback,
+            pof_scene_main_submenu_type_callback,
             pof);
         }
         int count = 0;
