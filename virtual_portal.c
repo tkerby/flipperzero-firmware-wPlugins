@@ -124,7 +124,11 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     uint8_t index = 0;
     response[index++] = 'R';
     response[index++] = 0x02;
-    response[index++] = 0x19;
+    if (virtual_portal->type == PoFHid) {
+        response[index++] = 0x19;
+    } else {
+        response[index++] = 0x1B;
+    }
     //response[index++] = 0x0a;
     //response[index++] = 0x03;
     //response[index++] = 0x02;
