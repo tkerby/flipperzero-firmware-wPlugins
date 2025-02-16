@@ -10,6 +10,13 @@ void pof_scene_main_submenu_callback(void* context, uint32_t index) {
     view_dispatcher_send_custom_event(pof->view_dispatcher, index);
 }
 
+void pof_scene_main_submenu_type_callback(void* context, PoFType type) {
+    PoFApp* pof = context;
+    pof_stop(pof);
+    pof->type = type;
+    pof_start(pof);
+}
+
 void pof_scene_main_on_update(void* context) {
     PoFApp* pof = context;
     VirtualPortal* virtual_portal = pof->virtual_portal;
@@ -19,6 +26,21 @@ void pof_scene_main_on_update(void* context) {
     FuriString* token_name = furi_string_alloc();
 
     if(pof->pof_usb) {
+        if (pof->type == PoFHid) {
+            submenu_add_item(
+            submenu,
+            "Emulate Xbox 360",
+            PoFXbox360,
+            pof_scene_main_submenu_callback,
+            pof);
+        } else if (pof->type == PoFXbox360) {
+            submenu_add_item(
+            submenu,
+            "Emulate HID",
+            PoFHid,
+            pof_scene_main_submenu_callback,
+            pof);
+        }
         int count = 0;
         for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
             if(virtual_portal->tokens[i]->loaded) {

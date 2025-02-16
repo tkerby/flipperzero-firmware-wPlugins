@@ -19,6 +19,11 @@
 
 typedef struct PoFApp PoFApp;
 
+typedef enum {
+    PoFHid,
+    PoFXbox360
+} PoFType;
+
 struct PoFApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
@@ -32,6 +37,8 @@ struct PoFApp {
     VirtualPortal* virtual_portal;
 
     PoFUsb* pof_usb;
+    PoFType type;
+    
 };
 
 typedef enum {
