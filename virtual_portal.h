@@ -14,7 +14,6 @@ typedef struct {
     bool speaker;
     NotificationApp* notifications;
 } VirtualPortal;
-
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
 
 void virtual_portal_free(VirtualPortal* virtual_portal);
