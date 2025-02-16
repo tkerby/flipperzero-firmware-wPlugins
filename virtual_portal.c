@@ -23,6 +23,11 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     return virtual_portal;
 }
 
+void virtual_portal_cleanup(VirtualPortal* virtual_portal) {
+    notification_message(virtual_portal->notifications, &sequence_reset_rgb);
+    notification_message(virtual_portal->notifications, &sequence_display_backlight_on);
+}
+
 void virtual_portal_free(VirtualPortal* virtual_portal) {
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         pof_token_free(virtual_portal->tokens[i]);
@@ -30,6 +35,47 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
     }
 
     free(virtual_portal);
+}
+
+NotificationMessage message_red = {
+    .type = NotificationMessageTypeLedRed,
+    .data.led.value = 0xFF,
+};
+NotificationMessage message_green = {
+    .type = NotificationMessageTypeLedGreen,
+    .data.led.value = 0xFF,
+};
+NotificationMessage message_blue = {
+    .type = NotificationMessageTypeLedBlue,
+    .data.led.value = 0xFF,
+};
+NotificationMessage message_display_backlight = {
+    .type = NotificationMessageTypeLedDisplayBacklight,
+    .data.led.value = 0xFF,
+};
+const NotificationSequence sequence_set_backlight = {
+    &message_display_backlight,
+    &message_do_not_reset,
+    NULL,
+};
+const NotificationSequence sequence_set_leds = {
+    &message_red,
+    &message_green,
+    &message_blue,
+    &message_do_not_reset,
+    NULL,
+};
+
+
+void virtaul_portal_set_leds(VirtualPortal* virtual_portal, uint8_t r, uint8_t g, uint8_t b) {
+    message_red.data.led.value = r;
+    message_green.data.led.value = g;
+    message_blue.data.led.value = b;
+    notification_message(virtual_portal->notifications, &sequence_set_leds);
+}
+void virtaul_portal_set_backlight(VirtualPortal* virtual_portal, uint8_t brightness) {
+    message_display_backlight.data.led.value = brightness;
+    notification_message(virtual_portal->notifications, &sequence_set_backlight);
 }
 
 void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_token) {
@@ -214,17 +260,15 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     switch(side) {
     case 0:
     case 2:
-        furi_hal_light_set(LightRed, message[2]);
-        furi_hal_light_set(LightGreen, message[3]);
-        furi_hal_light_set(LightBlue, message[4]);
+        virtaul_portal_set_leds(virtual_portal, message[2], message[3], message[4]);
         break;
     case 1:
         brightness = message[2];
-        furi_hal_light_set(LightBacklight, brightness);
+        virtaul_portal_set_backlight(virtual_portal, brightness);
         break;
     case 3:
         brightness = 0xff;
-        furi_hal_light_set(LightBacklight, brightness);
+        virtaul_portal_set_backlight(virtual_portal, brightness);
         break;
     }
 
@@ -254,9 +298,7 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     switch(side) {
     case 0:
     case 2:
-        furi_hal_light_set(LightRed, r);
-        furi_hal_light_set(LightGreen, g);
-        furi_hal_light_set(LightBlue, b);
+        virtaul_portal_set_leds(virtual_portal, r, g, b);
         break;
     }
 
@@ -340,9 +382,7 @@ int virtual_portal_process_message(
     case 'A':
         return virtual_portal_activate(virtual_portal, message, response);
     case 'C': //Ring color R G B
-        furi_hal_light_set(LightRed, message[1]);
-        furi_hal_light_set(LightGreen, message[2]);
-        furi_hal_light_set(LightBlue, message[3]);
+        virtaul_portal_set_leds(virtual_portal, message[1], message[2], message[3]);
         return 0;
     case 'J':
         // https://github.com/flyandi/flipper_zero_rgb_led
