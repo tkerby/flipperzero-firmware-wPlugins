@@ -18,7 +18,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
         virtual_portal->tokens[i] = pof_token_alloc();
     }
     virtual_portal->sequence_number = 0;
-    virtual_portal->active = true;
+    virtual_portal->active = false;
 
     return virtual_portal;
 }
