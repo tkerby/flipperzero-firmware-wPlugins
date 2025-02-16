@@ -6,7 +6,6 @@
 
 #define POF_TOKEN_LIMIT 16
 
-
 typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];
     uint8_t sequence_number;
@@ -16,6 +15,7 @@ typedef struct {
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
+
 void virtual_portal_free(VirtualPortal* virtual_portal);
 void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_token);
 
