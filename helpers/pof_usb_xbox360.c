@@ -580,7 +580,5 @@ PoFUsb* pof_usb_start_xbox360(VirtualPortal* virtual_portal) {
 void pof_usb_stop_xbox360(PoFUsb* pof_usb) {
     if(pof_usb) {
         furi_hal_usb_set_config(pof_usb->usb_prev, NULL);
-        free(pof_usb);
-        pof_usb = NULL;
     }
 }
