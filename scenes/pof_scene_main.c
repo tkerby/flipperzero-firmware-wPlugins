@@ -2,9 +2,7 @@
 #include "../pof_token.h"
 
 enum SubmenuIndex {
-    SubmenuIndexLoad = POF_TOKEN_LIMIT,
-    SubmenuIndexSwapHid,
-    SubmenuIndexSwapXbox360
+    SubmenuIndexLoad = POF_TOKEN_LIMIT
 };
 
 void pof_scene_main_submenu_callback(void* context, uint32_t index) {
@@ -21,21 +19,6 @@ void pof_scene_main_on_update(void* context) {
     FuriString* token_name = furi_string_alloc();
 
     if(pof->pof_usb) {
-        if (pof->type == PoFHid) {
-            submenu_add_item(
-            submenu,
-            "Emulate Xbox 360",
-            SubmenuIndexSwapXbox360,
-            pof_scene_main_submenu_callback,
-            pof);
-        } else if (pof->type == PoFXbox360) {
-            submenu_add_item(
-            submenu,
-            "Emulate HID",
-            SubmenuIndexSwapHid,
-            pof_scene_main_submenu_callback,
-            pof);
-        }
         int count = 0;
         for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
             if(virtual_portal->tokens[i]->loaded) {
@@ -87,18 +70,6 @@ bool pof_scene_main_on_event(void* context, SceneManagerEvent event) {
                 scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, SubmenuIndexLoad);
                 scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
             }
-            consumed = true;
-        } else if (event.event == SubmenuIndexSwapHid) {
-            pof_stop(pof);
-            pof->type = PoFHid;
-            pof_start(pof);
-            pof_scene_main_on_update(context);
-            consumed = true;
-        } else if (event.event == SubmenuIndexSwapXbox360) {
-            pof_stop(pof);
-            pof->type = PoFXbox360;
-            pof_start(pof);
-            pof_scene_main_on_update(context);
             consumed = true;
         } else {
             scene_manager_set_scene_state(pof->scene_manager, PoFSceneMain, event.event);
