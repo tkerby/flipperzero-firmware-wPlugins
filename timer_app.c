@@ -10,14 +10,13 @@ int32_t pomodoro_app_main(void* p) {
     app->record_view_active = false;
     app->daily_record_count = 0;
     app->alarm_sound_active = false;
-    
+
     // 日毎の記録初期化
     load_daily_records(app);
     time_t now = furi_hal_rtc_get_timestamp();
     int year, mon, day, dummy, dummy2, dummy3, dummy4;
     epoch_to_utc_breakdown(now, &year, &mon, &day, &dummy, &dummy2, &dummy3, &dummy4);
-    if(app->current_daily_record.year != year ||
-       app->current_daily_record.month != mon ||
+    if(app->current_daily_record.year != year || app->current_daily_record.month != mon ||
        app->current_daily_record.day != day) {
         app->current_daily_record.year = year;
         app->current_daily_record.month = mon;
@@ -26,13 +25,13 @@ int32_t pomodoro_app_main(void* p) {
         app->current_daily_record.rest_count = 0;
         app->current_daily_record.fail_count = 0;
     }
-    
+
     app->gui = furi_record_open("gui");
     app->view_port = view_port_alloc();
     view_port_draw_callback_set(app->view_port, draw_callback, app);
     view_port_input_callback_set(app->view_port, input_callback, app);
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
-    
+
     now = furi_hal_rtc_get_timestamp();
     app->running = true;
     app->state.phase = PomodoroPhaseWaitingRest;
@@ -45,15 +44,15 @@ int32_t pomodoro_app_main(void* p) {
     app->blinking = false;
     app->hourly_alarm_active = false;
     app->start_count = 0;
-    app->rest_count  = 0;
-    app->fail_count  = 0;
-    
+    app->rest_count = 0;
+    app->fail_count = 0;
+
     while(app->running) {
         update_logic(app);
         view_port_update(app->view_port);
         furi_delay_ms(200);
     }
-    
+
     save_daily_records(app);
     gui_remove_view_port(app->gui, app->view_port);
     view_port_free(app->view_port);
@@ -61,4 +60,3 @@ int32_t pomodoro_app_main(void* p) {
     free(app);
     return 0;
 }
-

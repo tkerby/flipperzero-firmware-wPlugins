@@ -1,65 +1,199 @@
 #include "timer_alarm.h"
+#include "notification/notification_messages.h" // for message_* references
+#include "notification/notification_messages_notes.h" // for message_note_* references
+
+#ifndef ALARM_TYPE_NONE
+#define ALARM_TYPE_NONE 0
+#endif
+
+// Revised time-up sequence with manually controlled fast blue LED blinking.
+// This sequence forces display brightness/backlight on, activates vibro,
+// then in each cycle it turns the LED on with message_blue_255, waits briefly,
+// plays a beep using message_note_c8, then turns the LED off with message_blue_0.
+// This cycle is repeated 4 times, and then vibro/backlight are turned off.
+static const NotificationSequence sequence_timeup = {
+    &message_force_display_brightness_setting_1f,
+    &message_vibro_on,
+
+    // 1st cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 2nd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 3rd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 4th cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    &message_delay_250,
+
+    // 1st cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 2nd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 3rd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 4th cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    &message_delay_250,
+    // 1st cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 2nd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 3rd cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    // 4th cycle
+    &message_display_backlight_on,
+    &message_blue_255,
+    &message_delay_10,
+    &message_note_c8,
+    &message_delay_50,
+    &message_sound_off,
+    &message_delay_10,
+    &message_blue_0,
+    &message_delay_10,
+    &message_display_backlight_off,
+
+    &message_delay_250,
+
+    &message_vibro_off,
+    &message_delay_250,
+    NULL,
+};
 
 void stop_alarm_sound(PomodoroApp* app) {
     if(app->alarm_sound_active) {
-        // フラグをクリアしてスピーカー停止
         app->alarm_sound_active = false;
         furi_hal_speaker_stop();
         furi_delay_ms(10);
-        if(furi_hal_speaker_is_mine()){
+        if(furi_hal_speaker_is_mine()) {
             furi_hal_speaker_release();
         }
     }
 }
 
 void start_screen_blink(PomodoroApp* app, uint32_t duration_ms) {
-    app->blinking          = true;
-    app->blink_start       = furi_get_tick();
-    app->blink_duration    = duration_ms;
-    app->last_blink_toggle = app->blink_start;
-    app->backlight_on      = true;
-    
-    // LEDは使用しない（ハードウェア未対応）
-    
-    // ※ここでは「もっと早く」感じるテンポとして、BPM240相当の音符長を使用
-    // BPM240の場合：1拍＝250ms, エイトノート＝125ms, クォーターノート＝250ms, ドットハーフ＝750ms
-    if(furi_hal_speaker_acquire(100)) {
-        app->alarm_sound_active = true;
-        const float melody[] = {
-            880.0f, 784.0f, 493.88f, 554.37f,
-            739.99f, 659.26f, 392.0f, 440.0f,
-            659.26f, 587.33f, 369.99f, 440.0f,
-            587.33f
-        };
-        const uint32_t noteDurations[] = {
-            125, 125, 250, 250,
-            125, 125, 250, 250,
-            125, 125, 250, 250,
-            750
-        };
-        int num_notes = sizeof(melody) / sizeof(melody[0]);
-        for(int i = 0; i < num_notes; i++){
-            if(!app->alarm_sound_active){
-                break;
-            }
-            if(melody[i] == 0.0f) {
-                furi_delay_ms(noteDurations[i]);
-            } else {
-                furi_hal_speaker_start(melody[i], 1.0f);
-                furi_delay_ms(noteDurations[i]);
-                furi_hal_speaker_stop();
-            }
-            // ノート間の遅延（ここでは0ms）
-            furi_delay_ms(0);
-        }
-        if(furi_hal_speaker_is_mine()){
-            furi_hal_speaker_release();
-        }
-        app->alarm_sound_active = false;
-    }
-    
+    (void)duration_ms; // avoid -Wunused-parameter
+
+    // 1. Display a dialog
+    show_dialog(app, "Timer Alarm", "Time's Up!", 5000, ALARM_TYPE_NONE);
+
+    // 2. Run the time-up sequence with fast blue LED blinking and beeps.
     NotificationApp* notif = furi_record_open("notification");
-    notification_message(notif, &sequence_display_backlight_on);
+    notification_message(notif, &sequence_timeup);
+
+    // Wait for the sequence to complete (~1000ms should be sufficient)
+    furi_delay_ms(1000);
+
+    // Close the notification safely
     furi_record_close("notification");
 }
 
@@ -78,11 +212,16 @@ void toggle_backlight_with_vibro(PomodoroApp* app) {
     furi_record_close("notification");
 }
 
-void show_dialog(PomodoroApp* app, const char* title, const char* message, uint32_t timeout_ms, AlarmType alarm_type) {
-    app->dialog_active  = true;
-    app->dialog_result  = false;
+void show_dialog(
+    PomodoroApp* app,
+    const char* title,
+    const char* message,
+    uint32_t timeout_ms,
+    AlarmType alarm_type) {
+    app->dialog_active = true;
+    app->dialog_result = false;
     app->dialog_timeout = timeout_ms;
-    app->dialog_start   = furi_get_tick();
+    app->dialog_start = furi_get_tick();
     strncpy(app->dialog_title, title, sizeof(app->dialog_title) - 1);
     strncpy(app->dialog_message, message, sizeof(app->dialog_message) - 1);
     app->current_alarm_type = alarm_type;

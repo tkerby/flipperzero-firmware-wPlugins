@@ -24,8 +24,8 @@
 
 // ポモドーロのフェーズ
 typedef enum {
-    PomodoroPhaseIdle = 0,       // 次の XX:00 で開始アラーム
-    PomodoroPhaseWaitingRest,    // 次の XX:50 で休憩アラーム
+    PomodoroPhaseIdle = 0, // 次の XX:00 で開始アラーム
+    PomodoroPhaseWaitingRest, // 次の XX:50 で休憩アラーム
 } PomodoroPhase;
 
 // アラーム種類
@@ -49,7 +49,7 @@ typedef struct {
 typedef struct {
     PomodoroPhase phase;
     time_t next_rest_time;
-    int last_hour_triggered;   // 最後にアラームを出した「時」(0-23)、-1なら未設定
+    int last_hour_triggered; // 最後にアラームを出した「時」(0-23)、-1なら未設定
 } PomodoroState;
 
 // アプリ全体管理構造体
@@ -97,4 +97,3 @@ typedef struct {
 int32_t pomodoro_app_main(void* p);
 
 #endif // TIMER_APP_H
-

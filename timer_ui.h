@@ -9,4 +9,3 @@ void draw_callback(Canvas* canvas, void* ctx);
 void input_callback(InputEvent* event, void* ctx);
 
 #endif // TIMER_UI_H
-
