@@ -123,8 +123,10 @@ static int32_t pof_thread_worker(void* context) {
             if(now > lastStatus + timeout) {
                 lastStatus = now;
                 memset(tx_data, 0, sizeof(tx_data));
-                len_data = virtual_portal_send_status(virtual_portal, tx_data);
+                len_data = virtual_portal_send_status(virtual_portal, tx_data + 2);
                 if(len_data > 0) {
+                    tx_data[0] = 0x0b;
+                    tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
             }
