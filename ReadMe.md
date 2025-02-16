@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0208-2035-0.420.0-f0143c6.tgz&channel=RM0208-2035-0.420.0-f0143c6&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0216-0021-0.420.0-adfe120.tgz&channel=RM0216-0021-0.420.0-adfe120&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -27,34 +27,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Releas RM0215-1145-0.420.0-3cfc04b](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-15 11:45 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-15 11:45 EST`
-- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
-- OFW: [Update mbedtls and expose AES #4092 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4092)
-- OFW: [ufbt: bumped gh upload action version in project template #4097 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4097)
-- Updated: [Metroflip v0.5.2 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [Lab401/Light MESSENGER v1.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
-- Updated: [VIN Decoder v0.2 (By evillero)](https://github.com/evillero/vin_decoder)
-- Updated: [StroboMeter v1.1 (By LeanderJDev)](https://github.com/LeanderJDev/FlipperStroboMeterApp)
-- OFW: [Ensure that furi_record_create is passed a non-NULL data pointer #4078 (By dcoles)](https://github.com/flipperdevices/flipperzero-firmware/pull/4078)
-- OFW: [Add new AC for Fujitsu ASTG12LVCC #4095 (By KereruA0i)](https://github.com/flipperdevices/flipperzero-firmware/pull/4095)
-- OFW: [Infrared: Update TV universal #4080 (By jaylikesbunda)](https://github.com/flipperdevices/flipperzero-firmware/pull/4080) (Already In RM)
-- OFW: [Add the Showtime animation #4100 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4100) (Not In Main Build) [Patreon Build Update](https://www.patreon.com/RogueMaster/membership): [Dolphin, Stock and AnimSwitcher Builds Updated To Include New Showtime Animation](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/faca04ee71e9f985d77611e094db3b166b237e89)
-- Updated: [Cigarette v0.1.2 (By fuckmaz)](https://github.com/fuckmaz/flipper-cigarette)
-- Updated: [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- OFW: [Infrared: increase max carrier limit #4070 (By skotopes)](https://github.com/flipperdevices/flipperzero-firmware/pull/4070) (Already In RM)
-- OFW: [ST25TB poller mode check #4084 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-firmware/pull/4084) (Already In RM)
-- OFW: [nfc: Enable MFUL sync poller to be provided with passwords #4050 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/4050)
-- OFW: [Added naming for DESFire cards + fix MF3ICD40 cards unable to be read #4058 (By Demae)](https://github.com/flipperdevices/flipperzero-firmware/pull/4058)
-- [Menu Styles C64, DSi, PS4, Terminal and Vertical have been retired to make space for better main functionality and NFC (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/41dcc6d5edb8ec4fd80db134d240f46742fcf4b0)
-- OFW: [EM4305 support #4069 (By Astrrra)](https://github.com/flipperdevices/flipperzero-firmware/pull/4069)
-- Updated: [ID Card v3.0 (By evillero)](https://github.com/evillero/ID_card_v2)
-- Updated: [Lab401/Light MESSENGER v1.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp) Fixed View Dispatcher Error (By jamisonderek)
-- Updated: [Portal of Flipper v1.0 (By bettse)](https://gitlab.com/bettse/portal_of_flipper)
-- Updated: [Metroflip v0.6 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [NFC Keyboard v1.0 (By Patrick762)](https://github.com/Patrick762/flipper-nfc-keyboard)
-- Added: [Ford Radio Codes v0.1 (By DavidB445)](https://github.com/DavidB445/fz_fordradiocodes)
-- Added: [Pet Your Dolphin v0.1 (By dwight9339)](https://github.com/dwight9339/pet_your_dolphin)
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-16 00:20 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-16 00:20 EST`
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043) [#4075](https://github.com/flipperdevices/flipperzero-firmware/pull/4075)
 
 <a name="release">
@@ -706,4 +680,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0208-2035-0.420.0-f0143c6.tgz&channel=RM0208-2035-0.420.0-f0143c6&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0216-0021-0.420.0-adfe120.tgz&channel=RM0216-0021-0.420.0-adfe120&version=0.420.0)
