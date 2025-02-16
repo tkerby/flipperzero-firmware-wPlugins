@@ -38,12 +38,12 @@ bool pof_scene_type_select_on_event(void* context, SceneManagerEvent event) {
         if (event.event == SubmenuIndexSwapHid) {
             pof->type = PoFHid;
             pof_start(pof);
-            scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
+            scene_manager_next_scene(pof->scene_manager, PoFSceneMain);
             return true;
         } else if (event.event == SubmenuIndexSwapXbox360) {
             pof->type = PoFXbox360;
             pof_start(pof);
-            scene_manager_next_scene(pof->scene_manager, PoFSceneFileSelect);
+            scene_manager_next_scene(pof->scene_manager, PoFSceneMain);
             return true;
         } 
     }
