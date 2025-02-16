@@ -2,7 +2,7 @@
 #include "../pof_token.h"
 
 enum SubmenuIndex {
-    SubmenuIndexLoad = POF_TOKEN_LIMIT
+    SubmenuIndexLoad = POF_TOKEN_LIMIT,
 };
 
 void pof_scene_main_submenu_callback(void* context, uint32_t index) {
