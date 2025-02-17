@@ -62,6 +62,7 @@ const char* const lightmsg_color_text[] = {
     "R4inb0w", // animated colors
     "Sp4rkl3", // animated colors
     "V4p0rw4v3", // animated colors
+    "R3dBlu3", // alternate colors
 };
 
 // Animation values (callbacks)
@@ -78,6 +79,7 @@ color_animation_callback lightmsg_color_value[] = {
     LightMsg_color_cb_rainbow, // animated colors
     LightMsg_color_cb_sparkle, // animated colors
     LightMsg_color_cb_vaporwave, // animated colors
+    LightMsg_color_cb_directional, // alternate colors
 };
 
 static uint32_t LightMsg_color_pal_nyancat[] = {
@@ -118,6 +120,42 @@ static uint32_t LightMsg_color_pal_vaporwave[] = {
     0x00d3ff,
 };
 
+const LightMsg_Mirror lightmsg_mirror_value[] = {
+    LightMsg_MirrorDisabled,
+    LightMsg_MirrorEnabled,
+};
+
+const char* const lightmsg_mirror_text[] = {
+    "Disabled",
+    "Enabled",
+};
+
+// Speed (ms) to change text being display (0=never, 1 sec, 0.5 sec)
+const uint32_t lightmsg_speed_value[] = {
+    UINT32_MAX,
+    1000,
+    500,
+};
+
+const char* const lightmsg_speed_text[] = {
+    "Off",
+    "Slow",
+    "Fast",
+};
+
+// Delay in microseconds (us) to wait after rendering a column
+const uint32_t lightmsg_width_value[] = {
+    250,
+    600,
+    1200,
+};
+
+const char* const lightmsg_width_text[] = {
+    "Narrow",
+    "Normal",
+    "Wide",
+};
+
 static uint8_t sine_wave[256] = {
     0x80, 0x83, 0x86, 0x89, 0x8C, 0x90, 0x93, 0x96, 0x99, 0x9C, 0x9F, 0xA2, 0xA5, 0xA8, 0xAB,
     0xAE, 0xB1, 0xB3, 0xB6, 0xB9, 0xBC, 0xBF, 0xC1, 0xC4, 0xC7, 0xC9, 0xCC, 0xCE, 0xD1, 0xD3,
@@ -139,8 +177,9 @@ static uint8_t sine_wave[256] = {
     0x7D};
 
 // No assert to avoid loosing cycles.
-void LightMsg_color_cb_flat(uint16_t tick, uint32_t* result, void* ctx) {
+void LightMsg_color_cb_flat(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
     UNUSED(tick);
+    UNUSED(direction);
     AppContext* app = ctx;
     // AppData *appData = (AppData*)app->data;
     Configuration* light_msg_data = (Configuration*)app->data->config;
@@ -150,25 +189,38 @@ void LightMsg_color_cb_flat(uint16_t tick, uint32_t* result, void* ctx) {
 }
 
 // No assert to avoid loosing cycles.
-void LightMsg_color_cb_nyancat(uint16_t tick, uint32_t* result, void* ctx) {
+void LightMsg_color_cb_directional(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
     UNUSED(ctx);
+    UNUSED(tick);
+    for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
+        result[row] = direction ? lightmsg_colors_flat[COLOR_RED] :
+                                  lightmsg_colors_flat[COLOR_BLUE];
+    }
+}
+
+// No assert to avoid loosing cycles.
+void LightMsg_color_cb_nyancat(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
+    UNUSED(ctx);
+    UNUSED(direction);
     for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
         result[row] = LightMsg_color_pal_nyancat[(row + (tick >> 6)) % LIGHTMSG_LED_ROWS];
     }
 }
 
 // No assert to avoid loosing cycles.
-void LightMsg_color_cb_vaporwave(uint16_t tick, uint32_t* result, void* ctx) {
+void LightMsg_color_cb_vaporwave(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
     UNUSED(ctx);
     UNUSED(tick);
+    UNUSED(direction);
     for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
         result[row] = LightMsg_color_pal_vaporwave[row];
     }
 }
 
 // No assert to avoid loosing cycles.
-void LightMsg_color_cb_sparkle(uint16_t tick, uint32_t* result, void* ctx) {
+void LightMsg_color_cb_sparkle(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
     UNUSED(ctx);
+    UNUSED(direction);
     // XorShift randomness
     uint8_t rand = tick;
     for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
@@ -180,8 +232,9 @@ void LightMsg_color_cb_sparkle(uint16_t tick, uint32_t* result, void* ctx) {
 }
 
 // No assert to avoid loosing cycles.
-void LightMsg_color_cb_rainbow(uint16_t tick, uint32_t* result, void* ctx) {
+void LightMsg_color_cb_rainbow(uint16_t tick, bool direction, uint32_t* result, void* ctx) {
     UNUSED(ctx);
+    UNUSED(direction);
     for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
         uint8_t r = (uint8_t)(sine_wave[(tick) % 255]);
         uint8_t b = (uint8_t)(sine_wave[(tick + 85) % 255]);
@@ -203,7 +256,7 @@ static void update_led(void* ctx) {
     uint32_t leds[LIGHTMSG_LED_ROWS] = {0};
     color_animation_callback led_cb = (color_animation_callback)appData->shader;
     // Retrieve colors from the configured callback
-    led_cb(update_counter << 2, leds, ctx);
+    led_cb(update_counter << 2, update_counter % 16 > 7, leds, ctx);
     double brightness = lightmsg_brightness_value[light_msg_data->brightness];
     for(size_t row = 0; row < LIGHTMSG_LED_ROWS; ++row) {
         uint32_t color = leds[row];
@@ -289,6 +342,30 @@ void on_change_color(VariableItem* item) {
     variable_item_set_current_value_text(item, lightmsg_color_text[index]);
 }
 
+void on_change_mirror(VariableItem* item) {
+    AppContext* app = variable_item_get_context(item);
+    Configuration* light_msg_data = (Configuration*)app->data->config;
+    uint8_t index = variable_item_get_current_value_index(item);
+    light_msg_data->mirror = lightmsg_mirror_value[index] == LightMsg_MirrorEnabled;
+    variable_item_set_current_value_text(item, lightmsg_mirror_text[index]);
+}
+
+void on_change_speed(VariableItem* item) {
+    AppContext* app = variable_item_get_context(item);
+    Configuration* light_msg_data = (Configuration*)app->data->config;
+    uint8_t index = variable_item_get_current_value_index(item);
+    light_msg_data->speed = index;
+    variable_item_set_current_value_text(item, lightmsg_speed_text[index]);
+}
+
+void on_change_width(VariableItem* item) {
+    AppContext* app = variable_item_get_context(item);
+    Configuration* light_msg_data = (Configuration*)app->data->config;
+    uint8_t index = variable_item_get_current_value_index(item);
+    light_msg_data->width = index;
+    variable_item_set_current_value_text(item, lightmsg_width_text[index]);
+}
+
 /**
  * @brief Allocate memory and initialize the app configuration.
  *
@@ -341,6 +418,22 @@ AppConfig* app_config_alloc(void* ctx) {
         appConfig->list, "Color", COUNT_OF(lightmsg_color_text), on_change_color, app);
     variable_item_set_current_value_index(item, light_msg_data->color); // 0,10,20,30,...
     variable_item_set_current_value_text(item, lightmsg_color_text[light_msg_data->color]);
+
+    item = variable_item_list_add(
+        appConfig->list, "Mirror", COUNT_OF(lightmsg_mirror_text), on_change_mirror, app);
+    variable_item_set_current_value_index(item, light_msg_data->mirror ? 1 : 0);
+    variable_item_set_current_value_text(
+        item, lightmsg_mirror_text[light_msg_data->mirror ? 1 : 0]);
+
+    item = variable_item_list_add(
+        appConfig->list, "letter width", COUNT_OF(lightmsg_width_text), on_change_width, app);
+    variable_item_set_current_value_index(item, light_msg_data->width);
+    variable_item_set_current_value_text(item, lightmsg_width_text[light_msg_data->width]);
+
+    item = variable_item_list_add(
+        appConfig->list, "Word by Word", COUNT_OF(lightmsg_speed_text), on_change_speed, app);
+    variable_item_set_current_value_index(item, light_msg_data->speed);
+    variable_item_set_current_value_text(item, lightmsg_speed_text[light_msg_data->speed]);
 
     return appConfig;
 }

@@ -11,17 +11,23 @@
 #include <storage/storage.h>
 #include <toolbox/path.h>
 // #include "401LightMsg_config.h"
-#define LIGHTMSG_VERSION             "1.0"
+#define LIGHTMSG_VERSION             "1.1"
 #define LIGHTMSG_DEFAULT_ORIENTATION 0
 #define LIGHTMSG_DEFAULT_BRIGHTNESS  3
 #define LIGHTMSG_DEFAULT_SENSIBILITY 1
 #define LIGHTMSG_DEFAULT_COLOR       1
 #define LIGHTMSG_DEFAULT_TEXT        "Lab401"
 #define LIGHTMSG_DEFAULT_BITMAPPATH  LIGHTMSGCONF_SAVE_FOLDER
+
+#define LIGHTMSG_DEFAULT_MIRROR 0
+#define LIGHTMSG_DEFAULT_SPEED  0
+#define LIGHTMSG_DEFAULT_WIDTH  1
+
 #include "401_err.h"
 #include "app_params.h"
 
-typedef void (*color_animation_callback)(uint16_t tick, uint32_t* result, void* ctx);
+typedef void (
+    *color_animation_callback)(uint16_t tick, bool direction, uint32_t* result, void* ctx);
 typedef struct {
     char* version;
     char text[LIGHTMSG_MAX_TEXT_LEN + 1];
@@ -30,6 +36,9 @@ typedef struct {
     uint8_t brightness;
     uint8_t sensitivity;
     bool orientation;
+    bool mirror; // true = mirror, false = no mirror
+    uint8_t speed; // speed index
+    uint8_t width; // width index
     color_animation_callback cb;
 } Configuration;
 
