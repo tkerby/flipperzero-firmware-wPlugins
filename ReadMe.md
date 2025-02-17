@@ -33,8 +33,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [INA Meter v0.1 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - Added: [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
 - Added: [Smartra VIN2PIN v1.0 (By evillero)](https://github.com/evillero/smartra_vin2pin)
-- Updated: [Lab401/Light MESSENGER v1.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
-- Updated: [Solitaire v2.0.1 (By doofy-dev)](https://github.com/doofy-dev/flipper_solitaire)
+- Updated: [Solitaire v2.0.2 (By doofy-dev)](https://github.com/doofy-dev/flipper_solitaire)
+- Updated: [Lab401/Light MESSENGER v1.2 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - OFW TO ADD: [Storage: remove LFS #3577](https://github.com/flipperdevices/flipperzero-firmware/pull/3577) [FuriEventLoop Pt.2 #3703](https://github.com/flipperdevices/flipperzero-firmware/pull/3703) [#3824](https://github.com/flipperdevices/flipperzero-firmware/pull/3824) [#3836](https://github.com/flipperdevices/flipperzero-firmware/pull/3836) [#3834](https://github.com/flipperdevices/flipperzero-firmware/pull/3834) [#3837](https://github.com/flipperdevices/flipperzero-firmware/pull/3837) [#3849](https://github.com/flipperdevices/flipperzero-firmware/pull/3849) [#3879](https://github.com/flipperdevices/flipperzero-firmware/pull/3879) [#3875](https://github.com/flipperdevices/flipperzero-firmware/pull/3875) [#3863](https://github.com/flipperdevices/flipperzero-firmware/pull/3863) [#3866](https://github.com/flipperdevices/flipperzero-firmware/pull/3866) [#3865](https://github.com/flipperdevices/flipperzero-firmware/pull/3865) [#3887](https://github.com/flipperdevices/flipperzero-firmware/pull/3887) [#3892](https://github.com/flipperdevices/flipperzero-firmware/pull/3892) [#3909](https://github.com/flipperdevices/flipperzero-firmware/pull/3909) [#3881](https://github.com/flipperdevices/flipperzero-firmware/pull/3881) [#3942](https://github.com/flipperdevices/flipperzero-firmware/pull/3942) [#3841](https://github.com/flipperdevices/flipperzero-firmware/pull/3841) [#3950](https://github.com/flipperdevices/flipperzero-firmware/pull/3950) [#3952](https://github.com/flipperdevices/flipperzero-firmware/pull/3952) [#3958](https://github.com/flipperdevices/flipperzero-firmware/pull/3958) [#3963](https://github.com/flipperdevices/flipperzero-firmware/pull/3963) [#3971](https://github.com/flipperdevices/flipperzero-firmware/pull/3971) [#3961](https://github.com/flipperdevices/flipperzero-firmware/pull/3961) [#3906](https://github.com/flipperdevices/flipperzero-firmware/pull/3906) [#3978](https://github.com/flipperdevices/flipperzero-firmware/pull/3978) [#3980](https://github.com/flipperdevices/flipperzero-firmware/pull/3980) [#3979](https://github.com/flipperdevices/flipperzero-firmware/pull/3979) [#4040](https://github.com/flipperdevices/flipperzero-firmware/pull/4040) [#3996](https://github.com/flipperdevices/flipperzero-firmware/pull/3996) [#4043](https://github.com/flipperdevices/flipperzero-firmware/pull/4043) [#4075](https://github.com/flipperdevices/flipperzero-firmware/pull/4075) [#4109](https://github.com/flipperdevices/flipperzero-firmware/pull/4109)
 
 <a name="release">
@@ -333,7 +333,7 @@ $ ./fbt dolphin_ext
 - [Slot Machine v1.3 (By Daniel-dev-s)](https://github.com/Daniel-dev-s/flipperzero-slots)
 - [Snake v1.7 (By OlegSchwann)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/829)
 - [Snake 2.0 v2.3 (By Willzvul)](https://github.com/Willzvul/Snake_2.0/)
-- [Solitaire v2.0.1 (By doofy-dev)](https://github.com/doofy-dev/flipper_solitaire)
+- [Solitaire v2.0.2 (By doofy-dev)](https://github.com/doofy-dev/flipper_solitaire)
 - [Sokoban v1.4 (By Racso)](https://github.com/Racso/fzero-apps)
 - [Space Impact WIP v0.2 (By Ka3u6y6a)](https://github.com/Ka3u6y6a/flipper-zero-space-impact)
 - [Space Invaders v0.1 (By PavelZurek)](https://github.com/PavelZurek/flipperzero-space-invaders)
@@ -503,7 +503,7 @@ $ ./fbt dolphin_ext
 - [J305 Geiger Counter v1.4 (By nmrr)](https://github.com/nmrr/flipperzero-geigercounter)
 - [JS Runner v1.0 (By nminaylov & DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/3286)
 - [Key Copier v1.1 (By zinongli)](https://github.com/zinongli/KeyCopier)
-- [Lab401/Light MESSENGER v1.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
+- [Lab401/Light MESSENGER v1.2 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
