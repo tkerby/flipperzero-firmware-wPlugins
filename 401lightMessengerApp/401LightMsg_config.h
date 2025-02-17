@@ -80,11 +80,29 @@ typedef enum {
 extern const char* const lightmsg_color_text[];
 extern color_animation_callback lightmsg_color_value[];
 
-void LightMsg_color_cb_flat(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_nyancat(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_vaporwave(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_sparkle(uint16_t tick, uint32_t* result, void* ctx);
-void LightMsg_color_cb_rainbow(uint16_t tick, uint32_t* result, void* ctx);
+void LightMsg_color_cb_flat(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+void LightMsg_color_cb_directional(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+void LightMsg_color_cb_nyancat(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+void LightMsg_color_cb_vaporwave(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+void LightMsg_color_cb_sparkle(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+void LightMsg_color_cb_rainbow(uint16_t tick, bool direction, uint32_t* result, void* ctx);
+
+// Custom configuration
+typedef enum {
+    LightMsg_MirrorDisabled = 0,
+    LightMsg_MirrorEnabled = 1
+} LightMsg_Mirror;
+
+extern const LightMsg_Mirror lightmsg_mirror_value[];
+extern const char* const lightmsg_mirror_text[];
+
+// Speed (ms) to change text being display (0=never, 1 sec, 0.5 sec)
+extern const uint32_t lightmsg_speed_value[];
+extern const char* const lightmsg_speed_text[];
+
+// Delay in microseconds (us) to wait after rendering a column
+extern const uint32_t lightmsg_width_value[];
+extern const char* const lightmsg_width_text[];
 
 AppConfig* app_config_alloc();
 void app_config_free(AppConfig* appConfig);

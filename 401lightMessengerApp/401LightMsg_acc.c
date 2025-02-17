@@ -40,7 +40,8 @@ static bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* f
     uint8_t fontWidth = font[0];
     uint8_t fontHeight = font[1];
     uint8_t fontOffset = font[2];
-    uint8_t totalWidth = (fontWidth + FONT_SPACE_WIDTH) * textLen;
+    uint8_t maxTextLen = UINT8_MAX / (fontWidth + FONT_SPACE_WIDTH);
+    uint8_t totalWidth;
     bitmapMatrix* bitMatrix = NULL;
     uint8_t letter = 0;
     size_t letterPtr = 0;
@@ -48,6 +49,11 @@ static bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* f
     bitMatrix = malloc(sizeof(bitmapMatrix));
     if(!bitMatrix) return NULL;
 
+    if(textLen > maxTextLen) {
+        FURI_LOG_E(TAG, "Text is too long, max length is %d", maxTextLen);
+        textLen = maxTextLen;
+    }
+    totalWidth = (fontWidth + FONT_SPACE_WIDTH) * textLen;
     bitMatrix->width = totalWidth;
     bitMatrix->height = fontHeight;
     bitMatrix->array = NULL;
@@ -59,6 +65,7 @@ static bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* f
         return NULL;
     }
 
+    FuriString* str = furi_string_alloc();
     for(uint8_t h = 0; h < fontHeight; h++) {
         bitMatrix->array[h] = malloc(totalWidth * sizeof(uint8_t));
         bitMatrix->height = h;
@@ -76,7 +83,18 @@ static bitmapMatrix* bitMatrix_text_create(const char* text, bitmapMatrixFont* f
                     ((font[letterPtr + h] >> (fontWidth - w)) & 0x01) ? 0xff : 0x00;
             }
         }
+        for(uint8_t t = 0; t < totalWidth; t++) {
+            furi_string_cat(str, bitMatrix->array[h][t] ? "X" : " ");
+        }
+        FURI_LOG_I(
+            TAG,
+            "IMG %02d %02d %s",
+            bitMatrix->width,
+            bitMatrix->height,
+            furi_string_get_cstr(str));
+        furi_string_reset(str);
     }
+    furi_string_free(str);
     // complete the height
     bitMatrix->height++;
     return bitMatrix;
@@ -190,6 +208,14 @@ static int32_t app_acc_worker(void* ctx) {
     lis2dh12_set_sensitivity(
         &app->data->lis2dh12, lightmsg_sensitivity_value[light_msg_data->sensitivity]);
 
+    uint32_t render_delay_us = lightmsg_width_value[light_msg_data->width];
+
+    uint32_t tick = furi_get_tick();
+    uint32_t direction_change_count = 0;
+    uint8_t end_message_count = 0;
+
+    uint32_t message_duration_ms = lightmsg_speed_value[light_msg_data->speed];
+
     while(running) {
         // Checks if the thread must be ended.
         if(furi_thread_flags_get()) {
@@ -201,7 +227,53 @@ static int32_t app_acc_worker(void* ctx) {
 
         // Update the cycles counter
         swipes_tick(appAcc);
+        // Count the number of times we change direction
+        if(appAcc->cycles == 1) {
+            direction_change_count++;
+        }
 
+        // Don't start the timer if we have changed direction more than 3 times
+        if(direction_change_count < 3) {
+            tick = furi_get_tick();
+        }
+
+        // Beginning of the swipe
+        if(appAcc->cycles == 1) {
+            // Change the bitmap if we have exceeded the message duration
+            if((furi_get_tick() - tick) > message_duration_ms) {
+                if(bitmapMatrix->next_bitmap) {
+                    bitmapMatrix = bitmapMatrix->next_bitmap;
+                } else {
+                    // Show the last message for a little longer
+                    if(++end_message_count > 1) {
+                        end_message_count = 0;
+                        bitmapMatrix = bitmapMatrix->next_bitmap;
+                    }
+                }
+
+                // Reset the timer
+                tick = furi_get_tick();
+            }
+
+            // Start the animation again once we have reached the end of the bitmaps
+            if(bitmapMatrix == NULL) {
+                // Start at the beginning of the bitmaps
+                bitmapMatrix = appAcc->bitmapMatrix;
+
+                // If we have multiple bitmaps, play a short vibration to signal the end of the message
+                if(bitmapMatrix->next_bitmap != NULL) {
+                    for(int i = 0; i < 2; i++) {
+                        furi_hal_vibro_on(true);
+                        furi_delay_ms(100 * i);
+                        furi_hal_vibro_on(false);
+                        furi_delay_ms(100);
+                    }
+
+                    direction_change_count = 0;
+                    tick = furi_get_tick();
+                }
+            }
+        }
         /*             Display diagram
 
                              ╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ cyclesCenter
@@ -239,11 +311,12 @@ static int32_t app_acc_worker(void* ctx) {
              (appAcc->cyclesCenter + ((bitmapMatrix->width - appAcc->direction) / 2)));
 
         // Update the color according to the current shader
-        shader(time, color, app);
-        // Let the leds shine for a bit
-        furi_delay_us(500);
+        shader(time, appAcc->direction ^ light_msg_data->orientation, color, app);
 
         if(is_bitmap_window) {
+            if(light_msg_data->mirror) {
+                column_directed = bitmapMatrix->width - column_directed;
+            }
             // Draws each rows for each collumns
             for(row = 0; row < LIGHTMSG_LED_ROWS; row++) {
                 pixel = (uint8_t)(bitmapMatrix->array[row][column_directed]);
@@ -260,24 +333,18 @@ static int32_t app_acc_worker(void* ctx) {
             }
         } else {
             for(row = 0; row < LIGHTMSG_LED_ROWS; row++) {
-                // Assign brightness accordingly to pixel
-                pixel = (uint8_t)(bitmapMatrix->array[row][column_directed - 1] * brightness);
-                //  Assign R/G/B on dimmed pixel value
+                //  Assign R/G/B off value to each LED
                 r = 0x00;
                 g = 0x00;
                 b = 0x00;
-
-                // Orientation (wheel up/wheel down)
-                if(light_msg_data->orientation) {
-                    SK6805_set_led_color(row, r, g, b);
-                } else {
-                    SK6805_set_led_color(LIGHTMSG_LED_ROWS - 1 - row, r, g, b);
-                }
+                SK6805_set_led_color(row, r, g, b);
             }
         }
+
         // Stops all OS operation while sending data to LEDs
         SK6805_update();
-        furi_delay_us(100);
+        //furi_delay_us(100);
+        furi_delay_us(render_delay_us);
     }
     SK6805_off();
     bitmapMatrix_free(appAcc->bitmapMatrix);
@@ -407,9 +474,46 @@ void app_scene_acc_on_enter(void* ctx) {
 
     switch(appAcc->displayMode) {
     case APPACC_DISPLAYMODE_TEXT:
-        appAcc->bitmapMatrix = bitMatrix_text_create((char*)light_msg_data->text, LightMsgSetFont);
-        break;
+        // If the speed is not 0, we need to split the text into multiple bitmaps
+        if(light_msg_data->speed > 0) {
+            // Copy our message to a buffer
+            char buf[sizeof(light_msg_data->text)];
+            strncpy(buf, light_msg_data->text, sizeof(buf));
+            size_t len = strlen(buf);
+            size_t start = 0;
 
+            // Keep track of the last bitmapMatrix, so we can append to it.
+            bitmapMatrix* bitMatrix_last = NULL;
+
+            for(size_t i = 0; i <= len; i++) {
+                // Split the text on spaces or the null terminator
+                if(buf[i] == ' ' || buf[i] == '\0') {
+                    // Null terminate the string at the space
+                    buf[i] = '\0';
+
+                    // If we have a non-empty string, create a bitmapMatrix
+                    if(strlen(&buf[start])) {
+                        if(appAcc->bitmapMatrix == NULL) {
+                            // Create the first bitmapMatrix
+                            appAcc->bitmapMatrix =
+                                bitMatrix_text_create((char*)&buf[0], LightMsgSetFont);
+                            bitMatrix_last = appAcc->bitmapMatrix;
+                        } else {
+                            // Append to the last bitmapMatrix
+                            bitMatrix_last->next_bitmap =
+                                bitMatrix_text_create((char*)&buf[start], LightMsgSetFont);
+                            bitMatrix_last = bitMatrix_last->next_bitmap;
+                        }
+                    }
+                    // Move the start to the next character
+                    start = i + 1;
+                }
+            }
+        } else {
+            appAcc->bitmapMatrix =
+                bitMatrix_text_create((char*)light_msg_data->text, LightMsgSetFont);
+        }
+        break;
     case APPACC_DISPLAYMODE_BITMAP:
         if(set_bitmap_dialog(ctx)) {
             appAcc->bitmapMatrix = bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
