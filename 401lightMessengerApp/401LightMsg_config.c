@@ -70,7 +70,6 @@ color_animation_callback lightmsg_color_value[] = {
     LightMsg_color_cb_vaporwave, // animated colors
 };
 
-
 static uint32_t LightMsg_color_pal_nyancat[] = {
     lightmsg_colors_flat[COLOR_RED],
     lightmsg_colors_flat[COLOR_RED],
