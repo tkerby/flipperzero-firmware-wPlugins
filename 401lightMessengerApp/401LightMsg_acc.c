@@ -187,6 +187,8 @@ static int32_t app_acc_worker(void* ctx) {
     // The shader updating function is the callback associated to the "color"
     color_animation_callback shader = appData->shader;
     lis2dh12_init(&app->data->lis2dh12);
+    lis2dh12_set_sensitivity(
+        &app->data->lis2dh12, lightmsg_sensitivity_value[light_msg_data->sensitivity]);
 
     while(running) {
         // Checks if the thread must be ended.
