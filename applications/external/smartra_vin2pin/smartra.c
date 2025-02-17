@@ -81,17 +81,8 @@ void smartra_main_menu_scene_on_enter(void* context) {
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Smartra VIN2PIN");
     submenu_add_item(
-        app->submenu,
-        "Enter VIN",
-        SmartraMainMenuSceneVinInput,
-        smartra_menu_callback,
-        app);
-    submenu_add_item(
-        app->submenu,
-        "About",
-        SmartraMainMenuSceneAbout,
-        smartra_menu_callback,
-        app);
+        app->submenu, "Enter VIN", SmartraMainMenuSceneVinInput, smartra_menu_callback, app);
+    submenu_add_item(app->submenu, "About", SmartraMainMenuSceneAbout, smartra_menu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, SmartraSubmenuView);
 }
 
@@ -132,7 +123,7 @@ void smartra_text_input_callback(void* context) {
     for(int i = 0; app->vin[i] != '\0'; i++) {
         app->vin[i] = toupper(app->vin[i]);
     }
-    
+
     scene_manager_handle_custom_event(app->scene_manager, SmartraVinInputSceneSaveEvent);
 }
 
@@ -143,12 +134,7 @@ void smartra_vin_input_scene_on_enter(void* context) {
     text_input_set_header_text(app->text_input, "Enter 17-character VIN");
 
     text_input_set_result_callback(
-        app->text_input,
-        smartra_text_input_callback,
-        app,
-        app->vin,
-        app->vin_size,
-        clear_text);
+        app->text_input, smartra_text_input_callback, app, app->vin, app->vin_size, clear_text);
 
     app->vin[17] = '\0';
     view_dispatcher_switch_to_view(app->view_dispatcher, SmartraTextInputView);
@@ -218,10 +204,10 @@ void smartra_pin_message_scene_on_exit(void* context) {
 void smartra_about_scene_on_enter(void* context) {
     SmartraApp* app = context;
     widget_reset(app->widget);
-    
+
     widget_add_text_scroll_element(
         app->widget,
-        0, 
+        0,
         0,
         128,
         64,
@@ -237,7 +223,7 @@ void smartra_about_scene_on_enter(void* context) {
         "For educational purposes only\n\n"
         "Author: evillero\n"
         "www.github.com/evillero\n");
-    
+
     view_dispatcher_switch_to_view(app->view_dispatcher, SmartraWidgetView);
 }
 
@@ -298,11 +284,13 @@ static SmartraApp* smartra_app_alloc() {
     app->vin = malloc(app->vin_size);
     app->scene_manager = scene_manager_alloc(&smartra_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, smartra_custom_callback);
-    view_dispatcher_set_navigation_event_callback(app->view_dispatcher, smartra_back_event_callback);
-    
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, smartra_back_event_callback);
+
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, SmartraSubmenuView, submenu_get_view(app->submenu));
@@ -312,7 +300,7 @@ static SmartraApp* smartra_app_alloc() {
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, SmartraTextInputView, text_input_get_view(app->text_input));
-    
+
     return app;
 }
 
