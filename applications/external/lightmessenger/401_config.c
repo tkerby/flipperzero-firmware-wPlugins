@@ -40,6 +40,7 @@ void config_default_init(Configuration* config) {
     config->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN + 1] = '\0';
     config->color = LIGHTMSG_DEFAULT_COLOR; // Default color
     config->brightness = LIGHTMSG_DEFAULT_BRIGHTNESS; // Default brightness
+    config->sensitivity = LIGHTMSG_DEFAULT_SENSIBILITY; // Default sensitivity
     config->orientation = LIGHTMSG_DEFAULT_ORIENTATION; // Default orientation (e.g., false)
 }
 
@@ -79,6 +80,7 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
     // overrites brightness setting
     cJSON_AddNumberToObject(
         json, "brightness", LightMsg_BrightnessBlinding); // (double)config->brightness);
+    cJSON_AddNumberToObject(json, "sensitivity", (double)config->sensitivity);
     cJSON_AddBoolToObject(json, "orientation", config->orientation);
 
     // Convert cJSON object to string
@@ -133,11 +135,13 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     cJSON* json_bitmapPath = cJSON_GetObjectItemCaseSensitive(json, "bitmapPath");
     cJSON* json_color = cJSON_GetObjectItemCaseSensitive(json, "color");
     cJSON* json_brightness = cJSON_GetObjectItemCaseSensitive(json, "brightness");
+    cJSON* json_sensitivity = cJSON_GetObjectItemCaseSensitive(json, "sensitivity");
     cJSON* json_orientation = cJSON_GetObjectItemCaseSensitive(json, "orientation");
 
     if(!cJSON_IsString(json_version) || !cJSON_IsString(json_text) ||
        !cJSON_IsString(json_bitmapPath) || !cJSON_IsNumber(json_color) ||
-       !cJSON_IsNumber(json_brightness) || !cJSON_IsBool(json_orientation)) {
+       !cJSON_IsNumber(json_brightness) || !cJSON_IsNumber(json_sensitivity) ||
+       !cJSON_IsBool(json_orientation)) {
         cJSON_Delete(json);
         FURI_LOG_E(TAG, "Error: Malformed configuration");
         return L401_ERR_MALFORMED;
@@ -153,6 +157,7 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     // config->text = strdup(json_text->valuestring);
     config->color = (uint8_t)json_color->valuedouble;
     config->brightness = (uint8_t)json_brightness->valuedouble;
+    config->sensitivity = (uint8_t)json_sensitivity->valuedouble;
     config->orientation = cJSON_IsTrue(json_orientation) ? true : false;
     cJSON_Delete(json);
     return L401_OK;
@@ -249,6 +254,19 @@ l401_err config_init_dir(const char* filename) {
     return L401_OK;
 }
 
+l401_err config_create_json(const char* filename, Configuration* config) {
+    furi_assert(filename);
+    furi_assert(config);
+    config_default_init(config);
+    FURI_LOG_I(TAG, "Save JSON to %s", filename);
+    l401_err res = config_save_json(filename, config);
+    if(res != L401_OK) {
+        FURI_LOG_E(TAG, "Error while saving default configuration to %s: %d", filename, res);
+        return res;
+    }
+    return L401_OK;
+}
+
 l401_err config_load_json(const char* filename, Configuration* config) {
     furi_assert(filename);
     furi_assert(config);
@@ -260,19 +278,34 @@ l401_err config_load_json(const char* filename, Configuration* config) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     // Check if configuration file exists
     if(!storage_common_stat(storage, filename, NULL) == FSE_OK) {
-        FURI_LOG_I(TAG, "Config file is not found. Will create new.");
-        config_default_init(config);
-        FURI_LOG_I(TAG, "Save JSON to %s", filename);
-        res = config_save_json(filename, config);
+        // Create it if it doesn't exists
+        if(config_create_json(filename, config) != L401_OK) {
+            FURI_LOG_E(TAG, "Could not create configuration file %s", filename);
+            return L401_ERR_INTERNAL;
+        }
+    }
+    // Try to load the configuration
+    res = config_read_json(filename, config);
+    if(res != L401_OK) {
+        // If it can't load it, remove the old version.
+        if(storage_common_remove(storage, LIGHTMSGCONF_CONFIG_FILE) != FSE_OK) {
+            FURI_LOG_E(TAG, "Could not remove old configuration file.");
+            // If it fails, it's bad.
+            return L401_ERR_FILESYSTEM;
+        }
+        // Recreate a fresh new config file.
+        if(config_create_json(filename, config) != L401_OK) {
+            // If it doesn't work, it's bad too.
+            FURI_LOG_E(TAG, "Could not get configuration from %s: %d", filename, res);
+            return L401_ERR_INTERNAL;
+        }
+        // Try to reload the configuration from the fresh new one.
+        res = config_read_json(filename, config);
+        furi_record_close(RECORD_STORAGE);
         if(res != L401_OK) {
-            FURI_LOG_E(TAG, "Error while saving default configuration to %s: %d", filename, res);
+            FURI_LOG_E(TAG, "Could not reset configuration file.... Aborting");
         }
     }
     furi_record_close(RECORD_STORAGE);
-
-    res = config_read_json(filename, config);
-    if(res != L401_OK) {
-        FURI_LOG_E(TAG, "Could not get configuration from %s: %d", filename, res);
-    }
     return res;
 }
