@@ -84,7 +84,7 @@ void pof_app_free(PoFApp* app) {
     // PoF emulation Stop
     pof_stop(app);
 
-    // Clean up peripherals like LEDs 
+    // Clean up peripherals like LEDs
     virtual_portal_cleanup(app->virtual_portal);
 
     // Submenu

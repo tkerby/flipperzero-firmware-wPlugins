@@ -66,7 +66,6 @@ const NotificationSequence sequence_set_leds = {
     NULL,
 };
 
-
 void virtaul_portal_set_leds(VirtualPortal* virtual_portal, uint8_t r, uint8_t g, uint8_t b) {
     message_red.data.led.value = r;
     message_green.data.led.value = g;

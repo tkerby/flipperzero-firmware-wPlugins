@@ -17,7 +17,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#include "app_common.h"
+#include "../app_common.h"
 #include "sensor_driver.h"
 #include "ina209_driver.h"
 
