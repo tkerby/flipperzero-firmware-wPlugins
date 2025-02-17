@@ -426,7 +426,7 @@ AppConfig* app_config_alloc(void* ctx) {
         item, lightmsg_mirror_text[light_msg_data->mirror ? 1 : 0]);
 
     item = variable_item_list_add(
-        appConfig->list, "letter width", COUNT_OF(lightmsg_width_text), on_change_width, app);
+        appConfig->list, "Letter width", COUNT_OF(lightmsg_width_text), on_change_width, app);
     variable_item_set_current_value_index(item, light_msg_data->width);
     variable_item_set_current_value_text(item, lightmsg_width_text[light_msg_data->width]);
 
