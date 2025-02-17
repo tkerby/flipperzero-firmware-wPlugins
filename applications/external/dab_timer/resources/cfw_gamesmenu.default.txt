@@ -1,4 +1,5 @@
 GamesMenuList Version 0
+/ext/apps/Games/1d_pacman.fap
 /ext/apps/Games/2048.fap
 /ext/apps/Games/2048_improved.fap
 /ext/apps/Games/4_in_a_row.fap
