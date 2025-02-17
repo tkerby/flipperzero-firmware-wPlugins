@@ -42,6 +42,11 @@ void config_default_init(Configuration* config) {
     config->brightness = LIGHTMSG_DEFAULT_BRIGHTNESS; // Default brightness
     config->sensitivity = LIGHTMSG_DEFAULT_SENSIBILITY; // Default sensitivity
     config->orientation = LIGHTMSG_DEFAULT_ORIENTATION; // Default orientation (e.g., false)
+    // Add version 1.1 features
+    // from Jamisonderek https://github.com/lab-401/fzLightMessenger/pull/5/commits
+    config->mirror = LIGHTMSG_DEFAULT_MIRROR;
+    config->speed = LIGHTMSG_DEFAULT_SPEED;
+    config->width = LIGHTMSG_DEFAULT_WIDTH;
 }
 
 /**
@@ -82,7 +87,10 @@ l401_err config_to_json(Configuration* config, char** jsontxt) {
         json, "brightness", LightMsg_BrightnessBlinding); // (double)config->brightness);
     cJSON_AddNumberToObject(json, "sensitivity", (double)config->sensitivity);
     cJSON_AddBoolToObject(json, "orientation", config->orientation);
-
+    // Add version 1.1 features
+    cJSON_AddBoolToObject(json, "mirror", config->mirror);
+    cJSON_AddNumberToObject(json, "speed", config->speed);
+    cJSON_AddNumberToObject(json, "width", config->width);
     // Convert cJSON object to string
     char* string = cJSON_PrintUnformatted(json);
     if(string == NULL) {
@@ -137,11 +145,16 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     cJSON* json_brightness = cJSON_GetObjectItemCaseSensitive(json, "brightness");
     cJSON* json_sensitivity = cJSON_GetObjectItemCaseSensitive(json, "sensitivity");
     cJSON* json_orientation = cJSON_GetObjectItemCaseSensitive(json, "orientation");
+    // Add version 1.1 features
+    cJSON* json_mirror = cJSON_GetObjectItemCaseSensitive(json, "mirror");
+    cJSON* json_speed = cJSON_GetObjectItemCaseSensitive(json, "speed");
+    cJSON* json_width = cJSON_GetObjectItemCaseSensitive(json, "width");
 
     if(!cJSON_IsString(json_version) || !cJSON_IsString(json_text) ||
        !cJSON_IsString(json_bitmapPath) || !cJSON_IsNumber(json_color) ||
        !cJSON_IsNumber(json_brightness) || !cJSON_IsNumber(json_sensitivity) ||
-       !cJSON_IsBool(json_orientation)) {
+       !cJSON_IsBool(json_orientation) || !cJSON_IsBool(json_mirror) ||
+       !cJSON_IsNumber(json_speed) || !cJSON_IsNumber(json_width)) {
         cJSON_Delete(json);
         FURI_LOG_E(TAG, "Error: Malformed configuration");
         return L401_ERR_MALFORMED;
@@ -159,6 +172,9 @@ l401_err json_to_config(char* jsontxt, Configuration* config) {
     config->brightness = (uint8_t)json_brightness->valuedouble;
     config->sensitivity = (uint8_t)json_sensitivity->valuedouble;
     config->orientation = cJSON_IsTrue(json_orientation) ? true : false;
+    config->mirror = cJSON_IsTrue(json_mirror) ? true : false;
+    config->speed = (uint8_t)json_speed->valuedouble;
+    config->width = (uint8_t)json_width->valuedouble;
     cJSON_Delete(json);
     return L401_OK;
 }
