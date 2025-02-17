@@ -11,7 +11,7 @@ App(
     fap_version="1.0",
     fap_icon="portal_of_flipper.png",  # 10x10 1-bit PNG
     fap_description="USB emulator",
-    fap_author="bettse",
-    fap_weburl="https://gitlab.com/bettse/portal_of_flipper",
+    fap_author="sanjay900",
+    fap_weburl="https://github.com/sanjay900/portal_of_flipper",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
