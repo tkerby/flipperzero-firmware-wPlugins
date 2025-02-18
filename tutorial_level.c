@@ -42,9 +42,17 @@ void tutorial_level_player_update(Entity* self, GameManager* manager, void* cont
     }
 }
 
+bool renderUsername = true;
+
 void tutorial_level_player_render(GameManager* manager, Canvas* canvas, void* context) {
     if(!game_menu_tutorial_selected) return;
     PlayerContext* player = context;
+
+    //Render player username
+    if(renderUsername && globalPlayer != NULL) {
+        Vector pos = entity_pos_get(globalPlayer);
+        canvas_printf(canvas, pos.x - 7, pos.y - 10, "%s", username);
+    }
     if(kills == 0) {
         static uint32_t dataHolder;
         static uint32_t dataHolder2;
@@ -62,6 +70,7 @@ void tutorial_level_player_render(GameManager* manager, Canvas* canvas, void* co
                 furi_delay_ms(2000);
             }
         } else if(furi_get_tick() - firstKillTick < 7500) {
+            renderUsername = false;
             canvas_printf(canvas, 20, 40, "You got your first kill!");
             static bool nextMsg;
             if(!nextMsg) {
@@ -166,6 +175,7 @@ void tutorial_level_player_render(GameManager* manager, Canvas* canvas, void* co
                     furi_delay_ms(i);
                 }
             }
+            renderUsername = true;
         }
     }
 }

@@ -79,12 +79,11 @@ uint32_t secondKillTick = 0;
 uint32_t gameBeginningTick = 0;
 Level* gameLevel = NULL;
 GameManager* globalGameManager = NULL;
+Entity* globalPlayer = NULL;
 
 /* End of header variables */
 
 //Enemy, and bullet storage
-
-Entity* globalPlayer = NULL;
 
 //Internal variables
 static const EntityDescription target_desc;

@@ -21,6 +21,7 @@ extern bool game_menu_game_selected;
 extern bool game_menu_tutorial_selected;
 extern bool game_menu_quit_selected;
 extern FuriApiLock game_menu_exit_lock;
+extern char username[100];
 void game_settings_menu_button_callback(void* game_manager, uint32_t index);
 void game_menu_button_callback(void* game_manager, uint32_t index);
 void game_menu_open(GameManager* gameManager, bool reopen);
