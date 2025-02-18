@@ -1542,29 +1542,6 @@ static void game_start(GameManager* game_manager, void* ctx) {
     //Instantiate the lock
     game_menu_open(game_manager, false);
 
-    if(game_menu_settings_selected) {
-        // End access to the GUI API.
-        //furi_record_close(RECORD_GUI);
-
-        Gui* gui = furi_record_open(RECORD_GUI);
-
-        Submenu* submenu = submenu_alloc();
-        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, game_manager);
-        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, game_manager);
-        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, game_manager);
-        submenu_add_item(submenu, "BACK", 3, game_settings_menu_button_callback, game_manager);
-        ViewHolder* view_holder = view_holder_alloc();
-        view_holder_set_view(view_holder, submenu_get_view(submenu));
-        view_holder_attach_to_gui(view_holder, gui);
-        api_lock_wait_unlock(game_menu_exit_lock);
-
-        view_holder_set_view(view_holder, NULL);
-        // Delete everything to prevent memory leaks.
-        view_holder_free(view_holder);
-        submenu_free(submenu);
-        furi_record_close(RECORD_GUI);
-    }
-
     game_start_post_menu((game_manager), ctx);
 
     if(game_menu_quit_selected) {
@@ -1585,7 +1562,7 @@ void game_stop(void* ctx) {
     Submenu* submenu = submenu_alloc();
     submenu_add_item(
         submenu,
-        game_menu_game_selected ? "RESUME GAME" : "PLAY GAME",
+        game_menu_game_selected ? "RESUME GAME" : "START GAME",
         4,
         game_menu_button_callback,
         ctx);
@@ -1595,36 +1572,11 @@ void game_stop(void* ctx) {
         5,
         game_menu_button_callback,
         ctx);
-    submenu_add_item(submenu, "SETTINGS", 2, game_menu_button_callback, ctx);
-    submenu_add_item(submenu, "QUIT", 3, game_menu_button_callback, ctx);
+    submenu_add_item(submenu, "QUIT", 2, game_menu_button_callback, ctx);
     ViewHolder* view_holder = view_holder_alloc();
     view_holder_set_view(view_holder, submenu_get_view(submenu));
     view_holder_attach_to_gui(view_holder, gui);
     api_lock_wait_unlock_and_free(game_menu_exit_lock);
-
-    if(game_menu_settings_selected) {
-        //Clear previous menu
-        view_holder_set_view(view_holder, NULL);
-        // Delete everything to prevent memory leaks.
-        view_holder_free(view_holder);
-        submenu_free(submenu);
-        furi_record_close(RECORD_GUI);
-
-        game_menu_exit_lock = api_lock_alloc_locked();
-        gui = furi_record_open(RECORD_GUI);
-
-        Submenu* submenu = submenu_alloc();
-        submenu_add_item(submenu, "A", 0, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(submenu, "B", 1, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(submenu, "C", 2, game_settings_menu_button_callback, globalGameManager);
-        submenu_add_item(
-            submenu, "BACK", 3, game_settings_menu_button_callback, globalGameManager);
-        view_holder = view_holder_alloc();
-        view_holder_set_view(view_holder, submenu_get_view(submenu));
-        view_holder_attach_to_gui(view_holder, gui);
-        api_lock_wait_unlock_and_free(game_menu_exit_lock);
-        furi_record_close(RECORD_GUI);
-    }
 
     //Do they want to quit?
     if(game_menu_quit_selected) {
