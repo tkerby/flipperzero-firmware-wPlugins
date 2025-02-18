@@ -92,6 +92,7 @@ extern uint32_t secondKillTick;
 extern uint32_t gameBeginningTick;
 extern Level* gameLevel;
 extern GameManager* globalGameManager;
+extern Entity* globalPlayer;
 
 //Functions
 float lerp(float y1, float y2, float t);
