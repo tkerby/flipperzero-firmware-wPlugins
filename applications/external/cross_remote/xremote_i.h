@@ -56,6 +56,8 @@
 #define INFRARED_APP_EXTENSION ".ir"
 #define INFRARED_APP_FOLDER    EXT_PATH("infrared")
 
+#define SUBGHZ_APP_EXTENSION ".sub"
+
 #define TAG "XRemote"
 
 typedef enum {
