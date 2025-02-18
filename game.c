@@ -1067,8 +1067,8 @@ void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
                 if(storage_file_open(
                        file, APP_DATA_PATH("game_data.deadzone"), FSAM_READ, FSOM_OPEN_ALWAYS)) {
                     storage_file_read(file, buffer, 12);
-                    storage_file_close(file);
                     highestLevel = atoi(buffer);
+                    storage_file_close(file);
                 }
                 FURI_LOG_I(
                     "DEADZONE",
