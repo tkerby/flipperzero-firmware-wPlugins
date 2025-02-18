@@ -45,7 +45,13 @@ void tutorial_level_player_update(Entity* self, GameManager* manager, void* cont
 void tutorial_level_player_render(GameManager* manager, Canvas* canvas, void* context) {
     if(!game_menu_tutorial_selected) return;
     PlayerContext* player = context;
-    if(kills == 1) {
+    if(kills == 0) {
+        static uint32_t dataHolder;
+        static uint32_t dataHolder2;
+        canvas_printf_blinking(canvas, 13, 10, 400, 200, "DEADZONE", &dataHolder);
+        canvas_printf_blinking(canvas, 15, 19, 400, 200, "developed by retrooper", &dataHolder2);
+
+    } else if(kills == 1) {
         if(furi_get_tick() - firstKillTick < 2000) {
             canvas_printf(canvas, 30, 30, "Great job!");
             static bool firstKillMsg;
