@@ -224,4 +224,3 @@ Configuration* light_msg_data = (Configuration*)appData->config;
 uint8_t value = listmsg_{name}_value[light_msg_data->{name}]; // Replace {name} with your feature name.
 ```
 
-## Contributors
