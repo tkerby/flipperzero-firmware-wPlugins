@@ -133,7 +133,16 @@ Remember, it's not about speed—it's about consistency. Take your time, experim
 
 ## Contributing
 
+Contributions are welcome! Do not hesitate to submit your own pull requests if you  want to add more features to LightMessenger. It's simple:
 
+- Fork this repository.
+- Create a branch with a descriptive name that reflects its purpose (e.g., "add-color-scheme" or "fix-LED-bug").
+- Ensure that your code follows [FlipperZero's contributing guidelines](https://github.com/flipperdevices/flipper-application-catalog/blob/main/documentation/Contributing.md) for the application catalog, and [FlipperZero's code of conduct](https://github.com/flipperdevices/flipperzero-firmware/blob/dev/CODE_OF_CONDUCT.md).
+- When you're sure, create your pull-request.
+- Please submit **one PR per improvement/contribution** so that we can merge them quickly and efficiently.
+- Have fun and let your creativity shine!
+
+Of course, we may not be able to merge every color scheme, and we are  obliged to make some production choices. But don't let that stop you  from sharing your work with us and the world!
 
 ## Development
 
@@ -155,18 +164,20 @@ ufbt launch
 
 ### Hardware 
 
-The Light Messenger has 16-LEDs (SK6805). The SK6805 are independent programmable RGB LEDs, with 8-bit for each of the red, green and blue channels. They are connected in series (chained data-in/data-out). The leftmost LED is the first one. You can use the provided [drivers/sk6805.h](401lightMessengerApp/drivers/sk6805.h) to control the LEDs.
-- Pin +5V goes to the VCC pin of the SK6805 LED.
-- Pin PA7 goes to the data in pin of the first (left-most) SK6805 LED.
-- Pin GND goes to the GND pin of the SK6805 LED.
+![schematics](./README.assets/schematics.png)
 
-The LIS2DH12 is a 3-axis femto accelerometer. It has two independent programmable interrupt generators for motion detection. It is connected to the Flipper Zero I2C bus using an 8-bit address of 0x30 `LIS2DH12_I2C_ADD_L`. You can use the provided [drivers/lis2dh12_reg.h](401lightMessengerApp/drivers/lis2dh12_reg.h) and [drivers/lis2dh12_wrapper.c](401lightMessengerApp/drivers/lis2xx12_wrapper.h) to access the LIS2DH12 features.
-- The 3V3 pin connects to the VCC pin of the LIS2DH12.
-- The GND pin connects to the GND pin of the LIS2DH12.
-- The PC1 pin connects to the SDA of the LIS2DH12.
-- The PC0 pin connects to the SCL of the LIS2DH12.
-- The PA4 pin connects to Int1 on the LIS2DH12.
-- The SWC pin connects to Int2 on the LIS2DH12.
+The Light Messenger has 16-LEDs (SK6805). The **[SK6805](http://www.normandled.com/upload/201912/SK6805SIDE-G%203512%20LED%20Datasheet.pdf)** are independent programmable RGB LEDs, with 8-bit for each of the red, green and blue channels. They are connected in series (chained data-in/data-out). The leftmost LED is the first one. You can use the provided [drivers/sk6805.h](401lightMessengerApp/drivers/sk6805.h) to control the LEDs.
+- Pin **+5V** goes to the VCC pin of the SK6805 LED.
+- Pin **PA7** goes to the data in pin of the first (left-most) SK6805 LED.
+- Pin **GND** goes to the GND pin of the SK6805 LED.
+
+The **[LIS2DH12](https://www.st.com/resource/en/datasheet/lis2dh12.pdf)** is a 3-axis femto accelerometer. It has two independent programmable interrupt generators for motion detection. It is connected to the Flipper Zero I2C bus using an 8-bit address of 0x30 `LIS2DH12_I2C_ADD_L`. You can use the provided [drivers/lis2dh12_reg.h](401lightMessengerApp/drivers/lis2dh12_reg.h) and [drivers/lis2dh12_wrapper.c](401lightMessengerApp/drivers/lis2xx12_wrapper.h) to access the LIS2DH12 features.
+- The **3V3** pin connects to the **VCC** pin of the LIS2DH12.
+- The **GND** pin connects to the **GND** pin of the LIS2DH12.
+- The **PC1** pin connects to the **SDA** of the LIS2DH12.
+- The **PC0** pin connects to the **SCL** of the LIS2DH12.
+- The **PA4** pin connects to **Int1** on the LIS2DH12.
+- The **SWC** pin connects to **Int2** on the LIS2DH12.
 
 ### Data Formats
 
@@ -182,15 +193,24 @@ To add a new configuration entry:
 - Update the [401_config.h](401lightMessengerApp/401_config.h) file:
    - Add a new property to the `Configuration` structure.
    - Define a new `LIGHTMSG_DEFAULT_{name}` with a default setting. Typically indexes are used instead of values.
+   
 - Update the [401_config.c](401lightMessengerApp/401_config.c) file:
    - Add an entry in `config_default_init` to initialize your property.
    - Add an entry in `config_to_json` to serialize your property.
    - Add an entry in `json_to_config` to deserialize your property.
-   - NOTE: For backward compatiblity, you will need to handle your property missing & should NOT reject the previous config.json file.
+   
+   > [!NOTE]
+   >
+   > For backward compatiblity, you will need to handle your property missing & should NOT reject the previous config.json file.
+   
 - Update the [401LightMsg_config.h](401lightMessengerApp/401LightMsg_config.h) file:
    - Add your new `extern const {type} lightmsg_{name}_value[];` to hold the values for your property.
    - Add your new `extern const char* const lightmsg_{name}_text[];` to hold the labels to display to the user.
-   - NOTE: If you are updating the list, append if possible, so users values will be preserved.
+   
+   > [!NOTE]
+   >
+   > If you are updating the list, append if possible, so users values will be preserved.
+   
 - Update the [401LightMsg_config.c](401lightMessengerApp/401LightMsg_config.c) file:
    - Define your `lightmsg_{name}_value` and `lightmsg_{name}_text` variables.
    - Implement an `on_change_{name}` function, for when the user changes the value of your property.
@@ -203,3 +223,5 @@ AppData* appData = (AppData*)app->data;
 Configuration* light_msg_data = (Configuration*)appData->config;
 uint8_t value = listmsg_{name}_value[light_msg_data->{name}]; // Replace {name} with your feature name.
 ```
+
+## Contributors
