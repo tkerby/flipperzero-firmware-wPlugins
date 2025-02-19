@@ -89,7 +89,7 @@ The orientation allows to choose between "Wheel Up" and "WheelDown". Select the 
 Multiple color shaders are available: 
 
 - Single colors (R3d, 0r4ng3, Y3ll0w, Gr33n, Cy4n, Blu3, Purpl3) 
-- Animated (Ny4nC4t, R4inb0w, Sp4rkl3, V4p0rw4v3)
+- Animated (Ny4nC4t, R4inb0w, Sp4rkl3, V4p0rw4v3, R3dBlu3)
 
 ## Swipe
 
