@@ -199,18 +199,20 @@ To add a new configuration entry:
    - Add an entry in `config_to_json` to serialize your property.
    - Add an entry in `json_to_config` to deserialize your property.
    
-   > [!NOTE]
-   >
-   > For backward compatiblity, you will need to handle your property missing & should NOT reject the previous config.json file.
-   
+
+> [!NOTE]
+>
+> For backward compatiblity, you will need to handle your property missing & should NOT reject the previous config.json file.
+
 - Update the [401LightMsg_config.h](401lightMessengerApp/401LightMsg_config.h) file:
    - Add your new `extern const {type} lightmsg_{name}_value[];` to hold the values for your property.
    - Add your new `extern const char* const lightmsg_{name}_text[];` to hold the labels to display to the user.
-   
-   > [!NOTE]
-   >
-   > If you are updating the list, append if possible, so users values will be preserved.
-   
+
+
+> [!NOTE]
+>
+> If you are updating the list, append if possible, so users values will be preserved.
+
 - Update the [401LightMsg_config.c](401lightMessengerApp/401LightMsg_config.c) file:
    - Define your `lightmsg_{name}_value` and `lightmsg_{name}_text` variables.
    - Implement an `on_change_{name}` function, for when the user changes the value of your property.
