@@ -88,7 +88,7 @@ static bool disney_infinity_parse(const NfcDevice* device, FuriString* parsed_da
         di_key(uid_bytes, &key);
         if(memcmp(key.data, sec_tr->key_a.data, 6) != 0) break;
 
-        //TODO: Add name lookup like Skylanders
+        // At some point I'd like to add name lookup like Skylanders
         furi_string_printf(parsed_data, "\e#Disney Infinity\n");
 
         parsed = true;
