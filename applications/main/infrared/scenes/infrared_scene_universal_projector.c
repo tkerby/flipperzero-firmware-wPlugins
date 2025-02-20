@@ -90,7 +90,7 @@ void infrared_scene_universal_projector_on_enter(void* context) {
     button_panel_add_icon(button_panel, 4, 109, &I_pause_text_23x5);
 
     button_panel_add_label(button_panel, 10, 11, FontPrimary, "Projector");
-    button_panel_add_icon(button_panel, 17, 72, &I_vol_ac_text_30x30);
+    button_panel_add_icon(button_panel, 34, 68, &I_vol_ac_text_30x30);
 
     infrared_scene_universal_common_on_enter(context);
 }
