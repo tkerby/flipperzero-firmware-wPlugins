@@ -389,9 +389,9 @@ void subghz_txrx_gen_serial_gangqi(uint64_t* result_key) {
     uint8_t const_and_button = (uint8_t)(0xD0 | 0xD);
     uint8_t serial_high = (uint8_t)(serial >> 8);
     uint8_t serial_low = (uint8_t)(serial & 0xFF);
-    uint8_t crc = (uint8_t)(0xC8 - serial_high - serial_low - const_and_button);
+    uint8_t bytesum = (uint8_t)(0xC8 - serial_high - serial_low - const_and_button);
 
-    // Add crc sum to the end
+    // Add bytesum to the end
     // serial | const_and_button
-    *result_key = (serial << 18) | (const_and_button << 10) | (crc << 2);
+    *result_key = (serial << 18) | (const_and_button << 10) | (bytesum << 2);
 }
