@@ -14,8 +14,31 @@
 #include <nfc/nfc_listener.h>
 #include "../../api/metroflip/metroflip_api.h"
 #include "../../metroflip_plugins.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #define TAG "Metroflip:Scene:gocard"
+
+typedef enum {
+    CHILD = 2051, // 0x803
+    ADULT = 3073 // 0xc01
+} ConcessionType;
+
+// Function to print concession type
+void printConcessionType(unsigned short concession_type, FuriString* parsed_data) {
+    switch(concession_type) {
+    case CHILD:
+        furi_string_cat_printf(parsed_data, "Concession Type: Child\n");
+        break;
+    case ADULT:
+        furi_string_cat_printf(parsed_data, "Concession Type: Adult\n");
+        break;
+    default:
+        furi_string_cat_printf(parsed_data, "Concession Type: 0x%X\n", concession_type);
+        break;
+    }
+}
 
 unsigned short byteArrayToIntReversed(unsigned int dec1, unsigned int dec2) {
     unsigned char byte1 = (unsigned char)dec1;
@@ -23,33 +46,46 @@ unsigned short byteArrayToIntReversed(unsigned int dec1, unsigned int dec2) {
     return ((unsigned short)byte2 << 8) | byte1;
 }
 
+// Function to extract a substring and convert binary to decimal
+uint32_t extract_and_convert(const char* str, int start, int length) {
+    uint32_t value = 0;
+    for(int i = 0; i < length; i++) {
+        if(str[start + i] == '1') {
+            value |= (1U << (length - 1 - i));
+        }
+    }
+    return value;
+}
+
+void parse_gocard_time(const char* bin_str, FuriString* parsed_data) {
+    int len = strlen(bin_str);
+    if(len != 32 && len != 33) {
+        FURI_LOG_I(TAG, "Invalid input length");
+        return;
+    }
+
+    // Extract values from right to left using bit_slice_to_dec
+    uint32_t day = bit_slice_to_dec(bin_str, len - 5, len);
+    uint32_t month = bit_slice_to_dec(bin_str, len - 9, len - 6);
+    uint32_t year = bit_slice_to_dec(bin_str, len - 15, len - 10);
+    uint32_t minutes = bit_slice_to_dec(bin_str, len - 26, len - 16);
+
+    // Convert year from offset 2000
+    year += 2000;
+
+    // Convert minutes since midnight to HH:MM
+    uint32_t hours = minutes / 60;
+    uint32_t mins = minutes % 60;
+
+    // Format output string: "YYYY-MM-DD HH:MM"
+    furi_string_cat_printf(
+        parsed_data, "%04lu-%02lu-%02lu %02lu:%02lu\n", year, month, day, hours, mins);
+}
+
 static bool gocard_parse(FuriString* parsed_data, const MfClassicData* data) {
     bool parsed = false;
 
     do {
-        // Verify key
-        //const uint8_t ticket_sector_number = 1;
-        //const uint8_t ticket_block_number = 1;
-
-        //const MfClassicSectorTrailer* sec_tr =
-        //    mf_classic_get_sector_trailer_by_sector(data, ticket_sector_number);
-
-        //const uint64_t key =
-        //    bit_lib_bytes_to_num_be(sec_tr->key_a.data, COUNT_OF(sec_tr->key_a.data));
-        ///if(key != gocard_1k_keys[ticket_sector_number].a) break;
-        //FURI_LOG_D(TAG, "passed key check");
-        // Parse data
-        //const uint8_t start_block_num =
-        //    mf_classic_get_first_block_num_of_sector(ticket_sector_number);
-
-        //const uint8_t* block_start_ptr =
-        //    &data->block[start_block_num + ticket_block_number].data[0];
-
-        //uint32_t balance = bit_lib_bytes_to_num_le(block_start_ptr, 4) - 100;
-
-        //uint32_t balance_lari = balance / 100;
-        //uint8_t balance_tetri = balance % 100;
-
         int balance_slot = 4;
 
         if(data->block[balance_slot].data[13] <= data->block[balance_slot + 1].data[13])
@@ -70,7 +106,32 @@ static bool gocard_parse(FuriString* parsed_data, const MfClassicData* data) {
         }
 
         double balance = balancecents / 100.0;
-        furi_string_printf(parsed_data, "\e#Go card\nValue: A$%.2f\n", balance);
+        furi_string_printf(parsed_data, "\e#go card\nValue: A$%.2f\n", balance); //show balance
+
+        int start_index = 4; //byte to start at
+        int end_index = 7; // byte to end at
+        int config_block = 6; //block number containing card configuration
+        int num_bytes = end_index - start_index + 1;
+        char config_bit_representation[num_bytes * 8 + 1];
+
+        for(int i = end_index, j = 0; i >= start_index;
+            i--, j++) { // Reverse the order of bytes and converty to binary
+            char bits[9];
+            byte_to_binary(data->block[config_block].data[i], bits);
+            memcpy(&config_bit_representation[j * 8], bits, 8);
+        }
+
+        config_bit_representation[num_bytes * 8] = '\0'; //add a null terminator as always
+        furi_string_cat_printf(parsed_data, "Expiry:\n");
+        parse_gocard_time(config_bit_representation, parsed_data);
+        FURI_LOG_I(TAG, "bitrepr: %s", config_bit_representation);
+
+        //concession type:
+
+        unsigned short concession_type = byteArrayToIntReversed(
+            data->block[config_block].data[8], data->block[config_block].data[9]);
+
+        printConcessionType(concession_type, parsed_data);
 
         parsed = true;
     } while(false);
