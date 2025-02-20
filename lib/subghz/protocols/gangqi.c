@@ -471,7 +471,7 @@ void subghz_protocol_decoder_gangqi_get_string(void* context, FuriString* output
         "%s %db\r\n"
         "Key: 0x%X%08lX\r\n"
         "Serial: 0x%05lX\r\n"
-        "Sum: 0x%02X  Sum2: 0x%02X\r\n"
+        "Sum: 0x%02X   Sum2: 0x%02X\r\n"
         "Btn: 0x%01X - %s\r\n",
         instance->generic.protocol_name,
         instance->generic.data_count_bit,
