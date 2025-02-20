@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Releas RM0218-1205-0.420.0-7bb30bf](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
+## Latest Updates - [PATREON: Latest Releas RM0220-1236-0.420.0-5cec824](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release) 
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-18 12:05 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-18 12:05 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-02-20 12:36 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-02-20 12:36 EST`
 - Updated: [Portal of Flipper v1.0 (By bettse)](https://gitlab.com/bettse/portal_of_flipper)
 - Added: [INA Meter v0.1 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - Added: [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
