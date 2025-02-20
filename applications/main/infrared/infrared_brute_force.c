@@ -16,6 +16,7 @@
 ARRAY_DEF(SignalPositionArray, size_t, M_DEFAULT_OPLIST);
 
 typedef struct {
+    uint32_t count;
     size_t index;
     SignalPositionArray_t signals;
 } InfraredBruteForceRecord;
@@ -93,7 +94,9 @@ void infrared_brute_force_set_db_filename(InfraredBruteForce* brute_force, const
     brute_force->db_filename = db_filename;
 }
 
-InfraredErrorCode infrared_brute_force_calculate_messages(InfraredBruteForce* brute_force) {
+InfraredErrorCode infrared_brute_force_calculate_messages(
+    InfraredBruteForce* brute_force,
+    bool auto_detect_buttons) {
     furi_check(brute_force);
     furi_assert(!brute_force->is_started);
     furi_assert(brute_force->db_filename);
