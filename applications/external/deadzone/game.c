@@ -1559,18 +1559,18 @@ void game_stop(void* ctx) {
     game_menu_exit_lock = api_lock_alloc_locked();
     Gui* gui = furi_record_open(RECORD_GUI);
     Submenu* submenu = submenu_alloc();
-    submenu_add_item(
+    /*submenu_add_item(
         submenu,
         game_menu_game_selected ? "RESUME GAME" : "START GAME",
-        4,
+        3,
         game_menu_button_callback,
         ctx);
     submenu_add_item(
         submenu,
         game_menu_tutorial_selected ? "RESUME TUTORIAL" : "TUTORIAL",
-        5,
+        4,
         game_menu_button_callback,
-        ctx);
+        ctx);*/
     submenu_add_item(submenu, "QUIT", 2, game_menu_button_callback, ctx);
     ViewHolder* view_holder = view_holder_alloc();
     view_holder_set_view(view_holder, submenu_get_view(submenu));
