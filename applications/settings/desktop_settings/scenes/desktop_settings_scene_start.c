@@ -80,6 +80,7 @@ static void desktop_settings_scene_start_dumbmode_changed(VariableItem* item) {
 
     variable_item_set_current_value_text(item, desktop_on_off_text[index]);
     app->settings.is_dumbmode = dumbmode_value[index];
+    app->settings.dummy_mode = dumbmode_value[index];
 }
 
 void desktop_settings_scene_start_on_enter(void* context) {

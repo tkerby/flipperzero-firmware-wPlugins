@@ -17,6 +17,7 @@ static Vector2 angle_to_vector2(float angle_in_degrees, uint8_t distance, Vector
 #if __has_include(<cfw/cfw.h>)
 static void dab_timer_dumbmode_changed(DesktopSettings* settings) {
     settings->is_dumbmode = !settings->is_dumbmode;
+    settings->dummy_mode = settings->is_dumbmode;
     DESKTOP_SETTINGS_SAVE(settings);
 }
 #endif
