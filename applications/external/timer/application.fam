@@ -1,0 +1,10 @@
+App(
+    appid="timer_app",
+    name="Timer App",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="pomodoro_app_main",
+    stack_size=1 * 1024,
+    fap_icon="timer_app.png",
+    fap_icon_assets="images",
+    fap_category="Tools",
+)
