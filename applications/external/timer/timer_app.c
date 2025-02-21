@@ -3,7 +3,7 @@
 #include "timer_ui.h"
 #include "timer_alarm.h"
 
-int32_t pomodoro_app_main(void* p) {
+int32_t timer_app_main(void* p) {
     UNUSED(p);
     PomodoroApp* app = malloc(sizeof(PomodoroApp));
     memset(app, 0, sizeof(PomodoroApp));
