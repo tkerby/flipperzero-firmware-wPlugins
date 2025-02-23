@@ -109,7 +109,6 @@ static void number_picker_view(
     uint32_t current,
     uint32_t min,
     uint32_t max) {
-
     number_input_set_header_text(app->number_input, header);
     number_input_set_result_callback(
         app->number_input, number_picker_callback, app, current, min, max);
