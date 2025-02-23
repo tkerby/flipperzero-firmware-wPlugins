@@ -14,7 +14,8 @@ static void timer_callback(void* context) {
         uint32_t current_time = furi_get_tick() / 1000; // seconds
         uint32_t elapsed_time = (furi_get_tick() - app->start_time) / 1000; // seconds
 
-        if(elapsed_time >= app->duration * 60) {
+        bool elapsed_time_passed = elapsed_time >= app->duration * 60;
+        if(elapsed_time_passed) {
             app->time_out = true;
             elapsed_time = app->duration * 60;
         }
@@ -26,7 +27,11 @@ static void timer_callback(void* context) {
             (elapsed_time * (app->max_interval - app->min_interval) / (app->duration * 60));
         // Execute on first run and afterwards every 5 seconds.
         // Do not run after 'duration' has passed, which means after time_out.
-        if(app->last_check == 0 || app->last_check + 5 < current_time || app->time_out == true) {
+
+        bool start = app->last_check == 0;
+        bool time_for_new_check = app->last_check + 5 < current_time; // Run every 5 seconds
+
+        if(start || time_for_new_check || app->time_out) {
             app->last_check = current_time;
 
             // Equation: 1 minute in miliseconds divided by number of cycles,
@@ -56,7 +61,8 @@ static bool back_button_callback(void* context) {
         furi_hal_light_set(LightBlue, 0);
     }
 
-    if(app->current_view != Main) {
+    bool back_to_main_menu = app->current_view != Main;
+    if(back_to_main_menu) {
         app->current_view = Main;
         view_dispatcher_switch_to_view(app->view_dispatcher, Main);
         return true;
@@ -103,6 +109,7 @@ static void number_picker_view(
     uint32_t current,
     uint32_t min,
     uint32_t max) {
+
     number_input_set_header_text(app->number_input, header);
     number_input_set_result_callback(
         app->number_input, number_picker_callback, app, current, min, max);
