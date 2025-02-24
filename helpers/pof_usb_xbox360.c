@@ -53,7 +53,7 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
     uint32_t timeout = TIMEOUT_NORMAL; // FuriWaitForever; //ms
-    uint32_t next = furi_get_tick() + timeout;
+    uint32_t last = 0;
 
     while(true) {
         uint32_t now = furi_get_tick();
@@ -73,7 +73,7 @@ static int32_t pof_thread_worker(void* context) {
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                     timeout = TIMEOUT_AFTER_RESPONSE;
-                    next = now + timeout;
+                    last = now();
                 }
             } else if (len_data > 0 && buf[0] == 0x0b && buf[1] == 0x17) {
                 // 360 audio packets start with 0b 17, samples start after the two byte header
@@ -87,8 +87,7 @@ static int32_t pof_thread_worker(void* context) {
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
-            if(now > next) {
-                next = now + timeout;
+            if(now > last + timeout) {
                 memset(tx_data, 0, sizeof(tx_data));
                 len_data = virtual_portal_send_status(virtual_portal, tx_data + 2);
                 if(len_data > 0) {
@@ -96,6 +95,8 @@ static int32_t pof_thread_worker(void* context) {
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
+                last = now();
+                timeout = TIMEOUT_NORMAL;
             }
 
             flags &= ~EventRx; // clear flag
@@ -135,7 +136,7 @@ static int32_t pof_thread_worker(void* context) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
             timeout = TIMEOUT_NORMAL;
-            next = now + timeout;
+            last = now();
         }
     }
 
