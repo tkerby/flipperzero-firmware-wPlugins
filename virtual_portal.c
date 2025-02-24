@@ -33,7 +33,8 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t elapsed = 0;
     uint32_t duration = 0;
     bool running = false;
-    // bool two_phase = false;
+    bool two_phase = false;
+    int current_phase = 0;
     float t_phase;
     uint32_t flags;
     while (true) {
@@ -45,12 +46,18 @@ static int32_t pof_thread_worker(void* context) {
         if (flags) {
             if (flags & EventLed) {
                 start_time = furi_get_tick();
-                elapsed = 0;
                 duration = virtual_portal->left.delay;
                 target_r = virtual_portal->left.r;
                 target_g = virtual_portal->left.g;
                 target_b = virtual_portal->left.b;
                 running = true;
+                bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
+                bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
+                two_phase = increasing && decreasing;
+                current_phase = increasing ? 0 : 1;
+                if (increasing && decreasing) {
+                    duration /= 2;
+                }
             }
             if (flags & EventExit) {
                 FURI_LOG_I(TAG, "exit");
@@ -60,17 +67,41 @@ static int32_t pof_thread_worker(void* context) {
         elapsed = furi_get_tick() - start_time;
         if (elapsed < duration) {
             t_phase = fminf((float)elapsed / (float)duration, 1);
-            furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-            furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
-            furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+            if (current_phase == 0) {
+                if (last_r > target_r) {
+                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+                }
+                if (last_g > target_g) {
+                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+                }
+                if (last_b > target_b) {
+                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+                }
+            } else {
+                if (last_r < target_r) {
+                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+                }
+                if (last_g < target_g) {
+                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+                }
+                if (last_b < target_b) {
+                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+                }
+            }
+            
         } else {
-            last_r = target_r;
-            last_g = target_g;
-            last_b = target_b;
-            furi_hal_light_set(LightRed, target_r);
-            furi_hal_light_set(LightBlue, target_g);
-            furi_hal_light_set(LightGreen, target_b);
-            running = false;
+            if (two_phase && current_phase == 0) {
+                start_time = furi_get_tick();
+                current_phase++;
+            } else {
+                last_r = target_r;
+                last_g = target_g;
+                last_b = target_b;
+                furi_hal_light_set(LightRed, target_r);
+                furi_hal_light_set(LightBlue, target_g);
+                furi_hal_light_set(LightGreen, target_b);
+                running = false;
+            }
         }
     }
 
