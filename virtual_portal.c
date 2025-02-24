@@ -91,20 +91,18 @@ static int32_t pof_thread_worker(void* context) {
                     furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
                 }
             }
-            
+
+        } else if (two_phase && current_phase == 0) {
+            start_time = furi_get_tick();
+            current_phase++;
         } else {
-            if (two_phase && current_phase == 0) {
-                start_time = furi_get_tick();
-                current_phase++;
-            } else {
-                last_r = target_r;
-                last_g = target_g;
-                last_b = target_b;
-                furi_hal_light_set(LightRed, target_r);
-                furi_hal_light_set(LightGreen, target_g);
-                furi_hal_light_set(LightBlue, target_b);
-                running = false;
-            }
+            last_r = target_r;
+            last_g = target_g;
+            last_b = target_b;
+            furi_hal_light_set(LightRed, target_r);
+            furi_hal_light_set(LightGreen, target_g);
+            furi_hal_light_set(LightBlue, target_b);
+            running = false;
         }
     }
 
@@ -384,14 +382,14 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtual_portal->right.g = g;
             virtual_portal->right.b = b;
             virtual_portal->right.delay = delay;
-            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            // furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
             break;
         case 1:
             virtual_portal->trap.r = r;
             virtual_portal->trap.g = g;
             virtual_portal->trap.b = b;
             virtual_portal->trap.delay = delay;
-            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            // furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
             break;
         case 2:
             virtual_portal->left.r = r;
