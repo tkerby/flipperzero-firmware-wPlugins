@@ -71,7 +71,7 @@ static int32_t pof_thread_worker(void* context) {
                 if(send_len > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                     timeout = TIMEOUT_AFTER_RESPONSE;
-                    last = now();
+                    last = now;
                 }
                 pof_usb->dataAvailable = 0;
             }
@@ -83,7 +83,7 @@ static int32_t pof_thread_worker(void* context) {
                 if(len_data > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
-                last = now();
+                last = now;
                 timeout = TIMEOUT_NORMAL;
             }
 
@@ -121,7 +121,7 @@ static int32_t pof_thread_worker(void* context) {
             if(len_data > 0) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
-            last = now();
+            last = now;
             timeout = TIMEOUT_NORMAL;
         }
     }

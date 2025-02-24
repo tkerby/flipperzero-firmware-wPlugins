@@ -73,7 +73,7 @@ static int32_t pof_thread_worker(void* context) {
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                     timeout = TIMEOUT_AFTER_RESPONSE;
-                    last = now();
+                    last = now;
                 }
             } else if (len_data > 0 && buf[0] == 0x0b && buf[1] == 0x17) {
                 // 360 audio packets start with 0b 17, samples start after the two byte header
@@ -95,7 +95,7 @@ static int32_t pof_thread_worker(void* context) {
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                 }
-                last = now();
+                last = now;
                 timeout = TIMEOUT_NORMAL;
             }
 
@@ -136,7 +136,7 @@ static int32_t pof_thread_worker(void* context) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
             timeout = TIMEOUT_NORMAL;
-            last = now();
+            last = now;
         }
     }
 
