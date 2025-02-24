@@ -32,14 +32,16 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t start_time = 0;
     uint32_t elapsed = 0;
     uint32_t duration = 0;
+    bool running = false;
     float t_phase;
+    uint32_t flags;
     while (true) {
-        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, FuriWaitForever);
+        if (running) {
+            flags = furi_thread_flags_get();
+        } else {
+            flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, FuriWaitForever);
+        }
         if (flags) {
-            if (flags & EventExit) {
-                FURI_LOG_I(TAG, "exit");
-                break;
-            }
             if (flags & EventLed) {
                 start_time = furi_get_tick();
                 elapsed = 0;
@@ -47,17 +49,24 @@ static int32_t pof_thread_worker(void* context) {
                 target_r = virtual_portal->left.r;
                 target_g = virtual_portal->left.g;
                 target_b = virtual_portal->left.b;
-                while (elapsed < duration) {
-                    elapsed = furi_get_tick() - start_time;
-                    t_phase = fminf((float)elapsed / (float)duration, 1);
-                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
-                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
-                }
-                last_r = target_r;
-                last_g = target_g;
-                last_b = target_b;
+                running = true;
             }
+            if (flags & EventExit) {
+                FURI_LOG_I(TAG, "exit");
+                break;
+            }
+        }
+        elapsed = furi_get_tick() - start_time;
+        if (elapsed < duration) {
+            t_phase = fminf((float)elapsed / (float)duration, 1);
+            furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+            furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+            furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+        } else {
+            last_r = target_r;
+            last_g = target_g;
+            last_b = target_b;
+            running = false;
         }
     }
 
