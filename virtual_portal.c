@@ -33,7 +33,7 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t elapsed = 0;
     uint32_t duration = 0;
     bool running = false;
-    bool two_phase = false;
+    // bool two_phase = false;
     float t_phase;
     uint32_t flags;
     while (true) {
