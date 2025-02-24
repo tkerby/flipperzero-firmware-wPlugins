@@ -11,6 +11,19 @@ typedef enum {
     PoFXbox360
 } PoFType;
 
+typedef enum {
+    EventExit = (1 << 0),
+    EventReset = (1 << 1),
+    EventRx = (1 << 2),
+    EventTx = (1 << 3),
+    EventTxComplete = (1 << 4),
+    EventResetSio = (1 << 5),
+    EventTxImmediate = (1 << 6),
+
+    EventAll = EventExit | EventReset | EventRx | EventTx | EventTxComplete | EventResetSio |
+               EventTxImmediate,
+} PoFEvent;
+
 typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];
     uint8_t sequence_number;
