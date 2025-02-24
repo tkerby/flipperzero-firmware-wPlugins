@@ -68,24 +68,24 @@ static int32_t pof_thread_worker(void* context) {
         if (elapsed < duration) {
             t_phase = fminf((float)elapsed / (float)duration, 1);
             if (current_phase == 0) {
-                if (last_r > target_r) {
-                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-                }
-                if (last_g > target_g) {
-                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
-                }
-                if (last_b > target_b) {
-                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
-                }
-            } else {
                 if (last_r < target_r) {
                     furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
                 }
                 if (last_g < target_g) {
-                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+                    furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
                 }
                 if (last_b < target_b) {
-                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+                    furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
+                }
+            } else {
+                if (last_r > target_r) {
+                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+                }
+                if (last_g > target_g) {
+                    furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
+                }
+                if (last_b > target_b) {
+                    furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
                 }
             }
             
@@ -98,8 +98,8 @@ static int32_t pof_thread_worker(void* context) {
                 last_g = target_g;
                 last_b = target_b;
                 furi_hal_light_set(LightRed, target_r);
-                furi_hal_light_set(LightBlue, target_g);
-                furi_hal_light_set(LightGreen, target_b);
+                furi_hal_light_set(LightGreen, target_g);
+                furi_hal_light_set(LightBlue, target_b);
                 running = false;
             }
         }
