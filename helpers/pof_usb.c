@@ -115,7 +115,7 @@ static int32_t pof_thread_worker(void* context) {
             }
         }
 
-        if(flags == (uint32_t)FuriFlagErrorISR) { // timeout
+        if(flags == (uint32_t)FuriFlagErrorISR && now > next) { // timeout
             memset(tx_data, 0, sizeof(tx_data));
             len_data = virtual_portal_send_status(virtual_portal, tx_data);
             if(len_data > 0) {
