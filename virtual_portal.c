@@ -33,6 +33,7 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t elapsed = 0;
     uint32_t duration = 0;
     bool running = false;
+    bool two_phase = false;
     float t_phase;
     uint32_t flags;
     while (true) {
@@ -303,7 +304,11 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     switch (side) {
         case 0:
         case 2:
-            virtaul_portal_set_leds(message[2], message[3], message[4]);
+            virtual_portal->left.r = message[2];
+            virtual_portal->left.g = message[3];
+            virtual_portal->left.b = message[4];
+            virtual_portal->left.delay = 0;
+            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
             break;
         case 1:
             brightness = message[2];
@@ -428,7 +433,11 @@ int virtual_portal_process_message(
         case 'A':
             return virtual_portal_activate(virtual_portal, message, response);
         case 'C':  // Ring color R G B
-            virtaul_portal_set_leds(message[1], message[2], message[3]);
+            virtual_portal->left.r = message[1];
+            virtual_portal->left.g = message[2];
+            virtual_portal->left.b = message[3];
+            virtual_portal->left.delay = 0;
+            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
             return 0;
         case 'J':
             // https://github.com/flyandi/flipper_zero_rgb_led
