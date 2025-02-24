@@ -18,6 +18,7 @@ typedef struct {
     bool speaker;
     NotificationApp* notifications;
     PoFType type;
+    FuriThread* thread;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);

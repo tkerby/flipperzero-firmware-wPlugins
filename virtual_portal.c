@@ -4,21 +4,57 @@
 
 #define BLOCK_SIZE 16
 
-static const NotificationSequence pof_sequence_cyan = {
-    &message_blink_start_10,
-    &message_blink_set_color_cyan,
+const NotificationSequence sequence_set_backlight = {
+    &message_display_backlight_on,
+    &message_do_not_reset,
     NULL,
 };
+const NotificationSequence sequence_set_leds = {
+    &message_red_0,
+    &message_blue_0,
+    &message_green_0,
+    &message_do_not_reset,
+    NULL,
+};
+
+static int32_t pof_thread_worker(void* context) {
+    VirtualPortal* virtual_portal = context;
+    
+    while(true) {
+        uint32_t now = furi_get_tick();
+        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
+
+        if(flags) {
+            if(flags & EventExit) {
+                FURI_LOG_I(TAG, "exit");
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     VirtualPortal* virtual_portal = malloc(sizeof(VirtualPortal));
     virtual_portal->notifications = notifications;
+
+    notification_message(virtual_portal->notifications, &sequence_set_backlight);
+    notification_message(virtual_portal->notifications, &sequence_set_leds);
 
     for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
         virtual_portal->tokens[i] = pof_token_alloc();
     }
     virtual_portal->sequence_number = 0;
     virtual_portal->active = false;
+
+    virtual_portal->thread = furi_thread_alloc();
+    furi_thread_set_name(virtual_portal->thread, "PoFLed");
+    furi_thread_set_stack_size(virtual_portal->thread, 2 * 1024);
+    furi_thread_set_context(virtual_portal->thread, virtual_portal);
+    furi_thread_set_callback(virtual_portal->thread, pof_thread_worker);
+
+    furi_thread_start(virtual_portal->thread);
 
     return virtual_portal;
 }
@@ -33,52 +69,20 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
         pof_token_free(virtual_portal->tokens[i]);
         virtual_portal->tokens[i] = NULL;
     }
-
+    furi_assert(virtual_portal->thread);
+    furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventExit);
+    furi_thread_join(virtual_portal->thread);
+    furi_thread_free(virtual_portal->thread);
+    virtual_portal->thread = NULL;
     free(virtual_portal);
 }
 
-NotificationMessage message_red = {
-    .type = NotificationMessageTypeLedRed,
-    .data.led.value = 0xFF,
-};
-NotificationMessage message_green = {
-    .type = NotificationMessageTypeLedGreen,
-    .data.led.value = 0xFF,
-};
-NotificationMessage message_blue = {
-    .type = NotificationMessageTypeLedBlue,
-    .data.led.value = 0xFF,
-};
-NotificationMessage message_display_backlight = {
-    .type = NotificationMessageTypeLedDisplayBacklight,
-    .data.led.value = 0xFF,
-};
-const NotificationSequence sequence_set_backlight = {
-    &message_display_backlight,
-    &message_do_not_reset,
-    NULL,
-};
-const NotificationSequence sequence_set_leds = {
-    &message_red,
-    &message_green,
-    &message_blue,
-    &message_do_not_reset,
-    NULL,
-};
-
-
 void virtaul_portal_set_leds(VirtualPortal* virtual_portal, uint8_t r, uint8_t g, uint8_t b) {
-    message_red.data.led.value = r;
-    message_green.data.led.value = g;
-    message_blue.data.led.value = b;
-    notification_message(virtual_portal->notifications, &sequence_set_leds);
     furi_hal_light_set(LightRed, r);
     furi_hal_light_set(LightGreen, g);
     furi_hal_light_set(LightBlue, b);
 }
 void virtaul_portal_set_backlight(VirtualPortal* virtual_portal, uint8_t brightness) {
-    message_display_backlight.data.led.value = brightness;
-    notification_message(virtual_portal->notifications, &sequence_set_backlight);
     furi_hal_light_set(LightBacklight, brightness);
 }
 
