@@ -149,13 +149,6 @@ int virtual_portal_activate(VirtualPortal* virtual_portal, uint8_t* message, uin
     FURI_LOG_D(TAG, "process %c", message[0]);
     virtual_portal->active = (message[1] == 1);
 
-    //virtual_portal->sequence_number = 0;
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-        if(virtual_portal->tokens[i]->loaded) {
-            virtual_portal->tokens[i]->change = true;
-        }
-    }
-    
     response[0] = message[0];
     response[1] = message[1];
     response[2] = 0xFF;
