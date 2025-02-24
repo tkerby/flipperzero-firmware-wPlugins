@@ -370,15 +370,27 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     FURI_LOG_I(TAG, "J %s", display);
     */
 
-    uint8_t side = message[1];  // 0: left, 2: right
-    uint8_t r = message[2];     // 0: left, 2: right
-    uint8_t g = message[3];     // 0: left, 2: right
-    uint8_t b = message[4];     // 0: left, 2: right
+    uint8_t side = message[1];  // 2: left, 1: right
+    uint8_t r = message[2];     // 2: left, 1: right
+    uint8_t g = message[3];     // 2: left, 1: right
+    uint8_t b = message[4];     // 2: left, 1: right
     uint16_t delay = message[6] << 8 | message[5];
     switch (side) {
         case 0:
+            virtual_portal->right.r = r;
+            virtual_portal->right.g = g;
+            virtual_portal->right.b = b;
+            virtual_portal->right.delay = delay;
+            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            break;
+        case 1:
+            virtual_portal->trap.r = r;
+            virtual_portal->trap.g = g;
+            virtual_portal->trap.b = b;
+            virtual_portal->trap.delay = delay;
+            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            break;
         case 2:
-            // virtaul_portal_set_leds(r, g, b);
             virtual_portal->left.r = r;
             virtual_portal->left.g = g;
             virtual_portal->left.b = b;
