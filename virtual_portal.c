@@ -17,17 +17,45 @@ const NotificationSequence sequence_set_leds = {
     NULL,
 };
 
+static float lerp(float start, float end, float t) {
+    return start + (end - start) * t;
+}
+
 static int32_t pof_thread_worker(void* context) {
     VirtualPortal* virtual_portal = context;
     UNUSED(virtual_portal);
-    
+    uint32_t now = 0;
+    uint8_t last_r = 0;
+    uint8_t last_g = 0;
+    uint8_t last_b = 0;
+    uint8_t target_r = 0;
+    uint8_t target_g = 0;
+    uint8_t target_b = 0;
+    uint32_t start_time = 0;
+    uint32_t elapsed = 0;
+    uint32_t duration = 0;
+    float t_phase;
     while(true) {
-        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, 32);
-
+        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, 1);
+        now = furi_get_tick();
+        elapsed = now - start_time;
         if(flags) {
             if(flags & EventExit) {
                 FURI_LOG_I(TAG, "exit");
                 break;
+            }
+            if(flags & EventLed) {
+                start_time = now;
+                duration = virtual_portal->delay;
+                target_r = virtual_portal->r;
+                target_g = virtual_portal->g;
+                target_b = virtual_portal->b;
+            }
+            if (elapsed < duration) {
+                t_phase = fmin(elapsed / duration, 1);
+                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+                furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+                furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
             }
         }
     }
@@ -284,7 +312,6 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 }
 
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
-    UNUSED(virtual_portal);
 
     /*
     char display[33] = {0};
@@ -303,13 +330,18 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     switch(side) {
     case 0:
     case 2:
-        virtaul_portal_set_leds(r, g, b);
+        // virtaul_portal_set_leds(r, g, b);
+        virtual_portal->r = r;
+        virtual_portal->g = g;
+        virtual_portal->b = b;
+        virtual_portal->delay = delay;
+        furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
         break;
     }
 
     // Delay response
     // furi_delay_ms(delay); // causes issues
-    UNUSED(delay);
+    // UNUSED(delay);
 
     // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
     size_t index = 0;
