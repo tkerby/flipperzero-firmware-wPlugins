@@ -40,8 +40,7 @@ static int32_t pof_thread_worker(void* context) {
 
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
-    uint32_t timeout = 32; // FuriWaitForever; //ms
-    uint32_t timeoutResponse = 100; // FuriWaitForever; //ms
+    uint32_t timeout = TIMEOUT_NORMAL; // FuriWaitForever; //ms
     uint32_t next = furi_get_tick() + timeout;
 
     while(true) {
@@ -71,13 +70,15 @@ static int32_t pof_thread_worker(void* context) {
                     virtual_portal_process_message(virtual_portal, pof_usb->data, tx_data);
                 if(send_len > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
-                    next = now + timeoutResponse;
+                    timeout = TIMEOUT_AFTER_RESPONSE;
+                    next = now + timeout;
                 }
                 pof_usb->dataAvailable = 0;
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
             if(now > next) {
+                timeout = TIMEOUT_NORMAL;
                 next = now + timeout;
                 memset(tx_data, 0, sizeof(tx_data));
                 len_data = virtual_portal_send_status(virtual_portal, tx_data);
@@ -114,12 +115,13 @@ static int32_t pof_thread_worker(void* context) {
             }
         }
 
-        if(flags == (uint32_t)FuriFlagErrorISR && now > next) { // timeout
+        if(flags == (uint32_t)FuriFlagErrorISR) { // timeout
             memset(tx_data, 0, sizeof(tx_data));
             len_data = virtual_portal_send_status(virtual_portal, tx_data);
             if(len_data > 0) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
+            timeout = TIMEOUT_NORMAL;
             next = now + timeout;
         }
     }

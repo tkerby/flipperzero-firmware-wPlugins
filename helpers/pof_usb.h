@@ -20,6 +20,9 @@
 #define POF_USB_RX_MAX_SIZE (POF_USB_EP_OUT_SIZE)
 #define POF_USB_TX_MAX_SIZE (POF_USB_EP_IN_SIZE)
 
+#define TIMEOUT_NORMAL 32
+#define TIMEOUT_AFTER_RESPONSE 100
+
 typedef struct PoFUsb PoFUsb;
 
 PoFUsb* pof_usb_start(VirtualPortal* virtual_portal);

@@ -67,6 +67,9 @@ static int32_t pof_thread_worker(void* context) {
             last_r = target_r;
             last_g = target_g;
             last_b = target_b;
+            furi_hal_light_set(LightRed, target_r);
+            furi_hal_light_set(LightBlue, target_g);
+            furi_hal_light_set(LightGreen, target_b);
             running = false;
         }
     }

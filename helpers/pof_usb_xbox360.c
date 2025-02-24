@@ -19,6 +19,9 @@
 
 #define POF_USB_ACTUAL_OUTPUT_SIZE 0x20
 
+#define TIMEOUT_NORMAL 32
+#define TIMEOUT_AFTER_RESPONSE 100
+
 static const struct usb_string_descriptor dev_manuf_desc =
     USB_ARRAY_DESC(0x41, 0x63, 0x74, 0x69, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x00);
 static const struct usb_string_descriptor dev_product_desc =
@@ -49,8 +52,7 @@ static int32_t pof_thread_worker(void* context) {
 
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
-    uint32_t timeout = 32; // FuriWaitForever; //ms
-    uint32_t timeoutResponse = 100; // FuriWaitForever; //ms
+    uint32_t timeout = TIMEOUT_NORMAL; // FuriWaitForever; //ms
     uint32_t next = furi_get_tick() + timeout;
 
     while(true) {
@@ -70,7 +72,8 @@ static int32_t pof_thread_worker(void* context) {
                     tx_data[0] = 0x0b;
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
-                    next = now + timeoutResponse;
+                    timeout = TIMEOUT_AFTER_RESPONSE;
+                    next = now + timeout;
                 }
             } else if (len_data > 0 && buf[0] == 0x0b && buf[1] == 0x17) {
                 // 360 audio packets start with 0b 17, samples start after the two byte header
@@ -123,7 +126,7 @@ static int32_t pof_thread_worker(void* context) {
             }
         }
 
-        if(flags == (uint32_t)FuriFlagErrorISR && now > next) { // timeout
+        if(flags == (uint32_t)FuriFlagErrorISR) { // timeout
             memset(tx_data, 0, sizeof(tx_data));
             len_data = virtual_portal_send_status(virtual_portal, tx_data + 2);
             if(len_data > 0) {
@@ -131,6 +134,7 @@ static int32_t pof_thread_worker(void* context) {
                 tx_data[1] = 0x14;
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
+            timeout = TIMEOUT_NORMAL;
             next = now + timeout;
         }
     }
