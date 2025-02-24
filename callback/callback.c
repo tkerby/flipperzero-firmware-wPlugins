@@ -1193,12 +1193,15 @@ void callback_submenu_choices(void *context, uint32_t index)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewGameSubmenu);
         break;
     case FlipWorldSubmenuIndexStory:
+        game_mode_index = 2; // GAME_MODE_STORY
         easy_flipper_dialog("Unavailable", "\nStory mode is not ready yet.\nPress BACK to return.");
         break;
     case FlipWorldSubmenuIndexPvP:
+        game_mode_index = 1; // GAME_MODE_PVP
         easy_flipper_dialog("Unavailable", "\nPvP mode is not ready yet.\nPress BACK to return.");
         break;
     case FlipWorldSubmenuIndexPvE:
+        game_mode_index = 0; // GAME_MODE_PVE
         free_all_views(app, true, true);
         if (!is_enough_heap(60000))
         {

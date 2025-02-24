@@ -21,6 +21,8 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->enemy_count = 0;
     game_context->npc_count = 0;
 
+    game_context->game_mode = game_mode_index;
+
     // set all levels to NULL
     for (int i = 0; i < MAX_LEVELS; i++)
         game_context->levels[i] = NULL;
