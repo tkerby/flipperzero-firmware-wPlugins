@@ -26,6 +26,13 @@ typedef enum {
 } PoFEvent;
 
 typedef struct {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint16_t delay;
+} VirtualPortalLed;
+
+typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];
     uint8_t sequence_number;
     bool active;
@@ -33,10 +40,9 @@ typedef struct {
     NotificationApp* notifications;
     PoFType type;
     FuriThread* thread;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint16_t delay;
+    VirtualPortalLed left;
+    VirtualPortalLed right;
+    VirtualPortalLed trap;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);

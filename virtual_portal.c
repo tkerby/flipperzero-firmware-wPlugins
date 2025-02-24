@@ -46,16 +46,20 @@ static int32_t pof_thread_worker(void* context) {
             }
             if(flags & EventLed) {
                 start_time = now;
-                duration = virtual_portal->delay;
-                target_r = virtual_portal->r;
-                target_g = virtual_portal->g;
-                target_b = virtual_portal->b;
+                duration = virtual_portal->left.delay;
+                target_r = virtual_portal->left.r;
+                target_g = virtual_portal->left.g;
+                target_b = virtual_portal->left.b;
             }
             if (elapsed < duration) {
-                t_phase = fmin(elapsed / duration, 1);
+                t_phase = fminf((float)elapsed / (float)duration, 1);
                 furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
                 furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
                 furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+            } else {
+                last_r = target_r;
+                last_g = target_g;
+                last_b = target_b;
             }
         }
     }
@@ -331,10 +335,10 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     case 0:
     case 2:
         // virtaul_portal_set_leds(r, g, b);
-        virtual_portal->r = r;
-        virtual_portal->g = g;
-        virtual_portal->b = b;
-        virtual_portal->delay = delay;
+        virtual_portal->left.r = r;
+        virtual_portal->left.g = g;
+        virtual_portal->left.b = b;
+        virtual_portal->left.delay = delay;
         furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
         break;
     }
