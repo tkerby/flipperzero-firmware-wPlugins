@@ -228,7 +228,7 @@ uint8_t virtual_portal_next_sequence(VirtualPortal* virtual_portal) {
 
 int virtual_portal_activate(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     FURI_LOG_D(TAG, "process %c", message[0]);
-    virtual_portal->active = (message[1] == 1);
+    virtual_portal->active = message[1] != 0;
 
     response[0] = message[0];
     response[1] = message[1];
