@@ -83,7 +83,7 @@ static int32_t pof_thread_worker(void* context) {
                 len_data = virtual_portal_send_status(virtual_portal, tx_data);
                 if(len_data > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
-                    next = now + timeoutResponse;
+                    next = now + timeout;
                 }
             }
 
