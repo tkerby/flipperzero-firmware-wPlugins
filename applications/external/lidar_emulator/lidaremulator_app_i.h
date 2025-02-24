@@ -11,7 +11,6 @@
 #include <notification/notification_messages.h>
 #include <infrared/worker/infrared_worker.h>
 
-
 #include "scenes/lidaremulator_scene.h"
 
 #include "view_hijacker.h"
@@ -31,9 +30,7 @@ struct LidarEmulatorApp {
 
 typedef struct LidarEmulatorApp LidarEmulatorApp;
 
-
 //Enumeration of all used view types.
 typedef enum {
     LidarEmulatorViewSubmenu,
 } LidarEmulatorView;
-
