@@ -71,10 +71,10 @@ void virtaul_portal_set_leds(VirtualPortal* virtual_portal, uint8_t r, uint8_t g
     message_red.data.led.value = r;
     message_green.data.led.value = g;
     message_blue.data.led.value = b;
+    notification_message(virtual_portal->notifications, &sequence_set_leds);
     furi_hal_light_set(LightRed, r);
     furi_hal_light_set(LightGreen, g);
     furi_hal_light_set(LightBlue, b);
-    notification_message(virtual_portal->notifications, &sequence_set_leds);
 }
 void virtaul_portal_set_backlight(VirtualPortal* virtual_portal, uint8_t brightness) {
     message_display_backlight.data.led.value = brightness;
