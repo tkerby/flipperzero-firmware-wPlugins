@@ -46,6 +46,9 @@ static int32_t pof_thread_worker(void* context) {
         if (flags) {
             if (flags & EventLed) {
                 start_time = furi_get_tick();
+                last_r = target_r;
+                last_g = target_g;
+                last_b = target_b;
                 duration = virtual_portal->left.delay;
                 target_r = virtual_portal->left.r;
                 target_g = virtual_portal->left.g;
