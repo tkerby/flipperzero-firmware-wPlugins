@@ -70,6 +70,7 @@ static int32_t pof_thread_worker(void* context) {
                     virtual_portal_process_message(virtual_portal, pof_usb->data, tx_data);
                 if(send_len > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
+                    lastStatus = now;
                 }
                 pof_usb->dataAvailable = 0;
             }
