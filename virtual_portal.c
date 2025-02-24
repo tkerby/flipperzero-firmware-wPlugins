@@ -23,8 +23,6 @@ static float lerp(float start, float end, float t) {
 
 static int32_t pof_thread_worker(void* context) {
     VirtualPortal* virtual_portal = context;
-    UNUSED(virtual_portal);
-    uint32_t now = 0;
     uint8_t last_r = 0;
     uint8_t last_g = 0;
     uint8_t last_b = 0;
@@ -35,28 +33,27 @@ static int32_t pof_thread_worker(void* context) {
     uint32_t elapsed = 0;
     uint32_t duration = 0;
     float t_phase;
-    while(true) {
-        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, 1);
-        now = furi_get_tick();
-        elapsed = now - start_time;
-        if(flags) {
-            if(flags & EventExit) {
+    while (true) {
+        uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, FuriWaitForever);
+        if (flags) {
+            if (flags & EventExit) {
                 FURI_LOG_I(TAG, "exit");
                 break;
             }
-            if(flags & EventLed) {
-                start_time = now;
+            if (flags & EventLed) {
+                start_time = furi_get_tick();
+                elapsed = 0;
                 duration = virtual_portal->left.delay;
                 target_r = virtual_portal->left.r;
                 target_g = virtual_portal->left.g;
                 target_b = virtual_portal->left.b;
-            }
-            if (elapsed < duration) {
-                t_phase = fminf((float)elapsed / (float)duration, 1);
-                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-                furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
-                furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
-            } else {
+                while (elapsed < duration) {
+                    elapsed = furi_get_tick() - start_time;
+                    t_phase = fminf((float)elapsed / (float)duration, 1);
+                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+                    furi_hal_light_set(LightBlue, lerp(last_g, target_g, t_phase));
+                    furi_hal_light_set(LightGreen, lerp(last_b, target_b, t_phase));
+                }
                 last_r = target_r;
                 last_g = target_g;
                 last_b = target_b;
@@ -74,7 +71,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     notification_message(virtual_portal->notifications, &sequence_set_backlight);
     notification_message(virtual_portal->notifications, &sequence_set_leds);
 
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+    for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
         virtual_portal->tokens[i] = pof_token_alloc();
     }
     virtual_portal->sequence_number = 0;
@@ -97,7 +94,7 @@ void virtual_portal_cleanup(VirtualPortal* virtual_portal) {
 }
 
 void virtual_portal_free(VirtualPortal* virtual_portal) {
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
+    for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
         pof_token_free(virtual_portal->tokens[i]);
         virtual_portal->tokens[i] = NULL;
     }
@@ -125,10 +122,10 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
     uint8_t empty[4] = {0, 0, 0, 0};
 
     // first try to "reload" to the same slot it used before based on UID
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-        if(memcmp(virtual_portal->tokens[i]->UID, pof_token->UID, sizeof(pof_token->UID)) == 0) {
+    for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
+        if (memcmp(virtual_portal->tokens[i]->UID, pof_token->UID, sizeof(pof_token->UID)) == 0) {
             // Found match
-            if(virtual_portal->tokens[i]->loaded) {
+            if (virtual_portal->tokens[i]->loaded) {
                 // already loaded, no-op
                 return;
             } else {
@@ -140,9 +137,9 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
     }
 
     // otherwise load into first slot with no set UID
-    if(target == NULL) {
-        for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-            if(memcmp(virtual_portal->tokens[i]->UID, empty, sizeof(empty)) == 0) {
+    if (target == NULL) {
+        for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
+            if (memcmp(virtual_portal->tokens[i]->UID, empty, sizeof(empty)) == 0) {
                 FURI_LOG_D(TAG, "Found empty UID at index %d", i);
                 // By definition an empty UID slot would not be loaded, so I'm not checking.  Fight me.
                 target = virtual_portal->tokens[i];
@@ -152,9 +149,9 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
     }
 
     // Re-use first unloaded slot
-    if(target == NULL) {
-        for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-            if(virtual_portal->tokens[i]->loaded == false) {
+    if (target == NULL) {
+        for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
+            if (virtual_portal->tokens[i]->loaded == false) {
                 FURI_LOG_D(TAG, "Re-using previously used slot %d", i);
                 target = virtual_portal->tokens[i];
                 break;
@@ -162,7 +159,7 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
         }
     }
 
-    if(target == NULL) {
+    if (target == NULL) {
         FURI_LOG_W(TAG, "Failed to find slot to token into");
         return;
     }
@@ -179,7 +176,7 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
 }
 
 uint8_t virtual_portal_next_sequence(VirtualPortal* virtual_portal) {
-    if(virtual_portal->sequence_number == 0xff) {
+    if (virtual_portal->sequence_number == 0xff) {
         virtual_portal->sequence_number = 0;
     }
     return virtual_portal->sequence_number++;
@@ -200,9 +197,9 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_D(TAG, "process %c", message[0]);
 
     virtual_portal->active = false;
-    //virtual_portal->sequence_number = 0;
-    for(int i = 0; i < POF_TOKEN_LIMIT; i++) {
-        if(virtual_portal->tokens[i]->loaded) {
+    // virtual_portal->sequence_number = 0;
+    for (int i = 0; i < POF_TOKEN_LIMIT; i++) {
+        if (virtual_portal->tokens[i]->loaded) {
             virtual_portal->tokens[i]->change = true;
         }
     }
@@ -211,13 +208,13 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     response[index++] = 'R';
     response[index++] = 0x02;
     response[index++] = 0x1B;
-    //response[index++] = 0x0a;
-    //response[index++] = 0x03;
-    //response[index++] = 0x02;
-    // https://github.com/tresni/PoweredPortals/wiki/USB-Protocols
-    // Wii Wireless: 01 29 00 00
-    // Wii Wired: 02 0a 03 02 (Giants: works)
-    // Arduboy: 02 19 (Trap team: works)
+    // response[index++] = 0x0a;
+    // response[index++] = 0x03;
+    // response[index++] = 0x02;
+    //  https://github.com/tresni/PoweredPortals/wiki/USB-Protocols
+    //  Wii Wireless: 01 29 00 00
+    //  Wii Wired: 02 0a 03 02 (Giants: works)
+    //  Arduboy: 02 19 (Trap team: works)
     return index;
 }
 
@@ -225,12 +222,12 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
     response[0] = 'S';
 
     bool update = false;
-    for(size_t i = 0; i < POF_TOKEN_LIMIT; i++) {
+    for (size_t i = 0; i < POF_TOKEN_LIMIT; i++) {
         // Can't use bit_lib since it uses the opposite endian
-        if(virtual_portal->tokens[i]->loaded) {
+        if (virtual_portal->tokens[i]->loaded) {
             response[1 + i / 4] |= 1 << ((i % 4) * 2 + 0);
         }
-        if(virtual_portal->tokens[i]->change) {
+        if (virtual_portal->tokens[i]->change) {
             update = true;
             response[1 + i / 4] |= 1 << ((i % 4) * 2 + 1);
         }
@@ -241,10 +238,10 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
     response[6] = 1;
 
     // Let me know when a status that actually has a change is sent
-    if(update) {
+    if (update) {
         char display[33] = {0};
         memset(display, 0, sizeof(display));
-        for(size_t i = 0; i < BLOCK_SIZE; i++) {
+        for (size_t i = 0; i < BLOCK_SIZE; i++) {
             snprintf(display + (i * 2), sizeof(display), "%02x", response[i]);
         }
         FURI_LOG_I(TAG, "> S %s", display);
@@ -254,7 +251,7 @@ int virtual_portal_status(VirtualPortal* virtual_portal, uint8_t* response) {
 }
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response) {
-    if(virtual_portal->active) {
+    if (virtual_portal->active) {
         return virtual_portal_status(virtual_portal, response);
     }
     return 0;
@@ -292,21 +289,21 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     FURI_LOG_I(TAG, "L %s", display);
     */
 
-    uint8_t side = message[1]; // 0: left, 2: right
+    uint8_t side = message[1];  // 0: left, 2: right
     uint8_t brightness = 0;
-    switch(side) {
-    case 0:
-    case 2:
-        virtaul_portal_set_leds(message[2], message[3], message[4]);
-        break;
-    case 1:
-        brightness = message[2];
-        virtaul_portal_set_backlight(brightness);
-        break;
-    case 3:
-        brightness = 0xff;
-        virtaul_portal_set_backlight(brightness);
-        break;
+    switch (side) {
+        case 0:
+        case 2:
+            virtaul_portal_set_leds(message[2], message[3], message[4]);
+            break;
+        case 1:
+            brightness = message[2];
+            virtaul_portal_set_backlight(brightness);
+            break;
+        case 3:
+            brightness = 0xff;
+            virtaul_portal_set_backlight(brightness);
+            break;
     }
 
     // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
@@ -316,7 +313,6 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 }
 
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
-
     /*
     char display[33] = {0};
     memset(display, 0, sizeof(display));
@@ -326,21 +322,21 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     FURI_LOG_I(TAG, "J %s", display);
     */
 
-    uint8_t side = message[1]; // 0: left, 2: right
-    uint8_t r = message[2]; // 0: left, 2: right
-    uint8_t g = message[3]; // 0: left, 2: right
-    uint8_t b = message[4]; // 0: left, 2: right
+    uint8_t side = message[1];  // 0: left, 2: right
+    uint8_t r = message[2];     // 0: left, 2: right
+    uint8_t g = message[3];     // 0: left, 2: right
+    uint8_t b = message[4];     // 0: left, 2: right
     uint16_t delay = message[6] << 8 | message[5];
-    switch(side) {
-    case 0:
-    case 2:
-        // virtaul_portal_set_leds(r, g, b);
-        virtual_portal->left.r = r;
-        virtual_portal->left.g = g;
-        virtual_portal->left.b = b;
-        virtual_portal->left.delay = delay;
-        furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
-        break;
+    switch (side) {
+        case 0:
+        case 2:
+            // virtaul_portal_set_leds(r, g, b);
+            virtual_portal->left.r = r;
+            virtual_portal->left.g = g;
+            virtual_portal->left.b = b;
+            virtual_portal->left.delay = delay;
+            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            break;
     }
 
     // Delay response
@@ -360,7 +356,7 @@ int virtual_portal_query(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     FURI_LOG_I(TAG, "Query %d %d", arrayIndex, blockNum);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
-    if(!pof_token->loaded) {
+    if (!pof_token->loaded) {
         response[0] = 'Q';
         response[1] = 0x00 | arrayIndex;
         response[2] = blockNum;
@@ -383,13 +379,13 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     int arrayIndex = index & 0x0f;
 
     char display[33] = {0};
-    for(size_t i = 0; i < BLOCK_SIZE; i++) {
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
         snprintf(display + (i * 2), sizeof(display), "%02x", message[3 + i]);
     }
     FURI_LOG_I(TAG, "Write %d %d %s", arrayIndex, blockNum, display);
 
     PoFToken* pof_token = virtual_portal->tokens[arrayIndex];
-    if(!pof_token->loaded) {
+    if (!pof_token->loaded) {
         response[0] = 'W';
         response[1] = 0x00 | arrayIndex;
         response[2] = blockNum;
@@ -419,34 +415,34 @@ int virtual_portal_process_message(
     uint8_t* message,
     uint8_t* response) {
     memset(response, 0, 32);
-    switch(message[0]) {
-    case 'A':
-        return virtual_portal_activate(virtual_portal, message, response);
-    case 'C': //Ring color R G B
-        virtaul_portal_set_leds(message[1], message[2], message[3]);
-        return 0;
-    case 'J':
-        // https://github.com/flyandi/flipper_zero_rgb_led
-        return virtual_portal_j(virtual_portal, message, response);
-    case 'L':
-        return virtual_portal_l(virtual_portal, message, response);
-    case 'M':
-        return virtual_portal_m(virtual_portal, message, response);
-    case 'Q': //Query
-        return virtual_portal_query(virtual_portal, message, response);
-    case 'R':
-        return virtual_portal_reset(virtual_portal, message, response);
-    case 'S': //Status
-        return virtual_portal_status(virtual_portal, response);
-    case 'V':
-        return 0;
-    case 'W': //Write
-        return virtual_portal_write(virtual_portal, message, response);
-    case 'Z':
-        return 0;
-    default:
-        FURI_LOG_W(TAG, "Unhandled command %c", message[0]);
-        return 0; //No response
+    switch (message[0]) {
+        case 'A':
+            return virtual_portal_activate(virtual_portal, message, response);
+        case 'C':  // Ring color R G B
+            virtaul_portal_set_leds(message[1], message[2], message[3]);
+            return 0;
+        case 'J':
+            // https://github.com/flyandi/flipper_zero_rgb_led
+            return virtual_portal_j(virtual_portal, message, response);
+        case 'L':
+            return virtual_portal_l(virtual_portal, message, response);
+        case 'M':
+            return virtual_portal_m(virtual_portal, message, response);
+        case 'Q':  // Query
+            return virtual_portal_query(virtual_portal, message, response);
+        case 'R':
+            return virtual_portal_reset(virtual_portal, message, response);
+        case 'S':  // Status
+            return virtual_portal_status(virtual_portal, response);
+        case 'V':
+            return 0;
+        case 'W':  // Write
+            return virtual_portal_write(virtual_portal, message, response);
+        case 'Z':
+            return 0;
+        default:
+            FURI_LOG_W(TAG, "Unhandled command %c", message[0]);
+            return 0;  // No response
     }
 
     return 0;

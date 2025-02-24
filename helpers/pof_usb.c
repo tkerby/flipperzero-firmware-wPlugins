@@ -377,7 +377,7 @@ PoFUsb* pof_usb_start(VirtualPortal* virtual_portal) {
     PoFUsb* pof_usb = malloc(sizeof(PoFUsb));
     pof_usb->virtual_portal = virtual_portal;
     pof_usb->dataAvailable = 0;
-
+    furi_hal_usb_unlock();
     pof_usb->usb_prev = furi_hal_usb_get_config();
     pof_usb->usb.init = pof_usb_init;
     pof_usb->usb.deinit = pof_usb_deinit;
