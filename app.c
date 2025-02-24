@@ -24,7 +24,7 @@ int32_t flip_world_main(void *p)
         return -1;
     }
 
-    if (!flipper_http_ping(fhttp))
+    if (!flipper_http_send_command(fhttp, HTTP_CMD_PING))
     {
         FURI_LOG_E(TAG, "Failed to ping the device");
         flipper_http_free(fhttp);

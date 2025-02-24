@@ -762,7 +762,7 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(fhttp, GET, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -797,7 +797,7 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
 
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
 }
 
 // static bool fetch_app_update(FlipperHTTP *fhttp)
@@ -921,7 +921,7 @@ static bool _fetch_game(DataLoaderModel *model)
         }
         char payload[256];
         snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
-        return flipper_http_post_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
+        return flipper_http_request(model->fhttp, POST, "https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
     }
     else if (model->request_index == 1)
     {
@@ -959,7 +959,7 @@ static bool _fetch_game(DataLoaderModel *model)
             char payload[172];
             snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
             model->title = "Registering...";
-            return flipper_http_post_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
+            return flipper_http_request(model->fhttp, POST, "https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
         }
         else
         {
@@ -1017,7 +1017,7 @@ static bool _fetch_game(DataLoaderModel *model)
         snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v5/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
-        return flipper_http_get_request_with_headers(model->fhttp, url, "{\"Content-Type\":\"application/json\"}");
+        return flipper_http_request(model->fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
     }
     FURI_LOG_E(TAG, "Unknown request index");
     return false;
@@ -1625,7 +1625,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
     furi_record_close(RECORD_STORAGE);
     snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(model->fhttp, GET, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 static char *_parse_worlds(DataLoaderModel *model)
 {
@@ -1807,7 +1807,7 @@ void loader_draw_callback(Canvas *canvas, void *model)
     }
 
     DataLoaderModel *data_loader_model = (DataLoaderModel *)model;
-    SerialState http_state = data_loader_model->fhttp->state;
+    HTTPState http_state = data_loader_model->fhttp->state;
     DataState data_state = data_loader_model->data_state;
     char *title = data_loader_model->title;
 
