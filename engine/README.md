@@ -15,6 +15,7 @@ There are two installation methods; choose the one that is most convenient for y
 **Method 1**
 1. Install the Video Game Module Tool app on your Flipper Zero from the Apps catalog: [Video Game Module Tool](https://lab.flipper.net/apps/video_game_module_tool).
 2. Download one of the examples from the `Arduino` directory:
+- Doom: `Doom-VGM-Engine.uf2`
 - FlipWorld: `FlipWorld-VGM-Engine.uf2`
 - Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
 - T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
@@ -35,6 +36,7 @@ There are two installation methods; choose the one that is most convenient for y
 
 **Method 2**
 1. Download one of the examples from the `Arduino` directory:
+- Doom: `Doom-VGM-Engine.uf2`
 - FlipWorld: `FlipWorld-VGM-Engine.uf2`
 - Air Labyrinth: `AirLabyrinth-VGM-Engine.uf2`
 - T-Rex Runner: `T-Rex-Runner-VGM-Engine.uf2`
