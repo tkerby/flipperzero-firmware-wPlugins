@@ -29,7 +29,7 @@ There are two installation methods; choose the one that is most convenient for y
 6. Drag the file you downloaded earlier into the `Engine` directory.
 7. Disconnect your Flipper from your computer, then turn it off.
 8. Connect your Video Game Module to your Flipper, then turn your Flipper on.
-9. Open the Video Game Module Tool app on your Flipper. It should be located in the `Apps -> GPIO` folder from the main menu.
+9. Open the Video Game Module Tool app on your Flipper. It should be located in the `Apps -> Tools` folder from the main menu.
 10. In the Video Game Module Tool app, select `Install Firmware from File`, then choose `apps_data`.
 11. Scroll down and click on the `vgm` folder, then the `Engine` folder, and finally select the `.uf2` file.
 12. The app will begin flashing the firmware to your Video Game Module. Wait until the process is complete.
