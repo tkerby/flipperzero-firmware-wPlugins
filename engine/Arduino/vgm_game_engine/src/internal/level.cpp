@@ -11,31 +11,21 @@ namespace VGMGameEngine
           game(nullptr),
           _start(nullptr),
           _stop(nullptr),
-          entity_count(0)
+          entity_count(0),
+          entities(nullptr)
     {
-        for (int i = 0; i < MAX_ENTITIES; i++)
-        {
-            entities[i] = nullptr;
-        }
     }
 
     // Parameterized Constructor
-    Level::Level(const char *name, const Vector &size, Game *game, void (*start)(Level &), void (*stop)(Level &), int max_entities)
+    Level::Level(const char *name, const Vector &size, Game *game, void (*start)(Level &), void (*stop)(Level &))
         : name(name),
           size(size),
           game(game),
           _start(start),
           _stop(stop),
-          entity_count(0)
+          entity_count(0),
+          entities(nullptr)
     {
-        if (max_entities > MAX_ENTITIES)
-        {
-            max_entities = MAX_ENTITIES;
-        }
-        for (int i = 0; i < max_entities; i++)
-        {
-            entities[i] = nullptr;
-        }
     }
 
     // Destructor
@@ -56,6 +46,9 @@ namespace VGMGameEngine
                 entities[i] = nullptr;
             }
         }
+        // Free the dynamic array
+        delete[] entities;
+        entities = nullptr;
         entity_count = 0;
     }
 
@@ -84,16 +77,18 @@ namespace VGMGameEngine
     // Add an entity to the level
     void Level::entity_add(Entity *entity)
     {
-        if (entity_count >= MAX_ENTITIES)
+        // Allocate a new array with size one greater than the current count
+        Entity **newEntities = new Entity *[entity_count + 1];
+        // Copy the existing entity pointers (if any)
+        for (int i = 0; i < entity_count; i++)
         {
-            // Optionally, notify the caller about the failure
-            // For example, return a bool indicating success/failure
-            // Here, we delete the entity to prevent memory leak
-            delete entity;
-            return;
+            newEntities[i] = entities[i];
         }
+        newEntities[entity_count] = entity;
 
-        entities[entity_count] = entity;
+        // Delete the old array
+        delete[] entities;
+        entities = newEntities;
         entity_count++;
 
         // Start the new entity
@@ -116,7 +111,6 @@ namespace VGMGameEngine
                 break;
             }
         }
-
         if (remove_index == -1)
             return;
 
@@ -124,13 +118,19 @@ namespace VGMGameEngine
         entities[remove_index]->stop(this->game);
         delete entities[remove_index];
 
-        // Shift remaining entities
-        for (int i = remove_index; i < entity_count - 1; i++)
+        // Allocate a new array with one fewer slot (if any remain)
+        Entity **newEntities = (entity_count - 1 > 0) ? new Entity *[entity_count - 1] : nullptr;
+        // Copy over all pointers except the removed one
+        for (int i = 0, j = 0; i < entity_count; i++)
         {
-            entities[i] = entities[i + 1];
+            if (i == remove_index)
+                continue;
+            newEntities[j++] = entities[i];
         }
 
-        entities[entity_count - 1] = nullptr;
+        // Free the old array and update state
+        delete[] entities;
+        entities = newEntities;
         entity_count--;
     }
 
@@ -166,21 +166,17 @@ namespace VGMGameEngine
             Entity *ent = entities[i];
             if (ent != nullptr && ent->is_active)
             {
-                // Calculate old screen position based on OLD camera position and ENTITY's OLD position
                 float old_screen_x = ent->old_position.x - game->old_pos.x;
                 float old_screen_y = ent->old_position.y - game->old_pos.y;
 
-                // Clear the old screen position if it was within the screen
                 if (!(old_screen_x + ent->size.x < 0 || old_screen_x > game->size.x ||
                       old_screen_y + ent->size.y < 0 || old_screen_y > game->size.y))
                 {
                     game->draw->clear(Vector(old_screen_x, old_screen_y), Vector(ent->size.x, ent->size.y), game->bg_color);
                 }
 
-                // Run any custom rendering code
                 ent->render(game->draw, game);
 
-                // Draw the entity’s sprite if available
                 if (ent->sprite != nullptr)
                 {
                     game->draw->image(Vector(ent->position.x - game->pos.x, ent->position.y - game->pos.y), ent->sprite);
@@ -215,17 +211,13 @@ namespace VGMGameEngine
             Entity *ent = entities[i];
             if (ent != nullptr && ent->is_active)
             {
-                // Update the entity
                 ent->update(this->game);
-
-                // Check collisions
                 int count = 0;
                 Entity **collisions = collision_list(ent, count);
                 for (int j = 0; j < count; j++)
                 {
                     ent->collision(collisions[j], this->game);
                 }
-                // Clean up collision list
                 delete[] collisions;
             }
         }

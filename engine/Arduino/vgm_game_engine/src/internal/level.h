@@ -5,7 +5,6 @@
 
 namespace VGMGameEngine
 {
-
     // Forward declarations
     class Game;
     class Entity;
@@ -19,8 +18,7 @@ namespace VGMGameEngine
               const Vector &size,
               Game *game,
               void (*start)(Level &) = nullptr,
-              void (*stop)(Level &) = nullptr,
-              int max_entities = 1000);
+              void (*stop)(Level &) = nullptr);
         ~Level();
 
         // Member Functions
@@ -39,13 +37,11 @@ namespace VGMGameEngine
         Game *game;
         Vector size;
         int entity_count;
-        static const int MAX_ENTITIES = 1000;
-        Entity *entities[MAX_ENTITIES];
+        Entity **entities;
 
     private:
         // Callback Functions
         void (*_start)(Level &);
         void (*_stop)(Level &);
     };
-
 }
