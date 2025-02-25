@@ -379,6 +379,8 @@ static NfcCommand suica_poller_callback(NfcGenericEvent event, void* context) {
 
             widget_add_button_element(
                 widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+            widget_add_button_element(
+                widget, GuiButtonTypeLeft, "Del", metroflip_delete_widget_callback, app);
 
             if(model->size > 1) {
                 widget_add_button_element(
@@ -515,6 +517,8 @@ static void suica_on_enter(Metroflip* app) {
 
         widget_add_button_element(
             widget, GuiButtonTypeRight, "Exit", metroflip_exit_widget_callback, app);
+        widget_add_button_element(
+            widget, GuiButtonTypeLeft, "Del", metroflip_delete_widget_callback, app);
 
         if(model->size > 1) {
             widget_add_button_element(

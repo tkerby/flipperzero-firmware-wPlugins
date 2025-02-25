@@ -103,7 +103,7 @@ typedef struct {
     // Calypso specific context
     CalypsoContext* calypso_context;
 
-    // Suica specific context
+    // Suica
     SuicaContext* suica_context;
 
     DialogsApp* dialogs;
