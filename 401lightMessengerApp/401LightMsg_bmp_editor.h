@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "bmp.h"
+#include "401_err.h"
 #include "drivers/sk6805.h"
 #include <401_light_msg_icons.h>
 #include <dialogs/dialogs.h>
@@ -30,6 +31,7 @@ typedef struct {
 typedef enum {
     BmpEditorStateDrawing,
     BmpEditorStateSelectSize,
+    BmpEditorStateSizeError,
     BmpEditorStateSelectName,
     BmpEditorStateSelectFile,
     BmpEditorStateSelectSource,
@@ -64,6 +66,7 @@ typedef struct {
     uint8_t* bmp_canvas;
     bitmapMatrix* bitmap;
     bmpEditorState state;
+    l401_err error;
 } bmpEditorData;
 
 typedef struct {

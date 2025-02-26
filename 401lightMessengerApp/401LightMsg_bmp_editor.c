@@ -32,21 +32,24 @@ static uint8_t bmp_editor_move(AppBmpEditor* BmpEditor, int8_t x, int8_t y) {
 }
 
 static uint8_t bmp_editor_resize(AppBmpEditor* BmpEditor, int8_t w, int8_t h) {
+    // Compute the new dimensions given increments/decrements in size. Usually only height
     int dh = BmpEditor->model_data->bmp_h + h;
     int dw = BmpEditor->model_data->bmp_w + w;
-    if(dh < PARAM_BMP_EDITOR_MIN_RES_H)
+    if(dh < PARAM_BMP_EDITOR_MIN_RES_H) {
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MIN_RES_H;
-    else if(dh > PARAM_BMP_EDITOR_MAX_RES_H)
+    } else if(dh > PARAM_BMP_EDITOR_MAX_RES_H) {
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MAX_RES_H;
-    else
+    } else {
         BmpEditor->model_data->bmp_h = dh;
+    }
 
-    if(dw < PARAM_BMP_EDITOR_MIN_RES_W)
+    if(dw < PARAM_BMP_EDITOR_MIN_RES_W) {
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MIN_RES_W;
-    else if(dw > PARAM_BMP_EDITOR_MAX_RES_W)
+    } else if(dw > PARAM_BMP_EDITOR_MAX_RES_W) {
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MAX_RES_W;
-    else
+    } else {
         BmpEditor->model_data->bmp_w = dw;
+    }
 
     BmpEditor->model_data->cursor.x = (BmpEditor->model_data->bmp_w / 2);
     BmpEditor->model_data->cursor.y = (BmpEditor->model_data->bmp_h / 2);
@@ -114,6 +117,7 @@ static void bmp_editor_select_file(void* ctx) {
     AppContext* app = (AppContext*)ctx; // Main app struct
     AppData* appData = (AppData*)app->data;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+
     bmpEditorData* BmpEditorData = BmpEditor->model_data;
     Configuration* light_msg_data = (Configuration*)appData->config;
     DialogsFileBrowserOptions browser_options;
@@ -129,16 +133,24 @@ static void bmp_editor_select_file(void* ctx) {
     if(dialog_file_browser_show(BmpEditor->dialogs, bitmapPath, bitmapPath, &browser_options)) {
         if(BmpEditorData->bitmap) bitmapMatrix_free(BmpEditorData->bitmap);
         BmpEditorData->bitmap = bmp_to_bitmapMatrix(furi_string_get_cstr(bitmapPath));
-        BmpEditorData->bmp_w = BmpEditorData->bitmap->width;
-        BmpEditorData->bmp_h = BmpEditorData->bitmap->height;
-        BmpEditorData->state = BmpEditorStateDrawing;
-
-        memcpy(
-            BmpEditor->bitmapPath,
-            furi_string_get_cstr(bitmapPath),
-            strlen(furi_string_get_cstr(bitmapPath)));
-        bmp_compute_model(BmpEditor, BmpEditor->model_data);
-        view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+        if(BmpEditorData->bitmap->width > PARAM_BMP_EDITOR_MAX_RES_W) {
+            //if(BmpEditorData->bitmap) bitmapMatrix_free(BmpEditorData->bitmap);
+            //furi_string_free(bitmapPath);
+            BmpEditorData->state = BmpEditorStateSizeError;
+            BmpEditorData->error = L401_ERR_WIDTH;
+            view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+            return;
+        } else {
+            BmpEditorData->bmp_w = BmpEditorData->bitmap->width;
+            BmpEditorData->bmp_h = BmpEditorData->bitmap->height;
+            BmpEditorData->state = BmpEditorStateDrawing;
+            memcpy(
+                BmpEditor->bitmapPath,
+                furi_string_get_cstr(bitmapPath),
+                strlen(furi_string_get_cstr(bitmapPath)));
+            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+        }
     }
     furi_string_free(bitmapPath);
 }
@@ -253,12 +265,15 @@ static bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* c
     bool consumed = false;
     switch(BmpEditorData->state) {
     case BmpEditorStateMainMenu:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateMainMenu");
         consumed = bmp_editor_mainmenu_input_callback(input_event, ctx);
         break;
     case BmpEditorStateSelectSize:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSelectSize");
         consumed = bmp_editor_select_size_input_callback(input_event, ctx);
         break;
     case BmpEditorStateDrawing:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateDrawing");
         consumed = bmp_editor_draw_input_callback(input_event, ctx);
         break;
     default:
@@ -288,6 +303,26 @@ static void bmp_editor_drawSizePicker(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 25 + 10, 62, "Exit");
     canvas_draw_icon(canvas, 25 + 35, 56, &I_btn_ok_7x7);
     canvas_draw_str(canvas, 25 + 45, 62, "OK");
+}
+
+static void bmp_editor_drawError(Canvas* canvas, void* ctx) {
+    // UNUSED(ctx);
+    bmpEditorModel* BmpEditorModel = (bmpEditorModel*)ctx;
+    bmpEditorData* BmpEditorData = BmpEditorModel->data;
+
+    switch(BmpEditorData->error) {
+    case L401_ERR_WIDTH:
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "BMP File too large to");
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "be edited on flipper!");
+        break;
+    default:
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Unknown error");
+        break;
+    }
 }
 
 static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
@@ -360,10 +395,16 @@ static void app_scene_bmp_editor_render_callback(Canvas* canvas, void* _model) {
 
     switch(BmpEditorData->state) {
     case BmpEditorStateSelectSize:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSelectSiz");
         bmp_editor_drawSizePicker(canvas, _model);
         break;
     case BmpEditorStateDrawing:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateDrawing");
         bmp_editor_drawBoard(canvas, _model);
+        break;
+    case BmpEditorStateSizeError:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSizeError");
+        bmp_editor_drawError(canvas, _model);
         break;
     default:
         break;
@@ -377,15 +418,18 @@ static void bmp_editor_mainmenu_callback(void* ctx, uint32_t index) {
 
     switch(index) {
     case BmpEditorMainmenuIndex_New:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorMainmenuIndex_New");
         BmpEditorData->state = BmpEditorStateSelectSize;
         view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
         break;
     case BmpEditorMainmenuIndex_Open:
+        FURI_LOG_I(__FUNCTION__, "BmpEditorMainmenuIndex_Open");
         BmpEditorData->state = BmpEditorStateSelectFile;
         bmp_editor_select_file(ctx);
 
         break;
     default:
+        FURI_LOG_I(__FUNCTION__, "Index = %ld", index);
         break;
     }
 }
@@ -404,6 +448,7 @@ AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
     appBmpEditor->model_data->bmp_pixel_spacing = 0;
     appBmpEditor->model_data->bmp_w = 32;
     appBmpEditor->model_data->bmp_h = 16;
+    appBmpEditor->model_data->error = L401_OK;
     appBmpEditor->mainmenu = submenu_alloc();
 
     submenu_add_item(
@@ -432,7 +477,6 @@ AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
 
     appBmpEditor->view = view_alloc();
     view_allocate_model(appBmpEditor->view, ViewModelTypeLocking, sizeof(bmpEditorModel));
-
     view_set_context(appBmpEditor->view, app);
     view_set_draw_callback(appBmpEditor->view, app_scene_bmp_editor_render_callback);
     view_set_input_callback(appBmpEditor->view, app_scene_bmp_editor_input_callback);
@@ -477,6 +521,7 @@ View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor) {
 void app_scene_bmp_editor_on_enter(void* context) {
     AppContext* app = context;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+    FURI_LOG_I(__FUNCTION__, " enter");
     BmpEditor->model_data->state = BmpEditorStateMainMenu;
     with_view_model(
         BmpEditor->view, bmpEditorModel * model, { model->data = BmpEditor->model_data; }, false);
