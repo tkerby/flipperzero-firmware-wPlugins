@@ -56,6 +56,7 @@ XRemote* xremote_app_alloc() {
     app->stop_transmit = false;
     app->loop_transmit = 0;
     app->transmit_item = 0;
+    app->loadFavorite = false;
 
     // Load configs
     xremote_read_settings(app);
@@ -223,16 +224,11 @@ static void xremote_ir_load_settings(XRemote* app) {
 }
 
 int32_t xremote_app(void* p) {
-    UNUSED(p);
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
 
     XRemote* app = xremote_app_alloc();
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-
-    //scene_manager_next_scene(app->scene_manager, XRemoteSceneInfoscreen); //Start with start screen
-    scene_manager_next_scene(
-        app->scene_manager, XRemoteSceneMenu); //if you want to directly start with Menu
 
     furi_hal_power_suppress_charge_enter();
     xremote_ir_load_settings(app);
@@ -259,6 +255,18 @@ int32_t xremote_app(void* p) {
             if(tx_pin_detected != FuriHalInfraredTxPinInternal) {
                 furi_hal_power_enable_otg();
             }
+        }
+        //bool loadFavorite = false;
+        if(p && strlen(p)) {
+            furi_string_set_str(app->file_path, p);
+            app->loadFavorite = xremote_cross_remote_load(app->cross_remote, app->file_path);
+        }
+        if(app->loadFavorite) {
+            scene_manager_next_scene(
+                app->scene_manager, XRemoteSceneTransmit); //if you loaded from Favorites
+        } else {
+            scene_manager_next_scene(
+                app->scene_manager, XRemoteSceneMenu); //if you want to directly start with Menu
         }
     }
 

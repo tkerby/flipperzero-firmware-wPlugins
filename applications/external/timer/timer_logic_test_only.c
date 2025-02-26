@@ -17,10 +17,10 @@ static inline int timer_logic_get_countdown_seconds_test(int hour, int min, int 
     (void)hour; // Explicitly mark as unused
     // 現在時刻の秒数（時間内）
     int seconds_of_hour = min * 60 + sec;
-    
+
     // ターゲット時刻の秒数
     int target_seconds;
-    
+
     // XX:00:00の場合、ターゲット時刻に達している
     if(min == 0 && sec == 0) {
         return 0;
@@ -33,7 +33,7 @@ static inline int timer_logic_get_countdown_seconds_test(int hour, int min, int 
     else if(seconds_of_hour < 50 * 60) {
         target_seconds = 50 * 60; // XX:50:00
         return target_seconds - seconds_of_hour;
-    } 
+    }
     // XX:50:01～XX:59:59の場合、ターゲットは(XX+1):00:00
     else {
         target_seconds = 60 * 60; // (XX+1):00:00

@@ -115,13 +115,13 @@ void draw_callback(Canvas* canvas, void* ctx) {
         int hour, minute;
         get_hour_minute(now, &hour, &minute);
         canvas_set_font(canvas, FontSecondary);
-        
+
         // カウントダウン秒数を表示
         int countdown_seconds = app->state.countdown_seconds;
         int minutes = countdown_seconds / 60;
         int seconds = countdown_seconds % 60;
         char buf[32];
-        
+
         if(app->state.phase == PomodoroPhaseIdle) {
             // XX:00:00までのカウントダウン（次の開始時刻）
             snprintf(buf, sizeof(buf), "Start in %d:%02d", minutes, seconds);

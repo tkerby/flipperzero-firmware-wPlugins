@@ -31,6 +31,7 @@ static const char* known_ext[] = {
     [ArchiveFileTypeSubGhz] = ".sub",
     [ArchiveFileTypeLFRFID] = ".rfid",
     [ArchiveFileTypeInfrared] = ".ir",
+    [ArchiveFileTypeCrossRemote] = ".xr",
     [ArchiveFileTypeSubghzPlaylist] = ".txt",
     [ArchiveFileTypeSubghzRemote] = ".txt",
     [ArchiveFileTypeInfraredRemote] = ".txt",

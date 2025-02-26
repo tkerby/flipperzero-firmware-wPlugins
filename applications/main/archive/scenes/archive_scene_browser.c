@@ -23,6 +23,8 @@ const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
         return "125 kHz RFID";
     case ArchiveFileTypeInfrared:
         return "Infrared";
+    case ArchiveFileTypeCrossRemote:
+        return EXT_PATH("apps/Infrared/cross_remote.fap");
     case ArchiveFileTypeSubghzPlaylist:
         return EXT_PATH("apps/Sub-GHz/subghz_playlist.fap");
     case ArchiveFileTypeSubghzRemote:

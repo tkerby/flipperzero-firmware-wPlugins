@@ -31,6 +31,7 @@ static const Icon* ArchiveItemIcons[] = {
     [ArchiveFileTypeSubGhz] = &I_sub1_10px,
     [ArchiveFileTypeLFRFID] = &I_125_10px,
     [ArchiveFileTypeInfrared] = &I_ir_10px,
+    [ArchiveFileTypeCrossRemote] = &I_ir_10px,
     [ArchiveFileTypeSubghzPlaylist] = &I_subplaylist_10px,
     [ArchiveFileTypeSubghzRemote] = &I_subrem_10px,
     [ArchiveFileTypeInfraredRemote] = &I_ir_scope_10px,

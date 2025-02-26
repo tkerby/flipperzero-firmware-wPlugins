@@ -22,16 +22,24 @@
 #ifndef FURI_H
 #define FURI_H
 typedef int furi_dummy;
-static inline void furi_function_dummy(void) {}
-static inline void furi_log(const char* msg) { (void)msg; }
-static inline int furi_init(void) { return 0; }
-static inline void furi_deinit(void) {}
+static inline void furi_function_dummy(void) {
+}
+static inline void furi_log(const char* msg) {
+    (void)msg;
+}
+static inline int furi_init(void) {
+    return 0;
+}
+static inline void furi_deinit(void) {
+}
 #endif // FURI_H
 
 // furi_hal.hをモック
 #ifndef FURI_HAL_H
 #define FURI_HAL_H
-static inline time_t furi_hal_rtc_get_timestamp(void) { return 0; }
+static inline time_t furi_hal_rtc_get_timestamp(void) {
+    return 0;
+}
 #endif // FURI_HAL_H
 
 // その他のFuri関連ヘッダをモック
@@ -41,9 +49,13 @@ static inline time_t furi_hal_rtc_get_timestamp(void) { return 0; }
 
 #ifndef FURI_HAL_SPEAKER_H
 #define FURI_HAL_SPEAKER_H
-static inline bool furi_hal_speaker_is_mine(void) { return false; }
-static inline void furi_hal_speaker_release(void) {}
-static inline void furi_hal_speaker_stop(void) {}
+static inline bool furi_hal_speaker_is_mine(void) {
+    return false;
+}
+static inline void furi_hal_speaker_release(void) {
+}
+static inline void furi_hal_speaker_stop(void) {
+}
 #endif
 
 #ifndef GUI_GUI_H
@@ -54,7 +66,8 @@ typedef void* ViewPort;
 
 #ifndef INPUT_INPUT_H
 #define INPUT_INPUT_H
-typedef struct {} InputEvent;
+typedef struct {
+} InputEvent;
 #endif
 
 #ifndef NOTIFICATION_NOTIFICATION_MESSAGES_H
@@ -69,27 +82,47 @@ typedef struct {} InputEvent;
 #define STORAGE_STORAGE_H
 typedef void* Storage;
 typedef void* File;
-#define FSAM_READ 0
-#define FSAM_WRITE 0
+#define FSAM_READ          0
+#define FSAM_WRITE         0
 #define FSOM_OPEN_EXISTING 0
 #define FSOM_CREATE_ALWAYS 0
-#define RECORD_STORAGE "storage"
-static inline void* furi_record_open(const char* name) { (void)name; return NULL; }
-static inline void furi_record_close(const char* name) { (void)name; }
-static inline void* storage_file_alloc(void* storage) { (void)storage; return NULL; }
-static inline void storage_file_free(void* file) { (void)file; }
-static inline bool storage_file_open(void* file, const char* path, uint8_t access_mode, uint8_t open_mode) { 
-    (void)file; (void)path; (void)access_mode; (void)open_mode; 
-    return false; 
+#define RECORD_STORAGE     "storage"
+static inline void* furi_record_open(const char* name) {
+    (void)name;
+    return NULL;
 }
-static inline void storage_file_close(void* file) { (void)file; }
-static inline size_t storage_file_read(void* file, void* data, size_t size) { 
-    (void)file; (void)data; (void)size; 
-    return 0; 
+static inline void furi_record_close(const char* name) {
+    (void)name;
 }
-static inline size_t storage_file_write(void* file, const void* data, size_t size) { 
-    (void)file; (void)data; (void)size; 
-    return 0; 
+static inline void* storage_file_alloc(void* storage) {
+    (void)storage;
+    return NULL;
+}
+static inline void storage_file_free(void* file) {
+    (void)file;
+}
+static inline bool
+    storage_file_open(void* file, const char* path, uint8_t access_mode, uint8_t open_mode) {
+    (void)file;
+    (void)path;
+    (void)access_mode;
+    (void)open_mode;
+    return false;
+}
+static inline void storage_file_close(void* file) {
+    (void)file;
+}
+static inline size_t storage_file_read(void* file, void* data, size_t size) {
+    (void)file;
+    (void)data;
+    (void)size;
+    return 0;
+}
+static inline size_t storage_file_write(void* file, const void* data, size_t size) {
+    (void)file;
+    (void)data;
+    (void)size;
+    return 0;
 }
 #endif
 
@@ -163,13 +196,27 @@ typedef struct {
 // timer_alarm.hをモック
 #ifndef TIMER_ALARM_H
 #define TIMER_ALARM_H
-static inline void stop_alarm_sound(PomodoroApp* app) { (void)app; }
-static inline void start_screen_blink(PomodoroApp* app, uint32_t duration_ms) { 
-    (void)app; (void)duration_ms; 
+static inline void stop_alarm_sound(PomodoroApp* app) {
+    (void)app;
 }
-static inline void toggle_backlight_with_vibro(PomodoroApp* app) { (void)app; }
-static inline void show_dialog(PomodoroApp* app, const char* title, const char* message, uint32_t timeout_ms, AlarmType alarm_type) {
-    (void)app; (void)title; (void)message; (void)timeout_ms; (void)alarm_type;
+static inline void start_screen_blink(PomodoroApp* app, uint32_t duration_ms) {
+    (void)app;
+    (void)duration_ms;
+}
+static inline void toggle_backlight_with_vibro(PomodoroApp* app) {
+    (void)app;
+}
+static inline void show_dialog(
+    PomodoroApp* app,
+    const char* title,
+    const char* message,
+    uint32_t timeout_ms,
+    AlarmType alarm_type) {
+    (void)app;
+    (void)title;
+    (void)message;
+    (void)timeout_ms;
+    (void)alarm_type;
 }
 #endif // TIMER_ALARM_H
 
@@ -182,23 +229,41 @@ static inline void show_dialog(PomodoroApp* app, const char* title, const char* 
 // CUnitが利用できない場合の簡易的な代替実装
 #include <stdio.h>
 #include <stdlib.h>
-#define CUE_SUCCESS 0
+#define CUE_SUCCESS    0
 #define CU_BRM_VERBOSE 1
 typedef void* CU_pSuite;
-#define CU_ASSERT_EQUAL(a, b) do { if ((a) != (b)) { printf("Test failed: %s != %s\n", #a, #b); exit(1); } } while(0)
-static inline int CU_initialize_registry(void) { return 0; }
-static inline int CU_get_error(void) { return 0; }
-static inline void* CU_add_suite(const char* name, void *init, void *cleanup) { 
-    (void)name; (void)init; (void)cleanup; 
-    return (void*)1; 
+#define CU_ASSERT_EQUAL(a, b)                          \
+    do {                                               \
+        if((a) != (b)) {                               \
+            printf("Test failed: %s != %s\n", #a, #b); \
+            exit(1);                                   \
+        }                                              \
+    } while(0)
+static inline int CU_initialize_registry(void) {
+    return 0;
 }
-static inline void* CU_add_test(void* suite, const char* name, void (*testFunc)(void)) { 
-    (void)suite; (void)name; (void)testFunc; 
-    return (void*)1; 
+static inline int CU_get_error(void) {
+    return 0;
 }
-static inline void CU_basic_set_mode(int mode) { (void)mode; }
-static inline void CU_basic_run_tests(void) {}
-static inline void CU_cleanup_registry(void) {}
+static inline void* CU_add_suite(const char* name, void* init, void* cleanup) {
+    (void)name;
+    (void)init;
+    (void)cleanup;
+    return (void*)1;
+}
+static inline void* CU_add_test(void* suite, const char* name, void (*testFunc)(void)) {
+    (void)suite;
+    (void)name;
+    (void)testFunc;
+    return (void*)1;
+}
+static inline void CU_basic_set_mode(int mode) {
+    (void)mode;
+}
+static inline void CU_basic_run_tests(void) {
+}
+static inline void CU_cleanup_registry(void) {
+}
 #endif
 
 // テスト用の簡略化された実装をインクルード
@@ -207,7 +272,7 @@ static inline void CU_cleanup_registry(void) {}
 
 // テスト用の関数を実際の関数名にマッピング
 #define timer_logic_get_countdown_seconds timer_logic_get_countdown_seconds_test
-#define timer_logic_should_trigger_alarm timer_logic_should_trigger_alarm_test
+#define timer_logic_should_trigger_alarm  timer_logic_should_trigger_alarm_test
 
 /* timer_logic_get_countdown_secondsのテスト */
 void test_countdown_normal(void) {
@@ -261,21 +326,19 @@ void test_additional_times(void) {
 
 int main() {
     /* CUnitテストレジストリの初期化 */
-    if (CUE_SUCCESS != CU_initialize_registry())
-        return CU_get_error();
+    if(CUE_SUCCESS != CU_initialize_registry()) return CU_get_error();
 
     /* テストスイートのセットアップ */
     CU_pSuite suite = CU_add_suite("TimerLogicTestSuite", 0, 0);
-    if (NULL == suite) {
+    if(NULL == suite) {
         CU_cleanup_registry();
         return CU_get_error();
     }
 
     /* テストをスイートに追加 */
-    if ((NULL == CU_add_test(suite, "test_countdown_normal", test_countdown_normal)) ||
-        (NULL == CU_add_test(suite, "test_alarm_trigger", test_alarm_trigger)) ||
-        (NULL == CU_add_test(suite, "test_additional_times", test_additional_times)))
-    {
+    if((NULL == CU_add_test(suite, "test_countdown_normal", test_countdown_normal)) ||
+       (NULL == CU_add_test(suite, "test_alarm_trigger", test_alarm_trigger)) ||
+       (NULL == CU_add_test(suite, "test_additional_times", test_additional_times))) {
         CU_cleanup_registry();
         return CU_get_error();
     }

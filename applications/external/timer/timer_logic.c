@@ -13,10 +13,10 @@ int timer_logic_get_countdown_seconds(int hour, int min, int sec) {
     (void)hour; // Explicitly mark as unused
     // 現在時刻の秒数（時間内）
     int seconds_of_hour = min * 60 + sec;
-    
+
     // ターゲット時刻の秒数
     int target_seconds;
-    
+
     // XX:00:00の場合、ターゲット時刻に達している
     if(min == 0 && sec == 0) {
         return 0;
@@ -29,7 +29,7 @@ int timer_logic_get_countdown_seconds(int hour, int min, int sec) {
     else if(seconds_of_hour < 50 * 60) {
         target_seconds = 50 * 60; // XX:50:00
         return target_seconds - seconds_of_hour;
-    } 
+    }
     // XX:50:01～XX:59:59の場合、ターゲットは(XX+1):00:00
     else {
         target_seconds = 60 * 60; // (XX+1):00:00
@@ -164,16 +164,16 @@ void update_logic(PomodoroApp* app) {
 
     // 新しいカウントダウンロジック
     int countdown_seconds = timer_logic_get_countdown_seconds(hour, minute, second);
-    
+
     // カウントダウン秒数をアプリ状態に保存（UI表示などに使用）
     app->state.countdown_seconds = countdown_seconds;
-    
+
     // アラームトリガーチェック
     if(timer_logic_should_trigger_alarm(hour, minute, second) && !app->dialog_active) {
         AlarmType alarm_type;
         const char* title;
         const char* message;
-        
+
         // XX:50:00の場合はスタートアラーム、XX:00:00の場合は休憩アラーム
         if(minute == 50) {
             alarm_type = AlarmTypeStart;
@@ -184,11 +184,11 @@ void update_logic(PomodoroApp* app) {
             title = "Rest Alarm";
             message = "Time to rest?\nPress UP to confirm.";
         }
-        
+
         show_dialog(app, title, message, 10 * 1000, alarm_type);
         start_screen_blink(app, 3000);
     }
-    
+
     // ここでカウントダウン秒数を使用して表示を更新するなどの処理を行う
     // （UIの更新はtimer_ui.cで行われる可能性があるため、ここでは変数を更新するだけ）
 }

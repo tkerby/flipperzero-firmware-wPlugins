@@ -50,7 +50,7 @@ typedef struct {
     PomodoroPhase phase;
     time_t next_rest_time;
     int last_hour_triggered; // 最後にアラームを出した「時」(0-23)、-1なら未設定
-    int countdown_seconds;   // 次のターゲット時刻までの残り秒数
+    int countdown_seconds; // 次のターゲット時刻までの残り秒数
 } PomodoroState;
 
 // アプリ全体管理構造体
