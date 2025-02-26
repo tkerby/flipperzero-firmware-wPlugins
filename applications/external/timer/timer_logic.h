@@ -55,6 +55,26 @@ static inline void epoch_to_utc_breakdown(
     *day = days_since_1970 + 1;
 }
 
+/**
+ * 現在時刻から次のターゲット時刻（XX:50:00 または XX+1:00:00）までの残り秒数を計算する
+ * 
+ * @param hour 現在の時 (0-23)
+ * @param min 現在の分 (0-59)
+ * @param sec 現在の秒 (0-59)
+ * @return 次のターゲット時刻までの残り秒数。ターゲット時刻に達した場合は0を返す
+ */
+int timer_logic_get_countdown_seconds(int hour, int min, int sec);
+
+/**
+ * 現在時刻がアラームをトリガーすべき時刻かどうかを判定する
+ * 
+ * @param hour 現在の時 (0-23)
+ * @param min 現在の分 (0-59)
+ * @param sec 現在の秒 (0-59)
+ * @return アラームをトリガーすべき場合は1、そうでない場合は0
+ */
+int timer_logic_should_trigger_alarm(int hour, int min, int sec);
+
 void update_daily_record(PomodoroApp* app, time_t now);
 void save_daily_records(PomodoroApp* app);
 void load_daily_records(PomodoroApp* app);

@@ -115,16 +115,20 @@ void draw_callback(Canvas* canvas, void* ctx) {
         int hour, minute;
         get_hour_minute(now, &hour, &minute);
         canvas_set_font(canvas, FontSecondary);
+        
+        // カウントダウン秒数を表示
+        int countdown_seconds = app->state.countdown_seconds;
+        int minutes = countdown_seconds / 60;
+        int seconds = countdown_seconds % 60;
+        char buf[32];
+        
         if(app->state.phase == PomodoroPhaseIdle) {
-            int diff = (60 - minute) % 60;
-            char buf[32];
-            snprintf(buf, sizeof(buf), "Start in %d min", diff);
+            // XX:00:00までのカウントダウン（次の開始時刻）
+            snprintf(buf, sizeof(buf), "Start in %d:%02d", minutes, seconds);
             canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignTop, buf);
         } else {
-            int diff = 50 - minute;
-            if(diff < 0) diff += 60;
-            char buf[32];
-            snprintf(buf, sizeof(buf), "Rest in %d min", diff);
+            // XX:50:00までのカウントダウン（次の休憩時刻）
+            snprintf(buf, sizeof(buf), "Rest in %d:%02d", minutes, seconds);
             canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignTop, buf);
         }
         canvas_draw_str_aligned(canvas, 128, 1, AlignRight, AlignTop, "[Right]:Test");

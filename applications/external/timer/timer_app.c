@@ -41,6 +41,7 @@ int32_t timer_app_main(void* p) {
     if(diff_to_50 < 0) diff_to_50 += 60;
     app->state.next_rest_time = now + diff_to_50 * 60;
     app->state.last_hour_triggered = -1;
+    app->state.countdown_seconds = 0; // カウントダウン秒数の初期化
     app->blinking = false;
     app->hourly_alarm_active = false;
     app->start_count = 0;
