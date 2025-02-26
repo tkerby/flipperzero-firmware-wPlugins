@@ -1,6 +1,56 @@
 #include "timer_logic.h"
 #include "timer_alarm.h" // アラーム関連の関数を使用するため
 
+/**
+ * 現在時刻から次のターゲット時刻（XX:50:00 または XX+1:00:00）までの残り秒数を計算する
+ * 
+ * @param hour 現在の時 (0-23)
+ * @param min 現在の分 (0-59)
+ * @param sec 現在の秒 (0-59)
+ * @return 次のターゲット時刻までの残り秒数。ターゲット時刻に達した場合は0を返す
+ */
+int timer_logic_get_countdown_seconds(int hour, int min, int sec) {
+    (void)hour; // Explicitly mark as unused
+    // 現在時刻の秒数（時間内）
+    int seconds_of_hour = min * 60 + sec;
+    
+    // ターゲット時刻の秒数
+    int target_seconds;
+    
+    // XX:00:00の場合、ターゲット時刻に達している
+    if(min == 0 && sec == 0) {
+        return 0;
+    }
+    // XX:50:00の場合、ターゲット時刻に達している
+    else if(min == 50 && sec == 0) {
+        return 0;
+    }
+    // XX:00:01～XX:49:59の場合、ターゲットはXX:50:00
+    else if(seconds_of_hour < 50 * 60) {
+        target_seconds = 50 * 60; // XX:50:00
+        return target_seconds - seconds_of_hour;
+    } 
+    // XX:50:01～XX:59:59の場合、ターゲットは(XX+1):00:00
+    else {
+        target_seconds = 60 * 60; // (XX+1):00:00
+        return target_seconds - seconds_of_hour;
+    }
+}
+
+/**
+ * 現在時刻がアラームをトリガーすべき時刻かどうかを判定する
+ * 
+ * @param hour 現在の時 (0-23)
+ * @param min 現在の分 (0-59)
+ * @param sec 現在の秒 (0-59)
+ * @return アラームをトリガーすべき場合は1、そうでない場合は0
+ */
+int timer_logic_should_trigger_alarm(int hour, int min, int sec) {
+    (void)hour; // Explicitly mark as unused
+    // XX:50:00またはXX:00:00の場合にアラームをトリガー
+    return ((min == 50 && sec == 0) || (min == 0 && sec == 0)) ? 1 : 0;
+}
+
 // 日毎の記録データ保存
 void save_daily_records(PomodoroApp* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
@@ -52,8 +102,9 @@ void update_daily_record(PomodoroApp* app, time_t now) {
 void update_logic(PomodoroApp* app) {
     time_t now = furi_hal_rtc_get_timestamp();
     update_daily_record(app, now);
-    int hour, minute;
+    int hour, minute, second;
     get_hour_minute(now, &hour, &minute);
+    second = now % 60;
 
     if(app->blinking) {
         uint32_t now_tick = furi_get_tick();
@@ -111,25 +162,33 @@ void update_logic(PomodoroApp* app) {
         }
     }
 
-    if(app->state.phase == PomodoroPhaseIdle) {
-        if(minute == 0 && hour != app->state.last_hour_triggered) {
-            show_dialog(
-                app,
-                "Start Alarm",
-                "Time to start?\nPress UP to confirm.",
-                10 * 1000,
-                AlarmTypeStart);
-            start_screen_blink(app, 3000);
-            app->state.last_hour_triggered = hour;
-            app->hourly_alarm_active = true;
+    // 新しいカウントダウンロジック
+    int countdown_seconds = timer_logic_get_countdown_seconds(hour, minute, second);
+    
+    // カウントダウン秒数をアプリ状態に保存（UI表示などに使用）
+    app->state.countdown_seconds = countdown_seconds;
+    
+    // アラームトリガーチェック
+    if(timer_logic_should_trigger_alarm(hour, minute, second) && !app->dialog_active) {
+        AlarmType alarm_type;
+        const char* title;
+        const char* message;
+        
+        // XX:50:00の場合はスタートアラーム、XX:00:00の場合は休憩アラーム
+        if(minute == 50) {
+            alarm_type = AlarmTypeStart;
+            title = "Start Alarm";
+            message = "Time to start?\nPress UP to confirm.";
+        } else { // minute == 0
+            alarm_type = AlarmTypeRest;
+            title = "Rest Alarm";
+            message = "Time to rest?\nPress UP to confirm.";
         }
-    } else if(app->state.phase == PomodoroPhaseWaitingRest) {
-        if(app->state.next_rest_time != 0 && now >= app->state.next_rest_time) {
-            show_dialog(
-                app, "Rest Alarm", "Time to rest?\nPress UP to confirm.", 10 * 1000, AlarmTypeRest);
-            start_screen_blink(app, 3000);
-            app->state.phase = PomodoroPhaseIdle;
-            app->state.next_rest_time = 0;
-        }
+        
+        show_dialog(app, title, message, 10 * 1000, alarm_type);
+        start_screen_blink(app, 3000);
     }
+    
+    // ここでカウントダウン秒数を使用して表示を更新するなどの処理を行う
+    // （UIの更新はtimer_ui.cで行われる可能性があるため、ここでは変数を更新するだけ）
 }
