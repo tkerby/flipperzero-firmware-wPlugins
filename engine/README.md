@@ -23,6 +23,7 @@ There are two installation methods; choose the one that is most convenient for y
 - Flight Assault: `FlightAssault-VGM-Engine.uf2`
 - Pong: `Pong-VGM-Engine.uf2`
 - Arkanoid: `Arkanoid-VGM-Engine.uf2`
+- FuriousBirds: `FuriousBirds-VGM-Engine.uf2`
 3. Disconnect your Video Game Module from your Flipper and connect your Flipper to your computer.
 4. Open qFlipper.
 5. Navigate to the `SD Card/apps_data/vgm/` directory. If the folder doesn’t exist, create it. Inside that folder, create a folder named `Engine`.
@@ -44,6 +45,7 @@ There are two installation methods; choose the one that is most convenient for y
 - Flight Assault: `FlightAssault-VGM-Engine.uf2`
 - Pong: `Pong-VGM-Engine.uf2`
 - Arkanoid: `Arkanoid-VGM-Engine.uf2`
+- FuriousBirds: `FuriousBirds-VGM-Engine.uf2`
 2. Press and hold the `BOOT` button on your Video Game Module for 2 seconds.
 3. While holding the `BOOT` button, connect the Video Game Module to your computer using a USB cable.
 4. Drag and drop the downloaded file onto the device. It will automatically reboot and begin running the example.
