@@ -67,20 +67,20 @@ This is a list of metro cards and transit systems that need support or have part
 
 ## ✅ Supported Cards
 
-| **Card / Agency**  | **Country / City**                          | **Card Type**     |
-|--------------------|---------------------------------------------|-------------------|
-| **Bip!**           | 🇨🇱 Santiago de Chile, Chile                | Mifare Classic    |
-| **Charliecard**    | 🇺🇸 Boston, MA, USA                        | Mifare Classic    |
-| **Clipper**        | 🇺🇸 San Francisco, CA, USA                  | Mifare DESFire    |
-| **ITSO**           | 🇬🇧 United Kingdom                          | Mifare DESFire    |
-| **Metromoney**     | 🇬🇪 Tbilisi, Georgia                        | Mifare Classic    |
-| **myki**           | 🇦🇺 Melbourne (and surrounds), VIC, Australia | Mifare DESFire    |
-| **Navigo**         | 🇫🇷 Paris, France                           | Calypso           |
-| **Opal**           | 🇦🇺 Sydney (and surrounds), NSW, Australia  | Mifare DESFire    |
-| **Opus**           | 🇨🇦 Montreal, QC, Canada                    | Calypso           |
-| **Rav-Kav**        | 🇮🇱 Israel                                  | Calypso           |
-| **SmartRider**     | :australia: Western Australia, Australia   | Mifare Classic    |
-| **Troika**         | 🇷🇺 Moscow, Russia                          | Mifare Classic    |
+| **Card / Agency**  | **City / Country**                           | **Card Type**     |
+|--------------------|----------------------------------------------|-------------------|
+| **Bip!**           | 🇨🇱 Santiago de Chile, Chile                  | MIFARE Classic    |
+| **Charliecard**    | 🇺🇸 Boston, MA, USA                           | MIFARE Classic    |
+| **Clipper**        | 🇺🇸 San Francisco, CA, USA                    | MIFARE DESFire    |
+| **ITSO**           | 🇬🇧 United Kingdom                            | MIFARE DESFire    |
+| **Metromoney**     | 🇬🇪 Tbilisi, Georgia                          | MIFARE Classic    |
+| **myki**           | 🇦🇺 Melbourne (and surrounds), VIC, Australia | MIFARE DESFire    |
+| **Navigo**         | 🇫🇷 Paris, France                             | Calypso           |
+| **Opal**           | 🇦🇺 Sydney (and surrounds), NSW, Australia    | MIFARE DESFire    |
+| **Opus**           | 🇨🇦 Montreal, QC, Canada                      | Calypso           |
+| **Rav-Kav**        | 🇮🇱 Israel                                    | Calypso           |
+| **SmartRider**     | 🇦🇺 Perth, WA, Australia                      | MIFARE Classic    |
+| **Troika**         | 🇷🇺 Moscow, Russia                            | MIFARE Classic    |
 
 
 ---
