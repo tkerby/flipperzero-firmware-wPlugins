@@ -86,19 +86,19 @@ This is a list of metro cards and transit systems that need support or have part
 ---
 
 # Credits
-- **App Author**: [@luu176](https://github.com/luu176)
-- **Info Slaves**: [@equipter](https://github.com/equipter), [TheDingo8MyBaby](https://github.com/TheDingo8MyBaby)
-- **Bip! Parser**: [@rbasoalto](https://github.com/rbasoalto), [@gornekich](https://github.com/gornekich)
-- **Charliecard Parser**: [@zacharyweiss](https://github.com/zacharyweiss)
-- **Clipper Parser**: [@ke6jjj](https://github.com/ke6jjj)
-- **ITSO Parser**: [@gsp8181](https://github.com/gsp8181), [@hedger](https://github.com/hedger), [@gornekich](https://github.com/gornekich)
-- **Metromoney Parser**: [@Leptopt1los](https://github.com/Leptopt1los)
-- **myki Parser**: [@gornekich](https://github.com/gornekich)
-- **Navigo Parser**: [@luu176](https://github.com/luu176), [@DocSystem](https://github.com/DocSystem)
-- **Opal Parser**: [@gornekich](https://github.com/gornekich)
-- **Opus Parser**: [@DocSystem](https://github.com/DocSystem)
-- **Rav-Kav Parser**: [@luu176](https://github.com/luu176)
-- **Troika Parser**: [@gornekich](https://github.com/gornekich)
+- **App Author:** [@luu176](https://github.com/luu176)
+- **Info Slaves:** [@equipter](https://github.com/equipter), [TheDingo8MyBaby](https://github.com/TheDingo8MyBaby)
+- **Bip! Parser:** [@rbasoalto](https://github.com/rbasoalto), [@gornekich](https://github.com/gornekich)
+- **Charliecard Parser:** [@zacharyweiss](https://github.com/zacharyweiss)
+- **Clipper Parser:** [@ke6jjj](https://github.com/ke6jjj)
+- **ITSO Parser:** [@gsp8181](https://github.com/gsp8181), [@hedger](https://github.com/hedger), [@gornekich](https://github.com/gornekich)
+- **Metromoney Parser:** [@Leptopt1los](https://github.com/Leptopt1los)
+- **myki Parser:** [@gornekich](https://github.com/gornekich)
+- **Navigo Parser:** [@luu176](https://github.com/luu176), [@DocSystem](https://github.com/DocSystem)
+- **Opal Parser:** [@gornekich](https://github.com/gornekich)
+- **Opus Parser:** [@DocSystem](https://github.com/DocSystem)
+- **Rav-Kav Parser:** [@luu176](https://github.com/luu176)
+- **Troika Parser:** [@gornekich](https://github.com/gornekich)
 
 ---
 
