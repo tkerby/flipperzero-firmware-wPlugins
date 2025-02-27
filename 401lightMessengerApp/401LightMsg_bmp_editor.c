@@ -32,21 +32,24 @@ static uint8_t bmp_editor_move(AppBmpEditor* BmpEditor, int8_t x, int8_t y) {
 }
 
 static uint8_t bmp_editor_resize(AppBmpEditor* BmpEditor, int8_t w, int8_t h) {
+    // Compute the new dimensions given increments/decrements in size. Usually only height
     int dh = BmpEditor->model_data->bmp_h + h;
     int dw = BmpEditor->model_data->bmp_w + w;
-    if(dh < PARAM_BMP_EDITOR_MIN_RES_H)
+    if(dh < PARAM_BMP_EDITOR_MIN_RES_H) {
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MIN_RES_H;
-    else if(dh > PARAM_BMP_EDITOR_MAX_RES_H)
+    } else if(dh > PARAM_BMP_EDITOR_MAX_RES_H) {
         BmpEditor->model_data->bmp_h = PARAM_BMP_EDITOR_MAX_RES_H;
-    else
+    } else {
         BmpEditor->model_data->bmp_h = dh;
+    }
 
-    if(dw < PARAM_BMP_EDITOR_MIN_RES_W)
+    if(dw < PARAM_BMP_EDITOR_MIN_RES_W) {
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MIN_RES_W;
-    else if(dw > PARAM_BMP_EDITOR_MAX_RES_W)
+    } else if(dw > PARAM_BMP_EDITOR_MAX_RES_W) {
         BmpEditor->model_data->bmp_w = PARAM_BMP_EDITOR_MAX_RES_W;
-    else
+    } else {
         BmpEditor->model_data->bmp_w = dw;
+    }
 
     BmpEditor->model_data->cursor.x = (BmpEditor->model_data->bmp_w / 2);
     BmpEditor->model_data->cursor.y = (BmpEditor->model_data->bmp_h / 2);
@@ -84,7 +87,7 @@ static void bmp_editor_text_input_callback(void* ctx) {
         LIGHTMSGCONF_SAVE_FOLDER,
         BmpEditor->bitmapName,
         ".bmp");
-    view_dispatcher_send_custom_event(app->view_dispatcher, SetTextInputSaveEvent);
+    view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventSaveText);
 }
 
 static void bmp_editor_select_name(void* ctx) {
@@ -114,6 +117,7 @@ static void bmp_editor_select_file(void* ctx) {
     AppContext* app = (AppContext*)ctx; // Main app struct
     AppData* appData = (AppData*)app->data;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
+
     bmpEditorData* BmpEditorData = BmpEditor->model_data;
     Configuration* light_msg_data = (Configuration*)appData->config;
     DialogsFileBrowserOptions browser_options;
@@ -129,16 +133,24 @@ static void bmp_editor_select_file(void* ctx) {
     if(dialog_file_browser_show(BmpEditor->dialogs, bitmapPath, bitmapPath, &browser_options)) {
         if(BmpEditorData->bitmap) bitmapMatrix_free(BmpEditorData->bitmap);
         BmpEditorData->bitmap = bmp_to_bitmapMatrix(furi_string_get_cstr(bitmapPath));
-        BmpEditorData->bmp_w = BmpEditorData->bitmap->width;
-        BmpEditorData->bmp_h = BmpEditorData->bitmap->height;
-        BmpEditorData->state = BmpEditorStateDrawing;
-
-        memcpy(
-            BmpEditor->bitmapPath,
-            furi_string_get_cstr(bitmapPath),
-            strlen(furi_string_get_cstr(bitmapPath)));
-        bmp_compute_model(BmpEditor, BmpEditor->model_data);
-        view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+        if(BmpEditorData->bitmap->width > PARAM_BMP_EDITOR_MAX_RES_W) {
+            //if(BmpEditorData->bitmap) bitmapMatrix_free(BmpEditorData->bitmap);
+            //furi_string_free(bitmapPath);
+            BmpEditorData->state = BmpEditorStateSizeError;
+            BmpEditorData->error = L401_ERR_WIDTH;
+            view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+            return;
+        } else {
+            BmpEditorData->bmp_w = BmpEditorData->bitmap->width;
+            BmpEditorData->bmp_h = BmpEditorData->bitmap->height;
+            BmpEditorData->state = BmpEditorStateDrawing;
+            memcpy(
+                BmpEditor->bitmapPath,
+                furi_string_get_cstr(bitmapPath),
+                strlen(furi_string_get_cstr(bitmapPath)));
+            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
+        }
     }
     furi_string_free(bitmapPath);
 }
@@ -147,6 +159,17 @@ static bool bmp_editor_mainmenu_input_callback(InputEvent* input_event, void* ct
     UNUSED(input_event);
     UNUSED(ctx);
     return false;
+}
+
+static bool bmp_editor_error_input_callback(InputEvent* input_event, void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    bool consumed = false;
+
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventQuit);
+        consumed = true;
+    }
+    return consumed;
 }
 
 static bool bmp_editor_select_size_input_callback(InputEvent* input_event, void* ctx) {
@@ -189,32 +212,52 @@ static bool bmp_editor_select_size_input_callback(InputEvent* input_event, void*
 static bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
-
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
     bool consumed = false;
     BMP_err res = BMP_OK;
-    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat) ||
+       (input_event->type == InputTypeLong)) {
         switch(input_event->key) {
         case InputKeyUp:
             bmp_editor_move(BmpEditor, 0, -1);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyDown:
             bmp_editor_move(BmpEditor, 0, 1);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyLeft:
             bmp_editor_move(BmpEditor, -1, 0);
-            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            //bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyRight:
             bmp_editor_move(BmpEditor, 1, 0);
-            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            //bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyOk:
-            bmp_editor_toggle(BmpEditor);
-            view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventToggle);
+            if(input_event->type == InputTypeLong) {
+                BmpEditorData->draw_mode = (BmpEditorData->draw_mode == BmpEditorDrawModeOneshot) ?
+                                               BmpEditorDrawModeContinuous :
+                                               BmpEditorDrawModeOneshot;
+            } else {
+                if(BmpEditorData->draw_mode == BmpEditorDrawModeOneshot) {
+                    bmp_editor_toggle(BmpEditor);
+                }
+            }
             consumed = false;
             break;
         case InputKeyBack:
@@ -261,6 +304,9 @@ static bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* c
     case BmpEditorStateDrawing:
         consumed = bmp_editor_draw_input_callback(input_event, ctx);
         break;
+    case BmpEditorStateSizeError:
+        consumed = bmp_editor_error_input_callback(input_event, ctx);
+        break;
     default:
         break;
     }
@@ -290,6 +336,27 @@ static void bmp_editor_drawSizePicker(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 25 + 45, 62, "OK");
 }
 
+static void bmp_editor_drawError(Canvas* canvas, void* ctx) {
+    // UNUSED(ctx);
+    bmpEditorModel* BmpEditorModel = (bmpEditorModel*)ctx;
+    bmpEditorData* BmpEditorData = BmpEditorModel->data;
+
+    switch(BmpEditorData->error) {
+    case L401_ERR_WIDTH:
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "BMP File too large to");
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "be edited on flipper!");
+        break;
+    default:
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Unknown error");
+        break;
+    }
+    elements_button_center(canvas, "Return");
+}
+
 static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
     bmpEditorModel* BmpEditorModel = (bmpEditorModel*)ctx;
     bmpEditorData* BmpEditorData = BmpEditorModel->data;
@@ -315,8 +382,12 @@ static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 25 + 10, 62, "Save");
     canvas_draw_icon(canvas, 25 + 35, 56, &I_btn_ok_7x7);
     canvas_draw_str(canvas, 25 + 45, 62, "Toggle");
-
+    // Indicates continuous mode
     canvas_set_font(canvas, FontPrimary);
+    if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+        canvas_draw_str(canvas, 0, 62, "C");
+        ;
+    }
     // Bitmap
     for(x = 0; x < BmpEditorData->bmp_w; x++) {
         for(y = 0; y < BmpEditorData->bmp_h; y++) {
@@ -365,6 +436,9 @@ static void app_scene_bmp_editor_render_callback(Canvas* canvas, void* _model) {
     case BmpEditorStateDrawing:
         bmp_editor_drawBoard(canvas, _model);
         break;
+    case BmpEditorStateSizeError:
+        bmp_editor_drawError(canvas, _model);
+        break;
     default:
         break;
     }
@@ -404,6 +478,7 @@ AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
     appBmpEditor->model_data->bmp_pixel_spacing = 0;
     appBmpEditor->model_data->bmp_w = 32;
     appBmpEditor->model_data->bmp_h = 16;
+    appBmpEditor->model_data->error = L401_OK;
     appBmpEditor->mainmenu = submenu_alloc();
 
     submenu_add_item(
@@ -432,11 +507,9 @@ AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
 
     appBmpEditor->view = view_alloc();
     view_allocate_model(appBmpEditor->view, ViewModelTypeLocking, sizeof(bmpEditorModel));
-
     view_set_context(appBmpEditor->view, app);
     view_set_draw_callback(appBmpEditor->view, app_scene_bmp_editor_render_callback);
     view_set_input_callback(appBmpEditor->view, app_scene_bmp_editor_input_callback);
-
     return appBmpEditor;
 }
 
@@ -536,11 +609,17 @@ bool app_scene_bmp_editor_on_event(void* ctx, SceneManagerEvent event) {
     // UNUSED(ctx);
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == SetTextInputSaveEvent) {
+        switch(event.event) {
+        case AppBmpEditorEventSaveText:
             bmp_editor_init_bitmap(ctx);
             BmpEditorData->state = BmpEditorStateDrawing;
             view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
             consumed = true;
+            break;
+        case AppBmpEditorEventQuit:
+            view_dispatcher_switch_to_view(app->view_dispatcher, BmpEditorViewMainMenu);
+            consumed = true;
+            break;
         }
     }
     // scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);
