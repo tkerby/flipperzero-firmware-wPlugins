@@ -234,7 +234,6 @@ static bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
             break;
         case InputKeyLeft:
             bmp_editor_move(BmpEditor, -1, 0);
-            //bmp_compute_model(BmpEditor, BmpEditor->model_data);
             if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
                 bmp_editor_toggle(BmpEditor);
             }
@@ -242,7 +241,6 @@ static bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
             break;
         case InputKeyRight:
             bmp_editor_move(BmpEditor, 1, 0);
-            //bmp_compute_model(BmpEditor, BmpEditor->model_data);
             if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
                 bmp_editor_toggle(BmpEditor);
             }
