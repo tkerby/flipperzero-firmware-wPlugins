@@ -18,6 +18,7 @@ typedef enum {
     L401_ERR_BMP_FILE,
     L401_ERR_NULLPTR,
     L401_ERR_HARDWARE,
+    L401_ERR_WIDTH,
 } l401_err;
 
 #endif /* end of include guard: L401_ERR_H */
