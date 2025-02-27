@@ -12,12 +12,14 @@
 #include <stdlib.h>
 
 #include "bmp.h"
+#include "401_err.h"
 #include "drivers/sk6805.h"
 #include <401_light_msg_icons.h>
 #include <dialogs/dialogs.h>
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
+#include <gui/elements.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 #include <lib/toolbox/name_generator.h>
@@ -30,6 +32,7 @@ typedef struct {
 typedef enum {
     BmpEditorStateDrawing,
     BmpEditorStateSelectSize,
+    BmpEditorStateSizeError,
     BmpEditorStateSelectName,
     BmpEditorStateSelectFile,
     BmpEditorStateSelectSource,
@@ -50,6 +53,11 @@ typedef enum {
     BmpEditorMainmenuIndex_Open,
 } BmpEditorMainmenuIndex;
 
+typedef enum {
+    BmpEditorDrawModeOneshot,
+    BmpEditorDrawModeContinuous,
+} BmpEditorDrawMode;
+
 typedef struct {
     bmpEditorCursor cursor;
     uint8_t bmp_pixel_size;
@@ -64,6 +72,8 @@ typedef struct {
     uint8_t* bmp_canvas;
     bitmapMatrix* bitmap;
     bmpEditorState state;
+    BmpEditorDrawMode draw_mode;
+    l401_err error;
 } bmpEditorData;
 
 typedef struct {
@@ -84,11 +94,7 @@ typedef struct AppBmpEditor {
 
 typedef enum {
     AppBmpEditorEventQuit,
-    AppBmpEditorEventUp,
-    AppBmpEditorEventDown,
-    AppBmpEditorEventLeft,
-    AppBmpEditorEventRight,
-    AppBmpEditorEventToggle,
+    AppBmpEditorEventSaveText,
 } AppBmpEditorCustomEvents;
 
 AppBmpEditor* app_bmp_editor_alloc();
