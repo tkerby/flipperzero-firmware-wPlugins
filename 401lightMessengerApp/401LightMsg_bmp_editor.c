@@ -87,7 +87,7 @@ static void bmp_editor_text_input_callback(void* ctx) {
         LIGHTMSGCONF_SAVE_FOLDER,
         BmpEditor->bitmapName,
         ".bmp");
-    view_dispatcher_send_custom_event(app->view_dispatcher, SetTextInputSaveEvent);
+    view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventSaveText);
 }
 
 static void bmp_editor_select_name(void* ctx) {
@@ -161,6 +161,17 @@ static bool bmp_editor_mainmenu_input_callback(InputEvent* input_event, void* ct
     return false;
 }
 
+static bool bmp_editor_error_input_callback(InputEvent* input_event, void* ctx) {
+    AppContext* app = (AppContext*)ctx;
+    bool consumed = false;
+
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventQuit);
+        consumed = true;
+    }
+    return consumed;
+}
+
 static bool bmp_editor_select_size_input_callback(InputEvent* input_event, void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
@@ -226,7 +237,6 @@ static bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
             break;
         case InputKeyOk:
             bmp_editor_toggle(BmpEditor);
-            view_dispatcher_send_custom_event(app->view_dispatcher, AppBmpEditorEventToggle);
             consumed = false;
             break;
         case InputKeyBack:
@@ -265,16 +275,16 @@ static bool app_scene_bmp_editor_input_callback(InputEvent* input_event, void* c
     bool consumed = false;
     switch(BmpEditorData->state) {
     case BmpEditorStateMainMenu:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateMainMenu");
         consumed = bmp_editor_mainmenu_input_callback(input_event, ctx);
         break;
     case BmpEditorStateSelectSize:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSelectSize");
         consumed = bmp_editor_select_size_input_callback(input_event, ctx);
         break;
     case BmpEditorStateDrawing:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateDrawing");
         consumed = bmp_editor_draw_input_callback(input_event, ctx);
+        break;
+    case BmpEditorStateSizeError:
+        consumed = bmp_editor_error_input_callback(input_event, ctx);
         break;
     default:
         break;
@@ -313,9 +323,9 @@ static void bmp_editor_drawError(Canvas* canvas, void* ctx) {
     switch(BmpEditorData->error) {
     case L401_ERR_WIDTH:
         canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "BMP File too large to");
-        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "be edited on flipper!");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "BMP File too large to");
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "be edited on flipper!");
         break;
     default:
         canvas_clear(canvas);
@@ -323,6 +333,7 @@ static void bmp_editor_drawError(Canvas* canvas, void* ctx) {
         canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignCenter, "Unknown error");
         break;
     }
+    elements_button_center(canvas, "Return");
 }
 
 static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
@@ -395,15 +406,12 @@ static void app_scene_bmp_editor_render_callback(Canvas* canvas, void* _model) {
 
     switch(BmpEditorData->state) {
     case BmpEditorStateSelectSize:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSelectSiz");
         bmp_editor_drawSizePicker(canvas, _model);
         break;
     case BmpEditorStateDrawing:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateDrawing");
         bmp_editor_drawBoard(canvas, _model);
         break;
     case BmpEditorStateSizeError:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorStateSizeError");
         bmp_editor_drawError(canvas, _model);
         break;
     default:
@@ -418,18 +426,15 @@ static void bmp_editor_mainmenu_callback(void* ctx, uint32_t index) {
 
     switch(index) {
     case BmpEditorMainmenuIndex_New:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorMainmenuIndex_New");
         BmpEditorData->state = BmpEditorStateSelectSize;
         view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
         break;
     case BmpEditorMainmenuIndex_Open:
-        FURI_LOG_I(__FUNCTION__, "BmpEditorMainmenuIndex_Open");
         BmpEditorData->state = BmpEditorStateSelectFile;
         bmp_editor_select_file(ctx);
 
         break;
     default:
-        FURI_LOG_I(__FUNCTION__, "Index = %ld", index);
         break;
     }
 }
@@ -480,7 +485,6 @@ AppBmpEditor* app_bmp_editor_alloc(void* ctx) {
     view_set_context(appBmpEditor->view, app);
     view_set_draw_callback(appBmpEditor->view, app_scene_bmp_editor_render_callback);
     view_set_input_callback(appBmpEditor->view, app_scene_bmp_editor_input_callback);
-
     return appBmpEditor;
 }
 
@@ -521,7 +525,6 @@ View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor) {
 void app_scene_bmp_editor_on_enter(void* context) {
     AppContext* app = context;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
-    FURI_LOG_I(__FUNCTION__, " enter");
     BmpEditor->model_data->state = BmpEditorStateMainMenu;
     with_view_model(
         BmpEditor->view, bmpEditorModel * model, { model->data = BmpEditor->model_data; }, false);
@@ -581,11 +584,17 @@ bool app_scene_bmp_editor_on_event(void* ctx, SceneManagerEvent event) {
     // UNUSED(ctx);
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == SetTextInputSaveEvent) {
+        switch(event.event) {
+        case AppBmpEditorEventSaveText:
             bmp_editor_init_bitmap(ctx);
             BmpEditorData->state = BmpEditorStateDrawing;
             view_dispatcher_switch_to_view(app->view_dispatcher, AppViewBmpEditor);
             consumed = true;
+            break;
+        case AppBmpEditorEventQuit:
+            view_dispatcher_switch_to_view(app->view_dispatcher, BmpEditorViewMainMenu);
+            consumed = true;
+            break;
         }
     }
     // scene_manager_next_scene(app->scene_manager, AppSceneMainMenu);

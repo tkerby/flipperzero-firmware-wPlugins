@@ -19,6 +19,7 @@
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
+#include <gui/elements.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 #include <lib/toolbox/name_generator.h>
@@ -87,11 +88,7 @@ typedef struct AppBmpEditor {
 
 typedef enum {
     AppBmpEditorEventQuit,
-    AppBmpEditorEventUp,
-    AppBmpEditorEventDown,
-    AppBmpEditorEventLeft,
-    AppBmpEditorEventRight,
-    AppBmpEditorEventToggle,
+    AppBmpEditorEventSaveText,
 } AppBmpEditorCustomEvents;
 
 AppBmpEditor* app_bmp_editor_alloc();
