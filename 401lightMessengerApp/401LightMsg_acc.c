@@ -191,8 +191,8 @@ static int32_t app_acc_worker(void* ctx) {
     bool is_bitmap_window = 0; // Check if
     // FuriMutex *mutex = appAcc->mutex;
 
-    uint8_t column = 0; // Column of the bitmap array
-    uint8_t column_directed = 0; // Column of the bitmap array
+    int16_t column = 0; // Column of the bitmap array
+    int16_t column_directed = 0; // Column of the bitmap array
 
     uint8_t row = 0;
 
@@ -293,30 +293,20 @@ static int32_t app_acc_worker(void* ctx) {
         // Get current column to be displayed.
         column = appAcc->cycles - ((appAcc->cyclesCenter) - (bitmapMatrix->width / 2));
 
-        // Swipe direction, according to orientation
-        if(appAcc->direction ^ light_msg_data->orientation) {
-            column_directed = (column % bitmapMatrix->width) - appAcc->direction;
-        } else {
-            column_directed =
-                bitmapMatrix->width - (column % (bitmapMatrix->width)) - appAcc->direction;
-        }
-
         // Computes the window in which the text is displayed.
-        // low limit  = center - len / 2
-        // high limit = center + len / 2
-        is_bitmap_window =
-            (appAcc->cycles >
-             (appAcc->cyclesCenter - ((bitmapMatrix->width - appAcc->direction) / 2))) &&
-            (appAcc->cycles <=
-             (appAcc->cyclesCenter + ((bitmapMatrix->width - appAcc->direction) / 2)));
+        is_bitmap_window = (column >= 0) && (column < bitmapMatrix->width);
+
+        // Swipe direction, according to orientation
+        if(appAcc->direction ^ light_msg_data->orientation ^ light_msg_data->mirror) {
+            column_directed = column;
+        } else {
+            column_directed = bitmapMatrix->width - column - 1;
+        }
 
         // Update the color according to the current shader
         shader(time, appAcc->direction ^ light_msg_data->orientation, color, app);
 
         if(is_bitmap_window) {
-            if(light_msg_data->mirror) {
-                column_directed = bitmapMatrix->width - column_directed;
-            }
             // Draws each rows for each collumns
             for(row = 0; row < LIGHTMSG_LED_ROWS; row++) {
                 pixel = (uint8_t)(bitmapMatrix->array[row][column_directed]);
