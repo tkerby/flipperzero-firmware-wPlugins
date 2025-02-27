@@ -53,6 +53,11 @@ typedef enum {
     BmpEditorMainmenuIndex_Open,
 } BmpEditorMainmenuIndex;
 
+typedef enum {
+    BmpEditorDrawModeOneshot,
+    BmpEditorDrawModeContinuous,
+} BmpEditorDrawMode;
+
 typedef struct {
     bmpEditorCursor cursor;
     uint8_t bmp_pixel_size;
@@ -67,6 +72,7 @@ typedef struct {
     uint8_t* bmp_canvas;
     bitmapMatrix* bitmap;
     bmpEditorState state;
+    BmpEditorDrawMode draw_mode;
     l401_err error;
 } bmpEditorData;
 

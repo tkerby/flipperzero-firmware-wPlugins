@@ -212,31 +212,50 @@ static bool bmp_editor_select_size_input_callback(InputEvent* input_event, void*
 static bool bmp_editor_draw_input_callback(InputEvent* input_event, void* ctx) {
     AppContext* app = (AppContext*)ctx;
     AppBmpEditor* BmpEditor = app->sceneBmpEditor;
-
+    bmpEditorData* BmpEditorData = BmpEditor->model_data;
     bool consumed = false;
     BMP_err res = BMP_OK;
-    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat)) {
+    if((input_event->type == InputTypePress) || (input_event->type == InputTypeRepeat) ||
+       (input_event->type == InputTypeLong)) {
         switch(input_event->key) {
         case InputKeyUp:
             bmp_editor_move(BmpEditor, 0, -1);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyDown:
             bmp_editor_move(BmpEditor, 0, 1);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyLeft:
             bmp_editor_move(BmpEditor, -1, 0);
-            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyRight:
             bmp_editor_move(BmpEditor, 1, 0);
-            bmp_compute_model(BmpEditor, BmpEditor->model_data);
+            if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+                bmp_editor_toggle(BmpEditor);
+            }
             consumed = true;
             break;
         case InputKeyOk:
-            bmp_editor_toggle(BmpEditor);
+            if(input_event->type == InputTypeLong) {
+                BmpEditorData->draw_mode = (BmpEditorData->draw_mode == BmpEditorDrawModeOneshot) ?
+                                               BmpEditorDrawModeContinuous :
+                                               BmpEditorDrawModeOneshot;
+            } else {
+                if(BmpEditorData->draw_mode == BmpEditorDrawModeOneshot) {
+                    bmp_editor_toggle(BmpEditor);
+                }
+            }
             consumed = false;
             break;
         case InputKeyBack:
@@ -361,8 +380,12 @@ static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 25 + 10, 62, "Save");
     canvas_draw_icon(canvas, 25 + 35, 56, &I_btn_ok_7x7);
     canvas_draw_str(canvas, 25 + 45, 62, "Toggle");
-
+    // Indicates continuous mode
     canvas_set_font(canvas, FontPrimary);
+    if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
+        canvas_draw_str(canvas, 0, 62, "C");
+        ;
+    }
     // Bitmap
     for(x = 0; x < BmpEditorData->bmp_w; x++) {
         for(y = 0; y < BmpEditorData->bmp_h; y++) {
