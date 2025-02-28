@@ -21,92 +21,77 @@ static float lerp(float start, float end, float t) {
     return start + (end - start) * t;
 }
 
-static int32_t pof_thread_worker(void* context) {
-    VirtualPortal* virtual_portal = context;
-    uint8_t last_r = 0;
-    uint8_t last_g = 0;
-    uint8_t last_b = 0;
-    uint8_t target_r = 0;
-    uint8_t target_g = 0;
-    uint8_t target_b = 0;
-    uint32_t start_time = 0;
-    uint32_t elapsed = 0;
-    uint32_t duration = 0;
-    bool running = false;
-    bool two_phase = false;
-    int current_phase = 0;
-    float t_phase;
-    uint32_t flags;
-    while (true) {
-        if (running) {
-            flags = furi_thread_flags_get();
-        } else {
-            flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, FuriWaitForever);
-        }
-        if (flags) {
-            if (flags & EventLed) {
-                start_time = furi_get_tick();
-                last_r = target_r;
-                last_g = target_g;
-                last_b = target_b;
-                duration = virtual_portal->left.delay;
-                target_r = virtual_portal->left.r;
-                target_g = virtual_portal->left.g;
-                target_b = virtual_portal->left.b;
-                running = true;
-                bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
-                bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
-                two_phase = increasing && decreasing;
-                current_phase = increasing ? 0 : 1;
-                if (increasing && decreasing) {
-                    duration /= 2;
-                }
-            }
-            if (flags & EventExit) {
-                FURI_LOG_I(TAG, "exit");
-                break;
-            }
-        }
-        elapsed = furi_get_tick() - start_time;
-        if (elapsed < duration) {
-            t_phase = fminf((float)elapsed / (float)duration, 1);
-            if (current_phase == 0) {
-                if (last_r < target_r) {
-                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-                }
-                if (last_g < target_g) {
-                    furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
-                }
-                if (last_b < target_b) {
-                    furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
-                }
-            } else {
-                if (last_r > target_r) {
-                    furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
-                }
-                if (last_g > target_g) {
-                    furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
-                }
-                if (last_b > target_b) {
-                    furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
-                }
-            }
-
-        } else if (two_phase && current_phase == 0) {
-            start_time = furi_get_tick();
-            current_phase++;
-        } else {
-            last_r = target_r;
-            last_g = target_g;
-            last_b = target_b;
-            furi_hal_light_set(LightRed, target_r);
-            furi_hal_light_set(LightGreen, target_g);
-            furi_hal_light_set(LightBlue, target_b);
-            running = false;
+uint8_t last_r = 0;
+uint8_t last_g = 0;
+uint8_t last_b = 0;
+uint8_t target_r = 0;
+uint8_t target_g = 0;
+uint8_t target_b = 0;
+uint32_t start_time = 0;
+uint32_t elapsed = 0;
+uint32_t duration = 0;
+bool running = false;
+bool two_phase = false;
+bool received_led_command = false;
+int current_phase = 0;
+float t_phase;
+void virtual_portal_tick(VirtualPortal* virtual_portal) {
+    if (received_led_command) {
+        received_led_command = false;
+        start_time = furi_get_tick();
+        last_r = target_r;
+        last_g = target_g;
+        last_b = target_b;
+        duration = virtual_portal->left.delay;
+        target_r = virtual_portal->left.r;
+        target_g = virtual_portal->left.g;
+        target_b = virtual_portal->left.b;
+        running = true;
+        bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
+        bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
+        two_phase = increasing && decreasing;
+        current_phase = increasing ? 0 : 1;
+        if (increasing && decreasing) {
+            duration /= 2;
         }
     }
+    elapsed = furi_get_tick() - start_time;
+    if (elapsed < duration) {
+        t_phase = fminf((float)elapsed / (float)duration, 1);
+        if (current_phase == 0) {
+            if (last_r < target_r) {
+                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+            }
+            if (last_g < target_g) {
+                furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
+            }
+            if (last_b < target_b) {
+                furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
+            }
+        } else {
+            if (last_r > target_r) {
+                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+            }
+            if (last_g > target_g) {
+                furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
+            }
+            if (last_b > target_b) {
+                furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
+            }
+        }
 
-    return 0;
+    } else if (two_phase && current_phase == 0) {
+        start_time = furi_get_tick();
+        current_phase++;
+    } else {
+        last_r = target_r;
+        last_g = target_g;
+        last_b = target_b;
+        furi_hal_light_set(LightRed, target_r);
+        furi_hal_light_set(LightGreen, target_g);
+        furi_hal_light_set(LightBlue, target_b);
+        running = false;
+    }
 }
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
@@ -122,14 +107,6 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->sequence_number = 0;
     virtual_portal->active = false;
 
-    virtual_portal->thread = furi_thread_alloc();
-    furi_thread_set_name(virtual_portal->thread, "PoFLed");
-    furi_thread_set_stack_size(virtual_portal->thread, 2 * 1024);
-    furi_thread_set_context(virtual_portal->thread, virtual_portal);
-    furi_thread_set_callback(virtual_portal->thread, pof_thread_worker);
-
-    furi_thread_start(virtual_portal->thread);
-
     return virtual_portal;
 }
 
@@ -143,11 +120,6 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
         pof_token_free(virtual_portal->tokens[i]);
         virtual_portal->tokens[i] = NULL;
     }
-    furi_assert(virtual_portal->thread);
-    furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventExit);
-    furi_thread_join(virtual_portal->thread);
-    furi_thread_free(virtual_portal->thread);
-    virtual_portal->thread = NULL;
     free(virtual_portal);
 }
 
@@ -343,7 +315,7 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtual_portal->left.g = message[3];
             virtual_portal->left.b = message[4];
             virtual_portal->left.delay = 0;
-            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            received_led_command = true;
             break;
         case 1:
             brightness = message[2];
@@ -396,7 +368,7 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtual_portal->left.g = g;
             virtual_portal->left.b = b;
             virtual_portal->left.delay = delay;
-            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            received_led_command = true;
             break;
     }
 
@@ -484,7 +456,7 @@ int virtual_portal_process_message(
             virtual_portal->left.g = message[2];
             virtual_portal->left.b = message[3];
             virtual_portal->left.delay = 0;
-            furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
+            received_led_command = true;
             return 0;
         case 'J':
             // https://github.com/flyandi/flipper_zero_rgb_led

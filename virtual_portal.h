@@ -19,10 +19,9 @@ typedef enum {
     EventTxComplete = (1 << 4),
     EventResetSio = (1 << 5),
     EventTxImmediate = (1 << 6),
-    EventLed = (1 << 7),
 
     EventAll = EventExit | EventReset | EventRx | EventTx | EventTxComplete | EventResetSio |
-               EventTxImmediate | EventLed,
+               EventTxImmediate,
 } PoFEvent;
 
 typedef struct {
@@ -39,7 +38,6 @@ typedef struct {
     bool speaker;
     NotificationApp* notifications;
     PoFType type;
-    FuriThread* thread;
     VirtualPortalLed left;
     VirtualPortalLed right;
     VirtualPortalLed trap;
@@ -50,6 +48,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
 void virtual_portal_free(VirtualPortal* virtual_portal);
 void virtual_portal_cleanup(VirtualPortal* virtual_portal);
 void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_token);
+void virtual_portal_tick(VirtualPortal* virtual_portal);
 
 int virtual_portal_process_message(
     VirtualPortal* virtual_portal,
