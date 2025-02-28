@@ -100,9 +100,6 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
             duration /= 2;
         }
     } else {
-        led->last_r = led->r;
-        led->last_g = led->g;
-        led->last_b = led->b;
         furi_hal_light_set(LightRed, led->r);
         furi_hal_light_set(LightGreen, led->g);
         furi_hal_light_set(LightBlue, led->b);
