@@ -4,6 +4,11 @@
 
 #define BLOCK_SIZE 16
 
+#define PORTAL_SIDE_RING 0
+#define PORTAL_SIDE_RIGHT 0
+#define PORTAL_SIDE_TRAP 1
+#define PORTAL_SIDE_LEFT 2
+
 const NotificationSequence sequence_set_backlight = {
     &message_display_backlight_on,
     &message_do_not_reset,
@@ -21,75 +26,77 @@ static float lerp(float start, float end, float t) {
     return start + (end - start) * t;
 }
 
-uint8_t last_r = 0;
-uint8_t last_g = 0;
-uint8_t last_b = 0;
-uint8_t target_r = 0;
-uint8_t target_g = 0;
-uint8_t target_b = 0;
-uint32_t start_time = 0;
-uint32_t elapsed = 0;
-uint32_t duration = 0;
-bool running = false;
-bool two_phase = false;
-int current_phase = 0;
-float t_phase;
+
 void virtual_portal_tick(void *ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     (void)virtual_portal;
-    elapsed = furi_get_tick() - start_time;
-    if (elapsed < duration) {
-        t_phase = fminf((float)elapsed / (float)duration, 1);
-        if (current_phase == 0) {
-            if (last_r < target_r) {
-                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+    VirtualPortalLed* led = &virtual_portal->right;
+    uint32_t elapsed = furi_get_tick() - led->start_time;
+    if (elapsed < led->delay) {
+        float t_phase = fminf((float)elapsed / (float)led->delay, 1);
+        if (led->current_phase == 0) {
+            if (led->last_r < led->r) {
+                furi_hal_light_set(LightRed, lerp(led->last_r, led->r, t_phase));
             }
-            if (last_g < target_g) {
-                furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
+            if (led->last_g < led->g) {
+                furi_hal_light_set(LightGreen, lerp(led->last_g, led->g, t_phase));
             }
-            if (last_b < target_b) {
-                furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
+            if (led->last_b < led->b) {
+                furi_hal_light_set(LightBlue, lerp(led->last_b, led->b, t_phase));
             }
         } else {
-            if (last_r > target_r) {
-                furi_hal_light_set(LightRed, lerp(last_r, target_r, t_phase));
+            if (led->last_r > led->r) {
+                furi_hal_light_set(LightRed, lerp(led->last_r, led->r, t_phase));
             }
-            if (last_g > target_g) {
-                furi_hal_light_set(LightGreen, lerp(last_g, target_g, t_phase));
+            if (led->last_g > led->g) {
+                furi_hal_light_set(LightGreen, lerp(led->last_g, led->g, t_phase));
             }
-            if (last_b > target_b) {
-                furi_hal_light_set(LightBlue, lerp(last_b, target_b, t_phase));
+            if (led->last_b > led->b) {
+                furi_hal_light_set(LightBlue, lerp(led->last_b, led->b, t_phase));
             }
         }
 
-    } else if (two_phase && current_phase == 0) {
-        start_time = furi_get_tick();
-        current_phase++;
+    } else if (led->two_phase && led->current_phase == 0) {
+        led->start_time = furi_get_tick();
+        led->current_phase++;
     } else {
-        last_r = target_r;
-        last_g = target_g;
-        last_b = target_b;
-        furi_hal_light_set(LightRed, target_r);
-        furi_hal_light_set(LightGreen, target_g);
-        furi_hal_light_set(LightBlue, target_b);
-        running = false;
+        led->last_r = led->r;
+        led->last_g = led->g;
+        led->last_b = led->b;
+        furi_hal_light_set(LightRed, led->r);
+        furi_hal_light_set(LightGreen, led->g);
+        furi_hal_light_set(LightBlue, led->b);
+        led->running = false;
     }
 }
 
-void queue_led_command(VirtualPortal* virtual_portal) {
-    start_time = furi_get_tick();
-    last_r = target_r;
-    last_g = target_g;
-    last_b = target_b;
-    duration = virtual_portal->right.delay;
-    target_r = virtual_portal->right.r;
-    target_g = virtual_portal->right.g;
-    target_b = virtual_portal->right.b;
-    running = true;
-    bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
-    bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
-    two_phase = increasing && decreasing;
-    current_phase = increasing ? 0 : 1;
+void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8_t g, uint8_t b, uint16_t duration) {
+    VirtualPortalLed* led = &virtual_portal->left;
+    switch (side) {
+        case PORTAL_SIDE_RIGHT:
+            led = &virtual_portal->right;
+            break;
+        case PORTAL_SIDE_TRAP:
+            led = &virtual_portal->trap;
+            break;
+        case PORTAL_SIDE_LEFT:
+            led = &virtual_portal->left;
+            break;
+
+    }
+    led->start_time = furi_get_tick();
+    led->delay = duration;
+    led->last_r = led->r;
+    led->last_g = led->g;
+    led->last_b = led->b;
+    led->r = r;
+    led->g = g;
+    led->b = b;
+    led->running = true;
+    bool increasing = r > led->last_r || g > led->last_g || b > led->last_b;
+    bool decreasing = r < led->last_r || g < led->last_g || b < led->last_b;
+    led->two_phase = increasing && decreasing;
+    led->current_phase = increasing ? 0 : 1;
     if (increasing && decreasing) {
         duration /= 2;
     }
@@ -320,11 +327,7 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message) {
     switch (side) {
         case 0:
         case 2:
-            virtual_portal->left.r = message[2];
-            virtual_portal->left.g = message[3];
-            virtual_portal->left.b = message[4];
-            virtual_portal->left.delay = 0;
-            queue_led_command(virtual_portal);
+            queue_led_command(virtual_portal, side, message[2], message[3], message[4], 0);
             break;
         case 1:
             brightness = message[2];
@@ -348,34 +351,10 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     FURI_LOG_I(TAG, "J %s", display);
     */
 
-    uint8_t side = message[1];  // 2: left, 1: right
-    uint8_t r = message[2];     // 2: left, 1: right
-    uint8_t g = message[3];     // 2: left, 1: right
-    uint8_t b = message[4];     // 2: left, 1: right
+    uint8_t side = message[1]; 
     uint16_t delay = message[6] << 8 | message[5];
-    switch (side) {
-        case 0:
-            virtual_portal->right.r = r;
-            virtual_portal->right.g = g;
-            virtual_portal->right.b = b;
-            virtual_portal->right.delay = delay;
-            // furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
-            break;
-        case 1:
-            virtual_portal->trap.r = r;
-            virtual_portal->trap.g = g;
-            virtual_portal->trap.b = b;
-            virtual_portal->trap.delay = delay;
-            // furi_thread_flags_set(furi_thread_get_id(virtual_portal->thread), EventLed);
-            break;
-        case 2:
-            virtual_portal->left.r = r;
-            virtual_portal->left.g = g;
-            virtual_portal->left.b = b;
-            virtual_portal->left.delay = delay;
-            queue_led_command(virtual_portal);
-            break;
-    }
+    
+    queue_led_command(virtual_portal, side, message[2], message[3], message[4], delay);
 
     // Delay response
     // furi_delay_ms(delay); // causes issues
@@ -457,11 +436,7 @@ int virtual_portal_process_message(
         case 'A':
             return virtual_portal_activate(virtual_portal, message, response);
         case 'C':  // Ring color R G B
-            virtual_portal->left.r = message[1];
-            virtual_portal->left.g = message[2];
-            virtual_portal->left.b = message[3];
-            virtual_portal->left.delay = 0;
-            queue_led_command(virtual_portal);
+            queue_led_command(virtual_portal, PORTAL_SIDE_RING, message[1], message[2], message[3], 0);
             return 0;
         case 'J':
             // https://github.com/flyandi/flipper_zero_rgb_led

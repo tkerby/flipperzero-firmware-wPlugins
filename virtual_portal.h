@@ -29,7 +29,14 @@ typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
+    uint8_t last_r;
+    uint8_t last_g;
+    uint8_t last_b;
     uint16_t delay;
+    uint32_t start_time;
+    bool two_phase;
+    bool running;
+    int current_phase;
 } VirtualPortalLed;
 
 typedef struct {
