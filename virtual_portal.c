@@ -26,8 +26,7 @@ static float lerp(float start, float end, float t) {
     return start + (end - start) * t;
 }
 
-
-void virtual_portal_tick(void *ctx) {
+void virtual_portal_tick(void* ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     (void)virtual_portal;
     VirtualPortalLed* led = &virtual_portal->right;
@@ -82,23 +81,32 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
         case PORTAL_SIDE_LEFT:
             led = &virtual_portal->left;
             break;
-
     }
-    led->start_time = furi_get_tick();
-    led->delay = duration;
     led->last_r = led->r;
     led->last_g = led->g;
     led->last_b = led->b;
     led->r = r;
     led->g = g;
     led->b = b;
-    led->running = true;
-    bool increasing = r > led->last_r || g > led->last_g || b > led->last_b;
-    bool decreasing = r < led->last_r || g < led->last_g || b < led->last_b;
-    led->two_phase = increasing && decreasing;
-    led->current_phase = increasing ? 0 : 1;
-    if (increasing && decreasing) {
-        duration /= 2;
+    if (duration) {
+        led->start_time = furi_get_tick();
+        led->delay = duration;
+        led->running = true;
+        bool increasing = r > led->last_r || g > led->last_g || b > led->last_b;
+        bool decreasing = r < led->last_r || g < led->last_g || b < led->last_b;
+        led->two_phase = increasing && decreasing;
+        led->current_phase = increasing ? 0 : 1;
+        if (increasing && decreasing) {
+            duration /= 2;
+        }
+    } else {
+        led->last_r = led->r;
+        led->last_g = led->g;
+        led->last_b = led->b;
+        furi_hal_light_set(LightRed, led->r);
+        furi_hal_light_set(LightGreen, led->g);
+        furi_hal_light_set(LightBlue, led->b);
+        led->running = false;
     }
 }
 
@@ -116,7 +124,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->active = false;
 
     virtual_portal->led_timer = furi_timer_alloc(virtual_portal_tick,
-					FuriTimerTypePeriodic, virtual_portal);
+                                                 FuriTimerTypePeriodic, virtual_portal);
 
     furi_timer_start(virtual_portal->led_timer, 100);
 
@@ -351,9 +359,9 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     FURI_LOG_I(TAG, "J %s", display);
     */
 
-    uint8_t side = message[1]; 
+    uint8_t side = message[1];
     uint16_t delay = message[6] << 8 | message[5];
-    
+
     queue_led_command(virtual_portal, side, message[2], message[3], message[4], delay);
 
     // Delay response
