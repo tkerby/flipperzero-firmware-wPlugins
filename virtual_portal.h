@@ -48,7 +48,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
 void virtual_portal_free(VirtualPortal* virtual_portal);
 void virtual_portal_cleanup(VirtualPortal* virtual_portal);
 void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_token);
-void virtual_portal_tick(VirtualPortal* virtual_portal);
+void virtual_portal_tick();
 
 int virtual_portal_process_message(
     VirtualPortal* virtual_portal,

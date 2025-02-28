@@ -32,29 +32,9 @@ uint32_t elapsed = 0;
 uint32_t duration = 0;
 bool running = false;
 bool two_phase = false;
-bool received_led_command = false;
 int current_phase = 0;
 float t_phase;
-void virtual_portal_tick(VirtualPortal* virtual_portal) {
-    if (received_led_command) {
-        received_led_command = false;
-        start_time = furi_get_tick();
-        last_r = target_r;
-        last_g = target_g;
-        last_b = target_b;
-        duration = virtual_portal->left.delay;
-        target_r = virtual_portal->left.r;
-        target_g = virtual_portal->left.g;
-        target_b = virtual_portal->left.b;
-        running = true;
-        bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
-        bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
-        two_phase = increasing && decreasing;
-        current_phase = increasing ? 0 : 1;
-        if (increasing && decreasing) {
-            duration /= 2;
-        }
-    }
+void virtual_portal_tick() {
     elapsed = furi_get_tick() - start_time;
     if (elapsed < duration) {
         t_phase = fminf((float)elapsed / (float)duration, 1);
@@ -91,6 +71,25 @@ void virtual_portal_tick(VirtualPortal* virtual_portal) {
         furi_hal_light_set(LightGreen, target_g);
         furi_hal_light_set(LightBlue, target_b);
         running = false;
+    }
+}
+
+void queue_led_command(VirtualPortal* virtual_portal) {
+    start_time = furi_get_tick();
+    last_r = target_r;
+    last_g = target_g;
+    last_b = target_b;
+    duration = virtual_portal->left.delay;
+    target_r = virtual_portal->left.r;
+    target_g = virtual_portal->left.g;
+    target_b = virtual_portal->left.b;
+    running = true;
+    bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
+    bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
+    two_phase = increasing && decreasing;
+    current_phase = increasing ? 0 : 1;
+    if (increasing && decreasing) {
+        duration /= 2;
     }
 }
 
@@ -315,7 +314,7 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtual_portal->left.g = message[3];
             virtual_portal->left.b = message[4];
             virtual_portal->left.delay = 0;
-            received_led_command = true;
+            queue_led_command(virtual_portal);
             break;
         case 1:
             brightness = message[2];
@@ -368,7 +367,7 @@ int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtual_portal->left.g = g;
             virtual_portal->left.b = b;
             virtual_portal->left.delay = delay;
-            received_led_command = true;
+            queue_led_command(virtual_portal);
             break;
     }
 
@@ -456,7 +455,7 @@ int virtual_portal_process_message(
             virtual_portal->left.g = message[2];
             virtual_portal->left.b = message[3];
             virtual_portal->left.delay = 0;
-            received_led_command = true;
+            queue_led_command(virtual_portal);
             return 0;
         case 'J':
             // https://github.com/flyandi/flipper_zero_rgb_led

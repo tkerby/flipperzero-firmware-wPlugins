@@ -1,6 +1,5 @@
 import usb.core
 import usb.util
-import time
 
 # Find our device
 dev = usb.core.find(idVendor=0x1430, idProduct=0x0150)
@@ -11,5 +10,5 @@ try:
 except:
     pass
 dev.ctrl_transfer(0x21, 9, wValue=0x0200, wIndex=0, data_or_wLength=b"C\xff\x00\x00", timeout=None)
-time.sleep(1)
+# time.sleep(1)
 dev.ctrl_transfer(0x21, 9, wValue=0x0200, wIndex=0, data_or_wLength=b"J\x02\x00\xff\x00\x00\x10", timeout=None)
