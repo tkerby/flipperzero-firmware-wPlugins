@@ -43,4 +43,6 @@ typedef struct {
    Popup* popup;
    NfcComparatorReaderWorker* worker;
    NotificationApp* notification_app;
+   FuriThread* thread;
+   NfcComparatorReaderWorker* nfc_comparator_reader_worker;
 } NfcComparator;
