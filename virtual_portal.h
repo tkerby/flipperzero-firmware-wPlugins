@@ -29,6 +29,9 @@ typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
+    uint8_t target_r;
+    uint8_t target_g;
+    uint8_t target_b;
     uint8_t last_r;
     uint8_t last_g;
     uint8_t last_b;
