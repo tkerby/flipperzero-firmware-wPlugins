@@ -128,7 +128,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->led_timer = furi_timer_alloc(virtual_portal_tick,
                                                  FuriTimerTypePeriodic, virtual_portal);
 
-    furi_timer_start(virtual_portal->led_timer, 100);
+    furi_timer_start(virtual_portal->led_timer, 10);
 
     return virtual_portal;
 }
