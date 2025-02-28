@@ -103,9 +103,11 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
             duration /= 2;
         }
     } else {
-        furi_hal_light_set(LightRed, led->r);
-        furi_hal_light_set(LightGreen, led->g);
-        furi_hal_light_set(LightBlue, led->b);
+        if (side == PORTAL_SIDE_RIGHT) {
+            furi_hal_light_set(LightRed, led->r);
+            furi_hal_light_set(LightGreen, led->g);
+            furi_hal_light_set(LightBlue, led->b);
+        }
         led->running = false;
     }
 }
