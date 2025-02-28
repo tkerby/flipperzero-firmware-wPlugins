@@ -1,7 +1,6 @@
 #include "draw.h"
 namespace VGMGameEngine
 {
-    uint16_t frameBuffer[320 * 240];
     Draw::Draw()
     {
         this->size = Vector(320, 240);
