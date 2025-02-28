@@ -30,6 +30,9 @@ void virtual_portal_tick(void* ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     (void)virtual_portal;
     VirtualPortalLed* led = &virtual_portal->right;
+    if (!led->running) {
+        return;
+    }
     uint32_t elapsed = furi_get_tick() - led->start_time;
     if (elapsed < led->delay) {
         float t_phase = fminf((float)elapsed / (float)led->delay, 1);
