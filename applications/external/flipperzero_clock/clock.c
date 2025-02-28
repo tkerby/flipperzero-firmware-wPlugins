@@ -134,19 +134,26 @@ void draw_digital_clock(Canvas* canvas, ClockConfig* cfg, DateTime* dt, uint16_t
         char* pm = hour >= 12 ? "PM" : "AM";
         hour = hour % 12 == 0 ? 12 : hour % 12;
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y + (cfg->show_battery ? 10 : -10), AlignCenter, cfg->show_battery ? AlignTop : AlignBottom, pm);
+        canvas_draw_str_aligned(
+            canvas,
+            cfg->ofs_x,
+            OFS_Y + (cfg->show_battery ? 10 : -10),
+            AlignCenter,
+            cfg->show_battery ? AlignTop : AlignBottom,
+            pm);
     }
     snprintf(buf, 6, "%2u:%02u", hour % 24, dt->minute % 60);
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y, AlignCenter, AlignCenter, buf);
-    
+
     if(cfg->show_battery) {
         static char batt_buf[5];
         snprintf(batt_buf, 5, "%u%%", furi_hal_power_get_pct());
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, cfg->ofs_x, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
+        canvas_draw_str_aligned(
+            canvas, cfg->ofs_x, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
     }
-    
+
     if(cfg->face_type == DigitalRectangular) {
         for(uint8_t i = 0; i < 45; i++)
             draw_line(canvas, cfg->ofs_x, &cfg->face.minutes[(dt->second - i + 60) % 60], Normal);
@@ -219,14 +226,16 @@ void draw_date(Canvas* canvas, DateTime* dt, ClockConfig* cfg) {
     Align m_align = AlignRight;
     if(locale_get_date_format() == LocaleDateFormatDMY)
         ofs_x = -2, d_align = AlignRight, m_align = AlignLeft;
-    
-    if(cfg->show_battery && (cfg->face_type != DigitalRectangular && cfg->face_type != DigitalRound)) {
+
+    if(cfg->show_battery &&
+       (cfg->face_type != DigitalRectangular && cfg->face_type != DigitalRound)) {
         static char batt_buf[5];
         snprintf(batt_buf, 5, "%u%%", furi_hal_power_get_pct());
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, OFS_RIGHT_X, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
+        canvas_draw_str_aligned(
+            canvas, OFS_RIGHT_X, OFS_Y - 10, AlignCenter, AlignBottom, batt_buf);
     }
-    
+
     canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str_aligned(canvas, OFS_RIGHT_X + ofs_x, OFS_Y, d_align, AlignCenter, day);
     canvas_set_font(canvas, FontPrimary);
