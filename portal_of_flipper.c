@@ -17,7 +17,6 @@ static void pof_app_tick_event_callback(void* context) {
     furi_assert(context);
     PoFApp* app = context;
     scene_manager_handle_tick_event(app->scene_manager);
-    virtual_portal_tick();
 }
 
 void pof_show_loading_popup(void* context, bool show) {

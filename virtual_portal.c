@@ -34,7 +34,9 @@ bool running = false;
 bool two_phase = false;
 int current_phase = 0;
 float t_phase;
-void virtual_portal_tick() {
+void virtual_portal_tick(void *ctx) {
+    VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
+    (void)virtual_portal;
     elapsed = furi_get_tick() - start_time;
     if (elapsed < duration) {
         t_phase = fminf((float)elapsed / (float)duration, 1);
@@ -79,10 +81,10 @@ void queue_led_command(VirtualPortal* virtual_portal) {
     last_r = target_r;
     last_g = target_g;
     last_b = target_b;
-    duration = virtual_portal->left.delay;
-    target_r = virtual_portal->left.r;
-    target_g = virtual_portal->left.g;
-    target_b = virtual_portal->left.b;
+    duration = virtual_portal->right.delay;
+    target_r = virtual_portal->right.r;
+    target_g = virtual_portal->right.g;
+    target_b = virtual_portal->right.b;
     running = true;
     bool increasing = target_r > last_r || target_g > last_g || target_b > last_b;
     bool decreasing = target_r < last_r || target_g < last_g || target_b < last_b;
@@ -106,6 +108,11 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->sequence_number = 0;
     virtual_portal->active = false;
 
+    virtual_portal->led_timer = furi_timer_alloc(virtual_portal_tick,
+					FuriTimerTypePeriodic, virtual_portal);
+
+    furi_timer_start(virtual_portal->led_timer, 100);
+
     return virtual_portal;
 }
 
@@ -119,6 +126,9 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
         pof_token_free(virtual_portal->tokens[i]);
         virtual_portal->tokens[i] = NULL;
     }
+    furi_timer_stop(virtual_portal->led_timer);
+    furi_timer_free(virtual_portal->led_timer);
+
     free(virtual_portal);
 }
 
@@ -293,7 +303,7 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     return index;
 }
 
-int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
+int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message) {
     UNUSED(virtual_portal);
 
     /*
@@ -325,11 +335,7 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
             virtaul_portal_set_backlight(brightness);
             break;
     }
-
-    // https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/
-    size_t index = 0;
-    response[index++] = 'J';
-    return index;
+    return 0;
 }
 
 int virtual_portal_j(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
@@ -461,7 +467,7 @@ int virtual_portal_process_message(
             // https://github.com/flyandi/flipper_zero_rgb_led
             return virtual_portal_j(virtual_portal, message, response);
         case 'L':
-            return virtual_portal_l(virtual_portal, message, response);
+            return virtual_portal_l(virtual_portal, message);
         case 'M':
             return virtual_portal_m(virtual_portal, message, response);
         case 'Q':  // Query

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <notification/notification_messages.h>
 #include <furi_hal_light.h>
+#include <notification/notification_messages.h>
+
 #include "pof_token.h"
 
 #define POF_TOKEN_LIMIT 16
@@ -41,6 +42,7 @@ typedef struct {
     VirtualPortalLed left;
     VirtualPortalLed right;
     VirtualPortalLed trap;
+    FuriTimer* led_timer;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
