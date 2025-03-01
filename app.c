@@ -36,12 +36,33 @@ static bool app_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
+// Set RGB LED to white for 1ms
+const NotificationSequence sequence_blink = {
+    &message_red_255,
+    &message_green_255,
+    &message_blue_255,
+    &message_delay_1,
+    NULL,
+};
+
 static void app_tick_event_callback(void* context) {
     furi_assert(context != NULL);
     App* app = (App*)context;
 
     if(app->sensor != NULL) {
         app->sensor->tick(app->sensor);
+
+        if(app->config.led_blinking) {
+            SensorState sensor_state;
+            app->sensor->get_state(app->sensor, &sensor_state);
+
+            bool new_measurement = sensor_state.time != app->last_measurement_time;
+            app->last_measurement_time = sensor_state.time;
+
+            if(new_measurement) {
+                notification_message(app->notifications, &sequence_blink);
+            }
+        }
     }
 
     scene_manager_handle_tick_event(app->scene_manager);
@@ -122,6 +143,8 @@ static App* app_alloc() {
     // Open storage
     app->storage = furi_record_open(RECORD_STORAGE);
 
+    app->notifications = furi_record_open(RECORD_NOTIFICATION);
+
     // Initialize the application configuration
     app_config_init(&app->config);
     app_config_load(&app->config, app->storage);
@@ -192,6 +215,7 @@ static void app_free(App* app) {
     // Save the application configuration
     app_config_save(&app->config, app->storage);
 
+    furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_STORAGE);
 
