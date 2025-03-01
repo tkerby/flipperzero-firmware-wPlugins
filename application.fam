@@ -8,7 +8,7 @@ App(
     stack_size=2 * 1024,
     fap_category="Games",
     # Optional values
-    # fap_version="0.1",
+    # fap_version="0.1.1",
     fap_icon="fighterjet.png",  # 10x10 1-bit PNG
     # fap_description="Fighter jet simulator",
     # fap_author="Eero Prittinen",

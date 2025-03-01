@@ -1,4 +1,7 @@
 # Flipper zero fighter jet
+
+![](./screenshots/gameplay.png)
+
 Simple game about flying a fighter jet. Fly around, shoot the enemies, and dont loose your healt.
 
 This is just a demo, might make more finalized version later.
