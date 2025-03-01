@@ -36,34 +36,50 @@ void virtual_portal_tick(void* ctx) {
     uint32_t elapsed = furi_get_tick() - led->start_time;
     if (elapsed < led->delay) {
         float t_phase = fminf((float)elapsed / (float)led->delay, 1);
-        if (led->current_phase == 0) {
-            if (led->last_r < led->target_r) {
-                led->r = lerp(led->last_r, led->target_r, t_phase);
-            }
-            if (led->last_g < led->target_g) {
-                led->g = lerp(led->last_g, led->target_g, t_phase);
-            }
-            if (led->last_b < led->target_b) {
-                led->b = lerp(led->last_b, led->target_b, t_phase);
+        
+        if (led->two_phase) {
+            if (led->current_phase == 0) {
+                // Phase 1: Increase channels that need to go up, hold others constant
+                if (led->target_r > led->last_r) {
+                    led->r = lerp(led->last_r, led->target_r, t_phase);
+                }
+                if (led->target_g > led->last_g) {
+                    led->g = lerp(led->last_g, led->target_g, t_phase);
+                }
+                if (led->target_b > led->last_b) {
+                    led->b = lerp(led->last_b, led->target_b, t_phase);
+                }
+            } else {
+                // Phase 2: Decrease channels that need to go down
+                if (led->target_r < led->last_r) {
+                    led->r = lerp(led->last_r, led->target_r, t_phase);
+                }
+                if (led->target_g < led->last_g) {
+                    led->g = lerp(led->last_g, led->target_g, t_phase);
+                }
+                if (led->target_b < led->last_b) {
+                    led->b = lerp(led->last_b, led->target_b, t_phase);
+                }
             }
         } else {
-            if (led->last_r > led->target_r) {
-                led->r = lerp(led->last_r, led->target_r, t_phase);
-            }
-            if (led->last_g > led->target_g) {
-                led->g = lerp(led->last_g, led->target_g, t_phase);
-            }
-            if (led->last_b > led->target_b) {
-                led->b = lerp(led->last_b, led->target_b, t_phase);
-            }
+            // Simple one-phase transition: all channels change together
+            led->r = lerp(led->last_r, led->target_r, t_phase);
+            led->g = lerp(led->last_g, led->target_g, t_phase);
+            led->b = lerp(led->last_b, led->target_b, t_phase);
         }
+        
         furi_hal_light_set(LightRed, led->r);
         furi_hal_light_set(LightGreen, led->g);
         furi_hal_light_set(LightBlue, led->b);
     } else if (led->two_phase && led->current_phase == 0) {
+        // Move to phase 2 - save the current state as our "last" values for phase 2
+        led->last_r = led->r;
+        led->last_g = led->g;
+        led->last_b = led->b;
         led->start_time = furi_get_tick();
         led->current_phase++;
     } else {
+        // Transition complete - set final values
         led->r = led->target_r;
         led->g = led->target_g;
         led->b = led->target_b;
@@ -87,26 +103,41 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
             led = &virtual_portal->left;
             break;
     }
-    led->running = false;
+    
+    // Store current values as last values
     led->last_r = led->r;
     led->last_g = led->g;
     led->last_b = led->b;
+    
+    // Set target values
     led->target_r = r;
     led->target_g = g;
     led->target_b = b;
+    
     if (duration) {
-        led->start_time = furi_get_tick();
-        led->delay = duration;
-        bool increasing = r > led->r || g > led->g || b > led->b;
-        bool decreasing = r < led->r || g < led->g || b < led->b;
+        // Determine if we need a two-phase transition
+        bool increasing = (r > led->last_r) || (g > led->last_g) || (b > led->last_b);
+        bool decreasing = (r < led->last_r) || (g < led->last_g) || (b < led->last_b);
         led->two_phase = increasing && decreasing;
-        led->current_phase = increasing ? 0 : 1;
-        if (increasing && decreasing) {
-            duration /= 2;
+        
+        // Set up transition parameters
+        led->start_time = furi_get_tick();
+        if (led->two_phase) {
+            // If two-phase, each phase gets half the duration
+            led->delay = duration / 2;
+        } else {
+            led->delay = duration;
         }
+        
+        // Start in phase 0
+        led->current_phase = 0;
         led->running = true;
     } else {
+        // Immediate change, no transition
         if (side == PORTAL_SIDE_RIGHT) {
+            led->r = r;
+            led->g = g;
+            led->b = b;
             furi_hal_light_set(LightRed, r);
             furi_hal_light_set(LightGreen, g);
             furi_hal_light_set(LightBlue, b);
