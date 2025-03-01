@@ -31,7 +31,8 @@
 typedef enum {
    NfcComparatorView_Submenu,
    NfcComparatorView_FileBrowser,
-   NfcComparatorView_Popup
+   NfcComparatorView_Popup,
+   NfcComparatorView_Count
 } NfcComparatorViews;
 
 typedef struct {
@@ -41,7 +42,6 @@ typedef struct {
    FileBrowser* file_browser;
    FuriString* file_browser_output;
    Popup* popup;
-   NfcComparatorReaderWorker* worker;
    NotificationApp* notification_app;
    FuriThread* thread;
    NfcComparatorReaderWorker* nfc_comparator_reader_worker;
