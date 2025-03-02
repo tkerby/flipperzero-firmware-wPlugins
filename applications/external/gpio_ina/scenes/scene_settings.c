@@ -63,6 +63,14 @@ static void on_current_precision_changed(VariableItem* item) {
     app->config.current_precision = index;
 }
 
+static void on_led_blinking_changed(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, index ? "Yes" : "No");
+
+    App* app = (App*)variable_item_get_context(item);
+    app->config.led_blinking = index ? true : false;
+}
+
 static void scene_settings_enter_callback(void* context, uint32_t index) {
     App* app = (App*)context;
 
@@ -104,6 +112,10 @@ void scene_settings_init(App* app) {
         list, "I Precision", SensorPrecision_count, on_current_precision_changed, app);
     variable_item_set_current_value_index(item, app->config.current_precision);
     on_current_precision_changed(item);
+
+    item = variable_item_list_add(list, "LED blinking", 2, on_led_blinking_changed, app);
+    variable_item_set_current_value_index(item, app->config.led_blinking ? 1 : 0);
+    on_led_blinking_changed(item);
 
     item = variable_item_list_add(list, "Wiring info", 0, NULL, app);
 

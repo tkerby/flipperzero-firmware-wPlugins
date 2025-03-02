@@ -23,6 +23,7 @@
 #include <gui/modules/number_input.h>
 #include <gui/modules/popup.h>
 #include <storage/storage.h>
+#include <notification/notification_messages.h>
 
 #include "app_common.h"
 #include "app_config.h"
@@ -38,6 +39,7 @@ typedef enum {
 typedef struct {
     Gui* gui;
     Storage* storage;
+    NotificationApp* notifications;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
 
@@ -48,6 +50,10 @@ typedef struct {
 
     AppConfig config;
     SensorDriver* sensor;
+
+    // Time of the last measurement
+    // (== 0 if no measurement was done yet)
+    uint32_t last_measurement_time;
 } App;
 
 // Restarts the sensor driver to apply the new configuration

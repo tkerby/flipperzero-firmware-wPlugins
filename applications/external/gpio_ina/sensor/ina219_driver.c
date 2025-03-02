@@ -114,6 +114,7 @@ static bool ina219_driver_tick(SensorDriver* driver) {
                 uint16_t power_reg;
                 ina219_read_reg(drv, INA219_REG_POWER, &power_reg);
 
+                drv->state.time = furi_get_tick();
                 drv->state.ready = true;
             }
         } else {

@@ -31,6 +31,7 @@
 #define KEY_SHUNT_RESISTOR    "shuntResistor"
 #define KEY_VOLTAGE_PRECISION "voltagePrecision"
 #define KEY_CURRENT_PRECISION "currentPrecision"
+#define KEY_LED_BLINKING      "ledBlinking"
 
 void app_config_init(AppConfig* config) {
     furi_check(config != NULL);
@@ -39,6 +40,7 @@ void app_config_init(AppConfig* config) {
     config->shunt_resistor = 100000; // 100mOhm
     config->voltage_precision = SensorPrecision_Medium;
     config->current_precision = SensorPrecision_Medium;
+    config->led_blinking = true;
 }
 
 const char* sensor_type_name(SensorType sensor_type) {
@@ -88,6 +90,7 @@ static FuriString* app_config_build(const AppConfig* config) {
         s, KEY_VOLTAGE_PRECISION, "%s", sensor_precision_name(config->voltage_precision));
     ini_add_keyval(
         s, KEY_CURRENT_PRECISION, "%s", sensor_precision_name(config->current_precision));
+    ini_add_keyval(s, KEY_LED_BLINKING, "%s", config->led_blinking ? "1" : "0");
 
     return s;
 }
@@ -160,6 +163,16 @@ static void app_config_set(AppConfig* config, Slice section, Slice key, Slice va
             } else {
                 FURI_LOG_E(TAG, "Unknown current precision");
             }
+        } else if(key(KEY_LED_BLINKING)) {
+            uint32_t temp;
+            if(slice_parse_uint32(value, 0, &temp)) {
+                config->led_blinking = temp != 0;
+                FURI_LOG_I(TAG, "led_blinking=%d", config->led_blinking);
+            } else {
+                FURI_LOG_E(TAG, "Failed to parse led_blinking value");
+            }
+        } else {
+            FURI_LOG_E(TAG, "Unknown key");
         }
     }
 }

@@ -28,6 +28,8 @@ typedef struct {
     // Sensor detected and ready
     bool ready;
 
+    // Time of the last measurement [system ticks]
+    uint32_t time;
     // Current [A]
     double current;
     // BUS voltage [V]

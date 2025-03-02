@@ -55,6 +55,8 @@ typedef struct {
     SensorPrecision voltage_precision;
     // Shunt current measurement precision
     SensorPrecision current_precision;
+    // Indicate a new measurement by blinking the LED
+    bool led_blinking;
 } AppConfig;
 
 // Initializes the application configuration and sets the default values
