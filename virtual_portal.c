@@ -541,7 +541,7 @@ void virtual_portal_process_audio(
     uint8_t* message,
     uint8_t len) {
     for (size_t i = 0; i < len; i += 2) {
-        int16_t int_16 =
+        uint16_t int_16 =
             (((uint16_t)message[i] << 8) + ((uint16_t)message[i + 1]));
 
         // float data = int_16;
@@ -560,7 +560,7 @@ void virtual_portal_process_audio(
         // if (data > 255) {
         //     data = 255;
         // }
-        *virtual_portal->head = ((uint16_t)int_16 + INT16_MAX) >> 8;
+        *virtual_portal->head = int_16 >> 8;
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
