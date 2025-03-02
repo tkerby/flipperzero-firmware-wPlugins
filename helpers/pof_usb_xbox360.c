@@ -71,6 +71,9 @@ static int32_t pof_thread_worker(void* context) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
                     timeout = TIMEOUT_AFTER_RESPONSE;
                     last = now;
+                    if (virtual_portal->speaker) {
+                        timeout = TIMEOUT_AFTER_MUSIC;
+                    }
                 }
             } else if (len_data > 0 && buf[0] == 0x0b && buf[1] == 0x17) {
                 // 360 audio packets start with 0b 17, samples start after the two byte header
@@ -82,8 +85,6 @@ static int32_t pof_thread_worker(void* context) {
                 FURI_LOG_RAW_I("\r\n");
                 */
                 virtual_portal_process_audio(virtual_portal, buf + 2, len_data - 2);
-                timeout = TIMEOUT_AFTER_RESPONSE;
-                last = now;
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
@@ -97,6 +98,9 @@ static int32_t pof_thread_worker(void* context) {
                 }
                 last = now;
                 timeout = TIMEOUT_NORMAL;
+                if (virtual_portal->speaker) {
+                    timeout = TIMEOUT_AFTER_MUSIC;
+                }
             }
 
             flags &= ~EventRx;  // clear flag
@@ -135,8 +139,11 @@ static int32_t pof_thread_worker(void* context) {
                 tx_data[1] = 0x14;
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
-            timeout = TIMEOUT_NORMAL;
             last = now;
+            timeout = TIMEOUT_NORMAL;
+            if (virtual_portal->speaker) {
+                timeout = TIMEOUT_AFTER_MUSIC;
+            }
         }
     }
 

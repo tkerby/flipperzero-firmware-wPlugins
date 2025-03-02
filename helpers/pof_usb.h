@@ -21,6 +21,7 @@
 
 #define TIMEOUT_NORMAL 32
 #define TIMEOUT_AFTER_RESPONSE 100
+#define TIMEOUT_AFTER_MUSIC 300
 
 typedef struct PoFUsb PoFUsb;
 
