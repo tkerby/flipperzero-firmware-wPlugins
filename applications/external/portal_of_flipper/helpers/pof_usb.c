@@ -424,6 +424,7 @@ PoFUsb* pof_usb_start(VirtualPortal* virtual_portal) {
     pof_usb->usb.str_serial_descr = NULL;
     pof_usb->usb.cfg_descr = (void*)&usb_pof_cfg_descr;
 
+    furi_hal_usb_unlock();
     if(!furi_hal_usb_set_config(&pof_usb->usb, pof_usb)) {
         FURI_LOG_E(TAG, "USB locked, can not start");
         if(pof_usb->usb.str_manuf_descr) {
