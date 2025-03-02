@@ -60,7 +60,6 @@ static int32_t pof_thread_worker(void* context) {
                     FURI_LOG_RAW_I("\r\n");
                     */
                    virtual_portal_process_audio(virtual_portal, buf, len_data);
-                   pof_usb_send(dev, buf, len_data);
                    timeout = TIMEOUT_AFTER_RESPONSE;
                    last = now;
                 }
