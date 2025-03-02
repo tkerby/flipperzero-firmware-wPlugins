@@ -60,10 +60,11 @@ static int32_t pof_thread_worker(void* context) {
                     FURI_LOG_RAW_I("\r\n");
                     */
                    virtual_portal_process_audio(virtual_portal, buf, len_data);
+                   pof_usb_send(dev, buf, len_data);
+                   timeout = TIMEOUT_AFTER_RESPONSE;
+                   last = now;
                 }
-            }
-
-            if(pof_usb->dataAvailable > 0) {
+            } else if(pof_usb->dataAvailable > 0) {
                 memset(tx_data, 0, sizeof(tx_data));
                 int send_len =
                     virtual_portal_process_message(virtual_portal, pof_usb->data, tx_data);

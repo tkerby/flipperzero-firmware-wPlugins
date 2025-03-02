@@ -216,7 +216,6 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
     furi_timer_start(virtual_portal->led_timer, 10);
     if (furi_hal_speaker_acquire(1000)) {
-        virtual_portal->got_speaker = true;
         wav_player_speaker_init(8000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
 
@@ -241,7 +240,7 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
     }
     furi_timer_stop(virtual_portal->led_timer);
     furi_timer_free(virtual_portal->led_timer);
-    if (virtual_portal->got_speaker) {
+    if (furi_hal_speaker_is_mine()) {
         furi_hal_speaker_release();
         wav_player_speaker_stop();
         wav_player_dma_stop();
@@ -543,10 +542,9 @@ void virtual_portal_process_audio(
     uint8_t len) {
     for (size_t i = 0; i < len; i += 2) {
         int16_t int_16 =
-            (((int16_t)message[i] << 8) + ((int16_t)message[i + 1]));
+            (((int16_t)message[i + 1] << 8) + ((int16_t)message[i]));
 
-        float data = ((float)int_16 / 256.0 + 127.0);
-        data -= UINT8_MAX / 2;  // to signed
+        float data = ((float)int_16 / 256.0);
         data /= UINT8_MAX / 2;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume

@@ -60,7 +60,6 @@ typedef struct {
     uint16_t count;
     bool active;
     bool speaker;
-    bool got_speaker;
     NotificationApp* notifications;
     PoFType type;
     VirtualPortalLed left;
