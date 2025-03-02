@@ -581,7 +581,7 @@ void virtual_portal_process_audio_360(
 
         data *= virtual_portal->volume;  // volume
         data = tanhf(data);              // hyperbolic tangent limiter
-
+        data = -data;
         data *= UINT8_MAX / 2;  // scale -128..127
         data += UINT8_MAX / 2;  // to unsigned
 
