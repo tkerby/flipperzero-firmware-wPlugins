@@ -547,8 +547,8 @@ void virtual_portal_process_audio(
         float data = int_16;
         data /= INT16_MAX;  // scale -1..1
 
-        data *= virtual_portal->volume;  // volume
-        data = tanhf(data);              // hyperbolic tangent limiter
+        // data *= virtual_portal->volume;  // volume
+        // data = tanhf(data);              // hyperbolic tangent limiter
 
         data += 1; // 0 - 2
         data *= UINT8_MAX / 2;  // scale 0 - 255
