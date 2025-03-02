@@ -206,7 +206,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     }
     virtual_portal->sequence_number = 0;
     virtual_portal->active = false;
-    virtual_portal->volume = 10.0f;
+    virtual_portal->volume = 20.0f;
 
     virtual_portal->led_timer = furi_timer_alloc(virtual_portal_tick,
                                                  FuriTimerTypePeriodic, virtual_portal);
