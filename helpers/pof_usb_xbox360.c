@@ -19,9 +19,6 @@
 
 #define POF_USB_ACTUAL_OUTPUT_SIZE 0x20
 
-#define TIMEOUT_NORMAL 32
-#define TIMEOUT_AFTER_RESPONSE 100
-
 static const struct usb_string_descriptor dev_manuf_desc =
     USB_ARRAY_DESC(0x41, 0x63, 0x74, 0x69, 0x76, 0x69, 0x73, 0x69, 0x6f, 0x6e, 0x00);
 static const struct usb_string_descriptor dev_product_desc =

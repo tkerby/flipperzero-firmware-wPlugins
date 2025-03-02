@@ -1,9 +1,10 @@
 #include "virtual_portal.h"
-#include "wav_player_hal.h"
-#include "string.h"
 
-#include <stm32wbxx_ll_dma.h>
 #include <furi_hal.h>
+#include <stm32wbxx_ll_dma.h>
+
+#include "string.h"
+#include "wav_player_hal.h"
 
 #define TAG "VirtualPortal"
 
@@ -34,7 +35,7 @@ static float lerp(float start, float end, float t) {
 static void wav_player_dma_isr(void* ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     // half of transfer
-    if(LL_DMA_IsActiveFlag_HT1(DMA1)) {
+    if (LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
         if (!virtual_portal->playing_audio) {
             return;
@@ -55,7 +56,7 @@ static void wav_player_dma_isr(void* ctx) {
     }
 
     // transfer complete
-    if(LL_DMA_IsActiveFlag_TC1(DMA1)) {
+    if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
 
         if (!virtual_portal->playing_audio) {
@@ -218,7 +219,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->end = &virtual_portal->current_audio_buffer[SAMPLES_COUNT_BUFFERED];
 
     furi_timer_start(virtual_portal->led_timer, 10);
-    if(furi_hal_speaker_acquire(1000)) {
+    if (furi_hal_speaker_acquire(1000)) {
         virtual_portal->got_speaker = true;
         wav_player_speaker_init(8000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
@@ -547,9 +548,11 @@ void virtual_portal_process_audio(
     uint8_t len) {
     for (size_t i = 0; i < len; i += 2) {
         int16_t int_16 =
-            (((int16_t)message[i + 1]) + ((int16_t)message[i] << 8));
+            (((int16_t)message[i] << 8) + ((int16_t)message[i + 1]));
 
-        float data = (((float)int_16 / INT16_MAX) * 2) - 1;
+        float data = ((float)int_16 / 256.0 + 127.0);
+        data -= UINT8_MAX / 2;  // to signed
+        data /= UINT8_MAX / 2;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
         data = tanhf(data);   // hyperbolic tangent limiter
@@ -566,7 +569,7 @@ void virtual_portal_process_audio(
         }
         *virtual_portal->head = data;
         virtual_portal->count++;
-        if (++virtual_portal->head == virtual_portal->current_audio_buffer + sizeof(virtual_portal->current_audio_buffer)) {
+        if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
     }

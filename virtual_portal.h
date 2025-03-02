@@ -5,6 +5,7 @@
 
 #include "pof_token.h"
 
+#define SAMPLE_RATE 8000
 #define POF_TOKEN_LIMIT 16
 #define SAMPLES_COUNT 1024
 #define SAMPLES_COUNT_BUFFERED SAMPLES_COUNT * 4
@@ -22,6 +23,8 @@ typedef enum {
     EventTxComplete = (1 << 4),
     EventResetSio = (1 << 5),
     EventTxImmediate = (1 << 6),
+    WavPlayerEventHalfTransfer = (1 << 2),
+    WavPlayerEventFullTransfer = (1 << 3),
 
     EventAll = EventExit | EventReset | EventRx | EventTx | EventTxComplete | EventResetSio |
                EventTxImmediate,
@@ -64,6 +67,7 @@ typedef struct {
     VirtualPortalLed right;
     VirtualPortalLed trap;
     FuriTimer* led_timer;
+    FuriThread* thread;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
@@ -78,6 +82,6 @@ int virtual_portal_process_message(
     uint8_t* message,
     uint8_t* response);
 void virtual_portal_process_audio(VirtualPortal* virtual_portal,
-    uint8_t* message, uint8_t len);
+                                  uint8_t* message, uint8_t len);
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response);
