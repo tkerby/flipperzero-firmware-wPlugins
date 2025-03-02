@@ -215,16 +215,11 @@ static int32_t app_acc_worker(void* ctx) {
     uint8_t end_message_count = 0;
 
     uint32_t message_duration_ms = lightmsg_speed_value[light_msg_data->speed];
-    uint32_t flush_counter = 0;
 
     while(running) {
         // Checks if the thread must be ended.
         if(furi_thread_flags_get()) {
             running = false;
-        }
-        if(flush_counter++ > 12000) {
-            flush_counter = 0;
-            furi_timer_flush();
         }
         if(time++ == 4000) {
             notification_message(app->notifications, &sequence_display_backlight_off);
