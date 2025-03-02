@@ -9,13 +9,13 @@
 #define POF_USB_VID (0x1430)
 #define POF_USB_PID (0x1F17)
 
-#define POF_USB_EP_IN  (0x81)
+#define POF_USB_EP_IN (0x81)
 #define POF_USB_EP_OUT (0x02)
-#define POF_USB_X360_AUDIO_EP_IN1  (0x83)
-#define POF_USB_X360_AUDIO_EP_OUT1  (0x04)
-#define POF_USB_X360_AUDIO_EP_IN2  (0x85)
-#define POF_USB_X360_AUDIO_EP_OUT2  (0x06)
-#define POF_USB_X360_PLUGIN_MODULE_EP_IN  (0x87)
+#define POF_USB_X360_AUDIO_EP_IN1 (0x83)
+#define POF_USB_X360_AUDIO_EP_OUT1 (0x04)
+#define POF_USB_X360_AUDIO_EP_IN2 (0x85)
+#define POF_USB_X360_AUDIO_EP_OUT2 (0x06)
+#define POF_USB_X360_PLUGIN_MODULE_EP_IN (0x87)
 
 #define POF_USB_ACTUAL_OUTPUT_SIZE 0x20
 
@@ -27,18 +27,18 @@ static const struct usb_string_descriptor dev_manuf_desc =
 static const struct usb_string_descriptor dev_product_desc =
     USB_ARRAY_DESC(0x53, 0x70, 0x79, 0x72, 0x6f, 0x20, 0x50, 0x6f, 0x72, 0x74, 0x61, 0x00);
 static const struct usb_string_descriptor dev_security_desc =
-    USB_ARRAY_DESC(0x58, 0x62, 0x6f, 0x78, 0x20, 0x53, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74, 
-                   0x79, 0x20, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x20, 0x33, 0x2c, 0x20, 
-                   0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x31, 0x2e, 0x30, 0x30, 
-                   0x2c, 0x20, 0xa9, 0x20, 0x32, 0x30, 0x30, 0x35, 0x20, 0x4d, 0x69, 0x63, 
-                   0x72, 0x6f, 0x73, 0x6f, 0x66, 0x74, 0x20, 0x43, 0x6f, 0x72, 0x70, 0x6f, 
-                   0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x20, 0x41, 0x6c, 0x6c, 0x20, 
-                   0x72, 0x69, 0x67, 0x68, 0x74, 0x73, 0x20, 0x72, 0x65, 0x73, 0x65, 0x72, 
+    USB_ARRAY_DESC(0x58, 0x62, 0x6f, 0x78, 0x20, 0x53, 0x65, 0x63, 0x75, 0x72, 0x69, 0x74,
+                   0x79, 0x20, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x20, 0x33, 0x2c, 0x20,
+                   0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x20, 0x31, 0x2e, 0x30, 0x30,
+                   0x2c, 0x20, 0xa9, 0x20, 0x32, 0x30, 0x30, 0x35, 0x20, 0x4d, 0x69, 0x63,
+                   0x72, 0x6f, 0x73, 0x6f, 0x66, 0x74, 0x20, 0x43, 0x6f, 0x72, 0x70, 0x6f,
+                   0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x20, 0x41, 0x6c, 0x6c, 0x20,
+                   0x72, 0x69, 0x67, 0x68, 0x74, 0x73, 0x20, 0x72, 0x65, 0x73, 0x65, 0x72,
                    0x76, 0x65, 0x64, 0x2e);
 
 static usbd_respond pof_usb_ep_config(usbd_device* dev, uint8_t cfg);
 static usbd_respond
-    pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
+pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback);
 static void pof_usb_send(usbd_device* dev, uint8_t* buf, uint16_t len);
 static int32_t pof_usb_receive(usbd_device* dev, uint8_t* buf, uint16_t max_len);
 
@@ -52,13 +52,13 @@ static int32_t pof_thread_worker(void* context) {
 
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
-    uint32_t timeout = TIMEOUT_NORMAL; // FuriWaitForever; //ms
+    uint32_t timeout = TIMEOUT_NORMAL;  // FuriWaitForever; //ms
     uint32_t last = 0;
 
-    while(true) {
+    while (true) {
         uint32_t now = furi_get_tick();
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
-        if(flags & EventRx) { //fast flag
+        if (flags & EventRx) {  // fast flag
 
             uint8_t buf[POF_USB_RX_MAX_SIZE];
             len_data = pof_usb_receive(dev, buf, POF_USB_RX_MAX_SIZE);
@@ -68,7 +68,7 @@ static int32_t pof_thread_worker(void* context) {
                 // prepend packet with xinput header
                 int send_len =
                     virtual_portal_process_message(virtual_portal, buf + 2, tx_data + 2);
-                if(send_len > 0) {
+                if (send_len > 0) {
                     tx_data[0] = 0x0b;
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
@@ -84,13 +84,14 @@ static int32_t pof_thread_worker(void* context) {
                 }
                 FURI_LOG_RAW_I("\r\n");
                 */
+                virtual_portal_process_audio(virtual_portal, buf + 2, len_data - 2);
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
-            if(now > last + timeout) {
+            if (now > last + timeout) {
                 memset(tx_data, 0, sizeof(tx_data));
                 len_data = virtual_portal_send_status(virtual_portal, tx_data + 2);
-                if(len_data > 0) {
+                if (len_data > 0) {
                     tx_data[0] = 0x0b;
                     tx_data[1] = 0x14;
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
@@ -99,38 +100,38 @@ static int32_t pof_thread_worker(void* context) {
                 timeout = TIMEOUT_NORMAL;
             }
 
-            flags &= ~EventRx; // clear flag
+            flags &= ~EventRx;  // clear flag
         }
 
-        if(flags) {
-            if(flags & EventResetSio) {
+        if (flags) {
+            if (flags & EventResetSio) {
             }
-            if(flags & EventTxComplete) {
+            if (flags & EventTxComplete) {
                 pof_usb->tx_complete = true;
             }
 
-            if(flags & EventTxImmediate) {
+            if (flags & EventTxImmediate) {
                 pof_usb->tx_immediate = true;
-                if(pof_usb->tx_complete) {
+                if (pof_usb->tx_complete) {
                     flags |= EventTx;
                 }
             }
 
-            if(flags & EventTx) {
+            if (flags & EventTx) {
                 pof_usb->tx_complete = false;
                 pof_usb->tx_immediate = false;
             }
 
-            if(flags & EventExit) {
+            if (flags & EventExit) {
                 FURI_LOG_I(TAG, "exit");
                 break;
             }
         }
 
-        if(flags == (uint32_t)FuriFlagErrorISR) { // timeout
+        if (flags == (uint32_t)FuriFlagErrorISR) {  // timeout
             memset(tx_data, 0, sizeof(tx_data));
             len_data = virtual_portal_send_status(virtual_portal, tx_data + 2);
-            if(len_data > 0) {
+            if (len_data > 0) {
                 tx_data[0] = 0x0b;
                 tx_data[1] = 0x14;
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
@@ -168,7 +169,7 @@ static void pof_usb_deinit(usbd_device* dev) {
     usbd_reg_control(dev, NULL);
 
     PoFUsb* pof_usb = pof_cur;
-    if(!pof_usb || pof_usb->dev != dev) {
+    if (!pof_usb || pof_usb->dev != dev) {
         return;
     }
     pof_cur = NULL;
@@ -211,7 +212,7 @@ static void pof_usb_wakeup(usbd_device* dev) {
 
 static void pof_usb_suspend(usbd_device* dev) {
     PoFUsb* pof_usb = pof_cur;
-    if(!pof_usb || pof_usb->dev != dev) return;
+    if (!pof_usb || pof_usb->dev != dev) return;
 }
 
 static void pof_usb_rx_ep_callback(usbd_device* dev, uint8_t event, uint8_t ep) {
@@ -231,34 +232,34 @@ static void pof_usb_tx_ep_callback(usbd_device* dev, uint8_t event, uint8_t ep) 
 }
 
 static usbd_respond pof_usb_ep_config(usbd_device* dev, uint8_t cfg) {
-    switch(cfg) {
-    case 0: // deconfig
-        usbd_ep_deconfig(dev, POF_USB_EP_OUT);
-        usbd_ep_deconfig(dev, POF_USB_EP_IN);
-        usbd_reg_endpoint(dev, POF_USB_EP_OUT, NULL);
-        usbd_reg_endpoint(dev, POF_USB_EP_IN, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN1, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN2, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT1, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT2, NULL);
-        usbd_reg_endpoint(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, NULL);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN1);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN2);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT1);
-        usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT2);
-        usbd_ep_deconfig(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN);
-        return usbd_ack;
-    case 1: // config
-        usbd_ep_config(dev, POF_USB_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
-        usbd_ep_config(dev, POF_USB_EP_OUT, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_reg_endpoint(dev, POF_USB_EP_IN, pof_usb_tx_ep_callback);
-        usbd_reg_endpoint(dev, POF_USB_EP_OUT, pof_usb_rx_ep_callback);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        usbd_ep_config(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
-        return usbd_ack;
+    switch (cfg) {
+        case 0:  // deconfig
+            usbd_ep_deconfig(dev, POF_USB_EP_OUT);
+            usbd_ep_deconfig(dev, POF_USB_EP_IN);
+            usbd_reg_endpoint(dev, POF_USB_EP_OUT, NULL);
+            usbd_reg_endpoint(dev, POF_USB_EP_IN, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN1, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_IN2, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT1, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_AUDIO_EP_OUT2, NULL);
+            usbd_reg_endpoint(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, NULL);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN1);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_IN2);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT1);
+            usbd_ep_deconfig(dev, POF_USB_X360_AUDIO_EP_OUT2);
+            usbd_ep_deconfig(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN);
+            return usbd_ack;
+        case 1:  // config
+            usbd_ep_config(dev, POF_USB_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
+            usbd_ep_config(dev, POF_USB_EP_OUT, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            usbd_reg_endpoint(dev, POF_USB_EP_IN, pof_usb_tx_ep_callback);
+            usbd_reg_endpoint(dev, POF_USB_EP_OUT, pof_usb_rx_ep_callback);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_IN2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT1, USB_EPTYPE_INTERRUPT, POF_USB_EP_IN_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_AUDIO_EP_OUT2, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            usbd_ep_config(dev, POF_USB_X360_PLUGIN_MODULE_EP_IN, USB_EPTYPE_INTERRUPT, POF_USB_EP_OUT_SIZE);
+            return usbd_ack;
     }
     return usbd_fail;
 }
@@ -302,7 +303,7 @@ struct XInputVibrationCapabilities_t {
     uint8_t left_motor;
     uint8_t right_motor;
     uint8_t padding_2[3];
-} __attribute__((packed)) ;
+} __attribute__((packed));
 
 struct XInputInputCapabilities_t {
     uint8_t rid;
@@ -329,8 +330,8 @@ static const struct usb_device_descriptor usb_pof_dev_descr_xbox_360 = {
     .idVendor = POF_USB_VID,
     .idProduct = POF_USB_PID,
     .bcdDevice = VERSION_BCD(1, 0, 0),
-    .iManufacturer = 1, // UsbDevManuf
-    .iProduct = 2, // UsbDevProduct
+    .iManufacturer = 1,  // UsbDevManuf
+    .iProduct = 2,       // UsbDevProduct
     .iSerialNumber = 0,
     .bNumConfigurations = 1,
 };
@@ -429,8 +430,8 @@ static const struct PoFUsbDescriptorXbox360 usb_pof_cfg_descr_x360 = {
         },
     .audio_desc =
         {0x1B, 0x21, 0x00, 0x01, 0x01, 0x01, POF_USB_X360_AUDIO_EP_IN1, 0x40, 0x01, POF_USB_X360_AUDIO_EP_OUT1,
-            0x20, 0x16, POF_USB_X360_AUDIO_EP_IN2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
-            POF_USB_X360_AUDIO_EP_OUT2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+         0x20, 0x16, POF_USB_X360_AUDIO_EP_IN2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16,
+         POF_USB_X360_AUDIO_EP_OUT2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     .ep_in_audio1 =
         {
             .bLength = sizeof(struct usb_endpoint_descriptor),
@@ -509,7 +510,7 @@ static const struct PoFUsbDescriptorXbox360 usb_pof_cfg_descr_x360 = {
 
 /* Control requests handler */
 static usbd_respond
-    pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
+pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
     UNUSED(callback);
     uint8_t wValueH = req->wValue >> 8;
     uint8_t wValueL = req->wValue & 0xFF;
@@ -533,18 +534,19 @@ static usbd_respond
         return usbd_ack;
     }
 
-    if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
-           (USB_REQ_DEVICE | USB_REQ_STANDARD) && req->bRequest == USB_STD_GET_DESCRIPTOR) {
-        switch(wValueH) {
-        case USB_DTYPE_STRING:
-            if (wValueL == 4) {
-                dev->status.data_ptr = (uint8_t*)&dev_security_desc;
-                dev->status.data_count = dev_security_desc.bLength;
-                return usbd_ack;
-            }
-            return usbd_fail;
-        default:
-            return usbd_fail;
+    if (((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
+            (USB_REQ_DEVICE | USB_REQ_STANDARD) &&
+        req->bRequest == USB_STD_GET_DESCRIPTOR) {
+        switch (wValueH) {
+            case USB_DTYPE_STRING:
+                if (wValueL == 4) {
+                    dev->status.data_ptr = (uint8_t*)&dev_security_desc;
+                    dev->status.data_count = dev_security_desc.bLength;
+                    return usbd_ack;
+                }
+                return usbd_fail;
+            default:
+                return usbd_fail;
         }
     }
     return usbd_fail;
@@ -566,15 +568,15 @@ PoFUsb* pof_usb_start_xbox360(VirtualPortal* virtual_portal) {
     pof_usb->usb.str_manuf_descr = (void*)&dev_manuf_desc;
     pof_usb->usb.str_prod_descr = (void*)&dev_product_desc;
     pof_usb->usb.str_serial_descr = NULL;
-    if(!furi_hal_usb_set_config(&pof_usb->usb, pof_usb)) {
+    if (!furi_hal_usb_set_config(&pof_usb->usb, pof_usb)) {
         FURI_LOG_E(TAG, "USB locked, can not start");
-        if(pof_usb->usb.str_manuf_descr) {
+        if (pof_usb->usb.str_manuf_descr) {
             free(pof_usb->usb.str_manuf_descr);
         }
-        if(pof_usb->usb.str_prod_descr) {
+        if (pof_usb->usb.str_prod_descr) {
             free(pof_usb->usb.str_prod_descr);
         }
-        if(pof_usb->usb.str_serial_descr) {
+        if (pof_usb->usb.str_serial_descr) {
             free(pof_usb->usb.str_serial_descr);
         }
 
@@ -586,7 +588,7 @@ PoFUsb* pof_usb_start_xbox360(VirtualPortal* virtual_portal) {
 }
 
 void pof_usb_stop_xbox360(PoFUsb* pof_usb) {
-    if(pof_usb) {
+    if (pof_usb) {
         furi_hal_usb_set_config(pof_usb->usb_prev, NULL);
     }
 }

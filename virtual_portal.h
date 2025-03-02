@@ -6,6 +6,8 @@
 #include "pof_token.h"
 
 #define POF_TOKEN_LIMIT 16
+#define SAMPLES_COUNT 1024
+#define SAMPLES_COUNT_BUFFERED SAMPLES_COUNT * 4
 
 typedef enum {
     PoFHid,
@@ -45,8 +47,17 @@ typedef struct {
 typedef struct {
     PoFToken* tokens[POF_TOKEN_LIMIT];
     uint8_t sequence_number;
+    float volume;
+    bool playing_audio;
+    uint8_t audio_buffer[SAMPLES_COUNT];
+    uint8_t current_audio_buffer[SAMPLES_COUNT_BUFFERED];
+    uint8_t* head;
+    uint8_t* tail;
+    uint8_t* end;
+    uint16_t count;
     bool active;
     bool speaker;
+    bool got_speaker;
     NotificationApp* notifications;
     PoFType type;
     VirtualPortalLed left;
@@ -66,5 +77,7 @@ int virtual_portal_process_message(
     VirtualPortal* virtual_portal,
     uint8_t* message,
     uint8_t* response);
+void virtual_portal_process_audio(VirtualPortal* virtual_portal,
+    uint8_t* message, uint8_t len);
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response);

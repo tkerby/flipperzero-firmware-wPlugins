@@ -1,4 +1,9 @@
 #include "virtual_portal.h"
+#include "wav_player_hal.h"
+#include "string.h"
+
+#include <stm32wbxx_ll_dma.h>
+#include <furi_hal.h>
 
 #define TAG "VirtualPortal"
 
@@ -26,6 +31,52 @@ static float lerp(float start, float end, float t) {
     return start + (end - start) * t;
 }
 
+static void wav_player_dma_isr(void* ctx) {
+    VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
+    // half of transfer
+    if(LL_DMA_IsActiveFlag_HT1(DMA1)) {
+        LL_DMA_ClearFlag_HT1(DMA1);
+        if (!virtual_portal->playing_audio) {
+            return;
+        }
+        if (virtual_portal->count < SAMPLES_COUNT / 2) {
+            virtual_portal->playing_audio = false;
+            wav_player_speaker_stop();
+            return;
+        }
+        // fill first half of buffer
+        for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
+            virtual_portal->audio_buffer[i] = *virtual_portal->tail;
+            if (++virtual_portal->tail == virtual_portal->end) {
+                virtual_portal->tail = virtual_portal->current_audio_buffer;
+            }
+            virtual_portal->count--;
+        }
+    }
+
+    // transfer complete
+    if(LL_DMA_IsActiveFlag_TC1(DMA1)) {
+        LL_DMA_ClearFlag_TC1(DMA1);
+
+        if (!virtual_portal->playing_audio) {
+            return;
+        }
+        if (virtual_portal->count < SAMPLES_COUNT / 2) {
+            virtual_portal->playing_audio = false;
+            wav_player_speaker_stop();
+            return;
+        }
+        // fill second half of buffer
+        for (int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
+            virtual_portal->audio_buffer[i] = *virtual_portal->tail;
+            if (++virtual_portal->tail == virtual_portal->end) {
+                virtual_portal->tail = virtual_portal->current_audio_buffer;
+            }
+            virtual_portal->count--;
+        }
+    }
+}
+
 void virtual_portal_tick(void* ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     (void)virtual_portal;
@@ -36,7 +87,7 @@ void virtual_portal_tick(void* ctx) {
     uint32_t elapsed = furi_get_tick() - led->start_time;
     if (elapsed < led->delay) {
         float t_phase = fminf((float)elapsed / (float)led->delay, 1);
-        
+
         if (led->two_phase) {
             if (led->current_phase == 0) {
                 // Phase 1: Increase channels that need to go up, hold others constant
@@ -67,7 +118,7 @@ void virtual_portal_tick(void* ctx) {
             led->g = lerp(led->last_g, led->target_g, t_phase);
             led->b = lerp(led->last_b, led->target_b, t_phase);
         }
-        
+
         furi_hal_light_set(LightRed, led->r);
         furi_hal_light_set(LightGreen, led->g);
         furi_hal_light_set(LightBlue, led->b);
@@ -103,23 +154,23 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
             led = &virtual_portal->left;
             break;
     }
-    
+
     // Store current values as last values
     led->last_r = led->r;
     led->last_g = led->g;
     led->last_b = led->b;
-    
+
     // Set target values
     led->target_r = r;
     led->target_g = g;
     led->target_b = b;
-    
+
     if (duration) {
         // Determine if we need a two-phase transition
         bool increasing = (r > led->last_r) || (g > led->last_g) || (b > led->last_b);
         bool decreasing = (r < led->last_r) || (g < led->last_g) || (b < led->last_b);
         led->two_phase = increasing && decreasing;
-        
+
         // Set up transition parameters
         led->start_time = furi_get_tick();
         if (led->two_phase) {
@@ -128,7 +179,7 @@ void queue_led_command(VirtualPortal* virtual_portal, int side, uint8_t r, uint8
         } else {
             led->delay = duration;
         }
-        
+
         // Start in phase 0
         led->current_phase = 0;
         led->running = true;
@@ -158,11 +209,24 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     }
     virtual_portal->sequence_number = 0;
     virtual_portal->active = false;
+    virtual_portal->volume = 10.0f;
 
     virtual_portal->led_timer = furi_timer_alloc(virtual_portal_tick,
                                                  FuriTimerTypePeriodic, virtual_portal);
+    virtual_portal->head = virtual_portal->current_audio_buffer;
+    virtual_portal->tail = virtual_portal->current_audio_buffer;
+    virtual_portal->end = &virtual_portal->current_audio_buffer[SAMPLES_COUNT_BUFFERED];
 
     furi_timer_start(virtual_portal->led_timer, 10);
+    if(furi_hal_speaker_acquire(1000)) {
+        virtual_portal->got_speaker = true;
+        wav_player_speaker_init(8000);
+        wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
+
+        furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, wav_player_dma_isr, virtual_portal);
+
+        wav_player_dma_start();
+    }
 
     return virtual_portal;
 }
@@ -179,6 +243,13 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
     }
     furi_timer_stop(virtual_portal->led_timer);
     furi_timer_free(virtual_portal->led_timer);
+    if (virtual_portal->got_speaker) {
+        furi_hal_speaker_release();
+        wav_player_speaker_stop();
+        wav_player_dma_stop();
+    }
+    wav_player_hal_deinit();
+    furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, NULL, NULL);
 
     free(virtual_portal);
 }
@@ -468,6 +539,41 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     response[1] = 0x10 | arrayIndex;
     response[2] = blockNum;
     return 3;
+}
+
+void virtual_portal_process_audio(
+    VirtualPortal* virtual_portal,
+    uint8_t* message,
+    uint8_t len) {
+    for (size_t i = 0; i < len; i += 2) {
+        int16_t int_16 =
+            (((int16_t)message[i + 1]) + ((int16_t)message[i] << 8));
+
+        float data = (((float)int_16 / INT16_MAX) * 2) - 1;
+
+        data *= virtual_portal->volume;  // volume
+        data = tanhf(data);   // hyperbolic tangent limiter
+
+        data *= UINT8_MAX / 2;  // scale -128..127
+        data += UINT8_MAX / 2;  // to unsigned
+
+        if (data < 0) {
+            data = 0;
+        }
+
+        if (data > 255) {
+            data = 255;
+        }
+        *virtual_portal->head = data;
+        virtual_portal->count++;
+        if (++virtual_portal->head == virtual_portal->current_audio_buffer + sizeof(virtual_portal->current_audio_buffer)) {
+            virtual_portal->head = virtual_portal->current_audio_buffer;
+        }
+    }
+    if (!virtual_portal->playing_audio && virtual_portal->count > SAMPLES_COUNT / 2) {
+        wav_player_speaker_start();
+        virtual_portal->playing_audio = true;
+    }
 }
 
 // 32 byte message, 32 byte response;
