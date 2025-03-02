@@ -540,27 +540,27 @@ void virtual_portal_process_audio(
     VirtualPortal* virtual_portal,
     uint8_t* message,
     uint8_t len) {
-    for (size_t i = 0; i < len / 2; i++) {
-        uint16_t int_16 =
-            (((uint16_t)message[i + 1] << 8) + ((uint16_t)message[i]));
+    for (size_t i = 0; i < len; i += 2) {
+        int16_t int_16 =
+            (((int16_t)message[i] << 8) + ((int16_t)message[i + 1]));
 
-        // float data = int_16;
-        // data /= INT16_MAX;  // scale -1..1
+        float data = ((float)int_16 / 256.0);
+        data /= UINT8_MAX / 2;  // scale -1..1
 
-        // data *= virtual_portal->volume;  // volume
-        // data = tanhf(data);              // hyperbolic tangent limiter
+        data *= virtual_portal->volume;  // volume
+        data = tanhf(data);              // hyperbolic tangent limiter
 
-        // data += 1; // 0 - 2
-        // data *= UINT8_MAX / 2;  // scale 0 - 255
+        data *= UINT8_MAX / 2;  // scale -128..127
+        data += UINT8_MAX / 2;  // to unsigned
 
-        // if (data < 0) {
-        //     data = 0;
-        // }
+        if (data < 0) {
+            data = 0;
+        }
 
-        // if (data > 255) {
-        //     data = 255;
-        // }
-        *virtual_portal->head = int_16 >> 8;
+        if (data > 255) {
+            data = 255;
+        }
+        *virtual_portal->head = data;
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
