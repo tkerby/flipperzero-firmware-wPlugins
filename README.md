@@ -34,6 +34,18 @@ The application provides a simple way to configure conversion time and sample av
 
 The precision can be set independently for VBUS and shunt voltage measurements.
 
+## Measurement Range and Resolution
+
+Each sensor operates within a fixed voltage range, with a defined resolution for both bus voltage (VBUS) and shunt voltage (VSHUNT) measurements. The values below indicate the maximum measurable voltage and the smallest detectable voltage step for each parameter.
+
+|              | VBUS Max  | VBUS Resolution | VSHUNT Max | VSHUNT Resolution |
+| ------------ | --------- | --------- | --------- | --------- |
+| INA219       | 26V       | 4mV       | ±320mV    | 10μV      |
+| INA226       | 36V       | 1.25mV    | ±81.92mV  | 2.5μV     |
+| INA228       | 85V       | 195.315μV | ±160mV    | 312.5nV   |
+
+
+
 
 
 
