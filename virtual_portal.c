@@ -568,6 +568,38 @@ void virtual_portal_process_audio(
     }
 }
 
+void virtual_portal_process_audio_360(
+    VirtualPortal* virtual_portal,
+    uint8_t* message,
+    uint8_t len) {
+    for (size_t i = 0; i < len; i += 2) {
+        int16_t int_16 =
+            (((int16_t)message[i + 1] << 8) + ((int16_t)message[i]));
+
+        float data = ((float)int_16 / 256.0);
+        data /= UINT8_MAX / 2;  // scale -1..1
+
+        data *= virtual_portal->volume;  // volume
+        data = tanhf(data);              // hyperbolic tangent limiter
+
+        data *= UINT8_MAX / 2;  // scale -128..127
+        data += UINT8_MAX / 2;  // to unsigned
+
+        if (data < 0) {
+            data = 0;
+        }
+
+        if (data > 255) {
+            data = 255;
+        }
+        *virtual_portal->head = data;
+        virtual_portal->count++;
+        if (++virtual_portal->head == virtual_portal->end) {
+            virtual_portal->head = virtual_portal->current_audio_buffer;
+        }
+    }
+}
+
 // 32 byte message, 32 byte response;
 int virtual_portal_process_message(
     VirtualPortal* virtual_portal,
