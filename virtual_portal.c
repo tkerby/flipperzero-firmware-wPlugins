@@ -542,7 +542,7 @@ void virtual_portal_process_audio(
     uint8_t len) {
     for (size_t i = 0; i < len; i += 2) {
         int16_t int_16 =
-            (((uint16_t)message[i + 1] << 8) + ((uint16_t)message[i]));
+            (((uint16_t)message[i] << 8) + ((uint16_t)message[i + 1]));
 
         // float data = int_16;
         // data /= INT16_MAX;  // scale -1..1
