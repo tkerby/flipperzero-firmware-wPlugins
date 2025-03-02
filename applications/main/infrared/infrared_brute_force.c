@@ -16,7 +16,6 @@
 ARRAY_DEF(SignalPositionArray, size_t, M_DEFAULT_OPLIST);
 
 typedef struct {
-    uint32_t count;
     size_t index;
     SignalPositionArray_t signals;
 } InfraredBruteForceRecord;
@@ -138,8 +137,8 @@ InfraredErrorCode infrared_brute_force_calculate_messages(
             break;
         }
 
-        uint32_t auto_detect_button_index = 0;
         bool signal_valid = false;
+        uint32_t auto_detect_button_index = 0;
         while(infrared_signal_read_name(ff, signal_name) == InfraredErrorCodeNone) {
             size_t signal_start = flipper_format_tell(ff);
             error = infrared_signal_read_body(signal, ff);
@@ -148,15 +147,18 @@ InfraredErrorCode infrared_brute_force_calculate_messages(
 
             InfraredBruteForceRecord* record =
                 InfraredBruteForceRecordDict_get(brute_force->records, signal_name);
-            if(!record && auto_detect_buttons) {
-                infrared_brute_force_add_record(
-                    brute_force, auto_detect_button_index++, furi_string_get_cstr(signal_name));
-                record = InfraredBruteForceRecordDict_get(brute_force->records, signal_name);
+            if(!record) {
+                if(auto_detect_buttons) {
+                    infrared_brute_force_add_record(
+                        brute_force,
+                        auto_detect_button_index++,
+                        furi_string_get_cstr(signal_name));
+                    record = InfraredBruteForceRecordDict_get(brute_force->records, signal_name);
+                } else {
+                    FURI_LOG_E(TAG, "Unknown signal name: %s", furi_string_get_cstr(signal_name));
+                    furi_crash("Unknown signal name");
+                }
             }
-            if(record) { //-V547
-                ++(record->count);
-            }
-            furi_assert(record);
             SignalPositionArray_push_back(record->signals, signal_start);
         }
         if(!signal_valid) break;
