@@ -82,6 +82,8 @@ static int32_t pof_thread_worker(void* context) {
                 FURI_LOG_RAW_I("\r\n");
                 */
                 virtual_portal_process_audio(virtual_portal, buf + 2, len_data - 2);
+                timeout = TIMEOUT_AFTER_RESPONSE;
+                last = now;
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
