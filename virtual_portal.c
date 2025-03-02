@@ -544,14 +544,14 @@ void virtual_portal_process_audio(
         int16_t int_16 =
             (((uint16_t)message[i] << 8) + ((uint16_t)message[i + 1]));
 
-        float data = ((float)int_16 / 256.0);
-        data /= UINT8_MAX / 2;  // scale -1..1
+        float data = int_16;
+        data /= INT16_MAX;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
         data = tanhf(data);              // hyperbolic tangent limiter
 
-        data *= UINT8_MAX / 2;  // scale -128..127
-        data += UINT8_MAX / 2;  // to unsigned
+        data += 1; // 0 - 2
+        data *= UINT8_MAX / 2;  // scale 0 - 255
 
         if (data < 0) {
             data = 0;
