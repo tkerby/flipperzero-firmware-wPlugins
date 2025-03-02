@@ -82,5 +82,7 @@ int virtual_portal_process_message(
     uint8_t* response);
 void virtual_portal_process_audio(VirtualPortal* virtual_portal,
                                   uint8_t* message, uint8_t len);
+void virtual_portal_process_audio_360(VirtualPortal* virtual_portal,
+                                  uint8_t* message, uint8_t len);
 
 int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response);
