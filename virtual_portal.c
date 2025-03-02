@@ -37,12 +37,10 @@ static void wav_player_dma_isr(void* ctx) {
     // half of transfer
     if (LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
-        if (!virtual_portal->playing_audio) {
-            return;
-        }
         if (virtual_portal->count < SAMPLES_COUNT / 2) {
-            virtual_portal->playing_audio = false;
-            wav_player_speaker_stop();
+            for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
+                virtual_portal->audio_buffer[i] = 0;
+            }
             return;
         }
         // fill first half of buffer
@@ -59,12 +57,10 @@ static void wav_player_dma_isr(void* ctx) {
     if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
 
-        if (!virtual_portal->playing_audio) {
-            return;
-        }
         if (virtual_portal->count < SAMPLES_COUNT / 2) {
-            virtual_portal->playing_audio = false;
-            wav_player_speaker_stop();
+            for (int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
+                virtual_portal->audio_buffer[i] = 0;
+            }
             return;
         }
         // fill second half of buffer
@@ -226,6 +222,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
         furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, wav_player_dma_isr, virtual_portal);
 
+        wav_player_speaker_start();
         wav_player_dma_start();
     }
 
@@ -255,12 +252,12 @@ void virtual_portal_free(VirtualPortal* virtual_portal) {
     free(virtual_portal);
 }
 
-void virtaul_portal_set_leds(uint8_t r, uint8_t g, uint8_t b) {
+void virtual_portal_set_leds(uint8_t r, uint8_t g, uint8_t b) {
     furi_hal_light_set(LightRed, r);
     furi_hal_light_set(LightGreen, g);
     furi_hal_light_set(LightBlue, b);
 }
-void virtaul_portal_set_backlight(uint8_t brightness) {
+void virtual_portal_set_backlight(uint8_t brightness) {
     furi_hal_light_set(LightBacklight, brightness);
 }
 
@@ -320,6 +317,8 @@ void virtual_portal_load_token(VirtualPortal* virtual_portal, PoFToken* pof_toke
     memcpy(target->dev_name, pof_token->dev_name, sizeof(pof_token->dev_name));
     memcpy(target->UID, pof_token->UID, sizeof(pof_token->UID));
 
+    furi_string_set(target->load_path, pof_token->load_path);
+
     const NfcDeviceData* data = nfc_device_get_data(pof_token->nfc_device, NfcProtocolMfClassic);
     nfc_device_set_data(target->nfc_device, NfcProtocolMfClassic, data);
 }
@@ -355,15 +354,11 @@ int virtual_portal_reset(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 
     uint8_t index = 0;
     response[index++] = 'R';
-    response[index++] = 0x02;
-    response[index++] = 0x1B;
-    // response[index++] = 0x0a;
-    // response[index++] = 0x03;
-    // response[index++] = 0x02;
-    //  https://github.com/tresni/PoweredPortals/wiki/USB-Protocols
-    //  Wii Wireless: 01 29 00 00
-    //  Wii Wired: 02 0a 03 02 (Giants: works)
-    //  Arduboy: 02 19 (Trap team: works)
+    response[index++] = 0x02; // Trap Team Xbox One
+    response[index++] = 0x27; // Trap Team Xbox One
+
+    // response[index++] = 0x02; // Swap Force 3DS
+    // response[index++] = 0x02; // Swap Force 3DS
     return index;
 }
 
@@ -447,11 +442,11 @@ int virtual_portal_l(VirtualPortal* virtual_portal, uint8_t* message) {
             break;
         case 1:
             brightness = message[2];
-            virtaul_portal_set_backlight(brightness);
+            virtual_portal_set_backlight(brightness);
             break;
         case 3:
             brightness = 0xff;
-            virtaul_portal_set_backlight(brightness);
+            virtual_portal_set_backlight(brightness);
             break;
     }
     return 0;
@@ -555,7 +550,7 @@ void virtual_portal_process_audio(
         data /= UINT8_MAX / 2;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
-        data = tanhf(data);   // hyperbolic tangent limiter
+        data = tanhf(data);              // hyperbolic tangent limiter
 
         data *= UINT8_MAX / 2;  // scale -128..127
         data += UINT8_MAX / 2;  // to unsigned
@@ -572,10 +567,6 @@ void virtual_portal_process_audio(
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
-    }
-    if (!virtual_portal->playing_audio && virtual_portal->count > SAMPLES_COUNT / 2) {
-        wav_player_speaker_start();
-        virtual_portal->playing_audio = true;
     }
 }
 

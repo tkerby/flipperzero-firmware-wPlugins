@@ -47,8 +47,7 @@ static int32_t pof_thread_worker(void* context) {
         uint32_t now = furi_get_tick();
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
         if(flags & EventRx) { //fast flag
-
-            // if(virtual_portal->speaker) {
+            if(virtual_portal->speaker) {
                 uint8_t buf[POF_USB_RX_MAX_SIZE];
                 len_data = pof_usb_receive(dev, buf, POF_USB_RX_MAX_SIZE);
                 // https://github.com/xMasterX/all-the-plugins/blob/dev/base_pack/wav_player/wav_player_hal.c
@@ -62,7 +61,7 @@ static int32_t pof_thread_worker(void* context) {
                     */
                    virtual_portal_process_audio(virtual_portal, buf, len_data);
                 }
-            // }
+            }
 
             if(pof_usb->dataAvailable > 0) {
                 memset(tx_data, 0, sizeof(tx_data));
