@@ -22,14 +22,14 @@ INA Meter is an application for Flipper Zero that allows you to read I2C-connect
 - Once the settings are complete, press the BACK button to return to the Current Gauge Screen.
 - If the sensor is connected properly, the Current Gauge Screen will display the bus voltage and the current flowing through the shunt resistor.
 
-## Configuration
+## Precision and Sampling Presets
 
 The application provides a simple way to configure conversion time and sample averaging with four preset levels: Low, Medium, High, and Max. These settings are sensor-specific:
 
 |              | Low       | Medium   | High     |  Max   |
 | ------------ | --------- | -------- | -------- |--------|
 | INA219       | 532μs x 128    | 532μs x 128    | 532μs x 128  | 532us x 128  |
-| INA228       | 140μs x 1024    | 588μs x 1024  | 2116μs x 1024  | 8244us x 1024 |
+| INA226       | 140μs x 1024    | 588μs x 1024  | 2116μs x 1024  | 8244us x 1024 |
 | INA228       | 50μs x 1024    | 280μs x 1024  | 1052μs x 1024  | 4120us x 1024 |
 
 The precision can be set independently for VBUS and shunt voltage measurements.
