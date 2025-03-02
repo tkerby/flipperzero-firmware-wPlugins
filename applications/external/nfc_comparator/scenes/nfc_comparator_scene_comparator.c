@@ -58,13 +58,15 @@ int32_t nfc_comparator_comparator_task(void* context) {
             checks.uid_length ? "Match" : "Mismatch",
             checks.protocol ? "Match" : "Mismatch");
 
-        char result_buffer[162];
-        strncpy(result_buffer, furi_string_get_cstr(comparator), sizeof(result_buffer) - 1);
-        result_buffer[sizeof(result_buffer) - 1] = '\0';
-        furi_string_free(comparator);
-
-        popup_set_text(nfc_comparator->popup, result_buffer, 64, 35, AlignCenter, AlignCenter);
+        popup_set_text(
+            nfc_comparator->popup,
+            furi_string_get_cstr(comparator),
+            64,
+            35,
+            AlignCenter,
+            AlignCenter);
         furi_delay_ms(5);
+        furi_string_free(comparator);
     }
     return 0;
 }
