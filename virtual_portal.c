@@ -560,7 +560,7 @@ void virtual_portal_process_audio(
         // if (data > 255) {
         //     data = 255;
         // }
-        *virtual_portal->head = ((uint16_t)data + INT16_MAX) >> 8;
+        *virtual_portal->head = ((uint16_t)int_16 + INT16_MAX) >> 8;
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
