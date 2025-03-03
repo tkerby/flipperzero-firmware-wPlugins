@@ -542,6 +542,7 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
     return 3;
 }
 
+// HID portals use send 8000hz 16 bit signed PCM samples
 void virtual_portal_process_audio(
     VirtualPortal* virtual_portal,
     uint8_t* message,
@@ -574,6 +575,8 @@ void virtual_portal_process_audio(
     }
 }
 
+// 360 portals didn't have the bandwith, so they use CCITT G.721 ADPCM coding
+// to encode the audio so it uses less bandwith.
 void virtual_portal_process_audio_360(
     VirtualPortal* virtual_portal,
     uint8_t* message,

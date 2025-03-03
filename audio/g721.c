@@ -73,8 +73,8 @@ static short _fitab[16] = { 0,     0,     0,     0x200, 0x200, 0x200, 0x600, 0xE
 /*
  * g721_encoder()
  *
- * Encodes the input vale of linear PCM, A-law or u-law data sl and returns
- * the resulting code. -1 is returned for unknown input coding value.
+ * Encodes the input value of linear PCM from sl and returns
+ * the resulting code. 
  */
 int g721_encoder(int sl, struct g72x_state* state_ptr)
 {
@@ -115,7 +115,6 @@ int g721_encoder(int sl, struct g72x_state* state_ptr)
  *
  * Decodes a 4-bit code of G.721 encoded data of i and
  * returns the resulting linear PCM
- * return -1 for unknown out_coding value.
  */
 int g721_decoder(int i, struct g72x_state* state_ptr)
 {
