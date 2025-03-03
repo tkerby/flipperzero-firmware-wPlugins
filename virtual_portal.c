@@ -221,6 +221,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
 void virtual_portal_set_type(VirtualPortal* virtual_portal, PoFType type) {
     virtual_portal->type = type;
+    virtual_portal->volume = 10;
     if (furi_hal_speaker_acquire(1000)) {
         wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
