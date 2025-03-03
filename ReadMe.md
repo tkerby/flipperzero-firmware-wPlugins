@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0301-1928-0.420.0-9c6e433](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0303-1119-0.420.0-f0160a2](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-01 19:28 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-01 19:28 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-03 11:19 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-03 11:19 EST`
 - Updated: [Timer v0.1 (By nagamine-git)](https://github.com/nagamine-git/flipperzero_timer_app)
 - Updated: [Cross Remote v3.3 (By leedave)](https://github.com/leedave/flipper-zero-cross-remote)
 - Added Cross Remote Support in Archive App (Code supplied By leedave)
