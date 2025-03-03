@@ -2,7 +2,7 @@
 
 #include <furi_hal.h>
 #include <stm32wbxx_ll_dma.h>
-
+#include "g72x.h"
 #include "string.h"
 #include "wav_player_hal.h"
 
@@ -577,13 +577,15 @@ void virtual_portal_process_audio_360(
     uint8_t* message,
     uint8_t len) {
     for (size_t i = 0; i < len; i++) {
-        int8_t int_8 = (int8_t)message[i];
+        
+        int16_t int_16 = (int16_t)ulaw2linear(message[i]);
 
-        float data = (float)int_8;
-        data /= INT8_MAX;  // scale -1..1
+        float data = ((float)int_16 / 256.0);
+        data /= UINT8_MAX / 2;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
         data = tanhf(data);              // hyperbolic tangent limiter
+
         data *= UINT8_MAX / 2;  // scale -128..127
         data += UINT8_MAX / 2;  // to unsigned
 
