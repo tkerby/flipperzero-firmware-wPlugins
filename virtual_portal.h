@@ -4,6 +4,7 @@
 #include <notification/notification_messages.h>
 
 #include "pof_token.h"
+#include "g72x.h"
 
 #define SAMPLE_RATE 8000
 #define POF_TOKEN_LIMIT 16
@@ -67,6 +68,7 @@ typedef struct {
     VirtualPortalLed trap;
     FuriTimer* led_timer;
     FuriThread* thread;
+    struct g72x_state state;
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
