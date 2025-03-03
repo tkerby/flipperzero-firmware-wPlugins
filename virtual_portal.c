@@ -221,7 +221,6 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
 void virtual_portal_set_type(VirtualPortal* virtual_portal, PoFType type) {
     virtual_portal->type = type;
-    virtual_portal->volume = 10;
     if (furi_hal_speaker_acquire(1000)) {
         wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
@@ -578,9 +577,9 @@ void virtual_portal_process_audio_360(
     uint8_t* message,
     uint8_t len) {
     for (size_t i = 0; i < len; i++) {
-        int8_t int_8 = (int8_t)message[i];
+        uint8_t int_8 = message[i];
 
-        float data = (float)int_8;
+        float data = (float)int_8 - INT8_MAX;
         data /= INT8_MAX;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
