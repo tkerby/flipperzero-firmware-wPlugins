@@ -578,7 +578,7 @@ void virtual_portal_process_audio_360(
     uint8_t len) {
     for (size_t i = 0; i < len; i++) {
         
-        int16_t int_16 = (int16_t)ulaw2linear(message[i]);
+        int16_t int_16 = (int16_t)alaw2linear(message[i]);
 
         float data = ((float)int_16 / 256.0);
         data /= UINT8_MAX / 2;  // scale -1..1
