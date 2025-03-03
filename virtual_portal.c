@@ -222,7 +222,8 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 void virtual_portal_set_type(VirtualPortal* virtual_portal, PoFType type) {
     virtual_portal->type = type;
     if (furi_hal_speaker_acquire(1000)) {
-        wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
+        // wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
+        wav_player_speaker_init(8000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
 
         furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, wav_player_dma_isr, virtual_portal);
@@ -403,7 +404,7 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
     }
     return 0;
 }
-
+struct g72x_state state;
 // 4d01ff0000d0077d6c2a77a400000000
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     virtual_portal->speaker = (message[1] == 1);
@@ -421,6 +422,7 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     response[index++] = message[1];
     response[index++] = 0x00;
     response[index++] = 0x19;
+    g72x_init_state(&state);
     return index;
 }
 
@@ -578,7 +580,7 @@ void virtual_portal_process_audio_360(
     uint8_t len) {
     for (size_t i = 0; i < len; i++) {
         
-        int16_t int_16 = (int16_t)alaw2linear(message[i]);
+        int16_t int_16 = (int16_t)g721_decoder(message[i],AUDIO_ENCODING_LINEAR, &state);
 
         float data = ((float)int_16 / 256.0);
         data /= UINT8_MAX / 2;  // scale -1..1
@@ -601,6 +603,30 @@ void virtual_portal_process_audio_360(
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
+
+        // int_16 = (int16_t)g721_decoder(message[i] << 4,AUDIO_ENCODING_LINEAR, &state);
+
+        // data = ((float)int_16 / 256.0);
+        // data /= UINT8_MAX / 2;  // scale -1..1
+
+        // data *= virtual_portal->volume;  // volume
+        // data = tanhf(data);              // hyperbolic tangent limiter
+
+        // data *= UINT8_MAX / 2;  // scale -128..127
+        // data += UINT8_MAX / 2;  // to unsigned
+
+        // if (data < 0) {
+        //     data = 0;
+        // }
+
+        // if (data > 255) {
+        //     data = 255;
+        // }
+        // *virtual_portal->head = data;
+        // virtual_portal->count++;
+        // if (++virtual_portal->head == virtual_portal->end) {
+        //     virtual_portal->head = virtual_portal->current_audio_buffer;
+        // }
     }
 }
 

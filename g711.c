@@ -228,7 +228,7 @@ int ulaw2linear(unsigned char u_val)
     int t;
 
     /* Complement to obtain normal u-law value. */
-    // u_val = ~u_val;
+    u_val = ~u_val;
 
     /*
      * Extract and bias the quantization bits. Then
