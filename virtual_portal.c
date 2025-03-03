@@ -215,6 +215,12 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
     virtual_portal->end = &virtual_portal->current_audio_buffer[SAMPLES_COUNT_BUFFERED];
 
     furi_timer_start(virtual_portal->led_timer, 10);
+
+    return virtual_portal;
+}
+
+void virtual_portal_set_type(VirtualPortal* virtual_portal, PoFType type) {
+    virtual_portal->type = type;
     if (furi_hal_speaker_acquire(1000)) {
         wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
@@ -224,8 +230,6 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
         wav_player_speaker_start();
         wav_player_dma_start();
     }
-
-    return virtual_portal;
 }
 
 void virtual_portal_cleanup(VirtualPortal* virtual_portal) {

@@ -70,6 +70,7 @@ typedef struct {
 } VirtualPortal;
 
 VirtualPortal* virtual_portal_alloc(NotificationApp* notifications);
+void virtual_portal_set_type(VirtualPortal* virtual_portal, PoFType type);
 
 void virtual_portal_free(VirtualPortal* virtual_portal);
 void virtual_portal_cleanup(VirtualPortal* virtual_portal);
