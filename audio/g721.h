@@ -33,10 +33,6 @@
 #ifndef _G72X_H
 #define _G72X_H
 
-#define AUDIO_ENCODING_ULAW (1)   /* ISDN u-law */
-#define AUDIO_ENCODING_ALAW (2)   /* ISDN A-law */
-#define AUDIO_ENCODING_LINEAR (3) /* PCM 2's-complement (0-center) */
-
 /*
  * The following is the definition of the state structure
  * used by the G.721/G.723 encoder and decoder to preserve their internal
@@ -75,12 +71,8 @@ struct g72x_state {
 /* External function definitions. */
 
 void g72x_init_state(struct g72x_state*);
-int g721_encoder(int sample, int in_coding, struct g72x_state* state_ptr);
-int g721_decoder(int code, int out_coding, struct g72x_state* state_ptr);
-int g723_24_encoder(int sample, int in_coding, struct g72x_state* state_ptr);
-int g723_24_decoder(int code, int out_coding, struct g72x_state* state_ptr);
-int g723_40_encoder(int sample, int in_coding, struct g72x_state* state_ptr);
-int g723_40_decoder(int code, int out_coding, struct g72x_state* state_ptr);
+int g721_encoder(int sample, struct g72x_state* state_ptr);
+int g721_decoder(int code, struct g72x_state* state_ptr);
 
 
 int quantize(int d, int y, short* table, int size);
@@ -95,17 +87,6 @@ void
                   int sr,
                   int dqsez,
                   struct g72x_state* state_ptr);
-int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short* qtab);
-
-int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short* qtab);
-
-unsigned char linear2alaw(int pcm_val);
-
-int alaw2linear(unsigned char a_val);
-
-unsigned char linear2ulaw(int pcm_val);
-
-int ulaw2linear(unsigned char u_val);
 
 int predictor_zero(struct g72x_state* state_ptr);
 

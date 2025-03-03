@@ -3,7 +3,7 @@
 #include <furi_hal.h>
 #include <stm32wbxx_ll_dma.h>
 #include "string.h"
-#include "wav_player_hal.h"
+#include "audio/wav_player_hal.h"
 
 #define TAG "VirtualPortal"
 
@@ -580,7 +580,7 @@ void virtual_portal_process_audio_360(
     uint8_t len) {
     for (size_t i = 0; i < len; i++) {
         
-        int16_t int_16 = (int16_t)g721_decoder(message[i],AUDIO_ENCODING_LINEAR, &virtual_portal->state);
+        int16_t int_16 = (int16_t)g721_decoder(message[i], &virtual_portal->state);
 
         float data = ((float)int_16 / 256.0);
         data /= UINT8_MAX / 2;  // scale -1..1
@@ -604,7 +604,7 @@ void virtual_portal_process_audio_360(
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
 
-        int_16 = (int16_t)g721_decoder(message[i] >> 4,AUDIO_ENCODING_LINEAR, &virtual_portal->state);
+        int_16 = (int16_t)g721_decoder(message[i] >> 4, &virtual_portal->state);
 
         data = ((float)int_16 / 256.0);
         data /= UINT8_MAX / 2;  // scale -1..1

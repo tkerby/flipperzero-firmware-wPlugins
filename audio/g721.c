@@ -23,14 +23,127 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#include <stdlib.h>
-/*
- * g72x.c
- *
- * Common routines for G.721 and G.723 conversions.
- */
 
-#include "g72x.h"
+/*
+ * g721.c
+ *
+ * Description:
+ *
+ * g721_encoder(), g721_decoder()
+ *
+ * These routines comprise an implementation of the CCITT G.721 ADPCM
+ * coding algorithm.  Essentially, this implementation is identical to
+ * the bit level description except for a few deviations which
+ * take advantage of work station attributes, such as hardware 2's
+ * complement arithmetic and large memory.  Specifically, certain time
+ * consuming operations such as multiplications are replaced
+ * with lookup tables and software 2's complement operations are
+ * replaced with hardware 2's complement.
+ *
+ * The deviation from the bit level specification (lookup tables)
+ * preserves the bit level performance specifications.
+ *
+ * As outlined in the G.721 Recommendation, the algorithm is broken
+ * down into modules.  Each section of code below is preceded by
+ * the name of the module which it is implementing.
+ *
+ */
+#include "g721.h"
+#include <stdlib.h>
+
+static short qtab_721[7] = { -124, 80, 178, 246, 300, 349, 400 };
+/*
+ * Maps G.721 code word to reconstructed scale factor normalized log
+ * magnitude values.
+ */
+static short _dqlntab[16] = { -2048, 4,   135, 213, 273, 323, 373, 425,
+                              425,   373, 323, 273, 213, 135, 4,   -2048 };
+
+/* Maps G.721 code word to log of scale factor multiplier. */
+static short _witab[16] = { -12,  18,  41,  64,  112, 198, 355, 1122,
+                            1122, 355, 198, 112, 64,  41,  18,  -12 };
+/*
+ * Maps G.721 code words to a set of values whose long and short
+ * term averages are computed and then compared to give an indication
+ * how stationary (steady state) the signal is.
+ */
+static short _fitab[16] = { 0,     0,     0,     0x200, 0x200, 0x200, 0x600, 0xE00,
+                            0xE00, 0x600, 0x200, 0x200, 0x200, 0,     0,     0 };
+
+/*
+ * g721_encoder()
+ *
+ * Encodes the input vale of linear PCM, A-law or u-law data sl and returns
+ * the resulting code. -1 is returned for unknown input coding value.
+ */
+int g721_encoder(int sl, struct g72x_state* state_ptr)
+{
+    short sezi, se, sez; /* ACCUM */
+    short d;             /* SUBTA */
+    short sr;            /* ADDB */
+    short y;             /* MIX */
+    short dqsez;         /* ADDC */
+    short dq, i;
+
+    sl >>= 2; /* linearize input sample to 14-bit PCM */
+
+    sezi = predictor_zero(state_ptr);
+    sez = sezi >> 1;
+    se = (sezi + predictor_pole(state_ptr)) >> 1; /* estimated signal */
+
+    d = sl - se; /* estimation difference */
+
+    /* quantize the prediction difference */
+    y = step_size(state_ptr);        /* quantizer step size */
+    i = quantize(d, y, qtab_721, 7); /* i = ADPCM code */
+
+    dq = reconstruct(i & 8, _dqlntab[i], y); /* quantized est diff */
+
+    sr = (dq < 0) ? se - (dq & 0x3FFF) : se + dq; /* reconst. signal */
+
+    dqsez = sr + sez - se; /* pole prediction diff. */
+
+    update(4, y, _witab[i] << 5, _fitab[i], dq, sr, dqsez, state_ptr);
+
+    return (i);
+}
+
+/*
+ * g721_decoder()
+ *
+ * Description:
+ *
+ * Decodes a 4-bit code of G.721 encoded data of i and
+ * returns the resulting linear PCM
+ * return -1 for unknown out_coding value.
+ */
+int g721_decoder(int i, struct g72x_state* state_ptr)
+{
+    short sezi, sei, sez, se; /* ACCUM */
+    short y;                  /* MIX */
+    short sr;                 /* ADDB */
+    short dq;
+    short dqsez;
+
+    i &= 0x0f; /* mask to get proper bits */
+    sezi = predictor_zero(state_ptr);
+    sez = sezi >> 1;
+    sei = sezi + predictor_pole(state_ptr);
+    se = sei >> 1; /* se = estimated signal */
+
+    y = step_size(state_ptr); /* dynamic quantizer step size */
+
+    dq = reconstruct(i & 0x08, _dqlntab[i], y); /* quantized diff. */
+
+    sr = (dq < 0) ? (se - (dq & 0x3FFF)) : se + dq; /* reconst. signal */
+
+    dqsez = sr - se + sez; /* pole prediction diff. */
+
+    update(4, y, _witab[i] << 5, _fitab[i], dq, sr, dqsez, state_ptr);
+
+    return (sr << 2);
+}
+
 
 static short power2[15] = { 1,     2,     4,     8,     0x10,   0x20,   0x40,  0x80,
                             0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000 };
@@ -76,165 +189,6 @@ static int fmult(int an, int srn)
     return (((an ^ srn) < 0) ? -retval : retval);
 }
 
-/*
- * g72x_init_state()
- *
- * This routine initializes and/or resets the g72x_state structure
- * pointed to by 'state_ptr'.
- * All the initial state values are specified in the CCITT G.721 document.
- */
-void g72x_init_state(struct g72x_state* state_ptr)
-{
-    int cnta;
-
-    state_ptr->yl = 34816;
-    state_ptr->yu = 544;
-    state_ptr->dms = 0;
-    state_ptr->dml = 0;
-    state_ptr->ap = 0;
-    for (cnta = 0; cnta < 2; cnta++) {
-        state_ptr->a[cnta] = 0;
-        state_ptr->pk[cnta] = 0;
-        state_ptr->sr[cnta] = 32;
-    }
-    for (cnta = 0; cnta < 6; cnta++) {
-        state_ptr->b[cnta] = 0;
-        state_ptr->dq[cnta] = 32;
-    }
-    state_ptr->td = 0;
-}
-
-/*
- * predictor_zero()
- *
- * computes the estimated signal from 6-zero predictor.
- *
- */
-int predictor_zero(struct g72x_state* state_ptr)
-{
-    int i;
-    int sezi;
-
-    sezi = fmult(state_ptr->b[0] >> 2, state_ptr->dq[0]);
-    for (i = 1; i < 6; i++) /* ACCUM */
-        sezi += fmult(state_ptr->b[i] >> 2, state_ptr->dq[i]);
-    return (sezi);
-}
-/*
- * predictor_pole()
- *
- * computes the estimated signal from 2-pole predictor.
- *
- */
-int predictor_pole(struct g72x_state* state_ptr)
-{
-    return (fmult(state_ptr->a[1] >> 2, state_ptr->sr[1]) +
-            fmult(state_ptr->a[0] >> 2, state_ptr->sr[0]));
-}
-/*
- * step_size()
- *
- * computes the quantization step size of the adaptive quantizer.
- *
- */
-int step_size(struct g72x_state* state_ptr)
-{
-    int y;
-    int dif;
-    int al;
-
-    if (state_ptr->ap >= 256)
-        return (state_ptr->yu);
-    else {
-        y = state_ptr->yl >> 6;
-        dif = state_ptr->yu - y;
-        al = state_ptr->ap >> 2;
-        if (dif > 0)
-            y += (dif * al) >> 6;
-        else if (dif < 0)
-            y += (dif * al + 0x3F) >> 6;
-        return (y);
-    }
-}
-
-/*
- * quantize()
- *
- * Given a raw sample, 'd', of the difference signal and a
- * quantization step size scale factor, 'y', this routine returns the
- * ADPCM codeword to which that sample gets quantized.  The step
- * size scale factor division operation is done in the log base 2 domain
- * as a subtraction.
- */
-int quantize(int d,        /* Raw difference signal sample */
-             int y,        /* Step size multiplier */
-             short* table, /* quantization table */
-             int size)     /* table size of short integers */
-{
-    short dqm;  /* Magnitude of 'd' */
-    short exp;  /* Integer part of base 2 log of 'd' */
-    short mant; /* Fractional part of base 2 log */
-    short dl;   /* Log of magnitude of 'd' */
-    short dln;  /* Step size scale factor normalized log */
-    int i;
-
-    /*
-     * LOG
-     *
-     * Compute base 2 log of 'd', and store in 'dl'.
-     */
-    dqm = abs(d);
-    exp = quan(dqm >> 1, power2, 15);
-    mant = ((dqm << 7) >> exp) & 0x7F; /* Fractional portion. */
-    dl = (exp << 7) + mant;
-
-    /*
-     * SUBTB
-     *
-     * "Divide" by step size multiplier.
-     */
-    dln = dl - (y >> 2);
-
-    /*
-     * QUAN
-     *
-     * Obtain codword i for 'd'.
-     */
-    i = quan(dln, table, size);
-    if (d < 0) /* take 1's complement of i */
-        return ((size << 1) + 1 - i);
-    else if (i == 0)              /* take 1's complement of 0 */
-        return ((size << 1) + 1); /* new in 1988 */
-    else
-        return (i);
-}
-/*
- * reconstruct()
- *
- * Returns reconstructed difference signal 'dq' obtained from
- * codeword 'i' and quantization step size scale factor 'y'.
- * Multiplication is performed in log base 2 domain as addition.
- */
-int reconstruct(int sign, /* 0 for non-negative value */
-                int dqln, /* G.72x codeword */
-                int y)    /* Step size multiplier */
-{
-    short dql; /* Log of 'dq' magnitude */
-    short dex; /* Integer part of log */
-    short dqt;
-    short dq; /* Reconstructed difference signal sample */
-
-    dql = dqln + (y >> 2); /* ADDA */
-
-    if (dql < 0) {
-        return ((sign) ? -0x8000 : 0);
-    } else { /* ANTILOG */
-        dex = (dql >> 7) & 15;
-        dqt = 128 + (dql & 127);
-        dq = (dqt << 7) >> (14 - dex);
-        return ((sign) ? (dq - 0x8000) : dq);
-    }
-}
 
 
 /*
@@ -428,105 +382,163 @@ void update(int code_size,                /* distinguish 723_40 with others */
         state_ptr->ap += (-state_ptr->ap) >> 4;
 }
 
+
 /*
- * tandem_adjust(sr, se, y, i, sign)
+ * g72x_init_state()
  *
- * At the end of ADPCM decoding, it simulates an encoder which may be receiving
- * the output of this decoder as a tandem process. If the output of the
- * simulated encoder differs from the input to this decoder, the decoder output
- * is adjusted by one level of A-law or u-law codes.
- *
- * Input:
- *	sr	decoder output linear PCM sample,
- *	se	predictor estimate sample,
- *	y	quantizer step size,
- *	i	decoder input code,
- *	sign	sign bit of code i
- *
- * Return:
- *	adjusted A-law or u-law compressed sample.
+ * This routine initializes and/or resets the g72x_state structure
+ * pointed to by 'state_ptr'.
+ * All the initial state values are specified in the CCITT G.721 document.
  */
-int tandem_adjust_alaw(int sr, /* decoder output linear PCM sample */
-                       int se, /* predictor estimate sample */
-                       int y,  /* quantizer step size */
-                       int i,  /* decoder input code */
-                       int sign,
-                       short* qtab)
+void g72x_init_state(struct g72x_state* state_ptr)
 {
-    unsigned char sp; /* A-law compressed 8-bit code */
-    short dx;         /* prediction error */
-    char id;          /* quantized prediction error */
-    int sd;           /* adjusted A-law decoded sample value */
-    int im;           /* biased magnitude of i */
-    int imx;          /* biased magnitude of id */
+    int cnta;
 
-    if (sr <= -32768)
-        sr = -1;
-    sp = linear2alaw((sr >> 1) << 3); /* short to A-law compression */
-    dx = (alaw2linear(sp) >> 2) - se; /* 16-bit prediction error */
-    id = quantize(dx, y, qtab, sign - 1);
+    state_ptr->yl = 34816;
+    state_ptr->yu = 544;
+    state_ptr->dms = 0;
+    state_ptr->dml = 0;
+    state_ptr->ap = 0;
+    for (cnta = 0; cnta < 2; cnta++) {
+        state_ptr->a[cnta] = 0;
+        state_ptr->pk[cnta] = 0;
+        state_ptr->sr[cnta] = 32;
+    }
+    for (cnta = 0; cnta < 6; cnta++) {
+        state_ptr->b[cnta] = 0;
+        state_ptr->dq[cnta] = 32;
+    }
+    state_ptr->td = 0;
+}
 
-    if (id == i) { /* no adjustment on sp */
-        return (sp);
-    } else { /* sp adjustment needed */
-        /* ADPCM codes : 8, 9, ... F, 0, 1, ... , 6, 7 */
-        im = i ^ sign; /* 2's complement to biased unsigned */
-        imx = id ^ sign;
+/*
+ * predictor_zero()
+ *
+ * computes the estimated signal from 6-zero predictor.
+ *
+ */
+int predictor_zero(struct g72x_state* state_ptr)
+{
+    int i;
+    int sezi;
 
-        if (imx > im) { /* sp adjusted to next lower value */
-            if (sp & 0x80) {
-                sd = (sp == 0xD5) ? 0x55 : ((sp ^ 0x55) - 1) ^ 0x55;
-            } else {
-                sd = (sp == 0x2A) ? 0x2A : ((sp ^ 0x55) + 1) ^ 0x55;
-            }
-        } else { /* sp adjusted to next higher value */
-            if (sp & 0x80)
-                sd = (sp == 0xAA) ? 0xAA : ((sp ^ 0x55) + 1) ^ 0x55;
-            else
-                sd = (sp == 0x55) ? 0xD5 : ((sp ^ 0x55) - 1) ^ 0x55;
-        }
-        return (sd);
+    sezi = fmult(state_ptr->b[0] >> 2, state_ptr->dq[0]);
+    for (i = 1; i < 6; i++) /* ACCUM */
+        sezi += fmult(state_ptr->b[i] >> 2, state_ptr->dq[i]);
+    return (sezi);
+}
+/*
+ * predictor_pole()
+ *
+ * computes the estimated signal from 2-pole predictor.
+ *
+ */
+int predictor_pole(struct g72x_state* state_ptr)
+{
+    return (fmult(state_ptr->a[1] >> 2, state_ptr->sr[1]) +
+            fmult(state_ptr->a[0] >> 2, state_ptr->sr[0]));
+}
+/*
+ * step_size()
+ *
+ * computes the quantization step size of the adaptive quantizer.
+ *
+ */
+int step_size(struct g72x_state* state_ptr)
+{
+    int y;
+    int dif;
+    int al;
+
+    if (state_ptr->ap >= 256)
+        return (state_ptr->yu);
+    else {
+        y = state_ptr->yl >> 6;
+        dif = state_ptr->yu - y;
+        al = state_ptr->ap >> 2;
+        if (dif > 0)
+            y += (dif * al) >> 6;
+        else if (dif < 0)
+            y += (dif * al + 0x3F) >> 6;
+        return (y);
     }
 }
 
-int tandem_adjust_ulaw(int sr, /* decoder output linear PCM sample */
-                       int se, /* predictor estimate sample */
-                       int y,  /* quantizer step size */
-                       int i,  /* decoder input code */
-                       int sign,
-                       short* qtab)
+/*
+ * quantize()
+ *
+ * Given a raw sample, 'd', of the difference signal and a
+ * quantization step size scale factor, 'y', this routine returns the
+ * ADPCM codeword to which that sample gets quantized.  The step
+ * size scale factor division operation is done in the log base 2 domain
+ * as a subtraction.
+ */
+int quantize(int d,        /* Raw difference signal sample */
+             int y,        /* Step size multiplier */
+             short* table, /* quantization table */
+             int size)     /* table size of short integers */
 {
-    unsigned char sp; /* u-law compressed 8-bit code */
-    short dx;         /* prediction error */
-    char id;          /* quantized prediction error */
-    int sd;           /* adjusted u-law decoded sample value */
-    int im;           /* biased magnitude of i */
-    int imx;          /* biased magnitude of id */
+    short dqm;  /* Magnitude of 'd' */
+    short exp;  /* Integer part of base 2 log of 'd' */
+    short mant; /* Fractional part of base 2 log */
+    short dl;   /* Log of magnitude of 'd' */
+    short dln;  /* Step size scale factor normalized log */
+    int i;
 
-    if (sr <= -32768)
-        sr = 0;
-    sp = linear2ulaw(sr << 2);        /* short to u-law compression */
-    dx = (ulaw2linear(sp) >> 2) - se; /* 16-bit prediction error */
-    id = quantize(dx, y, qtab, sign - 1);
-    if (id == i) {
-        return (sp);
-    } else {
-        /* ADPCM codes : 8, 9, ... F, 0, 1, ... , 6, 7 */
-        im = i ^ sign; /* 2's complement to biased unsigned */
-        imx = id ^ sign;
-        if (imx > im) { /* sp adjusted to next lower value */
-            if (sp & 0x80)
-                sd = (sp == 0xFF) ? 0x7E : sp + 1;
-            else
-                sd = (sp == 0) ? 0 : sp - 1;
+    /*
+     * LOG
+     *
+     * Compute base 2 log of 'd', and store in 'dl'.
+     */
+    dqm = abs(d);
+    exp = quan(dqm >> 1, power2, 15);
+    mant = ((dqm << 7) >> exp) & 0x7F; /* Fractional portion. */
+    dl = (exp << 7) + mant;
 
-        } else { /* sp adjusted to next higher value */
-            if (sp & 0x80)
-                sd = (sp == 0x80) ? 0x80 : sp - 1;
-            else
-                sd = (sp == 0x7F) ? 0xFE : sp + 1;
-        }
-        return (sd);
+    /*
+     * SUBTB
+     *
+     * "Divide" by step size multiplier.
+     */
+    dln = dl - (y >> 2);
+
+    /*
+     * QUAN
+     *
+     * Obtain codword i for 'd'.
+     */
+    i = quan(dln, table, size);
+    if (d < 0) /* take 1's complement of i */
+        return ((size << 1) + 1 - i);
+    else if (i == 0)              /* take 1's complement of 0 */
+        return ((size << 1) + 1); /* new in 1988 */
+    else
+        return (i);
+}
+/*
+ * reconstruct()
+ *
+ * Returns reconstructed difference signal 'dq' obtained from
+ * codeword 'i' and quantization step size scale factor 'y'.
+ * Multiplication is performed in log base 2 domain as addition.
+ */
+int reconstruct(int sign, /* 0 for non-negative value */
+                int dqln, /* G.72x codeword */
+                int y)    /* Step size multiplier */
+{
+    short dql; /* Log of 'dq' magnitude */
+    short dex; /* Integer part of log */
+    short dqt;
+    short dq; /* Reconstructed difference signal sample */
+
+    dql = dqln + (y >> 2); /* ADDA */
+
+    if (dql < 0) {
+        return ((sign) ? -0x8000 : 0);
+    } else { /* ANTILOG */
+        dex = (dql >> 7) & 15;
+        dqt = 128 + (dql & 127);
+        dq = (dqt << 7) >> (14 - dex);
+        return ((sign) ? (dq - 0x8000) : dq);
     }
 }
-

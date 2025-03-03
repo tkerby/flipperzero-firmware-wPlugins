@@ -4,7 +4,7 @@
 #include <notification/notification_messages.h>
 
 #include "pof_token.h"
-#include "g72x.h"
+#include "audio/g721.h"
 
 #define SAMPLE_RATE 8000
 #define POF_TOKEN_LIMIT 16
