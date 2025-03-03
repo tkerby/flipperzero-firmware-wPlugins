@@ -216,7 +216,7 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
     furi_timer_start(virtual_portal->led_timer, 10);
     if (furi_hal_speaker_acquire(1000)) {
-        wav_player_speaker_init(8000);
+        wav_player_speaker_init(virtual_portal->type == PoFHid ? 8000 : 4000);
         wav_player_dma_init((uint32_t)virtual_portal->audio_buffer, SAMPLES_COUNT);
 
         furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, wav_player_dma_isr, virtual_portal);
@@ -572,11 +572,10 @@ void virtual_portal_process_audio_360(
     VirtualPortal* virtual_portal,
     uint8_t* message,
     uint8_t len) {
-    for (size_t i = 0; i < len; i += 2) {
-        int16_t int_16 =
-            (((int16_t)message[i + 1] << 8) + ((int16_t)message[i]));
+    for (size_t i = 0; i < len; i++) {
+        int8_t int_8 = (int8_t)message[i];
 
-        float data = ((float)int_16 / 256.0);
+        float data = (float)int_8;
         data /= UINT8_MAX / 2;  // scale -1..1
 
         data *= virtual_portal->volume;  // volume
