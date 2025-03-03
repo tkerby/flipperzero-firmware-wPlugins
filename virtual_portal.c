@@ -594,7 +594,7 @@ void virtual_portal_process_audio_360(
         // if (data > 255) {
         //     data = 255;
         // }
-        *virtual_portal->head = message[i];
+        *virtual_portal->head = ((int8_t)message[i]) + INT8_MAX;
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
