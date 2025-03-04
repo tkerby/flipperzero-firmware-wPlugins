@@ -1,16 +1,16 @@
-v0.1.2: <br>
-- added persistent counter for darts smoked with InputKeyUp<br>
-- added progress to cancer counter<br>
-- saves data in ext/apps_data/cigarette/stats.txt<br>
-- red notif led on 'light up'<br>
-- switch style<br>
-- skinny cigarette<br>
-- able to puff extra time once cig runs out which triggers a 'cough' vibration and led<br>
+v0.1.2:
+- added persistent counter for darts smoked with InputKeyUp
+- added progress to cancer counter
+- saves data in ext/apps_data/cigarette/stats.txt
+- red notif led on 'light up'
+- switch style
+- skinny cigarette
+- able to puff extra time once cig runs out which triggers a 'cough' vibration and led
 - added progress bar
 
-v0.1.1: <br>
-- removed about for now<br>
+v0.1.1:
+- removed about for now
 - minor changes
 
-v0.1: <br>
+v0.1:
 - initial release
