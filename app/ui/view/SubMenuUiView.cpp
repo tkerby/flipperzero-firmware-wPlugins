@@ -28,8 +28,11 @@ private:
     }
 
 public:
-    SubMenuUiView(const char* header) {
+    SubMenuUiView() {
         menu = submenu_alloc();
+    }
+
+    SubMenuUiView(const char* header) : SubMenuUiView() {
         submenu_set_header(menu, header);
     }
 

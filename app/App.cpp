@@ -15,7 +15,7 @@ public:
         UiManager* ui = UiManager::GetInstance();
         ui->InitGui();
 
-        mainMenu = new SubMenuUiView("Chief Cooker");
+        mainMenu = new SubMenuUiView();
         mainMenu->AddItem("Scan", UI_HANDLER(&App::scanMenuPress));
         mainMenu->AddItem("Saved staion groups", UI_HANDLER(&App::otherMenuPress));
         mainMenu->AddItem("Settings", UI_HANDLER(&App::otherMenuPress));

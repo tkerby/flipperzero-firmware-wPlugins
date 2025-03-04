@@ -89,8 +89,8 @@ BreakBeforeConceptDeclarations: Always
 BreakBeforeBraces: Attach
 BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: false
-BreakConstructorInitializers: BeforeComma
-BreakInheritanceList: BeforeColon
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterComma
 BreakStringLiterals: false
 ColumnLimit:     130
 CommentPragmas:  '^ IWYU pragma:'
