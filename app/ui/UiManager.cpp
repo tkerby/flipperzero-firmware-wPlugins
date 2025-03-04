@@ -30,8 +30,8 @@ private:
     void popView() {
         UiView* currentView = viewStack.top();
         view_dispatcher_remove_view(viewDispatcher, currentViewId());
-        delete currentView;
         viewStack.pop();
+        delete currentView;
     }
 
     uint32_t currentViewId() {
@@ -67,6 +67,10 @@ public:
         view_dispatcher_run(viewDispatcher);
     }
 
+    void Destroy() {
+        this->~UiManager();
+    }
+
     ~UiManager() {
         while(!viewStack.empty()) {
             popView();
@@ -74,10 +78,12 @@ public:
 
         if(viewDispatcher != NULL) {
             view_dispatcher_free(viewDispatcher);
+            viewDispatcher = NULL;
         }
 
         if(gui != NULL) {
             furi_record_close(RECORD_GUI);
+            gui = NULL;
         }
     }
 };

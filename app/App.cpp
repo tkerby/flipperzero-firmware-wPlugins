@@ -25,7 +25,7 @@ public:
         ui->PushView(mainMenu);
         ui->RunEventLoop();
 
-        delete ui;
+        ui->Destroy();
     }
 
     void scanMenuPress(uint32_t index) {
