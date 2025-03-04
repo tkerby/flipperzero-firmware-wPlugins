@@ -35,10 +35,6 @@ public:
     UiView* GetView() {
         return menuView;
     }
-
-    ~MainMenuScreen() {
-        delete menuView;
-    }
 };
 
 #endif //_MAIN_MENU_SCREEN_CLASS_

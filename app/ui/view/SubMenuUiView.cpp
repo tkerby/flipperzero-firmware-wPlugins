@@ -50,7 +50,10 @@ public:
     }
 
     ~SubMenuUiView() {
-        submenu_free(menu);
+        if(menu != NULL) {
+            submenu_free(menu);
+            menu = NULL;
+        }
     }
 };
 
