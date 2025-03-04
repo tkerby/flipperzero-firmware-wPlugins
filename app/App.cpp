@@ -4,17 +4,23 @@
 #include "ui/UiManager.cpp"
 #include "ui/view/SubMenuUiView.cpp"
 
+using namespace std;
+
 class App {
+private:
+    SubMenuUiView* mainMenu;
+
 public:
     void Run() {
         UiManager* ui = UiManager::GetInstance();
         ui->InitGui();
 
-        SubMenuUiView* mainMenu = new SubMenuUiView("Chief Cooker");
-        mainMenu->AddItem("Scan", scanMenuPress, mainMenu);
-        mainMenu->AddItem("Saved staion groups", otherMenuPress, this);
-        mainMenu->AddItem("Settings", otherMenuPress, this);
-        mainMenu->AddItem("About", otherMenuPress, this);
+        mainMenu = new SubMenuUiView("Chief Cooker");
+        mainMenu->AddItem("Scan", UI_HANDLER(&App::scanMenuPress));
+        mainMenu->AddItem("Saved staion groups", UI_HANDLER(&App::otherMenuPress));
+        mainMenu->AddItem("Settings", UI_HANDLER(&App::otherMenuPress));
+        mainMenu->AddItem("About", UI_HANDLER(&App::otherMenuPress));
+        mainMenu->AddItem("TestHandler", UI_HANDLER(&App::handler));
 
         ui->PushView(mainMenu);
         ui->RunEventLoop();
@@ -22,15 +28,18 @@ public:
         delete ui;
     }
 
-    static void scanMenuPress(void* subMenuUiView, uint32_t index) {
-        SubMenuUiView* mainMenu = (SubMenuUiView*)subMenuUiView;
-        mainMenu->AddItem("You pressed scan!!", otherMenuPress, mainMenu);
+    void scanMenuPress(uint32_t index) {
+        UNUSED(index);
+        mainMenu->AddItem("You pressed scan!!", UI_HANDLER(&App::otherMenuPress));
+    }
+
+    void otherMenuPress(uint32_t index) {
         UNUSED(index);
     }
 
-    static void otherMenuPress(void* app, uint32_t index) {
-        UNUSED(app);
+    void handler(uint32_t index) {
         UNUSED(index);
+        furi_delay_ms(1000);
     }
 };
 
