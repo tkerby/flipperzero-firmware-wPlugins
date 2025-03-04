@@ -117,6 +117,8 @@ static const IdMapping bart_zones[] = {
     {.id = 0x002e, .name = "Warm Springs/South Fremont"},
     {.id = 0x002f, .name = "Milpitas"},
     {.id = 0x0030, .name = "Berryessa/North San Jose"},
+    {.id = 0x0031, .name = "Pittsburg Center"}, // Guessed
+    {.id = 0x0032, .name = "Antioch"},
 };
 static const size_t kNumBARTZones = COUNT(bart_zones);
 
