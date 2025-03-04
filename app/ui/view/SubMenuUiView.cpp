@@ -3,7 +3,6 @@
 
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
-#include <functional>
 #include "UiView.cpp"
 
 using namespace std;
@@ -18,9 +17,6 @@ private:
             FURI_LOG_W("CHCKR", "SubMenuUiView element %d has NULL handler!", (int)index);
             return;
         }
-
-        function<void(int)>* callback = (function<void(int)>*)context;
-        (*callback)(index);
     }
 
 public:
@@ -29,12 +25,12 @@ public:
         submenu_set_header(menu, header);
     }
 
-    void AddItem(const char* label, function<void(int)> callback) {
-        AddItemAt(elementCount, label, callback);
+    void AddItem(const char* label, void callback(void*, uint32_t), void* context) {
+        AddItemAt(elementCount, label, callback, context);
     }
 
-    void AddItemAt(int index, const char* label, function<void(int)> callback) {
-        submenu_add_item(menu, label, index, executeCallback, &callback);
+    void AddItemAt(int index, const char* label, void callback(void*, uint32_t), void* context) {
+        submenu_add_item(menu, label, index, callback, context);
         elementCount++;
     }
 

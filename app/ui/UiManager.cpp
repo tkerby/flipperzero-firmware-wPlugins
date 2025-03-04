@@ -4,24 +4,27 @@
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <stack>
-#include <unordered_map> //TODO replace with something else...
 
 #include "view/UiView.cpp"
 
 using namespace std;
 
+static void* __ui_manager_instance = NULL;
+
 class UiManager {
 private:
-    static unordered_map<void*, UiManager*> contextMap;
-
     Gui* gui = NULL;
     ViewDispatcher* viewDispatcher = NULL;
     stack<UiView*> viewStack;
 
+    UiManager() {
+        __ui_manager_instance = this;
+    }
+
     static uint32_t backCallback(void* context) {
-        UiManager* uiManager = contextMap[context]; //.find(context);
-        uiManager->popView();
-        return uiManager->currentViewId();
+        UNUSED(context);
+        GetInstance()->popView();
+        return GetInstance()->currentViewId();
     }
 
     void popView() {
@@ -39,6 +42,13 @@ private:
     }
 
 public:
+    static UiManager* GetInstance() {
+        if(__ui_manager_instance == NULL) {
+            __ui_manager_instance = new UiManager();
+        }
+        return (UiManager*)__ui_manager_instance;
+    }
+
     void InitGui() {
         gui = (Gui*)furi_record_open(RECORD_GUI);
         viewDispatcher = view_dispatcher_alloc();
@@ -46,13 +56,9 @@ public:
     }
 
     void PushView(UiView* view) {
-        // view_set_context(view->GetNativeView(), myContext);
-        // view_set_previous_callback(view->GetNativeView(), backCallback);
-        view_set_previous_callback(view->GetNativeView(), backCallback);
-        contextMap.insert({view->GetNativeView(), this});
-
         viewStack.push(view);
 
+        view_set_previous_callback(view->GetNativeView(), backCallback);
         view_dispatcher_add_view(viewDispatcher, currentViewId(), view->GetNativeView());
         view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
     }

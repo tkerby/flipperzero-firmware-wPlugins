@@ -5,22 +5,32 @@
 #include "ui/view/SubMenuUiView.cpp"
 
 class App {
-private:
-    UiManager* ui;
-
 public:
     void Run() {
-        ui = new UiManager();
+        UiManager* ui = UiManager::GetInstance();
         ui->InitGui();
 
         SubMenuUiView* mainMenu = new SubMenuUiView("Chief Cooker");
-        mainMenu->AddItem("Scan", [](uint32_t index) { UNUSED(index); });
-        mainMenu->AddItem("Saved staion groups", [](uint32_t index) { UNUSED(index); });
-        mainMenu->AddItem("Settings", [](uint32_t index) { UNUSED(index); });
-        mainMenu->AddItem("About", [](uint32_t index) { UNUSED(index); });
+        mainMenu->AddItem("Scan", scanMenuPress, mainMenu);
+        mainMenu->AddItem("Saved staion groups", otherMenuPress, this);
+        mainMenu->AddItem("Settings", otherMenuPress, this);
+        mainMenu->AddItem("About", otherMenuPress, this);
 
         ui->PushView(mainMenu);
         ui->RunEventLoop();
+
+        delete ui;
+    }
+
+    static void scanMenuPress(void* subMenuUiView, uint32_t index) {
+        SubMenuUiView* mainMenu = (SubMenuUiView*)subMenuUiView;
+        mainMenu->AddItem("You pressed scan!!", otherMenuPress, mainMenu);
+        UNUSED(index);
+    }
+
+    static void otherMenuPress(void* app, uint32_t index) {
+        UNUSED(app);
+        UNUSED(index);
     }
 };
 
