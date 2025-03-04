@@ -39,7 +39,6 @@ PoFApp* pof_app_alloc() {
 
     // View Dispatcher
     app->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(app->view_dispatcher);
     app->scene_manager = scene_manager_alloc(&pof_scene_handlers, app);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
@@ -71,10 +70,8 @@ PoFApp* pof_app_alloc() {
     view_dispatcher_add_view(app->view_dispatcher, PoFViewWidget, widget_get_view(app->widget));
 
     app->virtual_portal = virtual_portal_alloc(app->notifications);
-    // PoF emulation Start
-    pof_start(app);
 
-    scene_manager_next_scene(app->scene_manager, PoFSceneMain);
+    scene_manager_next_scene(app->scene_manager, PoFSceneTypeSelect);
     return app;
 }
 

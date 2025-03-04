@@ -12,12 +12,6 @@
 #define POF_USB_EP_IN  (0x81)
 #define POF_USB_EP_OUT (0x02)
 
-#define POF_USB_EP_IN_SIZE  (64UL)
-#define POF_USB_EP_OUT_SIZE (64UL)
-
-#define POF_USB_RX_MAX_SIZE (POF_USB_EP_OUT_SIZE)
-#define POF_USB_TX_MAX_SIZE (POF_USB_EP_IN_SIZE)
-
 #define POF_USB_ACTUAL_OUTPUT_SIZE 0x20
 
 static const struct usb_string_descriptor dev_manuf_desc =
@@ -36,38 +30,6 @@ static usbd_respond
 static void pof_usb_send(usbd_device* dev, uint8_t* buf, uint16_t len);
 static int32_t pof_usb_receive(usbd_device* dev, uint8_t* buf, uint16_t max_len);
 
-typedef enum {
-    EventExit = (1 << 0),
-    EventReset = (1 << 1),
-    EventRx = (1 << 2),
-    EventTx = (1 << 3),
-    EventTxComplete = (1 << 4),
-    EventResetSio = (1 << 5),
-    EventTxImmediate = (1 << 6),
-
-    EventAll = EventExit | EventReset | EventRx | EventTx | EventTxComplete | EventResetSio |
-               EventTxImmediate,
-} PoFEvent;
-
-struct PoFUsb {
-    FuriHalUsbInterface usb;
-    FuriHalUsbInterface* usb_prev;
-
-    FuriThread* thread;
-    usbd_device* dev;
-    VirtualPortal* virtual_portal;
-    uint8_t data_recvest[8];
-    uint16_t data_recvest_len;
-
-    bool tx_complete;
-    bool tx_immediate;
-
-    uint8_t dataAvailable;
-    uint8_t data[POF_USB_RX_MAX_SIZE];
-
-    uint8_t tx_data[POF_USB_TX_MAX_SIZE];
-};
-
 static PoFUsb* pof_cur = NULL;
 
 static int32_t pof_thread_worker(void* context) {
@@ -78,15 +40,13 @@ static int32_t pof_thread_worker(void* context) {
 
     uint32_t len_data = 0;
     uint8_t tx_data[POF_USB_TX_MAX_SIZE] = {0};
-    uint32_t timeout = 30; // FuriWaitForever; //ms
-    uint32_t lastStatus = 0x0;
+    uint32_t timeout = TIMEOUT_NORMAL; // FuriWaitForever; //ms
+    uint32_t last = 0;
 
     while(true) {
         uint32_t now = furi_get_tick();
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
-        if(flags & EventRx) { //fast flag
-            UNUSED(pof_usb_receive);
-
+        if(flags & EventRx) { // fast flag
             if(virtual_portal->speaker) {
                 uint8_t buf[POF_USB_RX_MAX_SIZE];
                 len_data = pof_usb_receive(dev, buf, POF_USB_RX_MAX_SIZE);
@@ -99,26 +59,35 @@ static int32_t pof_thread_worker(void* context) {
                     }
                     FURI_LOG_RAW_I("\r\n");
                     */
+                    virtual_portal_process_audio(virtual_portal, buf, len_data);
                 }
             }
-
             if(pof_usb->dataAvailable > 0) {
                 memset(tx_data, 0, sizeof(tx_data));
                 int send_len =
                     virtual_portal_process_message(virtual_portal, pof_usb->data, tx_data);
                 if(send_len > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
+                    timeout = TIMEOUT_AFTER_RESPONSE;
+                    if(virtual_portal->speaker) {
+                        timeout = TIMEOUT_AFTER_MUSIC;
+                    }
+                    last = now;
                 }
                 pof_usb->dataAvailable = 0;
             }
 
             // Check next status time since the timeout based one might be starved by incoming packets.
-            if(now > lastStatus + timeout) {
-                lastStatus = now;
+            if(now > last + timeout) {
                 memset(tx_data, 0, sizeof(tx_data));
                 len_data = virtual_portal_send_status(virtual_portal, tx_data);
                 if(len_data > 0) {
                     pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
+                }
+                last = now;
+                timeout = TIMEOUT_NORMAL;
+                if(virtual_portal->speaker) {
+                    timeout = TIMEOUT_AFTER_MUSIC;
                 }
             }
 
@@ -156,7 +125,11 @@ static int32_t pof_thread_worker(void* context) {
             if(len_data > 0) {
                 pof_usb_send(dev, tx_data, POF_USB_ACTUAL_OUTPUT_SIZE);
             }
-            lastStatus = now;
+            last = now;
+            timeout = TIMEOUT_NORMAL;
+            if(virtual_portal->speaker) {
+                timeout = TIMEOUT_AFTER_MUSIC;
+            }
         }
     }
 
@@ -412,7 +385,7 @@ PoFUsb* pof_usb_start(VirtualPortal* virtual_portal) {
     PoFUsb* pof_usb = malloc(sizeof(PoFUsb));
     pof_usb->virtual_portal = virtual_portal;
     pof_usb->dataAvailable = 0;
-
+    furi_hal_usb_unlock();
     pof_usb->usb_prev = furi_hal_usb_get_config();
     pof_usb->usb.init = pof_usb_init;
     pof_usb->usb.deinit = pof_usb_deinit;
@@ -424,7 +397,6 @@ PoFUsb* pof_usb_start(VirtualPortal* virtual_portal) {
     pof_usb->usb.str_serial_descr = NULL;
     pof_usb->usb.cfg_descr = (void*)&usb_pof_cfg_descr;
 
-    furi_hal_usb_unlock();
     if(!furi_hal_usb_set_config(&pof_usb->usb, pof_usb)) {
         FURI_LOG_E(TAG, "USB locked, can not start");
         if(pof_usb->usb.str_manuf_descr) {
