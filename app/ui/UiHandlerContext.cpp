@@ -1,6 +1,10 @@
 #ifndef _UI_HANDLER_CONTEXT_CLASS_
 #define _UI_HANDLER_CONTEXT_CLASS_
 
+#include <functional>
+
+using namespace std;
+
 #define UI_HANDLER(handlerMethod) bind(handlerMethod, this, placeholders::_1)
 
 template <class T>
