@@ -536,6 +536,9 @@ int virtual_portal_write(VirtualPortal* virtual_portal, uint8_t* message, uint8_
 
     mf_classic_free(data);
 
+
+    nfc_device_save(nfc_device, furi_string_get_cstr(pof_token->load_path));
+
     response[0] = 'W';
     response[1] = 0x10 | arrayIndex;
     response[2] = blockNum;
