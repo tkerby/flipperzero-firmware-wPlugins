@@ -284,9 +284,11 @@ void game_level_player_render(GameManager* manager, Canvas* canvas, void* contex
         enemy_spawn(gameLevel, manager, (Vector){120, 0}, 2000, false);
     }
 
-    if(started && furi_get_tick() - welcomeTicks < 3000 &&
-       ((furi_get_tick() - welcomeTicks) / 1000) % 2 == 0) {
-        canvas_printf(canvas, 15, 37, "This is DEADZONE...");
+    static uint32_t titleScreenHolder = 0;
+    if(started && (furi_get_tick() - welcomeTicks) < 4000) {
+        canvas_printf_blinking(
+            canvas, 15, 37, 1500, 350, "This is DEADZONE...", &titleScreenHolder);
+        //canvas_printf(canvas, 15, 37, "This is DEADZONE...");
     }
 
     bool renderedDoor = false;
