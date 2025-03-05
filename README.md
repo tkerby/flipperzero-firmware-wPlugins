@@ -60,9 +60,13 @@ You'll then have to choose a name for the new file.
 
 ![lm_bmp02](./README.assets/lm_bmpedit04.png)
 
-When done, select "**save**". To draw, just move the cursor using the arrows, and toggle pixels by pressing the "**Ok**" button. To save, press "**Return**"
+When done, select "**save**". To draw, just move the cursor using the arrows, and toggle pixels by pressing the "**Ok**" button. To save, press "**Return**". 
+
+**V1.3:** If you press longer on "**Ok**", then "**Hold**" will be activated, continuously drawing by flipping underlying pixels. No more Ok button smashing.
 
 ![lm_bmp02](./README.assets/lm_bmpedit05.png)
+
+![lm_bmp02](./README.assets/hold2.gif)
 
 #### Edit bitmap
 
@@ -181,7 +185,7 @@ The **[LIS2DH12](https://www.st.com/resource/en/datasheet/lis2dh12.pdf)** is a 3
 
 ### Data Formats
 
-The configuration file is stored in `SD Card/apps_data/401LightMsg/config.json`. The file of the format is JSON.
+The configuration file is stored in `SD Card/apps_assets/401_light_msg/config.json`. The file of the format is JSON.
 
 The image files are stored as 1-bit BMP images, using a `.bmp` file extension. Compression must be disabled. The height of the image must by 16 pixels. The file must not exceed 500 bytes.
 
