@@ -11,7 +11,7 @@ App(
     # fap_version="0.1",
     fap_icon="chief_cooker.png",  # 10x10 1-bit PNG
     # fap_description="A simple app",
-    # fap_author="J. Doe",
-    # fap_weburl="https://github.com/user/chief_cooker",
+    fap_author="Denr01",
+    fap_weburl="https://github.com/denr01/FZ-ChiefCooker",
     fap_icon_assets="images",  # Image assets to compile for this application
 )

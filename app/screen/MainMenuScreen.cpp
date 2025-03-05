@@ -16,9 +16,9 @@ private:
 public:
     MainMenuScreen() {
         menuView = new SubMenuUiView("Chief Cooker");
-        menuView->AddItem("Scan for station signals", UI_HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPress));
-        menuView->AddItem("Saved staions database", UI_HANDLER_1ARG(&MainMenuScreen::otherMenuPress));
-        menuView->AddItem("About / Manual", UI_HANDLER_1ARG(&MainMenuScreen::otherMenuPress));
+        menuView->AddItem("Scan for station signals", UI_HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
+        menuView->AddItem("Saved staions database", UI_HANDLER_1ARG(&MainMenuScreen::stationDatabasePressed));
+        menuView->AddItem("About / Manual", UI_HANDLER_1ARG(&MainMenuScreen::aboutPressed));
     }
 
     UiView* GetView() {
@@ -26,12 +26,18 @@ public:
     }
 
 private:
-    void scanStationsMenuPress(uint32_t index) {
+    void scanStationsMenuPressed(uint32_t index) {
         UNUSED(index);
         UiManager::GetInstance()->PushView((new ScanStationsScreen())->GetView());
     }
 
-    void otherMenuPress(uint32_t index) {
+    void stationDatabasePressed(uint32_t index) {
+        UNUSED(index);
+    }
+
+    void aboutPressed(uint32_t index) {
+        UNUSED(index);
+
         Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
         menuView->SetItemLabel(index, "Your pushed me!");
     }
