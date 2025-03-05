@@ -68,11 +68,11 @@ static void bmp_compute_model(AppBmpEditor* BmpEditor, bmpEditorData* BmpEditorD
     BmpEditorData->bmp_frame_w =
         ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) *
          BmpEditorData->bmp_w) +
-        (BmpEditorData->bmp_frame_spacing * 2) + 1;
+        (BmpEditorData->bmp_frame_spacing * 2) + 2;
     BmpEditorData->bmp_frame_h =
         ((BmpEditorData->bmp_pixel_size + BmpEditorData->bmp_pixel_spacing) *
          BmpEditorData->bmp_h) +
-        (BmpEditorData->bmp_frame_spacing * 2) + 1;
+        (BmpEditorData->bmp_frame_spacing * 2) + 2;
     BmpEditorData->bmp_frame_x = (128 - BmpEditorData->bmp_frame_w) >> 1;
     BmpEditorData->bmp_frame_y = 0;
 }
@@ -376,16 +376,15 @@ static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
     canvas_set_font_direction(canvas, CanvasDirectionLeftToRight);
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_icon(canvas, 25 + 0, 56, &I_btn_back_7x7);
-    canvas_draw_str(canvas, 25 + 10, 62, "Save");
-    canvas_draw_icon(canvas, 25 + 35, 56, &I_btn_ok_7x7);
-    canvas_draw_str(canvas, 25 + 45, 62, "Toggle");
+    canvas_draw_icon(canvas, 0, 56, &I_btn_back_7x7);
+    canvas_draw_str(canvas, 10, 62, "Save");
+    canvas_draw_icon(canvas, 35, 56, &I_btn_ok_7x7);
+    canvas_draw_str(canvas, 45, 62, "Toggle/");
     // Indicates continuous mode
-    canvas_set_font(canvas, FontPrimary);
     if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
-        canvas_draw_str(canvas, 0, 62, "C");
-        ;
+      canvas_set_font(canvas, FontPrimary);
     }
+    canvas_draw_str(canvas, 82, 62, "Hold");
     // Bitmap
     for(x = 0; x < BmpEditorData->bmp_w; x++) {
         for(y = 0; y < BmpEditorData->bmp_h; y++) {
