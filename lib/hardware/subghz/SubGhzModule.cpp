@@ -16,11 +16,17 @@
 
 #include <lib/subghz/subghz_protocol_registry.h>
 
+#include "lib/HandlerContext.cpp"
+
 class SubGhzModule {
 private:
     SubGhzEnvironment* environment;
     const SubGhzDevice* device;
     bool isExternal;
+    uint32_t frequency = 433920000;
+
+    static receiveCallback(void* context) {
+    }
 
 public:
     SubGhzModule() {
@@ -40,6 +46,17 @@ public:
 
         subghz_devices_begin(device);
         subghz_devices_reset(device);
+        subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
+
+        SetFrequency(frequency);
+    }
+
+    uint32_t SetFrequency(uint32_t frequency) {
+        return subghz_devices_set_frequency(device, frequency);
+    }
+
+    void ReceiveAsync(function<void()> handler) {
+        subghz_devices_start_async_rx(device, receiveCallback, new HandlerContext(handler));
     }
 
     ~SubGhzModule() {

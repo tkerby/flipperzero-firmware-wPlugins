@@ -16,9 +16,9 @@ private:
 public:
     MainMenuScreen() {
         menuView = new SubMenuUiView("Chief Cooker");
-        menuView->AddItem("Scan for station signals", UI_HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
-        menuView->AddItem("Saved staions database", UI_HANDLER_1ARG(&MainMenuScreen::stationDatabasePressed));
-        menuView->AddItem("About / Manual", UI_HANDLER_1ARG(&MainMenuScreen::aboutPressed));
+        menuView->AddItem("Scan for station signals", HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
+        menuView->AddItem("Saved staions database", HANDLER_1ARG(&MainMenuScreen::stationDatabasePressed));
+        menuView->AddItem("About / Manual", HANDLER_1ARG(&MainMenuScreen::aboutPressed));
     }
 
     UiView* GetView() {

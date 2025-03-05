@@ -16,7 +16,7 @@ public:
         subghz = new SubGhzModule();
 
         menuView = new SubMenuUiView("Scanning for signals...");
-        menuView->SetOnDestroyHandler(UI_HANDLER(&ScanStationsScreen::destroy));
+        menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
     }
 
     UiView* GetView() {

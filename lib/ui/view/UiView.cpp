@@ -6,13 +6,13 @@
 #include <gui/gui.h>
 #include <gui/view.h>
 
-#include "../UiHandlerContext.cpp"
+#include "lib/HandlerContext.cpp"
 
 using namespace std;
 
 class UiView {
 private:
-    function<void()> onDestroyHandler = UI_HANDLER(&UiView::doNothingOnDestroy);
+    function<void()> onDestroyHandler = HANDLER(&UiView::doNothingOnDestroy);
     void doNothingOnDestroy() {
     }
 

@@ -6,7 +6,7 @@
 #include <gui/modules/submenu.h>
 
 #include "UiView.cpp"
-#include "../UiHandlerContext.cpp"
+#include "lib/HandlerContext.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_SUBMENU"
@@ -24,7 +24,7 @@ private:
             return;
         }
 
-        UiHandlerContext<function<void(uint32_t)>>* handlerContext = (UiHandlerContext<function<void(uint32_t)>>*)context;
+        HandlerContext<function<void(uint32_t)>>* handlerContext = (HandlerContext<function<void(uint32_t)>>*)context;
         handlerContext->GetHandler()(index);
     }
 
@@ -46,7 +46,7 @@ public:
     }
 
     void AddItemAt(uint32_t index, const char* label, function<void(uint32_t)> handler) {
-        submenu_add_item(menu, label, index, executeCallback, new UiHandlerContext(handler));
+        submenu_add_item(menu, label, index, executeCallback, new HandlerContext(handler));
         elementCount++;
     }
 
