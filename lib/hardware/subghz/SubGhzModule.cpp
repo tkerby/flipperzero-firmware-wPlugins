@@ -16,9 +16,8 @@
 
 #include "lib/HandlerContext.cpp"
 
-#include "lib/hardware/notification/Notification.cpp"
-#include "app/AppNotifications.cpp"
 #include "SubGhzState.cpp"
+#include "SubGhzReceivedData.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"
@@ -36,21 +35,16 @@ private:
     uint32_t frequency = 433920000;
 
     static void captureCallback(SubGhzReceiver* receiver, SubGhzProtocolDecoderBase* decoderBase, void* context) {
+        UNUSED(receiver);
+        UNUSED(context);
+
         if(context == NULL) {
             FURI_LOG_W(LOG_TAG, "SubGhz module has NULL receive handler!");
             return;
         }
 
-        Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
-
-        FuriString* text = furi_string_alloc();
-        subghz_protocol_decoder_base_get_string(decoderBase, text);
-        subghz_receiver_reset(receiver);
-        FURI_LOG_E(LOG_TAG, "%s", furi_string_get_cstr(text));
-        furi_string_free(text);
-
-        HandlerContext<function<void()>>* handlerContext = (HandlerContext<function<void()>>*)context;
-        handlerContext->GetHandler()();
+        auto handlerContext = (HandlerContext<function<void(SubGhzReceivedData)>>*)context;
+        handlerContext->GetHandler()(SubGhzReceivedData(decoderBase));
     }
 
 public:
@@ -87,7 +81,7 @@ public:
         return subghz_devices_set_frequency(device, frequency);
     }
 
-    void SetReceiveHandler(function<void()> handler) {
+    void SetReceiveHandler(function<void(SubGhzReceivedData)> handler) {
         subghz_receiver_set_rx_callback(receiver, captureCallback, new HandlerContext(handler));
     }
 
