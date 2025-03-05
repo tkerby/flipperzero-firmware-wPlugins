@@ -7,6 +7,7 @@
 
 #include "view/UiView.cpp"
 
+#undef LOG_TAG
 #define LOG_TAG "UI_MGR"
 
 using namespace std;

@@ -8,6 +8,7 @@
 #include "UiView.cpp"
 #include "../UiHandlerContext.cpp"
 
+#undef LOG_TAG
 #define LOG_TAG "UI_SUBMENU"
 
 using namespace std;
