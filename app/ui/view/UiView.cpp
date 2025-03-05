@@ -1,13 +1,34 @@
 #ifndef _UI_VIEW_CLASS_
 #define _UI_VIEW_CLASS_
 
+#include <functional>
+
 #include <gui/gui.h>
 #include <gui/view.h>
 
+#include "../UiHandlerContext.cpp"
+
+using namespace std;
+
 class UiView {
+private:
+    function<void()> onDestroyHandler = UI_HANDLER(&UiView::doNothingOnDestroy);
+    void doNothingOnDestroy() {
+    }
+
 public:
     virtual View* GetNativeView() = 0;
     virtual ~UiView() {
+    }
+
+    void SetOnDestroyHandler(function<void()> handler) {
+        onDestroyHandler = handler;
+    }
+
+protected:
+    // Must be called from parent class destructor's!
+    void OnDestory() {
+        onDestroyHandler();
     }
 };
 

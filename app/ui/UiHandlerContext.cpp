@@ -5,7 +5,8 @@
 
 using namespace std;
 
-#define UI_HANDLER(handlerMethod) bind(handlerMethod, this, placeholders::_1)
+#define UI_HANDLER(handlerMethod)      bind(handlerMethod, this)
+#define UI_HANDLER_1ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1)
 
 template <class T>
 class UiHandlerContext {

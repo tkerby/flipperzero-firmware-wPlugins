@@ -3,37 +3,34 @@
 
 #include "../ui/view/UiView.cpp"
 #include "../ui/view/SubMenuUiView.cpp"
+#include "../ui/UiManager.cpp"
+
+#include "ScanStationsScreen.cpp"
 
 class MainMenuScreen {
 private:
     SubMenuUiView* menuView;
 
-    void scanMenuPress(uint32_t index) {
-        UNUSED(index);
-        menuView->AddItem("You pressed scan!!", UI_HANDLER(&MainMenuScreen::otherMenuPress));
-    }
-
-    void otherMenuPress(uint32_t index) {
-        UNUSED(index);
-    }
-
-    void handler(uint32_t index) {
-        UNUSED(index);
-        furi_delay_ms(1000);
-    }
-
 public:
     MainMenuScreen() {
-        menuView = new SubMenuUiView();
-        menuView->AddItem("Scan", UI_HANDLER(&MainMenuScreen::scanMenuPress));
-        menuView->AddItem("Saved staion groups", UI_HANDLER(&MainMenuScreen::otherMenuPress));
-        menuView->AddItem("Settings", UI_HANDLER(&MainMenuScreen::otherMenuPress));
-        menuView->AddItem("About", UI_HANDLER(&MainMenuScreen::otherMenuPress));
-        menuView->AddItem("TestHandler", UI_HANDLER(&MainMenuScreen::handler));
+        menuView = new SubMenuUiView("Chief Cooker");
+        menuView->AddItem("Scan for station signals", UI_HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPress));
+        menuView->AddItem("Saved staions database", UI_HANDLER_1ARG(&MainMenuScreen::otherMenuPress));
+        menuView->AddItem("About", UI_HANDLER_1ARG(&MainMenuScreen::otherMenuPress));
     }
 
     UiView* GetView() {
         return menuView;
+    }
+
+private:
+    void scanStationsMenuPress(uint32_t index) {
+        UNUSED(index);
+        UiManager::GetInstance()->PushView((new ScanStationsScreen())->GetView());
+    }
+
+    void otherMenuPress(uint32_t index) {
+        menuView->SetItemLabel(index, "Your pushed me!");
     }
 };
 
