@@ -66,7 +66,7 @@ When done, select "**save**". To draw, just move the cursor using the arrows, an
 
 ![lm_bmp02](./READMEassets/lm_bmpedit05.png)
 
-![lm_bmp02](./README.assets/hold2.gif)
+![lm_bmp02](./READMEassets/hold2.gif)
 
 #### Edit bitmap
 
