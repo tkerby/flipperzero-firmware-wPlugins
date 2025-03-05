@@ -5,18 +5,20 @@
 #include <furi_hal.h>
 
 #include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
+#include <lib/subghz/devices/cc1101_int/cc1101_int_interconnect.h>
 
 #include <lib/subghz/receiver.h>
 #include <lib/subghz/transmitter.h>
-#include <lib/subghz/subghz_file_encoder_worker.h>
-// #include <lib/subghz/protocols/protocol_items.h>
-#include <lib/subghz/devices/cc1101_int/cc1101_int_interconnect.h>
 #include <lib/subghz/devices/devices.h>
 #include <lib/subghz/devices/cc1101_configs.h>
-
 #include <lib/subghz/subghz_protocol_registry.h>
+#include <lib/subghz/subghz_worker.h>
 
 #include "lib/HandlerContext.cpp"
+
+#include "lib/hardware/notification/Notification.cpp"
+#include "app/AppNotifications.cpp"
+#include "SubGhzState.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"
@@ -26,15 +28,12 @@ private:
     SubGhzEnvironment* environment;
     const SubGhzDevice* device;
     SubGhzReceiver* receiver;
+    SubGhzWorker* worker;
 
     bool isExternal;
-    uint32_t frequency = 433920000;
+    SubGhzState state = IDLE;
 
-    static void receiveCallback(bool level, uint32_t duration, void* context) {
-        UNUSED(level);
-        UNUSED(duration);
-        UNUSED(context);
-    }
+    uint32_t frequency = 433920000;
 
     static void captureCallback(SubGhzReceiver* receiver, SubGhzProtocolDecoderBase* decoderBase, void* context) {
         if(context == NULL) {
@@ -42,10 +41,12 @@ private:
             return;
         }
 
+        Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
+
         FuriString* text = furi_string_alloc();
         subghz_protocol_decoder_base_get_string(decoderBase, text);
         subghz_receiver_reset(receiver);
-        printf("%s", furi_string_get_cstr(text));
+        FURI_LOG_E(LOG_TAG, "%s", furi_string_get_cstr(text));
         furi_string_free(text);
 
         HandlerContext<function<void()>>* handlerContext = (HandlerContext<function<void()>>*)context;
@@ -69,13 +70,17 @@ public:
         }
 
         subghz_devices_begin(device);
-        subghz_devices_reset(device);
         subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
 
         SetFrequency(frequency);
 
         receiver = subghz_receiver_alloc_init(environment);
         subghz_receiver_set_filter(receiver, SubGhzProtocolFlag_Decodable);
+
+        worker = subghz_worker_alloc();
+        subghz_worker_set_overrun_callback(worker, (SubGhzWorkerOverrunCallback)subghz_receiver_reset);
+        subghz_worker_set_pair_callback(worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
+        subghz_worker_set_context(worker, receiver);
     }
 
     uint32_t SetFrequency(uint32_t frequency) {
@@ -87,12 +92,48 @@ public:
     }
 
     void ReceiveAsync() {
-        subghz_devices_start_async_rx(device, (void*)receiveCallback, NULL);
+        PutToIdle();
+
+        subghz_devices_flush_rx(device);
+        subghz_devices_start_async_rx(device, (void*)subghz_worker_rx_callback, worker);
+        subghz_worker_start(worker);
+
+        state = RECEIVING;
+    }
+
+    void StopReceive() {
+        subghz_worker_stop(worker);
+        subghz_devices_stop_async_rx(device);
+        subghz_devices_idle(device);
+        state = IDLE;
+    }
+
+    void PutToIdle() {
+        switch(state) {
+        case RECEIVING:
+            StopReceive();
+            break;
+
+        case TRANSCEIVING:
+
+            break;
+
+        default:
+        case IDLE:
+            break;
+        }
     }
 
     ~SubGhzModule() {
+        PutToIdle();
+
         if(furi_hal_power_is_otg_enabled()) {
             furi_hal_power_disable_otg();
+        }
+
+        if(worker != NULL) {
+            subghz_worker_free(worker);
+            worker = NULL;
         }
 
         if(receiver != NULL) {

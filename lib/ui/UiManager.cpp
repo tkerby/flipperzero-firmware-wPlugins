@@ -73,7 +73,7 @@ public:
         view_dispatcher_add_view(viewDispatcher, currentViewId(), view->GetNativeView());
         view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
 
-        FURI_LOG_E(LOG_TAG, "ViewStack pushed, size: %d", viewStack.size());
+        FURI_LOG_I(LOG_TAG, "ViewStack pushed, size: %d", viewStack.size());
     }
 
     void RunEventLoop() {

@@ -17,6 +17,9 @@ public:
 
         menuView = new SubMenuUiView("Scanning for signals...");
         menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
+
+        subghz->SetReceiveHandler(HANDLER(&ScanStationsScreen::receive));
+        subghz->ReceiveAsync();
     }
 
     UiView* GetView() {
@@ -24,6 +27,9 @@ public:
     }
 
 private:
+    void receive() {
+    }
+
     void destroy() {
         delete subghz;
     }
