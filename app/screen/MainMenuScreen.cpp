@@ -1,9 +1,11 @@
 #ifndef _MAIN_MENU_SCREEN_CLASS_
 #define _MAIN_MENU_SCREEN_CLASS_
 
-#include "../ui/view/UiView.cpp"
-#include "../ui/view/SubMenuUiView.cpp"
-#include "../ui/UiManager.cpp"
+#include "lib/ui/view/UiView.cpp"
+#include "lib/ui/view/SubMenuUiView.cpp"
+#include "lib/ui/UiManager.cpp"
+
+#include "app/AppNotifications.cpp"
 
 #include "ScanStationsScreen.cpp"
 
@@ -30,6 +32,7 @@ private:
     }
 
     void otherMenuPress(uint32_t index) {
+        Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
         menuView->SetItemLabel(index, "Your pushed me!");
     }
 };

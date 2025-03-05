@@ -1,8 +1,8 @@
 #ifndef _SCAN_STATIONS_SCREEN_CLASS_
 #define _SCAN_STATIONS_SCREEN_CLASS_
 
-#include "../ui/view/UiView.cpp"
-#include "../ui/view/SubMenuUiView.cpp"
+#include "lib/ui/view/UiView.cpp"
+#include "lib/ui/view/SubMenuUiView.cpp"
 
 class ScanStationsScreen {
 private:

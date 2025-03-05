@@ -1,8 +1,10 @@
 #ifndef _APP_CLASS_
 #define _APP_CLASS_
 
-#include "ui/UiManager.cpp"
-#include "screen/MainMenuScreen.cpp"
+#include "lib/ui/UiManager.cpp"
+#include "lib/hardware/notification/Notification.cpp"
+
+#include "app/screen/MainMenuScreen.cpp"
 
 using namespace std;
 
@@ -17,6 +19,8 @@ public:
         ui->RunEventLoop();
 
         ui->Destroy();
+
+        Notification::Dispose();
     }
 };
 
