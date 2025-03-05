@@ -5,6 +5,7 @@ App(
     entry_point="lightMsg_app",
     requires=["gui"],
     stack_size=4 * 1024,
+    fap_file_assets="resources",
     fap_description="Lab401's Light Messenger companion app.",
     fap_author="Lab401 & tixlegeek",
     fap_icon="images/401_lghtmsg_icon_10px.png",
