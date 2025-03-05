@@ -1026,8 +1026,35 @@ void global_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     GameContext* game_context = game_manager_game_context_get(manager);
     UNUSED(game_context);
 
-    renderSceneBackground(canvas);
+    static uint32_t counter;
+    if(counter < 200) {
+        counter++;
+        renderSceneBackground(canvas);
+    } else {
+        showBackground = false;
+        canvas_draw_frame(canvas, 2, -4, 124, 61);
+        canvas_draw_line(canvas, 1, 57, 0, 60);
+        canvas_draw_line(canvas, 126, 57, 128, 61);
 
+        if(health <= 0) {
+            for(int i = 0; i < MAX_ENEMIES; i++) {
+                if(enemies[i].instance == NULL) continue;
+
+                //Enemy is in the way of the grave
+                if(fabs(backgroundAssets[0].posX - entity_pos_get(enemies[i].instance).x) < 18) {
+                    level_remove_entity(gameLevel, enemies[i].instance);
+
+                    genann_free(enemies[i].lastAI);
+                    genann_free(enemies[i].ai);
+                    enemies[i].instance = NULL;
+                }
+
+                for(int j = 0; j < MAX_OBSTACLES; j++) {
+                    if(obstacles[j].visible) obstacles[j].visible = false;
+                }
+            }
+        }
+    }
     //Draw background assets
     for(uint32_t i = 0; i < BACKGROUND_ASSET_COUNT; i++) {
         struct BackgroundAsset asset = backgroundAssets[i];
