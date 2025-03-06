@@ -6,6 +6,10 @@
 #include "PagerDataStored.cpp"
 #include "protocol/PagerProtocol.cpp"
 
+#include "decoder/Td157Decoder.cpp"
+
+static Td157Decoder td157Decoder;
+
 class PagerData {
 private:
     uint32_t index;
@@ -31,8 +35,13 @@ public:
     }
 
     const char* GetItemName() {
-        return furi_string_get_cstr(
-            furi_string_alloc_printf("x%d %s%06X", storedData.repeats, protocol->GetShortName(), (unsigned int)storedData.data));
+        return furi_string_get_cstr(furi_string_alloc_printf(
+            "x%d %s%06X S:%d P:%d",
+            storedData.repeats,
+            protocol->GetShortName(),
+            (unsigned int)storedData.data,
+            td157Decoder.GetStation(storedData.data),
+            td157Decoder.GetPager(storedData.data)));
     }
 };
 
