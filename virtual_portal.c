@@ -36,6 +36,9 @@ static void wav_player_dma_isr(void* ctx) {
     // half of transfer
     if (LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
+        if (!virtual_portal->playing_audio) {
+            return;
+        }
         // fill first half of buffer
         for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
             if (!virtual_portal->count) {
@@ -410,6 +413,7 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     } else {
         wav_player_speaker_stop();
     }
+    virtual_portal->audio_in_buffer = false;
     /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
@@ -577,6 +581,9 @@ void virtual_portal_process_audio(
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
+        if (virtual_portal->count > SAMPLES_COUNT_BUFFERED) {
+            virtual_portal->audio_in_buffer = true;
+        }
     }
 }
 
@@ -634,6 +641,9 @@ void virtual_portal_process_audio_360(
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
+        }
+        if (virtual_portal->count > SAMPLES_COUNT_BUFFERED) {
+            virtual_portal->audio_in_buffer = true;
         }
     }
 }

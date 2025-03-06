@@ -2,7 +2,7 @@
 
 #define TAG "POF USB"
 
-#define HID_INTERVAL 4
+#define HID_INTERVAL 1
 
 #define USB_EP0_SIZE 8
 

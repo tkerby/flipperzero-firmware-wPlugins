@@ -53,6 +53,7 @@ typedef struct {
     uint8_t sequence_number;
     float volume;
     bool playing_audio;
+    bool audio_in_buffer;
     uint8_t audio_buffer[SAMPLES_COUNT];
     uint8_t current_audio_buffer[SAMPLES_COUNT_BUFFERED];
     uint8_t* head;
