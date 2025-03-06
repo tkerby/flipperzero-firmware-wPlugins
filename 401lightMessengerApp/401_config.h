@@ -11,7 +11,7 @@
 #include <storage/storage.h>
 #include <toolbox/path.h>
 // #include "401LightMsg_config.h"
-#define LIGHTMSG_VERSION             "1.2"
+#define LIGHTMSG_VERSION             "1.3"
 #define LIGHTMSG_DEFAULT_ORIENTATION 0
 #define LIGHTMSG_DEFAULT_BRIGHTNESS  3
 #define LIGHTMSG_DEFAULT_SENSIBILITY 1
@@ -21,7 +21,7 @@
 
 #define LIGHTMSG_DEFAULT_MIRROR 0
 #define LIGHTMSG_DEFAULT_SPEED  0
-#define LIGHTMSG_DEFAULT_WIDTH  2
+#define LIGHTMSG_DEFAULT_WIDTH  1
 
 #include "401_err.h"
 #include "app_params.h"
