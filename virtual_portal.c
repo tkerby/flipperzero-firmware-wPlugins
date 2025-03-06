@@ -409,6 +409,11 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     // Activate speaker for any non-zero value in the range 01-FF
     virtual_portal->speaker = (message[1] != 0);
+    if (virtual_portal->speaker) {
+        wav_player_speaker_start();
+    } else {
+        wav_player_speaker_stop();
+    }
     /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
