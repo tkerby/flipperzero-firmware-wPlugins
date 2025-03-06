@@ -1,4 +1,7 @@
+Original App by bettse
 App Icon by mikeonut
+Additional protocol reverse engineering and testing by norto
+
 
 ## Requirements
 
