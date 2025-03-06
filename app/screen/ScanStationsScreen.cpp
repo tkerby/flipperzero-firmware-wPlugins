@@ -40,7 +40,7 @@ private:
         }
 
         if(pagerData->IsNew()) {
-            Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
+            Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
             menuView->SetHeader(NULL);
             menuView->AddItem(pagerData->GetItemName(), HANDLER_1ARG(&ScanStationsScreen::doNothing));

@@ -38,7 +38,7 @@ private:
     void aboutPressed(uint32_t index) {
         UNUSED(index);
 
-        Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
+        Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
         menuView->SetItemLabel(index, "Your pushed me!");
     }
 };

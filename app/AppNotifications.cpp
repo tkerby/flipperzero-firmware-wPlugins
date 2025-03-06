@@ -3,7 +3,7 @@
 
 #include "lib/hardware/notification/Notification.cpp"
 
-const NotificationSequence NOTIFICATION_SUBGHZ_RECEIVE = {
+const NotificationSequence NOTIFICATION_PAGER_RECEIVE = {
     &message_vibro_on,
     &message_note_e6,
 
