@@ -586,9 +586,6 @@ void virtual_portal_process_audio(
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
-        if (virtual_portal->count > SAMPLES_COUNT) {
-            virtual_portal->playing_audio = true;
-        }
     }
 }
 
@@ -646,9 +643,6 @@ void virtual_portal_process_audio_360(
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
-        }
-        if (virtual_portal->count > SAMPLES_COUNT) {
-            virtual_portal->playing_audio = true;
         }
     }
 }
