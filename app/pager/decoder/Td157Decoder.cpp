@@ -8,9 +8,9 @@
 
 class Td157Decoder : public PagerDecoder {
 private:
-    const uint32_t stationMask = 0b111111111100000000000000; //leading 10 bits (of 24) are station
-    const uint32_t pagerMask = 0b11111111110000; //following 10 bits are pager (leaving 4 low-order bits unused)
-    const uint32_t actionMask = 0b1111;
+    const uint32_t stationMask = 0b111111111100000000000000; // leading 10 bits (of 24) are station
+    const uint32_t pagerMask = 0b11111111110000; // next 10 bits are pager
+    const uint32_t actionMask = 0b1111; // and the last 4 bits is action
     const uint8_t stationOffset = 14;
     const uint8_t pagerOffset = 4;
 
