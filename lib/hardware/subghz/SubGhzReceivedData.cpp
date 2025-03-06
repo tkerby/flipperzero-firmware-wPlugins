@@ -16,7 +16,7 @@ public:
         return decoder->protocol->name;
     }
 
-    uint32_t GetKey() {
+    uint32_t GetHash() {
         return decoder->protocol->decoder->get_hash_data_long(decoder);
     }
 };

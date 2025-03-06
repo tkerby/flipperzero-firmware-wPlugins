@@ -7,14 +7,18 @@
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 
 #include "app/AppNotifications.cpp"
+#include "app/pager/PagerReceiver.cpp"
 
 class ScanStationsScreen {
 private:
     SubMenuUiView* menuView;
     SubGhzModule* subghz;
+    PagerReceiver* pagerReceiver;
 
 public:
     ScanStationsScreen() {
+        pagerReceiver = new PagerReceiver();
+
         menuView = new SubMenuUiView("Scanning for signals...");
         menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
 
@@ -29,13 +33,20 @@ public:
 
 private:
     void receive(SubGhzReceivedData data) {
-        menuView->SetHeader(NULL);
+        PagerData* pagerData = pagerReceiver->Receive(data);
 
-        Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
+        if(pagerData == NULL) {
+            return;
+        }
 
-        FuriString* itemName = furi_string_alloc_printf("%s %X", data.GetProtocolName(), (unsigned int)data.GetKey());
-        menuView->AddItem(furi_string_get_cstr(itemName), HANDLER_1ARG(&ScanStationsScreen::doNothing));
-        furi_string_free(itemName);
+        if(pagerData->IsNew()) {
+            Notification::Play(&NOTIFICATION_SUBGHZ_RECEIVE);
+
+            menuView->SetHeader(NULL);
+            menuView->AddItem(pagerData->GetItemName(), HANDLER_1ARG(&ScanStationsScreen::doNothing));
+        } else {
+            menuView->SetItemLabel(pagerData->GetIndex(), pagerData->GetItemName());
+        }
     }
 
     void doNothing(uint32_t) {
@@ -43,6 +54,7 @@ private:
 
     void destroy() {
         delete subghz;
+        delete pagerReceiver;
     }
 };
 
