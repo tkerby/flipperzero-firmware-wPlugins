@@ -36,9 +36,6 @@ static void wav_player_dma_isr(void* ctx) {
     // half of transfer
     if (LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
-        if (!virtual_portal->playing_audio) {
-            return;
-        }
         // fill first half of buffer
         for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
             if (!virtual_portal->count) {
@@ -56,10 +53,6 @@ static void wav_player_dma_isr(void* ctx) {
     // transfer complete
     if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
-
-        if (!virtual_portal->playing_audio) {
-            return;
-        }
         // fill second half of buffer
         for (int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
             if (!virtual_portal->count) {
