@@ -8,7 +8,7 @@
 
 #define SAMPLE_RATE            8000
 #define POF_TOKEN_LIMIT        16
-#define SAMPLES_COUNT          1024
+#define SAMPLES_COUNT          2048
 #define SAMPLES_COUNT_BUFFERED SAMPLES_COUNT * 8
 
 typedef enum {

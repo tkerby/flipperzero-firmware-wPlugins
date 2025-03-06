@@ -2,8 +2,9 @@
 
 #include <furi_hal.h>
 #include <stm32wbxx_ll_dma.h>
-#include "string.h"
+
 #include "audio/wav_player_hal.h"
+#include "string.h"
 
 #define TAG "VirtualPortal"
 
@@ -222,7 +223,6 @@ VirtualPortal* virtual_portal_alloc(NotificationApp* notifications) {
 
         furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, wav_player_dma_isr, virtual_portal);
 
-        wav_player_speaker_start();
         wav_player_dma_start();
     }
 
@@ -410,11 +410,12 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     // Activate speaker for any non-zero value in the range 01-FF
     virtual_portal->speaker = (message[1] != 0);
     if(virtual_portal->speaker) {
+        if(!virtual_portal->playing_audio) {
+            wav_player_speaker_start();
+        }
         virtual_portal->count = 0;
         virtual_portal->head = virtual_portal->tail = virtual_portal->current_audio_buffer;
-        virtual_portal->playing_audio = false;
-        wav_player_dma_stop();
-        wav_player_dma_start();
+        virtual_portal->playing_audio = true;
     }
     /*
     char display[33] = {0};
