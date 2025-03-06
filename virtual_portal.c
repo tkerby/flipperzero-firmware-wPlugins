@@ -405,13 +405,13 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     // Activate speaker for any non-zero value in the range 01-FF
     virtual_portal->speaker = (message[1] != 0);
     virtual_portal->count = 0;
-    virtual_portal->head = virtual_portal->tail = virtual_portal->audio_buffer;
+    virtual_portal->head = virtual_portal->tail = virtual_portal->current_audio_buffer;
     virtual_portal->playing_audio = false;
-    // if (virtual_portal->speaker) {
-    //     wav_player_speaker_start();
-    // } else {
-    //     wav_player_speaker_stop();
-    // }
+    if (virtual_portal->speaker) {
+        wav_player_speaker_start();
+    } else {
+        wav_player_speaker_stop();
+    }
     /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
