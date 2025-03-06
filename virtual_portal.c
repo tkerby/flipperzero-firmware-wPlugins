@@ -408,12 +408,14 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     // Activate speaker for any non-zero value in the range 01-FF
     virtual_portal->speaker = (message[1] != 0);
+    virtual_portal->head = virtual_portal->tail = virtual_portal->audio_buffer;
     if (virtual_portal->speaker) {
         wav_player_speaker_start();
     } else {
         wav_player_speaker_stop();
+        virtual_portal->count = 0;
+        virtual_portal->head = virtual_portal->tail = virtual_portal->audio_buffer;
     }
-    virtual_portal->audio_in_buffer = false;
     /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
@@ -581,9 +583,6 @@ void virtual_portal_process_audio(
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
         }
-        if (virtual_portal->count > SAMPLES_COUNT_BUFFERED) {
-            virtual_portal->audio_in_buffer = true;
-        }
     }
 }
 
@@ -641,9 +640,6 @@ void virtual_portal_process_audio_360(
         virtual_portal->count++;
         if (++virtual_portal->head == virtual_portal->end) {
             virtual_portal->head = virtual_portal->current_audio_buffer;
-        }
-        if (virtual_portal->count > SAMPLES_COUNT_BUFFERED) {
-            virtual_portal->audio_in_buffer = true;
         }
     }
 }
