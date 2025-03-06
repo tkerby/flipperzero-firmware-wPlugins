@@ -6,7 +6,7 @@
  */
 #include "401LightMsg_splash.h"
 
-static const char* TAG = "401_LightMsgSplash";
+//static const char* TAG = "401_LightMsgSplash";
 
 /**
  * Handles input events for the splash scene. Sends custom events based on
@@ -109,7 +109,6 @@ static void app_splash_render_callback(Canvas* canvas, void* _model) {
  * @return Pointer to the newly allocated AppSplash instance.
  */
 AppSplash* app_splash_alloc(void* ctx) {
-    FURI_LOG_I(TAG, "app_splash_alloc");
     AppContext* app = (AppContext*)ctx;
     AppSplash* appSplash = malloc(sizeof(AppSplash));
     appSplash->view = view_alloc();

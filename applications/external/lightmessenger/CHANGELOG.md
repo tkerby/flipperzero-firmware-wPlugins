@@ -6,3 +6,9 @@ Updated manifest.yaml and application.fam
 
 v1.2:
 Reworked config file's logic, merged pull requests and modifications from jamisonderek (Mirror, Accelerometer fix, word by word, sensitivity increase, letter width ), updated README and more stuff.
+
+v1.3
+- Bitmap editor enhancement
+- Fixes and enhancement in display model
+- Added authentic bitmaps 2000's operator logos as assets
+- Changed apps_data to apps_assetsfor storing datas and bitmaps

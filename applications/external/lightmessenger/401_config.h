@@ -21,7 +21,7 @@
 
 #define LIGHTMSG_DEFAULT_MIRROR 0
 #define LIGHTMSG_DEFAULT_SPEED  0
-#define LIGHTMSG_DEFAULT_WIDTH  2
+#define LIGHTMSG_DEFAULT_WIDTH  1
 
 #include "401_err.h"
 #include "app_params.h"
