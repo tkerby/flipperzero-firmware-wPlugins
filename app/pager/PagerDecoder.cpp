@@ -1,4 +1,0 @@
-#ifndef _PAGER_DECODER_CLASS_
-#define _PAGER_DECODER_CLASS_
-
-#endif //_PAGER_DECODER_CLASS_
