@@ -31,20 +31,20 @@ static float lerp(float start, float end, float t) {
     return start + (end - start) * t;
 }
 
+
 static void wav_player_dma_isr(void* ctx) {
     VirtualPortal* virtual_portal = (VirtualPortal*)ctx;
     // half of transfer
     if (LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
-        if (!virtual_portal->playing_audio) {
+        if (virtual_portal->count < SAMPLES_COUNT / 2) {
+            for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
+                virtual_portal->audio_buffer[i] = 0;
+            }
             return;
         }
         // fill first half of buffer
         for (int i = 0; i < SAMPLES_COUNT / 2; i++) {
-            if (!virtual_portal->count) {
-                virtual_portal->audio_buffer[i] = 0;
-                continue;
-            }
             virtual_portal->audio_buffer[i] = *virtual_portal->tail;
             if (++virtual_portal->tail == virtual_portal->end) {
                 virtual_portal->tail = virtual_portal->current_audio_buffer;
@@ -57,12 +57,14 @@ static void wav_player_dma_isr(void* ctx) {
     if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
 
+        if (virtual_portal->count < SAMPLES_COUNT / 2) {
+            for (int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
+                virtual_portal->audio_buffer[i] = 0;
+            }
+            return;
+        }
         // fill second half of buffer
         for (int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
-            if (!virtual_portal->count) {
-                virtual_portal->audio_buffer[i] = 0;
-                continue;
-            }
             virtual_portal->audio_buffer[i] = *virtual_portal->tail;
             if (++virtual_portal->tail == virtual_portal->end) {
                 virtual_portal->tail = virtual_portal->current_audio_buffer;
