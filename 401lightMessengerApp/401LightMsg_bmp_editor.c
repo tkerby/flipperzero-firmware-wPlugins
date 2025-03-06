@@ -382,7 +382,7 @@ static void bmp_editor_drawBoard(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 45, 62, "Toggle/");
     // Indicates continuous mode
     if(BmpEditorData->draw_mode == BmpEditorDrawModeContinuous) {
-      canvas_set_font(canvas, FontPrimary);
+        canvas_set_font(canvas, FontPrimary);
     }
     canvas_draw_str(canvas, 82, 62, "Hold");
     // Bitmap
