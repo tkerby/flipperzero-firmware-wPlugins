@@ -6,7 +6,7 @@
  */
 #include "401LightMsg_splash.h"
 
-static const char* TAG = "401_LightMsgSplash";
+//static const char* TAG = "401_LightMsgSplash";
 
 /**
  * Handles input events for the splash scene. Sends custom events based on
