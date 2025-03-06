@@ -59,6 +59,7 @@ typedef struct {
     uint8_t* tail;
     uint8_t* end;
     uint16_t count;
+    uint8_t m;
     bool active;
     bool speaker;
     NotificationApp* notifications;

@@ -422,7 +422,7 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
     // Always respond with 01 if active, 00 if not
     response[index++] = virtual_portal->speaker ? 0x01 : 0x00;
     response[index++] = 0x00;
-    response[index++] = 0x19;
+    response[index++] = virtual_portal->m;
     g72x_init_state(&virtual_portal->state);
     return index;
 }
@@ -669,6 +669,7 @@ int virtual_portal_process_message(
             }
             return virtual_portal_status(virtual_portal, response);
         case 'V':
+            virtual_portal->m = message[3];
             return 0;
         case 'W':  // Write
             if (!virtual_portal->active) {
