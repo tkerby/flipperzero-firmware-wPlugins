@@ -54,6 +54,8 @@ public:
             if(pagers[i].data == dataToStore.data && pagers[i].protocol == dataToStore.protocol) {
                 if(pagers[i].repeats < MAX_REPEATS) {
                     pagers[i].repeats++;
+                } else {
+                    return NULL; // no need to rename element any more
                 }
                 dataToStore = pagers[i];
                 indexFoundOn = i;
