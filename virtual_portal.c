@@ -408,8 +408,8 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
         virtual_portal->count = 0;
         virtual_portal->head = virtual_portal->tail = virtual_portal->current_audio_buffer;
         virtual_portal->playing_audio = false;
-        wav_player_dma_stop();
-        wav_player_dma_start();
+        // wav_player_dma_stop();
+        // wav_player_dma_start();
     } 
     /*
     char display[33] = {0};
