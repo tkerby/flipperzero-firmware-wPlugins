@@ -53,7 +53,6 @@ static void wav_player_dma_isr(void* ctx) {
     // transfer complete
     if(LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
-
         // fill second half of buffer
         for(int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
             if(!virtual_portal->count) {
@@ -410,10 +409,13 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
     // Activate speaker for any non-zero value in the range 01-FF
     virtual_portal->speaker = (message[1] != 0);
+    virtual_portal->count = 0;
+    virtual_portal->head = virtual_portal->tail = virtual_portal->current_audio_buffer;
+    virtual_portal->playing_audio = false;
     if(virtual_portal->speaker) {
-        wav_player_speaker_start();
+        wav_player_dma_start();
     } else {
-        wav_player_speaker_stop();
+        wav_player_dma_stop();
     }
     /*
     char display[33] = {0};
