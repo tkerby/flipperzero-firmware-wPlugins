@@ -46,7 +46,7 @@ void wav_player_speaker_init(uint32_t sample_rate) {
     //LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
     TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
     TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_ENABLE;
-    TIM_OC_InitStruct.CompareValue = 127;
+    TIM_OC_InitStruct.CompareValue = 0;
     LL_TIM_OC_Init(SAMPLE_RATE_TIMER, FURI_HAL_SPEAKER_CHANNEL, &TIM_OC_InitStruct);
 
     //=========================================================
