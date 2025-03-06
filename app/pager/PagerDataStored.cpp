@@ -4,8 +4,9 @@
 #include <cstdint>
 
 struct PagerDataStored {
-    uint32_t data    : 25; // princeton is 24 bit, smc5326 is 25 bit (we take the largest)
-    uint8_t protocol : 7;
+    uint32_t data;
+    uint8_t protocol;
+    uint8_t repeats;
 };
 
 #endif //_PAGER_DATA_STORED_CLASS_
