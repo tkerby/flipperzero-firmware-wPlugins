@@ -36,14 +36,12 @@ static void wav_player_dma_isr(void* ctx) {
     // half of transfer
     if(LL_DMA_IsActiveFlag_HT1(DMA1)) {
         LL_DMA_ClearFlag_HT1(DMA1);
-        if(virtual_portal->count < SAMPLES_COUNT / 2) {
-            for(int i = 0; i < SAMPLES_COUNT / 2; i++) {
-                virtual_portal->audio_buffer[i] = 0;
-            }
-            return;
-        }
         // fill first half of buffer
         for(int i = 0; i < SAMPLES_COUNT / 2; i++) {
+            if(!virtual_portal->count) {
+                virtual_portal->audio_buffer[i] = 0;
+                continue;
+            }
             virtual_portal->audio_buffer[i] = *virtual_portal->tail;
             if(++virtual_portal->tail == virtual_portal->end) {
                 virtual_portal->tail = virtual_portal->current_audio_buffer;
@@ -56,14 +54,12 @@ static void wav_player_dma_isr(void* ctx) {
     if(LL_DMA_IsActiveFlag_TC1(DMA1)) {
         LL_DMA_ClearFlag_TC1(DMA1);
 
-        if(virtual_portal->count < SAMPLES_COUNT / 2) {
-            for(int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
-                virtual_portal->audio_buffer[i] = 0;
-            }
-            return;
-        }
         // fill second half of buffer
         for(int i = SAMPLES_COUNT / 2; i < SAMPLES_COUNT; i++) {
+            if(!virtual_portal->count) {
+                virtual_portal->audio_buffer[i] = 0;
+                continue;
+            }
             virtual_portal->audio_buffer[i] = *virtual_portal->tail;
             if(++virtual_portal->tail == virtual_portal->end) {
                 virtual_portal->tail = virtual_portal->current_audio_buffer;
@@ -412,8 +408,13 @@ int virtual_portal_send_status(VirtualPortal* virtual_portal, uint8_t* response)
 
 // 4d01ff0000d0077d6c2a77a400000000
 int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* response) {
-    virtual_portal->speaker = (message[1] == 1);
-
+    // Activate speaker for any non-zero value in the range 01-FF
+    virtual_portal->speaker = (message[1] != 0);
+    if(virtual_portal->speaker) {
+        wav_player_speaker_start();
+    } else {
+        wav_player_speaker_stop();
+    }
     /*
     char display[33] = {0};
     for(size_t i = 0; i < BLOCK_SIZE; i++) {
@@ -424,9 +425,10 @@ int virtual_portal_m(VirtualPortal* virtual_portal, uint8_t* message, uint8_t* r
 
     size_t index = 0;
     response[index++] = 'M';
-    response[index++] = message[1];
+    // Always respond with 01 if active, 00 if not
+    response[index++] = virtual_portal->speaker ? 0x01 : 0x00;
     response[index++] = 0x00;
-    response[index++] = 0x19;
+    response[index++] = virtual_portal->m;
     g72x_init_state(&virtual_portal->state);
     return index;
 }
@@ -652,14 +654,24 @@ int virtual_portal_process_message(
     case 'M':
         return virtual_portal_m(virtual_portal, message, response);
     case 'Q': // Query
+        if(!virtual_portal->active) {
+            return 0; // No response if portal is not active
+        }
         return virtual_portal_query(virtual_portal, message, response);
     case 'R':
         return virtual_portal_reset(virtual_portal, message, response);
     case 'S': // Status
+        if(!virtual_portal->active) {
+            return 0; // No response if portal is not active
+        }
         return virtual_portal_status(virtual_portal, response);
     case 'V':
+        virtual_portal->m = message[3];
         return 0;
     case 'W': // Write
+        if(!virtual_portal->active) {
+            return 0; // No response if portal is not active
+        }
         return virtual_portal_write(virtual_portal, message, response);
     case 'Z':
         return 0;

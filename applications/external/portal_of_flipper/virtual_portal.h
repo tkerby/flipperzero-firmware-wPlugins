@@ -8,8 +8,8 @@
 
 #define SAMPLE_RATE            8000
 #define POF_TOKEN_LIMIT        16
-#define SAMPLES_COUNT          2048
-#define SAMPLES_COUNT_BUFFERED SAMPLES_COUNT * 32
+#define SAMPLES_COUNT          1024
+#define SAMPLES_COUNT_BUFFERED SAMPLES_COUNT * 4
 
 typedef enum {
     PoFHid,
@@ -59,6 +59,7 @@ typedef struct {
     uint8_t* tail;
     uint8_t* end;
     uint16_t count;
+    uint8_t m;
     bool active;
     bool speaker;
     NotificationApp* notifications;
