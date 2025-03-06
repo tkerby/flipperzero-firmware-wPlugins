@@ -22,6 +22,7 @@ There are two installation methods; choose the one that is most convenient for y
 - FlappyBird: `FlappyBird-VGM-Engine.uf2`
 - Flight Assault: `FlightAssault-VGM-Engine.uf2`
 - Pong: `Pong-VGM-Engine.uf2`
+- Tetris: `Tetris-VGM-Engine.uf2`
 - Arkanoid: `Arkanoid-VGM-Engine.uf2`
 - FuriousBirds: `FuriousBirds-VGM-Engine.uf2`
 3. Disconnect your Video Game Module from your Flipper and connect your Flipper to your computer.
@@ -44,6 +45,7 @@ There are two installation methods; choose the one that is most convenient for y
 - FlappyBird: `FlappyBird-VGM-Engine.uf2`
 - Flight Assault: `FlightAssault-VGM-Engine.uf2`
 - Pong: `Pong-VGM-Engine.uf2`
+- Tetris: `Tetris-VGM-Engine.uf2`
 - Arkanoid: `Arkanoid-VGM-Engine.uf2`
 - FuriousBirds: `FuriousBirds-VGM-Engine.uf2`
 2. Press and hold the `BOOT` button on your Video Game Module for 2 seconds.
