@@ -21,7 +21,6 @@ private:
     stack<UiView*> viewStack;
 
     UiManager() {
-        __ui_manager_instance = this;
     }
 
     static uint32_t backCallback(void* context) {
