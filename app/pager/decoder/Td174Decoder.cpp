@@ -5,7 +5,7 @@
 
 #define TD174_ACTION_RING   0
 #define TD174_ACTION_DESYNC 3
-#define PAGER_DESYNC        237
+#define TD174_PAGER_DESYNC  237
 
 class Td174Decoder : public PagerDecoder {
 private:
@@ -51,9 +51,10 @@ public:
             return RING;
 
         case TD174_ACTION_DESYNC:
-            if(GetPager(data) == PAGER_DESYNC) {
+            if(GetPager(data) == TD174_PAGER_DESYNC) {
                 return DESYNC;
             }
+            return UNKNOWN;
 
         default:
             return UNKNOWN;
@@ -75,7 +76,7 @@ public:
             return SetActionValue(data, TD174_ACTION_RING);
 
         case DESYNC:
-            return SetActionValue(SetPager(data, PAGER_DESYNC), TD174_ACTION_DESYNC);
+            return SetActionValue(SetPager(data, TD174_PAGER_DESYNC), TD174_ACTION_DESYNC);
 
         default:
             return data;

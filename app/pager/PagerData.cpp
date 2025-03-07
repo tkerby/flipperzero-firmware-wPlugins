@@ -7,8 +7,10 @@
 #include "protocol/PagerProtocol.cpp"
 
 #include "decoder/Td157Decoder.cpp"
+#include "decoder/Td165Decoder.cpp"
+#include "decoder/Td174Decoder.cpp"
 
-static Td157Decoder td157Decoder;
+static Td174Decoder pagerDecoder;
 
 class PagerData {
 private:
@@ -40,8 +42,8 @@ public:
             storedData.repeats,
             protocol->GetShortName(),
             (unsigned int)storedData.data,
-            td157Decoder.GetStation(storedData.data),
-            td157Decoder.GetPager(storedData.data)));
+            pagerDecoder.GetStation(storedData.data),
+            pagerDecoder.GetPager(storedData.data)));
     }
 };
 
