@@ -1,6 +1,7 @@
 #ifndef _PAGER_OPTIONS_SCREEN_CLASS_
 #define _PAGER_OPTIONS_SCREEN_CLASS_
 
+#include "lib/Helpers.cpp"
 #include "app/pager/PagerReceiver.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
@@ -35,14 +36,14 @@ public:
         varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
         varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
         varItemList->AddItem(actionItem = new UiVariableItem("Action", HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)));
-    }
 
-    UiView* GetView() {
-        return varItemList;
+        varItemList->AddItem(new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName()));
+        varItemList->AddItem(new UiVariableItem(
+            "Signal Repeats", Helpers::intToString(pager->repeats, pager->repeats == MAX_REPEATS ? "%d+" : "%d")));
     }
 
 private:
-    const char* encodingValueChanged(uint32_t index) {
+    const char* encodingValueChanged(int8_t index) {
         pager->decoder = index;
         if(stationItem != NULL) {
             stationItem->Refresh();
@@ -56,22 +57,21 @@ private:
         return receiver->decoders[pager->decoder]->GetShortName();
     }
 
-    const char* stationValueChanged(uint32_t) {
-        int value = receiver->decoders[pager->decoder]->GetStation(pager->data);
-        FuriString* str = furi_string_alloc_printf("%d", value);
-        return furi_string_get_cstr(str);
+    const char* stationValueChanged(int8_t) {
+        return Helpers::intToString(receiver->decoders[pager->decoder]->GetStation(pager->data));
     }
 
-    const char* pagerValueChanged(uint32_t) {
-        int value = receiver->decoders[pager->decoder]->GetPager(pager->data);
-        FuriString* str = furi_string_alloc_printf("%d", value);
-        return furi_string_get_cstr(str);
+    const char* pagerValueChanged(int8_t) {
+        return Helpers::intToString(receiver->decoders[pager->decoder]->GetPager(pager->data));
     }
 
-    const char* actionValueChanged(uint32_t) {
-        int value = receiver->decoders[pager->decoder]->GetActionValue(pager->data);
-        FuriString* str = furi_string_alloc_printf("%d", value);
-        return furi_string_get_cstr(str);
+    const char* actionValueChanged(int8_t) {
+        return Helpers::intToString(receiver->decoders[pager->decoder]->GetActionValue(pager->data));
+    }
+
+public:
+    UiView* GetView() {
+        return varItemList;
     }
 };
 

@@ -26,6 +26,10 @@ private:
     }
 
 public:
+    UiVariableItem(const char* label, const char* staticValue) :
+        UiVariableItem(label, [staticValue](int8_t) { return staticValue; }) {
+    }
+
     UiVariableItem(const char* label, function<const char*(int8_t)> changeHandler) : UiVariableItem(label, 0, 1, changeHandler) {
     }
 
