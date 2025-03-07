@@ -18,7 +18,7 @@ public:
         ui->PushView(mainMenuScreen.GetView());
         ui->RunEventLoop();
 
-        ui->Destroy();
+        delete ui;
 
         Notification::Dispose();
     }

@@ -83,11 +83,6 @@ public:
         }
     }
 
-    void Destroy() {
-        FURI_LOG_I(LOG_TAG, "Destroy called");
-        this->~UiManager();
-    }
-
     ~UiManager() {
         FURI_LOG_I(LOG_TAG, "Destructor called");
 

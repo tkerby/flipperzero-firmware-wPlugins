@@ -6,8 +6,8 @@
 extern "C" int32_t chief_cooker_app(void* p) {
     UNUSED(p);
 
-    App* app = new App();
-    app->Run();
+    App app;
+    app.Run();
 
     return 0;
 }
