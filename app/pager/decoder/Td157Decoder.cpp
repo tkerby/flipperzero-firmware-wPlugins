@@ -5,7 +5,7 @@
 
 #define TD157_ACTION_RING         0b0010
 #define TD157_ACTION_TURN_OFF_ALL 0b1111
-#define TD157_PAGER_TURN_OF_ALL   999
+#define TD157_PAGER_TURN_OFF_ALL  999
 
 class Td157Decoder : public PagerDecoder {
 private:
@@ -49,7 +49,7 @@ public:
         case TD157_ACTION_RING:
             return RING;
         case TD157_ACTION_TURN_OFF_ALL:
-            if(GetPager(data) == TD157_PAGER_TURN_OF_ALL) {
+            if(GetPager(data) == TD157_PAGER_TURN_OFF_ALL) {
                 return TURN_OFF_ALL;
             }
             return UNKNOWN;
@@ -63,7 +63,7 @@ public:
         case RING:
             return (data & ~actionMask) | TD157_ACTION_RING;
         case TURN_OFF_ALL:
-            return SetPager(data, TD157_PAGER_TURN_OF_ALL) | TD157_ACTION_TURN_OFF_ALL;
+            return SetPager(data, TD157_PAGER_TURN_OFF_ALL) | TD157_ACTION_TURN_OFF_ALL;
         default:
             return data;
         }

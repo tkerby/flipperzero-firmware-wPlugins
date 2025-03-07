@@ -3,9 +3,9 @@
 
 #include "PagerDecoder.cpp"
 
-#define TD165_ACTION_RING       0
-#define TD165_ACTION_MUTE       1
-#define TD165_PAGER_TURN_OF_ALL 1005
+#define TD165_ACTION_RING        0
+#define TD165_ACTION_MUTE        1
+#define TD165_PAGER_TURN_OFF_ALL 1005
 
 class Td165Decoder : public PagerDecoder {
 private:
@@ -45,7 +45,7 @@ public:
     PagerAction GetAction(uint32_t data) {
         switch(GetActionValue(data)) {
         case TD165_ACTION_RING:
-            if(GetPager(data) == TD165_PAGER_TURN_OF_ALL) {
+            if(GetPager(data) == TD165_PAGER_TURN_OFF_ALL) {
                 return TURN_OFF_ALL;
             }
             return RING;
@@ -76,7 +76,7 @@ public:
             return SetActionValue(data, TD165_ACTION_MUTE);
 
         case TURN_OFF_ALL:
-            return SetActionValue(SetPager(data, TD165_PAGER_TURN_OF_ALL), TD165_ACTION_RING);
+            return SetActionValue(SetPager(data, TD165_PAGER_TURN_OFF_ALL), TD165_ACTION_RING);
 
         default:
             return data;
