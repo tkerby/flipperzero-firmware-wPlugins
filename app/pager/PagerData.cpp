@@ -35,13 +35,15 @@ public:
     }
 
     const char* GetItemName() {
+        PagerAction action = decoder->GetAction(storedData->data);
         return furi_string_get_cstr(furi_string_alloc_printf(
-            "x%d %s%06X %d/%d A%d",
+            "x%d %s%06X %d/%d %s:%d",
             storedData->repeats,
             protocol->GetShortName(),
             (unsigned int)storedData->data,
             decoder->GetStation(storedData->data),
             decoder->GetPager(storedData->data),
+            action == UNKNOWN ? "A" : PagerActions::GetDescription(action),
             decoder->GetActionValue(storedData->data)));
     }
 };
