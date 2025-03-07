@@ -55,6 +55,10 @@ public:
         }
     }
 
+    PagerData* GetPagerData(size_t index) {
+        PagerDataStored storedData = pagers[index];
+    }
+
     PagerData* Receive(SubGhzReceivedData data) {
         PagerProtocol* protocol = getProtocol(data.GetProtocolName());
         if(protocol == NULL) {
@@ -73,7 +77,7 @@ public:
                 if(pagers[i].repeats < MAX_REPEATS) {
                     pagers[i].repeats++;
                 } else {
-                    return NULL; // no need to rename element any more
+                    return NULL; // no need to modify element any more
                 }
                 dataToStore = pagers[i];
                 indexFoundOn = i;

@@ -4,6 +4,8 @@
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/SubMenuUiView.cpp"
 
+#include "PagerOptionsScreen.cpp"
+
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 
 #include "app/AppNotifications.cpp"
@@ -43,13 +45,15 @@ private:
             Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
             menuView->SetHeader(NULL);
-            menuView->AddItem(pagerData->GetItemName(), HANDLER_1ARG(&ScanStationsScreen::doNothing));
+            menuView->AddItem(pagerData->GetItemName(), HANDLER_1ARG(&ScanStationsScreen::showOptions));
         } else {
             menuView->SetItemLabel(pagerData->GetIndex(), pagerData->GetItemName());
         }
     }
 
-    void doNothing(uint32_t) {
+    void showOptions(uint32_t index) {
+        PagerData* pagerData = pagerReceiver->GetPagerData(index);
+        // menuView->Set
     }
 
     void destroy() {
