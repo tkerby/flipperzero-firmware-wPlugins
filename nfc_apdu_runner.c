@@ -3,7 +3,7 @@
  * @Date: 2025-02-28 17:52:49
  * @version: 
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-07 22:55:09
+ * @LastEditTime: 2025-03-08 00:19:32
  * @Description: file content
  */
 #include "nfc_apdu_runner.h"
@@ -904,8 +904,6 @@ static void nfc_apdu_runner_init(NfcApduRunner* app) {
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    // 不再尝试移除可能不存在的视图，直接添加视图
-
     // 检查视图组件是否已分配
     if(!app->submenu || !app->widget || !app->text_box || !app->popup) {
         return;
@@ -930,7 +928,29 @@ static void nfc_apdu_runner_init(NfcApduRunner* app) {
     }
 
     // 确保应用目录存在
-    storage_simply_mkdir(app->storage, APP_DIRECTORY_PATH);
+    if(!storage_dir_exists(app->storage, APP_DIRECTORY_PATH)) {
+        FURI_LOG_I("APDU_RUNNER", "Creating application directory: %s", APP_DIRECTORY_PATH);
+        if(!storage_simply_mkdir(app->storage, APP_DIRECTORY_PATH)) {
+            FURI_LOG_E("APDU_RUNNER", "Failed to create application directory");
+            // 显示错误消息
+            widget_reset(app->widget);
+            widget_add_string_element(
+                app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Error");
+            widget_add_string_multiline_element(
+                app->widget,
+                64,
+                42,
+                AlignCenter,
+                AlignCenter,
+                FontSecondary,
+                "Failed to create\napplication directory");
+            view_dispatcher_switch_to_view(app->view_dispatcher, NfcApduRunnerViewWidget);
+            return;
+        }
+        FURI_LOG_I("APDU_RUNNER", "Application directory created successfully");
+    } else {
+        FURI_LOG_I("APDU_RUNNER", "Application directory already exists");
+    }
 
     // 检查场景管理器是否已分配
     if(!app->scene_manager) {
