@@ -2,8 +2,10 @@
 #define _PAGER_DECODER_CLASS_
 
 #include <cstdint>
-
+#include <vector>
 #include "PagerAction.cpp"
+
+using namespace std;
 
 class PagerDecoder {
 public:
@@ -11,13 +13,37 @@ public:
     virtual const char* GetFullName() = 0;
     virtual const char* GetShortName() = 0;
 
-    virtual uint16_t GetStation(uint32_t data);
+    virtual uint16_t GetStation(uint32_t data) = 0;
 
-    virtual uint16_t GetPager(uint32_t data);
-    virtual uint32_t SetPager(uint32_t data, uint16_t pagerNum);
+    virtual uint16_t GetPager(uint32_t data) = 0;
+    virtual uint32_t SetPager(uint32_t data, uint16_t pagerNum) = 0;
 
-    virtual PagerAction GetAction(uint32_t data);
-    virtual uint32_t SetAction(uint32_t data, PagerAction action);
+    virtual uint8_t GetActionValue(uint32_t data) = 0;
+    virtual PagerAction GetAction(uint32_t data) = 0;
+    virtual uint32_t SetAction(uint32_t data, PagerAction action) = 0;
+    virtual vector<PagerAction> GetSupportedActions() = 0;
+
+protected:
+    uint32_t reverseBits(uint32_t number, int count) {
+        uint32_t rev = 0;
+
+        // traversing bits of 'n' from the right
+        while(count-- > 0) {
+            // bitwise left shift
+            // 'rev' by 1
+            rev <<= 1;
+
+            // if current bit is '1'
+            if((number & 1) == 1) rev ^= 1;
+
+            // bitwise right shift
+            // 'n' by 1
+            number >>= 1;
+        }
+
+        // required number
+        return rev;
+    }
 };
 
 #endif //_PAGER_DECODER_CLASS_

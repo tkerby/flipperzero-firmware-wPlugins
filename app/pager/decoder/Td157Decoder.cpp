@@ -5,12 +5,14 @@
 
 #define TD157_ACTION_RING         0b0010
 #define TD157_ACTION_TURN_OFF_ALL 0b1111
+#define PAGER_TURN_OF_ALL         999
 
 class Td157Decoder : public PagerDecoder {
 private:
     const uint32_t stationMask = 0b111111111100000000000000; // leading 10 bits (of 24) are station
     const uint32_t pagerMask = 0b11111111110000; // next 10 bits are pager
     const uint32_t actionMask = 0b1111; // and the last 4 bits is action
+
     const uint8_t stationOffset = 14;
     const uint8_t pagerOffset = 4;
 
@@ -38,13 +40,18 @@ public:
         return pagerClearedData | (pagerNum << pagerOffset);
     }
 
+    uint8_t GetActionValue(uint32_t data) {
+        return data & actionMask;
+    }
+
     PagerAction GetAction(uint32_t data) {
-        uint8_t action = data & actionMask;
-        switch(action) {
+        switch(GetActionValue(data)) {
         case TD157_ACTION_RING:
             return RING;
         case TD157_ACTION_TURN_OFF_ALL:
-            return TURN_OFF_ALL;
+            if(GetPager(data) == PAGER_TURN_OF_ALL) {
+                return TURN_OFF_ALL;
+            }
         default:
             return UNKNOWN;
         }
@@ -55,10 +62,14 @@ public:
         case RING:
             return (data & ~actionMask) | TD157_ACTION_RING;
         case TURN_OFF_ALL:
-            return data | TD157_ACTION_TURN_OFF_ALL;
+            return SetPager(data, 999) | TD157_ACTION_TURN_OFF_ALL;
         default:
             return data;
         }
+    }
+
+    vector<PagerAction> GetSupportedActions() {
+        return vector<PagerAction>{RING, TURN_OFF_ALL};
     }
 };
 
