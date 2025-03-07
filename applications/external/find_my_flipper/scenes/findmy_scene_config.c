@@ -48,7 +48,7 @@ void findmy_scene_config_on_enter(void* context) {
     VariableItem* item;
 
     // Google requires a broadcast at least every 2 seconds: https://developers.google.com/nearby/fast-pair/specifications/extensions/fmdn#advertised-frames
-    if (app->state.tag_type == FindMyTypeGoogle) {
+    if(app->state.tag_type == FindMyTypeGoogle) {
         item = variable_item_list_add(
             var_item_list,
             "Broadcast Interval",
