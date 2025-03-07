@@ -52,6 +52,7 @@ public:
             if(GetPager(data) == TD157_PAGER_TURN_OF_ALL) {
                 return TURN_OFF_ALL;
             }
+            return UNKNOWN;
         default:
             return UNKNOWN;
         }

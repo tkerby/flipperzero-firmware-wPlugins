@@ -10,7 +10,7 @@
 #include "decoder/Td165Decoder.cpp"
 #include "decoder/Td174Decoder.cpp"
 
-static Td174Decoder pagerDecoder;
+static Td157Decoder pagerDecoder;
 
 class PagerData {
 private:
@@ -38,12 +38,13 @@ public:
 
     const char* GetItemName() {
         return furi_string_get_cstr(furi_string_alloc_printf(
-            "x%d %s%06X S:%d P:%d",
+            "x%d %s%06X %d/%d A%d",
             storedData.repeats,
             protocol->GetShortName(),
             (unsigned int)storedData.data,
             pagerDecoder.GetStation(storedData.data),
-            pagerDecoder.GetPager(storedData.data)));
+            pagerDecoder.GetPager(storedData.data),
+            pagerDecoder.GetActionValue(storedData.data)));
     }
 };
 
