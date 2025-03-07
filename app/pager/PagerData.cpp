@@ -10,16 +10,16 @@
 class PagerData {
 private:
     uint32_t index;
-    PagerDataStored storedData;
+    PagerDataStored* storedData;
     PagerProtocol* protocol;
     PagerDecoder* decoder;
 
 public:
-    PagerData(PagerDataStored storedData, PagerProtocol* protocol, PagerDecoder* decoder) :
+    PagerData(PagerDataStored* storedData, PagerProtocol* protocol, PagerDecoder* decoder) :
         PagerData(storedData, protocol, decoder, UINT32_MAX) {
     }
 
-    PagerData(PagerDataStored storedData, PagerProtocol* protocol, PagerDecoder* decoder, uint32_t index) {
+    PagerData(PagerDataStored* storedData, PagerProtocol* protocol, PagerDecoder* decoder, uint32_t index) {
         this->storedData = storedData;
         this->protocol = protocol;
         this->decoder = decoder;
@@ -37,12 +37,12 @@ public:
     const char* GetItemName() {
         return furi_string_get_cstr(furi_string_alloc_printf(
             "x%d %s%06X %d/%d A%d",
-            storedData.repeats,
+            storedData->repeats,
             protocol->GetShortName(),
-            (unsigned int)storedData.data,
-            decoder->GetStation(storedData.data),
-            decoder->GetPager(storedData.data),
-            decoder->GetActionValue(storedData.data)));
+            (unsigned int)storedData->data,
+            decoder->GetStation(storedData->data),
+            decoder->GetPager(storedData->data),
+            decoder->GetActionValue(storedData->data)));
     }
 };
 

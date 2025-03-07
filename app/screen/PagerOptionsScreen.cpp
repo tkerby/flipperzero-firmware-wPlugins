@@ -9,16 +9,18 @@
 
 class PagerOptionsScreen {
 private:
-    uint32_t pagerIndex;
+    PagerDataStored* pager;
     PagerReceiver* receiver;
     VariableItemListUiView* varItemList;
 
-    UiVariableItem* encodingItem;
-    UiVariableItem* stationItem;
+    UiVariableItem* encodingItem = NULL;
+    UiVariableItem* stationItem = NULL;
+    UiVariableItem* pagerItem = NULL;
+    UiVariableItem* actionItem = NULL;
 
 public:
     PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
-        this->pagerIndex = pagerIndex;
+        this->pager = receiver->GetPagerData(pagerIndex);
         this->receiver = receiver;
 
         varItemList = new VariableItemListUiView();
@@ -26,21 +28,13 @@ public:
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
                 "Encoding",
-                receiver->GetPagerData(pagerIndex).decoder,
+                receiver->GetPagerData(pagerIndex)->decoder,
                 receiver->decoders.size(),
                 HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged)));
 
-        varItemList->AddItem(
-            encodingItem = new UiVariableItem(
-                "Station",
-                receiver->GetPagerData(pagerIndex).decoder,
-                receiver->decoders.size(),
-                HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
-
-        // varItemList->AddItem(UiVariableItem *item, function<void (uint32_t)> changeHandler)
-        // menuView->AddItem("Scan for station signals", HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
-        // menuView->AddItem("Saved staions database", HANDLER_1ARG(&MainMenuScreen::stationDatabasePressed));
-        // menuView->AddItem("About / Manual", HANDLER_1ARG(&MainMenuScreen::aboutPressed));
+        varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
+        varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
+        varItemList->AddItem(actionItem = new UiVariableItem("Action", HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)));
     }
 
     UiView* GetView() {
@@ -49,13 +43,35 @@ public:
 
 private:
     const char* encodingValueChanged(uint32_t index) {
-        UNUSED(index);
-        return receiver->decoders[index]->GetShortName();
-        // return decoders[index].GetShortName();
+        pager->decoder = index;
+        if(stationItem != NULL) {
+            stationItem->Refresh();
+        }
+        if(pagerItem != NULL) {
+            pagerItem->Refresh();
+        }
+        if(actionItem != NULL) {
+            actionItem->Refresh();
+        }
+        return receiver->decoders[pager->decoder]->GetShortName();
     }
 
     const char* stationValueChanged(uint32_t) {
-        //return receiver->GetPagerData(pagerIndex).decoder
+        int value = receiver->decoders[pager->decoder]->GetStation(pager->data);
+        FuriString* str = furi_string_alloc_printf("%d", value);
+        return furi_string_get_cstr(str);
+    }
+
+    const char* pagerValueChanged(uint32_t) {
+        int value = receiver->decoders[pager->decoder]->GetPager(pager->data);
+        FuriString* str = furi_string_alloc_printf("%d", value);
+        return furi_string_get_cstr(str);
+    }
+
+    const char* actionValueChanged(uint32_t) {
+        int value = receiver->decoders[pager->decoder]->GetActionValue(pager->data);
+        FuriString* str = furi_string_alloc_printf("%d", value);
+        return furi_string_get_cstr(str);
     }
 };
 

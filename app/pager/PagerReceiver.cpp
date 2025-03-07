@@ -28,7 +28,7 @@ public:
 
 private:
     int pagerNumThreshold = 50;
-    vector<PagerDataStored> pagers;
+    vector<PagerDataStored*> pagers;
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
         for(size_t i = 0; i < protocols.size(); i++) {
@@ -39,9 +39,9 @@ private:
         return NULL;
     }
 
-    PagerDecoder* getDecoder(PagerDataStored pagerData) {
+    PagerDecoder* getDecoder(PagerDataStored* pagerData) {
         for(size_t i = 0; i < decoders.size(); i++) {
-            if(decoders[i]->GetPager(pagerData.data) <= pagerNumThreshold) {
+            if(decoders[i]->GetPager(pagerData->data) <= pagerNumThreshold) {
                 return decoders[i];
             }
         }
@@ -58,7 +58,7 @@ public:
         }
     }
 
-    PagerDataStored GetPagerData(size_t index) {
+    PagerDataStored* GetPagerData(size_t index) {
         return pagers[index];
     }
 
@@ -69,19 +69,20 @@ public:
             return NULL;
         }
 
-        PagerDataStored dataToStore;
-        dataToStore.data = data->GetHash();
-        dataToStore.protocol = protocol->id;
-        dataToStore.repeats = 1;
+        PagerDataStored* dataToStore = new PagerDataStored();
+        dataToStore->data = data->GetHash();
+        dataToStore->protocol = protocol->id;
+        dataToStore->repeats = 1;
 
         int indexFoundOn = -1;
         for(size_t i = 0; i < pagers.size(); i++) {
-            if(pagers[i].data == dataToStore.data && pagers[i].protocol == dataToStore.protocol) {
-                if(pagers[i].repeats < MAX_REPEATS) {
-                    pagers[i].repeats++;
+            if(pagers[i]->data == dataToStore->data && pagers[i]->protocol == dataToStore->protocol) {
+                if(pagers[i]->repeats < MAX_REPEATS) {
+                    pagers[i]->repeats++;
                 } else {
                     return NULL; // no need to modify element any more
                 }
+                delete dataToStore;
                 dataToStore = pagers[i];
                 indexFoundOn = i;
                 break;
@@ -90,13 +91,13 @@ public:
 
         if(indexFoundOn < 0) {
             PagerDecoder* decoder = getDecoder(dataToStore);
-            dataToStore.decoder = decoder->id;
+            dataToStore->decoder = decoder->id;
 
             pagers.push_back(dataToStore);
             return new PagerData(dataToStore, protocol, decoder);
         }
 
-        PagerDecoder* decoder = decoders[dataToStore.decoder];
+        PagerDecoder* decoder = decoders[dataToStore->decoder];
         return new PagerData(dataToStore, protocol, decoder, indexFoundOn);
     }
 };

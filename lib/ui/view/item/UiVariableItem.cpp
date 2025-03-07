@@ -26,6 +26,9 @@ private:
     }
 
 public:
+    UiVariableItem(const char* label, function<const char*(int8_t)> changeHandler) : UiVariableItem(label, 0, 1, changeHandler) {
+    }
+
     UiVariableItem(const char* label, uint8_t selectedIndex, uint8_t valuesCount, function<const char*(int8_t)> changeHandler) {
         this->label = label;
         this->selectedIndex = selectedIndex;
@@ -35,17 +38,17 @@ public:
 
     void AddTo(VariableItemList* varItemList) {
         item = variable_item_list_add(varItemList, label, valuesCount, itemChangeCallback, new HandlerContext(changeHandler));
-        RefreshItem();
+        Refresh();
     }
 
     void SetSelectedItem(uint8_t selectedIndex, uint8_t valuesCount) {
         this->selectedIndex = selectedIndex;
         this->valuesCount = valuesCount;
 
-        RefreshItem();
+        Refresh();
     }
 
-    void RefreshItem() {
+    void Refresh() {
         if(item == NULL) {
             return;
         }
