@@ -9,6 +9,10 @@
 #include "protocol/PrincetonProtocol.cpp"
 #include "protocol/Smc5326Protocol.cpp"
 
+#include "decoder/Td157Decoder.cpp"
+#include "decoder/Td165Decoder.cpp"
+#include "decoder/Td174Decoder.cpp"
+
 #undef LOG_TAG
 #define LOG_TAG "PGR_RCV"
 
@@ -18,8 +22,10 @@ using namespace std;
 
 class PagerReceiver {
 private:
+    int pagerNumThreshold = 50;
     vector<PagerDataStored> pagers;
     vector<PagerProtocol*> protocols = {new PrincetonProtocol(), new Smc5326Protocol()};
+    vector<PagerDecoder*> decoders = {new Td157Decoder(), new Td165Decoder(), new Td174Decoder()};
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
         for(size_t i = 0; i < protocols.size(); i++) {
@@ -30,10 +36,22 @@ private:
         return NULL;
     }
 
+    PagerDecoder* getDecoder(PagerDataStored pagerData) {
+        for(size_t i = 0; i < decoders.size(); i++) {
+            if(decoders[i]->GetPager(pagerData.data) <= pagerNumThreshold) {
+                return decoders[i];
+            }
+        }
+        return decoders[0];
+    }
+
 public:
     PagerReceiver() {
         for(size_t i = 0; i < protocols.size(); i++) {
             protocols[i]->id = i;
+        }
+        for(size_t i = 0; i < decoders.size(); i++) {
+            decoders[i]->id = i;
         }
     }
 
@@ -64,11 +82,15 @@ public:
         }
 
         if(indexFoundOn < 0) {
+            PagerDecoder* decoder = getDecoder(dataToStore);
+            dataToStore.decoder = decoder->id;
+
             pagers.push_back(dataToStore);
-            return new PagerData(protocol, dataToStore);
+            return new PagerData(dataToStore, protocol, decoder);
         }
 
-        return new PagerData(protocol, dataToStore, indexFoundOn);
+        PagerDecoder* decoder = decoders[dataToStore.decoder];
+        return new PagerData(dataToStore, protocol, decoder, indexFoundOn);
     }
 };
 

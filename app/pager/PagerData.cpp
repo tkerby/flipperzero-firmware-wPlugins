@@ -5,26 +5,24 @@
 #include <cstdint>
 #include "PagerDataStored.cpp"
 #include "protocol/PagerProtocol.cpp"
-
-#include "decoder/Td157Decoder.cpp"
-#include "decoder/Td165Decoder.cpp"
-#include "decoder/Td174Decoder.cpp"
-
-static Td157Decoder pagerDecoder;
+#include "decoder/PagerDecoder.cpp"
 
 class PagerData {
 private:
     uint32_t index;
     PagerDataStored storedData;
     PagerProtocol* protocol;
+    PagerDecoder* decoder;
 
 public:
-    PagerData(PagerProtocol* protocol, PagerDataStored storedData) : PagerData(protocol, storedData, UINT32_MAX) {
+    PagerData(PagerDataStored storedData, PagerProtocol* protocol, PagerDecoder* decoder) :
+        PagerData(storedData, protocol, decoder, UINT32_MAX) {
     }
 
-    PagerData(PagerProtocol* protocol, PagerDataStored storedData, uint32_t index) {
-        this->protocol = protocol;
+    PagerData(PagerDataStored storedData, PagerProtocol* protocol, PagerDecoder* decoder, uint32_t index) {
         this->storedData = storedData;
+        this->protocol = protocol;
+        this->decoder = decoder;
         this->index = index;
     }
 
@@ -42,9 +40,9 @@ public:
             storedData.repeats,
             protocol->GetShortName(),
             (unsigned int)storedData.data,
-            pagerDecoder.GetStation(storedData.data),
-            pagerDecoder.GetPager(storedData.data),
-            pagerDecoder.GetActionValue(storedData.data)));
+            decoder->GetStation(storedData.data),
+            decoder->GetPager(storedData.data),
+            decoder->GetActionValue(storedData.data)));
     }
 };
 

@@ -7,6 +7,7 @@ struct PagerDataStored {
     uint32_t data;
     uint8_t protocol;
     uint8_t repeats;
+    int8_t decoder;
 };
 
 #endif //_PAGER_DATA_STORED_CLASS_
