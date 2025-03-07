@@ -34,14 +34,7 @@ public:
     }
 
     void AddItem(UiVariableItem* item) {
-        // AddItemAt(elementCount, label, handler);
-        // variable_item_list_add(varItemList, label, uint8_t values_count, VariableItemChangeCallback change_callback, void *context)
-        VariableItemChangeCallback change_callback;
-        VariableItem* nativeItem = variable_item_list_add(
-            varItemList, item->GetLabel(), item->GetValuesCount(), UiVariableItem::itemChangeCallback, item);
-        item->Bind(nativeItem);
-        variable_item_list_set_selected_item(VariableItemList * variable_item_list, uint8_t index);
-        variable_item_set_current_value_text(VariableItem * item, const char* current_value_text)
+        item->AddTo(varItemList);
     }
 
     // void AddItemAt(uint32_t index, const char* label, function<void(uint32_t)> handler) {

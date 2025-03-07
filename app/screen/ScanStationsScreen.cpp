@@ -7,6 +7,7 @@
 #include "PagerOptionsScreen.cpp"
 
 #include "lib/hardware/subghz/SubGhzModule.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
 
 #include "app/AppNotifications.cpp"
 #include "app/pager/PagerReceiver.cpp"
@@ -27,6 +28,8 @@ public:
         subghz = new SubGhzModule();
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
         subghz->ReceiveAsync();
+
+        receive(new SubGhzReceivedDataStub("Princeton", 0x0b00A8));
     }
 
     UiView* GetView() {
@@ -34,7 +37,7 @@ public:
     }
 
 private:
-    void receive(SubGhzReceivedData data) {
+    void receive(SubGhzReceivedData* data) {
         PagerData* pagerData = pagerReceiver->Receive(data);
 
         if(pagerData == NULL) {
@@ -52,8 +55,8 @@ private:
     }
 
     void showOptions(uint32_t index) {
-        PagerData* pagerData = pagerReceiver->GetPagerData(index);
-        // menuView->Set
+        PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
+        UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void destroy() {

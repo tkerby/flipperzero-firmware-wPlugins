@@ -3,7 +3,8 @@
 
 #include <vector>
 
-#include "lib/hardware/subghz/SubGhzReceivedData.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedData.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
 #include "PagerData.cpp"
 
 #include "protocol/PrincetonProtocol.cpp"
@@ -21,11 +22,13 @@
 using namespace std;
 
 class PagerReceiver {
+public:
+    vector<PagerProtocol*> protocols = {new PrincetonProtocol(), new Smc5326Protocol()};
+    vector<PagerDecoder*> decoders = {new Td157Decoder(), new Td165Decoder(), new Td174Decoder()};
+
 private:
     int pagerNumThreshold = 50;
     vector<PagerDataStored> pagers;
-    vector<PagerProtocol*> protocols = {new PrincetonProtocol(), new Smc5326Protocol()};
-    vector<PagerDecoder*> decoders = {new Td157Decoder(), new Td165Decoder(), new Td174Decoder()};
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
         for(size_t i = 0; i < protocols.size(); i++) {
@@ -55,19 +58,19 @@ public:
         }
     }
 
-    PagerData* GetPagerData(size_t index) {
-        PagerDataStored storedData = pagers[index];
+    PagerDataStored GetPagerData(size_t index) {
+        return pagers[index];
     }
 
-    PagerData* Receive(SubGhzReceivedData data) {
-        PagerProtocol* protocol = getProtocol(data.GetProtocolName());
+    PagerData* Receive(SubGhzReceivedData* data) {
+        PagerProtocol* protocol = getProtocol(data->GetProtocolName());
         if(protocol == NULL) {
-            FURI_LOG_I(LOG_TAG, "Skipping received data with unsupported protocol: %s", data.GetProtocolName());
+            FURI_LOG_I(LOG_TAG, "Skipping received data with unsupported protocol: %s", data->GetProtocolName());
             return NULL;
         }
 
         PagerDataStored dataToStore;
-        dataToStore.data = data.GetHash();
+        dataToStore.data = data->GetHash();
         dataToStore.protocol = protocol->id;
         dataToStore.repeats = 1;
 

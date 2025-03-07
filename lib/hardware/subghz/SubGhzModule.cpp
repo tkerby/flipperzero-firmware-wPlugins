@@ -17,7 +17,7 @@
 #include "lib/HandlerContext.cpp"
 
 #include "SubGhzState.cpp"
-#include "SubGhzReceivedData.cpp"
+#include "data/SubGhzReceivedDataImpl.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"
@@ -43,8 +43,8 @@ private:
             return;
         }
 
-        auto handlerContext = (HandlerContext<function<void(SubGhzReceivedData)>>*)context;
-        handlerContext->GetHandler()(SubGhzReceivedData(decoderBase));
+        auto handlerContext = (HandlerContext<function<void(SubGhzReceivedData*)>>*)context;
+        handlerContext->GetHandler()(new SubGhzReceivedDataImpl(decoderBase));
     }
 
 public:
@@ -81,7 +81,7 @@ public:
         return subghz_devices_set_frequency(device, frequency);
     }
 
-    void SetReceiveHandler(function<void(SubGhzReceivedData)> handler) {
+    void SetReceiveHandler(function<void(SubGhzReceivedData*)> handler) {
         subghz_receiver_set_rx_callback(receiver, captureCallback, new HandlerContext(handler));
     }
 
