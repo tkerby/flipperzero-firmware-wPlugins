@@ -13,6 +13,9 @@ private:
     PagerReceiver* receiver;
     VariableItemListUiView* varItemList;
 
+    UiVariableItem* encodingItem;
+    UiVariableItem* stationItem;
+
 public:
     PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
         this->pagerIndex = pagerIndex;
@@ -20,12 +23,19 @@ public:
 
         varItemList = new VariableItemListUiView();
 
-        UiVariableItem* encodingItem = new UiVariableItem(
-            "Encoding",
-            receiver->GetPagerData(pagerIndex).decoder,
-            receiver->decoders.size(),
-            HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged));
-        varItemList->AddItem(encodingItem);
+        varItemList->AddItem(
+            encodingItem = new UiVariableItem(
+                "Encoding",
+                receiver->GetPagerData(pagerIndex).decoder,
+                receiver->decoders.size(),
+                HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged)));
+
+        varItemList->AddItem(
+            encodingItem = new UiVariableItem(
+                "Station",
+                receiver->GetPagerData(pagerIndex).decoder,
+                receiver->decoders.size(),
+                HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
 
         // varItemList->AddItem(UiVariableItem *item, function<void (uint32_t)> changeHandler)
         // menuView->AddItem("Scan for station signals", HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
@@ -42,6 +52,10 @@ private:
         UNUSED(index);
         return receiver->decoders[index]->GetShortName();
         // return decoders[index].GetShortName();
+    }
+
+    const char* stationValueChanged(uint32_t) {
+        //return receiver->GetPagerData(pagerIndex).decoder
     }
 };
 

@@ -35,16 +35,20 @@ public:
 
     void AddTo(VariableItemList* varItemList) {
         item = variable_item_list_add(varItemList, label, valuesCount, itemChangeCallback, new HandlerContext(changeHandler));
-        SetSelectedItem(selectedIndex, valuesCount);
+        RefreshItem();
     }
 
     void SetSelectedItem(uint8_t selectedIndex, uint8_t valuesCount) {
+        this->selectedIndex = selectedIndex;
+        this->valuesCount = valuesCount;
+
+        RefreshItem();
+    }
+
+    void RefreshItem() {
         if(item == NULL) {
             return;
         }
-
-        this->selectedIndex = selectedIndex;
-        this->valuesCount = valuesCount;
 
         variable_item_set_values_count(item, valuesCount);
         variable_item_set_current_value_index(item, selectedIndex);
