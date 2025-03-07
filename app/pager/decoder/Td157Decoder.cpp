@@ -61,16 +61,24 @@ public:
     uint32_t SetAction(uint32_t data, PagerAction action) {
         switch(action) {
         case RING:
-            return (data & ~actionMask) | TD157_ACTION_RING;
+            return SetActionValue(data, TD157_ACTION_RING);
         case TURN_OFF_ALL:
-            return SetPager(data, TD157_PAGER_TURN_OFF_ALL) | TD157_ACTION_TURN_OFF_ALL;
+            return SetActionValue(SetPager(data, TD157_PAGER_TURN_OFF_ALL), TD157_ACTION_TURN_OFF_ALL);
         default:
             return data;
         }
     }
 
+    virtual uint32_t SetActionValue(uint32_t data, uint8_t action) {
+        return (data & ~actionMask) | action;
+    }
+
     vector<PagerAction> GetSupportedActions() {
         return vector<PagerAction>{RING, TURN_OFF_ALL};
+    }
+
+    uint8_t GetActionsCount() {
+        return actionMask + 1;
     }
 };
 

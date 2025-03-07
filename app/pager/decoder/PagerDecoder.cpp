@@ -21,27 +21,22 @@ public:
     virtual uint8_t GetActionValue(uint32_t data) = 0;
     virtual PagerAction GetAction(uint32_t data) = 0;
     virtual uint32_t SetAction(uint32_t data, PagerAction action) = 0;
+    virtual uint32_t SetActionValue(uint32_t data, uint8_t action) = 0;
     virtual vector<PagerAction> GetSupportedActions() = 0;
+    virtual uint8_t GetActionsCount();
 
 protected:
     uint32_t reverseBits(uint32_t number, int count) {
         uint32_t rev = 0;
 
-        // traversing bits of 'n' from the right
         while(count-- > 0) {
-            // bitwise left shift
-            // 'rev' by 1
             rev <<= 1;
-
-            // if current bit is '1'
-            if((number & 1) == 1) rev ^= 1;
-
-            // bitwise right shift
-            // 'n' by 1
+            if((number & 1) == 1) {
+                rev ^= 1;
+            }
             number >>= 1;
         }
 
-        // required number
         return rev;
     }
 };

@@ -1,10 +1,10 @@
 #ifndef _PAGER_RECEIVER_CLASS_
 #define _PAGER_RECEIVER_CLASS_
 
+#include "core/log.h"
 #include <vector>
 
 #include "lib/hardware/subghz/data/SubGhzReceivedData.cpp"
-#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
 #include "PagerData.cpp"
 
 #include "protocol/PrincetonProtocol.cpp"

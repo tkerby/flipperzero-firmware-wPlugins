@@ -18,6 +18,7 @@ private:
     UiVariableItem* stationItem = NULL;
     UiVariableItem* pagerItem = NULL;
     UiVariableItem* actionItem = NULL;
+    UiVariableItem* hexItem = NULL;
 
 public:
     PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
@@ -25,6 +26,8 @@ public:
         this->receiver = receiver;
 
         varItemList = new VariableItemListUiView();
+
+        PagerDecoder* decoder = receiver->decoders[pager->decoder];
 
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
@@ -35,7 +38,14 @@ public:
 
         varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
         varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
-        varItemList->AddItem(actionItem = new UiVariableItem("Action", HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)));
+        varItemList->AddItem(
+            actionItem = new UiVariableItem(
+                "Action",
+                decoder->GetActionValue(pager->data),
+                decoder->GetActionsCount(),
+                HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)));
+
+        varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
 
         varItemList->AddItem(new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName()));
         varItemList->AddItem(new UiVariableItem(
@@ -52,7 +62,8 @@ private:
             pagerItem->Refresh();
         }
         if(actionItem != NULL) {
-            actionItem->Refresh();
+            PagerDecoder* decoder = receiver->decoders[pager->decoder];
+            actionItem->SetSelectedItem(decoder->GetActionValue(pager->data), decoder->GetActionsCount());
         }
         return receiver->decoders[pager->decoder]->GetShortName();
     }
@@ -65,8 +76,24 @@ private:
         return Helpers::intToString(receiver->decoders[pager->decoder]->GetPager(pager->data));
     }
 
-    const char* actionValueChanged(int8_t) {
-        return Helpers::intToString(receiver->decoders[pager->decoder]->GetActionValue(pager->data));
+    const char* actionValueChanged(int8_t value) {
+        PagerDecoder* decoder = receiver->decoders[pager->decoder];
+        if(decoder->GetActionValue(pager->data) != value) {
+            pager->data = decoder->SetActionValue(pager->data, value);
+        }
+
+        if(hexItem != NULL) {
+            hexItem->Refresh();
+        }
+
+        uint8_t actionValue = decoder->GetActionValue(pager->data);
+        PagerAction action = decoder->GetAction(pager->data);
+        const char* actionDesc = PagerActions::GetDescription(action);
+        return furi_string_get_cstr(furi_string_alloc_printf("%d (%s)", actionValue, actionDesc));
+    }
+
+    const char* hexValueChanged(int8_t) {
+        return furi_string_get_cstr(furi_string_alloc_printf("%06X", (unsigned int)pager->data));
     }
 
 public:

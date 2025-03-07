@@ -86,6 +86,10 @@ public:
     vector<PagerAction> GetSupportedActions() {
         return vector<PagerAction>{RING, MUTE, TURN_OFF_ALL};
     }
+
+    uint8_t GetActionsCount() {
+        return actionMask + 1;
+    }
 };
 
 #endif //_TD165_DECODER_CLASS_

@@ -86,6 +86,10 @@ public:
     vector<PagerAction> GetSupportedActions() {
         return vector<PagerAction>{RING, DESYNC};
     }
+
+    uint8_t GetActionsCount() {
+        return 4;
+    }
 };
 
 #endif //_TD174_DECODER_CLASS_
