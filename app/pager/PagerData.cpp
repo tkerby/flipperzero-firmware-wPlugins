@@ -1,7 +1,7 @@
 #ifndef _PAGER_DATA_CLASS_
 #define _PAGER_DATA_CLASS_
 
-#include "core/string.h"
+#include "lib/String.cpp"
 #include <cstdint>
 #include "PagerDataStored.cpp"
 #include "protocol/PagerProtocol.cpp"
@@ -34,9 +34,9 @@ public:
         return index;
     }
 
-    const char* GetItemName() {
+    const char* GetItemName(String* string) {
         PagerAction action = decoder->GetAction(storedData->data);
-        return furi_string_get_cstr(furi_string_alloc_printf(
+        return string->format(
             "x%d %s%06X %d/%d %s:%d",
             storedData->repeats,
             protocol->GetShortName(),
@@ -44,7 +44,7 @@ public:
             decoder->GetStation(storedData->data),
             decoder->GetPager(storedData->data),
             action == UNKNOWN ? "A" : PagerActions::GetDescription(action),
-            decoder->GetActionValue(storedData->data)));
+            decoder->GetActionValue(storedData->data));
     }
 };
 

@@ -1,7 +1,7 @@
 #ifndef _PAGER_OPTIONS_SCREEN_CLASS_
 #define _PAGER_OPTIONS_SCREEN_CLASS_
 
-#include "lib/Helpers.cpp"
+#include "lib/String.cpp"
 #include "app/pager/PagerReceiver.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
@@ -19,6 +19,12 @@ private:
     UiVariableItem* pagerItem = NULL;
     UiVariableItem* actionItem = NULL;
     UiVariableItem* hexItem = NULL;
+
+    String stationStr;
+    String pagerStr;
+    String actionStr;
+    String hexStr;
+    String repeatsStr;
 
 public:
     PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
@@ -49,7 +55,7 @@ public:
 
         varItemList->AddItem(new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName()));
         varItemList->AddItem(new UiVariableItem(
-            "Signal Repeats", Helpers::intToString(pager->repeats, pager->repeats == MAX_REPEATS ? "%d+" : "%d")));
+            "Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats)));
     }
 
 private:
@@ -69,11 +75,11 @@ private:
     }
 
     const char* stationValueChanged(int8_t) {
-        return Helpers::intToString(receiver->decoders[pager->decoder]->GetStation(pager->data));
+        return stationStr.fromInt(receiver->decoders[pager->decoder]->GetStation(pager->data));
     }
 
     const char* pagerValueChanged(int8_t) {
-        return Helpers::intToString(receiver->decoders[pager->decoder]->GetPager(pager->data));
+        return pagerStr.fromInt(receiver->decoders[pager->decoder]->GetPager(pager->data));
     }
 
     const char* actionValueChanged(int8_t value) {
@@ -89,11 +95,12 @@ private:
         uint8_t actionValue = decoder->GetActionValue(pager->data);
         PagerAction action = decoder->GetAction(pager->data);
         const char* actionDesc = PagerActions::GetDescription(action);
-        return furi_string_get_cstr(furi_string_alloc_printf("%d (%s)", actionValue, actionDesc));
+
+        return actionStr.format("%d (%s)", actionValue, actionDesc);
     }
 
     const char* hexValueChanged(int8_t) {
-        return furi_string_get_cstr(furi_string_alloc_printf("%06X", (unsigned int)pager->data));
+        return hexStr.format("%06X", (unsigned int)pager->data);
     }
 
 public:

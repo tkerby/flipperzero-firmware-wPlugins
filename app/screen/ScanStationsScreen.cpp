@@ -19,6 +19,7 @@ private:
     SubMenuUiView* menuView;
     SubGhzModule* subghz;
     PagerReceiver* pagerReceiver;
+    vector<String*> elementNames;
 
 public:
     ScanStationsScreen() {
@@ -54,9 +55,12 @@ private:
             Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
             menuView->SetHeader(NULL);
-            menuView->AddItem(pagerData->GetItemName(), HANDLER_1ARG(&ScanStationsScreen::showOptions));
+
+            String* elementName = new String();
+            elementNames.push_back(elementName);
+            menuView->AddItem(pagerData->GetItemName(elementName), HANDLER_1ARG(&ScanStationsScreen::showOptions));
         } else {
-            menuView->SetItemLabel(pagerData->GetIndex(), pagerData->GetItemName());
+            menuView->SetItemLabel(pagerData->GetIndex(), pagerData->GetItemName(elementNames[pagerData->GetIndex()]));
         }
     }
 
@@ -68,6 +72,10 @@ private:
     void destroy() {
         delete subghz;
         delete pagerReceiver;
+
+        for(size_t i = 0; i < elementNames.size(); i++) {
+            delete elementNames[i];
+        }
     }
 };
 
