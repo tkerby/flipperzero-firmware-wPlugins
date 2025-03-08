@@ -12,6 +12,8 @@
 #include "app/AppNotifications.cpp"
 #include "app/pager/PagerReceiver.cpp"
 
+#define DEBUG true
+
 class ScanStationsScreen {
 private:
     SubMenuUiView* menuView;
@@ -29,7 +31,11 @@ public:
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
         subghz->ReceiveAsync();
 
-        receive(new SubGhzReceivedDataStub("Princeton", 0x0b00A8));
+#if DEBUG
+        receive(new SubGhzReceivedDataStub("Princeton", 0xCBC082));
+        receive(new SubGhzReceivedDataStub("SMC5326", 0x71a4d0));
+        receive(new SubGhzReceivedDataStub("Princeton", 0x1914c0));
+#endif
     }
 
     UiView* GetView() {
