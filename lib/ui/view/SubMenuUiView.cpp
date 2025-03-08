@@ -61,6 +61,10 @@ public:
         return submenu_get_view(menu);
     }
 
+    uint32_t GetCurrentIndex() {
+        return submenu_get_selected_item(menu);
+    }
+
     ~SubMenuUiView() {
         if(menu != NULL) {
             OnDestory();

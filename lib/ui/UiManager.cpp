@@ -30,6 +30,11 @@ private:
         UiManager* uiManager = GetInstance();
         uiManager->popView();
 
+        if(!uiManager->viewStack.empty()) {
+            UiView* viewReturningTo = uiManager->viewStack.top();
+            viewReturningTo->OnReturn();
+        }
+
         return uiManager->currentViewId();
     }
 

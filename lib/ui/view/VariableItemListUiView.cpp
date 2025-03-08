@@ -6,7 +6,6 @@
 #include <gui/modules/variable_item_list.h>
 
 #include "UiView.cpp"
-#include "lib/HandlerContext.cpp"
 #include "item/UiVariableItem.cpp"
 
 #undef LOG_TAG

@@ -12,8 +12,10 @@ using namespace std;
 
 class UiView {
 private:
-    function<void()> onDestroyHandler = HANDLER(&UiView::doNothingOnDestroy);
-    void doNothingOnDestroy() {
+    function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
+    function<void()> onReturnToView = HANDLER(&UiView::doNothing);
+
+    void doNothing() {
     }
 
 public:
@@ -23,6 +25,14 @@ public:
 
     void SetOnDestroyHandler(function<void()> handler) {
         onDestroyHandler = handler;
+    }
+
+    void SetOnReturnToViewHandler(function<void()> handler) {
+        onReturnToView = handler;
+    }
+
+    void OnReturn() {
+        onReturnToView();
     }
 
 protected:

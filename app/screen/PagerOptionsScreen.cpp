@@ -86,6 +86,7 @@ private:
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         if(decoder->GetActionValue(pager->data) != value) {
             pager->data = decoder->SetActionValue(pager->data, value);
+            pager->edited = true;
         }
 
         if(hexItem != NULL) {

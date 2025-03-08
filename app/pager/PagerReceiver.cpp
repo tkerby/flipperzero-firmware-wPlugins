@@ -2,10 +2,11 @@
 #define _PAGER_RECEIVER_CLASS_
 
 #include "core/log.h"
+#include <cstring>
 #include <vector>
 
 #include "lib/hardware/subghz/data/SubGhzReceivedData.cpp"
-#include "PagerData.cpp"
+#include "ReceivedPagerData.cpp"
 
 #include "protocol/PrincetonProtocol.cpp"
 #include "protocol/Smc5326Protocol.cpp"
@@ -62,43 +63,43 @@ public:
         return pagers[index];
     }
 
-    PagerData* Receive(SubGhzReceivedData* data) {
+    ReceivedPagerData* Receive(SubGhzReceivedData* data) {
         PagerProtocol* protocol = getProtocol(data->GetProtocolName());
         if(protocol == NULL) {
             FURI_LOG_I(LOG_TAG, "Skipping received data with unsupported protocol: %s", data->GetProtocolName());
             return NULL;
         }
 
-        PagerDataStored* dataToStore = new PagerDataStored();
-        dataToStore->data = data->GetHash();
-        dataToStore->protocol = protocol->id;
-        dataToStore->repeats = 1;
+        PagerDataStored* storedData = new PagerDataStored();
+        storedData->data = data->GetHash();
+        storedData->protocol = protocol->id;
+        storedData->repeats = 1;
 
-        int indexFoundOn = -1;
+        int index = -1;
         for(size_t i = 0; i < pagers.size(); i++) {
-            if(pagers[i]->data == dataToStore->data && pagers[i]->protocol == dataToStore->protocol) {
+            if(pagers[i]->data == storedData->data && pagers[i]->protocol == storedData->protocol) {
                 if(pagers[i]->repeats < MAX_REPEATS) {
                     pagers[i]->repeats++;
                 } else {
                     return NULL; // no need to modify element any more
                 }
-                delete dataToStore;
-                dataToStore = pagers[i];
-                indexFoundOn = i;
+                delete storedData;
+                storedData = pagers[i];
+                index = i;
                 break;
             }
         }
 
-        if(indexFoundOn < 0) {
-            PagerDecoder* decoder = getDecoder(dataToStore);
-            dataToStore->decoder = decoder->id;
+        bool isNew = index < 0;
+        if(isNew) {
+            PagerDecoder* decoder = getDecoder(storedData);
+            storedData->decoder = decoder->id;
 
-            pagers.push_back(dataToStore);
-            return new PagerData(dataToStore, protocol, decoder);
+            index = pagers.size();
+            pagers.push_back(storedData);
         }
 
-        PagerDecoder* decoder = decoders[dataToStore->decoder];
-        return new PagerData(dataToStore, protocol, decoder, indexFoundOn);
+        return new ReceivedPagerData(storedData, index, isNew);
     }
 };
 

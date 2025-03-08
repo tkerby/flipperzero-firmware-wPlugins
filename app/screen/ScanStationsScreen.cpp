@@ -27,6 +27,7 @@ public:
 
         menuView = new SubMenuUiView("Scanning for signals...");
         menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
+        menuView->SetOnReturnToViewHandler(HANDLER(&ScanStationsScreen::onReturn));
 
         subghz = new SubGhzModule();
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
@@ -45,7 +46,7 @@ public:
 
 private:
     void receive(SubGhzReceivedData* data) {
-        PagerData* pagerData = pagerReceiver->Receive(data);
+        ReceivedPagerData* pagerData = pagerReceiver->Receive(data);
 
         if(pagerData == NULL) {
             return;
@@ -58,15 +59,41 @@ private:
 
             String* elementName = new String();
             elementNames.push_back(elementName);
-            menuView->AddItem(pagerData->GetItemName(elementName), HANDLER_1ARG(&ScanStationsScreen::showOptions));
+            menuView->AddItem(getItemName(pagerData->GetData(), elementName), HANDLER_1ARG(&ScanStationsScreen::showOptions));
         } else {
-            menuView->SetItemLabel(pagerData->GetIndex(), pagerData->GetItemName(elementNames[pagerData->GetIndex()]));
+            refreshName(pagerData->GetIndex());
         }
+
+        delete pagerData;
+    }
+
+    void refreshName(uint32_t index) {
+        menuView->SetItemLabel(index, getItemName(pagerReceiver->GetPagerData(index), elementNames[index]));
+    }
+
+    const char* getItemName(PagerDataStored* pagerData, String* string) {
+        PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
+        PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
+        PagerAction action = decoder->GetAction(pagerData->data);
+        return string->format(
+            "%sx%d %s%06X %d/%d %s:%d",
+            pagerData->edited ? "*" : "",
+            pagerData->repeats,
+            protocol->GetShortName(),
+            (unsigned int)pagerData->data,
+            decoder->GetStation(pagerData->data),
+            decoder->GetPager(pagerData->data),
+            action == UNKNOWN ? "A" : PagerActions::GetDescription(action),
+            decoder->GetActionValue(pagerData->data));
     }
 
     void showOptions(uint32_t index) {
         PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         UiManager::GetInstance()->PushView(screen->GetView());
+    }
+
+    void onReturn() {
+        refreshName(menuView->GetCurrentIndex());
     }
 
     void destroy() {

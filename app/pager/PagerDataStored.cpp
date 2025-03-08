@@ -8,6 +8,7 @@ struct PagerDataStored {
     uint8_t protocol;
     uint8_t repeats;
     int8_t decoder;
+    bool edited = false;
 };
 
 #endif //_PAGER_DATA_STORED_CLASS_
