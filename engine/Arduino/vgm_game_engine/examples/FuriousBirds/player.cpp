@@ -517,7 +517,7 @@ void player_spawn(Level *level, Game *game)
                                 NULL);
     level->entity_add(player);
     reset_game(game);
-    red->from_byte_array((uint8_t *)I_Red, Vector(RED_WIDTH, RED_HEIGHT));
-    piggy->from_byte_array((uint8_t *)I_Pig, Vector(PIG_WIDTH, PIG_HEIGHT));
-    slingshot->from_byte_array((uint8_t *)I_Slingshot, Vector(SLINGSHOT_WIDTH, SLINGSHOT_HEIGHT));
+    red->from_byte_array(I_Red, Vector(RED_WIDTH, RED_HEIGHT));
+    piggy->from_byte_array(I_Pig, Vector(PIG_WIDTH, PIG_HEIGHT));
+    slingshot->from_byte_array(I_Slingshot, Vector(SLINGSHOT_WIDTH, SLINGSHOT_HEIGHT));
 }

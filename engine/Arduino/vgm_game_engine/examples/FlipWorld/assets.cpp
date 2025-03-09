@@ -1,6 +1,6 @@
 #include "assets.h"
 
-char shadow_woods_v4[2210] = R"json(
+const PROGMEM char shadow_woods_v4[2210] = R"json(
     {
     "name": "shadow_woods_v4",
     "author": "ChatGPT",

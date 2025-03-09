@@ -337,7 +337,7 @@ static void enemy_spawn(
     if (enemy_left.data != NULL && enemy_right.data != NULL)
     {
         // Create the enemy entity
-        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, (uint8_t *)enemy_left.data, (uint8_t *)enemy_left.data, (uint8_t *)enemy_right.data, NULL, NULL, enemy_update, enemy_render, enemy_collision);
+        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, enemy_left.data, enemy_left.data, enemy_right.data, NULL, NULL, enemy_update, enemy_render, enemy_collision);
         entity->direction = direction;
         entity->start_position = start_position;
         entity->end_position = end_position;
@@ -561,7 +561,7 @@ void player_spawn(Level *level, const char *name, Vector position)
     if (player_left.data != NULL && player_right.data != NULL)
     {
         // Create the player entity
-        Entity *player = new Entity("Player", ENTITY_PLAYER, position, player_left.size, (uint8_t *)player_left.data, (uint8_t *)player_left.data, (uint8_t *)player_right.data, NULL, NULL, player_update, player_render, NULL);
+        Entity *player = new Entity("Player", ENTITY_PLAYER, position, player_left.size, player_left.data, player_left.data, player_right.data, NULL, NULL, player_update, player_render, NULL);
         player->level = 1;
         player->health = 100;
         player->max_health = 100;

@@ -41,23 +41,6 @@ static void furi_hal_random_fill_buf(void *buffer, size_t len)
     }
 }
 
-static void change_color(uint8_t *icon, int length, uint16_t newColor)
-{
-    for (int i = 0; i < length; i += 2)
-    {
-        // Read the pixel as 16-bit big-endian
-        uint16_t pixel = ((uint16_t)icon[i] << 8) | icon[i + 1];
-
-        // If it's black, replace it
-        if (pixel == 0x0000)
-        {
-            icon[i] = (uint8_t)(newColor >> 8);       // high byte
-            icon[i + 1] = (uint8_t)(newColor & 0xFF); // low byte
-        }
-    }
-}
-
-
 // ---------------------------------------------------------------------------------
 // GameState struct
 // ---------------------------------------------------------------------------------
@@ -280,17 +263,6 @@ void player_spawn(Level *level)
     level->entity_add(player);
 
     game_state_reinit(game_state);
-
-    // Turn the cactus from black to dark green
-    change_color(cactus_10x10, 200, TFT_DARKGREEN);
-
-    // Turn the dino from black to light cyan
-    change_color(dino_20x22, 880, TFT_DARKCYAN);
-    change_color(dino_run_0_20x22, 880, TFT_DARKCYAN);
-    change_color(dino_run_1_20x22, 880, TFT_DARKCYAN);
-
-    // Turn the horizon line from black to brown
-    change_color(horizon_line_0_320x12, 7680, 0xC407);
 
     game_state->dino = ImageManager::getInstance().getImage("dino", dino_20x22, Vector(DINO_W, DINO_H));
     game_state->dino_left = ImageManager::getInstance().getImage("dino_left", dino_run_0_20x22, Vector(DINO_W, DINO_H));

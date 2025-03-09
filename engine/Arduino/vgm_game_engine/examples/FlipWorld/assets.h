@@ -4,7 +4,7 @@
 // All assets from FlipWorld game: https://github.com/jblanked/FlipWorld
 // Icons translated with: https://www.flipsocial.net/png-to-fb/
 
-extern char shadow_woods_v4[2210];
+extern const PROGMEM char shadow_woods_v4[2210];
 
 /*
     Name: icon_tree_16x16.png

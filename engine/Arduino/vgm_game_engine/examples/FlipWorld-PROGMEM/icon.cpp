@@ -80,7 +80,7 @@ static void icon_spawn(Level *level, const char *name, Vector pos)
     }
 
     // Retrieve shared Image instance
-    Image *sharedImage = ImageManager::getInstance().getImage(name, (uint8_t *)icon.data, icon.size);
+    Image *sharedImage = ImageManager::getInstance().getImage(name, icon.data, icon.size);
     if (sharedImage == nullptr)
     {
         return;
@@ -92,7 +92,7 @@ static void icon_spawn(Level *level, const char *name, Vector pos)
         ENTITY_ICON,
         pos,
         icon.size,
-        (uint8_t *)icon.data,
+        icon.data,
         NULL, // sprite_left_data
         NULL, // sprite_right_data
         NULL, // start
