@@ -150,15 +150,20 @@ bool nfc_apdu_runner_scene_running_on_event(void* context, SceneManagerEvent eve
             consumed = true;
         } else if(custom_event == NfcWorkerEventFail) {
             FURI_LOG_E("APDU_DEBUG", "操作失败事件");
-            show_error_popup(app, "Failed to run APDU commands\nCheck the log for details");
+            // 停止NFC Worker
+            nfc_worker_stop(app->worker);
+            show_error_popup(
+                app, "Failed to detect card or run APDU commands\nCheck the log for details");
             consumed = true;
         } else if(custom_event == NfcWorkerEventCardLost) {
             FURI_LOG_E("APDU_DEBUG", "卡片丢失事件");
-            app->card_lost = true;
-            show_error_popup(app, "Card was removed\nCheck the log for details");
+            // 不停止NFC Worker，而是显示等待卡片弹窗
+            show_waiting_popup(app);
             consumed = true;
         } else if(custom_event == NfcWorkerEventAborted) {
             FURI_LOG_I("APDU_DEBUG", "操作被中止事件");
+            // 停止NFC Worker
+            nfc_worker_stop(app->worker);
             show_error_popup(app, "Operation cancelled by user");
             consumed = true;
         } else if(custom_event == NfcApduRunnerCustomEventPopupClosed) {

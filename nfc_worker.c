@@ -45,24 +45,47 @@ static void
 
 // NFC轮询器回调函数
 static NfcCommand nfc_worker_poller_callback(NfcGenericEvent event, void* context) {
-    UNUSED(event);
-    UNUSED(context);
-    FURI_LOG_I(TAG, "轮询器回调被调用");
+    NfcWorker* worker = context;
 
-    // 简单地继续操作，不做特殊处理
-    return NfcCommandContinue;
-}
+    // 检查事件类型
+    if(event.protocol == NfcProtocolIso14443_4a) {
+        const Iso14443_4aPollerEvent* iso14443_4a_event = event.event_data;
 
-// 检测卡片
-static bool nfc_worker_detect_card(NfcWorker* worker) {
-    furi_assert(worker);
+        if(iso14443_4a_event->type == Iso14443_4aPollerEventTypeReady) {
+            FURI_LOG_I(TAG, "ISO14443-4A卡检测成功");
+            // 只有当脚本中指定的卡类型是ISO14443-4A时，才认为检测到了卡片
+            if(worker->script && worker->script->card_type == CardTypeIso14443_4a) {
+                worker->card_detected = true;
+                worker->callback(NfcWorkerEventCardDetected, worker->context);
+            } else {
+                FURI_LOG_I(TAG, "检测到ISO14443-4A卡，但脚本要求的是其他类型");
+            }
+        } else if(iso14443_4a_event->type == Iso14443_4aPollerEventTypeError) {
+            FURI_LOG_E(TAG, "ISO14443-4A卡检测失败，错误码: %d", iso14443_4a_event->data->error);
+        }
+    } else if(event.protocol == NfcProtocolIso14443_4b) {
+        // 处理ISO14443-4B协议事件
+        // 注意：这里假设ISO14443-4B的事件结构与ISO14443-4A类似
+        const Iso14443_4bPollerEvent* iso14443_4b_event = event.event_data;
 
-    if(!worker->poller) {
-        FURI_LOG_E(TAG, "轮询器未初始化");
-        return false;
+        if(iso14443_4b_event->type == Iso14443_4bPollerEventTypeReady) {
+            FURI_LOG_I(TAG, "ISO14443-4B卡检测成功");
+            // 只有当脚本中指定的卡类型是ISO14443-4B时，才认为检测到了卡片
+            if(worker->script && worker->script->card_type == CardTypeIso14443_4b) {
+                worker->card_detected = true;
+                worker->callback(NfcWorkerEventCardDetected, worker->context);
+            } else {
+                FURI_LOG_I(TAG, "检测到ISO14443-4B卡，但脚本要求的是其他类型");
+            }
+        } else if(iso14443_4b_event->type == Iso14443_4bPollerEventTypeError) {
+            FURI_LOG_E(TAG, "ISO14443-4B卡检测失败，错误码: %d", iso14443_4b_event->data->error);
+        }
+    } else {
+        FURI_LOG_I(TAG, "收到未知协议事件: %d", event.protocol);
     }
 
-    return nfc_poller_detect(worker->poller);
+    // 继续操作
+    return NfcCommandContinue;
 }
 
 // 执行APDU命令
@@ -76,8 +99,18 @@ static bool nfc_worker_run_apdu_command(
     furi_assert(response);
     furi_assert(response_length);
 
+    // 初始化响应指针为NULL，以防出错时能正确处理
+    *response = NULL;
+    *response_length = 0;
+
     if(!worker->poller) {
         FURI_LOG_E(TAG, "轮询器未初始化");
+        return false;
+    }
+
+    // 检查卡片是否已检测到
+    if(!worker->card_detected) {
+        FURI_LOG_E(TAG, "卡片未检测到，无法执行APDU命令");
         return false;
     }
 
@@ -117,10 +150,46 @@ static bool nfc_worker_run_apdu_command(
     // 发送APDU命令
     bool tx_success = false;
 
-    // 发送数据块
-    Iso14443_4aError error =
-        iso14443_4a_poller_send_block((Iso14443_4aPoller*)worker->poller, tx_buffer, rx_buffer);
-    tx_success = (error == Iso14443_4aErrorNone);
+    // 再次检查轮询器是否有效
+    if(!worker->poller) {
+        FURI_LOG_E(TAG, "轮询器在发送前变为无效");
+        bit_buffer_free(tx_buffer);
+        bit_buffer_free(rx_buffer);
+        return false;
+    }
+
+    // 根据卡类型使用不同的方法发送APDU命令
+    if(worker->script) {
+        switch(worker->script->card_type) {
+        case CardTypeIso14443_4a: {
+            // 发送数据块
+            Iso14443_4aError error = iso14443_4a_poller_send_block(
+                (Iso14443_4aPoller*)worker->poller, tx_buffer, rx_buffer);
+            tx_success = (error == Iso14443_4aErrorNone);
+            if(!tx_success) {
+                FURI_LOG_E(TAG, "ISO14443-4A命令执行失败，错误码: %d", error);
+            }
+            break;
+        }
+        case CardTypeIso14443_4b: {
+            // 发送数据块
+            Iso14443_4bError error = iso14443_4b_poller_send_block(
+                (Iso14443_4bPoller*)worker->poller, tx_buffer, rx_buffer);
+            tx_success = (error == Iso14443_4bErrorNone);
+            if(!tx_success) {
+                FURI_LOG_E(TAG, "ISO14443-4B命令执行失败，错误码: %d", error);
+            }
+            break;
+        }
+        default:
+            FURI_LOG_E(TAG, "不支持的卡类型: %d", worker->script->card_type);
+            tx_success = false;
+            break;
+        }
+    } else {
+        FURI_LOG_E(TAG, "脚本未初始化");
+        tx_success = false;
+    }
 
     if(tx_success) {
         // 获取响应数据
@@ -142,7 +211,7 @@ static bool nfc_worker_run_apdu_command(
         // 记录APDU命令和响应
         nfc_worker_log_apdu_data(cmd, *response, *response_length);
     } else {
-        FURI_LOG_E(TAG, "命令执行失败，错误码: %d", error);
+        FURI_LOG_E(TAG, "命令执行失败");
         *response = NULL;
         *response_length = 0;
     }
@@ -158,81 +227,100 @@ static bool nfc_worker_run_apdu_command(
 static int32_t nfc_worker_detect_thread(void* context) {
     NfcWorker* worker = context;
 
+    FURI_LOG_I(TAG, "NFC Worker线程启动");
+
+    // 根据脚本中指定的卡类型创建相应的轮询器
+    NfcProtocol protocol;
+    if(worker->script) {
+        switch(worker->script->card_type) {
+        case CardTypeIso14443_3a:
+            protocol = NfcProtocolIso14443_3a;
+            FURI_LOG_I(TAG, "使用ISO14443-3A协议");
+            break;
+        case CardTypeIso14443_3b:
+            protocol = NfcProtocolIso14443_3b;
+            FURI_LOG_I(TAG, "使用ISO14443-3B协议");
+            break;
+        case CardTypeIso14443_4a:
+            protocol = NfcProtocolIso14443_4a;
+            FURI_LOG_I(TAG, "使用ISO14443-4A协议");
+            break;
+        case CardTypeIso14443_4b:
+            protocol = NfcProtocolIso14443_4b;
+            FURI_LOG_I(TAG, "使用ISO14443-4B协议");
+            break;
+        default:
+            FURI_LOG_E(TAG, "不支持的卡类型: %d", worker->script->card_type);
+            worker->callback(NfcWorkerEventFail, worker->context);
+            return -1;
+        }
+    } else {
+        // 如果没有脚本，默认使用ISO14443-4A
+        protocol = NfcProtocolIso14443_4a;
+        FURI_LOG_I(TAG, "没有指定脚本，默认使用ISO14443-4A协议");
+    }
+
     // 创建NFC轮询器
-    worker->poller = nfc_poller_alloc(worker->nfc, NfcProtocolIso14443_4a);
+    worker->poller = nfc_poller_alloc(worker->nfc, protocol);
     if(!worker->poller) {
-        FURI_LOG_E(TAG, "分配ISO14443-4A轮询器失败");
+        FURI_LOG_E(TAG, "分配轮询器失败，协议: %d", protocol);
         worker->callback(NfcWorkerEventFail, worker->context);
         return -1;
     }
+
+    FURI_LOG_I(TAG, "NFC轮询器分配成功");
+
+    // 重置卡片检测标志
+    worker->card_detected = false;
 
     // 启动轮询器，使用回调
     nfc_poller_start(worker->poller, nfc_worker_poller_callback, worker);
 
-    // 等待轮询器初始化完成
-    furi_delay_ms(100);
+    FURI_LOG_I(TAG, "NFC轮询器启动成功");
 
     // 等待卡片，持续检测直到找到卡片或用户取消
     FURI_LOG_I(TAG, "等待卡片");
-    worker->card_detected = false;
 
-    // 首次检测
-    for(int i = 0; i < 5 && worker->running; i++) {
-        if(nfc_worker_detect_card(worker)) {
-            worker->card_detected = true;
-            FURI_LOG_I(TAG, "卡片检测成功");
-            worker->callback(NfcWorkerEventCardDetected, worker->context);
-            break;
+    // 持续等待，直到检测到卡片或用户取消
+    uint32_t attempt = 0;
+    while(!worker->card_detected && worker->running) {
+        attempt++;
+        if(attempt % 5 == 0) {
+            FURI_LOG_I(TAG, "等待卡片中... (%lu秒)", attempt / 2);
+            // 通知用户放置卡片
+            worker->callback(NfcWorkerEventCardLost, worker->context);
         }
 
-        furi_delay_ms(200);
-    }
+        // 使用延迟来等待卡片
+        furi_delay_ms(500);
 
-    // 如果初始检测未找到卡片，持续检测
-    if(!worker->card_detected && worker->running) {
-        FURI_LOG_I(TAG, "初始检测未找到卡片，开始持续检测");
-
-        // 持续检测，每200毫秒检测一次，直到找到卡片或超时
-        const uint32_t max_attempts = 150; // 30秒超时 (150 * 200ms = 30s)
-        for(uint32_t i = 0; i < max_attempts && worker->running; i++) {
-            if(nfc_worker_detect_card(worker)) {
-                worker->card_detected = true;
-                FURI_LOG_I(TAG, "持续检测成功找到卡片");
-                worker->callback(NfcWorkerEventCardDetected, worker->context);
-                break;
-            }
-
-            furi_delay_ms(200);
-        }
-    }
-
-    if(!worker->card_detected) {
+        // 检查是否应该退出
         if(!worker->running) {
             FURI_LOG_I(TAG, "用户取消操作");
             worker->callback(NfcWorkerEventAborted, worker->context);
-        } else {
-            FURI_LOG_E(TAG, "未检测到ISO14443-4A卡");
-            worker->callback(NfcWorkerEventFail, worker->context);
+
+            // 停止轮询器
+            if(worker->poller) {
+                nfc_poller_stop(worker->poller);
+                nfc_poller_free(worker->poller);
+                worker->poller = NULL;
+            }
+
+            return -1;
         }
-
-        // 停止轮询器
-        nfc_poller_stop(worker->poller);
-        nfc_poller_free(worker->poller);
-        worker->poller = NULL;
-
-        return -1;
     }
 
-    // 检查协议
-    NfcProtocol protocol = nfc_poller_get_protocol(worker->poller);
-    if(protocol != NfcProtocolIso14443_4a) {
-        FURI_LOG_E(TAG, "无效的卡协议: %d", protocol);
+    // 如果没有检测到卡片，通知用户
+    if(!worker->card_detected) {
+        FURI_LOG_E(TAG, "未检测到ISO14443-4A卡");
         worker->callback(NfcWorkerEventFail, worker->context);
 
         // 停止轮询器
-        nfc_poller_stop(worker->poller);
-        nfc_poller_free(worker->poller);
-        worker->poller = NULL;
+        if(worker->poller) {
+            nfc_poller_stop(worker->poller);
+            nfc_poller_free(worker->poller);
+            worker->poller = NULL;
+        }
 
         return -1;
     }
@@ -242,15 +330,24 @@ static int32_t nfc_worker_detect_thread(void* context) {
         worker->callback(NfcWorkerEventSuccess, worker->context);
 
         // 停止轮询器
-        nfc_poller_stop(worker->poller);
-        nfc_poller_free(worker->poller);
-        worker->poller = NULL;
+        if(worker->poller) {
+            nfc_poller_stop(worker->poller);
+            nfc_poller_free(worker->poller);
+            worker->poller = NULL;
+        }
 
         return 0;
     }
 
     // 如果需要执行APDU命令，继续执行
-    if(worker->state == NfcWorkerStateRunning) {
+    if(worker->state == NfcWorkerStateRunning && worker->card_detected) {
+        // 确保轮询器仍然有效
+        if(!worker->poller) {
+            FURI_LOG_E(TAG, "轮询器无效，无法执行APDU命令");
+            worker->callback(NfcWorkerEventFail, worker->context);
+            return -1;
+        }
+
         // 分配响应内存
         worker->responses = malloc(sizeof(NfcApduResponse) * worker->script->command_count);
         if(!worker->responses) {
@@ -258,9 +355,11 @@ static int32_t nfc_worker_detect_thread(void* context) {
             worker->callback(NfcWorkerEventFail, worker->context);
 
             // 停止轮询器
-            nfc_poller_stop(worker->poller);
-            nfc_poller_free(worker->poller);
-            worker->poller = NULL;
+            if(worker->poller) {
+                nfc_poller_stop(worker->poller);
+                nfc_poller_free(worker->poller);
+                worker->poller = NULL;
+            }
 
             return -1;
         }
@@ -272,11 +371,9 @@ static int32_t nfc_worker_detect_thread(void* context) {
         // 执行每个APDU命令
         FURI_LOG_I(TAG, "开始执行APDU命令, 命令数: %lu", worker->script->command_count);
         for(uint32_t i = 0; i < worker->script->command_count && worker->running; i++) {
-            // 在执行命令前再次检查卡片是否存在
-            if(!nfc_worker_detect_card(worker)) {
-                FURI_LOG_E(TAG, "执行命令前卡片已丢失");
-                worker->card_lost = true;
-                worker->callback(NfcWorkerEventCardLost, worker->context);
+            // 检查轮询器是否仍然有效
+            if(!worker->poller) {
+                FURI_LOG_E(TAG, "轮询器无效，无法继续执行APDU命令");
                 success = false;
                 break;
             }
@@ -302,11 +399,10 @@ static int32_t nfc_worker_detect_thread(void* context) {
                 worker->responses[worker->response_count].response = NULL;
                 worker->responses[worker->response_count].response_length = 0;
 
-                // 检查卡片是否还在
-                if(!nfc_worker_detect_card(worker)) {
-                    FURI_LOG_E(TAG, "卡片已移除或通信错误");
-                    worker->card_lost = true;
-                    worker->callback(NfcWorkerEventCardLost, worker->context);
+                // 检查是否应该退出
+                if(!worker->running) {
+                    FURI_LOG_I(TAG, "用户取消操作");
+                    worker->callback(NfcWorkerEventAborted, worker->context);
                     success = false;
                     break;
                 }
@@ -316,9 +412,11 @@ static int32_t nfc_worker_detect_thread(void* context) {
         }
 
         // 停止轮询器
-        nfc_poller_stop(worker->poller);
-        nfc_poller_free(worker->poller);
-        worker->poller = NULL;
+        if(worker->poller) {
+            nfc_poller_stop(worker->poller);
+            nfc_poller_free(worker->poller);
+            worker->poller = NULL;
+        }
 
         // 返回结果
         if(!worker->running) {
@@ -405,21 +503,34 @@ void nfc_worker_start(
 void nfc_worker_stop(NfcWorker* worker) {
     furi_assert(worker);
 
-    if(worker->running) {
-        worker->running = false;
-
-        if(worker->thread) {
-            furi_thread_join(worker->thread);
-            furi_thread_free(worker->thread);
-            worker->thread = NULL;
-        }
-
-        if(worker->poller) {
-            nfc_poller_stop(worker->poller);
-            nfc_poller_free(worker->poller);
-            worker->poller = NULL;
-        }
+    if(!worker->running) {
+        // 已经停止，无需再次停止
+        return;
     }
+
+    // 设置运行标志为false，通知线程退出
+    worker->running = false;
+
+    // 等待线程退出
+    if(worker->thread) {
+        furi_thread_join(worker->thread);
+        furi_thread_free(worker->thread);
+        worker->thread = NULL;
+    }
+
+    // 确保轮询器被正确释放
+    if(worker->poller) {
+        nfc_poller_stop(worker->poller);
+        nfc_poller_free(worker->poller);
+        worker->poller = NULL;
+    }
+
+    // 重置状态
+    worker->card_detected = false;
+    worker->card_lost = false;
+    worker->state = NfcWorkerStateReady;
+    worker->callback = NULL;
+    worker->context = NULL;
 }
 
 // 检查NFC Worker是否正在运行
