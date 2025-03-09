@@ -1,5 +1,5 @@
 ## VGM-Library
-Collection of files for the Video Game Module.
+Collection of files for the Video Game Module. Video tutorial: https://www.youtube.com/watch?v=eJDsqlTX6Gk
 ### Engine
 The VGM Engine is not affiliated with Flipper Devices and utilizes the [PicoDVI](https://github.com/Wren6991/PicoDVI) and [pico-game-engine](https://github.com/jblanked/pico-game-engine) libraries. Developers can create their own games or recreate their Flipper games with the advantages of increased memory, colorful graphics, and video output to their TV or monitor.
 ### Screensavers
