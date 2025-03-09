@@ -96,22 +96,79 @@ namespace VGMGameEngine
         if (srcData == nullptr)
             return false;
         this->size = newSize;
-        uint32_t numPixels = size.x * size.y;
-        buffer = new uint16_t[numPixels];
-        if (!buffer)
-            return false;
 
-        // Convert uint8_t array to uint16_t array (little endian)
-        for (uint32_t i = 0; i < numPixels; i++)
+        if (!this->is_8bit)
         {
-            buffer[i] = ((uint16_t)srcData[2 * i + 1] << 8) | srcData[2 * i];
+            uint32_t numPixels = size.x * size.y;
+            buffer = new uint16_t[numPixels];
+            if (!buffer)
+                return false;
+
+            // Convert uint8_t array to uint16_t array (little endian)
+            for (uint32_t i = 0; i < numPixels; i++)
+            {
+                buffer[i] = ((uint16_t)srcData[2 * i + 1] << 8) | srcData[2 * i];
+            }
+
+            // write in big-endian
+            for (uint32_t i = 0; i < numPixels; i++)
+            {
+                uint16_t pixel = buffer[i];
+                buffer[i] = (pixel >> 8) | (pixel << 8);
+            }
+        }
+        else
+        {
+            // 8-bit image: just copy the data directly into the data buffer.
+            // then we'll use the data to draw bitmaps in level.cpp
+            uint32_t numPixels = size.x * size.y;
+            data = new uint8_t[numPixels];
+            if (!data)
+                return false;
+            // Copy the data from the source to the new buffer.
+            memcpy(data, srcData, numPixels);
         }
 
-        // write in big-endian
-        for (uint32_t i = 0; i < numPixels; i++)
+        return true;
+    }
+
+    // from_byte_array: create image buffer from an external byte array.
+    bool Image::from_byte_array(const uint8_t *srcData, Vector newSize)
+    {
+        if (srcData == nullptr)
+            return false;
+        this->size = newSize;
+
+        if (!this->is_8bit)
         {
-            uint16_t pixel = buffer[i];
-            buffer[i] = (pixel >> 8) | (pixel << 8);
+            uint32_t numPixels = size.x * size.y;
+            buffer = new uint16_t[numPixels];
+            if (!buffer)
+                return false;
+
+            // Convert uint8_t array to uint16_t array (little endian)
+            for (uint32_t i = 0; i < numPixels; i++)
+            {
+                buffer[i] = ((uint16_t)srcData[2 * i + 1] << 8) | srcData[2 * i];
+            }
+
+            // write in big-endian
+            for (uint32_t i = 0; i < numPixels; i++)
+            {
+                uint16_t pixel = buffer[i];
+                buffer[i] = (pixel >> 8) | (pixel << 8);
+            }
+        }
+        else
+        {
+            // 8-bit image: just copy the data directly into the data buffer.
+            // then we'll use the data to draw bitmaps in level.cpp
+            uint32_t numPixels = size.x * size.y;
+            data = new uint8_t[numPixels];
+            if (!data)
+                return false;
+            // Copy the data from the source to the new buffer.
+            memcpy(data, srcData, numPixels);
         }
 
         return true;

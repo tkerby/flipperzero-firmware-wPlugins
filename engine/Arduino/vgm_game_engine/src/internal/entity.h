@@ -73,6 +73,8 @@ namespace VGMGameEngine
         float xp;                   // Experience points of the entity
         float health_regen;         // player health regeneration rate per second/frame
         float elapsed_health_regen; // time elapsed since last health regeneration
+        //
+        bool is_8bit = false; // Flag to indicate if the entity uses 8-bit graphics
 
         Entity(
             const char *name,                                      // The name of the entity.
@@ -88,18 +90,22 @@ namespace VGMGameEngine
             void (*collision)(Entity *, Entity *, Game *) = NULL); // The collision function of the entity.
 
         Entity(
-            const char *name,                                      // The name of the entity.
-            EntityType type,                                       // The type of the entity.
-            Vector position,                                       // The position of the entity.
-            Vector size,                                           // The size of the entity.
-            uint8_t *sprite_data,                                  // The sprite of the entity.
-            uint8_t *sprite_left_data = NULL,                      // The sprite to switch to when facing left.
-            uint8_t *sprite_right_data = NULL,                     // The sprite to switch to when facing right.
-            void (*start)(Entity *, Game *) = NULL,                // The start function of the entity.
-            void (*stop)(Entity *, Game *) = NULL,                 // The stop function of the entity.
-            void (*update)(Entity *, Game *) = NULL,               // The update function of the entity.
-            void (*render)(Entity *, Draw *, Game *) = NULL,       // The render function of the entity.
-            void (*collision)(Entity *, Entity *, Game *) = NULL); // The collision function of the entity.
+            const char *name,                                     // The name of the entity.
+            EntityType type,                                      // The type of the entity.
+            Vector position,                                      // The position of the entity.
+            Vector size,                                          // The size of the entity.
+            const uint8_t *sprite_data,                           // The sprite of the entity.
+            const uint8_t *sprite_left_data = NULL,               // The sprite to switch to when facing left.
+            const uint8_t *sprite_right_data = NULL,              // The sprite to switch to when facing right.
+            void (*start)(Entity *, Game *) = NULL,               // The start function of the entity.
+            void (*stop)(Entity *, Game *) = NULL,                // The stop function of the entity.
+            void (*update)(Entity *, Game *) = NULL,              // The update function of the entity.
+            void (*render)(Entity *, Draw *, Game *) = NULL,      // The render function of the entity.
+            void (*collision)(Entity *, Entity *, Game *) = NULL, // The collision function of the entity.
+            bool is_8bit = false                                  // Flag to indicate if the entity uses 8-bit graphics
+        );
+
+        ~Entity(); // Destructor
 
         void collision(Entity *other, Game *game); // Handles the collision with another entity.
         Vector position_get();                     // Gets the position of the entity.

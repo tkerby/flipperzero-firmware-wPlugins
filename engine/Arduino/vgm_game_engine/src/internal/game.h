@@ -21,7 +21,8 @@ namespace VGMGameEngine
             void (*start)() = NULL,
             void (*stop)() = NULL,
             uint16_t fg_color = 0xFFFF,
-            uint16_t bg_color = 0x0000);
+            uint16_t bg_color = 0x0000,
+            bool use_8bit = false);
         ~Game();
         // Clamp a value between a lower and upper bound.
         void clamp(float &value, float min, float max);
@@ -61,6 +62,7 @@ namespace VGMGameEngine
         uint16_t bg_color; // Background color
         uint16_t fg_color; // Foreground color
 
+        bool is_8bit = false; // Flag to indicate if the game uses 8-bit graphics
     private:
         void (*_start)();
         void (*_stop)();

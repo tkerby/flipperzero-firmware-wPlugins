@@ -161,27 +161,50 @@ namespace VGMGameEngine
     // Render all active entities
     void Level::render(Game *game)
     {
+        if (game->is_8bit)
+        {
+            // clear screen
+            game->draw->clear(Vector(0, 0), game->size, game->bg_color);
+        }
+
         for (int i = 0; i < entity_count; i++)
         {
             Entity *ent = entities[i];
             if (ent != nullptr && ent->is_active)
             {
-                float old_screen_x = ent->old_position.x - game->old_pos.x;
-                float old_screen_y = ent->old_position.y - game->old_pos.y;
-
-                if (!(old_screen_x + ent->size.x < 0 || old_screen_x > game->size.x ||
-                      old_screen_y + ent->size.y < 0 || old_screen_y > game->size.y))
+                if (!game->is_8bit)
                 {
-                    game->draw->clear(Vector(old_screen_x, old_screen_y), Vector(ent->size.x, ent->size.y), game->bg_color);
+                    float old_screen_x = ent->old_position.x - game->old_pos.x;
+                    float old_screen_y = ent->old_position.y - game->old_pos.y;
+
+                    if (!(old_screen_x + ent->size.x < 0 || old_screen_x > game->size.x ||
+                          old_screen_y + ent->size.y < 0 || old_screen_y > game->size.y))
+                    {
+                        game->draw->clear(Vector(old_screen_x, old_screen_y), Vector(ent->size.x, ent->size.y), game->bg_color);
+                    }
                 }
 
                 ent->render(game->draw, game);
 
-                if (ent->sprite != nullptr)
+                if (!game->is_8bit)
                 {
-                    game->draw->image(Vector(ent->position.x - game->pos.x, ent->position.y - game->pos.y), ent->sprite);
+                    if (ent->sprite != nullptr)
+                    {
+                        game->draw->image(Vector(ent->position.x - game->pos.x, ent->position.y - game->pos.y), ent->sprite);
+                    }
+                }
+                else
+                {
+                    // draw 8bit sprite
+                    game->draw->image(Vector(ent->position.x - game->pos.x, ent->position.y - game->pos.y), ent->sprite->data, ent->sprite->size);
                 }
             }
+        }
+
+        if (game->is_8bit)
+        {
+            // send newly drawn pixels to the display
+            game->draw->display->swap();
         }
     }
 

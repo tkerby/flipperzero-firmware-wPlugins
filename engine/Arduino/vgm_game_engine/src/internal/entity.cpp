@@ -66,25 +66,26 @@ namespace VGMGameEngine
         EntityType type,
         Vector position,
         Vector size,
-        uint8_t *sprite_data,
-        uint8_t *sprite_left_data,
-        uint8_t *sprite_right_data,
+        const uint8_t *sprite_data,
+        const uint8_t *sprite_left_data,
+        const uint8_t *sprite_right_data,
         void (*start)(Entity *, Game *),
         void (*stop)(Entity *, Game *),
         void (*update)(Entity *, Game *),
         void (*render)(Entity *, Draw *, Game *),
-        void (*collision)(Entity *, Entity *, Game *))
+        void (*collision)(Entity *, Entity *, Game *),
+        bool is_8bit)
     {
         this->name = name;
         this->type = type;
         this->position = position;
         this->old_position = position;
         this->size = size;
-        this->sprite = new Image();
+        this->sprite = new Image(is_8bit);
         this->sprite->from_byte_array(sprite_data, size);
         if (sprite_left_data != NULL)
         {
-            this->sprite_left = new Image();
+            this->sprite_left = new Image(is_8bit);
             this->sprite_left->from_byte_array(sprite_left_data, size);
         }
         else
@@ -93,7 +94,7 @@ namespace VGMGameEngine
         }
         if (sprite_right_data != NULL)
         {
-            this->sprite_right = new Image();
+            this->sprite_right = new Image(is_8bit);
             this->sprite_right->from_byte_array(sprite_right_data, size);
         }
         else
@@ -125,6 +126,25 @@ namespace VGMGameEngine
         this->xp = 0;
         this->health_regen = 0;
         this->elapsed_health_regen = 0;
+    }
+
+    Entity::~Entity()
+    {
+        if (this->sprite != NULL)
+        {
+            delete this->sprite;
+            this->sprite = NULL;
+        }
+        if (this->sprite_left != NULL)
+        {
+            delete this->sprite_left;
+            this->sprite_left = NULL;
+        }
+        if (this->sprite_right != NULL)
+        {
+            delete this->sprite_right;
+            this->sprite_right = NULL;
+        }
     }
 
     void Entity::collision(Entity *other, Game *game)
