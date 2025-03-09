@@ -14,64 +14,55 @@ using namespace std;
 
 // Inspired by https://github.com/flipperdevices/flipperzero-firmware/blob/dev/applications/main/subghz/views/receiver.c
 
+struct AdvSubMenuViewModel {
+    void* uiVIew;
+};
+
 class AdvancedSubMenuUiView : public UiView {
 private:
-    Submenu* menu;
+    View* view = NULL;
+
+    uint8_t rssiLevel = 0;
     uint32_t elementCount = 0;
-
-    static void executeCallback(void* context, uint32_t index) {
-        if(context == NULL) {
-            FURI_LOG_W(LOG_TAG, "SubMenuUiView element %d has NULL handler!", (int)index);
-            return;
-        }
-
-        HandlerContext<function<void(uint32_t)>>* handlerContext = (HandlerContext<function<void(uint32_t)>>*)context;
-        handlerContext->GetHandler()(index);
-    }
 
 public:
     AdvancedSubMenuUiView() {
-        menu = submenu_alloc();
-    }
+        view = view_alloc();
+        view_set_context(view, this);
 
-    AdvancedSubMenuUiView(const char* header) : SubMenuUiView() {
-        SetHeader(header);
-    }
+        view_set_draw_callback(view, drawCallback);
+        view_set_input_callback(view, inputCallback);
+        view_set_enter_callback(view, enterCallback);
+        view_set_exit_callback(view, exitCallback);
 
-    void SetHeader(const char* header) {
-        submenu_set_header(menu, header);
-    }
-
-    void AddItem(const char* label, function<void(uint32_t)> handler) {
-        AddItemAt(elementCount, label, handler);
-    }
-
-    void AddItemAt(uint32_t index, const char* label, function<void(uint32_t)> handler) {
-        submenu_add_item(menu, label, index, executeCallback, new HandlerContext(handler));
-        elementCount++;
-    }
-
-    void SetItemLabel(uint32_t index, const char* label) {
-        if(index >= elementCount) {
-            FURI_LOG_W(LOG_TAG, "Cannot modify name of non-existing item %d to %s", (int)index, label);
-        }
-        submenu_change_item_label(menu, index, label);
+        view_allocate_model(view, ViewModelTypeLockFree, sizeof(AdvancedSubMenuUiView*));
+        with_view_model_cpp(view, AdvSubMenuViewModel, model, { model.uiVIew = this; }, false);
     }
 
     View* GetNativeView() {
-        return submenu_get_view(menu);
-    }
-
-    uint32_t GetCurrentIndex() {
-        return submenu_get_selected_item(menu);
+        return view;
     }
 
     ~AdvancedSubMenuUiView() {
-        if(menu != NULL) {
+        if(view != NULL) {
             OnDestory();
-            submenu_free(menu);
-            menu = NULL;
+            view_free(view);
+            view = NULL;
         }
+    }
+
+private:
+    static void drawCallback(Canvas* canvas, void* model) {
+        AdvancedSubMenuUiView* uiView = ((AdvSubMenuViewModel*)model)->uiVIew;
+    }
+
+    static bool inputCallback(InputEvent* event, void* context) {
+    }
+
+    static void enterCallback(void* context) {
+    }
+
+    static void exitCallback(void* context) {
     }
 };
 
