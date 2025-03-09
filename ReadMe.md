@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0307-1535-0.420.0-f691ad3](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0309-1930-0.420.0-0ef732f](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-07 15:35 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-07 15:35 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-09 19:30 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-09 19:30 EST`
 - [NFC Clipper updates (By Davis-P0)](https://github.com/flipperdevices/flipperzero-firmware/issues/4138)
 - OFW: PR: [Bad USB: Full USB/BLE parameter customization, UI improvements, and more #4136 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4136)
 - OFW: PR: [NFC: add nfc apdu cli command back #4133 (By leommxj)](https://github.com/flipperdevices/flipperzero-firmware/pull/4133)
