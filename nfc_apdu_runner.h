@@ -82,6 +82,30 @@ typedef struct {
     uint16_t response_length;
 } NfcApduResponse;
 
+// NFC Worker状态枚举
+typedef enum {
+    NfcWorkerStateReady, // 准备就绪
+    NfcWorkerStateDetecting, // 正在检测卡片
+    NfcWorkerStateRunning, // 正在执行APDU命令
+    NfcWorkerStateStop // 停止
+} NfcWorkerState;
+
+// NFC Worker事件枚举
+typedef enum {
+    NfcWorkerEventSuccess, // 操作成功
+    NfcWorkerEventFail, // 操作失败
+    NfcWorkerEventCardDetected, // 检测到卡片
+    NfcWorkerEventCardLost, // 卡片丢失
+    NfcWorkerEventAborted, // 操作被中止
+    NfcWorkerEventStop, // 停止事件
+} NfcWorkerEvent;
+
+// NFC Worker回调函数类型
+typedef void (*NfcWorkerCallback)(NfcWorkerEvent event, void* context);
+
+// NFC Worker结构体
+typedef struct NfcWorker NfcWorker;
+
 // 应用程序状态结构
 typedef struct {
     // GUI
@@ -98,6 +122,7 @@ typedef struct {
 
     // NFC
     Nfc* nfc;
+    NfcWorker* worker; // 添加NFC Worker
 
     // 文件
     Storage* storage;
@@ -146,3 +171,19 @@ void free_logs(NfcApduRunner* app);
 
 // 应用程序入口点
 int32_t nfc_apdu_runner_app(void* p);
+
+// NFC Worker函数声明
+NfcWorker* nfc_worker_alloc(Nfc* nfc);
+void nfc_worker_free(NfcWorker* worker);
+void nfc_worker_start(
+    NfcWorker* worker,
+    NfcWorkerState state,
+    NfcApduScript* script,
+    NfcWorkerCallback callback,
+    void* context);
+void nfc_worker_stop(NfcWorker* worker);
+bool nfc_worker_is_running(NfcWorker* worker);
+void nfc_worker_get_responses(
+    NfcWorker* worker,
+    NfcApduResponse** out_responses,
+    uint32_t* out_response_count);

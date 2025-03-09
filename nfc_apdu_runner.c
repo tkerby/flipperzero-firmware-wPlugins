@@ -885,6 +885,13 @@ static NfcApduRunner* nfc_apdu_runner_alloc() {
         return NULL;
     }
 
+    // 分配NFC Worker
+    app->worker = nfc_worker_alloc(app->nfc);
+    if(!app->worker) {
+        nfc_apdu_runner_free(app);
+        return NULL;
+    }
+
     // 分配存储资源
     app->storage = furi_record_open(RECORD_STORAGE);
     if(!app->storage) {
@@ -981,6 +988,12 @@ static void nfc_apdu_runner_free(NfcApduRunner* app) {
     if(app->nfc) {
         nfc_free(app->nfc);
         app->nfc = NULL;
+    }
+
+    // 释放NFC Worker
+    if(app->worker) {
+        nfc_worker_free(app->worker);
+        app->worker = NULL;
     }
 
     // 释放存储资源
