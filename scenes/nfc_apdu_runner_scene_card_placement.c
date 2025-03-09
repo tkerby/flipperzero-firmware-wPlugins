@@ -9,11 +9,7 @@ static void nfc_apdu_runner_scene_card_placement_widget_callback(
     void* context) {
     NfcApduRunner* app = context;
     if(type == InputTypeShort) {
-        if(result == GuiButtonTypeLeft) {
-            scene_manager_previous_scene(app->scene_manager);
-        } else if(result == GuiButtonTypeRight) {
-            scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneRunning);
-        }
+        view_dispatcher_send_custom_event(app->view_dispatcher, result);
     }
 }
 
@@ -48,9 +44,22 @@ void nfc_apdu_runner_scene_card_placement_on_enter(void* context) {
 
 // 卡片放置场景事件回调
 bool nfc_apdu_runner_scene_card_placement_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
-    return false;
+    NfcApduRunner* app = context;
+    bool consumed = false;
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        if(event.event == GuiButtonTypeLeft) {
+            // 返回上一个场景
+            scene_manager_previous_scene(app->scene_manager);
+            consumed = true;
+        } else if(event.event == GuiButtonTypeRight) {
+            // 进入运行场景
+            scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneRunning);
+            consumed = true;
+        }
+    }
+
+    return consumed;
 }
 
 // 卡片放置场景退出回调

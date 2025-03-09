@@ -10,14 +10,20 @@ void nfc_apdu_runner_scene_file_select_on_enter(void* context) {
 
     dialog_file_browser_set_basic_options(&browser_options, FILE_EXTENSION, NULL);
     browser_options.base_path = APP_DIRECTORY_PATH;
+    browser_options.hide_ext = false;
 
     // 确保目录存在
     Storage* storage = app->storage;
-    if(!storage_simply_mkdir(storage, APP_DIRECTORY_PATH)) {
-        dialog_message_show_storage_error(app->dialogs, "Cannot create\napp folder");
-        scene_manager_previous_scene(app->scene_manager);
-        return;
+    if(!storage_dir_exists(storage, APP_DIRECTORY_PATH)) {
+        if(!storage_simply_mkdir(storage, APP_DIRECTORY_PATH)) {
+            dialog_message_show_storage_error(app->dialogs, "Cannot create\napp folder");
+            scene_manager_previous_scene(app->scene_manager);
+            return;
+        }
     }
+
+    // 设置初始路径为APP_DIRECTORY_PATH
+    furi_string_set(app->file_path, APP_DIRECTORY_PATH);
 
     // 显示文件浏览器
     bool success =
