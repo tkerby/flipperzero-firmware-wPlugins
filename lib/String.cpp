@@ -19,6 +19,10 @@ public:
         va_end(args);
     }
 
+    FuriString* furiString() {
+        return string;
+    }
+
     const char* cstr() {
         return furi_string_get_cstr(string);
     }
@@ -34,6 +38,10 @@ public:
         va_end(args);
 
         return cstr();
+    }
+
+    void Reset() {
+        furi_string_reset(string);
     }
 
     ~String() {

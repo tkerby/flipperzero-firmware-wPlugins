@@ -9,8 +9,6 @@
 
 #include "ScanStationsScreen.cpp"
 
-#include "lib/ui/view/AdvancedSubMenuUiView.cpp"
-
 class MainMenuScreen {
 private:
     SubMenuUiView* menuView;
@@ -35,9 +33,6 @@ private:
 
     void stationDatabasePressed(uint32_t index) {
         UNUSED(index);
-        AdvancedSubMenuUiView* uiView = new AdvancedSubMenuUiView("Receiving...");
-        uiView->SetLeftButton("Config");
-        UiManager::GetInstance()->PushView(uiView);
     }
 
     void aboutPressed(uint32_t index) {

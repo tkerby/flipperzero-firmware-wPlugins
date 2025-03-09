@@ -22,7 +22,7 @@ public:
         case DESYNC:
             return "DESYNC";
         case TURN_OFF_ALL:
-            return "ALL_MUTE";
+            return "ALL_OFF";
         }
         return "";
     }

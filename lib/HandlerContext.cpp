@@ -4,6 +4,7 @@
 #define HANDLER(handlerMethod)      bind(handlerMethod, this)
 #define HANDLER_1ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1)
 #define HANDLER_2ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1, placeholders::_2)
+#define HANDLER_3ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1, placeholders::_2, placeholders::_3)
 
 template <class T>
 class HandlerContext {
