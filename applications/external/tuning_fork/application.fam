@@ -9,5 +9,5 @@ App(
     fap_author="besya & (Fixes by Willy-JL)",
     fap_weburl="https://github.com/besya/flipperzero-tuning-fork",
     fap_version="2.1",
-    fap_description="Tuning fork for tuning musical instruments",
+    fap_description="Tuning fork for tuning musical instruments and more",
 )
