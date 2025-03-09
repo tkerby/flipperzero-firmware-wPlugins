@@ -75,6 +75,7 @@ private:
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
         PagerAction action = decoder->GetAction(pagerData->data);
+
         return string->format(
             "%sx%d %s%06X %d/%d %s:%d",
             pagerData->edited ? "*" : "",

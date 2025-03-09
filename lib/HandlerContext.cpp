@@ -1,10 +1,6 @@
 #ifndef _HANDLER_CONTEXT_CLASS_
 #define _HANDLER_CONTEXT_CLASS_
 
-#include <functional>
-
-using namespace std;
-
 #define HANDLER(handlerMethod)      bind(handlerMethod, this)
 #define HANDLER_1ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1)
 #define HANDLER_2ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1, placeholders::_2)
@@ -21,6 +17,21 @@ public:
 
     T GetHandler() {
         return handler;
+    }
+};
+
+template <class T>
+class HandlerContextExt : public HandlerContext<T> {
+private:
+    void* extContext;
+
+public:
+    HandlerContextExt(T handler, void* extContext) : HandlerContext<T>(handler) {
+        this->extContext = extContext;
+    }
+
+    void* GetExtContext() {
+        return extContext;
     }
 };
 

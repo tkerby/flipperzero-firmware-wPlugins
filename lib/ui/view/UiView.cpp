@@ -15,6 +15,11 @@ private:
     function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
     function<void()> onReturnToView = HANDLER(&UiView::doNothing);
 
+    static bool onInput(InputEvent* input, void* context) {
+        auto handlerContext = (HandlerContext<function<bool(InputEvent*)>>*)context;
+        return handlerContext->GetHandler()(input);
+    }
+
     void doNothing() {
     }
 
@@ -29,6 +34,11 @@ public:
 
     void SetOnReturnToViewHandler(function<void()> handler) {
         onReturnToView = handler;
+    }
+
+    void SetInputHandler(function<bool(InputEvent*)> handler) {
+        view_set_context(GetNativeView(), new HandlerContext(handler));
+        view_set_input_callback(GetNativeView(), onInput);
     }
 
     void OnReturn() {
