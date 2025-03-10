@@ -7,7 +7,6 @@
 
 #include "UiView.cpp"
 #include "lib/String.cpp"
-#include "lib/HandlerContext.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_ADV_SUBMENU"
@@ -19,11 +18,11 @@ using namespace std;
 #define FRAME_HEIGHT    12
 #define ITEMS_ON_SCREEN 4
 
-struct AdvSubMenuViewModel {
+struct ColumnOrientedListViewModel {
     void* uiVIew;
 };
 
-class AdvancedColumnListUiView : public UiView {
+class ColumnOrientedListUiView : public UiView {
 private:
     View* view = NULL;
     const char* noElementsCapton = NULL;
@@ -48,7 +47,7 @@ private:
     function<void(int, int, String* name)> getColumnElementName;
 
 public:
-    AdvancedColumnListUiView(
+    ColumnOrientedListUiView(
         int8_t* columnOffsets,
         int8_t columnCount,
         function<void(int, int, String* name)> columnElementNameGetter
@@ -65,8 +64,8 @@ public:
         view_set_enter_callback(view, enterCallback);
         view_set_exit_callback(view, exitCallback);
 
-        view_allocate_model(view, ViewModelTypeLockFree, sizeof(AdvancedColumnListUiView*));
-        with_view_model_cpp(view, AdvSubMenuViewModel*, model, model->uiVIew = this;, false);
+        view_allocate_model(view, ViewModelTypeLockFree, sizeof(ColumnOrientedListUiView*));
+        with_view_model_cpp(view, ColumnOrientedListViewModel*, model, model->uiVIew = this;, false);
     }
 
     void SetNoElementCaption(const char* noElementsCapton) {
@@ -111,7 +110,7 @@ public:
         return view;
     }
 
-    ~AdvancedColumnListUiView() {
+    ~ColumnOrientedListUiView() {
         if(view != NULL) {
             OnDestory();
             view_free_model(view);
@@ -254,12 +253,12 @@ private:
     }
 
     static void drawCallback(Canvas* canvas, void* model) {
-        AdvancedColumnListUiView* uiView = (AdvancedColumnListUiView*)((AdvSubMenuViewModel*)model)->uiVIew;
+        ColumnOrientedListUiView* uiView = (ColumnOrientedListUiView*)((ColumnOrientedListViewModel*)model)->uiVIew;
         uiView->draw(canvas);
     }
 
     static bool inputCallback(InputEvent* event, void* context) {
-        AdvancedColumnListUiView* uiView = (AdvancedColumnListUiView*)context;
+        ColumnOrientedListUiView* uiView = (ColumnOrientedListUiView*)context;
         if(uiView->input(event)) {
             uiView->Refresh();
             return true;

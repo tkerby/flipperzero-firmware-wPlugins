@@ -1,7 +1,8 @@
 #ifndef _SCAN_STATIONS_SCREEN_CLASS_
 #define _SCAN_STATIONS_SCREEN_CLASS_
 
-#include "lib/ui/view/AdvancedColumnListUiView.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
+#include "lib/ui/view/ColumnOrientedListUiView.cpp"
 
 #include "PagerOptionsScreen.cpp"
 
@@ -10,7 +11,7 @@
 #include "app/AppNotifications.cpp"
 #include "app/pager/PagerReceiver.cpp"
 
-#define DEBUG false
+#define DEBUG true
 
 static int8_t stationScreenColumnOffsets[]{
     3, // hex
@@ -37,7 +38,7 @@ static Align stationScreenColumnAlignments[]{
 
 class ScanStationsScreen {
 private:
-    AdvancedColumnListUiView* menuView;
+    ColumnOrientedListUiView* menuView;
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
 
@@ -45,7 +46,7 @@ public:
     ScanStationsScreen() {
         pagerReceiver = new PagerReceiver();
 
-        menuView = new AdvancedColumnListUiView(
+        menuView = new ColumnOrientedListUiView(
             stationScreenColumnOffsets,
             sizeof(stationScreenColumnOffsets),
             HANDLER_3ARG(&ScanStationsScreen::getElementColumnName)
