@@ -1,4 +1,0 @@
-Filetype: APDU Script
-Version: 1
-CardType: iso14443_4a
-Data: ["90600000"] 
