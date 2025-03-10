@@ -71,15 +71,16 @@ const char* sensor_precision_name(SensorPrecision sensor_mode) {
     }
 }
 
-#define ini_add_comment(s, comment)      furi_string_cat_printf(s, "# %s\n", comment);
-#define ini_add_section(s, section)      furi_string_cat_printf(s, "[%s]\n", section);
-#define ini_add_keyval(s, key, fmt, val) furi_string_cat_printf(s, "%s = " fmt "\n", key, val);
-#define ini_add_empty_line(s)            furi_string_cat_printf(s, "\n");
+#define ini_add_comment(s, comment)      furi_string_cat_printf(s, "# %s\n", comment)
+#define ini_add_section(s, section)      furi_string_cat_printf(s, "[%s]\n", section)
+#define ini_add_keyval(s, key, fmt, val) furi_string_cat_printf(s, "%s = " fmt "\n", key, val)
+#define ini_add_empty_line(s)            furi_string_cat_printf(s, "\n")
 
 static FuriString* app_config_build(const AppConfig* config) {
     FuriString* s = furi_string_alloc();
 
     ini_add_section(s, SECTION_APP);
+    ini_add_keyval(s, KEY_LED_BLINKING, "%s", config->led_blinking ? "1" : "0");
     ini_add_empty_line(s);
 
     ini_add_section(s, SECTION_SENSOR);
@@ -90,7 +91,6 @@ static FuriString* app_config_build(const AppConfig* config) {
         s, KEY_VOLTAGE_PRECISION, "%s", sensor_precision_name(config->voltage_precision));
     ini_add_keyval(
         s, KEY_CURRENT_PRECISION, "%s", sensor_precision_name(config->current_precision));
-    ini_add_keyval(s, KEY_LED_BLINKING, "%s", config->led_blinking ? "1" : "0");
 
     return s;
 }
@@ -100,7 +100,17 @@ static FuriString* app_config_build(const AppConfig* config) {
 
 static void app_config_set(AppConfig* config, Slice section, Slice key, Slice value) {
     if(section(SECTION_APP)) {
-        // TODO
+        if(key(KEY_LED_BLINKING)) {
+            uint32_t temp;
+            if(slice_parse_uint32(value, 0, &temp)) {
+                config->led_blinking = temp != 0;
+                FURI_LOG_I(TAG, "led_blinking=%d", config->led_blinking);
+            } else {
+                FURI_LOG_E(TAG, "Failed to parse led_blinking value");
+            }
+        } else {
+            FURI_LOG_E(TAG, "Unknown key");
+        }
     } else if(section(SECTION_SENSOR)) {
         if(key(KEY_SENSOR_TYPE)) {
             bool found = false;
@@ -162,14 +172,6 @@ static void app_config_set(AppConfig* config, Slice section, Slice key, Slice va
                     TAG, "current_precision=%s", sensor_precision_name(config->current_precision));
             } else {
                 FURI_LOG_E(TAG, "Unknown current precision");
-            }
-        } else if(key(KEY_LED_BLINKING)) {
-            uint32_t temp;
-            if(slice_parse_uint32(value, 0, &temp)) {
-                config->led_blinking = temp != 0;
-                FURI_LOG_I(TAG, "led_blinking=%d", config->led_blinking);
-            } else {
-                FURI_LOG_E(TAG, "Failed to parse led_blinking value");
             }
         } else {
             FURI_LOG_E(TAG, "Unknown key");
