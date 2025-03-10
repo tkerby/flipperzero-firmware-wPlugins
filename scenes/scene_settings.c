@@ -24,6 +24,7 @@ typedef enum {
     MenuIndex_ShuntResistor,
     MenuIndex_VoltagePrecision,
     MenuIndex_CurrentPrecision,
+    MenuIndex_LedBlinking,
     MenuIndex_WiringInfo,
 } MenuIndex;
 
