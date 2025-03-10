@@ -1,0 +1,9 @@
+TODO:
+- debug memory leaks:
+    UiVariableItem* encodingItem = NULL;
+    UiVariableItem* stationItem = NULL;
+    UiVariableItem* pagerItem = NULL;
+    UiVariableItem* actionItem = NULL;
+    UiVariableItem* hexItem = NULL;
+delete?
+...

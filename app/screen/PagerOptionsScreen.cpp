@@ -40,7 +40,9 @@ public:
                 "Encoding",
                 receiver->GetPagerData(pagerIndex)->decoder,
                 receiver->decoders.size(),
-                HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged)));
+                HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged)
+            )
+        );
 
         varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
         varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
@@ -49,13 +51,16 @@ public:
                 "Action",
                 decoder->GetActionValue(pager->data),
                 decoder->GetActionsCount(),
-                HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)));
+                HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)
+            )
+        );
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
 
         varItemList->AddItem(new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName()));
-        varItemList->AddItem(new UiVariableItem(
-            "Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats)));
+        varItemList->AddItem(
+            new UiVariableItem("Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats))
+        );
     }
 
 private:
