@@ -76,7 +76,6 @@ public:
             for(IDestructable* handlerContext : handlers) {
                 delete handlerContext;
             }
-            handlers.clear();
 
             submenu_free(menu);
             menu = NULL;

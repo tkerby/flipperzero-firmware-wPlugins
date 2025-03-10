@@ -101,6 +101,20 @@ public:
 
         return new ReceivedPagerData(storedData, index, isNew);
     }
+
+    ~PagerReceiver() {
+        for(PagerProtocol* protocol : protocols) {
+            delete protocol;
+        }
+
+        for(PagerDecoder* decoder : decoders) {
+            delete decoder;
+        }
+
+        for(PagerDataStored* pagerData : pagers) {
+            delete pagerData;
+        }
+    }
 };
 
 #endif //_PAGER_RECEIVER_CLASS_

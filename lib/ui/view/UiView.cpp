@@ -14,6 +14,7 @@ class UiView {
 private:
     function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
     function<void()> onReturnToView = HANDLER(&UiView::doNothing);
+    IDestructable* inputHandler = NULL;
 
     static bool onInput(InputEvent* input, void* context) {
         auto handlerContext = (HandlerContext<function<bool(InputEvent*)>>*)context;
@@ -37,7 +38,7 @@ public:
     }
 
     void SetInputHandler(function<bool(InputEvent*)> handler) {
-        view_set_context(GetNativeView(), new HandlerContext(handler));
+        view_set_context(GetNativeView(), inputHandler = new HandlerContext(handler));
         view_set_input_callback(GetNativeView(), onInput);
     }
 
@@ -48,6 +49,10 @@ public:
 protected:
     // Must be called from parent class destructor's!
     void OnDestory() {
+        if(inputHandler != NULL) {
+            delete inputHandler;
+            inputHandler = NULL;
+        }
         onDestroyHandler();
     }
 };

@@ -9,6 +9,8 @@ public:
     virtual const char* GetSystemName() = 0;
     virtual const char* GetDisplayName() = 0;
     virtual const char* GetShortName() = 0;
+    virtual ~PagerProtocol() {
+    }
 };
 
 #endif //_PAGER_PROTCOL_CLASS_

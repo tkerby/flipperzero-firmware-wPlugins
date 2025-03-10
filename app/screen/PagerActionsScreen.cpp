@@ -69,6 +69,7 @@ private:
             delete actionsStrings[i];
         }
         delete[] actionsStrings;
+        delete this;
     }
 
 public:

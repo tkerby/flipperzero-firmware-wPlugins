@@ -25,6 +25,9 @@ public:
     virtual vector<PagerAction> GetSupportedActions() = 0;
     virtual uint8_t GetActionsCount() = 0;
 
+    virtual ~PagerDecoder() {
+    }
+
 protected:
     uint32_t reverseBits(uint32_t number, int count) {
         uint32_t rev = 0;

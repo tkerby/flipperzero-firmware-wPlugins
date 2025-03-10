@@ -23,10 +23,6 @@ public:
     uint32_t GetHash() {
         return hash;
     }
-
-    ~SubGhzReceivedDataStub() {
-        delete[] protocolName;
-    }
 };
 
 #endif //_SUBGHZ_RECEIVED_DATA_STUB_CLASS_

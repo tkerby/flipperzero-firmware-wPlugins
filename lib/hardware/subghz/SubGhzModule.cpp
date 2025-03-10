@@ -32,6 +32,7 @@ private:
     const SubGhzDevice* device;
     SubGhzReceiver* receiver;
     SubGhzWorker* worker;
+    IDestructable* receiveHandler = NULL;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -86,7 +87,7 @@ public:
     }
 
     void SetReceiveHandler(function<void(SubGhzReceivedData*)> handler) {
-        subghz_receiver_set_rx_callback(receiver, captureCallback, new HandlerContext(handler));
+        subghz_receiver_set_rx_callback(receiver, captureCallback, receiveHandler = new HandlerContext(handler));
     }
 
     void ReceiveAsync() {
@@ -131,6 +132,10 @@ public:
 
         if(furi_hal_power_is_otg_enabled()) {
             furi_hal_power_disable_otg();
+        }
+
+        if(receiveHandler != NULL) {
+            delete receiveHandler;
         }
 
         if(worker != NULL) {
