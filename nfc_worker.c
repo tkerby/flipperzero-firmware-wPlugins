@@ -7,6 +7,20 @@
 
 #define TAG "NfcWorker"
 
+// APDU上下文结构体，用于在回调中传递APDU命令和结果
+typedef struct {
+    struct NfcWorker* worker; // 指向NFC Worker的指针
+    const char** commands; // APDU命令数组
+    uint32_t command_count; // 命令总数
+    uint32_t current_index; // 当前执行的命令索引
+    NfcApduResponse* responses; // 响应结果数组
+    uint32_t response_count; // 已收到的响应数量
+    bool finished; // 是否所有命令都已执行完成
+    bool is_error; // 是否发生错误
+    BitBuffer* tx_buffer; // 发送缓冲区
+    BitBuffer* rx_buffer; // 接收缓冲区
+} ApduContext;
+
 // NFC Worker结构体定义
 struct NfcWorker {
     FuriThread* thread;
@@ -25,21 +39,10 @@ struct NfcWorker {
     bool running;
     bool card_detected;
     bool card_lost;
-};
 
-// APDU上下文结构体，用于在回调中传递APDU命令和结果
-typedef struct {
-    NfcWorker* worker; // 指向NFC Worker的指针
-    const char** commands; // APDU命令数组
-    uint32_t command_count; // 命令总数
-    uint32_t current_index; // 当前执行的命令索引
-    NfcApduResponse* responses; // 响应结果数组
-    uint32_t response_count; // 已收到的响应数量
-    bool finished; // 是否所有命令都已执行完成
-    bool is_error; // 是否发生错误
-    BitBuffer* tx_buffer; // 发送缓冲区
-    BitBuffer* rx_buffer; // 接收缓冲区
-} ApduContext;
+    // APDU上下文指针
+    ApduContext* apdu_ctx;
+};
 
 // 记录APDU数据的辅助函数
 static void
@@ -383,8 +386,8 @@ static int32_t nfc_worker_detect_thread(void* context) {
         FURI_LOG_I(TAG, "APDU执行轮询器分配成功");
 
         // 在堆上分配APDU上下文，确保回调函数可以安全访问
-        ApduContext* apdu_ctx = malloc(sizeof(ApduContext));
-        if(!apdu_ctx) {
+        worker->apdu_ctx = malloc(sizeof(ApduContext));
+        if(!worker->apdu_ctx) {
             FURI_LOG_E(TAG, "分配APDU上下文失败");
             worker->callback(NfcWorkerEventFail, worker->context);
 
@@ -399,11 +402,11 @@ static int32_t nfc_worker_detect_thread(void* context) {
         }
 
         // 初始化APDU上下文
-        memset(apdu_ctx, 0, sizeof(ApduContext));
-        apdu_ctx->worker = worker;
-        apdu_ctx->commands = (const char**)worker->script->commands;
-        apdu_ctx->command_count = worker->script->command_count;
-        apdu_ctx->current_index = 0;
+        memset(worker->apdu_ctx, 0, sizeof(ApduContext));
+        worker->apdu_ctx->worker = worker;
+        worker->apdu_ctx->commands = (const char**)worker->script->commands;
+        worker->apdu_ctx->command_count = worker->script->command_count;
+        worker->apdu_ctx->current_index = 0;
 
         // 分配响应内存
         worker->responses = malloc(sizeof(NfcApduResponse) * worker->script->command_count);
@@ -412,7 +415,7 @@ static int32_t nfc_worker_detect_thread(void* context) {
             worker->callback(NfcWorkerEventFail, worker->context);
 
             // 释放APDU上下文
-            free(apdu_ctx);
+            free(worker->apdu_ctx);
 
             // 停止轮询器
             if(worker->poller) {
@@ -425,20 +428,20 @@ static int32_t nfc_worker_detect_thread(void* context) {
         }
 
         memset(worker->responses, 0, sizeof(NfcApduResponse) * worker->script->command_count);
-        apdu_ctx->responses = worker->responses;
+        worker->apdu_ctx->responses = worker->responses;
 
         // 创建位缓冲区
-        apdu_ctx->tx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
-        apdu_ctx->rx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
+        worker->apdu_ctx->tx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
+        worker->apdu_ctx->rx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
 
-        if(!apdu_ctx->tx_buffer || !apdu_ctx->rx_buffer) {
+        if(!worker->apdu_ctx->tx_buffer || !worker->apdu_ctx->rx_buffer) {
             FURI_LOG_E(TAG, "分配位缓冲区失败");
             worker->callback(NfcWorkerEventFail, worker->context);
 
             // 释放资源
-            if(apdu_ctx->tx_buffer) bit_buffer_free(apdu_ctx->tx_buffer);
-            if(apdu_ctx->rx_buffer) bit_buffer_free(apdu_ctx->rx_buffer);
-            free(apdu_ctx);
+            if(worker->apdu_ctx->tx_buffer) bit_buffer_free(worker->apdu_ctx->tx_buffer);
+            if(worker->apdu_ctx->rx_buffer) bit_buffer_free(worker->apdu_ctx->rx_buffer);
+            free(worker->apdu_ctx);
 
             // 停止轮询器
             if(worker->poller) {
@@ -450,10 +453,10 @@ static int32_t nfc_worker_detect_thread(void* context) {
             return -1;
         }
 
-        FURI_LOG_I(TAG, "准备执行APDU命令，共 %lu 条", apdu_ctx->command_count);
+        FURI_LOG_I(TAG, "准备执行APDU命令，共 %lu 条", worker->apdu_ctx->command_count);
 
         // 启动新的轮询器，使用APDU回调函数
-        nfc_poller_start(worker->poller, nfc_worker_apdu_poller_callback, apdu_ctx);
+        nfc_poller_start(worker->poller, nfc_worker_apdu_poller_callback, worker->apdu_ctx);
 
         FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
 
@@ -463,22 +466,22 @@ static int32_t nfc_worker_detect_thread(void* context) {
         FURI_LOG_I(TAG, "开始执行APDU命令");
 
         // 等待所有APDU命令执行完成或出错
-        while(!apdu_ctx->finished && worker->running) {
+        while(!worker->apdu_ctx->finished && worker->running) {
             furi_delay_ms(100);
         }
 
         // 更新响应计数
-        worker->response_count = apdu_ctx->response_count;
+        worker->response_count = worker->apdu_ctx->response_count;
 
         // 保存错误状态
-        bool is_error = apdu_ctx->is_error;
+        bool is_error = worker->apdu_ctx->is_error;
 
         // 释放位缓冲区
-        bit_buffer_free(apdu_ctx->tx_buffer);
-        bit_buffer_free(apdu_ctx->rx_buffer);
+        bit_buffer_free(worker->apdu_ctx->tx_buffer);
+        bit_buffer_free(worker->apdu_ctx->rx_buffer);
 
         // 释放APDU上下文
-        free(apdu_ctx);
+        free(worker->apdu_ctx);
 
         // 停止轮询器
         if(worker->poller) {
@@ -521,6 +524,7 @@ NfcWorker* nfc_worker_alloc(Nfc* nfc) {
     worker->running = false;
     worker->card_detected = false;
     worker->card_lost = false;
+    worker->apdu_ctx = NULL;
 
     return worker;
 }
@@ -545,6 +549,18 @@ void nfc_worker_free(NfcWorker* worker) {
         free(worker->responses);
         worker->responses = NULL;
         worker->response_count = 0;
+    }
+
+    // 释放APDU上下文
+    if(worker->apdu_ctx) {
+        if(worker->apdu_ctx->tx_buffer) {
+            bit_buffer_free(worker->apdu_ctx->tx_buffer);
+        }
+        if(worker->apdu_ctx->rx_buffer) {
+            bit_buffer_free(worker->apdu_ctx->rx_buffer);
+        }
+        free(worker->apdu_ctx);
+        worker->apdu_ctx = NULL;
     }
 
     // 释放流缓冲区
@@ -613,6 +629,20 @@ void nfc_worker_stop(NfcWorker* worker) {
         // 然后释放轮询器
         nfc_poller_free(worker->poller);
         worker->poller = NULL;
+    }
+
+    // 释放APDU上下文
+    if(worker->apdu_ctx) {
+        if(worker->apdu_ctx->tx_buffer) {
+            bit_buffer_free(worker->apdu_ctx->tx_buffer);
+            worker->apdu_ctx->tx_buffer = NULL;
+        }
+        if(worker->apdu_ctx->rx_buffer) {
+            bit_buffer_free(worker->apdu_ctx->rx_buffer);
+            worker->apdu_ctx->rx_buffer = NULL;
+        }
+        free(worker->apdu_ctx);
+        worker->apdu_ctx = NULL;
     }
 
     // 重置状态
