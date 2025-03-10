@@ -1,6 +1,8 @@
 #ifndef _SUBGHZ_MODULE_CLASS_
 #define _SUBGHZ_MODULE_CLASS_
 
+#include <functional>
+
 #include <furi.h>
 #include <furi_hal.h>
 
@@ -18,6 +20,8 @@
 
 #include "SubGhzState.cpp"
 #include "data/SubGhzReceivedDataImpl.cpp"
+
+using namespace std;
 
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"

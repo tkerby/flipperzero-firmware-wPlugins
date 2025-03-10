@@ -31,9 +31,9 @@ private:
     const char* ceneterButtonCaption = NULL;
     const char* rightButtonCaption = NULL;
 
-    function<void(int)> leftButtonPress;
-    function<void(int)> centerButtonPress;
-    function<void(int)> rightButtonPress;
+    function<void(int)> leftButtonPress = NULL;
+    function<void(int)> centerButtonPress = NULL;
+    function<void(int)> rightButtonPress = NULL;
 
     int listOffset = 0;
     int selectedIndex = 0;
@@ -41,8 +41,8 @@ private:
 
     int8_t columnCount;
     int8_t* columnOffsets;
-    Font* columnFonts;
-    Align* columnAlignments;
+    Font* columnFonts = NULL;
+    Align* columnAlignments = NULL;
 
     function<void(int, int, String* name)> getColumnElementName;
 

@@ -5,6 +5,7 @@
 #include "lib/ui/view/ColumnOrientedListUiView.cpp"
 
 #include "PagerOptionsScreen.cpp"
+#include "PagerActionsScreen.cpp"
 
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 
@@ -57,7 +58,7 @@ public:
         menuView->SetColumnFonts(stationScreenColumnFonts);
         menuView->SetColumnAlignments(stationScreenColumnAlignments);
 
-        menuView->SetLeftButton("Config", HANDLER_1ARG(&ScanStationsScreen::showConfig));
+        menuView->SetLeftButton("Conf", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
         subghz = new SubGhzModule();
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
@@ -102,8 +103,8 @@ private:
             Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
             if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
-                menuView->SetCenterButton("View", HANDLER_1ARG(&ScanStationsScreen::viewPager));
-                menuView->SetRightButton("Action", HANDLER_1ARG(&ScanStationsScreen::showActions));
+                menuView->SetCenterButton("Actions", HANDLER_1ARG(&ScanStationsScreen::showActions));
+                menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editTransmission));
             }
 
             menuView->AddElement();
@@ -159,13 +160,17 @@ private:
         //     UiManager::GetInstance()->PushView(screen->GetView());
     }
 
-    void viewPager(uint32_t index) {
+    void editTransmission(uint32_t index) {
         PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void showActions(uint32_t index) {
-        UNUSED(index);
+        PagerDataStored* pagerData = pagerReceiver->GetPagerData(index);
+        PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
+
+        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, subghz);
+        UiManager::GetInstance()->PushView(screen->GetView());
         // PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         // UiManager::GetInstance()->PushView(screen->GetView());
     }
