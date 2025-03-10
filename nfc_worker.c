@@ -27,6 +27,20 @@ struct NfcWorker {
     bool card_lost;
 };
 
+// APDU上下文结构体，用于在回调中传递APDU命令和结果
+typedef struct {
+    NfcWorker* worker; // 指向NFC Worker的指针
+    const char** commands; // APDU命令数组
+    uint32_t command_count; // 命令总数
+    uint32_t current_index; // 当前执行的命令索引
+    NfcApduResponse* responses; // 响应结果数组
+    uint32_t response_count; // 已收到的响应数量
+    bool finished; // 是否所有命令都已执行完成
+    bool is_error; // 是否发生错误
+    BitBuffer* tx_buffer; // 发送缓冲区
+    BitBuffer* rx_buffer; // 接收缓冲区
+} ApduContext;
+
 // 记录APDU数据的辅助函数
 static void
     nfc_worker_log_apdu_data(const char* cmd, const uint8_t* response, uint16_t response_len) {
@@ -102,141 +116,136 @@ static NfcCommand nfc_worker_poller_callback(NfcGenericEvent event, void* contex
 
 // 执行APDU命令的回调函数
 static NfcCommand nfc_worker_apdu_poller_callback(NfcGenericEvent event, void* context) {
-    // 这个回调函数不做任何事情，只是为了满足nfc_poller_start的参数要求
-    // 实际的APDU命令通过nfc_worker_run_apdu_command直接发送
-    FURI_LOG_D(TAG, "APDU轮询器回调");
     UNUSED(event);
-    UNUSED(context);
-    return NfcCommandContinue;
-}
+    ApduContext* apdu_ctx = (ApduContext*)context;
 
-// 执行APDU命令
-static bool nfc_worker_run_apdu_command(
-    NfcWorker* worker,
-    const char* cmd,
-    uint8_t** response,
-    uint16_t* response_length) {
-    furi_assert(worker);
-    furi_assert(cmd);
-    furi_assert(response);
-    furi_assert(response_length);
-
-    // 初始化响应指针为NULL，以防出错时能正确处理
-    *response = NULL;
-    *response_length = 0;
-
-    if(!worker->poller) {
-        FURI_LOG_E(TAG, "轮询器未初始化");
-        return false;
+    if(!apdu_ctx || apdu_ctx->finished) {
+        return NfcCommandStop;
     }
 
-    // 解析APDU命令
-    uint8_t apdu_data[MAX_APDU_LENGTH];
-    uint16_t apdu_len = 0;
-    size_t cmd_len = strlen(cmd);
+    NfcWorker* worker = apdu_ctx->worker;
 
-    // 将十六进制字符串转换为字节数组
-    for(size_t i = 0; i < cmd_len; i += 2) {
-        if(i + 1 >= cmd_len) break;
+    // 如果是第一次调用或上一个命令已完成，准备执行下一个命令
+    if(apdu_ctx->current_index < apdu_ctx->command_count) {
+        const char* cmd = apdu_ctx->commands[apdu_ctx->current_index];
+        FURI_LOG_I(TAG, "准备执行APDU命令 %lu: %s", apdu_ctx->current_index, cmd);
 
-        char hex[3] = {cmd[i], cmd[i + 1], '\0'};
-        apdu_data[apdu_len++] = (uint8_t)strtol(hex, NULL, 16);
+        // 解析APDU命令
+        uint8_t apdu_data[MAX_APDU_LENGTH];
+        uint16_t apdu_len = 0;
+        size_t cmd_len = strlen(cmd);
 
-        if(apdu_len >= MAX_APDU_LENGTH) break;
-    }
+        // 将十六进制字符串转换为字节数组
+        for(size_t i = 0; i < cmd_len; i += 2) {
+            if(i + 1 >= cmd_len) break;
 
-    // 创建位缓冲区
-    BitBuffer* tx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
-    BitBuffer* rx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
+            char hex[3] = {cmd[i], cmd[i + 1], '\0'};
+            apdu_data[apdu_len++] = (uint8_t)strtol(hex, NULL, 16);
 
-    if(!tx_buffer || !rx_buffer) {
-        FURI_LOG_E(TAG, "分配位缓冲区失败");
-        if(tx_buffer) bit_buffer_free(tx_buffer);
-        if(rx_buffer) bit_buffer_free(rx_buffer);
-        return false;
-    }
-
-    // 清空缓冲区
-    bit_buffer_reset(tx_buffer);
-    bit_buffer_reset(rx_buffer);
-
-    // 将APDU数据复制到发送缓冲区
-    bit_buffer_copy_bytes(tx_buffer, apdu_data, apdu_len);
-
-    // 发送APDU命令
-    bool tx_success = false;
-
-    // 再次检查轮询器是否有效
-    if(!worker->poller) {
-        FURI_LOG_E(TAG, "轮询器在发送前变为无效");
-        bit_buffer_free(tx_buffer);
-        bit_buffer_free(rx_buffer);
-        return false;
-    }
-
-    // 根据卡类型使用不同的方法发送APDU命令
-    if(worker->script) {
-        switch(worker->script->card_type) {
-        case CardTypeIso14443_4a: {
-            // 发送数据块
-            Iso14443_4aError error = iso14443_4a_poller_send_block(
-                (Iso14443_4aPoller*)worker->poller, tx_buffer, rx_buffer);
-            tx_success = (error == Iso14443_4aErrorNone);
-            if(!tx_success) {
-                FURI_LOG_E(TAG, "ISO14443-4A命令执行失败，错误码: %d", error);
-            }
-            break;
+            if(apdu_len >= MAX_APDU_LENGTH) break;
         }
-        case CardTypeIso14443_4b: {
-            // 发送数据块
-            Iso14443_4bError error = iso14443_4b_poller_send_block(
-                (Iso14443_4bPoller*)worker->poller, tx_buffer, rx_buffer);
-            tx_success = (error == Iso14443_4bErrorNone);
-            if(!tx_success) {
-                FURI_LOG_E(TAG, "ISO14443-4B命令执行失败，错误码: %d", error);
+
+        // 清空缓冲区
+        bit_buffer_reset(apdu_ctx->tx_buffer);
+        bit_buffer_reset(apdu_ctx->rx_buffer);
+
+        // 将APDU数据复制到发送缓冲区
+        bit_buffer_copy_bytes(apdu_ctx->tx_buffer, apdu_data, apdu_len);
+
+        // 保存命令
+        apdu_ctx->responses[apdu_ctx->response_count].command = strdup(cmd);
+
+        // 根据卡类型使用不同的方法发送APDU命令
+        bool tx_success = false;
+        if(worker->script) {
+            switch(worker->script->card_type) {
+            case CardTypeIso14443_4a: {
+                // 发送数据块
+                Iso14443_4aError error = iso14443_4a_poller_send_block(
+                    (Iso14443_4aPoller*)worker->poller, apdu_ctx->tx_buffer, apdu_ctx->rx_buffer);
+                tx_success = (error == Iso14443_4aErrorNone);
+                if(!tx_success) {
+                    FURI_LOG_E(TAG, "ISO14443-4A命令执行失败，错误码: %d", error);
+                }
+                break;
             }
-            break;
-        }
-        default:
-            FURI_LOG_E(TAG, "不支持的卡类型: %d", worker->script->card_type);
+            case CardTypeIso14443_4b: {
+                // 发送数据块
+                Iso14443_4bError error = iso14443_4b_poller_send_block(
+                    (Iso14443_4bPoller*)worker->poller, apdu_ctx->tx_buffer, apdu_ctx->rx_buffer);
+                tx_success = (error == Iso14443_4bErrorNone);
+                if(!tx_success) {
+                    FURI_LOG_E(TAG, "ISO14443-4B命令执行失败，错误码: %d", error);
+                }
+                break;
+            }
+            default:
+                FURI_LOG_E(TAG, "不支持的卡类型: %d", worker->script->card_type);
+                tx_success = false;
+                break;
+            }
+        } else {
+            FURI_LOG_E(TAG, "脚本未初始化");
             tx_success = false;
-            break;
-        }
-    } else {
-        FURI_LOG_E(TAG, "脚本未初始化");
-        tx_success = false;
-    }
-
-    if(tx_success) {
-        // 获取响应数据
-        size_t rx_bytes_count = bit_buffer_get_size(rx_buffer) / 8;
-
-        // 分配响应内存
-        *response = malloc(rx_bytes_count);
-        if(!*response) {
-            FURI_LOG_E(TAG, "分配响应内存失败");
-            bit_buffer_free(tx_buffer);
-            bit_buffer_free(rx_buffer);
-            return false;
         }
 
-        // 复制响应数据
-        bit_buffer_write_bytes(rx_buffer, *response, rx_bytes_count);
-        *response_length = rx_bytes_count;
+        if(tx_success) {
+            // 获取响应数据
+            size_t rx_bytes_count = bit_buffer_get_size(apdu_ctx->rx_buffer) / 8;
 
-        // 记录APDU命令和响应
-        nfc_worker_log_apdu_data(cmd, *response, *response_length);
-    } else {
-        FURI_LOG_E(TAG, "命令执行失败");
-        *response = NULL;
-        *response_length = 0;
+            // 分配响应内存
+            uint8_t* response = malloc(rx_bytes_count);
+            if(!response) {
+                FURI_LOG_E(TAG, "分配响应内存失败");
+                apdu_ctx->responses[apdu_ctx->response_count].response = NULL;
+                apdu_ctx->responses[apdu_ctx->response_count].response_length = 0;
+                apdu_ctx->is_error = true;
+            } else {
+                // 复制响应数据
+                bit_buffer_write_bytes(apdu_ctx->rx_buffer, response, rx_bytes_count);
+
+                // 保存响应
+                apdu_ctx->responses[apdu_ctx->response_count].response = response;
+                apdu_ctx->responses[apdu_ctx->response_count].response_length = rx_bytes_count;
+
+                // 记录APDU命令和响应
+                nfc_worker_log_apdu_data(cmd, response, rx_bytes_count);
+
+                FURI_LOG_I(TAG, "APDU命令 %lu 执行成功", apdu_ctx->current_index);
+            }
+        } else {
+            // 命令执行失败
+            apdu_ctx->responses[apdu_ctx->response_count].response = NULL;
+            apdu_ctx->responses[apdu_ctx->response_count].response_length = 0;
+
+            FURI_LOG_E(TAG, "APDU命令 %lu 执行失败", apdu_ctx->current_index);
+
+            // 如果第一个命令就失败，可能是卡片已经不存在
+            if(apdu_ctx->current_index == 0) {
+                FURI_LOG_E(TAG, "第一个命令执行失败，可能是卡片已经不存在");
+                worker->callback(NfcWorkerEventCardLost, worker->context);
+                apdu_ctx->is_error = true;
+                apdu_ctx->finished = true;
+                return NfcCommandStop;
+            }
+        }
+
+        // 更新计数器
+        apdu_ctx->response_count++;
+        apdu_ctx->current_index++;
+
+        // 检查是否所有命令都已执行完成
+        if(apdu_ctx->current_index >= apdu_ctx->command_count) {
+            FURI_LOG_I(TAG, "所有APDU命令执行完成");
+            apdu_ctx->finished = true;
+            return NfcCommandStop;
+        }
+
+        // 命令之间添加短暂延迟
+        furi_delay_ms(50);
     }
 
-    // 释放位缓冲区
-    bit_buffer_free(tx_buffer);
-    bit_buffer_free(rx_buffer);
-
-    return tx_success;
+    return NfcCommandContinue;
 }
 
 // 检测卡片的线程函数
@@ -370,22 +379,10 @@ static int32_t nfc_worker_detect_thread(void* context) {
 
         FURI_LOG_I(TAG, "APDU执行轮询器分配成功");
 
-        // 启动新的轮询器，使用一个空的回调函数
-        nfc_poller_start(worker->poller, nfc_worker_apdu_poller_callback, NULL);
-
-        FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
-
-        // 等待轮询器初始化完成
-        // furi_delay_ms(100);
-
-        // 不再使用nfc_poller_detect检查卡片是否存在
-        // 假设卡片仍然存在，直接继续执行APDU命令
-        FURI_LOG_I(TAG, "开始执行APDU命令");
-
-        // 分配响应内存
-        worker->responses = malloc(sizeof(NfcApduResponse) * worker->script->command_count);
-        if(!worker->responses) {
-            FURI_LOG_E(TAG, "分配响应内存失败");
+        // 在堆上分配APDU上下文，确保回调函数可以安全访问
+        ApduContext* apdu_ctx = malloc(sizeof(ApduContext));
+        if(!apdu_ctx) {
+            FURI_LOG_E(TAG, "分配APDU上下文失败");
             worker->callback(NfcWorkerEventFail, worker->context);
 
             // 停止轮询器
@@ -398,67 +395,87 @@ static int32_t nfc_worker_detect_thread(void* context) {
             return -1;
         }
 
-        memset(worker->responses, 0, sizeof(NfcApduResponse) * worker->script->command_count);
-        worker->response_count = 0;
-        bool success = true;
+        // 初始化APDU上下文
+        memset(apdu_ctx, 0, sizeof(ApduContext));
+        apdu_ctx->worker = worker;
+        apdu_ctx->commands = (const char**)worker->script->commands;
+        apdu_ctx->command_count = worker->script->command_count;
+        apdu_ctx->current_index = 0;
 
-        // 执行每个APDU命令
-        FURI_LOG_I(TAG, "开始执行APDU命令, 命令数: %lu", worker->script->command_count);
-        for(uint32_t i = 0; i < worker->script->command_count && worker->running; i++) {
-            // 检查轮询器是否仍然有效
-            if(!worker->poller) {
-                FURI_LOG_E(TAG, "轮询器无效，无法继续执行APDU命令");
-                success = false;
-                break;
+        // 分配响应内存
+        worker->responses = malloc(sizeof(NfcApduResponse) * worker->script->command_count);
+        if(!worker->responses) {
+            FURI_LOG_E(TAG, "分配响应内存失败");
+            worker->callback(NfcWorkerEventFail, worker->context);
+
+            // 释放APDU上下文
+            free(apdu_ctx);
+
+            // 停止轮询器
+            if(worker->poller) {
+                nfc_poller_stop(worker->poller);
+                nfc_poller_free(worker->poller);
+                worker->poller = NULL;
             }
 
-            // 执行APDU命令
-            const char* cmd = worker->script->commands[i];
-            uint8_t* response = NULL;
-            uint16_t response_length = 0;
-
-            FURI_LOG_I(TAG, "执行APDU命令 %lu: %s", i, cmd);
-
-            // 保存命令
-            worker->responses[worker->response_count].command = strdup(cmd);
-
-            // 执行命令
-            bool cmd_success =
-                nfc_worker_run_apdu_command(worker, cmd, &response, &response_length);
-
-            if(cmd_success) {
-                // 保存响应
-                worker->responses[worker->response_count].response = response;
-                worker->responses[worker->response_count].response_length = response_length;
-                FURI_LOG_I(TAG, "APDU命令 %lu 执行成功", i);
-            } else {
-                // 命令执行失败
-                worker->responses[worker->response_count].response = NULL;
-                worker->responses[worker->response_count].response_length = 0;
-                FURI_LOG_E(TAG, "APDU命令 %lu 执行失败", i);
-
-                // 检查是否应该退出
-                if(!worker->running) {
-                    FURI_LOG_I(TAG, "用户取消操作");
-                    worker->callback(NfcWorkerEventAborted, worker->context);
-                    success = false;
-                    break;
-                }
-
-                // 如果第一个命令就失败，可能是卡片已经不存在
-                if(i == 0) {
-                    FURI_LOG_E(TAG, "第一个命令执行失败，可能是卡片已经不存在");
-                    worker->callback(NfcWorkerEventCardLost, worker->context);
-                    success = false;
-                    break;
-                }
-            }
-
-            worker->response_count++;
-
-            // 命令之间添加短暂延迟
-            furi_delay_ms(50);
+            return -1;
         }
+
+        memset(worker->responses, 0, sizeof(NfcApduResponse) * worker->script->command_count);
+        apdu_ctx->responses = worker->responses;
+
+        // 创建位缓冲区
+        apdu_ctx->tx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
+        apdu_ctx->rx_buffer = bit_buffer_alloc(MAX_APDU_LENGTH * 8);
+
+        if(!apdu_ctx->tx_buffer || !apdu_ctx->rx_buffer) {
+            FURI_LOG_E(TAG, "分配位缓冲区失败");
+            worker->callback(NfcWorkerEventFail, worker->context);
+
+            // 释放资源
+            if(apdu_ctx->tx_buffer) bit_buffer_free(apdu_ctx->tx_buffer);
+            if(apdu_ctx->rx_buffer) bit_buffer_free(apdu_ctx->rx_buffer);
+            free(apdu_ctx);
+
+            // 停止轮询器
+            if(worker->poller) {
+                nfc_poller_stop(worker->poller);
+                nfc_poller_free(worker->poller);
+                worker->poller = NULL;
+            }
+
+            return -1;
+        }
+
+        FURI_LOG_I(TAG, "准备执行APDU命令，共 %lu 条", apdu_ctx->command_count);
+
+        // 启动新的轮询器，使用APDU回调函数
+        nfc_poller_start(worker->poller, nfc_worker_apdu_poller_callback, apdu_ctx);
+
+        FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
+
+        // 等待轮询器初始化完成
+        furi_delay_ms(100);
+
+        FURI_LOG_I(TAG, "开始执行APDU命令");
+
+        // 等待所有APDU命令执行完成或出错
+        while(!apdu_ctx->finished && worker->running) {
+            furi_delay_ms(100);
+        }
+
+        // 更新响应计数
+        worker->response_count = apdu_ctx->response_count;
+
+        // 保存错误状态
+        bool is_error = apdu_ctx->is_error;
+
+        // 释放位缓冲区
+        bit_buffer_free(apdu_ctx->tx_buffer);
+        bit_buffer_free(apdu_ctx->rx_buffer);
+
+        // 释放APDU上下文
+        free(apdu_ctx);
 
         // 停止轮询器
         if(worker->poller) {
@@ -473,7 +490,7 @@ static int32_t nfc_worker_detect_thread(void* context) {
             FURI_LOG_I(TAG, "用户取消操作");
             worker->callback(NfcWorkerEventAborted, worker->context);
             return -1;
-        } else if(success) {
+        } else if(!is_error) {
             FURI_LOG_I(TAG, "执行成功");
             worker->callback(NfcWorkerEventSuccess, worker->context);
             return 0;
