@@ -60,15 +60,15 @@ public:
 
         menuView->SetLeftButton("Conf", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
-        // subghz = new SubGhzModule();
-        // subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
-        // subghz->ReceiveAsync();
+        subghz = new SubGhzModule();
+        subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
+        subghz->ReceiveAsync();
 
-        // if(subghz->IsExternal()) {
-        //     menuView->SetNoElementCaption("Receiving via EXT...");
-        // } else {
-        //     menuView->SetNoElementCaption("Receiving...");
-        // }
+        if(subghz->IsExternal()) {
+            menuView->SetNoElementCaption("Receiving via EXT...");
+        } else {
+            menuView->SetNoElementCaption("Receiving...");
+        }
 
 #if DEBUG
         receive(new SubGhzReceivedDataStub("Princeton", 0xCBC082));
@@ -113,6 +113,7 @@ private:
         menuView->Refresh();
 
         delete pagerData;
+        delete data;
     }
 
     void getElementColumnName(int index, int column, String* str) {
@@ -177,7 +178,7 @@ private:
     }
 
     void destroy() {
-        // delete subghz;
+        delete subghz;
         delete pagerReceiver;
         delete this;
     }
