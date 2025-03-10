@@ -32,6 +32,10 @@ private:
     const char* ceneterButtonCaption = NULL;
     const char* rightButtonCaption = NULL;
 
+    function<void(int)> leftButtonPress;
+    function<void(int)> centerButtonPress;
+    function<void(int)> rightButtonPress;
+
     int listOffset = 0;
     int selectedIndex = 0;
     int elementsCount = 0;
@@ -77,16 +81,19 @@ public:
         this->columnAlignments = columnAlignments;
     }
 
-    void SetLeftButton(const char* caption) {
+    void SetLeftButton(const char* caption, function<void(int)> pressHandler) {
         leftButtonCaption = caption;
+        leftButtonPress = pressHandler;
     }
 
-    void SetCenterButton(const char* caption) {
+    void SetCenterButton(const char* caption, function<void(int)> pressHandler) {
         ceneterButtonCaption = caption;
+        centerButtonPress = pressHandler;
     }
 
-    void SetRightButton(const char* caption) {
+    void SetRightButton(const char* caption, function<void(int)> pressHandler) {
         rightButtonCaption = caption;
+        rightButtonPress = pressHandler;
     }
 
     void AddElement() {
@@ -161,6 +168,7 @@ private:
                 int8_t columnOffset = columnOffsets[column];
                 getColumnElementName(idx, column, &stringBuffer);
                 // elements_string_fit_width(canvas, stringBuffer.furiString(), maxWidth);
+
                 if(columnAlignments == NULL) {
                     canvas_draw_str(canvas, columnOffset, 9 + i * FRAME_HEIGHT, stringBuffer.cstr());
                 } else {
@@ -181,26 +189,49 @@ private:
     }
 
     bool input(InputEvent* event) {
-        if(event->type != InputTypeShort) {
-            return false;
-        }
-
         switch(event->key) {
         case InputKeyUp:
-            if(selectedIndex == 0) {
-                setIndex(elementsCount - 1);
-            } else {
-                setIndex(selectedIndex - 1);
+            if(event->type == InputTypePress || event->type == InputTypeRepeat) {
+                if(selectedIndex == 0) {
+                    setIndex(elementsCount - 1);
+                } else {
+                    setIndex(selectedIndex - 1);
+                }
+                return true;
             }
-            return true;
+            break;
 
         case InputKeyDown:
-            if(selectedIndex >= elementsCount - 1) {
-                setIndex(0);
-            } else {
-                setIndex(selectedIndex + 1);
+            if(event->type == InputTypePress || event->type == InputTypeRepeat) {
+                if(selectedIndex >= elementsCount - 1) {
+                    setIndex(0);
+                } else {
+                    setIndex(selectedIndex + 1);
+                }
+                return true;
             }
-            return true;
+            break;
+
+        case InputKeyLeft:
+            if(event->type == InputTypePress && leftButtonPress != NULL) {
+                leftButtonPress(selectedIndex);
+                return true;
+            }
+            break;
+
+        case InputKeyOk:
+            if(event->type == InputTypePress && centerButtonPress != NULL) {
+                centerButtonPress(selectedIndex);
+                return true;
+            }
+            break;
+
+        case InputKeyRight:
+            if(event->type == InputTypePress && rightButtonPress != NULL) {
+                rightButtonPress(selectedIndex);
+                return true;
+            }
+            break;
 
         default:
             break;
@@ -211,10 +242,6 @@ private:
 
     void setIndex(int index) {
         selectedIndex = index;
-
-        // if(selectedIndex > 2) {
-        //     listOffset = selectedIndex - 2;
-        // }
 
         int bounds = elementsCount > 3 ? 2 : elementsCount;
         if(elementsCount > 3 && selectedIndex >= elementsCount - 1) {

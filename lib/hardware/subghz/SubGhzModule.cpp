@@ -118,6 +118,10 @@ public:
         }
     }
 
+    bool IsExternal() {
+        return isExternal;
+    }
+
     ~SubGhzModule() {
         PutToIdle();
 

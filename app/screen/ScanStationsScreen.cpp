@@ -6,17 +6,16 @@
 #include "PagerOptionsScreen.cpp"
 
 #include "lib/hardware/subghz/SubGhzModule.cpp"
-#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
 
 #include "app/AppNotifications.cpp"
 #include "app/pager/PagerReceiver.cpp"
 
-#define DEBUG true
+#define DEBUG false
 
 static int8_t stationScreenColumnOffsets[]{
     3, // hex
-    50, // station
-    73, // pager
+    49, // station
+    72, // pager
     94, // action
     128 - 8 // repeats / edit flag
 };
@@ -38,7 +37,6 @@ static Align stationScreenColumnAlignments[]{
 
 class ScanStationsScreen {
 private:
-    // SubMenuUiView* menuView;
     AdvancedColumnListUiView* menuView;
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
@@ -53,21 +51,22 @@ public:
             HANDLER_3ARG(&ScanStationsScreen::getElementColumnName)
         );
         menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
-        menuView->SetOnReturnToViewHandler(HANDLER(&ScanStationsScreen::onReturn));
+        menuView->SetOnReturnToViewHandler([this]() { this->menuView->Refresh(); });
 
-        menuView->SetNoElementCaption("Receiving...");
         menuView->SetColumnFonts(stationScreenColumnFonts);
         menuView->SetColumnAlignments(stationScreenColumnAlignments);
 
-        menuView->SetLeftButton("Config");
-
-        // menuView = new SubMenuUiView("Scanning for signals...");
-        // menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
-        // menuView->SetOnReturnToViewHandler(HANDLER(&ScanStationsScreen::onReturn));
+        menuView->SetLeftButton("Config", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
         subghz = new SubGhzModule();
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
         subghz->ReceiveAsync();
+
+        if(subghz->IsExternal()) {
+            menuView->SetNoElementCaption("Receiving via EXT...");
+        } else {
+            menuView->SetNoElementCaption("Receiving...");
+        }
 
 #if DEBUG
         receive(new SubGhzReceivedDataStub("Princeton", 0xCBC082));
@@ -81,7 +80,7 @@ public:
         receive(new SubGhzReceivedDataStub("Princeton", 0x1F3E7F));
 
         for(int i = 0; i < 99; i++) {
-            receive(new SubGhzReceivedDataStub("Princeton", 0x20019F));
+            receive(new SubGhzReceivedDataStub("Princeton", 0xABC082));
         }
 #endif
     }
@@ -101,13 +100,12 @@ private:
         if(pagerData->IsNew()) {
             Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
-            if(pagerData->GetIndex() == 0) {
-                menuView->SetCenterButton("View");
-                menuView->SetRightButton("Action");
+            if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
+                menuView->SetCenterButton("View", HANDLER_1ARG(&ScanStationsScreen::viewPager));
+                menuView->SetRightButton("Action", HANDLER_1ARG(&ScanStationsScreen::showActions));
             }
 
             menuView->AddElement();
-            // menuView->AddItem(getItemName(pagerData->GetData(), elementName), HANDLER_1ARG(&ScanStationsScreen::showOptions));
         }
 
         menuView->Refresh();
@@ -145,7 +143,7 @@ private:
             if(!pagerData->edited) {
                 str->format("x%d", pagerData->repeats);
             } else {
-                str->format("*");
+                str->format("**");
             }
             break;
 
@@ -154,35 +152,21 @@ private:
         }
     }
 
-    void refreshName(uint32_t index) {
+    void showConfig(uint32_t index) {
         UNUSED(index);
-        // menuView->SetItemLabel(index, getItemName(pagerReceiver->GetPagerData(index), elementNames[index]));
+        //     PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
+        //     UiManager::GetInstance()->PushView(screen->GetView());
     }
 
-    const char* getItemName(PagerDataStored* pagerData, String* string) {
-        PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
-        // PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
-        PagerAction action = decoder->GetAction(pagerData->data);
-
-        return string->format(
-            "%s%06X - %d/%d - %s:%d",
-            pagerData->edited ? "*" : "",
-            (unsigned int)pagerData->data,
-            decoder->GetStation(pagerData->data),
-            decoder->GetPager(pagerData->data),
-            action == UNKNOWN ? "A" : PagerActions::GetDescription(action),
-            decoder->GetActionValue(pagerData->data)
-        );
-    }
-
-    void showOptions(uint32_t index) {
+    void viewPager(uint32_t index) {
         PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
-    void onReturn() {
-        // refreshName(menuView->GetCurrentIndex());
-        menuView->Refresh();
+    void showActions(uint32_t index) {
+        UNUSED(index);
+        // PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
+        // UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void destroy() {
