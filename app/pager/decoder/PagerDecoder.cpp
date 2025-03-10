@@ -23,7 +23,7 @@ public:
     virtual uint32_t SetAction(uint32_t data, PagerAction action) = 0;
     virtual uint32_t SetActionValue(uint32_t data, uint8_t action) = 0;
     virtual vector<PagerAction> GetSupportedActions() = 0;
-    virtual uint8_t GetActionsCount();
+    virtual uint8_t GetActionsCount() = 0;
 
 protected:
     uint32_t reverseBits(uint32_t number, int count) {
