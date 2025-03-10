@@ -156,13 +156,6 @@ bool nfc_apdu_save_responses(
     NfcApduResponse* responses,
     uint32_t response_count);
 
-// 执行APDU命令
-bool nfc_apdu_run_commands(
-    NfcApduRunner* app,
-    NfcApduScript* script,
-    NfcApduResponse** out_responses,
-    uint32_t* out_response_count);
-
 // 添加日志
 void add_log_entry(NfcApduRunner* app, const char* message, bool is_error);
 

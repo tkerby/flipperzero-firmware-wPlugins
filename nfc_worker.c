@@ -116,15 +116,17 @@ static NfcCommand nfc_worker_poller_callback(NfcGenericEvent event, void* contex
 
 // 执行APDU命令的回调函数
 static NfcCommand nfc_worker_apdu_poller_callback(NfcGenericEvent event, void* context) {
-    UNUSED(event);
+    furi_check(context);
+    FURI_LOG_I(TAG, "APDU回调函数被调用");
     ApduContext* apdu_ctx = (ApduContext*)context;
 
     if(!apdu_ctx || apdu_ctx->finished) {
         return NfcCommandStop;
     }
+    FURI_LOG_I(TAG, "APDU回调函数继续执行");
 
     NfcWorker* worker = apdu_ctx->worker;
-
+    FURI_LOG_I(TAG, "APDU回调函数获取NFC Worker");
     // 如果是第一次调用或上一个命令已完成，准备执行下一个命令
     if(apdu_ctx->current_index < apdu_ctx->command_count) {
         const char* cmd = apdu_ctx->commands[apdu_ctx->current_index];
