@@ -116,6 +116,7 @@ static NfcCommand nfc_worker_poller_callback(NfcGenericEvent event, void* contex
 
 // 执行APDU命令的回调函数
 static NfcCommand nfc_worker_apdu_poller_callback(NfcGenericEvent event, void* context) {
+    UNUSED(event);
     furi_check(context);
     FURI_LOG_I(TAG, "APDU回调函数被调用");
     ApduContext* apdu_ctx = (ApduContext*)context;
