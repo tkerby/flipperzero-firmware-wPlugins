@@ -376,22 +376,11 @@ static int32_t nfc_worker_detect_thread(void* context) {
         FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
 
         // 等待轮询器初始化完成
-        furi_delay_ms(100);
+        // furi_delay_ms(100);
 
-        // 确保卡片仍然存在
-        if(!nfc_poller_detect(worker->poller)) {
-            FURI_LOG_E(TAG, "卡片已丢失，无法执行APDU命令");
-            worker->callback(NfcWorkerEventFail, worker->context);
-
-            // 停止轮询器
-            nfc_poller_stop(worker->poller);
-            nfc_poller_free(worker->poller);
-            worker->poller = NULL;
-
-            return -1;
-        }
-
-        FURI_LOG_I(TAG, "卡片仍然存在，开始执行APDU命令");
+        // 不再使用nfc_poller_detect检查卡片是否存在
+        // 假设卡片仍然存在，直接继续执行APDU命令
+        FURI_LOG_I(TAG, "开始执行APDU命令");
 
         // 分配响应内存
         worker->responses = malloc(sizeof(NfcApduResponse) * worker->script->command_count);
@@ -452,6 +441,14 @@ static int32_t nfc_worker_detect_thread(void* context) {
                 if(!worker->running) {
                     FURI_LOG_I(TAG, "用户取消操作");
                     worker->callback(NfcWorkerEventAborted, worker->context);
+                    success = false;
+                    break;
+                }
+
+                // 如果第一个命令就失败，可能是卡片已经不存在
+                if(i == 0) {
+                    FURI_LOG_E(TAG, "第一个命令执行失败，可能是卡片已经不存在");
+                    worker->callback(NfcWorkerEventCardLost, worker->context);
                     success = false;
                     break;
                 }
