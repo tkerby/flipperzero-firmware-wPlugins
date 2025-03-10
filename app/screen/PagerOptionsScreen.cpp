@@ -20,6 +20,9 @@ private:
     UiVariableItem* actionItem = NULL;
     UiVariableItem* hexItem = NULL;
 
+    UiVariableItem* protocolItem = NULL;
+    UiVariableItem* repeatsItem = NULL;
+
     String stationStr;
     String pagerStr;
     String actionStr;
@@ -31,9 +34,10 @@ public:
         this->pager = receiver->GetPagerData(pagerIndex);
         this->receiver = receiver;
 
-        varItemList = new VariableItemListUiView();
-
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
+
+        varItemList = new VariableItemListUiView();
+        varItemList->SetOnDestroyHandler(HANDLER(&PagerOptionsScreen::destroy));
 
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
@@ -57,9 +61,13 @@ public:
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
 
-        varItemList->AddItem(new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName()));
         varItemList->AddItem(
-            new UiVariableItem("Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats))
+            protocolItem = new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName())
+        );
+        varItemList->AddItem(
+            repeatsItem = new UiVariableItem(
+                "Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats)
+            )
         );
     }
 
@@ -107,6 +115,17 @@ private:
 
     const char* hexValueChanged(int8_t) {
         return hexStr.format("%06X", (unsigned int)pager->data);
+    }
+
+    void destroy() {
+        delete encodingItem;
+        delete stationItem;
+        delete pagerItem;
+        delete actionItem;
+        delete hexItem;
+        delete protocolItem;
+        delete repeatsItem;
+        delete this;
     }
 
 public:

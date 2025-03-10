@@ -17,6 +17,7 @@ private:
     uint8_t selectedIndex;
     uint8_t valuesCount;
 
+    IDestructable* handlerContext = NULL;
     function<const char*(int)> changeHandler;
 
     static void itemChangeCallback(VariableItem* item) {
@@ -27,7 +28,7 @@ private:
 
 public:
     UiVariableItem(const char* label, const char* staticValue) :
-        UiVariableItem(label, [staticValue](int8_t) { return staticValue; }) {
+            UiVariableItem(label, [staticValue](int8_t) { return staticValue; }) {
     }
 
     UiVariableItem(const char* label, function<const char*(int8_t)> changeHandler) : UiVariableItem(label, 0, 1, changeHandler) {
@@ -41,7 +42,9 @@ public:
     }
 
     void AddTo(VariableItemList* varItemList) {
-        item = variable_item_list_add(varItemList, label, valuesCount, itemChangeCallback, new HandlerContext(changeHandler));
+        item = variable_item_list_add(
+            varItemList, label, valuesCount, itemChangeCallback, handlerContext = new HandlerContext(changeHandler)
+        );
         Refresh();
     }
 
@@ -60,6 +63,13 @@ public:
         variable_item_set_values_count(item, valuesCount);
         variable_item_set_current_value_index(item, selectedIndex);
         itemChangeCallback(item);
+    }
+
+    ~UiVariableItem() {
+        if(handlerContext != NULL) {
+            delete handlerContext;
+            handlerContext = NULL;
+        }
     }
 };
 
