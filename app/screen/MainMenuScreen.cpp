@@ -19,6 +19,7 @@ public:
         menuView->AddItem("Scan for station signals", HANDLER_1ARG(&MainMenuScreen::scanStationsMenuPressed));
         menuView->AddItem("Saved staions database", HANDLER_1ARG(&MainMenuScreen::stationDatabasePressed));
         menuView->AddItem("About / Manual", HANDLER_1ARG(&MainMenuScreen::aboutPressed));
+        menuView->SetOnDestroyHandler(HANDLER(&MainMenuScreen::destroy));
     }
 
     UiView* GetView() {
@@ -40,6 +41,10 @@ private:
 
         Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
         menuView->SetItemLabel(index, "Your pushed me!");
+    }
+
+    void destroy() {
+        delete this;
     }
 };
 
