@@ -370,7 +370,7 @@ static int32_t nfc_worker_detect_thread(void* context) {
     // 如果需要执行APDU命令，继续执行
     if(worker->state == NfcWorkerStateRunning && worker->card_detected) {
         // 短暂延迟，确保之前的轮询器完全停止
-        furi_delay_ms(200);
+        furi_delay_ms(500);
 
         // 创建新的轮询器用于执行APDU命令
         worker->poller = nfc_poller_alloc(worker->nfc, protocol);
@@ -458,7 +458,7 @@ static int32_t nfc_worker_detect_thread(void* context) {
         FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
 
         // 等待轮询器初始化完成
-        furi_delay_ms(100);
+        // furi_delay_ms(100);
 
         FURI_LOG_I(TAG, "开始执行APDU命令");
 
