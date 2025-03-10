@@ -458,7 +458,7 @@ static int32_t nfc_worker_detect_thread(void* context) {
         FURI_LOG_I(TAG, "APDU执行轮询器启动成功");
 
         // 等待轮询器初始化完成
-        // furi_delay_ms(100);
+        furi_delay_ms(100);
 
         FURI_LOG_I(TAG, "开始执行APDU命令");
 
