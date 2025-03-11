@@ -1,0 +1,4 @@
+Filetype: APDU Script
+Version: 1
+CardType: iso14443_3a
+Data: ["FFCA000000"] 
