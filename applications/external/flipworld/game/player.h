@@ -59,12 +59,20 @@ typedef enum {
     GAME_MENU_NPC, // NPC dialog
 } GameMenuScreen;
 
+// game modes
+typedef enum {
+    GAME_MODE_PVE = 0, // player(s) vs everyone
+    GAME_MODE_PVP = 1, // player vs player
+    GAME_MODE_STORY = 2, // story mode
+} GameMode;
+
 typedef struct {
     PlayerContext* player_context;
     Level* levels[MAX_LEVELS];
     Entity* enemies[MAX_ENEMIES];
     Entity* npcs[MAX_NPCS];
     Entity* player;
+    //
     float fps;
     int level_count;
     int enemy_count;
@@ -82,6 +90,8 @@ typedef struct {
     //
     GameMenuScreen menu_screen;
     uint8_t menu_selection;
+    //
+    GameMode game_mode;
     //
     int icon_count;
     int icon_offset;

@@ -174,13 +174,12 @@ void background_render(Canvas* canvas, GameManager* manager) {
         // draw username over player's head
         draw_username(canvas, posi, game_context->player_context->username);
 
-        // draw switch world icon
-        if(game_context->is_switching_level) {
+        if(game_context->is_switching_level)
+            // draw switch world icon
             canvas_draw_icon(canvas, 0, 0, &I_icon_world_change_128x64px);
-        }
-
-        // Draw user stats
-        draw_user_stats(canvas, (Vector){0, 50}, manager);
+        else
+            // Draw user stats
+            draw_user_stats(canvas, (Vector){0, 50}, manager);
     } else {
         // draw menu
         draw_menu(manager, canvas);

@@ -336,8 +336,6 @@ bool save_player_context_api(PlayerContext* player_context) {
     // closing brace
     furi_string_cat_str(json, "}");
 
-    // save the json to API
-
     // create new JSON with username key (of just username), and game_stats key (of the all of the data)
     FuriString* json_data = furi_string_alloc();
     if(!json_data) {
@@ -355,10 +353,11 @@ bool save_player_context_api(PlayerContext* player_context) {
     furi_string_free(json);
 
     // save the json_data to the API
-    if(!flipper_http_post_request_with_headers(
+    if(!flipper_http_request(
            fhttp,
+           POST,
            "https://www.flipsocial.net/api/user/update-game-stats/",
-           "{\"Content-Type\":\"application/json\"}",
+           "{\"Content-Type\": \"application/json\"}",
            furi_string_get_cstr(json_data))) {
         FURI_LOG_E(TAG, "Failed to save player context to API");
         furi_string_free(json_data);

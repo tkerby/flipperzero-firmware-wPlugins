@@ -133,8 +133,7 @@ FuriString* fetch_world(const char* name) {
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json",
         name);
     fhttp->save_received_data = true;
-    if(!flipper_http_get_request_with_headers(
-           fhttp, url, "{\"Content-Type\": \"application/json\"}")) {
+    if(!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL)) {
         FURI_LOG_E("Game", "Failed to send HTTP request");
         flipper_http_free(fhttp);
         return NULL;
