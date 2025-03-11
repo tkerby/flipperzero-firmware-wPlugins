@@ -66,6 +66,9 @@ bool nfc_apdu_runner_scene_results_on_event(void* context, SceneManagerEvent eve
             consumed = true;
         } else if(event.event == GuiButtonTypeRight) {
             // 保存按钮 - 进入保存文件场景
+            // 设置场景状态，标记为进入保存文件场景
+            scene_manager_set_scene_state(
+                app->scene_manager, NfcApduRunnerSceneResults, NfcApduRunnerSceneSaveFile);
             scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneSaveFile);
             consumed = true;
         }
@@ -84,8 +87,10 @@ void nfc_apdu_runner_scene_results_on_exit(void* context) {
     NfcApduRunner* app = context;
     widget_reset(app->widget);
 
-    // 释放响应资源
-    if(app->responses != NULL) {
+    // 只有在不是进入保存文件场景时才释放响应资源
+    if(app->responses != NULL &&
+       scene_manager_get_scene_state(app->scene_manager, NfcApduRunnerSceneResults) !=
+           NfcApduRunnerSceneSaveFile) {
         nfc_apdu_responses_free(app->responses, app->response_count);
         app->responses = NULL;
         app->response_count = 0;

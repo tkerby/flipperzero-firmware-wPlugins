@@ -104,4 +104,11 @@ bool nfc_apdu_runner_scene_save_file_on_event(void* context, SceneManagerEvent e
 void nfc_apdu_runner_scene_save_file_on_exit(void* context) {
     NfcApduRunner* app = context;
     text_input_reset(app->text_input);
+
+    // 释放响应资源
+    if(app->responses != NULL) {
+        nfc_apdu_responses_free(app->responses, app->response_count);
+        app->responses = NULL;
+        app->response_count = 0;
+    }
 }
