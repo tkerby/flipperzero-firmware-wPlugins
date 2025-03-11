@@ -7,6 +7,7 @@
 
 #include "UiView.cpp"
 #include "lib/String.cpp"
+#include "lib/Helpers.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_ADV_SUBMENU"
@@ -17,10 +18,6 @@ using namespace std;
 
 #define FRAME_HEIGHT    12
 #define ITEMS_ON_SCREEN 4
-
-struct ColumnOrientedListViewModel {
-    void* uiVIew;
-};
 
 class ColumnOrientedListUiView : public UiView {
 private:
@@ -64,8 +61,8 @@ public:
         view_set_enter_callback(view, enterCallback);
         view_set_exit_callback(view, exitCallback);
 
-        view_allocate_model(view, ViewModelTypeLockFree, sizeof(ColumnOrientedListUiView*));
-        with_view_model_cpp(view, ColumnOrientedListViewModel*, model, model->uiVIew = this;, false);
+        view_allocate_model(view, ViewModelTypeLockFree, sizeof(UiVIewPointerViewModel*));
+        with_view_model_cpp(view, UiVIewPointerViewModel*, model, model->uiVIew = this;, false);
     }
 
     void SetNoElementCaption(const char* noElementsCapton) {
@@ -253,7 +250,7 @@ private:
     }
 
     static void drawCallback(Canvas* canvas, void* model) {
-        ColumnOrientedListUiView* uiView = (ColumnOrientedListUiView*)((ColumnOrientedListViewModel*)model)->uiVIew;
+        ColumnOrientedListUiView* uiView = (ColumnOrientedListUiView*)((UiVIewPointerViewModel*)model)->uiVIew;
         uiView->draw(canvas);
     }
 

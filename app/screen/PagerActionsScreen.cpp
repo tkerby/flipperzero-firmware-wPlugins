@@ -1,12 +1,13 @@
 #ifndef _PAGER_ACTIONS_SCREEN_CLASS_
 #define _PAGER_ACTIONS_SCREEN_CLASS_
 
+#include "lib/String.cpp"
 #include "app/pager/PagerDataStored.cpp"
 #include "app/pager/decoder/PagerDecoder.cpp"
-#include "lib/String.cpp"
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/SubMenuUiView.cpp"
+#include "app/screen/BatchTransmissionScreen.cpp"
 
 #include "lib/ui/UiManager.cpp"
 
@@ -62,6 +63,7 @@ public:
 
 private:
     void resendToAll(uint32_t) {
+        UiManager::GetInstance()->PushView((new BatchTransmissionScreen(pager, decoder, subghz))->GetView());
     }
 
     void destroy() {

@@ -32,6 +32,7 @@ private:
     const SubGhzDevice* device;
     SubGhzReceiver* receiver;
     SubGhzWorker* worker;
+    // SubGhzTransmitter transmitter;
     IDestructable* receiveHandler = NULL;
 
     bool isExternal;
@@ -98,6 +99,13 @@ public:
         subghz_worker_start(worker);
 
         state = RECEIVING;
+    }
+
+    void Transmit() {
+        PutToIdle();
+
+        // transmitter = subghz_transmitter_alloc_init(environment, "Princeton");
+        // subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter);
     }
 
     void StopReceive() {
