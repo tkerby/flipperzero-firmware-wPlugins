@@ -425,6 +425,7 @@ static NfcApduRunner* nfc_apdu_runner_alloc() {
     }
 
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     if(!app->view_dispatcher) {
         nfc_apdu_runner_free(app);
         return NULL;
