@@ -268,20 +268,28 @@ bool nfc_apdu_save_responses(
     Storage* storage,
     const char* file_path,
     NfcApduResponse* responses,
-    uint32_t response_count) {
+    uint32_t response_count,
+    const char* custom_save_path) {
     FuriString* temp_str = furi_string_alloc();
     FuriString* file_path_str = furi_string_alloc_set(file_path);
     FuriString* response_path = furi_string_alloc();
 
     // 构建响应文件路径
-    FuriString* filename = furi_string_alloc();
-    path_extract_filename(file_path_str, filename, true);
-    furi_string_cat_printf(
-        response_path,
-        "%s/%s%s",
-        APP_DIRECTORY_PATH,
-        furi_string_get_cstr(filename),
-        RESPONSE_EXTENSION);
+    if(custom_save_path != NULL) {
+        // 使用自定义保存路径
+        furi_string_set(response_path, custom_save_path);
+    } else {
+        // 使用默认路径
+        FuriString* filename = furi_string_alloc();
+        path_extract_filename(file_path_str, filename, true);
+        furi_string_cat_printf(
+            response_path,
+            "%s/%s%s",
+            APP_DIRECTORY_PATH,
+            furi_string_get_cstr(filename),
+            RESPONSE_EXTENSION);
+        furi_string_free(filename);
+    }
 
     File* file = storage_file_alloc(storage);
     bool success = false;
@@ -333,7 +341,6 @@ bool nfc_apdu_save_responses(
     storage_file_free(file);
     furi_string_free(temp_str);
     furi_string_free(file_path_str);
-    furi_string_free(filename);
     furi_string_free(response_path);
 
     return success;
@@ -471,6 +478,12 @@ static NfcApduRunner* nfc_apdu_runner_alloc() {
         return NULL;
     }
 
+    app->text_input = text_input_alloc();
+    if(!app->text_input) {
+        nfc_apdu_runner_free(app);
+        return NULL;
+    }
+
     // 分配NFC资源
     app->nfc = nfc_alloc();
     if(!app->nfc) {
@@ -566,6 +579,12 @@ static void nfc_apdu_runner_free(NfcApduRunner* app) {
         app->button_menu = NULL;
     }
 
+    if(app->text_input) {
+        view_dispatcher_remove_view(app->view_dispatcher, NfcApduRunnerViewTextInput);
+        text_input_free(app->text_input);
+        app->text_input = NULL;
+    }
+
     // 关闭记录
     if(app->dialogs) {
         furi_record_close(RECORD_DIALOGS);
@@ -653,7 +672,7 @@ static void nfc_apdu_runner_init(NfcApduRunner* app) {
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     // 检查视图组件是否已分配
-    if(!app->submenu || !app->widget || !app->text_box || !app->popup) {
+    if(!app->submenu || !app->widget || !app->text_box || !app->popup || !app->text_input) {
         return;
     }
 
@@ -666,6 +685,8 @@ static void nfc_apdu_runner_init(NfcApduRunner* app) {
         app->view_dispatcher, NfcApduRunnerViewTextBox, text_box_get_view(app->text_box));
     view_dispatcher_add_view(
         app->view_dispatcher, NfcApduRunnerViewPopup, popup_get_view(app->popup));
+    view_dispatcher_add_view(
+        app->view_dispatcher, NfcApduRunnerViewTextInput, text_input_get_view(app->text_input));
 
     // 配置文本框
     text_box_set_font(app->text_box, TextBoxFontText);
@@ -677,32 +698,10 @@ static void nfc_apdu_runner_init(NfcApduRunner* app) {
 
     // 确保应用目录存在
     if(!storage_dir_exists(app->storage, APP_DIRECTORY_PATH)) {
-        FURI_LOG_I("APDU_RUNNER", "Creating application directory: %s", APP_DIRECTORY_PATH);
         if(!storage_simply_mkdir(app->storage, APP_DIRECTORY_PATH)) {
-            FURI_LOG_E("APDU_RUNNER", "Failed to create application directory");
-            // 显示错误消息
-            widget_reset(app->widget);
-            widget_add_string_element(
-                app->widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, "Error");
-            widget_add_string_multiline_element(
-                app->widget,
-                64,
-                42,
-                AlignCenter,
-                AlignCenter,
-                FontSecondary,
-                "Failed to create\napplication directory");
-            view_dispatcher_switch_to_view(app->view_dispatcher, NfcApduRunnerViewWidget);
+            FURI_LOG_E("APDU_DEBUG", "无法创建应用目录");
             return;
         }
-        FURI_LOG_I("APDU_RUNNER", "Application directory created successfully");
-    } else {
-        FURI_LOG_I("APDU_RUNNER", "Application directory already exists");
-    }
-
-    // 检查场景管理器是否已分配
-    if(!app->scene_manager) {
-        return;
     }
 
     // 启动场景管理器

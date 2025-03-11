@@ -9,6 +9,7 @@ typedef enum {
     NfcApduRunnerSceneCardPlacement,
     NfcApduRunnerSceneRunning,
     NfcApduRunnerSceneResults,
+    NfcApduRunnerSceneSaveFile,
     NfcApduRunnerSceneLogs,
     NfcApduRunnerSceneAbout,
     NfcApduRunnerSceneCount,
@@ -44,3 +45,7 @@ void nfc_apdu_runner_scene_logs_on_exit(void* context);
 void nfc_apdu_runner_scene_about_on_enter(void* context);
 bool nfc_apdu_runner_scene_about_on_event(void* context, SceneManagerEvent event);
 void nfc_apdu_runner_scene_about_on_exit(void* context);
+
+void nfc_apdu_runner_scene_save_file_on_enter(void* context);
+bool nfc_apdu_runner_scene_save_file_on_event(void* context, SceneManagerEvent event);
+void nfc_apdu_runner_scene_save_file_on_exit(void* context);

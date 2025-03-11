@@ -1,10 +1,17 @@
+/*
+ * @Author: SpenserCai
+ * @Date: 2025-03-07 16:30:29
+ * @version: 
+ * @LastEditors: SpenserCai
+ * @LastEditTime: 2025-03-11 09:50:54
+ * @Description: file content
+ */
 #include "../nfc_apdu_runner.h"
 #include "nfc_apdu_runner_scene.h"
 
 // 开始场景菜单项枚举
 enum {
     NfcApduRunnerStartSubmenuIndexLoadFile,
-    NfcApduRunnerStartSubmenuIndexViewLogs,
     NfcApduRunnerStartSubmenuIndexAbout,
 };
 
@@ -25,13 +32,6 @@ void nfc_apdu_runner_scene_start_on_enter(void* context) {
         submenu,
         "Load Script",
         NfcApduRunnerStartSubmenuIndexLoadFile,
-        nfc_apdu_runner_start_submenu_callback,
-        app);
-
-    submenu_add_item(
-        submenu,
-        "View Logs",
-        NfcApduRunnerStartSubmenuIndexViewLogs,
         nfc_apdu_runner_start_submenu_callback,
         app);
 
@@ -59,10 +59,6 @@ bool nfc_apdu_runner_scene_start_on_event(void* context, SceneManagerEvent event
         switch(event.event) {
         case NfcApduRunnerStartSubmenuIndexLoadFile:
             scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneFileSelect);
-            consumed = true;
-            break;
-        case NfcApduRunnerStartSubmenuIndexViewLogs:
-            scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneLogs);
             consumed = true;
             break;
         case NfcApduRunnerStartSubmenuIndexAbout:

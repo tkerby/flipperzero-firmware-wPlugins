@@ -9,6 +9,7 @@ void (*const nfc_apdu_runner_on_enter_handlers[])(void*) = {
     nfc_apdu_runner_scene_card_placement_on_enter,
     nfc_apdu_runner_scene_running_on_enter,
     nfc_apdu_runner_scene_results_on_enter,
+    nfc_apdu_runner_scene_save_file_on_enter,
     nfc_apdu_runner_scene_logs_on_enter,
     nfc_apdu_runner_scene_about_on_enter,
 };
@@ -22,6 +23,7 @@ bool (*const nfc_apdu_runner_on_event_handlers[])(void* context, SceneManagerEve
     nfc_apdu_runner_scene_card_placement_on_event,
     nfc_apdu_runner_scene_running_on_event,
     nfc_apdu_runner_scene_results_on_event,
+    nfc_apdu_runner_scene_save_file_on_event,
     nfc_apdu_runner_scene_logs_on_event,
     nfc_apdu_runner_scene_about_on_event,
 };
@@ -35,6 +37,7 @@ void (*const nfc_apdu_runner_on_exit_handlers[])(void* context) = {
     nfc_apdu_runner_scene_card_placement_on_exit,
     nfc_apdu_runner_scene_running_on_exit,
     nfc_apdu_runner_scene_results_on_exit,
+    nfc_apdu_runner_scene_save_file_on_exit,
     nfc_apdu_runner_scene_logs_on_exit,
     nfc_apdu_runner_scene_about_on_exit,
 };

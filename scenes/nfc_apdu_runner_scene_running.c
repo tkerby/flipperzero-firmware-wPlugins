@@ -129,22 +129,6 @@ bool nfc_apdu_runner_scene_running_on_event(void* context, SceneManagerEvent eve
             // 获取响应结果
             nfc_worker_get_responses(app->worker, &app->responses, &app->response_count);
 
-            // 保存响应结果
-            FURI_LOG_I("APDU_DEBUG", "开始保存响应结果");
-            bool success = nfc_apdu_save_responses(
-                app->storage,
-                furi_string_get_cstr(app->file_path),
-                app->responses,
-                app->response_count);
-
-            if(!success) {
-                FURI_LOG_E("APDU_DEBUG", "保存响应结果失败");
-                show_error_popup(app, "Failed to save responses");
-                return true;
-            }
-
-            FURI_LOG_I("APDU_DEBUG", "响应结果保存成功");
-
             // 切换到结果场景
             scene_manager_next_scene(app->scene_manager, NfcApduRunnerSceneResults);
             consumed = true;

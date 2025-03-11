@@ -38,6 +38,7 @@
 #define MAX_APDU_COMMANDS  50
 #define MAX_APDU_LENGTH    256
 #define MAX_LOG_ENTRIES    100
+#define MAX_FILENAME_LEN   64
 
 // 自定义事件枚举
 typedef enum {
@@ -60,6 +61,7 @@ typedef enum {
     NfcApduRunnerViewWidget,
     NfcApduRunnerViewTextBox,
     NfcApduRunnerViewPopup,
+    NfcApduRunnerViewTextInput,
 } NfcApduRunnerView;
 
 // 日志条目结构
@@ -119,6 +121,7 @@ typedef struct {
     FuriString* text_box_store;
     Popup* popup;
     ButtonMenu* button_menu;
+    TextInput* text_input;
 
     // NFC
     Nfc* nfc;
@@ -130,6 +133,7 @@ typedef struct {
     NfcApduScript* script;
     NfcApduResponse* responses;
     uint32_t response_count;
+    char file_name_buf[MAX_FILENAME_LEN + 1];
 
     // 日志
     LogEntry* log_entries;
@@ -154,7 +158,8 @@ bool nfc_apdu_save_responses(
     Storage* storage,
     const char* file_path,
     NfcApduResponse* responses,
-    uint32_t response_count);
+    uint32_t response_count,
+    const char* custom_save_path);
 
 // 添加日志
 void add_log_entry(NfcApduRunner* app, const char* message, bool is_error);
