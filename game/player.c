@@ -382,6 +382,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         {
             if (!game_context->is_menu_open)
             {
+                save_player_context(player);
+                furi_delay_ms(100);
                 game_manager_game_stop(manager);
                 return;
             }
