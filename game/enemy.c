@@ -263,7 +263,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                 if (enemy_context->health <= 0)
                 {
-                    FURI_LOG_I("Game", "Enemy '%s' is dead.. resetting enemy position and health", enemy_context->id);
                     enemy_context->state = ENTITY_DEAD;
 
                     // Reset enemy position and health
@@ -278,12 +277,11 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 }
                 else
                 {
-                    FURI_LOG_I("Game", "Enemy '%s' took %f damage from player", enemy_context->id, (double)game_context->player_context->strength);
                     enemy_context->state = ENTITY_ATTACKED;
                     // Vector old_pos = entity_pos_get(self);
                     //  Bounce the enemy back by X units opposite their last movement direction
                     enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
-                    enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
+                    // enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(self, enemy_pos);
 
                     // Reset enemy's movement direction to prevent immediate re-collision
@@ -332,7 +330,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
                     // Bounce the player back by X units opposite their last movement direction
                     player_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
-                    player_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
+                    // player_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(other, player_pos);
 
                     // Reset player's movement direction to prevent immediate re-collision
@@ -349,10 +347,6 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             game_context->player_context->dx = 0;
             game_context->player_context->dy = 0;
         }
-
-        // Reset enemy's state
-        enemy_context->state = ENTITY_IDLE;
-        enemy_context->elapsed_move_timer = 0.0f;
 
         if (game_context->player_context->state == ENTITY_DEAD)
         {
@@ -437,12 +431,18 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
 
     case ENTITY_MOVING_TO_END:
     case ENTITY_MOVING_TO_START:
+    case ENTITY_ATTACKED:
     {
-        // Determine the target position based on the current state
-        Vector target_position = (enemy_context->state == ENTITY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
-
         // Get current position
         Vector current_pos = entity_pos_get(self);
+        if (enemy_context->state == ENTITY_ATTACKED)
+        {
+            // set direction again
+            enemy_context->state = enemy_context->direction == ENTITY_LEFT ? ENTITY_MOVING_TO_START : ENTITY_MOVING_TO_END;
+        }
+
+        // Determine the target position based on the current state
+        Vector target_position = (enemy_context->state == ENTITY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
         Vector direction_vector = {0, 0};
 
         // Calculate direction towards the target

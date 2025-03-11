@@ -15,13 +15,16 @@
 //
 
 #define TAG "FlipWorld"
-#define VERSION 0.5
+#define VERSION 0.6
 #define VERSION_TAG TAG " " FAP_VERSION
 
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
-    FlipWorldSubmenuIndexRun, // Click to run the FlipWorld application
+    FlipWorldSubmenuIndexPvE,
+    FlipWorldSubmenuIndexStory,
+    FlipWorldSubmenuIndexPvP,
+    FlipWorldSubmenuIndexGameSubmenu,
     FlipWorldSubmenuIndexMessage,
     FlipWorldSubmenuIndexSettings,
     FlipWorldSubmenuIndexWiFiSettings,
@@ -33,6 +36,7 @@ typedef enum
 typedef enum
 {
     FlipWorldViewSubmenu,          // The submenu
+    FlipWorldViewGameSubmenu,      // The game submenu
     FlipWorldViewMessage,          // The about, loading screen
     FlipWorldViewSettings,         // The settings screen
     FlipWorldViewVariableItemList, // The variable item list screen
@@ -58,6 +62,7 @@ typedef struct
     ViewDispatcher *view_dispatcher;       // Switches between our views
     View *view_message;                    // The about, loading screen
     Submenu *submenu;                      // The submenu
+    Submenu *submenu_game;                 // The game submenu
     Submenu *submenu_settings;             // The settings submenu
     VariableItemList *variable_item_list;  // The variable item list (settngs)
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
@@ -92,6 +97,7 @@ extern int player_sprite_index;
 extern char *vgm_levels[];
 extern int vgm_x_index;
 extern int vgm_y_index;
+extern int game_mode_index;
 float atof_(const char *nptr);
 float atof_furi(const FuriString *nptr);
 bool is_str(const char *src, const char *dst);

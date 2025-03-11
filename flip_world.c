@@ -10,6 +10,7 @@ int player_sprite_index = 1;
 char *vgm_levels[] = {"-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 int vgm_x_index = 2;
 int vgm_y_index = 2;
+int game_mode_index = 0;
 float atof_(const char *nptr) { return (float)strtod(nptr, NULL); }
 float atof_furi(const FuriString *nptr) { return atof_(furi_string_get_cstr(nptr)); }
 bool is_str(const char *src, const char *dst) { return strcmp(src, dst) == 0; }

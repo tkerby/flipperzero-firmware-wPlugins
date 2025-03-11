@@ -11,7 +11,7 @@
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.
 #ifdef DEVELOPMENT
 #define FURI_LOG_DEV(tag, format, ...) furi_log_print_format(FuriLogLevelInfo, tag, format, ##__VA_ARGS__)
-#define DEV_CRASH()                    furi_crash()
+#define DEV_CRASH() furi_crash()
 #else
 #define FURI_LOG_DEV(tag, format, ...)
 #define DEV_CRASH()
@@ -430,7 +430,7 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             char _game_fps[8];
             if (load_char("Game-FPS", _game_fps, sizeof(_game_fps)))
             {
-                                int index = is_str(_game_fps, "30") ? 0 : is_str(_game_fps, "60") ? 1
+                int index = is_str(_game_fps, "30") ? 0 : is_str(_game_fps, "60") ? 1
                                                       : is_str(_game_fps, "120")  ? 2
                                                       : is_str(_game_fps, "240")  ? 3
                                                                                   : 0;
@@ -441,20 +441,19 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             if (load_char("Game-VGM-X", _game_vgm_x, sizeof(_game_vgm_x)))
             {
                 int vgm_x = atoi(_game_vgm_x);
-                int index = vgm_x == -2 ? 0 :
-                            vgm_x == -1 ? 1 :
-                            vgm_x == 0  ? 2 :
-                            vgm_x == 1  ? 3 :
-                            vgm_x == 2  ? 4 :
-                            vgm_x == 3  ? 5 :
-                            vgm_x == 4  ? 6 :
-                            vgm_x == 5  ? 7 :
-                            vgm_x == 6  ? 8 :
-                            vgm_x == 7  ? 9 :
-                            vgm_x == 8  ? 10 :
-                            vgm_x == 9  ? 11 :
-                            vgm_x == 10 ? 12 :
-                                          2;
+                int index = vgm_x == -2 ? 0 : vgm_x == -1 ? 1
+                                          : vgm_x == 0    ? 2
+                                          : vgm_x == 1    ? 3
+                                          : vgm_x == 2    ? 4
+                                          : vgm_x == 3    ? 5
+                                          : vgm_x == 4    ? 6
+                                          : vgm_x == 5    ? 7
+                                          : vgm_x == 6    ? 8
+                                          : vgm_x == 7    ? 9
+                                          : vgm_x == 8    ? 10
+                                          : vgm_x == 9    ? 11
+                                          : vgm_x == 10   ? 12
+                                                          : 2;
                 variable_item_set_current_value_index(app->variable_item_game_vgm_x, index);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_x, vgm_levels[index]);
             }
@@ -462,41 +461,43 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
             if (load_char("Game-VGM-Y", _game_vgm_y, sizeof(_game_vgm_y)))
             {
                 int vgm_y = atoi(_game_vgm_y);
-                int index = vgm_y == -2 ? 0 :
-                            vgm_y == -1 ? 1 :
-                            vgm_y == 0  ? 2 :
-                            vgm_y == 1  ? 3 :
-                            vgm_y == 2  ? 4 :
-                            vgm_y == 3  ? 5 :
-                            vgm_y == 4  ? 6 :
-                            vgm_y == 5  ? 7 :
-                            vgm_y == 6  ? 8 :
-                            vgm_y == 7  ? 9 :
-                            vgm_y == 8  ? 10 :
-                            vgm_y == 9  ? 11 :
-                            vgm_y == 10 ? 12 :
-                                          2;
+                int index = vgm_y == -2 ? 0 : vgm_y == -1 ? 1
+                                          : vgm_y == 0    ? 2
+                                          : vgm_y == 1    ? 3
+                                          : vgm_y == 2    ? 4
+                                          : vgm_y == 3    ? 5
+                                          : vgm_y == 4    ? 6
+                                          : vgm_y == 5    ? 7
+                                          : vgm_y == 6    ? 8
+                                          : vgm_y == 7    ? 9
+                                          : vgm_y == 8    ? 10
+                                          : vgm_y == 9    ? 11
+                                          : vgm_y == 10   ? 12
+                                                          : 2;
                 variable_item_set_current_value_index(app->variable_item_game_vgm_y, index);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_y, vgm_levels[index]);
             }
             char _game_screen_always_on[8];
             if (load_char("Game-Screen-Always-On", _game_screen_always_on, sizeof(_game_screen_always_on)))
             {
-                int index = is_str(_game_screen_always_on, "No") ? 0 : is_str(_game_screen_always_on, "Yes") ? 1 : 0;
+                int index = is_str(_game_screen_always_on, "No") ? 0 : is_str(_game_screen_always_on, "Yes") ? 1
+                                                                                                             : 0;
                 variable_item_set_current_value_text(app->variable_item_game_screen_always_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, index);
             }
             char _game_sound_on[8];
             if (load_char("Game-Sound-On", _game_sound_on, sizeof(_game_sound_on)))
             {
-                int index = is_str(_game_sound_on, "No") ? 0 : is_str(_game_sound_on, "Yes") ? 1 : 0;
+                int index = is_str(_game_sound_on, "No") ? 0 : is_str(_game_sound_on, "Yes") ? 1
+                                                                                             : 0;
                 variable_item_set_current_value_text(app->variable_item_game_sound_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_sound_on, index);
             }
             char _game_vibration_on[8];
             if (load_char("Game-Vibration-On", _game_vibration_on, sizeof(_game_vibration_on)))
             {
-                int index = is_str(_game_vibration_on, "No") ? 0 : is_str(_game_vibration_on, "Yes") ? 1 : 0;
+                int index = is_str(_game_vibration_on, "No") ? 0 : is_str(_game_vibration_on, "Yes") ? 1
+                                                                                                     : 0;
                 variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[index]);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, index);
             }
@@ -737,7 +738,8 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         }
     }
 
-    if (should_free_submenu_settings) free_submenu_settings(app);
+    if (should_free_submenu_settings)
+        free_submenu_settings(app);
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -760,7 +762,7 @@ static bool fetch_world_list(FlipperHTTP *fhttp)
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(fhttp, GET, "https://www.flipsocial.net/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -795,7 +797,7 @@ static bool fetch_player_stats(FlipperHTTP *fhttp)
 
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/player/player_stats.json");
     fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
 }
 
 // static bool fetch_app_update(FlipperHTTP *fhttp)
@@ -919,7 +921,7 @@ static bool _fetch_game(DataLoaderModel *model)
         }
         char payload[256];
         snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
-        return flipper_http_post_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
+        return flipper_http_request(model->fhttp, POST, "https://www.flipsocial.net/api/user/login/", "{\"Content-Type\":\"application/json\"}", payload);
     }
     else if (model->request_index == 1)
     {
@@ -957,7 +959,7 @@ static bool _fetch_game(DataLoaderModel *model)
             char payload[172];
             snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
             model->title = "Registering...";
-            return flipper_http_post_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
+            return flipper_http_request(model->fhttp, POST, "https://www.flipsocial.net/api/user/register/", "{\"Content-Type\":\"application/json\"}", payload);
         }
         else
         {
@@ -1015,7 +1017,7 @@ static bool _fetch_game(DataLoaderModel *model)
         snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v5/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
-        return flipper_http_get_request_with_headers(model->fhttp, url, "{\"Content-Type\":\"application/json\"}");
+        return flipper_http_request(model->fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
     }
     FURI_LOG_E(TAG, "Unknown request index");
     return false;
@@ -1187,7 +1189,19 @@ void callback_submenu_choices(void *context, uint32_t index)
     }
     switch (index)
     {
-    case FlipWorldSubmenuIndexRun:
+    case FlipWorldSubmenuIndexGameSubmenu:
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewGameSubmenu);
+        break;
+    case FlipWorldSubmenuIndexStory:
+        game_mode_index = 2; // GAME_MODE_STORY
+        easy_flipper_dialog("Unavailable", "\nStory mode is not ready yet.\nPress BACK to return.");
+        break;
+    case FlipWorldSubmenuIndexPvP:
+        game_mode_index = 1; // GAME_MODE_PVP
+        easy_flipper_dialog("Unavailable", "\nPvP mode is not ready yet.\nPress BACK to return.");
+        break;
+    case FlipWorldSubmenuIndexPvE:
+        game_mode_index = 0; // GAME_MODE_PVE
         free_all_views(app, true, true);
         if (!is_enough_heap(60000))
         {
@@ -1248,7 +1262,6 @@ void callback_submenu_choices(void *context, uint32_t index)
                 easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
                 return;
             }
-            
         }
         else
         {
@@ -1615,7 +1628,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
     furi_record_close(RECORD_STORAGE);
     snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
-    return flipper_http_get_request_with_headers(model->fhttp, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}");
+    return flipper_http_request(model->fhttp, GET, "https://www.flipsocial.net/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 static char *_parse_worlds(DataLoaderModel *model)
 {
@@ -1797,7 +1810,7 @@ void loader_draw_callback(Canvas *canvas, void *model)
     }
 
     DataLoaderModel *data_loader_model = (DataLoaderModel *)model;
-    SerialState http_state = data_loader_model->fhttp->state;
+    HTTPState http_state = data_loader_model->fhttp->state;
     DataState data_state = data_loader_model->data_state;
     char *title = data_loader_model->title;
 
