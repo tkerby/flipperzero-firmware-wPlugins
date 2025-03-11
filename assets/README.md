@@ -79,10 +79,9 @@ NPCs are friendly characters that players can interact with. Currently, you can 
 
 **v0.6**
 - New game features
-- Custom Controller Support
 
 **v0.7**
-- ???
+- New game features
 
 **v0.8**
 - Multiplayer support
