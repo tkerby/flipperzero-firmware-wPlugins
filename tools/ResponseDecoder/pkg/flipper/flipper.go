@@ -57,7 +57,7 @@ func GetResponseFromDevice() (string, error) {
 	}
 
 	if len(files) == 0 {
-		return "", errors.New("no response files found on Flipper Zero")
+		return "", errors.New("no response files found on flipper zero")
 	}
 
 	// 让用户选择文件
@@ -92,7 +92,7 @@ func GetResponseFromDeviceSerial(portName string) (string, error) {
 	}
 
 	if len(files) == 0 {
-		return "", errors.New("no response files found on Flipper Zero")
+		return "", errors.New("no response files found on flipper zero")
 	}
 
 	// 让用户选择文件
@@ -193,22 +193,7 @@ func findFlipperPort() (string, error) {
 		return potentialPorts[0], nil
 	}
 
-	return "", errors.New("Flipper Zero device not found")
-}
-
-// flushPort 清空串口缓冲区
-func flushPort(port serial.Port) error {
-	buffer := make([]byte, 1024)
-	for {
-		// 设置较短的超时，以便快速返回
-		port.SetReadTimeout(100 * time.Millisecond)
-		n, err := port.Read(buffer)
-		if err != nil || n == 0 {
-			break
-		}
-	}
-	// 恢复正常超时
-	return port.SetReadTimeout(readTimeout)
+	return "", errors.New("flipper zero device not found")
 }
 
 // sendCommand 发送命令到Flipper Zero
@@ -217,78 +202,6 @@ func sendCommand(port serial.Port, command string) error {
 	command = command + "\r"
 	_, err := port.Write([]byte(command))
 	return err
-}
-
-// waitForPrompt 等待CLI提示符
-func waitForPrompt(port serial.Port) (string, error) {
-	var buffer bytes.Buffer
-	readBuffer := make([]byte, 1)
-	startTime := time.Now()
-
-	for {
-		// 检查是否超时
-		if time.Since(startTime) > readTimeout {
-			return buffer.String(), errors.New("timeout waiting for prompt")
-		}
-
-		// 读取一个字节
-		n, err := port.Read(readBuffer)
-		if err != nil {
-			return buffer.String(), err
-		}
-
-		if n > 0 {
-			buffer.WriteByte(readBuffer[0])
-
-			// 检查是否收到提示符
-			if buffer.Len() >= len(cmdPrompt) &&
-				bytes.HasSuffix(buffer.Bytes(), []byte(cmdPrompt)) {
-				return buffer.String(), nil
-			}
-		}
-	}
-}
-
-// readResponse 读取响应直到提示符出现
-func readResponse(port serial.Port) (string, error) {
-	return waitForPrompt(port)
-}
-
-// listResponseFiles 列出设备上的.apdures文件
-func listResponseFiles(port serial.Port) ([]string, error) {
-	// 发送列出文件的命令
-	err := sendCommand(port, fmt.Sprintf(cmdListFiles, apduResponseDir))
-	if err != nil {
-		return nil, fmt.Errorf("failed to send list command: %w", err)
-	}
-
-	// 读取响应
-	response, err := readResponse(port)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// 解析响应，提取文件列表
-	var files []string
-	scanner := bufio.NewScanner(strings.NewReader(response))
-	for scanner.Scan() {
-		line := scanner.Text()
-		// 跳过命令行和提示符
-		if strings.Contains(line, cmdListFiles) || strings.Contains(line, cmdPrompt) {
-			continue
-		}
-		// 检查是否是.apdures文件
-		if strings.HasSuffix(line, ".apdures") {
-			// 提取文件名
-			parts := strings.Fields(line)
-			if len(parts) > 0 {
-				fileName := parts[len(parts)-1]
-				files = append(files, filepath.Join(apduResponseDir, fileName))
-			}
-		}
-	}
-
-	return files, nil
 }
 
 // selectFile 让用户选择文件
@@ -311,45 +224,6 @@ func selectFile(files []string) (string, error) {
 	}
 
 	return files[choice-1], nil
-}
-
-// readFileFromDevice 从设备读取文件内容
-func readFileFromDevice(port serial.Port, filePath string) (string, error) {
-	// 发送读取文件的命令
-	err := sendCommand(port, fmt.Sprintf(cmdReadFile, filePath))
-	if err != nil {
-		return "", fmt.Errorf("failed to send read command: %w", err)
-	}
-
-	// 读取响应
-	response, err := readResponse(port)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// 处理响应，提取文件内容
-	var content strings.Builder
-	scanner := bufio.NewScanner(strings.NewReader(response))
-	var inContent bool
-	for scanner.Scan() {
-		line := scanner.Text()
-		// 跳过命令行
-		if strings.Contains(line, cmdReadFile) {
-			inContent = true
-			continue
-		}
-		// 结束于提示符
-		if strings.Contains(line, cmdPrompt) {
-			break
-		}
-		// 收集内容
-		if inContent {
-			content.WriteString(line)
-			content.WriteString("\n")
-		}
-	}
-
-	return content.String(), nil
 }
 
 // CloseConnection 关闭与Flipper Zero的连接
@@ -462,7 +336,7 @@ func getMacOSMountPath() (string, error) {
 		}
 	}
 
-	return "", errors.New("Flipper SD card not found. Please connect your Flipper Zero and ensure the SD card is mounted")
+	return "", errors.New("flipper sd card not found. please connect your flipper zero and ensure the sd card is mounted")
 }
 
 // getWindowsMountPath 获取Windows下的挂载路径
@@ -483,7 +357,7 @@ func getWindowsMountPath() (string, error) {
 		}
 	}
 
-	return "", errors.New("Flipper SD card not found. Please connect your Flipper Zero and ensure the SD card is mounted")
+	return "", errors.New("flipper sd card not found. please connect your flipper zero and ensure the sd card is mounted")
 }
 
 // getLinuxMountPath 获取Linux下的挂载路径
@@ -520,7 +394,7 @@ func getLinuxMountPath() (string, error) {
 		}
 	}
 
-	return "", errors.New("Flipper SD card not found. Please connect your Flipper Zero and ensure the SD card is mounted")
+	return "", errors.New("flipper sd card not found. please connect your flipper zero and ensure the sd card is mounted")
 }
 
 // listResponseFilesSD 列出SD卡上的.apdures文件
