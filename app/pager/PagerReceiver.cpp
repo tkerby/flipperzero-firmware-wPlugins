@@ -78,12 +78,12 @@ public:
         int index = -1;
         for(size_t i = 0; i < pagers.size(); i++) {
             if(pagers[i]->data == storedData->data && pagers[i]->protocol == storedData->protocol) {
+                delete storedData;
                 if(pagers[i]->repeats < MAX_REPEATS) {
                     pagers[i]->repeats++;
                 } else {
                     return NULL; // no need to modify element any more
                 }
-                delete storedData;
                 storedData = pagers[i];
                 index = i;
                 break;

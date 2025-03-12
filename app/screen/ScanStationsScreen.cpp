@@ -95,24 +95,22 @@ private:
     void receive(SubGhzReceivedData* data) {
         ReceivedPagerData* pagerData = pagerReceiver->Receive(data);
 
-        if(pagerData == NULL) {
-            return;
-        }
+        if(pagerData != NULL) {
+            if(pagerData->IsNew()) {
+                Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
 
-        if(pagerData->IsNew()) {
-            Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
+                if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
+                    menuView->SetCenterButton("Actions", HANDLER_1ARG(&ScanStationsScreen::showActions));
+                    menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editTransmission));
+                }
 
-            if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
-                menuView->SetCenterButton("Actions", HANDLER_1ARG(&ScanStationsScreen::showActions));
-                menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editTransmission));
+                menuView->AddElement();
             }
 
-            menuView->AddElement();
+            menuView->Refresh();
+
+            delete pagerData;
         }
-
-        menuView->Refresh();
-
-        delete pagerData;
         delete data;
     }
 
