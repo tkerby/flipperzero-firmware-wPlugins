@@ -1,0 +1,8 @@
+EMV卡片信息
+卡号: {O[1]TAG(5A), "numeric"}
+持卡人姓名: {O[2]TAG(5F20), "utf-8"}
+有效期: {O[2]TAG(5F24), "numeric"}
+货币代码: {O[3]TAG(9F42)}
+余额: {O[3]TAG(9F79)}
+交易日志: {O[4]TAG(9F4D)}
+应用标签: {O[0]TAG(50), "ascii"} 

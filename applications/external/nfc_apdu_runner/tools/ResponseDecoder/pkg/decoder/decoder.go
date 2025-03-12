@@ -11,12 +11,46 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/tlv"
 )
 
 // Response 表示解析后的APDU响应
 type Response struct {
 	Inputs  []string
 	Outputs []string
+}
+
+// ErrorInfo 表示APDU错误信息
+type ErrorInfo struct {
+	Index       int
+	StatusCode  string
+	Description string
+}
+
+// DecodeContext 解码上下文，包含解码过程中的状态
+type DecodeContext struct {
+	Response *Response
+	Errors   []ErrorInfo
+	Debug    bool
+}
+
+// NewDecodeContext 创建新的解码上下文
+func NewDecodeContext(response *Response, debug bool) *DecodeContext {
+	return &DecodeContext{
+		Response: response,
+		Errors:   []ErrorInfo{},
+		Debug:    debug,
+	}
+}
+
+// AddError 添加错误信息
+func (ctx *DecodeContext) AddError(index int, statusCode string) {
+	description := GetErrorDescription(statusCode)
+	ctx.Errors = append(ctx.Errors, ErrorInfo{
+		Index:       index,
+		StatusCode:  statusCode,
+		Description: description,
+	})
 }
 
 // ParseResponseData 解析.apdures文件内容
@@ -95,11 +129,14 @@ func SelectFormat(formats []string) (string, error) {
 }
 
 // DecodeAndDisplay 解码并显示结果
-func DecodeAndDisplay(response *Response, formatData string) error {
+func DecodeAndDisplay(response *Response, formatData string, debug bool) error {
 	lines := strings.Split(formatData, "\n")
 	if len(lines) == 0 {
 		return fmt.Errorf("empty format data")
 	}
+
+	// 创建解码上下文
+	ctx := NewDecodeContext(response, debug)
 
 	// 显示标题
 	title := lines[0]
@@ -117,12 +154,26 @@ func DecodeAndDisplay(response *Response, formatData string) error {
 		}
 
 		// 解析占位符
-		result, err := parsePlaceholders(line, response)
+		result, err := parsePlaceholders(line, ctx)
 		if err != nil {
 			return fmt.Errorf("error parsing line %d: %w", i+1, err)
 		}
 
 		fmt.Println(result)
+	}
+
+	// 如果启用了调试模式并且有错误，显示错误信息
+	if debug && len(ctx.Errors) > 0 {
+		errorColor := color.New(color.FgRed, color.Bold)
+		fmt.Println()
+		fmt.Println(strings.Repeat("-", 50))
+		errorColor.Println("Error Information:")
+		fmt.Println(strings.Repeat("-", 50))
+
+		for _, err := range ctx.Errors {
+			fmt.Printf("Output[%d]: Error code %s - %s\n",
+				err.Index, err.StatusCode, err.Description)
+		}
 	}
 
 	return nil
@@ -139,14 +190,14 @@ func centerText(text string, width int) string {
 }
 
 // parsePlaceholders 解析并替换占位符
-func parsePlaceholders(line string, response *Response) (string, error) {
+func parsePlaceholders(line string, ctx *DecodeContext) (string, error) {
 	re := regexp.MustCompile(`\{([^}]+)\}`)
 	result := re.ReplaceAllStringFunc(line, func(match string) string {
 		// 去除大括号
 		expr := match[1 : len(match)-1]
 
 		// 解析表达式
-		value, err := evaluateExpression(expr, response)
+		value, err := evaluateExpression(expr, ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Error evaluating expression '%s': %s\n", expr, err)
 			return match
@@ -159,7 +210,63 @@ func parsePlaceholders(line string, response *Response) (string, error) {
 }
 
 // evaluateExpression 评估表达式
-func evaluateExpression(expr string, response *Response) (string, error) {
+func evaluateExpression(expr string, ctx *DecodeContext) (string, error) {
+	// 检查是否是TLV标签表达式
+	tlvTagRe := regexp.MustCompile(`([OI])\[(\d+)\]TAG\(([0-9A-Fa-f]+)\)(?:,\s*"([^"]+)")?`)
+	tlvMatches := tlvTagRe.FindStringSubmatch(expr)
+	if tlvMatches != nil {
+		// 获取数据源（输入或输出）
+		var data []string
+		if tlvMatches[1] == "O" {
+			data = ctx.Response.Outputs
+		} else {
+			data = ctx.Response.Inputs
+		}
+
+		// 获取索引
+		index, err := strconv.Atoi(tlvMatches[2])
+		if err != nil {
+			return "", fmt.Errorf("invalid index: %s", tlvMatches[2])
+		}
+
+		if index < 0 || index >= len(data) {
+			return "", fmt.Errorf("index out of range: %d", index)
+		}
+
+		// 检查输出是否成功
+		if tlvMatches[1] == "O" && index < len(ctx.Response.Outputs) {
+			output := ctx.Response.Outputs[index]
+			if len(output) >= 4 {
+				statusCode := output[len(output)-4:]
+				if !IsSuccessStatusCode(statusCode) {
+					// 添加错误信息
+					ctx.AddError(index, statusCode)
+					// 返回空字符串
+					return "", nil
+				}
+			}
+		}
+
+		// 获取标签
+		tagHex := tlvMatches[3]
+
+		// 获取编码（如果有）
+		encoding := ""
+		if len(tlvMatches) > 4 && tlvMatches[4] != "" {
+			encoding = tlvMatches[4]
+		}
+
+		// 解析TLV并获取标签值
+		hexData := data[index]
+		if encoding == "" {
+			// 返回原始十六进制
+			return tlv.GetTagValue(hexData, tagHex)
+		} else {
+			// 返回解码后的字符串
+			return tlv.GetTagValueAsString(hexData, tagHex, encoding)
+		}
+	}
+
 	// 检查是否是hex函数
 	if strings.HasPrefix(expr, "hex(") && strings.HasSuffix(expr, ")") {
 		// 提取hex函数的参数
@@ -180,9 +287,14 @@ func evaluateExpression(expr string, response *Response) (string, error) {
 		}
 
 		// 获取数据
-		data, err := evaluateDataExpression(dataExpr, response)
+		data, err := evaluateDataExpression(dataExpr, ctx)
 		if err != nil {
 			return "", err
+		}
+
+		// 如果数据为空，直接返回空字符串
+		if data == "" {
+			return "", nil
 		}
 
 		// 解码十六进制
@@ -195,11 +307,11 @@ func evaluateExpression(expr string, response *Response) (string, error) {
 	}
 
 	// 直接评估数据表达式
-	return evaluateDataExpression(expr, response)
+	return evaluateDataExpression(expr, ctx)
 }
 
 // evaluateDataExpression 评估数据表达式 (如 O[1][10:18])
-func evaluateDataExpression(expr string, response *Response) (string, error) {
+func evaluateDataExpression(expr string, ctx *DecodeContext) (string, error) {
 	// 匹配 O[index][slice] 或 I[index][slice] 格式
 	re := regexp.MustCompile(`([OI])\[(\d+)\](?:\[([^]]+)\])?`)
 	matches := re.FindStringSubmatch(expr)
@@ -211,9 +323,9 @@ func evaluateDataExpression(expr string, response *Response) (string, error) {
 	// 确定是输入还是输出
 	var data []string
 	if matches[1] == "O" {
-		data = response.Outputs
+		data = ctx.Response.Outputs
 	} else {
-		data = response.Inputs
+		data = ctx.Response.Inputs
 	}
 
 	// 获取索引
@@ -224,6 +336,20 @@ func evaluateDataExpression(expr string, response *Response) (string, error) {
 
 	if index < 0 || index >= len(data) {
 		return "", fmt.Errorf("index out of range: %d", index)
+	}
+
+	// 检查输出是否成功
+	if matches[1] == "O" && index < len(ctx.Response.Outputs) {
+		output := ctx.Response.Outputs[index]
+		if len(output) >= 4 {
+			statusCode := output[len(output)-4:]
+			if !IsSuccessStatusCode(statusCode) {
+				// 添加错误信息
+				ctx.AddError(index, statusCode)
+				// 返回空字符串
+				return "", nil
+			}
+		}
 	}
 
 	// 获取数据
@@ -329,6 +455,6 @@ func hexDecode(hexStr string, encoding string) (string, error) {
 // cleanString 清理字符串，只保留有效内容
 func cleanString(s string) string {
 	// 保留中文、英文、数字、空格等
-	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"+-*/=<>@#$%^&_|\\]+`)
+	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"\/\+\-\*=<>@#$%^&_|\\]+`)
 	return re.ReplaceAllString(s, "")
 }
