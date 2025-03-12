@@ -64,14 +64,15 @@ jobs:
         run: |
           cd tools/ResponseDecoder
           make build-macos
+          # 显示文件以便调试
+          ls -la
 
       # 上传编译结果
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-builds
-          path: |
-            tools/ResponseDecoder/response_decoder_macos
+          path: tools/ResponseDecoder/response_decoder_macos
 
   package-release:
     needs: [build-linux-windows, build-macos]
@@ -83,6 +84,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      # 调试：显示下载的文件结构
+      - name: Debug artifacts
+        run: |
+          find artifacts -type f | sort
 
       # 创建发布目录结构
       - name: Create release directory structure
@@ -97,12 +103,12 @@ jobs:
           cp -r artifacts/linux-windows-builds/apdu_script/* release_package/apdu_script/ || echo "no script files found, skipping"
           
           # 复制ResponseDecoder工具
-          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/
-          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/
-          cp artifacts/macos-builds/tools/ResponseDecoder/response_decoder_macos release_package/ResponseDecoder/
+          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/ || echo "Linux binary not found"
+          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/ || echo "Windows binary not found"
+          cp artifacts/macos-builds/response_decoder_macos release_package/ResponseDecoder/ || echo "macOS binary not found"
           
           # 复制格式文件
-          cp -r artifacts/linux-windows-builds/tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/
+          cp -r artifacts/linux-windows-builds/tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/ || echo "Format files not found"
           
           # 创建压缩包
           cd release_package
