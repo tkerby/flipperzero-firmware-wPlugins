@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/tlv"
 )
 
 // Response 表示解析后的APDU响应
@@ -160,6 +161,48 @@ func parsePlaceholders(line string, response *Response) (string, error) {
 
 // evaluateExpression 评估表达式
 func evaluateExpression(expr string, response *Response) (string, error) {
+	// 检查是否是TLV标签表达式
+	tlvTagRe := regexp.MustCompile(`([OI])\[(\d+)\]TAG\(([0-9A-Fa-f]+)\)(?:,\s*"([^"]+)")?`)
+	tlvMatches := tlvTagRe.FindStringSubmatch(expr)
+	if tlvMatches != nil {
+		// 获取数据源（输入或输出）
+		var data []string
+		if tlvMatches[1] == "O" {
+			data = response.Outputs
+		} else {
+			data = response.Inputs
+		}
+
+		// 获取索引
+		index, err := strconv.Atoi(tlvMatches[2])
+		if err != nil {
+			return "", fmt.Errorf("invalid index: %s", tlvMatches[2])
+		}
+
+		if index < 0 || index >= len(data) {
+			return "", fmt.Errorf("index out of range: %d", index)
+		}
+
+		// 获取标签
+		tagHex := tlvMatches[3]
+
+		// 获取编码（如果有）
+		encoding := ""
+		if len(tlvMatches) > 4 && tlvMatches[4] != "" {
+			encoding = tlvMatches[4]
+		}
+
+		// 解析TLV并获取标签值
+		hexData := data[index]
+		if encoding == "" {
+			// 返回原始十六进制
+			return tlv.GetTagValue(hexData, tagHex)
+		} else {
+			// 返回解码后的字符串
+			return tlv.GetTagValueAsString(hexData, tagHex, encoding)
+		}
+	}
+
 	// 检查是否是hex函数
 	if strings.HasPrefix(expr, "hex(") && strings.HasSuffix(expr, ")") {
 		// 提取hex函数的参数

@@ -79,6 +79,32 @@ PBOC
 - `O[n]`: 第n个输出响应
 - `hex(data)`: 将十六进制字符串转换为可读文本
 - `hex(data, "utf-8")`: 将十六进制字符串按UTF-8编码转换为文本
+- `O[n]TAG(tag)`: 从第n个输出响应中提取指定TLV标签的值
+- `O[n]TAG(tag, "encoding")`: 从第n个输出响应中提取指定TLV标签的值，并按指定编码转换为文本
+
+### TLV解析
+
+本工具支持解析EMV和其他智能卡中常用的TLV（Tag-Length-Value）数据结构。TLV解析功能允许您直接从APDU响应中提取特定标签的值，而无需手动计算偏移量。
+
+支持的编码类型：
+- `utf-8`: UTF-8编码
+- `ascii`: ASCII编码
+- `numeric`: 数字编码（如BCD码）
+
+#### TLV模板示例
+
+EMV格式模板：
+
+```
+EMV卡片信息
+卡号: {O[1]TAG(5A), "numeric"}
+持卡人姓名: {O[2]TAG(5F20), "utf-8"}
+有效期: {O[2]TAG(5F24), "numeric"}
+货币代码: {O[3]TAG(9F42)}
+余额: {O[3]TAG(9F79)}
+交易日志: {O[4]TAG(9F4D)}
+应用标签: {O[0]TAG(50), "ascii"}
+```
 
 ## 示例
 
