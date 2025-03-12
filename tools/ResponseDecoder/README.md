@@ -8,6 +8,7 @@ APDU Response Decoder is a tool for parsing and displaying `.apdures` files gene
 - Support for loading `.apdures` files directly from Flipper Zero devices (via SD card mounting or serial communication)
 - Support for custom decoding format templates
 - TLV (Tag-Length-Value) data parsing capabilities
+- Automatic error detection and reporting for failed APDU commands
 - Beautiful colored output
 
 ## Installation
@@ -48,6 +49,7 @@ Flags:
   -h, --help                   help for response_decoder
   -p, --port string            Specify serial port for Flipper Zero (optional)
   -s, --serial                 Use serial communication with Flipper Zero (requires -d)
+      --debug                  Enable debug mode to show error messages
 ```
 
 ### Load from Local File
@@ -135,6 +137,15 @@ Transaction Record: {hex(O[5][10:30])}
 - `hex(data, "utf-8")`: Convert a hexadecimal string to text using UTF-8 encoding
 - `O[n]TAG(tag)`: Extract the value of the specified TLV tag from the nth output response
 - `O[n]TAG(tag, "encoding")`: Extract the value of the specified TLV tag from the nth output response and convert it to text using the specified encoding
+
+### Error Handling
+
+The tool automatically detects error responses (non-9000 status codes) and handles them appropriately:
+
+- When an output has a non-success status code (not 9000, 9100, or 9200), any template expression referencing that output will return an empty string
+- Error information is collected during parsing but not displayed by default
+- To view error information, use the `--debug` flag when running the command
+- In debug mode, error messages are displayed at the end of the output, including the output index, status code, and a description of the error (e.g., "Output[2]: Error code 6A82 - File not found")
 
 ### TLV Parsing
 

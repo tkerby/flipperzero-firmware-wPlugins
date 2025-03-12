@@ -18,6 +18,7 @@ var (
 	formatPath   string
 	formatDir    string
 	responseData string
+	debugMode    bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -85,7 +86,7 @@ using either SD card mounting or serial communication.`,
 		}
 
 		// 解码并显示结果
-		err = decoder.DecodeAndDisplay(response, string(formatData))
+		err = decoder.DecodeAndDisplay(response, string(formatData), debugMode)
 		if err != nil {
 			return fmt.Errorf("failed to decode and display: %w", err)
 		}
@@ -124,6 +125,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&serialPort, "port", "p", "", "Specify serial port for Flipper Zero (optional)")
 	rootCmd.Flags().StringVar(&formatPath, "decode-format", "", "Path to format template file (.apdufmt)")
 	rootCmd.Flags().StringVar(&formatDir, "format-dir", formatDir, "Directory containing format template files")
+	rootCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode to show error messages")
 
 	// 禁用completion命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

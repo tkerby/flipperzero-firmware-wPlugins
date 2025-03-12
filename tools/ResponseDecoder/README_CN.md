@@ -8,6 +8,7 @@ APDU Response Decoder是一个用于解析和显示Flipper Zero NFC APDU Runner�
 - 支持直接从Flipper Zero设备加载`.apdures`文件（通过SD卡挂载或串口通信）
 - 支持自定义解码格式模板
 - TLV（Tag-Length-Value）数据解析功能
+- 自动检测和报告失败的APDU命令
 - 美观的彩色输出
 
 ## 安装
@@ -48,6 +49,7 @@ go build -o response_decoder
   -h, --help                   查看帮助信息
   -p, --port string            指定Flipper Zero的串口 (可选)
   -s, --serial                 使用串口与Flipper Zero通信 (需要 -d)
+      --debug                  启用调试模式以显示错误信息
 ```
 
 ### 从本地文件加载
@@ -135,6 +137,15 @@ PBOC
 - `hex(data, "utf-8")`: 将十六进制字符串按UTF-8编码转换为文本
 - `O[n]TAG(tag)`: 从第n个输出响应中提取指定TLV标签的值
 - `O[n]TAG(tag, "encoding")`: 从第n个输出响应中提取指定TLV标签的值，并按指定编码转换为文本
+
+### 错误处理
+
+该工具自动检测错误响应（非9000状态码）并适当处理：
+
+- 当输出具有非成功状态码（不是9000、9100或9200）时，任何引用该输出的模板表达式将返回空字符串
+- 解析过程中会收集错误信息，但默认不显示
+- 要查看错误信息，请在运行命令时使用`--debug`参数
+- 在调试模式下，错误信息会在输出结束后显示，包括输出索引、状态码和错误描述（例如，"Output[2]: Error code 6A82 - File not found"）
 
 ### TLV解析
 
