@@ -18,23 +18,23 @@ private:
     uint8_t valuesCount;
 
     IDestructable* handlerContext = NULL;
-    function<const char*(int)> changeHandler;
+    function<const char*(uint8_t)> changeHandler;
 
     static void itemChangeCallback(VariableItem* item) {
-        auto handlerContext = (HandlerContext<function<const char*(int8_t)>>*)variable_item_get_context(item);
+        auto handlerContext = (HandlerContext<function<const char*(uint8_t)>>*)variable_item_get_context(item);
         uint8_t index = variable_item_get_current_value_index(item);
         variable_item_set_current_value_text(item, handlerContext->GetHandler()(index));
     }
 
 public:
     UiVariableItem(const char* label, const char* staticValue) :
-            UiVariableItem(label, [staticValue](int8_t) { return staticValue; }) {
+            UiVariableItem(label, [staticValue](uint8_t) { return staticValue; }) {
     }
 
-    UiVariableItem(const char* label, function<const char*(int8_t)> changeHandler) : UiVariableItem(label, 0, 1, changeHandler) {
+    UiVariableItem(const char* label, function<const char*(uint8_t)> changeHandler) : UiVariableItem(label, 0, 1, changeHandler) {
     }
 
-    UiVariableItem(const char* label, uint8_t selectedIndex, uint8_t valuesCount, function<const char*(int8_t)> changeHandler) {
+    UiVariableItem(const char* label, uint8_t selectedIndex, uint8_t valuesCount, function<const char*(uint8_t)> changeHandler) {
         this->label = label;
         this->selectedIndex = selectedIndex;
         this->valuesCount = valuesCount;
@@ -63,6 +63,10 @@ public:
         variable_item_set_values_count(item, valuesCount);
         variable_item_set_current_value_index(item, selectedIndex);
         itemChangeCallback(item);
+    }
+
+    bool Editable() {
+        return valuesCount > 1;
     }
 
     ~UiVariableItem() {

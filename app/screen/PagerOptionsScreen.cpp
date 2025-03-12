@@ -6,7 +6,7 @@
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
 
-#include "lib/ui/UiManager.cpp"
+#define TE_DIV 10
 
 class PagerOptionsScreen {
 private:
@@ -19,8 +19,8 @@ private:
     UiVariableItem* pagerItem = NULL;
     UiVariableItem* actionItem = NULL;
     UiVariableItem* hexItem = NULL;
-
     UiVariableItem* protocolItem = NULL;
+    UiVariableItem* teItem = NULL;
     UiVariableItem* repeatsItem = NULL;
 
     String stationStr;
@@ -28,6 +28,7 @@ private:
     String actionStr;
     String hexStr;
     String repeatsStr;
+    String teStr;
 
 public:
     PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
@@ -35,6 +36,7 @@ public:
         this->receiver = receiver;
 
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
+        PagerProtocol* protocol = receiver->protocols[pager->protocol];
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&PagerOptionsScreen::destroy));
@@ -49,7 +51,10 @@ public:
         );
 
         varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
+
         varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
+        updatePagerIsEditable();
+
         varItemList->AddItem(
             actionItem = new UiVariableItem(
                 "Action",
@@ -61,8 +66,11 @@ public:
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
 
+        varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetDisplayName()));
         varItemList->AddItem(
-            protocolItem = new UiVariableItem("Protocol", receiver->protocols[pager->protocol]->GetDisplayName())
+            teItem = new UiVariableItem(
+                "TE", pager->te / TE_DIV, protocol->GetMaxTE() / TE_DIV, HANDLER_1ARG(&PagerOptionsScreen::teValueChanged)
+            )
         );
         varItemList->AddItem(
             repeatsItem = new UiVariableItem(
@@ -72,30 +80,50 @@ public:
     }
 
 private:
-    const char* encodingValueChanged(int8_t index) {
+    void updatePagerIsEditable() {
+        int pagerNum = receiver->decoders[pager->decoder]->GetPager(pager->data);
+        if(pagerNum < UINT8_MAX) {
+            pagerItem->SetSelectedItem(pagerNum, UINT8_MAX);
+        } else {
+            pagerItem->SetSelectedItem(0, 1);
+        }
+    }
+
+    const char* encodingValueChanged(uint8_t index) {
+        PagerDecoder* decoder = receiver->decoders[index];
         pager->decoder = index;
+
         if(stationItem != NULL) {
             stationItem->Refresh();
         }
         if(pagerItem != NULL) {
+            updatePagerIsEditable();
             pagerItem->Refresh();
         }
         if(actionItem != NULL) {
-            PagerDecoder* decoder = receiver->decoders[pager->decoder];
             actionItem->SetSelectedItem(decoder->GetActionValue(pager->data), decoder->GetActionsCount());
         }
         return receiver->decoders[pager->decoder]->GetShortName();
     }
 
-    const char* stationValueChanged(int8_t) {
+    const char* stationValueChanged(uint8_t) {
         return stationStr.fromInt(receiver->decoders[pager->decoder]->GetStation(pager->data));
     }
 
-    const char* pagerValueChanged(int8_t) {
-        return pagerStr.fromInt(receiver->decoders[pager->decoder]->GetPager(pager->data));
+    const char* pagerValueChanged(uint8_t newPager) {
+        PagerDecoder* decoder = receiver->decoders[pager->decoder];
+        if(pagerItem->Editable() && newPager != decoder->GetPager(pager->data)) {
+            pager->data = decoder->SetPager(pager->data, newPager);
+            pager->edited = true;
+
+            if(hexItem != NULL) {
+                hexItem->Refresh();
+            }
+        }
+        return pagerStr.fromInt(decoder->GetPager(pager->data));
     }
 
-    const char* actionValueChanged(int8_t value) {
+    const char* actionValueChanged(uint8_t value) {
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         if(decoder->GetActionValue(pager->data) != value) {
             pager->data = decoder->SetActionValue(pager->data, value);
@@ -113,8 +141,20 @@ private:
         return actionStr.format("%d (%s)", actionValue, actionDesc);
     }
 
-    const char* hexValueChanged(int8_t) {
+    const char* hexValueChanged(uint8_t) {
         return hexStr.format("%06X", (unsigned int)pager->data);
+    }
+
+    const char* teValueChanged(uint8_t newTeIndex) {
+        if(newTeIndex != pager->te / TE_DIV) {
+            int teDiff = pager->te % TE_DIV;
+            int newTe = newTeIndex * TE_DIV + teDiff;
+
+            pager->te = newTe;
+            pager->edited = true;
+        }
+
+        return teStr.format("%d", pager->te);
     }
 
     void destroy() {
@@ -123,6 +163,7 @@ private:
         delete pagerItem;
         delete actionItem;
         delete hexItem;
+        delete teItem;
         delete protocolItem;
         delete repeatsItem;
         delete this;

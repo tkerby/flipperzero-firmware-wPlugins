@@ -23,6 +23,10 @@ public:
     uint32_t GetHash() {
         return hash;
     }
+
+    int GetTE() {
+        return 212;
+    }
 };
 
 #endif //_SUBGHZ_RECEIVED_DATA_STUB_CLASS_

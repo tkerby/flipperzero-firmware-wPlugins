@@ -15,6 +15,14 @@ class Smc5326Protocol : public PagerProtocol {
     const char* GetShortName() {
         return "s";
     }
+
+    int GetFallbackTE() {
+        return 326;
+    }
+
+    int GetMaxTE() {
+        return 900;
+    }
 };
 
 #endif //_SMC5326_PROTCOL_CLASS_

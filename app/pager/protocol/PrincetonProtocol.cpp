@@ -16,6 +16,14 @@ public:
     const char* GetShortName() {
         return "p";
     }
+
+    int GetFallbackTE() {
+        return 212;
+    }
+
+    int GetMaxTE() {
+        return 1200;
+    }
 };
 
 #endif //_PRINCETON_PROTCOL_CLASS_

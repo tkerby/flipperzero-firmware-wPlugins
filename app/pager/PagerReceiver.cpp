@@ -29,7 +29,7 @@ public:
 
 private:
     int pagerNumThreshold = 50;
-    vector<PagerDataStored*> pagers;
+    vector<PagerDataStored> pagers;
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
         for(size_t i = 0; i < protocols.size(); i++) {
@@ -60,7 +60,7 @@ public:
     }
 
     PagerDataStored* GetPagerData(size_t index) {
-        return pagers[index];
+        return &pagers[index];
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
@@ -70,21 +70,16 @@ public:
             return NULL;
         }
 
-        PagerDataStored* storedData = new PagerDataStored();
-        storedData->data = data->GetHash();
-        storedData->protocol = protocol->id;
-        storedData->repeats = 1;
-
         int index = -1;
+        uint32_t dataHash = data->GetHash();
+
         for(size_t i = 0; i < pagers.size(); i++) {
-            if(pagers[i]->data == storedData->data && pagers[i]->protocol == storedData->protocol) {
-                delete storedData;
-                if(pagers[i]->repeats < MAX_REPEATS) {
-                    pagers[i]->repeats++;
+            if(pagers[i].data == dataHash && pagers[i].protocol == protocol->id) {
+                if(pagers[i].repeats < MAX_REPEATS) {
+                    pagers[i].repeats++;
                 } else {
                     return NULL; // no need to modify element any more
                 }
-                storedData = pagers[i];
                 index = i;
                 break;
             }
@@ -92,14 +87,18 @@ public:
 
         bool isNew = index < 0;
         if(isNew) {
-            PagerDecoder* decoder = getDecoder(storedData);
-            storedData->decoder = decoder->id;
+            PagerDataStored storedData = PagerDataStored();
+            storedData.decoder = getDecoder(&storedData)->id;
+            storedData.data = dataHash;
+            storedData.protocol = protocol->id;
+            storedData.repeats = 1;
+            storedData.te = data->GetTE();
 
             index = pagers.size();
             pagers.push_back(storedData);
         }
 
-        return new ReceivedPagerData(storedData, index, isNew);
+        return new ReceivedPagerData(GetPagerData(index), index, isNew);
     }
 
     ~PagerReceiver() {
@@ -109,10 +108,6 @@ public:
 
         for(PagerDecoder* decoder : decoders) {
             delete decoder;
-        }
-
-        for(PagerDataStored* pagerData : pagers) {
-            delete pagerData;
         }
     }
 };
