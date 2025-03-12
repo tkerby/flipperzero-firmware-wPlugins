@@ -37,9 +37,9 @@ build-linux:
 build-windows:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME).exe -v
 
-build-mac:
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)_arm64_mac -v
+# build-mac:
+#	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)_arm64_mac -v
 
-build-all: build-linux build-windows build-mac
+build-all: build-linux build-windows
 
 .PHONY: all build test clean run deps build-linux build-windows build-mac build-all 
