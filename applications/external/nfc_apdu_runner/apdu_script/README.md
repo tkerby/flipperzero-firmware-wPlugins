@@ -14,7 +14,7 @@
 
 1. 将这些脚本文件（`.apduscr` 文件）复制到 Flipper Zero 的以下目录：
    ```
-   /ext/apps_data/nfc_apdu_runner
+   /ext/apps_assets/nfc_apdu_runner
    ```
 
 2. 您可以通过以下方式将文件复制到 Flipper Zero：
@@ -71,7 +71,7 @@ Data: ["00A4040007A0000000041010", "00B0000000"]
 
 1. 使用任何文本编辑器创建一个新的 `.apduscr` 文件
 2. 按照上述格式编写脚本内容
-3. 将文件保存到 `/ext/apps_data/nfc_apdu_runner` 目录
+3. 将文件保存到 `/ext/apps_assets/nfc_apdu_runner` 目录
 
 ## 注意事项
 

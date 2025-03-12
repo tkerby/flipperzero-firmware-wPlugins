@@ -31,7 +31,7 @@ const (
 	cmdListFiles    = "storage list %s"
 	cmdReadFile     = "storage read %s"
 	cmdExit         = "exit"
-	apduResponseDir = "/ext/apps_data/nfc_apdu_runner"
+	apduResponseDir = "/ext/apps_assets/nfc_apdu_runner"
 
 	// Flipper Zero USB VID/PID
 	// flipperVID = "0483"
