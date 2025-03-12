@@ -1,0 +1,74 @@
+name: "Release: Build and publish"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 编译FAP
+      - name: Build FAP with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        id: build-app
+        with:
+          sdk-channel: release
+          sdk-index-url: https://up.unleashedflip.com/directory.json
+
+      # 设置Go环境
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      # 编译ResponseDecoder工具
+      - name: Build ResponseDecoder tools
+        run: |
+          cd tools/ResponseDecoder
+          make build-all
+
+      # 创建发布目录结构
+      - name: Create release directory structure
+        run: |
+          mkdir -p release_package/ResponseDecoder/format
+          mkdir -p release_package/apdu_script
+          
+          # 复制FAP文件
+          cp ${{ steps.build-app.outputs.fap-artifacts }} release_package/nfc_apdu_runner.fap
+          
+          # 复制示例脚本
+          cp -r apdu_script/* release_package/apdu_script/ || echo "no file found, skipping"
+          
+          # 复制ResponseDecoder工具
+          cp tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/
+          cp tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/
+          cp tools/ResponseDecoder/response_decoder_mac release_package/ResponseDecoder/
+          
+          # 复制格式文件
+          cp -r tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/
+          
+          # 创建压缩包
+          cd release_package
+          zip -r ../nfc_apdu_runner_${{ github.event.inputs.version }}.zip .
+
+      # 创建GitHub Release
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            nfc_apdu_runner_${{ github.event.inputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
