@@ -9,10 +9,8 @@ on:
         type: string
 
 jobs:
-  build-and-release:
+  build-linux-windows:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,11 +29,60 @@ jobs:
         with:
           go-version: '1.21'
 
-      # 编译ResponseDecoder工具
-      - name: Build ResponseDecoder tools
+      # 编译ResponseDecoder工具 (Windows和Linux版本)
+      - name: Build ResponseDecoder tools for Windows and Linux
         run: |
           cd tools/ResponseDecoder
-          make build-all
+          make build-windows build-linux
+
+      # 上传编译结果
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-windows-builds
+          path: |
+            ${{ steps.build-app.outputs.fap-artifacts }}
+            tools/ResponseDecoder/response_decoder_linux
+            tools/ResponseDecoder/response_decoder.exe
+            tools/ResponseDecoder/format/*.apdufmt
+            apdu_script/*
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 设置Go环境
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      # 编译ResponseDecoder工具 (macOS版本)
+      - name: Build ResponseDecoder tools for macOS
+        run: |
+          cd tools/ResponseDecoder
+          make build-macos
+
+      # 上传编译结果
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: |
+            tools/ResponseDecoder/response_decoder_macos
+
+  package-release:
+    needs: [build-linux-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
 
       # 创建发布目录结构
       - name: Create release directory structure
@@ -44,17 +91,18 @@ jobs:
           mkdir -p release_package/apdu_script
           
           # 复制FAP文件
-          cp ${{ steps.build-app.outputs.fap-artifacts }} release_package/nfc_apdu_runner.fap
+          find artifacts/linux-windows-builds -name "*.fap" -exec cp {} release_package/nfc_apdu_runner.fap \;
           
           # 复制示例脚本
-          cp -r apdu_script/* release_package/apdu_script/ || echo "no file found, skipping"
+          cp -r artifacts/linux-windows-builds/apdu_script/* release_package/apdu_script/ || echo "no script files found, skipping"
           
           # 复制ResponseDecoder工具
-          cp tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/
-          cp tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/
+          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/
+          cp artifacts/linux-windows-builds/tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/
+          cp artifacts/macos-builds/tools/ResponseDecoder/response_decoder_macos release_package/ResponseDecoder/
           
           # 复制格式文件
-          cp -r tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/
+          cp -r artifacts/linux-windows-builds/tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/
           
           # 创建压缩包
           cd release_package

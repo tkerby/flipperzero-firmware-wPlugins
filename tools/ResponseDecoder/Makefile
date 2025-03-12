@@ -8,6 +8,7 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 BINARY_NAME=response_decoder
 BINARY_UNIX=$(BINARY_NAME)_linux
+BINARY_MACOS=$(BINARY_NAME)_macos
 
 all: test build
 
@@ -21,6 +22,7 @@ clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_UNIX)
+	rm -f $(BINARY_MACOS)
 
 run:
 	$(GOBUILD) -o $(BINARY_NAME) -v
@@ -37,9 +39,12 @@ build-linux:
 build-windows:
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(BINARY_NAME).exe -v
 
-# build-mac:
-#	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)_arm64_mac -v
+build-mac:
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)_arm64_mac -v
 
-build-all: build-linux build-windows
+build-macos:
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $(BINARY_MACOS) -v
 
-.PHONY: all build test clean run deps build-linux build-windows build-mac build-all 
+build-all: build-linux build-windows build-macos
+
+.PHONY: all build test clean run deps build-linux build-windows build-mac build-macos build-all 
