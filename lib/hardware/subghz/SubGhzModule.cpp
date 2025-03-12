@@ -1,6 +1,7 @@
 #ifndef _SUBGHZ_MODULE_CLASS_
 #define _SUBGHZ_MODULE_CLASS_
 
+#include "lib/hardware/subghz/SubGhzPayload.cpp"
 #include <functional>
 
 #include <furi.h>
@@ -21,6 +22,8 @@
 #include "SubGhzState.cpp"
 #include "data/SubGhzReceivedDataImpl.cpp"
 
+#include "lib/hardware/notification/Notification.cpp"
+
 using namespace std;
 
 #undef LOG_TAG
@@ -32,8 +35,10 @@ private:
     const SubGhzDevice* device;
     SubGhzReceiver* receiver;
     SubGhzWorker* worker;
-    // SubGhzTransmitter transmitter;
+    SubGhzTransmitter* transmitter;
     IDestructable* receiveHandler = NULL;
+    FuriTimer* txCompleteCheckTimer;
+    function<void()> txCompleteHandler;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -51,6 +56,19 @@ private:
 
         auto handlerContext = (HandlerContext<function<void(SubGhzReceivedData*)>>*)context;
         handlerContext->GetHandler()(new SubGhzReceivedDataImpl(decoderBase));
+    }
+
+    static void txCompleteCheckCallback(void* context) {
+        SubGhzModule* subghz = (SubGhzModule*)context;
+        if(subghz_devices_is_async_complete_tx(subghz->device)) {
+            furi_timer_stop(subghz->txCompleteCheckTimer);
+            FURI_LOG_I(LOG_TAG, "TX complete!");
+            if(subghz->txCompleteHandler != NULL) {
+                subghz->txCompleteHandler();
+            } else {
+                subghz->StopTranmit();
+            }
+        }
     }
 
 public:
@@ -81,6 +99,8 @@ public:
         subghz_worker_set_overrun_callback(worker, (SubGhzWorkerOverrunCallback)subghz_receiver_reset);
         subghz_worker_set_pair_callback(worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
         subghz_worker_set_context(worker, receiver);
+
+        txCompleteCheckTimer = furi_timer_alloc(txCompleteCheckCallback, FuriTimerTypePeriodic, this);
     }
 
     uint32_t SetFrequency(uint32_t frequency) {
@@ -101,11 +121,28 @@ public:
         state = RECEIVING;
     }
 
-    void Transmit() {
-        PutToIdle();
+    void SetTransmitCompleteHandler(function<void()> txCompleteHandler) {
+        this->txCompleteHandler = txCompleteHandler;
+    }
 
-        // transmitter = subghz_transmitter_alloc_init(environment, "Princeton");
-        // subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter);
+    void Transmit(SubGhzPayload* payload) {
+        if(state != TRANSMITTING) {
+            PutToIdle();
+
+            transmitter = subghz_transmitter_alloc_init(environment, payload->GetProtocol());
+            state = TRANSMITTING;
+        } else {
+            furi_timer_stop(txCompleteCheckTimer);
+            subghz_devices_stop_async_tx(device);
+        }
+
+        Notification::Play(&sequence_blink_start_magenta);
+
+        subghz_transmitter_deserialize(transmitter, payload->GetFlipperFormat());
+        subghz_devices_start_async_tx(device, (void*)subghz_transmitter_yield, transmitter);
+
+        uint32_t interval = furi_kernel_get_tick_frequency() / 100; // every 10 ms
+        furi_timer_start(txCompleteCheckTimer, interval);
     }
 
     void StopReceive() {
@@ -115,14 +152,23 @@ public:
         state = IDLE;
     }
 
+    void StopTranmit() {
+        Notification::Play(&sequence_blink_stop);
+
+        subghz_devices_stop_async_tx(device);
+        subghz_devices_idle(device);
+        subghz_transmitter_free(transmitter);
+        state = IDLE;
+    }
+
     void PutToIdle() {
         switch(state) {
         case RECEIVING:
             StopReceive();
             break;
 
-        case TRANSCEIVING:
-
+        case TRANSMITTING:
+            StopTranmit();
             break;
 
         default:
@@ -137,6 +183,11 @@ public:
 
     ~SubGhzModule() {
         PutToIdle();
+
+        if(txCompleteCheckTimer != NULL) {
+            furi_timer_stop(txCompleteCheckTimer);
+            furi_timer_free(txCompleteCheckTimer);
+        }
 
         if(furi_hal_power_is_otg_enabled()) {
             furi_hal_power_disable_otg();

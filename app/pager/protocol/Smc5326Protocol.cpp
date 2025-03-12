@@ -23,6 +23,15 @@ class Smc5326Protocol : public PagerProtocol {
     int GetMaxTE() {
         return 900;
     }
+
+    SubGhzPayload* CreatePayload(uint64_t data, uint32_t te, uint32_t repeats) {
+        SubGhzPayload* payload = new SubGhzPayload(GetSystemName());
+        payload->SetBits(25);
+        payload->SetKey(data);
+        payload->SetTE(te);
+        payload->SetRepeat(repeats);
+        return payload;
+    }
 };
 
 #endif //_SMC5326_PROTCOL_CLASS_

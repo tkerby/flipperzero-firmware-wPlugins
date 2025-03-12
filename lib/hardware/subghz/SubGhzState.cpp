@@ -4,7 +4,7 @@
 enum SubGhzState {
     IDLE,
     RECEIVING,
-    TRANSCEIVING,
+    TRANSMITTING,
 };
 
 #endif //_SUBGHZ_STATE_ENUM_

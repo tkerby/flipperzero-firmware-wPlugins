@@ -51,7 +51,6 @@ public:
         );
 
         varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
-
         varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
         updatePagerIsEditable();
 
@@ -65,7 +64,6 @@ public:
         );
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
-
         varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetDisplayName()));
         varItemList->AddItem(
             teItem = new UiVariableItem(

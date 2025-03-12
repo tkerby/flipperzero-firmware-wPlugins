@@ -4,6 +4,7 @@
 #include "lib/String.cpp"
 #include "app/pager/PagerDataStored.cpp"
 #include "app/pager/decoder/PagerDecoder.cpp"
+#include "app/pager/protocol/PagerProtocol.cpp"
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/SubMenuUiView.cpp"
@@ -16,6 +17,7 @@ private:
     SubMenuUiView* submenu;
     PagerDataStored* pager;
     PagerDecoder* decoder;
+    PagerProtocol* protocol;
     SubGhzModule* subghz;
 
     String headerStr;
@@ -24,9 +26,10 @@ private:
     String** actionsStrings;
 
 public:
-    PagerActionsScreen(PagerDataStored* pager, PagerDecoder* decoder, SubGhzModule* subghz) {
+    PagerActionsScreen(PagerDataStored* pager, PagerDecoder* decoder, PagerProtocol* protocol, SubGhzModule* subghz) {
         this->pager = pager;
         this->decoder = decoder;
+        this->protocol = protocol;
         this->subghz = subghz;
 
         PagerAction currentAction = decoder->GetAction(pager->data);
@@ -63,7 +66,10 @@ public:
 
 private:
     void resendToAll(uint32_t) {
-        UiManager::GetInstance()->PushView((new BatchTransmissionScreen(pager, decoder, subghz))->GetView());
+        SubGhzPayload* payload = protocol->CreatePayload(pager->data, pager->te, 10);
+        subghz->Transmit(payload);
+        delete payload;
+        //UiManager::GetInstance()->PushView((new BatchTransmissionScreen(pager, decoder, subghz))->GetView());
     }
 
     void destroy() {

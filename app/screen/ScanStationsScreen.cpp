@@ -168,8 +168,9 @@ private:
     void showActions(uint32_t index) {
         PagerDataStored* pagerData = pagerReceiver->GetPagerData(index);
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
+        PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
 
-        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, subghz);
+        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, protocol, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
         // PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         // UiManager::GetInstance()->PushView(screen->GetView());
