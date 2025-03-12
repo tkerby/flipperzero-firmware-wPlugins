@@ -124,4 +124,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&serialPort, "port", "p", "", "Specify serial port for Flipper Zero (optional)")
 	rootCmd.Flags().StringVar(&formatPath, "decode-format", "", "Path to format template file (.apdufmt)")
 	rootCmd.Flags().StringVar(&formatDir, "format-dir", formatDir, "Directory containing format template files")
+
+	// 禁用completion命令
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }
