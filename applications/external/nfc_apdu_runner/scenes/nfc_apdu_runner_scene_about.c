@@ -1,3 +1,11 @@
+/*
+ * @Author: SpenserCai
+ * @Date: 2025-03-07 16:32:13
+ * @version: 
+ * @LastEditors: SpenserCai
+ * @LastEditTime: 2025-03-12 09:34:30
+ * @Description: file content
+ */
 #include "../nfc_apdu_runner.h"
 #include "nfc_apdu_runner_scene.h"
 
@@ -12,11 +20,12 @@ void nfc_apdu_runner_scene_about_on_enter(void* context) {
     text_box_set_text(
         text_box,
         "NFC APDU Runner\n"
-        "Version: 0.1\n\n"
-        "This app allows you to run APDU\n"
-        "commands from script files.\n\n"
+        "Version: 0.2\n"
+        "Auther: SpenserCai\n\n"
+        "This app allows you to run APDU commands from script files.\n\n"
         "Supported card types:\n"
-        "- ISO14443-4A\n\n"
+        "- ISO14443-4A\n"
+        "- ISO14443-4B\n\n"
         "Place your script files in:\n" APP_DIRECTORY_PATH "\n\n"
         "File format:\n"
         "Filetype: APDU Script\n"
