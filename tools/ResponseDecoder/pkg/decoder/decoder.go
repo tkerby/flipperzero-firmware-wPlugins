@@ -455,6 +455,6 @@ func hexDecode(hexStr string, encoding string) (string, error) {
 // cleanString 清理字符串，只保留有效内容
 func cleanString(s string) string {
 	// 保留中文、英文、数字、空格等
-	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"+-*/=<>@#$%^&_|\\]+`)
+	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"\/\+\-\*=<>@#$%^&_|\\]+`)
 	return re.ReplaceAllString(s, "")
 }
