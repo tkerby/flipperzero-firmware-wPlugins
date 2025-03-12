@@ -7,6 +7,7 @@ APDU Response Decoder is a tool for parsing and displaying `.apdures` files gene
 - Support for loading `.apdures` files from local storage
 - Support for loading `.apdures` files directly from Flipper Zero devices (via SD card mounting or serial communication)
 - Support for custom decoding format templates
+- TLV (Tag-Length-Value) data parsing capabilities
 - Beautiful colored output
 
 ## Installation
@@ -28,7 +29,30 @@ go build -o response_decoder
 
 ## Usage
 
+### Basic Commands
+
+```
+Usage:
+  response_decoder [flags]
+  response_decoder [command]
+
+Available Commands:
+  help        Help about any command
+  tlv         Parse TLV data and extract values for specified tags
+
+Flags:
+      --decode-format string   Path to format template file (.apdufmt)
+  -d, --device                 Connect to Flipper Zero device
+  -f, --file string            Path to .apdures file
+      --format-dir string      Directory containing format template files (default "./format")
+  -h, --help                   help for response_decoder
+  -p, --port string            Specify serial port for Flipper Zero (optional)
+  -s, --serial                 Use serial communication with Flipper Zero (requires -d)
+```
+
 ### Load from Local File
+
+To parse an APDU response file from your local storage:
 
 ```bash
 ./response_decoder -f path/to/file.apdures
@@ -36,17 +60,23 @@ go build -o response_decoder
 
 ### Load from Flipper Zero Device (SD Card Mount)
 
+To load and parse an APDU response file directly from your Flipper Zero device using SD card mounting:
+
 ```bash
 ./response_decoder -d
 ```
 
+This will automatically detect your Flipper Zero device's mount point and list available `.apdures` files for you to select.
+
 ### Load from Flipper Zero Device (Serial Communication)
+
+To load and parse an APDU response file directly from your Flipper Zero device using serial communication:
 
 ```bash
 ./response_decoder -d -s
 ```
 
-If you need to specify a serial port:
+If you need to specify a serial port (useful when you have multiple devices connected):
 
 ```bash
 ./response_decoder -d -s -p /dev/tty.usbmodem123456
@@ -54,8 +84,32 @@ If you need to specify a serial port:
 
 ### Use Custom Decoding Format
 
+To use a specific format template for decoding:
+
 ```bash
 ./response_decoder -f file.apdures --decode-format path/to/format.apdufmt
+```
+
+If you don't specify a format file, the program will list all available `.apdufmt` files in the format directory and prompt you to select one.
+
+### TLV Data Parsing
+
+The tool includes a dedicated TLV parser that can be used independently:
+
+```bash
+./response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264
+```
+
+To extract specific tags:
+
+```bash
+./response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 84,50
+```
+
+To specify data type for better display:
+
+```bash
+./response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 50 --type ascii
 ```
 
 ## Decoding Format Templates
@@ -104,6 +158,26 @@ Currency Code: {O[3]TAG(9F42)}
 Balance: {O[3]TAG(9F79)}
 Transaction Log: {O[4]TAG(9F4D)}
 Application Label: {O[0]TAG(50), "ascii"}
+```
+
+## Examples
+
+### Example 1: Parsing a Local File with Default Format
+
+```bash
+./response_decoder -f ./responses/visa_card.apdures
+```
+
+### Example 2: Parsing a File from Flipper Zero with Custom Format
+
+```bash
+./response_decoder -d -s --decode-format ./format/EMV.apdufmt
+```
+
+### Example 3: Parsing TLV Data
+
+```bash
+./response_decoder tlv --hex 6F1A8407A0000000031010A50F500A4D617374657243617264870101 --tag 50,84 --type ascii
 ```
 
 ## License

@@ -10,6 +10,12 @@ NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡�
 - 执行日志记录，方便调试
 - 可以保存执行结果到文件
 
+## 工具
+
+本项目包含额外的工具以增强功能：
+
+- [APDU响应解码器](tools/ResponseDecoder/README_CN.md) - 一个用于解析和显示NFC APDU Runner应用程序生成的`.apdures`文件的工具
+
 ## 支持的卡类型
 
 - ISO14443-4A（已实现）
@@ -64,7 +70,7 @@ Out: 6A82
 ## 开发信息
 
 - 作者：SpenserCai
-- 版本：1.0
+- 版本：0.2
 - 许可证：GNU通用公共许可证v3.0
 
 ## 注意事项
