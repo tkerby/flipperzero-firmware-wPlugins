@@ -15,38 +15,38 @@ var (
 	dataType string
 )
 
-// tlvCmd 表示tlv命令
+// tlvCmd represents the tlv command
 var tlvCmd = &cobra.Command{
 	Use:   "tlv",
-	Short: "解析TLV数据并提取指定标签的值",
-	Long: `解析TLV数据并提取指定标签的值。
+	Short: "Parse TLV data and extract values for specified tags",
+	Long: `Parse TLV data and extract values for specified tags.
 
-示例:
-  # 解析所有标签
+Examples:
+  # Parse all tags
   response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264
 
-  # 解析指定标签
+  # Parse specific tags
   response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 84,50
 
-  # 指定数据类型
+  # Specify data type
   response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 50 --type ascii`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if hexData == "" {
-			return fmt.Errorf("必须提供十六进制数据 (--hex)")
+			return fmt.Errorf("hex data must be provided (--hex)")
 		}
 
-		// 解析TLV数据
+		// Parse TLV data
 		tlvList, err := tlv.ParseHex(hexData)
 		if err != nil {
-			return fmt.Errorf("解析TLV数据失败: %w", err)
+			return fmt.Errorf("failed to parse TLV data: %w", err)
 		}
 
-		// 如果没有指定标签，则显示所有标签
+		// If no tag is specified, display all tags
 		if tagList == "" {
 			return displayAllTags(tlvList)
 		}
 
-		// 解析标签列表
+		// Parse tag list
 		tags := strings.Split(tagList, ",")
 		for _, tag := range tags {
 			tag = strings.TrimSpace(tag)
@@ -54,14 +54,14 @@ var tlvCmd = &cobra.Command{
 				continue
 			}
 
-			// 查找标签
+			// Find tag
 			tlvItem, err := tlvList.FindTagRecursive(tag)
 			if err != nil {
-				fmt.Printf("标签 %s 未找到: %v\n", tag, err)
+				fmt.Printf("Tag %s not found: %v\n", tag, err)
 				continue
 			}
 
-			// 显示标签值
+			// Display tag value
 			displayTagValue(tag, tlvItem)
 		}
 
@@ -69,21 +69,21 @@ var tlvCmd = &cobra.Command{
 	},
 }
 
-// displayAllTags 显示所有标签
+// displayAllTags displays all tags
 func displayAllTags(tlvList tlv.TLVList) error {
 	titleColor := color.New(color.FgCyan, color.Bold)
 
 	fmt.Println(strings.Repeat("=", 50))
-	titleColor.Println("TLV 数据解析结果")
+	titleColor.Println("TLV Data Parsing Results")
 	fmt.Println(strings.Repeat("=", 50))
 
-	// 递归显示TLV结构
+	// Recursively display TLV structure
 	displayTLVStructure(tlvList, 0)
 
 	return nil
 }
 
-// displayTLVStructure 递归显示TLV结构
+// displayTLVStructure recursively displays TLV structure
 func displayTLVStructure(tlvList tlv.TLVList, level int) {
 	indent := strings.Repeat("  ", level)
 	tagColor := color.New(color.FgYellow, color.Bold)
@@ -91,30 +91,30 @@ func displayTLVStructure(tlvList tlv.TLVList, level int) {
 	constructedColor := color.New(color.FgMagenta, color.Bold)
 
 	for _, item := range tlvList {
-		// 显示标签
-		tagColor.Printf("%s标签: %s", indent, item.Tag)
+		// Display tag
+		tagColor.Printf("%sTag: %s", indent, item.Tag)
 
-		// 显示长度
-		fmt.Printf(", 长度: %d", item.Length)
+		// Display length
+		fmt.Printf(", Length: %d", item.Length)
 
-		// 如果是构造型标签，递归显示其内容
+		// If it's a constructed tag, recursively display its contents
 		if item.IsConstructed() {
-			constructedColor.Println(" [构造型]")
+			constructedColor.Println(" [Constructed]")
 
-			// 解析嵌套TLV
+			// Parse nested TLV
 			nestedList, err := tlv.Parse(item.Value)
 			if err != nil {
-				fmt.Printf("%s  解析嵌套TLV失败: %v\n", indent, err)
+				fmt.Printf("%s  Failed to parse nested TLV: %v\n", indent, err)
 				continue
 			}
 
-			// 递归显示嵌套TLV
+			// Recursively display nested TLV
 			displayTLVStructure(nestedList, level+1)
 		} else {
-			// 显示值
-			fmt.Print(", 值: ")
+			// Display value
+			fmt.Print(", Value: ")
 
-			// 根据数据类型显示值
+			// Display value based on data type
 			switch dataType {
 			case "utf8", "utf-8":
 				data, err := tlv.GetTagValueAsString(hexData, item.Tag.String(), "utf-8")
@@ -144,21 +144,21 @@ func displayTLVStructure(tlvList tlv.TLVList, level int) {
 	}
 }
 
-// displayTagValue 显示标签值
+// displayTagValue displays tag value
 func displayTagValue(tag string, tlvItem *tlv.TLV) {
 	tagColor := color.New(color.FgYellow, color.Bold)
 	valueColor := color.New(color.FgGreen)
 
-	// 显示标签
-	tagColor.Printf("标签: %s", tag)
+	// Display tag
+	tagColor.Printf("Tag: %s", tag)
 
-	// 显示长度
-	fmt.Printf(", 长度: %d", tlvItem.Length)
+	// Display length
+	fmt.Printf(", Length: %d", tlvItem.Length)
 
-	// 显示值
-	fmt.Print(", 值: ")
+	// Display value
+	fmt.Print(", Value: ")
 
-	// 根据数据类型显示值
+	// Display value based on data type
 	switch dataType {
 	case "utf8", "utf-8":
 		data, err := tlv.GetTagValueAsString(hexData, tag, "utf-8")
@@ -189,8 +189,8 @@ func displayTagValue(tag string, tlvItem *tlv.TLV) {
 func init() {
 	rootCmd.AddCommand(tlvCmd)
 
-	// 添加命令行标志
-	tlvCmd.Flags().StringVar(&hexData, "hex", "", "要解析的十六进制TLV数据")
-	tlvCmd.Flags().StringVar(&tagList, "tag", "", "要提取的标签列表，用逗号分隔")
-	tlvCmd.Flags().StringVar(&dataType, "type", "", "数据类型 (utf8, ascii, numeric)")
+	// Add command line flags
+	tlvCmd.Flags().StringVar(&hexData, "hex", "", "Hex TLV data to parse")
+	tlvCmd.Flags().StringVar(&tagList, "tag", "", "List of tags to extract, comma separated")
+	tlvCmd.Flags().StringVar(&dataType, "type", "", "Data type (utf8, ascii, numeric)")
 }
