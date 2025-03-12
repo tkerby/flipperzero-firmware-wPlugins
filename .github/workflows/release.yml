@@ -50,7 +50,6 @@ jobs:
           # 复制ResponseDecoder工具
           cp tools/ResponseDecoder/response_decoder_linux release_package/ResponseDecoder/
           cp tools/ResponseDecoder/response_decoder.exe release_package/ResponseDecoder/
-          cp tools/ResponseDecoder/response_decoder_mac release_package/ResponseDecoder/
           
           # 复制格式文件
           cp -r tools/ResponseDecoder/format/*.apdufmt release_package/ResponseDecoder/format/
