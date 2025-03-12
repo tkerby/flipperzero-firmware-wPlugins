@@ -1,5 +1,7 @@
 # NFC APDU Runner
 
+[中文](./README_CN.md)
+
 NFC APDU Runner is a Flipper Zero application for reading and executing APDU commands on NFC cards. This application allows users to load APDU commands from script files, send them to NFC cards, and view the response results.
 
 ## Features
