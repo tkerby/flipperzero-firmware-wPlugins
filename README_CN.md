@@ -10,6 +10,15 @@ NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡�
 - 执行日志记录，方便调试
 - 可以保存执行结果到文件
 
+##安装
+
+1. 从[Release](https://github.com/SpenserCai/nfc_apdu_runner/releases)页面下载最新版本
+2. 解压缩zip文件
+3. 将`nfc_apdu_runner.fap`文件复制到Flipper Zero上的`/ext/apps/NFC/`目录中
+   ![image](./doc_images/install_1.png)
+4. 将`apdu_script`目录目录中的文件复制到Flipper Zero上的`/ext/apps_data/nfc_apdu_runner/`目录（如果`/ext/apps_data/nfc_apdu_runner/`不存在，请创建它）
+   ![image](./doc_images/install_2.png)
+
 ## 工具
 
 本项目包含额外的工具以增强功能：

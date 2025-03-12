@@ -12,6 +12,14 @@ NFC APDU Runner is a Flipper Zero application for reading and executing APDU com
 - Execution logging for debugging
 - Ability to save execution results to files
 
+## Installation
+
+1. Download the latest release from the [Releases](https://github.com/SpenserCai/nfc_apdu_runner/releases) page
+2. Extract the zip file
+3. Copy the `nfc_apdu_runner.fap` file to the `/ext/apps/NFC/` directory on your Flipper Zero
+4. Copy the files from `apdu_script` directory to the `/ext/apps_data/nfc_apdu_runner/` directory on your Flipper Zero(If not exist, create it)
+
+
 ## Tools
 
 This project includes additional tools to enhance functionality:
