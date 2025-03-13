@@ -88,11 +88,11 @@ public:
         bool isNew = index < 0;
         if(isNew) {
             PagerDataStored storedData = PagerDataStored();
-            storedData.decoder = getDecoder(&storedData)->id;
             storedData.data = dataHash;
             storedData.protocol = protocol->id;
             storedData.repeats = 1;
             storedData.te = data->GetTE();
+            storedData.decoder = getDecoder(&storedData)->id;
 
             index = pagers.size();
             pagers.push_back(storedData);

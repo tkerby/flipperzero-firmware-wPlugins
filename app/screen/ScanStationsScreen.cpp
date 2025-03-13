@@ -107,11 +107,16 @@ private:
 
     void getElementColumnName(int index, int column, String* str) {
         PagerDataStored* pagerData = pagerReceiver->GetPagerData(index);
+        PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
 
         switch(column) {
         case 0: // hex
-            str->format("%06X", pagerData->data);
+            if(protocol->GetShortName()[0] == 's') {
+                str->format("s%06X", pagerData->data);
+            } else {
+                str->format("%06X", pagerData->data);
+            }
             break;
 
         case 1: // station
