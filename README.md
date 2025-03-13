@@ -80,7 +80,7 @@ Out: 6A82
 ## Development Information
 
 - Author: SpenserCai
-- Version: 0.2
+- Version: 0.3
 - License: GNU General Public License v3.0
 
 ## Notes

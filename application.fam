@@ -3,7 +3,7 @@ Author: SpenserCai
 Date: 2025-02-28 17:52:49
 version: 
 LastEditors: SpenserCai
-LastEditTime: 2025-03-11 22:35:16
+LastEditTime: 2025-03-13 13:06:31
 Description: file content
 '''
 
@@ -18,7 +18,7 @@ App(
     fap_category="NFC",
     targets=["f7"],
     # Optional values
-    fap_version="0.2",
+    fap_version="0.3",
     fap_icon="images/nfc_apdu_runner_10px.png",  # 10x10 1-bit PNG
     fap_description="Run APDU commands from script files",
     fap_author="SpenserCai",

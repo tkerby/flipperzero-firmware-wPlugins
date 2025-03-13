@@ -341,9 +341,18 @@ static int32_t nfc_worker_apdu_thread(void* context) {
         if(flags & APDU_POLLER_ERR) {
             // 命令执行出错
             FURI_LOG_E(TAG, "APDU命令执行出错");
+
+            // 设置错误信息
+            worker->error_message = malloc(100);
+            if(worker->error_message) {
+                snprintf(worker->error_message, 100, "APDU command failed\nCommand: %lu", i + 1);
+            }
+
             worker->responses[response_count].response = NULL;
             worker->responses[response_count].response_length = 0;
             is_error = true;
+            // 立即调用失败回调，而不是等到线程结束
+            worker->callback(NfcWorkerEventFail, worker->context);
             response_count++;
             break;
         } else if(flags & APDU_POLLER_DONE) {
@@ -384,9 +393,18 @@ static int32_t nfc_worker_apdu_thread(void* context) {
         } else {
             // 超时
             FURI_LOG_E(TAG, "APDU命令执行超时");
+
+            // 设置错误信息
+            worker->error_message = malloc(100);
+            if(worker->error_message) {
+                snprintf(worker->error_message, 100, "Command timeout\nCommand: %lu", i + 1);
+            }
+
             worker->responses[response_count].response = NULL;
             worker->responses[response_count].response_length = 0;
             is_error = true;
+            // 立即调用失败回调，而不是等到线程结束
+            worker->callback(NfcWorkerEventFail, worker->context);
             response_count++;
             break;
         }
