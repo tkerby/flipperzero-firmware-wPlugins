@@ -19,6 +19,7 @@ private:
     PagerDecoder* decoder;
     PagerProtocol* protocol;
     SubGhzModule* subghz;
+    bool returnToReceiveAfterTransmission;
 
     String headerStr;
     String resendToAllStr;
@@ -26,11 +27,18 @@ private:
     String** actionsStrings;
 
 public:
-    PagerActionsScreen(PagerDataStored* pager, PagerDecoder* decoder, PagerProtocol* protocol, SubGhzModule* subghz) {
+    PagerActionsScreen(
+        PagerDataStored* pager,
+        PagerDecoder* decoder,
+        PagerProtocol* protocol,
+        SubGhzModule* subghz,
+        bool returnToReceiveAfterTransmission
+    ) {
         this->pager = pager;
         this->decoder = decoder;
         this->protocol = protocol;
         this->subghz = subghz;
+        this->returnToReceiveAfterTransmission = returnToReceiveAfterTransmission;
 
         PagerAction currentAction = decoder->GetAction(pager->data);
         uint8_t actionValue = decoder->GetActionValue(pager->data);
@@ -62,6 +70,8 @@ public:
 
             submenu->AddItem(actionsStrings[i]->cstr(), HANDLER_1ARG(&PagerActionsScreen::resendToAll));
         }
+
+        subghz->SetTransmitCompleteHandler(HANDLER(&PagerActionsScreen::txComplete));
     }
 
 private:
@@ -69,7 +79,12 @@ private:
         SubGhzPayload* payload = protocol->CreatePayload(pager->data, pager->te, 10);
         subghz->Transmit(payload);
         delete payload;
-        //UiManager::GetInstance()->PushView((new BatchTransmissionScreen(pager, decoder, subghz))->GetView());
+    }
+
+    void txComplete() {
+        if(returnToReceiveAfterTransmission) {
+            subghz->ReceiveAsync();
+        }
     }
 
     void destroy() {

@@ -8,6 +8,7 @@
 #include "UiView.cpp"
 #include "lib/String.cpp"
 #include "lib/Helpers.cpp"
+#include "lib/ui/UiManager.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_ADV_SUBMENU"
@@ -94,7 +95,9 @@ public:
 
     void AddElement() {
         if(elementsCount == 0 || selectedIndex == elementsCount - 1) {
-            setIndex(elementsCount);
+            if(IsOnTop()) {
+                setIndex(elementsCount);
+            }
         }
         elementsCount++;
     }

@@ -170,7 +170,7 @@ private:
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
 
-        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, protocol, subghz);
+        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, protocol, subghz, true);
         UiManager::GetInstance()->PushView(screen->GetView());
         // PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
         // UiManager::GetInstance()->PushView(screen->GetView());

@@ -40,10 +40,12 @@ private:
 
     void popView() {
         UiView* currentView = viewStack.top();
+        currentView->SetOnTop(false);
         view_dispatcher_remove_view(viewDispatcher, currentViewId());
         viewStack.pop();
         delete currentView;
 
+        viewStack.top()->SetOnTop(true);
         FURI_LOG_I(LOG_TAG, "ViewStack popped, size: %d", viewStack.size());
     }
 
@@ -71,7 +73,12 @@ public:
     }
 
     void PushView(UiView* view) {
+        if(!viewStack.empty()) {
+            viewStack.top()->SetOnTop(false);
+        }
+
         viewStack.push(view);
+        view->SetOnTop(true);
 
         view_set_previous_callback(view->GetNativeView(), backCallback);
         view_dispatcher_add_view(viewDispatcher, currentViewId(), view->GetNativeView());

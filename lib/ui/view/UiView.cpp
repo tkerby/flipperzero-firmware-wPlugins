@@ -15,6 +15,7 @@ private:
     function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
     function<void()> onReturnToView = HANDLER(&UiView::doNothing);
     IDestructable* inputHandler = NULL;
+    bool isOnTop = false;
 
     static bool onInput(InputEvent* input, void* context) {
         auto handlerContext = (HandlerContext<function<bool(InputEvent*)>>*)context;
@@ -44,6 +45,14 @@ public:
 
     void OnReturn() {
         onReturnToView();
+    }
+
+    bool IsOnTop() {
+        return isOnTop;
+    }
+
+    void SetOnTop(bool value) {
+        this->isOnTop = value;
     }
 
 protected:
