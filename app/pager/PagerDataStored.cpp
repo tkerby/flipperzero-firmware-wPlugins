@@ -2,6 +2,9 @@
 #define _PAGER_DATA_STORED_CLASS_
 
 #include <cstdint>
+#include <functional>
+
+using namespace std;
 
 struct PagerDataStored {
     // first 4-bytes
@@ -14,5 +17,11 @@ struct PagerDataStored {
     uint8_t protocol : 7;
     bool edited      : 1 = false;
 };
+
+// PagerDataStored is short-living because it's stored as vector of stack allocated objects in PagerReceiver class.
+// If vector size changes, it reallocates all the objects on the new addresses in memory. We could store pointers in vector instead of stack objects,
+// but it would take more memory which is not acceptable (sizeof(PagerDataStored) + sizeof(PagerDataStored*)) vs sizeof(PagerDataStored).
+// That's why we pass the getter instead of object itself, to make sure we always have the right pointer to the PagerDataStored structure.
+typedef function<PagerDataStored*()> PagerDataGetter;
 
 #endif //_PAGER_DATA_STORED_CLASS_

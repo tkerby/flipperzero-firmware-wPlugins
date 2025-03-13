@@ -17,10 +17,10 @@ class PagerActionsScreen {
 private:
     AppConfig* config;
     SubMenuUiView* submenu;
-    PagerDataStored* pager;
     PagerDecoder* decoder;
     PagerProtocol* protocol;
     SubGhzModule* subghz;
+    PagerDataGetter getPager;
     BatchTransmissionScreen* batchTransmissionScreen;
 
     String headerStr;
@@ -34,17 +34,18 @@ private:
 public:
     PagerActionsScreen(
         AppConfig* config,
-        PagerDataStored* pager,
+        PagerDataGetter pagerGetter,
         PagerDecoder* decoder,
         PagerProtocol* protocol,
         SubGhzModule* subghz
     ) {
         this->config = config;
-        this->pager = pager;
+        this->getPager = pagerGetter;
         this->decoder = decoder;
         this->protocol = protocol;
         this->subghz = subghz;
 
+        PagerDataStored* pager = getPager();
         PagerAction currentAction = decoder->GetAction(pager->data);
         uint8_t actionValue = decoder->GetActionValue(pager->data);
         uint16_t stationNum = decoder->GetStation(pager->data);
@@ -91,14 +92,18 @@ private:
     }
 
     void resendSingle(uint32_t) {
+        PagerDataStored* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
     }
 
     void sendAction(PagerAction action) {
+        PagerDataStored* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats));
     }
 
     void sendCurrentPager() {
+        PagerDataStored* pager = getPager();
+        FURI_LOG_E("PAS", "Pager data: %06X, protocol: %s", pager->data, protocol->GetDisplayName());
         batchTransmissionScreen->SetProgress(currentPager, config->MaxPagerForBatchOrDetection);
         subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats));
     }

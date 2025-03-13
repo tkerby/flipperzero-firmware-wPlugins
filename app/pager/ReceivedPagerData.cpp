@@ -6,13 +6,13 @@
 
 class ReceivedPagerData {
 private:
-    PagerDataStored* storedData;
+    PagerDataGetter getStoredData;
     uint32_t index;
     bool isNew;
 
 public:
-    ReceivedPagerData(PagerDataStored* storedData, uint32_t index, bool isNew) {
-        this->storedData = storedData;
+    ReceivedPagerData(PagerDataGetter storedDataGetter, uint32_t index, bool isNew) {
+        this->getStoredData = storedDataGetter;
         this->index = index;
         this->isNew = isNew;
     }
@@ -26,7 +26,7 @@ public:
     }
 
     PagerDataStored* GetData() {
-        return storedData;
+        return getStoredData();
     }
 };
 

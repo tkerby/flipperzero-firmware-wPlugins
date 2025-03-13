@@ -104,7 +104,9 @@ private:
                 menuView->AddElement();
             }
 
-            menuView->Refresh();
+            if(menuView->IsOnTop()) {
+                menuView->Refresh();
+            }
 
             delete pagerData;
         }
@@ -112,7 +114,7 @@ private:
     }
 
     void getElementColumnName(int index, int column, String* str) {
-        PagerDataStored* pagerData = pagerReceiver->GetPagerData(index);
+        PagerDataStored* pagerData = pagerReceiver->PagerGetter(index)();
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
 
@@ -163,16 +165,17 @@ private:
     }
 
     void editTransmission(uint32_t index) {
-        PagerOptionsScreen* screen = new PagerOptionsScreen(config, subghz, pagerReceiver, index);
+        PagerOptionsScreen* screen = new PagerOptionsScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index));
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void showActions(uint32_t index) {
-        PagerDataStored* pagerData = pagerReceiver->GetPagerData(index);
+        PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
+        PagerDataStored* pagerData = getPager();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
 
-        PagerActionsScreen* screen = new PagerActionsScreen(config, pagerData, decoder, protocol, subghz);
+        PagerActionsScreen* screen = new PagerActionsScreen(config, getPager, decoder, protocol, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 

@@ -63,8 +63,8 @@ public:
         }
     }
 
-    PagerDataStored* GetPagerData(size_t index) {
-        return &pagers[index];
+    PagerDataGetter PagerGetter(size_t index) {
+        return [this, index]() { return &pagers[index]; };
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
@@ -102,7 +102,7 @@ public:
             pagers.push_back(storedData);
         }
 
-        return new ReceivedPagerData(GetPagerData(index), index, isNew);
+        return new ReceivedPagerData(PagerGetter(index), index, isNew);
     }
 
     ~PagerReceiver() {

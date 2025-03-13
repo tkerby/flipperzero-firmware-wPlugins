@@ -48,7 +48,6 @@ private:
 
     static void captureCallback(SubGhzReceiver* receiver, SubGhzProtocolDecoderBase* decoderBase, void* context) {
         UNUSED(receiver);
-        UNUSED(context);
 
         if(context == NULL) {
             FURI_LOG_W(LOG_TAG, "SubGhz module has NULL receive handler!");
@@ -168,6 +167,7 @@ private:
 
         transmitter = subghz_transmitter_alloc_init(environment, currentPayload->GetProtocol());
         subghz_transmitter_deserialize(transmitter, currentPayload->GetFlipperFormat());
+        subghz_devices_flush_tx(device);
         subghz_devices_start_async_tx(device, (void*)subghz_transmitter_yield, transmitter);
     }
 

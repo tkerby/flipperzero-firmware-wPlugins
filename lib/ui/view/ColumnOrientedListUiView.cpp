@@ -121,6 +121,10 @@ public:
 
 private:
     void draw(Canvas* canvas) {
+        if(!IsOnTop()) {
+            return;
+        }
+
         canvas_clear(canvas);
         canvas_set_color(canvas, ColorBlack);
         canvas_set_font(canvas, FontSecondary);
