@@ -75,6 +75,10 @@ public:
         receive(new SubGhzReceivedDataStub("Princeton", 0xCBC012)); // Europolis, tokyo ramen
         receive(new SubGhzReceivedDataStub("Princeton", 0xA00012)); // Europolis, Istanbul
         receive(new SubGhzReceivedDataStub("Princeton", 0x134012)); // Metropolis, Vai me
+
+        receive(new SubGhzReceivedDataStub("Princeton", 0x71A420)); // batoni?
+        receive(new SubGhzReceivedDataStub("SMC5326", 0x200084)); // koreana
+        receive(new SubGhzReceivedDataStub("Princeton", 0xBC022)); // koreana
 #endif
     }
 
