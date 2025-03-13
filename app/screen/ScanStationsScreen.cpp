@@ -71,19 +71,10 @@ public:
         }
 
 #if DEBUG
-        receive(new SubGhzReceivedDataStub("Princeton", 0xCBC082));
-        receive(new SubGhzReceivedDataStub("SMC5326", 0x71a4d0));
-        receive(new SubGhzReceivedDataStub("Princeton", 0x1914c0));
-
-        receive(new SubGhzReceivedDataStub("Princeton", 0x4b00C2));
-        receive(new SubGhzReceivedDataStub("Princeton", 0x200194));
-
-        // turn off all
-        receive(new SubGhzReceivedDataStub("Princeton", 0x1F3E7F));
-
-        for(int i = 0; i < 99; i++) {
-            receive(new SubGhzReceivedDataStub("Princeton", 0xABC082));
-        }
+        receive(new SubGhzReceivedDataStub("Princeton", 0x030012)); // Europolis, pasta & pizza
+        receive(new SubGhzReceivedDataStub("Princeton", 0xCBC012)); // Europolis, tokyo ramen
+        receive(new SubGhzReceivedDataStub("Princeton", 0xA00012)); // Europolis, Istanbul
+        receive(new SubGhzReceivedDataStub("Princeton", 0x134012)); // Metropolis, Vai me
 #endif
     }
 
