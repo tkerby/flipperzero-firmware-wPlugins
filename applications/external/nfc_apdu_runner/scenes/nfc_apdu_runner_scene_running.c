@@ -21,7 +21,7 @@ static void show_error_popup(NfcApduRunner* app, const char* message) {
     FURI_LOG_I("APDU_DEBUG", "显示错误弹窗: %s", message);
     Popup* popup = app->popup;
     popup_reset(popup);
-    popup_set_text(popup, message, 89, 44, AlignCenter, AlignCenter);
+    popup_set_text(popup, message, 64, 32, AlignCenter, AlignCenter);
     popup_set_timeout(popup, 2000);
     popup_set_callback(popup, nfc_apdu_runner_scene_running_popup_callback);
     popup_set_context(popup, app);
@@ -136,8 +136,16 @@ bool nfc_apdu_runner_scene_running_on_event(void* context, SceneManagerEvent eve
             FURI_LOG_E("APDU_DEBUG", "操作失败事件");
             // 停止NFC Worker
             nfc_worker_stop(app->worker);
-            show_error_popup(
-                app, "Failed to detect card or run APDU commands\nCheck the log for details");
+
+            // 获取自定义错误信息
+            const char* error_message = nfc_worker_get_error_message(app->worker);
+            if(error_message) {
+                show_error_popup(app, error_message);
+            } else {
+                show_error_popup(
+                    app, "Failed to detect card or run APDU commands\nCheck the log for details");
+            }
+
             consumed = true;
         } else if(custom_event == NfcWorkerEventCardLost) {
             FURI_LOG_E("APDU_DEBUG", "卡片丢失事件");
@@ -148,7 +156,14 @@ bool nfc_apdu_runner_scene_running_on_event(void* context, SceneManagerEvent eve
             FURI_LOG_I("APDU_DEBUG", "操作被中止事件");
             // 停止NFC Worker
             nfc_worker_stop(app->worker);
-            show_error_popup(app, "Operation cancelled by user");
+
+            // 检查是否已经显示了错误信息
+            const char* error_message = nfc_worker_get_error_message(app->worker);
+            if(!error_message) {
+                // 只有在没有错误信息的情况下才显示用户取消的消息
+                show_error_popup(app, "Operation cancelled by user");
+            }
+
             consumed = true;
         } else if(custom_event == NfcApduRunnerCustomEventPopupClosed) {
             FURI_LOG_I("APDU_DEBUG", "弹出窗口关闭事件");
