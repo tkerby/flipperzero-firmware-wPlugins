@@ -38,6 +38,8 @@ struct NfcWorker {
     bool running;
     bool card_detected;
     bool card_lost;
+
+    char* error_message;
 };
 
 // 记录APDU数据的辅助函数
@@ -279,10 +281,32 @@ static int32_t nfc_worker_apdu_thread(void* context) {
         const char* cmd = worker->script->commands[i];
         FURI_LOG_I(TAG, "准备执行APDU命令 %lu: %s", i, cmd);
 
+        // 检查命令长度是否超过限制
+        size_t cmd_len = strlen(cmd);
+        if(cmd_len / 2 > MAX_APDU_LENGTH) {
+            FURI_LOG_E(
+                TAG, "APDU命令长度超过限制(%zu > %d): %s", cmd_len / 2, MAX_APDU_LENGTH, cmd);
+
+            // 设置错误信息
+            worker->error_message = malloc(100);
+            if(worker->error_message) {
+                snprintf(
+                    worker->error_message,
+                    100,
+                    "Command too long\n%d bytes max\nCommand: %lu",
+                    MAX_APDU_LENGTH,
+                    i + 1);
+            }
+
+            is_error = true;
+            // 立即调用失败回调，而不是等到线程结束
+            worker->callback(NfcWorkerEventFail, worker->context);
+            break;
+        }
+
         // 解析APDU命令
         uint8_t apdu_data[MAX_APDU_LENGTH];
         uint16_t apdu_len = 0;
-        size_t cmd_len = strlen(cmd);
 
         // 将十六进制字符串转换为字节数组
         for(size_t j = 0; j < cmd_len; j += 2) {
@@ -394,17 +418,19 @@ static int32_t nfc_worker_apdu_thread(void* context) {
     }
 
     // 返回结果
-    if(!worker->running) {
+    if(!worker->running && !is_error) {
+        // 只有在用户取消操作且没有其他错误时才触发中止事件
         FURI_LOG_I(TAG, "用户取消操作");
         worker->callback(NfcWorkerEventAborted, worker->context);
         return -1;
     } else if(!is_error) {
+        // 没有错误时触发成功事件
         FURI_LOG_I(TAG, "执行成功");
         worker->callback(NfcWorkerEventSuccess, worker->context);
         return 0;
     } else {
+        // 错误已经在上面触发了回调，这里不需要再次触发
         FURI_LOG_E(TAG, "执行失败");
-        worker->callback(NfcWorkerEventFail, worker->context);
         return -1;
     }
 }
@@ -483,7 +509,10 @@ static int32_t nfc_worker_detect_thread(void* context) {
         // 检查是否应该退出
         if(!worker->running) {
             FURI_LOG_I(TAG, "用户取消操作");
-            worker->callback(NfcWorkerEventAborted, worker->context);
+            // 只有在没有错误信息的情况下才触发中止回调
+            if(!worker->error_message) {
+                worker->callback(NfcWorkerEventAborted, worker->context);
+            }
 
             // 停止轮询器
             if(worker->poller) {
@@ -542,7 +571,10 @@ static int32_t nfc_worker_detect_thread(void* context) {
         // 返回结果
         if(!worker->running) {
             FURI_LOG_I(TAG, "用户取消操作");
-            worker->callback(NfcWorkerEventAborted, worker->context);
+            // 只有在没有错误信息的情况下才触发中止回调
+            if(!worker->error_message) {
+                worker->callback(NfcWorkerEventAborted, worker->context);
+            }
             return -1;
         } else {
             FURI_LOG_I(TAG, "执行成功");
@@ -568,6 +600,7 @@ NfcWorker* nfc_worker_alloc(Nfc* nfc) {
     worker->running = false;
     worker->card_detected = false;
     worker->card_lost = false;
+    worker->error_message = NULL;
 
     return worker;
 }
@@ -592,6 +625,12 @@ void nfc_worker_free(NfcWorker* worker) {
         free(worker->responses);
         worker->responses = NULL;
         worker->response_count = 0;
+    }
+
+    // 释放错误信息
+    if(worker->error_message) {
+        free(worker->error_message);
+        worker->error_message = NULL;
     }
 
     // 释放流缓冲区
@@ -666,6 +705,12 @@ void nfc_worker_stop(NfcWorker* worker) {
     worker->card_detected = false;
     worker->card_lost = false;
     worker->state = NfcWorkerStateReady;
+
+    // 如果有错误信息，说明已经触发了错误回调，不需要再触发中止回调
+    if(worker->callback && !worker->error_message) {
+        worker->callback(NfcWorkerEventAborted, worker->context);
+    }
+
     worker->callback = NULL;
     worker->context = NULL;
 }
@@ -691,4 +736,10 @@ void nfc_worker_get_responses(
     // 清空worker中的响应，避免重复释放
     worker->responses = NULL;
     worker->response_count = 0;
+}
+
+// 获取NFC Worker的错误信息
+const char* nfc_worker_get_error_message(NfcWorker* worker) {
+    furi_assert(worker);
+    return worker->error_message;
 }

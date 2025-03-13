@@ -3,7 +3,7 @@
  * @Date: 2025-02-28 18:02:04
  * @version: 
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-13 11:46:52
+ * @LastEditTime: 2025-03-13 12:22:41
  * @Description: file content
  */
 #pragma once
@@ -185,3 +185,4 @@ void nfc_worker_get_responses(
     NfcWorker* worker,
     NfcApduResponse** out_responses,
     uint32_t* out_response_count);
+const char* nfc_worker_get_error_message(NfcWorker* worker);
