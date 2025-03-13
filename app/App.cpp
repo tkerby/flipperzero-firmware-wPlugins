@@ -4,6 +4,7 @@
 #include "lib/ui/UiManager.cpp"
 #include "lib/hardware/notification/Notification.cpp"
 
+#include "AppConfig.cpp"
 #include "app/screen/MainMenuScreen.cpp"
 
 using namespace std;
@@ -14,10 +15,14 @@ public:
         UiManager* ui = UiManager::GetInstance();
         ui->InitGui();
 
-        MainMenuScreen mainMenuScreen;
-        ui->PushView(mainMenuScreen.GetView());
+        AppConfig* config = new AppConfig();
+
+        MainMenuScreen* mainMenuScreen = new MainMenuScreen(config);
+        ui->PushView(mainMenuScreen->GetView());
         ui->RunEventLoop();
 
+        delete mainMenuScreen;
+        delete config;
         delete ui;
 
         Notification::Dispose();

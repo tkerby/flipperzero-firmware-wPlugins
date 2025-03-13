@@ -3,6 +3,7 @@
 
 #include "lib/String.cpp"
 #include "app/pager/PagerReceiver.cpp"
+#include "lib/hardware/subghz/SubGhzModule.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
 
@@ -10,6 +11,8 @@
 
 class PagerOptionsScreen {
 private:
+    AppConfig* config;
+    SubGhzModule* subghz;
     PagerDataStored* pager;
     PagerReceiver* receiver;
     VariableItemListUiView* varItemList;
@@ -31,7 +34,9 @@ private:
     String teStr;
 
 public:
-    PagerOptionsScreen(PagerReceiver* receiver, uint32_t pagerIndex) {
+    PagerOptionsScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, uint32_t pagerIndex) {
+        this->config = config;
+        this->subghz = subghz;
         this->pager = receiver->GetPagerData(pagerIndex);
         this->receiver = receiver;
 
@@ -40,6 +45,7 @@ public:
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&PagerOptionsScreen::destroy));
+        varItemList->SetEnterPressHandler(HANDLER_1ARG(&PagerOptionsScreen::enterPressed));
 
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
@@ -85,6 +91,11 @@ private:
         } else {
             pagerItem->SetSelectedItem(0, 1);
         }
+    }
+
+    void enterPressed(uint32_t) {
+        PagerProtocol* protocol = receiver->protocols[pager->protocol];
+        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
     }
 
     const char* encodingValueChanged(uint8_t index) {

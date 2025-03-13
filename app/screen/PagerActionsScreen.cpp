@@ -2,6 +2,7 @@
 #define _PAGER_ACTIONS_SCREEN_CLASS_
 
 #include "lib/String.cpp"
+#include "app/AppConfig.cpp"
 #include "app/pager/PagerDataStored.cpp"
 #include "app/pager/decoder/PagerDecoder.cpp"
 #include "app/pager/protocol/PagerProtocol.cpp"
@@ -12,17 +13,14 @@
 
 #include "lib/ui/UiManager.cpp"
 
-#define PAGER_COUNT  50
-#define REPEAT_COUNT 10
-
 class PagerActionsScreen {
 private:
+    AppConfig* config;
     SubMenuUiView* submenu;
     PagerDataStored* pager;
     PagerDecoder* decoder;
     PagerProtocol* protocol;
     SubGhzModule* subghz;
-    bool returnToReceiveAfterTransmission;
     BatchTransmissionScreen* batchTransmissionScreen;
 
     String headerStr;
@@ -35,17 +33,17 @@ private:
 
 public:
     PagerActionsScreen(
+        AppConfig* config,
         PagerDataStored* pager,
         PagerDecoder* decoder,
         PagerProtocol* protocol,
-        SubGhzModule* subghz,
-        bool returnToReceiveAfterTransmission
+        SubGhzModule* subghz
     ) {
+        this->config = config;
         this->pager = pager;
         this->decoder = decoder;
         this->protocol = protocol;
         this->subghz = subghz;
-        this->returnToReceiveAfterTransmission = returnToReceiveAfterTransmission;
 
         PagerAction currentAction = decoder->GetAction(pager->data);
         uint8_t actionValue = decoder->GetActionValue(pager->data);
@@ -93,21 +91,21 @@ private:
     }
 
     void resendSingle(uint32_t) {
-        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, REPEAT_COUNT));
+        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
     }
 
     void sendAction(PagerAction action) {
-        subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, REPEAT_COUNT));
+        subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats));
     }
 
     void sendCurrentPager() {
-        batchTransmissionScreen->SetProgress(currentPager, PAGER_COUNT);
-        subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, REPEAT_COUNT));
+        batchTransmissionScreen->SetProgress(currentPager, config->MaxPagerForBatchOrDetection);
+        subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats));
     }
 
     void txComplete() {
         if(transmittingBatch) {
-            if(++currentPager <= PAGER_COUNT) {
+            if(++currentPager <= config->MaxPagerForBatchOrDetection) {
                 sendCurrentPager();
                 return;
             } else {
@@ -116,11 +114,7 @@ private:
             }
         }
 
-        if(returnToReceiveAfterTransmission) {
-            subghz->ReceiveAsync();
-        } else {
-            subghz->PutToIdle();
-        }
+        subghz->DefaultAfterTransmissionHandler();
     }
 
     void onReturn() {
@@ -128,6 +122,7 @@ private:
     }
 
     void destroy() {
+        subghz->SetTransmitCompleteHandler(NULL);
         for(size_t i = 0; i < decoder->GetSupportedActions().size(); i++) {
             delete actionsStrings[i];
         }

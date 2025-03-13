@@ -44,8 +44,7 @@ private:
 
     bool isExternal;
     SubGhzState state = IDLE;
-
-    uint32_t frequency = 433920000;
+    bool receiveAfterTransmission = false;
 
     static void captureCallback(SubGhzReceiver* receiver, SubGhzProtocolDecoderBase* decoderBase, void* context) {
         UNUSED(receiver);
@@ -73,13 +72,13 @@ private:
             if(subghz->txCompleteHandler != NULL) {
                 subghz->txCompleteHandler();
             } else {
-                subghz->StopTranmit();
+                subghz->DefaultAfterTransmissionHandler();
             }
         }
     }
 
 public:
-    SubGhzModule() {
+    SubGhzModule(uint32_t frequency) {
         environment = subghz_environment_alloc();
         subghz_environment_set_protocol_registry(environment, &subghz_protocol_registry);
 
@@ -112,6 +111,18 @@ public:
 
     uint32_t SetFrequency(uint32_t frequency) {
         return subghz_devices_set_frequency(device, frequency);
+    }
+
+    void SetReceiveAfterTransmission(bool value) {
+        this->receiveAfterTransmission = value;
+    }
+
+    void DefaultAfterTransmissionHandler() {
+        if(receiveAfterTransmission) {
+            ReceiveAsync();
+        } else {
+            PutToIdle();
+        }
     }
 
     void SetReceiveHandler(function<void(SubGhzReceivedData*)> handler) {

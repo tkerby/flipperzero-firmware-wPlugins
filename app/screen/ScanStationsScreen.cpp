@@ -9,10 +9,9 @@
 
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 
+#include "app/AppConfig.cpp"
 #include "app/AppNotifications.cpp"
 #include "app/pager/PagerReceiver.cpp"
-
-#define DEBUG true
 
 static int8_t stationScreenColumnOffsets[]{
     3, // hex
@@ -39,13 +38,15 @@ static Align stationScreenColumnAlignments[]{
 
 class ScanStationsScreen {
 private:
+    AppConfig* config;
     ColumnOrientedListUiView* menuView;
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
 
 public:
-    ScanStationsScreen() {
-        pagerReceiver = new PagerReceiver();
+    ScanStationsScreen(AppConfig* config) {
+        this->config = config;
+        pagerReceiver = new PagerReceiver(config);
 
         menuView = new ColumnOrientedListUiView(
             stationScreenColumnOffsets,
@@ -60,8 +61,9 @@ public:
 
         menuView->SetLeftButton("Conf", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
-        subghz = new SubGhzModule();
+        subghz = new SubGhzModule(config->Frequency);
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
+        subghz->SetReceiveAfterTransmission(true);
         subghz->ReceiveAsync();
 
         if(subghz->IsExternal()) {
@@ -70,16 +72,16 @@ public:
             menuView->SetNoElementCaption("Receiving...");
         }
 
-#if DEBUG
-        receive(new SubGhzReceivedDataStub("Princeton", 0x030012)); // Europolis, pasta & pizza
-        receive(new SubGhzReceivedDataStub("Princeton", 0xCBC012)); // Europolis, tokyo ramen
-        receive(new SubGhzReceivedDataStub("Princeton", 0xA00012)); // Europolis, Istanbul
-        receive(new SubGhzReceivedDataStub("Princeton", 0x134012)); // Metropolis, Vai me
+        if(config->Debug) {
+            receive(new SubGhzReceivedDataStub("Princeton", 0x030012)); // Europolis, pasta & pizza
+            receive(new SubGhzReceivedDataStub("Princeton", 0xCBC012)); // Europolis, tokyo ramen
+            receive(new SubGhzReceivedDataStub("Princeton", 0xA00012)); // Europolis, Istanbul
+            receive(new SubGhzReceivedDataStub("Princeton", 0x134012)); // Metropolis, Vai me
 
-        receive(new SubGhzReceivedDataStub("Princeton", 0x71A420)); // batoni?
-        receive(new SubGhzReceivedDataStub("SMC5326", 0x200084)); // koreana
-        receive(new SubGhzReceivedDataStub("Princeton", 0xBC022)); // koreana
-#endif
+            receive(new SubGhzReceivedDataStub("Princeton", 0x71A420)); // batoni?
+            receive(new SubGhzReceivedDataStub("SMC5326", 0x200084)); // koreana
+            receive(new SubGhzReceivedDataStub("Princeton", 0xBC022)); // koreana
+        }
     }
 
     UiView* GetView() {
@@ -161,7 +163,7 @@ private:
     }
 
     void editTransmission(uint32_t index) {
-        PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
+        PagerOptionsScreen* screen = new PagerOptionsScreen(config, subghz, pagerReceiver, index);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
@@ -170,10 +172,8 @@ private:
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
 
-        PagerActionsScreen* screen = new PagerActionsScreen(pagerData, decoder, protocol, subghz, true);
+        PagerActionsScreen* screen = new PagerActionsScreen(config, pagerData, decoder, protocol, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
-        // PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
-        // UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void destroy() {

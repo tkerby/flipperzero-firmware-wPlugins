@@ -5,6 +5,8 @@
 #include <cstring>
 #include <vector>
 
+#include "app/AppConfig.cpp"
+
 #include "lib/hardware/subghz/data/SubGhzReceivedData.cpp"
 #include "ReceivedPagerData.cpp"
 
@@ -28,7 +30,7 @@ public:
     vector<PagerDecoder*> decoders = {new Td157Decoder(), new Td165Decoder(), new Td174Decoder()};
 
 private:
-    int pagerNumThreshold = 50;
+    AppConfig* config;
     vector<PagerDataStored> pagers;
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
@@ -42,7 +44,7 @@ private:
 
     PagerDecoder* getDecoder(PagerDataStored* pagerData) {
         for(size_t i = 0; i < decoders.size(); i++) {
-            if(decoders[i]->GetPager(pagerData->data) <= pagerNumThreshold) {
+            if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
                 return decoders[i];
             }
         }
@@ -50,7 +52,9 @@ private:
     }
 
 public:
-    PagerReceiver() {
+    PagerReceiver(AppConfig* config) {
+        this->config = config;
+
         for(size_t i = 0; i < protocols.size(); i++) {
             protocols[i]->id = i;
         }
