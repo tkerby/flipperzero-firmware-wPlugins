@@ -1,29 +1,25 @@
 #ifndef _BATCH_TRANSMISSION_SCREEN_CLASS_
 #define _BATCH_TRANSMISSION_SCREEN_CLASS_
 
-#include "app/pager/PagerDataStored.cpp"
-#include "app/pager/decoder/PagerDecoder.cpp"
-#include "lib/hardware/subghz/SubGhzModule.cpp"
+#include "lib/String.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/ProgressbarPopupUiView.cpp"
 
 class BatchTransmissionScreen {
 private:
     ProgressbarPopupUiView* popup;
-
-    PagerDataStored* pager;
-    PagerDecoder* decoder;
-    SubGhzModule* subghz;
+    String statusStr;
 
 public:
-    BatchTransmissionScreen(PagerDataStored* pager, PagerDecoder* decoder, SubGhzModule* subghz) {
-        this->pager = pager;
-        this->decoder = decoder;
-        this->subghz = subghz;
-
+    BatchTransmissionScreen() {
         popup = new ProgressbarPopupUiView("Transmitting...");
         popup->SetProgress("Pager 0 / 50", 0);
         popup->SetOnDestroyHandler(HANDLER(&BatchTransmissionScreen::destroy));
+    }
+
+    void SetProgress(int pagerNum, int pagersTotal) {
+        float progressValue = (float)pagerNum / pagersTotal;
+        popup->SetProgress(statusStr.format("Pager %d / %d", pagerNum, pagersTotal), progressValue);
     }
 
 private:

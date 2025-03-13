@@ -6,10 +6,14 @@
 
 using namespace std;
 
+#undef LOG_TAG
+#define LOG_TAG "SG_PLD"
+
 class SubGhzPayload {
 private:
     const char* protocol;
     FlipperFormat* flipperFormat;
+    int requiredSoftwareRepeats = 1;
 
 public:
     SubGhzPayload(const char* protocol) {
@@ -20,6 +24,8 @@ public:
     }
 
     void SetKey(uint64_t key) {
+        FURI_LOG_I(LOG_TAG, "Setting transmission key to %06X", (unsigned int)key);
+
         char* dataBytes = (char*)&key;
         reverse(dataBytes, dataBytes + sizeof(key));
         flipper_format_write_hex(flipperFormat, "Key", (const uint8_t*)dataBytes, sizeof(key));
@@ -37,9 +43,16 @@ public:
         flipper_format_write_uint32(flipperFormat, "Repeat", &repeats, 1);
     }
 
+    void SetSoftwareRepeats(uint32_t repeats) {
+        this->requiredSoftwareRepeats = repeats;
+    }
+
     FlipperFormat* GetFlipperFormat() {
-        // flipper_format_rewind(flipperFormat);
         return flipperFormat;
+    }
+
+    int GetRequiredSofwareRepeats() {
+        return requiredSoftwareRepeats;
     }
 
     const char* GetProtocol() {

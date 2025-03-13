@@ -12,6 +12,9 @@
 
 #include "lib/ui/UiManager.cpp"
 
+#define PAGER_COUNT  50
+#define REPEAT_COUNT 10
+
 class PagerActionsScreen {
 private:
     SubMenuUiView* submenu;
@@ -20,11 +23,15 @@ private:
     PagerProtocol* protocol;
     SubGhzModule* subghz;
     bool returnToReceiveAfterTransmission;
+    BatchTransmissionScreen* batchTransmissionScreen;
 
     String headerStr;
     String resendToAllStr;
     String resendToCurrentStr;
     String** actionsStrings;
+
+    int currentPager = 0;
+    bool transmittingBatch = false;
 
 public:
     PagerActionsScreen(
@@ -47,6 +54,7 @@ public:
 
         submenu = new SubMenuUiView(headerStr.format("Station %d actions", stationNum));
         submenu->SetOnDestroyHandler(HANDLER(&PagerActionsScreen::destroy));
+        submenu->SetOnReturnToViewHandler(HANDLER(&PagerActionsScreen::onReturn));
 
         submenu->AddItem(
             resendToAllStr.format("Resend %d (%s) to ALL", actionValue, PagerActions::GetDescription(currentAction)),
@@ -55,7 +63,7 @@ public:
 
         if(currentAction == UNKNOWN) {
             submenu->AddItem(
-                resendToCurrentStr.format("Resend only to pager %d", pagerNum), HANDLER_1ARG(&PagerActionsScreen::resendToAll)
+                resendToCurrentStr.format("Resend only to pager %d", pagerNum), HANDLER_1ARG(&PagerActionsScreen::resendSingle)
             );
         }
 
@@ -68,7 +76,7 @@ public:
                 actionsStrings[i] = new String("%s only pager %d", PagerActions::GetDescription(action), pagerNum);
             }
 
-            submenu->AddItem(actionsStrings[i]->cstr(), HANDLER_1ARG(&PagerActionsScreen::resendToAll));
+            submenu->AddItem(actionsStrings[i]->cstr(), [this, action](uint32_t) { sendAction(action); });
         }
 
         subghz->SetTransmitCompleteHandler(HANDLER(&PagerActionsScreen::txComplete));
@@ -76,15 +84,47 @@ public:
 
 private:
     void resendToAll(uint32_t) {
-        SubGhzPayload* payload = protocol->CreatePayload(pager->data, pager->te, 10);
-        subghz->Transmit(payload);
-        delete payload;
+        currentPager = 0;
+        transmittingBatch = true;
+
+        batchTransmissionScreen = new BatchTransmissionScreen();
+        UiManager::GetInstance()->PushView(batchTransmissionScreen->GetView());
+        sendCurrentPager();
+    }
+
+    void resendSingle(uint32_t) {
+        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, REPEAT_COUNT));
+    }
+
+    void sendAction(PagerAction action) {
+        subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, REPEAT_COUNT));
+    }
+
+    void sendCurrentPager() {
+        batchTransmissionScreen->SetProgress(currentPager, PAGER_COUNT);
+        subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, REPEAT_COUNT));
     }
 
     void txComplete() {
+        if(transmittingBatch) {
+            if(++currentPager <= PAGER_COUNT) {
+                sendCurrentPager();
+                return;
+            } else {
+                transmittingBatch = false;
+                UiManager::GetInstance()->PopView();
+            }
+        }
+
         if(returnToReceiveAfterTransmission) {
             subghz->ReceiveAsync();
+        } else {
+            subghz->PutToIdle();
         }
+    }
+
+    void onReturn() {
+        transmittingBatch = false;
     }
 
     void destroy() {

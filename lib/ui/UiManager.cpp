@@ -45,7 +45,9 @@ private:
         viewStack.pop();
         delete currentView;
 
-        viewStack.top()->SetOnTop(true);
+        if(!viewStack.empty()) {
+            viewStack.top()->SetOnTop(true);
+        }
         FURI_LOG_I(LOG_TAG, "ViewStack popped, size: %d", viewStack.size());
     }
 
@@ -85,6 +87,11 @@ public:
         view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
 
         FURI_LOG_I(LOG_TAG, "ViewStack pushed, size: %d", viewStack.size());
+    }
+
+    void PopView() {
+        popView();
+        view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
     }
 
     void RunEventLoop() {

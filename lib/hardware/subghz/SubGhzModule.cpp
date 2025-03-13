@@ -39,6 +39,8 @@ private:
     IDestructable* receiveHandler = NULL;
     FuriTimer* txCompleteCheckTimer;
     function<void()> txCompleteHandler;
+    int repeatsLeft = 0;
+    SubGhzPayload* currentPayload;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -61,6 +63,11 @@ private:
     static void txCompleteCheckCallback(void* context) {
         SubGhzModule* subghz = (SubGhzModule*)context;
         if(subghz_devices_is_async_complete_tx(subghz->device)) {
+            if(subghz->repeatsLeft-- > 0 && subghz->currentPayload != NULL) {
+                subghz->startTransmission();
+                return;
+            }
+
             furi_timer_stop(subghz->txCompleteCheckTimer);
             FURI_LOG_I(LOG_TAG, "TX complete!");
             if(subghz->txCompleteHandler != NULL) {
@@ -128,23 +135,40 @@ public:
     void Transmit(SubGhzPayload* payload) {
         if(state != TRANSMITTING) {
             PutToIdle();
-
-            transmitter = subghz_transmitter_alloc_init(environment, payload->GetProtocol());
             state = TRANSMITTING;
         } else {
             furi_timer_stop(txCompleteCheckTimer);
-            subghz_devices_stop_async_tx(device);
+            delete currentPayload;
         }
 
         Notification::Play(&sequence_blink_start_magenta);
+        currentPayload = payload;
+        repeatsLeft = payload->GetRequiredSofwareRepeats() - 1;
 
-        subghz_transmitter_deserialize(transmitter, payload->GetFlipperFormat());
-        subghz_devices_start_async_tx(device, (void*)subghz_transmitter_yield, transmitter);
+        startTransmission();
 
         uint32_t interval = furi_kernel_get_tick_frequency() / 100; // every 10 ms
         furi_timer_start(txCompleteCheckTimer, interval);
     }
 
+private:
+    void startTransmission() {
+        stopTransmission();
+
+        transmitter = subghz_transmitter_alloc_init(environment, currentPayload->GetProtocol());
+        subghz_transmitter_deserialize(transmitter, currentPayload->GetFlipperFormat());
+        subghz_devices_start_async_tx(device, (void*)subghz_transmitter_yield, transmitter);
+    }
+
+    void stopTransmission() {
+        if(transmitter != NULL) {
+            subghz_devices_stop_async_tx(device);
+            subghz_transmitter_free(transmitter);
+            transmitter = NULL;
+        }
+    }
+
+public:
     void StopReceive() {
         subghz_worker_stop(worker);
         subghz_devices_stop_async_rx(device);
@@ -155,9 +179,13 @@ public:
     void StopTranmit() {
         Notification::Play(&sequence_blink_stop);
 
-        subghz_devices_stop_async_tx(device);
+        repeatsLeft = 0;
+        delete currentPayload;
+
+        furi_timer_stop(txCompleteCheckTimer);
+        stopTransmission();
         subghz_devices_idle(device);
-        subghz_transmitter_free(transmitter);
+
         state = IDLE;
     }
 
@@ -185,7 +213,6 @@ public:
         PutToIdle();
 
         if(txCompleteCheckTimer != NULL) {
-            furi_timer_stop(txCompleteCheckTimer);
             furi_timer_free(txCompleteCheckTimer);
         }
 

@@ -32,7 +32,10 @@ public:
         payload->SetBits(24);
         payload->SetKey(data);
         payload->SetTE(te);
-        payload->SetRepeat(repeats);
+        // somewhy repeats are always 10 even if we set it, so use here "software repeats" instead
+        payload->SetSoftwareRepeats(ceil(repeats / 10.0));
+        payload->SetRepeat(10); // just in case they'll fix it
+
         return payload;
     }
 };
