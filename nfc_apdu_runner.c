@@ -168,7 +168,9 @@ NfcApduScript* nfc_apdu_script_parse(Storage* storage, const char* file_path) {
 
         // 读取数据行
         line = next_line + 1;
+        next_line = strchr(line, '\n');
 
+        // 检查当前行是否为 Data 行
         if(strncmp(line, "Data: [", 7) != 0) {
             FURI_LOG_E("APDU_DEBUG", "无效的数据行: %s", line);
             break;
@@ -178,6 +180,40 @@ NfcApduScript* nfc_apdu_script_parse(Storage* storage, const char* file_path) {
 
         // 解析命令数组
         char* data_str = line + 7; // 跳过 "Data: ["
+
+        // 处理多行格式的命令
+        // 将整个文件内容中的所有换行符和空格替换为空格，以便正确解析命令
+        char* p = data_str;
+        while(*p) {
+            if(*p == '\n' || *p == '\r') {
+                *p = ' '; // 将换行符替换为空格
+            }
+            p++;
+        }
+
+        // 清理多余的空格，使解析更加稳健
+        p = data_str;
+        char* q = data_str;
+        bool in_quotes = false;
+
+        while(*p) {
+            // 在引号内保留所有字符
+            if(*p == '"') {
+                in_quotes = !in_quotes;
+                *q++ = *p++;
+                continue;
+            }
+
+            // 在引号外，跳过空格
+            if(!in_quotes && (*p == ' ' || *p == '\t')) {
+                p++;
+                continue;
+            }
+
+            // 复制其他字符
+            *q++ = *p++;
+        }
+        *q = '\0'; // 确保字符串正确终止
 
         // 查找第一个引号
         char* command_start = strchr(data_str, '"');
