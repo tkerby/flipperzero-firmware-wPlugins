@@ -3,30 +3,30 @@
  * @Date: 2025-03-08 00:18:57
  * @version: 
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-08 00:25:50
+ * @LastEditTime: 2025-03-13 14:54:16
  * @Description: file content
 -->
-# NFC APDU Runner 预制脚本
+# NFC APDU Runner Predefined Scripts
 
-本目录包含了一些预制的 APDU 命令脚本，可以直接用于 NFC APDU Runner 应用程序。
+This directory contains predefined APDU command scripts that can be used directly with the NFC APDU Runner application.
 
-## 使用方法
+## Usage
 
-1. 将这些脚本文件（`.apduscr` 文件）复制到 Flipper Zero 的以下目录：
+1. Copy these script files (`.apduscr` files) to the following directory on your Flipper Zero:
    ```
    /ext/apps_data/nfc_apdu_runner
    ```
 
-2. 您可以通过以下方式将文件复制到 Flipper Zero：
-   - 使用 qFlipper 应用程序
-   - 通过 USB 大容量存储模式
-   - 使用 Flipper Zero 的文件浏览器
+2. You can copy the files to your Flipper Zero using:
+   - qFlipper application
+   - USB mass storage mode
+   - Flipper Zero's file browser
 
-3. 复制完成后，启动 NFC APDU Runner 应用程序，选择 "Load Script" 选项，即可看到并选择这些预制脚本。
+3. After copying, launch the NFC APDU Runner application, select "Load Script" option, and you'll see and be able to select these predefined scripts.
 
-## 脚本格式说明
+## Script Format
 
-APDU 脚本文件（`.apduscr`）是一个结构化的文本文件，格式如下：
+APDU script files (`.apduscr`) are structured text files with the following format:
 
 ```
 Filetype: APDU Script
@@ -35,17 +35,17 @@ CardType: iso14443_4a
 Data: ["00A4040007A0000000041010", "00B0000000"]
 ```
 
-其中：
-- `Filetype`: 固定为 "APDU Script"
-- `Version`: 脚本版本号，当前为 1
-- `CardType`: 卡片类型，可以是以下值之一（不区分大小写）：
+Where:
+- `Filetype`: Always "APDU Script"
+- `Version`: Script version number, currently 1
+- `CardType`: Card type, can be one of the following (case-insensitive):
   - `iso14443_4a`
   - `iso14443_4b`
-- `Data`: 包含一个或多个 APDU 命令的 JSON 数组，每个命令都是十六进制格式的字符串
+- `Data`: JSON array containing one or more APDU commands, each as a hexadecimal string
 
-## 示例
+## Example
 
-以下是一个示例脚本文件的内容：
+Here's an example script file:
 
 ```
 Filetype: APDU Script
@@ -54,38 +54,54 @@ CardType: iso14443_4a
 Data: ["00A4040007A0000000041010", "00B0000000"]
 ```
 
-这个脚本将：
-1. 选择一个 ISO14443-4A 类型的卡片
-2. 发送 SELECT 命令选择支付应用
-3. 发送 READ RECORD 命令读取数据
+This script will:
+1. Select an ISO14443-4A type card
+2. Send a SELECT command to select a payment application
+3. Send a READ RECORD command to read data
 
-## 本目录中的预制脚本
+## Available Scripts
 
-1. **emv_select_ppse.apduscr**: 选择 EMV 支付卡的 PPSE（Proximity Payment System Environment）
-2. **read_uid.apduscr**: 读取 ISO14443-3A 卡片的 UID
-3. **mifare_desfire_get_version.apduscr**: 获取 Mifare DESFire 卡片的版本信息
+The following table lists the predefined scripts available in this directory:
 
-## 自定义脚本
+| Script Name              | Purpose                                                                                                             | Parsing Template                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| get_aid.apduscr          | Attempts to select various AIDs (Application Identifiers) to determine which applications are supported by the card | None                                                                               |
+| e_travel_card_sh.apduscr | Reads information from Shanghai electronic transportation cards (NFC emulated transit cards on devices like iPhone) | [E_TRAVEL_CARD_SH.apdufmt](/tools/ResponseDecoder/format/E_TRAVEL_CARD_SH.apdufmt) |
+| pboc.apduscr             | Reads information from PBOC (China UnionPay) banking cards                                                          | [PBOC.apdufmt](/tools/ResponseDecoder/format/PBOC.apdufmt)                         |
 
-您可以根据自己的需求创建自定义脚本：
+## Creating Custom Scripts
 
-1. 使用任何文本编辑器创建一个新的 `.apduscr` 文件
-2. 按照上述格式编写脚本内容
-3. 将文件保存到 `/ext/apps_data/nfc_apdu_runner` 目录
+You can create your own custom scripts:
 
-## 注意事项
+1. Use any text editor to create a new `.apduscr` file
+2. Write the script content following the format described above
+3. Save the file to the `/ext/apps_data/nfc_apdu_runner` directory
 
-- 确保 APDU 命令格式正确，否则可能导致执行失败
-- 某些 APDU 命令可能需要特定的卡片类型才能正常工作
-- 使用未知或不安全的 APDU 命令可能会对某些卡片造成永久性损坏，请谨慎使用
+## Notes
 
-## 常见问题
+- Ensure APDU commands are correctly formatted, otherwise execution may fail
+- Some APDU commands may require specific card types to work properly
+- Using unknown or unsafe APDU commands may cause permanent damage to some cards, use with caution
 
-**Q: 为什么我的脚本无法执行？**  
-A: 请检查卡片类型是否正确，以及 APDU 命令格式是否正确。
+## Parsing Templates
 
-**Q: 我可以在哪里找到更多的 APDU 命令？**  
-A: 您可以参考相关卡片的技术规范或在线资源。
+For some scripts, parsing templates (`.apdufmt` files) are available in the `/tools/ResponseDecoder/format/` directory. These templates define how to interpret and display the response data from the card.
 
-**Q: 执行脚本后，我可以在哪里查看结果？**  
-A: 执行完成后，应用程序会自动显示每个命令的响应结果。 
+To use a parsing template:
+1. Run the script using NFC APDU Runner
+2. Save the response file (`.apdures`)
+3. Use the ResponseDecoder tool with the appropriate template:
+   ```
+   ./response_decoder --hex "response_file.apdures" --format "template_name.apdufmt"
+   ```
+
+## FAQ
+
+**Q: Why can't my script execute?**  
+A: Check if the card type is correct and if the APDU command format is valid.
+
+**Q: Where can I find more APDU commands?**  
+A: You can refer to the technical specifications of relevant cards or online resources.
+
+**Q: Where can I view the results after executing a script?**  
+A: After execution, the application will automatically display the response result for each command. 
