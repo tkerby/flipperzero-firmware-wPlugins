@@ -10,6 +10,7 @@ APDU Response Decoder is a tool for parsing and displaying `.apdures` files gene
 - Support for loading `.apdures` files directly from Flipper Zero devices (via SD card mounting or serial communication)
 - Support for custom decoding format templates
 - TLV (Tag-Length-Value) data parsing capabilities
+- Hex to decimal conversion and mathematical operations
 - Automatic error detection and reporting for failed APDU commands
 - Beautiful colored output
 
@@ -126,7 +127,7 @@ For example, a PBOC format template:
 PBOC
 Card Number: {hex(O[1][10:18])}
 Name: {hex(O[2][10:20], "utf-8")}
-Balance: {hex(O[3][10:18])} Yuan
+Balance: {h2d(O[3][10:18])/100.00} Yuan
 Valid Until: 20{O[4][10:12]}-{O[4][12:14]}
 Transaction Record: {hex(O[5][10:30])}
 ```
@@ -135,10 +136,43 @@ Transaction Record: {hex(O[5][10:30])}
 
 - `I[n]`: The nth input command
 - `O[n]`: The nth output response
+- `O[n][start:end]`: Slice of the nth output response from start to end position
 - `hex(data)`: Convert a hexadecimal string to readable text
 - `hex(data, "utf-8")`: Convert a hexadecimal string to text using UTF-8 encoding
+- `h2d(data)`: Convert a hexadecimal string to decimal number
 - `O[n]TAG(tag)`: Extract the value of the specified TLV tag from the nth output response
 - `O[n]TAG(tag, "encoding")`: Extract the value of the specified TLV tag from the nth output response and convert it to text using the specified encoding
+- `O[n]TAG(tag)[start:end]`: Extract the value of the specified TLV tag and then slice it
+- Mathematical operations: `+`, `-`, `*`, `/` (e.g., `{h2d(O[1][4:8]) + h2d(O[2][4:8])}`)
+
+### Advanced Features
+
+#### Hex to Decimal Conversion
+
+The `h2d()` function converts hexadecimal values to decimal numbers:
+
+```
+Balance: {h2d(O[1][4:12])} (in cents)
+Balance: {h2d(O[1][4:12])/100.00} Yuan (formatted)
+```
+
+#### Mathematical Operations
+
+You can perform basic mathematical operations within the template expressions:
+
+```
+Total: {h2d(O[1][4:8]) + h2d(O[2][4:8])}
+Average: {(h2d(O[1][4:8]) + h2d(O[2][4:8]) + h2d(O[3][4:8])) / 3}
+```
+
+#### Slicing Function Results
+
+You can apply slicing to the results of functions:
+
+```
+Card Number Part: {O[1]TAG(5A)[0:8]}
+Decimal Value Prefix: {h2d(O[1][4:12])[0:4]}
+```
 
 ### Error Handling
 
@@ -168,7 +202,7 @@ Card Number: {O[1]TAG(5A), "numeric"}
 Cardholder Name: {O[2]TAG(5F20), "utf-8"}
 Expiration Date: {O[2]TAG(5F24), "numeric"}
 Currency Code: {O[3]TAG(9F42)}
-Balance: {O[3]TAG(9F79)}
+Balance: {h2d(O[3]TAG(9F79))/100.00}
 Transaction Log: {O[4]TAG(9F4D)}
 Application Label: {O[0]TAG(50), "ascii"}
 ```
@@ -191,6 +225,16 @@ Application Label: {O[0]TAG(50), "ascii"}
 
 ```bash
 ./response_decoder tlv --hex 6F1A8407A0000000031010A50F500A4D617374657243617264870101 --tag 50,84 --type ascii
+```
+
+### Example 4: Using Mathematical Operations
+
+Format template example:
+```
+Card Analysis
+Balance (Yuan): {h2d(O[1]TAG(9F79))/100.00}
+Last Transaction: {h2d(O[2]TAG(9F02))/100.00}
+Remaining Balance: {h2d(O[1]TAG(9F79))/100.00 - h2d(O[2]TAG(9F02))/100.00}
 ```
 
 ## License

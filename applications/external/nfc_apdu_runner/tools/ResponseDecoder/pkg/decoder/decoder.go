@@ -4,7 +4,11 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/ioutil"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -211,6 +215,58 @@ func parsePlaceholders(line string, ctx *DecodeContext) (string, error) {
 
 // evaluateExpression 评估表达式
 func evaluateExpression(expr string, ctx *DecodeContext) (string, error) {
+	// 首先检查是否包含数学表达式
+	if containsMathOperators(expr) {
+		// 先处理所有的函数调用和数据引用
+		processedExpr, err := preprocessMathExpression(expr, ctx)
+		if err != nil {
+			return "", err
+		}
+
+		// 计算数学表达式
+		result, err := evaluateMathExpression(processedExpr)
+		if err != nil {
+			return "", err
+		}
+
+		return result, nil
+	}
+
+	// 检查是否是带切片的TAG表达式，例如 O[1]TAG(84)[2:6]
+	tagWithSliceRe := regexp.MustCompile(`([OI])\[(\d+)\]TAG\(([0-9A-Fa-f]+)\)(?:,\s*"([^"]+)")?\[([^]]+)\]`)
+	tagWithSliceMatches := tagWithSliceRe.FindStringSubmatch(expr)
+	if tagWithSliceMatches != nil {
+		// 先获取TAG值
+		sourceType := tagWithSliceMatches[1]
+		indexStr := tagWithSliceMatches[2]
+		tagHex := tagWithSliceMatches[3]
+		encoding := ""
+		if len(tagWithSliceMatches) > 4 && tagWithSliceMatches[4] != "" {
+			encoding = tagWithSliceMatches[4]
+		}
+		sliceExpr := tagWithSliceMatches[5]
+
+		// 构造不带切片的TAG表达式
+		tagExpr := sourceType + "[" + indexStr + "]TAG(" + tagHex + ")"
+		if encoding != "" {
+			tagExpr += ", \"" + encoding + "\""
+		}
+
+		// 获取TAG值
+		tagValue, err := evaluateExpression(tagExpr, ctx)
+		if err != nil {
+			return "", err
+		}
+
+		// 如果TAG值为空，直接返回
+		if tagValue == "" {
+			return "", nil
+		}
+
+		// 应用切片
+		return applySlice(tagValue, sliceExpr)
+	}
+
 	// 检查是否是TLV标签表达式
 	tlvTagRe := regexp.MustCompile(`([OI])\[(\d+)\]TAG\(([0-9A-Fa-f]+)\)(?:,\s*"([^"]+)")?`)
 	tlvMatches := tlvTagRe.FindStringSubmatch(expr)
@@ -267,6 +323,84 @@ func evaluateExpression(expr string, ctx *DecodeContext) (string, error) {
 		}
 	}
 
+	// 检查是否是带切片的h2d函数，例如 h2d(O[1][2:6])[2:4]
+	h2dWithSliceRe := regexp.MustCompile(`h2d\(([^)]+)\)\[([^]]+)\]`)
+	h2dWithSliceMatches := h2dWithSliceRe.FindStringSubmatch(expr)
+	if h2dWithSliceMatches != nil {
+		// 先获取h2d值
+		h2dArg := h2dWithSliceMatches[1]
+		sliceExpr := h2dWithSliceMatches[2]
+
+		// 构造不带切片的h2d表达式
+		h2dExpr := "h2d(" + h2dArg + ")"
+
+		// 获取h2d值
+		h2dValue, err := evaluateExpression(h2dExpr, ctx)
+		if err != nil {
+			return "", err
+		}
+
+		// 如果h2d值为空，直接返回
+		if h2dValue == "" {
+			return "", nil
+		}
+
+		// 应用切片
+		return applySlice(h2dValue, sliceExpr)
+	}
+
+	// 检查是否是带切片的hex函数，例如 hex(O[1][2:6])[2:4]
+	hexWithSliceRe := regexp.MustCompile(`hex\(([^)]+)\)\[([^]]+)\]`)
+	hexWithSliceMatches := hexWithSliceRe.FindStringSubmatch(expr)
+	if hexWithSliceMatches != nil {
+		// 先获取hex值
+		hexArg := hexWithSliceMatches[1]
+		sliceExpr := hexWithSliceMatches[2]
+
+		// 构造不带切片的hex表达式
+		hexExpr := "hex(" + hexArg + ")"
+
+		// 获取hex值
+		hexValue, err := evaluateExpression(hexExpr, ctx)
+		if err != nil {
+			return "", err
+		}
+
+		// 如果hex值为空，直接返回
+		if hexValue == "" {
+			return "", nil
+		}
+
+		// 应用切片
+		return applySlice(hexValue, sliceExpr)
+	}
+
+	// 检查是否是h2d函数
+	if strings.HasPrefix(expr, "h2d(") && strings.HasSuffix(expr, ")") {
+		// 提取h2d函数的参数
+		args := expr[4 : len(expr)-1]
+
+		// 获取数据
+		data, err := evaluateDataExpression(args, ctx)
+		if err != nil {
+			// 如果不是数据表达式，尝试直接解析
+			data = args
+		}
+
+		// 如果数据为空，直接返回空字符串
+		if data == "" {
+			return "", nil
+		}
+
+		// 将十六进制转换为十进制
+		decimal, err := hexToDecimal(data)
+		if err != nil {
+			return "", err
+		}
+
+		return decimal, nil
+	}
+
 	// 检查是否是hex函数
 	if strings.HasPrefix(expr, "hex(") && strings.HasSuffix(expr, ")") {
 		// 提取hex函数的参数
@@ -308,6 +442,224 @@ func evaluateExpression(expr string, ctx *DecodeContext) (string, error) {
 
 	// 直接评估数据表达式
 	return evaluateDataExpression(expr, ctx)
+}
+
+// containsMathOperators 检查表达式是否包含数学运算符
+func containsMathOperators(expr string) bool {
+	// 检查是否包含 +, -, *, / 运算符，但排除函数调用中的这些符号
+	// 这是一个简化的检查，可能需要更复杂的解析
+	inFunction := 0
+	for i := 0; i < len(expr); i++ {
+		if expr[i] == '(' {
+			inFunction++
+		} else if expr[i] == ')' {
+			inFunction--
+		} else if inFunction == 0 && (expr[i] == '+' || expr[i] == '-' || expr[i] == '*' || expr[i] == '/') {
+			return true
+		}
+	}
+	return false
+}
+
+// preprocessMathExpression 预处理数学表达式，替换函数调用和数据引用
+func preprocessMathExpression(expr string, ctx *DecodeContext) (string, error) {
+	// 匹配函数调用和数据引用
+	re := regexp.MustCompile(`(h2d|hex)\([^)]+\)|([OI])\[(\d+)\](?:\[([^]]+)\])?`)
+
+	result := re.ReplaceAllStringFunc(expr, func(match string) string {
+		// 评估子表达式
+		value, err := evaluateExpression(match, ctx)
+		if err != nil {
+			// 在这里我们不能直接返回错误，所以记录错误并返回原始匹配
+			fmt.Fprintf(os.Stderr, "Warning: Error evaluating sub-expression '%s': %s\n", match, err)
+			return match
+		}
+
+		// 如果结果是数字，直接返回
+		if _, err := strconv.ParseFloat(value, 64); err == nil {
+			return value
+		}
+
+		// 否则，将结果括在引号中作为字符串
+		return fmt.Sprintf("\"%s\"", value)
+	})
+
+	return result, nil
+}
+
+// evaluateMathExpression 计算数学表达式
+func evaluateMathExpression(expr string) (string, error) {
+	// 使用 Go 的表达式解析器
+	e, err := parser.ParseExpr(expr)
+	if err != nil {
+		return "", fmt.Errorf("error parsing expression: %w", err)
+	}
+
+	// 计算表达式
+	result, err := evaluateAst(e)
+	if err != nil {
+		return "", err
+	}
+
+	// 格式化结果
+	switch v := result.(type) {
+	case float64:
+		// 检查是否为整数
+		if v == math.Floor(v) {
+			return fmt.Sprintf("%.0f", v), nil
+		}
+		return fmt.Sprintf("%.2f", v), nil
+	case int64:
+		return fmt.Sprintf("%d", v), nil
+	case string:
+		return v, nil
+	default:
+		return fmt.Sprintf("%v", v), nil
+	}
+}
+
+// evaluateAst 计算抽象语法树
+func evaluateAst(expr ast.Expr) (interface{}, error) {
+	switch e := expr.(type) {
+	case *ast.BasicLit:
+		// 基本字面量（数字、字符串等）
+		switch e.Kind {
+		case token.INT:
+			return strconv.ParseInt(e.Value, 10, 64)
+		case token.FLOAT:
+			return strconv.ParseFloat(e.Value, 64)
+		case token.STRING:
+			// 去除引号
+			return e.Value[1 : len(e.Value)-1], nil
+		default:
+			return nil, fmt.Errorf("unsupported literal type: %v", e.Kind)
+		}
+
+	case *ast.BinaryExpr:
+		// 二元表达式（如 a + b）
+		x, err := evaluateAst(e.X)
+		if err != nil {
+			return nil, err
+		}
+
+		y, err := evaluateAst(e.Y)
+		if err != nil {
+			return nil, err
+		}
+
+		// 将操作数转换为 float64
+		xFloat, xErr := toFloat64(x)
+		yFloat, yErr := toFloat64(y)
+
+		if xErr != nil || yErr != nil {
+			return nil, fmt.Errorf("cannot perform operation on non-numeric values")
+		}
+
+		// 执行操作
+		switch e.Op {
+		case token.ADD:
+			return xFloat + yFloat, nil
+		case token.SUB:
+			return xFloat - yFloat, nil
+		case token.MUL:
+			return xFloat * yFloat, nil
+		case token.QUO:
+			if yFloat == 0 {
+				return nil, fmt.Errorf("division by zero")
+			}
+			return xFloat / yFloat, nil
+		default:
+			return nil, fmt.Errorf("unsupported operator: %v", e.Op)
+		}
+
+	case *ast.ParenExpr:
+		// 括号表达式
+		return evaluateAst(e.X)
+
+	default:
+		return nil, fmt.Errorf("unsupported expression type: %T", expr)
+	}
+}
+
+// toFloat64 将值转换为 float64
+func toFloat64(v interface{}) (float64, error) {
+	switch val := v.(type) {
+	case float64:
+		return val, nil
+	case int64:
+		return float64(val), nil
+	case int:
+		return float64(val), nil
+	case string:
+		return strconv.ParseFloat(val, 64)
+	default:
+		return 0, fmt.Errorf("cannot convert %T to float64", v)
+	}
+}
+
+// hexToDecimal 将十六进制字符串转换为十进制数字字符串
+func hexToDecimal(hexStr string) (string, error) {
+	// 移除可能的 0x 前缀
+	hexStr = strings.TrimPrefix(hexStr, "0x")
+	hexStr = strings.TrimPrefix(hexStr, "0X")
+
+	// 移除空格
+	hexStr = strings.ReplaceAll(hexStr, " ", "")
+
+	// 解析十六进制
+	num, err := strconv.ParseInt(hexStr, 16, 64)
+	if err != nil {
+		return "", fmt.Errorf("error parsing hex value: %w", err)
+	}
+
+	return fmt.Sprintf("%d", num), nil
+}
+
+// hexDecode 解码十六进制字符串
+func hexDecode(hexStr string, encoding string) (string, error) {
+	// 解码十六进制
+	data, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return "", fmt.Errorf("error decoding hex: %w", err)
+	}
+
+	// 根据编码转换为字符串
+	var result string
+
+	switch encoding {
+	case "utf-8", "utf8":
+		result = string(data)
+	case "gbk":
+		// 简单处理：保留可见字符
+		var sb strings.Builder
+		for _, b := range data {
+			if b >= 32 && b <= 126 {
+				sb.WriteByte(b)
+			}
+		}
+		result = sb.String()
+	default:
+		// 默认处理：保留可见字符
+		var sb strings.Builder
+		for _, b := range data {
+			if b >= 32 && b <= 126 {
+				sb.WriteByte(b)
+			}
+		}
+		result = sb.String()
+	}
+
+	// 清理结果，只保留有效内容
+	result = cleanString(result)
+
+	return result, nil
+}
+
+// cleanString 清理字符串，只保留有效内容
+func cleanString(s string) string {
+	// 保留中文、英文、数字、空格等
+	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"\/\+\-\*=<>@#$%^&_|\\]+`)
+	return re.ReplaceAllString(s, "")
 }
 
 // evaluateDataExpression 评估数据表达式 (如 O[1][10:18])
@@ -410,51 +762,4 @@ func applySlice(value string, sliceExpr string) (string, error) {
 	}
 
 	return value[start:end], nil
-}
-
-// hexDecode 解码十六进制字符串
-func hexDecode(hexStr string, encoding string) (string, error) {
-	// 解码十六进制
-	data, err := hex.DecodeString(hexStr)
-	if err != nil {
-		return "", fmt.Errorf("error decoding hex: %w", err)
-	}
-
-	// 根据编码转换为字符串
-	var result string
-
-	switch encoding {
-	case "utf-8", "utf8":
-		result = string(data)
-	case "gbk":
-		// 简单处理：保留可见字符
-		var sb strings.Builder
-		for _, b := range data {
-			if b >= 32 && b <= 126 {
-				sb.WriteByte(b)
-			}
-		}
-		result = sb.String()
-	default:
-		// 默认处理：保留可见字符
-		var sb strings.Builder
-		for _, b := range data {
-			if b >= 32 && b <= 126 {
-				sb.WriteByte(b)
-			}
-		}
-		result = sb.String()
-	}
-
-	// 清理结果，只保留有效内容
-	result = cleanString(result)
-
-	return result, nil
-}
-
-// cleanString 清理字符串，只保留有效内容
-func cleanString(s string) string {
-	// 保留中文、英文、数字、空格等
-	re := regexp.MustCompile(`[^\p{Han}\p{Latin}\p{N}\s.,;:!?()[\]{}'"\/\+\-\*=<>@#$%^&_|\\]+`)
-	return re.ReplaceAllString(s, "")
 }
