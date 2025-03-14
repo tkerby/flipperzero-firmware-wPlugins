@@ -1,5 +1,11 @@
 # APDU Response Decoder
 
+<div align="center">
+<h2 style="color:red;font-weight:bold">
+ResponseDecoder的所有功能已迁移到`nfc_analysis_platform`的`nard`子命令中，ResponsDecoder会在后续版本被删除。
+</h2>
+</div>
+
 APDU Response Decoder是一个用于解析和显示Flipper Zero NFC APDU Runner应用程序生成的`.apdures`文件的工具。
 
 ## 功能特点
