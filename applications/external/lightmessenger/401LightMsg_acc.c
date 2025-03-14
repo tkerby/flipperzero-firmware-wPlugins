@@ -11,9 +11,20 @@
 #include "font.h"
 #include "gui/gui.h"
 #include "gui/view_dispatcher.h"
+
 #define PI  3.14159
 #define PI3 PI / 3
 static const char* TAG = "401_LightMsgAcc";
+
+/*
+  As pointed out by @jamisonderek, furi_timer_flush isn't present on older
+  versions of flipper's core, which is used by some alternative firmwares.
+  This quickly fixes the missing function, and may be used to implement
+  workarounds in the future
+*/
+#pragma weak furi_timer_flush
+void furi_timer_flush(void) {
+}
 
 /**
 
@@ -224,7 +235,7 @@ static int32_t app_acc_worker(void* ctx) {
         }
         if(flush_counter++ > 12000) {
             flush_counter = 0;
-            // furi_timer_flush();
+            furi_timer_flush();
         }
         if(time++ == 4000) {
             notification_message(app->notifications, &sequence_display_backlight_off);
