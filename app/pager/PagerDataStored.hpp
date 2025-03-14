@@ -1,5 +1,4 @@
-#ifndef _PAGER_DATA_STORED_CLASS_
-#define _PAGER_DATA_STORED_CLASS_
+#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -23,5 +22,3 @@ struct PagerDataStored {
 // but it would take more memory which is not acceptable (sizeof(PagerDataStored) + sizeof(PagerDataStored*)) vs sizeof(PagerDataStored).
 // That's why we pass the getter instead of object itself, to make sure we always have the right pointer to the PagerDataStored structure.
 typedef function<PagerDataStored*()> PagerDataGetter;
-
-#endif //_PAGER_DATA_STORED_CLASS_

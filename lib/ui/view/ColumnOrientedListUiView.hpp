@@ -1,5 +1,4 @@
-#ifndef _ADVANCED_SUBMENU_UI_VIEW_CLASS_
-#define _ADVANCED_SUBMENU_UI_VIEW_CLASS_
+#pragma once
 
 #include <furi.h>
 #include <gui/gui.h>
@@ -278,5 +277,3 @@ private:
         UNUSED(context);
     }
 };
-
-#endif //_ADVANCED_SUBMENU_UI_VIEW_CLASS_

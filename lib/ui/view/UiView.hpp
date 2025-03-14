@@ -1,5 +1,4 @@
-#ifndef _UI_VIEW_CLASS_
-#define _UI_VIEW_CLASS_
+#pragma once
 
 #include <functional>
 
@@ -65,5 +64,3 @@ protected:
         onDestroyHandler();
     }
 };
-
-#endif //_UI_VIEW_CLASS_

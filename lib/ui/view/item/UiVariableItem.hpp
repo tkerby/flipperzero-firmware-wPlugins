@@ -1,5 +1,4 @@
-#ifndef _UI_VARIABLE_ITEM_CLASS_
-#define _UI_VARIABLE_ITEM_CLASS_
+#pragma once
 
 #include <functional>
 
@@ -76,5 +75,3 @@ public:
         }
     }
 };
-
-#endif //_UI_VARIABLE_ITEM_CLASS_

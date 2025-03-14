@@ -1,5 +1,4 @@
-#ifndef _PAGER_DECODER_CLASS_
-#define _PAGER_DECODER_CLASS_
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -43,5 +42,3 @@ protected:
         return rev;
     }
 };
-
-#endif //_PAGER_DECODER_CLASS_

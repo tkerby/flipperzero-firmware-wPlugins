@@ -1,5 +1,4 @@
-#ifndef _SUBGHZ_RECEIVED_DATA_CLASS_
-#define _SUBGHZ_RECEIVED_DATA_CLASS_
+#pragma once
 
 #include <cstdint>
 
@@ -10,5 +9,3 @@ public:
     virtual ~SubGhzReceivedData() {};
     virtual int GetTE() = 0;
 };
-
-#endif //_SUBGHZ_RECEIVED_DATA_CLASS_

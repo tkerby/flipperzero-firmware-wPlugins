@@ -1,5 +1,4 @@
-#ifndef _TD174_DECODER_CLASS_
-#define _TD174_DECODER_CLASS_
+#pragma once
 
 #include "PagerDecoder.hpp"
 
@@ -91,5 +90,3 @@ public:
         return 4;
     }
 };
-
-#endif //_TD174_DECODER_CLASS_

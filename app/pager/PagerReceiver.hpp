@@ -1,5 +1,4 @@
-#ifndef _PAGER_RECEIVER_CLASS_
-#define _PAGER_RECEIVER_CLASS_
+#pragma once
 
 #include "core/log.h"
 #include <cstring>
@@ -123,5 +122,3 @@ public:
         }
     }
 };
-
-#endif //_PAGER_RECEIVER_CLASS_

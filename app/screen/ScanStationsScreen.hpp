@@ -1,5 +1,4 @@
-#ifndef _SCAN_STATIONS_SCREEN_CLASS_
-#define _SCAN_STATIONS_SCREEN_CLASS_
+#pragma once
 
 #include "lib/hardware/subghz/data/SubGhzReceivedDataStub.hpp"
 #include "lib/ui/view/ColumnOrientedListUiView.hpp"
@@ -180,5 +179,3 @@ private:
         delete this;
     }
 };
-
-#endif //_SCAN_STATIONS_SCREEN_CLASS_

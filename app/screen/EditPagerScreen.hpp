@@ -1,5 +1,4 @@
-#ifndef _EDIT_PAGER_SCREEN_CLASS_
-#define _EDIT_PAGER_SCREEN_CLASS_
+#pragma once
 
 #include "lib/String.hpp"
 #include "app/pager/PagerReceiver.hpp"
@@ -192,5 +191,3 @@ public:
         return varItemList;
     }
 };
-
-#endif //_EDIT_PAGER_SCREEN_CLASS_

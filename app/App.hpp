@@ -1,5 +1,4 @@
-#ifndef _APP_CLASS_
-#define _APP_CLASS_
+#pragma once
 
 #include "lib/ui/UiManager.hpp"
 #include "lib/hardware/notification/Notification.hpp"
@@ -29,5 +28,3 @@ public:
         Notification::Dispose();
     }
 };
-
-#endif //_APP_CLASS_

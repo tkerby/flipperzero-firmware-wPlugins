@@ -1,5 +1,4 @@
-#ifndef _SUBGHZ_RECEIVED_DATA_STUB_CLASS_
-#define _SUBGHZ_RECEIVED_DATA_STUB_CLASS_
+#pragma once
 
 #include <lib/subghz/protocols/base.h>
 
@@ -28,5 +27,3 @@ public:
         return 212;
     }
 };
-
-#endif //_SUBGHZ_RECEIVED_DATA_STUB_CLASS_

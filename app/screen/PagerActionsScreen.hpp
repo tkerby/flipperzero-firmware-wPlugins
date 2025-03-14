@@ -1,5 +1,4 @@
-#ifndef _PAGER_ACTIONS_SCREEN_CLASS_
-#define _PAGER_ACTIONS_SCREEN_CLASS_
+#pragma once
 
 #include "lib/String.hpp"
 #include "app/AppConfig.hpp"
@@ -145,5 +144,3 @@ public:
         return submenu;
     }
 };
-
-#endif //_PAGER_ACTIONS_SCREEN_CLASS_

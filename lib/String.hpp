@@ -1,5 +1,4 @@
-#ifndef _STRING_CLASS_
-#define _STRING_CLASS_
+#pragma once
 
 #include <core/string.h>
 
@@ -48,5 +47,3 @@ public:
         furi_string_free(string);
     }
 };
-
-#endif //_STRING_CLASS_

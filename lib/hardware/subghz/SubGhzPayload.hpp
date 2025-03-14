@@ -1,5 +1,4 @@
-#ifndef _SUBGHZ_PAYLOAD_CLASS_
-#define _SUBGHZ_PAYLOAD_CLASS_
+#pragma once
 
 #include <algorithm>
 #include "flipper_format.h"
@@ -66,5 +65,3 @@ public:
         }
     }
 };
-
-#endif //_SUBGHZ_PAYLOAD_CLASS_

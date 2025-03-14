@@ -1,5 +1,4 @@
-#ifndef _TD157_DECODER_CLASS_
-#define _TD157_DECODER_CLASS_
+#pragma once
 
 #include "PagerDecoder.hpp"
 
@@ -81,5 +80,3 @@ public:
         return actionMask + 1;
     }
 };
-
-#endif //_TD157_DECODER_CLASS_

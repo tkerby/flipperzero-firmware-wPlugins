@@ -1,5 +1,4 @@
-#ifndef _HANDLER_CONTEXT_CLASS_
-#define _HANDLER_CONTEXT_CLASS_
+#pragma once
 
 #define HANDLER(handlerMethod)      bind(handlerMethod, this)
 #define HANDLER_1ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1)
@@ -41,5 +40,3 @@ public:
         return extContext;
     }
 };
-
-#endif //_HANDLER_CONTEXT_CLASS_

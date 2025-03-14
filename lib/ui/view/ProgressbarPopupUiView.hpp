@@ -1,5 +1,4 @@
-#ifndef _PROGRESSBAR_POPUP_UI_VIEW_CLASS_
-#define _PROGRESSBAR_POPUP_UI_VIEW_CLASS_
+#pragma once
 
 #include "gui/elements.h"
 #include <furi.h>
@@ -74,5 +73,3 @@ private:
         uiView->draw(canvas);
     }
 };
-
-#endif //_PROGRESSBAR_POPUP_UI_VIEW_CLASS_

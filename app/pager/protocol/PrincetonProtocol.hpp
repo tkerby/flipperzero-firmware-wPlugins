@@ -1,5 +1,4 @@
-#ifndef _PRINCETON_PROTCOL_CLASS_
-#define _PRINCETON_PROTCOL_CLASS_
+#pragma once
 
 #include <stream/stream.h>
 
@@ -39,5 +38,3 @@ public:
         return payload;
     }
 };
-
-#endif //_PRINCETON_PROTCOL_CLASS_

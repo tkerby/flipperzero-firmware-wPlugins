@@ -1,5 +1,4 @@
-#ifndef _APP_CONFIG_CLASS_
-#define _APP_CONFIG_CLASS_
+#pragma once
 
 #include <cstdint>
 
@@ -11,5 +10,3 @@ public:
     bool Debug = true;
     bool IgnoreMessagesFromSavedStations = false;
 };
-
-#endif //_APP_CONFIG_CLASS_

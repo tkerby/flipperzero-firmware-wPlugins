@@ -1,5 +1,4 @@
-#ifndef _NOTIFICATION_CLASS_
-#define _NOTIFICATION_CLASS_
+#pragma once
 
 #include <furi.h>
 #include <notification/notification.h>
@@ -28,5 +27,3 @@ public:
         }
     }
 };
-
-#endif //_NOTIFICATION_CLASS_

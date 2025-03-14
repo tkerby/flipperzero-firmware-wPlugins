@@ -1,5 +1,4 @@
-#ifndef _SUBMENU_UI_VIEW_CLASS_
-#define _SUBMENU_UI_VIEW_CLASS_
+#pragma once
 
 #include <furi.h>
 #include <gui/gui.h>
@@ -82,5 +81,3 @@ public:
         }
     }
 };
-
-#endif //_SUBMENU_UI_VIEW_CLASS_

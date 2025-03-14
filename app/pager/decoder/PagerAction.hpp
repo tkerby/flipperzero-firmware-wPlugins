@@ -1,5 +1,4 @@
-#ifndef _PAGER_ACTION_ENUM_
-#define _PAGER_ACTION_ENUM_
+#pragma once
 
 enum PagerAction {
     UNKNOWN,
@@ -38,5 +37,3 @@ public:
         }
     }
 };
-
-#endif //_PAGER_ACTION_ENUM_

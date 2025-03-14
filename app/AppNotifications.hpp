@@ -1,5 +1,4 @@
-#ifndef _APP_NOTIFICATIONS_
-#define _APP_NOTIFICATIONS_
+#pragma once
 
 #include "lib/hardware/notification/Notification.hpp"
 
@@ -15,5 +14,3 @@ const NotificationSequence NOTIFICATION_PAGER_RECEIVE = {
 
     NULL,
 };
-
-#endif //_APP_NOTIFICATIONS_

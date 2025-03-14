@@ -1,5 +1,4 @@
-#ifndef _SMC5326_PROTCOL_CLASS_
-#define _SMC5326_PROTCOL_CLASS_
+#pragma once
 
 #include "PagerProtocol.hpp"
 
@@ -33,5 +32,3 @@ class Smc5326Protocol : public PagerProtocol {
         return payload;
     }
 };
-
-#endif //_SMC5326_PROTCOL_CLASS_

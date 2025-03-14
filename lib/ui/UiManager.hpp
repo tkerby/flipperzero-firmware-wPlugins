@@ -1,5 +1,4 @@
-#ifndef _UI_MANAGER_CLASS_
-#define _UI_MANAGER_CLASS_
+#pragma once
 
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
@@ -119,5 +118,3 @@ public:
         }
     }
 };
-
-#endif //_UI_MANAGER_CLASS_

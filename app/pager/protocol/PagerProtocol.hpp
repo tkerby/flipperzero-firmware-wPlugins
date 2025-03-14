@@ -1,5 +1,4 @@
-#ifndef _PAGER_PROTCOL_CLASS_
-#define _PAGER_PROTCOL_CLASS_
+#pragma once
 
 #include <cstdint>
 
@@ -17,5 +16,3 @@ public:
     virtual ~PagerProtocol() {
     }
 };
-
-#endif //_PAGER_PROTCOL_CLASS_

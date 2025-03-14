@@ -1,5 +1,4 @@
-#ifndef _L8R_DECODER_CLASS_
-#define _L8R_DECODER_CLASS_
+#pragma once
 
 #include "PagerDecoder.hpp"
 
@@ -83,5 +82,3 @@ public:
         return 8;
     }
 };
-
-#endif //_L8R_DECODER_CLASS_

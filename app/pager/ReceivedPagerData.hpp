@@ -1,5 +1,4 @@
-#ifndef _RECEIVED_PAGER_DATA_CLASS_
-#define _RECEIVED_PAGER_DATA_CLASS_
+#pragma once
 
 #include <cstdint>
 #include "PagerDataStored.hpp"
@@ -29,5 +28,3 @@ public:
         return getStoredData();
     }
 };
-
-#endif //_RECEIVED_PAGER_DATA_CLASS_

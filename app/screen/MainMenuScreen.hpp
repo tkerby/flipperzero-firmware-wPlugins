@@ -1,5 +1,4 @@
-#ifndef _MAIN_MENU_SCREEN_CLASS_
-#define _MAIN_MENU_SCREEN_CLASS_
+#pragma once
 
 #include "app/AppConfig.hpp"
 
@@ -52,5 +51,3 @@ private:
         delete this;
     }
 };
-
-#endif //_MAIN_MENU_SCREEN_CLASS_

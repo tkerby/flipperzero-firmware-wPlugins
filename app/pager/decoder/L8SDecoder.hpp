@@ -1,5 +1,4 @@
-#ifndef _L8S_DECODER_CLASS_
-#define _L8S_DECODER_CLASS_
+#pragma once
 
 #include "core/core_defines.h"
 
@@ -63,5 +62,3 @@ public:
         return 8;
     }
 };
-
-#endif //_L8S_DECODER_CLASS_

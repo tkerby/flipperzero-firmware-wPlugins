@@ -1,5 +1,4 @@
-#ifndef _SUBGHZ_MODULE_CLASS_
-#define _SUBGHZ_MODULE_CLASS_
+#pragma once
 
 #include "lib/hardware/subghz/SubGhzPayload.hpp"
 #include <functional>
@@ -258,5 +257,3 @@ public:
         }
     }
 };
-
-#endif //_SUBGHZ_MODULE_CLASS_

@@ -1,5 +1,4 @@
-#ifndef _VARIABLE_ITEM_LIST_UI_VIEW_CLASS_
-#define _VARIABLE_ITEM_LIST_UI_VIEW_CLASS_
+#pragma once
 
 #include <furi.h>
 #include <gui/gui.h>
@@ -56,5 +55,3 @@ public:
         }
     }
 };
-
-#endif //_VARIABLE_ITEM_LIST_UI_VIEW_CLASS_

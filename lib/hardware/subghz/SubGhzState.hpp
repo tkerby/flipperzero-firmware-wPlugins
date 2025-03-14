@@ -1,10 +1,7 @@
-#ifndef _SUBGHZ_STATE_ENUM_
-#define _SUBGHZ_STATE_ENUM_
+#pragma once
 
 enum SubGhzState {
     IDLE,
     RECEIVING,
     TRANSMITTING,
 };
-
-#endif //_SUBGHZ_STATE_ENUM_

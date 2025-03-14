@@ -1,5 +1,4 @@
-#ifndef _SUBGHZ_RECEIVED_DATA_IMPL_CLASS_
-#define _SUBGHZ_RECEIVED_DATA_IMPL_CLASS_
+#pragma once
 
 #include <lib/subghz/protocols/base.h>
 
@@ -40,5 +39,3 @@ public:
         return te;
     }
 };
-
-#endif //_SUBGHZ_RECEIVED_DATA_IMPL_CLASS_

@@ -1,5 +1,4 @@
-#ifndef _FILE_MANAGER_CLASS_
-#define _FILE_MANAGER_CLASS_
+#pragma once
 
 #include <toolbox/path.h>
 #include <storage/storage.h>
@@ -10,5 +9,3 @@ public:
     FileManager() {
     }
 };
-
-#endif //_FILE_MANAGER_CLASS_

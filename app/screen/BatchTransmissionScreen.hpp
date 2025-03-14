@@ -1,5 +1,4 @@
-#ifndef _BATCH_TRANSMISSION_SCREEN_CLASS_
-#define _BATCH_TRANSMISSION_SCREEN_CLASS_
+#pragma once
 
 #include "lib/String.hpp"
 #include "lib/ui/view/UiView.hpp"
@@ -32,5 +31,3 @@ public:
         return popup;
     }
 };
-
-#endif //_BATCH_TRANSMISSION_SCREEN_CLASS_
