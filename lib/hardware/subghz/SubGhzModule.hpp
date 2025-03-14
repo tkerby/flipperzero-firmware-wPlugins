@@ -1,7 +1,7 @@
 #ifndef _SUBGHZ_MODULE_CLASS_
 #define _SUBGHZ_MODULE_CLASS_
 
-#include "lib/hardware/subghz/SubGhzPayload.cpp"
+#include "lib/hardware/subghz/SubGhzPayload.hpp"
 #include <functional>
 
 #include <furi.h>
@@ -17,12 +17,12 @@
 #include <lib/subghz/subghz_protocol_registry.h>
 #include <lib/subghz/subghz_worker.h>
 
-#include "lib/HandlerContext.cpp"
+#include "lib/HandlerContext.hpp"
 
-#include "SubGhzState.cpp"
-#include "data/SubGhzReceivedDataImpl.cpp"
+#include "SubGhzState.hpp"
+#include "data/SubGhzReceivedDataImpl.hpp"
 
-#include "lib/hardware/notification/Notification.cpp"
+#include "lib/hardware/notification/Notification.hpp"
 
 using namespace std;
 

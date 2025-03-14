@@ -5,19 +5,19 @@
 #include <cstring>
 #include <vector>
 
-#include "app/AppConfig.cpp"
+#include "app/AppConfig.hpp"
 
-#include "lib/hardware/subghz/data/SubGhzReceivedData.cpp"
-#include "ReceivedPagerData.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
+#include "ReceivedPagerData.hpp"
 
-#include "protocol/PrincetonProtocol.cpp"
-#include "protocol/Smc5326Protocol.cpp"
+#include "protocol/PrincetonProtocol.hpp"
+#include "protocol/Smc5326Protocol.hpp"
 
-#include "decoder/Td157Decoder.cpp"
-#include "decoder/Td165Decoder.cpp"
-#include "decoder/Td174Decoder.cpp"
-#include "decoder/L8RDecoder.cpp"
-#include "decoder/L8SDecoder.cpp"
+#include "decoder/Td157Decoder.hpp"
+#include "decoder/Td165Decoder.hpp"
+#include "decoder/Td174Decoder.hpp"
+#include "decoder/L8RDecoder.hpp"
+#include "decoder/L8SDecoder.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "PGR_RCV"

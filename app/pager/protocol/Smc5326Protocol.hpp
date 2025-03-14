@@ -1,7 +1,7 @@
 #ifndef _SMC5326_PROTCOL_CLASS_
 #define _SMC5326_PROTCOL_CLASS_
 
-#include "PagerProtocol.cpp"
+#include "PagerProtocol.hpp"
 
 class Smc5326Protocol : public PagerProtocol {
     const char* GetSystemName() {

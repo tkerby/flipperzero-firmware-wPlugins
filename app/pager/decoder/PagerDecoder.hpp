@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <vector>
-#include "PagerAction.cpp"
+#include "PagerAction.hpp"
 
 using namespace std;
 

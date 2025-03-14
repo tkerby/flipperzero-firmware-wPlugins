@@ -1,9 +1,9 @@
 #ifndef _BATCH_TRANSMISSION_SCREEN_CLASS_
 #define _BATCH_TRANSMISSION_SCREEN_CLASS_
 
-#include "lib/String.cpp"
-#include "lib/ui/view/UiView.cpp"
-#include "lib/ui/view/ProgressbarPopupUiView.cpp"
+#include "lib/String.hpp"
+#include "lib/ui/view/UiView.hpp"
+#include "lib/ui/view/ProgressbarPopupUiView.hpp"
 
 class BatchTransmissionScreen {
 private:

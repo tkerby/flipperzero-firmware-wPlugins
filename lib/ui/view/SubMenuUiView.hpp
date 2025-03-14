@@ -5,8 +5,8 @@
 #include <gui/gui.h>
 #include <gui/modules/submenu.h>
 
-#include "UiView.cpp"
-#include "lib/HandlerContext.cpp"
+#include "UiView.hpp"
+#include "lib/HandlerContext.hpp"
 #include <list>
 
 #undef LOG_TAG

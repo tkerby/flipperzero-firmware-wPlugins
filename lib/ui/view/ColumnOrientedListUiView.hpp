@@ -5,10 +5,10 @@
 #include <gui/gui.h>
 #include <gui/elements.h>
 
-#include "UiView.cpp"
-#include "lib/String.cpp"
-#include "lib/Helpers.cpp"
-#include "lib/ui/UiManager.cpp"
+#include "UiView.hpp"
+#include "lib/String.hpp"
+#include "lib/Helpers.hpp"
+#include "lib/ui/UiManager.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_ADV_SUBMENU"

@@ -3,7 +3,7 @@
 
 #include <stream/stream.h>
 
-#include "PagerProtocol.cpp"
+#include "PagerProtocol.hpp"
 
 class PrincetonProtocol : public PagerProtocol {
 public:

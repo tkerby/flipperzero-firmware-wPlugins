@@ -1,7 +1,7 @@
 #ifndef _TD157_DECODER_CLASS_
 #define _TD157_DECODER_CLASS_
 
-#include "PagerDecoder.cpp"
+#include "PagerDecoder.hpp"
 
 #define TD157_ACTION_RING         0b0010
 #define TD157_ACTION_TURN_OFF_ALL 0b1111

@@ -1,11 +1,11 @@
 #ifndef _EDIT_PAGER_SCREEN_CLASS_
 #define _EDIT_PAGER_SCREEN_CLASS_
 
-#include "lib/String.cpp"
-#include "app/pager/PagerReceiver.cpp"
-#include "lib/hardware/subghz/SubGhzModule.cpp"
-#include "lib/ui/view/UiView.cpp"
-#include "lib/ui/view/VariableItemListUiView.cpp"
+#include "lib/String.hpp"
+#include "app/pager/PagerReceiver.hpp"
+#include "lib/hardware/subghz/SubGhzModule.hpp"
+#include "lib/ui/view/UiView.hpp"
+#include "lib/ui/view/VariableItemListUiView.hpp"
 #include "lib/FlipperDolphin.hpp"
 
 #define TE_DIV 10

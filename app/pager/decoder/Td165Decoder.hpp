@@ -1,7 +1,7 @@
 #ifndef _TD165_DECODER_CLASS_
 #define _TD165_DECODER_CLASS_
 
-#include "PagerDecoder.cpp"
+#include "PagerDecoder.hpp"
 
 #define TD165_ACTION_RING        0
 #define TD165_ACTION_MUTE        1

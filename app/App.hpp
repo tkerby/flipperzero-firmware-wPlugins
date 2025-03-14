@@ -1,12 +1,12 @@
 #ifndef _APP_CLASS_
 #define _APP_CLASS_
 
-#include "lib/ui/UiManager.cpp"
-#include "lib/hardware/notification/Notification.cpp"
+#include "lib/ui/UiManager.hpp"
+#include "lib/hardware/notification/Notification.hpp"
 #include "AppFileSystem.hpp"
 
-#include "AppConfig.cpp"
-#include "app/screen/MainMenuScreen.cpp"
+#include "AppConfig.hpp"
+#include "app/screen/MainMenuScreen.hpp"
 
 using namespace std;
 

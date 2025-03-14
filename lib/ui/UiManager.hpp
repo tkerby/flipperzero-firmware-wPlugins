@@ -5,7 +5,7 @@
 #include <gui/view_dispatcher.h>
 #include <stack>
 
-#include "view/UiView.cpp"
+#include "view/UiView.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_MGR"

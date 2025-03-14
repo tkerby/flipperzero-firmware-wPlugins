@@ -5,8 +5,8 @@
 #include <gui/gui.h>
 #include <gui/modules/variable_item_list.h>
 
-#include "UiView.cpp"
-#include "item/UiVariableItem.cpp"
+#include "UiView.hpp"
+#include "item/UiVariableItem.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_VARITEMLST"

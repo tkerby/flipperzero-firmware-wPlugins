@@ -1,7 +1,7 @@
 #ifndef _APP_NOTIFICATIONS_
 #define _APP_NOTIFICATIONS_
 
-#include "lib/hardware/notification/Notification.cpp"
+#include "lib/hardware/notification/Notification.hpp"
 
 const NotificationSequence NOTIFICATION_PAGER_RECEIVE = {
     &message_vibro_on,

@@ -3,7 +3,7 @@
 
 #include <lib/subghz/protocols/base.h>
 
-#include "SubGhzReceivedData.cpp"
+#include "SubGhzReceivedData.hpp"
 
 class SubGhzReceivedDataStub : public SubGhzReceivedData {
 private:

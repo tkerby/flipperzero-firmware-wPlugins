@@ -6,9 +6,9 @@
 #include <gui/gui.h>
 #include <gui/modules/popup.h>
 
-#include "UiView.cpp"
-#include "lib/Helpers.cpp"
-#include "item/UiVariableItem.cpp"
+#include "UiView.hpp"
+#include "lib/Helpers.hpp"
+#include "item/UiVariableItem.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_VARITEMLST"

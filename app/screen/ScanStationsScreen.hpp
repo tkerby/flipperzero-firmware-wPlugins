@@ -1,17 +1,17 @@
 #ifndef _SCAN_STATIONS_SCREEN_CLASS_
 #define _SCAN_STATIONS_SCREEN_CLASS_
 
-#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
-#include "lib/ui/view/ColumnOrientedListUiView.cpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedDataStub.hpp"
+#include "lib/ui/view/ColumnOrientedListUiView.hpp"
 
-#include "EditPagerScreen.cpp"
-#include "PagerActionsScreen.cpp"
+#include "EditPagerScreen.hpp"
+#include "PagerActionsScreen.hpp"
 
-#include "lib/hardware/subghz/SubGhzModule.cpp"
+#include "lib/hardware/subghz/SubGhzModule.hpp"
 
-#include "app/AppConfig.cpp"
-#include "app/AppNotifications.cpp"
-#include "app/pager/PagerReceiver.cpp"
+#include "app/AppConfig.hpp"
+#include "app/AppNotifications.hpp"
+#include "app/pager/PagerReceiver.hpp"
 
 static int8_t stationScreenColumnOffsets[]{
     3, // hex

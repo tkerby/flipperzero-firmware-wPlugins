@@ -6,7 +6,7 @@
 #include <gui/gui.h>
 #include <gui/view.h>
 
-#include "lib/HandlerContext.cpp"
+#include "lib/HandlerContext.hpp"
 
 using namespace std;
 

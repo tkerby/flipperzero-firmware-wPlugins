@@ -1,15 +1,15 @@
 #ifndef _MAIN_MENU_SCREEN_CLASS_
 #define _MAIN_MENU_SCREEN_CLASS_
 
-#include "app/AppConfig.cpp"
+#include "app/AppConfig.hpp"
 
-#include "lib/ui/view/UiView.cpp"
-#include "lib/ui/view/SubMenuUiView.cpp"
-#include "lib/ui/UiManager.cpp"
+#include "lib/ui/view/UiView.hpp"
+#include "lib/ui/view/SubMenuUiView.hpp"
+#include "lib/ui/UiManager.hpp"
 
-#include "app/AppNotifications.cpp"
+#include "app/AppNotifications.hpp"
 
-#include "ScanStationsScreen.cpp"
+#include "ScanStationsScreen.hpp"
 
 class MainMenuScreen {
 private:

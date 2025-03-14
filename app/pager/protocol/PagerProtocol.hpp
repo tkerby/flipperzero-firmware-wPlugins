@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "lib/hardware/subghz/SubGhzPayload.cpp"
+#include "lib/hardware/subghz/SubGhzPayload.hpp"
 
 class PagerProtocol {
 public:

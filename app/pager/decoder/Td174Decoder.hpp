@@ -1,7 +1,7 @@
 #ifndef _TD174_DECODER_CLASS_
 #define _TD174_DECODER_CLASS_
 
-#include "PagerDecoder.cpp"
+#include "PagerDecoder.hpp"
 
 #define TD174_ACTION_RING   0
 #define TD174_ACTION_DESYNC 3

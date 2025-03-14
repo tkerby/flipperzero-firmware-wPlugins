@@ -1,17 +1,17 @@
 #ifndef _PAGER_ACTIONS_SCREEN_CLASS_
 #define _PAGER_ACTIONS_SCREEN_CLASS_
 
-#include "lib/String.cpp"
-#include "app/AppConfig.cpp"
-#include "app/pager/PagerDataStored.cpp"
-#include "app/pager/decoder/PagerDecoder.cpp"
-#include "app/pager/protocol/PagerProtocol.cpp"
-#include "lib/hardware/subghz/SubGhzModule.cpp"
-#include "lib/ui/view/UiView.cpp"
-#include "lib/ui/view/SubMenuUiView.cpp"
-#include "app/screen/BatchTransmissionScreen.cpp"
+#include "lib/String.hpp"
+#include "app/AppConfig.hpp"
+#include "app/pager/PagerDataStored.hpp"
+#include "app/pager/decoder/PagerDecoder.hpp"
+#include "app/pager/protocol/PagerProtocol.hpp"
+#include "lib/hardware/subghz/SubGhzModule.hpp"
+#include "lib/ui/view/UiView.hpp"
+#include "lib/ui/view/SubMenuUiView.hpp"
+#include "app/screen/BatchTransmissionScreen.hpp"
 #include "lib/FlipperDolphin.hpp"
-#include "lib/ui/UiManager.cpp"
+#include "lib/ui/UiManager.hpp"
 
 class PagerActionsScreen {
 private:

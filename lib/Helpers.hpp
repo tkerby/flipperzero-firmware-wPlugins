@@ -1,7 +1,7 @@
 #ifndef _HELPERS_CLASS_
 #define _HELPERS_CLASS_
 
-#include "lib/ui/view/UiView.cpp"
+#include "lib/ui/view/UiView.hpp"
 #include <core/string.h>
 
 class Helpers {};

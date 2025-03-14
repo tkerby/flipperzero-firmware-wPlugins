@@ -5,7 +5,7 @@
 
 #include "gui/modules/variable_item_list.h"
 
-#include "lib/HandlerContext.cpp"
+#include "lib/HandlerContext.hpp"
 
 using namespace std;
 

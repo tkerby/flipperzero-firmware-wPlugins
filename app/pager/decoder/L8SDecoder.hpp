@@ -3,7 +3,7 @@
 
 #include "core/core_defines.h"
 
-#include "PagerDecoder.cpp"
+#include "PagerDecoder.hpp"
 
 // L8S — (L)ast (8) bits (S)traight order (non-reversed) (for pager number)
 class L8SDecoder : public PagerDecoder {

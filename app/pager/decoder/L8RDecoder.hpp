@@ -1,7 +1,7 @@
 #ifndef _L8R_DECODER_CLASS_
 #define _L8R_DECODER_CLASS_
 
-#include "PagerDecoder.cpp"
+#include "PagerDecoder.hpp"
 
 #define T111_ACTION_RING 0
 

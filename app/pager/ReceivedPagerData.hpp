@@ -2,7 +2,7 @@
 #define _RECEIVED_PAGER_DATA_CLASS_
 
 #include <cstdint>
-#include "PagerDataStored.cpp"
+#include "PagerDataStored.hpp"
 
 class ReceivedPagerData {
 private:
