@@ -8,7 +8,7 @@ public:
     uint32_t Frequency = 433920000;
     int MaxPagerForBatchOrDetection = 30;
     uint32_t SignalRepeats = 10;
-    bool Debug = false;
+    bool Debug = true;
 };
 
 #endif //_APP_CONFIG_CLASS_

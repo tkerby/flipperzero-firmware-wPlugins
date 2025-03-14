@@ -1,13 +1,14 @@
-#ifndef _T111_DECODER_CLASS_
-#define _T111_DECODER_CLASS_
+#ifndef _L8R_DECODER_CLASS_
+#define _L8R_DECODER_CLASS_
 
 #include "PagerDecoder.cpp"
 
 #define T111_ACTION_RING 0
 
-// maybe better to rename to L8R — (L)ast (8) bits (R)eversed (for pager number)
+// L8R — (L)ast (8) bits (R)eversed order (for pager number)
 // seems to be Retekess T111 encoding, but cannot check it due to lack of information
-class T111Decoder : public PagerDecoder {
+// So I decided to keep it's name as L8R
+class L8RDecoder : public PagerDecoder {
 private:
     const uint32_t stationMask = 0b111111111111100000000000; // leading 13 bits (of 24) are station (any maybe more)
     const uint32_t actionMask = 0b11100000000; // next 3 bits are action (possibly, just my guess, may be they are also station)
@@ -23,11 +24,11 @@ private:
 
 public:
     const char* GetFullName() {
-        return "Retekess T111";
+        return "Retekess T111 / L8R";
     }
 
     const char* GetShortName() {
-        return "T111";
+        return "L8R";
     }
 
     uint16_t GetStation(uint32_t data) {
@@ -83,4 +84,4 @@ public:
     }
 };
 
-#endif //_T111_DECODER_CLASS_
+#endif //_L8R_DECODER_CLASS_

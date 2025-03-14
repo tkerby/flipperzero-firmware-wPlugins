@@ -16,7 +16,8 @@
 #include "decoder/Td157Decoder.cpp"
 #include "decoder/Td165Decoder.cpp"
 #include "decoder/Td174Decoder.cpp"
-#include "decoder/T111Decoder.cpp"
+#include "decoder/L8RDecoder.cpp"
+#include "decoder/L8SDecoder.cpp"
 
 #undef LOG_TAG
 #define LOG_TAG "PGR_RCV"
@@ -28,7 +29,13 @@ using namespace std;
 class PagerReceiver {
 public:
     vector<PagerProtocol*> protocols = {new PrincetonProtocol(), new Smc5326Protocol()};
-    vector<PagerDecoder*> decoders = {new Td157Decoder(), new Td165Decoder(), new Td174Decoder(), new T111Decoder()};
+    vector<PagerDecoder*> decoders = {
+        new Td157Decoder(),
+        new Td165Decoder(),
+        new Td174Decoder(),
+        new L8RDecoder(),
+        new L8SDecoder(),
+    };
 
 private:
     AppConfig* config;
