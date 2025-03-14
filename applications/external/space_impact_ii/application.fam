@@ -1,16 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="spaceimpactii985e",
+    appid="spaceimpactii",
     name="Space Impact II",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="app_entry",
     stack_size=1024,
     fap_category="Games",
-    # Optional values
-    fap_version="1.0.2",
     fap_icon="myapp.png",
-    fap_description="Space Impact II clone",
-    fap_author="Eero Prittinen",
+    fap_author="Erbonator3000 & VoidXH",
     fap_weburl="https://github.com/Erbonator3000/Flipper-Zero-Space-Impact-II",
+    fap_version="1.0.2",
+    fap_description="Space Impact II clone",
+    #  Fork Of: https://github.com/VoidXH/Space-Impact-II
 )
