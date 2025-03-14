@@ -1,5 +1,5 @@
-#ifndef _PAGER_OPTIONS_SCREEN_CLASS_
-#define _PAGER_OPTIONS_SCREEN_CLASS_
+#ifndef _EDIT_PAGER_SCREEN_CLASS_
+#define _EDIT_PAGER_SCREEN_CLASS_
 
 #include "lib/String.cpp"
 #include "app/pager/PagerReceiver.cpp"
@@ -9,7 +9,7 @@
 
 #define TE_DIV 10
 
-class PagerOptionsScreen {
+class EditPagerScreen {
 private:
     AppConfig* config;
     SubGhzModule* subghz;
@@ -34,7 +34,7 @@ private:
     String teStr;
 
 public:
-    PagerOptionsScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
+    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
@@ -45,17 +45,17 @@ public:
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
 
         varItemList = new VariableItemListUiView();
-        varItemList->SetOnDestroyHandler(HANDLER(&PagerOptionsScreen::destroy));
-        varItemList->SetEnterPressHandler(HANDLER_1ARG(&PagerOptionsScreen::enterPressed));
+        varItemList->SetOnDestroyHandler(HANDLER(&EditPagerScreen::destroy));
+        varItemList->SetEnterPressHandler(HANDLER_1ARG(&EditPagerScreen::enterPressed));
 
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
-                "Encoding", pager->decoder, receiver->decoders.size(), HANDLER_1ARG(&PagerOptionsScreen::encodingValueChanged)
+                "Encoding", pager->decoder, receiver->decoders.size(), HANDLER_1ARG(&EditPagerScreen::encodingValueChanged)
             )
         );
 
-        varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&PagerOptionsScreen::stationValueChanged)));
-        varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&PagerOptionsScreen::pagerValueChanged)));
+        varItemList->AddItem(stationItem = new UiVariableItem("Station", HANDLER_1ARG(&EditPagerScreen::stationValueChanged)));
+        varItemList->AddItem(pagerItem = new UiVariableItem("Pager", HANDLER_1ARG(&EditPagerScreen::pagerValueChanged)));
         updatePagerIsEditable();
 
         varItemList->AddItem(
@@ -63,15 +63,15 @@ public:
                 "Action",
                 decoder->GetActionValue(pager->data),
                 decoder->GetActionsCount(),
-                HANDLER_1ARG(&PagerOptionsScreen::actionValueChanged)
+                HANDLER_1ARG(&EditPagerScreen::actionValueChanged)
             )
         );
 
-        varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&PagerOptionsScreen::hexValueChanged)));
+        varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&EditPagerScreen::hexValueChanged)));
         varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetDisplayName()));
         varItemList->AddItem(
             teItem = new UiVariableItem(
-                "TE", pager->te / TE_DIV, protocol->GetMaxTE() / TE_DIV, HANDLER_1ARG(&PagerOptionsScreen::teValueChanged)
+                "TE", pager->te / TE_DIV, protocol->GetMaxTE() / TE_DIV, HANDLER_1ARG(&EditPagerScreen::teValueChanged)
             )
         );
         varItemList->AddItem(
@@ -190,4 +190,4 @@ public:
     }
 };
 
-#endif //_PAGER_OPTIONS_SCREEN_CLASS_
+#endif //_EDIT_PAGER_SCREEN_CLASS_

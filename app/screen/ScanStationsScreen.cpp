@@ -4,7 +4,7 @@
 #include "lib/hardware/subghz/data/SubGhzReceivedDataStub.cpp"
 #include "lib/ui/view/ColumnOrientedListUiView.cpp"
 
-#include "PagerOptionsScreen.cpp"
+#include "EditPagerScreen.cpp"
 #include "PagerActionsScreen.cpp"
 
 #include "lib/hardware/subghz/SubGhzModule.cpp"
@@ -155,12 +155,12 @@ private:
 
     void showConfig(uint32_t index) {
         UNUSED(index);
-        //     PagerOptionsScreen* screen = new PagerOptionsScreen(pagerReceiver, index);
+        //     EditPagerScreen* screen = new EditPagerScreen(pagerReceiver, index);
         //     UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void editTransmission(uint32_t index) {
-        PagerOptionsScreen* screen = new PagerOptionsScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index));
+        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index));
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
