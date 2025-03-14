@@ -306,9 +306,7 @@ bool uhf_reader_view_read_input_callback(InputEvent* event, void* context) {
             with_view_model(
                 App->ViewRead,
                 UHFReaderConfigModel * model,
-                {
-                    model->IsScrolling = (event->type == InputTypePress);
-                },
+                { model->IsScrolling = (event->type == InputTypePress); },
                 true);
             return true;
         }
@@ -410,16 +408,14 @@ bool uhf_reader_view_read_input_callback(InputEvent* event, void* context) {
             return true;
         }
 
-        
         //If the down button is pressed, then show the view epc screen
         else if(event->key == InputKeyDown && !App->IsReading) {
             view_set_previous_callback(App->ViewEpc, uhf_reader_navigation_read_callback);
             view_dispatcher_switch_to_view(App->ViewDispatcher, UHFReaderViewEpcDump);
             return true;
         }
-        
-    }
-    else if(event->type == InputTypePress) {
+
+    } else if(event->type == InputTypePress) {
         //Handles the start button being pressed
         if(event->key == InputKeyOk) {
             view_dispatcher_send_custom_event(App->ViewDispatcher, UHFReaderEventIdOkPressed);
