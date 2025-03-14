@@ -152,6 +152,7 @@ public:
         }
 
         Notification::Play(&sequence_blink_start_magenta);
+
         currentPayload = payload;
         repeatsLeft = payload->GetRequiredSofwareRepeats() - 1;
 

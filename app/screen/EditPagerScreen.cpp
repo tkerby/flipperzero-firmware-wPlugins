@@ -6,6 +6,7 @@
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
+#include "lib/FlipperDolphin.cpp"
 
 #define TE_DIV 10
 
@@ -96,6 +97,8 @@ private:
         PagerDataStored* pager = getPager();
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
+
+        FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     const char* encodingValueChanged(uint8_t index) {

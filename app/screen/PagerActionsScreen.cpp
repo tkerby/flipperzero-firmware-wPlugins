@@ -10,7 +10,7 @@
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/SubMenuUiView.cpp"
 #include "app/screen/BatchTransmissionScreen.cpp"
-
+#include "lib/FlipperDolphin.cpp"
 #include "lib/ui/UiManager.cpp"
 
 class PagerActionsScreen {
@@ -89,16 +89,22 @@ private:
         batchTransmissionScreen = new BatchTransmissionScreen(config->MaxPagerForBatchOrDetection);
         UiManager::GetInstance()->PushView(batchTransmissionScreen->GetView());
         sendCurrentPager();
+
+        FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void resendSingle(uint32_t) {
         PagerDataStored* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
+
+        FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void sendAction(PagerAction action) {
         PagerDataStored* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats));
+
+        FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void sendCurrentPager() {
