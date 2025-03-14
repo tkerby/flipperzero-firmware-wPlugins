@@ -1,11 +1,11 @@
-package cmd
+package tlv
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/tlv"
+	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/tlv"
 	"github.com/spf13/cobra"
 )
 
@@ -15,21 +15,21 @@ var (
 	dataType string
 )
 
-// tlvCmd represents the tlv command
-var tlvCmd = &cobra.Command{
+// TlvCmd represents the tlv command
+var TlvCmd = &cobra.Command{
 	Use:   "tlv",
 	Short: "Parse TLV data and extract values for specified tags",
 	Long: `Parse TLV data and extract values for specified tags.
 
 Examples:
   # Parse all tags
-  response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264
+  nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264
 
   # Parse specific tags
-  response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 84,50
+  nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 84,50
 
   # Specify data type
-  response_decoder tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 50 --type ascii`,
+  nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 50 --type ascii`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if hexData == "" {
 			return fmt.Errorf("hex data must be provided (--hex)")
@@ -187,10 +187,8 @@ func displayTagValue(tag string, tlvItem *tlv.TLV) {
 }
 
 func init() {
-	rootCmd.AddCommand(tlvCmd)
-
 	// Add command line flags
-	tlvCmd.Flags().StringVar(&hexData, "hex", "", "Hex TLV data to parse")
-	tlvCmd.Flags().StringVar(&tagList, "tag", "", "List of tags to extract, comma separated")
-	tlvCmd.Flags().StringVar(&dataType, "type", "", "Data type (utf8, ascii, numeric)")
+	TlvCmd.Flags().StringVar(&hexData, "hex", "", "Hex TLV data to parse")
+	TlvCmd.Flags().StringVar(&tagList, "tag", "", "List of tags to extract, comma separated")
+	TlvCmd.Flags().StringVar(&dataType, "type", "", "Data type (utf8, ascii, numeric)")
 }

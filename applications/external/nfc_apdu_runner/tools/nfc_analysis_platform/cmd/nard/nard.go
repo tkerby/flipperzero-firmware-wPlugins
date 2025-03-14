@@ -1,12 +1,12 @@
-package cmd
+package nard
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/decoder"
-	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/flipper"
+	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/decoder"
+	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/flipper"
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +21,11 @@ var (
 	debugMode    bool
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "response_decoder",
-	Short: "APDU Response Decoder for Flipper Zero",
-	Long: `APDU Response Decoder is a tool for parsing and displaying .apdures files
+// NardCmd represents the nard command
+var NardCmd = &cobra.Command{
+	Use:   "nard",
+	Short: "NFC APDU Runner Response Decoder",
+	Long: `NFC APDU Runner Response Decoder (nard) is a tool for parsing and displaying .apdures files
 from Flipper Zero NFC APDU Runner application.
 
 You can load .apdures files either from a local file or directly from your Flipper Zero device
@@ -95,12 +95,6 @@ using either SD card mounting or serial communication.`,
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() error {
-	return rootCmd.Execute()
-}
-
 func init() {
 	// 获取当前可执行文件所在目录
 	execPath, err := os.Executable()
@@ -111,22 +105,19 @@ func init() {
 	execDir := filepath.Dir(execPath)
 
 	// 设置默认格式目录
-	formatDir = filepath.Join(execDir, "format")
+	formatDir = filepath.Join(execDir, "nard_format")
 
 	// 如果格式目录不存在，尝试使用相对路径
 	if _, err := os.Stat(formatDir); os.IsNotExist(err) {
-		formatDir = "format"
+		formatDir = "nard_format"
 	}
 
 	// 添加命令行标志
-	rootCmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to .apdures file")
-	rootCmd.Flags().BoolVarP(&useDevice, "device", "d", false, "Connect to Flipper Zero device")
-	rootCmd.Flags().BoolVarP(&useSerial, "serial", "s", false, "Use serial communication with Flipper Zero (requires -d)")
-	rootCmd.Flags().StringVarP(&serialPort, "port", "p", "", "Specify serial port for Flipper Zero (optional)")
-	rootCmd.Flags().StringVar(&formatPath, "decode-format", "", "Path to format template file (.apdufmt)")
-	rootCmd.Flags().StringVar(&formatDir, "format-dir", formatDir, "Directory containing format template files")
-	rootCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode to show error messages")
-
-	// 禁用completion命令
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	NardCmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to .apdures file")
+	NardCmd.Flags().BoolVarP(&useDevice, "device", "d", false, "Connect to Flipper Zero device")
+	NardCmd.Flags().BoolVarP(&useSerial, "serial", "s", false, "Use serial communication with Flipper Zero (requires -d)")
+	NardCmd.Flags().StringVarP(&serialPort, "port", "p", "", "Specify serial port for Flipper Zero (optional)")
+	NardCmd.Flags().StringVar(&formatPath, "decode-format", "", "Path to format template file (.apdufmt)")
+	NardCmd.Flags().StringVar(&formatDir, "format-dir", formatDir, "Directory containing format template files")
+	NardCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode to show error messages")
 }

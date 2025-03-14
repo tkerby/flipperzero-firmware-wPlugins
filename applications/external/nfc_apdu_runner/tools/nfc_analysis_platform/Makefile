@@ -6,7 +6,7 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
-BINARY_NAME=response_decoder
+BINARY_NAME=nfc_analysis_platform
 BINARY_UNIX=$(BINARY_NAME)_linux
 BINARY_MACOS=$(BINARY_NAME)_macos
 

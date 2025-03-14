@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/spensercai/nfc_apdu_runner/tools/ResponseDecoder/pkg/tlv"
+	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/tlv"
 )
 
 // Response 表示解析后的APDU响应
