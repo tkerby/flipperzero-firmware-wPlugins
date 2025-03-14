@@ -11,9 +11,9 @@ private:
     String statusStr;
 
 public:
-    BatchTransmissionScreen() {
+    BatchTransmissionScreen(int pagersTotal) {
         popup = new ProgressbarPopupUiView("Transmitting...");
-        popup->SetProgress("Pager 0 / 50", 0);
+        SetProgress(0, pagersTotal);
         popup->SetOnDestroyHandler(HANDLER(&BatchTransmissionScreen::destroy));
     }
 

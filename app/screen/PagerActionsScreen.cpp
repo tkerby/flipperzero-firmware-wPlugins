@@ -86,7 +86,7 @@ private:
         currentPager = 0;
         transmittingBatch = true;
 
-        batchTransmissionScreen = new BatchTransmissionScreen();
+        batchTransmissionScreen = new BatchTransmissionScreen(config->MaxPagerForBatchOrDetection);
         UiManager::GetInstance()->PushView(batchTransmissionScreen->GetView());
         sendCurrentPager();
     }
