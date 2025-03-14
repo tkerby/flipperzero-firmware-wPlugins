@@ -3,7 +3,7 @@
  * @Date: 2025-03-08 00:18:57
  * @version: 
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-13 14:54:16
+ * @LastEditTime: 2025-03-14 12:01:57
  * @Description: file content
 -->
 # NFC APDU Runner Predefined Scripts
@@ -63,12 +63,12 @@ This script will:
 
 The following table lists the predefined scripts available in this directory:
 
-| Script Name              | Purpose                                                                                                             | Parsing Template                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| get_aid.apduscr          | Attempts to select various AIDs (Application Identifiers) to determine which applications are supported by the card | None                                                                               |
-| e_travel_card_sh.apduscr | Reads information from Shanghai electronic transportation cards (NFC emulated transit cards on devices like iPhone) | [E_TRAVEL_CARD_SH.apdufmt](/tools/ResponseDecoder/format/E_TRAVEL_CARD_SH.apdufmt) |
-| pboc.apduscr             | Reads information from PBOC (China UnionPay) banking cards                                                          | [PBOC.apdufmt](/tools/ResponseDecoder/format/PBOC.apdufmt)                         |
-| emv.apduscr              | Reads essential information from EMV payment cards including card number, expiry date, and application data         | [EMV.apdufmt](/tools/ResponseDecoder/format/EMV.apdufmt)                           |
+| Script Name            | Purpose                                                                                                             | Parsing Template                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| get_aid.apduscr        | Attempts to select various AIDs (Application Identifiers) to determine which applications are supported by the card | None                                                                           |
+| travel_card_sh.apduscr | Reads information from Shanghai transportation cards                                                                | [TRAVEL_CARD_SH.apdufmt](/tools/ResponseDecoder/format/TRAVEL_CARD_SH.apdufmt) |
+| pboc.apduscr           | Reads information from PBOC (China UnionPay) banking cards                                                          | [PBOC.apdufmt](/tools/ResponseDecoder/format/PBOC.apdufmt)                     |
+| emv.apduscr            | Reads essential information from EMV payment cards including card number, expiry date, and application data         | [EMV.apdufmt](/tools/ResponseDecoder/format/EMV.apdufmt)                       |
 
 ## Creating Custom Scripts
 
