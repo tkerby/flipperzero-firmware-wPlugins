@@ -1,113 +1,193 @@
 # NFC Analysis Platform
 
-NFC Analysis Platform是一个用于分析Flipper Zero NFC应用程序数据的综合工具。该平台提供了多种工具，用于NFC数据分析，包括：
+NFC Analysis Platform is a comprehensive tool for analyzing NFC data from Flipper Zero NFC applications. This platform provides various tools for NFC data analysis, including:
 
-- APDU响应解码器 (nard)
-- TLV解析器 (tlv)
+- APDU Response Decoder (nard)
+- TLV Parser (tlv)
 
-## 安装
+## Installation
 
-### 前提条件
+### Prerequisites
 
-- Go 1.21或更高版本
-- Make (可选，用于简化构建过程)
+- Go 1.21 or higher
+- Make (optional, for simplifying the build process)
 
-### 使用Make构建和安装
+### Dependencies
 
 ```bash
-# 初始化项目
+go get github.com/spf13/cobra
+go get github.com/fatih/color
+go get go.bug.st/serial
+```
+
+### Build and Install with Make
+
+```bash
+# Initialize the project
 make init
 
-# 构建项目
+# Build the project
 make build
 
-# 安装到~/bin目录
+# Install to ~/bin directory
 make install
 ```
 
-### 手动构建和安装
+### Cross-Platform Building
 
 ```bash
-# 初始化Go模块
+# Build for Linux
+make build-linux
+
+# Build for Windows
+make build-windows
+
+# Build for macOS
+make build-macos
+
+# Build for all platforms
+make build-all
+```
+
+### Manual Build and Install
+
+```bash
+# Initialize Go modules
 go mod tidy
 
-# 构建项目
+# Build the project
 go build -o nfc_analysis_platform .
 
-# 安装到~/bin目录
+# Install to ~/bin directory
 mkdir -p ~/bin
 cp nfc_analysis_platform ~/bin/
 mkdir -p ~/bin/format
 cp -r format/* ~/bin/format/ 2>/dev/null || :
 ```
 
-确保`~/bin`目录在您的PATH环境变量中。
+Make sure the `~/bin` directory is in your PATH environment variable.
 
-## 使用方法
+## Usage
 
-### APDU响应解码器 (nard)
+### APDU Response Decoder (nard)
 
-APDU响应解码器用于解析和显示来自Flipper Zero NFC APDU Runner应用程序的.apdures文件。
+The APDU Response Decoder is used to parse and display .apdures files from the Flipper Zero NFC APDU Runner application.
 
 ```bash
-# 从本地文件加载.apdures文件
+# Load .apdures file from a local file
 nfc_analysis_platform nard --file path/to/file.apdures
 
-# 从Flipper Zero设备加载.apdures文件
+# Load .apdures file from Flipper Zero device
 nfc_analysis_platform nard --device
 
-# 使用串口通信从Flipper Zero设备加载.apdures文件
+# Load .apdures file from Flipper Zero device using serial communication
 nfc_analysis_platform nard --device --serial
 
-# 指定串口
+# Specify serial port
 nfc_analysis_platform nard --device --serial --port /dev/ttyACM0
 
-# 指定解码格式模板
-nfc_analysis_platform nard --file path/to/file.apdures --decode-format path/to/format.apdufmt
+# Specify decode format template
+nfc_analysis_platform nard --decode-format path/to/format.apdufmt
 
-# 启用调试模式
-nfc_analysis_platform nard --file path/to/file.apdures --debug
+# Specify format directory
+nfc_analysis_platform nard --format-dir /path/to/format/directory
+
+# Enable debug mode
+nfc_analysis_platform nard --debug
 ```
 
-### TLV解析器 (tlv)
+#### Format Template Syntax
 
-TLV解析器用于解析TLV（Tag-Length-Value）数据并提取指定标签的值。
+The APDU Response Decoder uses Go templates for formatting. The following functions are available:
+
+- `TAG(tag)`: Extract the value of a TLV tag from the response data
+- `hex(data)`: Convert hexadecimal string to ASCII
+- `h2d(data)`: Convert hexadecimal string to decimal
+- Mathematical operations: Addition (`+`), Subtraction (`-`), Multiplication (`*`), Division (`/`)
+- Slicing: `expression[start:end]` to extract a substring from the result of an expression
+
+Example format template:
+```
+@ID = EMV Card Information
+
+====================================
+EMV Card Information
+====================================
+
+Status: {{.Status}}
+{{if eq .Status "9000"}}
+AID: {{TAG "4F"}}
+Application Label: {{hex (TAG "50")}}
+Card Holder Name: {{hex (TAG "5F20")}}
+Application Expiration Date: {{TAG "5F24"}}
+Application Primary Account Number: {{TAG "5A"}}
+Application Transaction Counter: {{h2d (TAG "9F36")}}
+Application Version Number: {{TAG "9F08"}}
+{{end}}
+```
+
+### TLV Parser (tlv)
+
+The TLV Parser is used to parse TLV (Tag-Length-Value) data and extract values for specified tags.
 
 ```bash
-# 解析所有标签
+# Parse all tags
 nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264
 
-# 解析特定标签
+# Parse specific tags
 nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 84,50
 
-# 指定数据类型
+# Specify data type
 nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D617374657243617264 --tag 50 --type ascii
 ```
 
-## 功能特点
+#### Supported Data Types
 
-### APDU响应解码器 (nard)
+- `utf8`, `utf-8`: UTF-8 encoding
+- `ascii`: ASCII encoding
+- `numeric`: Numeric encoding (such as BCD code)
 
-- 支持自定义解码格式模板
-- 支持从本地文件或Flipper Zero设备加载.apdures文件
-- 支持串口通信
-- 支持调试模式，显示详细错误信息
-- 支持十六进制到十进制的转换
-- 支持数学运算
-- 支持函数结果切片
+## Features
 
-### TLV解析器 (tlv)
+### APDU Response Decoder (nard)
 
-- 支持解析TLV数据
-- 支持递归解析嵌套TLV结构
-- 支持提取特定标签的值
-- 支持多种数据类型显示（十六进制、ASCII、UTF-8、数字）
-- 支持彩色输出，提高可读性
+- Support for custom decoding format templates
+- Support for loading .apdures files from local files or Flipper Zero device
+- Support for serial communication
+- Debug mode to display detailed error messages
+- Hexadecimal to decimal conversion
+- Mathematical operations
+- Slicing function results
 
-## 贡献
+### TLV Parser (tlv)
 
-欢迎贡献代码、报告问题或提出改进建议。请通过GitHub Issues或Pull Requests提交您的贡献。
+- Support for parsing TLV data
+- Support for recursively parsing nested TLV structures
+- Support for extracting values for specific tags
+- Support for multiple data type displays (hexadecimal, ASCII, UTF-8, numeric)
+- Colored output for improved readability
 
-## 许可证
+## Format Template Examples
 
-本项目采用MIT许可证。详情请参阅LICENSE文件。 
+The platform includes several example format templates in the `format` directory:
+
+- `emv_card.apdufmt`: For decoding EMV card information
+
+You can create your own format templates and place them in the format directory.
+
+## Error Handling
+
+The tool automatically detects error responses (non-9000 status codes) and handles them appropriately:
+
+- When an output has a non-success status code (not 9000), any template expression referencing that output will return an empty string
+- Error information is collected during parsing but not displayed by default
+- To view error information, use the `--debug` flag when running the command
+- In debug mode, error messages are displayed at the end of the output
+
+## Contributing
+
+Contributions are welcome, whether it's code contributions, bug reports, or suggestions for improvements. Please submit your contributions through GitHub Issues or Pull Requests.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details. 

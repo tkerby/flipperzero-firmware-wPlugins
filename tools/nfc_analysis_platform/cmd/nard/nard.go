@@ -105,11 +105,11 @@ func init() {
 	execDir := filepath.Dir(execPath)
 
 	// 设置默认格式目录
-	formatDir = filepath.Join(execDir, "format")
+	formatDir = filepath.Join(execDir, "nard_format")
 
 	// 如果格式目录不存在，尝试使用相对路径
 	if _, err := os.Stat(formatDir); os.IsNotExist(err) {
-		formatDir = "format"
+		formatDir = "nard_format"
 	}
 
 	// 添加命令行标志
