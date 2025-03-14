@@ -6,4 +6,4 @@ dist/*
 .env
 .ufbt
 .DS_Store
-tools/ResponseDecoder/cmd/tlvtool/tlvtool
+
