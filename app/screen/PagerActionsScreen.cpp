@@ -103,7 +103,6 @@ private:
 
     void sendCurrentPager() {
         PagerDataStored* pager = getPager();
-        FURI_LOG_E("PAS", "Pager data: %06X, protocol: %s", pager->data, protocol->GetDisplayName());
         batchTransmissionScreen->SetProgress(currentPager, config->MaxPagerForBatchOrDetection);
         subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats));
     }
