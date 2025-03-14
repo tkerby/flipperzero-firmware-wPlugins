@@ -12,3 +12,6 @@ v1.3
 - Fixes and enhancement in display model
 - Added authentic bitmaps 2000's operator logos as assets
 - Changed apps_data to apps_assetsfor storing datas and bitmaps
+
+v1.3.1
+- Workaround for allowing older core to compile while maintaining current core fixes.
