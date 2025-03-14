@@ -308,6 +308,7 @@ typedef struct {
     FuriString* Crc;
     uint32_t ScrollOffset;
     char* ScrollingText;
+    bool IsScrolling;
 } UHFReaderConfigModel;
 
 //Model for the write screen
