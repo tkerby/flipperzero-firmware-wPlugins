@@ -1,5 +1,4 @@
-#ifndef _FLIPPER_DOLPHIN_CLASS_
-#define _FLIPPER_DOLPHIN_CLASS_
+#pragma once
 
 #include <dolphin/dolphin.h>
 
@@ -10,5 +9,3 @@ public:
         dolphin_deed(deed);
     }
 };
-
-#endif //_FLIPPER_DOLPHIN_CLASS_

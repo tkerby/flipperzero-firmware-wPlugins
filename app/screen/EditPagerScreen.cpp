@@ -6,7 +6,7 @@
 #include "lib/hardware/subghz/SubGhzModule.cpp"
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/VariableItemListUiView.cpp"
-#include "lib/FlipperDolphin.cpp"
+#include "lib/FlipperDolphin.hpp"
 
 #define TE_DIV 10
 

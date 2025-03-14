@@ -9,6 +9,7 @@ public:
     int MaxPagerForBatchOrDetection = 30;
     uint32_t SignalRepeats = 10;
     bool Debug = true;
+    bool IgnoreMessagesFromSavedStations = false;
 };
 
 #endif //_APP_CONFIG_CLASS_

@@ -10,7 +10,7 @@
 #include "lib/ui/view/UiView.cpp"
 #include "lib/ui/view/SubMenuUiView.cpp"
 #include "app/screen/BatchTransmissionScreen.cpp"
-#include "lib/FlipperDolphin.cpp"
+#include "lib/FlipperDolphin.hpp"
 #include "lib/ui/UiManager.cpp"
 
 class PagerActionsScreen {

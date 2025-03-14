@@ -3,6 +3,7 @@
 
 #include "lib/ui/UiManager.cpp"
 #include "lib/hardware/notification/Notification.cpp"
+#include "AppFileSystem.hpp"
 
 #include "AppConfig.cpp"
 #include "app/screen/MainMenuScreen.cpp"
