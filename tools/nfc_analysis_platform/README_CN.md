@@ -2,7 +2,7 @@
 
 NFC 分析平台是一个用于分析 Flipper Zero NFC 应用程序数据的综合工具。该平台提供了多种工具，用于 NFC 数据分析，包括：
 
-- APDU 响应解码器 (nard)
+- NFC APDU Runner 响应解码器 (nard)
 - TLV 解析器 (tlv)
 
 ## 安装
@@ -69,9 +69,9 @@ cp -r format/* ~/bin/format/ 2>/dev/null || :
 
 ## 使用方法
 
-### APDU 响应解码器 (nard)
+### NFC APDU Runner 响应解码器 (nard)
 
-APDU 响应解码器用于解析和显示来自 Flipper Zero NFC APDU Runner 应用程序的 .apdures 文件。
+NFC APDU Runner 响应解码器用于解析和显示来自 Flipper Zero NFC APDU Runner 应用程序的 `.apdures` 文件。
 
 ```bash
 # 从本地文件加载 .apdures 文件
@@ -98,7 +98,7 @@ nfc_analysis_platform nard --debug
 
 #### 格式模板语法
 
-APDU 响应解码器使用 Go 模板进行格式化。以下函数可用：
+NFC APDU Runner 响应解码器使用 Go 模板进行格式化。以下函数可用：
 
 - `TAG(tag)`：从响应数据中提取 TLV 标签的值
 - `hex(data)`：将十六进制字符串转换为 ASCII
@@ -108,22 +108,14 @@ APDU 响应解码器使用 Go 模板进行格式化。以下函数可用：
 
 示例格式模板：
 ```
-@ID = EMV 卡片信息
-
-====================================
-EMV 卡片信息
-====================================
-
-状态: {{.Status}}
-{{if eq .Status "9000"}}
-AID: {{TAG "4F"}}
-应用标签: {{hex (TAG "50")}}
-持卡人姓名: {{hex (TAG "5F20")}}
-应用有效期: {{TAG "5F24"}}
-应用主账号: {{TAG "5A"}}
-应用交易计数器: {{h2d (TAG "9F36")}}
-应用版本号: {{TAG "9F08"}}
-{{end}}
+EMV Card Information
+Application Label: {O[1]TAG(50), "ascii"}
+Card Number: {O[3]TAG(9F6B)[0:16], "numeric"}
+Expiry Date: Year: 20{O[3]TAG(9F6B)[17:19], "numeric"}, Month: {O[3]TAG(9F6B)[19:21], "numeric"}
+Country Code: {O[1]TAG(9F6E)[0:4]}
+Application Priority: {O[1]TAG(87), "hex"}
+Application Interchange Profile: {O[2]TAG(82), "hex"}
+PIN Try Counter: {O[4]TAG(9F17), "numeric"}
 ```
 
 ### TLV 解析器 (tlv)
@@ -149,7 +141,7 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 
 ## 功能特点
 
-### APDU 响应解码器 (nard)
+### NFC APDU Runner 响应解码器 (nard)
 
 - 支持自定义解码格式模板
 - 支持从本地文件或 Flipper Zero 设备加载 .apdures 文件

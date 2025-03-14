@@ -2,7 +2,7 @@
 
 NFC Analysis Platform is a comprehensive tool for analyzing NFC data from Flipper Zero NFC applications. This platform provides various tools for NFC data analysis, including:
 
-- APDU Response Decoder (nard)
+- NFC APDU Runner Response Decoder (nard)
 - TLV Parser (tlv)
 
 ## Installation
@@ -69,9 +69,9 @@ Make sure the `~/bin` directory is in your PATH environment variable.
 
 ## Usage
 
-### APDU Response Decoder (nard)
+### NFC APDU Runner Response Decoder (nard)
 
-The APDU Response Decoder is used to parse and display .apdures files from the Flipper Zero NFC APDU Runner application.
+The NFC APDU Runner Response Decoder is used to parse and display `.apdures` files from the Flipper Zero NFC APDU Runner application.
 
 ```bash
 # Load .apdures file from a local file
@@ -98,7 +98,7 @@ nfc_analysis_platform nard --debug
 
 #### Format Template Syntax
 
-The APDU Response Decoder uses Go templates for formatting. The following functions are available:
+NFC APDU Runner Response Decoder uses Go templates for formatting. The following functions are available:
 
 - `TAG(tag)`: Extract the value of a TLV tag from the response data
 - `hex(data)`: Convert hexadecimal string to ASCII
@@ -108,22 +108,14 @@ The APDU Response Decoder uses Go templates for formatting. The following functi
 
 Example format template:
 ```
-@ID = EMV Card Information
-
-====================================
 EMV Card Information
-====================================
-
-Status: {{.Status}}
-{{if eq .Status "9000"}}
-AID: {{TAG "4F"}}
-Application Label: {{hex (TAG "50")}}
-Card Holder Name: {{hex (TAG "5F20")}}
-Application Expiration Date: {{TAG "5F24"}}
-Application Primary Account Number: {{TAG "5A"}}
-Application Transaction Counter: {{h2d (TAG "9F36")}}
-Application Version Number: {{TAG "9F08"}}
-{{end}}
+Application Label: {O[1]TAG(50), "ascii"}
+Card Number: {O[3]TAG(9F6B)[0:16], "numeric"}
+Expiry Date: Year: 20{O[3]TAG(9F6B)[17:19], "numeric"}, Month: {O[3]TAG(9F6B)[19:21], "numeric"}
+Country Code: {O[1]TAG(9F6E)[0:4]}
+Application Priority: {O[1]TAG(87), "hex"}
+Application Interchange Profile: {O[2]TAG(82), "hex"}
+PIN Try Counter: {O[4]TAG(9F17), "numeric"}
 ```
 
 ### TLV Parser (tlv)
@@ -149,7 +141,7 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 
 ## Features
 
-### APDU Response Decoder (nard)
+### NFC APDU Runner Response Decoder (nard)
 
 - Support for custom decoding format templates
 - Support for loading .apdures files from local files or Flipper Zero device
