@@ -1,10 +1,8 @@
 # APDU Response Decoder
 
-<div align="center">
-<h2 style="color:red;font-weight:bold">
-All functions of ResponseDecoder have been migrated to the 'nard' sub command of 'nfc_analysis_platform', and ResponsDecoder will be removed in subsequent versions.
-</h2>
-</div>
+> [!CAUTION]
+> All functions of ResponseDecoder have been migrated to the 'nard' sub command of 'nfc_analysis_platform', and ResponsDecoder will be removed in subsequent versions.
+
 
 [中文](./README_CN.md)
 
