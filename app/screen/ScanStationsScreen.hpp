@@ -110,6 +110,7 @@ private:
 
             delete pagerData;
         }
+
         delete data;
     }
 
