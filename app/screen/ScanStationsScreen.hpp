@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SettingsScreen.hpp"
 #include "lib/hardware/subghz/data/SubGhzReceivedDataStub.hpp"
 #include "lib/ui/view/ColumnOrientedListUiView.hpp"
 
@@ -152,10 +153,9 @@ private:
         }
     }
 
-    void showConfig(uint32_t index) {
-        UNUSED(index);
-        //     EditPagerScreen* screen = new EditPagerScreen(pagerReceiver, index);
-        //     UiManager::GetInstance()->PushView(screen->GetView());
+    void showConfig(uint32_t) {
+        SettingsScreen* screen = new SettingsScreen(config);
+        UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void editTransmission(uint32_t index) {

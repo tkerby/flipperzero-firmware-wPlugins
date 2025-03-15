@@ -14,6 +14,7 @@ using namespace std;
 
 class VariableItemListUiView : public UiView {
 private:
+    uint32_t itemCounter = 0;
     VariableItemList* varItemList;
     IDestructable* enterPressHandler;
 
@@ -27,8 +28,9 @@ public:
         varItemList = variable_item_list_alloc();
     }
 
-    void AddItem(UiVariableItem* item) {
+    uint32_t AddItem(UiVariableItem* item) {
         item->AddTo(varItemList);
+        return itemCounter++;
     }
 
     void SetEnterPressHandler(function<void(uint32_t)> handler) {
