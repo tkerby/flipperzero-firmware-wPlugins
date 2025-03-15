@@ -59,14 +59,16 @@ func TestNardCommand(t *testing.T) {
 	})
 
 	t.Run("NARD Command with Invalid File", func(t *testing.T) {
-		_, err := common.ExecuteCommand(t, binaryPath, "nard", "--file", "nonexistent.apdures")
+		// 使用 ExecuteCommandSilent 来抑制错误输出
+		_, err := common.ExecuteCommandSilent(t, binaryPath, "nard", "--file", "nonexistent.apdures")
 		assert.Error(t, err, "NARD command with invalid file should fail")
-		// 检查错误消息中是否包含 "no such file or directory"
+		// 检查错误消息中是否包含 "exit status 1"
 		assert.Contains(t, err.Error(), "exit status 1", "Error message should indicate command failure")
 	})
 
 	t.Run("NARD Command without Required Flags", func(t *testing.T) {
-		_, err := common.ExecuteCommand(t, binaryPath, "nard")
+		// 使用 ExecuteCommandSilent 来抑制错误输出
+		_, err := common.ExecuteCommandSilent(t, binaryPath, "nard")
 		assert.Error(t, err, "NARD command without required flags should fail")
 		// 检查错误消息中是否包含 "exit status 1"
 		assert.Contains(t, err.Error(), "exit status 1", "Error message should indicate command failure")

@@ -30,6 +30,20 @@ func ExecuteCommand(t *testing.T, command string, args ...string) (string, error
 	return stdout.String(), nil
 }
 
+// ExecuteCommandSilent executes a command and returns its output without logging errors
+func ExecuteCommandSilent(t *testing.T, command string, args ...string) (string, error) {
+	cmd := exec.Command(command, args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		// 不输出错误信息
+		return stdout.String(), err
+	}
+	return stdout.String(), nil
+}
+
 // GetTestDataPath returns the absolute path to a test data file
 func GetTestDataPath(t *testing.T, relativePath string) string {
 	// Get the absolute path to the project root
