@@ -56,8 +56,8 @@ static void app_tick_event_callback(void* context) {
             SensorState sensor_state;
             app->sensor->get_state(app->sensor, &sensor_state);
 
-            bool new_measurement = sensor_state.time != app->last_measurement_time;
-            app->last_measurement_time = sensor_state.time;
+            bool new_measurement = sensor_state.ticks != app->last_measurement_ticks;
+            app->last_measurement_ticks = sensor_state.ticks;
 
             if(new_measurement) {
                 notification_message(app->notifications, &sequence_blink);

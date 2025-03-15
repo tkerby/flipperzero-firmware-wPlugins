@@ -51,9 +51,9 @@ typedef struct {
     AppConfig config;
     SensorDriver* sensor;
 
-    // Time of the last measurement
+    // Time (ticks) of the last measurement
     // (== 0 if no measurement was done yet)
-    uint32_t last_measurement_time;
+    uint32_t last_measurement_ticks;
 } App;
 
 // Restarts the sensor driver to apply the new configuration
