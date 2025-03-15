@@ -54,6 +54,9 @@ func TestTlvAPI(t *testing.T) {
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
 		// Check response data
 		assert.True(t, common.IsSuccessResponse(t, &apiResponse), "Response should be successful")
 		assert.NotNil(t, apiResponse.Data, "Response data should not be nil")
@@ -83,6 +86,9 @@ func TestTlvAPI(t *testing.T) {
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
 		// Check response data
 		assert.True(t, common.IsSuccessResponse(t, &apiResponse), "Response should be successful")
 		assert.NotNil(t, apiResponse.Data, "Response data should not be nil")
@@ -109,6 +115,9 @@ func TestTlvAPI(t *testing.T) {
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
+
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
 
 		// Check response data
 		assert.NotEqual(t, 0, apiResponse.Code, "Response should have non-zero code")

@@ -109,6 +109,16 @@ func ParseAPIResponse(t *testing.T, body io.Reader, model interface{}) {
 	require.NoError(t, err, "Failed to unmarshal response body")
 }
 
+// LogAPIResponseJSON 将API响应以JSON字符串的形式输出到测试日志中
+func LogAPIResponseJSON(t *testing.T, response interface{}) {
+	jsonData, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		t.Logf("Failed to marshal response to JSON: %v", err)
+		return
+	}
+	t.Logf("Response JSON:\n%s", string(jsonData))
+}
+
 // IsSuccessResponse checks if an API response is successful
 func IsSuccessResponse(t *testing.T, response *models.APIResponse) bool {
 	return response.Code == 0 && strings.ToLower(response.Message) == "success"

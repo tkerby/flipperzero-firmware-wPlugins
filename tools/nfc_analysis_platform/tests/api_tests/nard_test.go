@@ -53,6 +53,9 @@ func TestNardAPI(t *testing.T) {
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
 		// Check response data
 		assert.True(t, common.IsSuccessResponse(t, &apiResponse), "Response should be successful")
 		assert.NotNil(t, apiResponse.Data, "Response data should not be nil")
@@ -60,7 +63,7 @@ func TestNardAPI(t *testing.T) {
 
 	t.Run("Get Format Template", func(t *testing.T) {
 		// Make request - using "EMV" as a sample format ID
-		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/formats/EMV", nil)
+		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/formats/EMV.apdufmt", nil)
 		defer resp.Body.Close()
 
 		// Check response
@@ -69,6 +72,9 @@ func TestNardAPI(t *testing.T) {
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
+
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
 
 		// Check response data - this might be a success or error depending on if EMV format exists
 		// Just check that we get a valid response structure
@@ -113,6 +119,9 @@ func TestNardAPI(t *testing.T) {
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
 		// 检查响应数据
 		assert.NotNil(t, apiResponse.Code, "Response should have a code")
 		assert.NotNil(t, apiResponse.Message, "Response should have a message")
@@ -129,6 +138,9 @@ func TestNardAPI(t *testing.T) {
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
+
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
 
 		// 检查响应数据
 		t.Logf("Response code: %d", apiResponse.Code)
@@ -154,6 +166,9 @@ func TestNardAPI(t *testing.T) {
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
+
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
 
 		// 检查响应数据
 		t.Logf("Response code: %d", apiResponse.Code)

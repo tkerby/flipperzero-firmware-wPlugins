@@ -41,6 +41,9 @@ func TestSystemInfoAPI(t *testing.T) {
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
 		// Check response data
 		assert.True(t, common.IsSuccessResponse(t, &apiResponse), "Response should be successful")
 		assert.NotNil(t, apiResponse.Data, "Response data should not be nil")

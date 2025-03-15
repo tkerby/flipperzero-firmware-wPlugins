@@ -2,7 +2,6 @@ package nard
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/decoder"
@@ -71,7 +70,7 @@ func (h *decodeApduResponseHandler) Handle(params nardOps.DecodeApduResponsePara
 	ctx := decoder.NewDecodeContext(response, debug)
 
 	// 解码响应
-	err = decoder.DecodeAndDisplay(response, formatContent, debug)
+	decodedOutput, err := decoder.DecodeResponse(response, formatContent, debug)
 	if err != nil {
 		return nardOps.NewDecodeApduResponseOK().WithPayload(business.ErrorResponse(500, "解码失败: "+err.Error()))
 	}
@@ -94,7 +93,7 @@ func (h *decodeApduResponseHandler) Handle(params nardOps.DecodeApduResponsePara
 
 	result := &models.DecodeResult{
 		Status: statusCode,
-		Output: strings.Join(response.Outputs, "\n"),
+		Output: decodedOutput,
 		Errors: errors,
 	}
 
