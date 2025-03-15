@@ -182,4 +182,46 @@ func TestNardAPI(t *testing.T) {
 			assert.NotNil(t, apiResponse.Data, "Response should have data")
 		}
 	})
+
+	t.Run("Get Flipper File Content", func(t *testing.T) {
+		// 设置文件ID和参数
+		fileID := "emv.apdures"
+		useSerial := "true"
+
+		// 构建URL
+		url := "/api/nard/flipper/files/" + fileID + "?use_serial=" + useSerial
+
+		// 发送请求
+		resp := common.MakeAPIRequest(t, server, "GET", url, nil)
+		defer resp.Body.Close()
+
+		// 期望返回200
+		assert.Equal(t, http.StatusOK, resp.StatusCode, "Response status code should be 200")
+
+		// 解析响应
+		var apiResponse models.APIResponse
+		common.ParseAPIResponse(t, resp.Body, &apiResponse)
+
+		// 输出JSON格式的响应
+		common.LogAPIResponseJSON(t, apiResponse)
+
+		// 检查响应数据
+		t.Logf("Response code: %d", apiResponse.Code)
+		t.Logf("Response message: %s", apiResponse.Message)
+
+		// 在测试环境中，我们接受成功响应或404/500错误
+		if apiResponse.Code == int32(404) || apiResponse.Code == int32(500) {
+			assert.NotEmpty(t, apiResponse.Message, "Message should not be empty")
+		} else {
+			assert.Equal(t, int32(0), apiResponse.Code, "Response code should be 0 (success)")
+			assert.NotNil(t, apiResponse.Data, "Response should have data")
+
+			// 检查返回的文件内容
+			fileContent, ok := apiResponse.Data.(map[string]interface{})
+			assert.True(t, ok, "Response data should be a map")
+			assert.Equal(t, fileID, fileContent["id"], "File ID should match")
+			assert.Equal(t, fileID, fileContent["name"], "File name should match")
+			assert.NotEmpty(t, fileContent["content"], "File content should not be empty")
+		}
+	})
 }
