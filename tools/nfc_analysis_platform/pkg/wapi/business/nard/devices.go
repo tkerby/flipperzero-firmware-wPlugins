@@ -13,7 +13,6 @@ import (
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/wapi/business"
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/wapi/codegen/models"
 	nardOps "github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/wapi/codegen/restapi/operations/nard"
-	"go.bug.st/serial/enumerator"
 )
 
 // 获取Flipper设备处理器
@@ -38,7 +37,7 @@ func (h *getFlipperDevicesHandler) Handle(params nardOps.GetFlipperDevicesParams
 	}
 
 	// 尝试获取串口设备
-	serialPorts, err := getFlipperSerialPorts()
+	serialPorts, err := flipper.GetFlipperSerialPorts()
 	if err == nil {
 		for _, port := range serialPorts {
 			devices = append(devices, &models.FlipperDevice{
@@ -333,51 +332,4 @@ func isFlipperDrive(path string) bool {
 func getVolumeLabel(path string) string {
 	// 这里简化实现，实际应该使用系统API获取卷标
 	return filepath.Base(path)
-}
-
-// 获取Flipper Zero串口列表
-func getFlipperSerialPorts() ([]string, error) {
-	// 获取所有串口
-	ports, err := enumerator.GetDetailedPortsList()
-	if err != nil {
-		return nil, err
-	}
-
-	var flipperPorts []string
-
-	// 查找Flipper Zero的串口
-	for _, port := range ports {
-		// 根据VID和PID识别Flipper Zero
-		if (port.IsUSB && port.VID == "0483" && port.PID == "5740") || // Flipper Zero的VID和PID
-			strings.Contains(strings.ToLower(port.Product), "flipper") ||
-			strings.Contains(strings.ToLower(port.Name), "flipper") {
-			flipperPorts = append(flipperPorts, port.Name)
-			continue
-		}
-
-		// 根据操作系统的常见命名规则查找
-		switch runtime.GOOS {
-		case "windows":
-			// Windows上通常是COMx
-			if strings.HasPrefix(port.Name, "COM") {
-				flipperPorts = append(flipperPorts, port.Name)
-			}
-		case "darwin":
-			// macOS上通常是/dev/tty.usbmodem*
-			if strings.Contains(port.Name, "usbmodem") {
-				flipperPorts = append(flipperPorts, port.Name)
-			}
-		case "linux":
-			// Linux上通常是/dev/ttyACM*
-			if strings.Contains(port.Name, "ttyACM") {
-				flipperPorts = append(flipperPorts, port.Name)
-			}
-		}
-	}
-
-	if len(flipperPorts) == 0 {
-		return nil, os.ErrNotExist
-	}
-
-	return flipperPorts, nil
 }

@@ -146,11 +146,29 @@ func ConnectToFlipper(portName string) (serial.Port, error) {
 
 // FindFlipperPort 查找Flipper Zero的串口
 func FindFlipperPort() (string, error) {
+	// 获取所有Flipper串口
+	ports, err := GetFlipperSerialPorts()
+	if err != nil {
+		return "", err
+	}
+
+	// 如果找到了串口，返回第一个
+	if len(ports) > 0 {
+		return ports[0], nil
+	}
+
+	return "", errors.New("flipper zero device not found")
+}
+
+// GetFlipperSerialPorts 获取所有Flipper Zero的串口列表
+func GetFlipperSerialPorts() ([]string, error) {
 	// 获取所有串口
 	ports, err := enumerator.GetDetailedPortsList()
 	if err != nil {
-		return "", fmt.Errorf("failed to get serial ports: %w", err)
+		return nil, fmt.Errorf("failed to get serial ports: %w", err)
 	}
+
+	var flipperPorts []string
 
 	// 查找Flipper Zero的串口
 	for _, port := range ports {
@@ -158,42 +176,43 @@ func FindFlipperPort() (string, error) {
 		if (port.IsUSB && port.VID == "0483" && port.PID == "5740") || // Flipper Zero的VID和PID
 			strings.Contains(strings.ToLower(port.Product), "flipper") ||
 			strings.Contains(strings.ToLower(port.Name), "flipper") {
-			return port.Name, nil
+			flipperPorts = append(flipperPorts, port.Name)
+			continue
 		}
 	}
 
 	// 如果没有找到，尝试根据操作系统的常见命名规则查找
-	var potentialPorts []string
-	switch runtime.GOOS {
-	case "windows":
-		// Windows上通常是COMx
-		for _, port := range ports {
-			if strings.HasPrefix(port.Name, "COM") {
-				potentialPorts = append(potentialPorts, port.Name)
+	if len(flipperPorts) == 0 {
+		switch runtime.GOOS {
+		case "windows":
+			// Windows上通常是COMx
+			for _, port := range ports {
+				if strings.HasPrefix(port.Name, "COM") {
+					flipperPorts = append(flipperPorts, port.Name)
+				}
 			}
-		}
-	case "darwin":
-		// macOS上通常是/dev/tty.usbmodem*
-		for _, port := range ports {
-			if strings.Contains(port.Name, "usbmodem") {
-				potentialPorts = append(potentialPorts, port.Name)
+		case "darwin":
+			// macOS上通常是/dev/tty.usbmodem*
+			for _, port := range ports {
+				if strings.Contains(port.Name, "usbmodem") {
+					flipperPorts = append(flipperPorts, port.Name)
+				}
 			}
-		}
-	case "linux":
-		// Linux上通常是/dev/ttyACM*
-		for _, port := range ports {
-			if strings.Contains(port.Name, "ttyACM") {
-				potentialPorts = append(potentialPorts, port.Name)
+		case "linux":
+			// Linux上通常是/dev/ttyACM*
+			for _, port := range ports {
+				if strings.Contains(port.Name, "ttyACM") {
+					flipperPorts = append(flipperPorts, port.Name)
+				}
 			}
 		}
 	}
 
-	// 如果找到了潜在的端口，使用第一个
-	if len(potentialPorts) > 0 {
-		return potentialPorts[0], nil
+	if len(flipperPorts) == 0 {
+		return nil, errors.New("flipper zero device not found")
 	}
 
-	return "", errors.New("flipper zero device not found")
+	return flipperPorts, nil
 }
 
 // sendCommand 发送命令到Flipper Zero
