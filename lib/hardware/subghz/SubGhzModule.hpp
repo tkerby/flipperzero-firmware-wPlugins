@@ -110,10 +110,17 @@ public:
     }
 
     uint32_t SetFrequency(uint32_t frequency) {
+        bool wereReceiving = state == RECEIVING;
+        PutToIdle();
+
         if(subghz_devices_is_frequency_valid(device, frequency)) {
             return subghz_devices_set_frequency(device, frequency);
         } else {
             return subghz_devices_set_frequency(device, DEFAULT_FREQUENCY);
+        }
+
+        if(wereReceiving) {
+            ReceiveAsync();
         }
     }
 

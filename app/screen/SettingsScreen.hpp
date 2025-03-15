@@ -1,6 +1,9 @@
 #pragma once
 
 #include <vector>
+
+#include "lib/hardware/subghz/SubGhzSettings.hpp"
+
 #include "app/AppConfig.hpp"
 #include "lib/String.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
@@ -9,6 +12,7 @@ class SettingsScreen {
 private:
     AppConfig* config;
     SubGhzModule* subghz;
+    SubGhzSettings* subghzSettings;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* frequencyItem;
@@ -18,21 +22,16 @@ private:
     UiVariableItem* autosaveFoundItem;
     UiVariableItem* debugModeItem;
 
+    String frequencyStr;
     String maxPagerStr;
     String signalRepeatStr;
-
-    //TODO: add only supported frequencies
-    //TODO: change on-the-fly
-    vector<uint32_t> frequencies{
-        315000000,
-        433920000,
-        467750000,
-    };
 
 public:
     SettingsScreen(AppConfig* config, SubGhzModule* subghz) {
         this->config = config;
         this->subghz = subghz;
+
+        subghzSettings = new SubGhzSettings();
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&SettingsScreen::destroy));
@@ -40,12 +39,12 @@ public:
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
                 "Frequency",
-                indexOf(config->Frequency, frequencies, indexOf<uint32_t>(DEFAULT_FREQUENCY, frequencies, 0)),
-                frequencies.size(),
+                subghzSettings->GetFrequencyIndex(config->Frequency),
+                subghzSettings->GetFrequencyCount(),
                 [this](uint8_t val) {
-                    uint32_t freq = this->config->Frequency = frequencies[val];
-                    //TODO: change on-the-fly HERE
-                    return maxPagerStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
+                    uint32_t freq = this->config->Frequency = subghzSettings->GetFrequency(val);
+                    this->subghz->SetFrequency(this->config->Frequency);
+                    return frequencyStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
                 }
             )
         );
@@ -122,16 +121,6 @@ private:
         return value ? "ON" : "OFF";
     }
 
-    template <class T>
-    uint8_t indexOf(T value, vector<T> values, uint8_t defaultIndex) {
-        for(uint8_t i = 0; i < (uint8_t)values.size(); i++) {
-            if(values[i] == value) {
-                return i;
-            }
-        }
-        return defaultIndex;
-    }
-
     void destroy() {
         config->Save();
 
@@ -141,6 +130,8 @@ private:
         delete ignoreSavedItem;
         delete autosaveFoundItem;
         delete debugModeItem;
+
+        delete subghzSettings;
 
         delete this;
     }
