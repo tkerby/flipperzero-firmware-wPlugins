@@ -1,8 +1,17 @@
+/*
+ * @Author: SpenserCai
+ * @Date: 2025-03-14 18:03:48
+ * @version:
+ * @LastEditors: SpenserCai
+ * @LastEditTime: 2025-03-15 14:16:27
+ * @Description: file content
+ */
 package cmd
 
 import (
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/cmd/nard"
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/cmd/tlv"
+	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/cmd/wapi"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +25,7 @@ from Flipper Zero NFC applications.
 This platform provides various tools for NFC data analysis, including:
 - APDU Response Decoder (nard)
 - TLV Parser (tlv)
+- Web API Server (wapi)
 `,
 }
 
@@ -32,4 +42,5 @@ func init() {
 	// 添加子命令
 	rootCmd.AddCommand(nard.NardCmd)
 	rootCmd.AddCommand(tlv.TlvCmd)
+	rootCmd.AddCommand(wapi.WapiCmd)
 }

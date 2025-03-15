@@ -183,6 +183,58 @@ func DecodeAndDisplay(response *Response, formatData string, debug bool) error {
 	return nil
 }
 
+// DecodeResponse 解码并返回结果字符串
+func DecodeResponse(response *Response, formatData string, debug bool) (string, error) {
+	lines := strings.Split(formatData, "\n")
+	if len(lines) == 0 {
+		return "", fmt.Errorf("empty format data")
+	}
+
+	// 创建解码上下文
+	ctx := NewDecodeContext(response, debug)
+
+	// 构建结果字符串
+	var result strings.Builder
+
+	// 添加标题
+	title := lines[0]
+	result.WriteString(strings.Repeat("=", 50) + "\n")
+	result.WriteString(centerText(title, 50) + "\n")
+	result.WriteString(strings.Repeat("=", 50) + "\n")
+
+	// 解析和添加其余行
+	for i := 1; i < len(lines); i++ {
+		line := lines[i]
+		if line == "" {
+			result.WriteString("\n")
+			continue
+		}
+
+		// 解析占位符
+		parsedLine, err := parsePlaceholders(line, ctx)
+		if err != nil {
+			return "", fmt.Errorf("error parsing line %d: %w", i+1, err)
+		}
+
+		result.WriteString(parsedLine + "\n")
+	}
+
+	// 如果启用了调试模式并且有错误，添加错误信息
+	if debug && len(ctx.Errors) > 0 {
+		result.WriteString("\n")
+		result.WriteString(strings.Repeat("-", 50) + "\n")
+		result.WriteString("Error Information:\n")
+		result.WriteString(strings.Repeat("-", 50) + "\n")
+
+		for _, err := range ctx.Errors {
+			result.WriteString(fmt.Sprintf("Output[%d]: Error code %s - %s\n",
+				err.Index, err.StatusCode, err.Description))
+		}
+	}
+
+	return result.String(), nil
+}
+
 // centerText 将文本居中
 func centerText(text string, width int) string {
 	if len(text) >= width {

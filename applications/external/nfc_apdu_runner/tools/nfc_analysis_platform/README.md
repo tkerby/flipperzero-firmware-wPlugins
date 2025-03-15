@@ -4,6 +4,7 @@ NFC Analysis Platform is a comprehensive tool for analyzing NFC data from Flippe
 
 - NFC APDU Runner Response Decoder (nard)
 - TLV Parser (tlv)
+- Web API Server (wapi)
 
 ## Installation
 
@@ -139,6 +140,24 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 - `ascii`: ASCII encoding
 - `numeric`: Numeric encoding (such as BCD code)
 
+### Web API Server (wapi)
+
+The Web API Server provides a RESTful API interface for the NFC Analysis Platform, allowing you to access its functionality through HTTP requests.
+
+```bash
+# Start the Web API server with default settings (host: 127.0.0.1, port: 8280)
+nfc_analysis_platform wapi
+
+# Specify a custom host address
+nfc_analysis_platform wapi --host 0.0.0.0
+
+# Specify a custom port
+nfc_analysis_platform wapi --port 9000
+
+# Specify both custom host and port
+nfc_analysis_platform wapi --host 0.0.0.0 --port 9000
+```
+
 ## Features
 
 ### NFC APDU Runner Response Decoder (nard)
@@ -158,6 +177,14 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 - Support for extracting values for specific tags
 - Support for multiple data type displays (hexadecimal, ASCII, UTF-8, numeric)
 - Colored output for improved readability
+
+### Web API Server (wapi)
+
+- RESTful API interface for NFC Analysis Platform functionality
+- System information endpoint
+- NARD format template management endpoints
+- Flipper device interaction endpoints
+- TLV parsing endpoints
 
 ## Format Template Examples
 

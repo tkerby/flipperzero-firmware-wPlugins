@@ -4,6 +4,7 @@ NFC 分析平台是一个用于分析 Flipper Zero NFC 应用程序数据的综�
 
 - NFC APDU Runner 响应解码器 (nard)
 - TLV 解析器 (tlv)
+- Web API 服务器 (wapi)
 
 ## 安装
 
@@ -139,6 +140,24 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 - `ascii`: ASCII 编码
 - `numeric`: 数字编码（如 BCD 码）
 
+### Web API 服务器 (wapi)
+
+Web API 服务器为 NFC 分析平台提供了 RESTful API 接口，允许您通过 HTTP 请求访问其功能。
+
+```bash
+# 使用默认设置启动 Web API 服务器（主机：127.0.0.1，端口：8280）
+nfc_analysis_platform wapi
+
+# 指定自定义主机地址
+nfc_analysis_platform wapi --host 0.0.0.0
+
+# 指定自定义端口
+nfc_analysis_platform wapi --port 9000
+
+# 同时指定自定义主机和端口
+nfc_analysis_platform wapi --host 0.0.0.0 --port 9000
+```
+
 ## 功能特点
 
 ### NFC APDU Runner 响应解码器 (nard)
@@ -158,6 +177,14 @@ nfc_analysis_platform tlv --hex 6F198407A0000000031010A50E500A4D6173746572436172
 - 支持提取特定标签的值
 - 支持多种数据类型显示（十六进制、ASCII、UTF-8、数字）
 - 支持彩色输出，提高可读性
+
+### Web API 服务器 (wapi)
+
+- 为 NFC 分析平台功能提供 RESTful API 接口
+- 系统信息接口
+- NARD 格式模板管理接口
+- Flipper 设备交互接口
+- TLV 解析接口
 
 ## 格式模板示例
 
