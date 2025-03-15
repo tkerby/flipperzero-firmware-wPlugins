@@ -10,7 +10,7 @@ BINARY_NAME=nfc_analysis_platform
 BINARY_UNIX=$(BINARY_NAME)_linux
 BINARY_MACOS=$(BINARY_NAME)_macos
 
-.PHONY: build install clean generate-api run-api
+.PHONY: build install clean generate-api run-api tests-all tests-api tests-cmd
 
 # 项目名称
 PROJECT_NAME := nfc_analysis_platform
@@ -61,6 +61,18 @@ run-api: build
 	@echo "启动API服务器..."
 	@./$(PROJECT_NAME) wapi
 
+# 测试目标
+tests-all: tests-cmd tests-api
+	@echo "所有测试完成！"
+
+tests-api:
+	@echo "运行API测试..."
+	@$(GO) test -v ./tests/api_tests/...
+
+tests-cmd:
+	@echo "运行命令行测试..."
+	@$(GO) test -v ./tests/cmd_tests/...
+
 # 默认目标
 all: build
 
@@ -72,6 +84,9 @@ help:
 	@echo "  clean         - 清理构建文件"
 	@echo "  generate-api  - 生成API代码"
 	@echo "  run-api       - 运行API服务器"
+	@echo "  tests-all     - 运行所有测试"
+	@echo "  tests-api     - 仅运行API测试"
+	@echo "  tests-cmd     - 仅运行命令行测试"
 	@echo "  help          - 显示此帮助信息"
 
 # Cross compilation
