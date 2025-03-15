@@ -4,6 +4,7 @@
 
 #include "app/AppFileSystem.hpp"
 #include "lib/file/FileManager.hpp"
+#include "lib/hardware/subghz/SubGhzModule.hpp"
 
 #define KEY_FREQUENCY    "Frequency"
 #define KEY_MAX_PAGERS   "MaxPagerForBatchOrDetection"
@@ -14,7 +15,7 @@
 
 class AppConfig {
 public:
-    uint32_t Frequency = 433920000;
+    uint32_t Frequency = DEFAULT_FREQUENCY;
     uint32_t MaxPagerForBatchOrDetection = 30;
     uint32_t SignalRepeats = 10;
     bool Debug = false;

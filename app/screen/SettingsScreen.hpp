@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "app/AppConfig.hpp"
 #include "lib/String.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
@@ -7,8 +8,10 @@
 class SettingsScreen {
 private:
     AppConfig* config;
+    SubGhzModule* subghz;
     VariableItemListUiView* varItemList;
 
+    UiVariableItem* frequencyItem;
     UiVariableItem* maxPagerItem;
     UiVariableItem* signalRepeatItem;
     UiVariableItem* ignoreSavedItem;
@@ -18,12 +21,34 @@ private:
     String maxPagerStr;
     String signalRepeatStr;
 
+    //TODO: add only supported frequencies
+    //TODO: change on-the-fly
+    vector<uint32_t> frequencies{
+        315000000,
+        433920000,
+        467750000,
+    };
+
 public:
-    SettingsScreen(AppConfig* config) {
+    SettingsScreen(AppConfig* config, SubGhzModule* subghz) {
         this->config = config;
+        this->subghz = subghz;
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&SettingsScreen::destroy));
+
+        varItemList->AddItem(
+            frequencyItem = new UiVariableItem(
+                "Frequency",
+                indexOf(config->Frequency, frequencies, indexOf<uint32_t>(DEFAULT_FREQUENCY, frequencies, 0)),
+                frequencies.size(),
+                [this](uint8_t val) {
+                    uint32_t freq = this->config->Frequency = frequencies[val];
+                    //TODO: change on-the-fly HERE
+                    return maxPagerStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
+                }
+            )
+        );
 
         varItemList->AddItem(
             maxPagerItem = new UiVariableItem(
@@ -97,9 +122,20 @@ private:
         return value ? "ON" : "OFF";
     }
 
+    template <class T>
+    uint8_t indexOf(T value, vector<T> values, uint8_t defaultIndex) {
+        for(uint8_t i = 0; i < (uint8_t)values.size(); i++) {
+            if(values[i] == value) {
+                return i;
+            }
+        }
+        return defaultIndex;
+    }
+
     void destroy() {
         config->Save();
 
+        delete frequencyItem;
         delete maxPagerItem;
         delete signalRepeatItem;
         delete ignoreSavedItem;

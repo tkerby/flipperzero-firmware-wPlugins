@@ -28,6 +28,8 @@ using namespace std;
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"
 
+#define DEFAULT_FREQUENCY 433920000
+
 class SubGhzModule {
 private:
     SubGhzEnvironment* environment;
@@ -108,7 +110,11 @@ public:
     }
 
     uint32_t SetFrequency(uint32_t frequency) {
-        return subghz_devices_set_frequency(device, frequency);
+        if(subghz_devices_is_frequency_valid(device, frequency)) {
+            return subghz_devices_set_frequency(device, frequency);
+        } else {
+            return subghz_devices_set_frequency(device, DEFAULT_FREQUENCY);
+        }
     }
 
     void SetReceiveAfterTransmission(bool value) {

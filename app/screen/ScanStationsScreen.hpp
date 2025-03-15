@@ -155,7 +155,7 @@ private:
     }
 
     void showConfig(uint32_t) {
-        SettingsScreen* screen = new SettingsScreen(config);
+        SettingsScreen* screen = new SettingsScreen(config, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
