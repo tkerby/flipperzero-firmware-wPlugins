@@ -2,6 +2,8 @@ package api_tests
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-openapi/loads"
@@ -16,7 +18,7 @@ import (
 
 func TestNardAPI(t *testing.T) {
 	// 跳过测试，因为需要实现 API 处理程序
-	t.Skip("Skipping NARD API tests until API handlers are implemented")
+	// t.Skip("Skipping NARD API tests until API handlers are implemented")
 
 	// Load Swagger spec
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
@@ -75,23 +77,43 @@ func TestNardAPI(t *testing.T) {
 	})
 
 	t.Run("Decode NARD Data", func(t *testing.T) {
-		// Create request body
+		// 获取当前工作目录
+		wd, err := os.Getwd()
+		require.NoError(t, err, "Failed to get working directory")
+
+		// 读取 emv.apdures 文件内容
+		apduresPath := filepath.Join(wd, "nard_format", "emv.apdures")
+		apduresData, err := os.ReadFile(apduresPath)
+		require.NoError(t, err, "Failed to read emv.apdures file")
+
+		// 读取 EMV.apdufmt 文件内容
+		apdufmtPath := filepath.Join(wd, "nard_format", "EMV.apdufmt")
+		apdufmtData, err := os.ReadFile(apdufmtPath)
+		require.NoError(t, err, "Failed to read EMV.apdufmt file")
+
+		// 将 apdures 文件内容转换为字符串
+		responseData := string(apduresData)
+
+		// 创建请求体
+		debug := false
 		requestBody := map[string]interface{}{
-			"nard_data": common.SampleNARDData,
+			"response_data":  responseData,
+			"format_content": string(apdufmtData),
+			"debug":          debug,
 		}
 
-		// Make request
+		// 发送请求
 		resp := common.MakeAPIRequest(t, server, "POST", "/api/nard/decode", requestBody)
 		defer resp.Body.Close()
 
-		// Check response
+		// 检查响应状态码
 		assert.Equal(t, http.StatusOK, resp.StatusCode, "Response status code should be 200")
 
-		// Parse response
+		// 解析响应
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
-		// Check response data
+		// 检查响应数据
 		assert.NotNil(t, apiResponse.Code, "Response should have a code")
 		assert.NotNil(t, apiResponse.Message, "Response should have a message")
 	})
