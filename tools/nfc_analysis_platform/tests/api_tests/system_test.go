@@ -29,6 +29,7 @@ func TestSystemInfoAPI(t *testing.T) {
 	server := common.APITestServer(t, api.Serve(nil))
 	defer server.Close()
 
+	// @TestInfo: 系统信息|获取系统信息|测试获取平台的系统信息，包括版本、构建日期、Go版本、操作系统和架构
 	t.Run("Get System Info", func(t *testing.T) {
 		// Make request
 		resp := common.MakeAPIRequest(t, server, "GET", "/api/system/info", nil)

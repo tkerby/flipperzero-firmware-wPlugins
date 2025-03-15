@@ -41,6 +41,7 @@ func TestNardAPI(t *testing.T) {
 	server := common.APITestServer(t, api.Serve(nil))
 	defer server.Close()
 
+	// @TestInfo: NARD格式模板|获取格式模板列表|测试获取所有可用的NARD格式模板列表
 	t.Run("Get Format Templates", func(t *testing.T) {
 		// Make request
 		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/formats", nil)
@@ -61,6 +62,7 @@ func TestNardAPI(t *testing.T) {
 		assert.NotNil(t, apiResponse.Data, "Response data should not be nil")
 	})
 
+	// @TestInfo: NARD格式模板|获取特定格式模板内容|测试获取EMV格式模板的详细内容
 	t.Run("Get Format Template", func(t *testing.T) {
 		// Make request - using "EMV" as a sample format ID
 		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/formats/EMV.apdufmt", nil)
@@ -82,6 +84,7 @@ func TestNardAPI(t *testing.T) {
 		assert.NotNil(t, apiResponse.Message, "Response should have a message")
 	})
 
+	// @TestInfo: NARD解码|解码APDU响应数据|测试使用EMV格式模板解码APDU响应数据
 	t.Run("Decode NARD Data", func(t *testing.T) {
 		// 获取当前工作目录
 		wd, err := os.Getwd()
@@ -127,6 +130,7 @@ func TestNardAPI(t *testing.T) {
 		assert.NotNil(t, apiResponse.Message, "Response should have a message")
 	})
 
+	// @TestInfo: Flipper设备|获取Flipper设备列表|测试获取所有可用的Flipper Zero设备列表
 	t.Run("Get Flipper Devices", func(t *testing.T) {
 		// Make request
 		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/flipper/devices", nil)
@@ -155,6 +159,7 @@ func TestNardAPI(t *testing.T) {
 		}
 	})
 
+	// @TestInfo: Flipper文件|获取Flipper设备文件列表|测试使用串口模式获取Flipper设备上的文件列表
 	t.Run("Get Flipper Files", func(t *testing.T) {
 		// Make request
 		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/flipper/files?use_serial=true", nil)
@@ -183,6 +188,7 @@ func TestNardAPI(t *testing.T) {
 		}
 	})
 
+	// @TestInfo: Flipper文件|获取Flipper设备特定文件内容|测试使用串口模式获取Flipper设备上特定APDU响应文件的内容
 	t.Run("Get Flipper File Content", func(t *testing.T) {
 		// 设置文件ID和参数
 		fileID := "emv.apdures"
@@ -240,6 +246,7 @@ func TestNardAPI(t *testing.T) {
 		}
 	})
 
+	// @TestInfo: Flipper文件|获取不存在的文件内容|测试获取Flipper设备上不存在的文件时的错误处理
 	t.Run("Get Flipper File Content With Invalid File ID", func(t *testing.T) {
 		// 设置无效的文件ID和参数
 		fileID := "nonexistent_file.apdures"
@@ -284,6 +291,7 @@ func TestNardAPI(t *testing.T) {
 		}
 	})
 
+	// @TestInfo: Flipper文件|参数验证测试|测试未指定串口参数时的错误处理
 	t.Run("Get Flipper File Content Without UseSerial", func(t *testing.T) {
 		// 设置文件ID，但不设置use_serial参数
 		fileID := "emv.apdures"

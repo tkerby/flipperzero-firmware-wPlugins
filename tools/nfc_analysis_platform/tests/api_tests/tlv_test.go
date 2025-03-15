@@ -36,6 +36,7 @@ func TestTlvAPI(t *testing.T) {
 	// Sample TLV data
 	tlvData := common.SampleTLVData
 
+	// @TestInfo: TLV解析|解析TLV数据|测试解析十六进制格式的TLV数据结构
 	t.Run("Parse TLV Data", func(t *testing.T) {
 		// Create request body
 		hexData := tlvData
@@ -67,6 +68,7 @@ func TestTlvAPI(t *testing.T) {
 		assert.Contains(t, result, "structure", "Result should contain structure")
 	})
 
+	// @TestInfo: TLV提取|提取TLV特定标签值|测试从TLV数据中提取指定标签的值并转换为ASCII格式
 	t.Run("Extract TLV Values", func(t *testing.T) {
 		// Create request body
 		requestBody := map[string]interface{}{
@@ -99,6 +101,7 @@ func TestTlvAPI(t *testing.T) {
 		assert.Contains(t, result, "values", "Result should contain values")
 	})
 
+	// @TestInfo: TLV错误处理|处理无效的十六进制数据|测试当提供无效的十六进制数据时的错误处理
 	t.Run("Parse TLV Data with Invalid Hex", func(t *testing.T) {
 		// Create request body
 		requestBody := map[string]interface{}{

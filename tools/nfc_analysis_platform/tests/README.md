@@ -3,7 +3,7 @@
  * @Date: 2025-03-15 16:52:39
  * @version: 
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-15 17:24:20
+ * @LastEditTime: 2025-03-16 00:55:11
  * @Description: file content
 -->
 # NFC Analysis Platform 测试
@@ -36,6 +36,35 @@ tests/
 └── testdata.json    # 测试数据配置文件
 ```
 
+## 测试用例
+
+<!-- TEST_TABLE_START -->
+| 功能模块 | 测试用例 | 用例说明 | 测试文件 |
+| ------- | ------- | ------- | ------- |
+| Flipper文件 | 参数验证测试 | 测试未指定串口参数时的错误处理 | nard_test.go |
+| Flipper文件 | 获取Flipper设备文件列表 | 测试使用串口模式获取Flipper设备上的文件列表 | nard_test.go |
+| Flipper文件 | 获取Flipper设备特定文件内容 | 测试使用串口模式获取Flipper设备上特定APDU响应文件的内容 | nard_test.go |
+| Flipper文件 | 获取不存在的文件内容 | 测试获取Flipper设备上不存在的文件时的错误处理 | nard_test.go |
+| Flipper设备 | 获取Flipper设备列表 | 测试获取所有可用的Flipper Zero设备列表 | nard_test.go |
+| NARD格式模板 | 获取格式模板列表 | 测试获取所有可用的NARD格式模板列表 | nard_test.go |
+| NARD格式模板 | 获取特定格式模板内容 | 测试获取EMV格式模板的详细内容 | nard_test.go |
+| NARD解码 | 解码APDU响应数据 | 测试使用EMV格式模板解码APDU响应数据 | nard_test.go |
+| TLV提取 | 提取TLV特定标签值 | 测试从TLV数据中提取指定标签的值并转换为ASCII格式 | tlv_test.go |
+| TLV解析 | 解析TLV数据 | 测试解析十六进制格式的TLV数据结构 | tlv_test.go |
+| TLV错误处理 | 处理无效的十六进制数据 | 测试当提供无效的十六进制数据时的错误处理 | tlv_test.go |
+| 系统信息 | 获取系统信息 | 测试获取平台的系统信息，包括版本、构建日期、Go版本、操作系统和架构 | system_test.go |
+
+<!-- TEST_TABLE_END -->
+
+### 更新测试用例表格
+
+测试用例表格是通过解析测试文件中的 `@TestInfo` 注释自动生成的。要更新表格，请运行：
+
+```bash
+# 在tests目录下运行
+python3 test_info_sync_readme.py
+```
+
 ## 测试数据配置
 
 测试数据存储在 `testdata.json` 文件中，包含以下部分：
@@ -45,18 +74,7 @@ tests/
     "tlv": {
         "sample_data": "6F198407A0000000031010A50E500A4D617374657243617264",
         "sample_data_extended": "6F1A840E315041592E5359532E4444463031A5088801025F2D02zhCN"
-    },
-    "nard": {
-        "sample_data": {
-            "format": "EMV",
-            "data": {
-                "AID": "A0000000041010",
-                "Label": "Visa Credit"
-            }
-        },
-        "sample_response": "Flipper NFC APDU Runner\nDevice: ISO14443-4A (MIFARE DESFire)\nUID: 04A23B9C5D7E8F\nATQA: 0004\nSAK: 08\n\nResponse:\nIn: 00A404000E315041592E5359532E4444463031\nOut: 6F2A840E315041592E5359532E4444463031A518BF0C15611361124F07A0000000031010870101500A4D617374657243617264 9000\nIn: 00B2010C00\nOut: 7081B89081B15A0842628D13FFFFFFFF82025800950500000080005F24032312315F25030101015F280208405F2A0208405F300202015F3401009F01060000000000019F02060000000001009F03060000000000009F0607A00000000310109F0702FF009F080200029F090200029F0D05B8508000009F0E0500000000009F0F05B8708098009F100706010A03A020009F120A4D6173746572436172649F160F3132333435363738393031323334359F1A0208409F1C0831323334353637389F1E0831323334353637389F33036028C89F34030203009F3501229F360200019F3704AAAAAAAA 9000"
-    },
-    "format_template": "EMV Card Information\nApplication Label: {O[1]TAG(50), \"ascii\"}\nCard Number: {O[3]TAG(9F6B)[0:16], \"numeric\"}\nExpiry Date: Year: 20{O[3]TAG(9F6B)[17:19], \"numeric\"}, Month: {O[3]TAG(9F6B)[19:21], \"numeric\"}\nCountry Code: {O[1]TAG(9F6E)[0:4]}\nApplication Priority: {O[1]TAG(87), \"hex\"}\nApplication Interchange Profile: {O[2]TAG(82), \"hex\"}\nPIN Try Counter: {O[4]TAG(9F17), \"numeric\"}"
+    }
 }
 ```
 
