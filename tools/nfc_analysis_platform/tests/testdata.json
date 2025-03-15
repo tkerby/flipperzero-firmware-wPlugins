@@ -3,9 +3,6 @@
         "sample_data": "6F198407A0000000031010A50E500A4D617374657243617264",
         "sample_data_extended": "6F1A840E315041592E5359532E4444463031A5088801025F2D02zhCN"
     },
-    "apdu": {
-        "sample_data": "00A4040007A0000000041010"
-    },
     "nard": {
         "sample_data": {
             "format": "EMV",

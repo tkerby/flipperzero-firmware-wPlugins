@@ -1,3 +1,11 @@
+/*
+ * @Author: SpenserCai
+ * @Date: 2025-03-15 16:54:32
+ * @version:
+ * @LastEditors: SpenserCai
+ * @LastEditTime: 2025-03-15 17:48:52
+ * @Description: file content
+ */
 package cmd_tests
 
 import (
@@ -23,27 +31,36 @@ func TestTlvCommand(t *testing.T) {
 	}
 
 	t.Run("Basic TLV Command", func(t *testing.T) {
-		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "parse", "--hex", common.SampleTLVData)
+		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", common.SampleTLVData)
 		require.NoError(t, err, "TLV command failed")
-		assert.Contains(t, output, "6F", "Output should contain tag 6F")
-		assert.Contains(t, output, "84", "Output should contain tag 84")
+		assert.Contains(t, output, "TLV Data Parsing Results", "Output should contain title")
+		assert.Contains(t, output, "Tag: 6f", "Output should contain tag 6F")
+		assert.Contains(t, output, "Tag: 84", "Output should contain tag 84")
+		assert.Contains(t, output, "Tag: a5", "Output should contain tag A5")
 	})
 
 	t.Run("TLV Command with Specific Tags", func(t *testing.T) {
-		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "extract", "--hex", common.SampleTLVData, "--tags", "84,50")
+		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", common.SampleTLVData, "--tag", "84,50")
 		require.NoError(t, err, "TLV command with specific tags failed")
-		assert.Contains(t, output, "84:", "Output should contain tag 84")
-		assert.Contains(t, output, "50:", "Output should contain tag 50")
+		assert.Contains(t, output, "Tag: 84", "Output should contain tag 84")
+		assert.Contains(t, output, "Tag: 50", "Output should contain tag 50")
 	})
 
 	t.Run("TLV Command with ASCII Type", func(t *testing.T) {
-		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "parse", "--hex", common.SampleTLVData, "--ascii")
+		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", common.SampleTLVData, "--tag", "50", "--type", "ascii")
 		require.NoError(t, err, "TLV command with ASCII type failed")
 		assert.Contains(t, output, "MasterCard", "Output should contain ASCII value")
 	})
 
+	t.Run("TLV Command with Numeric Type", func(t *testing.T) {
+		output, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", common.SampleTLVData, "--type", "numeric")
+		require.NoError(t, err, "TLV command with numeric type failed")
+		assert.Contains(t, output, "TLV Data Parsing Results", "Output should contain title")
+	})
+
 	t.Run("TLV Command with Invalid Hex", func(t *testing.T) {
-		_, err := common.ExecuteCommand(t, binaryPath, "tlv", "parse", "--hex", "INVALID")
+		_, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", "INVALID")
 		assert.Error(t, err, "TLV command with invalid hex should fail")
+		assert.Contains(t, err.Error(), "failed to parse TLV data", "Error message should mention parsing failure")
 	})
 }
