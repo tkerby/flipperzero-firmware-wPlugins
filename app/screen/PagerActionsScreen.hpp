@@ -27,7 +27,7 @@ private:
     String resendToCurrentStr;
     String** actionsStrings;
 
-    int currentPager = 0;
+    uint32_t currentPager = 0;
     bool transmittingBatch = false;
 
 public:

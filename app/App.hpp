@@ -16,6 +16,7 @@ public:
         ui->InitGui();
 
         AppConfig* config = new AppConfig();
+        config->Load();
 
         MainMenuScreen* mainMenuScreen = new MainMenuScreen(config);
         ui->PushView(mainMenuScreen->GetView());
