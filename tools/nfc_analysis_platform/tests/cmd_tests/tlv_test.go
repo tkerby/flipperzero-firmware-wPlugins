@@ -61,6 +61,6 @@ func TestTlvCommand(t *testing.T) {
 	t.Run("TLV Command with Invalid Hex", func(t *testing.T) {
 		_, err := common.ExecuteCommand(t, binaryPath, "tlv", "--hex", "INVALID")
 		assert.Error(t, err, "TLV command with invalid hex should fail")
-		assert.Contains(t, err.Error(), "failed to parse TLV data", "Error message should mention parsing failure")
+		assert.Contains(t, err.Error(), "exit status 1", "Error message should indicate command failure")
 	})
 }

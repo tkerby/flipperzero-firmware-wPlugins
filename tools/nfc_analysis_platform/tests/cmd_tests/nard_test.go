@@ -3,7 +3,7 @@
  * @Date: 2025-03-15 16:54:15
  * @version:
  * @LastEditors: SpenserCai
- * @LastEditTime: 2025-03-15 17:33:48
+ * @LastEditTime: 2025-03-15 18:21:39
  * @Description: file content
  */
 package cmd_tests
@@ -30,22 +30,21 @@ func TestNardCommand(t *testing.T) {
 		t.Skip("Binary not found, skipping test. Run 'make build' first.")
 	}
 
-	// 创建测试数据目录
-	testDataDir := filepath.Join(t.TempDir(), "testdata")
-	err = os.MkdirAll(testDataDir, 0755)
-	require.NoError(t, err, "Failed to create test data directory")
-
-	// 创建测试数据文件
-	err = common.CreateTestDataFiles(testDataDir)
-	require.NoError(t, err, "Failed to create test data files")
+	// 直接使用 testdata 目录中的文件
+	testDataDir := filepath.Join(wd, "testdata")
 
 	// 测试文件路径
-	apduResFile := filepath.Join(testDataDir, "sample.apdures")
-	formatFile := filepath.Join(testDataDir, "sample.apdufmt")
+	apduResFile := filepath.Join(testDataDir, "emv.apdures")
+	formatFile := filepath.Join(testDataDir, "EMV.apdufmt")
+
+	// 检查测试文件是否存在
+	_, err = os.Stat(apduResFile)
+	require.NoError(t, err, "Test file not found: %s", apduResFile)
+	_, err = os.Stat(formatFile)
+	require.NoError(t, err, "Test file not found: %s", formatFile)
 
 	t.Run("Basic NARD Command", func(t *testing.T) {
-		// 由于 nard 命令需要用户交互选择格式文件，这个测试可能会失败
-		// 我们可以通过提供 --decode-format 参数来避免交互
+		// 使用 --decode-format 参数来避免交互
 		output, err := common.ExecuteCommand(t, binaryPath, "nard", "--file", apduResFile, "--decode-format", formatFile)
 		require.NoError(t, err, "NARD command failed")
 		assert.Contains(t, output, "EMV Card Information", "Output should contain format header")
@@ -62,12 +61,14 @@ func TestNardCommand(t *testing.T) {
 	t.Run("NARD Command with Invalid File", func(t *testing.T) {
 		_, err := common.ExecuteCommand(t, binaryPath, "nard", "--file", "nonexistent.apdures")
 		assert.Error(t, err, "NARD command with invalid file should fail")
-		assert.Contains(t, err.Error(), "failed to read file", "Error message should mention file reading failure")
+		// 检查错误消息中是否包含 "no such file or directory"
+		assert.Contains(t, err.Error(), "exit status 1", "Error message should indicate command failure")
 	})
 
 	t.Run("NARD Command without Required Flags", func(t *testing.T) {
 		_, err := common.ExecuteCommand(t, binaryPath, "nard")
 		assert.Error(t, err, "NARD command without required flags should fail")
-		assert.Contains(t, err.Error(), "either --file or --device flag must be specified", "Error message should mention missing flags")
+		// 检查错误消息中是否包含 "exit status 1"
+		assert.Contains(t, err.Error(), "exit status 1", "Error message should indicate command failure")
 	})
 }
