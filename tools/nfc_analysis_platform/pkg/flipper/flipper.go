@@ -79,14 +79,14 @@ func GetResponseFromDevice() (string, error) {
 // 通过串口通信方式
 func GetResponseFromDeviceSerial(portName string) (string, error) {
 	// 连接到Flipper Zero
-	port, err := connectToFlipper(portName)
+	port, err := ConnectToFlipper(portName)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to Flipper Zero: %w", err)
 	}
 	defer port.Close()
 
 	// 列出响应文件
-	files, err := listResponseFilesSerial(port)
+	files, err := ListResponseFilesSerial(port)
 	if err != nil {
 		return "", fmt.Errorf("failed to list response files: %w", err)
 	}
@@ -102,7 +102,7 @@ func GetResponseFromDeviceSerial(portName string) (string, error) {
 	}
 
 	// 读取文件内容
-	content, err := readFileFromDeviceSerial(port, selectedFile)
+	content, err := ReadFileFromDeviceSerial(port, selectedFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to read file from device: %w", err)
 	}
@@ -110,12 +110,12 @@ func GetResponseFromDeviceSerial(portName string) (string, error) {
 	return content, nil
 }
 
-// connectToFlipper 连接到Flipper Zero设备
-func connectToFlipper(portName string) (serial.Port, error) {
+// ConnectToFlipper 连接到Flipper Zero设备
+func ConnectToFlipper(portName string) (serial.Port, error) {
 	// 如果没有指定端口，自动检测Flipper Zero端口
 	if portName == "" {
 		var err error
-		portName, err = findFlipperPort()
+		portName, err = FindFlipperPort()
 		if err != nil {
 			return nil, err
 		}
@@ -144,8 +144,8 @@ func connectToFlipper(portName string) (serial.Port, error) {
 	return port, nil
 }
 
-// findFlipperPort 查找Flipper Zero的串口
-func findFlipperPort() (string, error) {
+// FindFlipperPort 查找Flipper Zero的串口
+func FindFlipperPort() (string, error) {
 	// 获取所有串口
 	ports, err := enumerator.GetDetailedPortsList()
 	if err != nil {
@@ -242,11 +242,11 @@ func CloseConnection(port serial.Port) error {
 	return port.Close()
 }
 
-// listResponseFilesSerial 通过串口列出响应文件
-func listResponseFilesSerial(port serial.Port) ([]string, error) {
+// ListResponseFilesSerial 通过串口列出响应文件
+func ListResponseFilesSerial(port serial.Port) ([]string, error) {
 	// 执行列出文件命令
 	cmd := fmt.Sprintf("storage list %s", apduResponseDir)
-	response, err := executeCommand(port, cmd)
+	response, err := ExecuteCommand(port, cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list files: %w", err)
 	}
@@ -267,12 +267,12 @@ func listResponseFilesSerial(port serial.Port) ([]string, error) {
 	return files, nil
 }
 
-// readFileFromDeviceSerial 通过串口从设备读取文件内容
-func readFileFromDeviceSerial(port serial.Port, fileName string) (string, error) {
+// ReadFileFromDeviceSerial 通过串口从设备读取文件内容
+func ReadFileFromDeviceSerial(port serial.Port, fileName string) (string, error) {
 	// 执行读取文件命令
 	filePath := filepath.Join(apduResponseDir, fileName)
 	cmd := fmt.Sprintf("storage read %s", filePath)
-	response, err := executeCommand(port, cmd)
+	response, err := ExecuteCommand(port, cmd)
 	if err != nil {
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
@@ -443,8 +443,8 @@ func readFileFromDeviceSD(mountPath, filePath string) (string, error) {
 	return string(data), nil
 }
 
-// executeCommand 执行Flipper命令并返回结果
-func executeCommand(port serial.Port, command string) (string, error) {
+// ExecuteCommand 执行Flipper命令并返回结果
+func ExecuteCommand(port serial.Port, command string) (string, error) {
 	// 发送命令
 	if _, err := port.Write([]byte(command + "\r\n")); err != nil {
 		return "", fmt.Errorf("failed to send command: %w", err)

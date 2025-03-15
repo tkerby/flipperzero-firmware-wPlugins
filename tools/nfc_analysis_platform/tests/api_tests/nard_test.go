@@ -120,36 +120,51 @@ func TestNardAPI(t *testing.T) {
 
 	t.Run("Get Flipper Devices", func(t *testing.T) {
 		// Make request
-		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/devices", nil)
+		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/flipper/devices", nil)
 		defer resp.Body.Close()
 
-		// Check response
+		// 期望返回200
 		assert.Equal(t, http.StatusOK, resp.StatusCode, "Response status code should be 200")
 
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
-		// Check response data
-		assert.NotNil(t, apiResponse.Code, "Response should have a code")
-		assert.NotNil(t, apiResponse.Message, "Response should have a message")
+		// 检查响应数据
+		t.Logf("Response code: %d", apiResponse.Code)
+		t.Logf("Response message: %s", apiResponse.Message)
+
+		// 在测试环境中，我们接受成功响应或404错误
+		if apiResponse.Code == int32(404) {
+			assert.Contains(t, apiResponse.Message, "未找到", "Message should indicate no devices found")
+		} else {
+			assert.Equal(t, int32(0), apiResponse.Code, "Response code should be 0 (success)")
+			assert.NotNil(t, apiResponse.Data, "Response should have data")
+		}
 	})
 
 	t.Run("Get Flipper Files", func(t *testing.T) {
-		// Make request - this will likely fail in tests without a real device
-		// but we can test the API structure
-		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/files?device_path=/dev/ttyACM0", nil)
+		// Make request
+		resp := common.MakeAPIRequest(t, server, "GET", "/api/nard/flipper/files?use_serial=true", nil)
 		defer resp.Body.Close()
 
-		// Check response
+		// 期望返回200
 		assert.Equal(t, http.StatusOK, resp.StatusCode, "Response status code should be 200")
 
 		// Parse response
 		var apiResponse models.APIResponse
 		common.ParseAPIResponse(t, resp.Body, &apiResponse)
 
-		// Check response data
-		assert.NotNil(t, apiResponse.Code, "Response should have a code")
-		assert.NotNil(t, apiResponse.Message, "Response should have a message")
+		// 检查响应数据
+		t.Logf("Response code: %d", apiResponse.Code)
+		t.Logf("Response message: %s", apiResponse.Message)
+
+		// 在测试环境中，我们接受成功响应或404/400错误
+		if apiResponse.Code == int32(404) || apiResponse.Code == int32(400) {
+			assert.NotEmpty(t, apiResponse.Message, "Message should not be empty")
+		} else {
+			assert.Equal(t, int32(0), apiResponse.Code, "Response code should be 0 (success)")
+			assert.NotNil(t, apiResponse.Data, "Response should have data")
+		}
 	})
 }
