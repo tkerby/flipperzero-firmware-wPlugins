@@ -1,3 +1,6 @@
+## 0.6.1 (2025-03-15)
+- Switched the server backend to prepare for multiplayer in version 0.8.
+
 ## 0.6 (2025-03-10)
 - Fixed saving of player attributes so that it works as intended.
 - Updated the player's level and strength as XP increases.

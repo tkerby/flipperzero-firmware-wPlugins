@@ -146,7 +146,7 @@ FuriString *fetch_world(const char *name)
     }
 
     char url[256];
-    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/world/v5/get/world/%s/", name);
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v5/get/world/%s/", name);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
     fhttp->save_received_data = true;
     if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL))

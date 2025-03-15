@@ -15,7 +15,7 @@
 //
 
 #define TAG "FlipWorld"
-#define VERSION 0.6
+#define VERSION "0.6.1"
 #define VERSION_TAG TAG " " FAP_VERSION
 
 // Define the submenu items for our FlipWorld application
