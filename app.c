@@ -61,6 +61,10 @@ static void app_tick_event_callback(void* context) {
 
             if(new_measurement) {
                 notification_message(app->notifications, &sequence_blink);
+                if(app->datalog != NULL) {
+                    datalog_append_record(app->datalog, &sensor_state);
+                    datalog_screen_update(app->datalog_screen, app->datalog);
+                }
             }
         }
     }
@@ -177,6 +181,10 @@ static App* app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, AppViewCurrentGauge, current_gauge_get_view(app->current_gauge));
 
+    app->datalog_screen = datalog_screen_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppViewDatalog, datalog_screen_get_view(app->datalog_screen));
+
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, AppViewWiring, popup_get_view(app->popup));
 
@@ -190,6 +198,8 @@ static App* app_alloc() {
 static void app_free(App* app) {
     FURI_LOG_T(TAG, "Stopping application...");
 
+    datalog_close(app->datalog);
+
     // Free views
     view_dispatcher_remove_view(app->view_dispatcher, AppViewVariableList);
     variable_item_list_free(app->var_item_list);
@@ -199,6 +209,9 @@ static void app_free(App* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewWiring);
     popup_free(app->popup);
+
+    view_dispatcher_remove_view(app->view_dispatcher, AppViewDatalog);
+    datalog_screen_free(app->datalog_screen);
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewCurrentGauge);
     current_gauge_free(app->current_gauge);

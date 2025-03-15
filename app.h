@@ -28,12 +28,15 @@
 #include "app_common.h"
 #include "app_config.h"
 #include "views/current_gauge.h"
+#include "views/datalog_screen.h"
+#include "datalog.h"
 
 typedef enum {
     AppViewNumberInput,
     AppViewVariableList,
     AppViewCurrentGauge,
     AppViewWiring,
+    AppViewDatalog,
 } AppView;
 
 typedef struct {
@@ -46,10 +49,12 @@ typedef struct {
     VariableItemList* var_item_list;
     NumberInput* number_input;
     CurrentGauge* current_gauge;
+    DatalogScreen* datalog_screen;
     Popup* popup;
 
     AppConfig config;
     SensorDriver* sensor;
+    Datalog* datalog;
 
     // Time (ticks) of the last measurement
     // (== 0 if no measurement was done yet)

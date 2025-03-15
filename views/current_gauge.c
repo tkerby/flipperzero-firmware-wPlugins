@@ -107,6 +107,7 @@ static void current_gauge_draw_callback(Canvas* canvas, void* _model) {
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
     elements_button_left(canvas, "Config");
+    elements_button_right(canvas, "Log");
 
     furi_string_free(value_text);
 }
@@ -124,10 +125,10 @@ bool current_gauge_input_callback(InputEvent* event, void* context) {
     if(event->type == InputTypeShort && event->key == InputKeyLeft) {
         invoke_button_callback(gauge, CurrentGaugeButton_Menu);
         return true;
-    } /*else if(event->type == InputTypeShort && event->key == InputKeyRight) {
+    } else if(event->type == InputTypeShort && event->key == InputKeyRight) {
         invoke_button_callback(gauge, CurrentGaugeButton_DataLog);
         return true;
-    }*/
+    }
 
     return false;
 }
