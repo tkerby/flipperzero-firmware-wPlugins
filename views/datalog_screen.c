@@ -90,17 +90,35 @@ static void datalog_screen_draw_callback(Canvas* canvas, void* _model) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(
             canvas, 88, 44, AlignCenter, AlignBottom, furi_string_get_cstr(text));
-    } else if(!model->running) {
-        canvas_set_color(canvas, ColorBlack);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(
-            canvas, 64, 36, AlignCenter, AlignBottom, "Press OK to start recording");
+    } else {
+        if(!model->running) {
+            canvas_set_color(canvas, ColorBlack);
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(
+                canvas, 64, 36, AlignCenter, AlignBottom, "Press OK to start recording");
+        } else {
+            canvas_set_color(canvas, ColorBlack);
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignBottom, "No records yet");
+        }
     }
-
     // Buttons
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    elements_button_center(canvas, model->running ? "Stop" : "Start");
+
+    const char* button_text = "Stop";
+
+    if(!model->running) {
+        if(model->record_count == 0) {
+            button_text = "Start";
+        } else {
+            button_text = "Start new";
+        }
+    } else {
+        button_text = "Stop";
+    }
+
+    elements_button_center(canvas, button_text);
 
     furi_string_free(text);
 }

@@ -22,6 +22,7 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/number_input.h>
 #include <gui/modules/popup.h>
+#include <gui/modules/dialog_ex.h>
 #include <storage/storage.h>
 #include <notification/notification_messages.h>
 
@@ -35,6 +36,7 @@ typedef enum {
     AppViewNumberInput,
     AppViewVariableList,
     AppViewCurrentGauge,
+    AppViewDialog,
     AppViewWiring,
     AppViewDatalog,
 } AppView;
@@ -51,6 +53,7 @@ typedef struct {
     CurrentGauge* current_gauge;
     DatalogScreen* datalog_screen;
     Popup* popup;
+    DialogEx* dialog;
 
     AppConfig config;
     SensorDriver* sensor;

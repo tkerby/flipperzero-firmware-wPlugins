@@ -22,14 +22,13 @@ static void scene_datalog_button_callback(void* context, DatalogScreenButton but
 
     if(button == DatalogScreenButton_StartStop) {
         if(app->datalog != NULL) {
-            datalog_close(app->datalog);
-            app->datalog = NULL;
+            scene_manager_next_scene(app->scene_manager, SceneDialogStop);
         } else {
             FuriString* file_name = datalog_build_unique_file_name();
             app->datalog = datalog_open(app->storage, furi_string_get_cstr(file_name));
             furi_string_free(file_name);
+            datalog_screen_update(app->datalog_screen, app->datalog);
         }
-        datalog_screen_update(app->datalog_screen, app->datalog);
     }
 }
 
@@ -37,7 +36,7 @@ void scene_datalog_on_enter(void* context) {
     App* app = (App*)context;
 
     datalog_screen_set_button_callback(app->datalog_screen, scene_datalog_button_callback, app);
-
+    datalog_screen_update(app->datalog_screen, app->datalog);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewDatalog);
 }
 

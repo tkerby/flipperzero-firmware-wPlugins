@@ -25,14 +25,16 @@
 #include "sensor/ina228_driver.h"
 
 static bool app_custom_event_callback(void* context, uint32_t event) {
-    furi_assert(context != NULL);
     App* app = (App*)context;
+    furi_assert(app != NULL);
+
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
 static bool app_back_event_callback(void* context) {
-    furi_assert(context != NULL);
     App* app = (App*)context;
+    furi_assert(app != NULL);
+
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
@@ -46,8 +48,8 @@ const NotificationSequence sequence_blink = {
 };
 
 static void app_tick_event_callback(void* context) {
-    furi_assert(context != NULL);
     App* app = (App*)context;
+    furi_assert(app != NULL);
 
     if(app->sensor != NULL) {
         app->sensor->tick(app->sensor);
@@ -188,6 +190,9 @@ static App* app_alloc() {
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, AppViewWiring, popup_get_view(app->popup));
 
+    app->dialog = dialog_ex_alloc();
+    view_dispatcher_add_view(app->view_dispatcher, AppViewDialog, dialog_ex_get_view(app->dialog));
+
     app_restart_sensor_driver(app);
 
     FURI_LOG_T(TAG, "Application started");
@@ -209,6 +214,9 @@ static void app_free(App* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewWiring);
     popup_free(app->popup);
+
+    view_dispatcher_remove_view(app->view_dispatcher, AppViewDialog);
+    dialog_ex_free(app->dialog);
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewDatalog);
     datalog_screen_free(app->datalog_screen);
@@ -239,6 +247,7 @@ static void app_free(App* app) {
 
 static void app_run(App* app) {
     // Switch to the gauge screen
+    scene_manager_next_scene(app->scene_manager, SceneDialogExit);
     scene_manager_next_scene(app->scene_manager, SceneGauge);
 
     FURI_LOG_D(TAG, "Running view dispatcher...");
