@@ -16,6 +16,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// LogErrors 控制是否输出命令执行错误信息
+var LogErrors = true
+
+// 初始化函数，检查环境变量
+func init() {
+	// 检查环境变量
+	logErrorsEnv := os.Getenv("LOG_ERROR")
+	if logErrorsEnv == "false" {
+		LogErrors = false
+	}
+}
+
+// SetLogErrors 设置是否输出错误信息
+func SetLogErrors(logErrors bool) {
+	LogErrors = logErrors
+}
+
 // ExecuteCommand executes a command and returns its output
 func ExecuteCommand(t *testing.T, command string, args ...string) (string, error) {
 	cmd := exec.Command(command, args...)
@@ -23,11 +40,11 @@ func ExecuteCommand(t *testing.T, command string, args ...string) (string, error
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	if err != nil {
+	if err != nil && LogErrors {
 		t.Logf("Command stderr: %s", stderr.String())
 		return stdout.String(), err
 	}
-	return stdout.String(), nil
+	return stdout.String(), err
 }
 
 // ExecuteCommandSilent executes a command and returns its output without logging errors

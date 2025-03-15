@@ -23,6 +23,9 @@ FORMAT_DIR := $(BIN_DIR)/format
 GO := go
 GOFLAGS :=
 
+# 设置默认值
+LOG_ERROR ?= true
+
 # 构建目标
 build:
 	@echo "构建 $(PROJECT_NAME)..."
@@ -71,7 +74,7 @@ tests-api:
 
 tests-cmd:
 	@echo "运行命令行测试..."
-	@$(GO) test -v ./tests/cmd_tests/...
+	@LOG_ERROR=$(LOG_ERROR) $(GO) test $(GOFLAGS) -v ./tests/cmd_tests/...
 
 # 默认目标
 all: build

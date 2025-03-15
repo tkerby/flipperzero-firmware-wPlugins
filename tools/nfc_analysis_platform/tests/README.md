@@ -78,6 +78,18 @@ make tests-api
 
 # 仅运行命令行测试
 make tests-cmd
+
+# 运行命令行测试但不输出错误信息
+make tests-cmd LOG_ERROR=false
+
+# 运行命令行测试并输出错误信息（默认行为）
+make tests-cmd LOG_ERROR=true
+
+# 运行命令行测试并禁用缓存
+make tests-cmd GOFLAGS="-count=1"
+
+# 运行命令行测试，不输出错误信息并禁用缓存
+make tests-cmd LOG_ERROR=false GOFLAGS="-count=1"
 ```
 
 ### 直接使用 Go 测试命令
