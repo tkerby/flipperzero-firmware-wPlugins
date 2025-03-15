@@ -16,7 +16,7 @@ import (
 
 func TestTlvAPI(t *testing.T) {
 	// 跳过测试，因为需要实现 API 处理程序
-	t.Skip("Skipping TLV API tests until API handlers are implemented")
+	// t.Skip("Skipping TLV API tests until API handlers are implemented")
 
 	// Load Swagger spec
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
