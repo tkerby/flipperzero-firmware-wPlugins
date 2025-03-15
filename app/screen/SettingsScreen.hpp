@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "lib/hardware/subghz/SubGhzSettings.hpp"
 
 #include "app/AppConfig.hpp"
