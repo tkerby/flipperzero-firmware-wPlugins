@@ -63,6 +63,9 @@ Flipper device interaction and TLV parsing functionality.`,
 		server.Host = host
 		server.Port = port
 
+		// 只启用HTTP，禁用HTTPS
+		server.EnabledListeners = []string{"http"}
+
 		// Configure the server
 		server.ConfigureAPI()
 
