@@ -38,9 +38,7 @@ public:
     }
 
     ~FlipperFile() {
-        if(isOpened) {
-            flipper_format_file_close(flipperFormat);
-        }
+        flipper_format_file_close(flipperFormat);
         flipper_format_free(flipperFormat);
     }
 };

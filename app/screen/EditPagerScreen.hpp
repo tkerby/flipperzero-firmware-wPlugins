@@ -25,6 +25,7 @@ private:
     UiVariableItem* protocolItem = NULL;
     UiVariableItem* teItem = NULL;
     UiVariableItem* repeatsItem = NULL;
+    UiVariableItem* saveAsItem = NULL;
 
     String stationStr;
     String pagerStr;
@@ -32,6 +33,7 @@ private:
     String hexStr;
     String repeatsStr;
     String teStr;
+    uint32_t saveAsItemIndex;
 
 public:
     EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
@@ -79,6 +81,8 @@ public:
                 "Signal Repeats", repeatsStr.format(pager->repeats == MAX_REPEATS ? "%d+" : "%d", pager->repeats)
             )
         );
+
+        saveAsItemIndex = varItemList->AddItem(saveAsItem = new UiVariableItem("Save signal as...", ""));
     }
 
 private:
@@ -92,12 +96,26 @@ private:
         }
     }
 
-    void enterPressed(uint32_t) {
+    void enterPressed(uint32_t index) {
+        if(index == saveAsItemIndex) {
+            saveAs();
+        } else {
+            transmitMessage();
+        }
+    }
+
+    void transmitMessage() {
         PagerDataStored* pager = getPager();
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
+    }
+
+    void saveAs() {
+        //TODO: show popup screen
+
+        //FlipperDolphin::Deed(DolphinDeedSubGhzSave);
     }
 
     const char* encodingValueChanged(uint8_t index) {

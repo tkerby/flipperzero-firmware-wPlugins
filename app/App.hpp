@@ -2,7 +2,6 @@
 
 #include "lib/ui/UiManager.hpp"
 #include "lib/hardware/notification/Notification.hpp"
-#include "AppFileSystem.hpp"
 
 #include "AppConfig.hpp"
 #include "app/screen/MainMenuScreen.hpp"
