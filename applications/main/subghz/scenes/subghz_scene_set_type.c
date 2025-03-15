@@ -337,6 +337,16 @@ bool subghz_scene_set_type_on_event(void* context, SceneManagerEvent event) {
                 .data.bits = 42,
                 .data.te = 0};
             break;
+        case SetTypeReversRB2_433:
+            gen_info = (GenInfo){
+                .type = GenData,
+                .mod = "AM650",
+                .freq = 433920000,
+                .data.name = SUBGHZ_PROTOCOL_REVERSRB2_NAME, // 64bits no buttons
+                .data.key = (key & 0x00000FFFFFFFF000) | 0xFFFFF00000000000 | 0x0000000000000A00,
+                .data.bits = 64,
+                .data.te = 0};
+            break;
         case SetTypeMarantec24_868:
             gen_info = (GenInfo){
                 .type = GenData,
