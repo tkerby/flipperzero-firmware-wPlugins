@@ -1,6 +1,16 @@
+/*
+ * @Author: SpenserCai
+ * @Date: 2025-03-15 15:09:45
+ * @version:
+ * @LastEditors: SpenserCai
+ * @LastEditTime: 2025-03-16 13:07:50
+ * @Description: file content
+ */
 package tlv
 
 import (
+	"strconv"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/tlv"
 	"github.com/spensercai/nfc_apdu_runner/tools/nfc_analysis_platform/pkg/wapi/business"
@@ -59,7 +69,7 @@ func (h *extractTlvValuesHandler) Handle(params tlvOps.ExtractTlvValuesParams) m
 			var intValue int
 			intValue, err = tlv.GetTagValueAsInt(hexData, tag)
 			if err == nil {
-				value = string(intValue)
+				value = strconv.Itoa(intValue)
 			}
 		default: // hex
 			value, err = tlv.GetTagValue(hexData, tag)
