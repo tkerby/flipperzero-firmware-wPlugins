@@ -35,8 +35,8 @@ public:
         stationFile->WriteUInt32(KEY_PAGER_FREQUENCY, settings->GetFrequency(pager->frequency));
         stationFile->WriteString(KEY_PAGER_PROTOCOL, protocol->GetDisplayName());
         stationFile->WriteString(KEY_PAGER_DECODER, decoder->GetShortName());
-        stationFile->WriteHex(KEY_PAGER_DATA, pager->data);
         stationFile->WriteUInt32(KEY_PAGER_TE, pager->te);
+        stationFile->WriteHex(KEY_PAGER_DATA, pager->data);
 
         delete stationFile;
     }
