@@ -94,7 +94,12 @@
               <td class="font-mono">
                 <div class="flex items-center">
                   <span v-if="item.level > 0" class="inline-block mr-2" :style="`margin-left: ${item.level * 16}px`">└</span>
-                  {{ item.tag }}
+                  <span 
+                    @click="copyTag(item.tag)" 
+                    :class="['cursor-pointer px-2 py-0.5 rounded text-xs font-medium', getTagColorClass(index)]"
+                  >
+                    {{ item.tag }}
+                  </span>
                 </div>
               </td>
               <td>{{ item.length }}</td>
@@ -121,7 +126,14 @@
           </thead>
           <tbody>
             <tr v-for="(item, index) in extractResult" :key="index">
-              <td class="font-mono">{{ item.tag }}</td>
+              <td class="font-mono">
+                <span 
+                  @click="copyTag(item.tag)" 
+                  :class="['cursor-pointer px-2 py-0.5 rounded text-xs font-medium', getTagColorClass(index)]"
+                >
+                  {{ item.tag }}
+                </span>
+              </td>
               <td class="font-mono text-sm max-w-xs truncate">{{ item.value }}</td>
               <td>{{ item.description || '-' }}</td>
             </tr>
@@ -149,6 +161,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { parseTlvData, extractTlvValues } from '@/api/tlv';
+import toast from '@/utils/toast';
 
 const { t } = useI18n();
 const hexData = ref('');
@@ -158,6 +171,35 @@ const extractResult = ref([]);
 const loading = ref(false);
 const error = ref('');
 const dataType = ref('hex'); // 默认数据类型为 hex
+
+// 标签颜色类
+const tagColorClasses = [
+  'bg-ark-blue-light/10 text-ark-blue-light',
+  'bg-ark-green-light/10 text-ark-green-light',
+  'bg-ark-yellow-light/10 text-ark-yellow-light',
+  'bg-ark-red-light/10 text-ark-red-light',
+  'bg-ark-purple-light/10 text-ark-purple-light',
+  'bg-ark-cyan-light/10 text-ark-cyan-light',
+  'bg-ark-orange-light/10 text-ark-orange-light',
+  'bg-ark-pink-light/10 text-ark-pink-light'
+];
+
+// 获取标签颜色类
+const getTagColorClass = (index) => {
+  // 使用标签的索引来选择颜色，确保相同的标签有相同的颜色
+  return tagColorClasses[index % tagColorClasses.length];
+};
+
+// 复制标签
+const copyTag = (tag) => {
+  navigator.clipboard.writeText(tag)
+    .then(() => {
+      toast.success(t('tlv.copy.success', { tag }));
+    })
+    .catch(() => {
+      toast.error(t('tlv.copy.error'));
+    });
+};
 
 // 解析 TLV 数据
 const parseTLV = async () => {

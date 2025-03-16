@@ -57,7 +57,7 @@ export default {
       button: '提取标签',
       tagsPlaceholder: '标签,如:9F26,9F27',
       dataTypes: {
-        hex: '十六进制',
+        hex: 'Hex',
         utf8: 'UTF-8',
         ascii: 'ASCII',
         numeric: '数值'
@@ -69,6 +69,10 @@ export default {
       length: '长度',
       value: '值',
       description: '描述',
+    },
+    copy: {
+      success: '标签 {tag} 已复制到剪贴板',
+      error: '复制失败，请手动复制'
     },
     error: {
       title: '解析错误',

@@ -57,7 +57,7 @@ export default {
       button: 'Extract Tags',
       tagsPlaceholder: 'Tags, e.g. 9F26,9F27',
       dataTypes: {
-        hex: 'Hexadecimal',
+        hex: 'Hex',
         utf8: 'UTF-8',
         ascii: 'ASCII',
         numeric: 'Numeric'
@@ -69,6 +69,10 @@ export default {
       length: 'Length',
       value: 'Value',
       description: 'Description',
+    },
+    copy: {
+      success: 'Tag {tag} copied to clipboard',
+      error: 'Copy failed, please copy manually'
     },
     error: {
       title: 'Parsing Error',
