@@ -2,67 +2,54 @@
   <div class="space-y-6">
     <!-- 输入区域 -->
     <div class="ark-panel p-6">
-      <h1 class="text-2xl font-medium mb-6">TLV 数据解析</h1>
+      <h1 class="text-2xl font-medium mb-4">{{ t('tlv.title') }}</h1>
+      <p class="text-ark-text-secondary mb-6">{{ t('tlv.description') }}</p>
       
       <div class="space-y-4">
-        <textarea
-          v-model="tlvInput"
-          class="ark-input h-32 font-mono"
-          placeholder="请输入 TLV 数据（十六进制格式）..."
-        ></textarea>
+        <div>
+          <label class="block text-sm font-medium mb-2">{{ t('tlv.input.label') }}</label>
+          <textarea
+            v-model="hexData"
+            rows="4"
+            class="ark-input"
+            :placeholder="t('tlv.input.placeholder')"
+          ></textarea>
+        </div>
         
         <div class="flex space-x-4">
-          <button 
-            @click="parseTlv" 
-            class="ark-btn-primary"
-            :disabled="!tlvInput || loading"
-          >
-            <span class="flex items-center">
-              <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              解析数据
-            </span>
+          <button @click="parseTLV" class="ark-button-primary">
+            {{ t('tlv.buttons.parse') }}
           </button>
-          <button 
-            @click="loadSampleData" 
-            class="ark-btn-secondary"
-            :disabled="loading"
-          >
-            加载示例
+          <button @click="loadSample" class="ark-button-secondary">
+            {{ t('tlv.buttons.loadSample') }}
           </button>
-          <button 
-            @click="clearData" 
-            class="ark-btn-secondary"
-            :disabled="loading"
-          >
-            清除
+          <button @click="clearData" class="ark-button-secondary">
+            {{ t('tlv.buttons.clear') }}
           </button>
         </div>
       </div>
     </div>
 
     <!-- 解析结果 -->
-    <div v-if="parsedData.length > 0" class="ark-panel p-6">
-      <h2 class="text-lg font-medium mb-4">解析结果</h2>
+    <div v-if="parseResult.length > 0" class="ark-panel p-6">
+      <h2 class="text-xl font-medium mb-4">{{ t('tlv.results.title') }}</h2>
       
       <div class="overflow-x-auto">
         <table class="ark-table">
           <thead>
             <tr>
-              <th>Tag</th>
-              <th>Length</th>
-              <th>Value</th>
-              <th>描述</th>
+              <th>{{ t('tlv.results.tag') }}</th>
+              <th>{{ t('tlv.results.length') }}</th>
+              <th>{{ t('tlv.results.value') }}</th>
+              <th>{{ t('tlv.results.raw') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in parsedData" :key="index">
-              <td class="font-mono">{{ item.tag }}</td>
-              <td class="font-mono">{{ item.length }}</td>
-              <td class="font-mono break-all">{{ item.value }}</td>
-              <td>{{ item.description }}</td>
+            <tr v-for="(item, index) in parseResult" :key="index">
+              <td>{{ item.tag }}</td>
+              <td>{{ item.length }}</td>
+              <td>{{ item.value }}</td>
+              <td class="font-mono text-sm">{{ item.raw }}</td>
             </tr>
           </tbody>
         </table>
@@ -86,14 +73,16 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const tlvInput = ref('');
-const parsedData = ref([]);
+const { t } = useI18n();
+const hexData = ref('');
+const parseResult = ref([]);
 const loading = ref(false);
 const error = ref('');
 
-const parseTlv = async () => {
-  if (!tlvInput.value) return;
+const parseTLV = async () => {
+  if (!hexData.value) return;
   
   loading.value = true;
   error.value = '';
@@ -103,24 +92,12 @@ const parseTlv = async () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // 这里是模拟的解析结果
-    parsedData.value = [
+    parseResult.value = [
       {
         tag: '6F',
-        length: '23',
-        value: '840E325041592E5359532E4444463031A511BF0C0E610C4F07A0000000031010870101',
-        description: 'FCI 模板'
-      },
-      {
-        tag: '84',
-        length: '0E',
-        value: '325041592E5359532E444446303',
-        description: 'DF 名称'
-      },
-      {
-        tag: 'A5',
-        length: '11',
-        value: 'BF0C0E610C4F07A0000000031010870101',
-        description: 'FCI 专有模板'
+        length: '20',
+        value: 'File Control Information (FCI) Template',
+        raw: '6F20840E325041592E5359532E4444463031A50E8801015F2D046672656E'
       }
     ];
   } catch (err) {
@@ -131,13 +108,13 @@ const parseTlv = async () => {
   }
 };
 
-const loadSampleData = () => {
-  tlvInput.value = '6F23840E325041592E5359532E4444463031A511BF0C0E610C4F07A0000000031010870101';
+const loadSample = () => {
+  hexData.value = '6F20840E325041592E5359532E4444463031A50E8801015F2D046672656E';
 };
 
 const clearData = () => {
-  tlvInput.value = '';
-  parsedData.value = [];
+  hexData.value = '';
+  parseResult.value = [];
   error.value = '';
 };
 </script> 

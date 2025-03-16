@@ -11,36 +11,95 @@ export default {
   },
   home: {
     welcome: 'Welcome to NFC Analysis Platform',
-    description: 'A powerful tool for analyzing NFC data structures',
+    description: 'A professional NFC data analysis platform providing TLV and NARD format parsing capabilities.',
     features: {
       tlv: {
         title: 'TLV Parsing',
-        description: 'Parse and analyze Tag-Length-Value data structures',
+        description: 'Parse and analyze Tag-Length-Value (TLV) format NFC data.',
       },
       nard: {
         title: 'NARD Analysis',
-        description: 'Analyze NARD (NFC Application Record Data) structures',
+        description: 'Parse NARD format NFC communication data.',
       },
       system: {
-        title: 'System Information',
-        description: 'View system status and configuration',
+        title: 'System Info',
+        description: 'View system status and configuration information.',
+      },
+    },
+    recentActivities: {
+      title: 'Recent Activities',
+      time: 'Time',
+      type: 'Type',
+      description: 'Description',
+      status: 'Status',
+      items: {
+        tlvPaymentCard: 'Parse payment card TLV data',
+        nardFlipperData: 'Parse Flipper Zero captured data',
+        tlvAccessCard: 'Parse access card data',
       },
     },
   },
-  loading: {
-    messages: {
-      init: 'Initializing system',
-      nfc: 'Loading NFC modules',
-      calibrate: 'Calibrating signal processor',
-      start: 'Starting analysis engine',
-      ready: 'System ready',
+  tlv: {
+    title: 'TLV Data Analysis',
+    description: 'Input hex data to parse TLV structure',
+    input: {
+      label: 'HEX Data',
+      placeholder: 'Enter HEX data here...',
     },
+    buttons: {
+      parse: 'Parse',
+      clear: 'Clear',
+      loadSample: 'Load Sample',
+    },
+    results: {
+      title: 'Parsing Results',
+      tag: 'Tag',
+      length: 'Length',
+      value: 'Value',
+      raw: 'Raw Data',
+    },
+  },
+  nard: {
+    title: 'NARD Data Analysis',
+    description: 'Parse NARD (NFC Application Record Data) format data, supporting standard NDEF record format.',
+    input: {
+      label: 'NARD Data',
+      placeholder: 'Enter NARD data in hexadecimal format',
+    },
+    buttons: {
+      analyze: 'Analyze',
+      clear: 'Clear',
+      loadSample: 'Load Sample',
+    },
+    results: {
+      title: 'Analysis Results',
+      recordType: 'Record Type',
+      payload: 'Payload',
+      length: 'Length',
+      raw: 'Raw Data',
+    },
+  },
+  system: {
+    title: 'System Information',
+    description: 'View system information and running status',
+    info: {
+      version: 'Version',
+      buildDate: 'Build Date',
+      os: 'Operating System',
+      arch: 'Architecture',
+      goVersion: 'Go Version'
+    }
   },
   common: {
     select_language: 'Select Language',
     languages: {
       en: 'English',
       zh: '中文',
+    },
+    status: {
+      success: 'Success',
+      failed: 'Failed',
+      pending: 'Pending',
     },
   },
 } 

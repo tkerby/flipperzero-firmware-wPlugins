@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div class="ark-panel p-6">
-      <h1 class="text-2xl font-medium mb-4">欢迎使用 NFC Analysis Platform</h1>
-      <p class="text-ark-text-secondary">这是一个专业的 NFC 数据分析平台，提供 TLV 和 NARD 格式的数据解析功能。</p>
+      <h1 class="text-2xl font-medium mb-4">{{ t('home.welcome') }}</h1>
+      <p class="text-ark-text-secondary">{{ t('home.description') }}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -13,8 +13,10 @@
             <DocumentTextIcon class="w-6 h-6 text-ark-blue-light" />
           </div>
           <div>
-            <h3 class="text-lg font-medium group-hover:text-ark-blue-light transition-colors duration-200">TLV 解析</h3>
-            <p class="mt-1 text-sm text-ark-text-secondary">解析 TLV (Tag-Length-Value) 格式的 NFC 数据。</p>
+            <h3 class="text-lg font-medium group-hover:text-ark-blue-light transition-colors duration-200">
+              {{ t('home.features.tlv.title') }}
+            </h3>
+            <p class="mt-1 text-sm text-ark-text-secondary">{{ t('home.features.tlv.description') }}</p>
           </div>
         </div>
       </router-link>
@@ -26,8 +28,10 @@
             <ChipIcon class="w-6 h-6 text-ark-green-light" />
           </div>
           <div>
-            <h3 class="text-lg font-medium group-hover:text-ark-green-light transition-colors duration-200">NARD 解析</h3>
-            <p class="mt-1 text-sm text-ark-text-secondary">解析 NARD 格式的 NFC 通信数据。</p>
+            <h3 class="text-lg font-medium group-hover:text-ark-green-light transition-colors duration-200">
+              {{ t('home.features.nard.title') }}
+            </h3>
+            <p class="mt-1 text-sm text-ark-text-secondary">{{ t('home.features.nard.description') }}</p>
           </div>
         </div>
       </router-link>
@@ -39,8 +43,10 @@
             <CogIcon class="w-6 h-6 text-ark-yellow-light" />
           </div>
           <div>
-            <h3 class="text-lg font-medium group-hover:text-ark-yellow-light transition-colors duration-200">系统信息</h3>
-            <p class="mt-1 text-sm text-ark-text-secondary">查看系统状态和配置信息。</p>
+            <h3 class="text-lg font-medium group-hover:text-ark-yellow-light transition-colors duration-200">
+              {{ t('home.features.system.title') }}
+            </h3>
+            <p class="mt-1 text-sm text-ark-text-secondary">{{ t('home.features.system.description') }}</p>
           </div>
         </div>
       </router-link>
@@ -48,14 +54,14 @@
 
     <!-- 最近活动 -->
     <div class="ark-panel p-6">
-      <h2 class="text-xl font-medium mb-4">最近活动</h2>
+      <h2 class="text-xl font-medium mb-4">{{ t('home.recentActivities.title') }}</h2>
       <table class="ark-table">
         <thead>
           <tr>
-            <th>时间</th>
-            <th>类型</th>
-            <th>描述</th>
-            <th>状态</th>
+            <th>{{ t('home.recentActivities.time') }}</th>
+            <th>{{ t('home.recentActivities.type') }}</th>
+            <th>{{ t('home.recentActivities.description') }}</th>
+            <th>{{ t('home.recentActivities.status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,10 +72,10 @@
                 {{ activity.type }}
               </span>
             </td>
-            <td>{{ activity.description }}</td>
+            <td>{{ t(activity.descriptionKey) }}</td>
             <td>
               <span :class="['ark-badge', activity.statusClass]">
-                {{ activity.status }}
+                {{ t(`common.status.${activity.status}`) }}
               </span>
             </td>
           </tr>
@@ -82,30 +88,33 @@
 <script setup>
 import { ref } from 'vue';
 import { DocumentTextIcon, ChipIcon, CogIcon } from '@heroicons/vue/solid';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const recentActivities = ref([
   {
     time: '2024-03-16 18:30',
     type: 'TLV',
     typeClass: 'ark-badge-blue',
-    description: '解析支付卡 TLV 数据',
-    status: '成功',
+    descriptionKey: 'home.recentActivities.items.tlvPaymentCard',
+    status: 'success',
     statusClass: 'ark-badge-green'
   },
   {
     time: '2024-03-16 18:15',
     type: 'NARD',
     typeClass: 'ark-badge-green',
-    description: '解析 Flipper Zero 捕获数据',
-    status: '成功',
+    descriptionKey: 'home.recentActivities.items.nardFlipperData',
+    status: 'success',
     statusClass: 'ark-badge-green'
   },
   {
     time: '2024-03-16 17:45',
     type: 'TLV',
     typeClass: 'ark-badge-blue',
-    description: '解析门禁卡数据',
-    status: '失败',
+    descriptionKey: 'home.recentActivities.items.tlvAccessCard',
+    status: 'failed',
     statusClass: 'ark-badge-red'
   }
 ]);

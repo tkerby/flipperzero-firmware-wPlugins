@@ -2,7 +2,8 @@
   <div class="space-y-6">
     <!-- 文件上传区域 -->
     <div class="ark-panel p-6">
-      <h1 class="text-2xl font-medium mb-6">NARD 数据解析</h1>
+      <h1 class="text-2xl font-medium mb-4">{{ t('nard.title') }}</h1>
+      <p class="text-ark-text-secondary mb-6">{{ t('nard.description') }}</p>
       
       <div class="space-y-4">
         <div class="border-2 border-dashed border-ark-border rounded-lg p-6 text-center">
@@ -21,9 +22,9 @@
             
             <div class="text-sm">
               <button class="ark-btn-secondary" @click="triggerFileInput">
-                选择 NARD 文件
+                {{ t('nard.input.label') }}
               </button>
-              <p class="mt-2 text-ark-text opacity-70">或将文件拖放到此处</p>
+              <p class="mt-2 text-ark-text opacity-70">{{ t('nard.input.placeholder') }}</p>
             </div>
           </div>
         </div>
@@ -41,7 +42,7 @@
             class="ark-btn-danger"
             @click="clearFile"
           >
-            移除
+            {{ t('nard.buttons.clear') }}
           </button>
         </div>
         
@@ -56,7 +57,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              解析数据
+              {{ t('nard.buttons.analyze') }}
             </span>
           </button>
         </div>
@@ -65,7 +66,7 @@
 
     <!-- 解析结果 -->
     <div v-if="parsedData" class="ark-panel p-6">
-      <h2 class="text-lg font-medium mb-4">解析结果</h2>
+      <h2 class="text-lg font-medium mb-4">{{ t('nard.results.title') }}</h2>
       
       <!-- 基本信息 -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -87,15 +88,16 @@
       
       <!-- 数据块 -->
       <div class="space-y-6">
-        <h3 class="text-lg font-medium">数据块</h3>
+        <h3 class="text-lg font-medium">{{ t('nard.results.recordType') }}</h3>
         
         <div class="overflow-x-auto">
           <table class="ark-table">
             <thead>
               <tr>
-                <th>块号</th>
-                <th>数据</th>
-                <th>状态</th>
+                <th>{{ t('nard.results.recordType') }}</th>
+                <th>{{ t('nard.results.length') }}</th>
+                <th>{{ t('nard.results.payload') }}</th>
+                <th>{{ t('nard.results.raw') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -114,6 +116,7 @@
                     {{ block.status }}
                   </span>
                 </td>
+                <td class="font-mono text-sm">{{ block.data }}</td>
               </tr>
             </tbody>
           </table>
@@ -138,7 +141,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const parsedData = ref(null);

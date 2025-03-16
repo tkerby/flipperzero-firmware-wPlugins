@@ -363,7 +363,8 @@ func init() {
         "code": {
           "description": "Response code, 0 for success, non-zero for errors",
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "x-omitempty": false
         },
         "data": {
           "description": "Response data, contains the actual response data or empty object for errors",
@@ -975,7 +976,8 @@ func init() {
         "code": {
           "description": "Response code, 0 for success, non-zero for errors",
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "x-omitempty": false
         },
         "data": {
           "description": "Response data, contains the actual response data or empty object for errors",

@@ -18,7 +18,7 @@ import (
 type APIResponse struct {
 
 	// Response code, 0 for success, non-zero for errors
-	Code int32 `json:"code,omitempty"`
+	Code int32 `json:"code"`
 
 	// Response data, contains the actual response data or empty object for errors
 	Data interface{} `json:"data,omitempty"`
