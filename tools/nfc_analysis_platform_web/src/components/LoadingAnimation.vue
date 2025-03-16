@@ -1,183 +1,154 @@
 <template>
-  <div class="loading-animation-container" :class="{ 'fade-out': isComplete }">
-    <div class="loading-content">
-      <div class="logo-animation">
-        <div class="nfc-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="nfc-svg">
-            <path d="M20,2H4A2,2 0 0,0 2,4V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V4A2,2 0 0,0 20,2M10,17.5V15H8V17.5H6.5V9H8V13.5H10V9H11.5V17.5H10M14.5,17.5H13V9H14.5V17.5M18,17.5H16.5V9H18V17.5Z" />
-          </svg>
+  <div class="loading-container">
+    <!-- 主标题动画 -->
+    <div class="title-container">
+      <h1 class="main-title">
+        <span v-for="(char, index) in 'NFC ANALYSIS PLATFORM'" 
+              :key="index"
+              class="char"
+              :style="{ 
+                animationDelay: `${index * 0.1}s`,
+                '--glow-color': char === ' ' ? 'transparent' : '#38BDF8'
+              }">
+          {{ char }}
+        </span>
+      </h1>
+      
+      <!-- 扫描线效果 -->
+      <div class="scan-line"></div>
+    </div>
+
+    <!-- 中央动画区域 -->
+    <div class="central-animation">
+      <!-- 外圈旋转效果 -->
+      <div class="rotating-circle"></div>
+      
+      <!-- NFC 信号波动 -->
+      <div class="signal-waves">
+        <div v-for="i in 3" :key="i" 
+             class="wave"
+             :style="{ animationDelay: `${(i-1) * 0.3}s` }">
         </div>
-        <div class="signal-waves">
-          <div class="wave wave-1"></div>
-          <div class="wave wave-2"></div>
-          <div class="wave wave-3"></div>
+      </div>
+      
+      <!-- 数据流效果 -->
+      <div class="data-stream">
+        <div v-for="i in 12" :key="i" 
+             class="data-particle"
+             :style="{ 
+               '--angle': `${(i * 30)}deg`,
+               '--delay': `${i * 0.2}s`
+             }">
+          {{ Math.random() > 0.5 ? '1' : '0' }}
         </div>
       </div>
-      
-      <div class="title-animation">
-        <h1 class="cyber-title">
-          <span v-for="(char, index) in titleChars" :key="index" 
-                :style="{ animationDelay: `${index * 0.1}s` }"
-                class="char">
-            {{ char }}
-          </span>
-        </h1>
+    </div>
+
+    <!-- 加载状态文本 -->
+    <div class="loading-status">
+      <div class="status-text">
+        <span class="text">LOADING</span>
+        <span class="dots">
+          <span v-for="i in 3" :key="i" 
+                class="dot"
+                :style="{ animationDelay: `${(i-1) * 0.2}s` }">.</span>
+        </span>
       </div>
-      
-      <div class="loading-bar-container">
-        <div class="loading-bar" :style="{ width: `${loadingProgress}%` }"></div>
-        <div class="loading-percentage">{{ Math.floor(loadingProgress) }}%</div>
+      <div class="progress-bar">
+        <div class="progress" :style="{ width: `${progress}%` }"></div>
       </div>
-      
-      <div class="loading-text">
-        <span class="terminal-prefix">&gt;</span>
-        <span class="typewriter-text">{{ currentText }}</span>
-        <span class="cursor" :class="{ 'blink': cursorBlink }">_</span>
-      </div>
+      <div class="status-message">{{ currentMessage }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-
-const props = defineProps({
-  duration: {
-    type: Number,
-    default: 3000
-  },
-  autoComplete: {
-    type: Boolean,
-    default: true
-  }
-});
+import { ref, onMounted } from 'vue';
 
 const emit = defineEmits(['complete']);
+const progress = ref(0);
+const currentMessage = ref('Initializing system');
 
-const loadingProgress = ref(0);
-const isComplete = ref(false);
-const currentTextIndex = ref(0);
-const currentCharIndex = ref(0);
-const cursorBlink = ref(false);
-
-const loadingTexts = [
-  '初始化系统...',
-  '加载NFC分析模块...',
-  '连接Flipper设备...',
-  '准备TLV解析器...',
-  '系统就绪'
+const messages = [
+  'Initializing system',
+  'Loading NFC modules',
+  'Calibrating signal processor',
+  'Starting analysis engine',
+  'System ready'
 ];
 
-const titleText = 'NFC Analysis Platform';
-const titleChars = computed(() => titleText.split(''));
-
-const currentText = ref('');
-const typingInterval = ref(null);
-const progressInterval = ref(null);
-const cursorInterval = ref(null);
-
-// 打字机效果
-const typeNextChar = () => {
-  if (currentTextIndex.value >= loadingTexts.length) {
-    return;
-  }
-  
-  const text = loadingTexts[currentTextIndex.value];
-  
-  if (currentCharIndex.value < text.length) {
-    currentText.value = text.substring(0, currentCharIndex.value + 1);
-    currentCharIndex.value++;
-  } else {
-    clearInterval(typingInterval.value);
-    setTimeout(() => {
-      currentText.value = '';
-      currentCharIndex.value = 0;
-      currentTextIndex.value++;
-      
-      if (currentTextIndex.value < loadingTexts.length) {
-        typingInterval.value = setInterval(typeNextChar, 50);
-      }
-    }, 1000);
-  }
-};
-
-// 进度条动画
-const updateProgress = () => {
-  if (loadingProgress.value < 100) {
-    // 非线性进度，开始快，结束慢
-    const increment = (100 - loadingProgress.value) / 50;
-    loadingProgress.value = Math.min(100, loadingProgress.value + increment);
-  } else {
-    clearInterval(progressInterval.value);
-    
-    if (props.autoComplete) {
-      setTimeout(completeAnimation, 500);
-    }
-  }
-};
-
-// 完成动画
-const completeAnimation = () => {
-  isComplete.value = true;
-  setTimeout(() => {
-    emit('complete');
-  }, 1000);
-};
+let messageIndex = 0;
 
 onMounted(() => {
-  // 启动打字机效果
-  typingInterval.value = setInterval(typeNextChar, 50);
-  
-  // 启动进度条动画
-  progressInterval.value = setInterval(updateProgress, 50);
-  
-  // 启动光标闪烁
-  cursorInterval.value = setInterval(() => {
-    cursorBlink.value = !cursorBlink.value;
-  }, 500);
-  
-  // 如果设置了自动完成，则在指定时间后完成
-  if (props.autoComplete) {
-    setTimeout(() => {
-      loadingProgress.value = 100;
-    }, props.duration * 0.8);
-  }
-});
-
-onBeforeUnmount(() => {
-  clearInterval(typingInterval.value);
-  clearInterval(progressInterval.value);
-  clearInterval(cursorInterval.value);
+  // 进度条动画
+  const progressInterval = setInterval(() => {
+    if (progress.value < 100) {
+      progress.value += 1;
+      
+      // 根据进度更新消息
+      if (progress.value % 20 === 0) {
+        messageIndex = Math.min(messageIndex + 1, messages.length - 1);
+        currentMessage.value = messages[messageIndex];
+      }
+    } else {
+      clearInterval(progressInterval);
+      // 当进度达到 100% 时，等待一小段时间后触发完成事件
+      setTimeout(() => {
+        emit('complete');
+      }, 1000);
+    }
+  }, 50);
 });
 </script>
 
 <style scoped>
-.loading-animation-container {
-  @apply fixed inset-0 flex items-center justify-center bg-hacker-dark z-50;
-  transition: opacity 1s ease-out;
+.loading-container {
+  @apply fixed inset-0 flex flex-col items-center justify-center bg-ark-bg z-50;
+  @apply bg-opacity-95 backdrop-blur-sm;
+  perspective: 1000px;
 }
 
-.loading-animation-container.fade-out {
-  opacity: 0;
+/* 主标题样式 */
+.title-container {
+  @apply relative mb-12;
 }
 
-.loading-content {
-  @apply flex flex-col items-center justify-center space-y-8 w-full max-w-2xl px-4;
+.main-title {
+  @apply text-4xl md:text-5xl font-mono tracking-wider text-ark-text;
 }
 
-.logo-animation {
-  @apply relative flex items-center justify-center mb-8;
+.char {
+  @apply inline-block relative;
+  color: transparent;
+  text-shadow: 0 0 10px var(--glow-color);
+  animation: char-appear 0.5s forwards, char-glow 2s infinite;
 }
 
-.nfc-icon {
-  @apply relative z-10 w-24 h-24 flex items-center justify-center;
-  animation: pulse 2s infinite;
+.scan-line {
+  @apply absolute w-full h-1 bg-ark-accent;
+  @apply opacity-50;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: scan-line 2s linear infinite;
+  box-shadow: 0 0 15px theme('colors.ark.accent');
 }
 
-.nfc-svg {
-  @apply w-full h-full;
-  fill: theme('colors.hacker.accent');
-  filter: drop-shadow(0 0 8px theme('colors.hacker.accent'));
+/* 中央动画区域 */
+.central-animation {
+  @apply relative w-48 h-48 mb-12;
+}
+
+.rotating-circle {
+  @apply absolute inset-0 border-2 border-ark-accent rounded-full;
+  animation: rotate 4s linear infinite;
+}
+
+.rotating-circle::before {
+  content: '';
+  @apply absolute w-4 h-4 bg-ark-accent rounded-full;
+  top: -8px;
+  left: calc(50% - 8px);
+  box-shadow: 0 0 15px theme('colors.ark.accent');
 }
 
 .signal-waves {
@@ -185,113 +156,137 @@ onBeforeUnmount(() => {
 }
 
 .wave {
-  @apply absolute rounded-full border border-hacker-accent opacity-0;
-  animation: wave-animation 3s infinite;
+  @apply absolute w-full h-full rounded-full border-2 border-ark-accent opacity-0;
+  animation: wave-expand 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
-.wave-1 {
-  @apply w-16 h-16;
-  animation-delay: 0s;
+.data-stream {
+  @apply absolute inset-0;
 }
 
-.wave-2 {
-  @apply w-20 h-20;
-  animation-delay: 0.5s;
+.data-particle {
+  @apply absolute font-mono text-xs text-ark-accent;
+  top: 50%;
+  left: 50%;
+  animation: particle-move 2s linear infinite;
+  animation-delay: var(--delay);
+  transform-origin: 0 0;
 }
 
-.wave-3 {
-  @apply w-24 h-24;
-  animation-delay: 1s;
+/* 加载状态区域 */
+.loading-status {
+  @apply flex flex-col items-center;
 }
 
-.cyber-title {
-  @apply text-4xl md:text-5xl font-display text-center mb-8;
+.status-text {
+  @apply flex items-center font-mono text-ark-text mb-4;
 }
 
-.char {
-  @apply inline-block text-hacker-accent;
-  animation: glow-text 2s ease-in-out infinite alternate;
-  opacity: 0;
-  animation: char-appear 0.5s forwards;
+.text {
+  @apply mr-1;
 }
 
-.loading-bar-container {
-  @apply relative w-full h-2 bg-hacker-primary rounded-full overflow-hidden mt-8;
-}
-
-.loading-bar {
-  @apply h-full bg-hacker-accent;
-  box-shadow: 0 0 10px theme('colors.hacker.accent');
-  transition: width 0.2s ease-out;
-}
-
-.loading-percentage {
-  @apply absolute top-3 right-0 text-xs text-hacker-accent font-mono;
-}
-
-.loading-text {
-  @apply mt-6 font-mono text-hacker-light flex items-center justify-center h-6;
-}
-
-.terminal-prefix {
-  @apply text-hacker-accent mr-2;
-}
-
-.typewriter-text {
-  @apply text-hacker-light;
-}
-
-.cursor {
-  @apply text-hacker-accent ml-1;
-}
-
-.cursor.blink {
+.dot {
+  animation: dot-blink 1.4s infinite;
   opacity: 0;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
+.progress-bar {
+  @apply w-64 h-1 bg-ark-panel rounded-full overflow-hidden mb-2;
+}
+
+.progress {
+  @apply h-full bg-ark-accent;
+  box-shadow: 0 0 10px theme('colors.ark.accent');
+  transition: width 0.3s ease-out;
+}
+
+.status-message {
+  @apply text-sm text-ark-text opacity-70 font-mono;
+}
+
+/* 动画关键帧 */
+@keyframes char-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) rotateX(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+@keyframes char-glow {
+  0%, 100% {
+    text-shadow: 0 0 10px var(--glow-color);
   }
   50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.8;
+    text-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color);
   }
 }
 
-@keyframes wave-animation {
+@keyframes scan-line {
   0% {
-    transform: scale(0.5);
-    opacity: 0.8;
+    transform: translateY(-50%) scaleX(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-50%) scaleX(1);
+    opacity: 1;
   }
   100% {
-    transform: scale(2);
+    transform: translateY(-50%) scaleX(0);
     opacity: 0;
   }
 }
 
-@keyframes char-appear {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@keyframes glow-text {
+@keyframes wave-expand {
   0% {
-    text-shadow: 0 0 5px theme('colors.hacker.accent');
+    transform: scale(0.3);
+    opacity: 0.8;
   }
   100% {
-    text-shadow: 0 0 15px theme('colors.hacker.accent'), 0 0 20px theme('colors.hacker.accent');
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes particle-move {
+  0% {
+    transform: rotate(var(--angle)) translateX(0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateX(100px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes dot-blink {
+  0%, 20% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  80%, 100% {
+    opacity: 0;
   }
 }
 </style> 

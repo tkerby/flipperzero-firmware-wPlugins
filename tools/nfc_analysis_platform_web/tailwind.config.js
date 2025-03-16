@@ -13,6 +13,7 @@ export default {
                     'border': '#21262D',
                     'hover': '#1C2128',
                     'active': '#22272E',
+                    'accent': '#38BDF8',
                     'text': {
                         DEFAULT: '#C9D1D9',
                         secondary: '#8B949E',
