@@ -79,7 +79,7 @@ static void fdd_screen_draw_callback(Canvas* canvas, void* _model) {
     // Disk capacity & sector length
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    furi_string_printf(text, "%dKB", (model->disk_size + 512) / 1024);
+    furi_string_printf(text, "%dKB", model->disk_size / 1024);
     canvas_draw_str(canvas, 28, 36, furi_string_get_cstr(text));
     furi_string_printf(text, "%dB", model->sector_size);
     canvas_draw_str(canvas, 28, 46, furi_string_get_cstr(text));

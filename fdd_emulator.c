@@ -43,7 +43,10 @@ struct FddEmulator {
     FddActivityCallback activity_callback;
     void* callback_context;
 
-    DiskGeometry format_geometry;
+    // Flag indicating that disk geometry has changed by host
+    bool geometry_changed;
+    // Disk geometry used for PERCOM config and format commands
+    DiskGeometry geometry;
 
     AppConfig* config;
 };
@@ -100,6 +103,8 @@ bool fdd_insert_disk(FddEmulator* fdd, DiskImage* image) {
     if(image != fdd->image) {
         disk_image_close(fdd->image);
         fdd->image = image;
+        fdd->geometry = disk_geometry(image);
+        fdd->geometry_changed = false;
     }
 
     return true;
@@ -150,10 +155,10 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_READ_PERCOM:
-        request->rx_size = 12;
         return SIO_ACK;
 
     case SIO_COMMAND_WRITE_PERCOM:
+        request->rx_size = 12;
         return SIO_ACK;
 
     case SIO_COMMAND_GET_HSI:
@@ -233,12 +238,12 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_READ_PERCOM: {
-        DiskGeometry geom = disk_geometry(fdd->image);
+        DiskGeometry geom = fdd->geometry;
         request->tx_data[0] = geom.tracks;
         request->tx_data[1] = 1;
         request->tx_data[2] = geom.sectors_per_track >> 8;
         request->tx_data[3] = geom.sectors_per_track & 0xFF;
-        request->tx_data[4] = geom.heads;
+        request->tx_data[4] = geom.heads - 1;
         request->tx_data[5] = geom.density;
         request->tx_data[6] = geom.sector_size >> 8;
         request->tx_data[7] = geom.sector_size & 0xFF;
@@ -251,13 +256,30 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_WRITE_PERCOM: {
+        FURI_LOG_I(
+            TAG,
+            "PERCOM: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+            request->rx_data[0],
+            request->rx_data[1],
+            request->rx_data[2],
+            request->rx_data[3],
+            request->rx_data[4],
+            request->rx_data[5],
+            request->rx_data[6],
+            request->rx_data[7],
+            request->rx_data[8],
+            request->rx_data[9],
+            request->rx_data[10],
+            request->rx_data[11]);
+
         DiskGeometry geom = {0};
         geom.tracks = request->rx_data[0];
         geom.sectors_per_track = (request->rx_data[2] << 8) | request->rx_data[3];
-        geom.heads = request->rx_data[4];
+        geom.heads = request->rx_data[4] + 1;
         geom.density = request->rx_data[5];
         geom.sector_size = (request->rx_data[6] << 8) | request->rx_data[7];
-        fdd->format_geometry = geom;
+        fdd->geometry = geom;
+        fdd->geometry_changed = true;
         return SIO_COMPLETE;
     }
 
@@ -265,12 +287,19 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         if(disk_image_get_write_protect(fdd->image)) {
             return SIO_ERROR;
         }
-        if(!determine_disk_geometry(&fdd->format_geometry, 90 * 1024, 128)) {
+
+        if(!fdd->geometry_changed) {
+            // Default single-sided, single-density - 90KB disk
+            if(!determine_disk_geometry(&fdd->geometry, 90 * 1024, 128)) {
+                return SIO_ERROR;
+            }
+        }
+
+        if(!disk_image_format(fdd->image, fdd->geometry)) {
             return SIO_ERROR;
         }
-        if(!disk_image_format(fdd->image, fdd->format_geometry)) {
-            return SIO_ERROR;
-        }
+
+        fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
         memset(request->tx_data, 0xFF, request->tx_size);
@@ -281,12 +310,14 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         if(disk_image_get_write_protect(fdd->image)) {
             return SIO_ERROR;
         }
-        if(!determine_disk_geometry(&fdd->format_geometry, 130 * 1024, 128)) {
+        if(!determine_disk_geometry(&fdd->geometry, 130 * 1024, 128)) {
             return SIO_ERROR;
         }
-        if(!disk_image_format(fdd->image, fdd->format_geometry)) {
+        if(!disk_image_format(fdd->image, fdd->geometry)) {
             return SIO_ERROR;
         }
+
+        fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
         memset(request->tx_data, 0xFF, request->tx_size);

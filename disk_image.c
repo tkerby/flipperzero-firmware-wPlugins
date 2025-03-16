@@ -29,10 +29,6 @@ struct DiskImage {
     uint8_t header[ATR_FILE_HEADER_SIZE];
     // File handle
     File* file;
-    // Disk size in bytes
-    size_t disk_size;
-    // Sector size in bytes
-    size_t sector_size;
     // Disk configuration
     DiskGeometry geometry;
 };
@@ -65,24 +61,24 @@ DiskImage* disk_image_open(const char* path, Storage* storage) {
         goto cleanup;
     }
 
-    image->disk_size = (image->header[2] + (header[3] << 8) + (header[6] << 16)) * 16;
-    image->sector_size = header[4] + (header[5] << 8);
+    size_t disk_size = (image->header[2] + (header[3] << 8) + (header[6] << 16)) * 16;
+    size_t sector_size = header[4] + (header[5] << 8);
 
-    if(image->sector_size != 128 && image->sector_size != 256) {
-        set_last_error(ERROR_TITLE, "Invalid sector size (%d)", image->sector_size);
+    if(sector_size != 128 && sector_size != 256) {
+        set_last_error(ERROR_TITLE, "Invalid sector size (%d)", sector_size);
         goto cleanup;
     }
 
-    if(storage_file_size(image->file) < image->disk_size + ATR_FILE_HEADER_SIZE) {
+    if(storage_file_size(image->file) < disk_size + ATR_FILE_HEADER_SIZE) {
         set_last_error(
             ERROR_TITLE,
             "Invalid ATR file size (%d/%d)",
             storage_file_size(image->file),
-            image->disk_size + ATR_FILE_HEADER_SIZE);
+            disk_size + ATR_FILE_HEADER_SIZE);
         goto cleanup;
     }
 
-    if(!determine_disk_geometry(&image->geometry, image->disk_size, image->sector_size)) {
+    if(!determine_disk_geometry(&image->geometry, disk_size, sector_size)) {
         FURI_LOG_W(TAG, "Failed to determine disk geometry");
     } else {
         FURI_LOG_I(
@@ -98,9 +94,9 @@ DiskImage* disk_image_open(const char* path, Storage* storage) {
     FURI_LOG_I(
         TAG,
         "ATR file: disk_size=%d, sector_size=%d, sector_count=%d",
-        image->disk_size,
-        image->sector_size,
-        image->disk_size / image->sector_size);
+        disk_size,
+        sector_size,
+        disk_size / sector_size);
 
     return image;
 
@@ -132,15 +128,15 @@ DiskGeometry disk_geometry(const DiskImage* image) {
 }
 
 size_t disk_image_size(const DiskImage* image) {
-    return image->disk_size;
+    return disk_image_sector_size(image) * disk_image_sector_count(image);
 }
 
 size_t disk_image_sector_size(const DiskImage* image) {
-    return image->sector_size;
+    return image->geometry.sector_size;
 }
 
 size_t disk_image_sector_count(const DiskImage* image) {
-    return 3 + (image->disk_size - 768) / image->sector_size;
+    return image->geometry.heads * image->geometry.tracks * image->geometry.sectors_per_track;
 }
 
 bool disk_image_get_write_protect(const DiskImage* image) {
@@ -166,7 +162,11 @@ size_t disk_image_nth_sector_size(const DiskImage* image, size_t sector) {
         return 0;
     }
 
-    return (sector <= 3) ? 128 : image->sector_size;
+    if(image->geometry.sector_size == 256) {
+        return (sector <= 3) ? 128 : image->geometry.sector_size;
+    } else {
+        return image->geometry.sector_size;
+    }
 }
 
 static uintptr_t disk_image_nth_sector_offset(const DiskImage* image, size_t sector) {
@@ -176,10 +176,14 @@ static uintptr_t disk_image_nth_sector_offset(const DiskImage* image, size_t sec
 
     uintptr_t offset = ATR_FILE_HEADER_SIZE;
 
-    if(sector <= 3) {
-        offset += (sector - 1) * 128;
+    if(image->geometry.sector_size == 256) {
+        if(sector <= 3) {
+            offset += (sector - 1) * 128;
+        } else {
+            offset += 384 + (sector - 4) * image->geometry.sector_size;
+        }
     } else {
-        offset += 384 + (sector - 4) * image->sector_size;
+        offset += (sector - 1) * image->geometry.sector_size;
     }
 
     return offset;
@@ -214,15 +218,19 @@ bool disk_image_write_sector(DiskImage* image, size_t sector, const void* buffer
         return false;
     }
 
-    return storage_file_write(image->file, buffer, sector_size) == image->sector_size;
+    return storage_file_write(image->file, buffer, sector_size) == sector_size;
 }
 
 bool disk_image_format(DiskImage* image, DiskGeometry geometry) {
     size_t sector_count = geometry.heads * geometry.tracks * geometry.sectors_per_track;
-    size_t disk_size = (sector_count - 3) * geometry.sector_size + 3 * 128;
 
-    image->disk_size = disk_size;
-    image->sector_size = geometry.sector_size;
+    size_t disk_size;
+
+    if(geometry.sector_size == 256) {
+        disk_size = (sector_count - 3) * geometry.sector_size + 3 * 128;
+    } else {
+        disk_size = sector_count * geometry.sector_size;
+    }
 
     image->geometry = geometry;
     image->header[0] = 0x96;
@@ -258,31 +266,43 @@ bool disk_image_format(DiskImage* image, DiskGeometry geometry) {
 }
 
 bool determine_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size) {
-    if(disk_size == 90 * 1024 && sector_size == 128) {
+    if(disk_size == 90 * 1024 && sector_size == 128) { // SS/SD
         geom->heads = 1;
         geom->tracks = 40;
         geom->sectors_per_track = 18;
         geom->sector_size = 128;
         geom->density = 0;
-    } else if(disk_size == 130 * 1024 && sector_size == 128) {
+    } else if(disk_size == 130 * 1024 && sector_size == 128) { // SS/ED
         geom->heads = 1;
         geom->tracks = 40;
         geom->sectors_per_track = 26;
         geom->sector_size = 128;
         geom->density = 0x4;
-    } else if(disk_size == (180 * 1024 - 3 * 128) && sector_size == 256) {
+    } else if(disk_size == 180 * 1024 && sector_size == 128) { // DS/SD
+        geom->heads = 2;
+        geom->tracks = 40;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 128;
+        geom->density = 0x4;
+    } else if(disk_size == (180 * 1024 - 3 * 128) && sector_size == 256) { // SS/DD
         geom->heads = 1;
         geom->tracks = 40;
         geom->sectors_per_track = 18;
         geom->sector_size = 256;
         geom->density = 0x4;
-    } else if(disk_size == (360 * 1024 - 3 * 128) && sector_size == 256) {
+    } else if(disk_size == (360 * 1024) && sector_size == 128) { // DS/2SD
+        geom->heads = 2;
+        geom->tracks = 80;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 128;
+        geom->density = 0x4;
+    } else if(disk_size == (360 * 1024 - 3 * 128) && sector_size == 256) { // DS/DD
         geom->heads = 2;
         geom->tracks = 40;
         geom->sectors_per_track = 18;
         geom->sector_size = 256;
         geom->density = 0x4;
-    } else if(disk_size == (720 * 1024 - 3 * 128) && sector_size == 256) {
+    } else if(disk_size == (720 * 1024 - 3 * 128) && sector_size == 256) { // DS/2DD
         geom->heads = 2;
         geom->tracks = 80;
         geom->sectors_per_track = 18;
