@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSystemInfo } from '@/api/system';
 
@@ -55,16 +55,8 @@ const fetchSystemInfo = async () => {
   }
 };
 
-// 定期更新系统信息
-let updateInterval;
+// 只在组件挂载时获取一次系统信息
 onMounted(() => {
   fetchSystemInfo();
-  updateInterval = setInterval(fetchSystemInfo, 5000); // 每 5 秒更新一次
-});
-
-onUnmounted(() => {
-  if (updateInterval) {
-    clearInterval(updateInterval);
-  }
 });
 </script> 

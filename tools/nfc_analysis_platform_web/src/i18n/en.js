@@ -41,23 +41,40 @@ export default {
   },
   tlv: {
     title: 'TLV Data Analysis',
-    description: 'Input hex data to parse TLV structure',
+    description: 'Input hex data to parse TLV structure, supporting nested TLV format',
     input: {
       label: 'HEX Data',
       placeholder: 'Enter HEX data here...',
     },
     buttons: {
       parse: 'Parse',
+      parsing: 'Parsing...',
       clear: 'Clear',
       loadSample: 'Load Sample',
+    },
+    extract: {
+      title: 'Extraction Results',
+      button: 'Extract Tags',
+      tagsPlaceholder: 'Tags, e.g. 9F26,9F27',
+      dataTypes: {
+        hex: 'Hexadecimal',
+        utf8: 'UTF-8',
+        ascii: 'ASCII',
+        numeric: 'Numeric'
+      }
     },
     results: {
       title: 'Parsing Results',
       tag: 'Tag',
       length: 'Length',
       value: 'Value',
-      raw: 'Raw Data',
+      description: 'Description',
     },
+    error: {
+      title: 'Parsing Error',
+      parseError: 'Invalid data format or contains invalid characters',
+      extractError: 'Failed to extract tags',
+    }
   },
   nard: {
     title: 'NARD Data Analysis',

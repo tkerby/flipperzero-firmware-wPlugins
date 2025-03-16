@@ -41,23 +41,40 @@ export default {
   },
   tlv: {
     title: 'TLV 数据分析',
-    description: '输入十六进制数据以解析 TLV 结构',
+    description: '输入十六进制数据以解析 TLV 结构，支持嵌套 TLV 格式',
     input: {
       label: '十六进制数据',
       placeholder: '在此输入十六进制数据...',
     },
     buttons: {
       parse: '解析',
+      parsing: '解析中...',
       clear: '清除',
       loadSample: '加载示例',
+    },
+    extract: {
+      title: '提取结果',
+      button: '提取标签',
+      tagsPlaceholder: '标签,如:9F26,9F27',
+      dataTypes: {
+        hex: '十六进制',
+        utf8: 'UTF-8',
+        ascii: 'ASCII',
+        numeric: '数值'
+      }
     },
     results: {
       title: '解析结果',
       tag: '标签',
       length: '长度',
       value: '值',
-      raw: '原始数据',
+      description: '描述',
     },
+    error: {
+      title: '解析错误',
+      parseError: '数据格式错误或包含无效字符',
+      extractError: '提取标签失败',
+    }
   },
   nard: {
     title: 'NARD 数据分析',
