@@ -3,12 +3,41 @@
     <!-- 主标题动画 -->
     <div class="title-container">
       <h1 class="main-title">
-        <span v-for="(char, index) in 'NFC ANALYSIS PLATFORM'" 
-              :key="index"
+        <!-- NFC -->
+        <span v-for="(char, index) in 'NFC'" 
+              :key="'nfc-'+index"
               class="char"
               :style="{ 
                 animationDelay: `${index * 0.1}s`,
-                '--glow-color': char === ' ' ? 'transparent' : '#38BDF8'
+                '--glow-color': '#38BDF8'
+              }">
+          {{ char }}
+        </span>
+        
+        <!-- 间隔 -->
+        <span class="word-space"></span>
+        
+        <!-- ANALYSIS -->
+        <span v-for="(char, index) in 'ANALYSIS'" 
+              :key="'analysis-'+index"
+              class="char"
+              :style="{ 
+                animationDelay: `${(index + 4) * 0.1}s`,
+                '--glow-color': '#38BDF8'
+              }">
+          {{ char }}
+        </span>
+        
+        <!-- 间隔 -->
+        <span class="word-space"></span>
+        
+        <!-- PLATFORM -->
+        <span v-for="(char, index) in 'PLATFORM'" 
+              :key="'platform-'+index"
+              class="char"
+              :style="{ 
+                animationDelay: `${(index + 12) * 0.1}s`,
+                '--glow-color': '#38BDF8'
               }">
           {{ char }}
         </span>
@@ -115,6 +144,7 @@ onMounted(() => {
 
 .main-title {
   @apply text-4xl md:text-5xl font-mono tracking-wider text-ark-text;
+  word-spacing: 50em;  /* 增加单词间距 */
 }
 
 .char {
@@ -288,5 +318,10 @@ onMounted(() => {
   80%, 100% {
     opacity: 0;
   }
+}
+
+.word-space {
+  display: inline-block;
+  width: 0.5em;  /* 可以调整这个值来控制单词间的间距 */
 }
 </style> 
