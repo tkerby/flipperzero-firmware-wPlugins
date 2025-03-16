@@ -5,9 +5,16 @@
 #include "lib/hardware/subghz/SubGhzModule.hpp"
 #include "lib/ui/view/UiView.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
+#include "lib/ui/view/TextInputUiView.hpp"
 #include "lib/FlipperDolphin.hpp"
+#include "lib/ui/UiManager.hpp"
+#include "app/AppFileSystem.hpp"
+#include "lib/file/FileManager.hpp"
+#include "app/pager/PagerSerializer.hpp"
 
-#define TE_DIV 10
+#define TE_DIV          10
+#define NAME_MIN_LENGTH 2
+#define NAME_MAX_LENGTH 20
 
 class EditPagerScreen {
 private:
@@ -15,6 +22,7 @@ private:
     SubGhzModule* subghz;
     PagerReceiver* receiver;
     PagerDataGetter getPager;
+    TextInputUiView* nameInputView;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* encodingItem = NULL;
@@ -113,9 +121,29 @@ private:
     }
 
     void saveAs() {
-        //TODO: show popup screen
+        if(nameInputView == NULL) {
+            nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
+            nameInputView->SetOnDestroyHandler([this]() { this->nameInputView = NULL; });
+            nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
+        }
+        UiManager::GetInstance()->PushView(nameInputView);
+    }
 
-        //FlipperDolphin::Deed(DolphinDeedSubGhzSave);
+    void saveAsHandler(const char* name) {
+        UiManager::GetInstance()->PopView(true);
+
+        FileManager fileManager = FileManager();
+        fileManager.CreateDirIfNotExists((char*)SAVED_STATIONS_PATH);
+        fileManager.CreateDirIfNotExists((char*)KNOWN_STATIONS_DIR_PATH);
+
+        PagerDataStored* pager = getPager();
+        PagerDecoder* decoder = receiver->decoders[pager->decoder];
+        PagerProtocol* protocol = receiver->protocols[pager->protocol];
+
+        PagerSerializer().SavePagerData(
+            &fileManager, KNOWN_STATIONS_DIR_PATH, name, pager, decoder, protocol, subghz->GetSettings()
+        );
+        FlipperDolphin::Deed(DolphinDeedSubGhzSave);
     }
 
     const char* encodingValueChanged(uint8_t index) {
@@ -193,6 +221,10 @@ private:
     }
 
     void destroy() {
+        if(nameInputView != NULL) {
+            delete nameInputView;
+        }
+
         delete encodingItem;
         delete stationItem;
         delete pagerItem;

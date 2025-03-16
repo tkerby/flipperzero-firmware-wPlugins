@@ -6,10 +6,12 @@
 
 class SubGhzReceivedDataImpl : public SubGhzReceivedData {
 private:
+    uint32_t frequency;
     SubGhzProtocolDecoderBase* decoder;
 
 public:
-    SubGhzReceivedDataImpl(SubGhzProtocolDecoderBase* decoder) {
+    SubGhzReceivedDataImpl(SubGhzProtocolDecoderBase* decoder, uint32_t frequency) {
+        this->frequency = frequency;
         this->decoder = decoder;
     }
 
@@ -37,5 +39,9 @@ public:
         furi_string_free(dataString);
 
         return te;
+    }
+
+    uint32_t GetFrequency() {
+        return frequency;
     }
 };

@@ -26,4 +26,8 @@ public:
     int GetTE() {
         return 212;
     }
+
+    uint32_t GetFrequency() {
+        return 433920000;
+    }
 };

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "lib/hardware/subghz/SubGhzSettings.hpp"
-
 #include "app/AppConfig.hpp"
 #include "lib/String.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
@@ -10,7 +8,6 @@ class SettingsScreen {
 private:
     AppConfig* config;
     SubGhzModule* subghz;
-    SubGhzSettings* subghzSettings;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* frequencyItem;
@@ -29,18 +26,16 @@ public:
         this->config = config;
         this->subghz = subghz;
 
-        subghzSettings = new SubGhzSettings();
-
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&SettingsScreen::destroy));
 
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
                 "Frequency",
-                subghzSettings->GetFrequencyIndex(config->Frequency),
-                subghzSettings->GetFrequencyCount(),
+                subghz->GetSettings()->GetFrequencyIndex(config->Frequency),
+                subghz->GetSettings()->GetFrequencyCount(),
                 [this](uint8_t val) {
-                    uint32_t freq = this->config->Frequency = subghzSettings->GetFrequency(val);
+                    uint32_t freq = this->config->Frequency = this->subghz->GetSettings()->GetFrequency(val);
                     this->subghz->SetFrequency(this->config->Frequency);
                     return frequencyStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
                 }
@@ -128,8 +123,6 @@ private:
         delete ignoreSavedItem;
         delete autosaveFoundItem;
         delete debugModeItem;
-
-        delete subghzSettings;
 
         delete this;
     }

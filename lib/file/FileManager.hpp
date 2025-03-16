@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lib/String.hpp"
 #include <toolbox/path.h>
 #include <storage/storage.h>
 
@@ -13,6 +14,12 @@ private:
 public:
     FileManager() {
         storage = (Storage*)furi_record_open(RECORD_STORAGE);
+    }
+
+    void CreateDirIfNotExists(char* path) {
+        if(!storage_dir_exists(storage, path)) {
+            storage_common_mkdir(storage, path);
+        }
     }
 
     Directory* OpenDirectory(const char* path) {
@@ -40,6 +47,11 @@ public:
         }
         delete file;
         return NULL;
+    }
+
+    FlipperFile* OpenWrite(const char* dir, const char* file) {
+        String concatedPath = String("%s/%s", dir, file);
+        return OpenWrite(concatedPath.cstr());
     }
 
     ~FileManager() {

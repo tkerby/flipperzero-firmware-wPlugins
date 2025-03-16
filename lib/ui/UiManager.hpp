@@ -27,26 +27,27 @@ private:
         FURI_LOG_I(LOG_TAG, "Back callback called");
 
         UiManager* uiManager = GetInstance();
-        uiManager->popView();
-
-        if(!uiManager->viewStack.empty()) {
-            UiView* viewReturningTo = uiManager->viewStack.top();
-            viewReturningTo->OnReturn();
-        }
+        uiManager->popView(false);
 
         return uiManager->currentViewId();
     }
 
-    void popView() {
+    void popView(bool preserveView) {
         UiView* currentView = viewStack.top();
         currentView->SetOnTop(false);
         view_dispatcher_remove_view(viewDispatcher, currentViewId());
         viewStack.pop();
-        delete currentView;
+
+        if(!preserveView) {
+            delete currentView;
+        }
 
         if(!viewStack.empty()) {
-            viewStack.top()->SetOnTop(true);
+            UiView* viewReturningTo = viewStack.top();
+            viewReturningTo->SetOnTop(true);
+            viewReturningTo->OnReturn();
         }
+
         FURI_LOG_I(LOG_TAG, "ViewStack popped, size: %d", viewStack.size());
     }
 
@@ -88,8 +89,8 @@ public:
         FURI_LOG_I(LOG_TAG, "ViewStack pushed, size: %d", viewStack.size());
     }
 
-    void PopView() {
-        popView();
+    void PopView(bool preserveView) {
+        popView(preserveView);
         view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
     }
 
@@ -104,7 +105,7 @@ public:
         FURI_LOG_I(LOG_TAG, "Destructor called");
 
         while(!viewStack.empty()) {
-            popView();
+            popView(false);
         }
 
         if(viewDispatcher != NULL) {

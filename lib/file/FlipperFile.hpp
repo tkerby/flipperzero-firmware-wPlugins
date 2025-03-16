@@ -29,12 +29,20 @@ public:
         return flipper_format_read_bool(flipperFormat, key, valueTarget, 1);
     }
 
-    bool WriteUInt32(const char* key, uint32_t* value) {
-        return flipper_format_write_uint32(flipperFormat, key, value, 1);
+    bool WriteUInt32(const char* key, uint32_t value) {
+        return flipper_format_write_uint32(flipperFormat, key, &value, 1);
     }
 
-    bool WriteBool(const char* key, bool* value) {
-        return flipper_format_write_bool(flipperFormat, key, value, 1);
+    bool WriteBool(const char* key, bool value) {
+        return flipper_format_write_bool(flipperFormat, key, &value, 1);
+    }
+
+    bool WriteString(const char* key, const char* value) {
+        return flipper_format_write_string_cstr(flipperFormat, key, value);
+    }
+
+    bool WriteHex(const char* key, uint64_t value) {
+        return flipper_format_write_hex(flipperFormat, key, (const uint8_t*)&value, sizeof(key));
     }
 
     ~FlipperFile() {

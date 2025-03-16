@@ -119,7 +119,7 @@ private:
                 return;
             } else {
                 transmittingBatch = false;
-                UiManager::GetInstance()->PopView();
+                UiManager::GetInstance()->PopView(false);
             }
         }
 

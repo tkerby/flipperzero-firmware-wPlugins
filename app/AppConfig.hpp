@@ -6,16 +6,16 @@
 #include "lib/file/FileManager.hpp"
 #include "lib/hardware/subghz/SubGhzModule.hpp"
 
-#define KEY_FREQUENCY    "Frequency"
-#define KEY_MAX_PAGERS   "MaxPagerForBatchOrDetection"
-#define KEY_REPEATS      "SignalRepeats"
-#define KEY_DEBUG        "Debug"
-#define KEY_IGNORE_SAVED "IgnoreMessagesFromSavedStations"
-#define KEY_AUTOSAVE     "Autosave"
+#define KEY_CONFIG_FREQUENCY    "Frequency"
+#define KEY_CONFIG_MAX_PAGERS   "MaxPagerForBatchOrDetection"
+#define KEY_CONFIG_REPEATS      "SignalRepeats"
+#define KEY_CONFIG_DEBUG        "Debug"
+#define KEY_CONFIG_IGNORE_SAVED "IgnoreMessagesFromSavedStations"
+#define KEY_CONFIG_AUTOSAVE     "Autosave"
 
 class AppConfig {
 public:
-    uint32_t Frequency = DEFAULT_FREQUENCY;
+    uint32_t Frequency = 433920000;
     uint32_t MaxPagerForBatchOrDetection = 30;
     uint32_t SignalRepeats = 10;
     bool Debug = false;
@@ -24,21 +24,21 @@ public:
 
 private:
     void readFromFile(FlipperFile* file) {
-        file->ReadUInt32(KEY_FREQUENCY, &Frequency);
-        file->ReadUInt32(KEY_MAX_PAGERS, &MaxPagerForBatchOrDetection);
-        file->ReadUInt32(KEY_REPEATS, &SignalRepeats);
-        file->ReadBool(KEY_IGNORE_SAVED, &IgnoreMessagesFromSavedStations);
-        file->ReadBool(KEY_DEBUG, &Debug);
-        file->ReadBool(KEY_AUTOSAVE, &AutosaveFoundSignals);
+        file->ReadUInt32(KEY_CONFIG_FREQUENCY, &Frequency);
+        file->ReadUInt32(KEY_CONFIG_MAX_PAGERS, &MaxPagerForBatchOrDetection);
+        file->ReadUInt32(KEY_CONFIG_REPEATS, &SignalRepeats);
+        file->ReadBool(KEY_CONFIG_IGNORE_SAVED, &IgnoreMessagesFromSavedStations);
+        file->ReadBool(KEY_CONFIG_DEBUG, &Debug);
+        file->ReadBool(KEY_CONFIG_AUTOSAVE, &AutosaveFoundSignals);
     }
 
     void writeToFile(FlipperFile* file) {
-        file->WriteUInt32(KEY_FREQUENCY, &Frequency);
-        file->WriteUInt32(KEY_MAX_PAGERS, &MaxPagerForBatchOrDetection);
-        file->WriteUInt32(KEY_REPEATS, &SignalRepeats);
-        file->WriteBool(KEY_IGNORE_SAVED, &IgnoreMessagesFromSavedStations);
-        file->WriteBool(KEY_DEBUG, &Debug);
-        file->WriteBool(KEY_AUTOSAVE, &AutosaveFoundSignals);
+        file->WriteUInt32(KEY_CONFIG_FREQUENCY, Frequency);
+        file->WriteUInt32(KEY_CONFIG_MAX_PAGERS, MaxPagerForBatchOrDetection);
+        file->WriteUInt32(KEY_CONFIG_REPEATS, SignalRepeats);
+        file->WriteBool(KEY_CONFIG_IGNORE_SAVED, IgnoreMessagesFromSavedStations);
+        file->WriteBool(KEY_CONFIG_DEBUG, Debug);
+        file->WriteBool(KEY_CONFIG_AUTOSAVE, AutosaveFoundSignals);
     }
 
 public:

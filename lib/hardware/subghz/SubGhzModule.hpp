@@ -17,6 +17,7 @@
 #include <lib/subghz/subghz_worker.h>
 
 #include "lib/HandlerContext.hpp"
+#include "lib/hardware/subghz/SubGhzSettings.hpp"
 
 #include "SubGhzState.hpp"
 #include "data/SubGhzReceivedDataImpl.hpp"
@@ -28,8 +29,6 @@ using namespace std;
 #undef LOG_TAG
 #define LOG_TAG "SUB_GHZ"
 
-#define DEFAULT_FREQUENCY 433920000
-
 class SubGhzModule {
 private:
     SubGhzEnvironment* environment;
@@ -37,12 +36,13 @@ private:
     SubGhzReceiver* receiver;
     SubGhzWorker* worker;
     SubGhzTransmitter* transmitter;
-    IDestructable* receiveHandler = NULL;
+    function<void(SubGhzReceivedData*)> receiveHandler;
     FuriTimer* txCompleteCheckTimer;
     function<void()> txCompleteHandler;
     int repeatsLeft = 0;
     SubGhzPayload* currentPayload;
     uint32_t currentFrequency = 0;
+    SubGhzSettings* settings;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -56,8 +56,10 @@ private:
             return;
         }
 
-        auto handlerContext = (HandlerContext<function<void(SubGhzReceivedData*)>>*)context;
-        handlerContext->GetHandler()(new SubGhzReceivedDataImpl(decoderBase));
+        SubGhzModule* subghz = (SubGhzModule*)context;
+        if(subghz->receiveHandler != NULL) {
+            subghz->receiveHandler(new SubGhzReceivedDataImpl(decoderBase, subghz->currentFrequency));
+        }
     }
 
     static void txCompleteCheckCallback(void* context) {
@@ -80,6 +82,7 @@ private:
 
 public:
     SubGhzModule(uint32_t frequency) {
+        settings = new SubGhzSettings();
         environment = subghz_environment_alloc();
         subghz_environment_set_protocol_registry(environment, &subghz_protocol_registry);
 
@@ -110,6 +113,10 @@ public:
         txCompleteCheckTimer = furi_timer_alloc(txCompleteCheckCallback, FuriTimerTypePeriodic, this);
     }
 
+    SubGhzSettings* GetSettings() {
+        return settings;
+    }
+
     void SetFrequency(uint32_t frequency) {
         if(currentFrequency == frequency) {
             return;
@@ -123,7 +130,7 @@ public:
         if(subghz_devices_is_frequency_valid(device, frequency)) {
             subghz_devices_set_frequency(device, frequency);
         } else {
-            subghz_devices_set_frequency(device, DEFAULT_FREQUENCY);
+            subghz_devices_set_frequency(device, settings->GetDefaultFrequency());
         }
 
         if(restoreReceive) {
@@ -144,7 +151,8 @@ public:
     }
 
     void SetReceiveHandler(function<void(SubGhzReceivedData*)> handler) {
-        subghz_receiver_set_rx_callback(receiver, captureCallback, receiveHandler = new HandlerContext(handler));
+        receiveHandler = handler;
+        subghz_receiver_set_rx_callback(receiver, captureCallback, this);
     }
 
     void ReceiveAsync() {
@@ -251,10 +259,6 @@ public:
             furi_hal_power_disable_otg();
         }
 
-        if(receiveHandler != NULL) {
-            delete receiveHandler;
-        }
-
         if(worker != NULL) {
             subghz_worker_free(worker);
             worker = NULL;
@@ -274,6 +278,11 @@ public:
             subghz_devices_end(device);
             subghz_devices_deinit();
             device = NULL;
+        }
+
+        if(settings != NULL) {
+            delete settings;
+            settings = NULL;
         }
     }
 };

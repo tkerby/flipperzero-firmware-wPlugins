@@ -38,6 +38,7 @@ public:
 
 private:
     AppConfig* config;
+    SubGhzSettings* subghzSettings;
     vector<PagerDataStored> pagers;
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
@@ -59,8 +60,9 @@ private:
     }
 
 public:
-    PagerReceiver(AppConfig* config) {
+    PagerReceiver(AppConfig* config, SubGhzSettings* subghzSettings) {
         this->config = config;
+        this->subghzSettings = subghzSettings;
 
         for(size_t i = 0; i < protocols.size(); i++) {
             protocols[i]->id = i;
@@ -103,6 +105,7 @@ public:
             storedData.protocol = protocol->id;
             storedData.repeats = 1;
             storedData.te = data->GetTE();
+            storedData.frequency = subghzSettings->GetFrequencyIndex(data->GetFrequency());
             storedData.decoder = getDecoder(&storedData)->id;
 
             index = pagers.size();

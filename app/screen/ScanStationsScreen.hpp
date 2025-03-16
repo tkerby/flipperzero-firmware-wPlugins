@@ -46,7 +46,6 @@ private:
 public:
     ScanStationsScreen(AppConfig* config) {
         this->config = config;
-        pagerReceiver = new PagerReceiver(config);
 
         menuView = new ColumnOrientedListUiView(
             stationScreenColumnOffsets,
@@ -65,6 +64,8 @@ public:
         subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
         subghz->SetReceiveAfterTransmission(true);
         subghz->ReceiveAsync();
+
+        pagerReceiver = new PagerReceiver(config, subghz->GetSettings());
 
         if(subghz->IsExternal()) {
             menuView->SetNoElementCaption("Receiving via EXT...");
