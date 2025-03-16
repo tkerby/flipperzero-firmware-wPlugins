@@ -26,7 +26,7 @@ bool flip_social_get_feed(bool alloc_http, int series_index) {
         snprintf(
             command,
             96,
-            "https://www.flipsocial.net/api/feed/%d/%s/%d/max/series/",
+            "https://www.jblanked.com/flipper/api/feed/%d/%s/%d/max/series/",
             MAX_FEED_ITEMS,
             app_instance->login_username_logged_out,
             series_index);
@@ -34,7 +34,7 @@ bool flip_social_get_feed(bool alloc_http, int series_index) {
         snprintf(
             command,
             96,
-            "https://www.flipsocial.net/api/feed/%d/%s/%d/max/friends/series/",
+            "https://www.jblanked.com/flipper/api/feed/%d/%s/%d/max/friends/series/",
             MAX_FEED_ITEMS,
             app_instance->login_username_logged_out,
             series_index);

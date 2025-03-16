@@ -47,7 +47,7 @@ bool flip_social_get_explore(void) {
     snprintf(
         url,
         sizeof(url),
-        "https://www.flipsocial.net/api/user/explore/%s/%d/",
+        "https://www.jblanked.com/flipper/api/user/explore/%s/%d/",
         keyword,
         MAX_EXPLORE_USERS);
     if(!flipper_http_get_request_with_headers(url, auth_headers)) {
@@ -89,7 +89,7 @@ bool flip_social_get_explore_2(void) {
     snprintf(
         url,
         sizeof(url),
-        "https://www.flipsocial.net/api/user/explore/%s/%d/",
+        "https://www.jblanked.com/flipper/api/user/explore/%s/%d/",
         keyword,
         MAX_EXPLORE_USERS);
     return flipper_http_get_request_with_headers(url, auth_headers);

@@ -122,7 +122,7 @@ bool flip_social_get_message_users() {
     snprintf(
         command,
         128,
-        "https://www.flipsocial.net/api/messages/%s/get/list/%d/",
+        "https://www.jblanked.com/flipper/api/messages/%s/get/list/%d/",
         app_instance->login_username_logged_out,
         MAX_MESSAGE_USERS);
     if(!flipper_http_get_request_with_headers(command, auth_headers)) {
@@ -169,7 +169,7 @@ bool flip_social_get_messages_with_user() {
     snprintf(
         command,
         sizeof(command),
-        "https://www.flipsocial.net/api/messages/%s/get/%s/%d/",
+        "https://www.jblanked.com/flipper/api/messages/%s/get/%s/%d/",
         app_instance->login_username_logged_out,
         flip_social_message_users->usernames[flip_social_message_users->index],
         MAX_MESSAGES);

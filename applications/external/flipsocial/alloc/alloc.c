@@ -439,7 +439,7 @@ static bool flip_social_feed_input_callback(InputEvent* event, void* context) {
             app_instance->login_username_logged_in,
             flip_feed_item->id);
         if(flipper_http_post_request_with_headers(
-               "https://www.flipsocial.net/api/feed/flip/", auth_headers, payload)) {
+               "https://www.jblanked.com/flipper/api/feed/flip/", auth_headers, payload)) {
             // save feed item
             char new_save[512];
             snprintf(
@@ -788,7 +788,7 @@ bool about_widget_alloc(bool is_logged_in) {
             return easy_flipper_set_widget(
                 &app_instance->widget_logged_out_about,
                 FlipSocialViewLoggedOutAbout,
-                "Welcome to FlipSocial\n---\nThe social media app for\nFlipper Zero, created by\nJBlanked: www.flipsocial.net\n---\nPress BACK to return.",
+                "Welcome to FlipSocial\n---\nThe social media app for\nFlipper Zero, created by\nJBlanked: www.jblanked.com/flipper\n---\nPress BACK to return.",
                 flip_social_callback_to_submenu_logged_out,
                 &app_instance->view_dispatcher);
         }
@@ -797,7 +797,7 @@ bool about_widget_alloc(bool is_logged_in) {
             return easy_flipper_set_widget(
                 &app_instance->widget_logged_in_about,
                 FlipSocialViewLoggedInSettingsAbout,
-                "Welcome to FlipSocial\n---\nThe social media app for\nFlipper Zero, created by\nJBlanked: www.flipsocial.net\n---\nPress BACK to return.",
+                "Welcome to FlipSocial\n---\nThe social media app for\nFlipper Zero, created by\nJBlanked: www.jblanked.com/flipper\n---\nPress BACK to return.",
                 flip_social_callback_to_settings_logged_in,
                 &app_instance->view_dispatcher);
         }

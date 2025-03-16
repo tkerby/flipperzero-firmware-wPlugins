@@ -73,7 +73,7 @@ static bool flip_social_login_fetch(DataLoaderModel* model) {
         app_instance->login_password_logged_out);
     auth_headers_alloc();
     return flipper_http_post_request_with_headers(
-        "https://www.flipsocial.net/api/user/login/", auth_headers, buffer);
+        "https://www.jblanked.com/flipper/api/user/login/", auth_headers, buffer);
 }
 
 static char* flip_social_login_parse(DataLoaderModel* model) {
@@ -163,7 +163,7 @@ static bool flip_social_register_fetch(DataLoaderModel* model) {
         app_instance->register_password_logged_out);
 
     return flipper_http_post_request_with_headers(
-        "https://www.flipsocial.net/api/user/register/",
+        "https://www.jblanked.com/flipper/api/user/register/",
         "{\"Content-Type\":\"application/json\"}",
         buffer);
 }
@@ -417,7 +417,7 @@ static void explore_dialog_callback(DialogExResult result, void* context) {
                 flip_social_explore->usernames[flip_social_explore->index]);
             auth_headers_alloc();
             flipper_http_post_request_with_headers(
-                "https://www.flipsocial.net/api/user/remove-friend/",
+                "https://www.jblanked.com/flipper/api/user/remove-friend/",
                 auth_headers,
                 remove_payload);
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipSocialViewSubmenu);
@@ -437,7 +437,9 @@ static void explore_dialog_callback(DialogExResult result, void* context) {
                 flip_social_explore->usernames[flip_social_explore->index]);
             auth_headers_alloc();
             flipper_http_post_request_with_headers(
-                "https://www.flipsocial.net/api/user/add-friend/", auth_headers, add_payload);
+                "https://www.jblanked.com/flipper/api/user/add-friend/",
+                auth_headers,
+                add_payload);
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipSocialViewSubmenu);
             flip_social_free_explore_dialog();
             furi_delay_ms(1000);
@@ -461,7 +463,7 @@ static void friends_dialog_callback(DialogExResult result, void* context) {
                 flip_social_friends->usernames[flip_social_friends->index]);
             auth_headers_alloc();
             flipper_http_post_request_with_headers(
-                "https://www.flipsocial.net/api/user/remove-friend/",
+                "https://www.jblanked.com/flipper/api/user/remove-friend/",
                 auth_headers,
                 remove_payload);
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipSocialViewSubmenu);
@@ -625,7 +627,7 @@ static void compose_dialog_callback(DialogExResult result, void* context) {
                 app_instance->login_username_logged_in,
                 selected_message);
             if(!flipper_http_post_request_with_headers(
-                   "https://www.flipsocial.net/api/feed/post/", auth_headers, command)) {
+                   "https://www.jblanked.com/flipper/api/feed/post/", auth_headers, command)) {
                 FURI_LOG_E(TAG, "Failed to send HTTP request for feed");
                 flipper_http_deinit();
                 return;
@@ -660,7 +662,7 @@ static bool flip_social_get_user_info() {
     snprintf(
         url,
         sizeof(url),
-        "https://www.flipsocial.net/api/user/users/%s/extended/",
+        "https://www.jblanked.com/flipper/api/user/users/%s/extended/",
         flip_social_explore->usernames[flip_social_explore->index]);
     if(!flipper_http_get_request_with_headers(url, auth_headers)) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for user info");
@@ -1772,7 +1774,9 @@ void flip_social_logged_in_profile_change_password_updated(void* context) {
             old_password,
             app->change_password_logged_in);
         if(!flipper_http_post_request_with_headers(
-               "https://www.flipsocial.net/api/user/change-password/", auth_headers, payload)) {
+               "https://www.jblanked.com/flipper/api/user/change-password/",
+               auth_headers,
+               payload)) {
             FURI_LOG_E(TAG, "Failed to send post request to change password");
             FURI_LOG_E(TAG, "Make sure the Flipper is connected to the Wifi Dev Board");
         }
@@ -1826,7 +1830,7 @@ void flip_social_logged_in_profile_change_bio_updated(void* context) {
             app->login_username_logged_out,
             app->change_bio_logged_in);
         if(!flipper_http_post_request_with_headers(
-               "https://www.flipsocial.net/api/user/change-bio/", auth_headers, payload)) {
+               "https://www.jblanked.com/flipper/api/user/change-bio/", auth_headers, payload)) {
             FURI_LOG_E(TAG, "Failed to send post request to change bio");
             FURI_LOG_E(TAG, "Make sure the Flipper is connected to the Wifi Dev Board");
         }
@@ -1945,7 +1949,7 @@ void flip_social_logged_in_messages_user_choice_message_updated(void* context) {
     snprintf(
         url,
         sizeof(url),
-        "https://www.flipsocial.net/api/messages/%s/post/",
+        "https://www.jblanked.com/flipper/api/messages/%s/post/",
         app->login_username_logged_in);
     snprintf(
         payload,
@@ -2038,7 +2042,7 @@ void flip_social_logged_in_messages_new_message_updated(void* context) {
         snprintf(
             url,
             sizeof(url),
-            "https://www.flipsocial.net/api/messages/%s/post/",
+            "https://www.jblanked.com/flipper/api/messages/%s/post/",
             app->login_username_logged_in);
         snprintf(
             payload,
@@ -2584,7 +2588,7 @@ static bool flip_social_get_home_notification() {
 
     fhttp.save_received_data = true;
     return flipper_http_get_request_with_headers(
-        "https://www.flipsocial.net/api/flip-social-notifications/", auth_headers);
+        "https://www.jblanked.com/flipper/api/flip-social-notifications/", auth_headers);
 }
 static bool flip_social_parse_home_notification() {
     FuriString* notification = flipper_http_load_from_file(fhttp.file_path);
