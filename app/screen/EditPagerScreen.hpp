@@ -31,7 +31,9 @@ private:
     UiVariableItem* protocolItem = NULL;
     UiVariableItem* teItem = NULL;
     UiVariableItem* repeatsItem = NULL;
+
     UiVariableItem* saveAsItem = NULL;
+    UiVariableItem* deleteItem = NULL;
 
     String stationStr;
     String pagerStr;
@@ -39,10 +41,19 @@ private:
     String hexStr;
     String repeatsStr;
     String teStr;
-    uint32_t saveAsItemIndex;
+    int32_t saveAsItemIndex = -1;
+    int32_t deleteItemIndex = -1;
+
+    String* savedAsName = NULL;
 
 public:
-    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
+    EditPagerScreen(
+        AppConfig* config,
+        SubGhzModule* subghz,
+        PagerReceiver* receiver,
+        PagerDataGetter pagerGetter,
+        String* savedAsNameFromFile
+    ) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
@@ -88,10 +99,31 @@ public:
             )
         );
 
-        saveAsItemIndex = varItemList->AddItem(saveAsItem = new UiVariableItem("Save signal as...", ""));
+        if(savedAsNameFromFile != NULL) {
+            this->savedAsName = new String("%s", savedAsNameFromFile);
+        } else {
+            FileManager* fileManager = new FileManager();
+            this->savedAsName = PagerSerializer().LoadOnlyStationName(fileManager, SAVED_STATIONS_PATH, pager);
+            delete fileManager;
+        }
+
+        if(canSaveOrDelete()) {
+            const char* saveAsItemName = savedAsName == NULL ? "Save signal as..." : "Save / Rename";
+            saveAsItemIndex = varItemList->AddItem(saveAsItem = new UiVariableItem(saveAsItemName, ""));
+            if(savedAsName != NULL) {
+                deleteItemIndex = varItemList->AddItem(deleteItem = new UiVariableItem("Delete station", ""));
+            }
+        }
     }
 
 private:
+    bool canSaveOrDelete() {
+        bool notKnown = !receiver->IsKnown(getPager());
+        bool savedAsNameNotNull = this->savedAsName != NULL;
+        FURI_LOG_I(LOG_TAG, "NK: %d, SANNN: %d", notKnown, savedAsNameNotNull);
+        return !receiver->IsKnown(getPager()) || this->savedAsName != NULL;
+    }
+
     void updatePagerIsEditable() {
         StoredPagerData* pager = getPager();
         int pagerNum = receiver->decoders[pager->decoder]->GetPager(pager->data);
@@ -102,9 +134,11 @@ private:
         }
     }
 
-    void enterPressed(uint32_t index) {
+    void enterPressed(int32_t index) {
         if(index == saveAsItemIndex) {
             saveAs();
+        } else if(index == deleteItemIndex) {
+            //TODO: delete
         } else {
             transmitMessage();
         }
@@ -121,6 +155,9 @@ private:
     void saveAs() {
         if(nameInputView == NULL) {
             nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
+            if(savedAsName != NULL) {
+                nameInputView->SetDefaultText(savedAsName);
+            }
             nameInputView->SetOnDestroyHandler([this]() { this->nameInputView = NULL; });
             nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
         }
@@ -140,6 +177,7 @@ private:
 
         PagerSerializer().SavePagerData(&fileManager, SAVED_STATIONS_PATH, name, pager, decoder, protocol, subghz->GetSettings());
         FlipperDolphin::Deed(DolphinDeedSubGhzSave);
+        receiver->ReloadKnownStations();
     }
 
     const char* encodingValueChanged(uint8_t index) {
@@ -229,6 +267,19 @@ private:
         delete teItem;
         delete protocolItem;
         delete repeatsItem;
+
+        if(saveAsItem != NULL) {
+            delete saveAsItem;
+        }
+
+        if(savedAsName != NULL) {
+            delete savedAsName;
+        }
+
+        if(deleteItem != NULL) {
+            delete deleteItem;
+        }
+
         delete this;
     }
 

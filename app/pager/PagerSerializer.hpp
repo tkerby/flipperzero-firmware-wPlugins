@@ -24,6 +24,10 @@
 class PagerSerializer {
 private:
 public:
+    String* GetFilename(StoredPagerData* pager) {
+        return new String("%06X.fff", pager->data);
+    }
+
     void SavePagerData(
         FileManager* fileManager,
         const char* dir,
@@ -33,8 +37,8 @@ public:
         PagerProtocol* protocol,
         SubGhzSettings* settings
     ) {
-        String fileName = String("%s-%d-%06X.fff", decoder->GetShortName(), decoder->GetStation(pager->data), pager->data);
-        FlipperFile* stationFile = fileManager->OpenWrite(dir, fileName.cstr());
+        String* fileName = GetFilename(pager);
+        FlipperFile* stationFile = fileManager->OpenWrite(dir, fileName->cstr());
 
         stationFile->WriteString(KEY_PAGER_STATION_NAME, stationName);
         stationFile->WriteUInt32(KEY_PAGER_FREQUENCY, settings->GetFrequency(pager->frequency));
@@ -44,6 +48,22 @@ public:
         stationFile->WriteHex(KEY_PAGER_DATA, pager->data);
 
         delete stationFile;
+        delete fileName;
+    }
+
+    String* LoadOnlyStationName(FileManager* fileManager, const char* dir, StoredPagerData* pager) {
+        String* filename = GetFilename(pager);
+        FlipperFile* stationFile = fileManager->OpenRead(dir, filename->cstr());
+        String* stationName = NULL;
+        delete filename;
+
+        if(stationFile != NULL) {
+            stationName = new String();
+            stationFile->ReadString(KEY_PAGER_STATION_NAME, stationName);
+            delete stationFile;
+        }
+
+        return stationName;
     }
 
     StoredPagerData LoadPagerData(
@@ -75,7 +95,6 @@ public:
         StoredPagerData pager;
         pager.data = hex;
         pager.te = te;
-        pager.hasName = true;
         pager.edited = false;
         pager.frequency = settings->GetFrequencyIndex(frequency);
         pager.protocol = getProtocol(protocolName.cstr());

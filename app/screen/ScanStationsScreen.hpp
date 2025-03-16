@@ -85,6 +85,8 @@ public:
             receive(new SubGhzReceivedDataStub("Princeton", 0x71A420)); // batoni?
             receive(new SubGhzReceivedDataStub("SMC5326", 0x200084)); // koreana
             receive(new SubGhzReceivedDataStub("Princeton", 0xBC022)); // koreana
+
+            receive(new SubGhzReceivedDataStub("Princeton", 0xCBC022)); // tokyo ramen another pager
         }
     }
 
@@ -102,7 +104,7 @@ private:
 
                 if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
                     menuView->SetCenterButton("Actions", HANDLER_1ARG(&ScanStationsScreen::showActions));
-                    menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editTransmission));
+                    menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editPagerMessage));
                 }
 
                 menuView->AddElement();
@@ -121,7 +123,7 @@ private:
     void getElementColumnName(int index, int column, String* str) {
         StoredPagerData* pagerData = pagerReceiver->PagerGetter(index)();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
-        String* name = pagerData->hasName ? pagerReceiver->GetName(pagerData) : NULL;
+        String* name = pagerReceiver->GetName(pagerData);
 
         switch(column) {
         case 0: // station name
@@ -170,12 +172,12 @@ private:
     }
 
     void showConfig(uint32_t) {
-        SettingsScreen* screen = new SettingsScreen(config, subghz);
+        SettingsScreen* screen = new SettingsScreen(config, pagerReceiver, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
-    void editTransmission(uint32_t index) {
-        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index));
+    void editPagerMessage(uint32_t index) {
+        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index), NULL);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 

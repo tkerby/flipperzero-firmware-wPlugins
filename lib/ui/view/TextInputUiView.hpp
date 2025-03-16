@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lib/String.hpp"
 #include <furi.h>
 #include <gui/gui.h>
 #include <gui/modules/text_input.h>
@@ -29,9 +30,13 @@ public:
         bufferSize = maxLength;
     }
 
+    void SetDefaultText(String* text) {
+        memcpy(textBuffer, text->cstr(), MIN(strlen(text->cstr()), bufferSize));
+    }
+
     void SetResultHandler(function<void(char*)> handler) {
         inputHandler = handler;
-        text_input_set_result_callback(textInput, inputCallback, this, textBuffer, bufferSize, true);
+        text_input_set_result_callback(textInput, inputCallback, this, textBuffer, bufferSize, false);
     }
 
     View* GetNativeView() {

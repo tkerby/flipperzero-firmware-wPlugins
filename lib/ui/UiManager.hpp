@@ -38,14 +38,16 @@ private:
         view_dispatcher_remove_view(viewDispatcher, currentViewId());
         viewStack.pop();
 
-        if(!preserveView) {
-            delete currentView;
-        }
-
         if(!viewStack.empty()) {
             UiView* viewReturningTo = viewStack.top();
             viewReturningTo->SetOnTop(true);
             viewReturningTo->OnReturn();
+        }
+
+        view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
+
+        if(!preserveView) {
+            delete currentView;
         }
 
         FURI_LOG_I(LOG_TAG, "ViewStack popped, size: %d", viewStack.size());

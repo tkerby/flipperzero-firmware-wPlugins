@@ -46,24 +46,15 @@ private:
     AppConfig* config;
     SubGhzSettings* subghzSettings;
     vector<StoredPagerData> pagers;
-    map<uint32_t, String*> knownNames;
+    map<uint32_t, String*> knownStations;
 
-    PagerDecoder* getDecoder(StoredPagerData* pagerData) {
-        for(size_t i = 0; i < decoders.size(); i++) {
-            if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
-                return decoders[i];
-            }
-        }
-        return decoders[0];
-    }
-
-    void loadKnownStations() {
+    void loadKnownStations(bool withNames) {
         FileManager fileManager = FileManager();
         Directory* dir = fileManager.OpenDirectory(SAVED_STATIONS_PATH);
         PagerSerializer serializer = PagerSerializer();
 
         if(dir != NULL) {
-            const uint16_t nameLength = 32;
+            const uint16_t nameLength = 16;
             char fileName[nameLength];
 
             while(dir->GetNextFile(fileName, nameLength)) {
@@ -80,28 +71,53 @@ private:
 
                 KnownStationData data = getKnownStation(&pager);
                 uint32_t stationId = data.toInt();
-                knownNames[stationId] = stationName;
+                if(withNames && knownStations.contains(stationId)) {
+                    delete knownStations[stationId];
+                }
+                knownStations[stationId] = withNames ? stationName : NULL;
 
-                FURI_LOG_I(LOG_TAG, "STID: %lu", stationId);
-                FURI_LOG_I(LOG_TAG, "PDATA: %06X", pager.data);
-                FURI_LOG_I(LOG_TAG, "ST: %d", data.station);
-                FURI_LOG_I(LOG_TAG, "DEC: %d", data.decoder);
-                FURI_LOG_I(LOG_TAG, "PROT: %d", data.protocol);
-                FURI_LOG_I(LOG_TAG, "FREQ: %d", data.frequency);
-                FURI_LOG_I(LOG_TAG, "-------------------------");
+                if(!withNames) {
+                    delete stationName;
+                }
             }
         }
 
         delete dir;
     }
 
+    void unloadKnownStations() {
+        for(const auto& [key, value] : knownStations) {
+            if(value != NULL) {
+                delete value;
+            }
+        }
+        knownStations.clear();
+    }
+
     KnownStationData getKnownStation(StoredPagerData* pager) {
-        KnownStationData data;
+        KnownStationData data = KnownStationData();
         data.frequency = pager->frequency;
         data.protocol = pager->protocol;
         data.decoder = pager->decoder;
         data.station = decoders[pager->decoder]->GetStation(pager->data);
         return data;
+    }
+
+    PagerDecoder* getDecoder(StoredPagerData* pagerData) {
+        for(size_t i = 0; i < decoders.size(); i++) {
+            pagerData->decoder = i;
+            if(IsKnown(pagerData)) {
+                return decoders[i];
+            }
+        }
+
+        for(size_t i = 0; i < decoders.size(); i++) {
+            if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
+                return decoders[i];
+            }
+        }
+
+        return decoders[0];
     }
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
@@ -132,10 +148,22 @@ public:
         for(size_t i = 0; i < protocols.size(); i++) {
             protocols[i]->id = i;
         }
+
         for(size_t i = 0; i < decoders.size(); i++) {
             decoders[i]->id = i;
         }
-        loadKnownStations();
+
+        ReloadKnownStations();
+    }
+
+    void ReloadKnownStations() {
+        unloadKnownStations();
+
+        if(config->SavedStrategy == SHOW_NAME) {
+            loadKnownStations(true);
+        } else {
+            loadKnownStations(false);
+        }
     }
 
     PagerDataGetter PagerGetter(size_t index) {
@@ -143,21 +171,20 @@ public:
     }
 
     String* GetName(StoredPagerData* pager) {
-        KnownStationData stData = getKnownStation(pager);
-        uint32_t stid = stData.toInt();
-        String* name = knownNames[stid];
-        FURI_LOG_I(
-            LOG_TAG,
-            "KN of STID %lu is %s (%d, %d, %d, %d / %d)",
-            stid,
-            name == NULL ? "NULL" : name->cstr(),
-            stData.station,
-            stData.decoder,
-            stData.protocol,
-            stData.frequency,
-            stData.unused
-        );
-        return name;
+        uint32_t stationId = getKnownStation(pager).toInt();
+        if(knownStations.contains(stationId)) {
+            return knownStations[stationId];
+        }
+        return NULL;
+    }
+
+    bool IsKnown(StoredPagerData* pager) {
+        for(const auto& [key, value] : knownStations) {
+            FURI_LOG_I(LOG_TAG, "IN: %lu", key);
+        }
+        bool result = knownStations.contains(getKnownStation(pager).toInt());
+        FURI_LOG_I(LOG_TAG, "KS contains %lu: %d", getKnownStation(pager).toInt(), result);
+        return result;
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
@@ -191,8 +218,11 @@ public:
             storedData.te = data->GetTE();
             storedData.frequency = subghzSettings->GetFrequencyIndex(data->GetFrequency());
             storedData.decoder = getDecoder(&storedData)->id;
-            storedData.hasName = GetName(&storedData) != NULL;
             storedData.edited = false;
+
+            if(config->SavedStrategy == HIDE && IsKnown(&storedData)) {
+                return NULL;
+            }
 
             index = pagers.size();
             pagers.push_back(storedData);
@@ -210,8 +240,6 @@ public:
             delete decoder;
         }
 
-        for(const auto& [key, value] : knownNames) {
-            delete value;
-        }
+        unloadKnownStations();
     }
 };

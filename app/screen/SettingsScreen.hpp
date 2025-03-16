@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/AppConfig.hpp"
+#include "app/pager/PagerReceiver.hpp"
 #include "lib/String.hpp"
 #include "lib/hardware/subghz/SubGhzModule.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
@@ -9,6 +10,7 @@ class SettingsScreen {
 private:
     AppConfig* config;
     SubGhzModule* subghz;
+    PagerReceiver* receiver;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* frequencyItem;
@@ -23,8 +25,9 @@ private:
     String signalRepeatStr;
 
 public:
-    SettingsScreen(AppConfig* config, SubGhzModule* subghz) {
+    SettingsScreen(AppConfig* config, PagerReceiver* receiver, SubGhzModule* subghz) {
         this->config = config;
+        this->receiver = receiver;
         this->subghz = subghz;
 
         varItemList = new VariableItemListUiView();
@@ -133,6 +136,7 @@ private:
 
     void destroy() {
         config->Save();
+        receiver->ReloadKnownStations();
 
         delete frequencyItem;
         delete maxPagerItem;

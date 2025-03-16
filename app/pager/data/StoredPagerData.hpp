@@ -18,7 +18,7 @@ struct StoredPagerData {
     uint8_t decoder   : 4; // max 16 decoders, enough for now
     uint8_t protocol  : 2; // max 4 protocols (only )
     bool edited       : 1;
-    bool hasName      : 1;
+    uint8_t           : 0;
 
     // byte 3-4
     uint16_t te       : 11; // 2048 values should be enough
