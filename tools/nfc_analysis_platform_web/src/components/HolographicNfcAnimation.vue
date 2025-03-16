@@ -28,10 +28,51 @@
       <div class="label label-2">UID: 04A5B9C2</div>
       <div class="label label-3">APDU: 00A4040007</div>
       <div class="label label-4">SW: 9000</div>
+      <div class="label label-5">MIFARE Classic 1K</div>
+      <div class="label label-6">Attack: Nested</div>
+      <div class="label label-7">Attack: Darkside</div>
+      <div class="label label-8">Key: FFFFFFFFFFFF</div>
     </div>
     
     <!-- 扫描线效果 -->
     <div class="scan-line"></div>
+    
+    <!-- 技术参数 -->
+    <div class="tech-specs">
+      <div class="spec-item">
+        <div class="spec-label">ISO/IEC</div>
+        <div class="spec-value">14443A</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Freq</div>
+        <div class="spec-value">13.56MHz</div>
+      </div>
+      <div class="spec-item">
+        <div class="spec-label">Crypto</div>
+        <div class="spec-value">CRYPTO1</div>
+      </div>
+    </div>
+    
+    <!-- 破解算法可视化 -->
+    <div class="attack-visualization">
+      <div class="attack-title">MIFARE Classic Attack</div>
+      <div class="attack-steps">
+        <div class="step step-1">Collect nonces</div>
+        <div class="step step-2">Find key correlation</div>
+        <div class="step step-3">Brute force</div>
+        <div class="step step-4">Key recovery</div>
+      </div>
+      <div class="attack-progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- 十六进制数据流 -->
+    <div class="hex-data-stream">
+      <div class="hex-row">26 3F 00 91 B4 5A 08 F2 E3 D7 C1</div>
+      <div class="hex-row">A0 00 00 00 62 03 01 0C 06 01 02</div>
+      <div class="hex-row">00 0F 00 00 00 00 00 00 00 00 00</div>
+    </div>
   </div>
 </template>
 
@@ -266,27 +307,59 @@
 }
 
 .label-1 {
-  top: 30%;
-  left: 20%;
+  top: 20%;
+  left: 15%;
   animation-delay: 0s;
 }
 
 .label-2 {
-  top: 60%;
-  left: 25%;
+  top: 50%;
+  left: 20%;
   animation-delay: 2s;
 }
 
 .label-3 {
-  top: 40%;
+  top: 30%;
   left: 70%;
   animation-delay: 1s;
 }
 
 .label-4 {
-  top: 70%;
+  top: 60%;
   left: 65%;
   animation-delay: 3s;
+}
+
+.label-5 {
+  top: 15%;
+  left: 40%;
+  animation-delay: 1.5s;
+  border-color: rgba(126, 231, 135, 0.6);
+  box-shadow: 0 0 10px rgba(126, 231, 135, 0.4);
+}
+
+.label-6 {
+  top: 75%;
+  left: 30%;
+  animation-delay: 2.5s;
+  border-color: rgba(255, 123, 114, 0.6);
+  box-shadow: 0 0 10px rgba(255, 123, 114, 0.4);
+}
+
+.label-7 {
+  top: 40%;
+  left: 85%;
+  animation-delay: 3.5s;
+  border-color: rgba(255, 123, 114, 0.6);
+  box-shadow: 0 0 10px rgba(255, 123, 114, 0.4);
+}
+
+.label-8 {
+  top: 85%;
+  left: 75%;
+  animation-delay: 4s;
+  border-color: rgba(248, 227, 161, 0.6);
+  box-shadow: 0 0 10px rgba(248, 227, 161, 0.4);
 }
 
 @keyframes float {
@@ -322,6 +395,126 @@
   }
   100% {
     top: 100%;
+  }
+}
+
+/* 技术参数 */
+.tech-specs {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  display: flex;
+  gap: 15px;
+}
+
+.spec-item {
+  background-color: rgba(22, 27, 34, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.spec-label {
+  color: rgba(126, 231, 135, 0.8);
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
+.spec-value {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 破解算法可视化 */
+.attack-visualization {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 200px;
+  background-color: rgba(22, 27, 34, 0.7);
+  border: 1px solid rgba(255, 123, 114, 0.6);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.attack-title {
+  color: rgba(255, 123, 114, 0.9);
+  font-size: 12px;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.attack-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 5px;
+}
+
+.step {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.step::before {
+  content: ">";
+  position: absolute;
+  left: 0;
+  color: rgba(255, 123, 114, 0.8);
+}
+
+.step-1::before { opacity: 0.4; }
+.step-2::before { opacity: 0.6; }
+.step-3::before { opacity: 0.8; }
+.step-4::before { opacity: 1; }
+
+.attack-progress-bar {
+  height: 4px;
+  background-color: rgba(22, 27, 34, 0.8);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: rgba(255, 123, 114, 0.8);
+  width: 75%;
+  animation: progressPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes progressPulse {
+  0% {
+    width: 65%;
+  }
+  100% {
+    width: 85%;
+  }
+}
+
+/* 十六进制数据流 */
+.hex-data-stream {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-family: monospace;
+  font-size: 10px;
+  color: rgba(126, 231, 135, 0.8);
+  text-align: right;
+  line-height: 1.4;
+  animation: hexFade 8s linear infinite;
+}
+
+@keyframes hexFade {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 </style> 
