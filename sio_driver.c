@@ -192,7 +192,7 @@ static int32_t sio_driver_rx_worker(void* context) {
         furi_check((events & FuriFlagError) == 0);
 
         if(events & WORKER_EVT_STOP) {
-            // Application is stopping
+            // Worker thread is stopping
             break;
         } else if(events & WORKER_EVT_ERROR) {
             FURI_LOG_E(
@@ -236,18 +236,27 @@ static int32_t sio_driver_rx_worker(void* context) {
                 sio_driver_send_status(sio, status);
 
                 // Increase baudrate if needed
-                if(status == SIO_ACK && sio->request.baudrate != SIO_DEFAULT_BAUDRATE) {
-                    sio->baudrate = sio->request.baudrate;
-                    furi_hal_serial_tx_wait_complete(sio->uart);
-                    furi_hal_serial_set_br(sio->uart, sio->baudrate);
+                if(status == SIO_ACK) {
+                    if(sio->request.baudrate != SIO_DEFAULT_BAUDRATE) {
+                        sio->baudrate = sio->request.baudrate;
+                        furi_hal_serial_tx_wait_complete(sio->uart);
+                        furi_hal_serial_set_br(sio->uart, sio->baudrate);
+                    }
+
+                    if(sio->rx_expected == 0) {
+                        // Execute the command without receiving data
+                        uint8_t status = sio_invoke_data_callback(sio, &sio->request);
+
+                        sio_driver_send_status(sio, status);
+                        sio_driver_send_data(sio, sio->request.tx_data, sio->request.tx_size);
+                    }
                 }
 
             } else {
                 // ACK data frame
                 sio_driver_send_status(sio, SIO_ACK);
-            }
 
-            if(sio->rx_expected == 0) {
+                // Execute the command with received data
                 uint8_t status = sio_invoke_data_callback(sio, &sio->request);
 
                 sio_driver_send_status(sio, status);
