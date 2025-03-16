@@ -69,15 +69,75 @@
     
     <!-- 十六进制数据流 -->
     <div class="hex-data-stream">
-      <div class="hex-row">26 3F 00 91 B4 5A 08 F2 E3 D7 C1</div>
-      <div class="hex-row">A0 00 00 00 62 03 01 0C 06 01 02</div>
-      <div class="hex-row">00 0F 00 00 00 00 00 00 00 00 00</div>
+      <div class="hex-set">
+        <div v-for="(row, index) in displayedRows" :key="index" class="hex-row">
+          {{ row }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// 组件逻辑
+import { ref, onMounted } from 'vue';
+
+// 当前显示的十六进制数据集索引
+const currentHexSet = ref(0);
+
+// 十六进制数据集合
+const hexDataSets = [
+  [
+    '26 3F 7C 91 B4 5A 08 F2 E3 D7 C1',
+    'A0 4B 3D 7E 62 03 01 0C 06 01 02',
+    'D5 0F 2A 8C 5F 1B 9A 34 C7 E2 B8'
+  ],
+  [
+    '04 A5 B9 C2 17 5B 80 39 FF 76 D1',
+    '90 AF 6D 8E 12 F3 7A 4C 2B 9D E5',
+    '6F 10 84 08 A0 3F 2E 5D 03 7C 4B'
+  ],
+  [
+    '00 A4 04 00 07 D2 76 9C 3E 85 01',
+    '6F 84 A5 BF 0C 61 4F 50 87 90 3A',
+    '9F 26 08 3E DC 16 79 53 C6 14 22'
+  ],
+  [
+    '60 7B 2C 4D 9E 5F FF FF FF FF FF',
+    '50 3A 11 22 33 44 55 66 77 88 99',
+    '08 77 8F 08 1A 2B 3C 4D 5E 6F 7A'
+  ],
+  [
+    'A0 B1 C2 D3 03 10 10 E4 F5 A6 B7',
+    '67 89 AB CD EF 12 34 56 78 9A BC',
+    'FF EE DD CC BB AA 08 04 F1 E2 D3'
+  ],
+  [
+    '00 84 00 00 08 7A 6B 5C 4D 3E 2F',
+    '90 AF 1A 2B 3C 4D 5E 6F 7A 8B 9C',
+    '4D 49 46 41 52 45 20 43 6C 61 73'
+  ]
+];
+
+// 当前显示的行数据
+const displayedRows = ref([
+  hexDataSets[0][0],
+  hexDataSets[0][1],
+  hexDataSets[0][2]
+]);
+
+// 在组件挂载后启动数据切换
+onMounted(() => {
+  // 快速切换效果
+  let rowIndex = 0;
+  setInterval(() => {
+    // 随机选择一个数据集
+    const randomSetIndex = Math.floor(Math.random() * hexDataSets.length);
+    // 更新单行数据
+    displayedRows.value[rowIndex] = hexDataSets[randomSetIndex][rowIndex];
+    // 循环切换行
+    rowIndex = (rowIndex + 1) % 3;
+  }, 300); // 每300毫秒更新一行
+});
 </script>
 
 <style scoped>
@@ -355,8 +415,8 @@
 }
 
 .label-8 {
-  top: 85%;
-  left: 75%;
+  top: 75%;
+  left: 55%;
   animation-delay: 4s;
   border-color: rgba(248, 227, 161, 0.6);
   box-shadow: 0 0 10px rgba(248, 227, 161, 0.4);
@@ -506,15 +566,40 @@
   color: rgba(126, 231, 135, 0.8);
   text-align: right;
   line-height: 1.4;
-  animation: hexFade 8s linear infinite;
+  width: 220px;
 }
 
-@keyframes hexFade {
+.hex-set {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.hex-row {
+  margin-bottom: 2px;
+  transition: color 0.1s ease;
+}
+
+/* 让每行在更新时有短暂的高亮效果 */
+.hex-row:nth-child(1) {
+  animation: rowHighlight 0.9s infinite;
+}
+
+.hex-row:nth-child(2) {
+  animation: rowHighlight 0.9s 0.3s infinite;
+}
+
+.hex-row:nth-child(3) {
+  animation: rowHighlight 0.9s 0.6s infinite;
+}
+
+@keyframes rowHighlight {
   0%, 100% {
-    opacity: 0.3;
+    color: rgba(126, 231, 135, 0.8);
   }
-  50% {
-    opacity: 0.8;
+  10% {
+    color: rgba(255, 255, 255, 1);
+    text-shadow: 0 0 5px rgba(126, 231, 135, 0.8);
   }
 }
 </style> 
