@@ -68,7 +68,6 @@ export default {
       tag: '标签',
       length: '长度',
       value: '值',
-      description: '描述',
     },
     copy: {
       success: '标签 {tag} 已复制到剪贴板',

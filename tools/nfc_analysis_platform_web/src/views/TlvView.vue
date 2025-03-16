@@ -86,7 +86,6 @@
               <th>{{ t('tlv.results.tag') }}</th>
               <th>{{ t('tlv.results.length') }}</th>
               <th>{{ t('tlv.results.value') }}</th>
-              <th>{{ t('tlv.results.description') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -94,17 +93,17 @@
               <td class="font-mono">
                 <div class="flex items-center">
                   <span v-if="item.level > 0" class="inline-block mr-2" :style="`margin-left: ${item.level * 16}px`">└</span>
-                  <span 
-                    @click="copyTag(item.tag)" 
-                    :class="['cursor-pointer px-2 py-0.5 rounded text-xs font-medium', getTagColorClass(index)]"
+                  <ColorTag 
+                    :text="item.tag" 
+                    :level="item.level" 
+                    @click="copyTag"
                   >
                     {{ item.tag }}
-                  </span>
+                  </ColorTag>
                 </div>
               </td>
               <td>{{ item.length }}</td>
               <td class="font-mono text-sm max-w-xs truncate">{{ item.value }}</td>
-              <td>{{ item.description || '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -121,21 +120,20 @@
             <tr>
               <th>{{ t('tlv.results.tag') }}</th>
               <th>{{ t('tlv.results.value') }}</th>
-              <th>{{ t('tlv.results.description') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in extractResult" :key="index">
               <td class="font-mono">
-                <span 
-                  @click="copyTag(item.tag)" 
-                  :class="['cursor-pointer px-2 py-0.5 rounded text-xs font-medium', getTagColorClass(index)]"
+                <ColorTag 
+                  :text="item.tag" 
+                  :color-index="index" 
+                  @click="copyTag"
                 >
                   {{ item.tag }}
-                </span>
+                </ColorTag>
               </td>
               <td class="font-mono text-sm max-w-xs truncate">{{ item.value }}</td>
-              <td>{{ item.description || '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -162,6 +160,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { parseTlvData, extractTlvValues } from '@/api/tlv';
 import toast from '@/utils/toast';
+import ColorTag from '@/components/ColorTag.vue';
 
 const { t } = useI18n();
 const hexData = ref('');
@@ -171,24 +170,6 @@ const extractResult = ref([]);
 const loading = ref(false);
 const error = ref('');
 const dataType = ref('hex'); // 默认数据类型为 hex
-
-// 标签颜色类
-const tagColorClasses = [
-  'bg-ark-blue-light/10 text-ark-blue-light',
-  'bg-ark-green-light/10 text-ark-green-light',
-  'bg-ark-yellow-light/10 text-ark-yellow-light',
-  'bg-ark-red-light/10 text-ark-red-light',
-  'bg-ark-purple-light/10 text-ark-purple-light',
-  'bg-ark-cyan-light/10 text-ark-cyan-light',
-  'bg-ark-orange-light/10 text-ark-orange-light',
-  'bg-ark-pink-light/10 text-ark-pink-light'
-];
-
-// 获取标签颜色类
-const getTagColorClass = (index) => {
-  // 使用标签的索引来选择颜色，确保相同的标签有相同的颜色
-  return tagColorClasses[index % tagColorClasses.length];
-};
 
 // 复制标签
 const copyTag = (tag) => {
@@ -214,6 +195,12 @@ const parseTLV = async () => {
     
     // 处理嵌套 TLV 结构
     parseResult.value = flattenTlvStructure(result.structure);
+    
+    // 打印层级信息，用于调试
+    console.log('TLV Structure with levels:', parseResult.value.map(item => ({
+      tag: item.tag,
+      level: item.level
+    })));
   } catch (err) {
     console.error('Failed to parse TLV data:', err);
     error.value = err.message || t('tlv.error.parseError');
@@ -239,8 +226,7 @@ const extractValues = async () => {
     // 将结果转换为数组格式以便显示
     extractResult.value = Object.entries(result.values || {}).map(([tag, value]) => ({
       tag,
-      value,
-      description: ''
+      value
     }));
     
   } catch (err) {

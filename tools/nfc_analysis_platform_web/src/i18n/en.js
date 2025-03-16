@@ -68,7 +68,6 @@ export default {
       tag: 'Tag',
       length: 'Length',
       value: 'Value',
-      description: 'Description',
     },
     copy: {
       success: 'Tag {tag} copied to clipboard',
