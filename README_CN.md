@@ -7,6 +7,11 @@ NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡�
   <img src="./doc_images/emv_response.jpg" width="45%" alt="EMV卡片解码响应">
 </div>
 
+<div align="center">
+  <img src="./doc_images/emv_decode.jpg" width="45%" alt="EMV卡片详细解码">
+  <img src="./doc_images/travel_card_decode.png" width="45%" alt="交通卡解码">
+</div>
+
 ## 功能特点
 
 - 支持从脚本文件加载APDU命令
