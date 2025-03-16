@@ -1,10 +1,2 @@
-dist/*
-.vscode
-.clang-format
-.clangd
-.editorconfig
-.env
-.ufbt
 .DS_Store
-
 node_modules
