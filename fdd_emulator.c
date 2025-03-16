@@ -182,7 +182,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
 
     switch(request->command) {
     case SIO_COMMAND_STATUS: {
-        size_t sector_size = disk_image_sector_size(fdd->image);
+        DiskGeometry geom = disk_geometry(fdd->image);
         bool write_protect = disk_image_get_write_protect(fdd->image);
 
         uint8_t drive_status = 0;
@@ -191,9 +191,9 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         drive_status |= false ? 0x04 : 0x00; // Operation error
         drive_status |= write_protect ? 0x08 : 0x00; // Write protected
         drive_status |= 0x10; // Motor ON
-        drive_status |= (sector_size == 256) ? 0x20 : 0x00; // Double density
-        drive_status |= false ? 0x40 : 0x00; // Medium density
-        drive_status |= false ? 0x80 : 0x00; // Enhanced density
+        drive_status |= geom.sector_size == 256 ? 0x20 : 0x00; // Double density
+        drive_status |= geom.heads == 2 ? 0x40 : 0x00; // Double sided
+        drive_status |= geom.sectors_per_track == 26 ? 0x80 : 0x00; // Enhanced density
 
         request->tx_data[0] = drive_status;
         request->tx_data[1] = 0xFF;

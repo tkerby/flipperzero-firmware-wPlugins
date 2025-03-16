@@ -17,7 +17,7 @@ Note: All signals on the Atari SIO use 5V TTL logic. Flipper Zero’s I/Os are 5
 
 ## Instructions for Use
 
-The emulator accepts disk images in ATR format, which must be copied to the SD card to `/apps_data/sio2flip/atr/`. It supports SD, ED, and DD disk images with 128- or 256-byte sectors. Up to four floppy disk drives can be emulated.
+The emulator accepts disk images in ATR format, which must be copied to the SD card to `/apps_data/sio2flip/atr/`. It supports SD, ED, and DD disk images with 128- or 256-byte sectors, as well as single- and double-sided disks. Up to four floppy disk drives can be emulated.
 
 ## TODO
 
