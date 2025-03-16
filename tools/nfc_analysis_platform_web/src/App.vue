@@ -11,64 +11,34 @@
             <div class="flex">
               <div class="flex-shrink-0 flex items-center">
                 <img class="h-8 w-auto" src="@/assets/logo.svg" alt="NFC Analysis Platform">
+                <span class="ml-2 text-xl font-semibold">{{ t('app.title') }}</span>
               </div>
               
               <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <router-link 
-                  to="/" 
+                  v-for="(route, index) in routes"
+                  :key="index"
+                  :to="route.path"
                   class="inline-flex items-center px-1 pt-1 border-b-2"
                   :class="[
-                    $route.name === 'home' 
-                      ? 'border-ark-accent text-ark-accent' 
+                    $route.path === route.path
+                      ? 'border-ark-accent text-ark-accent'
                       : 'border-transparent hover:border-ark-border'
                   ]"
                 >
-                  主页
-                </router-link>
-                
-                <router-link 
-                  to="/tlv" 
-                  class="inline-flex items-center px-1 pt-1 border-b-2"
-                  :class="[
-                    $route.name === 'tlv' 
-                      ? 'border-ark-accent text-ark-accent' 
-                      : 'border-transparent hover:border-ark-border'
-                  ]"
-                >
-                  TLV 解析
-                </router-link>
-                
-                <router-link 
-                  to="/nard" 
-                  class="inline-flex items-center px-1 pt-1 border-b-2"
-                  :class="[
-                    $route.name === 'nard' 
-                      ? 'border-ark-accent text-ark-accent' 
-                      : 'border-transparent hover:border-ark-border'
-                  ]"
-                >
-                  NARD 解析
-                </router-link>
-                
-                <router-link 
-                  to="/system" 
-                  class="inline-flex items-center px-1 pt-1 border-b-2"
-                  :class="[
-                    $route.name === 'system' 
-                      ? 'border-ark-accent text-ark-accent' 
-                      : 'border-transparent hover:border-ark-border'
-                  ]"
-                >
-                  系统信息
+                  {{ t(`nav.${route.name}`) }}
                 </router-link>
               </div>
             </div>
             
             <!-- 右侧用户菜单 -->
-            <div class="hidden sm:ml-6 sm:flex sm:items-center">
+            <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+              <!-- 语言选择器 -->
+              <LanguageSelector />
+              
               <button 
                 type="button" 
-                class="bg-ark-panel-light p-1 rounded-full text-ark-text hover:text-ark-accent focus:outline-none"
+                class="bg-ark-panel p-1 rounded-full text-ark-text hover:text-ark-accent focus:outline-none"
               >
                 <span class="sr-only">查看通知</span>
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -113,51 +83,17 @@
         >
           <div class="pt-2 pb-3 space-y-1">
             <router-link 
-              to="/" 
+              v-for="(route, index) in routes"
+              :key="index"
+              :to="route.path"
               class="block pl-3 pr-4 py-2 border-l-4"
               :class="[
-                $route.name === 'home'
+                $route.path === route.path
                   ? 'border-ark-accent text-ark-accent bg-ark-panel-light'
                   : 'border-transparent hover:border-ark-border'
               ]"
             >
-              主页
-            </router-link>
-            
-            <router-link 
-              to="/tlv" 
-              class="block pl-3 pr-4 py-2 border-l-4"
-              :class="[
-                $route.name === 'tlv'
-                  ? 'border-ark-accent text-ark-accent bg-ark-panel-light'
-                  : 'border-transparent hover:border-ark-border'
-              ]"
-            >
-              TLV 解析
-            </router-link>
-            
-            <router-link 
-              to="/nard" 
-              class="block pl-3 pr-4 py-2 border-l-4"
-              :class="[
-                $route.name === 'nard'
-                  ? 'border-ark-accent text-ark-accent bg-ark-panel-light'
-                  : 'border-transparent hover:border-ark-border'
-              ]"
-            >
-              NARD 解析
-            </router-link>
-            
-            <router-link 
-              to="/system" 
-              class="block pl-3 pr-4 py-2 border-l-4"
-              :class="[
-                $route.name === 'system'
-                  ? 'border-ark-accent text-ark-accent bg-ark-panel-light'
-                  : 'border-transparent hover:border-ark-border'
-              ]"
-            >
-              系统信息
+              {{ t(`nav.${route.name}`) }}
             </router-link>
           </div>
         </div>
@@ -177,10 +113,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import LoadingAnimation from './components/LoadingAnimation.vue';
+import LanguageSelector from './components/LanguageSelector.vue';
 
+const { t } = useI18n();
 const isLoading = ref(true);
 const mobileMenuOpen = ref(false);
+
+const routes = [
+  { path: '/', name: 'home' },
+  { path: '/tlv', name: 'tlv' },
+  { path: '/nard', name: 'nard' },
+  { path: '/system', name: 'system' }
+];
 
 const onLoadingComplete = () => {
   isLoading.value = false;
@@ -188,10 +134,9 @@ const onLoadingComplete = () => {
 
 // 模拟资源预加载
 onMounted(() => {
-  // 这里可以添加实际的资源预加载逻辑
   setTimeout(() => {
     isLoading.value = false;
-  }, 5000); // 设置一个合适的加载时间，这里设置为 5 秒
+  }, 5000);
 });
 </script>
 

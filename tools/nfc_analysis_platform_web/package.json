@@ -13,8 +13,10 @@
   "description": "",
   "dependencies": {
     "@heroicons/vue": "^1.0.6",
+    "js-cookie": "^3.0.5",
     "pinia": "^3.0.1",
     "vue": "^3.4.21",
+    "vue-i18n": "^11.1.2",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
