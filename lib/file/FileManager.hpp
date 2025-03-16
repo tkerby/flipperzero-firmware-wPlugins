@@ -59,6 +59,11 @@ public:
         return OpenWrite(concatedPath.cstr());
     }
 
+    void DeleteFile(const char* dir, const char* file) {
+        String concatedPath = String("%s/%s", dir, file);
+        storage_common_remove(storage, concatedPath.cstr());
+    }
+
     ~FileManager() {
         furi_record_close(RECORD_STORAGE);
     }

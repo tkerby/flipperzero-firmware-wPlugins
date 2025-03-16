@@ -6,6 +6,7 @@
 #include "lib/ui/view/UiView.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
 #include "lib/ui/view/TextInputUiView.hpp"
+#include "lib/ui/view/DialogUiView.hpp"
 #include "lib/FlipperDolphin.hpp"
 #include "lib/ui/UiManager.hpp"
 #include "app/AppFileSystem.hpp"
@@ -138,9 +139,36 @@ private:
         if(index == saveAsItemIndex) {
             saveAs();
         } else if(index == deleteItemIndex) {
-            //TODO: delete
+            DialogUiView* removeConfirmation = new DialogUiView("Really delete?", savedAsName->cstr());
+            removeConfirmation->AddLeftButton("Nope");
+            removeConfirmation->AddRightButton("Yup");
+            removeConfirmation->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::confirmDelete));
+
+            UiManager::GetInstance()->PushView(removeConfirmation);
         } else {
             transmitMessage();
+        }
+    }
+
+    void confirmDelete(DialogExResult result) {
+        switch(result) {
+        case DialogExResultRight: {
+            String* pagerFile = PagerSerializer().GetFilename(getPager());
+            FileManager().DeleteFile(SAVED_STATIONS_PATH, pagerFile->cstr());
+            delete pagerFile;
+
+            receiver->ReloadKnownStations();
+            UiManager::GetInstance()->PopView(false);
+            UiManager::GetInstance()->PopView(false);
+        } break;
+
+        case DialogExResultLeft:
+            UiManager::GetInstance()->PopView(false);
+            break;
+
+        default:
+        case DialogExResultCenter:
+            break;
         }
     }
 
@@ -165,8 +193,6 @@ private:
     }
 
     void saveAsHandler(const char* name) {
-        UiManager::GetInstance()->PopView(true);
-
         FileManager fileManager = FileManager();
         fileManager.CreateDirIfNotExists((char*)STATIONS_PATH);
         fileManager.CreateDirIfNotExists((char*)SAVED_STATIONS_PATH);
@@ -178,6 +204,8 @@ private:
         PagerSerializer().SavePagerData(&fileManager, SAVED_STATIONS_PATH, name, pager, decoder, protocol, subghz->GetSettings());
         FlipperDolphin::Deed(DolphinDeedSubGhzSave);
         receiver->ReloadKnownStations();
+
+        UiManager::GetInstance()->PopView(true);
     }
 
     const char* encodingValueChanged(uint8_t index) {
