@@ -44,6 +44,7 @@ typedef enum {
     SIO_COMMAND_STATUS = 0x53, // Get status
     SIO_COMMAND_PUT = 0x50, // Write sector without verification
     SIO_COMMAND_FORMAT = 0x21, // Format disk
+    SIO_COMMAND_FORMAT_MEDIUM = 0x22, // Format disk (medium density)
     SIO_COMMAND_GET_HSI = 0x3F, // Get high-speed index
     SIO_COMMAND_READ_PERCOM = 0x4E, // Read PERCOM configuration
     SIO_COMMAND_WRITE_PERCOM = 0x4F, // Write PERCOM configuration

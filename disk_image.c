@@ -37,8 +37,6 @@ struct DiskImage {
     DiskGeometry geometry;
 };
 
-static bool guess_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size);
-
 #define ERROR_TITLE "Image not loaded"
 
 DiskImage* disk_image_open(const char* path, Storage* storage) {
@@ -84,12 +82,12 @@ DiskImage* disk_image_open(const char* path, Storage* storage) {
         goto cleanup;
     }
 
-    if(!guess_disk_geometry(&image->geometry, image->disk_size, image->sector_size)) {
-        FURI_LOG_W(TAG, "Failed to guess disk geometry");
+    if(!determine_disk_geometry(&image->geometry, image->disk_size, image->sector_size)) {
+        FURI_LOG_W(TAG, "Failed to determine disk geometry");
     } else {
         FURI_LOG_I(
             TAG,
-            "Guessed disk geometry: heads=%d, tracks=%d, sectors_per_track=%d, sector_size=%d, density=%d",
+            "Disk geometry: heads=%d, tracks=%d, sectors_per_track=%d, sector_size=%d, density=%d",
             image->geometry.heads,
             image->geometry.tracks,
             image->geometry.sectors_per_track,
@@ -219,7 +217,47 @@ bool disk_image_write_sector(DiskImage* image, size_t sector, const void* buffer
     return storage_file_write(image->file, buffer, sector_size) == image->sector_size;
 }
 
-static bool guess_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size) {
+bool disk_image_format(DiskImage* image, DiskGeometry geometry) {
+    size_t sector_count = geometry.heads * geometry.tracks * geometry.sectors_per_track;
+    size_t disk_size = (sector_count - 3) * geometry.sector_size + 3 * 128;
+
+    image->disk_size = disk_size;
+    image->sector_size = geometry.sector_size;
+
+    image->geometry = geometry;
+    image->header[0] = 0x96;
+    image->header[1] = 0x02;
+    image->header[2] = (disk_size / 16);
+    image->header[3] = (disk_size / 16) >> 8;
+    image->header[4] = geometry.sector_size;
+    image->header[5] = geometry.sector_size >> 8;
+    image->header[6] = (disk_size / 16) >> 16;
+
+    if(!storage_file_seek(image->file, 0, true)) {
+        return false;
+    }
+
+    if(storage_file_write(image->file, image->header, ATR_FILE_HEADER_SIZE) !=
+       ATR_FILE_HEADER_SIZE) {
+        return false;
+    }
+
+    if(!storage_file_truncate(image->file)) {
+        return false;
+    }
+
+    if(!storage_file_seek(image->file, disk_size + ATR_FILE_HEADER_SIZE, true)) {
+        return false;
+    }
+
+    if(!storage_file_sync(image->file)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool determine_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size) {
     if(disk_size == 90 * 1024 && sector_size == 128) {
         geom->heads = 1;
         geom->tracks = 40;

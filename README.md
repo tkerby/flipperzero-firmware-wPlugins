@@ -24,7 +24,7 @@ The emulator accepts disk images in ATR format, which must be copied to the SD c
 I have some plans, but I’m not sure if or when I’ll be able to complete them all.
 
 - Add a “New Disk Image” menu command
-- Implement disk formatting
+- Better support for PERCOM configuration
 - Support higher baud rates
 - Add CAS file emulation
 - Implement an XEX file loader

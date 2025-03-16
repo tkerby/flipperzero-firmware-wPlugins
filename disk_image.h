@@ -75,3 +75,11 @@ bool disk_image_read_sector(DiskImage* image, size_t sector, void* buffer);
 // - `sector` is 1-based
 // - `buffer` must be at least `disk_image_sector_size(image)` bytes long
 bool disk_image_write_sector(DiskImage* image, size_t sector, const void* buffer);
+
+// Formats the disk image with the specified geometry.
+// The disk image is resized and all sectors are cleared.
+bool disk_image_format(DiskImage* image, DiskGeometry geometry);
+
+// Determines the disk geometry based on the disk size and sector size
+// Returns false if the geometry cannot be determined.
+bool determine_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size);

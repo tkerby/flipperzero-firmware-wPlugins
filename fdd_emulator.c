@@ -157,7 +157,14 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         return SIO_ACK;
 
     case SIO_COMMAND_GET_HSI:
-        request->baudrate = 38400;
+        //request->baudrate = 38400;
+        //return SIO_ACK;
+        return SIO_NAK;
+
+    case SIO_COMMAND_FORMAT:
+        return SIO_ACK;
+
+    case SIO_COMMAND_FORMAT_MEDIUM:
         return SIO_ACK;
 
     default:
@@ -254,8 +261,40 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
     }
 
+    case SIO_COMMAND_FORMAT:
+        if(disk_image_get_write_protect(fdd->image)) {
+            return SIO_ERROR;
+        }
+        if(!determine_disk_geometry(&fdd->format_geometry, 90 * 1024, 128)) {
+            return SIO_ERROR;
+        }
+        if(!disk_image_format(fdd->image, fdd->format_geometry)) {
+            return SIO_ERROR;
+        }
+
+        // Send a list of bad sectors terminated by 0xFFFF
+        memset(request->tx_data, 0xFF, request->tx_size);
+        request->tx_size = disk_image_sector_size(fdd->image);
+        return SIO_COMPLETE;
+
+    case SIO_COMMAND_FORMAT_MEDIUM:
+        if(disk_image_get_write_protect(fdd->image)) {
+            return SIO_ERROR;
+        }
+        if(!determine_disk_geometry(&fdd->format_geometry, 130 * 1024, 128)) {
+            return SIO_ERROR;
+        }
+        if(!disk_image_format(fdd->image, fdd->format_geometry)) {
+            return SIO_ERROR;
+        }
+
+        // Send a list of bad sectors terminated by 0xFFFF
+        memset(request->tx_data, 0xFF, request->tx_size);
+        request->tx_size = disk_image_sector_size(fdd->image);
+        return SIO_COMPLETE;
+
     case SIO_COMMAND_GET_HSI:
-        request->tx_data[0] = SIO_HSI_38400;
+        request->tx_data[0] = SIO_HSI_19200;
         request->tx_size = 1;
         return SIO_COMPLETE;
 
