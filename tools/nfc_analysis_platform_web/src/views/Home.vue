@@ -51,12 +51,18 @@
         </div>
       </router-link>
     </div>
+    
+    <!-- NFC 全息动画 -->
+    <div class="ark-panel p-0 overflow-hidden">
+      <HolographicNfcAnimation />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { DocumentTextIcon, ChipIcon, CogIcon } from '@heroicons/vue/solid';
 import { useI18n } from 'vue-i18n';
+import HolographicNfcAnimation from '@/components/HolographicNfcAnimation.vue';
 
 const { t } = useI18n();
 </script> 
