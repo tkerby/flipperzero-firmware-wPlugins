@@ -45,9 +45,10 @@ private:
     ColumnOrientedListUiView* menuView;
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
+    bool receiveMode = false;
 
 public:
-    ScanStationsScreen(AppConfig* config) {
+    ScanStationsScreen(AppConfig* config, bool receiveNew, const char* stationsDir, bool preloadKnown) {
         this->config = config;
 
         menuView = new ColumnOrientedListUiView(
@@ -65,19 +66,28 @@ public:
         menuView->SetLeftButton("Conf", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
         subghz = new SubGhzModule(config->Frequency);
-        subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
-        subghz->SetReceiveAfterTransmission(true);
-        subghz->ReceiveAsync();
-
-        pagerReceiver = new PagerReceiver(config, subghz->GetSettings());
-
-        if(subghz->IsExternal()) {
-            menuView->SetNoElementCaption("Receiving via EXT...");
-        } else {
-            menuView->SetNoElementCaption("Receiving...");
+        if(receiveNew) {
+            subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
+            subghz->SetReceiveAfterTransmission(true);
+            subghz->ReceiveAsync();
         }
 
-        if(config->Debug) {
+        pagerReceiver = new PagerReceiver(config, subghz->GetSettings());
+        if(preloadKnown) {
+            pagerReceiver->ReloadKnownStations();
+        }
+
+        if(receiveNew) {
+            if(subghz->IsExternal()) {
+                menuView->SetNoElementCaption("Receiving via EXT...");
+            } else {
+                menuView->SetNoElementCaption("Receiving...");
+            }
+        } else {
+            menuView->SetNoElementCaption("No stations found!");
+        }
+
+        if(receiveNew && config->Debug) {
             receive(new SubGhzReceivedDataStub("Princeton", 0x030012)); // Europolis, pasta & pizza
             receive(new SubGhzReceivedDataStub("Princeton", 0xCBC012)); // Europolis, tokyo ramen
             receive(new SubGhzReceivedDataStub("Princeton", 0xA00012)); // Europolis, Istanbul
@@ -89,6 +99,12 @@ public:
 
             receive(new SubGhzReceivedDataStub("Princeton", 0xCBC022)); // tokyo ramen another pager
         }
+
+        if(stationsDir != NULL) {
+            pagerReceiver->LoadStationsFromDirectory(stationsDir, HANDLER_1ARG(&ScanStationsScreen::pagerAdded));
+        }
+
+        receiveMode = receiveNew;
     }
 
     UiView* GetView() {
@@ -97,11 +113,16 @@ public:
 
 private:
     void receive(SubGhzReceivedData* data) {
-        ReceivedPagerData* pagerData = pagerReceiver->Receive(data);
+        pagerAdded(pagerReceiver->Receive(data));
+        delete data;
+    }
 
+    void pagerAdded(ReceivedPagerData* pagerData) {
         if(pagerData != NULL) {
             if(pagerData->IsNew()) {
-                Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
+                if(receiveMode) {
+                    Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
+                }
 
                 if(pagerData->GetIndex() == 0) { // add buttons after capturing the first transmission
                     menuView->SetCenterButton("Actions", HANDLER_1ARG(&ScanStationsScreen::showActions));
@@ -117,8 +138,6 @@ private:
 
             delete pagerData;
         }
-
-        delete data;
     }
 
     void getElementColumnName(int index, int column, String* str) {
@@ -160,10 +179,10 @@ private:
         }; break;
 
         case 5: // repeats or edit flag
-            if(!pagerData->edited) {
-                str->format("x%d", pagerData->repeats);
-            } else {
+            if(pagerData->edited) {
                 str->format("**");
+            } else if(receiveMode) {
+                str->format("x%d", pagerData->repeats);
             }
             break;
 
@@ -193,7 +212,7 @@ private:
     }
 
     bool goBack() {
-        if(menuView->GetElementsCount() > 0) {
+        if(receiveMode && menuView->GetElementsCount() > 0) {
             DialogUiView* confirmGoBack = new DialogUiView("Really stop scan?", "You may loose captured signals");
             confirmGoBack->AddLeftButton("No");
             confirmGoBack->AddRightButton("Yes");

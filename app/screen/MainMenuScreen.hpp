@@ -32,7 +32,7 @@ public:
 
 private:
     void scanStationsMenuPressed(uint32_t) {
-        UiManager::GetInstance()->PushView((new ScanStationsScreen(config))->GetView());
+        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, true, NULL, true))->GetView());
     }
 
     void stationDatabasePressed(uint32_t) {
@@ -54,10 +54,12 @@ private:
     }
 
     void savedStationsPressed(uint32_t) {
+        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, false, SAVED_STATIONS_PATH, false))->GetView());
     }
 
     void autosavedStationsPressed(const char* dirName) {
-        UNUSED(dirName);
+        String path = String("%s/%s", AUTOSAVED_STATIONS_PATH, dirName);
+        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, false, path.cstr(), true))->GetView());
     }
 
     void aboutPressed(uint32_t index) {

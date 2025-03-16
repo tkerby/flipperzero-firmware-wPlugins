@@ -54,10 +54,9 @@ private:
         PagerSerializer serializer = PagerSerializer();
 
         if(dir != NULL) {
-            const uint16_t nameLength = 16;
-            char fileName[nameLength];
+            char fileName[MAX_STATION_FILENAME_LENGTH];
 
-            while(dir->GetNextFile(fileName, nameLength)) {
+            while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
                 String* stationName = new String();
                 StoredPagerData pager = serializer.LoadPagerData(
                     &fileManager,
@@ -69,20 +68,24 @@ private:
                     [this](const char* name) { return getDecoder(name)->id; }
                 );
 
-                KnownStationData data = getKnownStation(&pager);
-                uint32_t stationId = data.toInt();
-                if(withNames && knownStations.contains(stationId)) {
-                    delete knownStations[stationId];
-                }
-                knownStations[stationId] = withNames ? stationName : NULL;
-
-                if(!withNames) {
-                    delete stationName;
-                }
+                addKnown(withNames, stationName, &pager);
             }
         }
 
         delete dir;
+    }
+
+    void addKnown(bool withName, String* stationName, StoredPagerData* pager) {
+        KnownStationData data = getKnownStation(pager);
+        uint32_t stationId = data.toInt();
+        if(withName && knownStations.contains(stationId)) {
+            delete knownStations[stationId];
+        }
+        knownStations[stationId] = withName ? stationName : NULL;
+
+        if(!withName) {
+            delete stationName;
+        }
     }
 
     void unloadKnownStations() {
@@ -152,8 +155,6 @@ public:
         for(size_t i = 0; i < decoders.size(); i++) {
             decoders[i]->id = i;
         }
-
-        ReloadKnownStations();
     }
 
     void ReloadKnownStations() {
@@ -164,6 +165,38 @@ public:
         } else {
             loadKnownStations(false);
         }
+    }
+
+    void LoadStationsFromDirectory(const char* stationDirectory, function<void(ReceivedPagerData*)> pagerHandler) {
+        FileManager fileManager = FileManager();
+        Directory* dir = fileManager.OpenDirectory(stationDirectory);
+        PagerSerializer serializer = PagerSerializer();
+        bool withNames = config->SavedStrategy == SHOW_NAME;
+
+        if(dir != NULL) {
+            char fileName[MAX_STATION_FILENAME_LENGTH];
+
+            while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
+                String* stationName = new String();
+                StoredPagerData pager = serializer.LoadPagerData(
+                    &fileManager,
+                    stationName,
+                    SAVED_STATIONS_PATH,
+                    fileName,
+                    subghzSettings,
+                    [this](const char* name) { return getProtocol(name)->id; },
+                    [this](const char* name) { return getDecoder(name)->id; }
+                );
+
+                addKnown(withNames, stationName, &pager);
+
+                int index = pagers.size();
+                pagers.push_back(pager);
+                pagerHandler(new ReceivedPagerData(PagerGetter(index), index, true));
+            }
+        }
+
+        delete dir;
     }
 
     PagerDataGetter PagerGetter(size_t index) {

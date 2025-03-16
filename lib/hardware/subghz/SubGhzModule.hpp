@@ -80,6 +80,17 @@ private:
         }
     }
 
+    void prepareReceiver() {
+        receiver = subghz_receiver_alloc_init(environment);
+        subghz_receiver_set_filter(receiver, SubGhzProtocolFlag_Decodable);
+        subghz_receiver_set_rx_callback(receiver, captureCallback, this);
+
+        worker = subghz_worker_alloc();
+        subghz_worker_set_overrun_callback(worker, (SubGhzWorkerOverrunCallback)subghz_receiver_reset);
+        subghz_worker_set_pair_callback(worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
+        subghz_worker_set_context(worker, receiver);
+    }
+
 public:
     SubGhzModule(uint32_t frequency) {
         settings = new SubGhzSettings();
@@ -101,14 +112,6 @@ public:
         subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
 
         SetFrequency(frequency);
-
-        receiver = subghz_receiver_alloc_init(environment);
-        subghz_receiver_set_filter(receiver, SubGhzProtocolFlag_Decodable);
-
-        worker = subghz_worker_alloc();
-        subghz_worker_set_overrun_callback(worker, (SubGhzWorkerOverrunCallback)subghz_receiver_reset);
-        subghz_worker_set_pair_callback(worker, (SubGhzWorkerPairCallback)subghz_receiver_decode);
-        subghz_worker_set_context(worker, receiver);
 
         txCompleteCheckTimer = furi_timer_alloc(txCompleteCheckCallback, FuriTimerTypePeriodic, this);
     }
@@ -152,10 +155,13 @@ public:
 
     void SetReceiveHandler(function<void(SubGhzReceivedData*)> handler) {
         receiveHandler = handler;
-        subghz_receiver_set_rx_callback(receiver, captureCallback, this);
     }
 
     void ReceiveAsync() {
+        if(receiver == NULL) {
+            prepareReceiver();
+        }
+
         PutToIdle();
 
         subghz_devices_flush_rx(device);
