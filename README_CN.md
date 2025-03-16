@@ -1,6 +1,11 @@
 # NFC APDU Runner
 
-NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡片的APDU命令。该应用程序允许用户从脚本文件中加载APDU命令，并将其发送到NFC卡片，然后查看响应结果。
+NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡片的APDU命令。该应用程序允许用户从脚本文件中加载APDU命令，并将其发送到NFC卡片，然后查看响应结果。它还包含NARD（NFC APDU Runner响应解码器）功能，可使用自定义格式模板解析和分析APDU响应，以及TLV数据提取功能。
+
+<div align="center">
+  <img src="./doc_images/waiting_decode.png" width="45%" alt="NARD等待解码">
+  <img src="./doc_images/emv_response.jpg" width="45%" alt="EMV卡片解码响应">
+</div>
 
 ## 功能特点
 
@@ -9,6 +14,9 @@ NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡�
 - 用户友好的界面，提供操作提示
 - 执行日志记录，方便调试
 - 可以保存执行结果到文件
+- NARD（NFC APDU Runner响应解码器）用于解析和分析APDU响应
+- 基于模板的APDU响应解码，支持自定义格式模板
+- TLV数据提取和解析功能
 
 ##安装
 
@@ -23,7 +31,10 @@ NFC APDU Runner是一个Flipper Zero应用程序，用于读取和执行NFC卡�
 
 本项目包含额外的工具以增强功能：
 
-- [nfc_analysis_platform nard](tools/nfc_analysis_platform/README.md) - 一个用于解析和显示NFC APDU Runner应用程序生成的`.apdures`文件的工具
+- [nfc_analysis_platform](tools/nfc_analysis_platform/README.md) - 一个综合性的NFC数据分析平台，包括：
+  - **NARD（NFC APDU Runner响应解码器）** - 使用可自定义的格式模板解析和解码`.apdures`文件
+  - **TLV解析器** - 从NFC通信中提取和分析Tag-Length-Value数据结构
+  - **Web API服务器** - 通过RESTful API接口访问NFC分析功能
 
 ## 支持的卡类型
 
