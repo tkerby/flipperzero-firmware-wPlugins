@@ -356,7 +356,7 @@ bool save_player_context_api(PlayerContext* player_context) {
     if(!flipper_http_request(
            fhttp,
            POST,
-           "https://www.flipsocial.net/api/user/update-game-stats/",
+           "https://www.jblanked.com/flipper/api/user/update-game-stats/",
            "{\"Content-Type\": \"application/json\"}",
            furi_string_get_cstr(json_data))) {
         FURI_LOG_E(TAG, "Failed to save player context to API");

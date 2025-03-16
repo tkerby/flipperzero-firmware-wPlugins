@@ -766,7 +766,7 @@ static bool fetch_world_list(FlipperHTTP* fhttp) {
     return flipper_http_request(
         fhttp,
         GET,
-        "https://www.flipsocial.net/api/world/v5/list/10/",
+        "https://www.jblanked.com/flipper/api/world/v5/list/10/",
         "{\"Content-Type\":\"application/json\"}",
         NULL);
 }
@@ -785,7 +785,8 @@ static bool fetch_player_stats(FlipperHTTP* fhttp) {
         return false;
     }
     char url[128];
-    snprintf(url, sizeof(url), "https://www.flipsocial.net/api/user/game-stats/%s/", username);
+    snprintf(
+        url, sizeof(url), "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
 
     // ensure the folders exist
     char directory_path[128];
@@ -822,7 +823,7 @@ static bool fetch_player_stats(FlipperHTTP* fhttp) {
 //         return false;
 //     }
 
-//     return flipper_http_get_request_with_headers(fhttp, "https://www.flipsocial.net/api/app/last-updated/flip_world/", "{\"Content-Type\":\"application/json\"}");
+//     return flipper_http_get_request_with_headers(fhttp, "https://www.jblanked.com/flipper/api/app/last-updated/flip_world/", "{\"Content-Type\":\"application/json\"}");
 // }
 
 // static bool parse_app_update(FlipperHTTP *fhttp)
@@ -936,7 +937,7 @@ static bool _fetch_game(DataLoaderModel* model) {
         return flipper_http_request(
             model->fhttp,
             POST,
-            "https://www.flipsocial.net/api/user/login/",
+            "https://www.jblanked.com/flipper/api/user/login/",
             "{\"Content-Type\":\"application/json\"}",
             payload);
     } else if(model->request_index == 1) {
@@ -984,7 +985,7 @@ static bool _fetch_game(DataLoaderModel* model) {
             return flipper_http_request(
                 model->fhttp,
                 POST,
-                "https://www.flipsocial.net/api/user/register/",
+                "https://www.jblanked.com/flipper/api/user/register/",
                 "{\"Content-Type\":\"application/json\"}",
                 payload);
         } else {
@@ -1046,7 +1047,7 @@ static bool _fetch_game(DataLoaderModel* model) {
         snprintf(
             url,
             sizeof(url),
-            "https://www.flipsocial.net/api/world/v5/get/world/%s/",
+            "https://www.jblanked.com/flipper/api/world/v5/get/world/%s/",
             furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
@@ -1638,7 +1639,7 @@ static bool _fetch_worlds(DataLoaderModel* model) {
     return flipper_http_request(
         model->fhttp,
         GET,
-        "https://www.flipsocial.net/api/world/v5/get/10/",
+        "https://www.jblanked.com/flipper/api/world/v5/get/10/",
         "{\"Content-Type\":\"application/json\"}",
         NULL);
 }

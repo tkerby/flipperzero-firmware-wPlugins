@@ -43,9 +43,9 @@ int32_t flip_world_main(void* p) {
             "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
 
     // save app version
-    char app_version[16];
-    snprintf(app_version, sizeof(app_version), "%f", (double)VERSION);
-    save_char("app_version", app_version);
+    // char app_version[16];
+    // snprintf(app_version, sizeof(app_version), "%f", (double)VERSION);
+    save_char("app_version", VERSION);
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
