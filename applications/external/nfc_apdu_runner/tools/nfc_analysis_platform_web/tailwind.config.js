@@ -38,6 +38,36 @@ export default {
                         light: '#F8E3A1',
                         DEFAULT: '#F2CC60',
                         dark: '#D9B44D',
+                    },
+                    'purple': {
+                        light: '#D2A8FF',
+                        DEFAULT: '#8957E5',
+                        dark: '#6E40C9',
+                    },
+                    'cyan': {
+                        light: '#76E4F7',
+                        DEFAULT: '#39C5BB',
+                        dark: '#1B9E94',
+                    },
+                    'orange': {
+                        light: '#FFAB70',
+                        DEFAULT: '#F0883E',
+                        dark: '#DB6D28',
+                    },
+                    'pink': {
+                        light: '#F778BA',
+                        DEFAULT: '#DB61A2',
+                        dark: '#BF4B8A',
+                    },
+                    'indigo': {
+                        light: '#A5B4FC',
+                        DEFAULT: '#6366F1',
+                        dark: '#4F46E5',
+                    },
+                    'teal': {
+                        light: '#5EEAD4',
+                        DEFAULT: '#14B8A6',
+                        dark: '#0D9488',
                     }
                 },
                 'neon': {

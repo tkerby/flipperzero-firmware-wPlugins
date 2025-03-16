@@ -6,36 +6,24 @@ export default {
   nav: {
     home: '首页',
     tlv: 'TLV 分析',
-    nard: 'NARD 分析',
+    nard: 'NARD',
     system: '系统',
   },
   home: {
-    welcome: '欢迎使用 NFC 分析平台',
-    description: '这是一个专业的 NFC 数据分析平台，提供 TLV 和 NARD 格式的数据解析功能。',
+    welcome: 'NFC 分析平台欢迎您',
+    description: '专业的 NFC 数据分析平台，提供 TLV 和 NARD 格式解析能力。',
     features: {
       tlv: {
         title: 'TLV 解析',
         description: '解析和分析 Tag-Length-Value (TLV) 格式的 NFC 数据。',
       },
       nard: {
-        title: 'NARD 解析',
-        description: '解析 NARD 格式的 NFC 通信数据。',
+        title: 'NARD',
+        description: 'NFC Apdu Runner 响应解码器，用于解析 Flipper Zero 应用的响应数据。',
       },
       system: {
         title: '系统信息',
         description: '查看系统状态和配置信息。',
-      },
-    },
-    recentActivities: {
-      title: '最近活动',
-      time: '时间',
-      type: '类型',
-      description: '描述',
-      status: '状态',
-      items: {
-        tlvPaymentCard: '解析支付卡 TLV 数据',
-        nardFlipperData: '解析 Flipper Zero 捕获数据',
-        tlvAccessCard: '解析门禁卡数据',
       },
     },
   },
@@ -68,7 +56,6 @@ export default {
       tag: '标签',
       length: '长度',
       value: '值',
-      description: '描述',
     },
     copy: {
       success: '标签 {tag} 已复制到剪贴板',
@@ -81,8 +68,8 @@ export default {
     }
   },
   nard: {
-    title: 'NARD 数据分析',
-    description: '解析 NARD (NFC Application Record Data) 格式的数据，支持标准 NDEF 记录格式。',
+    title: 'NARD',
+    description: 'NFC Apdu Runner 响应解码器（NFC Apdu Runner Response Decoder），用于解析 Flipper Zero 下 NFC Apdu Runner 应用的响应数据。',
     input: {
       label: 'NARD 数据',
       placeholder: '请输入十六进制格式的 NARD 数据',

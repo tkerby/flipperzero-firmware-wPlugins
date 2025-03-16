@@ -6,7 +6,7 @@ export default {
   nav: {
     home: 'Home',
     tlv: 'TLV Analysis',
-    nard: 'NARD Analysis',
+    nard: 'NARD',
     system: 'System',
   },
   home: {
@@ -18,24 +18,12 @@ export default {
         description: 'Parse and analyze Tag-Length-Value (TLV) format NFC data.',
       },
       nard: {
-        title: 'NARD Analysis',
-        description: 'Parse NARD format NFC communication data.',
+        title: 'NARD',
+        description: 'NFC Apdu Runner Response Decoder for analyzing responses from Flipper Zero application.',
       },
       system: {
         title: 'System Info',
         description: 'View system status and configuration information.',
-      },
-    },
-    recentActivities: {
-      title: 'Recent Activities',
-      time: 'Time',
-      type: 'Type',
-      description: 'Description',
-      status: 'Status',
-      items: {
-        tlvPaymentCard: 'Parse payment card TLV data',
-        nardFlipperData: 'Parse Flipper Zero captured data',
-        tlvAccessCard: 'Parse access card data',
       },
     },
   },
@@ -68,7 +56,6 @@ export default {
       tag: 'Tag',
       length: 'Length',
       value: 'Value',
-      description: 'Description',
     },
     copy: {
       success: 'Tag {tag} copied to clipboard',
@@ -81,8 +68,8 @@ export default {
     }
   },
   nard: {
-    title: 'NARD Data Analysis',
-    description: 'Parse NARD (NFC Application Record Data) format data, supporting standard NDEF record format.',
+    title: 'NARD',
+    description: 'NFC Apdu Runner Response Decoder for analyzing responses from the NFC Apdu Runner application on Flipper Zero.',
     input: {
       label: 'NARD Data',
       placeholder: 'Enter NARD data in hexadecimal format',

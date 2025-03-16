@@ -51,71 +51,18 @@
         </div>
       </router-link>
     </div>
-
-    <!-- 最近活动 -->
-    <div class="ark-panel p-6">
-      <h2 class="text-xl font-medium mb-4">{{ t('home.recentActivities.title') }}</h2>
-      <table class="ark-table">
-        <thead>
-          <tr>
-            <th>{{ t('home.recentActivities.time') }}</th>
-            <th>{{ t('home.recentActivities.type') }}</th>
-            <th>{{ t('home.recentActivities.description') }}</th>
-            <th>{{ t('home.recentActivities.status') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(activity, index) in recentActivities" :key="index">
-            <td class="text-ark-text-secondary">{{ activity.time }}</td>
-            <td>
-              <span :class="['ark-badge', activity.typeClass]">
-                {{ activity.type }}
-              </span>
-            </td>
-            <td>{{ t(activity.descriptionKey) }}</td>
-            <td>
-              <span :class="['ark-badge', activity.statusClass]">
-                {{ t(`common.status.${activity.status}`) }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    
+    <!-- NFC 全息动画 -->
+    <div class="ark-panel p-0 overflow-hidden">
+      <HolographicNfcAnimation />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import { DocumentTextIcon, ChipIcon, CogIcon } from '@heroicons/vue/solid';
 import { useI18n } from 'vue-i18n';
+import HolographicNfcAnimation from '@/components/HolographicNfcAnimation.vue';
 
 const { t } = useI18n();
-
-const recentActivities = ref([
-  {
-    time: '2024-03-16 18:30',
-    type: 'TLV',
-    typeClass: 'ark-badge-blue',
-    descriptionKey: 'home.recentActivities.items.tlvPaymentCard',
-    status: 'success',
-    statusClass: 'ark-badge-green'
-  },
-  {
-    time: '2024-03-16 18:15',
-    type: 'NARD',
-    typeClass: 'ark-badge-green',
-    descriptionKey: 'home.recentActivities.items.nardFlipperData',
-    status: 'success',
-    statusClass: 'ark-badge-green'
-  },
-  {
-    time: '2024-03-16 17:45',
-    type: 'TLV',
-    typeClass: 'ark-badge-blue',
-    descriptionKey: 'home.recentActivities.items.tlvAccessCard',
-    status: 'failed',
-    statusClass: 'ark-badge-red'
-  }
-]);
 </script> 
