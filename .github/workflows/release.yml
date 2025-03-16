@@ -7,6 +7,14 @@ on:
         description: '版本号 (例如: v1.0.0)'
         required: true
         type: string
+      release_notes:
+        description: '版本更新说明 (支持多行输入)'
+        required: false
+        type: string
+        default: |
+          ## 更新内容
+          
+          - 
 
 jobs:
   build-linux-windows:
@@ -22,6 +30,7 @@ jobs:
         with:
           sdk-channel: release
           sdk-index-url: https://up.unleashedflip.com/directory.json
+          app-dir: fap
 
       # 设置Go环境
       - name: Set up Go
@@ -121,6 +130,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version }}
           name: Release ${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.release_notes }}
           draft: false
           prerelease: false
           files: |
