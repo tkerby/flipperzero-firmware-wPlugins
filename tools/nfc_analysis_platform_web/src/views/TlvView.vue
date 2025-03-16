@@ -80,7 +80,12 @@
       <h2 class="text-xl font-medium mb-4">{{ t('tlv.results.title') }}</h2>
       
       <div class="overflow-x-auto">
-        <table class="ark-table">
+        <table class="ark-table" style="table-layout: fixed;">
+          <colgroup>
+            <col style="width: 180px;" />
+            <col style="width: 80px;" />
+            <col />
+          </colgroup>
           <thead>
             <tr>
               <th>{{ t('tlv.results.tag') }}</th>
@@ -90,7 +95,7 @@
           </thead>
           <tbody>
             <tr v-for="(item, index) in parseResult" :key="index" :class="{'bg-ark-panel-light': item.level > 0}">
-              <td class="font-mono">
+              <td class="font-mono whitespace-nowrap overflow-hidden text-ellipsis">
                 <div class="flex items-center">
                   <span v-if="item.level > 0" class="inline-block mr-2" :style="`margin-left: ${item.level * 16}px`">└</span>
                   <ColorTag 
@@ -102,8 +107,8 @@
                   </ColorTag>
                 </div>
               </td>
-              <td>{{ item.length }}</td>
-              <td class="font-mono text-sm max-w-xs truncate">{{ item.value }}</td>
+              <td class="text-center">{{ item.length }}</td>
+              <td class="font-mono text-sm truncate">{{ item.value }}</td>
             </tr>
           </tbody>
         </table>
@@ -115,7 +120,11 @@
       <h2 class="text-xl font-medium mb-4">{{ t('tlv.extract.title') }}</h2>
       
       <div class="overflow-x-auto">
-        <table class="ark-table">
+        <table class="ark-table" style="table-layout: fixed;">
+          <colgroup>
+            <col style="width: 180px;" />
+            <col />
+          </colgroup>
           <thead>
             <tr>
               <th>{{ t('tlv.results.tag') }}</th>
@@ -124,7 +133,7 @@
           </thead>
           <tbody>
             <tr v-for="(item, index) in extractResult" :key="index">
-              <td class="font-mono">
+              <td class="font-mono whitespace-nowrap overflow-hidden text-ellipsis">
                 <ColorTag 
                   :text="item.tag" 
                   :color-index="index" 
@@ -133,7 +142,7 @@
                   {{ item.tag }}
                 </ColorTag>
               </td>
-              <td class="font-mono text-sm max-w-xs truncate">{{ item.value }}</td>
+              <td class="font-mono text-sm truncate">{{ item.value }}</td>
             </tr>
           </tbody>
         </table>
