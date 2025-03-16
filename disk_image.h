@@ -20,6 +20,19 @@
 
 #include <storage/storage.h>
 
+typedef struct {
+    // Nubner of heads (1==Single sided, 2==Double sided)
+    uint8_t heads;
+    // Number of tracks per head
+    uint8_t tracks;
+    // Number of sectors per track
+    uint16_t sectors_per_track;
+    // Sector size in bytes
+    uint16_t sector_size;
+    // Density (0 for FM/Single, 4 for MFM/Double)
+    uint8_t density;
+} DiskGeometry;
+
 typedef struct DiskImage DiskImage;
 
 // Opens ATR disk image file
@@ -30,6 +43,8 @@ void disk_image_close(DiskImage* image);
 
 // Returns the path to the disk image.
 const FuriString* disk_image_path(const DiskImage* image);
+
+DiskGeometry disk_geometry(const DiskImage* image);
 
 // Returns the size of the image in bytes
 size_t disk_image_size(const DiskImage* image);

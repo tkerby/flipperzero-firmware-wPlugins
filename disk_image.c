@@ -33,7 +33,11 @@ struct DiskImage {
     size_t disk_size;
     // Sector size in bytes
     size_t sector_size;
+    // Disk configuration
+    DiskGeometry geometry;
 };
+
+static bool guess_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size);
 
 #define ERROR_TITLE "Image not loaded"
 
@@ -80,10 +84,23 @@ DiskImage* disk_image_open(const char* path, Storage* storage) {
         goto cleanup;
     }
 
+    if(!guess_disk_geometry(&image->geometry, image->disk_size, image->sector_size)) {
+        FURI_LOG_W(TAG, "Failed to guess disk geometry");
+    } else {
+        FURI_LOG_I(
+            TAG,
+            "Guessed disk geometry: heads=%d, tracks=%d, sectors_per_track=%d, sector_size=%d, density=%d",
+            image->geometry.heads,
+            image->geometry.tracks,
+            image->geometry.sectors_per_track,
+            image->geometry.sector_size,
+            image->geometry.density);
+    }
+
     FURI_LOG_I(
         TAG,
-        "ATR file: disk_size=%dKB, sector_size=%d, sector_count=%d",
-        image->disk_size / 1024,
+        "ATR file: disk_size=%d, sector_size=%d, sector_count=%d",
+        image->disk_size,
         image->sector_size,
         image->disk_size / image->sector_size);
 
@@ -110,6 +127,10 @@ void disk_image_close(DiskImage* image) {
 
 const FuriString* disk_image_path(const DiskImage* image) {
     return image->path;
+}
+
+DiskGeometry disk_geometry(const DiskImage* image) {
+    return image->geometry;
 }
 
 size_t disk_image_size(const DiskImage* image) {
@@ -196,4 +217,42 @@ bool disk_image_write_sector(DiskImage* image, size_t sector, const void* buffer
     }
 
     return storage_file_write(image->file, buffer, sector_size) == image->sector_size;
+}
+
+static bool guess_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector_size) {
+    if(disk_size == 90 * 1024 && sector_size == 128) {
+        geom->heads = 1;
+        geom->tracks = 40;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 128;
+        geom->density = 0;
+    } else if(disk_size == 130 * 1024 && sector_size == 128) {
+        geom->heads = 1;
+        geom->tracks = 40;
+        geom->sectors_per_track = 26;
+        geom->sector_size = 128;
+        geom->density = 0x4;
+    } else if(disk_size == (180 * 1024 - 3 * 128) && sector_size == 256) {
+        geom->heads = 1;
+        geom->tracks = 40;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 256;
+        geom->density = 0x4;
+    } else if(disk_size == (360 * 1024 - 3 * 128) && sector_size == 256) {
+        geom->heads = 2;
+        geom->tracks = 40;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 256;
+        geom->density = 0x4;
+    } else if(disk_size == (720 * 1024 - 3 * 128) && sector_size == 256) {
+        geom->heads = 2;
+        geom->tracks = 80;
+        geom->sectors_per_track = 18;
+        geom->sector_size = 256;
+        geom->density = 0x4;
+    } else {
+        return false;
+    }
+
+    return true;
 }

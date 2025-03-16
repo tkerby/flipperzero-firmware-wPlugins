@@ -43,6 +43,8 @@ struct FddEmulator {
     FddActivityCallback activity_callback;
     void* callback_context;
 
+    DiskGeometry format_geometry;
+
     AppConfig* config;
 };
 
@@ -147,6 +149,13 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         }
     }
 
+    case SIO_COMMAND_READ_PERCOM:
+        request->rx_size = 12;
+        return SIO_ACK;
+
+    case SIO_COMMAND_WRITE_PERCOM:
+        return SIO_ACK;
+
     case SIO_COMMAND_GET_HSI:
         request->baudrate = 38400;
         return SIO_ACK;
@@ -213,6 +222,35 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         if(!disk_image_write_sector(fdd->image, sector, request->rx_data)) {
             return SIO_ERROR;
         }
+        return SIO_COMPLETE;
+    }
+
+    case SIO_COMMAND_READ_PERCOM: {
+        DiskGeometry geom = disk_geometry(fdd->image);
+        request->tx_data[0] = geom.tracks;
+        request->tx_data[1] = 1;
+        request->tx_data[2] = geom.sectors_per_track >> 8;
+        request->tx_data[3] = geom.sectors_per_track & 0xFF;
+        request->tx_data[4] = geom.heads;
+        request->tx_data[5] = geom.density;
+        request->tx_data[6] = geom.sector_size >> 8;
+        request->tx_data[7] = geom.sector_size & 0xFF;
+        request->tx_data[8] = 0xFF;
+        request->tx_data[9] = 0;
+        request->tx_data[10] = 0;
+        request->tx_data[11] = 0;
+        request->tx_size = 12;
+        return SIO_COMPLETE;
+    }
+
+    case SIO_COMMAND_WRITE_PERCOM: {
+        DiskGeometry geom = {0};
+        geom.tracks = request->rx_data[0];
+        geom.sectors_per_track = (request->rx_data[2] << 8) | request->rx_data[3];
+        geom.heads = request->rx_data[4];
+        geom.density = request->rx_data[5];
+        geom.sector_size = (request->rx_data[6] << 8) | request->rx_data[7];
+        fdd->format_geometry = geom;
         return SIO_COMPLETE;
     }
 
