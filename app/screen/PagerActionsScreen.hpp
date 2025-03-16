@@ -2,7 +2,7 @@
 
 #include "lib/String.hpp"
 #include "app/AppConfig.hpp"
-#include "app/pager/PagerDataStored.hpp"
+#include "app/pager/data/StoredPagerData.hpp"
 #include "app/pager/decoder/PagerDecoder.hpp"
 #include "app/pager/protocol/PagerProtocol.hpp"
 #include "lib/hardware/subghz/SubGhzModule.hpp"
@@ -44,7 +44,7 @@ public:
         this->protocol = protocol;
         this->subghz = subghz;
 
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerAction currentAction = decoder->GetAction(pager->data);
         uint8_t actionValue = decoder->GetActionValue(pager->data);
         uint16_t stationNum = decoder->GetStation(pager->data);
@@ -93,21 +93,21 @@ private:
     }
 
     void resendSingle(uint32_t) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void sendAction(PagerAction action) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats));
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void sendCurrentPager() {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         batchTransmissionScreen->SetProgress(currentPager, config->MaxPagerForBatchOrDetection);
         subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats));
     }

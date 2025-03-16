@@ -31,13 +31,33 @@ public:
     }
 
 private:
-    void scanStationsMenuPressed(uint32_t index) {
-        UNUSED(index);
+    void scanStationsMenuPressed(uint32_t) {
         UiManager::GetInstance()->PushView((new ScanStationsScreen(config))->GetView());
     }
 
-    void stationDatabasePressed(uint32_t index) {
-        UNUSED(index);
+    void stationDatabasePressed(uint32_t) {
+        SubMenuUiView* savedMenuView = new SubMenuUiView();
+        savedMenuView->AddItem("Manually saved stations", HANDLER_1ARG(&MainMenuScreen::savedStationsPressed));
+
+        FileManager fileManager = FileManager();
+        Directory* autosaved = fileManager.OpenDirectory(AUTOSAVED_STATIONS_PATH);
+        if(autosaved != NULL) {
+            char dirName[AUTOSAVED_DIR_NAME_LENGTH];
+            while(autosaved->GetNextFile(dirName, AUTOSAVED_DIR_NAME_LENGTH)) {
+                String itemName = String("Autosaved %s", dirName);
+                savedMenuView->AddItem(itemName.cstr(), [this, dirName](uint32_t) { autosavedStationsPressed(dirName); });
+            }
+        }
+        delete autosaved;
+
+        UiManager::GetInstance()->PushView(savedMenuView);
+    }
+
+    void savedStationsPressed(uint32_t) {
+    }
+
+    void autosavedStationsPressed(const char* dirName) {
+        UNUSED(dirName);
     }
 
     void aboutPressed(uint32_t index) {

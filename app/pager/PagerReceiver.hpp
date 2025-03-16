@@ -1,13 +1,19 @@
 #pragma once
 
-#include "core/log.h"
+#include "PagerSerializer.hpp"
 #include <cstring>
 #include <vector>
+#include <map>
+
+#include "core/log.h"
+
+#include "lib/hardware/subghz/SubGhzSettings.hpp"
+#include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
 
 #include "app/AppConfig.hpp"
 
-#include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
-#include "ReceivedPagerData.hpp"
+#include "data/ReceivedPagerData.hpp"
+#include "data/KnownStationData.hpp"
 
 #include "protocol/PrincetonProtocol.hpp"
 #include "protocol/Smc5326Protocol.hpp"
@@ -39,7 +45,64 @@ public:
 private:
     AppConfig* config;
     SubGhzSettings* subghzSettings;
-    vector<PagerDataStored> pagers;
+    vector<StoredPagerData> pagers;
+    map<uint32_t, String*> knownNames;
+
+    PagerDecoder* getDecoder(StoredPagerData* pagerData) {
+        for(size_t i = 0; i < decoders.size(); i++) {
+            if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
+                return decoders[i];
+            }
+        }
+        return decoders[0];
+    }
+
+    void loadKnownStations() {
+        FileManager fileManager = FileManager();
+        Directory* dir = fileManager.OpenDirectory(SAVED_STATIONS_PATH);
+        PagerSerializer serializer = PagerSerializer();
+
+        if(dir != NULL) {
+            const uint16_t nameLength = 32;
+            char fileName[nameLength];
+
+            while(dir->GetNextFile(fileName, nameLength)) {
+                String* stationName = new String();
+                StoredPagerData pager = serializer.LoadPagerData(
+                    &fileManager,
+                    stationName,
+                    SAVED_STATIONS_PATH,
+                    fileName,
+                    subghzSettings,
+                    [this](const char* name) { return getProtocol(name)->id; },
+                    [this](const char* name) { return getDecoder(name)->id; }
+                );
+
+                KnownStationData data = getKnownStation(&pager);
+                uint32_t stationId = data.toInt();
+                knownNames[stationId] = stationName;
+
+                FURI_LOG_I(LOG_TAG, "STID: %lu", stationId);
+                FURI_LOG_I(LOG_TAG, "PDATA: %06X", pager.data);
+                FURI_LOG_I(LOG_TAG, "ST: %d", data.station);
+                FURI_LOG_I(LOG_TAG, "DEC: %d", data.decoder);
+                FURI_LOG_I(LOG_TAG, "PROT: %d", data.protocol);
+                FURI_LOG_I(LOG_TAG, "FREQ: %d", data.frequency);
+                FURI_LOG_I(LOG_TAG, "-------------------------");
+            }
+        }
+
+        delete dir;
+    }
+
+    KnownStationData getKnownStation(StoredPagerData* pager) {
+        KnownStationData data;
+        data.frequency = pager->frequency;
+        data.protocol = pager->protocol;
+        data.decoder = pager->decoder;
+        data.station = decoders[pager->decoder]->GetStation(pager->data);
+        return data;
+    }
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
         for(size_t i = 0; i < protocols.size(); i++) {
@@ -47,16 +110,18 @@ private:
                 return protocols[i];
             }
         }
+
         return NULL;
     }
 
-    PagerDecoder* getDecoder(PagerDataStored* pagerData) {
+    PagerDecoder* getDecoder(const char* shortName) {
         for(size_t i = 0; i < decoders.size(); i++) {
-            if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
+            if(strcmp(shortName, decoders[i]->GetShortName()) == 0) {
                 return decoders[i];
             }
         }
-        return decoders[0];
+
+        return NULL;
     }
 
 public:
@@ -70,10 +135,29 @@ public:
         for(size_t i = 0; i < decoders.size(); i++) {
             decoders[i]->id = i;
         }
+        loadKnownStations();
     }
 
     PagerDataGetter PagerGetter(size_t index) {
         return [this, index]() { return &pagers[index]; };
+    }
+
+    String* GetName(StoredPagerData* pager) {
+        KnownStationData stData = getKnownStation(pager);
+        uint32_t stid = stData.toInt();
+        String* name = knownNames[stid];
+        FURI_LOG_I(
+            LOG_TAG,
+            "KN of STID %lu is %s (%d, %d, %d, %d / %d)",
+            stid,
+            name == NULL ? "NULL" : name->cstr(),
+            stData.station,
+            stData.decoder,
+            stData.protocol,
+            stData.frequency,
+            stData.unused
+        );
+        return name;
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
@@ -100,13 +184,15 @@ public:
 
         bool isNew = index < 0;
         if(isNew) {
-            PagerDataStored storedData = PagerDataStored();
+            StoredPagerData storedData = StoredPagerData();
             storedData.data = dataHash;
             storedData.protocol = protocol->id;
             storedData.repeats = 1;
             storedData.te = data->GetTE();
             storedData.frequency = subghzSettings->GetFrequencyIndex(data->GetFrequency());
             storedData.decoder = getDecoder(&storedData)->id;
+            storedData.hasName = GetName(&storedData) != NULL;
+            storedData.edited = false;
 
             index = pagers.size();
             pagers.push_back(storedData);
@@ -122,6 +208,10 @@ public:
 
         for(PagerDecoder* decoder : decoders) {
             delete decoder;
+        }
+
+        for(const auto& [key, value] : knownNames) {
+            delete value;
         }
     }
 };

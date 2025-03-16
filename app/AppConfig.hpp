@@ -4,39 +4,43 @@
 
 #include "app/AppFileSystem.hpp"
 #include "lib/file/FileManager.hpp"
-#include "lib/hardware/subghz/SubGhzModule.hpp"
+#include "app/pager/SavedStationStrategy.hpp"
 
-#define KEY_CONFIG_FREQUENCY    "Frequency"
-#define KEY_CONFIG_MAX_PAGERS   "MaxPagerForBatchOrDetection"
-#define KEY_CONFIG_REPEATS      "SignalRepeats"
-#define KEY_CONFIG_DEBUG        "Debug"
-#define KEY_CONFIG_IGNORE_SAVED "IgnoreMessagesFromSavedStations"
-#define KEY_CONFIG_AUTOSAVE     "Autosave"
+#define KEY_CONFIG_FREQUENCY      "Frequency"
+#define KEY_CONFIG_MAX_PAGERS     "MaxPagerForBatchOrDetection"
+#define KEY_CONFIG_REPEATS        "SignalRepeats"
+#define KEY_CONFIG_DEBUG          "Debug"
+#define KEY_CONFIG_SAVED_STRATEGY "SavedStationStrategy"
+#define KEY_CONFIG_AUTOSAVE       "AutosaveFoundSignals"
 
 class AppConfig {
 public:
     uint32_t Frequency = 433920000;
     uint32_t MaxPagerForBatchOrDetection = 30;
     uint32_t SignalRepeats = 10;
-    bool Debug = false;
-    bool IgnoreMessagesFromSavedStations = false;
+    SavedStationStrategy SavedStrategy = SHOW_NAME;
     bool AutosaveFoundSignals = true;
+    bool Debug = false;
 
 private:
     void readFromFile(FlipperFile* file) {
+        uint32_t savedStrategyValue = SavedStrategy;
+
         file->ReadUInt32(KEY_CONFIG_FREQUENCY, &Frequency);
         file->ReadUInt32(KEY_CONFIG_MAX_PAGERS, &MaxPagerForBatchOrDetection);
         file->ReadUInt32(KEY_CONFIG_REPEATS, &SignalRepeats);
-        file->ReadBool(KEY_CONFIG_IGNORE_SAVED, &IgnoreMessagesFromSavedStations);
+        file->ReadUInt32(KEY_CONFIG_SAVED_STRATEGY, &savedStrategyValue);
         file->ReadBool(KEY_CONFIG_DEBUG, &Debug);
         file->ReadBool(KEY_CONFIG_AUTOSAVE, &AutosaveFoundSignals);
+
+        SavedStrategy = static_cast<enum SavedStationStrategy>(savedStrategyValue);
     }
 
     void writeToFile(FlipperFile* file) {
         file->WriteUInt32(KEY_CONFIG_FREQUENCY, Frequency);
         file->WriteUInt32(KEY_CONFIG_MAX_PAGERS, MaxPagerForBatchOrDetection);
         file->WriteUInt32(KEY_CONFIG_REPEATS, SignalRepeats);
-        file->WriteBool(KEY_CONFIG_IGNORE_SAVED, IgnoreMessagesFromSavedStations);
+        file->WriteUInt32(KEY_CONFIG_SAVED_STRATEGY, SavedStrategy);
         file->WriteBool(KEY_CONFIG_DEBUG, Debug);
         file->WriteBool(KEY_CONFIG_AUTOSAVE, AutosaveFoundSignals);
     }

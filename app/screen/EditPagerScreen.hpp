@@ -12,9 +12,7 @@
 #include "lib/file/FileManager.hpp"
 #include "app/pager/PagerSerializer.hpp"
 
-#define TE_DIV          10
-#define NAME_MIN_LENGTH 2
-#define NAME_MAX_LENGTH 20
+#define TE_DIV 10
 
 class EditPagerScreen {
 private:
@@ -50,7 +48,7 @@ public:
         this->receiver = receiver;
         this->getPager = pagerGetter;
 
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
 
@@ -95,7 +93,7 @@ public:
 
 private:
     void updatePagerIsEditable() {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         int pagerNum = receiver->decoders[pager->decoder]->GetPager(pager->data);
         if(pagerNum < UINT8_MAX) {
             pagerItem->SetSelectedItem(pagerNum, UINT8_MAX);
@@ -113,7 +111,7 @@ private:
     }
 
     void transmitMessage() {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
 
@@ -136,7 +134,7 @@ private:
         fileManager.CreateDirIfNotExists((char*)STATIONS_PATH);
         fileManager.CreateDirIfNotExists((char*)SAVED_STATIONS_PATH);
 
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
 
@@ -145,7 +143,7 @@ private:
     }
 
     const char* encodingValueChanged(uint8_t index) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[index];
         pager->decoder = index;
 
@@ -163,12 +161,12 @@ private:
     }
 
     const char* stationValueChanged(uint8_t) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         return stationStr.fromInt(receiver->decoders[pager->decoder]->GetStation(pager->data));
     }
 
     const char* pagerValueChanged(uint8_t newPager) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         if(pagerItem->Editable() && newPager != decoder->GetPager(pager->data)) {
             pager->data = decoder->SetPager(pager->data, newPager);
@@ -182,7 +180,7 @@ private:
     }
 
     const char* actionValueChanged(uint8_t value) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         if(decoder->GetActionValue(pager->data) != value) {
             pager->data = decoder->SetActionValue(pager->data, value);
@@ -201,12 +199,12 @@ private:
     }
 
     const char* hexValueChanged(uint8_t) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         return hexStr.format("%06X", (unsigned int)pager->data);
     }
 
     const char* teValueChanged(uint8_t newTeIndex) {
-        PagerDataStored* pager = getPager();
+        StoredPagerData* pager = getPager();
         if(newTeIndex != pager->te / TE_DIV) {
             int teDiff = pager->te % TE_DIV;
             int newTe = newTeIndex * TE_DIV + teDiff;

@@ -14,6 +14,7 @@
 #include "app/pager/PagerReceiver.hpp"
 
 static int8_t stationScreenColumnOffsets[]{
+    3, // station name (if known)
     3, // hex
     49, // station
     72, // pager
@@ -21,6 +22,7 @@ static int8_t stationScreenColumnOffsets[]{
     128 - 8 // repeats / edit flag
 };
 static Font stationScreenColumnFonts[]{
+    FontSecondary, // station name (if known)
     FontBatteryPercent, // hex
     FontSecondary, // station
     FontSecondary, // pager
@@ -29,6 +31,7 @@ static Font stationScreenColumnFonts[]{
 };
 
 static Align stationScreenColumnAlignments[]{
+    AlignLeft, // station name (if known)
     AlignLeft, // hex
     AlignCenter, // station
     AlignCenter, // pager
@@ -116,23 +119,34 @@ private:
     }
 
     void getElementColumnName(int index, int column, String* str) {
-        PagerDataStored* pagerData = pagerReceiver->PagerGetter(index)();
+        StoredPagerData* pagerData = pagerReceiver->PagerGetter(index)();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
+        String* name = pagerData->hasName ? pagerReceiver->GetName(pagerData) : NULL;
 
         switch(column) {
-        case 0: // hex
-            str->format("%06X", pagerData->data);
+        case 0: // station name
+            if(name != NULL) {
+                str->format("%s", name->cstr());
+            }
             break;
 
-        case 1: // station
-            str->format("%d", decoder->GetStation(pagerData->data));
+        case 1: // hex
+            if(name == NULL) {
+                str->format("%06X", pagerData->data);
+            }
             break;
 
-        case 2: // pager
+        case 2: // station
+            if(name == NULL) {
+                str->format("%d", decoder->GetStation(pagerData->data));
+            }
+            break;
+
+        case 3: // pager
             str->format("%d", decoder->GetPager(pagerData->data));
             break;
 
-        case 3: // action
+        case 4: // action
         {
             PagerAction action = decoder->GetAction(pagerData->data);
             if(action == UNKNOWN) {
@@ -142,7 +156,7 @@ private:
             }
         }; break;
 
-        case 4: // repeats or edit flag
+        case 5: // repeats or edit flag
             if(!pagerData->edited) {
                 str->format("x%d", pagerData->repeats);
             } else {
@@ -167,7 +181,7 @@ private:
 
     void showActions(uint32_t index) {
         PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
-        PagerDataStored* pagerData = getPager();
+        StoredPagerData* pagerData = getPager();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         PagerProtocol* protocol = pagerReceiver->protocols[pagerData->protocol];
 

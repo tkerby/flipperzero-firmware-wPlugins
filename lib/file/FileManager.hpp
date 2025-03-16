@@ -40,6 +40,11 @@ public:
         return NULL;
     }
 
+    FlipperFile* OpenRead(const char* dir, const char* file) {
+        String concatedPath = String("%s/%s", dir, file);
+        return OpenRead(concatedPath.cstr());
+    }
+
     FlipperFile* OpenWrite(const char* path) {
         FlipperFile* file = new FlipperFile(storage, path, true);
         if(file->IsOpened()) {

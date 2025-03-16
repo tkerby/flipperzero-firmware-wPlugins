@@ -2,6 +2,7 @@
 
 #include "app/AppConfig.hpp"
 #include "lib/String.hpp"
+#include "lib/hardware/subghz/SubGhzModule.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
 
 class SettingsScreen {
@@ -68,12 +69,12 @@ public:
 
         varItemList->AddItem(
             ignoreSavedItem = new UiVariableItem(
-                "Ignore saved stations",
-                config->IgnoreMessagesFromSavedStations,
-                2,
+                "Saved stations",
+                config->SavedStrategy,
+                SavedStationStrategyValuesCount,
                 [this](uint8_t val) {
-                    this->config->IgnoreMessagesFromSavedStations = val;
-                    return boolOption(val);
+                    this->config->SavedStrategy = static_cast<enum SavedStationStrategy>(val);
+                    return savedStationsStrategy(this->config->SavedStrategy);
                 }
             )
         );
@@ -112,6 +113,22 @@ public:
 private:
     const char* boolOption(uint8_t value) {
         return value ? "ON" : "OFF";
+    }
+
+    const char* savedStationsStrategy(SavedStationStrategy value) {
+        switch(value) {
+        case IGNORE:
+            return "Ignore";
+
+        case SHOW_NAME:
+            return "Show name";
+
+        case HIDE:
+            return "Hide";
+
+        default:
+            return NULL;
+        }
     }
 
     void destroy() {

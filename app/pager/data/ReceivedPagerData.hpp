@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "PagerDataStored.hpp"
+#include "StoredPagerData.hpp"
 
 class ReceivedPagerData {
 private:
@@ -24,7 +24,7 @@ public:
         return index;
     }
 
-    PagerDataStored* GetData() {
+    StoredPagerData* GetData() {
         return getStoredData();
     }
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "flipper_format.h"
+#include "lib/String.hpp"
 
 class FlipperFile {
 private:
@@ -29,6 +30,14 @@ public:
         return flipper_format_read_bool(flipperFormat, key, valueTarget, 1);
     }
 
+    bool ReadString(const char* key, String* valueTarget) {
+        return flipper_format_read_string(flipperFormat, key, valueTarget->furiString());
+    }
+
+    bool ReadHex(const char* key, uint64_t* value) {
+        return flipper_format_read_hex(flipperFormat, key, (uint8_t*)value, sizeof(value));
+    }
+
     bool WriteUInt32(const char* key, uint32_t value) {
         return flipper_format_write_uint32(flipperFormat, key, &value, 1);
     }
@@ -42,7 +51,7 @@ public:
     }
 
     bool WriteHex(const char* key, uint64_t value) {
-        return flipper_format_write_hex(flipperFormat, key, (const uint8_t*)&value, sizeof(key));
+        return flipper_format_write_hex(flipperFormat, key, (const uint8_t*)&value, sizeof(value));
     }
 
     ~FlipperFile() {
