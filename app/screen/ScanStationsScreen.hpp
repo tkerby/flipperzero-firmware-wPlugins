@@ -57,6 +57,7 @@ public:
         );
         menuView->SetOnDestroyHandler(HANDLER(&ScanStationsScreen::destroy));
         menuView->SetOnReturnToViewHandler([this]() { this->menuView->Refresh(); });
+        menuView->SetGoBackHandler(HANDLER(&ScanStationsScreen::goBack));
 
         menuView->SetColumnFonts(stationScreenColumnFonts);
         menuView->SetColumnAlignments(stationScreenColumnAlignments);
@@ -189,6 +190,24 @@ private:
 
         PagerActionsScreen* screen = new PagerActionsScreen(config, getPager, decoder, protocol, subghz);
         UiManager::GetInstance()->PushView(screen->GetView());
+    }
+
+    bool goBack() {
+        if(menuView->GetElementsCount() > 0) {
+            DialogUiView* confirmGoBack = new DialogUiView("Really stop scan?", "You may loose captured signals");
+            confirmGoBack->AddLeftButton("No");
+            confirmGoBack->AddRightButton("Yes");
+            confirmGoBack->SetResultHandler(HANDLER_1ARG(&ScanStationsScreen::goBackConfirmationHandler));
+            UiManager::GetInstance()->PushView(confirmGoBack);
+            return false;
+        }
+        return true;
+    }
+
+    void goBackConfirmationHandler(DialogExResult dialogResult) {
+        if(dialogResult == DialogExResultRight) {
+            UiManager::GetInstance()->PopView(false);
+        }
     }
 
     void destroy() {

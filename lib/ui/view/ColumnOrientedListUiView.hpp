@@ -109,6 +109,10 @@ public:
         return view;
     }
 
+    int GetElementsCount() {
+        return elementsCount;
+    }
+
     ~ColumnOrientedListUiView() {
         if(view != NULL) {
             OnDestory();

@@ -27,7 +27,10 @@ private:
         FURI_LOG_I(LOG_TAG, "Back callback called");
 
         UiManager* uiManager = GetInstance();
-        uiManager->popView(false);
+        UiView* currentView = uiManager->viewStack.top();
+        if(currentView->GoBack()) {
+            uiManager->popView(false);
+        }
 
         return uiManager->currentViewId();
     }

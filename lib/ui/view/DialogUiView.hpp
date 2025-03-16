@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui/modules/dialog_ex.h>
+#include "lib/ui/UiManager.hpp"
 
 #include "UiView.hpp"
 
@@ -14,6 +15,7 @@ private:
         if(dialog->resultHandler != NULL) {
             dialog->resultHandler(result);
         }
+        UiManager::GetInstance()->PopView(false);
     }
 
 public:

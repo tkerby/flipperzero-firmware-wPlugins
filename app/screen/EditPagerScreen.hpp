@@ -151,24 +151,13 @@ private:
     }
 
     void confirmDelete(DialogExResult result) {
-        switch(result) {
-        case DialogExResultRight: {
+        if(result == DialogExResultRight) {
             String* pagerFile = PagerSerializer().GetFilename(getPager());
             FileManager().DeleteFile(SAVED_STATIONS_PATH, pagerFile->cstr());
             delete pagerFile;
 
             receiver->ReloadKnownStations();
             UiManager::GetInstance()->PopView(false);
-            UiManager::GetInstance()->PopView(false);
-        } break;
-
-        case DialogExResultLeft:
-            UiManager::GetInstance()->PopView(false);
-            break;
-
-        default:
-        case DialogExResultCenter:
-            break;
         }
     }
 

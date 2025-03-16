@@ -13,6 +13,7 @@ class UiView {
 private:
     function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
     function<void()> onReturnToView = HANDLER(&UiView::doNothing);
+    function<bool()> goBackHandler = []() { return true; };
     IDestructable* inputHandler = NULL;
     bool isOnTop = false;
 
@@ -42,6 +43,10 @@ public:
         view_set_input_callback(GetNativeView(), onInput);
     }
 
+    void SetGoBackHandler(function<bool()> handler) {
+        goBackHandler = handler;
+    }
+
     void OnReturn() {
         onReturnToView();
     }
@@ -52,6 +57,10 @@ public:
 
     void SetOnTop(bool value) {
         this->isOnTop = value;
+    }
+
+    bool GoBack() {
+        return goBackHandler();
     }
 
 protected:
