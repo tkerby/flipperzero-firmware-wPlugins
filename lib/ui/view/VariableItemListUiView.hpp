@@ -16,11 +16,11 @@ class VariableItemListUiView : public UiView {
 private:
     uint32_t itemCounter = 0;
     VariableItemList* varItemList;
-    IDestructable* enterPressHandler;
+    function<void(uint32_t)> enterPressHandler;
 
     static void onEnterCallback(void* context, uint32_t index) {
-        auto handlerContext = (HandlerContext<function<void(uint32_t)>>*)context;
-        handlerContext->GetHandler()(index);
+        VariableItemListUiView* view = (VariableItemListUiView*)context;
+        view->enterPressHandler(index);
     }
 
 public:
@@ -34,10 +34,8 @@ public:
     }
 
     void SetEnterPressHandler(function<void(uint32_t)> handler) {
-        if(enterPressHandler != NULL) {
-            delete enterPressHandler;
-        }
-        variable_item_list_set_enter_callback(varItemList, onEnterCallback, enterPressHandler = new HandlerContext(handler));
+        enterPressHandler = handler;
+        variable_item_list_set_enter_callback(varItemList, onEnterCallback, this);
     }
 
     View* GetNativeView() {
@@ -47,10 +45,6 @@ public:
     ~VariableItemListUiView() {
         if(varItemList != NULL) {
             OnDestory();
-
-            if(enterPressHandler != NULL) {
-                delete enterPressHandler;
-            }
 
             variable_item_list_free(varItemList);
             varItemList = NULL;

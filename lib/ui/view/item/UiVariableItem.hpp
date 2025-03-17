@@ -4,8 +4,6 @@
 
 #include "gui/modules/variable_item_list.h"
 
-#include "lib/HandlerContext.hpp"
-
 using namespace std;
 
 class UiVariableItem {
@@ -16,13 +14,12 @@ private:
     uint8_t selectedIndex;
     uint8_t valuesCount;
 
-    IDestructable* handlerContext = NULL;
     function<const char*(uint8_t)> changeHandler;
 
     static void itemChangeCallback(VariableItem* item) {
-        auto handlerContext = (HandlerContext<function<const char*(uint8_t)>>*)variable_item_get_context(item);
+        UiVariableItem* uiItem = (UiVariableItem*)variable_item_get_context(item);
         uint8_t index = variable_item_get_current_value_index(item);
-        variable_item_set_current_value_text(item, handlerContext->GetHandler()(index));
+        variable_item_set_current_value_text(item, uiItem->changeHandler(index));
     }
 
 public:
@@ -41,9 +38,7 @@ public:
     }
 
     void AddTo(VariableItemList* varItemList) {
-        item = variable_item_list_add(
-            varItemList, label, valuesCount, itemChangeCallback, handlerContext = new HandlerContext(changeHandler)
-        );
+        item = variable_item_list_add(varItemList, label, valuesCount, itemChangeCallback, this);
         Refresh();
     }
 
@@ -69,9 +64,5 @@ public:
     }
 
     ~UiVariableItem() {
-        if(handlerContext != NULL) {
-            delete handlerContext;
-            handlerContext = NULL;
-        }
     }
 };

@@ -17,7 +17,7 @@ class SubMenuUiView : public UiView {
 private:
     Submenu* menu;
     uint32_t elementCount = 0;
-    forward_list<IDestructable*> handlers;
+    forward_list<HandlerContext<function<void(uint32_t)>>*> handlers;
 
     static void executeCallback(void* context, uint32_t index) {
         if(context == NULL) {
@@ -70,7 +70,7 @@ public:
         if(menu != NULL) {
             OnDestory();
 
-            for(IDestructable* handlerContext : handlers) {
+            for(auto handlerContext : handlers) {
                 delete handlerContext;
             }
 

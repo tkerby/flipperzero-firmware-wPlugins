@@ -5,14 +5,8 @@
 #define HANDLER_2ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1, placeholders::_2)
 #define HANDLER_3ARG(handlerMethod) bind(handlerMethod, this, placeholders::_1, placeholders::_2, placeholders::_3)
 
-class IDestructable {
-public:
-    virtual ~IDestructable() {
-    }
-};
-
 template <class T>
-class HandlerContext : public IDestructable {
+class HandlerContext {
 private:
     T handler;
 
