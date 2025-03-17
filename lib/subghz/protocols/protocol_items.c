@@ -54,6 +54,7 @@ const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_marantec24,
     &subghz_protocol_hollarm,
     &subghz_protocol_hay21,
+    &subghz_protocol_revers_rb2,
 };
 
 const SubGhzProtocolRegistry subghz_protocol_registry = {

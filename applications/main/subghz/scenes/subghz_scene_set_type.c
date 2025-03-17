@@ -67,6 +67,7 @@ static const char* submenu_names[SetTypeMAX] = {
     [SetTypePricenton433] = "Princeton 433MHz",
     [SetTypeGangQi_433] = "GangQi 433MHz",
     [SetTypeHollarm_433] = "Hollarm 433MHz",
+    [SetTypeReversRB2_433] = "Revers RB2 433MHz",
     [SetTypeMarantec24_868] = "Marantec24 868MHz",
     [SetTypeBETT_433] = "BETT 433MHz",
     [SetTypeLinear_300_00] = "Linear 300MHz",

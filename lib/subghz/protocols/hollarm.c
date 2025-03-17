@@ -378,6 +378,21 @@ void subghz_protocol_decoder_hollarm_feed(void* context, bool level, volatile ui
                     // Saving with 2bit to the right offset for proper parsing
                     instance->generic.data = (instance->decoder.decode_data >> 2);
                     instance->generic.data_count_bit = instance->decoder.decode_count_bit;
+
+                    uint8_t bytesum = ((instance->generic.data >> 32) & 0xFF) +
+                                      ((instance->generic.data >> 24) & 0xFF) +
+                                      ((instance->generic.data >> 16) & 0xFF) +
+                                      ((instance->generic.data >> 8) & 0xFF);
+
+                    if(bytesum != (instance->generic.data & 0xFF)) {
+                        // Check if the key is valid by verifying the sum
+                        instance->generic.data = 0;
+                        instance->generic.data_count_bit = 0;
+                        instance->decoder.decode_data = 0;
+                        instance->decoder.decode_count_bit = 0;
+                        instance->decoder.parser_step = HollarmDecoderStepReset;
+                        break;
+                    }
                     if(instance->base.callback)
                         instance->base.callback(&instance->base, instance->base.context);
                 }
