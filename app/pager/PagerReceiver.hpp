@@ -189,8 +189,6 @@ public:
             char fileName[MAX_STATION_FILENAME_LENGTH];
 
             while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
-                FURI_LOG_I(LOG_TAG, "Reading file %s", fileName);
-
                 String* stationName = new String();
                 StoredPagerData pager = serializer.LoadPagerData(
                     &fileManager,
@@ -203,7 +201,6 @@ public:
                 );
 
                 if(!knownStationsLoaded) {
-                    FURI_LOG_I(LOG_TAG, "Adding known station %s", stationName->cstr());
                     addKnown(withNames, stationName, &pager);
                 } else {
                     delete stationName;
@@ -231,18 +228,12 @@ public:
     }
 
     bool IsKnown(StoredPagerData* pager) {
-        for(const auto& [key, value] : knownStations) {
-            FURI_LOG_I(LOG_TAG, "IN: %lu", key);
-        }
-        bool result = knownStations.contains(getKnownStation(pager).toInt());
-        FURI_LOG_I(LOG_TAG, "KS contains %lu: %d", getKnownStation(pager).toInt(), result);
-        return result;
+        return knownStations.contains(getKnownStation(pager).toInt());
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
         PagerProtocol* protocol = getProtocol(data->GetProtocolName());
         if(protocol == NULL) {
-            FURI_LOG_I(LOG_TAG, "Skipping received data with unsupported protocol: %s", data->GetProtocolName());
             return NULL;
         }
 

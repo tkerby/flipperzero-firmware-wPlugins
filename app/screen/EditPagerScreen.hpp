@@ -119,9 +119,6 @@ public:
 
 private:
     bool canSaveOrDelete() {
-        bool notKnown = !receiver->IsKnown(getPager());
-        bool savedAsNameNotNull = this->savedAsName != NULL;
-        FURI_LOG_I(LOG_TAG, "NK: %d, SANNN: %d", notKnown, savedAsNameNotNull);
         return !receiver->IsKnown(getPager()) || this->savedAsName != NULL;
     }
 

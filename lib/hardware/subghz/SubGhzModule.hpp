@@ -48,7 +48,6 @@ private:
         UNUSED(receiver);
 
         if(context == NULL) {
-            FURI_LOG_W(LOG_TAG, "SubGhz module has NULL receive handler!");
             return;
         }
 
@@ -67,7 +66,7 @@ private:
             }
 
             furi_timer_stop(subghz->txCompleteCheckTimer);
-            FURI_LOG_I(LOG_TAG, "TX complete!");
+
             if(subghz->txCompleteHandler != NULL) {
                 subghz->txCompleteHandler();
             } else {

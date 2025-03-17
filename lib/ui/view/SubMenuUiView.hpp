@@ -21,7 +21,6 @@ private:
 
     static void executeCallback(void* context, uint32_t index) {
         if(context == NULL) {
-            FURI_LOG_W(LOG_TAG, "SubMenuUiView element %d has NULL handler!", (int)index);
             return;
         }
 
@@ -55,7 +54,6 @@ public:
 
     void SetItemLabel(uint32_t index, const char* label) {
         if(index >= elementCount) {
-            FURI_LOG_W(LOG_TAG, "Cannot modify name of non-existing item %d to %s", (int)index, label);
         }
         submenu_change_item_label(menu, index, label);
     }

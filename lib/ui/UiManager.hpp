@@ -24,7 +24,6 @@ private:
 
     static uint32_t backCallback(void* context) {
         UNUSED(context);
-        FURI_LOG_I(LOG_TAG, "Back callback called");
 
         UiManager* uiManager = GetInstance();
         UiView* currentView = uiManager->viewStack.top();
@@ -52,8 +51,6 @@ private:
         if(!preserveView) {
             delete currentView;
         }
-
-        FURI_LOG_I(LOG_TAG, "ViewStack popped, size: %d", viewStack.size());
     }
 
     uint32_t currentViewId() {
@@ -72,8 +69,6 @@ public:
     }
 
     void InitGui() {
-        FURI_LOG_I(LOG_TAG, "Init GUI called");
-
         gui = (Gui*)furi_record_open(RECORD_GUI);
         viewDispatcher = view_dispatcher_alloc();
         view_dispatcher_attach_to_gui(viewDispatcher, gui, ViewDispatcherTypeFullscreen);
@@ -90,8 +85,6 @@ public:
         view_set_previous_callback(view->GetNativeView(), backCallback);
         view_dispatcher_add_view(viewDispatcher, currentViewId(), view->GetNativeView());
         view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
-
-        FURI_LOG_I(LOG_TAG, "ViewStack pushed, size: %d", viewStack.size());
     }
 
     void PopView(bool preserveView) {
@@ -101,14 +94,11 @@ public:
 
     void RunEventLoop() {
         while(!viewStack.empty()) {
-            FURI_LOG_I(LOG_TAG, "Running event loop");
             view_dispatcher_run(viewDispatcher);
         }
     }
 
     ~UiManager() {
-        FURI_LOG_I(LOG_TAG, "Destructor called");
-
         while(!viewStack.empty()) {
             popView(false);
         }

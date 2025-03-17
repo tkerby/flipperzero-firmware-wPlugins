@@ -23,8 +23,6 @@ public:
     }
 
     void SetKey(uint64_t key) {
-        FURI_LOG_I(LOG_TAG, "Setting transmission key to %06X", (unsigned int)key);
-
         char* dataBytes = (char*)&key;
         reverse(dataBytes, dataBytes + sizeof(key));
         flipper_format_write_hex(flipperFormat, "Key", (const uint8_t*)dataBytes, sizeof(key));
