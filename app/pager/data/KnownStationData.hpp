@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lib/String.hpp"
 #include <cstdint>
 
 struct KnownStationData {
@@ -8,6 +9,7 @@ struct KnownStationData {
     uint8_t decoder   : 4;
     uint8_t unused    : 2; // align
     uint16_t station  : 16;
+    String* name;
 
 public:
     uint32_t toInt();
