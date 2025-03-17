@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - name: Momentum firmware
-            sdk-index-url: https://raw.githubusercontent.com/Next-Flip/Momentum-Firmware/refs/heads/release/targets/f7/target.json
+            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
             sdk-channel: release
     name: 'ufbt: Build for ${{ matrix.name }}'
     steps:
@@ -31,6 +31,7 @@ jobs:
         id: build-app
         with:
           sdk-channel: ${{ matrix.sdk-channel }}
+          sdk-index-url: ${{ matrix.sdk-index-url }}
       - name: Upload app artifacts
         uses: actions/upload-artifact@v4.6.1
         with:
