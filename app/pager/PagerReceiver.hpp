@@ -2,7 +2,7 @@
 
 #include "PagerSerializer.hpp"
 #include <cstring>
-#include <vector>
+#include <forward_list>
 
 #include "lib/hardware/subghz/SubGhzSettings.hpp"
 #include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
@@ -51,7 +51,7 @@ private:
     uint16_t pagersArraySize = PAGERS_ARRAY_SIZE_MULTIPLIER;
     uint16_t nextPagerIndex = 0;
     StoredPagerData* pagers = new StoredPagerData[pagersArraySize];
-    size_t knownStaionsSize = 0;
+    size_t knownStationsSize = 0;
     KnownStationData* knownStations;
     uint32_t lastFrequency = 0;
     uint8_t lastFrequencyIndex = 0;
@@ -62,7 +62,7 @@ private:
         Directory* dir = fileManager.OpenDirectory(SAVED_STATIONS_PATH);
         PagerSerializer serializer = PagerSerializer();
         SubGhzSettings subghzSettings = SubGhzSettings();
-        vector<KnownStationData> stations;
+        forward_list<KnownStationData> stations;
 
         if(dir != NULL) {
             char fileName[MAX_STATION_FILENAME_LENGTH];
@@ -79,14 +79,15 @@ private:
                     [this](const char* name) { return getDecoder(name)->id; }
                 );
                 addKnown(stations, withNames, pager, stationName);
+                knownStationsSize++;
             }
         }
 
-        copyKnown(stations);
+        copyKnown(&stations);
         delete dir;
     }
 
-    void addKnown(vector<KnownStationData>& stations, bool withNames, StoredPagerData pager, String* stationName) {
+    void addKnown(forward_list<KnownStationData>& stations, bool withNames, StoredPagerData pager, String* stationName) {
         KnownStationData data = getKnownStation(&pager);
         if(withNames) {
             data.name = stationName;
@@ -94,27 +95,30 @@ private:
             data.name = NULL;
             delete stationName;
         }
-        stations.push_back(data);
+        stations.push_front(data);
     }
 
-    void copyKnown(vector<KnownStationData>& stations) {
-        knownStaionsSize = stations.size();
-        knownStations = new KnownStationData[knownStaionsSize];
-        for(size_t i = 0; i < stations.size(); i++) {
-            knownStations[i] = stations[i];
+    void copyKnown(forward_list<KnownStationData>* stations) {
+        knownStations = new KnownStationData[knownStationsSize];
+        for(size_t i = 0; i < knownStationsSize; i++) {
+            knownStations[i] = stations->front();
+            stations->pop_front();
         }
 
         knownStationsLoaded = true;
     }
 
     void unloadKnownStations() {
-        for(size_t i = 0; i < knownStaionsSize; i++) {
+        for(size_t i = 0; i < knownStationsSize; i++) {
             if(knownStations[i].name != NULL) {
                 delete knownStations[i].name;
             }
         }
+
         delete[] knownStations;
+
         knownStationsLoaded = false;
+        knownStationsSize = 0;
     }
 
     KnownStationData getKnownStation(StoredPagerData* pager) {
@@ -205,7 +209,7 @@ public:
         PagerSerializer serializer = PagerSerializer();
         SubGhzSettings subghzSettings = SubGhzSettings();
         bool withNames = config->SavedStrategy == SHOW_NAME;
-        vector<KnownStationData> stations;
+        forward_list<KnownStationData> stations;
 
         if(dir != NULL) {
             char fileName[MAX_STATION_FILENAME_LENGTH];
@@ -224,6 +228,7 @@ public:
 
                 if(!knownStationsLoaded) {
                     addKnown(stations, withNames, pager, stationName);
+                    knownStationsSize++;
                 } else {
                     delete stationName;
                 }
@@ -235,7 +240,7 @@ public:
         }
 
         if(!knownStationsLoaded) {
-            copyKnown(stations);
+            copyKnown(&stations);
         }
         delete dir;
     }
@@ -246,7 +251,7 @@ public:
 
     String* GetName(StoredPagerData* pager) {
         uint32_t stationId = getKnownStation(pager).toInt();
-        for(size_t i = 0; i < knownStaionsSize; i++) {
+        for(size_t i = 0; i < knownStationsSize; i++) {
             if(knownStations[i].toInt() == stationId) {
                 return knownStations[i].name;
             }
@@ -256,7 +261,7 @@ public:
 
     bool IsKnown(StoredPagerData* pager) {
         uint32_t stationId = getKnownStation(pager).toInt();
-        for(size_t i = 0; i < knownStaionsSize; i++) {
+        for(size_t i = 0; i < knownStationsSize; i++) {
             if(knownStations[i].toInt() == stationId) {
                 return true;
             }
