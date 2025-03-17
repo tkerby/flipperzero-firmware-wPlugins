@@ -16,7 +16,6 @@
 #include <lib/subghz/subghz_protocol_registry.h>
 #include <lib/subghz/subghz_worker.h>
 
-#include "lib/HandlerContext.hpp"
 #include "lib/hardware/subghz/SubGhzSettings.hpp"
 
 #include "SubGhzState.hpp"
