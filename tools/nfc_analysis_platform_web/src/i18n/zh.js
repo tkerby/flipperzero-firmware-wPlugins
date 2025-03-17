@@ -69,10 +69,57 @@ export default {
   },
   nard: {
     title: 'NARD',
-    description: 'NFC Apdu Runner 响应解码器（NFC Apdu Runner Response Decoder），用于解析 Flipper Zero 下 NFC Apdu Runner 应用的响应数据。',
-    input: {
-      label: 'NARD 数据',
-      placeholder: '请输入十六进制格式的 NARD 数据',
+    description: 'NFC Apdu Runner 响应解码器（NFC Apdu Runner Response Decoder），用于连接 Flipper Zero 设备并进行 NFC 卡片操作。',
+    deviceSelector: {
+      title: 'Flipper 设备',
+      loading: '正在加载设备列表...',
+      noDevices: '未检测到设备',
+      retry: '重试',
+      errorLoading: '加载设备失败',
+      autoSelect: '自动选择设备',
+      serialDevice: '串口设备'
+    },
+    status: {
+      title: '状态',
+      ready: '准备就绪',
+      scanning: '正在扫描...',
+      loading: '加载中...',
+      noDevice: '未选择设备',
+      connected: '已连接'
+    },
+    templates: {
+      title: 'APDU 解析模板',
+      id: '文件名',
+      content: '内容',
+      use: '查看',
+      detail: '模板详情',
+    },
+    grid: {
+      scanning: '正在扫描 NFC 卡片...',
+      empty: '未发现 NFC 卡片，请将卡片靠近设备'
+    },
+    card: {
+      details: '查看详情'
+    },
+    details: {
+      type: '卡片类型',
+      uid: 'UID',
+      timestamp: '扫描时间',
+      data: '卡片数据',
+      actions: '可用操作',
+      save: '保存数据',
+      emulate: '模拟卡片',
+      analyze: '分析数据'
+    },
+    time: {
+      justNow: '刚刚',
+      minutesAgo: '{mins} 分钟前',
+      hoursAgo: '{hours} 小时前'
+    },
+    error: {
+      scanFailed: '扫描失败，请检查设备连接',
+      deviceError: '设备连接错误',
+      cardError: '卡片读取错误'
     },
     buttons: {
       analyze: '解析数据',
@@ -99,6 +146,9 @@ export default {
     }
   },
   common: {
+    loading: '加载中...',
+    noData: '暂无数据',
+    retry: '重试',
     select_language: '选择语言',
     languages: {
       en: 'English',

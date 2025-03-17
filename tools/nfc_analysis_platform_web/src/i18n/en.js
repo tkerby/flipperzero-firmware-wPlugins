@@ -69,10 +69,57 @@ export default {
   },
   nard: {
     title: 'NARD',
-    description: 'NFC Apdu Runner Response Decoder for analyzing responses from the NFC Apdu Runner application on Flipper Zero.',
-    input: {
-      label: 'NARD Data',
-      placeholder: 'Enter NARD data in hexadecimal format',
+    description: 'NFC Apdu Runner Response Decoder for connecting to Flipper Zero devices and performing NFC card operations.',
+    deviceSelector: {
+      title: 'Flipper Devices',
+      loading: 'Loading devices...',
+      noDevices: 'No devices detected',
+      retry: 'Retry',
+      errorLoading: 'Failed to load devices',
+      autoSelect: 'Auto-select device',
+      serialDevice: 'Serial Device'
+    },
+    status: {
+      title: 'Status',
+      ready: 'Ready',
+      scanning: 'Scanning...',
+      loading: 'Loading...',
+      noDevice: 'No device selected',
+      connected: 'Connected'
+    },
+    templates: {
+      title: 'APDU Analysis Templates',
+      id: 'Filename',
+      content: 'Template Content',
+      use: 'View',
+      detail: 'Template Details',
+    },
+    grid: {
+      scanning: 'Scanning for NFC cards...',
+      empty: 'No NFC cards found, please place a card near the device'
+    },
+    card: {
+      details: 'View Details'
+    },
+    details: {
+      type: 'Card Type',
+      uid: 'UID',
+      timestamp: 'Scan Time',
+      data: 'Card Data',
+      actions: 'Available Actions',
+      save: 'Save Data',
+      emulate: 'Emulate Card',
+      analyze: 'Analyze Data'
+    },
+    time: {
+      justNow: 'Just now',
+      minutesAgo: '{mins} minutes ago',
+      hoursAgo: '{hours} hours ago'
+    },
+    error: {
+      scanFailed: 'Scan failed, please check device connection',
+      deviceError: 'Device connection error',
+      cardError: 'Card reading error'
     },
     buttons: {
       analyze: 'Analyze',
@@ -99,6 +146,9 @@ export default {
     }
   },
   common: {
+    loading: 'Loading...',
+    noData: 'No data available',
+    retry: 'Retry',
     select_language: 'Select Language',
     languages: {
       en: 'English',
