@@ -19,6 +19,7 @@
 #pragma once
 
 #include <storage/storage.h>
+#include "app_common.h"
 
 // Supported FDD drives
 typedef enum {
