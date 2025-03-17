@@ -246,13 +246,13 @@ watch(() => props.loading, (newVal) => {
 .grid-content {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 20px;
   width: 100%;
   padding: 4px; /* 添加内边距，确保卡片发光效果不被裁剪 */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
-  padding-right: 16px; /* 为自定义滚动条留出空间 */
+  padding-right: 24px; /* 增加右侧内边距，避免与滚动条重合 */
 }
 
 .grid-content::-webkit-scrollbar {
@@ -366,10 +366,10 @@ watch(() => props.loading, (newVal) => {
 /* 自定义滚动条 */
 .grid-scrollbar {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 4px;
+  right: 4px;
   width: 8px;
-  height: 100%;
+  height: calc(100% - 8px);
   z-index: 5;
 }
 

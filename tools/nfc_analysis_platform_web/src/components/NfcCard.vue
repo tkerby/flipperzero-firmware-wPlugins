@@ -157,7 +157,7 @@ const cardStyle = computed(() => {
 .nfc-card {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.6 / 1;
+  aspect-ratio: 1.8 / 1;
   border-radius: 12px;
   overflow: visible; /* 修改为 visible 以防止边框被裁剪 */
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -235,7 +235,7 @@ const cardStyle = computed(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 14px; /* 减小内边距 */
   border-radius: 12px; /* 添加圆角到内容区域 */
   overflow: hidden; /* 内容区域保持 hidden 以防止内容溢出 */
 }
@@ -244,11 +244,11 @@ const cardStyle = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px; /* 减小底部间距 */
 }
 
 .card-title {
-  font-size: 1.1rem;
+  font-size: 1rem; /* 减小字体大小 */
   font-weight: 600;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -285,7 +285,7 @@ const cardStyle = computed(() => {
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  height: calc(100% - 40px); /* 减去header高度 */
+  height: calc(100% - 36px); /* 减去header高度 */
 }
 
 .signal-waves {
@@ -306,11 +306,11 @@ const cardStyle = computed(() => {
 }
 
 .card-preview {
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* 减小字体大小 */
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 8px;
-  line-height: 1.4;
-  max-height: 60px;
+  margin-top: 6px; /* 减小上边距 */
+  line-height: 1.3; /* 减小行高 */
+  max-height: 50px; /* 减小最大高度 */
   overflow: hidden;
   flex-grow: 1;
 }
@@ -392,15 +392,15 @@ const cardStyle = computed(() => {
 .card-footer {
   margin-top: auto;
   text-align: left;
-  padding-top: 8px;
+  padding-top: 6px; /* 减小上边距 */
 }
 
 .view-button {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid v-bind('getThemeColor(0.5)');
   border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  padding: 4px 10px; /* 减小内边距 */
+  font-size: 0.75rem; /* 减小字体大小 */
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
