@@ -70,7 +70,7 @@ public:
 
         varItemList->AddItem(
             encodingItem = new UiVariableItem(
-                "Encoding", pager->decoder, receiver->decoders.size(), HANDLER_1ARG(&EditPagerScreen::encodingValueChanged)
+                "Encoding", pager->decoder, receiver->decodersCount, HANDLER_1ARG(&EditPagerScreen::encodingValueChanged)
             )
         );
 

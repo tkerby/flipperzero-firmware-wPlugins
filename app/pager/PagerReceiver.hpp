@@ -33,8 +33,14 @@ using namespace std;
 
 class PagerReceiver {
 public:
-    vector<PagerProtocol*> protocols = {new PrincetonProtocol(), new Smc5326Protocol()};
-    vector<PagerDecoder*> decoders = {
+    static const uint8_t protocolsCount = 2;
+    PagerProtocol* protocols[protocolsCount]{
+        new PrincetonProtocol(),
+        new Smc5326Protocol(),
+    };
+
+    static const uint8_t decodersCount = 5;
+    PagerDecoder* decoders[decodersCount]{
         new Td157Decoder(),
         new Td165Decoder(),
         new Td174Decoder(),
@@ -113,14 +119,14 @@ private:
     }
 
     PagerDecoder* getDecoder(StoredPagerData* pagerData) {
-        for(size_t i = 0; i < decoders.size(); i++) {
+        for(size_t i = 0; i < decodersCount; i++) {
             pagerData->decoder = i;
             if(IsKnown(pagerData)) {
                 return decoders[i];
             }
         }
 
-        for(size_t i = 0; i < decoders.size(); i++) {
+        for(size_t i = 0; i < decodersCount; i++) {
             if(decoders[i]->GetPager(pagerData->data) <= config->MaxPagerForBatchOrDetection) {
                 return decoders[i];
             }
@@ -130,7 +136,7 @@ private:
     }
 
     PagerProtocol* getProtocol(const char* systemProtocolName) {
-        for(size_t i = 0; i < protocols.size(); i++) {
+        for(size_t i = 0; i < protocolsCount; i++) {
             if(strcmp(systemProtocolName, protocols[i]->GetSystemName()) == 0) {
                 return protocols[i];
             }
@@ -140,7 +146,7 @@ private:
     }
 
     PagerDecoder* getDecoder(const char* shortName) {
-        for(size_t i = 0; i < decoders.size(); i++) {
+        for(size_t i = 0; i < decodersCount; i++) {
             if(strcmp(shortName, decoders[i]->GetShortName()) == 0) {
                 return decoders[i];
             }
@@ -153,11 +159,11 @@ public:
     PagerReceiver(AppConfig* config) {
         this->config = config;
 
-        for(size_t i = 0; i < protocols.size(); i++) {
+        for(size_t i = 0; i < protocolsCount; i++) {
             protocols[i]->id = i;
         }
 
-        for(size_t i = 0; i < decoders.size(); i++) {
+        for(size_t i = 0; i < decodersCount; i++) {
             decoders[i]->id = i;
         }
     }
