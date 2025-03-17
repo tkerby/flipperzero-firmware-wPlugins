@@ -1,8 +1,8 @@
 #pragma once
 
+#include <forward_list>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
-#include <stack>
 
 #include "view/UiView.hpp"
 
@@ -17,7 +17,8 @@ class UiManager {
 private:
     Gui* gui = NULL;
     ViewDispatcher* viewDispatcher = NULL;
-    stack<UiView*> viewStack;
+    forward_list<UiView*> viewStack;
+    uint8_t viewStackSize = 0;
 
     UiManager() {
     }
@@ -26,7 +27,7 @@ private:
         UNUSED(context);
 
         UiManager* uiManager = GetInstance();
-        UiView* currentView = uiManager->viewStack.top();
+        UiView* currentView = uiManager->viewStack.front();
         if(currentView->GoBack()) {
             uiManager->popView(false);
         }
@@ -35,13 +36,14 @@ private:
     }
 
     void popView(bool preserveView) {
-        UiView* currentView = viewStack.top();
+        UiView* currentView = viewStack.front();
         currentView->SetOnTop(false);
         view_dispatcher_remove_view(viewDispatcher, currentViewId());
-        viewStack.pop();
+        viewStack.pop_front();
+        viewStackSize--;
 
         if(!viewStack.empty()) {
-            UiView* viewReturningTo = viewStack.top();
+            UiView* viewReturningTo = viewStack.front();
             viewReturningTo->SetOnTop(true);
             viewReturningTo->OnReturn();
         }
@@ -57,7 +59,7 @@ private:
         if(viewStack.empty()) {
             return VIEW_NONE;
         }
-        return viewStack.size();
+        return viewStackSize;
     }
 
 public:
@@ -76,10 +78,11 @@ public:
 
     void PushView(UiView* view) {
         if(!viewStack.empty()) {
-            viewStack.top()->SetOnTop(false);
+            viewStack.front()->SetOnTop(false);
         }
 
-        viewStack.push(view);
+        viewStackSize++;
+        viewStack.push_front(view);
         view->SetOnTop(true);
 
         view_set_previous_callback(view->GetNativeView(), backCallback);

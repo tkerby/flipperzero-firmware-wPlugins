@@ -5,8 +5,6 @@
 #include <vector>
 #include <map>
 
-#include "core/log.h"
-
 #include "lib/hardware/subghz/SubGhzSettings.hpp"
 #include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
 
