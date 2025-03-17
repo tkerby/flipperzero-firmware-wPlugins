@@ -48,8 +48,8 @@ public:
 
 private:
     AppConfig* config;
-    uint16_t pagersArraySize = PAGERS_ARRAY_SIZE_MULTIPLIER;
     uint16_t nextPagerIndex = 0;
+    uint16_t pagersArraySize = PAGERS_ARRAY_SIZE_MULTIPLIER;
     StoredPagerData* pagers = new StoredPagerData[pagersArraySize];
     size_t knownStationsSize = 0;
     KnownStationData* knownStations;

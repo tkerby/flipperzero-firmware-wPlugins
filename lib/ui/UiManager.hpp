@@ -3,6 +3,7 @@
 #include <forward_list>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
+#include <gui/modules/loading.h>
 
 #include "view/UiView.hpp"
 
@@ -20,39 +21,19 @@ private:
     forward_list<UiView*> viewStack;
     uint8_t viewStackSize = 0;
 
+    uint32_t loadingId = 9999;
+    Loading* loading = NULL;
+
     UiManager() {
     }
 
-    static uint32_t backCallback(void* context) {
-        UNUSED(context);
-
+    static uint32_t backCallback(void*) {
         UiManager* uiManager = GetInstance();
         UiView* currentView = uiManager->viewStack.front();
         if(currentView->GoBack()) {
-            uiManager->popView(false);
+            uiManager->PopView(false);
         }
-
         return uiManager->currentViewId();
-    }
-
-    void popView(bool preserveView) {
-        UiView* currentView = viewStack.front();
-        currentView->SetOnTop(false);
-        view_dispatcher_remove_view(viewDispatcher, currentViewId());
-        viewStack.pop_front();
-        viewStackSize--;
-
-        if(!viewStack.empty()) {
-            UiView* viewReturningTo = viewStack.front();
-            viewReturningTo->SetOnTop(true);
-            viewReturningTo->OnReturn();
-        }
-
-        view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
-
-        if(!preserveView) {
-            delete currentView;
-        }
     }
 
     uint32_t currentViewId() {
@@ -62,7 +43,29 @@ private:
         return viewStackSize;
     }
 
+    void freeLoading() {
+        if(loading != NULL) {
+            view_dispatcher_remove_view(viewDispatcher, loadingId);
+            loading_free(loading);
+            loading = NULL;
+        }
+    }
+
+    void showView(uint32_t viewId) {
+        freeLoading();
+        view_dispatcher_switch_to_view(viewDispatcher, viewId);
+    }
+
 public:
+    void ShowLoading() {
+        if(loading == NULL) {
+            loading = loading_alloc();
+            View* loadingView = loading_get_view(loading);
+            view_dispatcher_add_view(viewDispatcher, loadingId, loadingView);
+            view_dispatcher_switch_to_view(viewDispatcher, loadingId);
+        }
+    }
+
     static UiManager* GetInstance() {
         if(__ui_manager_instance == NULL) {
             __ui_manager_instance = new UiManager();
@@ -87,12 +90,27 @@ public:
 
         view_set_previous_callback(view->GetNativeView(), backCallback);
         view_dispatcher_add_view(viewDispatcher, currentViewId(), view->GetNativeView());
-        view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
+        showView(currentViewId());
     }
 
     void PopView(bool preserveView) {
-        popView(preserveView);
-        view_dispatcher_switch_to_view(viewDispatcher, currentViewId());
+        UiView* currentView = viewStack.front();
+        currentView->SetOnTop(false);
+        view_dispatcher_remove_view(viewDispatcher, currentViewId());
+        viewStack.pop_front();
+        viewStackSize--;
+
+        if(!viewStack.empty()) {
+            UiView* viewReturningTo = viewStack.front();
+            viewReturningTo->SetOnTop(true);
+            viewReturningTo->OnReturn();
+        }
+
+        showView(currentViewId());
+
+        if(!preserveView) {
+            delete currentView;
+        }
     }
 
     void RunEventLoop() {
@@ -103,8 +121,10 @@ public:
 
     ~UiManager() {
         while(!viewStack.empty()) {
-            popView(false);
+            PopView(false);
         }
+
+        freeLoading();
 
         if(viewDispatcher != NULL) {
             view_dispatcher_free(viewDispatcher);
