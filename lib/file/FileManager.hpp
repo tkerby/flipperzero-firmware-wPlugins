@@ -16,7 +16,7 @@ public:
         storage = (Storage*)furi_record_open(RECORD_STORAGE);
     }
 
-    void CreateDirIfNotExists(char* path) {
+    void CreateDirIfNotExists(const char* path) {
         if(!storage_dir_exists(storage, path)) {
             storage_common_mkdir(storage, path);
         }

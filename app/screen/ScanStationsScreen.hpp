@@ -98,6 +98,9 @@ public:
             receive(new SubGhzReceivedDataStub("Princeton", 0xBC022)); // koreana
 
             receive(new SubGhzReceivedDataStub("Princeton", 0xCBC022)); // tokyo ramen another pager
+
+            receive(new SubGhzReceivedDataStub("Princeton", 0x298042)); // greek street
+            receive(new SubGhzReceivedDataStub("Princeton", 0x004082)); // gruz trad
         }
 
         if(stationsDir != NULL) {

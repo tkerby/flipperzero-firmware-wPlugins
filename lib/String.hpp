@@ -39,6 +39,10 @@ public:
         return cstr();
     }
 
+    bool isEmpty() {
+        return furi_string_empty(string);
+    }
+
     void Reset() {
         furi_string_reset(string);
     }

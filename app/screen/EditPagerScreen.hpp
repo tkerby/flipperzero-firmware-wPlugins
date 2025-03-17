@@ -183,8 +183,8 @@ private:
 
     void saveAsHandler(const char* name) {
         FileManager fileManager = FileManager();
-        fileManager.CreateDirIfNotExists((char*)STATIONS_PATH);
-        fileManager.CreateDirIfNotExists((char*)SAVED_STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(SAVED_STATIONS_PATH);
 
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];

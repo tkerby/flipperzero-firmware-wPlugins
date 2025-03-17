@@ -47,6 +47,7 @@ private:
     SubGhzSettings* subghzSettings;
     vector<StoredPagerData> pagers;
     map<uint32_t, String*> knownStations;
+    bool knownStationsLoaded = false;
 
     void loadKnownStations(bool withNames) {
         FileManager fileManager = FileManager();
@@ -72,6 +73,7 @@ private:
             }
         }
 
+        knownStationsLoaded = true;
         delete dir;
     }
 
@@ -94,6 +96,8 @@ private:
                 delete value;
             }
         }
+
+        knownStationsLoaded = false;
         knownStations.clear();
     }
 
@@ -177,18 +181,25 @@ public:
             char fileName[MAX_STATION_FILENAME_LENGTH];
 
             while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
+                FURI_LOG_I(LOG_TAG, "Reading file %s", fileName);
+
                 String* stationName = new String();
                 StoredPagerData pager = serializer.LoadPagerData(
                     &fileManager,
                     stationName,
-                    SAVED_STATIONS_PATH,
+                    stationDirectory,
                     fileName,
                     subghzSettings,
                     [this](const char* name) { return getProtocol(name)->id; },
                     [this](const char* name) { return getDecoder(name)->id; }
                 );
 
-                addKnown(withNames, stationName, &pager);
+                if(!knownStationsLoaded) {
+                    FURI_LOG_I(LOG_TAG, "Adding known station %s", stationName->cstr());
+                    addKnown(withNames, stationName, &pager);
+                } else {
+                    delete stationName;
+                }
 
                 int index = pagers.size();
                 pagers.push_back(pager);
@@ -255,6 +266,22 @@ public:
 
             if(config->SavedStrategy == HIDE && IsKnown(&storedData)) {
                 return NULL;
+            }
+
+            if(config->AutosaveFoundSignals) {
+                DateTime datetime;
+                furi_hal_rtc_get_datetime(&datetime);
+                String todaysDir =
+                    String("%s/%d-%02d-%02d", AUTOSAVED_STATIONS_PATH, datetime.year, datetime.month, datetime.day);
+
+                FileManager fileManager = FileManager();
+                fileManager.CreateDirIfNotExists(STATIONS_PATH);
+                fileManager.CreateDirIfNotExists(AUTOSAVED_STATIONS_PATH);
+                fileManager.CreateDirIfNotExists(todaysDir.cstr());
+
+                PagerSerializer().SavePagerData(
+                    &fileManager, todaysDir.cstr(), "", &storedData, decoders[storedData.decoder], protocol, subghzSettings
+                );
             }
 
             index = pagers.size();

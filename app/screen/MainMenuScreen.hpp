@@ -66,7 +66,7 @@ private:
         UNUSED(index);
 
         Notification::Play(&NOTIFICATION_PAGER_RECEIVE);
-        menuView->SetItemLabel(index, "Your pushed me!");
+        menuView->SetItemLabel(index, "Developed by Denr01!");
     }
 
     void destroy() {

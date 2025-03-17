@@ -19,7 +19,7 @@
 #define NAME_MIN_LENGTH 2
 #define NAME_MAX_LENGTH 20
 
-#define AUTOSAVED_DIR_NAME_LENGTH 10
+#define AUTOSAVED_DIR_NAME_LENGTH 11
 
 class PagerSerializer {
 private:
