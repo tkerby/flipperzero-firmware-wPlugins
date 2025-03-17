@@ -72,7 +72,7 @@ public:
             subghz->ReceiveAsync();
         }
 
-        pagerReceiver = new PagerReceiver(config, subghz->GetSettings());
+        pagerReceiver = new PagerReceiver(config);
         if(preloadKnown) {
             pagerReceiver->ReloadKnownStations();
         }

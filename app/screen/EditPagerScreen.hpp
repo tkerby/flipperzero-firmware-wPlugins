@@ -189,8 +189,9 @@ private:
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
+        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
 
-        PagerSerializer().SavePagerData(&fileManager, SAVED_STATIONS_PATH, name, pager, decoder, protocol, subghz->GetSettings());
+        PagerSerializer().SavePagerData(&fileManager, SAVED_STATIONS_PATH, name, pager, decoder, protocol, frequency);
         FlipperDolphin::Deed(DolphinDeedSubGhzSave);
         receiver->ReloadKnownStations();
 

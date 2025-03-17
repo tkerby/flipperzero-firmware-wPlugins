@@ -44,15 +44,17 @@ public:
 
 private:
     AppConfig* config;
-    SubGhzSettings* subghzSettings;
     vector<StoredPagerData> pagers;
     map<uint32_t, String*> knownStations;
+    uint32_t lastFrequency = 0;
+    uint8_t lastFrequencyIndex = 0;
     bool knownStationsLoaded = false;
 
     void loadKnownStations(bool withNames) {
         FileManager fileManager = FileManager();
         Directory* dir = fileManager.OpenDirectory(SAVED_STATIONS_PATH);
         PagerSerializer serializer = PagerSerializer();
+        SubGhzSettings subghzSettings = SubGhzSettings();
 
         if(dir != NULL) {
             char fileName[MAX_STATION_FILENAME_LENGTH];
@@ -64,7 +66,7 @@ private:
                     stationName,
                     SAVED_STATIONS_PATH,
                     fileName,
-                    subghzSettings,
+                    &subghzSettings,
                     [this](const char* name) { return getProtocol(name)->id; },
                     [this](const char* name) { return getDecoder(name)->id; }
                 );
@@ -148,9 +150,8 @@ private:
     }
 
 public:
-    PagerReceiver(AppConfig* config, SubGhzSettings* subghzSettings) {
+    PagerReceiver(AppConfig* config) {
         this->config = config;
-        this->subghzSettings = subghzSettings;
 
         for(size_t i = 0; i < protocols.size(); i++) {
             protocols[i]->id = i;
@@ -175,6 +176,7 @@ public:
         FileManager fileManager = FileManager();
         Directory* dir = fileManager.OpenDirectory(stationDirectory);
         PagerSerializer serializer = PagerSerializer();
+        SubGhzSettings subghzSettings = SubGhzSettings();
         bool withNames = config->SavedStrategy == SHOW_NAME;
 
         if(dir != NULL) {
@@ -189,7 +191,7 @@ public:
                     stationName,
                     stationDirectory,
                     fileName,
-                    subghzSettings,
+                    &subghzSettings,
                     [this](const char* name) { return getProtocol(name)->id; },
                     [this](const char* name) { return getDecoder(name)->id; }
                 );
@@ -255,12 +257,17 @@ public:
 
         bool isNew = index < 0;
         if(isNew) {
+            if(data->GetFrequency() != lastFrequency) {
+                lastFrequencyIndex = SubGhzSettings().GetFrequencyIndex(data->GetFrequency());
+                lastFrequency = data->GetFrequency();
+            }
+
             StoredPagerData storedData = StoredPagerData();
             storedData.data = dataHash;
             storedData.protocol = protocol->id;
             storedData.repeats = 1;
             storedData.te = data->GetTE();
-            storedData.frequency = subghzSettings->GetFrequencyIndex(data->GetFrequency());
+            storedData.frequency = lastFrequencyIndex;
             storedData.decoder = getDecoder(&storedData)->id;
             storedData.edited = false;
 
@@ -280,7 +287,7 @@ public:
                 fileManager.CreateDirIfNotExists(todaysDir.cstr());
 
                 PagerSerializer().SavePagerData(
-                    &fileManager, todaysDir.cstr(), "", &storedData, decoders[storedData.decoder], protocol, subghzSettings
+                    &fileManager, todaysDir.cstr(), "", &storedData, decoders[storedData.decoder], protocol, lastFrequency
                 );
             }
 

@@ -35,13 +35,13 @@ public:
         StoredPagerData* pager,
         PagerDecoder* decoder,
         PagerProtocol* protocol,
-        SubGhzSettings* settings
+        uint32_t frequency
     ) {
         String* fileName = GetFilename(pager);
         FlipperFile* stationFile = fileManager->OpenWrite(dir, fileName->cstr());
 
         stationFile->WriteString(KEY_PAGER_STATION_NAME, stationName);
-        stationFile->WriteUInt32(KEY_PAGER_FREQUENCY, settings->GetFrequency(pager->frequency));
+        stationFile->WriteUInt32(KEY_PAGER_FREQUENCY, frequency);
         stationFile->WriteString(KEY_PAGER_PROTOCOL, protocol->GetSystemName());
         stationFile->WriteString(KEY_PAGER_DECODER, decoder->GetShortName());
         stationFile->WriteUInt32(KEY_PAGER_TE, pager->te);

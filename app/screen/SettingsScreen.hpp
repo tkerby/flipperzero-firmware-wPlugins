@@ -11,6 +11,7 @@ private:
     AppConfig* config;
     SubGhzModule* subghz;
     PagerReceiver* receiver;
+    SubGhzSettings subghzSettings;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* frequencyItem;
@@ -36,10 +37,10 @@ public:
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
                 "Frequency",
-                subghz->GetSettings()->GetFrequencyIndex(config->Frequency),
-                subghz->GetSettings()->GetFrequencyCount(),
+                subghzSettings.GetFrequencyIndex(config->Frequency),
+                subghzSettings.GetFrequencyCount(),
                 [this](uint8_t val) {
-                    uint32_t freq = this->config->Frequency = this->subghz->GetSettings()->GetFrequency(val);
+                    uint32_t freq = this->config->Frequency = this->subghzSettings.GetFrequency(val);
                     this->subghz->SetFrequency(this->config->Frequency);
                     return frequencyStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
                 }

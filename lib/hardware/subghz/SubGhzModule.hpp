@@ -16,8 +16,6 @@
 #include <lib/subghz/subghz_protocol_registry.h>
 #include <lib/subghz/subghz_worker.h>
 
-#include "lib/hardware/subghz/SubGhzSettings.hpp"
-
 #include "SubGhzState.hpp"
 #include "data/SubGhzReceivedDataImpl.hpp"
 
@@ -41,7 +39,6 @@ private:
     int repeatsLeft = 0;
     SubGhzPayload* currentPayload;
     uint32_t currentFrequency = 0;
-    SubGhzSettings* settings;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -92,7 +89,6 @@ private:
 
 public:
     SubGhzModule(uint32_t frequency) {
-        settings = new SubGhzSettings();
         environment = subghz_environment_alloc();
         subghz_environment_set_protocol_registry(environment, &subghz_protocol_registry);
 
@@ -115,10 +111,6 @@ public:
         txCompleteCheckTimer = furi_timer_alloc(txCompleteCheckCallback, FuriTimerTypePeriodic, this);
     }
 
-    SubGhzSettings* GetSettings() {
-        return settings;
-    }
-
     void SetFrequency(uint32_t frequency) {
         if(currentFrequency == frequency) {
             return;
@@ -131,8 +123,6 @@ public:
 
         if(subghz_devices_is_frequency_valid(device, frequency)) {
             subghz_devices_set_frequency(device, frequency);
-        } else {
-            subghz_devices_set_frequency(device, settings->GetDefaultFrequency());
         }
 
         if(restoreReceive) {
@@ -283,11 +273,6 @@ public:
             subghz_devices_end(device);
             subghz_devices_deinit();
             device = NULL;
-        }
-
-        if(settings != NULL) {
-            delete settings;
-            settings = NULL;
         }
     }
 };
