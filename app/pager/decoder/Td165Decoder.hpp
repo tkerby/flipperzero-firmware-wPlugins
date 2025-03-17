@@ -6,6 +6,7 @@
 #define TD165_ACTION_MUTE        1
 #define TD165_PAGER_TURN_OFF_ALL 1005
 
+// Retekess TD165/T119
 class Td165Decoder : public PagerDecoder {
 private:
     const uint32_t stationMask = 0b111111111111100000000000; // leading 13 bits (of 24) are station
@@ -19,10 +20,6 @@ private:
     const uint8_t pagerOffset = 1;
 
 public:
-    const char* GetFullName() {
-        return "Retekess TD165/T119";
-    }
-
     const char* GetShortName() {
         return "TD165";
     }

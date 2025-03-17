@@ -6,6 +6,7 @@
 #define TD157_ACTION_TURN_OFF_ALL 0b1111
 #define TD157_PAGER_TURN_OFF_ALL  999
 
+// Retekess TD157
 class Td157Decoder : public PagerDecoder {
 private:
     const uint32_t stationMask = 0b111111111100000000000000; // leading 10 bits (of 24) are station
@@ -16,10 +17,6 @@ private:
     const uint8_t pagerOffset = 4;
 
 public:
-    const char* GetFullName() {
-        return "Retekess TD157";
-    }
-
     const char* GetShortName() {
         return "TD157";
     }

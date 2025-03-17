@@ -6,6 +6,7 @@
 #define TD174_ACTION_DESYNC 3
 #define TD174_PAGER_DESYNC  237
 
+// Retekess TD174
 class Td174Decoder : public PagerDecoder {
 private:
     const uint32_t stationMask = 0b111111111111100000000000; // leading 13 bits (of 24) are station
@@ -21,10 +22,6 @@ private:
     const uint8_t pagerBitCount = 9;
 
 public:
-    const char* GetFullName() {
-        return "Retekess TD174";
-    }
-
     const char* GetShortName() {
         return "TD174";
     }

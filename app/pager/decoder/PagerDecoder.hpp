@@ -9,7 +9,6 @@ using namespace std;
 class PagerDecoder {
 public:
     uint8_t id;
-    virtual const char* GetFullName() = 0;
     virtual const char* GetShortName() = 0;
 
     virtual uint16_t GetStation(uint32_t data) = 0;

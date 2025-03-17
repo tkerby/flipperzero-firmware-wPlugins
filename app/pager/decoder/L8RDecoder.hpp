@@ -4,6 +4,7 @@
 
 #define T111_ACTION_RING 0
 
+// Retekess T111 / L8R
 // L8R — (L)ast (8) bits (R)eversed order (for pager number)
 // seems to be Retekess T111 encoding, but cannot check it due to lack of information
 // So I decided to keep it's name as L8R
@@ -22,10 +23,6 @@ private:
     const uint8_t pagerBitCount = 8;
 
 public:
-    const char* GetFullName() {
-        return "Retekess T111 / L8R";
-    }
-
     const char* GetShortName() {
         return "L8R";
     }

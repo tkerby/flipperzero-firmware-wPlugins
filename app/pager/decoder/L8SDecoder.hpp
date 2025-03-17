@@ -4,6 +4,7 @@
 
 #include "PagerDecoder.hpp"
 
+// iBells ZJ-68 / L8S
 // L8S — (L)ast (8) bits (S)traight order (non-reversed) (for pager number)
 class L8SDecoder : public PagerDecoder {
 private:
@@ -15,10 +16,6 @@ private:
     const uint8_t actionOffset = 8;
 
 public:
-    const char* GetFullName() {
-        return "iBells ZJ-68 / L8S";
-    }
-
     const char* GetShortName() {
         return "L8S";
     }
