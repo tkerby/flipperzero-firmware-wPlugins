@@ -89,6 +89,7 @@ export default {
     },
     templates: {
       title: 'APDU Analysis Templates',
+      description: 'Select a template to parse APDU response data',
       id: 'Filename',
       content: 'Template Content',
       use: 'View',

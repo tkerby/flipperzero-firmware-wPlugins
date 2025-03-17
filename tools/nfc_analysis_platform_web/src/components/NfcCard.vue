@@ -3,7 +3,7 @@
     class="nfc-card" 
     :class="{ 'selected': selected }" 
     :style="cardStyle"
-    @click="handleClick"
+    @click="handleCardClick"
   >
     <div class="card-content">
       <div class="card-header">
@@ -19,12 +19,12 @@
         </div>
         
         <div class="card-preview">
-          {{ formatContent(content) }}
+          {{ props.id || formatContent(content) }}
         </div>
         
         <!-- 添加查看按钮 -->
         <div class="card-footer">
-          <button class="view-button">
+          <button class="view-button" @click.stop="handleViewClick">
             {{ viewText }}
           </button>
         </div>
@@ -68,7 +68,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(['click', 'view']);
 
 // 格式化标题：将文件名转换为可读标题
 const formatTitle = (title) => {
@@ -96,9 +96,16 @@ const formatContent = (content) => {
 };
 
 // 处理卡片点击事件
-const handleClick = () => {
+const handleCardClick = () => {
   if (props.clickable) {
     emit('click', { title: props.title, content: props.content });
+  }
+};
+
+// 处理查看按钮点击事件
+const handleViewClick = () => {
+  if (props.clickable) {
+    emit('view', { title: props.title, content: props.content });
   }
 };
 

@@ -56,6 +56,7 @@
               :selected="selectedTemplateIndex === index"
               :viewText="t('nard.templates.use')"
               @click="selectTemplate(index)"
+              @view="viewTemplateDetails(index)"
             >
             </NfcCard>
           </NfcCardGrid>
@@ -205,19 +206,17 @@ const selectTemplate = (index) => {
   if (index >= 0 && index < templates.value.length) {
     selectedTemplateIndex.value = index;
     selectedTemplateData.value = { ...templates.value[index] };
-    showTemplateDetails.value = true;
     console.log('Selected template:', selectedTemplateData.value);
   }
 };
 
-// 使用模板
-const useTemplate = (index) => {
+// 查看模板详情
+const viewTemplateDetails = (index) => {
   if (index >= 0 && index < templates.value.length) {
     selectedTemplateIndex.value = index;
     selectedTemplateData.value = { ...templates.value[index] };
-    showTemplateDetails.value = false;
-    // 这里可以添加使用模板的逻辑
-    console.log('Using template:', selectedTemplateData.value);
+    showTemplateDetails.value = true;
+    console.log('Viewing template details:', selectedTemplateData.value);
   }
 };
 

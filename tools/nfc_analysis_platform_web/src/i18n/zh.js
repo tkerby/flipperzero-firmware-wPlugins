@@ -89,6 +89,7 @@ export default {
     },
     templates: {
       title: 'APDU 解析模板',
+      description: '选择一个模板来解析APDU响应数据',
       id: '文件名',
       content: '内容',
       use: '查看',
