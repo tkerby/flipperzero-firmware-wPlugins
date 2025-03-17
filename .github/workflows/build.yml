@@ -19,11 +19,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: dev channel
-            sdk-channel: dev
-          - name: release channel
+          - name: Momentum firmware
+            sdk-index-url: https://raw.githubusercontent.com/Next-Flip/Momentum-Firmware/refs/heads/release/targets/f7/target.json
             sdk-channel: release
-          # You can add unofficial channels here. See ufbt action docs for more info.
     name: 'ufbt: Build for ${{ matrix.name }}'
     steps:
       - name: Checkout
