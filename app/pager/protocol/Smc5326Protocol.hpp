@@ -7,14 +7,6 @@ class Smc5326Protocol : public PagerProtocol {
         return "SMC5326";
     }
 
-    const char* GetDisplayName() {
-        return GetSystemName();
-    }
-
-    const char* GetShortName() {
-        return "s";
-    }
-
     int GetFallbackTE() {
         return 326;
     }

@@ -10,14 +10,6 @@ public:
         return "Princeton";
     }
 
-    const char* GetDisplayName() {
-        return GetSystemName();
-    }
-
-    const char* GetShortName() {
-        return "p";
-    }
-
     int GetFallbackTE() {
         return 212;
     }

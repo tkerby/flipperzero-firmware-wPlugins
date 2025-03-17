@@ -88,7 +88,7 @@ public:
         );
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&EditPagerScreen::hexValueChanged)));
-        varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetDisplayName()));
+        varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetSystemName()));
         varItemList->AddItem(
             teItem = new UiVariableItem(
                 "TE", pager->te / TE_DIV, protocol->GetMaxTE() / TE_DIV, HANDLER_1ARG(&EditPagerScreen::teValueChanged)
