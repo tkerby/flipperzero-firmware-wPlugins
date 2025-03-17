@@ -6,7 +6,7 @@
 
 #include "UiView.hpp"
 #include "lib/HandlerContext.hpp"
-#include <list>
+#include <forward_list>
 
 #undef LOG_TAG
 #define LOG_TAG "UI_SUBMENU"
@@ -17,7 +17,7 @@ class SubMenuUiView : public UiView {
 private:
     Submenu* menu;
     uint32_t elementCount = 0;
-    list<IDestructable*> handlers;
+    forward_list<IDestructable*> handlers;
 
     static void executeCallback(void* context, uint32_t index) {
         if(context == NULL) {
@@ -47,7 +47,7 @@ public:
 
     void AddItemAt(uint32_t index, const char* label, function<void(uint32_t)> handler) {
         auto handlerContext = new HandlerContext(handler);
-        handlers.push_back(handlerContext);
+        handlers.push_front(handlerContext);
         submenu_add_item(menu, label, index, executeCallback, handlerContext);
         elementCount++;
     }
