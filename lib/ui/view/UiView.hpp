@@ -5,25 +5,14 @@
 #include <gui/gui.h>
 #include <gui/view.h>
 
-#include "lib/HandlerContext.hpp"
-
 using namespace std;
 
 class UiView {
 private:
-    function<void()> onDestroyHandler = HANDLER(&UiView::doNothing);
-    function<void()> onReturnToView = HANDLER(&UiView::doNothing);
-    function<bool()> goBackHandler = []() { return true; };
-    IDestructable* inputHandler = NULL;
+    function<void()> onDestroyHandler = NULL;
+    function<void()> onReturnToView = NULL;
+    function<bool()> goBackHandler = NULL;
     bool isOnTop = false;
-
-    static bool onInput(InputEvent* input, void* context) {
-        auto handlerContext = (HandlerContext<function<bool(InputEvent*)>>*)context;
-        return handlerContext->GetHandler()(input);
-    }
-
-    void doNothing() {
-    }
 
 public:
     virtual View* GetNativeView() = 0;
@@ -38,17 +27,14 @@ public:
         onReturnToView = handler;
     }
 
-    void SetInputHandler(function<bool(InputEvent*)> handler) {
-        view_set_context(GetNativeView(), inputHandler = new HandlerContext(handler));
-        view_set_input_callback(GetNativeView(), onInput);
-    }
-
     void SetGoBackHandler(function<bool()> handler) {
         goBackHandler = handler;
     }
 
     void OnReturn() {
-        onReturnToView();
+        if(onReturnToView != NULL) {
+            onReturnToView();
+        }
     }
 
     bool IsOnTop() {
@@ -60,16 +46,17 @@ public:
     }
 
     bool GoBack() {
-        return goBackHandler();
+        if(goBackHandler != NULL) {
+            return goBackHandler();
+        }
+        return true;
     }
 
 protected:
     // Must be called from parent class destructor's!
     void OnDestory() {
-        if(inputHandler != NULL) {
-            delete inputHandler;
-            inputHandler = NULL;
+        if(onDestroyHandler != NULL) {
+            onDestroyHandler();
         }
-        onDestroyHandler();
     }
 };
