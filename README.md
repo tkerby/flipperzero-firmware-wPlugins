@@ -1,5 +1,5 @@
 # Chief Cooker
-Your ultimate Flipper Zero restaurant pager tool. Be a _real chief_ at your local food court!
+Your ultimate Flipper Zero restaurant pager tool. Be a _real chief_ of all the restaurants on the food court!
 
 This app supports receiving, decoding, editing and sending restaurant pager signals. 
 
