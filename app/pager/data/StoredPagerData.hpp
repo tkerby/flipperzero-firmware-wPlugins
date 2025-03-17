@@ -26,8 +26,8 @@ struct StoredPagerData {
     // 5 bits still unused
 };
 
-// StoredPagerData is short-living because it's stored as vector of stack allocated objects in PagerReceiver class.
-// If vector size changes, it reallocates all the objects on the new addresses in memory. We could store pointers in vector instead of stack objects,
+// StoredPagerData is short-living because it's stored as array of stack allocated objects in PagerReceiver class.
+// If array size changes, it reallocates all the objects on the new addresses in memory. We could store pointers in array instead of stack objects,
 // but it would take more memory which is not acceptable (sizeof(StoredPagerData) + sizeof(StoredPagerData*)) vs sizeof(StoredPagerData).
 // That's why we pass the getter instead of object itself, to make sure we always have the right pointer to the StoredPagerData structure.
 typedef function<StoredPagerData*()> PagerDataGetter;

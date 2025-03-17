@@ -2,7 +2,6 @@
 
 #include "PagerSerializer.hpp"
 #include <cstring>
-#include <vector>
 #include <map>
 
 #include "lib/hardware/subghz/SubGhzSettings.hpp"
@@ -25,7 +24,8 @@
 #undef LOG_TAG
 #define LOG_TAG "PGR_RCV"
 
-#define MAX_REPEATS 99
+#define MAX_REPEATS                  99
+#define PAGERS_ARRAY_SIZE_MULTIPLIER 8
 
 using namespace std;
 
@@ -48,7 +48,9 @@ public:
 
 private:
     AppConfig* config;
-    vector<StoredPagerData> pagers;
+    uint16_t pagersArraySize = PAGERS_ARRAY_SIZE_MULTIPLIER;
+    uint16_t nextPagerIndex = 0;
+    StoredPagerData* pagers = new StoredPagerData[pagersArraySize];
     map<uint32_t, String*> knownStations;
     uint32_t lastFrequency = 0;
     uint8_t lastFrequencyIndex = 0;
@@ -153,6 +155,19 @@ private:
         return NULL;
     }
 
+    void addPager(StoredPagerData data) {
+        if(nextPagerIndex == pagersArraySize) {
+            pagersArraySize += PAGERS_ARRAY_SIZE_MULTIPLIER;
+            StoredPagerData* newPagers = new StoredPagerData[pagersArraySize];
+            for(int i = 0; i < nextPagerIndex; i++) {
+                newPagers[i] = pagers[i];
+            }
+            delete[] pagers;
+            pagers = newPagers;
+        }
+        pagers[nextPagerIndex++] = data;
+    }
+
 public:
     PagerReceiver(AppConfig* config) {
         this->config = config;
@@ -204,8 +219,8 @@ public:
                     delete stationName;
                 }
 
-                int index = pagers.size();
-                pagers.push_back(pager);
+                int index = nextPagerIndex;
+                addPager(pager);
                 pagerHandler(new ReceivedPagerData(PagerGetter(index), index, true));
             }
         }
@@ -238,7 +253,7 @@ public:
         int index = -1;
         uint32_t dataHash = data->GetHash();
 
-        for(size_t i = 0; i < pagers.size(); i++) {
+        for(size_t i = 0; i < nextPagerIndex; i++) {
             if(pagers[i].data == dataHash && pagers[i].protocol == protocol->id) {
                 if(pagers[i].repeats < MAX_REPEATS) {
                     pagers[i].repeats++;
@@ -286,8 +301,8 @@ public:
                 );
             }
 
-            index = pagers.size();
-            pagers.push_back(storedData);
+            index = nextPagerIndex;
+            addPager(storedData);
         }
 
         return new ReceivedPagerData(PagerGetter(index), index, isNew);
@@ -302,6 +317,7 @@ public:
             delete decoder;
         }
 
+        delete[] pagers;
         unloadKnownStations();
     }
 };
