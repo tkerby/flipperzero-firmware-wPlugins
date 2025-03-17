@@ -162,9 +162,7 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         return SIO_ACK;
 
     case SIO_COMMAND_GET_HSI:
-        //request->baudrate = 38400;
-        //return SIO_ACK;
-        return SIO_NAK;
+        return SIO_ACK;
 
     case SIO_COMMAND_FORMAT:
         return SIO_ACK;
@@ -325,8 +323,9 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
 
     case SIO_COMMAND_GET_HSI:
-        request->tx_data[0] = SIO_HSI_19200;
+        request->tx_data[0] = SIO_HSI_38400;
         request->tx_size = 1;
+        request->baudrate = 1780000 / 2 / (7 + request->tx_data[0]);
         return SIO_COMPLETE;
 
     default:

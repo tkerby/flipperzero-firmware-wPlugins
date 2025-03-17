@@ -51,11 +51,18 @@ typedef struct {
 } SIOHandler;
 
 struct SIODriver {
-    uint32_t baudrate;
-
     size_t command_phase;
     size_t rx_count;
     size_t rx_expected;
+
+    // Currently used baudrate
+    uint32_t baudrate;
+    // Baudrate for the next command
+    uint32_t req_baudrate;
+    // Alternative baudrate (used for baudrate swapping)
+    uint32_t alt_baudrate;
+    // Errors counter used for baudrate swapping
+    uint32_t error_count;
 
     FuriHalSerialHandle* uart;
     FuriThread* rx_thread;
@@ -75,10 +82,30 @@ static uint8_t calc_chksum(const uint8_t* data, size_t size) {
     return chksum;
 }
 
+static void sio_set_baudrate(SIODriver* sio, uint32_t baudrate) {
+    furi_check(sio != NULL);
+
+    if(baudrate != sio->baudrate) {
+        sio->baudrate = baudrate;
+        furi_hal_serial_tx_wait_complete(sio->uart);
+        furi_hal_serial_set_br(sio->uart, sio->baudrate);
+    }
+}
+
+static void sio_swap_baudrate(SIODriver* sio) {
+    furi_check(sio != NULL);
+
+    if(sio->baudrate == SIO_DEFAULT_BAUDRATE) {
+        sio->req_baudrate = sio->alt_baudrate;
+    } else {
+        sio->req_baudrate = SIO_DEFAULT_BAUDRATE;
+    }
+}
+
 void sio_driver_rx_callback(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {
     SIODriver* sio = (SIODriver*)context;
 
-    if(event == FuriHalSerialRxEventData) {
+    if(event & FuriHalSerialRxEventData) {
         while(furi_hal_serial_async_rx_available(handle)) {
             bool command_low = !furi_hal_gpio_read(GPIO_EXT_COMMAND);
 
@@ -178,9 +205,10 @@ static SIOStatus sio_invoke_data_callback(SIODriver* sio, SIORequest* request) {
 static void sio_driver_command_fall_callback(void* context) {
     SIODriver* sio = (SIODriver*)context;
 
-    if(sio->baudrate != SIO_DEFAULT_BAUDRATE) {
-        sio->baudrate = SIO_DEFAULT_BAUDRATE;
-        furi_hal_serial_set_br(sio->uart, sio->baudrate);
+    UNUSED(sio);
+
+    if(sio->baudrate != sio->req_baudrate) {
+        sio_set_baudrate(sio, sio->req_baudrate);
     }
 }
 
@@ -197,33 +225,42 @@ static int32_t sio_driver_rx_worker(void* context) {
         } else if(events & WORKER_EVT_ERROR) {
             FURI_LOG_E(
                 TAG,
-                "SIO checksum error (%d bytes received - %02X %02X %02X %02X...)",
+                "SIO: frame checksum error (%d bytes received - %02X %02X %02X %02X...)",
                 sio->rx_count,
                 sio->request.rx_data[0],
                 sio->request.rx_data[1],
                 sio->request.rx_data[2],
                 sio->request.rx_data[3]);
 
+            if(sio->command_phase) {
+                sio->error_count++;
+                if(sio->error_count >= 2) {
+                    sio->error_count = 0;
+                    // Swap baudrate after 2 consecutive errors
+                    // (US Doubler high-speed mode)
+                    sio_swap_baudrate(sio);
+                }
+            }
+
             sio->command_phase = false;
-            uint8_t status = SIO_NAK;
-            furi_delay_ms(1);
-            furi_hal_serial_tx(sio->uart, &status, 1);
         } else if(events & WORKER_EVT_RECEIVE) {
+            sio->error_count = 0;
+
             if(sio->command_phase) {
                 FURI_LOG_I(
                     TAG,
-                    "SIO command %02X %02X %02X %02X received",
+                    "SIO: command frame received: %02X %02X %02X %02X",
                     sio->request.device,
                     sio->request.command,
                     sio->request.aux1,
                     sio->request.aux2);
             } else {
-                FURI_LOG_I(TAG, "SIO: %d bytes of data received", sio->rx_count);
+                FURI_LOG_I(TAG, "SIO: data frame received (%d bytes)", sio->rx_count);
             }
 
             if(sio->command_phase) {
                 // Process the command frame
-                sio->request.baudrate = SIO_DEFAULT_BAUDRATE;
+                sio->request.baudrate = sio->baudrate;
                 uint8_t status = sio_invoke_command_callback(sio, &sio->request);
 
                 __disable_irq();
@@ -235,12 +272,13 @@ static int32_t sio_driver_rx_worker(void* context) {
                 // ACK or NAK the command frame
                 sio_driver_send_status(sio, status);
 
-                // Increase baudrate if needed
                 if(status == SIO_ACK) {
-                    if(sio->request.baudrate != SIO_DEFAULT_BAUDRATE) {
-                        sio->baudrate = sio->request.baudrate;
-                        furi_hal_serial_tx_wait_complete(sio->uart);
-                        furi_hal_serial_set_br(sio->uart, sio->baudrate);
+                    if(sio->request.baudrate != sio->baudrate) {
+                        // Temporary baudrate for the data frame
+                        // (XF551 high-speed mode)
+                        sio->alt_baudrate = SIO_DEFAULT_BAUDRATE;
+                        sio->req_baudrate = SIO_DEFAULT_BAUDRATE;
+                        sio_set_baudrate(sio, sio->request.baudrate);
                     }
 
                     if(sio->rx_expected == 0) {
@@ -249,9 +287,15 @@ static int32_t sio_driver_rx_worker(void* context) {
 
                         sio_driver_send_status(sio, status);
                         sio_driver_send_data(sio, sio->request.tx_data, sio->request.tx_size);
+
+                        if(sio->request.baudrate != sio->req_baudrate) {
+                            // Permanent baudrate change for all subsequent commands
+                            // (US Doubler high-speed mode)
+                            sio->alt_baudrate = sio->request.baudrate;
+                            sio->req_baudrate = sio->request.baudrate;
+                        }
                     }
                 }
-
             } else {
                 // ACK data frame
                 sio_driver_send_status(sio, SIO_ACK);
@@ -276,6 +320,8 @@ SIODriver* sio_driver_alloc() {
     furi_hal_gpio_init(GPIO_EXT_MOTORCTL, GpioModeInput, GpioPullNo, GpioSpeedLow);
 
     sio->baudrate = SIO_DEFAULT_BAUDRATE;
+    sio->req_baudrate = SIO_DEFAULT_BAUDRATE;
+    sio->alt_baudrate = SIO_DEFAULT_BAUDRATE;
     sio->uart = furi_hal_serial_control_acquire(GPIO_EXT_UART);
 
     if(!sio->uart) {
@@ -298,7 +344,7 @@ SIODriver* sio_driver_alloc() {
 
     furi_thread_start(sio->rx_thread);
 
-    furi_hal_serial_async_rx_start(sio->uart, sio_driver_rx_callback, sio, false);
+    furi_hal_serial_async_rx_start(sio->uart, sio_driver_rx_callback, sio, true);
 
     furi_hal_gpio_add_int_callback(GPIO_EXT_COMMAND, sio_driver_command_fall_callback, sio);
 
