@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0314-1528-0.420.0-86a8013](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0316-2318-0.420.0-d116354](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-14 15:28 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-14 15:28 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-03-16 23:18 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-03-16 23:18 EST`
 - Updated: [INA Meter v0.2 (By cepetr)](https://github.com/cepetr/flipper-tina)
 - Updated: [Radio Scanner v0.3 (By RocketGod)](https://github.com/RocketGod-Git/Flipper-Zero-Radio-Scanner) [Stealth Mode Sound Lock Bug Fix #8 (By forever45360)](https://github.com/RocketGod-git/Flipper-Zero-Radio-Scanner/pull/8)
 - Added: [NFC APDU Runner v0.2 (By SpenserCai)](https://github.com/SpenserCai/nfc_apdu_runner)
