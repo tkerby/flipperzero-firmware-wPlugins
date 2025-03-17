@@ -71,8 +71,8 @@ public:
         }
     }
 
-    vector<PagerAction> GetSupportedActions() {
-        return vector<PagerAction>{RING};
+    bool IsSupported(PagerAction) {
+        return false;
     }
 
     uint8_t GetActionsCount() {

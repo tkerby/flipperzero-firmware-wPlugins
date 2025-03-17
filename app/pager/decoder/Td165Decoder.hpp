@@ -79,8 +79,17 @@ public:
         }
     }
 
-    vector<PagerAction> GetSupportedActions() {
-        return vector<PagerAction>{RING, MUTE, TURN_OFF_ALL};
+    bool IsSupported(PagerAction action) {
+        switch(action) {
+        case RING:
+        case MUTE:
+        case TURN_OFF_ALL:
+            return true;
+
+        default:
+            return false;
+        }
+        return false;
     }
 
     uint8_t GetActionsCount() {

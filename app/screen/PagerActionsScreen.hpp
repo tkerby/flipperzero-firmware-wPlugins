@@ -65,9 +65,13 @@ public:
             );
         }
 
-        actionsStrings = new String*[decoder->GetSupportedActions().size()];
-        for(size_t i = 0; i < decoder->GetSupportedActions().size(); i++) {
-            PagerAction action = decoder->GetSupportedActions()[i];
+        actionsStrings = new String*[decoder->GetSupportedActionsCount()];
+        for(size_t actionIndex = 0, i = 0; actionIndex < PagerActionCount; actionIndex++) {
+            PagerAction action = static_cast<enum PagerAction>(actionIndex);
+            if(!decoder->IsSupported(action)) {
+                continue;
+            }
+
             if(PagerActions::IsPagerActionSpecial(action)) {
                 actionsStrings[i] = new String("Trigger action %s", PagerActions::GetDescription(action));
             } else {
@@ -75,6 +79,7 @@ public:
             }
 
             submenu->AddItem(actionsStrings[i]->cstr(), [this, action](uint32_t) { sendAction(action); });
+            i++;
         }
 
         subghz->SetTransmitCompleteHandler(HANDLER(&PagerActionsScreen::txComplete));
@@ -132,7 +137,7 @@ private:
 
     void destroy() {
         subghz->SetTransmitCompleteHandler(NULL);
-        for(size_t i = 0; i < decoder->GetSupportedActions().size(); i++) {
+        for(size_t i = 0; i < decoder->GetSupportedActionsCount(); i++) {
             delete actionsStrings[i];
         }
         delete[] actionsStrings;

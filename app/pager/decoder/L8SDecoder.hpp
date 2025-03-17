@@ -51,8 +51,8 @@ public:
         return data;
     }
 
-    vector<PagerAction> GetSupportedActions() {
-        return vector<PagerAction>{};
+    bool IsSupported(PagerAction) {
+        return false;
     }
 
     uint8_t GetActionsCount() {

@@ -6,6 +6,8 @@ enum PagerAction {
     MUTE,
     DESYNC,
     TURN_OFF_ALL,
+
+    PagerActionCount,
 };
 
 class PagerActions {
@@ -22,8 +24,9 @@ public:
             return "DESYNC_ALL";
         case TURN_OFF_ALL:
             return "ALL_OFF";
+        default:
+            return "";
         }
-        return "";
     }
 
     static bool IsPagerActionSpecial(PagerAction action) {

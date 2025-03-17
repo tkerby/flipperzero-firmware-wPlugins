@@ -69,8 +69,16 @@ public:
         return (data & ~actionMask) | action;
     }
 
-    vector<PagerAction> GetSupportedActions() {
-        return vector<PagerAction>{RING, TURN_OFF_ALL};
+    bool IsSupported(PagerAction action) {
+        switch(action) {
+        case RING:
+        case TURN_OFF_ALL:
+            return true;
+
+        default:
+            return false;
+        }
+        return false;
     }
 
     uint8_t GetActionsCount() {

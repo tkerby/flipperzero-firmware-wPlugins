@@ -79,8 +79,16 @@ public:
         }
     }
 
-    vector<PagerAction> GetSupportedActions() {
-        return vector<PagerAction>{RING, DESYNC};
+    bool IsSupported(PagerAction action) {
+        switch(action) {
+        case RING:
+        case DESYNC:
+            return true;
+
+        default:
+            return false;
+        }
+        return false;
     }
 
     uint8_t GetActionsCount() {
