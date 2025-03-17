@@ -60,3 +60,7 @@ protected:
         }
     }
 };
+
+struct UiVIewPointerViewModel {
+    UiView* uiVIew;
+};
