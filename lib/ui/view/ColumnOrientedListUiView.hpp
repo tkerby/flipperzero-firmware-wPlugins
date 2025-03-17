@@ -7,7 +7,6 @@
 #include "UiView.hpp"
 #include "lib/String.hpp"
 #include "lib/Helpers.hpp"
-#include "lib/ui/UiManager.hpp"
 
 #undef LOG_TAG
 #define LOG_TAG "UI_ADV_SUBMENU"
