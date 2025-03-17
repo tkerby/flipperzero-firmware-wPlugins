@@ -168,6 +168,8 @@ const cardStyle = computed(() => {
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   transform-style: preserve-3d;
   perspective: 1000px;
+  margin: 2px; /* 添加外边距，确保发光效果不被裁剪 */
+  z-index: 1; /* 添加基本z-index */
 }
 
 /* 添加选中状态的发光效果 */
@@ -177,6 +179,7 @@ const cardStyle = computed(() => {
     0 0 15px v-bind('getThemeColor(0.5)'),
     0 4px 20px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
+  z-index: 2; /* 选中状态提高z-index，确保在最上层 */
 }
 
 /* 添加悬停时的发光效果 */
@@ -186,6 +189,7 @@ const cardStyle = computed(() => {
     0 0 10px v-bind('getThemeColor(0.3)'),
     0 8px 24px rgba(0, 0, 0, 0.4);
   transform: translateY(-2px) scale(1.01);
+  z-index: 2; /* 悬停状态提高z-index */
 }
 
 /* 添加卡片表面的网格纹理 */
@@ -359,6 +363,8 @@ const cardStyle = computed(() => {
 
 .nfc-card.selected {
   animation: card-activate 1s forwards;
+  position: relative;
+  z-index: 10; /* 确保选中的卡片在最上层 */
 }
 
 /* 添加芯片闪烁效果 */
