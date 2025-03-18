@@ -46,10 +46,12 @@ private:
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
     bool receiveMode = false;
+    bool isFavourites = false;
 
 public:
-    ScanStationsScreen(AppConfig* config, bool receiveNew, const char* stationsDir, bool preloadKnown) {
+    ScanStationsScreen(AppConfig* config, bool receiveNew, const char* stationsDir, bool isFavouritesDir) {
         this->config = config;
+        this->isFavourites = isFavouritesDir;
 
         menuView = new ColumnOrientedListUiView(
             stationScreenColumnOffsets,
@@ -73,7 +75,7 @@ public:
         }
 
         pagerReceiver = new PagerReceiver(config);
-        if(preloadKnown) {
+        if(!isFavouritesDir) {
             pagerReceiver->ReloadKnownStations();
         }
 
@@ -200,7 +202,10 @@ private:
     }
 
     void editPagerMessage(uint32_t index) {
-        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, pagerReceiver->PagerGetter(index), NULL);
+        PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
+        EditPagerScreen* screen = new EditPagerScreen(
+            config, subghz, pagerReceiver, getPager, isFavourites ? pagerReceiver->GetName(getPager()) : NULL
+        );
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 

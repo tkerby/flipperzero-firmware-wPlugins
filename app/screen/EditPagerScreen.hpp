@@ -101,7 +101,7 @@ public:
         );
 
         if(savedAsNameFromFile != NULL) {
-            this->savedAsName = new String("%s", savedAsNameFromFile);
+            this->savedAsName = new String("%s", savedAsNameFromFile->cstr());
         } else {
             FileManager* fileManager = new FileManager();
             this->savedAsName = PagerSerializer().LoadOnlyStationName(fileManager, SAVED_STATIONS_PATH, pager);
