@@ -290,7 +290,7 @@ bool determine_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector
         geom->sectors_per_track = 18;
         geom->sector_size = 256;
         geom->density = 0x4;
-    } else if(disk_size == (360 * 1024) && sector_size == 128) { // DS/2SD
+    } else if(disk_size == (360 * 1024) && sector_size == 128) { // DS/DD
         geom->heads = 2;
         geom->tracks = 80;
         geom->sectors_per_track = 18;
@@ -302,13 +302,23 @@ bool determine_disk_geometry(DiskGeometry* geom, size_t disk_size, size_t sector
         geom->sectors_per_track = 18;
         geom->sector_size = 256;
         geom->density = 0x4;
-    } else if(disk_size == (720 * 1024 - 3 * 128) && sector_size == 256) { // DS/2DD
+    } else if(disk_size == (720 * 1024 - 3 * 128) && sector_size == 256) { // DS/QD
         geom->heads = 2;
         geom->tracks = 80;
         geom->sectors_per_track = 18;
         geom->sector_size = 256;
         geom->density = 0x4;
     } else {
+        // Unlisted disk geometry
+        if(sector_size == 256) {
+            geom->sectors_per_track = 3 + (disk_size - 3 * 128) / sector_size;
+        } else {
+            geom->sectors_per_track = disk_size / sector_size;
+        }
+        geom->heads = 1;
+        geom->tracks = 1;
+        geom->sector_size = sector_size;
+        geom->density = 0;
         return false;
     }
 
