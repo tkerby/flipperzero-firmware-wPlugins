@@ -34,11 +34,21 @@ static bool app_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-void fdd_activity_callback(void* context, SIODevice device, FddActivity activity, uint16_t sector) {
+static bool is_charging(App* app) {
+    PowerInfo power_info;
+    power_get_info(app->power, &power_info);
+    return power_info.is_charging;
+}
+
+static void
+    fdd_activity_callback(void* context, SIODevice device, FddActivity activity, uint16_t sector) {
     furi_check(context != NULL);
     App* app = (App*)context;
 
-    if(app->config.led_blinking) {
+    // When charging, do not blink the LED, as it is somewhat confusing and
+    // significantly slows down the emulator speed.
+
+    if(app->config.led_blinking && !is_charging(app)) {
         switch(activity) {
         case FddEmuActivity_Read:
             notification_message(app->notifications, &sequence_blink_green_10);
@@ -70,6 +80,8 @@ static App* app_alloc() {
     app->storage = furi_record_open(RECORD_STORAGE);
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
+
+    app->power = furi_record_open(RECORD_POWER);
 
     // Create the ATR data directory
     storage_common_mkdir(app->storage, ATR_DATA_PATH_PREFIX);
@@ -180,6 +192,7 @@ static void app_free(App* app) {
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
 
+    furi_record_close(RECORD_POWER);
     furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_STORAGE);
