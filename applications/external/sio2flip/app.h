@@ -28,6 +28,7 @@
 #include <gui/modules/dialog_ex.h>
 #include <storage/storage.h>
 #include <notification/notification_messages.h>
+#include <power/power_service/power.h>
 
 #include "app_common.h"
 #include "app_config.h"
@@ -53,6 +54,7 @@ typedef struct {
     NotificationApp* notifications;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
+    Power* power;
 
     VariableItemList* var_item_list;
     NumberInput* number_input;
