@@ -1,14 +1,53 @@
 # NFC APDU Runner
 
-NFC APDU Runner is a Flipper Zero application for reading and executing APDU commands on NFC cards. This application allows users to load APDU commands from script files, send them to NFC cards, and view the response results.
+[中文](./README_CN.md)
+
+NFC APDU Runner is a Flipper Zero application for reading and executing APDU commands on NFC cards. This application allows users to load APDU commands from script files, send them to NFC cards, and view the response results. It also includes NARD (NFC APDU Runner Response Decoder) for parsing and analyzing APDU responses using customizable format templates, and TLV data extraction capabilities. The project now supports a Web interface analysis platform for more comprehensive NFC data analysis and visualization.
+
+<div align="center">
+
+[![NFC APDU Runner Web Interface](./doc_images/web_image.png)](https://youtu.be/u8o0eTmCCew)
+
+</div>
+
+<div align="center">
+  <img src="./doc_images/waiting_decode.png" width="45%" alt="NARD Waiting for Decode">
+  <img src="./doc_images/emv_response.jpg" width="45%" alt="EMV Card Decoded Response">
+</div>
+
+<div align="center">
+  <img src="./doc_images/emv_decode.jpg" width="45%" alt="EMV Card Detailed Decode">
+  <img src="./doc_images/travel_card_decode.png" width="45%" alt="Travel Card Decode">
+</div>
 
 ## Features
 
 - Support for loading APDU commands from script files
+- Web interface analysis platform for comprehensive NFC data analysis and visualization
 - Support for multiple card types (ISO14443-4A and ISO14443-4B implemented)
 - User-friendly interface with operation prompts
 - Execution logging for debugging
 - Ability to save execution results to files
+- NARD (NFC APDU Runner Response Decoder) for parsing and analyzing APDU responses
+- Template-based decoding of APDU responses with custom format templates
+- TLV data extraction and parsing capabilities
+
+## Installation
+
+1. Download the latest release from the [Releases](https://github.com/SpenserCai/nfc_apdu_runner/releases) page
+2. Extract the zip file
+3. Copy the `nfc_apdu_runner.fap` file to the `/ext/apps/NFC/` directory on your Flipper Zero
+4. Copy the files from `apdu_script` directory to the `/ext/apps_data/nfc_apdu_runner/` directory on your Flipper Zero(If not exist, create it)
+
+
+## Tools
+
+This project includes additional tools to enhance functionality:
+
+- [nfc_analysis_platform](tools/nfc_analysis_platform/README.md) - A comprehensive platform for NFC data analysis, including:
+  - **NARD (NFC APDU Runner Response Decoder)** - Parse and decode `.apdures` files using customizable format templates
+  - **TLV Parser** - Extract and analyze Tag-Length-Value data structures from NFC communications
+  - **Web API Server** - Access NFC analysis functionality through a RESTful API interface
 
 ## Supported Card Types
 
@@ -64,7 +103,7 @@ Out: 6A82
 ## Development Information
 
 - Author: SpenserCai
-- Version: 1.0
+- Version: 0.3
 - License: GNU General Public License v3.0
 
 ## Notes

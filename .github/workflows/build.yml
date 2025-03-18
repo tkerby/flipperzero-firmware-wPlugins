@@ -32,6 +32,8 @@ jobs:
         id: build-app
         with:
           sdk-channel: ${{ matrix.sdk-channel }}
+          # 指定FAP应用程序的目录
+          app-dir: fap
       - name: Upload app artifacts
         uses: actions/upload-artifact@v4
         with:
