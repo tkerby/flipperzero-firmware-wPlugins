@@ -256,7 +256,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.y -= (2 + game_context->icon_offset);
+            pos.y -= (1 + game_context->icon_offset);
             player->dy = -1;
             player->direction = ENTITY_UP;
         }
@@ -277,7 +277,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.y += (2 + game_context->icon_offset);
+            pos.y += (1 + game_context->icon_offset);
             player->dy = 1;
             player->direction = ENTITY_DOWN;
         }
@@ -298,7 +298,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.x -= (2 + game_context->icon_offset);
+            pos.x -= (1 + game_context->icon_offset);
             player->dx = -1;
             player->direction = ENTITY_LEFT;
         }
@@ -321,7 +321,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         if (!game_context->is_menu_open)
         {
-            pos.x += (2 + game_context->icon_offset);
+            pos.x += (1 + game_context->icon_offset);
             player->dx = 1;
             player->direction = ENTITY_RIGHT;
         }
