@@ -1,5 +1,5 @@
 # Chief Cooker
-Your ultimate Flipper Zero restaurant pager tool. Be a _real chief_ at your local food court!
+Your ultimate Flipper Zero restaurant pager tool. Be a _real chief_ of all the restaurants on the food court!
 
 This app supports receiving, decoding, editing and sending restaurant pager signals. 
 
@@ -19,7 +19,7 @@ Use it responsibly, okay?
 - Save signals from captured stations and give it a name
 - Dsiplay signals from saved stations by it's name or hide them from list
 - Send signals from saved stations at any time, no need to capture it again
-- Of course, suports working with external CC1101 module to cover all pagers on your food court! 
+- Of course, suports working with external CC1101 module to cover the area of all the pagers on your food court! 
 
 ## Supported protocols
 - Princeton
