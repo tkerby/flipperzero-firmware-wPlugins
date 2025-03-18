@@ -38,16 +38,18 @@ void fdd_activity_callback(void* context, SIODevice device, FddActivity activity
     furi_check(context != NULL);
     App* app = (App*)context;
 
-    switch(activity) {
-    case FddEmuActivity_Read:
-        notification_message(app->notifications, &sequence_blink_green_10);
-        break;
-    case FddEmuActivity_Write:
-        notification_message(app->notifications, &sequence_blink_red_10);
-        break;
-    default:
-        notification_message(app->notifications, &sequence_blink_blue_10);
-        break;
+    if(app->config.led_blinking) {
+        switch(activity) {
+        case FddEmuActivity_Read:
+            notification_message(app->notifications, &sequence_blink_green_10);
+            break;
+        case FddEmuActivity_Write:
+            notification_message(app->notifications, &sequence_blink_red_10);
+            break;
+        default:
+            notification_message(app->notifications, &sequence_blink_blue_10);
+            break;
+        }
     }
 
     if(app->selected_fdd == device - SIO_DEVICE_DISK1) {
