@@ -57,15 +57,17 @@ private:
     uint8_t lastFrequencyIndex = 0;
     bool knownStationsLoaded = false;
 
-    void loadKnownStations(bool withNames) {
+    void loadKnownStations() {
         AppFileSysytem appFilesystem;
         forward_list<NamedPagerData> stations;
 
-        int count = appFilesystem.GetStationsFromDirectory(&stations, this, User, NULL, withNames);
+        bool withNames = config->SavedStrategy == SHOW_NAME;
+        String* category = config->CurrentUserCategory;
+
+        int count = appFilesystem.GetStationsFromDirectory(&stations, this, User, category->cstr(), withNames);
 
         knownStations = new KnownStationData[count];
         for(size_t i = 0; i < knownStationsSize; i++) {
-            buildKnownStationWithName(stations.front());
             knownStations[i] = buildKnownStationWithName(stations.front());
             stations.pop_front();
         }
@@ -171,12 +173,7 @@ public:
 
     void ReloadKnownStations() {
         unloadKnownStations();
-
-        if(config->SavedStrategy == SHOW_NAME) {
-            loadKnownStations(true);
-        } else {
-            loadKnownStations(false);
-        }
+        loadKnownStations();
     }
 
     void LoadStationsFromDirectory(
@@ -191,8 +188,8 @@ public:
         int count = appFilesystem.GetStationsFromDirectory(&stations, this, categoryType, categoryName, withNames);
 
         delete[] pagers;
-
         pagers = new StoredPagerData[count];
+
         knownStations = new KnownStationData[count];
 
         for(int i = 0; i < count; i++) {
@@ -200,6 +197,7 @@ public:
             pagers[i] = pagerData.storedData;
             knownStations[i] = buildKnownStationWithName(pagerData);
             stations.pop_front();
+
             pagerHandler(new ReceivedPagerData(PagerGetter(i), i, true));
         }
     }
@@ -270,7 +268,7 @@ public:
             }
 
             if(config->AutosaveFoundSignals) {
-                AppFileSysytem().AutoSave(storedData, decoders[storedData.decoder], protocol, lastFrequency);
+                AppFileSysytem().AutoSave(&storedData, decoders[storedData.decoder], protocol, lastFrequency);
             }
 
             index = nextPagerIndex;

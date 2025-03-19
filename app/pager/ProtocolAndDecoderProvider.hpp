@@ -7,4 +7,6 @@ class ProtocolAndDecoderProvider {
 public:
     virtual PagerProtocol* GetProtocolByName(const char* name) = 0;
     virtual PagerDecoder* GetDecoderByName(const char* name) = 0;
+    virtual ~ProtocolAndDecoderProvider() {
+    }
 };

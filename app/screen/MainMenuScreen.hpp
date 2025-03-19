@@ -8,6 +8,7 @@
 
 #include "app/AppNotifications.hpp"
 
+#include "SelectCategoryScreen.hpp"
 #include "ScanStationsScreen.hpp"
 
 class MainMenuScreen {
@@ -33,37 +34,33 @@ public:
 private:
     void scanStationsMenuPressed(uint32_t) {
         UiManager::GetInstance()->ShowLoading();
-        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, true, NULL, false))->GetView());
+        UiManager::GetInstance()->PushView((new ScanStationsScreen(config))->GetView());
     }
 
     void stationDatabasePressed(uint32_t) {
-        UiManager::GetInstance()->ShowLoading();
         SubMenuUiView* savedMenuView = new SubMenuUiView();
-        savedMenuView->AddItem("Manually saved stations", HANDLER_1ARG(&MainMenuScreen::savedStationsPressed));
-
-        FileManager fileManager = FileManager();
-        Directory* autosaved = fileManager.OpenDirectory(AUTOSAVED_STATIONS_PATH);
-        if(autosaved != NULL) {
-            char dirName[AUTOSAVED_DIR_NAME_LENGTH];
-            while(autosaved->GetNextFile(dirName, AUTOSAVED_DIR_NAME_LENGTH)) {
-                String itemName = String("Autosaved %s", dirName);
-                savedMenuView->AddItem(itemName.cstr(), [this, dirName](uint32_t) { autosavedStationsPressed(dirName); });
-            }
-        }
-        delete autosaved;
-
+        savedMenuView->AddItem("Saved by you", HANDLER_1ARG(&MainMenuScreen::savedStationsPressed));
+        savedMenuView->AddItem("Autosaved", HANDLER_1ARG(&MainMenuScreen::autosavedStationsPressed));
         UiManager::GetInstance()->PushView(savedMenuView);
     }
 
     void savedStationsPressed(uint32_t) {
         UiManager::GetInstance()->ShowLoading();
-        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, false, SAVED_STATIONS_PATH, true))->GetView());
+        UiManager::GetInstance()->PushView(
+            (new SelectCategoryScreen(false, User, HANDLER_2ARG(&MainMenuScreen::categorySelected)))->GetView()
+        );
     }
 
-    void autosavedStationsPressed(const char* dirName) {
+    void autosavedStationsPressed(uint32_t) {
         UiManager::GetInstance()->ShowLoading();
-        String path = String("%s/%s", AUTOSAVED_STATIONS_PATH, dirName);
-        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, false, path.cstr(), false))->GetView());
+        UiManager::GetInstance()->PushView(
+            (new SelectCategoryScreen(false, Autosaved, HANDLER_2ARG(&MainMenuScreen::categorySelected)))->GetView()
+        );
+    }
+
+    void categorySelected(CategoryType categoryType, const char* category) {
+        UiManager::GetInstance()->ShowLoading();
+        UiManager::GetInstance()->PushView((new ScanStationsScreen(config, categoryType, category))->GetView());
     }
 
     void aboutPressed(uint32_t index) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lib/HandlerContext.hpp"
 #include "lib/String.hpp"
 #include "app/pager/PagerReceiver.hpp"
 #include "lib/hardware/subghz/SubGhzModule.hpp"
@@ -45,16 +46,10 @@ private:
     int32_t saveAsItemIndex = -1;
     int32_t deleteItemIndex = -1;
 
-    String* savedAsName = NULL;
+    String* stationNameFromCurrentPagerFile = NULL;
 
 public:
-    EditPagerScreen(
-        AppConfig* config,
-        SubGhzModule* subghz,
-        PagerReceiver* receiver,
-        PagerDataGetter pagerGetter,
-        String* guaranteedStationNameFromFile
-    ) {
+    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
@@ -100,18 +95,13 @@ public:
             )
         );
 
-        if(guaranteedStationNameFromFile != NULL) {
-            this->savedAsName = new String("%s", guaranteedStationNameFromFile->cstr());
-        } else {
-            FileManager* fileManager = new FileManager();
-            this->savedAsName = PagerSerializer().LoadOnlyStationName(fileManager, SAVED_STATIONS_PATH, pager);
-            delete fileManager;
-        }
+        this->stationNameFromCurrentPagerFile =
+            AppFileSysytem().GetOnlyStationName(User, config->CurrentUserCategory->cstr(), pager);
 
         if(canSaveOrDelete()) {
-            const char* saveAsItemName = savedAsName == NULL ? "Save signal as..." : "Save / Rename";
+            const char* saveAsItemName = stationNameFromCurrentPagerFile == NULL ? "Save signal as..." : "Save / Rename";
             saveAsItemIndex = varItemList->AddItem(saveAsItem = new UiVariableItem(saveAsItemName, ""));
-            if(savedAsName != NULL) {
+            if(stationNameFromCurrentPagerFile != NULL) {
                 deleteItemIndex = varItemList->AddItem(deleteItem = new UiVariableItem("Delete station", ""));
             }
         }
@@ -119,7 +109,7 @@ public:
 
 private:
     bool canSaveOrDelete() {
-        return !receiver->IsKnown(getPager()) || this->savedAsName != NULL;
+        return !receiver->IsKnown(getPager()) || this->stationNameFromCurrentPagerFile != NULL;
     }
 
     void updatePagerIsEditable() {
@@ -136,7 +126,7 @@ private:
         if(index == saveAsItemIndex) {
             saveAs();
         } else if(index == deleteItemIndex) {
-            DialogUiView* removeConfirmation = new DialogUiView("Really delete?", savedAsName->cstr());
+            DialogUiView* removeConfirmation = new DialogUiView("Really delete?", stationNameFromCurrentPagerFile->cstr());
             removeConfirmation->AddLeftButton("Nope");
             removeConfirmation->AddRightButton("Yup");
             removeConfirmation->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::confirmDelete));
@@ -169,8 +159,8 @@ private:
     void saveAs() {
         if(nameInputView == NULL) {
             nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
-            if(savedAsName != NULL) {
-                nameInputView->SetDefaultText(savedAsName);
+            if(stationNameFromCurrentPagerFile != NULL) {
+                nameInputView->SetDefaultText(stationNameFromCurrentPagerFile);
             }
             nameInputView->SetOnDestroyHandler([this]() { this->nameInputView = NULL; });
             nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
@@ -287,8 +277,8 @@ private:
             delete saveAsItem;
         }
 
-        if(savedAsName != NULL) {
-            delete savedAsName;
+        if(stationNameFromCurrentPagerFile != NULL) {
+            delete stationNameFromCurrentPagerFile;
         }
 
         if(deleteItem != NULL) {

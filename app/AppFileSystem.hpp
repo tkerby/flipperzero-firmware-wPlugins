@@ -23,6 +23,8 @@ using namespace std;
 enum CategoryType {
     User,
     Autosaved,
+
+    NotSelected,
 };
 
 class AppFileSysytem {
@@ -38,19 +40,38 @@ private:
 
         case Autosaved:
             return new String("%s/%s", AUTOSAVED_STATIONS_PATH, category);
+
+        default:
+        case NotSelected:
+            return NULL;
         }
     }
 
-    String getFilePath(CategoryType categoryType, const char* category, StoredPagerData* pager) {
+    String* getFilePath(CategoryType categoryType, const char* category, StoredPagerData* pager) {
         String* categoryPath = getCategoryPath(categoryType, category);
-        String* filePath = new String("%s/%s", categoryPath->cstr(), ) delete categoryPath;
-        //TODO: finish...
-        return
+        String* pagerFilename = PagerSerializer().GetFilename(pager);
+        String* filePath = new String("%s/%s", categoryPath->cstr(), pagerFilename->cstr());
+        delete categoryPath;
+        delete pagerFilename;
+        return filePath;
     }
 
 public:
-    int GetCategories(forward_list<const char*>* categoryList, CategoryType categoryType) {
-        const char* dirPath = categoryType == User ? SAVED_STATIONS_PATH : AUTOSAVED_STATIONS_PATH;
+    int GetCategories(forward_list<char*>* categoryList, CategoryType categoryType) {
+        const char* dirPath;
+        switch(categoryType) {
+        case User:
+            dirPath = SAVED_STATIONS_PATH;
+            break;
+
+        case Autosaved:
+            dirPath = AUTOSAVED_STATIONS_PATH;
+            break;
+
+        default:
+            return 0;
+        }
+
         FileManager fileManager = FileManager();
         Directory* dir = fileManager.OpenDirectory(dirPath);
         uint16_t categoriesLoaded = 0;
@@ -58,10 +79,16 @@ public:
         if(dir != NULL) {
             char fileName[MAX_FILENAME_LENGTH];
             while(dir->GetNextDir(fileName, MAX_FILENAME_LENGTH)) {
-                categoryList->push_front(fileName);
+                FURI_LOG_I("TAG", "Dir read: %s", fileName);
+
+                char* category = new char[strlen(fileName)];
+                strcpy(category, fileName);
+                categoryList->push_front(category);
+                categoriesLoaded++;
             }
         }
 
+        delete dir;
         return categoriesLoaded;
     }
 
@@ -106,20 +133,28 @@ public:
         return stationsLoaded;
     }
 
-    const char* GetOnlyStationName(CategoryType categoryType, const char* category) {
-        return PagerSerializer().LoadOnlyStationName(FileManager(), SAVED_STATIONS_PATH, pager);
+    String* GetOnlyStationName(CategoryType categoryType, const char* category, StoredPagerData* pager) {
+        FileManager fileManager = FileManager();
+        String* categoryPath = getCategoryPath(categoryType, category);
+        String* name = PagerSerializer().LoadOnlyStationName(&fileManager, categoryPath->cstr(), pager);
+        delete categoryPath;
+        return name;
     }
 
-    void AutoSave(StoredPagerData storedData, PagerDecoder* decoder, PagerProtocol* protocol, uint32_t frequency) {
+    void AutoSave(StoredPagerData* storedData, PagerDecoder* decoder, PagerProtocol* protocol, uint32_t frequency) {
         DateTime datetime;
         furi_hal_rtc_get_datetime(&datetime);
-        String todaysDir = String("%s/%d-%02d-%02d", AUTOSAVED_STATIONS_PATH, datetime.year, datetime.month, datetime.day);
+        String* todayDate = new String("%d-%02d-%02d", datetime.year, datetime.month, datetime.day);
+        String* todaysDir = getCategoryPath(Autosaved, todayDate->cstr());
 
         FileManager fileManager = FileManager();
         fileManager.CreateDirIfNotExists(STATIONS_PATH);
         fileManager.CreateDirIfNotExists(AUTOSAVED_STATIONS_PATH);
-        fileManager.CreateDirIfNotExists(todaysDir.cstr());
+        fileManager.CreateDirIfNotExists(todaysDir->cstr());
 
-        PagerSerializer().SavePagerData(&fileManager, todaysDir.cstr(), "", &storedData, decoder, protocol, frequency);
+        PagerSerializer().SavePagerData(&fileManager, todaysDir->cstr(), "", storedData, decoder, protocol, frequency);
+
+        delete todaysDir;
+        delete todayDate;
     }
 };

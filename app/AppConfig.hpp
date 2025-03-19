@@ -20,6 +20,7 @@ public:
     uint32_t SignalRepeats = 10;
     SavedStationStrategy SavedStrategy = SHOW_NAME;
     bool AutosaveFoundSignals = true;
+    String* CurrentUserCategory = NULL;
     bool Debug = false;
 
 private:

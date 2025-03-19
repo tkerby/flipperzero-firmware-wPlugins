@@ -46,12 +46,17 @@ private:
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
     bool receiveMode = false;
-    bool isFavourites = false;
 
 public:
-    ScanStationsScreen(AppConfig* config, bool receiveNew, const char* stationsDir, bool isFavouritesDir) {
+    ScanStationsScreen(AppConfig* config) : ScanStationsScreen(config, true, NotSelected, NULL) {
+    }
+
+    ScanStationsScreen(AppConfig* config, CategoryType categoryType, const char* category) :
+            ScanStationsScreen(config, false, categoryType, category) {
+    }
+
+    ScanStationsScreen(AppConfig* config, bool receiveNew, CategoryType categoryType, const char* category) {
         this->config = config;
-        this->isFavourites = isFavouritesDir;
 
         menuView = new ColumnOrientedListUiView(
             stationScreenColumnOffsets,
@@ -75,7 +80,7 @@ public:
         }
 
         pagerReceiver = new PagerReceiver(config);
-        if(!isFavouritesDir) {
+        if(categoryType != User) {
             pagerReceiver->ReloadKnownStations();
         }
 
@@ -105,8 +110,8 @@ public:
             receive(new SubGhzReceivedDataStub("Princeton", 0x004082)); // gruz trad
         }
 
-        if(stationsDir != NULL) {
-            pagerReceiver->LoadStationsFromDirectory(stationsDir, HANDLER_1ARG(&ScanStationsScreen::pagerAdded));
+        if(!receiveNew) {
+            pagerReceiver->LoadStationsFromDirectory(categoryType, category, HANDLER_1ARG(&ScanStationsScreen::pagerAdded));
         }
 
         receiveMode = receiveNew;
@@ -203,9 +208,7 @@ private:
 
     void editPagerMessage(uint32_t index) {
         PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
-        EditPagerScreen* screen = new EditPagerScreen(
-            config, subghz, pagerReceiver, getPager, isFavourites ? pagerReceiver->GetName(getPager()) : NULL
-        );
+        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, getPager);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
