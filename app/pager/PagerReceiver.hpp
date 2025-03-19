@@ -1,6 +1,5 @@
 #pragma once
 
-#include "PagerSerializer.hpp"
 #include "ProtocolAndDecoderProvider.hpp"
 #include <cstring>
 #include <forward_list>
@@ -99,10 +98,10 @@ private:
 
     KnownStationData buildKnownStationWithoutName(StoredPagerData* pager) {
         KnownStationData data = KnownStationData();
-        data.frequency = pager.frequency;
-        data.protocol = pager.protocol;
-        data.decoder = pager.decoder;
-        data.station = decoders[pager.decoder]->GetStation(pager.data);
+        data.frequency = pager->frequency;
+        data.protocol = pager->protocol;
+        data.decoder = pager->decoder;
+        data.station = decoders[pager->decoder]->GetStation(pager->data);
         data.name = NULL;
         return data;
     }
@@ -271,19 +270,7 @@ public:
             }
 
             if(config->AutosaveFoundSignals) {
-                DateTime datetime;
-                furi_hal_rtc_get_datetime(&datetime);
-                String todaysDir =
-                    String("%s/%d-%02d-%02d", AUTOSAVED_STATIONS_PATH, datetime.year, datetime.month, datetime.day);
-
-                FileManager fileManager = FileManager();
-                fileManager.CreateDirIfNotExists(STATIONS_PATH);
-                fileManager.CreateDirIfNotExists(AUTOSAVED_STATIONS_PATH);
-                fileManager.CreateDirIfNotExists(todaysDir.cstr());
-
-                PagerSerializer().SavePagerData(
-                    &fileManager, todaysDir.cstr(), "", &storedData, decoders[storedData.decoder], protocol, lastFrequency
-                );
+                AppFileSysytem().AutoSave(storedData, decoders[storedData.decoder], protocol, lastFrequency);
             }
 
             index = nextPagerIndex;

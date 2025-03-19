@@ -98,4 +98,17 @@ public:
 
         return stationsLoaded;
     }
+
+    void AutoSave(StoredPagerData storedData, PagerDecoder* decoder, PagerProtocol* protocol, uint32_t frequency) {
+        DateTime datetime;
+        furi_hal_rtc_get_datetime(&datetime);
+        String todaysDir = String("%s/%d-%02d-%02d", AUTOSAVED_STATIONS_PATH, datetime.year, datetime.month, datetime.day);
+
+        FileManager fileManager = FileManager();
+        fileManager.CreateDirIfNotExists(STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(AUTOSAVED_STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(todaysDir.cstr());
+
+        PagerSerializer().SavePagerData(&fileManager, todaysDir.cstr(), "", &storedData, decoder, protocol, frequency);
+    }
 };
