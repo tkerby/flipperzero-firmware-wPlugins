@@ -1,11 +1,11 @@
 #pragma once
 
+#include <storage/storage.h>
+#include <forward_list>
+
 #include "app/pager/PagerSerializer.hpp"
 #include "lib/file/FileManager.hpp"
 #include "pager/data/NamedPagerData.hpp"
-#include <forward_list>
-
-#include <storage/storage.h>
 
 // .fff stands for (f)lipper (f)ile (f)ormat
 #define CONFIG_FILE_PATH APP_DATA_PATH("config.fff")
@@ -39,6 +39,13 @@ private:
         case Autosaved:
             return new String("%s/%s", AUTOSAVED_STATIONS_PATH, category);
         }
+    }
+
+    String getFilePath(CategoryType categoryType, const char* category, StoredPagerData* pager) {
+        String* categoryPath = getCategoryPath(categoryType, category);
+        String* filePath = new String("%s/%s", categoryPath->cstr(), ) delete categoryPath;
+        //TODO: finish...
+        return
     }
 
 public:
@@ -97,6 +104,10 @@ public:
         delete stationDirPath;
 
         return stationsLoaded;
+    }
+
+    const char* GetOnlyStationName(CategoryType categoryType, const char* category) {
+        return PagerSerializer().LoadOnlyStationName(FileManager(), SAVED_STATIONS_PATH, pager);
     }
 
     void AutoSave(StoredPagerData storedData, PagerDecoder* decoder, PagerProtocol* protocol, uint32_t frequency) {

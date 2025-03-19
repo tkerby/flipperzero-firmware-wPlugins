@@ -53,7 +53,7 @@ public:
         SubGhzModule* subghz,
         PagerReceiver* receiver,
         PagerDataGetter pagerGetter,
-        String* savedAsNameFromFile
+        String* guaranteedStationNameFromFile
     ) {
         this->config = config;
         this->subghz = subghz;
@@ -100,8 +100,8 @@ public:
             )
         );
 
-        if(savedAsNameFromFile != NULL) {
-            this->savedAsName = new String("%s", savedAsNameFromFile->cstr());
+        if(guaranteedStationNameFromFile != NULL) {
+            this->savedAsName = new String("%s", guaranteedStationNameFromFile->cstr());
         } else {
             FileManager* fileManager = new FileManager();
             this->savedAsName = PagerSerializer().LoadOnlyStationName(fileManager, SAVED_STATIONS_PATH, pager);
