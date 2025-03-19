@@ -49,7 +49,13 @@ private:
     String* stationNameFromCurrentPagerFile = NULL;
 
 public:
-    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
+    EditPagerScreen(
+        AppConfig* config,
+        SubGhzModule* subghz,
+        PagerReceiver* receiver,
+        PagerDataGetter pagerGetter,
+        String* stationNameFromFile
+    ) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
@@ -95,8 +101,12 @@ public:
             )
         );
 
-        this->stationNameFromCurrentPagerFile =
-            AppFileSysytem().GetOnlyStationName(User, config->CurrentUserCategory->cstr(), pager);
+        if(stationNameFromFile == NULL) {
+            this->stationNameFromCurrentPagerFile =
+                AppFileSysytem().GetOnlyStationName(User, config->GetCurrentUserCategoryCstr(), pager);
+        } else {
+            this->stationNameFromCurrentPagerFile = new String("%s", stationNameFromFile);
+        }
 
         if(canSaveOrDelete()) {
             const char* saveAsItemName = stationNameFromCurrentPagerFile == NULL ? "Save signal as..." : "Save / Rename";

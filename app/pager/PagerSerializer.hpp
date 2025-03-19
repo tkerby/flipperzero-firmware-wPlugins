@@ -53,15 +53,14 @@ public:
     String* LoadOnlyStationName(FileManager* fileManager, const char* dir, StoredPagerData* pager) {
         String* filename = GetFilename(pager);
         FlipperFile* stationFile = fileManager->OpenRead(dir, filename->cstr());
-        String* stationName = NULL;
         delete filename;
 
+        String* stationName = NULL;
         if(stationFile != NULL) {
             stationName = new String();
             stationFile->ReadString(KEY_PAGER_STATION_NAME, stationName);
             delete stationFile;
         }
-
         return stationName;
     }
 

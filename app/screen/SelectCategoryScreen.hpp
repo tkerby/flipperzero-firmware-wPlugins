@@ -54,5 +54,7 @@ private:
             delete[] categories.front();
             categories.pop_front();
         }
+
+        delete this;
     }
 };

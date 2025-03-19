@@ -30,6 +30,8 @@ enum CategoryType {
 class AppFileSysytem {
 private:
     String* getCategoryPath(CategoryType categoryType, const char* category) {
+        FURI_LOG_I("APPFS", "CAT %d / %s", categoryType, category != NULL ? category : "NULL");
+        furi_delay_ms(100);
         switch(categoryType) {
         case User:
             if(category != NULL) {
@@ -136,7 +138,11 @@ public:
     String* GetOnlyStationName(CategoryType categoryType, const char* category, StoredPagerData* pager) {
         FileManager fileManager = FileManager();
         String* categoryPath = getCategoryPath(categoryType, category);
+        FURI_LOG_I("APPFS", "CAT PATH %s", categoryPath->cstr());
+        furi_delay_ms(100);
         String* name = PagerSerializer().LoadOnlyStationName(&fileManager, categoryPath->cstr(), pager);
+        FURI_LOG_I("APPFS", "NAME %s", name != NULL ? name->cstr() : "NULL");
+        furi_delay_ms(100);
         delete categoryPath;
         return name;
     }
