@@ -1,9 +1,11 @@
 #pragma once
 
+#include "SelectCategoryScreen.hpp"
 #include "app/AppConfig.hpp"
 #include "app/pager/PagerReceiver.hpp"
 #include "lib/String.hpp"
 #include "lib/hardware/subghz/SubGhzModule.hpp"
+#include "lib/ui/UiManager.hpp"
 #include "lib/ui/view/VariableItemListUiView.hpp"
 
 class SettingsScreen {
@@ -14,6 +16,7 @@ private:
     SubGhzSettings subghzSettings;
     VariableItemListUiView* varItemList;
 
+    UiVariableItem* currentCategoryItem;
     UiVariableItem* frequencyItem;
     UiVariableItem* maxPagerItem;
     UiVariableItem* signalRepeatItem;
@@ -25,6 +28,7 @@ private:
     String maxPagerStr;
     String signalRepeatStr;
     bool updateUserCategory;
+    uint32_t categoryItemIndex;
 
 public:
     SettingsScreen(AppConfig* config, PagerReceiver* receiver, SubGhzModule* subghz, bool updateUserCategory) {
@@ -35,6 +39,11 @@ public:
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&SettingsScreen::destroy));
+        varItemList->SetEnterPressHandler(HANDLER_1ARG(&SettingsScreen::enterPressHandler));
+
+        categoryItemIndex = varItemList->AddItem(
+            currentCategoryItem = new UiVariableItem("Category", HANDLER_1ARG(&SettingsScreen::categoryChangedHandler))
+        );
 
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
@@ -117,6 +126,32 @@ public:
     }
 
 private:
+    void enterPressHandler(uint32_t index) {
+        if(index != categoryItemIndex) {
+            return;
+        }
+        UiManager::GetInstance()->PushView(
+            (new SelectCategoryScreen(false, User, HANDLER_2ARG(&SettingsScreen::categorySelected)))->GetView()
+        );
+    }
+
+    void categorySelected(CategoryType, const char* category) {
+        if(config->CurrentUserCategory != NULL) {
+            delete config->CurrentUserCategory;
+        }
+        config->CurrentUserCategory = category != NULL ? new String("%s", category) : NULL;
+        UiManager::GetInstance()->PopView(false);
+        currentCategoryItem->Refresh();
+    }
+
+    const char* categoryChangedHandler(uint8_t) {
+        const char* category = config->GetCurrentUserCategoryCstr();
+        if(category == NULL) {
+            category = "Default";
+        }
+        return category;
+    }
+
     const char* boolOption(uint8_t value) {
         return value ? "ON" : "OFF";
     }
@@ -144,6 +179,7 @@ private:
             receiver->ReloadKnownStations();
         }
 
+        delete currentCategoryItem;
         delete frequencyItem;
         delete maxPagerItem;
         delete signalRepeatItem;

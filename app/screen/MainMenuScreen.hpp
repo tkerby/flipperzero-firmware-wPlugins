@@ -38,7 +38,7 @@ private:
     }
 
     void stationDatabasePressed(uint32_t) {
-        SubMenuUiView* savedMenuView = new SubMenuUiView();
+        SubMenuUiView* savedMenuView = new SubMenuUiView("Select database");
         savedMenuView->AddItem("Saved by you", HANDLER_1ARG(&MainMenuScreen::savedStationsPressed));
         savedMenuView->AddItem("Autosaved", HANDLER_1ARG(&MainMenuScreen::autosavedStationsPressed));
         UiManager::GetInstance()->PushView(savedMenuView);
