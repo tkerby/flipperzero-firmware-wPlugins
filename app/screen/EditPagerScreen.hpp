@@ -12,7 +12,6 @@
 #include "lib/FlipperDolphin.hpp"
 #include "lib/ui/UiManager.hpp"
 #include "app/AppFileSystem.hpp"
-#include "lib/file/FileManager.hpp"
 #include "app/pager/PagerSerializer.hpp"
 
 #define TE_DIV 10
