@@ -27,7 +27,33 @@ public:
     }
 
     bool GetNextFile(char* name, uint16_t nameLength) {
-        return isOpened && storage_dir_read(dir, NULL, name, nameLength);
+        if(!isOpened) {
+            return false;
+        }
+
+        FileInfo fileInfo = FileInfo();
+        do {
+            if(!storage_dir_read(dir, &fileInfo, name, nameLength)) {
+                return false;
+            }
+        } while((fileInfo.flags & FSF_DIRECTORY) > 0); // dir
+
+        return true;
+    }
+
+    bool GetNextDir(char* name, uint16_t nameLength) {
+        if(!isOpened) {
+            return false;
+        }
+
+        FileInfo fileInfo = FileInfo();
+        do {
+            if(!storage_dir_read(dir, &fileInfo, name, nameLength)) {
+                return false;
+            }
+        } while((fileInfo.flags & FSF_DIRECTORY) == 0); // not dir
+
+        return true;
     }
 
     ~Directory() {

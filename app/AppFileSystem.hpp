@@ -1,5 +1,10 @@
 #pragma once
 
+#include "app/pager/PagerSerializer.hpp"
+#include "lib/file/FileManager.hpp"
+#include "pager/data/NamedPagerData.hpp"
+#include <forward_list>
+
 #include <storage/storage.h>
 
 // .fff stands for (f)lipper (f)ile (f)ormat
@@ -11,4 +16,86 @@
 #define SAVED_STATIONS_PATH     STATIONS_PATH_OF("saved")
 #define AUTOSAVED_STATIONS_PATH STATIONS_PATH_OF("autosaved")
 
-#define MAX_STATION_FILENAME_LENGTH 16
+#define MAX_FILENAME_LENGTH 16
+
+using namespace std;
+
+enum CategoryType {
+    User,
+    Autosaved,
+};
+
+class AppFileSysytem {
+private:
+    String* getCategoryPath(CategoryType categoryType, const char* category) {
+        switch(categoryType) {
+        case User:
+            if(category != NULL) {
+                return new String("%s/%s", SAVED_STATIONS_PATH, category);
+            } else {
+                return new String(SAVED_STATIONS_PATH);
+            }
+
+        case Autosaved:
+            return new String("%s/%s", AUTOSAVED_STATIONS_PATH, category);
+        }
+    }
+
+public:
+    int GetCategories(forward_list<const char*>* categoryList, CategoryType categoryType) {
+        const char* dirPath = categoryType == User ? SAVED_STATIONS_PATH : AUTOSAVED_STATIONS_PATH;
+        FileManager fileManager = FileManager();
+        Directory* dir = fileManager.OpenDirectory(dirPath);
+        uint16_t categoriesLoaded = 0;
+
+        if(dir != NULL) {
+            char fileName[MAX_FILENAME_LENGTH];
+            while(dir->GetNextDir(fileName, MAX_FILENAME_LENGTH)) {
+                categoryList->push_front(fileName);
+            }
+        }
+
+        return categoriesLoaded;
+    }
+
+    uint16_t GetStationsFromDirectory(
+        forward_list<NamedPagerData>* stationList,
+        ProtocolAndDecoderProvider* pdProvider,
+        CategoryType categoryType,
+        const char* category,
+        bool loadNames
+    ) {
+        FileManager fileManager = FileManager();
+        String* stationDirPath = getCategoryPath(categoryType, category);
+        Directory* dir = fileManager.OpenDirectory(stationDirPath->cstr());
+        PagerSerializer serializer = PagerSerializer();
+        SubGhzSettings subghzSettings = SubGhzSettings();
+        uint16_t stationsLoaded = 0;
+
+        if(dir != NULL) {
+            char fileName[MAX_FILENAME_LENGTH];
+            while(dir->GetNextFile(fileName, MAX_FILENAME_LENGTH)) {
+                String* stationName = new String();
+                StoredPagerData pager = serializer.LoadPagerData(
+                    &fileManager, stationName, stationDirPath->cstr(), fileName, &subghzSettings, pdProvider
+                );
+
+                if(!loadNames) {
+                    delete stationName;
+                    stationName = NULL;
+                }
+
+                NamedPagerData returnData = NamedPagerData();
+                returnData.storedData = pager;
+                returnData.name = stationName;
+                stationList->push_front(returnData);
+                stationsLoaded++;
+            }
+        }
+
+        delete dir;
+        delete stationDirPath;
+
+        return stationsLoaded;
+    }
+};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PagerSerializer.hpp"
+#include "ProtocolAndDecoderProvider.hpp"
 #include <cstring>
 #include <forward_list>
 
@@ -29,7 +30,7 @@
 
 using namespace std;
 
-class PagerReceiver {
+class PagerReceiver : public ProtocolAndDecoderProvider {
 public:
     static const uint8_t protocolsCount = 2;
     PagerProtocol* protocols[protocolsCount]{
@@ -58,51 +59,16 @@ private:
     bool knownStationsLoaded = false;
 
     void loadKnownStations(bool withNames) {
-        FileManager fileManager = FileManager();
-        Directory* dir = fileManager.OpenDirectory(SAVED_STATIONS_PATH);
-        PagerSerializer serializer = PagerSerializer();
-        SubGhzSettings subghzSettings = SubGhzSettings();
-        forward_list<KnownStationData> stations;
+        AppFileSysytem appFilesystem;
+        forward_list<NamedPagerData> stations;
 
-        if(dir != NULL) {
-            char fileName[MAX_STATION_FILENAME_LENGTH];
+        int count = appFilesystem.GetStationsFromDirectory(&stations, this, User, NULL, withNames);
 
-            while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
-                String* stationName = new String();
-                StoredPagerData pager = serializer.LoadPagerData(
-                    &fileManager,
-                    stationName,
-                    SAVED_STATIONS_PATH,
-                    fileName,
-                    &subghzSettings,
-                    [this](const char* name) { return getProtocol(name)->id; },
-                    [this](const char* name) { return getDecoder(name)->id; }
-                );
-                addKnown(stations, withNames, pager, stationName);
-                knownStationsSize++;
-            }
-        }
-
-        copyKnown(&stations);
-        delete dir;
-    }
-
-    void addKnown(forward_list<KnownStationData>& stations, bool withNames, StoredPagerData pager, String* stationName) {
-        KnownStationData data = getKnownStation(&pager);
-        if(withNames) {
-            data.name = stationName;
-        } else {
-            data.name = NULL;
-            delete stationName;
-        }
-        stations.push_front(data);
-    }
-
-    void copyKnown(forward_list<KnownStationData>* stations) {
-        knownStations = new KnownStationData[knownStationsSize];
+        knownStations = new KnownStationData[count];
         for(size_t i = 0; i < knownStationsSize; i++) {
-            knownStations[i] = stations->front();
-            stations->pop_front();
+            buildKnownStationWithName(stations.front());
+            knownStations[i] = buildKnownStationWithName(stations.front());
+            stations.pop_front();
         }
 
         knownStationsLoaded = true;
@@ -121,12 +87,23 @@ private:
         knownStationsSize = 0;
     }
 
-    KnownStationData getKnownStation(StoredPagerData* pager) {
+    KnownStationData buildKnownStationWithName(NamedPagerData pager) {
         KnownStationData data = KnownStationData();
-        data.frequency = pager->frequency;
-        data.protocol = pager->protocol;
-        data.decoder = pager->decoder;
-        data.station = decoders[pager->decoder]->GetStation(pager->data);
+        data.frequency = pager.storedData.frequency;
+        data.protocol = pager.storedData.protocol;
+        data.decoder = pager.storedData.decoder;
+        data.station = decoders[pager.storedData.decoder]->GetStation(pager.storedData.data);
+        data.name = pager.name;
+        return data;
+    }
+
+    KnownStationData buildKnownStationWithoutName(StoredPagerData* pager) {
+        KnownStationData data = KnownStationData();
+        data.frequency = pager.frequency;
+        data.protocol = pager.protocol;
+        data.decoder = pager.decoder;
+        data.station = decoders[pager.decoder]->GetStation(pager.data);
+        data.name = NULL;
         return data;
     }
 
@@ -145,26 +122,6 @@ private:
         }
 
         return decoders[0];
-    }
-
-    PagerProtocol* getProtocol(const char* systemProtocolName) {
-        for(size_t i = 0; i < protocolsCount; i++) {
-            if(strcmp(systemProtocolName, protocols[i]->GetSystemName()) == 0) {
-                return protocols[i];
-            }
-        }
-
-        return NULL;
-    }
-
-    PagerDecoder* getDecoder(const char* shortName) {
-        for(size_t i = 0; i < decodersCount; i++) {
-            if(strcmp(shortName, decoders[i]->GetShortName()) == 0) {
-                return decoders[i];
-            }
-        }
-
-        return NULL;
     }
 
     void addPager(StoredPagerData data) {
@@ -193,6 +150,26 @@ public:
         }
     }
 
+    PagerProtocol* GetProtocolByName(const char* systemProtocolName) {
+        for(size_t i = 0; i < protocolsCount; i++) {
+            if(strcmp(systemProtocolName, protocols[i]->GetSystemName()) == 0) {
+                return protocols[i];
+            }
+        }
+
+        return NULL;
+    }
+
+    PagerDecoder* GetDecoderByName(const char* shortName) {
+        for(size_t i = 0; i < decodersCount; i++) {
+            if(strcmp(shortName, decoders[i]->GetShortName()) == 0) {
+                return decoders[i];
+            }
+        }
+
+        return NULL;
+    }
+
     void ReloadKnownStations() {
         unloadKnownStations();
 
@@ -203,46 +180,29 @@ public:
         }
     }
 
-    void LoadStationsFromDirectory(const char* stationDirectory, function<void(ReceivedPagerData*)> pagerHandler) {
-        FileManager fileManager = FileManager();
-        Directory* dir = fileManager.OpenDirectory(stationDirectory);
-        PagerSerializer serializer = PagerSerializer();
-        SubGhzSettings subghzSettings = SubGhzSettings();
+    void LoadStationsFromDirectory(
+        CategoryType categoryType,
+        const char* categoryName,
+        function<void(ReceivedPagerData*)> pagerHandler
+    ) {
+        AppFileSysytem appFilesystem;
+        forward_list<NamedPagerData> stations;
         bool withNames = config->SavedStrategy == SHOW_NAME;
-        forward_list<KnownStationData> stations;
 
-        if(dir != NULL) {
-            char fileName[MAX_STATION_FILENAME_LENGTH];
+        int count = appFilesystem.GetStationsFromDirectory(&stations, this, categoryType, categoryName, withNames);
 
-            while(dir->GetNextFile(fileName, MAX_STATION_FILENAME_LENGTH)) {
-                String* stationName = new String();
-                StoredPagerData pager = serializer.LoadPagerData(
-                    &fileManager,
-                    stationName,
-                    stationDirectory,
-                    fileName,
-                    &subghzSettings,
-                    [this](const char* name) { return getProtocol(name)->id; },
-                    [this](const char* name) { return getDecoder(name)->id; }
-                );
+        delete[] pagers;
 
-                if(!knownStationsLoaded) {
-                    addKnown(stations, withNames, pager, stationName);
-                    knownStationsSize++;
-                } else {
-                    delete stationName;
-                }
+        pagers = new StoredPagerData[count];
+        knownStations = new KnownStationData[count];
 
-                int index = nextPagerIndex;
-                addPager(pager);
-                pagerHandler(new ReceivedPagerData(PagerGetter(index), index, true));
-            }
+        for(int i = 0; i < count; i++) {
+            NamedPagerData pagerData = stations.front();
+            pagers[i] = pagerData.storedData;
+            knownStations[i] = buildKnownStationWithName(pagerData);
+            stations.pop_front();
+            pagerHandler(new ReceivedPagerData(PagerGetter(i), i, true));
         }
-
-        if(!knownStationsLoaded) {
-            copyKnown(&stations);
-        }
-        delete dir;
     }
 
     PagerDataGetter PagerGetter(size_t index) {
@@ -250,7 +210,7 @@ public:
     }
 
     String* GetName(StoredPagerData* pager) {
-        uint32_t stationId = getKnownStation(pager).toInt();
+        uint32_t stationId = buildKnownStationWithoutName(pager).toInt();
         for(size_t i = 0; i < knownStationsSize; i++) {
             if(knownStations[i].toInt() == stationId) {
                 return knownStations[i].name;
@@ -260,7 +220,7 @@ public:
     }
 
     bool IsKnown(StoredPagerData* pager) {
-        uint32_t stationId = getKnownStation(pager).toInt();
+        uint32_t stationId = buildKnownStationWithoutName(pager).toInt();
         for(size_t i = 0; i < knownStationsSize; i++) {
             if(knownStations[i].toInt() == stationId) {
                 return true;
@@ -270,7 +230,7 @@ public:
     }
 
     ReceivedPagerData* Receive(SubGhzReceivedData* data) {
-        PagerProtocol* protocol = getProtocol(data->GetProtocolName());
+        PagerProtocol* protocol = GetProtocolByName(data->GetProtocolName());
         if(protocol == NULL) {
             return NULL;
         }

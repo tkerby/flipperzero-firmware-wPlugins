@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ProtocolAndDecoderProvider.hpp"
 #include "lib/String.hpp"
 #include "lib/file/FileManager.hpp"
 #include "lib/file/FlipperFile.hpp"
@@ -72,8 +73,7 @@ public:
         const char* dir,
         const char* fileName,
         SubGhzSettings* settings,
-        function<uint8_t(const char*)> getProtocol,
-        function<uint8_t(const char*)> getDecoder
+        ProtocolAndDecoderProvider* pdProvider
     ) {
         FlipperFile* stationFile = fileManager->OpenRead(dir, fileName);
 
@@ -97,8 +97,8 @@ public:
         pager.te = te;
         pager.edited = false;
         pager.frequency = settings->GetFrequencyIndex(frequency);
-        pager.protocol = getProtocol(protocolName.cstr());
-        pager.decoder = getDecoder(decoderName.cstr());
+        pager.protocol = pdProvider->GetProtocolByName(protocolName.cstr())->id;
+        pager.decoder = pdProvider->GetDecoderByName(decoderName.cstr())->id;
         return pager;
     }
 };
