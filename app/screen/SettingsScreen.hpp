@@ -137,6 +137,7 @@ private:
 
     void destroy() {
         config->Save();
+        receiver->SetUserCategory(config->CurrentUserCategory);
         receiver->ReloadKnownStations();
 
         delete frequencyItem;

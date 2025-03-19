@@ -80,7 +80,9 @@ public:
         }
 
         pagerReceiver = new PagerReceiver(config);
-        if(categoryType != User) {
+        if(categoryType == User) {
+            pagerReceiver->SetUserCategory(category);
+        } else {
             pagerReceiver->ReloadKnownStations();
         }
 

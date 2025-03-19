@@ -92,7 +92,7 @@ public:
         return categoriesLoaded;
     }
 
-    uint16_t GetStationsFromDirectory(
+    size_t GetStationsFromDirectory(
         forward_list<NamedPagerData>* stationList,
         ProtocolAndDecoderProvider* pdProvider,
         CategoryType categoryType,
@@ -104,7 +104,7 @@ public:
         Directory* dir = fileManager.OpenDirectory(stationDirPath->cstr());
         PagerSerializer serializer = PagerSerializer();
         SubGhzSettings subghzSettings = SubGhzSettings();
-        uint16_t stationsLoaded = 0;
+        size_t stationsLoaded = 0;
 
         if(dir != NULL) {
             char fileName[MAX_FILENAME_LENGTH];

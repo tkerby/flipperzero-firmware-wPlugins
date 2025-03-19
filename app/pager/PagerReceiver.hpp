@@ -56,22 +56,22 @@ private:
     uint32_t lastFrequency = 0;
     uint8_t lastFrequencyIndex = 0;
     bool knownStationsLoaded = false;
+    const char* userCategory;
 
     void loadKnownStations() {
         AppFileSysytem appFilesystem;
         forward_list<NamedPagerData> stations;
-
         bool withNames = config->SavedStrategy == SHOW_NAME;
-        String* category = config->CurrentUserCategory;
 
-        int count = appFilesystem.GetStationsFromDirectory(&stations, this, User, category->cstr(), withNames);
+        size_t count = appFilesystem.GetStationsFromDirectory(&stations, this, User, userCategory, withNames);
 
         knownStations = new KnownStationData[count];
-        for(size_t i = 0; i < knownStationsSize; i++) {
+        for(size_t i = 0; i < count; i++) {
             knownStations[i] = buildKnownStationWithName(stations.front());
             stations.pop_front();
         }
 
+        knownStationsSize = count;
         knownStationsLoaded = true;
     }
 
@@ -149,6 +149,16 @@ public:
         for(size_t i = 0; i < decodersCount; i++) {
             decoders[i]->id = i;
         }
+
+        SetUserCategory(config->CurrentUserCategory);
+    }
+
+    void SetUserCategory(String* category) {
+        SetUserCategory(category != NULL ? category->cstr() : NULL);
+    }
+
+    void SetUserCategory(const char* category) {
+        userCategory = category;
     }
 
     PagerProtocol* GetProtocolByName(const char* systemProtocolName) {
@@ -178,28 +188,37 @@ public:
 
     void LoadStationsFromDirectory(
         CategoryType categoryType,
-        const char* categoryName,
+        const char* category,
         function<void(ReceivedPagerData*)> pagerHandler
     ) {
         AppFileSysytem appFilesystem;
         forward_list<NamedPagerData> stations;
-        bool withNames = config->SavedStrategy == SHOW_NAME;
+        bool withNames = !knownStationsLoaded && config->SavedStrategy == SHOW_NAME;
 
-        int count = appFilesystem.GetStationsFromDirectory(&stations, this, categoryType, categoryName, withNames);
+        int count = appFilesystem.GetStationsFromDirectory(&stations, this, categoryType, category, withNames);
 
         delete[] pagers;
         pagers = new StoredPagerData[count];
 
-        knownStations = new KnownStationData[count];
+        if(!knownStationsLoaded) {
+            knownStations = new KnownStationData[count];
+        }
 
         for(int i = 0; i < count; i++) {
             NamedPagerData pagerData = stations.front();
             pagers[i] = pagerData.storedData;
-            knownStations[i] = buildKnownStationWithName(pagerData);
+            if(!knownStationsLoaded) {
+                knownStations[i] = buildKnownStationWithName(pagerData);
+            }
             stations.pop_front();
 
             pagerHandler(new ReceivedPagerData(PagerGetter(i), i, true));
         }
+
+        if(!knownStationsLoaded) {
+            knownStationsSize = count;
+        }
+        knownStationsLoaded = true;
     }
 
     PagerDataGetter PagerGetter(size_t index) {
