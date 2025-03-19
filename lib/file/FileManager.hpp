@@ -61,7 +61,11 @@ public:
 
     void DeleteFile(const char* dir, const char* file) {
         String concatedPath = String("%s/%s", dir, file);
-        storage_common_remove(storage, concatedPath.cstr());
+        DeleteFile(concatedPath.cstr());
+    }
+
+    void DeleteFile(const char* filePath) {
+        storage_common_remove(storage, filePath);
     }
 
     ~FileManager() {

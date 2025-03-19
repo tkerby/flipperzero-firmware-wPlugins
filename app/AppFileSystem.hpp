@@ -155,4 +155,30 @@ public:
         delete todaysDir;
         delete todayDate;
     }
+
+    void SaveToUserCategory(
+        const char* userCategory,
+        const char* stationName,
+        StoredPagerData* storedData,
+        PagerDecoder* decoder,
+        PagerProtocol* protocol,
+        uint32_t frequency
+    ) {
+        String* catDir = getCategoryPath(User, userCategory);
+
+        FileManager fileManager = FileManager();
+        fileManager.CreateDirIfNotExists(STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(AUTOSAVED_STATIONS_PATH);
+        fileManager.CreateDirIfNotExists(catDir->cstr());
+
+        PagerSerializer().SavePagerData(&fileManager, catDir->cstr(), stationName, storedData, decoder, protocol, frequency);
+
+        delete catDir;
+    }
+
+    void DeletePager(const char* userCategory, StoredPagerData* storedData) {
+        String* filePath = getFilePath(User, userCategory, storedData);
+        FileManager().DeleteFile(filePath->cstr());
+        delete filePath;
+    }
 };

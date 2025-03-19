@@ -46,7 +46,7 @@ private:
     PagerReceiver* pagerReceiver;
     SubGhzModule* subghz;
     bool receiveMode = false;
-    bool pagerNamesFromCurrentFolder = false;
+    bool updateUserCategory = true;
 
 public:
     ScanStationsScreen(AppConfig* config) : ScanStationsScreen(config, true, NotSelected, NULL) {
@@ -83,7 +83,7 @@ public:
         pagerReceiver = new PagerReceiver(config);
         if(categoryType == User) {
             pagerReceiver->SetUserCategory(category);
-            pagerNamesFromCurrentFolder = true;
+            updateUserCategory = false;
         } else {
             pagerReceiver->ReloadKnownStations();
         }
@@ -206,14 +206,13 @@ private:
     }
 
     void showConfig(uint32_t) {
-        SettingsScreen* screen = new SettingsScreen(config, pagerReceiver, subghz);
+        SettingsScreen* screen = new SettingsScreen(config, pagerReceiver, subghz, updateUserCategory);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 
     void editPagerMessage(uint32_t index) {
         PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
-        String* stationNameFromFile = pagerNamesFromCurrentFolder ? pagerReceiver->GetName(getPager()) : NULL;
-        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, getPager, stationNameFromFile);
+        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, getPager);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 

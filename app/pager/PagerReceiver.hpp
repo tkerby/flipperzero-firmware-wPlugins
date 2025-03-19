@@ -157,6 +157,10 @@ public:
         SetUserCategory(category != NULL ? category->cstr() : NULL);
     }
 
+    const char* GetCurrentUserCategory() {
+        return userCategory;
+    }
+
     void SetUserCategory(const char* category) {
         userCategory = category;
     }

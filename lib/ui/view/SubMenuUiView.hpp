@@ -58,6 +58,10 @@ public:
         submenu_change_item_label(menu, index, label);
     }
 
+    void SetSelectedItem(uint32_t index) {
+        submenu_set_selected_item(menu, index);
+    }
+
     View* GetNativeView() {
         return submenu_get_view(menu);
     }

@@ -31,7 +31,7 @@ public:
     }
 
     void SetDefaultText(String* text) {
-        memcpy(textBuffer, text->cstr(), MIN(strlen(text->cstr()), bufferSize));
+        strcpy(textBuffer, text->cstr());
     }
 
     void SetResultHandler(function<void(char*)> handler) {

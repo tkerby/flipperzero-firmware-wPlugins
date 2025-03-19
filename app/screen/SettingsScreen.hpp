@@ -24,12 +24,14 @@ private:
     String frequencyStr;
     String maxPagerStr;
     String signalRepeatStr;
+    bool updateUserCategory;
 
 public:
-    SettingsScreen(AppConfig* config, PagerReceiver* receiver, SubGhzModule* subghz) {
+    SettingsScreen(AppConfig* config, PagerReceiver* receiver, SubGhzModule* subghz, bool updateUserCategory) {
         this->config = config;
         this->receiver = receiver;
         this->subghz = subghz;
+        this->updateUserCategory = updateUserCategory;
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&SettingsScreen::destroy));
@@ -137,8 +139,10 @@ private:
 
     void destroy() {
         config->Save();
-        receiver->SetUserCategory(config->CurrentUserCategory);
-        receiver->ReloadKnownStations();
+        if(updateUserCategory) {
+            receiver->SetUserCategory(config->CurrentUserCategory);
+            receiver->ReloadKnownStations();
+        }
 
         delete frequencyItem;
         delete maxPagerItem;

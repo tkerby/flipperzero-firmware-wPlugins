@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SelectCategoryScreen.hpp"
 #include "lib/HandlerContext.hpp"
 #include "lib/String.hpp"
 #include "app/pager/PagerReceiver.hpp"
@@ -22,7 +23,6 @@ private:
     SubGhzModule* subghz;
     PagerReceiver* receiver;
     PagerDataGetter getPager;
-    TextInputUiView* nameInputView;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* encodingItem = NULL;
@@ -47,15 +47,10 @@ private:
     int32_t deleteItemIndex = -1;
 
     String* stationNameFromCurrentPagerFile = NULL;
+    const char* saveAsName = NULL;
 
 public:
-    EditPagerScreen(
-        AppConfig* config,
-        SubGhzModule* subghz,
-        PagerReceiver* receiver,
-        PagerDataGetter pagerGetter,
-        String* stationNameFromFile
-    ) {
+    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
@@ -101,12 +96,8 @@ public:
             )
         );
 
-        if(stationNameFromFile == NULL) {
-            this->stationNameFromCurrentPagerFile =
-                AppFileSysytem().GetOnlyStationName(User, config->GetCurrentUserCategoryCstr(), pager);
-        } else {
-            this->stationNameFromCurrentPagerFile = new String("%s", stationNameFromFile);
-        }
+        this->stationNameFromCurrentPagerFile =
+            AppFileSysytem().GetOnlyStationName(User, receiver->GetCurrentUserCategory(), pager);
 
         if(canSaveOrDelete()) {
             const char* saveAsItemName = stationNameFromCurrentPagerFile == NULL ? "Save signal as..." : "Save / Rename";
@@ -149,10 +140,7 @@ private:
 
     void confirmDelete(DialogExResult result) {
         if(result == DialogExResultRight) {
-            String* pagerFile = PagerSerializer().GetFilename(getPager());
-            FileManager().DeleteFile(SAVED_STATIONS_PATH, pagerFile->cstr());
-            delete pagerFile;
-
+            AppFileSysytem().DeletePager(receiver->GetCurrentUserCategory(), getPager());
             receiver->ReloadKnownStations();
             UiManager::GetInstance()->PopView(false);
         }
@@ -167,32 +155,37 @@ private:
     }
 
     void saveAs() {
-        if(nameInputView == NULL) {
-            nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
-            if(stationNameFromCurrentPagerFile != NULL) {
-                nameInputView->SetDefaultText(stationNameFromCurrentPagerFile);
-            }
-            nameInputView->SetOnDestroyHandler([this]() { this->nameInputView = NULL; });
-            nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
+        TextInputUiView* nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
+        if(stationNameFromCurrentPagerFile != NULL) {
+            nameInputView->SetDefaultText(stationNameFromCurrentPagerFile);
         }
+        nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
         UiManager::GetInstance()->PushView(nameInputView);
     }
 
     void saveAsHandler(const char* name) {
-        FileManager fileManager = FileManager();
-        fileManager.CreateDirIfNotExists(STATIONS_PATH);
-        fileManager.CreateDirIfNotExists(SAVED_STATIONS_PATH);
+        saveAsName = name;
 
+        UiManager::GetInstance()->ShowLoading();
+        UiManager::GetInstance()->PushView(
+            (new SelectCategoryScreen(true, User, HANDLER_2ARG(&EditPagerScreen::categorySelected)))->GetView()
+        );
+    }
+
+    void categorySelected(CategoryType, const char* category) {
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
         uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
 
-        PagerSerializer().SavePagerData(&fileManager, SAVED_STATIONS_PATH, name, pager, decoder, protocol, frequency);
+        AppFileSysytem().SaveToUserCategory(category, saveAsName, pager, decoder, protocol, frequency);
         FlipperDolphin::Deed(DolphinDeedSubGhzSave);
+
         receiver->ReloadKnownStations();
 
-        UiManager::GetInstance()->PopView(true);
+        for(int i = 0; i < 3; i++) {
+            UiManager::GetInstance()->PopView(false);
+        }
     }
 
     const char* encodingValueChanged(uint8_t index) {
@@ -270,10 +263,6 @@ private:
     }
 
     void destroy() {
-        if(nameInputView != NULL) {
-            delete nameInputView;
-        }
-
         delete encodingItem;
         delete stationItem;
         delete pagerItem;
