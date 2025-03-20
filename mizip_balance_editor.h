@@ -3,6 +3,7 @@
 #include <dialogs/dialogs.h>
 
 #include <gui/gui.h>
+#include <gui/scene_manager.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 
@@ -14,6 +15,8 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
+
+#include "scenes/mizip_balance_editor_scene.h"
 
 #define NFC_APP_FOLDER    ANY_PATH("nfc")
 #define NFC_APP_EXTENSION ".nfc"
