@@ -181,4 +181,10 @@ public:
         FileManager().DeleteFile(filePath->cstr());
         delete filePath;
     }
+
+    void DeleteCategory(const char* userCategory) {
+        String* catPath = getCategoryPath(User, userCategory);
+        FileManager().DeleteFile(catPath->cstr());
+        delete catPath;
+    }
 };
