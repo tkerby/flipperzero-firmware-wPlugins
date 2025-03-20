@@ -37,6 +37,9 @@ If you want to add any new pager encoding, please feel free to create PR with it
 
 Also you can open issue and share with me any captured data (and at least pager number) if you have any and maybe I'll try create a decoder for it
 
+## Building
+TODO
+
 ## Special Thanks
 - [meoker/pagger](https://github.com/meoker/pagger) for Retekess pager encodings
 - This [awesome repository](https://dev.xcjs.com/r0073dl053r/flipper-playground/-/tree/main/Sub-GHz/Restaurant_Pagers?ref_type=heads) for Retekess T111 and iBells ZJ-68 files
