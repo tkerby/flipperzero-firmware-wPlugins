@@ -11,6 +11,9 @@
 #include <gui/modules/widget.h>
 #include <gui/modules/submenu.h>
 
+#include <nfc/nfc.h>
+#include <nfc/nfc_device.h>
+
 #define NFC_APP_FOLDER    ANY_PATH("nfc")
 #define NFC_APP_EXTENSION ".nfc"
 
@@ -37,3 +40,5 @@ typedef struct {
 
     FuriString* filePath;
 } MiZipBalanceEditorApp;
+
+void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app);

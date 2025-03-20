@@ -4,7 +4,7 @@
 #include <mizip_balance_editor_icons.h>
 
 // This function is called when the user has pressed the Back key.
-static bool mizip_balance_editor_app_navigation_callback(void* context) {
+bool mizip_balance_editor_app_navigation_callback(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
     // Back means exit the application, which can be done by stopping the ViewDispatcher.
@@ -13,7 +13,7 @@ static bool mizip_balance_editor_app_navigation_callback(void* context) {
 }
 
 // This function is called when there are custom events to process.
-static bool mizip_balance_editor_app_custom_event_callback(void* context, uint32_t event) {
+bool mizip_balance_editor_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
     // The event numerical value can mean different things (the application is responsible to uphold its chosen convention)
@@ -26,7 +26,7 @@ static bool mizip_balance_editor_app_custom_event_callback(void* context, uint32
 }
 
 // This function is called when the user presses the "Switch View" button on the Widget view.
-static void mizip_balance_editor_app_button_callback(
+void mizip_balance_editor_app_button_callback(
     GuiButtonType button_type,
     InputType input_type,
     void* context) {
@@ -40,7 +40,7 @@ static void mizip_balance_editor_app_button_callback(
 }
 
 // This function is called when the user activates the "Switch View" submenu item.
-static void mizip_balance_editor_app_submenu_callback(void* context, uint32_t index) {
+void mizip_balance_editor_app_submenu_callback(void* context, uint32_t index) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
     // Only request the view switch if the user activates the "Switch View" item.
@@ -52,9 +52,30 @@ static void mizip_balance_editor_app_submenu_callback(void* context, uint32_t in
         dialog_file_browser_set_basic_options(&browser_options, NFC_APP_EXTENSION, &I_Nfc_10px);
         browser_options.base_path = NFC_APP_FOLDER;
         browser_options.hide_dot_files = true;
+        //Show file browser
         dialog_file_browser_show(app->dialogs, app->filePath, app->filePath, &browser_options);
+        //Check if file is MiZip file
+        mizip_balance_editor_load_file(app);
+        //Return to view, delete later
         view_dispatcher_send_custom_event(app->view_dispatcher, ViewIndexWidget);
     }
+}
+
+//Function to check if the file is a MiZip file
+void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app) {
+    furi_assert(app);
+
+    NfcDevice* nfc_device = nfc_device_alloc();
+    nfc_device_load(nfc_device, furi_string_get_cstr(app->filePath));
+    if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic) {
+        //MiFare Classic
+        //TODO Check if file is MiZip and load
+    } else {
+        //Invalid file
+        //TODO Show error message and return to main menu
+    }
+
+    nfc_device_free(nfc_device);
 }
 
 // Application constructor function.
