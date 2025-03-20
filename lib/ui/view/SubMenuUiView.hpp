@@ -53,8 +53,6 @@ public:
     }
 
     void SetItemLabel(uint32_t index, const char* label) {
-        if(index >= elementCount) {
-        }
         submenu_change_item_label(menu, index, label);
     }
 

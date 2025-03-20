@@ -1,30 +1,23 @@
 import os
-import glob
 import lief
 import pathlib
 
-OBJCOPY_PATH = (
-    "C:/Users/denr01/.ufbt/toolchain/x86_64-windows/bin/arm-none-eabi-objcopy.exe"
-)
-
-FAP_LOCATION_ON_FLIPPER = "/ext/apps/Sub-GHz/chief_cooker.fap"
-
 UFBT_PATH = pathlib.Path.home() / ".ufbt"
 
-fapDir = pathlib.Path(__file__).parent.parent.resolve() / "dist/*.fap"
-fapFile = glob.glob(str(fapDir))[0]
-print("Using FAP file: " + fapFile)
+FAP_LOCATION_AFTER_BUILD = "dist/chief_cooker.fap"
+FAP_LOCATION_ON_FLIPPER = "/ext/apps/Sub-GHz/chief_cooker.fap"
+OBJCOPY_PATH = UFBT_PATH / "toolchain/x86_64-windows/bin/arm-none-eabi-objcopy.exe"
 
 
 def clearSections():
-    binary = lief.parse(fapFile)
+    binary = lief.parse(FAP_LOCATION_AFTER_BUILD)
 
     for i, sect in enumerate(binary.sections):
         if sect.name.find("_Z") >= 0:
             newSectName = "s%d" % i
             cmd = '%s "%s" --rename-section %s=%s' % (
                 OBJCOPY_PATH,
-                fapFile,
+                FAP_LOCATION_AFTER_BUILD,
                 sect.name,
                 newSectName,
             )
@@ -32,9 +25,9 @@ def clearSections():
             os.system(cmd)
 
 
-os.system("ufbt build")
+os.system("ufbt")
 clearSections()
 os.system(
     "%s/toolchain/current/python/python %s/current/scripts/runfap.py -p auto -s %s -t %s"
-    % (UFBT_PATH, UFBT_PATH, fapFile, FAP_LOCATION_ON_FLIPPER)
+    % (UFBT_PATH, UFBT_PATH, FAP_LOCATION_AFTER_BUILD, FAP_LOCATION_ON_FLIPPER)
 )
