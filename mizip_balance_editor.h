@@ -13,6 +13,7 @@
 
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
+#include <nfc/protocols/mf_classic/mf_classic.h>
 
 #define NFC_APP_FOLDER    ANY_PATH("nfc")
 #define NFC_APP_EXTENSION ".nfc"
@@ -36,7 +37,10 @@ typedef struct {
     Widget* widget;
     Submenu* submenu;
 
+    Storage* storage;
     DialogsApp* dialogs;
+
+    MfClassicData* mf_classic_data;
 
     FuriString* filePath;
 } MiZipBalanceEditorApp;

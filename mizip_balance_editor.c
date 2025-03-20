@@ -57,6 +57,21 @@ void mizip_balance_editor_app_submenu_callback(void* context, uint32_t index) {
         //Check if file is MiZip file
         mizip_balance_editor_load_file(app);
         //Return to view, delete later
+        widget_reset(app->widget);
+        widget_add_string_multiline_element(
+            app->widget,
+            64,
+            32,
+            AlignCenter,
+            AlignCenter,
+            FontSecondary,
+            furi_string_get_cstr(app->filePath));
+        widget_add_button_element(
+            app->widget,
+            GuiButtonTypeCenter,
+            "Return to menu",
+            mizip_balance_editor_app_button_callback,
+            app);
         view_dispatcher_send_custom_event(app->view_dispatcher, ViewIndexWidget);
     }
 }
@@ -70,6 +85,9 @@ void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app) {
     if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic) {
         //MiFare Classic
         //TODO Check if file is MiZip and load
+        const MfClassicData* mf_classic_data =
+            nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
+        mf_classic_copy(app->mf_classic_data, mf_classic_data);
     } else {
         //Invalid file
         //TODO Show error message and return to main menu
@@ -83,29 +101,14 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     MiZipBalanceEditorApp* app = malloc(sizeof(MiZipBalanceEditorApp));
     // Access the GUI API instance.
     Gui* gui = furi_record_open(RECORD_GUI);
-    app->filePath = furi_string_alloc_set(NFC_APP_FOLDER);
     // Create and initialize the Widget view.
     app->widget = widget_alloc();
-    widget_add_string_multiline_element(
-        app->widget,
-        64,
-        32,
-        AlignCenter,
-        AlignCenter,
-        FontSecondary,
-        furi_string_get_cstr(app->filePath));
-    widget_add_button_element(
-        app->widget,
-        GuiButtonTypeCenter,
-        "Switch View",
-        mizip_balance_editor_app_button_callback,
-        app);
     // Create and initialize the Submenu view.
     app->submenu = submenu_alloc();
     submenu_set_header(app->submenu, "MiZip Balance Editor");
     submenu_add_item(
         app->submenu,
-        "Direct to tag",
+        "TODO Direct to tag",
         SubmenuIndexDirectToTag,
         mizip_balance_editor_app_submenu_callback,
         app);
@@ -135,7 +138,12 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     // The context will be passed to the callbacks as a parameter, so we have access to our application object.
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
+    app->storage = furi_record_open(RECORD_STORAGE);
+
     app->dialogs = furi_record_open(RECORD_DIALOGS);
+
+    app->mf_classic_data = mf_classic_alloc();
+    app->filePath = furi_string_alloc_set(NFC_APP_FOLDER);
 
     return app;
 }
@@ -155,8 +163,15 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     furi_record_close(RECORD_GUI);
     // Free the remaining memory.
 
+    furi_record_close(RECORD_STORAGE);
+    app->storage = NULL;
+
     furi_record_close(RECORD_DIALOGS);
     app->dialogs = NULL;
+
+    mf_classic_free(app->mf_classic_data);
+    furi_string_free(app->filePath);
+
     free(app);
 }
 
