@@ -1,3 +1,10 @@
+/*
+ * This code is based on the NaejEL's (https://github.com/NaejEL) BLE fix.
+ * 
+ * Thank you to NaejEL for providing this code and making it available under the https://github.com/Flipper-XFW/Xtreme-Apps repository.
+ * Your contribution has been invaluable for this project.
+ */
+
 #include "ble_serial.h"
 
 #include <gap.h>
