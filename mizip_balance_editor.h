@@ -38,6 +38,7 @@ typedef enum {
 typedef enum {
     SubmenuIndexDirectToTag,
     SubmenuIndexEditMiZipFile,
+    SubmenuIndexAbout,
 } SubmenuIndex;
 
 // Main application structure.
