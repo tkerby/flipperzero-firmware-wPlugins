@@ -97,7 +97,7 @@ typedef enum {
     AppBmpEditorEventSaveText,
 } AppBmpEditorCustomEvents;
 
-AppBmpEditor* app_bmp_editor_alloc();
+AppBmpEditor* app_bmp_editor_alloc(void* ctx);
 void app_bmp_editor_free(void* ctx);
 View* app_bitmap_editor_get_view(AppBmpEditor* appBmpEditor);
 void app_scene_bmp_editor_on_enter(void* context);
