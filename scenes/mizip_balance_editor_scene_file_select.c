@@ -13,7 +13,10 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
     browser_options.base_path = NFC_APP_FOLDER;
     browser_options.hide_dot_files = true;
     //Show file browser
-    dialog_file_browser_show(app->dialogs, app->filePath, app->filePath, &browser_options);
+    if(!dialog_file_browser_show(app->dialogs, app->filePath, app->filePath, &browser_options)) {
+        scene_manager_previous_scene(app->scene_manager);
+        return;
+    }
     //Check if file is MiZip file
     NfcDevice* nfc_device = nfc_device_alloc();
     if(nfc_device_load(nfc_device, furi_string_get_cstr(app->filePath))) {
@@ -36,11 +39,9 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
 }
 
 bool mizip_balance_editor_scene_file_select_on_event(void* context, SceneManagerEvent event) {
-    furi_assert(context);
-    furi_assert(event);
     MiZipBalanceEditorApp* app = context;
     if(event.type == SceneManagerEventTypeBack) {
-        view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
+        scene_manager_previous_scene(app->scene_manager);
     }
     return false;
 }
