@@ -4,6 +4,7 @@
 
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
+#include <gui/modules/dialog_ex.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 
@@ -25,7 +26,9 @@
 // Enumeration of the view indexes.
 typedef enum {
     MiZipBalanceEditorViewIdMainMenu,
-    MiZipBalanceEditorViewIdWidget,
+    MiZipBalanceEditorViewIdFileSelect,
+    MiZipBalanceEditorViewIdNumberInput,
+    MiZipBalanceEditorViewIdShowResult,
 } MiZipBalanceEditorViewId;
 
 // Enumeration of submenu items.
@@ -40,8 +43,8 @@ typedef struct {
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
 
-    Widget* widget;
     Submenu* submenu;
+    DialogEx* dialog_ex;
 
     Storage* storage;
     DialogsApp* dialogs;
@@ -49,6 +52,11 @@ typedef struct {
     MfClassicData* mf_classic_data;
 
     FuriString* filePath;
+    bool valid_file;
+
+    int32_t current_balance;
+    int32_t min_value;
+    int32_t max_value;
 } MiZipBalanceEditorApp;
 
 void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app);

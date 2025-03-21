@@ -28,26 +28,6 @@ void mizip_balance_editor_app_button_callback(
     }
 }
 
-//Function to check if the file is a MiZip file
-void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app) {
-    furi_assert(app);
-
-    NfcDevice* nfc_device = nfc_device_alloc();
-    nfc_device_load(nfc_device, furi_string_get_cstr(app->filePath));
-    if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic) {
-        //MiFare Classic
-        //TODO Check if file is MiZip and load
-        const MfClassicData* mf_classic_data =
-            nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
-        mf_classic_copy(app->mf_classic_data, mf_classic_data);
-    } else {
-        //Invalid file
-        //TODO Show error message and return to main menu
-    }
-
-    nfc_device_free(nfc_device);
-}
-
 // Application constructor function.
 static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     MiZipBalanceEditorApp* app = malloc(sizeof(MiZipBalanceEditorApp));
@@ -67,16 +47,23 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu, submenu_get_view(app->submenu));
     // Create and initialize the Widget view.
-    app->widget = widget_alloc();
+    app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, MiZipBalanceEditorViewIdWidget, widget_get_view(app->widget));
+        app->view_dispatcher,
+        MiZipBalanceEditorViewIdShowResult,
+        dialog_ex_get_view(app->dialog_ex));
 
     app->storage = furi_record_open(RECORD_STORAGE);
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
 
     app->mf_classic_data = mf_classic_alloc();
-    app->filePath = furi_string_alloc_set(NFC_APP_FOLDER);
+    app->filePath = furi_string_alloc();
+    app->valid_file = false;
+
+    app->current_balance = 0;
+    app->min_value = 0;
+    app->max_value = 65535;
 
     return app;
 }
@@ -88,8 +75,8 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
     submenu_free(app->submenu);
 
-    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdWidget);
-    widget_free(app->widget);
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
+    dialog_ex_free(app->dialog_ex);
 
     // Now it is safe to delete the ViewDispatcher instance.
     scene_manager_free(app->scene_manager);
