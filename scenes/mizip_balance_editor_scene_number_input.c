@@ -2,7 +2,7 @@
 
 void mizip_balance_editor_scene_input_number_callback(void* context, int32_t number) {
     MiZipBalanceEditorApp* app = context;
-    app->current_balance = number;
+    mizip_balance_editor_write_new_balance(context, number);
     view_dispatcher_send_custom_event(app->view_dispatcher, 0);
 }
 
@@ -29,7 +29,6 @@ void mizip_balance_editor_scene_number_input_on_enter(void* context) {
 
 bool mizip_balance_editor_scene_number_input_on_event(void* context, SceneManagerEvent event) {
     MiZipBalanceEditorApp* app = context;
-    UNUSED(event);
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) { //Back button pressed
         scene_manager_previous_scene(app->scene_manager);

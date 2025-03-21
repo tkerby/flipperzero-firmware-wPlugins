@@ -54,11 +54,12 @@ typedef struct {
     MfClassicData* mf_classic_data;
 
     FuriString* filePath;
-    bool valid_file;
+    bool is_valid_mizip_file;
 
+    uint8_t credit_pointer;
     uint16_t current_balance;
     uint16_t min_value;
     uint16_t max_value;
 } MiZipBalanceEditorApp;
 
-void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app);
+void mizip_balance_editor_write_new_balance(void* context, uint16_t new_balance);

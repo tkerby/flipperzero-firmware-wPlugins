@@ -26,15 +26,15 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
             const MfClassicData* mf_classic_data =
                 nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
             mf_classic_copy(app->mf_classic_data, mf_classic_data);
-            app->valid_file = true;
+            app->is_valid_mizip_file = true;
         } else {
             //Invalid file
-            app->valid_file = false;
+            app->is_valid_mizip_file = false;
         }
         nfc_device_free(nfc_device);
         scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
     } else {
-        scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
+        scene_manager_previous_scene(app->scene_manager);
     }
 }
 

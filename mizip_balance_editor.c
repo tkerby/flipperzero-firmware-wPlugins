@@ -14,18 +14,21 @@ bool mizip_balance_editor_app_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-// This function is called when the user presses the "Switch View" button on the Widget view.
-void mizip_balance_editor_app_button_callback(
-    GuiButtonType button_type,
-    InputType input_type,
-    void* context) {
-    furi_assert(context);
+void mizip_balance_editor_write_new_balance(void* context, uint16_t new_balance) {
     MiZipBalanceEditorApp* app = context;
-    // Only request the view switch if the user short-presses the Center button.
-    if(button_type == GuiButtonTypeCenter && input_type == InputTypeShort) {
-        // Request switch to the Submenu view via the custom event queue.
-        view_dispatcher_send_custom_event(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
-    }
+
+    app->mf_classic_data->block[app->credit_pointer].data[2] = (new_balance >> 8) &
+                                                               0xFF; // High byte
+    app->mf_classic_data->block[app->credit_pointer].data[1] = new_balance & 0xFF; // Low byte
+    app->mf_classic_data->block[app->credit_pointer].data[3] =
+        app->mf_classic_data->block[app->credit_pointer].data[1] ^
+        app->mf_classic_data->block[app->credit_pointer].data[2]; //Checksum
+
+    NfcDevice* nfc_device = nfc_device_alloc();
+    nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
+    nfc_device_save(nfc_device, furi_string_get_cstr(app->filePath));
+    nfc_device_free(nfc_device);
+    app->current_balance = new_balance;
 }
 
 // Application constructor function.
@@ -65,8 +68,9 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
 
     app->mf_classic_data = mf_classic_alloc();
     app->filePath = furi_string_alloc();
-    app->valid_file = false;
+    app->is_valid_mizip_file = false;
 
+    app->credit_pointer = 0x09;
     app->current_balance = 0;
     app->min_value = 0;
     app->max_value = 65535;
