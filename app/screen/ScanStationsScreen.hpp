@@ -84,7 +84,10 @@ public:
         if(categoryType == User) {
             pagerReceiver->SetUserCategory(category);
             updateUserCategory = false;
-            menuView->SetRightButton("Delete category", HANDLER_1ARG(&ScanStationsScreen::deleteCategory));
+
+            if(category != NULL) {
+                menuView->SetRightButton("Delete category", HANDLER_1ARG(&ScanStationsScreen::deleteCategory));
+            }
         } else {
             pagerReceiver->ReloadKnownStations();
         }
