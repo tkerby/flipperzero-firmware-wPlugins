@@ -20,16 +20,14 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
     //Check if file is MiZip file
     NfcDevice* nfc_device = nfc_device_alloc();
     if(nfc_device_load(nfc_device, furi_string_get_cstr(app->filePath))) {
-        if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic) {
-            //MiFare Classic
-            //TODO Check if file is MiZip and load
+        if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic &&
+           mizip_verify(nfc_device)) {
             const MfClassicData* mf_classic_data =
                 nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
             mf_classic_copy(app->mf_classic_data, mf_classic_data);
-            app->is_valid_mizip_file = true;
+            app->is_valid_mizip_data = true;
         } else {
-            //Invalid file
-            app->is_valid_mizip_file = false;
+            app->is_valid_mizip_data = false;
         }
         nfc_device_free(nfc_device);
         scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);

@@ -21,6 +21,8 @@
 #include <mizip_balance_editor_icons.h>
 #include "scenes/mizip_balance_editor_scene.h"
 
+#include "adapted_from_ofw/mizip.h"
+
 #define NFC_APP_FOLDER    ANY_PATH("nfc")
 #define NFC_APP_EXTENSION ".nfc"
 
@@ -54,7 +56,7 @@ typedef struct {
     MfClassicData* mf_classic_data;
 
     FuriString* filePath;
-    bool is_valid_mizip_file;
+    bool is_valid_mizip_data;
 
     uint8_t credit_pointer;
     uint16_t current_balance;

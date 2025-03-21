@@ -68,7 +68,7 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
 
     app->mf_classic_data = mf_classic_alloc();
     app->filePath = furi_string_alloc();
-    app->is_valid_mizip_file = false;
+    app->is_valid_mizip_data = false;
 
     app->credit_pointer = 0x09;
     app->current_balance = 0;

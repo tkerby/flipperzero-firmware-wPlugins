@@ -10,7 +10,7 @@ void mizip_balance_editor_update_balance(void* context) {
     MiZipBalanceEditorApp* app = context;
     FuriString* message;
     dialog_ex_reset(app->dialog_ex);
-    if(app->is_valid_mizip_file) {
+    if(app->is_valid_mizip_data) {
         //Get and show UID
         char uid[18];
         snprintf(
@@ -69,7 +69,7 @@ bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManager
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case DialogExResultCenter:
-            if(app->is_valid_mizip_file) {
+            if(app->is_valid_mizip_data) {
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
             } else {
                 scene_manager_previous_scene(app->scene_manager);
