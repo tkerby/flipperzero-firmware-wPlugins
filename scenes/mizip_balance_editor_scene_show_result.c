@@ -14,7 +14,22 @@ void mizip_balance_editor_scene_show_result_on_enter(void* context) {
 
     FuriString* message;
     if(app->valid_file) {
-        message = furi_string_alloc_set("Valid file");
+        if(app->mf_classic_data->block[10].data[0] == 0x55) {
+            app->current_balance = (app->mf_classic_data->block[0x09].data[2] << 8) |
+                                   (app->mf_classic_data->block[0x09].data[1]);
+        } else {
+            app->current_balance = (app->mf_classic_data->block[0x08].data[2] << 8) |
+                                   (app->mf_classic_data->block[0x08].data[1]);
+        }
+
+        char str[50];
+        snprintf(
+            str,
+            sizeof(str),
+            "Current balance: %d.%02d E",
+            app->current_balance / 100,
+            app->current_balance % 100);
+        message = furi_string_alloc_set(str);
     } else {
         message = furi_string_alloc_set("Not a MiZip file");
     }
@@ -34,9 +49,27 @@ void mizip_balance_editor_scene_show_result_on_enter(void* context) {
 }
 
 bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
+    MiZipBalanceEditorApp* app = context;
     bool consumed = false;
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        switch(event.event) {
+        case DialogExResultCenter:
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
+            consumed = true;
+            break;
+        case DialogExResultLeft:
+            //scene_manager_next_scene(app->scene_manager, ExampleNumberInputSceneInputMin);
+            consumed = true;
+            break;
+        case DialogExResultRight:
+            //scene_manager_next_scene(app->scene_manager, ExampleNumberInputSceneInputMax);
+            consumed = true;
+            break;
+        default:
+            break;
+        }
+    }
 
     return consumed;
 }

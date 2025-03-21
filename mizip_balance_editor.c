@@ -42,16 +42,22 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
         app->view_dispatcher, mizip_balance_editor_app_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, mizip_balance_editor_app_back_event_callback);
-    // Create and initialize the Submenu view.
+
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu, submenu_get_view(app->submenu));
-    // Create and initialize the Widget view.
+
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         MiZipBalanceEditorViewIdShowResult,
         dialog_ex_get_view(app->dialog_ex));
+
+    app->number_input = number_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        MiZipBalanceEditorViewIdNumberInput,
+        number_input_get_view(app->number_input));
 
     app->storage = furi_record_open(RECORD_STORAGE);
 
@@ -77,6 +83,9 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
     dialog_ex_free(app->dialog_ex);
+
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdNumberInput);
+    number_input_free(app->number_input);
 
     // Now it is safe to delete the ViewDispatcher instance.
     scene_manager_free(app->scene_manager);

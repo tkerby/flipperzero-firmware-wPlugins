@@ -5,6 +5,7 @@
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/dialog_ex.h>
+#include <gui/modules/number_input.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 
@@ -45,6 +46,7 @@ typedef struct {
 
     Submenu* submenu;
     DialogEx* dialog_ex;
+    NumberInput* number_input;
 
     Storage* storage;
     DialogsApp* dialogs;
@@ -54,9 +56,9 @@ typedef struct {
     FuriString* filePath;
     bool valid_file;
 
-    int32_t current_balance;
-    int32_t min_value;
-    int32_t max_value;
+    uint16_t current_balance;
+    uint16_t min_value;
+    uint16_t max_value;
 } MiZipBalanceEditorApp;
 
 void mizip_balance_editor_load_file(MiZipBalanceEditorApp* app);
