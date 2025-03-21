@@ -1,24 +1,14 @@
 # NFC APDU Runner
 
+<div align="center">
+  
+<img src="https://raw.githubusercontent.com/SpenserCai/nfc_apdu_runner/refs/heads/main/.github/nfc_com/holographic-nfc-animation.svg" width="100%" height="100%"></a>
+
+</div>
+
 [中文](./README_CN.md)
 
 NFC APDU Runner is a Flipper Zero application for reading and executing APDU commands on NFC cards. This application allows users to load APDU commands from script files, send them to NFC cards, and view the response results. It also includes NARD (NFC APDU Runner Response Decoder) for parsing and analyzing APDU responses using customizable format templates, and TLV data extraction capabilities. The project now supports a Web interface analysis platform for more comprehensive NFC data analysis and visualization.
-
-<div align="center">
-
-[![NFC APDU Runner Web Interface](./doc_images/web_image.png)](https://youtu.be/u8o0eTmCCew)
-
-</div>
-
-<div align="center">
-  <img src="./doc_images/waiting_decode.png" width="45%" alt="NARD Waiting for Decode">
-  <img src="./doc_images/emv_response.jpg" width="45%" alt="EMV Card Decoded Response">
-</div>
-
-<div align="center">
-  <img src="./doc_images/emv_decode.jpg" width="45%" alt="EMV Card Detailed Decode">
-  <img src="./doc_images/travel_card_decode.png" width="45%" alt="Travel Card Decode">
-</div>
 
 ## Features
 
@@ -31,6 +21,16 @@ NFC APDU Runner is a Flipper Zero application for reading and executing APDU com
 - NARD (NFC APDU Runner Response Decoder) for parsing and analyzing APDU responses
 - Template-based decoding of APDU responses with custom format templates
 - TLV data extraction and parsing capabilities
+
+<div align="center">
+  <img src="./doc_images/waiting_decode.png" width="45%" alt="NARD Waiting for Decode">
+  <img src="./doc_images/emv_response.jpg" width="45%" alt="EMV Card Decoded Response">
+</div>
+
+<div align="center">
+  <img src="./doc_images/emv_decode.jpg" width="45%" alt="EMV Card Detailed Decode">
+  <img src="./doc_images/travel_card_decode.png" width="45%" alt="Travel Card Decode">
+</div>
 
 ## Installation
 
