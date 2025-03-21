@@ -293,7 +293,7 @@ l401_err config_load_json(const char* filename, Configuration* config) {
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     // Check if configuration file exists
-    if(!storage_common_stat(storage, filename, NULL) == FSE_OK) {
+    if(storage_common_stat(storage, filename, NULL) != FSE_OK) {
         // Create it if it doesn't exists
         if(config_create_json(filename, config) != L401_OK) {
             FURI_LOG_E(TAG, "Could not create configuration file %s", filename);
