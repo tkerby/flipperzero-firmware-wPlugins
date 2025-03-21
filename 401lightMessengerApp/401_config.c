@@ -32,12 +32,12 @@ void config_default_init(Configuration* config) {
     // Initialize with default values
     config->version = strdup(LIGHTMSG_VERSION); // Default version
     strncpy(config->text, LIGHTMSG_DEFAULT_TEXT, LIGHTMSG_MAX_TEXT_LEN); // Default text
-    config->text[LIGHTMSG_MAX_TEXT_LEN + 1] = '\0';
+    config->text[LIGHTMSG_MAX_TEXT_LEN] = '\0';
     strncpy(
         config->bitmapPath,
         LIGHTMSG_DEFAULT_BITMAPPATH,
         LIGHTMSG_MAX_BITMAPPATH_LEN); // Default text
-    config->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN + 1] = '\0';
+    config->bitmapPath[LIGHTMSG_MAX_BITMAPPATH_LEN] = '\0';
     config->color = LIGHTMSG_DEFAULT_COLOR; // Default color
     config->brightness = LIGHTMSG_DEFAULT_BRIGHTNESS; // Default brightness
     config->sensitivity = LIGHTMSG_DEFAULT_SENSIBILITY; // Default sensitivity
