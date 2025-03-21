@@ -16,6 +16,7 @@
 #include <nfc/nfc_device.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 
+#include <mizip_balance_editor_icons.h>
 #include "scenes/mizip_balance_editor_scene.h"
 
 #define NFC_APP_FOLDER    ANY_PATH("nfc")
@@ -23,10 +24,9 @@
 
 // Enumeration of the view indexes.
 typedef enum {
-    ViewIndexWidget,
-    ViewIndexSubmenu,
-    ViewIndexCount,
-} ViewIndex;
+    MiZipBalanceEditorViewIdMainMenu,
+    MiZipBalanceEditorViewIdWidget,
+} MiZipBalanceEditorViewId;
 
 // Enumeration of submenu items.
 typedef enum {
@@ -36,7 +36,10 @@ typedef enum {
 
 // Main application structure.
 typedef struct {
+    Gui* gui;
+    SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
+
     Widget* widget;
     Submenu* submenu;
 
