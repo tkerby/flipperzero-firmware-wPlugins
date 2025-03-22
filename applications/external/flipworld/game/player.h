@@ -97,6 +97,8 @@ typedef struct {
     int icon_offset;
     //
     char message[64];
+    //
+    uint8_t tutorial_step;
 } GameContext;
 
 typedef struct {

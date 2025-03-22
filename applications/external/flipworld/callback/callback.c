@@ -1209,6 +1209,65 @@ static void switch_to_view_get_game(FlipWorldApp* app) {
         FlipWorldViewLoader);
 }
 
+static void run(FlipWorldApp* app) {
+    if(!app) {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    free_all_views(app, true, true);
+    if(!is_enough_heap(60000)) {
+        easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
+        return;
+    }
+    // check if logged in
+    if(is_logged_in() || is_logged_in_to_flip_social()) {
+        FlipperHTTP* fhttp = flipper_http_alloc();
+        if(!fhttp) {
+            FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+            easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
+            return;
+        }
+        bool fetch_world_list_i() {
+            return fetch_world_list(fhttp);
+        }
+        bool parse_world_list_i() {
+            return fhttp->state != ISSUE;
+        }
+
+        bool fetch_player_stats_i() {
+            return fetch_player_stats(fhttp);
+        }
+
+        if(!alloc_message_view(app, MessageStateLoading)) {
+            FURI_LOG_E(TAG, "Failed to allocate message view");
+            return;
+        }
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
+
+        // Make the request
+        if(!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) ||
+           !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context)) {
+            FURI_LOG_E(HTTP_TAG, "Failed to make request");
+            flipper_http_free(fhttp);
+        } else {
+            flipper_http_free(fhttp);
+        }
+
+        if(!alloc_submenu_settings(app)) {
+            FURI_LOG_E(TAG, "Failed to allocate settings view");
+            return;
+        }
+
+        if(!start_game_thread(app)) {
+            FURI_LOG_E(TAG, "Failed to start game thread");
+            easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+            return;
+        }
+    } else {
+        switch_to_view_get_game(app);
+    }
+}
+
 void callback_submenu_choices(void* context, uint32_t index) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     if(!app) {
@@ -1221,8 +1280,7 @@ void callback_submenu_choices(void* context, uint32_t index) {
         break;
     case FlipWorldSubmenuIndexStory:
         game_mode_index = 2; // GAME_MODE_STORY
-        easy_flipper_dialog(
-            "Unavailable", "\nStory mode is not ready yet.\nPress BACK to return.");
+        run(app);
         break;
     case FlipWorldSubmenuIndexPvP:
         game_mode_index = 1; // GAME_MODE_PVP
@@ -1230,61 +1288,7 @@ void callback_submenu_choices(void* context, uint32_t index) {
         break;
     case FlipWorldSubmenuIndexPvE:
         game_mode_index = 0; // GAME_MODE_PVE
-        free_all_views(app, true, true);
-        if(!is_enough_heap(60000)) {
-            easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
-            return;
-        }
-        // check if logged in
-        if(is_logged_in() || is_logged_in_to_flip_social()) {
-            FlipperHTTP* fhttp = flipper_http_alloc();
-            if(!fhttp) {
-                FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
-                easy_flipper_dialog(
-                    "Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
-                return;
-            }
-            bool fetch_world_list_i() {
-                return fetch_world_list(fhttp);
-            }
-            bool parse_world_list_i() {
-                return fhttp->state != ISSUE;
-            }
-
-            bool fetch_player_stats_i() {
-                return fetch_player_stats(fhttp);
-            }
-
-            if(!alloc_message_view(app, MessageStateLoading)) {
-                FURI_LOG_E(TAG, "Failed to allocate message view");
-                return;
-            }
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
-
-            // Make the request
-            if(!flipper_http_process_response_async(
-                   fhttp, fetch_world_list_i, parse_world_list_i) ||
-               !flipper_http_process_response_async(
-                   fhttp, fetch_player_stats_i, set_player_context)) {
-                FURI_LOG_E(HTTP_TAG, "Failed to make request");
-                flipper_http_free(fhttp);
-            } else {
-                flipper_http_free(fhttp);
-            }
-
-            if(!alloc_submenu_settings(app)) {
-                FURI_LOG_E(TAG, "Failed to allocate settings view");
-                return;
-            }
-
-            if(!start_game_thread(app)) {
-                FURI_LOG_E(TAG, "Failed to start game thread");
-                easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-                return;
-            }
-        } else {
-            switch_to_view_get_game(app);
-        }
+        run(app);
         break;
     case FlipWorldSubmenuIndexMessage:
         // About menu.

@@ -9,6 +9,7 @@ static Level* next_level(GameManager* manager) {
     GameContext* game_context = game_manager_game_context_get(manager);
     if(!game_context) {
         FURI_LOG_E(TAG, "Failed to get game context");
+        game_context->is_switching_level = false;
         return NULL;
     }
     // check if there are more levels to load
@@ -17,21 +18,31 @@ static Level* next_level(GameManager* manager) {
         if(!game_context->levels[game_context->current_level]) {
             if(!allocate_level(manager, game_context->current_level)) {
                 FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
+                game_context->is_switching_level = false;
+                furi_delay_ms(100);
                 return NULL;
             }
         }
+        game_context->is_switching_level = false;
+        furi_delay_ms(100);
         return game_context->levels[game_context->current_level];
     }
     for(int i = game_context->current_level + 1; i < game_context->level_count; i++) {
         if(!game_context->levels[i]) {
             if(!allocate_level(manager, i)) {
                 FURI_LOG_E(TAG, "Failed to allocate level %d", i);
+                game_context->is_switching_level = false;
+                furi_delay_ms(100);
                 return NULL;
             }
         }
         game_context->current_level = i;
+        game_context->is_switching_level = false;
+        furi_delay_ms(100);
         return game_context->levels[i];
     }
+    game_context->is_switching_level = false;
+    furi_delay_ms(100);
     return NULL;
 }
 
@@ -223,7 +234,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             game_context->elapsed_button_timer = 0;
 
         if(!game_context->is_menu_open) {
-            pos.y -= (2 + game_context->icon_offset);
+            pos.y -= (1 + game_context->icon_offset);
             player->dy = -1;
             player->direction = ENTITY_UP;
         } else {
@@ -240,7 +251,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             game_context->elapsed_button_timer = 0;
 
         if(!game_context->is_menu_open) {
-            pos.y += (2 + game_context->icon_offset);
+            pos.y += (1 + game_context->icon_offset);
             player->dy = 1;
             player->direction = ENTITY_DOWN;
         } else {
@@ -257,7 +268,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             game_context->elapsed_button_timer = 0;
 
         if(!game_context->is_menu_open) {
-            pos.x -= (2 + game_context->icon_offset);
+            pos.x -= (1 + game_context->icon_offset);
             player->dx = -1;
             player->direction = ENTITY_LEFT;
         } else {
@@ -275,7 +286,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
             game_context->elapsed_button_timer = 0;
 
         if(!game_context->is_menu_open) {
-            pos.x += (2 + game_context->icon_offset);
+            pos.x += (1 + game_context->icon_offset);
             player->dx = 1;
             player->direction = ENTITY_RIGHT;
         } else {
@@ -299,6 +310,7 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         if(game_context->enemy_count == 0 && !game_context->is_switching_level) {
             game_context->is_switching_level = true;
             save_player_context(player);
+            furi_delay_ms(100);
             game_manager_next_level_set(manager, next_level(manager));
             return;
         }
@@ -334,6 +346,33 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         }
     }
 
+    // adjust tutorial step
+    if(game_context->game_mode == GAME_MODE_STORY) {
+        switch(game_context->tutorial_step) {
+        case 0:
+            if(input.held & GameKeyLeft) game_context->tutorial_step++;
+            break;
+        case 1:
+            if(input.held & GameKeyRight) game_context->tutorial_step++;
+            break;
+        case 2:
+            if(input.held & GameKeyUp) game_context->tutorial_step++;
+            break;
+        case 3:
+            if(input.held & GameKeyDown) game_context->tutorial_step++;
+            break;
+        case 5:
+            if(input.held & GameKeyOk && game_context->is_menu_open) game_context->tutorial_step++;
+            break;
+        case 6:
+            if(input.held & GameKeyBack) game_context->tutorial_step++;
+            break;
+        case 7:
+            if(input.held & GameKeyBack) game_context->tutorial_step++;
+            break;
+        }
+    }
+
     // Clamp the player's position to stay within world bounds
     pos.x = CLAMP(pos.x, WORLD_WIDTH - 5, 5);
     pos.y = CLAMP(pos.y, WORLD_HEIGHT - 5, 5);
@@ -350,8 +389,53 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
         player->state = ENTITY_MOVING;
 }
 
+static void draw_tutorial(Canvas* canvas, GameManager* manager) {
+    GameContext* game_context = game_manager_game_context_get(manager);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 45, 12, "Tutorial");
+    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    switch(game_context->tutorial_step) {
+    case 0:
+        canvas_draw_str(canvas, 15, 20, "Press LEFT to move left");
+        break;
+    case 1:
+        canvas_draw_str(canvas, 15, 20, "Press RIGHT to move right");
+        break;
+    case 2:
+        canvas_draw_str(canvas, 15, 20, "Press UP to move up");
+        break;
+    case 3:
+        canvas_draw_str(canvas, 15, 20, "Press DOWN to move down");
+        break;
+    case 4:
+        canvas_draw_str(canvas, 0, 20, "Press OK + collide with an enemy to attack");
+        break;
+    case 5:
+        canvas_draw_str(canvas, 15, 20, "Hold OK to open the menu");
+        break;
+    case 6:
+        canvas_draw_str(canvas, 15, 20, "Press BACK to escape the menu");
+        break;
+    case 7:
+        canvas_draw_str(canvas, 15, 20, "Hold BACK to save and exit");
+        break;
+    case 8:
+        // end of tutorial so quit
+        game_context->tutorial_step = 0;
+        game_context->is_menu_open = false;
+        game_context->is_switching_level = true;
+        game_manager_game_stop(manager);
+        return;
+    default:
+        break;
+    }
+}
+
 static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     if(!self || !context || !canvas || !manager) return;
+
+    // Get game context
+    GameContext* game_context = game_manager_game_context_get(manager);
 
     // Get player context
     PlayerContext* player = context;
@@ -390,8 +474,17 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
     // Draw the outer bounds adjusted by camera offset
     canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
-    // render background
-    background_render(canvas, manager);
+    // render tutorial
+    if(game_context->game_mode == GAME_MODE_STORY) {
+        draw_tutorial(canvas, manager);
+
+        if(game_context->is_menu_open) {
+            background_render(canvas, manager);
+        }
+    } else {
+        // render background
+        background_render(canvas, manager);
+    }
 }
 
 const EntityDescription player_desc = {
