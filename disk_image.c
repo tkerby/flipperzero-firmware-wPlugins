@@ -154,7 +154,8 @@ bool disk_image_set_write_protect(DiskImage* image, bool write_protect) {
         return false;
     }
 
-    return storage_file_write(image->file, image->header, 1) == 1;
+    return storage_file_write(image->file, image->header, sizeof(image->header)) ==
+           sizeof(image->header);
 }
 
 size_t disk_image_nth_sector_size(const DiskImage* image, size_t sector) {
