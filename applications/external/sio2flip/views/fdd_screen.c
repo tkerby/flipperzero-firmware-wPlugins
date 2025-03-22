@@ -55,7 +55,7 @@ static void fdd_screen_draw_callback(Canvas* canvas, void* _model) {
     if(model->write_protect) {
         canvas_draw_str(canvas, 26, 10, "WR PROTECT");
     }
-    canvas_draw_str_aligned(canvas, 126, 10, AlignRight, AlignBottom, "XF-551");
+    canvas_draw_str_aligned(canvas, 126, 10, AlignRight, AlignBottom, "FDD");
 
     // FDD device
     x = 8;

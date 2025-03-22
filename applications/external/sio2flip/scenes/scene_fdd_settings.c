@@ -22,17 +22,8 @@
 typedef enum {
     MenuIndex_InsertDisk,
     MenuIndex_EjectDisk,
-    MenuIndex_DeviceType,
     MenuIndex_WriteProtect,
 } MenuIndex;
-
-static void on_device_type_changed(VariableItem* item) {
-    uint8_t index = variable_item_get_current_value_index(item);
-    variable_item_set_current_value_text(item, fdd_type_name(index));
-
-    App* app = (App*)variable_item_get_context(item);
-    app->config.fdd[app->selected_fdd].type = index;
-}
 
 static void on_write_protect_changed(VariableItem* item) {
     uint8_t index = variable_item_get_current_value_index(item);
@@ -69,10 +60,6 @@ void scene_fdd_settings_init(App* app) {
     item = variable_item_list_add(list, "Insert disk", 0, NULL, app);
 
     item = variable_item_list_add(list, "Eject disk", 0, NULL, app);
-
-    item = variable_item_list_add(list, "Device type", 2, on_device_type_changed, app);
-    variable_item_set_current_value_index(item, app->config.fdd[app->selected_fdd].type);
-    on_device_type_changed(item);
 
     DiskImage* image = fdd_get_disk(app->fdd[app->selected_fdd]);
     if(image != NULL) {

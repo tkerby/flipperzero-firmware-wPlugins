@@ -23,14 +23,6 @@
 #include "fdd_emulator.h"
 #include "disk_image.h"
 
-#define SIO_HSI_19200 40
-#define SIO_HSI_38400 16
-#define SIO_HSI_41890 14
-#define SIO_HSI_57600 8
-#define SIO_HSI_61440 7
-#define SIO_HSI_68266 6
-#define SIO_HSI_73728 5
-
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
 
@@ -124,6 +116,32 @@ SIODevice fdd_get_device(FddEmulator* fdd) {
     return fdd->device;
 }
 
+static DiskGeometry decode_percom_config(const uint8_t* rx_data) {
+    FURI_LOG_I(
+        TAG,
+        "PERCOM: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+        rx_data[0],
+        rx_data[1],
+        rx_data[2],
+        rx_data[3],
+        rx_data[4],
+        rx_data[5],
+        rx_data[6],
+        rx_data[7],
+        rx_data[8],
+        rx_data[9],
+        rx_data[10],
+        rx_data[11]);
+
+    DiskGeometry geom = {0};
+    geom.tracks = rx_data[0];
+    geom.sectors_per_track = (rx_data[2] << 8) | rx_data[3];
+    geom.heads = rx_data[4] + 1;
+    geom.density = rx_data[5];
+    geom.sector_size = (rx_data[6] << 8) | rx_data[7];
+    return geom;
+}
+
 static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     FddEmulator* fdd = (FddEmulator*)context;
     furi_check(fdd != NULL);
@@ -162,9 +180,17 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         return SIO_ACK;
 
     case SIO_COMMAND_GET_HSI:
-        return SIO_ACK;
+        if(fdd->config->speed_mode == SpeedMode_USDoubler) {
+            return SIO_ACK;
+        } else {
+            return SIO_NAK;
+        }
 
     case SIO_COMMAND_FORMAT:
+        return SIO_ACK;
+
+    case SIO_COMMAND_FORMAT_WITH_SKEW:
+        request->rx_size = 128;
         return SIO_ACK;
 
     case SIO_COMMAND_FORMAT_MEDIUM:
@@ -254,28 +280,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_WRITE_PERCOM: {
-        FURI_LOG_I(
-            TAG,
-            "PERCOM: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-            request->rx_data[0],
-            request->rx_data[1],
-            request->rx_data[2],
-            request->rx_data[3],
-            request->rx_data[4],
-            request->rx_data[5],
-            request->rx_data[6],
-            request->rx_data[7],
-            request->rx_data[8],
-            request->rx_data[9],
-            request->rx_data[10],
-            request->rx_data[11]);
-
-        DiskGeometry geom = {0};
-        geom.tracks = request->rx_data[0];
-        geom.sectors_per_track = (request->rx_data[2] << 8) | request->rx_data[3];
-        geom.heads = request->rx_data[4] + 1;
-        geom.density = request->rx_data[5];
-        geom.sector_size = (request->rx_data[6] << 8) | request->rx_data[7];
+        DiskGeometry geom = decode_percom_config(request->rx_data);
         fdd->geometry = geom;
         fdd->geometry_changed = true;
         return SIO_COMPLETE;
@@ -300,8 +305,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
-        memset(request->tx_data, 0xFF, request->tx_size);
         request->tx_size = disk_image_sector_size(fdd->image);
+        memset(request->tx_data, 0xFF, request->tx_size);
         return SIO_COMPLETE;
 
     case SIO_COMMAND_FORMAT_MEDIUM:
@@ -318,12 +323,30 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
-        memset(request->tx_data, 0xFF, request->tx_size);
         request->tx_size = disk_image_sector_size(fdd->image);
+        memset(request->tx_data, 0xFF, request->tx_size);
+        return SIO_COMPLETE;
+
+    case SIO_COMMAND_FORMAT_WITH_SKEW:
+        // First 12 bytes contains percom configuration
+        // Next bytes contains sector numbers (we ignore them)
+        DiskGeometry geom = decode_percom_config(request->rx_data);
+        fdd->geometry = geom;
+        fdd->geometry_changed = true;
+
+        if(!disk_image_format(fdd->image, fdd->geometry)) {
+            return SIO_ERROR;
+        }
+
+        fdd->geometry_changed = false;
+
+        // Send a list of bad sectors terminated by 0xFFFF
+        request->tx_size = disk_image_sector_size(fdd->image);
+        memset(request->tx_data, 0xFF, request->tx_size);
         return SIO_COMPLETE;
 
     case SIO_COMMAND_GET_HSI:
-        request->tx_data[0] = SIO_HSI_38400;
+        request->tx_data[0] = fdd->config->speed_index;
         request->tx_size = 1;
         request->baudrate = 1780000 / 2 / (7 + request->tx_data[0]);
         return SIO_COMPLETE;

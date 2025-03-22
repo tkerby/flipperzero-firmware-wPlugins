@@ -27,10 +27,11 @@
 #define SECTION_APP "app"
 
 #define KEY_LED_BLINKING "ledBlinking"
+#define KEY_SPEED_MODE   "speedMode"
+#define KEY_SPEED_INDEX  "speedIndex"
 
 #define SECTION_FDD "fdd."
 
-#define KEY_FDD_TYPE   "fddType"
 #define KEY_DISK_IMAGE "diskImage"
 
 void app_config_init(AppConfig* config) {
@@ -38,8 +39,9 @@ void app_config_init(AppConfig* config) {
     memset(config, 0, sizeof(AppConfig));
 
     config->led_blinking = true;
+    config->speed_mode = SpeedMode_Standard;
+    config->speed_index = SpeedIndex_57600;
     for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
-        config->fdd[i].type = FddType_ATARI_1050;
         config->fdd[i].image = furi_string_alloc();
     }
 }
@@ -54,15 +56,73 @@ void app_config_free(AppConfig* config) {
     }
 }
 
-const char* fdd_type_name(FddType fdd_type) {
-    switch(fdd_type) {
-    case FddType_ATARI_1050:
-        return "A1050";
-    case FddType_ATARI_XF551:
-        return "XF551";
-    default:
-        return "Unknown";
+const AppConfigOption speed_mode_options[] = {
+    {SpeedMode_Standard, "standard", "Standard"},
+    {SpeedMode_USDoubler, "us-doubler", "US Dblr"},
+    // {SpeedMode_XF551, "xf-551", "XF551"},
+};
+
+const AppConfigOption* speed_mode_by_value(SpeedMode mode) {
+    for(size_t i = 0; i < ARRAY_SIZE(speed_mode_options); i++) {
+        if(speed_mode_options[i].value == mode) {
+            return &speed_mode_options[i];
+        }
     }
+    return NULL;
+}
+
+const AppConfigOption* speed_mode_by_id(Slice slice) {
+    for(size_t i = 0; i < ARRAY_SIZE(speed_mode_options); i++) {
+        if(slice_equals_cstr(slice, speed_mode_options[i].id)) {
+            return &speed_mode_options[i];
+        }
+    }
+    return NULL;
+}
+
+const AppConfigOption speed_index_options[] = {
+    {SpeedIndex_38400, "38400", "38.4K"},
+    {SpeedIndex_57600, "57600", "57.6K"},
+    // {SpeedIndex_61440, "61440", "61.4K"},
+    // {SpeedIndex_68266, "68266", "68.3K"},
+};
+
+const AppConfigOption* speed_index_by_value(SpeedIndex value) {
+    for(size_t i = 0; i < ARRAY_SIZE(speed_index_options); i++) {
+        if(speed_index_options[i].value == value) {
+            return &speed_index_options[i];
+        }
+    }
+    return NULL;
+}
+
+const AppConfigOption* speed_index_by_id(Slice slice) {
+    for(size_t i = 0; i < ARRAY_SIZE(speed_index_options); i++) {
+        if(slice_equals_cstr(slice, speed_index_options[i].id)) {
+            return &speed_index_options[i];
+        }
+    }
+    return NULL;
+}
+
+static bool slice_to_bool(Slice slice, bool* value) {
+    if(slice_equals_cstr(slice, "1")) {
+        *value = true;
+        return true;
+    } else if(slice_equals_cstr(slice, "0")) {
+        *value = false;
+        return true;
+    }
+    return false;
+}
+
+static bool slice_to_fdd_index(Slice text, uint32_t* index) {
+    return slice_parse_uint32(text, 0, index) && *index < FDD_EMULATOR_COUNT;
+}
+
+static bool slice_to_image_path(Slice slice, FuriString* path) {
+    furi_string_set_strn(path, slice.start, slice_len(slice));
+    return true;
 }
 
 #define ini_add_comment(s, comment)      furi_string_cat_printf(s, "# %s\n", comment)
@@ -77,11 +137,12 @@ static FuriString* app_config_build(const AppConfig* config) {
 
     ini_add_section(s, SECTION_APP);
     ini_add_keyval(s, KEY_LED_BLINKING, "%s", config->led_blinking ? "1" : "0");
+    ini_add_keyval(s, KEY_SPEED_MODE, "%s", speed_mode_by_value(config->speed_mode)->id);
+    ini_add_keyval(s, KEY_SPEED_INDEX, "%s", speed_index_by_value(config->speed_index)->id);
     ini_add_empty_line(s);
 
     for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
         ini_add_fdd_section(s, i);
-        ini_add_keyval(s, KEY_FDD_TYPE, "%s", fdd_type_name(config->fdd[i].type));
         ini_add_keyval(s, KEY_DISK_IMAGE, "%s", furi_string_get_cstr(config->fdd[i].image));
         ini_add_empty_line(s);
     }
@@ -94,53 +155,35 @@ static FuriString* app_config_build(const AppConfig* config) {
 
 #define section_starts_with(str) slice_starts_with_cstr(section, str)
 
-static void app_config_set(AppConfig* config, Slice section, Slice key, Slice value) {
+static bool app_config_set(AppConfig* config, Slice section, Slice key, Slice value) {
     if(section(SECTION_APP)) {
         if(key(KEY_LED_BLINKING)) {
-            uint32_t temp;
-            if(slice_parse_uint32(value, 0, &temp)) {
-                config->led_blinking = temp != 0;
-                FURI_LOG_I(TAG, "led_blinking=%d", config->led_blinking);
-            } else {
-                FURI_LOG_E(TAG, "Failed to parse 'led_blinking' value");
+            return slice_to_bool(value, &config->led_blinking);
+        } else if(key(KEY_SPEED_MODE)) {
+            const AppConfigOption* option = speed_mode_by_id(value);
+            if(option != NULL) {
+                config->speed_mode = option->value;
+                return true;
             }
-        } else {
-            FURI_LOG_E(TAG, "Unknown key");
+        } else if(key(KEY_SPEED_INDEX)) {
+            const AppConfigOption* option = speed_index_by_id(value);
+            if(option != NULL) {
+                config->speed_index = option->value;
+                return true;
+            }
         }
     } else if(section_starts_with(SECTION_FDD)) {
         section.start += strlen(SECTION_FDD);
         uint32_t fdd_idx;
-        if(!slice_parse_uint32(section, 0, &fdd_idx) || fdd_idx >= FDD_EMULATOR_COUNT) {
-            FURI_LOG_E(TAG, "Invalid 'fdd' index");
-            return;
+        if(!slice_to_fdd_index(section, &fdd_idx)) {
+            return false;
         }
 
-        if(key(KEY_FDD_TYPE)) {
-            bool found = false;
-            for(FddType i = 0; i < FddType_count; i++) {
-                if(slice_equals_cstr(value, fdd_type_name(i))) {
-                    config->fdd[fdd_idx].type = i;
-                    found = true;
-                    break;
-                }
-            }
-            if(found) {
-                FURI_LOG_I(
-                    TAG, "fdd[%lu].type=%s", fdd_idx, fdd_type_name(config->fdd[fdd_idx].type));
-            } else {
-                FURI_LOG_E(TAG, "Unknown fdd type");
-            }
-        } else if(key(KEY_DISK_IMAGE)) {
-            furi_string_set_strn(config->fdd[fdd_idx].image, value.start, slice_len(value));
-            FURI_LOG_I(
-                TAG,
-                "fdd[%lu].image=%s",
-                fdd_idx,
-                furi_string_get_cstr(config->fdd[fdd_idx].image));
-        } else {
-            FURI_LOG_E(TAG, "Unknown key");
+        if(key(KEY_DISK_IMAGE)) {
+            return slice_to_image_path(value, config->fdd[fdd_idx].image);
         }
     }
+    return false;
 }
 
 static void app_config_parse(AppConfig* config, Slice text) {
@@ -159,7 +202,17 @@ static void app_config_parse(AppConfig* config, Slice text) {
             if(tok_skip_char(&line, '=')) {
                 value = slice_trim(line);
             }
-            app_config_set(config, section, key, value);
+            if(!app_config_set(config, section, key, value)) {
+                FURI_LOG_E(
+                    TAG,
+                    "Failed to parse %.*s.%.*s = %.*s",
+                    slice_len(section),
+                    slice_start(section),
+                    slice_len(key),
+                    slice_start(key),
+                    slice_len(value),
+                    slice_start(value));
+            }
         }
         tok_skip_eol(&text);
     }
@@ -202,19 +255,21 @@ void app_config_load(AppConfig* config, Storage* storage) {
 
     if(storage_file_open(file, CONFIG_FILE_NAME, FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t buff_size = storage_file_size(file);
-        char* buff = malloc(buff_size);
+        if(buff_size > 0) {
+            char* buff = malloc(buff_size);
 
-        if(storage_file_read(file, buff, buff_size) == buff_size) {
-            Slice text = {buff, buff + buff_size};
-            FURI_LOG_I(TAG, "Parsing configuration...");
-            app_config_parse(config, text);
+            if(storage_file_read(file, buff, buff_size) == buff_size) {
+                Slice text = {buff, buff + buff_size};
+                FURI_LOG_I(TAG, "Parsing configuration...");
+                app_config_parse(config, text);
+            } else {
+                FURI_LOG_E(TAG, "Failed to read config file %s", CONFIG_FILE_NAME);
+            }
+
+            free(buff);
         } else {
-            FURI_LOG_E(TAG, "Failed to read config file %s", CONFIG_FILE_NAME);
+            FURI_LOG_E(TAG, "Failed to open config file %s", CONFIG_FILE_NAME);
         }
-
-        free(buff);
-    } else {
-        FURI_LOG_E(TAG, "Failed to open config file %s", CONFIG_FILE_NAME);
     }
 
     storage_file_close(file);

@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -37,6 +39,10 @@ static inline Slice slice_empty(void) {
 // Returns `true` if the slice is empty
 static inline bool slice_is_empty(Slice slice) {
     return slice.start >= slice.end;
+}
+
+static inline const char* slice_start(Slice slice) {
+    return slice.start;
 }
 
 // Returns the length of the slice
