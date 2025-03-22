@@ -35,20 +35,34 @@ static void game_start(GameManager *game_manager, void *ctx)
     for (int i = 0; i < MAX_NPCS; i++)
         game_context->npcs[i] = NULL;
 
-    // attempt to allocate all levels
-    for (int i = 0; i < MAX_LEVELS; i++)
+    if (game_context->game_mode == GAME_MODE_PVE)
     {
-        if (!allocate_level(game_manager, i))
+        // attempt to allocate all levels
+        for (int i = 0; i < MAX_LEVELS; i++)
         {
-            if (i == 0)
+            if (!allocate_level(game_manager, i))
             {
-                game_context->levels[0] = game_manager_add_level(game_manager, training_world());
-                game_context->level_count = 1;
+                if (i == 0)
+                {
+                    game_context->levels[0] = game_manager_add_level(game_manager, training_world());
+                    game_context->level_count = 1;
+                }
+                break;
             }
-            break;
+            else
+                game_context->level_count++;
         }
-        else
-            game_context->level_count++;
+    }
+    else if (game_context->game_mode == GAME_MODE_STORY)
+    {
+        // show tutorial only for now
+        game_context->levels[0] = game_manager_add_level(game_manager, training_world());
+        game_context->level_count = 1;
+    }
+    else if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        // show pvp menu
+        easy_flipper_dialog("Unavailable", "\nPvP mode is not ready yet.\nPress BACK to return.");
     }
 
     // imu

@@ -182,16 +182,11 @@ static void level_start(Level *level, GameManager *manager, void *context)
         // furi_delay_ms(1000);
         game_context->is_switching_level = false;
     }
-    /*
-       adjust the player's position n such based on icon count
-       the more icons to draw, the slower the player moves
-       so we'll increase the player's speed as the icon count increases
-       by 0.1 for every 8 icons
-   */
+
     game_context->icon_offset = 0;
     if (!game_context->imu_present)
     {
-        game_context->icon_offset += ((game_context->icon_count / 8) / 10);
+        game_context->icon_offset += ((game_context->icon_count / 10) / 15);
     }
     player_spawn(level, manager);
 }

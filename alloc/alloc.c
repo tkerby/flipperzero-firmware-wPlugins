@@ -60,7 +60,7 @@ FlipWorldApp *flip_world_app_alloc()
     submenu_add_item(app->submenu, "About", FlipWorldSubmenuIndexMessage, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "Settings", FlipWorldSubmenuIndexSettings, callback_submenu_choices, app);
     //
-    submenu_add_item(app->submenu_game, "Story", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
+    submenu_add_item(app->submenu_game, "Tutorial", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
     submenu_add_item(app->submenu_game, "PvP", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
     submenu_add_item(app->submenu_game, "PvE", FlipWorldSubmenuIndexPvE, callback_submenu_choices, app);
 
