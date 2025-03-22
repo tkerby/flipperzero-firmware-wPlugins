@@ -8,7 +8,7 @@ The app has been tested with the PAL version of the Atari 800XL. It appears to b
 
 - Device status command (0x53)
 - Sector read and write commands (0x52, 0x57, 0x53)
-- Disk formatting commands (0x21, 0x22)
+- Disk formatting commands (0x21, 0x22, 0x66)
 - Commands for reading and writing PERCOM configuration (0x4E, 0x4F)
 - US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
 - Support for 90K, 130K, 180K, 360K, and 720K ATR disk images

@@ -48,6 +48,7 @@ typedef enum {
     SIO_COMMAND_GET_HSI = 0x3F, // Get high-speed index
     SIO_COMMAND_READ_PERCOM = 0x4E, // Read PERCOM configuration
     SIO_COMMAND_WRITE_PERCOM = 0x4F, // Write PERCOM configuration
+    SIO_COMMAND_FORMAT_WITH_SKEW = 0x66, // Format disk with skew
 } SIOCommand;
 
 // SIO request structure passed to the device driver
