@@ -238,17 +238,19 @@ void app_config_load(AppConfig* config, Storage* storage) {
 
     if(storage_file_open(file, CONFIG_FILE_NAME, FSAM_READ, FSOM_OPEN_EXISTING)) {
         size_t buff_size = storage_file_size(file);
-        char* buff = malloc(buff_size);
+        if(buff_size > 0) {
+            char* buff = malloc(buff_size);
 
-        if(storage_file_read(file, buff, buff_size) == buff_size) {
-            Slice text = {buff, buff + buff_size};
-            FURI_LOG_I(TAG, "Parsing configuration...");
-            app_config_parse(config, text);
-        } else {
-            FURI_LOG_E(TAG, "Failed to read config file");
+            if(storage_file_read(file, buff, buff_size) == buff_size) {
+                Slice text = {buff, buff + buff_size};
+                FURI_LOG_I(TAG, "Parsing configuration...");
+                app_config_parse(config, text);
+            } else {
+                FURI_LOG_E(TAG, "Failed to read config file");
+            }
+
+            free(buff);
         }
-
-        free(buff);
     } else {
         FURI_LOG_E(TAG, "Failed to open config file");
     }
