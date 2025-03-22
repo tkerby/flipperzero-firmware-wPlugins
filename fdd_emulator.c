@@ -23,14 +23,6 @@
 #include "fdd_emulator.h"
 #include "disk_image.h"
 
-#define SIO_HSI_19200 40
-#define SIO_HSI_38400 16
-#define SIO_HSI_41890 14
-#define SIO_HSI_57600 8
-#define SIO_HSI_61440 7
-#define SIO_HSI_68266 6
-#define SIO_HSI_73728 5
-
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
 
@@ -162,7 +154,11 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         return SIO_ACK;
 
     case SIO_COMMAND_GET_HSI:
-        return SIO_ACK;
+        if(fdd->config->speed_mode == SpeedMode_USDoubler) {
+            return SIO_ACK;
+        } else {
+            return SIO_NAK;
+        }
 
     case SIO_COMMAND_FORMAT:
         return SIO_ACK;
@@ -323,7 +319,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
 
     case SIO_COMMAND_GET_HSI:
-        request->tx_data[0] = SIO_HSI_38400;
+        request->tx_data[0] = fdd->config->speed_index;
         request->tx_size = 1;
         request->baudrate = 1780000 / 2 / (7 + request->tx_data[0]);
         return SIO_COMPLETE;

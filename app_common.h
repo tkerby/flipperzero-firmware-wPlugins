@@ -22,6 +22,8 @@
 
 #define TAG "sio2flip"
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+
 // Number of emulated FDD peripherals
 #define FDD_EMULATOR_COUNT 4
 

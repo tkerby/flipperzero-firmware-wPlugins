@@ -18,26 +18,63 @@
 
 #pragma once
 
+#include "slice.h"
+
 #include <storage/storage.h>
 
-// Supported FDD drives
-typedef enum {
-    FddType_ATARI_1050,
-    FddType_ATARI_XF551,
-    FddType_count,
-} FddType;
+typedef struct {
+    // Enum value
+    uint32_t value;
+    // Identifier in the configuration file
+    const char* id;
+    // Text representation
+    const char* text;
+} AppConfigOption;
 
-// Returns the name of the FDD drive
-const char* fdd_type_name(FddType fdd_type);
+typedef enum {
+    SpeedIndex_19200 = 40,
+    SpeedIndex_38400 = 16,
+    SpeedIndex_57600 = 8,
+    SpeedIndex_61440 = 7,
+    SpeedIndex_68266 = 6,
+    SpeedIndex_73728 = 5,
+} SpeedIndex;
+
+// All possible high-speed indexes
+extern const AppConfigOption speed_index_options[2];
+
+// Finds the high-speed index option by its value
+const AppConfigOption* speed_index_by_value(SpeedIndex value);
+
+// Finds the high-speed index option by its identifier
+const AppConfigOption* speed_index_by_id(Slice slice);
+
+typedef enum {
+    SpeedMode_Standard,
+    SpeedMode_USDoubler,
+    // SIOSpeedMode_XF551,
+} SpeedMode;
+
+// All possible speed modes
+extern const AppConfigOption speed_mode_options[2];
+
+// Finds the speed mode option by its value
+const AppConfigOption* speed_mode_by_value(SpeedMode value);
+
+// Finds the speed mode option by its identifier
+const AppConfigOption* speed_mode_by_id(Slice slice);
 
 // Application configuration
 typedef struct {
     // Indicate an activity  by blinking the LED
     bool led_blinking;
 
+    // Speed mode
+    SpeedMode speed_mode;
+    // Speed index (used if speed mode is not standard)
+    uint8_t speed_index;
+
     struct {
-        // Type of FDD drive
-        FddType type;
         // Disk image file name
         // (empty string means no disk inserted)
         FuriString* image;

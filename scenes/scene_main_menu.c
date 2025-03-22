@@ -22,6 +22,8 @@
 typedef enum {
     MenuIndex_Start,
     MenuIndex_LedBlinking,
+    MenuIndex_SioSpeedMode,
+    MenuIndex_SioBaudrate,
     MenuIndex_WiringInfo,
 } MenuIndex;
 
@@ -31,6 +33,22 @@ static void on_led_blinking_changed(VariableItem* item) {
 
     App* app = (App*)variable_item_get_context(item);
     app->config.led_blinking = index ? true : false;
+}
+
+static void on_speed_mode_changed(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, speed_mode_options[index].text);
+
+    App* app = (App*)variable_item_get_context(item);
+    app->config.speed_mode = speed_mode_options[index].value;
+}
+
+static void on_baudrate_changed(VariableItem* item) {
+    uint8_t index = variable_item_get_current_value_index(item);
+    variable_item_set_current_value_text(item, speed_index_options[index].text);
+
+    App* app = (App*)variable_item_get_context(item);
+    app->config.speed_index = speed_index_options[index].value;
 }
 
 static void scene_main_menu_enter_callback(void* context, uint32_t index) {
@@ -56,6 +74,18 @@ void scene_main_menu_init(App* app) {
     item = variable_item_list_add(list, "LED blinking", 2, on_led_blinking_changed, app);
     variable_item_set_current_value_index(item, app->config.led_blinking ? 1 : 0);
     on_led_blinking_changed(item);
+
+    item = variable_item_list_add(
+        list, "Speed mode", ARRAY_SIZE(speed_mode_options), on_speed_mode_changed, app);
+    variable_item_set_current_value_index(
+        item, speed_mode_by_value(app->config.speed_mode) - speed_mode_options);
+    on_speed_mode_changed(item);
+
+    item = variable_item_list_add(
+        list, "High speed", ARRAY_SIZE(speed_index_options), on_baudrate_changed, app);
+    variable_item_set_current_value_index(
+        item, speed_index_by_value(app->config.speed_index) - speed_index_options);
+    on_baudrate_changed(item);
 
     item = variable_item_list_add(list, "Wiring info", 0, NULL, app);
 
