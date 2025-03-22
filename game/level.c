@@ -186,7 +186,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     game_context->icon_offset = 0;
     if (!game_context->imu_present)
     {
-        game_context->icon_offset += ((game_context->icon_count / 10) / 25);
+        game_context->icon_offset += ((game_context->icon_count / 10) / 15);
     }
     player_spawn(level, manager);
 }

@@ -95,6 +95,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         return;
 
     EntityContext *enemy_context = (EntityContext *)context;
+    GameContext *game_context = game_manager_game_context_get(manager);
 
     // Get the position of the enemy
     Vector pos = entity_pos_get(self);
@@ -118,17 +119,22 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         current_sprite = enemy_context->sprite_right;
     }
 
-    // Draw enemy sprite relative to camera, centered on the enemy's position
-    canvas_draw_sprite(
-        canvas,
-        current_sprite,
-        pos.x - camera_x - (enemy_context->size.x / 2),
-        pos.y - camera_y - (enemy_context->size.y / 2));
+    // no enemies in story mode for now
+    if (game_context->game_mode != GAME_MODE_STORY || (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4))
+    {
 
-    // draw health of enemy
-    char health_str[32];
-    snprintf(health_str, sizeof(health_str), "%.0f", (double)enemy_context->health);
-    draw_username(canvas, pos, health_str);
+        // Draw enemy sprite relative to camera, centered on the enemy's position
+        canvas_draw_sprite(
+            canvas,
+            current_sprite,
+            pos.x - camera_x - (enemy_context->size.x / 2),
+            pos.y - camera_y - (enemy_context->size.y / 2));
+
+        // draw health of enemy
+        char health_str[32];
+        snprintf(health_str, sizeof(health_str), "%.0f", (double)enemy_context->health);
+        draw_username(canvas, pos, health_str);
+    }
 }
 
 static void atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
@@ -204,6 +210,11 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     furi_check(enemy_context, "Enemy collision: EntityContext is NULL");
     GameContext *game_context = game_manager_game_context_get(manager);
     furi_check(game_context, "Enemy collision: GameContext is NULL");
+    if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step != 4)
+    {
+        // FURI_LOG_I("Game", "Enemy collision: No enemies in story mode");
+        return;
+    }
     // Check if the enemy collided with the player
     if (entity_description_get(other) == &player_desc)
     {
@@ -237,6 +248,11 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
         if (player_is_facing_enemy && game_context->last_button == GameKeyOk && !enemy_is_facing_player)
         {
+            if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4)
+            {
+                // FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
+                game_context->tutorial_step++;
+            }
             // Reset last button
             game_context->last_button = -1;
 

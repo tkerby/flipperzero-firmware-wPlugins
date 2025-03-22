@@ -86,6 +86,7 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
         return;
 
     EntityContext *npc_context = (EntityContext *)context;
+    GameContext *game_context = game_manager_game_context_get(manager);
 
     // Get the position of the NPC
     Vector pos = entity_pos_get(self);
@@ -107,13 +108,16 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
     {
         current_sprite = npc_context->sprite_right;
     }
-
-    // Draw NPC sprite relative to camera, centered on the NPC's position
-    canvas_draw_sprite(
-        canvas,
-        current_sprite,
-        pos.x - camera_x - (npc_context->size.x / 2),
-        pos.y - camera_y - (npc_context->size.y / 2));
+    // no NPCs in story mode for now
+    if (game_context->game_mode != GAME_MODE_STORY)
+    {
+        // Draw NPC sprite relative to camera, centered on the NPC's position
+        canvas_draw_sprite(
+            canvas,
+            current_sprite,
+            pos.x - camera_x - (npc_context->size.x / 2),
+            pos.y - camera_y - (npc_context->size.y / 2));
+    }
 }
 
 // NPC collision function

@@ -1,3 +1,8 @@
+## 0.7 (2025-03-21)
+- Sped up player movement.
+- Added a Tutorial mode.
+- Fixed transition of worlds.
+
 ## 0.6.1 (2025-03-15)
 - Switched the server backend to prepare for multiplayer in version 0.8.
 
