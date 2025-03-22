@@ -47,6 +47,7 @@ private:
     SubGhzModule* subghz;
     bool receiveMode = false;
     bool updateUserCategory = true;
+    int scanForMoreButtonIndex = -1;
 
 public:
     ScanStationsScreen(AppConfig* config) : ScanStationsScreen(config, true, NotSelected, NULL) {
@@ -74,8 +75,8 @@ public:
         menuView->SetLeftButton("Conf", HANDLER_1ARG(&ScanStationsScreen::showConfig));
 
         subghz = new SubGhzModule(config->Frequency);
+        subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
         if(receiveNew) {
-            subghz->SetReceiveHandler(HANDLER_1ARG(&ScanStationsScreen::receive));
             subghz->SetReceiveAfterTransmission(true);
             subghz->ReceiveAsync();
         }
@@ -120,6 +121,11 @@ public:
 
         if(!receiveNew) {
             pagerReceiver->LoadStationsFromDirectory(categoryType, category, HANDLER_1ARG(&ScanStationsScreen::pagerAdded));
+
+            if(categoryType == User && menuView->GetElementsCount() > 0) {
+                scanForMoreButtonIndex = menuView->GetElementsCount();
+                menuView->AddElement();
+            }
         }
 
         receiveMode = receiveNew;
@@ -147,7 +153,11 @@ private:
                     menuView->SetRightButton("Edit", HANDLER_1ARG(&ScanStationsScreen::editPagerMessage));
                 }
 
-                menuView->AddElement();
+                if(!receiveMode || scanForMoreButtonIndex == -1) {
+                    menuView->AddElement();
+                } else {
+                    scanForMoreButtonIndex = -1;
+                }
             }
 
             if(menuView->IsOnTop()) {
@@ -162,6 +172,17 @@ private:
         StoredPagerData* pagerData = pagerReceiver->PagerGetter(index)();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];
         String* name = pagerReceiver->GetName(pagerData);
+
+        if(index == scanForMoreButtonIndex) {
+            if(column == 0) {
+                if(!receiveMode) {
+                    str->format("> Scan here for more");
+                } else {
+                    str->format("Scanning...");
+                }
+            }
+            return;
+        }
 
         switch(column) {
         case 0: // station name
@@ -221,6 +242,16 @@ private:
     }
 
     void showActions(uint32_t index) {
+        if((int)index == scanForMoreButtonIndex) {
+            if(!receiveMode) {
+                subghz->SetReceiveAfterTransmission(true);
+                subghz->ReceiveAsync();
+
+                receiveMode = true;
+            }
+            return;
+        }
+
         PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
         StoredPagerData* pagerData = getPager();
         PagerDecoder* decoder = pagerReceiver->decoders[pagerData->decoder];

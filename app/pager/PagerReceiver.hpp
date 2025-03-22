@@ -222,6 +222,8 @@ public:
         if(!knownStationsLoaded) {
             knownStationsSize = count;
         }
+
+        nextPagerIndex = count;
         knownStationsLoaded = true;
     }
 
