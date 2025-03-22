@@ -296,8 +296,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
-        memset(request->tx_data, 0xFF, request->tx_size);
         request->tx_size = disk_image_sector_size(fdd->image);
+        memset(request->tx_data, 0xFF, request->tx_size);
         return SIO_COMPLETE;
 
     case SIO_COMMAND_FORMAT_MEDIUM:
@@ -314,6 +314,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         fdd->geometry_changed = false;
 
         // Send a list of bad sectors terminated by 0xFFFF
+        request->tx_size = disk_image_sector_size(fdd->image);
         memset(request->tx_data, 0xFF, request->tx_size);
         request->tx_size = disk_image_sector_size(fdd->image);
         return SIO_COMPLETE;
