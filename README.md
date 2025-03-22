@@ -1,6 +1,19 @@
 # Atari SIO Peripheral Emulator for Flipper Zero
 
-sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, and currently, only limited support for Floppy Disk Drives is implemented. However, it appears to be quite functional, allowing booting from various types of ATR image files.
+sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, and currently offers limited support for floppy disk drives.
+
+## What's tested
+
+The app has been tested with the PAL version of the Atari 800XL. It appears to be quite functional, allowing the system to boot from various ATR image files. The following features have already been implemented:
+
+- Device status command (0x53)
+- Sector read and write commands (0x52, 0x57, 0x53)
+- Disk formatting commands (0x21, 0x22)
+- Commands for reading and writing PERCOM configuration (0x4E, 0x4F)
+- US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
+- Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
+- 128- or 256-byte sectors are supported
+- Up to four floppy disk drives can be emulated.
 
 ## Wiring
 
@@ -17,14 +30,16 @@ Note: All signals on the Atari SIO use 5V TTL logic. Flipper Zero’s I/Os are 5
 
 ## Instructions for Use
 
-The emulator accepts disk images in ATR format, which must be copied to the SD card to `/apps_data/sio2flip/atr/`. It supports SD, ED, and DD disk images with 128- or 256-byte sectors, as well as single- and double-sided disks. Up to four floppy disk drives can be emulated.
+The emulator accepts disk images in ATR format, which must be copied to the SD card to `/apps_data/sio2flip/atr/`.
 
 ## TODO
 
 I have some plans, but I’m not sure if or when I’ll be able to complete them all.
 
 - Add a “New Disk Image” menu command
-- Better support for PERCOM configuration
-- Support higher baud rates
+- Verify that PERCOM configuration is correct
 - Add CAS file emulation
 - Implement an XEX file loader
+- Support XF551 high-speed mode in addition to US Doubler
+- Investigate issue with US Doubler when swapping baudrates
+- Improve error signaling to host via FDD status byte
