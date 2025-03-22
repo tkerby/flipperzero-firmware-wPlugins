@@ -23,11 +23,7 @@ void mizip_balance_editor_scene_main_menu_on_enter(void* context) {
         mizip_balance_editor_app_submenu_callback,
         app);
     submenu_add_item(
-        app->submenu,
-        "About",
-        SubmenuIndexEditMiZipFile,
-        mizip_balance_editor_app_submenu_callback,
-        app);
+        app->submenu, "About", SubmenuIndexAbout, mizip_balance_editor_app_submenu_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
 }
@@ -45,7 +41,7 @@ bool mizip_balance_editor_scene_main_menu_on_event(void* context, SceneManagerEv
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdFileSelect);
             break;
         case SubmenuIndexAbout:
-            //TODO
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdAbout);
             break;
         }
     } else if(event.type == SceneManagerEventTypeBack) {

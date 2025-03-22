@@ -4,15 +4,12 @@
 
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
+#include <gui/modules/submenu.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/number_input.h>
+#include <gui/modules/text_box.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
-
-#include <storage/storage.h>
-
-#include <gui/modules/widget.h>
-#include <gui/modules/submenu.h>
 
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
@@ -32,6 +29,7 @@ typedef enum {
     MiZipBalanceEditorViewIdFileSelect,
     MiZipBalanceEditorViewIdNumberInput,
     MiZipBalanceEditorViewIdShowResult,
+    MiZipBalanceEditorViewIdAbout,
 } MiZipBalanceEditorViewId;
 
 // Enumeration of submenu items.
@@ -48,11 +46,10 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
 
     Submenu* submenu;
+    DialogsApp* dialogs;
     DialogEx* dialog_ex;
     NumberInput* number_input;
-
-    Storage* storage;
-    DialogsApp* dialogs;
+    TextBox* text_box;
 
     MfClassicData* mf_classic_data;
 

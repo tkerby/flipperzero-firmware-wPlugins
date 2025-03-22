@@ -36,9 +36,8 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     MiZipBalanceEditorApp* app = malloc(sizeof(MiZipBalanceEditorApp));
     app->gui = furi_record_open(RECORD_GUI);
 
-    // Create the ViewDispatcher instance.
+    // Create the ViewDispatcher and SceneManager instance
     app->view_dispatcher = view_dispatcher_alloc();
-
     app->scene_manager = scene_manager_alloc(&mizip_balance_editor_scene_handlers, app);
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
@@ -46,26 +45,34 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, mizip_balance_editor_app_back_event_callback);
 
+    //Create the SubMenu for main menu
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu, submenu_get_view(app->submenu));
 
+    //Initialize Dialogs for file browser
+    app->dialogs = furi_record_open(RECORD_DIALOGS);
+
+    //Create the DialogEx for editing view
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         MiZipBalanceEditorViewIdShowResult,
         dialog_ex_get_view(app->dialog_ex));
 
+    //Create the NumberInput for custom value balance
     app->number_input = number_input_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         MiZipBalanceEditorViewIdNumberInput,
         number_input_get_view(app->number_input));
 
-    app->storage = furi_record_open(RECORD_STORAGE);
+    //Create the TextBox for about scene
+    app->text_box = text_box_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MiZipBalanceEditorViewIdAbout, text_box_get_view(app->text_box));
 
-    app->dialogs = furi_record_open(RECORD_DIALOGS);
-
+    //Initiate data for MfClassic data store
     app->mf_classic_data = mf_classic_alloc();
     app->filePath = furi_string_alloc();
     app->is_valid_mizip_data = false;
@@ -91,17 +98,14 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdNumberInput);
     number_input_free(app->number_input);
 
-    // Now it is safe to delete the ViewDispatcher instance.
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdAbout);
+    text_box_free(app->text_box);
+
     scene_manager_free(app->scene_manager);
     view_dispatcher_free(app->view_dispatcher);
 
     furi_record_close(RECORD_GUI);
     app->gui = NULL;
-    // Delete the views
-    // End access to hte the GUI API.
-
-    furi_record_close(RECORD_STORAGE);
-    app->storage = NULL;
 
     furi_record_close(RECORD_DIALOGS);
     app->dialogs = NULL;
