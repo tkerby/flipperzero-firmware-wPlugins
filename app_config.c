@@ -59,7 +59,7 @@ void app_config_free(AppConfig* config) {
 const AppConfigOption speed_mode_options[] = {
     {SpeedMode_Standard, "standard", "Standard"},
     {SpeedMode_USDoubler, "us-doubler", "US Dblr"},
-    // {SpeedMode_XF551, "xf-551", "XF551"},
+    {SpeedMode_XF551, "xf-551", "XF551"},
 };
 
 const AppConfigOption* speed_mode_by_value(SpeedMode mode) {

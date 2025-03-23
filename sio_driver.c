@@ -278,6 +278,7 @@ static int32_t sio_driver_rx_worker(void* context) {
                         sio->alt_baudrate = SIO_DEFAULT_BAUDRATE;
                         sio->req_baudrate = SIO_DEFAULT_BAUDRATE;
                         sio_set_baudrate(sio, sio->request.baudrate);
+                        sio->request.baudrate = SIO_DEFAULT_BAUDRATE;
                     }
 
                     if(sio->rx_expected == 0) {
