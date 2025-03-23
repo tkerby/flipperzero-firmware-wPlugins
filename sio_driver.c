@@ -51,7 +51,7 @@ typedef struct {
 } SIOHandler;
 
 struct SIODriver {
-    size_t command_phase;
+    bool command_phase;
     size_t rx_count;
     size_t rx_expected;
 
@@ -99,58 +99,6 @@ static void sio_swap_baudrate(SIODriver* sio) {
         sio->req_baudrate = sio->alt_baudrate;
     } else {
         sio->req_baudrate = SIO_DEFAULT_BAUDRATE;
-    }
-}
-
-void sio_driver_rx_callback(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {
-    SIODriver* sio = (SIODriver*)context;
-
-    if(event & FuriHalSerialRxEventData) {
-        while(furi_hal_serial_async_rx_available(handle)) {
-            bool command_low = !furi_hal_gpio_read(GPIO_EXT_COMMAND);
-
-            uint8_t rx_byte = furi_hal_serial_async_rx(handle);
-
-            if(command_low && !sio->command_phase) {
-                // Start of command
-                sio->command_phase = true;
-                sio->rx_count = 0;
-                sio->rx_expected = 4; // Device, Command, Aux1, Aux2
-            } else if(!command_low && sio->command_phase) {
-                // Command pin was deasserted prematurely
-                sio->command_phase = false;
-                sio->rx_count = 0;
-                sio->rx_expected = 0;
-            }
-
-            if(sio->rx_count < sio->rx_expected) {
-                // Store received byte
-                sio->request.rx_data[sio->rx_count++] = rx_byte;
-            } else if(sio->rx_expected > 0 && sio->rx_count == sio->rx_expected) {
-                // Checksum received
-                sio->rx_expected = 0;
-
-                if(rx_byte == calc_chksum(sio->request.rx_data, sio->rx_count)) {
-                    // Checksum OK
-
-                    if(sio->command_phase) {
-                        sio->request.rx_size = 0;
-                        sio->request.tx_size = 0;
-                        sio->request.device = sio->request.rx_data[0];
-                        sio->request.command = sio->request.rx_data[1];
-                        sio->request.aux1 = sio->request.rx_data[2];
-                        sio->request.aux2 = sio->request.rx_data[3];
-                    } else {
-                        sio->request.rx_size = sio->rx_count;
-                    }
-                    furi_thread_flags_set(furi_thread_get_id(sio->rx_thread), WORKER_EVT_RECEIVE);
-
-                } else {
-                    // Checksum error
-                    furi_thread_flags_set(furi_thread_get_id(sio->rx_thread), WORKER_EVT_ERROR);
-                }
-            }
-        }
     }
 }
 
@@ -202,13 +150,64 @@ static SIOStatus sio_invoke_data_callback(SIODriver* sio, SIORequest* request) {
     return SIO_NORESP;
 }
 
-static void sio_driver_command_fall_callback(void* context) {
+static void sio_driver_command_pin_callback(void* context) {
     SIODriver* sio = (SIODriver*)context;
 
-    UNUSED(sio);
+    bool command_low = !furi_hal_gpio_read(GPIO_EXT_COMMAND);
 
-    if(sio->baudrate != sio->req_baudrate) {
-        sio_set_baudrate(sio, sio->req_baudrate);
+    if(command_low) {
+        if(!sio->command_phase) {
+            // Start of command
+            sio->command_phase = true;
+            sio->rx_count = 0;
+            sio->rx_expected = 4; // Device, Command, Aux1, Aux2
+        } else {
+            // Command pin went log again during command phase
+            furi_thread_flags_set(furi_thread_get_id(sio->rx_thread), WORKER_EVT_ERROR);
+        }
+
+        if(sio->baudrate != sio->req_baudrate) {
+            // Restore the requested baudrate
+            sio_set_baudrate(sio, sio->req_baudrate);
+        }
+    }
+}
+
+void sio_driver_rx_callback(FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context) {
+    SIODriver* sio = (SIODriver*)context;
+
+    if(event & FuriHalSerialRxEventData) {
+        while(furi_hal_serial_async_rx_available(handle)) {
+            uint8_t rx_byte = furi_hal_serial_async_rx(handle);
+
+            if(sio->rx_count < sio->rx_expected) {
+                // Store received byte
+                sio->request.rx_data[sio->rx_count++] = rx_byte;
+            } else if(sio->rx_expected > 0 && sio->rx_count == sio->rx_expected) {
+                // Checksum received
+                sio->rx_expected = 0;
+
+                if(rx_byte == calc_chksum(sio->request.rx_data, sio->rx_count)) {
+                    // Checksum OK
+
+                    if(sio->command_phase) {
+                        sio->request.rx_size = 0;
+                        sio->request.tx_size = 0;
+                        sio->request.device = sio->request.rx_data[0];
+                        sio->request.command = sio->request.rx_data[1];
+                        sio->request.aux1 = sio->request.rx_data[2];
+                        sio->request.aux2 = sio->request.rx_data[3];
+                    } else {
+                        sio->request.rx_size = sio->rx_count;
+                    }
+                    furi_thread_flags_set(furi_thread_get_id(sio->rx_thread), WORKER_EVT_RECEIVE);
+
+                } else {
+                    // Checksum error
+                    furi_thread_flags_set(furi_thread_get_id(sio->rx_thread), WORKER_EVT_ERROR);
+                }
+            }
+        }
     }
 }
 
@@ -225,7 +224,7 @@ static int32_t sio_driver_rx_worker(void* context) {
         } else if(events & WORKER_EVT_ERROR) {
             FURI_LOG_E(
                 TAG,
-                "SIO: frame checksum error (%d bytes received - %02X %02X %02X %02X...)",
+                "SIO: frame error (%d bytes received - %02X %02X %02X %02X...)",
                 sio->rx_count,
                 sio->request.rx_data[0],
                 sio->request.rx_data[1],
@@ -293,6 +292,7 @@ static int32_t sio_driver_rx_worker(void* context) {
                             // (US Doubler high-speed mode)
                             sio->alt_baudrate = sio->request.baudrate;
                             sio->req_baudrate = sio->request.baudrate;
+                            FURI_LOG_D(TAG, "SIO: baudrate changed to %ld", sio->req_baudrate);
                         }
                     }
                 }
@@ -316,7 +316,7 @@ SIODriver* sio_driver_alloc() {
     memset(sio, 0, sizeof(SIODriver));
 
     furi_hal_gpio_init(GPIO_EXT_COMMAND, GpioModeInput, GpioPullNo, GpioSpeedLow);
-    furi_hal_gpio_init(GPIO_EXT_COMMAND, GpioModeInterruptFall, GpioPullNo, GpioSpeedLow);
+    furi_hal_gpio_init(GPIO_EXT_COMMAND, GpioModeInterruptRiseFall, GpioPullNo, GpioSpeedLow);
     furi_hal_gpio_init(GPIO_EXT_MOTORCTL, GpioModeInput, GpioPullNo, GpioSpeedLow);
 
     sio->baudrate = SIO_DEFAULT_BAUDRATE;
@@ -346,7 +346,7 @@ SIODriver* sio_driver_alloc() {
 
     furi_hal_serial_async_rx_start(sio->uart, sio_driver_rx_callback, sio, true);
 
-    furi_hal_gpio_add_int_callback(GPIO_EXT_COMMAND, sio_driver_command_fall_callback, sio);
+    furi_hal_gpio_add_int_callback(GPIO_EXT_COMMAND, sio_driver_command_pin_callback, sio);
 
     FURI_LOG_I(TAG, "SIO driver initialized");
 

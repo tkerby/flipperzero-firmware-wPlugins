@@ -41,5 +41,4 @@ I have some plans, but I’m not sure if or when I’ll be able to complete them
 - Add CAS file emulation
 - Implement an XEX file loader
 - Support XF551 high-speed mode in addition to US Doubler
-- Investigate issue with US Doubler when swapping baudrates
 - Improve error signaling to host via FDD status byte
