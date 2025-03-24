@@ -24,6 +24,9 @@ Numbers: Toggle whether or not numbers are displayed when characters are randoml
 Symbols: Toggle whether or not symbols are displayed when characters are randomly chosen. 
     (default NO)
 
+Inverted Mode: Toggle whether or not the app makes the text and menu content white and the background black (makes everything inverted!)
+    (default NO)
+
 Max Speed: The fastest possible matrix rain can go. 
     (1-20, default 3)
 

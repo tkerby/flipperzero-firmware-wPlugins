@@ -5,6 +5,7 @@
 #include <gui/elements.h>
 #include <string.h>
 
+
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define CHAR_WIDTH 6
@@ -34,6 +35,7 @@ typedef struct {
     bool use_lowercase;
     bool use_numbers;
     bool use_symbols;
+    bool inverted_mode;
     IntSetting max_speed;
     IntSetting min_speed;
     IntSetting spawn_rate;
@@ -72,7 +74,8 @@ static void init_settings(Settings* settings) {
     settings->use_lowercase = false;
     settings->use_numbers = false;
     settings->use_symbols = false;
-    
+    settings->inverted_mode = false;
+
     settings->max_speed = (IntSetting){.value = 3, .min = 1, .max = 20, .label = "Max Fall Speed"};
     settings->min_speed = (IntSetting){.value = 1, .min = 1, .max = 20, .label = "Min Fall Speed"};
     settings->spawn_rate = (IntSetting){.value = 5, .min = 1, .max = 10, .label = "Spawn Rate"};
@@ -154,7 +157,7 @@ static void render_main_menu(Canvas* canvas, MatrixApp* app) {
     };
     int num_items = sizeof(menu_items) / sizeof(menu_items[0]);
     
-    canvas_draw_str(canvas, 2, 10, "fmatrix v0.3");
+    canvas_draw_str(canvas, 2, 10, "fmatrix v0.3.5");
     
     for(int i = 0; i < num_items; i++) {
         if (i == app->selected_menu_item) {
@@ -170,7 +173,7 @@ static void render_options_menu(Canvas* canvas, MatrixApp* app) {
     Settings* settings = &app->matrix_ctx.settings;
     
     const int visible_start = app->menu_scroll_position;
-    const int total_items = 9;  // Total number of options
+    const int total_items = 10;  // Total number of options
     
     // Draw scroll indicators
     if (app->menu_scroll_position > 0) {
@@ -208,22 +211,26 @@ static void render_options_menu(Canvas* canvas, MatrixApp* app) {
                         settings->use_symbols ? 'X' : ' ');
                 break;
             case 4:
+                snprintf(value_str, sizeof(value_str), "Inverted mode: [%c]", 
+                        settings->inverted_mode ? 'X' : ' ');
+                break;
+            case 5:
                 snprintf(value_str, sizeof(value_str), "Max Speed: < %d >", 
                         settings->max_speed.value);
                 break;
-            case 5:
+            case 6:
                 snprintf(value_str, sizeof(value_str), "Min Speed: < %d >", 
                         settings->min_speed.value);
                 break;
-            case 6:
+            case 7:
                 snprintf(value_str, sizeof(value_str), "Spawn Rate: < %d >", 
                         settings->spawn_rate.value);
                 break;
-            case 7:
+            case 8:
                 snprintf(value_str, sizeof(value_str), "Max Length: < %d >", 
                         settings->max_length.value);
                 break;
-            case 8:
+            case 9:
                 snprintf(value_str, sizeof(value_str), "Min Length: < %d >", 
                         settings->min_length.value);
                 break;
@@ -235,9 +242,18 @@ static void render_options_menu(Canvas* canvas, MatrixApp* app) {
 
 static void matrix_render(Canvas* canvas, void* context) {
     MatrixApp* app = (MatrixApp*)context;
-    
-    canvas_clear(canvas);
-    
+
+    MatrixContext* ctx = &app->matrix_ctx;
+
+    if(ctx->settings.inverted_mode == true){
+        canvas_set_color(canvas, 0x01);
+        canvas_clear(canvas);
+        canvas_draw_box(canvas, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        canvas_set_color(canvas, 0x00);
+    } else {
+        canvas_clear(canvas);
+    }
+
     switch(app->state) {
         case AppStateMainMenu:
             render_main_menu(canvas, app);
@@ -270,6 +286,7 @@ static void matrix_render(Canvas* canvas, void* context) {
     }
 }
 
+
 static void adjust_int_setting(IntSetting* setting, bool increment) {
     if (increment) {
         if (setting->value < setting->max) setting->value++;
@@ -280,7 +297,7 @@ static void adjust_int_setting(IntSetting* setting, bool increment) {
 
 static void handle_options_menu_input(MatrixApp* app, InputKey key) {
     Settings* settings = &app->matrix_ctx.settings;
-    const int total_items = 9;
+    const int total_items = 10;
     
     switch(key) {
         case InputKeyUp:
@@ -306,11 +323,11 @@ static void handle_options_menu_input(MatrixApp* app, InputKey key) {
             {
                 bool increment = (key == InputKeyRight);
                 switch(app->selected_menu_item) {
-                    case 4: adjust_int_setting(&settings->max_speed, increment); break;
-                    case 5: adjust_int_setting(&settings->min_speed, increment); break;
-                    case 6: adjust_int_setting(&settings->spawn_rate, increment); break;
-                    case 7: adjust_int_setting(&settings->max_length, increment); break;
-                    case 8: adjust_int_setting(&settings->min_length, increment); break;
+                    case 5: adjust_int_setting(&settings->max_speed, increment); break;
+                    case 6: adjust_int_setting(&settings->min_speed, increment); break;
+                    case 7: adjust_int_setting(&settings->spawn_rate, increment); break;
+                    case 8: adjust_int_setting(&settings->max_length, increment); break;
+                    case 9: adjust_int_setting(&settings->min_length, increment); break;
                 }
             }
             break;
@@ -321,6 +338,8 @@ static void handle_options_menu_input(MatrixApp* app, InputKey key) {
                 case 1: settings->use_lowercase = !settings->use_lowercase; break;
                 case 2: settings->use_numbers = !settings->use_numbers; break;
                 case 3: settings->use_symbols = !settings->use_symbols; break;
+                case 4: settings->inverted_mode = !settings->inverted_mode; break;
+
             }
             update_char_pool(&app->matrix_ctx);
             break;
