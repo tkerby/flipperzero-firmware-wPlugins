@@ -7,4 +7,4 @@ The current screensavers are compiled examples from the [PicoDVI-Adafruit Fork](
 ### Related Videos
 - Derek Jamison: https://www.youtube.com/watch?v=eJDsqlTX6Gk
 - Sn0ren: https://www.youtube.com/watch?v=gHgeCLeA5sM
-- JBlanked: https://youtube.com/shorts/7-Aamrl5qug?feature=share
+- JBlanked: https://www.youtube.com/watch?v=NHhpUs5HSmQ
