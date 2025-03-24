@@ -38,7 +38,7 @@ private:
     function<void()> txCompleteHandler;
     int repeatsLeft = 0;
     SubGhzPayload* currentPayload;
-    uint32_t currentFrequency = 0;
+    uint32_t receiveFrequency = 0;
 
     bool isExternal;
     SubGhzState state = IDLE;
@@ -53,7 +53,7 @@ private:
 
         SubGhzModule* subghz = (SubGhzModule*)context;
         if(subghz->receiveHandler != NULL) {
-            subghz->receiveHandler(new SubGhzReceivedDataImpl(decoderBase, subghz->currentFrequency));
+            subghz->receiveHandler(new SubGhzReceivedDataImpl(decoderBase, subghz->receiveFrequency));
         }
     }
 
@@ -61,7 +61,7 @@ private:
         SubGhzModule* subghz = (SubGhzModule*)context;
         if(subghz_devices_is_async_complete_tx(subghz->device)) {
             if(subghz->repeatsLeft-- > 0 && subghz->currentPayload != NULL) {
-                subghz->startTransmission();
+                subghz->startTransmission(0);
                 return;
             }
 
@@ -86,6 +86,12 @@ private:
         subghz_worker_set_context(worker, receiver);
     }
 
+    void setFrequencyIgnoringStateChecks(uint32_t frequency) {
+        if(subghz_devices_is_frequency_valid(device, frequency)) {
+            subghz_devices_set_frequency(device, frequency);
+        }
+    }
+
 public:
     SubGhzModule(uint32_t frequency) {
         environment = subghz_environment_alloc();
@@ -105,24 +111,22 @@ public:
         subghz_devices_begin(device);
         subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
 
-        SetFrequency(frequency);
+        SetReceiveFrequency(frequency);
 
         txCompleteCheckTimer = furi_timer_alloc(txCompleteCheckCallback, FuriTimerTypePeriodic, this);
     }
 
-    void SetFrequency(uint32_t frequency) {
-        if(currentFrequency == frequency) {
+    void SetReceiveFrequency(uint32_t frequency) {
+        if(receiveFrequency == frequency) {
             return;
         } else {
-            currentFrequency = frequency;
+            receiveFrequency = frequency;
         }
 
         bool restoreReceive = state == RECEIVING;
         PutToIdle();
 
-        if(subghz_devices_is_frequency_valid(device, frequency)) {
-            subghz_devices_set_frequency(device, frequency);
-        }
+        setFrequencyIgnoringStateChecks(frequency);
 
         if(restoreReceive) {
             ReceiveAsync();
@@ -152,6 +156,8 @@ public:
 
         PutToIdle();
 
+        setFrequencyIgnoringStateChecks(receiveFrequency);
+
         subghz_devices_flush_rx(device);
         subghz_devices_start_async_rx(device, (void*)subghz_worker_rx_callback, worker);
         subghz_worker_start(worker);
@@ -163,7 +169,7 @@ public:
         this->txCompleteHandler = txCompleteHandler;
     }
 
-    void Transmit(SubGhzPayload* payload) {
+    void Transmit(SubGhzPayload* payload, uint32_t frequency) {
         if(state != TRANSMITTING) {
             PutToIdle();
             state = TRANSMITTING;
@@ -177,15 +183,19 @@ public:
         currentPayload = payload;
         repeatsLeft = payload->GetRequiredSofwareRepeats() - 1;
 
-        startTransmission();
+        startTransmission(frequency);
 
         uint32_t interval = furi_kernel_get_tick_frequency() / 100; // every 10 ms
         furi_timer_start(txCompleteCheckTimer, interval);
     }
 
 private:
-    void startTransmission() {
+    void startTransmission(uint32_t frequency) {
         stopTransmission();
+
+        if(frequency > 0 && frequency != receiveFrequency) {
+            setFrequencyIgnoringStateChecks(frequency);
+        }
 
         transmitter = subghz_transmitter_alloc_init(environment, currentPayload->GetProtocol());
         subghz_transmitter_deserialize(transmitter, currentPayload->GetFlipperFormat());

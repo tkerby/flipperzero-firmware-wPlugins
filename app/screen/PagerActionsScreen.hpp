@@ -27,6 +27,7 @@ private:
     String resendToCurrentStr;
     String** actionsStrings;
 
+    uint32_t currentBatchFrequency;
     uint32_t currentPager = 0;
     bool transmittingBatch = false;
 
@@ -89,6 +90,7 @@ private:
     void resendToAll(uint32_t) {
         currentPager = 0;
         transmittingBatch = true;
+        currentBatchFrequency = SubGhzSettings().GetFrequency(getPager()->frequency);
 
         batchTransmissionScreen = new BatchTransmissionScreen(config->MaxPagerForBatchOrDetection);
         UiManager::GetInstance()->PushView(batchTransmissionScreen->GetView());
@@ -99,14 +101,18 @@ private:
 
     void resendSingle(uint32_t) {
         StoredPagerData* pager = getPager();
-        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
+        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats), frequency);
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
 
     void sendAction(PagerAction action) {
         StoredPagerData* pager = getPager();
-        subghz->Transmit(protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats));
+        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        subghz->Transmit(
+            protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats), frequency
+        );
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
@@ -114,7 +120,10 @@ private:
     void sendCurrentPager() {
         StoredPagerData* pager = getPager();
         batchTransmissionScreen->SetProgress(currentPager, config->MaxPagerForBatchOrDetection);
-        subghz->Transmit(protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats));
+        subghz->Transmit(
+            protocol->CreatePayload(decoder->SetPager(pager->data, currentPager), pager->te, config->SignalRepeats),
+            currentBatchFrequency
+        );
     }
 
     void txComplete() {

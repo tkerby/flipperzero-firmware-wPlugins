@@ -30,6 +30,7 @@ private:
     UiVariableItem* actionItem = NULL;
     UiVariableItem* hexItem = NULL;
     UiVariableItem* protocolItem = NULL;
+    UiVariableItem* frequencyItem = NULL;
     UiVariableItem* teItem = NULL;
     UiVariableItem* repeatsItem = NULL;
 
@@ -41,6 +42,7 @@ private:
     String actionStr;
     String hexStr;
     String repeatsStr;
+    String frequencyStr;
     String teStr;
     int32_t saveAsItemIndex = -1;
     int32_t deleteItemIndex = -1;
@@ -58,6 +60,7 @@ public:
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
+        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&EditPagerScreen::destroy));
@@ -84,6 +87,11 @@ public:
 
         varItemList->AddItem(hexItem = new UiVariableItem("HEX value", HANDLER_1ARG(&EditPagerScreen::hexValueChanged)));
         varItemList->AddItem(protocolItem = new UiVariableItem("Protocol", protocol->GetSystemName()));
+        varItemList->AddItem(
+            frequencyItem = new UiVariableItem(
+                "Frequency", frequencyStr.format("%lu.%02lu", frequency / 1000000, (frequency % 1000000) / 10000)
+            )
+        );
         varItemList->AddItem(
             teItem = new UiVariableItem(
                 "TE", pager->te / TE_DIV, protocol->GetMaxTE() / TE_DIV, HANDLER_1ARG(&EditPagerScreen::teValueChanged)
@@ -148,7 +156,8 @@ private:
     void transmitMessage() {
         StoredPagerData* pager = getPager();
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
-        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats));
+        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats), frequency);
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
     }
@@ -267,6 +276,7 @@ private:
         delete pagerItem;
         delete actionItem;
         delete hexItem;
+        delete frequencyItem;
         delete teItem;
         delete protocolItem;
         delete repeatsItem;

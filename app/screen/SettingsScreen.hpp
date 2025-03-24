@@ -47,12 +47,12 @@ public:
 
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
-                "Frequency",
+                "Scan frequency",
                 subghzSettings.GetFrequencyIndex(config->Frequency),
                 subghzSettings.GetFrequencyCount(),
                 [this](uint8_t val) {
                     uint32_t freq = this->config->Frequency = this->subghzSettings.GetFrequency(val);
-                    this->subghz->SetFrequency(this->config->Frequency);
+                    this->subghz->SetReceiveFrequency(this->config->Frequency);
                     return frequencyStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
                 }
             )
