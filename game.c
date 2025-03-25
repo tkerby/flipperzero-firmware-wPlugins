@@ -10,6 +10,8 @@ typedef struct {
 // Forward declaration of player_desc, because it's used in player_spawn function.
 static const EntityDescription player_desc;
 
+static const EntityDescription ground_desc;
+
 static void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
@@ -61,6 +63,15 @@ static void player_update(Entity* self, GameManager* manager, void* context) {
     }
 }
 
+static void player_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
+    UNUSED(context);
+    UNUSED(self);
+    UNUSED(manager);
+    if(entity_description_get(other) == &ground_desc) {
+        return;
+    }
+}
+
 static void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     // Get player context
     PlayerContext* player = context;
@@ -86,7 +97,7 @@ static const EntityDescription player_desc = {
     .stop = NULL, // called when entity is removed from the level
     .update = player_update, // called every frame
     .render = player_render, // called every frame, after update
-    .collision = NULL, // called when entity collides with another entity
+    .collision = player_collision, // called when entity collides with another entity
     .event = NULL, // called when entity receives an event
     .context_size =
         sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
