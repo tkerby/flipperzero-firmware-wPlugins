@@ -149,6 +149,8 @@ static bool alloc_message_view(void *context, MessageState state);
 static bool alloc_text_input_view(void *context, char *title);
 static bool alloc_variable_item_list(void *context, uint32_t view_id);
 //
+static void callback_submenu_lobby_choices(void *context, uint32_t index);
+//
 static void wifi_settings_select(void *context, uint32_t index);
 static void updated_wifi_ssid(void *context);
 static void updated_wifi_pass(void *context);
@@ -198,10 +200,19 @@ static void message_draw_callback(Canvas *canvas, void *model)
     else if (message_model->message_state == MessageStateLoading)
     {
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Starting FlipWorld");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 0, 50, "Please wait while your");
-        canvas_draw_str(canvas, 0, 60, "game is started.");
+        if (game_mode_index != 1)
+        {
+            canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Starting FlipWorld");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 0, 50, "Please wait while your");
+            canvas_draw_str(canvas, 0, 60, "game is started.");
+        }
+        else
+        {
+            canvas_draw_str_aligned(canvas, 64, 0, AlignCenter, AlignTop, "Loading Lobbies");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 0, 60, "Please wait....");
+        }
     }
 }
 
@@ -564,7 +575,7 @@ static bool alloc_submenu_settings(void *context)
     {
         if (!easy_flipper_set_submenu(&app->submenu_settings, FlipWorldViewSettings, "Settings", callback_to_submenu, &app->view_dispatcher))
         {
-            return NULL;
+            return false;
         }
         if (!app->submenu_settings)
         {
@@ -575,6 +586,51 @@ static bool alloc_submenu_settings(void *context)
         submenu_add_item(app->submenu_settings, "User", FlipWorldSubmenuIndexUserSettings, callback_submenu_choices, app);
     }
     return true;
+}
+static bool alloc_submenu_lobby(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return false;
+    }
+    if (!app->submenu_lobby)
+    {
+        if (!easy_flipper_set_submenu(&app->submenu_lobby, FlipWorldViewLobby, "Lobbies", callback_to_submenu, &app->view_dispatcher))
+        {
+            return false;
+        }
+        if (!app->submenu_lobby)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+static char *lobby_list[10];
+static void free_submenu_lobby(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    if (app->submenu_lobby)
+    {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewLobby);
+        submenu_free(app->submenu_lobby);
+        app->submenu_lobby = NULL;
+    }
+    for (int i = 0; i < 10; i++)
+    {
+        if (lobby_list[i])
+        {
+            free(lobby_list[i]);
+            lobby_list[i] = NULL;
+        }
+    }
 }
 // free
 static void free_message_view(void *context)
@@ -739,7 +795,10 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
     }
 
     if (should_free_submenu_settings)
+    {
         free_submenu_settings(app);
+        free_submenu_lobby(app);
+    }
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -864,6 +923,8 @@ static bool start_game_thread(void *context)
         easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
         return false;
     }
+    // free lobby if it exists
+    free_submenu_lobby(app);
     // free game thread
     if (game_thread_running)
     {
@@ -1178,7 +1239,6 @@ static void switch_to_view_get_game(FlipWorldApp *app)
 {
     generic_switch_to_view(app, "Starting Game..", _fetch_game, _parse_game, 5, callback_to_submenu, FlipWorldViewLoader);
 }
-
 static void run(FlipWorldApp *app)
 {
     if (!app)
@@ -1187,7 +1247,7 @@ static void run(FlipWorldApp *app)
         return;
     }
     free_all_views(app, true, true);
-    if (!is_enough_heap(60000))
+    if (!is_enough_heap(10000))
     {
         easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
         return;
@@ -1235,6 +1295,13 @@ static void run(FlipWorldApp *app)
             {
                 flipper_http_free(fhttp);
             }
+
+            if (!start_game_thread(app))
+            {
+                FURI_LOG_E(TAG, "Failed to start game thread");
+                easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+                return;
+            }
         }
         else
         {
@@ -1257,9 +1324,54 @@ static void run(FlipWorldApp *app)
 
             bool parse_pvp_lobbies()
             {
-                // as long as the request is not an issue, we are good
-                // the game will handle the rest
-                return fhttp->state != ISSUE;
+                FURI_LOG_I(TAG, "allocating pvp lobbies");
+                free_submenu_lobby(app);
+                if (!alloc_submenu_lobby(app))
+                {
+                    FURI_LOG_E(TAG, "Failed to allocate lobby submenu");
+                    return false;
+                }
+                FURI_LOG_I(TAG, "Parsing pvp lobbies");
+                // add the lobbies to the submenu
+                FuriString *lobbies = flipper_http_load_from_file(fhttp->file_path);
+                if (!lobbies)
+                {
+                    FURI_LOG_E(TAG, "Failed to load lobbies");
+                    return false;
+                }
+                FURI_LOG_I(TAG, "Parsing lobbies 1");
+                // parse the lobbies
+                for (uint32_t i = 0; i < 10; i++)
+                {
+                    FuriString *lobby = get_json_array_value_furi("lobbies", i, lobbies);
+                    if (!lobby)
+                    {
+                        FURI_LOG_I(TAG, "No more lobbies");
+                        break;
+                    }
+                    FuriString *lobby_id = get_json_value_furi("id", lobby);
+                    if (!lobby_id)
+                    {
+                        FURI_LOG_E(TAG, "Failed to get lobby id");
+                        furi_string_free(lobby);
+                        return false;
+                    }
+                    // add the lobby to the submenu
+                    submenu_add_item(app->submenu_lobby, furi_string_get_cstr(lobby_id), FlipWorldSubmenuIndexLobby + i, callback_submenu_lobby_choices, app);
+                    // add the lobby to the list
+                    if (!easy_flipper_set_buffer(&lobby_list[i], 64))
+                    {
+                        FURI_LOG_E(TAG, "Failed to allocate lobby list");
+                        furi_string_free(lobby);
+                        furi_string_free(lobby_id);
+                        return false;
+                    }
+                    snprintf(lobby_list[i], 64, "%s", furi_string_get_cstr(lobby_id));
+                    furi_string_free(lobby);
+                    furi_string_free(lobby_id);
+                }
+                furi_string_free(lobbies);
+                return true;
             }
 
             // load pvp lobbies and player stats
@@ -1277,19 +1389,9 @@ static void run(FlipWorldApp *app)
             {
                 flipper_http_free(fhttp);
             }
-        }
 
-        if (!alloc_submenu_settings(app))
-        {
-            FURI_LOG_E(TAG, "Failed to allocate settings view");
-            return;
-        }
-
-        if (!start_game_thread(app))
-        {
-            FURI_LOG_E(TAG, "Failed to start game thread");
-            easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
-            return;
+            // switch to the lobby submenu
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewLobby);
         }
     }
     else
@@ -1372,6 +1474,54 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     default:
         break;
+    }
+}
+static void callback_submenu_lobby_choices(void *context, uint32_t index)
+{
+    /* Handle other game lobbies
+             1. when clicked on, send request to fetch the selected game lobby details
+             2. start the websocket session
+             3. start the game thread (the rest will be handled by game_start and player_update)
+             */
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    if (index >= FlipWorldSubmenuIndexLobby && index < FlipWorldSubmenuIndexLobby + 10)
+    {
+        uint32_t lobby_index = index - FlipWorldSubmenuIndexLobby;
+        // get the lobby id
+
+        FlipperHTTP *fhttp = flipper_http_alloc();
+        if (!fhttp)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+            easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
+            return;
+        }
+
+        // send the request to fetch the lobby details
+
+        // start the websocket session
+        char websocket_url[128];
+        snprintf(websocket_url, sizeof(websocket_url), "wss://www.jblanked.com/flipper/api/world/pvp/lobby/%ld/", lobby_index);
+        if (!flipper_http_websocket_start(fhttp, websocket_url, 443, "{\"Content-Type\":\"application/json\"}"))
+        {
+            FURI_LOG_E(TAG, "Failed to start websocket session");
+            easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
+            flipper_http_free(fhttp);
+            return;
+        }
+        flipper_http_free(fhttp);
+        // start the game thread
+        if (!start_game_thread(app))
+        {
+            FURI_LOG_E(TAG, "Failed to start game thread");
+            easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+            return;
+        }
     }
 }
 

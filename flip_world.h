@@ -4,14 +4,14 @@
 #include <font/font.h>
 
 // added by Derek Jamison to lower memory usage
-#undef FURI_LOG_E
-#define FURI_LOG_E(tag, msg, ...)
+// #undef FURI_LOG_E
+// #define FURI_LOG_E(tag, msg, ...)
 
-#undef FURI_LOG_I
-#define FURI_LOG_I(tag, msg, ...)
+// #undef FURI_LOG_I
+// #define FURI_LOG_I(tag, msg, ...)
 
-#undef FURI_LOG_D
-#define FURI_LOG_D(tag, msg, ...)
+// #undef FURI_LOG_D
+// #define FURI_LOG_D(tag, msg, ...)
 //
 
 #define TAG "FlipWorld"
@@ -30,6 +30,7 @@ typedef enum
     FlipWorldSubmenuIndexWiFiSettings,
     FlipWorldSubmenuIndexGameSettings,
     FlipWorldSubmenuIndexUserSettings,
+    FlipWorldSubmenuIndexLobby,
 } FlipWorldSubmenuIndex;
 
 // Define a single view for our FlipWorld application
@@ -39,6 +40,7 @@ typedef enum
     FlipWorldViewGameSubmenu,      // The game submenu
     FlipWorldViewMessage,          // The about, loading screen
     FlipWorldViewSettings,         // The settings screen
+    FlipWorldViewLobby,            // The lobby screen
     FlipWorldViewVariableItemList, // The variable item list screen
     FlipWorldViewTextInput,        // The text input screen
     //
@@ -64,6 +66,7 @@ typedef struct
     Submenu *submenu;                      // The submenu
     Submenu *submenu_game;                 // The game submenu
     Submenu *submenu_settings;             // The settings submenu
+    Submenu *submenu_lobby;                // The lobby submenu
     VariableItemList *variable_item_list;  // The variable item list (settngs)
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
     VariableItem *variable_item_wifi_pass; // The variable item for WiFi password
