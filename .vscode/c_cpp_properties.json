@@ -1,18 +1,13 @@
 {
-  "configurations": [
-    {
-      "name": "linux-gcc-x64",
-      "includePath": [
-        "${workspaceFolder}/**"
-      ],
-      "compilerPath": "/usr/bin/gcc",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "linux-gcc-x64",
-      "compilerArgs": [
-        ""
-      ]
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "main",
+            "compilerPath": "/home/carmi/.ufbt/toolchain/x86_64-linux/bin/arm-none-eabi-gcc",
+            "intelliSenseMode": "gcc-arm",
+            "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json",
+            "cStandard": "gnu23",
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
 }
