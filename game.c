@@ -81,8 +81,6 @@ static void player_render(Entity* self, GameManager* manager, Canvas* canvas, vo
 
     // Draw player sprite
     // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
-
-    //THIS IS WHY THE COLLISION DOSN'T ALIGN WITH THE SPRITE
     canvas_draw_sprite(canvas, player->sprite, pos.x - 10, pos.y - 12);
 
     // Get game context
