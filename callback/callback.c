@@ -923,7 +923,8 @@ static bool start_game_thread(void *context)
         easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
         return false;
     }
-    // free lobby if it exists
+    // well, without this, we dont have enough memory.. but with this, we get furi_check when the game ends :D
+    // after debugging, we'll remove this since we'll have memory free
     free_submenu_lobby(app);
     // free game thread
     if (game_thread_running)
@@ -1315,6 +1316,8 @@ static void run(FlipWorldApp *app)
                 storage_common_mkdir(storage, directory_path);
                 snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp");
                 storage_common_mkdir(storage, directory_path);
+                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/lobbies");
+                storage_common_mkdir(storage, directory_path);
                 furi_record_close(RECORD_STORAGE);
                 snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/pvp_lobbies.json");
                 fhttp->save_received_data = true;
@@ -1324,14 +1327,14 @@ static void run(FlipWorldApp *app)
 
             bool parse_pvp_lobbies()
             {
-                FURI_LOG_I(TAG, "allocating pvp lobbies");
+
                 free_submenu_lobby(app);
                 if (!alloc_submenu_lobby(app))
                 {
                     FURI_LOG_E(TAG, "Failed to allocate lobby submenu");
                     return false;
                 }
-                FURI_LOG_I(TAG, "Parsing pvp lobbies");
+
                 // add the lobbies to the submenu
                 FuriString *lobbies = flipper_http_load_from_file(fhttp->file_path);
                 if (!lobbies)
@@ -1339,7 +1342,7 @@ static void run(FlipWorldApp *app)
                     FURI_LOG_E(TAG, "Failed to load lobbies");
                     return false;
                 }
-                FURI_LOG_I(TAG, "Parsing lobbies 1");
+
                 // parse the lobbies
                 for (uint32_t i = 0; i < 10; i++)
                 {
@@ -1492,7 +1495,6 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
     if (index >= FlipWorldSubmenuIndexLobby && index < FlipWorldSubmenuIndexLobby + 10)
     {
         uint32_t lobby_index = index - FlipWorldSubmenuIndexLobby;
-        // get the lobby id
 
         FlipperHTTP *fhttp = flipper_http_alloc();
         if (!fhttp)
@@ -1503,6 +1505,38 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
         }
 
         // send the request to fetch the lobby details
+        char url[128];
+        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/%s/", lobby_list[lobby_index]);
+        snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/lobbies/%s.json", lobby_list[lobby_index]);
+        fhttp->save_received_data = true;
+
+        bool fetch_lobby()
+        {
+            if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL))
+            {
+                FURI_LOG_E(TAG, "Failed to fetch lobby details");
+                flipper_http_free(fhttp);
+                return false;
+            }
+            return true;
+        }
+
+        bool parse_lobby()
+        {
+            // for now just return true and the game will handle the rest
+            // later we will parse the current player's attributes (which is not the current user)
+            // not sure how we're gonna handle two PlayerContexts O.o
+            return fhttp->state != ISSUE;
+        }
+
+        // well.. we need to wait for the response to be received
+        if (!flipper_http_process_response_async(fhttp, fetch_lobby, parse_lobby))
+        {
+            FURI_LOG_E(TAG, "Failed to fetch lobby details");
+            easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
+            flipper_http_free(fhttp);
+            return;
+        }
 
         // start the websocket session
         char websocket_url[128];
@@ -1515,6 +1549,7 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             return;
         }
         flipper_http_free(fhttp);
+
         // start the game thread
         if (!start_game_thread(app))
         {
