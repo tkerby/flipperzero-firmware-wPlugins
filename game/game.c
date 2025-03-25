@@ -61,8 +61,9 @@ static void game_start(GameManager *game_manager, void *ctx)
     }
     else if (game_context->game_mode == GAME_MODE_PVP)
     {
-        // show pvp menu
-        easy_flipper_dialog("Unavailable", "\nPvP mode is not ready yet.\nPress BACK to return.");
+        // show pvp
+        game_context->levels[0] = game_manager_add_level(game_manager, pvp_world());
+        game_context->level_count = 1;
     }
 
     // imu

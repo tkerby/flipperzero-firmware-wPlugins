@@ -1224,14 +1224,58 @@ static void run(FlipWorldApp *app)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 
         // Make the request
-        if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) || !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
+        if (game_mode_index != 1) // not GAME_MODE_PVP
         {
-            FURI_LOG_E(HTTP_TAG, "Failed to make request");
-            flipper_http_free(fhttp);
+            if (!flipper_http_process_response_async(fhttp, fetch_world_list_i, parse_world_list_i) || !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
+            {
+                FURI_LOG_E(HTTP_TAG, "Failed to make request");
+                flipper_http_free(fhttp);
+            }
+            else
+            {
+                flipper_http_free(fhttp);
+            }
         }
         else
         {
-            flipper_http_free(fhttp);
+            // load pvp info (this returns the lobbies available)
+            bool fetch_pvp_lobbies()
+            {
+                // ensure flip_world directory exists
+                char directory_path[128];
+                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+                Storage *storage = furi_record_open(RECORD_STORAGE);
+                storage_common_mkdir(storage, directory_path);
+                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp");
+                storage_common_mkdir(storage, directory_path);
+                furi_record_close(RECORD_STORAGE);
+                snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/pvp_lobbies.json");
+                fhttp->save_received_data = true;
+                return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/pvp/lobbies/", "{\"Content-Type\":\"application/json\"}", NULL);
+            }
+
+            bool parse_pvp_lobbies()
+            {
+                // as long as the request is not an issue, we are good
+                // the game will handle the rest
+                return fhttp->state != ISSUE;
+            }
+
+            // load pvp lobbies and player stats
+            if (!flipper_http_process_response_async(fhttp, fetch_pvp_lobbies, parse_pvp_lobbies) || !flipper_http_process_response_async(fhttp, fetch_player_stats_i, set_player_context))
+            {
+                // unlike the pve/story, receiving data is necessary
+                // so send the user back to the main menu if it fails
+                FURI_LOG_E(HTTP_TAG, "Failed to make request");
+                easy_flipper_dialog("Error", "Failed to make request. Press BACK to return.");
+                view_dispatcher_switch_to_view(app->view_dispatcher,
+                                               FlipWorldViewSubmenu);
+                flipper_http_free(fhttp);
+            }
+            else
+            {
+                flipper_http_free(fhttp);
+            }
         }
 
         if (!alloc_submenu_settings(app))
@@ -1272,7 +1316,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     case FlipWorldSubmenuIndexPvP:
         game_mode_index = 1; // GAME_MODE_PVP
-        easy_flipper_dialog("Unavailable", "\nPvP mode is not ready yet.\nPress BACK to return.");
+        run(app);
         break;
     case FlipWorldSubmenuIndexPvE:
         game_mode_index = 0; // GAME_MODE_PVE
