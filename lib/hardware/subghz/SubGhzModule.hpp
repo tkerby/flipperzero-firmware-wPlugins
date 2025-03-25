@@ -193,7 +193,7 @@ private:
     void startTransmission(uint32_t frequency) {
         stopTransmission();
 
-        if(frequency > 0 && frequency != receiveFrequency) {
+        if(frequency > 0) {
             setFrequencyIgnoringStateChecks(frequency);
         }
 
