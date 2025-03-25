@@ -1251,7 +1251,8 @@ static void run(FlipWorldApp *app)
                 furi_record_close(RECORD_STORAGE);
                 snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/pvp_lobbies.json");
                 fhttp->save_received_data = true;
-                return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/pvp/lobbies/", "{\"Content-Type\":\"application/json\"}", NULL);
+                // 2 players max, 10 lobbies
+                return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/pvp/lobbies/2/10/", "{\"Content-Type\":\"application/json\"}", NULL);
             }
 
             bool parse_pvp_lobbies()
