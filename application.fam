@@ -1,0 +1,13 @@
+App(
+    appid="uart_pong",
+    name="UART Pong",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="uart_pong_app",
+    requires=["bt", "gui"],
+    stack_size=1 * 1024,
+    fap_description="A multiplayer ping pong game using UART",
+    fap_category="Games",
+    fap_icon="assets/icon_10px.png",
+    fap_version="1.0",
+    fap_author="Olejka",
+)
