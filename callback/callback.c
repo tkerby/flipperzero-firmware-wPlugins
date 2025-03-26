@@ -1539,15 +1539,33 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
         }
 
         // start the websocket session
-        char websocket_url[128];
-        snprintf(websocket_url, sizeof(websocket_url), "wss://www.jblanked.com/flipper/api/world/pvp/lobby/%ld/", lobby_index);
-        if (!flipper_http_websocket_start(fhttp, websocket_url, 443, "{\"Content-Type\":\"application/json\"}"))
+        bool start_ws()
+        {
+            char websocket_url[128];
+            snprintf(websocket_url, sizeof(websocket_url), "wss://www.jblanked.com/ws/game/%s/", lobby_list[lobby_index]);
+            if (!flipper_http_websocket_start(fhttp, websocket_url, 443, "{\"Content-Type\":\"application/json\"}"))
+            {
+                FURI_LOG_E(TAG, "Failed to start websocket session");
+                flipper_http_free(fhttp);
+                return false;
+            }
+            return true;
+        }
+        bool parse_ws()
+        {
+            // for now just return true and the game will handle the rest
+            return fhttp->state != ISSUE;
+        }
+
+        // start the websocket session
+        if (!flipper_http_process_response_async(fhttp, start_ws, parse_ws))
         {
             FURI_LOG_E(TAG, "Failed to start websocket session");
             easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
             flipper_http_free(fhttp);
             return;
         }
+
         flipper_http_free(fhttp);
 
         // start the game thread
