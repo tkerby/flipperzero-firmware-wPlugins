@@ -1542,8 +1542,8 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
         bool start_ws()
         {
             char websocket_url[128];
-            snprintf(websocket_url, sizeof(websocket_url), "wss://www.jblanked.com/ws/game/%s/", lobby_list[lobby_index]);
-            if (!flipper_http_websocket_start(fhttp, websocket_url, 443, "{\"Content-Type\":\"application/json\"}"))
+            snprintf(websocket_url, sizeof(websocket_url), "ws://www.jblanked.com/ws/game/%s/", lobby_list[lobby_index]);
+            if (!flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}"))
             {
                 FURI_LOG_E(TAG, "Failed to start websocket session");
                 flipper_http_free(fhttp);
