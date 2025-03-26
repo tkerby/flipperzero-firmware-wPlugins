@@ -23,6 +23,13 @@
 #include "fdd_emulator.h"
 #include "disk_image.h"
 
+// POKEY clock frequency [Hz]
+// PAL: 1.7734MHz, NTSC: 1.7898MHz
+#define POKEY_CLOCK 1780000
+
+// XF551 high-speed mode baudrate
+#define XF551_BAUDRATE 38400
+
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
 
@@ -154,12 +161,25 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     case SIO_COMMAND_STATUS:
         return SIO_ACK;
 
+    case SIO_COMMAND_READ_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_READ: {
         size_t sector = request->aux1 + request->aux2 * 256;
         size_t sector_size = disk_image_nth_sector_size(fdd->image, sector);
         return sector_size == 0 ? SIO_NAK : SIO_ACK;
     }
 
+    case SIO_COMMAND_PUT_HS:
+    case SIO_COMMAND_WRITE_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_PUT:
     case SIO_COMMAND_WRITE: {
         size_t sector = request->aux1 + request->aux2 * 256;
@@ -187,6 +207,13 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         }
 
     case SIO_COMMAND_FORMAT:
+        return SIO_ACK;
+
+    case SIO_COMMAND_FORMAT_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
         return SIO_ACK;
 
     case SIO_COMMAND_FORMAT_WITH_SKEW:
@@ -233,7 +260,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
     }
 
-    case SIO_COMMAND_READ: {
+    case SIO_COMMAND_READ:
+    case SIO_COMMAND_READ_HS: {
         size_t sector = request->aux1 + request->aux2 * 256;
         if(!disk_image_read_sector(fdd->image, sector, request->tx_data)) {
             return SIO_ERROR;
@@ -246,7 +274,9 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_PUT:
-    case SIO_COMMAND_WRITE: {
+    case SIO_COMMAND_PUT_HS:
+    case SIO_COMMAND_WRITE:
+    case SIO_COMMAND_WRITE_HS: {
         size_t sector = request->aux1 + request->aux2 * 256;
 
         if(disk_image_get_write_protect(fdd->image)) {
@@ -287,6 +317,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     case SIO_COMMAND_FORMAT:
+    case SIO_COMMAND_FORMAT_HS:
         if(disk_image_get_write_protect(fdd->image)) {
             return SIO_ERROR;
         }
@@ -348,7 +379,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     case SIO_COMMAND_GET_HSI:
         request->tx_data[0] = fdd->config->speed_index;
         request->tx_size = 1;
-        request->baudrate = 1780000 / 2 / (7 + request->tx_data[0]);
+        request->baudrate = POKEY_CLOCK / 2 / (7 + request->tx_data[0]);
         return SIO_COMPLETE;
 
     default:

@@ -11,9 +11,11 @@ The app has been tested with the PAL version of the Atari 800XL. It appears to b
 - Disk formatting commands (0x21, 0x22, 0x66)
 - Commands for reading and writing PERCOM configuration (0x4E, 0x4F)
 - US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
+- XF-551 High Speed mode is emulated 
 - Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
 - 128- or 256-byte sectors are supported
 - Up to four floppy disk drives can be emulated.
+
 
 ## Wiring
 
@@ -40,6 +42,4 @@ I have some plans, but I’m not sure if or when I’ll be able to complete them
 - Verify that PERCOM configuration is correct
 - Add CAS file emulation
 - Implement an XEX file loader
-- Support XF551 high-speed mode in addition to US Doubler
-- Investigate issue with US Doubler when swapping baudrates
 - Improve error signaling to host via FDD status byte

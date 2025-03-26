@@ -53,11 +53,11 @@ const AppConfigOption* speed_index_by_id(Slice slice);
 typedef enum {
     SpeedMode_Standard,
     SpeedMode_USDoubler,
-    // SIOSpeedMode_XF551,
+    SpeedMode_XF551,
 } SpeedMode;
 
 // All possible speed modes
-extern const AppConfigOption speed_mode_options[2];
+extern const AppConfigOption speed_mode_options[3];
 
 // Finds the speed mode option by its value
 const AppConfigOption* speed_mode_by_value(SpeedMode value);
