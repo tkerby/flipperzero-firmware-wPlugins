@@ -144,7 +144,13 @@ static void game_stop(void *ctx)
         uint32_t tick_count = furi_get_tick();
         furi_delay_ms(800);
 
-        save_player_context_api(player_context);
+        // save the player context to the API
+        game_context->fhttp = flipper_http_alloc();
+        if (game_context->fhttp)
+        {
+            save_player_context_api(player_context, game_context->fhttp);
+            flipper_http_free(game_context->fhttp);
+        }
 
         const uint32_t delay = 3500;
         tick_count = (tick_count + delay) - furi_get_tick();

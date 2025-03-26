@@ -213,7 +213,7 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
         player->direction = ENTITY_UP;
     }
 }
-
+uint16_t elapsed_ws_timer = 0;
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
     if (!self || !manager || !context)
@@ -222,8 +222,25 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
-    player->old_position = pos;
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // update websocket player context
+    if (game_context->game_mode == GAME_MODE_PVP && (player->old_position.x != pos.x || player->old_position.y != pos.y))
+    {
+        elapsed_ws_timer++;
+        // only send the websocket update every 100ms
+        if (elapsed_ws_timer >= (game_context->fps / 10))
+        {
+            if (game_context->fhttp)
+            {
+                player->start_position = player->old_position;
+                websocket_player_context(player, game_context->fhttp);
+            }
+            elapsed_ws_timer = 0;
+        }
+    }
+
+    player->old_position = pos;
 
     // Determine the player's level based on XP
     player->level = get_player_level_iterative(player->xp);
