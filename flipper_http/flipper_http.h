@@ -20,7 +20,6 @@
 
 #undef FURI_LOG_I
 #define FURI_LOG_I(tag, msg, ...)
-//
 
 #define HTTP_TAG "FlipWorld"              // change this to your app name
 #define http_tag "flip_world"             // change this to your app id

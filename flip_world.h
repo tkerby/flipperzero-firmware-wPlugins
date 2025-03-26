@@ -4,14 +4,14 @@
 #include <font/font.h>
 
 // added by Derek Jamison to lower memory usage
-// #undef FURI_LOG_E
-// #define FURI_LOG_E(tag, msg, ...)
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
 
-// #undef FURI_LOG_I
-// #define FURI_LOG_I(tag, msg, ...)
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
 
-// #undef FURI_LOG_D
-// #define FURI_LOG_D(tag, msg, ...)
+#undef FURI_LOG_D
+#define FURI_LOG_D(tag, msg, ...)
 //
 
 #define TAG "FlipWorld"

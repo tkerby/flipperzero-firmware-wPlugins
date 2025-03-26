@@ -93,6 +93,17 @@ static void game_stop(void *ctx)
     imu_free(game_context->imu);
     game_context->imu = NULL;
 
+    if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        // close websocket
+        FlipperHTTP *fhttp = flipper_http_alloc();
+        if (fhttp)
+        {
+            flipper_http_websocket_stop(fhttp);
+            flipper_http_free(fhttp);
+        }
+    }
+
     // clear current level early
     if (game_context->levels[game_context->current_level])
     {

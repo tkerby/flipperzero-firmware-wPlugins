@@ -923,9 +923,7 @@ static bool start_game_thread(void *context)
         easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
         return false;
     }
-    // well, without this, we dont have enough memory.. but with this, we get furi_check when the game ends :D
-    // after debugging, we'll remove this since we'll have memory free
-    free_submenu_lobby(app);
+
     // free game thread
     if (game_thread_running)
     {
