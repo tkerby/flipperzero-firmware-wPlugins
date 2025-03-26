@@ -69,6 +69,17 @@ static void game_start(GameManager *game_manager, void *ctx)
     // imu
     game_context->imu = imu_alloc();
     game_context->imu_present = imu_present(game_context->imu);
+
+    // FlipperHTTP
+    if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        game_context->fhttp = flipper_http_alloc();
+        if (!game_context->fhttp)
+        {
+            FURI_LOG_E("Game", "Failed to allocate FlipperHTTP");
+            return;
+        }
+    }
 }
 
 static void thanks(Canvas *canvas, void *context)
@@ -96,11 +107,10 @@ static void game_stop(void *ctx)
     if (game_context->game_mode == GAME_MODE_PVP)
     {
         // close websocket
-        FlipperHTTP *fhttp = flipper_http_alloc();
-        if (fhttp)
+        if (game_context->fhttp)
         {
-            flipper_http_websocket_stop(fhttp);
-            flipper_http_free(fhttp);
+            flipper_http_websocket_stop(game_context->fhttp);
+            flipper_http_free(game_context->fhttp);
         }
     }
 
