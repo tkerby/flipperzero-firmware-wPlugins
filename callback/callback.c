@@ -1632,7 +1632,6 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             if (!flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}"))
             {
                 FURI_LOG_E(TAG, "Failed to start websocket session");
-                flipper_http_free(fhttp);
                 return false;
             }
             return true;

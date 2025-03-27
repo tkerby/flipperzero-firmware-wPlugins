@@ -401,6 +401,77 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
+static void pvp_position(GameContext *game_context, EntityContext *enemy)
+{
+    if (!game_context || !enemy)
+    {
+        FURI_LOG_E("Game", "PVP position: Invalid parameters");
+        return;
+    }
+
+    if (game_context->fhttp->last_response != NULL && strlen(game_context->fhttp->last_response) > 0)
+    {
+        // parse the response and set the enemy position
+        /* expected response:
+        {
+            "u": "JBlanked",
+            "xp": 37743,
+            "h": 207,
+            "ehr": 0.7,
+            "eat": 127.5,
+            "d": 2,
+            "s": 1,
+            "sp": {
+                "x": 381.0,
+                "y": 192.0
+            }
+        }
+        */
+
+        // FuriStrings are probably safer but we already last_response as a char*
+
+        // we need the health, elapsed attack timer, direction, and position
+        char *h = get_json_value("h", game_context->fhttp->last_response);
+        char *eat = get_json_value("eat", game_context->fhttp->last_response);
+        char *d = get_json_value("d", game_context->fhttp->last_response);
+        char *sp = get_json_value("sp", game_context->fhttp->last_response);
+        char *x = get_json_value("x", sp);
+        char *y = get_json_value("y", sp);
+
+        if (!h || !eat || !d || !sp || !x || !y)
+        {
+            FURI_LOG_E("Game", "PVP position: Failed to parse enemy data");
+            return;
+        }
+
+        // set enemy info
+        enemy->health = (float)atoi(h);
+        enemy->elapsed_attack_timer = (float)atof_(eat);
+        switch (atoi(d))
+        {
+        case 0:
+            enemy->direction = ENTITY_LEFT;
+            break;
+        case 1:
+            enemy->direction = ENTITY_RIGHT;
+            break;
+        case 2:
+            enemy->direction = ENTITY_UP;
+            break;
+        case 3:
+            enemy->direction = ENTITY_DOWN;
+            break;
+        default:
+            enemy->direction = ENTITY_RIGHT;
+            break;
+        }
+        enemy->start_position.x = (float)atoi(x);
+        enemy->start_position.y = (float)atoi(y);
+        enemy->end_position.x = (float)atoi(x);
+        enemy->end_position.y = (float)atoi(y);
+    }
+}
+
 // Enemy update function
 static void enemy_update(Entity *self, GameManager *manager, void *context)
 {
@@ -418,6 +489,12 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     {
         FURI_LOG_E("Game", "Enemy update: Failed to get GameContext");
         return;
+    }
+
+    if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        // update enemy position
+        pvp_position(game_context, enemy_context);
     }
 
     float delta_time = 1.0f / game_context->fps;
