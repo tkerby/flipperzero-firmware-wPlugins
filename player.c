@@ -1,6 +1,7 @@
 #include "player.h"
 
 bool isGrounded;
+bool isJumping;
 
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -31,7 +32,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     game_context->score = pos.y;
 
     // isGrounded check
-    if((pos.y + 12) >= game_context->ground_hight) {
+    if((pos.y + 12) >= game_context->ground_hight && playerContext->Yvelocity >= 0) {
         pos.y = game_context->ground_hight - 12;
         playerContext->Yvelocity = 0;
         isGrounded = true;
@@ -41,7 +42,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
 
     // gravity
     if(!isGrounded) {
-        playerContext->Yvelocity += 1;
+        playerContext->Yvelocity += 0.5;
         pos.y += playerContext->Yvelocity;
     }
 
@@ -49,7 +50,9 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     if(input.held & GameKeyRight) pos.x += 2;
 
     // jump
-    if(input.pressed & GameKeyUp /*&& isGrounded*/) playerContext->Yvelocity = 3;
+    if(input.pressed & GameKeyUp && isGrounded) {
+        playerContext->Yvelocity = -3.5;
+    }
 
     // Clamp player position to screen bounds, considering player sprite size (10x10)
     pos.x = CLAMP(pos.x, 123, 5);
