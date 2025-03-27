@@ -6,62 +6,13 @@
 
 static const EntityDescription ground_desc;
 
-/****** Entities: Target ******/
-
-static Vector random_pos(void) {
-    return (Vector){rand() % 120 + 4, rand() % 58 + 4};
-}
-
-static void target_start(Entity* self, GameManager* manager, void* context) {
-    UNUSED(context);
-    UNUSED(manager);
-    // Set target position
-    entity_pos_set(self, random_pos());
-    // Add collision circle to target entity
-    // Circle is centered in target x and y, and it's radius is 3
-    entity_collider_add_circle(self, 7);
-}
-
-static void target_render(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
-    UNUSED(context);
-    UNUSED(manager);
-
-    // Get target position
-    Vector pos = entity_pos_get(self);
-
-    // Draw target
-    canvas_draw_disc(canvas, pos.x, pos.y, 7);
-}
-
-static void target_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
-    UNUSED(context);
-    // Check if target collided with player
-    if(entity_description_get(other) == &player_desc) {
-        // Increase score
-        GameContext* game_context = game_manager_game_context_get(manager);
-        game_context->score++;
-
-        // Move target to new random position
-        //Level* current_level = game_manager_current_level_get(manager);
-        entity_pos_set(self, random_pos());
-        //level_remove_entity(current_level, self);
-    }
-}
-
-static const EntityDescription target_desc = {
-    .start = target_start, // called when entity is added to the level
-    .stop = NULL, // called when entity is removed from the level
-    .update = NULL, // called every frame
-    .render = target_render, // called every frame, after update
-    .collision = target_collision, // called when entity collides with another entity
-    .event = NULL, // called when entity receives an event
-    .context_size = 0, // size of entity context, will be automatically allocated and freed
-};
-
 /****** ground ******/
 static void ground_start(Entity* self, GameManager* manager, void* context) {
     UNUSED(manager);
     UNUSED(context);
+    GameContext* game_context = game_manager_game_context_get(manager);
+    game_context->ground_hight = 50;
+
     entity_collider_add_rect(self, 50, 128);
 }
 
@@ -88,12 +39,8 @@ static const EntityDescription ground_desc = {
 static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(manager);
     UNUSED(context);
-
-    // Add player entity to the level
+    // add the player to the level
     player_spawn(level, manager);
-
-    // Add target entity to the level
-    level_add_entity(level, &target_desc);
 
     // add the ground to the level
     level_add_entity(level, &ground_desc);

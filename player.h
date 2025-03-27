@@ -9,6 +9,8 @@ typedef struct {
     bool isGrounded;
 } PlayerContext;
 
+extern float ground_hight;
+
 extern const EntityDescription player_desc;
 
 void player_spawn(Level* level, GameManager* manager);
