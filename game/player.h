@@ -29,6 +29,7 @@ typedef struct
     float strength;             // Damage the entity deals
     float health;               // Health of the entity
     char message[64];           // Message to display when interacting with the entity
+    bool is_user;               // Flag to indicate if the entity is a live player or not
 } EntityContext;
 
 typedef struct

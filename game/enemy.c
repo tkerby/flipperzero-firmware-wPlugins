@@ -15,7 +15,8 @@ static EntityContext *enemy_generic_alloc(
     float speed,
     float attack_timer,
     float strength,
-    float health)
+    float health,
+    bool is_user)
 {
     if (!enemy_context_generic)
     {
@@ -44,6 +45,8 @@ static EntityContext *enemy_generic_alloc(
     enemy_context_generic->state = ENTITY_MOVING_TO_END; // Start in IDLE state
     // Set radius based on size, for example, average of size.x and size.y divided by 2
     enemy_context_generic->radius = (size.x + size.y) / 4.0f;
+    //
+    enemy_context_generic->is_user = is_user;
     return enemy_context_generic;
 }
 
@@ -80,6 +83,7 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
     enemy_context->direction = enemy_context_generic->direction;
     enemy_context->state = enemy_context_generic->state;
     enemy_context->radius = enemy_context_generic->radius;
+    enemy_context->is_user = enemy_context_generic->is_user;
 
     // Set enemy's initial position based on start_position
     entity_pos_set(self, enemy_context->start_position);
@@ -565,7 +569,9 @@ const EntityDescription *enemy(
     float speed,
     float attack_timer,
     float strength,
-    float health)
+    float health,
+    bool is_user)
+
 {
     SpriteContext *sprite_context = get_sprite_context(id);
     if (!sprite_context)
@@ -585,7 +591,8 @@ const EntityDescription *enemy(
         speed,
         attack_timer,
         strength,
-        health);
+        health,
+        is_user);
     if (!enemy_context_generic)
     {
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
@@ -651,6 +658,13 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
         return;
     }
 
+    FuriString *is_user = get_json_value_furi("is_user", json);
+    bool is_user_value = false;
+    if (is_user)
+    {
+        is_user_value = strstr(furi_string_get_cstr(is_user), "true") != NULL;
+    }
+
     GameContext *game_context = game_manager_game_context_get(manager);
     if (game_context && game_context->enemy_count < MAX_ENEMIES && !game_context->enemies[game_context->enemy_count])
     {
@@ -664,7 +678,8 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
                                                                                        atof_furi(speed),
                                                                                        atof_furi(attack_timer),
                                                                                        atof_furi(strength),
-                                                                                       atof_furi(health)));
+                                                                                       atof_furi(health),
+                                                                                       is_user_value));
         game_context->enemy_count++;
     }
 
@@ -681,4 +696,5 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
     furi_string_free(attack_timer);
     furi_string_free(strength);
     furi_string_free(health);
+    furi_string_free(is_user);
 }

@@ -1521,10 +1521,98 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
 
         bool parse_lobby()
         {
-            // for now just return true and the game will handle the rest
-            // later we will parse the current player's attributes (which is not the current user)
-            // not sure how we're gonna handle two PlayerContexts O.o
-            return fhttp->state != ISSUE;
+            /*
+            expected output from fhttp->file_path
+           {"id":"new","player_count":1,"player_list":["JBlanked"],"player_stats":[{"username":"JBlanked","level":16,"xp":25511,"health":90,"strength":12,"max_health":100,"health_regen":1,"elapsed_health_regen":0,"attack_timer":0.1,"elapsed_attack_timer":0,"direction":"up","state":"moving","start_position_x":450,"start_position_y":300,"dx":5,"dy":0}],"data":{}}
+
+           expected out to save
+           {"enemy_data":[{"id":"cyclops","index":0,"start_position":{"x":350,"y":210},"end_position":{"x":350,"y":210},"move_timer":1,"speed":1,"attack_timer":0.1,"strength":12,"health":100"}]}
+           */
+            // we need to save the first player's stats as enemy_data for the pvp_world, so that the game renders the player as an Enemy using EnemyContext
+            // saved at STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_json_data.json
+            // ensure flip_world directory exists
+            char directory_path[128];
+            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+            Storage *storage = furi_record_open(RECORD_STORAGE);
+            storage_common_mkdir(storage, directory_path);
+            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+            storage_common_mkdir(storage, directory_path);
+            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world");
+            storage_common_mkdir(storage, directory_path);
+            furi_record_close(RECORD_STORAGE);
+
+            snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world/pvp_world_enemy_data.json");
+
+            FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
+            if (!lobby)
+            {
+                FURI_LOG_E(TAG, "Failed to load lobby details");
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            // parse the lobby details
+            FuriString *player_stats = get_json_array_value_furi("player_stats", 0, lobby);
+            if (!player_stats)
+            {
+                FURI_LOG_E(TAG, "Failed to get player stats");
+                furi_string_free(lobby);
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            // available keys from player_stats
+            FuriString *username = get_json_value_furi("username", player_stats);
+            FuriString *strength = get_json_value_furi("strength", player_stats);
+            FuriString *health = get_json_value_furi("health", player_stats);
+            FuriString *attack_timer = get_json_value_furi("attack_timer", player_stats);
+
+            if (!username || !strength || !health || !attack_timer)
+            {
+                FURI_LOG_E(TAG, "Failed to get player stats");
+                furi_string_free(player_stats);
+                furi_string_free(lobby);
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            // create enemy data
+            FuriString *enemy_data = furi_string_alloc();
+            furi_string_printf(enemy_data, "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},\"move_timer\":1,\"speed\":1,\"attack_timer\":%s,\"strength\":%s,\"health\":%s}]}",
+                               furi_string_get_cstr(attack_timer), furi_string_get_cstr(strength), furi_string_get_cstr(health));
+
+            File *file = storage_file_alloc(storage);
+            if (!storage_file_open(file, directory_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+            {
+                FURI_LOG_E("Game", "Failed to open file for writing: %s", directory_path);
+                storage_file_free(file);
+                furi_record_close(RECORD_STORAGE);
+                furi_string_free(enemy_data);
+                furi_string_free(player_stats);
+                furi_string_free(lobby);
+                furi_string_free(username);
+                furi_string_free(strength);
+                furi_string_free(health);
+                furi_string_free(attack_timer);
+                return false;
+            }
+
+            size_t data_size = furi_string_size(enemy_data);
+            if (storage_file_write(file, furi_string_get_cstr(enemy_data), data_size) != data_size)
+            {
+                FURI_LOG_E("Game", "Failed to write enemy_data");
+            }
+            storage_file_close(file);
+
+            furi_string_free(enemy_data);
+            furi_string_free(player_stats);
+            furi_string_free(lobby);
+            furi_string_free(username);
+            furi_string_free(strength);
+            furi_string_free(health);
+            furi_string_free(attack_timer);
+
+            return true;
         }
 
         // well.. we need to wait for the response to be received
