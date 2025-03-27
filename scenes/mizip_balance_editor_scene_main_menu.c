@@ -12,7 +12,7 @@ void mizip_balance_editor_scene_main_menu_on_enter(void* context) {
     submenu_set_header(app->submenu, "MiZip Balance Editor");
     submenu_add_item(
         app->submenu,
-        "TODO Direct to tag",
+        "Direct to tag",
         SubmenuIndexDirectToTag,
         mizip_balance_editor_app_submenu_callback,
         app);
@@ -35,7 +35,7 @@ bool mizip_balance_editor_scene_main_menu_on_event(void* context, SceneManagerEv
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
         case SubmenuIndexDirectToTag:
-            //TODO
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdScanner);
             break;
         case SubmenuIndexEditMiZipFile:
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdFileSelect);

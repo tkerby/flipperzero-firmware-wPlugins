@@ -5,6 +5,7 @@
 #include <gui/gui.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/popup.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/number_input.h>
 #include <gui/modules/text_box.h>
@@ -13,6 +14,7 @@
 
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
+#include <nfc/nfc_scanner.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 
 #include <mizip_balance_editor_icons.h>
@@ -26,6 +28,7 @@
 // Enumeration of the view indexes.
 typedef enum {
     MiZipBalanceEditorViewIdMainMenu,
+    MiZipBalanceEditorViewIdScanner,
     MiZipBalanceEditorViewIdFileSelect,
     MiZipBalanceEditorViewIdNumberInput,
     MiZipBalanceEditorViewIdShowResult,
@@ -46,11 +49,13 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
 
     Submenu* submenu;
+    Popup* popup;
     DialogsApp* dialogs;
     DialogEx* dialog_ex;
     NumberInput* number_input;
     TextBox* text_box;
 
+    NfcDevice* nfc_device;
     MfClassicData* mf_classic_data;
 
     FuriString* filePath;

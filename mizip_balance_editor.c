@@ -53,6 +53,12 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     //Initialize Dialogs for file browser
     app->dialogs = furi_record_open(RECORD_DIALOGS);
 
+    //Initialize Popup for NFC scanner
+    app->popup = popup_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MiZipBalanceEditorViewIdScanner, popup_get_view(app->popup));
+    app->nfc_device = nfc_device_alloc();
+
     //Create the DialogEx for editing view
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
@@ -92,6 +98,9 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
     submenu_free(app->submenu);
 
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdScanner);
+    popup_free(app->popup);
+
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
     dialog_ex_free(app->dialog_ex);
 
@@ -110,6 +119,7 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     furi_record_close(RECORD_DIALOGS);
     app->dialogs = NULL;
 
+    nfc_device_free(app->nfc_device);
     mf_classic_free(app->mf_classic_data);
     furi_string_free(app->filePath);
 
