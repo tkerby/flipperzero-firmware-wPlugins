@@ -696,5 +696,8 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
     furi_string_free(attack_timer);
     furi_string_free(strength);
     furi_string_free(health);
-    furi_string_free(is_user);
+    if (is_user)
+    {
+        furi_string_free(is_user);
+    }
 }
