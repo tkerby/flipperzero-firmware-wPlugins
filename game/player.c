@@ -374,7 +374,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
-        if (game_context->enemy_count == 0 && !game_context->is_switching_level)
+        if (game_context->game_mode != GAME_MODE_PVP && game_context->enemy_count == 0 && !game_context->is_switching_level)
         {
             game_context->is_switching_level = true;
             save_player_context(player);
