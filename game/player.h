@@ -47,7 +47,7 @@ typedef struct
     uint32_t strength;          // player strength
     uint32_t health;            // player health
     uint32_t max_health;        // player maximum health
-    uint32_t health_regen;      // player health regeneration rate per second/frame
+    uint8_t health_regen;       // player health regeneration rate per second/frame
     float elapsed_health_regen; // time elapsed since last health regeneration
     float attack_timer;         // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
@@ -91,8 +91,8 @@ typedef struct
     bool is_switching_level;
     bool is_menu_open;
     //
-    uint32_t elapsed_button_timer;
-    uint32_t last_button;
+    uint16_t elapsed_button_timer;
+    uint8_t last_button;
     //
     GameMenuScreen menu_screen;
     uint8_t menu_selection;

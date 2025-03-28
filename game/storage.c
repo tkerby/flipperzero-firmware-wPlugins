@@ -310,7 +310,7 @@ static FuriString *player_context_json(PlayerContext *player_context, bool webso
 
         // 7. Health Regen
         furi_string_cat_str(json, "\"health_regen\":");
-        snprintf(buffer, sizeof(buffer), "%lu", player_context->health_regen);
+        snprintf(buffer, sizeof(buffer), "%u", player_context->health_regen);
         furi_string_cat_str(json, buffer);
         furi_string_cat_str(json, ",");
 
