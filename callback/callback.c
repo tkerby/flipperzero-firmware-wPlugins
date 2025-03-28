@@ -799,6 +799,9 @@ void free_all_views(void *context, bool should_free_variable_item_list, bool sho
         free_submenu_settings(app);
         free_submenu_lobby(app);
     }
+
+    // free Derek's loader
+    free_view_loader(app);
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -923,6 +926,13 @@ static bool start_game_thread(void *context)
         easy_flipper_dialog("Error", "app is NULL. Press BACK to return.");
         return false;
     }
+
+    // free everything but message_view
+    free_variable_item_list(app);
+    free_text_input_view(app);
+    free_submenu_settings(app);
+    free_submenu_lobby(app);
+    free_view_loader(app);
 
     // free game thread
     if (game_thread_running)
@@ -1236,6 +1246,11 @@ static char *_parse_game(DataLoaderModel *model)
 }
 static void switch_to_view_get_game(FlipWorldApp *app)
 {
+    if (!alloc_view_loader(app))
+    {
+        FURI_LOG_E(TAG, "Failed to allocate view loader");
+        return;
+    }
     generic_switch_to_view(app, "Starting Game..", _fetch_game, _parse_game, 5, callback_to_submenu, FlipWorldViewLoader);
 }
 static void run(FlipWorldApp *app)
@@ -1980,6 +1995,11 @@ static char *_parse_worlds(DataLoaderModel *model)
 }
 static void switch_to_view_get_worlds(FlipWorldApp *app)
 {
+    if (!alloc_view_loader(app))
+    {
+        FURI_LOG_E(TAG, "Failed to allocate view loader");
+        return;
+    }
     generic_switch_to_view(app, "Fetching World Pack..", _fetch_worlds, _parse_worlds, 1, callback_to_submenu, FlipWorldViewLoader);
 }
 static void game_settings_select(void *context, uint32_t index)
