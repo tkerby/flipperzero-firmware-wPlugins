@@ -23,7 +23,7 @@
 
 #include "adapted_from_ofw/mizip.h"
 
-#define NFC_APP_FOLDER    ANY_PATH("nfc")
+#define NFC_APP_FOLDER    EXT_PATH("nfc")
 #define NFC_APP_EXTENSION ".nfc"
 
 // Enumeration of the view indexes.
