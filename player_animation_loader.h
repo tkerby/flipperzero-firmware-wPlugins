@@ -4,6 +4,7 @@
 #include "game.h"
 #include "player.h"
 
-void idle_animation_load(int len);
+void idle_animation_load(GameManager* manager);
+void swinging_sword_animation_load(GameManager* manager);
 
 #endif
