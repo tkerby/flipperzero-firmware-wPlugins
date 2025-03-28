@@ -75,18 +75,10 @@ static void icon_start(Entity *self, GameManager *manager, void *context)
     free(loaded_data);
 }
 
-// -------------- Stop callback --------------
-static void icon_free(Entity *self, GameManager *manager, void *context)
-{
-    UNUSED(self);
-    UNUSED(manager);
-    UNUSED(context);
-}
-
 // -------------- Entity description --------------
 const EntityDescription icon_desc = {
     .start = icon_start,
-    .stop = icon_free,
+    .stop = NULL,
     .update = NULL,
     .render = icon_render,
     .collision = icon_collision,
