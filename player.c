@@ -95,12 +95,12 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
 
-void Animation(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+void Animations(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
     UNUSED(self);
     UNUSED(canvas);
-
-    playerContext->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
+    UNUSED(playerContext);
+    UNUSED(manager);
 }
 
 const EntityDescription player_desc = {
