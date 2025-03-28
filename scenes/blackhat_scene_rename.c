@@ -36,7 +36,7 @@ bool blackhat_scene_rename_on_event(void* context, SceneManagerEvent event)
         snprintf(
             app->text_store,
             sizeof(app->text_store),
-            "%s %s\n",
+            "%s '%s'\n",
             app->selected_tx_string,
             app->text_input_ch
         );
