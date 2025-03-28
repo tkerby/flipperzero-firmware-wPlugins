@@ -53,6 +53,7 @@ void mizip_balance_editor_update_balance(void* context) {
     dialog_ex_set_result_callback(
         app->dialog_ex, mizip_balance_editor_scene_confirm_dialog_callback);
     dialog_ex_set_context(app->dialog_ex, app);
+    FURI_LOG_T("RESULT", "Result showed");
 }
 
 void mizip_balance_editor_scene_show_result_on_enter(void* context) {
