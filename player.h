@@ -15,4 +15,6 @@ extern const EntityDescription player_desc;
 
 void player_spawn(Level* level, GameManager* manager);
 
+extern void Animations(GameManager* manager, void* context);
+
 #endif

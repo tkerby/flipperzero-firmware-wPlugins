@@ -4,6 +4,10 @@ Sprite* idle[2];
 Sprite* sword_swing[7];
 Sprite* walking[8];
 
+int idle_current_frame = 0;
+int swinging_sword_current_frame = 0;
+int walking_current_frame = 0;
+
 void Idle_animation_load(GameManager* manager) {
     idle[0] = game_manager_sprite_load(manager, "other/player.fxbm");
     idle[1] = game_manager_sprite_load(manager, "other/idle.fxbm");
@@ -32,14 +36,14 @@ void Walking_animation_load(GameManager* manager) {
 
 // the animation_play voids only transfer you to the next frames, any delay between frames needs to be done somewhere else.
 
-void Idle_animation_play(GameManager* manager, void* context, int current_frame) {
+void Idle_animation_play(GameManager* manager, void* context) {
     UNUSED(manager);
     int total_frames = sizeof(idle) / sizeof(idle[0]);
-    if(current_frame > total_frames) {
-        current_frame = 0;
+    if(idle_current_frame == total_frames) {
+        idle_current_frame = 0;
     }
 
     PlayerContext* playerContext = (PlayerContext*)context;
-    playerContext->sprite = idle[current_frame];
-    current_frame++;
+    playerContext->sprite = idle[idle_current_frame];
+    idle_current_frame++;
 }

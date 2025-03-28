@@ -1,7 +1,10 @@
 #include "player.h"
+#include "player_animations.h"
 
 bool isGrounded;
 bool isJumping;
+
+bool is_moving;
 
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -19,6 +22,10 @@ void player_spawn(Level* level, GameManager* manager) {
 
     // Load player sprite
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
+
+    Idle_animation_load(manager);
+    Walking_animation_load(manager);
+    Swinging_sword_animation_load(manager);
 }
 
 void player_update(Entity* self, GameManager* manager, void* context) {
@@ -48,6 +55,11 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     if(input.held & GameKeyLeft) pos.x -= 2;
     if(input.held & GameKeyRight) pos.x += 2;
 
+    if(input.held & GameKeyLeft || input.held & GameKeyRight)
+        is_moving = true;
+    else
+        is_moving = false;
+
     // jump
     if(input.pressed & GameKeyUp && isGrounded) {
         playerContext->Yvelocity = -3.5;
@@ -64,6 +76,8 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     if(input.pressed & GameKeyBack) {
         game_manager_game_stop(manager);
     }
+
+    Animations(manager, context);
 }
 
 void player_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
@@ -95,12 +109,13 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
 }
 
-void Animations(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
-    UNUSED(self);
-    UNUSED(canvas);
-    UNUSED(playerContext);
+    if(!is_moving && isGrounded) {
+        Idle_animation_play(manager, context);
+    }
     UNUSED(manager);
+    UNUSED(playerContext);
 }
 
 const EntityDescription player_desc = {

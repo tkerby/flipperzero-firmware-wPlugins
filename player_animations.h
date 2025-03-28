@@ -12,8 +12,8 @@ void Idle_animation_load(GameManager* manager);
 void Swinging_sword_animation_load(GameManager* manager);
 void Walking_animation_load(GameManager* manager);
 
-void Idle_animation_play(GameManager* manager, void* context, int current_frame);
-void Swinging_sword_animation_play(GameManager* manager, void* context, int current_frame);
-void Walking_animation_play(GameManager* manager, void* context, int current_frame);
+void Idle_animation_play(GameManager* manager, void* context);
+void Swinging_sword_animation_play(GameManager* manager, void* context);
+void Walking_animation_play(GameManager* manager, void* context);
 
 #endif
