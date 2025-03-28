@@ -442,6 +442,18 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
         if (!h || !eat || !d || !sp || !x || !y)
         {
             FURI_LOG_E("Game", "PVP position: Failed to parse enemy data");
+            if (h)
+                free(h);
+            if (eat)
+                free(eat);
+            if (d)
+                free(d);
+            if (sp)
+                free(sp);
+            if (x)
+                free(x);
+            if (y)
+                free(y);
             return;
         }
 
@@ -470,6 +482,14 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
         enemy->start_position.y = (float)atoi(y);
         enemy->end_position.x = (float)atoi(x);
         enemy->end_position.y = (float)atoi(y);
+
+        // free the strings
+        free(h);
+        free(eat);
+        free(d);
+        free(sp);
+        free(x);
+        free(y);
     }
 }
 
