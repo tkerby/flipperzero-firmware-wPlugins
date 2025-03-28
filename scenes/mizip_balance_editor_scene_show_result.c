@@ -45,8 +45,8 @@ void mizip_balance_editor_update_balance(void* context) {
         dialog_ex_set_right_button_text(app->dialog_ex, "+");
         dialog_ex_set_center_button_text(app->dialog_ex, "Custom value");
     } else {
-        message = furi_string_alloc_set("Not a MiZip file");
-        dialog_ex_set_center_button_text(app->dialog_ex, "Select another file");
+        message = furi_string_alloc_set("No MiZip data found");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Retry");
     }
     dialog_ex_set_text(
         app->dialog_ex, furi_string_get_cstr(message), 64, 29, AlignCenter, AlignCenter);

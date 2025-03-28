@@ -19,6 +19,7 @@ void mizip_balance_editor_scene_scanner_scan_callback(NfcScannerEvent event, voi
 void mizip_balance_editor_scene_scanner_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
+
     popup_set_header(
         app->popup, "Apply MiZip\n  tag to the\n      back", 65, 30, AlignLeft, AlignTop);
     popup_set_icon(app->popup, 0, 3, &I_RFIDDolphinReceive_97x61);
@@ -35,13 +36,13 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == MiZipBalanceEditorCustomEventCardDetected) {
-            popup_set_header(app->popup, "Reading...", 70, 30, AlignLeft, AlignTop);
+            popup_set_header(app->popup, "Reading...", 65, 40, AlignLeft, AlignTop);
             consumed = true;
         } else if(event.event == MiZipBalanceEditorCustomEventWrongCard) {
             nfc_scanner_stop(app->scanner);
             nfc_scanner_free(app->scanner);
 
-            popup_set_header(app->popup, "Wrong tag", 70, 30, AlignLeft, AlignTop);
+            popup_set_header(app->popup, "Wrong tag", 65, 40, AlignLeft, AlignTop);
             consumed = true;
         } else if(event.event == MiZipBalanceEditorCustomEventMfClassicCard) {
             nfc_scanner_stop(app->scanner);
@@ -49,12 +50,9 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
 
             app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
             mf_classic_copy(app->mf_classic_data, nfc_poller_get_data(app->poller));
+            nfc_poller_free(app->poller);
             app->is_valid_mizip_data = mizip_verify(context);
-            if(app->is_valid_mizip_data) {
-                popup_set_header(app->popup, "MiZip tag found", 70, 30, AlignLeft, AlignTop);
-            } else {
-                popup_set_header(app->popup, "Not a MiZip tag", 70, 30, AlignLeft, AlignTop);
-            }
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
             consumed = true;
         }
     }
@@ -62,5 +60,6 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
 }
 
 void mizip_balance_editor_scene_scanner_on_exit(void* context) {
-    UNUSED(context);
+    MiZipBalanceEditorApp* app = context;
+    popup_reset(app->popup);
 }
