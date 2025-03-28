@@ -18,7 +18,7 @@ void player_spawn(Level* level, GameManager* manager) {
     PlayerContext* player_context = entity_context_get(player);
 
     // Load player sprite
-    player_context->sprite = game_manager_sprite_load(manager, "player.fxbm");
+    player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
 }
 
 void player_update(Entity* self, GameManager* manager, void* context) {
@@ -93,6 +93,14 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 
     // Draw score
     canvas_printf(canvas, 0, 7, "Score: %lu", game_context->score);
+}
+
+void Animation(Entity* self, GameManager* manager, Canvas* canvas, void* context) {
+    PlayerContext* playerContext = (PlayerContext*)context;
+    UNUSED(self);
+    UNUSED(canvas);
+
+    playerContext->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
 }
 
 const EntityDescription player_desc = {
