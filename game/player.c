@@ -143,9 +143,6 @@ void player_spawn(Level *level, GameManager *manager)
                 snprintf(pctx->username, sizeof(pctx->username), "Player");
             }
         }
-
-        game_context->player_context = pctx;
-
         // Save the initialized context
         if (!save_player_context(pctx))
         {
@@ -171,8 +168,6 @@ void player_spawn(Level *level, GameManager *manager)
     // set the player's left sprite direction
     pctx->left = pctx->direction == ENTITY_LEFT ? true : false;
 
-    // Assign loaded player context to game context
-    game_context->player_context = pctx;
     free(sprite_context);
 }
 

@@ -214,6 +214,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     furi_check(enemy_context, "Enemy collision: EntityContext is NULL");
     GameContext *game_context = game_manager_game_context_get(manager);
     furi_check(game_context, "Enemy collision: GameContext is NULL");
+    PlayerContext *player_context = entity_context_get(game_context->player);
     if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step != 4)
     {
         // FURI_LOG_I("Game", "Enemy collision: No enemies in story mode");
@@ -241,10 +242,10 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         }
 
         // Determine if the player is facing the enemy
-        if ((game_context->player_context->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x) ||
-            (game_context->player_context->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x) ||
-            (game_context->player_context->direction == ENTITY_UP && enemy_pos.y < player_pos.y) ||
-            (game_context->player_context->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y))
+        if ((player_context->direction == ENTITY_LEFT && enemy_pos.x < player_pos.x) ||
+            (player_context->direction == ENTITY_RIGHT && enemy_pos.x > player_pos.x) ||
+            (player_context->direction == ENTITY_UP && enemy_pos.y < player_pos.y) ||
+            (player_context->direction == ENTITY_DOWN && enemy_pos.y > player_pos.y))
         {
             player_is_facing_enemy = true;
         }
@@ -260,26 +261,26 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             // Reset last button
             game_context->last_button = -1;
 
-            if (game_context->player_context->elapsed_attack_timer >= game_context->player_context->attack_timer)
+            if (player_context->elapsed_attack_timer >= player_context->attack_timer)
             {
                 atk_notify(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
-                game_context->player_context->elapsed_attack_timer = 0.0f;
+                player_context->elapsed_attack_timer = 0.0f;
                 enemy_context->elapsed_attack_timer = 0.0f; // Reset enemy's attack timer to block enemy attack
 
                 // Increase XP by the enemy's strength
-                game_context->player_context->xp += enemy_context->strength;
+                player_context->xp += enemy_context->strength;
 
                 // Increase healthy by 10% of the enemy's strength
-                game_context->player_context->health += enemy_context->strength * 0.1f;
-                if (game_context->player_context->health > game_context->player_context->max_health)
+                player_context->health += enemy_context->strength * 0.1f;
+                if (player_context->health > player_context->max_health)
                 {
-                    game_context->player_context->health = game_context->player_context->max_health;
+                    player_context->health = player_context->max_health;
                 }
 
                 // Decrease enemy health by player strength
-                enemy_context->health -= game_context->player_context->strength;
+                enemy_context->health -= player_context->strength;
 
                 if (enemy_context->health <= 0)
                 {
@@ -300,18 +301,18 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     enemy_context->state = ENTITY_ATTACKED;
                     // Vector old_pos = entity_pos_get(self);
                     //  Bounce the enemy back by X units opposite their last movement direction
-                    enemy_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
-                    // enemy_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
+                    enemy_pos.x -= player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    // enemy_pos.y -= player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(self, enemy_pos);
 
                     // Reset enemy's movement direction to prevent immediate re-collision
-                    game_context->player_context->dx = 0;
-                    game_context->player_context->dy = 0;
+                    player_context->dx = 0;
+                    player_context->dy = 0;
                 }
             }
             else
             {
-                FURI_LOG_I("Game", "Player attack on enemy '%s' is on cooldown: %f seconds remaining", enemy_context->id, (double)(game_context->player_context->attack_timer - game_context->player_context->elapsed_attack_timer));
+                FURI_LOG_I("Game", "Player attack on enemy '%s' is on cooldown: %f seconds remaining", enemy_context->id, (double)(player_context->attack_timer - player_context->elapsed_attack_timer));
             }
         }
         // Handle Enemy Attacking Player (enemy facing player)
@@ -325,54 +326,54 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 enemy_context->elapsed_attack_timer = 0.0f;
 
                 // Decrease player health by enemy strength
-                game_context->player_context->health -= enemy_context->strength;
+                player_context->health -= enemy_context->strength;
 
-                if (game_context->player_context->health <= 0)
+                if (player_context->health <= 0)
                 {
                     FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
-                    game_context->player_context->state = ENTITY_DEAD;
+                    player_context->state = ENTITY_DEAD;
 
                     // Reset player position and health
-                    entity_pos_set(other, game_context->player_context->start_position);
-                    game_context->player_context->health = game_context->player_context->max_health;
+                    entity_pos_set(other, player_context->start_position);
+                    player_context->health = player_context->max_health;
 
                     // subtract player's XP by the enemy's strength
-                    game_context->player_context->xp -= enemy_context->strength;
-                    if ((int)game_context->player_context->xp < 0)
+                    player_context->xp -= enemy_context->strength;
+                    if ((int)player_context->xp < 0)
                     {
-                        game_context->player_context->xp = 0;
+                        player_context->xp = 0;
                     }
                 }
                 else
                 {
                     FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
-                    game_context->player_context->state = ENTITY_ATTACKED;
+                    player_context->state = ENTITY_ATTACKED;
 
                     // Bounce the player back by X units opposite their last movement direction
-                    player_pos.x -= game_context->player_context->dx * enemy_context->radius + game_context->icon_offset;
-                    // player_pos.y -= game_context->player_context->dy * enemy_context->radius + game_context->icon_offset;
+                    player_pos.x -= player_context->dx * enemy_context->radius + game_context->icon_offset;
+                    // player_pos.y -= player_context->dy * enemy_context->radius + game_context->icon_offset;
                     entity_pos_set(other, player_pos);
 
                     // Reset player's movement direction to prevent immediate re-collision
-                    game_context->player_context->dx = 0;
-                    game_context->player_context->dy = 0;
+                    player_context->dx = 0;
+                    player_context->dy = 0;
                 }
             }
         }
         else // handle other collisions
         {
             // Set the player's old position to prevent collision
-            entity_pos_set(other, game_context->player_context->old_position);
+            entity_pos_set(other, player_context->old_position);
             // Reset player's movement direction to prevent immediate re-collision
-            game_context->player_context->dx = 0;
-            game_context->player_context->dy = 0;
+            player_context->dx = 0;
+            player_context->dy = 0;
         }
 
-        if (game_context->player_context->state == ENTITY_DEAD)
+        if (player_context->state == ENTITY_DEAD)
         {
             // Reset player's position and health
-            entity_pos_set(other, game_context->player_context->start_position);
-            game_context->player_context->health = game_context->player_context->max_health;
+            entity_pos_set(other, player_context->start_position);
+            player_context->health = player_context->max_health;
         }
     }
     // if not player than must be an icon or npc; so push back

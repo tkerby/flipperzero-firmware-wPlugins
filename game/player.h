@@ -73,7 +73,6 @@ typedef enum
 
 typedef struct
 {
-    PlayerContext *player_context;
     Level *levels[MAX_LEVELS];
     Entity *enemies[MAX_ENEMIES];
     Entity *npcs[MAX_NPCS];

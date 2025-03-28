@@ -14,7 +14,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->fps = atof_(fps_choices_str[fps_index]);
-    game_context->player_context = NULL;
+    game_context->player = NULL;
     game_context->ended_early = false;
     game_context->current_level = 0;
     game_context->level_count = 0;
