@@ -24,7 +24,6 @@ void player_spawn(Level* level, GameManager* manager) {
 void player_update(Entity* self, GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
     GameContext* game_context = game_manager_game_context_get(manager);
-
     InputState input = game_manager_input_get(manager);
 
     Vector pos = entity_pos_get(self);
@@ -87,8 +86,7 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
     Vector pos = entity_pos_get(self);
 
     // Draw player sprite
-    // We subtract 5 from x and y, because collision box is 10x10, and we want to center sprite in it.
-    canvas_draw_sprite(canvas, player->sprite, pos.x - 10, pos.y - 12);
+    canvas_draw_sprite(canvas, player->sprite, pos.x - 38, pos.y - 40);
 
     // Get game context
     GameContext* game_context = game_manager_game_context_get(manager);
