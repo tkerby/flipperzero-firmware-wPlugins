@@ -2,7 +2,7 @@
 #include <flip_world.h>
 #include <flip_storage/storage.h>
 
-void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings);
+void free_all_views(void *context, bool free_variable_list, bool free_settings_submenu, bool free_submenu_game);
 void callback_submenu_choices(void *context, uint32_t index);
 uint32_t callback_to_submenu(void *context);
 

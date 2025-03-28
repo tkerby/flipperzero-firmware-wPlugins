@@ -94,17 +94,10 @@ FlipWorldApp *flip_world_app_alloc()
     {
         return NULL;
     }
-    if (!easy_flipper_set_submenu(&app->submenu_game, FlipWorldViewGameSubmenu, "Play", callback_to_submenu, &app->view_dispatcher))
-    {
-        return NULL;
-    }
+
     submenu_add_item(app->submenu, "Play", FlipWorldSubmenuIndexGameSubmenu, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "About", FlipWorldSubmenuIndexMessage, callback_submenu_choices, app);
     submenu_add_item(app->submenu, "Settings", FlipWorldSubmenuIndexSettings, callback_submenu_choices, app);
-    //
-    submenu_add_item(app->submenu_game, "Tutorial", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_game, "PvP", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
-    submenu_add_item(app->submenu_game, "PvE", FlipWorldSubmenuIndexPvE, callback_submenu_choices, app);
 
     // Switch to the main view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
@@ -127,15 +120,8 @@ void flip_world_app_free(FlipWorldApp *app)
         view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSubmenu);
         submenu_free(app->submenu);
     }
-    if (app->submenu_game)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewGameSubmenu);
-        submenu_free(app->submenu_game);
-    }
 
-    free_view_loader(app);
-
-    free_all_views(app, true, true);
+    free_all_views(app, true, true, true);
 
     // free the view dispatcher
     view_dispatcher_free(app->view_dispatcher);
