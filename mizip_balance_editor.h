@@ -17,6 +17,7 @@
 #include <nfc/nfc_scanner.h>
 #include <nfc/nfc_poller.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
+#include <lib/nfc/protocols/mf_classic/mf_classic_poller.h>
 
 #include <mizip_balance_editor_icons.h>
 #include "scenes/mizip_balance_editor_scene.h"
@@ -46,6 +47,7 @@ typedef enum {
 enum MiZipBalanceEditorCustomEvent {
     MiZipBalanceEditorCustomEventCardDetected,
     MiZipBalanceEditorCustomEventMfClassicCard,
+    MiZipBalanceEditorCustomEventPollerSuccess,
     MiZipBalanceEditorCustomEventWrongCard
 };
 

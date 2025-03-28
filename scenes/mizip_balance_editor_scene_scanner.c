@@ -1,5 +1,26 @@
 #include "../mizip_balance_editor.h"
 
+static NfcCommand
+    mizip_balance_editor_scene_scanner_poller_callback(NfcGenericEvent event, void* context) {
+    furi_assert(event.protocol == NfcProtocolMfClassic);
+    MiZipBalanceEditorApp* app = context;
+    NfcCommand command = NfcCommandContinue;
+
+    const MfClassicPollerEvent* mf_classic_event = event.event_data;
+    if(mf_classic_event->type == MfClassicPollerEventTypeSuccess) {
+        nfc_device_set_data(
+            app->nfc_device, NfcProtocolMfClassic, nfc_poller_get_data(app->poller));
+        const MfClassicData* mf_classic_data =
+            nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
+        mf_classic_copy(app->mf_classic_data, mf_classic_data);
+        view_dispatcher_send_custom_event(
+            app->view_dispatcher, MiZipBalanceEditorCustomEventPollerSuccess);
+        command = NfcCommandStop;
+    }
+
+    return command;
+}
+
 void mizip_balance_editor_scene_scanner_scan_callback(NfcScannerEvent event, void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
@@ -53,7 +74,11 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
             nfc_scanner_free(app->scanner);
 
             app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
-            mf_classic_copy(app->mf_classic_data, nfc_poller_get_data(app->poller));
+            nfc_poller_start(
+                app->poller, mizip_balance_editor_scene_scanner_poller_callback, context);
+            consumed = true;
+        } else if(event.event == MiZipBalanceEditorCustomEventPollerSuccess) {
+            nfc_poller_stop(app->poller);
             nfc_poller_free(app->poller);
             app->is_valid_mizip_data = mizip_verify(context);
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
