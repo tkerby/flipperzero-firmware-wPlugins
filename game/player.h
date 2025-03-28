@@ -4,9 +4,9 @@
 #include <game/game.h>
 #include "engine/sensors/imu.h"
 
-#define MAX_ENEMIES 10
-#define MAX_LEVELS 10
-#define MAX_NPCS 10
+#define MAX_ENEMIES 5
+#define MAX_LEVELS 5
+#define MAX_NPCS 5
 
 // EntityContext definition
 typedef struct
