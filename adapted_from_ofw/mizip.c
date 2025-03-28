@@ -1,3 +1,4 @@
+#include "mizip.h"
 #include <flipper_application/flipper_application.h>
 #include <nfc/nfc_device.h>
 #include <bit_lib/bit_lib.h>
@@ -90,10 +91,10 @@ static bool mizip_get_card_config(MizipCardConfig* config, MfClassicType type) {
     return success;
 }
 
-bool mizip_verify(const NfcDevice* device) {
-    furi_assert(device);
-
-    const MfClassicData* data = nfc_device_get_data(device, NfcProtocolMfClassic);
+bool mizip_verify(void* context) {
+    furi_assert(context);
+    MiZipBalanceEditorApp* app = context;
+    const MfClassicData* data = app->mf_classic_data;
 
     bool is_mizip = false;
 

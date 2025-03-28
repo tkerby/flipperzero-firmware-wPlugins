@@ -57,6 +57,7 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->popup = popup_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdScanner, popup_get_view(app->popup));
+    app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
 
     //Create the DialogEx for editing view
@@ -119,6 +120,7 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     furi_record_close(RECORD_DIALOGS);
     app->dialogs = NULL;
 
+    nfc_free(app->nfc);
     nfc_device_free(app->nfc_device);
     mf_classic_free(app->mf_classic_data);
     furi_string_free(app->filePath);

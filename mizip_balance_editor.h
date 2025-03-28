@@ -15,6 +15,7 @@
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
 #include <nfc/nfc_scanner.h>
+#include <nfc/nfc_poller.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 
 #include <mizip_balance_editor_icons.h>
@@ -42,6 +43,12 @@ typedef enum {
     SubmenuIndexAbout,
 } SubmenuIndex;
 
+enum MiZipBalanceEditorCustomEvent {
+    MiZipBalanceEditorCustomEventCardDetected,
+    MiZipBalanceEditorCustomEventMfClassicCard,
+    MiZipBalanceEditorCustomEventWrongCard
+};
+
 // Main application structure.
 typedef struct {
     Gui* gui;
@@ -55,6 +62,9 @@ typedef struct {
     NumberInput* number_input;
     TextBox* text_box;
 
+    Nfc* nfc;
+    NfcScanner* scanner;
+    NfcPoller* poller;
     NfcDevice* nfc_device;
     MfClassicData* mf_classic_data;
 

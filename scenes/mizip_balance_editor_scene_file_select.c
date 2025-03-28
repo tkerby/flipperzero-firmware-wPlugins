@@ -20,19 +20,15 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
     //Check if file is MiZip file
     NfcDevice* nfc_device = nfc_device_alloc();
     if(nfc_device_load(nfc_device, furi_string_get_cstr(app->filePath))) {
-        if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic &&
-           mizip_verify(nfc_device)) {
-            const MfClassicData* mf_classic_data =
-                nfc_device_get_data(nfc_device, NfcProtocolMfClassic);
-            mf_classic_copy(app->mf_classic_data, mf_classic_data);
-            app->is_valid_mizip_data = true;
+        if(nfc_device_get_protocol(nfc_device) == NfcProtocolMfClassic) {
+            mf_classic_copy(
+                app->mf_classic_data, nfc_device_get_data(nfc_device, NfcProtocolMfClassic));
+            app->is_valid_mizip_data = mizip_verify(context);
+            nfc_device_free(nfc_device);
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
         } else {
-            app->is_valid_mizip_data = false;
+            scene_manager_previous_scene(app->scene_manager);
         }
-        nfc_device_free(nfc_device);
-        scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
-    } else {
-        scene_manager_previous_scene(app->scene_manager);
     }
 }
 
