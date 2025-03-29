@@ -47,6 +47,12 @@ const NotificationSequence sequence_blink = {
     NULL,
 };
 
+static bool is_charging(App* app) {
+    PowerInfo power_info;
+    power_get_info(app->power, &power_info);
+    return power_info.is_charging;
+}
+
 static void app_tick_event_callback(void* context) {
     App* app = (App*)context;
     furi_assert(app != NULL);
@@ -61,7 +67,7 @@ static void app_tick_event_callback(void* context) {
         app->last_measurement_ticks = sensor_state.ticks;
 
         if(new_measurement) {
-            if(app->config.led_blinking) {
+            if(app->config.led_blinking && !is_charging(app)) {
                 notification_message(app->notifications, &sequence_blink);
             }
 
@@ -152,6 +158,8 @@ static App* app_alloc() {
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
+    app->power = furi_record_open(RECORD_POWER);
+
     // Initialize the application configuration
     app_config_init(&app->config);
     app_config_load(&app->config, app->storage);
@@ -237,6 +245,7 @@ static void app_free(App* app) {
     // Save the application configuration
     app_config_save(&app->config, app->storage);
 
+    furi_record_close(RECORD_POWER);
     furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_STORAGE);
