@@ -21,6 +21,10 @@ void player_spawn(Level* level, GameManager* manager) {
     Idle_animation_load(manager);
     Walking_animation_load(manager);
     Swinging_sword_animation_load(manager);
+
+    Idle_animation_right_load(manager);
+    Walking_right_animation_load(manager);
+    Swinging_sword_right_animation_load(manager);
 }
 
 void player_update(Entity* self, GameManager* manager, void* context) {

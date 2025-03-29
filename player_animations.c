@@ -98,6 +98,23 @@ void Idle_animation_play(GameManager* manager, void* context) {
     }
 }
 
+void Swinging_sword_animation_play(GameManager *manager, void *context){
+    UNUSED(manager);
+    int total_frames = sizeof(sword_swing) / sizeof(sword_swing[0]);
+    if(swinging_sword_current_frame == total_frames) {
+        swinging_sword_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = sword_swing[swinging_sword_current_frame];
+
+    sword_i++;
+    if(sword_i >= swinging_sword_fps) {
+        swinging_sword_current_frame++;
+        sword_i = 0;
+    }
+}
+
 void Walking_animation_play(GameManager* manager, void* context) {
     UNUSED(manager);
     int total_frames = sizeof(walking) / sizeof(walking[0]);
@@ -112,5 +129,23 @@ void Walking_animation_play(GameManager* manager, void* context) {
     if(walking_i >= walking_fps) {
         walking_current_frame++;
         walking_i = 0;
+    }
+}
+
+// facing right animations
+void Idle_animation_right_play(GameManager *manager, void *context){
+    UNUSED(manager);
+    int total_frames = sizeof(idle_right) / sizeof(idle_right[0]);
+    if(idle_right_current_frame == total_frames) {
+        idle_right_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = idle_right[idle_right_current_frame];
+
+    idle_right_i++;
+    if(idle_right_i >= idle_fps) {
+        idle_right_current_frame++;
+        idle_right_i = 0;
     }
 }
