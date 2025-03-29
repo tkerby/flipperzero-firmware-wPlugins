@@ -35,8 +35,11 @@ typedef struct {
 
 typedef struct DiskImage DiskImage;
 
-// Opens ATR disk image file
+// Opens existing ATR disk image file
 DiskImage* disk_image_open(const char* path, Storage* storage);
+
+// Creates a new empty ATR disk image file
+DiskImage* disk_image_create(const char* path, Storage* storage);
 
 // Closes the disk image
 void disk_image_close(DiskImage* image);

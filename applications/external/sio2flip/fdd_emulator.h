@@ -47,6 +47,9 @@ SIODevice fdd_get_device(FddEmulator* fdd);
 // Returns loaded disk image
 DiskImage* fdd_get_disk(FddEmulator* fdd);
 
+// Returns the last accessed sector
+size_t fdd_get_last_sector(FddEmulator* fdd);
+
 // Load a disk image into the FDD emulator
 bool fdd_insert_disk(FddEmulator* fdd, DiskImage* image);
 

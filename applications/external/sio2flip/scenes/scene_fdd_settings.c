@@ -22,6 +22,7 @@
 typedef enum {
     MenuIndex_InsertDisk,
     MenuIndex_EjectDisk,
+    MenuIndex_NewDisk,
     MenuIndex_WriteProtect,
 } MenuIndex;
 
@@ -49,6 +50,10 @@ static void scene_settings_enter_callback(void* context, uint32_t index) {
         furi_string_reset(app->config.fdd[app->selected_fdd].image);
         scene_manager_previous_scene(app->scene_manager);
         break;
+
+    case MenuIndex_NewDisk:
+        scene_manager_next_scene(app->scene_manager, SceneFddNewDisk);
+        break;
     }
 }
 
@@ -57,9 +62,11 @@ void scene_fdd_settings_init(App* app) {
 
     VariableItem* item;
 
-    item = variable_item_list_add(list, "Insert disk", 0, NULL, app);
+    item = variable_item_list_add(list, "Insert disk...", 0, NULL, app);
 
     item = variable_item_list_add(list, "Eject disk", 0, NULL, app);
+
+    item = variable_item_list_add(list, "New disk...", 0, NULL, app);
 
     DiskImage* image = fdd_get_disk(app->fdd[app->selected_fdd]);
     if(image != NULL) {
