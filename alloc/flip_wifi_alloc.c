@@ -14,7 +14,7 @@ FlipWiFiApp *flip_wifi_app_alloc()
     }
 
     // Submenu
-    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.3.2", callback_exit_app, &app->view_dispatcher))
+    if (!easy_flipper_set_submenu(&app->submenu_main, FlipWiFiViewSubmenuMain, "FlipWiFi v1.4", callback_exit_app, &app->view_dispatcher))
     {
         return NULL;
     }
