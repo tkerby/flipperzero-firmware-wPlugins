@@ -1,80 +1,12 @@
 #include "key_copier.h"
-#include "key_copier_icons.h"
-#include "key_formats.h"
-#include <applications/services/dialogs/dialogs.h>
-#include <applications/services/storage/storage.h>
-#include <flipper_format.h>
-#include <furi.h>
-#include <furi_hal.h>
-#include <gui/gui.h>
-#include <gui/modules/submenu.h>
-#include <gui/modules/text_input.h>
-#include <gui/modules/variable_item_list.h>
-#include <gui/modules/widget.h>
-#include <gui/view.h>
-#include <gui/view_dispatcher.h>
-#include <math.h>
-#include <notification/notification.h>
-#include <notification/notification_messages.h>
-#include <stdbool.h>
 
-#define TAG "KeyCopier"
-
-#define BACKLIGHT_ON 1
-
-typedef enum {
-    KeyCopierSubmenuIndexMeasure,
-    KeyCopierSubmenuIndexConfigure,
-    KeyCopierSubmenuIndexSave,
-    KeyCopierSubmenuIndexLoad,
-    KeyCopierSubmenuIndexAbout,
-} KeyCopierSubmenuIndex;
-
-typedef enum {
-    KeyCopierViewSubmenu,
-    KeyCopierViewTextInput,
-    KeyCopierViewConfigure_i,
-    KeyCopierViewConfigure_e,
-    KeyCopierViewSave,
-    KeyCopierViewLoad,
-    KeyCopierViewMeasure,
-    KeyCopierViewAbout,
-    KeyCopierViewManufacturerList,
-    KeyCopierViewFormatList,
-} KeyCopierView;
-
-typedef struct {
-    ViewDispatcher* view_dispatcher;
-    NotificationApp* notifications;
-    Submenu* submenu;
-    TextInput* text_input;
-    VariableItemList* variable_item_list_config;
-    View* view_measure;
-    View* view_config_e;
-    View* view_save;
-    View* view_load;
-    Widget* widget_about;
-    VariableItem* key_name_item;
-    VariableItem* format_item;
-    VariableItem* format_name_item;
-    char* temp_buffer;
-    uint32_t temp_buffer_size;
-
-    DialogsApp* dialogs;
-    FuriString* file_path;
-    Submenu* manufacturer_list;
-    Submenu* format_list;
-    char* selected_manufacturer;
-} KeyCopierApp;
-
-typedef struct {
-    uint32_t format_index;
-    FuriString* key_name_str;
-    uint8_t pin_slc; // The pin that is being adjusted
-    uint8_t* depth; // The cutting depth
-    bool data_loaded;
-    KeyFormat format;
-} KeyCopierModel;
+void exit_widget_callback(GuiButtonType result, InputType type, void* context) {
+    KeyCopierApp* app = context;
+    UNUSED(result);
+    if(type == InputTypeShort) {
+        view_dispatcher_switch_to_view(app->view_dispatcher, KeyCopierViewSubmenu);
+    }
+}
 
 void initialize_model(KeyCopierModel* model) {
     if(model->depth != NULL) {
@@ -101,6 +33,11 @@ static uint32_t key_copier_navigation_submenu_callback(void* _context) {
     return KeyCopierViewSubmenu;
 }
 
+static uint32_t key_copier_navigation_manufacturer_list_callback(void* _context) {
+    UNUSED(_context);
+    return KeyCopierViewManufacturerList;
+}
+
 static void key_copier_submenu_callback(void* context, uint32_t index) {
     KeyCopierApp* app = (KeyCopierApp*)context;
     switch(index) {
@@ -118,6 +55,9 @@ static void key_copier_submenu_callback(void* context, uint32_t index) {
         break;
     case KeyCopierSubmenuIndexAbout:
         view_dispatcher_switch_to_view(app->view_dispatcher, KeyCopierViewAbout);
+        break;
+    case KeyCopierSubmenuIndexQRCode:
+        view_dispatcher_switch_to_view(app->view_dispatcher, KeyCopierViewQRCode);
         break;
     default:
         break;
@@ -703,7 +643,7 @@ static KeyCopierApp* key_copier_app_alloc() {
     app->dialogs = furi_record_open(RECORD_DIALOGS);
     app->file_path = furi_string_alloc();
     app->submenu = submenu_alloc();
-    submenu_set_header(app->submenu, "Key Copier v1.2");
+    submenu_set_header(app->submenu, "Key Copier v1.3");
     submenu_add_item(
         app->submenu,
         "Select Key Format",
@@ -718,6 +658,13 @@ static KeyCopierApp* key_copier_app_alloc() {
         app->submenu, "Load", KeyCopierSubmenuIndexLoad, key_copier_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Help", KeyCopierSubmenuIndexAbout, key_copier_submenu_callback, app);
+    submenu_add_item(
+        app->submenu,
+        "Video Instruction",
+        KeyCopierSubmenuIndexQRCode,
+        key_copier_submenu_callback,
+        app);
+
     view_set_previous_callback(
         submenu_get_view(app->submenu), key_copier_navigation_exit_callback);
     view_dispatcher_add_view(
@@ -770,7 +717,7 @@ static KeyCopierApp* key_copier_app_alloc() {
         0,
         128,
         64,
-        "Key Maker App 1.2\nAuthor: @Torron\n\nTo measure your key:\n\n1. Place "
+        "Key Maker App 1.3\nAuthor: @Torron\n\nTo measure your key:\n\n1. Place "
         "it on top of the screen.\n\n2. Use the contour to align your key.\n\n3. "
         "Adjust each pin's depth until they match. It's easier if you look with "
         "one eye closed.\n\nGithub: github.com/zinongli/KeyCopier \n\nSpecial "
@@ -779,6 +726,25 @@ static KeyCopierApp* key_copier_app_alloc() {
         widget_get_view(app->widget_about), key_copier_navigation_submenu_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, KeyCopierViewAbout, widget_get_view(app->widget_about));
+
+    app->widget_qr_code = widget_alloc();
+    widget_add_icon_element(app->widget_qr_code, 92, 7, &I_QR_Code);
+    widget_add_string_element(
+        app->widget_qr_code, 0, 10, AlignLeft, AlignBottom, FontSecondary, "Check out");
+    widget_add_string_element(
+        app->widget_qr_code, 0, 23, AlignLeft, AlignBottom, FontSecondary, "@TalkingSasquach's");
+    widget_add_string_element(
+        app->widget_qr_code, 0, 36, AlignLeft, AlignBottom, FontSecondary, "video from decoding");
+    widget_add_string_element(
+        app->widget_qr_code, 0, 49, AlignLeft, AlignBottom, FontSecondary, "a key to eventually");
+    widget_add_string_element(
+        app->widget_qr_code, 0, 62, AlignLeft, AlignBottom, FontSecondary, "3D-printing a copy!");
+    widget_add_button_element(
+        app->widget_qr_code, GuiButtonTypeRight, "Back", exit_widget_callback, app);
+    view_set_previous_callback(
+        widget_get_view(app->widget_qr_code), key_copier_navigation_submenu_callback);
+    view_dispatcher_add_view(
+        app->view_dispatcher, KeyCopierViewQRCode, widget_get_view(app->widget_qr_code));
 
     app->manufacturer_list = submenu_alloc();
     view_set_previous_callback(
@@ -790,14 +756,14 @@ static KeyCopierApp* key_copier_app_alloc() {
 
     app->format_list = submenu_alloc();
     view_set_previous_callback(
-        submenu_get_view(app->format_list), key_copier_navigation_submenu_callback);
+        submenu_get_view(app->format_list), key_copier_navigation_manufacturer_list_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, KeyCopierViewFormatList, submenu_get_view(app->format_list));
 
     app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
 #ifdef BACKLIGHT_ON
-    notification_message(app->notifications, &sequence_display_backlight_enforce_on);
+    notification_message(app->notifications, &sequence_display_backlight_on);
 #endif
 
     return app;
@@ -814,6 +780,8 @@ static void key_copier_app_free(KeyCopierApp* app) {
     free(app->temp_buffer);
     view_dispatcher_remove_view(app->view_dispatcher, KeyCopierViewAbout);
     widget_free(app->widget_about);
+    view_dispatcher_remove_view(app->view_dispatcher, KeyCopierViewQRCode);
+    widget_free(app->widget_qr_code);
     view_dispatcher_remove_view(app->view_dispatcher, KeyCopierViewMeasure);
     with_view_model(
         app->view_measure,
