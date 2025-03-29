@@ -43,6 +43,8 @@ void Walking_animation_load(GameManager* manager) {
     walking[7] = game_manager_sprite_load(manager, "walking/walking_7.fxbm");
 }
 
+
+
 // loading facing right animations
 void Idle_animation_right_load(GameManager* manager) {
     idle[0] = game_manager_sprite_load(manager, "other/player_right.fxbm");
@@ -70,8 +72,9 @@ void Walking_animation_right_load(GameManager* manager) {
     walking[7] = game_manager_sprite_load(manager, "walking/walking_right_7.fxbm");
 }
 
-void Idle_animation_play(GameManager* manager, void* context) {
-    UNUSED(manager);
+
+
+void Idle_animation_play(void* context) {
     int total_frames = sizeof(idle) / sizeof(idle[0]);
     if(idle_current_frame == total_frames) {
         idle_current_frame = 0;
@@ -87,8 +90,23 @@ void Idle_animation_play(GameManager* manager, void* context) {
     }
 }
 
-void Walking_animation_play(GameManager* manager, void* context) {
-    UNUSED(manager);
+void Swinging_sword_animation_play(void *context){
+    int total_frames = sizeof(sword_swing) / sizeof(sword_swing[0]);
+    if(swinging_sword_current_frame == total_frames) {
+        swinging_sword_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = walking[swinging_sword_current_frame];
+
+    sword_i++;
+    if(sword_i >= swinging_sword_fps) {
+        swinging_sword_current_frame++;
+        sword_i = 0;
+    }
+}
+
+void Walking_animation_play(void* context) {
     int total_frames = sizeof(walking) / sizeof(walking[0]);
     if(walking_current_frame == total_frames) {
         walking_current_frame = 0;
