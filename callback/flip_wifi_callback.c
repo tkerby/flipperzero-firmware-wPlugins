@@ -133,7 +133,7 @@ static bool flip_wifi_alloc_widgets(void *context, uint32_t widget)
     case FlipWiFiViewAbout:
         if (!app->widget_info)
         {
-            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.3.2\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
+            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.4\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
             {
                 return false;
             }
