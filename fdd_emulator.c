@@ -42,6 +42,9 @@ struct FddEmulator {
     FddActivityCallback activity_callback;
     void* callback_context;
 
+    // Sector accessed by the last host command
+    size_t last_sector;
+
     // Flag indicating that disk geometry has changed by host
     bool geometry_changed;
     // Disk geometry used for PERCOM config and format commands
@@ -83,8 +86,14 @@ void fdd_set_activity_callback(
     fdd->callback_context = context;
 }
 
+// Returns the last accessed sector
+size_t fdd_get_last_sector(FddEmulator* fdd) {
+    return fdd->last_sector;
+}
+
 static void fdd_notify_activity(FddEmulator* fdd, FddActivity activity, uint16_t sector) {
     furi_check(fdd != NULL);
+    fdd->last_sector = sector;
     if(fdd->activity_callback) {
         fdd->activity_callback(fdd->callback_context, fdd->device, activity, sector);
     }

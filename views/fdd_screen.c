@@ -185,6 +185,7 @@ void fdd_screen_update_state(FddScreen* screen, FddEmulator* emu) {
                 model->disk_size = disk_image_size(image);
                 model->sector_size = disk_image_sector_size(image);
                 model->write_protect = disk_image_get_write_protect(image);
+                model->sector = fdd_get_last_sector(emu);
 
                 const char* filename = furi_string_get_cstr(disk_image_path(image));
                 if(strrchr(filename, '/') != NULL) {
@@ -195,6 +196,7 @@ void fdd_screen_update_state(FddScreen* screen, FddEmulator* emu) {
             } else {
                 model->disk_size = 0;
                 model->sector_size = 0;
+                model->sector = 0;
                 model->write_protect = false;
                 model->image_name[0] = '\0';
             }
