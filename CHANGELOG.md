@@ -1,5 +1,7 @@
 ## v1.4
 - Updated to the latest FlipperHTTP library.
+- Added a check to verify the WiFi connection was successful.
+- Updated the WiFi scan to use JSON for handling unconventional network names.
 
 ## v1.3.2
 - Fixed a crash that occurred when deleting a network from the Saved APs list.
