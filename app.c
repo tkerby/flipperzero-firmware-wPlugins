@@ -69,6 +69,17 @@ static void
     }
 }
 
+static void xex_activity_callback(void* context) {
+    furi_check(context != NULL);
+    App* app = (App*)context;
+
+    if(app->config.led_blinking && !is_charging(app)) {
+        notification_message(app->notifications, &sequence_blink_green_10);
+    }
+
+    xex_screen_update_state(app->xex_screen, app->xex_loader);
+}
+
 static App* app_alloc() {
     FURI_LOG_T(TAG, "Starting application...");
 
@@ -85,8 +96,9 @@ static App* app_alloc() {
 
     app->power = furi_record_open(RECORD_POWER);
 
-    // Create the ATR data directory
+    // Create the data directories
     storage_common_mkdir(app->storage, ATR_DATA_PATH_PREFIX);
+    storage_common_mkdir(app->storage, XEX_DATA_PATH_PREFIX);
 
     // Initialize the application configuration
     app_config_init(&app->config);
@@ -118,6 +130,10 @@ static App* app_alloc() {
     app->fdd_screen = fdd_screen_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, AppViewFddScreen, fdd_screen_get_view(app->fdd_screen));
+
+    app->xex_screen = xex_screen_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppViewXexScreen, xex_screen_get_view(app->xex_screen));
 
     app->popup = popup_alloc();
     view_dispatcher_add_view(app->view_dispatcher, AppViewWiring, popup_get_view(app->popup));
@@ -152,6 +168,11 @@ static App* app_alloc() {
         }
     }
 
+    app->xex_loader = xex_loader_alloc(&app->config);
+    furi_check(app->xex_loader != NULL);
+
+    xex_loader_set_activity_callback(app->xex_loader, xex_activity_callback, app);
+
     FURI_LOG_T(TAG, "Application started");
 
     return app;
@@ -159,6 +180,8 @@ static App* app_alloc() {
 
 static void app_free(App* app) {
     FURI_LOG_T(TAG, "Stopping application...");
+
+    xex_loader_free(app->xex_loader);
 
     if(app->sio) {
         for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
@@ -189,6 +212,9 @@ static void app_free(App* app) {
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewFddScreen);
     fdd_screen_free(app->fdd_screen);
+
+    view_dispatcher_remove_view(app->view_dispatcher, AppViewXexScreen);
+    xex_screen_free(app->xex_screen);
 
     // Free view dispatcher and scene manager
     view_dispatcher_free(app->view_dispatcher);
@@ -235,6 +261,7 @@ void app_stop_emulation(App* app) {
     for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
         fdd_stop(app->fdd[i]);
     }
+    xex_loader_stop(app->xex_loader);
 }
 
 const char* app_build_unique_file_name(App* app) {

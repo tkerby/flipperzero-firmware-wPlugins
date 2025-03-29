@@ -34,15 +34,19 @@
 #include "app_config.h"
 #include "sio_driver.h"
 #include "fdd_emulator.h"
+#include "xex_loader.h"
 
 #include "views/fdd_screen.h"
+#include "views/xex_screen.h"
 
 #define ATR_DATA_PATH_PREFIX STORAGE_APP_DATA_PATH_PREFIX "/atr"
+#define XEX_DATA_PATH_PREFIX STORAGE_APP_DATA_PATH_PREFIX "/xex"
 
 typedef enum {
     AppViewNumberInput,
     AppViewVariableList,
     AppViewFddScreen,
+    AppViewXexScreen,
     AppViewWiring,
     AppViewDialog,
     AppViewFileBrowser,
@@ -59,6 +63,7 @@ typedef struct {
     VariableItemList* var_item_list;
     NumberInput* number_input;
     FddScreen* fdd_screen;
+    XexScreen* xex_screen;
     Popup* popup;
     DialogEx* dialog;
     FileBrowser* file_browser;
@@ -70,6 +75,8 @@ typedef struct {
     SIODriver* sio;
     // FDD emulators
     FddEmulator* fdd[FDD_EMULATOR_COUNT];
+    // XEX file loader
+    XexLoader* xex_loader;
     // Selected FDD emulator
     uint8_t selected_fdd;
 } App;
