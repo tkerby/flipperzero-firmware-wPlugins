@@ -5,9 +5,6 @@ bool isGrounded;
 bool isJumping;
 
 bool is_moving;
-bool can_move = true;
-
-bool is_swinging_sword;
 
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
@@ -22,10 +19,6 @@ void player_spawn(Level* level, GameManager* manager) {
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
 
     Idle_animation_load(manager);
-    Walking_animation_load(manager);
-    Swinging_sword_animation_load(manager);
-
-    Idle_animation_right_load(manager);
     Walking_animation_load(manager);
     Swinging_sword_animation_load(manager);
 }
@@ -52,8 +45,8 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         pos.y += playerContext->Yvelocity;
     }
 
-    if(input.held & GameKeyLeft && can_move && !is_swinging_sword) pos.x -= 1;
-    if(input.held & GameKeyRight && can_move && !is_swinging_sword) pos.x += 1;
+    if(input.held & GameKeyLeft) pos.x -= 1;
+    if(input.held & GameKeyRight) pos.x += 1;
 
     if(input.held & GameKeyLeft || input.held & GameKeyRight)
         is_moving = true;
@@ -112,11 +105,11 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
     if(!is_moving && isGrounded) {
-        Idle_animation_play(manager);
+        Idle_animation_play(manager, context);
     }
 
     if(is_moving && isGrounded) {
-        Walking_animation_play(manager);
+        Walking_animation_play(manager, context);
     }
     UNUSED(manager);
     UNUSED(playerContext);
