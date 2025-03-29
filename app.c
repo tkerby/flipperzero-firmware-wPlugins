@@ -54,19 +54,20 @@ static void app_tick_event_callback(void* context) {
     if(app->sensor != NULL) {
         app->sensor->tick(app->sensor);
 
-        if(app->config.led_blinking) {
-            SensorState sensor_state;
-            app->sensor->get_state(app->sensor, &sensor_state);
+        SensorState sensor_state;
+        app->sensor->get_state(app->sensor, &sensor_state);
 
-            bool new_measurement = sensor_state.ticks != app->last_measurement_ticks;
-            app->last_measurement_ticks = sensor_state.ticks;
+        bool new_measurement = sensor_state.ticks != app->last_measurement_ticks;
+        app->last_measurement_ticks = sensor_state.ticks;
 
-            if(new_measurement) {
+        if(new_measurement) {
+            if(app->config.led_blinking) {
                 notification_message(app->notifications, &sequence_blink);
-                if(app->datalog != NULL) {
-                    datalog_append_record(app->datalog, &sensor_state);
-                    datalog_screen_update(app->datalog_screen, app->datalog);
-                }
+            }
+
+            if(app->datalog != NULL) {
+                datalog_append_record(app->datalog, &sensor_state);
+                datalog_screen_update(app->datalog_screen, app->datalog);
             }
         }
     }
