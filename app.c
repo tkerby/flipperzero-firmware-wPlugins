@@ -137,7 +137,7 @@ static App* app_alloc() {
     app->selected_fdd = 0;
 
     for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
-        app->fdd[i] = fdd_alloc(SIO_DEVICE_DISK1 + i, app->sio, &app->config);
+        app->fdd[i] = fdd_alloc(SIO_DEVICE_DISK1 + i, &app->config);
         furi_check(app->fdd[i] != NULL);
 
         fdd_set_activity_callback(app->fdd[i], fdd_activity_callback, app);
@@ -223,6 +223,18 @@ int32_t app_startup(void* p) {
     app_free(app);
 
     return 0;
+}
+
+void app_start_fdd_emulation(App* app) {
+    for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
+        fdd_start(app->fdd[i], app->sio);
+    }
+}
+
+void app_stop_emulation(App* app) {
+    for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
+        fdd_stop(app->fdd[i]);
+    }
 }
 
 const char* app_build_unique_file_name(App* app) {

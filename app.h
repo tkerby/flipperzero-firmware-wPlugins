@@ -78,3 +78,9 @@ typedef struct {
 // File name is stored in app->file_path and is valid until the next call to
 // this function or FddSelect dialog is used.
 const char* app_build_unique_file_name(App* app);
+
+// Starts emulation of all FDD devices
+void app_start_fdd_emulation(App* app);
+
+// Stops emulation of all devices
+void app_stop_emulation(App* app);

@@ -56,6 +56,7 @@ static void scene_main_menu_enter_callback(void* context, uint32_t index) {
 
     switch(index) {
     case MenuIndex_Start:
+        app_start_fdd_emulation(app);
         scene_manager_next_scene(app->scene_manager, SceneFddInfo);
         break;
     case MenuIndex_WiringInfo:
@@ -94,6 +95,8 @@ void scene_main_menu_init(App* app) {
 
 void scene_main_menu_on_enter(void* context) {
     App* app = (App*)context;
+
+    app_stop_emulation(app);
 
     scene_main_menu_init(app);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewVariableList);
