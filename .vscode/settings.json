@@ -4,7 +4,7 @@
   "cortex-debug.armToolchainPath": "/home/carmi/.ufbt/toolchain/x86_64-linux/bin",
   "cortex-debug.openocdPath": "/home/carmi/.ufbt/toolchain/x86_64-linux/bin/openocd",
   "cortex-debug.gdbPath": "/home/carmi/.ufbt/toolchain/x86_64-linux/bin/arm-none-eabi-gdb-py3",
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "files.associations": {
     "*.scons": "python",
     "SConscript": "python",

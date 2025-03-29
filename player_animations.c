@@ -43,33 +43,6 @@ void Walking_animation_load(GameManager* manager) {
     walking[7] = game_manager_sprite_load(manager, "walking/walking_7.fxbm");
 }
 
-// loading facing right animations
-void Idle_animation_right_load(GameManager* manager) {
-    idle[0] = game_manager_sprite_load(manager, "other/player_right.fxbm");
-    idle[1] = game_manager_sprite_load(manager, "other/idle_right.fxbm");
-}
-
-void Swinging_sword_animation_right_load(GameManager* manager) {
-    sword_swing[0] = game_manager_sprite_load(manager, "other/player_right.fxbm");
-    sword_swing[1] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
-    sword_swing[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.fxbm");
-    sword_swing[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
-    sword_swing[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
-    sword_swing[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
-    sword_swing[6] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
-}
-
-void Walking_animation_right_load(GameManager* manager) {
-    walking[0] = game_manager_sprite_load(manager, "walking/walking_right_0.fxbm");
-    walking[1] = game_manager_sprite_load(manager, "walking/walking_right_1.fxbm");
-    walking[2] = game_manager_sprite_load(manager, "walking/walking_right_2.fxbm");
-    walking[3] = game_manager_sprite_load(manager, "walking/walking_right_3.fxbm");
-    walking[4] = game_manager_sprite_load(manager, "walking/walking_right_4.fxbm");
-    walking[5] = game_manager_sprite_load(manager, "walking/walking_right_5.fxbm");
-    walking[6] = game_manager_sprite_load(manager, "walking/walking_right_6.fxbm");
-    walking[7] = game_manager_sprite_load(manager, "walking/walking_right_7.fxbm");
-}
-
 void Idle_animation_play(GameManager* manager, void* context) {
     UNUSED(manager);
     int total_frames = sizeof(idle) / sizeof(idle[0]);
