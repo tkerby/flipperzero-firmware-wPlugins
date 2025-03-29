@@ -8,6 +8,15 @@ int idle_current_frame = 0;
 int swinging_sword_current_frame = 0;
 int walking_current_frame = 0;
 
+// this tells how many frames to wait until going to the next animation frame
+int idle_fps = 30;
+int swinging_sword_fps = 0;
+int walking_fps = 4;
+
+int idle_i;
+int sword_i;
+int walking_i;
+
 void Idle_animation_load(GameManager* manager) {
     idle[0] = game_manager_sprite_load(manager, "other/player.fxbm");
     idle[1] = game_manager_sprite_load(manager, "other/idle.fxbm");
@@ -15,26 +24,24 @@ void Idle_animation_load(GameManager* manager) {
 
 void Swinging_sword_animation_load(GameManager* manager) {
     sword_swing[0] = game_manager_sprite_load(manager, "other/player.fxbm");
-    sword_swing[1] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_1.png");
-    sword_swing[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_2.png");
-    sword_swing[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_3.png");
-    sword_swing[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_4.png");
-    sword_swing[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_5.png");
-    sword_swing[6] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_6.png");
+    sword_swing[1] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_1.fxbm");
+    sword_swing[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_2.fxbm");
+    sword_swing[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_3.fxbm");
+    sword_swing[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_4.fxbm");
+    sword_swing[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_5.fxbm");
+    sword_swing[6] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_6.fxbm");
 }
 
 void Walking_animation_load(GameManager* manager) {
-    walking[0] = game_manager_sprite_load(manager, "walking/walking_0.png");
-    walking[1] = game_manager_sprite_load(manager, "walking/walking_1.png");
-    walking[2] = game_manager_sprite_load(manager, "walking/walking_2.png");
-    walking[3] = game_manager_sprite_load(manager, "walking/walking_3.png");
-    walking[4] = game_manager_sprite_load(manager, "walking/walking_4.png");
-    walking[5] = game_manager_sprite_load(manager, "walking/walking_5.png");
-    walking[6] = game_manager_sprite_load(manager, "walking/walking_6.png");
-    walking[7] = game_manager_sprite_load(manager, "walking/walking_7.png");
+    walking[0] = game_manager_sprite_load(manager, "walking/walking_0.fxbm");
+    walking[1] = game_manager_sprite_load(manager, "walking/walking_1.fxbm");
+    walking[2] = game_manager_sprite_load(manager, "walking/walking_2.fxbm");
+    walking[3] = game_manager_sprite_load(manager, "walking/walking_3.fxbm");
+    walking[4] = game_manager_sprite_load(manager, "walking/walking_4.fxbm");
+    walking[5] = game_manager_sprite_load(manager, "walking/walking_5.fxbm");
+    walking[6] = game_manager_sprite_load(manager, "walking/walking_6.fxbm");
+    walking[7] = game_manager_sprite_load(manager, "walking/walking_7.fxbm");
 }
-
-// the animation_play voids only transfer you to the next frames, any delay between frames needs to be done somewhere else.
 
 void Idle_animation_play(GameManager* manager, void* context) {
     UNUSED(manager);
@@ -45,5 +52,27 @@ void Idle_animation_play(GameManager* manager, void* context) {
 
     PlayerContext* playerContext = (PlayerContext*)context;
     playerContext->sprite = idle[idle_current_frame];
-    idle_current_frame++;
+
+    idle_i++;
+    if(idle_i >= idle_fps) {
+        idle_current_frame++;
+        idle_i = 0;
+    }
+}
+
+void Walking_animation_play(GameManager* manager, void* context) {
+    UNUSED(manager);
+    int total_frames = sizeof(walking) / sizeof(walking[0]);
+    if(walking_current_frame == total_frames) {
+        walking_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = walking[walking_current_frame];
+
+    walking_i++;
+    if(walking_i >= walking_fps) {
+        walking_current_frame++;
+        walking_i = 0;
+    }
 }

@@ -9,18 +9,13 @@ bool is_moving;
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
-    // Set player position.
-    // Depends on your game logic, it can be done in start entity function, but also can be done here.
     entity_pos_set(player, (Vector){15, 24});
 
-    // Add collision box to player entity
-    // Box is centered in player x and y, and it's size is 10x10
+    // Box is centered in player x and y
     entity_collider_add_rect(player, 15, 24);
 
-    // Get player context
     PlayerContext* player_context = entity_context_get(player);
 
-    // Load player sprite
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
 
     Idle_animation_load(manager);
@@ -34,8 +29,6 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     InputState input = game_manager_input_get(manager);
 
     Vector pos = entity_pos_get(self);
-
-    game_context->score = pos.y;
 
     // isGrounded check
     if((pos.y + 12) >= game_context->ground_hight && playerContext->Yvelocity >= 0) {
@@ -52,8 +45,8 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         pos.y += playerContext->Yvelocity;
     }
 
-    if(input.held & GameKeyLeft) pos.x -= 2;
-    if(input.held & GameKeyRight) pos.x += 2;
+    if(input.held & GameKeyLeft) pos.x -= 1;
+    if(input.held & GameKeyRight) pos.x += 1;
 
     if(input.held & GameKeyLeft || input.held & GameKeyRight)
         is_moving = true;
@@ -113,6 +106,10 @@ void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
     if(!is_moving && isGrounded) {
         Idle_animation_play(manager, context);
+    }
+
+    if(is_moving && isGrounded) {
+        Walking_animation_play(manager, context);
     }
     UNUSED(manager);
     UNUSED(playerContext);
