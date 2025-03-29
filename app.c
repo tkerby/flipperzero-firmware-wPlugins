@@ -17,6 +17,8 @@
  */
 
 #include <furi.h>
+#include <furi_hal.h>
+
 #include <notification/notification_messages.h>
 
 #include "app.h"
@@ -221,4 +223,21 @@ int32_t app_startup(void* p) {
     app_free(app);
 
     return 0;
+}
+
+const char* app_build_unique_file_name(App* app) {
+    DateTime time;
+    furi_hal_rtc_get_datetime(&time);
+
+    furi_string_printf(
+        app->file_path,
+        ATR_DATA_PATH_PREFIX "/%04d%02d%02d_%02d%02d%02d.atr",
+        time.year,
+        time.month,
+        time.day,
+        time.hour,
+        time.minute,
+        time.second);
+
+    return furi_string_get_cstr(app->file_path);
 }

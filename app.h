@@ -73,3 +73,8 @@ typedef struct {
     // Selected FDD emulator
     uint8_t selected_fdd;
 } App;
+
+// Builds a unique file name for a new ATR image.
+// File name is stored in app->file_path and is valid until the next call to
+// this function or FddSelect dialog is used.
+const char* app_build_unique_file_name(App* app);

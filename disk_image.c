@@ -37,6 +37,7 @@ struct DiskImage {
 
 DiskImage* disk_image_open(const char* path, Storage* storage) {
     DiskImage* image = (DiskImage*)malloc(sizeof(DiskImage));
+    memset(image, 0, sizeof(DiskImage));
 
     image->file = storage_file_alloc(storage);
 
@@ -97,6 +98,36 @@ DiskImage* disk_image_open(const char* path, Storage* storage) {
         disk_size,
         sector_size,
         disk_size / sector_size);
+
+    return image;
+
+cleanup:
+    disk_image_close(image);
+    return NULL;
+}
+
+DiskImage* disk_image_create(const char* path, Storage* storage) {
+    DiskImage* image = (DiskImage*)malloc(sizeof(DiskImage));
+    memset(image, 0, sizeof(DiskImage));
+
+    image->file = storage_file_alloc(storage);
+
+    FURI_LOG_I(TAG, "Opening ATR file %s", path);
+
+    image->path = furi_string_alloc_set(path);
+
+    if(!storage_file_open(image->file, path, FSAM_READ_WRITE, FSOM_CREATE_ALWAYS)) {
+        set_last_error(ERROR_TITLE, "Failed to open file %s", path);
+        goto cleanup;
+    }
+
+    if(!determine_disk_geometry(&image->geometry, 90 * 1024, 128)) {
+        goto cleanup;
+    }
+
+    if(!disk_image_format(image, image->geometry)) {
+        goto cleanup;
+    }
 
     return image;
 
