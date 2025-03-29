@@ -1,0 +1,13 @@
+App(
+    appid="clockv1",
+    name="Clock",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="clock_app",
+    stack_size=2 * 1024,
+    fap_icon="clock.png",
+    fap_category="Tools",
+    fap_author="kowalski7cc",
+    fap_weburl="https://github.com/kowalski7cc/flipperzero-firmware/tree/clock-v1",
+    fap_version="1.2",
+    fap_description="Simple clock app",
+)

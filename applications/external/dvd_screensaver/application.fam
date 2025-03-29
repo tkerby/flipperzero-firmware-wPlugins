@@ -1,0 +1,14 @@
+App(
+    appid="dvd_screensaver",
+    name="DVD Screensaver",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="dvd_screensaver_app",
+    stack_size=2 * 1024,
+    fap_icon="dvd_screensaver.png",
+    fap_icon_assets="images",
+    fap_category="Media",
+    fap_author="shantih19",
+    fap_weburl="https://github.com/shantih19/flipper_dvd_screensaver",
+    fap_version="1.1",
+    fap_description="DVD Screensaver clone",
+)

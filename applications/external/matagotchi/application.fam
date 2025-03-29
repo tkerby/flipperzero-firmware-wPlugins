@@ -1,0 +1,15 @@
+App(
+    appid="matagotchi",
+    name="Matagotchi",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="matagotchi_app",
+    stack_size=2 * 1024,
+    fap_icon="matagotchi_10px.png",
+    fap_icon_assets="assets",
+    fap_category="Games",
+    fap_author="MrModd",
+    fap_weburl="https://github.com/MrModd/Matagotchi",
+    fap_version=(1, 1),
+    fap_description="Tamagotchi like game",
+    #   [Refactor features to ease the addition of new ones #3](https://github.com/MrModd/Matagotchi/pull/3)
+)

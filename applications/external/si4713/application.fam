@@ -1,0 +1,14 @@
+App(
+    appid="si4713tuner",
+    name="SI4713 Tuner",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="si4713fmtuner_app",
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    fap_icon="si4713tuner.png",
+    fap_icon_assets="images",
+    fap_author="rullinoiz",
+    fap_weburl="https://github.com/rullinoiz/flipper-si4713",
+    fap_version="0.1",
+    fap_description="Basic Adafruit SI4713 tuner for the Flipper Zero",
+)

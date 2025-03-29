@@ -1,0 +1,14 @@
+App(
+    appid="ina_meter",
+    name="INA Meter",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="app_startup",
+    stack_size=3 * 1024,
+    fap_icon="ina_meter.png",
+    fap_icon_assets="images",
+    fap_category="GPIO",
+    fap_author="cepetr",
+    fap_weburl="https://github.com/cepetr/flipper-tina",
+    fap_version="0.2",
+    fap_description="Application for reading TI INAxxx sensors.",
+)

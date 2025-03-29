@@ -1,0 +1,13 @@
+App(
+    appid="hc_sr04_dist_sensor",
+    name="[HC-SR04] Dist. Sensor",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="hc_sr04_app",
+    stack_size=2 * 1024,
+    fap_icon="dist_sensor10px.png",
+    fap_category="GPIO/Sensors",
+    fap_author="xMasterX (first implementation by Sanqui)",
+    fap_version="1.1",
+    fap_description="HC-SR(04) Distance sensor reader",
+    #  Ported/Modified by xMasterX
+)

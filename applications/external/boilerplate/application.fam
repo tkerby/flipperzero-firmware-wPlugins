@@ -1,0 +1,15 @@
+App(
+    appid="fap_boilerplate",
+    name="FAP Boilerplate",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="boilerplate_app",
+    stack_size=2 * 1024,
+    fap_icon="icons/boilerplate_10px.png",
+    fap_icon_assets="icons",
+    fap_category="Tools/Educational",
+    fap_icon_assets_symbol="boilerplate",
+    fap_author="leedave",
+    fap_weburl="https://github.com/leedave/flipper-zero-fap-boilerplate",
+    fap_version="1.3",
+    fap_description="A Boilerplate FAP or FAP template to use as a starting point in your new custom app",
+)

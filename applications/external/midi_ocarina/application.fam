@@ -1,0 +1,13 @@
+App(
+    appid="midiocarina",
+    name="MIDI Ocarina",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="test_midi_main",
+    stack_size=8 * 1024,
+    fap_category="Media",
+    fap_icon="midi_ocarina.png",
+    fap_author="crackerjacques",
+    fap_weburl="https://github.com/crackerjacques/Flipper_Zero_MIDI_Ocarina",
+    fap_version="0.1",
+    fap_description="Push button to play midi note over USB",
+)

@@ -1,0 +1,16 @@
+App(
+    appid="swd_probe",
+    name="SWD Probe",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="swd_probe_app_main",
+    stack_size=2 * 1024,
+    fap_file_assets="resources",
+    fap_icon="icons/app.png",
+    fap_category="GPIO/Debug",
+    fap_icon_assets="icons",
+    fap_icon_assets_symbol="swd_probe",
+    fap_author="g3gg0 & (fixes by xMasterX)",
+    fap_weburl="https://github.com/g3gg0/flipper-swd_probe",
+    fap_version="1.2",
+    fap_description="ARM SWD (Single Wire Debug) Probe",
+)

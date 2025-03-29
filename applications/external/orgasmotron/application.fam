@@ -1,0 +1,16 @@
+App(
+    appid="orgasmotron",
+    name="Orgasmotron",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="orgasmotron_app",
+    stack_size=1 * 1024,
+    fap_icon="orgasmotron_10px.png",
+    fap_icon_assets="icons",
+    fap_category="Tools",
+    fap_author="Leedave",
+    fap_weburl="https://github.com/leedave/Leeds-Flipper-Zero-Applications",
+    fap_version="1.1",
+    fap_description="Vibrate Flipper in different modes",
+    #  [(Original By qqmajikpp)](https://github.com/qqmajikpp/flipperzero-firmware-wPlugins)
+    #  [Changes also (By jbohack)](https://github.com/jbohack)
+)

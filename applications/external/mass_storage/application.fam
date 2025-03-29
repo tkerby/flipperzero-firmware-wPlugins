@@ -1,0 +1,18 @@
+App(
+    appid="mass_storage",
+    name="Mass Storage",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="mass_storage_app",
+    stack_size=2 * 1024,
+    fap_file_assets="resources",
+    fap_icon="assets/mass_storage_10px.png",
+    fap_icon_assets="assets",
+    fap_category="USB",
+    fap_icon_assets_symbol="mass_storage",
+    fap_author="kevinwallace & nminaylov",
+    fap_weburl="https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage",
+    fap_version=(1, 4),
+    fap_description="Implements a mass storage device over USB for disk images",
+    #  fap_weburl="https://github.com/flipperdevices/flipperzero-firmware/pull/1060",
+    #  [Based on OFW#1060 (By kevinwallace)](https://github.com/flipperdevices/flipperzero-firmware/pull/1060)
+)

@@ -1,0 +1,13 @@
+App(
+    appid="plugin_demo",
+    name="Plugin Demo",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="bc_demo",
+    stack_size=2 * 1024,
+    fap_icon="CS.png",
+    fap_category="Tools/Educational",
+    fap_author="csBlueChip",
+    fap_weburl="https://github.com/csBlueChip/FlipperZero_plugin_howto",
+    fap_version="1.0",
+    fap_description="A simple plugin for the FlipperZero written as a tutorial example [ie. excessive documentation & error handling]. See code.",
+)
