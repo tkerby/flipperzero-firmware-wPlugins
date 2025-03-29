@@ -53,10 +53,12 @@ enum MiZipBalanceEditorCustomEvent {
 
 // Main application structure.
 typedef struct {
+    //GUI components
     Gui* gui;
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
 
+    //Scenes
     Submenu* submenu;
     Popup* popup;
     DialogsApp* dialogs;
@@ -64,15 +66,21 @@ typedef struct {
     NumberInput* number_input;
     TextBox* text_box;
 
+    //NFC
     Nfc* nfc;
     NfcScanner* scanner;
     NfcPoller* poller;
     NfcDevice* nfc_device;
-    MfClassicData* mf_classic_data;
+    bool is_scan_active;
 
+    //File
     FuriString* filePath;
+
+    //Mifare Classic data
+    MfClassicData* mf_classic_data;
     bool is_valid_mizip_data;
 
+    //MiZip data
     uint8_t credit_pointer;
     uint16_t current_balance;
     uint16_t min_value;
