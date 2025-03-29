@@ -1,6 +1,0 @@
-+------- IDEA  -------+
- | block size: 64-bit (8 byte) |
- | key size bits: 128-bits           |
- | structure: Lai-Massey         |
- | rounds: 8.5                                 |
-+------------------ +

@@ -1,78 +1,54 @@
-*~
-*.swp
-*.swo
-*.gdb_history
-*.old
+# Prerequisites
+*.d
 
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
 
-# LSP
-.cache
-compile_commands.json
+# Linker output
+*.ilk
+*.map
+*.exp
 
-# JetBrains IDEs
-.idea/
+# Precompiled Headers
+*.gch
+*.pch
 
-# Sublime Text
-.sublime-project.sublime-workspace
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
 
-# Python VirtEnvironments
-.env
-.venv
-env/
-venv/
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
 
-# Python Byte-compiled / optimized files
-__pycache__/
-*.py[cod]
-*$py.class
-*.pickle
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+# *.hex -- We want to provide dump files for the user to flash
 
-.obj/
-bindings/
-.DS_Store
-.mxproject
-Brewfile.lock.json
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
 
-# Kate
-.kateproject
-.kateconfig
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
 
-# kde
-.directory
-null.d
-
-# SCons
-.sconsign.dblite
-
-
-# bundle output
-/dist
-/artifacts-default
-/artifacts-ofw-anims
-/artifacts-rgb-patch
-/artifacts-extra-apps
-/artifacts-clean
-
-# SCons build dir
-/build
-
-# Toolchain
-/toolchain
-
-# openocd output file
-openocd.log
-
-# PVS Studio temporary files
-.PVS-Studio/
-PVS-Studio.log
-*.PVS-Studio.*
-
-.gdbinit
-/fbt_options_local.py
-
-RM*-*.tgz
-RM*-*.zip
-RM*-*.txt
-RM*-*-*/
-RM-*.sh
-/%SystemDrive%
+.vscode/

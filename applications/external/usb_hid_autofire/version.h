@@ -1,1 +1,0 @@
-#define VERSION FAP_VERSION

@@ -1,2 +1,0 @@
-- 0.2 - Update for use with new serial API
-- 0.1 - Initial version
