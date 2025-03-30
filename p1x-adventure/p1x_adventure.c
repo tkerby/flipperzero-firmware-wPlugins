@@ -12,7 +12,14 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define WEAPON_LENGTH 12
-#define WEAPON_DURATION 10  // frames that the weapon stays active
+#define WEAPON_DURATION 4  // frames that the weapon stays active
+
+// Game states
+typedef enum {
+    GameStateTitle,
+    GameStateGameplay,
+    GameStateGameOver
+} GameStateEnum;
 
 // Direction constants
 #define DIR_UP 0
@@ -34,12 +41,14 @@ typedef struct {
 } Enemy;
 
 typedef struct {
+    GameStateEnum state;   // Current game state
     Player player;
     Enemy enemies[MAX_ENEMIES];
     int32_t score;
 } GameState;
 
 static GameState game_state = {
+    .state = GameStateTitle,
     .player = {
         .x = 10, 
         .y = 30, 
@@ -72,12 +81,40 @@ static void get_weapon_end_point(int* end_x, int* end_y) {
     }
 }
 
-// Screen is 128x64 px
-static void app_draw_callback(Canvas* canvas, void* ctx) {
-    UNUSED(ctx);
-
+// Draw title screen
+static void draw_title_screen(Canvas* canvas) {
     canvas_clear(canvas);
     
+    // Draw game title
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "P1X Adventure");
+    
+    // Draw instructions
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Press OK to start");
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Arrow keys to move, OK to attack");
+}
+
+// Draw game over screen
+static void draw_game_over_screen(Canvas* canvas) {
+    canvas_clear(canvas);
+    
+    // Draw game over message
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "GAME OVER");
+    
+    // Draw final score
+    char score_str[20];
+    snprintf(score_str, sizeof(score_str), "Score: %ld", game_state.score);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, score_str);
+    
+    // Draw restart instructions
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to restart");
+}
+
+// Draw gameplay screen
+static void draw_gameplay_screen(Canvas* canvas) {
     // Draw player (8x8 square)
     canvas_draw_frame(
         canvas,
@@ -121,11 +158,42 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
     canvas_draw_str(canvas, 70, 10, score_str);
 }
 
+// Screen is 128x64 px
+static void app_draw_callback(Canvas* canvas, void* ctx) {
+    UNUSED(ctx);
+
+    canvas_clear(canvas);
+    
+    // Draw appropriate screen based on current game state
+    switch(game_state.state) {
+        case GameStateTitle:
+            draw_title_screen(canvas);
+            break;
+        case GameStateGameplay:
+            draw_gameplay_screen(canvas);
+            break;
+        case GameStateGameOver:
+            draw_game_over_screen(canvas);
+            break;
+    }
+}
+
 static void app_input_callback(InputEvent* input_event, void* ctx) {
     furi_assert(ctx);
 
     FuriMessageQueue* event_queue = ctx;
     furi_message_queue_put(event_queue, input_event, FuriWaitForever);
+}
+
+// Reset game to initial state
+static void reset_game() {
+    game_state.player.x = 10;
+    game_state.player.y = 30;
+    game_state.player.health = 100;
+    game_state.player.direction = DIR_RIGHT;
+    game_state.player.weapon_active = false;
+    game_state.player.weapon_timer = 0;
+    game_state.score = 0;
 }
 
 static void init_enemies() {
@@ -193,6 +261,11 @@ static void check_weapon_collisions() {
                 // Kill enemy
                 game_state.enemies[i].active = false;
                 game_state.score += 10; // More points for weapon kill
+                
+                // Short vibration for hit
+                furi_hal_vibro_on(true);
+                furi_delay_ms(20);
+                furi_hal_vibro_on(false);
             }
         }
     }
@@ -208,9 +281,20 @@ static void check_collisions() {
             
             if(dx < collision_threshold && dy < collision_threshold) {
                 game_state.player.health -= 10;
+                
+                // Medium vibration when player gets hit
+                furi_hal_vibro_on(true);
+                furi_delay_ms(100);
+                furi_hal_vibro_on(false);
+                
                 // Don't kill enemy on body collision, player must use weapon
             }
         }
+    }
+    
+    // Check if player died
+    if (game_state.player.health <= 0) {
+        game_state.state = GameStateGameOver;
     }
 }
 
@@ -240,6 +324,22 @@ static bool all_enemies_defeated() {
     return true;
 }
 
+// Handle the title screen
+static void handle_title_screen(InputEvent* event) {
+    if(event->type == InputTypePress && event->key == InputKeyOk) {
+        reset_game();
+        init_enemies();
+        game_state.state = GameStateGameplay;
+    }
+}
+
+// Handle the game over screen
+static void handle_game_over_screen(InputEvent* event) {
+    if(event->type == InputTypePress && event->key == InputKeyOk) {
+        game_state.state = GameStateTitle;
+    }
+}
+
 int32_t p1x_adventure_main(void* p) {
     UNUSED(p);
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
@@ -252,57 +352,78 @@ int32_t p1x_adventure_main(void* p) {
     // Register view port in GUI
     Gui* gui = furi_record_open(RECORD_GUI);
     gui_add_view_port(gui, view_port, GuiLayerFullscreen);
-
-    // Initialize game (spawn enemies)
-    init_enemies();
     
     InputEvent event;
     uint32_t last_tick = furi_get_tick();
 
     bool running = true;
-    while(running && game_state.player.health > 0) {
+    while(running) {
+        // Handle input based on current game state
         if(furi_message_queue_get(event_queue, &event, 10) == FuriStatusOk) {
-            if(event.type == InputTypePress || event.type == InputTypeRepeat) {
-                switch(event.key) {
-                case InputKeyLeft:
-                    game_state.player.x -= 2;
-                    game_state.player.direction = DIR_LEFT;
-                    if(game_state.player.x < 0) game_state.player.x = 0;
-                    break;
-                case InputKeyRight:
-                    game_state.player.x += 2;
-                    game_state.player.direction = DIR_RIGHT;
-                    if(game_state.player.x > SCREEN_WIDTH - 8) 
-                        game_state.player.x = SCREEN_WIDTH - 8;
-                    break;
-                case InputKeyUp:
-                    game_state.player.y -= 2;
-                    game_state.player.direction = DIR_UP;
-                    if(game_state.player.y < 15) game_state.player.y = 15;
-                    break;
-                case InputKeyDown:
-                    game_state.player.y += 2;
-                    game_state.player.direction = DIR_DOWN;
-                    if(game_state.player.y > SCREEN_HEIGHT - 8) 
-                        game_state.player.y = SCREEN_HEIGHT - 8;
-                    break;
-                case InputKeyOk:
-                    // Activate weapon on OK button press
-                    game_state.player.weapon_active = true;
-                    game_state.player.weapon_timer = WEAPON_DURATION;
-                    break;
-                case InputKeyBack:
-                    running = false;
-                    break;
-                default:
-                    break;
+            if(event.type == InputTypePress) {
+                // Global back button handling
+                if(event.key == InputKeyBack) {
+                    // Always allow exit with back button
+                    if(game_state.state == GameStateTitle) {
+                        running = false;
+                    } else {
+                        // From gameplay or game over, go back to title
+                        game_state.state = GameStateTitle;
+                    }
+                } 
+                // State-specific input handling
+                else {
+                    switch(game_state.state) {
+                        case GameStateTitle:
+                            handle_title_screen(&event);
+                            break;
+                        case GameStateGameOver:
+                            handle_game_over_screen(&event);
+                            break;
+                        case GameStateGameplay:
+                            // Handle gameplay inputs
+                            if((event.type == InputTypePress) || (event.type == InputTypeRepeat)) {
+                                switch(event.key) {
+                                case InputKeyLeft:
+                                    game_state.player.x -= 2;
+                                    game_state.player.direction = DIR_LEFT;
+                                    if(game_state.player.x < 0) game_state.player.x = 0;
+                                    break;
+                                case InputKeyRight:
+                                    game_state.player.x += 2;
+                                    game_state.player.direction = DIR_RIGHT;
+                                    if(game_state.player.x > SCREEN_WIDTH - 8) 
+                                        game_state.player.x = SCREEN_WIDTH - 8;
+                                    break;
+                                case InputKeyUp:
+                                    game_state.player.y -= 2;
+                                    game_state.player.direction = DIR_UP;
+                                    if(game_state.player.y < 15) game_state.player.y = 15;
+                                    break;
+                                case InputKeyDown:
+                                    game_state.player.y += 2;
+                                    game_state.player.direction = DIR_DOWN;
+                                    if(game_state.player.y > SCREEN_HEIGHT - 8) 
+                                        game_state.player.y = SCREEN_HEIGHT - 8;
+                                    break;
+                                case InputKeyOk:
+                                    // Activate weapon on OK button press
+                                    game_state.player.weapon_active = true;
+                                    game_state.player.weapon_timer = WEAPON_DURATION;
+                                    break;
+                                default:
+                                    break;
+                                }
+                            }
+                            break;
+                    }
                 }
             }
         }
         
-        // Update game state every 100ms
+        // Update game logic only during gameplay
         uint32_t current_tick = furi_get_tick();
-        if(current_tick - last_tick > 100) {
+        if(game_state.state == GameStateGameplay && current_tick - last_tick > 100) {
             // Update weapon timer
             if(game_state.player.weapon_active) {
                 if(--game_state.player.weapon_timer <= 0) {
