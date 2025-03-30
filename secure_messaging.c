@@ -40,17 +40,21 @@ SecureMessaging* secure_messaging_alloc(
     memset(secure_messaging->rndIFD, 0x00, sizeof(secure_messaging->rndIFD));
     memset(secure_messaging->Kifd, 0x00, sizeof(secure_messaging->Kifd));
 
-    uint8_t mrz[10 + 7 + 7];
-    memcpy(mrz, passport_number, 10);
-    memcpy(mrz + 10, date_of_birth, 7);
-    memcpy(mrz + 10 + 7, date_of_expiry, 7);
+    uint8_t mrz[SECURE_MESSAGING_MAX_SIZE];
+    size_t mrz_index = 0;
+    strncpy((char*)mrz, (char*)passport_number, 12);
+    mrz_index += strlen((char*)passport_number);
+    strncpy((char*)mrz + mrz_index, (char*)date_of_birth, 8);
+    mrz_index += strlen((char*)date_of_birth);
+    strncpy((char*)mrz + mrz_index, (char*)date_of_expiry, 8);
+    mrz_index += strlen((char*)date_of_expiry);
     FURI_LOG_D(TAG, "secure_messaging_alloc mrz %s", mrz);
 
     uint8_t sha[20];
 
     mbedtls_sha1_init(&ctx);
     mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, mrz, sizeof(mrz));
+    mbedtls_sha1_update(&ctx, mrz, mrz_index);
     mbedtls_sha1_finish(&ctx, sha);
 
     passy_log_buffer(TAG, "secure_messaging_alloc sha", sha, sizeof(sha));

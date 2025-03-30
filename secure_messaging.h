@@ -14,10 +14,6 @@
 #define SECURE_MESSAGING_MAX_SIZE 128
 
 typedef struct {
-    uint8_t passport_number[10];
-    uint8_t date_of_birth[7];
-    uint8_t date_of_expiry[7];
-
     uint8_t KENC[16];
     uint8_t KMAC[16];
 
