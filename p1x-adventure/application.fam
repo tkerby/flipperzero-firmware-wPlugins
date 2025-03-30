@@ -1,0 +1,15 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="p1x_adventure",  # Must be unique
+    name="P1X Adventure",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="p1x_adventure_main",
+    stack_size=2 * 1024,
+    fap_category="P1X",
+    fap_icon="images/p1x_adventure.png",  # 10x10 1-bit PNG
+    fap_description="Adventure game from P1X",
+    fap_author="Krzysztof Krystian Jankowski",
+    fap_weburl="https://github.com/w84death/flipper_zero_apps/p1x_adventure",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
