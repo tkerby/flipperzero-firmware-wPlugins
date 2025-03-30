@@ -4,9 +4,7 @@
 #include <stdlib.h>
 
 #include <mbedtls/des.h>
-#include <mbedtls/aes.h>
 #include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
 
 #include <furi.h>
 #include <lib/toolbox/bit_buffer.h>
