@@ -57,8 +57,6 @@ SecureMessaging* secure_messaging_alloc(
     mbedtls_sha1_update(&ctx, mrz, mrz_index);
     mbedtls_sha1_finish(&ctx, sha);
 
-    passy_log_buffer(TAG, "secure_messaging_alloc sha", sha, sizeof(sha));
-
     uint8_t D[20];
     memset(D, 0, sizeof(D));
     memcpy(D, sha, 16);
@@ -69,13 +67,9 @@ SecureMessaging* secure_messaging_alloc(
     mbedtls_sha1_finish(&ctx, sha);
 
     memcpy(secure_messaging->KENC, sha, 16);
-    passy_log_buffer(
-        TAG, "secure_messaging_alloc KENC", secure_messaging->KENC, sizeof(secure_messaging->KENC));
 
     // Adjust the parity bits
     secure_messaging_adjust_parity(secure_messaging->KENC);
-    passy_log_buffer(
-        TAG, "secure_messaging_alloc KENC", secure_messaging->KENC, sizeof(secure_messaging->KENC));
 
     D[19] = 0x02;
     mbedtls_sha1_init(&ctx);
@@ -84,12 +78,8 @@ SecureMessaging* secure_messaging_alloc(
     mbedtls_sha1_finish(&ctx, sha);
 
     memcpy(secure_messaging->KMAC, sha, 16);
-    passy_log_buffer(
-        TAG, "secure_messaging_alloc KMAC", secure_messaging->KMAC, sizeof(secure_messaging->KMAC));
 
     secure_messaging_adjust_parity(secure_messaging->KMAC);
-    passy_log_buffer(
-        TAG, "secure_messaging_alloc KMAC", secure_messaging->KMAC, sizeof(secure_messaging->KMAC));
 
     mbedtls_sha1_free(&ctx);
     return secure_messaging;
@@ -106,7 +96,6 @@ void secure_messaging_calculate_session_keys(SecureMessaging* secure_messaging) 
     for(size_t i = 0; i < sizeof(Kseed); i++) {
         Kseed[i] = secure_messaging->Kifd[i] ^ secure_messaging->Kicc[i];
     }
-    passy_log_buffer(TAG, "secure_messaging_calculate_session_keys Kseed", Kseed, sizeof(Kseed));
     mbedtls_sha1_context ctx;
 
     uint8_t D[20];
@@ -122,12 +111,6 @@ void secure_messaging_calculate_session_keys(SecureMessaging* secure_messaging) 
 
     memcpy(secure_messaging->KSenc, sha, 16);
     secure_messaging_adjust_parity(secure_messaging->KSenc);
-    passy_log_buffer(
-        TAG,
-        "secure_messaging_calculate_session_keys KSenc",
-        secure_messaging->KSenc,
-        sizeof(secure_messaging->KSenc));
-
     memset(D, 0, sizeof(D));
     memcpy(D, Kseed, sizeof(Kseed));
     D[19] = 0x02;
@@ -137,11 +120,6 @@ void secure_messaging_calculate_session_keys(SecureMessaging* secure_messaging) 
     mbedtls_sha1_finish(&ctx, sha);
     memcpy(secure_messaging->KSmac, sha, 16);
     secure_messaging_adjust_parity(secure_messaging->KSmac);
-    passy_log_buffer(
-        TAG,
-        "secure_messaging_calculate_session_keys KSmac",
-        secure_messaging->KSmac,
-        sizeof(secure_messaging->KSmac));
 }
 
 void secure_messaging_increment_context(SecureMessaging* secure_messaging) {
@@ -166,9 +144,6 @@ void secure_messaging_wrap_apdu(
     } else {
         payload_length = message[4];
     }
-    if(has_le) {
-        FURI_LOG_I(TAG, "secure_messaging_wrap_apdu has_le %d", message[message_len - 1]);
-    }
 
     uint8_t cmd_header[8];
     memset(cmd_header, 0, sizeof(cmd_header));
@@ -187,11 +162,6 @@ void secure_messaging_wrap_apdu(
         memset(padded_payload, 0, sizeof(padded_payload));
         memcpy(padded_payload, payload, payload_length);
         padded_payload[payload_length] = 0x80;
-        passy_log_buffer(
-            TAG,
-            "secure_messaging_wrap_apdu padded_payload",
-            padded_payload,
-            sizeof(padded_payload));
 
         uint8_t encrypted_payload[8];
         uint8_t iv[8];
@@ -238,7 +208,6 @@ void secure_messaging_wrap_apdu(
         memcpy(M + M_index, D097, sizeof(D097));
         M_index += sizeof(D097);
     }
-    passy_log_buffer(TAG, "secure_messaging_wrap_apdu M", M, M_index);
 
     uint8_t N[32];
     uint8_t N_index = 0;
@@ -251,11 +220,9 @@ void secure_messaging_wrap_apdu(
     // Align to 8 bytes
     uint8_t block_count = (N_index + 7) / 8;
     N_index = block_count * 8;
-    passy_log_buffer(TAG, "secure_messaging_wrap_apdu N", N, N_index);
 
     uint8_t mac[8];
     passy_mac(secure_messaging->KSmac, N, N_index, mac, true);
-    passy_log_buffer(TAG, "secure_messaging_wrap_apdu mac", mac, sizeof(mac));
 
     uint8_t D08E[2 + 8];
     memset(D08E, 0, sizeof(D08E));
@@ -347,14 +314,8 @@ void secure_messaging_unwrap_rapdu(SecureMessaging* secure_messaging, BitBuffer*
         // Align to 8 bytes
         uint8_t block_count = (K_index + 7) / 8;
         K_index = block_count * 8;
-        passy_log_buffer(TAG, "secure_messaging_unwrap_rapdu K", K, K_index);
         uint8_t calculated_mac[8];
         passy_mac(secure_messaging->KSmac, K, K_index, calculated_mac, true);
-        passy_log_buffer(
-            TAG,
-            "secure_messaging_unwrap_rapdu calculated_mac",
-            calculated_mac,
-            sizeof(calculated_mac));
         if(memcmp(mac, calculated_mac, sizeof(calculated_mac)) != 0) {
             FURI_LOG_W(TAG, "Invalid MAC");
             return;
@@ -380,7 +341,6 @@ void secure_messaging_unwrap_rapdu(SecureMessaging* secure_messaging, BitBuffer*
         do {
         } while(decrypted[--decrypted_len] == 0 && decrypted_len > 0);
 
-        passy_log_buffer(TAG, "secure_messaging_unwrap_rapdu decrypted", decrypted, decrypted_len);
     }
 
     // Don't reset until after data has been decrypted
