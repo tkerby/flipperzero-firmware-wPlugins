@@ -1,5 +1,5 @@
 # RTL8720DN & Flipper Zero WiFi Attack Tool
-Based on: https://github.com/tesa-klebeband/RTL8720dn-Deauther
+Based on: https://github.com/tesa-klebeband/RTL8720dn-Deauther also the FAP was made based on UART example from https://github.com/jamisonderek/flipper-zero-tutorials
 ## Overview
 This project utilizes the **RTL8720DN** WiFi module in combination with the **Flipper Zero** to perform various **WiFi penetration testing attacks** on **2.4GHz** and **5GHz** networks. The implemented attacks include:
 
