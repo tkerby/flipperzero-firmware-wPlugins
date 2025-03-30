@@ -9,6 +9,10 @@ typedef struct {
     bool isGrounded;
 } PlayerContext;
 
+// making player accessible globaly
+extern Entity* player;
+
+
 extern float ground_hight;
 
 extern const EntityDescription player_desc;

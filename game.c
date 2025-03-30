@@ -1,5 +1,6 @@
 #include "game.h"
 #include "player.h"
+#include "skeleton.h"
 
 // REMEBER do not use static on scripts that communicate with each other!
 // what static means is that it's not letting the function be used OUTSIDE of the file!
@@ -41,6 +42,8 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(context);
     // add the player to the level
     player_spawn(level, manager);
+
+    skeleton_spawn(level, manager);
 
     // add the ground to the level
     level_add_entity(level, &ground_desc);

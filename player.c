@@ -8,8 +8,11 @@ bool is_moving;
 
 bool is_facing_right;
 
+
+Entity* player = NULL;
+
 void player_spawn(Level* level, GameManager* manager) {
-    Entity* player = level_add_entity(level, &player_desc);
+    player = level_add_entity(level, &player_desc);
 
     entity_pos_set(player, (Vector){15, 24});
 
