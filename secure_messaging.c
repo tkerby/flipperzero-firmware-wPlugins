@@ -17,12 +17,12 @@ void secure_messaging_adjust_parity(uint8_t key[16]) {
     }
 }
 
-void secure_messaging_key_diversification(uint8_t input[20], uint8_t* output) {
+void secure_messaging_key_diversification(uint8_t input[20], size_t input_len, uint8_t* output) {
     uint8_t sha[20];
     mbedtls_sha1_context ctx;
     mbedtls_sha1_init(&ctx);
     mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, input, 20);
+    mbedtls_sha1_update(&ctx, input, input_len);
     mbedtls_sha1_finish(&ctx, sha);
 
     memcpy(output, sha, 16);
@@ -60,26 +60,12 @@ SecureMessaging* secure_messaging_alloc(
     uint8_t D[20];
     memset(D, 0, sizeof(D));
     memcpy(D, sha, 16);
+
     D[19] = 0x01;
-    mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, D, sizeof(D));
-    mbedtls_sha1_finish(&ctx, sha);
-
-    memcpy(secure_messaging->KENC, sha, 16);
-
-    // Adjust the parity bits
-    secure_messaging_adjust_parity(secure_messaging->KENC);
+    secure_messaging_key_diversification(D, sizeof(D), secure_messaging->KENC);
 
     D[19] = 0x02;
-    mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, D, sizeof(D));
-    mbedtls_sha1_finish(&ctx, sha);
-
-    memcpy(secure_messaging->KMAC, sha, 16);
-
-    secure_messaging_adjust_parity(secure_messaging->KMAC);
+    secure_messaging_key_diversification(D, sizeof(D), secure_messaging->KMAC);
 
     mbedtls_sha1_free(&ctx);
     return secure_messaging;
@@ -96,30 +82,17 @@ void secure_messaging_calculate_session_keys(SecureMessaging* secure_messaging) 
     for(size_t i = 0; i < sizeof(Kseed); i++) {
         Kseed[i] = secure_messaging->Kifd[i] ^ secure_messaging->Kicc[i];
     }
-    mbedtls_sha1_context ctx;
 
     uint8_t D[20];
-    uint8_t sha[20];
 
     memset(D, 0, sizeof(D));
     memcpy(D, Kseed, sizeof(Kseed));
+
     D[19] = 0x01;
-    mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, D, sizeof(D));
-    mbedtls_sha1_finish(&ctx, sha);
+    secure_messaging_key_diversification(D, sizeof(D), secure_messaging->KSenc);
 
-    memcpy(secure_messaging->KSenc, sha, 16);
-    secure_messaging_adjust_parity(secure_messaging->KSenc);
-    memset(D, 0, sizeof(D));
-    memcpy(D, Kseed, sizeof(Kseed));
     D[19] = 0x02;
-    mbedtls_sha1_init(&ctx);
-    mbedtls_sha1_starts(&ctx);
-    mbedtls_sha1_update(&ctx, D, sizeof(D));
-    mbedtls_sha1_finish(&ctx, sha);
-    memcpy(secure_messaging->KSmac, sha, 16);
-    secure_messaging_adjust_parity(secure_messaging->KSmac);
+    secure_messaging_key_diversification(D, sizeof(D), secure_messaging->KSmac);
 }
 
 void secure_messaging_increment_context(SecureMessaging* secure_messaging) {
@@ -340,7 +313,6 @@ void secure_messaging_unwrap_rapdu(SecureMessaging* secure_messaging, BitBuffer*
         // Remove padding
         do {
         } while(decrypted[--decrypted_len] == 0 && decrypted_len > 0);
-
     }
 
     // Don't reset until after data has been decrypted
