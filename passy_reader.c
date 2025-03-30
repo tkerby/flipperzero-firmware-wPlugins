@@ -372,7 +372,6 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 passy->view_dispatcher, PassyCustomEventReaderReading);
             uint8_t chunk[0x20];
             uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - body_offset));
-            FURI_LOG_I(TAG, "Reading %d bytes from offset %d", Le, body_offset);
 
             ret = passy_reader_read_binary(passy_reader, body_offset, Le, chunk);
             if(ret != NfcCommandContinue) {
@@ -383,8 +382,21 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             bit_buffer_append_bytes(passy_reader->DG1, chunk, sizeof(chunk));
             body_offset += sizeof(chunk);
         } while(body_offset < body_size);
-        const uint8_t* decrypted_data = bit_buffer_get_data(passy_reader->DG1) + 3;
-        FURI_LOG_I(TAG, "Decrypted data: %s", decrypted_data);
+        passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
+
+        ret = passy_reader_select_file(passy_reader, 0x0102);
+        if(ret != NfcCommandContinue) {
+            view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderError);
+            break;
+        }
+
+        ret = passy_reader_read_binary(passy_reader, 0x00, 0x04, header);
+        if(ret != NfcCommandContinue) {
+            view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderError);
+            break;
+        }
+        FURI_LOG_I(
+            TAG, "DG2 header: %02x %02x %02x %02x", header[0], header[1], header[2], header[3]);
 
         // Everything done
         ret = NfcCommandStop;
