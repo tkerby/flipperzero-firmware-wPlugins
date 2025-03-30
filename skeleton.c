@@ -10,7 +10,7 @@ void skeleton_spawn(Level *level, GameManager *manager){
 
     SkeletonContext* skeleton_context = entity_context_get(skeleton);
 
-    skeleton_context->sprite = game_manager_sprite_load(manager, "enemies/skeleton/walking_0.png");
+    skeleton_context->sprite = game_manager_sprite_load(manager, "enemies/skeleton/walking_0.fxbm");
 }
 
 void skel_update(Entity* self, GameManager* manager, void* context) {

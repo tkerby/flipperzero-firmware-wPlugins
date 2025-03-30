@@ -141,7 +141,7 @@ void Animations(GameManager* manager, void* context) {
     
     if(playerContext->Yvelocity > 0 && !isGrounded){
         if(!is_facing_right){
-            playerContext->sprite = jumping[0];
+            playerContext->sprite = jumping[3];
         }
         else{
             playerContext->sprite = jumping[1];
@@ -150,7 +150,7 @@ void Animations(GameManager* manager, void* context) {
 
     if(playerContext->Yvelocity < 0 && !isGrounded){
         if(!is_facing_right){
-            playerContext->sprite = jumping[3];
+            playerContext->sprite = jumping[0];
         }
         else{
             playerContext->sprite = jumping[4];
