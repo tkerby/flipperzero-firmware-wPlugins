@@ -47,7 +47,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
 }
 
 /*
-    Alloc/free is called once, when level is added/removed from the game. 
+    Alloc/free is called once, when level is added/removed from the game.
     It useful if you have small amount of levels and entities, that can be allocated at once.
 
     Start/stop is called when level is changed to/from this level.
