@@ -9,6 +9,17 @@ static uint8_t get_challenge[] = {0x00, 0x84, 0x00, 0x00, 0x08};
 
 static uint8_t SW_success[] = {0x90, 0x00};
 
+size_t asn1_length(uint8_t data[3]) {
+    if(data[0] <= 0x7F) {
+        return data[0];
+    } else if(data[0] == 0x81) {
+        return data[1];
+    } else if(data[0] == 0x82) {
+        return (data[1] << 8) | data[2];
+    }
+    return 0;
+}
+
 PassyReader* passy_reader_alloc(Passy* passy, Iso14443_4bPoller* iso14443_4b_poller) {
     PassyReader* passy_reader = malloc(sizeof(PassyReader));
     memset(passy_reader, 0, sizeof(PassyReader));
@@ -365,7 +376,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
 
             break;
         }
-        uint8_t body_size = header[1];
+        size_t body_size = asn1_length(header + 1);
         uint8_t body_offset = 0x04;
         do {
             view_dispatcher_send_custom_event(
@@ -395,8 +406,8 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderError);
             break;
         }
-        FURI_LOG_I(
-            TAG, "DG2 header: %02x %02x %02x %02x", header[0], header[1], header[2], header[3]);
+        body_size = asn1_length(header + 1);
+        FURI_LOG_I(TAG, "DG2 length: %d", body_size);
 
         // Everything done
         ret = NfcCommandStop;
