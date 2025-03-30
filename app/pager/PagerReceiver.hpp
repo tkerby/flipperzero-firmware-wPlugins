@@ -4,7 +4,7 @@
 #include <cstring>
 #include <forward_list>
 
-#include "lib/hardware/subghz/SubGhzSettings.hpp"
+#include "lib/hardware/subghz/FrequencyManager.hpp"
 #include "lib/hardware/subghz/data/SubGhzReceivedData.hpp"
 
 #include "app/AppConfig.hpp"
@@ -275,7 +275,7 @@ public:
         bool isNew = index < 0;
         if(isNew) {
             if(data->GetFrequency() != lastFrequency) {
-                lastFrequencyIndex = SubGhzSettings().GetFrequencyIndex(data->GetFrequency());
+                lastFrequencyIndex = FrequencyManager::GetInstance()->GetFrequencyIndex(data->GetFrequency());
                 lastFrequency = data->GetFrequency();
             }
 

@@ -101,16 +101,14 @@ public:
         String* stationDirPath = getCategoryPath(categoryType, category);
         Directory* dir = fileManager.OpenDirectory(stationDirPath->cstr());
         PagerSerializer serializer = PagerSerializer();
-        SubGhzSettings subghzSettings = SubGhzSettings();
         size_t stationsLoaded = 0;
 
         if(dir != NULL) {
             char fileName[MAX_FILENAME_LENGTH];
             while(dir->GetNextFile(fileName, MAX_FILENAME_LENGTH)) {
                 String* stationName = new String();
-                StoredPagerData pager = serializer.LoadPagerData(
-                    &fileManager, stationName, stationDirPath->cstr(), fileName, &subghzSettings, pdProvider
-                );
+                StoredPagerData pager =
+                    serializer.LoadPagerData(&fileManager, stationName, stationDirPath->cstr(), fileName, pdProvider);
 
                 if(!loadNames) {
                     delete stationName;

@@ -90,7 +90,7 @@ private:
     void resendToAll(uint32_t) {
         currentPager = 0;
         transmittingBatch = true;
-        currentBatchFrequency = SubGhzSettings().GetFrequency(getPager()->frequency);
+        currentBatchFrequency = FrequencyManager::GetInstance()->GetFrequency(getPager()->frequency);
 
         batchTransmissionScreen = new BatchTransmissionScreen(config->MaxPagerForBatchOrDetection);
         UiManager::GetInstance()->PushView(batchTransmissionScreen->GetView());
@@ -101,7 +101,7 @@ private:
 
     void resendSingle(uint32_t) {
         StoredPagerData* pager = getPager();
-        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        uint32_t frequency = FrequencyManager::GetInstance()->GetFrequency(pager->frequency);
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats), frequency);
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
@@ -109,7 +109,7 @@ private:
 
     void sendAction(PagerAction action) {
         StoredPagerData* pager = getPager();
-        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        uint32_t frequency = FrequencyManager::GetInstance()->GetFrequency(pager->frequency);
         subghz->Transmit(
             protocol->CreatePayload(decoder->SetAction(pager->data, action), pager->te, config->SignalRepeats), frequency
         );

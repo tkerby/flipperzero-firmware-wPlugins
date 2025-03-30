@@ -60,7 +60,7 @@ public:
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
-        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        uint32_t frequency = FrequencyManager::GetInstance()->GetFrequency(pager->frequency);
 
         varItemList = new VariableItemListUiView();
         varItemList->SetOnDestroyHandler(HANDLER(&EditPagerScreen::destroy));
@@ -156,7 +156,7 @@ private:
     void transmitMessage() {
         StoredPagerData* pager = getPager();
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
-        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        uint32_t frequency = FrequencyManager::GetInstance()->GetFrequency(pager->frequency);
         subghz->Transmit(protocol->CreatePayload(pager->data, pager->te, config->SignalRepeats), frequency);
 
         FlipperDolphin::Deed(DolphinDeedSubGhzSend);
@@ -184,7 +184,7 @@ private:
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
         PagerProtocol* protocol = receiver->protocols[pager->protocol];
-        uint32_t frequency = SubGhzSettings().GetFrequency(pager->frequency);
+        uint32_t frequency = FrequencyManager::GetInstance()->GetFrequency(pager->frequency);
 
         AppFileSysytem().SaveToUserCategory(category, saveAsName, pager, decoder, protocol, frequency);
         FlipperDolphin::Deed(DolphinDeedSubGhzSave);

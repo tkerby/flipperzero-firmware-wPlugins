@@ -13,7 +13,6 @@ private:
     AppConfig* config;
     SubGhzModule* subghz;
     PagerReceiver* receiver;
-    SubGhzSettings subghzSettings;
     VariableItemListUiView* varItemList;
 
     UiVariableItem* currentCategoryItem;
@@ -48,10 +47,10 @@ public:
         varItemList->AddItem(
             frequencyItem = new UiVariableItem(
                 "Scan frequency",
-                subghzSettings.GetFrequencyIndex(config->Frequency),
-                subghzSettings.GetFrequencyCount(),
+                FrequencyManager::GetInstance()->GetFrequencyIndex(config->Frequency),
+                FrequencyManager::GetInstance()->GetFrequencyCount(),
                 [this](uint8_t val) {
-                    uint32_t freq = this->config->Frequency = this->subghzSettings.GetFrequency(val);
+                    uint32_t freq = this->config->Frequency = FrequencyManager::GetInstance()->GetFrequency(val);
                     this->subghz->SetReceiveFrequency(this->config->Frequency);
                     return frequencyStr.format("%lu.%02lu", freq / 1000000, (freq % 1000000) / 10000);
                 }

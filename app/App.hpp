@@ -2,6 +2,7 @@
 
 #include "lib/ui/UiManager.hpp"
 #include "lib/hardware/notification/Notification.hpp"
+#include "lib/hardware/subghz/FrequencyManager.hpp"
 
 #include "AppConfig.hpp"
 #include "app/screen/MainMenuScreen.hpp"
@@ -14,6 +15,7 @@ public:
         UiManager* ui = UiManager::GetInstance();
         ui->InitGui();
 
+        FrequencyManager* frequencyManager = FrequencyManager::GetInstance();
         AppConfig* config = new AppConfig();
         config->Load();
 
@@ -21,6 +23,7 @@ public:
         ui->PushView(mainMenuScreen->GetView());
         ui->RunEventLoop();
 
+        delete frequencyManager;
         delete mainMenuScreen;
         delete config;
         delete ui;

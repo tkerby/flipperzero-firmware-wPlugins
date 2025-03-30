@@ -6,7 +6,7 @@
 #include "lib/file/FlipperFile.hpp"
 
 #include "data/StoredPagerData.hpp"
-#include "lib/hardware/subghz/SubGhzSettings.hpp"
+#include "lib/hardware/subghz/FrequencyManager.hpp"
 #include "protocol/PagerProtocol.hpp"
 #include "decoder/PagerDecoder.hpp"
 
@@ -69,7 +69,6 @@ public:
         String* stationName,
         const char* dir,
         const char* fileName,
-        SubGhzSettings* settings,
         ProtocolAndDecoderProvider* pdProvider
     ) {
         FlipperFile* stationFile = fileManager->OpenRead(dir, fileName);
@@ -93,7 +92,7 @@ public:
         pager.data = hex;
         pager.te = te;
         pager.edited = false;
-        pager.frequency = settings->GetFrequencyIndex(frequency);
+        pager.frequency = FrequencyManager::GetInstance()->GetFrequencyIndex(frequency);
         pager.protocol = pdProvider->GetProtocolByName(protocolName.cstr())->id;
         pager.decoder = pdProvider->GetDecoderByName(decoderName.cstr())->id;
         return pager;
