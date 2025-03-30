@@ -357,6 +357,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             break;
         }
 
+        bit_buffer_reset(passy->DG1);
         uint8_t header[4];
         ret = passy_reader_read_binary(passy_reader, 0x00, 0x04, header);
         if(ret != NfcCommandContinue) {
