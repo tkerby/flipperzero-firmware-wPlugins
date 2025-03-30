@@ -26,6 +26,19 @@ size_t asn1_length(uint8_t data[3]) {
     return 0;
 }
 
+char asn1_log[PASSY_READER_MAX_BUFFER_SIZE];
+static int print_struct_callback(const void* buffer, size_t size, void* app_key) {
+    if(app_key) {
+        char* str = (char*)app_key;
+        size_t next = strlen(str);
+        strncpy(str + next, buffer, size);
+    } else {
+        uint8_t next = strlen(asn1_log);
+        strncpy(asn1_log + next, buffer, size);
+    }
+    return 0;
+}
+
 PassyReader* passy_reader_alloc(Passy* passy, Iso14443_4bPoller* iso14443_4b_poller) {
     PassyReader* passy_reader = malloc(sizeof(PassyReader));
     memset(passy_reader, 0, sizeof(PassyReader));
@@ -399,6 +412,35 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 body_offset += sizeof(chunk);
             } while(body_offset < body_size);
             passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
+
+        DG1_t* dg1 = 0;
+        dg1 = calloc(1, sizeof *dg1);
+        assert(dg1);
+        asn_dec_rval_t rval = asn_decode(0, ATS_DER, &asn_DEF_DG1, (void**)&dg1, bit_buffer_get_data(passy_reader->DG1), bit_buffer_get_size_bytes(passy_reader->DG1));
+
+        if(rval.code == RC_OK) {
+            FURI_LOG_I(TAG, "ASN.1 decode success");
+
+            char payloadDebug[384] = {0};
+            memset(payloadDebug, 0, sizeof(payloadDebug));
+            (&asn_DEF_DG1)
+                ->op->print_struct(
+                    &asn_DEF_DG1, dg1, 1, print_struct_callback, payloadDebug);
+            if(strlen(payloadDebug) > 0) {
+                FURI_LOG_D(TAG, "DG1: %s", payloadDebug);
+            } else {
+                FURI_LOG_D(TAG, "Received empty Payload");
+            }
+        } else {
+            FURI_LOG_E(TAG, "ASN.1 decode failed");
+        }
+
+        free(dg1);
+        dg1 = 0;
+
+
+
+
         } else if(passy->read_type == PassyReadDG2) {
             ret = passy_reader_select_file(passy_reader, 0x0102);
             if(ret != NfcCommandContinue) {

@@ -15,3 +15,9 @@
 ## To do
  - Support other country passports
  - Support DG2, the photo
+
+## Generate asn:
+
+```bash
+asn1c -D ./lib/asn1 -no-gen-example -pdu=all eMRTD.asn1
+```

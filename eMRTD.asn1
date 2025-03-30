@@ -1,0 +1,15 @@
+Passport DEFINITIONS ::=
+BEGIN
+
+MRZ ::= [APPLICATION 31] OCTET STRING
+
+Application1 ::= SET {
+  mrz MRZ
+}
+
+-- ASN.1 definition for the MRZ
+DG1 ::= [APPLICATION 1] IMPLICIT SEQUENCE {
+  mrz MRZ
+}
+
+END
