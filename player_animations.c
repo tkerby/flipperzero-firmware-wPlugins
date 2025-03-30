@@ -8,6 +8,10 @@ Sprite* idle_right[2];
 Sprite* sword_swing_right[7];
 Sprite* walking_right[8];
 
+Sprite* jumping[4];
+
+int jumping_animations_current_frame;
+
 int idle_current_frame = 0;
 int swinging_sword_current_frame = 0;
 int walking_current_frame = 0;
@@ -28,6 +32,15 @@ int walking_i;
 int idle_right_i;
 int sword_right_i;
 int walking_right_i;
+
+
+void Jumping_animations_load(GameManager *manager){
+    jumping[0] = game_manager_sprite_load(manager, "jumping/jumping.fxbm");
+    jumping[1] = game_manager_sprite_load(manager, "jumping/jumping_right.fxbm");
+    jumping[3] = game_manager_sprite_load(manager, "jumping/falling.fxbm");
+    jumping[3] = game_manager_sprite_load(manager, "jumping/falling_right.fxbm");
+}
+
 
 void Idle_animation_load(GameManager* manager) {
     idle[0] = game_manager_sprite_load(manager, "other/player.fxbm");

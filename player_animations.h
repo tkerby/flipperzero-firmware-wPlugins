@@ -4,6 +4,8 @@
 #include "game.h"
 #include "player.h"
 
+extern Sprite* jumping[];
+
 extern Sprite* idle[];
 extern Sprite* sword_swing[];
 extern Sprite* walking[];
@@ -11,6 +13,8 @@ extern Sprite* walking[];
 extern Sprite* idle_right[];
 extern Sprite* sword_swing_right[];
 extern Sprite* walking_right[];
+
+void Jumping_animations_load(GameManager* manager);
 
 void Idle_animation_load(GameManager* manager);
 void Swinging_sword_animation_load(GameManager* manager);

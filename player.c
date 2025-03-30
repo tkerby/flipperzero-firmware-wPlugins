@@ -19,6 +19,8 @@ void player_spawn(Level* level, GameManager* manager) {
     PlayerContext* player_context = entity_context_get(player);
 
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
+    
+    Jumping_animations_load(manager);
 
     Idle_animation_load(manager);
     Walking_animation_load(manager);
@@ -133,9 +135,26 @@ void Animations(GameManager* manager, void* context) {
     if(is_moving && isGrounded && is_facing_right) {
         Walking_right_animation_play(manager, context);
     }
+    
+    if(playerContext->Yvelocity > 0 && !isGrounded){
+        if(!is_facing_right){
+            playerContext->sprite = jumping[0];
+        }
+        else{
+            playerContext->sprite = jumping[1];
+        }
+    }
+
+    if(playerContext->Yvelocity < 0 && !isGrounded){
+        if(!is_facing_right){
+            playerContext->sprite = jumping[3];
+        }
+        else{
+            playerContext->sprite = jumping[4];
+        }
+    }
 
     UNUSED(manager);
-    UNUSED(playerContext);
 }
 
 const EntityDescription player_desc = {
