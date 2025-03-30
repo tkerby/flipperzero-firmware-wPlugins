@@ -6,6 +6,8 @@ bool isJumping;
 
 bool is_moving;
 
+bool is_facing_right;
+
 void player_spawn(Level* level, GameManager* manager) {
     Entity* player = level_add_entity(level, &player_desc);
 
@@ -56,6 +58,14 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         is_moving = true;
     else
         is_moving = false;
+
+    if(input.held & GameKeyLeft){
+        is_facing_right = false;
+    }
+    
+    if(input.held & GameKeyRight){
+        is_facing_right = true;
+    }
 
     // jump
     if(input.pressed & GameKeyUp && isGrounded) {
@@ -108,13 +118,22 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 
 void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
-    if(!is_moving && isGrounded) {
+    if(!is_moving && isGrounded && !is_facing_right) {
         Idle_animation_play(manager, context);
     }
+    
+    if(!is_moving && isGrounded && is_facing_right) {
+        Idle_animation_right_play(manager, context);
+    }
 
-    if(is_moving && isGrounded) {
+    if(is_moving && isGrounded && !is_facing_right) {
         Walking_animation_play(manager, context);
     }
+    
+    if(is_moving && isGrounded && is_facing_right) {
+        Walking_right_animation_play(manager, context);
+    }
+
     UNUSED(manager);
     UNUSED(playerContext);
 }

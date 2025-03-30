@@ -62,23 +62,23 @@ void Idle_animation_right_load(GameManager* manager) {
 }
 
 void Swinging_sword_right_animation_load(GameManager *manager){
-    sword_swing_right[0] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.png");
-    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.png");
-    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.png");
-    sword_swing_right[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.png");
-    sword_swing_right[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.png");
-    sword_swing_right[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.png");
+    sword_swing_right[0] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
+    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.fxbm");
+    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
+    sword_swing_right[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
+    sword_swing_right[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
+    sword_swing_right[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
 }
 
 void Walking_right_animation_load(GameManager* manager) {
-    walking_right[0] = game_manager_sprite_load(manager, "walking/walking_right_0.png");
-    walking_right[1] = game_manager_sprite_load(manager, "walking/walking_right_1.png");
-    walking_right[2] = game_manager_sprite_load(manager, "walking/walking_right_2.png");
-    walking_right[3] = game_manager_sprite_load(manager, "walking/walking_right_3.png");
-    walking_right[4] = game_manager_sprite_load(manager, "walking/walking_right_4.png");
-    walking_right[5] = game_manager_sprite_load(manager, "walking/walking_right_5.png");
-    walking_right[6] = game_manager_sprite_load(manager, "walking/walking_right_6.png");
-    walking_right[7] = game_manager_sprite_load(manager, "walking/walking_right_7.png");
+    walking_right[0] = game_manager_sprite_load(manager, "walking/walking_right_0.fxbm");
+    walking_right[1] = game_manager_sprite_load(manager, "walking/walking_right_1.fxbm");
+    walking_right[2] = game_manager_sprite_load(manager, "walking/walking_right_2.fxbm");
+    walking_right[3] = game_manager_sprite_load(manager, "walking/walking_right_3.fxbm");
+    walking_right[4] = game_manager_sprite_load(manager, "walking/walking_right_4.fxbm");
+    walking_right[5] = game_manager_sprite_load(manager, "walking/walking_right_5.fxbm");
+    walking_right[6] = game_manager_sprite_load(manager, "walking/walking_right_6.fxbm");
+    walking_right[7] = game_manager_sprite_load(manager, "walking/walking_right_7.fxbm");
 }
 
 void Idle_animation_play(GameManager* manager, void* context) {
@@ -147,5 +147,22 @@ void Idle_animation_right_play(GameManager *manager, void *context){
     if(idle_right_i >= idle_fps) {
         idle_right_current_frame++;
         idle_right_i = 0;
+    }
+}
+
+void Walking_right_animation_play(GameManager *manager, void *context){
+    UNUSED(manager); 
+    int total_frames = sizeof(walking_right) / sizeof(walking_right[0]);
+    if(walking_right_current_frame == total_frames) {
+        walking_right_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = walking_right[walking_right_current_frame];
+
+    walking_right_i++;
+    if(walking_right_i >= walking_fps) {
+        walking_right_current_frame++;
+        walking_right_i = 0;
     }
 }
