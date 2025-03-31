@@ -380,7 +380,7 @@ static void init_boss_fight() {
     game_state.boss.x = 90;
     game_state.boss.y = 30;
     game_state.boss.active = true;
-    game_state.boss.hitpoints = 25; // was 3
+    game_state.boss.hitpoints = 50;
     game_state.state = GameStateBossFight;
 }
 
@@ -480,6 +480,12 @@ static void check_boss_player_collision() {
         furi_hal_vibro_on(true);
         furi_delay_ms(100);
         furi_hal_vibro_on(false);
+        // bounce the player away from the boss
+        int bounce_dist = 5;
+        if(game_state.player.x < game_state.boss.x) game_state.player.x -= bounce_dist;
+        else game_state.player.x += bounce_dist;
+        if(game_state.player.y < game_state.boss.y) game_state.player.y -= bounce_dist;
+        else game_state.player.y += bounce_dist;
         if(game_state.player.health <= 0) {
             game_state.state = GameStateGameOver;
         }
@@ -501,6 +507,13 @@ static void check_collisions() {
                 furi_hal_vibro_on(true);
                 furi_delay_ms(100);
                 furi_hal_vibro_on(false);
+                
+                // bounce the player away from this enemy
+                int bounce_dist = 5;
+                if(game_state.player.x < game_state.enemies[i].x) game_state.player.x -= bounce_dist;
+                else game_state.player.x += bounce_dist;
+                if(game_state.player.y < game_state.enemies[i].y) game_state.player.y -= bounce_dist;
+                else game_state.player.y += bounce_dist;
                 
                 // Don't kill enemy on body collision, player must use weapon
                 game_state.enemies[i].hitpoints--;
