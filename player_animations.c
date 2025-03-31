@@ -124,6 +124,7 @@ void Swinging_sword_animation_play(GameManager *manager, void *context){
     sword_i++;
     if(sword_i >= swinging_sword_fps) {
         swinging_sword_current_frame++;
+        playerContext->is_swinging_sword = false;
         sword_i = 0;
     }
 }
@@ -160,6 +161,24 @@ void Idle_animation_right_play(GameManager *manager, void *context){
     if(idle_right_i >= idle_fps) {
         idle_right_current_frame++;
         idle_right_i = 0;
+    }
+}
+
+void Swinging_sword_animation_right_play(GameManager *manager, void *context){
+    UNUSED(manager);
+    int total_frames = sizeof(sword_swing_right) / sizeof(sword_swing_right[0]);
+    if(swinging_sword_right_current_frame == total_frames) {
+        swinging_sword_right_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = sword_swing_right[swinging_sword_right_current_frame];
+
+    sword_right_i++;
+    if(sword_right_i >= swinging_sword_fps) {
+        swinging_sword_right_current_frame++;
+        playerContext->is_swinging_sword = false;
+        sword_i = 0;
     }
 }
 

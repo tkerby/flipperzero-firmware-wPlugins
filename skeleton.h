@@ -3,10 +3,10 @@
 
 #include "game.h"
 
-typedef struct{
+typedef struct {
     Sprite* sprite;
     bool is_going_right;
-}SkeletonContext;
+} SkeletonContext;
 
 void skeleton_spawn(Level* level, GameManager* manager);
 

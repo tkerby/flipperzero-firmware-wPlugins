@@ -5,6 +5,7 @@ bool isGrounded;
 bool isJumping;
 
 bool is_moving;
+bool can_move = true;
 
 bool is_facing_right;
 
@@ -56,10 +57,25 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         pos.y += playerContext->Yvelocity;
     }
 
-    if(input.held & GameKeyLeft) pos.x -= 1;
-    if(input.held & GameKeyRight) pos.x += 1;
+    if(can_move){
+        if(input.held & GameKeyLeft) pos.x -= 1;
+        if(input.held & GameKeyRight) pos.x += 1;        
+    }
 
-    if(input.held & GameKeyLeft || input.held & GameKeyRight)
+    if(input.pressed & GameKeyOk && !is_facing_right){
+        playerContext->is_swinging_sword = true;
+        Swinging_sword_animation_play(manager, context);
+    }
+
+    if(input.pressed & GameKeyOk && is_facing_right){
+        playerContext->is_swinging_sword = true;
+        Swinging_sword_animation_right_play(manager, context);
+    }
+
+    if(playerContext->is_swinging_sword) can_move = false;
+    else can_move = true;
+
+    if(input.held & GameKeyLeft || (input.held & GameKeyRight && can_move))
         is_moving = true;
     else
         is_moving = false;
@@ -89,7 +105,9 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         game_manager_game_stop(manager);
     }
 
-    Animations(manager, context);
+    if(!playerContext->is_swinging_sword){
+        Animations(manager, context);
+    }
 }
 
 void player_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
