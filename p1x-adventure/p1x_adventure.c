@@ -199,20 +199,20 @@ static void draw_upgrade_screen(Canvas* canvas) {
     
     // Option 1: Weapon Duration
     if(game_state.selected_upgrade == 0) {
-        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "> Weapon Duration +1 <");
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "> Weapon Upgrade <");
     } else {
-        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "  Weapon Duration +1  ");
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "  Weapon Upgrade   ");
     }
     
     // Option 2: Weapon Length
     if(game_state.selected_upgrade == 1) {
-        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "> Weapon Length +2 <");
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "> Health Restore <");
     } else {
-        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "  Weapon Length +2  ");
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "  Health Restore  ");
     }
     
     // Instructions
-    canvas_draw_str_aligned(canvas, 64, 55, AlignCenter, AlignCenter, "Up/Down to select, OK to choose");
+    canvas_draw_str_aligned(canvas, 64, 55, AlignCenter, AlignCenter, "Select your upgrade!");
 }
 
 // Draw gameplay screen
@@ -484,11 +484,15 @@ static void handle_upgrade_screen(InputEvent* event) {
             case InputKeyOk:
                 // Apply the selected upgrade
                 if(game_state.selected_upgrade == 0) {
-                    // Increase weapon duration
-                    game_state.weapon_duration += 1;  // Now modifying a variable, not a constant
+                    // Increase weapon duration and length
+                    game_state.weapon_duration += 1;
+                    game_state.weapon_length += 2;
                 } else {
-                    // Increase weapon length
-                    game_state.weapon_length += 2;    // Now modifying a variable, not a constant
+                    // Increase player health
+                    game_state.player.health += 25;
+                    if(game_state.player.health > 100) {
+                        game_state.player.health = 100; // Cap health at 100
+                    }
                 }
                 
                 // Return to gameplay with new enemies
