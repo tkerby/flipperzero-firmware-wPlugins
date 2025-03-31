@@ -11,10 +11,10 @@ typedef struct {
     uint8_t current_scene;
     int8_t selected_option;
     bool running;
-} P1xGame;
+} Game;
 
 void draw_callback(Canvas* canvas, void* ctx) {
-    P1xGame* game = ctx;
+    Game* game = ctx;
     Scene* current_scene = &SCENARIO.scenes[game->current_scene];
 
     canvas_clear(canvas);
@@ -61,7 +61,7 @@ void input_callback(InputEvent* event, void* ctx) {
     furi_message_queue_put(event_queue, event, FuriWaitForever);
 }
 
-void p1x_game_init(P1xGame* game) {
+void game_init(Game* game) {
     game->current_scene = 0;
     game->selected_option = 0;
     game->running = true;
@@ -77,7 +77,7 @@ void p1x_game_init(P1xGame* game) {
     view_port_input_callback_set(game->view_port, input_callback, game->event_queue);
 }
 
-void p1x_game_free(P1xGame* game) {
+void game_free(Game* game) {
     // Free resources
     view_port_enabled_set(game->view_port, false);
     gui_remove_view_port(game->gui, game->view_port);
@@ -86,7 +86,7 @@ void p1x_game_free(P1xGame* game) {
     furi_message_queue_free(game->event_queue);
 }
 
-void p1x_game_process_input(P1xGame* game, InputEvent* event) {
+void process_input(Game* game, InputEvent* event) {
     Scene* current_scene = &SCENARIO.scenes[game->current_scene];
     
     if(event->type == InputTypePress) {
@@ -120,19 +120,19 @@ void p1x_game_process_input(P1xGame* game, InputEvent* event) {
 int32_t p1x_your_own_adventure_app(void* p) {
     UNUSED(p);
     
-    P1xGame game;
+    Game game;
     InputEvent event;
     
-    p1x_game_init(&game);
+    game_init(&game);
     
     while(game.running) {
         if(furi_message_queue_get(game.event_queue, &event, 100) == FuriStatusOk) {
-            p1x_game_process_input(&game, &event);
+            process_input(&game, &event);
         }
         view_port_update(game.view_port);
     }
     
-    p1x_game_free(&game);
+    game_free(&game);
     
     return 0;
 }
