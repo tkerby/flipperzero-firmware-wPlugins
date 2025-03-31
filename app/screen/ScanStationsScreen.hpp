@@ -48,6 +48,7 @@ private:
     bool receiveMode = false;
     bool updateUserCategory = true;
     int scanForMoreButtonIndex = -1;
+    uint32_t fromFilePagersCount = 0;
 
 public:
     ScanStationsScreen(AppConfig* config) : ScanStationsScreen(config, true, NotSelected, NULL) {
@@ -124,6 +125,7 @@ public:
 
             if(categoryType == User && menuView->GetElementsCount() > 0) {
                 scanForMoreButtonIndex = menuView->GetElementsCount();
+                fromFilePagersCount = menuView->GetElementsCount();
                 menuView->AddElement();
             }
         }
@@ -236,8 +238,12 @@ private:
     }
 
     void editPagerMessage(uint32_t index) {
+        if((int)index == scanForMoreButtonIndex) {
+            return;
+        }
+
         PagerDataGetter getPager = pagerReceiver->PagerGetter(index);
-        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, getPager);
+        EditPagerScreen* screen = new EditPagerScreen(config, subghz, pagerReceiver, getPager, index < fromFilePagersCount);
         UiManager::GetInstance()->PushView(screen->GetView());
     }
 

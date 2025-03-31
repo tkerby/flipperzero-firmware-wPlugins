@@ -47,15 +47,22 @@ private:
     int32_t saveAsItemIndex = -1;
     int32_t deleteItemIndex = -1;
 
-    String* stationNameFromCurrentPagerFile = NULL;
+    bool isFromFile;
     const char* saveAsName = NULL;
 
 public:
-    EditPagerScreen(AppConfig* config, SubGhzModule* subghz, PagerReceiver* receiver, PagerDataGetter pagerGetter) {
+    EditPagerScreen(
+        AppConfig* config,
+        SubGhzModule* subghz,
+        PagerReceiver* receiver,
+        PagerDataGetter pagerGetter,
+        bool isFromFile
+    ) {
         this->config = config;
         this->subghz = subghz;
         this->receiver = receiver;
         this->getPager = pagerGetter;
+        this->isFromFile = isFromFile;
 
         StoredPagerData* pager = getPager();
         PagerDecoder* decoder = receiver->decoders[pager->decoder];
@@ -103,21 +110,27 @@ public:
             )
         );
 
-        this->stationNameFromCurrentPagerFile =
-            AppFileSysytem().GetOnlyStationName(User, receiver->GetCurrentUserCategory(), pager);
-
-        if(canSaveOrDelete()) {
-            const char* saveAsItemName = stationNameFromCurrentPagerFile == NULL ? "Save signal as..." : "Save / Rename";
+        if(canSave()) {
+            const char* saveAsItemName = isFromFile ? "Save / Rename" : "Save signal as...";
             saveAsItemIndex = varItemList->AddItem(saveAsItem = new UiVariableItem(saveAsItemName, ""));
-            if(stationNameFromCurrentPagerFile != NULL) {
-                deleteItemIndex = varItemList->AddItem(deleteItem = new UiVariableItem("Delete station", ""));
-            }
+        }
+
+        if(canDelete()) {
+            deleteItemIndex = varItemList->AddItem(deleteItem = new UiVariableItem("Delete station", ""));
         }
     }
 
 private:
-    bool canSaveOrDelete() {
-        return !receiver->IsKnown(getPager()) || this->stationNameFromCurrentPagerFile != NULL;
+    bool canSave() {
+        return !receiver->IsKnown(getPager()) || this->isFromFile;
+    }
+
+    bool canDelete() {
+        return isFromFile;
+    }
+
+    String* currentStationName() {
+        return receiver->GetName(getPager());
     }
 
     void updatePagerIsEditable() {
@@ -134,7 +147,7 @@ private:
         if(index == saveAsItemIndex) {
             saveAs();
         } else if(index == deleteItemIndex) {
-            DialogUiView* removeConfirmation = new DialogUiView("Really delete?", stationNameFromCurrentPagerFile->cstr());
+            DialogUiView* removeConfirmation = new DialogUiView("Really delete?", currentStationName()->cstr());
             removeConfirmation->AddLeftButton("Nope");
             removeConfirmation->AddRightButton("Yup");
             removeConfirmation->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::confirmDelete));
@@ -164,8 +177,9 @@ private:
 
     void saveAs() {
         TextInputUiView* nameInputView = new TextInputUiView("Enter station name", NAME_MIN_LENGTH, NAME_MAX_LENGTH);
-        if(stationNameFromCurrentPagerFile != NULL) {
-            nameInputView->SetDefaultText(stationNameFromCurrentPagerFile);
+        String* name = currentStationName();
+        if(name != NULL) {
+            nameInputView->SetDefaultText(name);
         }
         nameInputView->SetResultHandler(HANDLER_1ARG(&EditPagerScreen::saveAsHandler));
         UiManager::GetInstance()->PushView(nameInputView);
@@ -283,10 +297,6 @@ private:
 
         if(saveAsItem != NULL) {
             delete saveAsItem;
-        }
-
-        if(stationNameFromCurrentPagerFile != NULL) {
-            delete stationNameFromCurrentPagerFile;
         }
 
         if(deleteItem != NULL) {
