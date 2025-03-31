@@ -300,11 +300,7 @@ static void draw_boss_fight_screen(Canvas* canvas) {
     
     // Draw boss (16px circle)
     if(game_state.boss.active) {
-        canvas_draw_circle(
-            canvas,
-            game_state.boss.x + 8,
-            game_state.boss.y + 8,
-            8);
+        canvas_draw_circle(canvas, game_state.boss.x + 8, game_state.boss.y + 8, 6);
     }
     
     // Draw health and score
@@ -541,6 +537,9 @@ static void move_enemies() {
 }
 
 static void move_boss() {
+    static uint8_t slow_counter = 0;
+    slow_counter++;
+    if(slow_counter % 2 != 0) return;
     if(!game_state.boss.active) return;
     // Simple chase logic
     if(game_state.boss.x < game_state.player.x) game_state.boss.x++;
