@@ -4,7 +4,7 @@
 void skeleton_spawn(Level *level, GameManager *manager){
     Entity* skeleton = level_add_entity(level, &skel_desc);
     // TEMP//
-    entity_pos_set(player, (Vector){15, 24});
+    entity_pos_set(skeleton, (Vector){30, 30});
 
     entity_collider_add_rect(skeleton, 15, 31);
 
@@ -16,10 +16,13 @@ void skeleton_spawn(Level *level, GameManager *manager){
 void skel_update(Entity* self, GameManager* manager, void* context) {
     Vector pos = entity_pos_get(self);
     Vector player_pos = entity_pos_get(player);
+    
+    if(player != NULL){
+        if(player_pos.x > pos.x) pos.x += 0.5;
+        if(player_pos.x < pos.x) pos.x -= 0.5;
+    }
 
-    if(player_pos.x > pos.x) pos.x += 0.5;
-    if(player_pos.x < pos.x) pos.x -= 0.5;
-
+    entity_pos_set(self, pos);
     UNUSED(manager);
     UNUSED(context);
 }
@@ -28,7 +31,7 @@ void skel_render(Entity* self, GameManager* manager, Canvas* canvas, void* conte
     SkeletonContext* skel = context;
     Vector pos = entity_pos_get(self);
 
-    canvas_draw_sprite(canvas, skel->sprite, pos.x - 38, pos.y - 40);
+    canvas_draw_sprite(canvas, skel->sprite, pos.x - 10, pos.y);
 
     UNUSED(manager);
 }

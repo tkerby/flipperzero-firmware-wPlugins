@@ -42,7 +42,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(context);
     // add the player to the level
     player_spawn(level, manager);
-
+    
     skeleton_spawn(level, manager);
 
     // add the ground to the level
