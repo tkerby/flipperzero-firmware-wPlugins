@@ -19,7 +19,7 @@
 #ifndef SK6805_H_
 #define SK6805_H_
 
-#include "app_params.h" // Application specific configuration
+#include "../app_params.h" // Application specific configuration
 #include <furi.h>
 
 /**
