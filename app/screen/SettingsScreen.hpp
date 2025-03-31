@@ -104,20 +104,6 @@ public:
                 }
             )
         );
-
-        // clang-format off
-        varItemList->AddItem(
-            debugModeItem = new UiVariableItem(
-                "Debug mode",
-                config->Debug,
-                2,
-                [this](uint8_t val) {
-                    this->config->Debug = val;
-                    return boolOption(val);
-                }
-            )
-        );
-        // clang-format on
     }
 
     UiView* GetView() {

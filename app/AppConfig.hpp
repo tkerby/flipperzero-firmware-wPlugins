@@ -9,7 +9,6 @@
 #define KEY_CONFIG_FREQUENCY      "Frequency"
 #define KEY_CONFIG_MAX_PAGERS     "MaxPagerForBatchOrDetection"
 #define KEY_CONFIG_REPEATS        "SignalRepeats"
-#define KEY_CONFIG_DEBUG          "Debug"
 #define KEY_CONFIG_SAVED_STRATEGY "SavedStationStrategy"
 #define KEY_CONFIG_AUTOSAVE       "AutosaveFoundSignals"
 #define KEY_CONFIG_USER_CATGEGORY "UserCategory"
@@ -22,7 +21,6 @@ public:
     SavedStationStrategy SavedStrategy = SHOW_NAME;
     bool AutosaveFoundSignals = true;
     String* CurrentUserCategory = NULL;
-    bool Debug = false;
 
 private:
     void readFromFile(FlipperFile* file) {
@@ -36,7 +34,6 @@ private:
         file->ReadUInt32(KEY_CONFIG_MAX_PAGERS, &MaxPagerForBatchOrDetection);
         file->ReadUInt32(KEY_CONFIG_REPEATS, &SignalRepeats);
         file->ReadUInt32(KEY_CONFIG_SAVED_STRATEGY, &savedStrategyValue);
-        file->ReadBool(KEY_CONFIG_DEBUG, &Debug);
         file->ReadBool(KEY_CONFIG_AUTOSAVE, &AutosaveFoundSignals);
         file->ReadString(KEY_CONFIG_USER_CATGEGORY, userCat);
 
@@ -54,7 +51,6 @@ private:
         file->WriteUInt32(KEY_CONFIG_MAX_PAGERS, MaxPagerForBatchOrDetection);
         file->WriteUInt32(KEY_CONFIG_REPEATS, SignalRepeats);
         file->WriteUInt32(KEY_CONFIG_SAVED_STRATEGY, SavedStrategy);
-        file->WriteBool(KEY_CONFIG_DEBUG, Debug);
         file->WriteBool(KEY_CONFIG_AUTOSAVE, AutosaveFoundSignals);
         file->WriteString(KEY_CONFIG_USER_CATGEGORY, CurrentUserCategory != NULL ? CurrentUserCategory->cstr() : "");
     }
