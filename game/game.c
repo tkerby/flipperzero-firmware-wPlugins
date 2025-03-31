@@ -11,6 +11,15 @@
 static void game_start(GameManager *game_manager, void *ctx)
 {
     // Do some initialization here, for example you can load score from storage.
+    // check if enough memory
+    if (!is_enough_heap(sizeof(GameContext), true))
+    {
+        FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
+        GameContext *game_context = ctx;
+        game_context->ended_early = true;
+        game_manager_game_stop(game_manager); // end game early
+        return;
+    }
     // For simplicity, we will just set it to 0.
     GameContext *game_context = ctx;
     game_context->fps = atof_(fps_choices_str[fps_index]);
@@ -73,10 +82,20 @@ static void game_start(GameManager *game_manager, void *ctx)
     // FlipperHTTP
     if (game_context->game_mode == GAME_MODE_PVP)
     {
+        // check if enough memory
+        if (!is_enough_heap(sizeof(FlipperHTTP), true))
+        {
+            FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
+            game_context->ended_early = true;
+            game_manager_game_stop(game_manager); // end game early
+            return;
+        }
         game_context->fhttp = flipper_http_alloc();
         if (!game_context->fhttp)
         {
             FURI_LOG_E("Game", "Failed to allocate FlipperHTTP");
+            game_context->ended_early = true;
+            game_manager_game_stop(game_manager); // end game early
             return;
         }
     }

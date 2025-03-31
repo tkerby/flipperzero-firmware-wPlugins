@@ -14,4 +14,23 @@ int game_mode_index = 0;
 float atof_(const char *nptr) { return (float)strtod(nptr, NULL); }
 float atof_furi(const FuriString *nptr) { return atof_(furi_string_get_cstr(nptr)); }
 bool is_str(const char *src, const char *dst) { return strcmp(src, dst) == 0; }
-bool is_enough_heap(size_t heap_size) { return memmgr_get_free_heap() > (heap_size + 1024); } // 1KB buffer
+bool is_enough_heap(size_t heap_size, bool check_blocks)
+{
+    const size_t min_heap = heap_size + 1024; // 1KB buffer
+    const size_t min_free = memmgr_get_free_heap();
+    if (min_free < min_heap)
+    {
+        FURI_LOG_E(TAG, "Not enough heap memory: %zu bytes", min_free);
+        return false;
+    }
+    if (check_blocks)
+    {
+        const size_t max_free_block = memmgr_heap_get_max_free_block();
+        if (max_free_block < min_heap)
+        {
+            FURI_LOG_E(TAG, "Not enough free blocks: %zu bytes", max_free_block);
+            return false;
+        }
+    }
+    return true;
+}

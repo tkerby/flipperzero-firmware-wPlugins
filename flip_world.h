@@ -104,4 +104,4 @@ extern int game_mode_index;
 float atof_(const char *nptr);
 float atof_furi(const FuriString *nptr);
 bool is_str(const char *src, const char *dst);
-bool is_enough_heap(size_t heap_size);
+bool is_enough_heap(size_t heap_size, bool check_blocks);

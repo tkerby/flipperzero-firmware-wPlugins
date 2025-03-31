@@ -1306,7 +1306,7 @@ static void run(FlipWorldApp *app)
         return;
     }
     free_all_views(app, true, true, false);
-    if (!is_enough_heap(60000))
+    if (!is_enough_heap(60000, false)) // only need to check if they have 60k free (a 60k memory block is highly unlikely anyways)
     {
         easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
         return;
