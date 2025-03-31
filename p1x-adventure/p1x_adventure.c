@@ -13,12 +13,16 @@
 #define SCREEN_HEIGHT 64
 #define WEAPON_LENGTH 12
 #define WEAPON_DURATION 4  // frames that the weapon stays active
+#define CASTLE_WIDTH 15    // Width of castle entrance
+#define CASTLE_HEIGHT 30   // Height of castle entrance
+#define PLAYER_SPEED 4     // Player moves 4 pixels per keypress
 
 // Game states
 typedef enum {
     GameStateTitle,
     GameStateGameplay,
-    GameStateGameOver
+    GameStateGameOver,
+    GameStateWin
 } GameStateEnum;
 
 // Direction constants
@@ -81,6 +85,38 @@ static void get_weapon_end_point(int* end_x, int* end_y) {
     }
 }
 
+// Draw the castle entrance on the right side of the screen
+static void draw_castle_entrance(Canvas* canvas) {
+    int castle_x = SCREEN_WIDTH - CASTLE_WIDTH;
+    int castle_y = (SCREEN_HEIGHT - CASTLE_HEIGHT) / 2;
+    
+    // Draw castle walls
+    canvas_draw_frame(canvas, castle_x, castle_y, CASTLE_WIDTH, CASTLE_HEIGHT);
+    
+    // Draw towers
+    canvas_draw_box(canvas, castle_x - 2, castle_y - 2, 4, 4); // Top tower
+    canvas_draw_box(canvas, castle_x - 2, castle_y + CASTLE_HEIGHT - 2, 4, 4); // Bottom tower
+    
+    // Draw entrance (doorway)
+    canvas_draw_frame(canvas, 
+                    castle_x + 3, 
+                    castle_y + (CASTLE_HEIGHT/2) - 8, 
+                    CASTLE_WIDTH - 6, 
+                    16);
+}
+
+// Check if player has reached the castle entrance
+static bool check_castle_reached() {
+    int castle_x = SCREEN_WIDTH - CASTLE_WIDTH;
+    int castle_y = (SCREEN_HEIGHT - CASTLE_HEIGHT) / 2;
+    int castle_door_y = castle_y + (CASTLE_HEIGHT/2) - 8;
+    
+    // Player needs to be at the castle entrance (doorway)
+    return (game_state.player.x >= castle_x - 2 && 
+            game_state.player.y >= castle_door_y - 4 && 
+            game_state.player.y <= castle_door_y + 20);
+}
+
 // Draw title screen
 static void draw_title_screen(Canvas* canvas) {
     canvas_clear(canvas);
@@ -113,8 +149,29 @@ static void draw_game_over_screen(Canvas* canvas) {
     canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to restart");
 }
 
+// Draw win screen
+static void draw_win_screen(Canvas* canvas) {
+    canvas_clear(canvas);
+    
+    // Draw win message
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "YOU WIN!");
+    
+    // Draw final score
+    char score_str[20];
+    snprintf(score_str, sizeof(score_str), "Score: %ld", game_state.score);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, score_str);
+    
+    // Draw restart instructions
+    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to play again");
+}
+
 // Draw gameplay screen
 static void draw_gameplay_screen(Canvas* canvas) {
+    // Draw castle entrance first (background)
+    draw_castle_entrance(canvas);
+    
     // Draw player (8x8 square)
     canvas_draw_frame(
         canvas,
@@ -174,6 +231,9 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
             break;
         case GameStateGameOver:
             draw_game_over_screen(canvas);
+            break;
+        case GameStateWin:
+            draw_win_screen(canvas);
             break;
     }
 }
@@ -340,6 +400,13 @@ static void handle_game_over_screen(InputEvent* event) {
     }
 }
 
+// Handle the win screen
+static void handle_win_screen(InputEvent* event) {
+    if(event->type == InputTypePress && event->key == InputKeyOk) {
+        game_state.state = GameStateTitle;
+    }
+}
+
 int32_t p1x_adventure_main(void* p) {
     UNUSED(p);
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
@@ -380,28 +447,31 @@ int32_t p1x_adventure_main(void* p) {
                         case GameStateGameOver:
                             handle_game_over_screen(&event);
                             break;
+                        case GameStateWin:
+                            handle_win_screen(&event);
+                            break;
                         case GameStateGameplay:
                             // Handle gameplay inputs
                             if((event.type == InputTypePress) || (event.type == InputTypeRepeat)) {
                                 switch(event.key) {
                                 case InputKeyLeft:
-                                    game_state.player.x -= 2;
+                                    game_state.player.x -= PLAYER_SPEED;
                                     game_state.player.direction = DIR_LEFT;
                                     if(game_state.player.x < 0) game_state.player.x = 0;
                                     break;
                                 case InputKeyRight:
-                                    game_state.player.x += 2;
+                                    game_state.player.x += PLAYER_SPEED;
                                     game_state.player.direction = DIR_RIGHT;
                                     if(game_state.player.x > SCREEN_WIDTH - 8) 
                                         game_state.player.x = SCREEN_WIDTH - 8;
                                     break;
                                 case InputKeyUp:
-                                    game_state.player.y -= 2;
+                                    game_state.player.y -= PLAYER_SPEED;
                                     game_state.player.direction = DIR_UP;
                                     if(game_state.player.y < 15) game_state.player.y = 15;
                                     break;
                                 case InputKeyDown:
-                                    game_state.player.y += 2;
+                                    game_state.player.y += PLAYER_SPEED;
                                     game_state.player.direction = DIR_DOWN;
                                     if(game_state.player.y > SCREEN_HEIGHT - 8) 
                                         game_state.player.y = SCREEN_HEIGHT - 8;
@@ -434,6 +504,13 @@ int32_t p1x_adventure_main(void* p) {
             move_enemies();
             check_collisions();
             check_weapon_collisions();
+            
+            // Check if player reached the castle
+            if(check_castle_reached()) {
+                game_state.state = GameStateWin;
+                // Add bonus points for reaching the castle
+                game_state.score += 50;
+            }
             
             // Check if level is complete
             if(all_enemies_defeated()) {
