@@ -8,6 +8,5 @@
  - Only requests DG1, the contents of the MRZ
 
 ## To do
- - Menu to delete cached MRZ
  - Support other country passports
  - Support DG2, the photo

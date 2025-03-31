@@ -4,6 +4,7 @@
 
 enum SubmenuIndex {
     SubmenuIndexRead,
+    SubmenuIndexDeleteMRZInfo,
 };
 
 void passy_scene_main_menu_submenu_callback(void* context, uint32_t index) {
@@ -18,6 +19,15 @@ void passy_scene_main_menu_on_enter(void* context) {
 
     submenu_add_item(
         submenu, "Read", SubmenuIndexRead, passy_scene_main_menu_submenu_callback, passy);
+    if(strlen(passy->passport_number) > 0 && strlen(passy->date_of_birth) > 0 &&
+       strlen(passy->date_of_expiry) > 0) {
+        submenu_add_item(
+            submenu,
+            "Delete MRZ Info",
+            SubmenuIndexDeleteMRZInfo,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+    }
 
     view_dispatcher_switch_to_view(passy->view_dispatcher, PassyViewMenu);
 }
@@ -37,6 +47,11 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
             } else {
                 scene_manager_next_scene(passy->scene_manager, PassyScenePassportNumberInput);
             }
+            consumed = true;
+        } else if(event.event == SubmenuIndexDeleteMRZInfo) {
+            scene_manager_set_scene_state(
+                passy->scene_manager, PassySceneMainMenu, SubmenuIndexDeleteMRZInfo);
+            scene_manager_next_scene(passy->scene_manager, PassySceneDelete);
             consumed = true;
         }
     }

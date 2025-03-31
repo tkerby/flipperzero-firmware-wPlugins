@@ -82,6 +82,32 @@ bool passy_save_mrz_info(Passy* passy) {
     return saved;
 }
 
+bool passy_delete_mrz_info(Passy* passy) {
+    furi_assert(passy);
+
+    bool deleted = false;
+    FuriString* file_path;
+    file_path = furi_string_alloc();
+
+    do {
+        furi_string_printf(
+            file_path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, PASSY_MRZ_INFO_FILENAME, ".txt");
+
+        if(!storage_simply_remove(passy->storage, furi_string_get_cstr(file_path))) break;
+        memset(passy->passport_number, 0, sizeof(passy->passport_number));
+        memset(passy->date_of_birth, 0, sizeof(passy->date_of_birth));
+        memset(passy->date_of_expiry, 0, sizeof(passy->date_of_expiry));
+        deleted = true;
+    } while(false);
+
+    if(!deleted) {
+        dialog_message_show_storage_error(passy->dialogs, "Can not remove file");
+    }
+
+    furi_string_free(file_path);
+    return deleted;
+}
+
 bool passy_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     Passy* passy = context;
