@@ -139,7 +139,7 @@ static void draw_upgrade_screen(Canvas* canvas) {
 
 static void draw_gameplay_screen(Canvas* canvas) {
     canvas_clear(canvas);
-    canvas_draw_icon(canvas, 128-28, 16, &I_castle); // Draw level 1 background
+    canvas_draw_icon(canvas, 128-22, 24, &I_castle); // Draw level 1 background
     
     canvas_draw_frame(canvas, game_state.player.x, game_state.player.y, 8, 8);
     if(game_state.player.weapon_active) {
@@ -303,10 +303,10 @@ static void check_boss_player_collision() {
         furi_delay_ms(100);
         furi_hal_vibro_on(false);
         int bounce_dist = 5;
-        if(game_state.player.x < game_state.boss.x) game_state.player.x -= bounce_dist;
-        else game_state.player.x += bounce_dist;
-        if(game_state.player.y < game_state.boss.y) game_state.player.y -= bounce_dist;
-        else game_state.player.y += bounce_dist;
+        if(game_state.player.x < game_state.boss.x) game_state.player.x = (game_state.player.x - bounce_dist < 0) ? 0 : game_state.player.x - bounce_dist;
+        else game_state.player.x = (game_state.player.x + bounce_dist > SCREEN_WIDTH - 8) ? SCREEN_WIDTH - 8 : game_state.player.x + bounce_dist;
+        if(game_state.player.y < game_state.boss.y) game_state.player.y = (game_state.player.y - bounce_dist < 0) ? 0 : game_state.player.y - bounce_dist;
+        else game_state.player.y = (game_state.player.y + bounce_dist > SCREEN_HEIGHT - 8) ? SCREEN_HEIGHT - 8 : game_state.player.y + bounce_dist;
         if(game_state.player.health <= 0) {
             game_state.state = GameStateGameOver;
         }
@@ -325,10 +325,10 @@ static void check_collisions() {
                 furi_delay_ms(100);
                 furi_hal_vibro_on(false);
                 int bounce_dist = 5;
-                if(game_state.player.x < game_state.enemies[i].x) game_state.player.x -= bounce_dist;
-                else game_state.player.x += bounce_dist;
-                if(game_state.player.y < game_state.enemies[i].y) game_state.player.y -= bounce_dist;
-                else game_state.player.y += bounce_dist;
+                if(game_state.player.x < game_state.enemies[i].x) game_state.player.x = (game_state.player.x - bounce_dist < 0) ? 0 : game_state.player.x - bounce_dist;
+                else game_state.player.x = (game_state.player.x + bounce_dist > SCREEN_WIDTH - 8) ? SCREEN_WIDTH - 8 : game_state.player.x + bounce_dist;
+                if(game_state.player.y < game_state.enemies[i].y) game_state.player.y = (game_state.player.y - bounce_dist < 0) ? 0 : game_state.player.y - bounce_dist;
+                else game_state.player.y = (game_state.player.y + bounce_dist > SCREEN_HEIGHT - 8) ? SCREEN_HEIGHT - 8 : game_state.player.y + bounce_dist;
                 game_state.enemies[i].hitpoints--;
                 if(game_state.enemies[i].hitpoints <= 0) {
                     game_state.enemies[i].active = false;
@@ -361,13 +361,13 @@ static void move_enemies() {
 static void move_boss() {
     static uint8_t slow_counter = 0;
     slow_counter++;
-    if(slow_counter % 10 != 0) return; // Move boss less frequently
+    if(slow_counter % 5 != 0) return; // Increase boss movement speed by reducing delay
 
     if(!game_state.boss.active) return;
 
     // Generate random movement direction
     int direction = rand() % 4;
-    switch(direction) {
+    switch(direction) { 
         case 0: // Move up
             if(game_state.boss.y > 0) game_state.boss.y--;
             break;
@@ -468,38 +468,7 @@ int32_t p1x_adventure_main(void* p) {
                         case GameStateWin: handle_win_screen(&event); break;
                         case GameStateUpgrade: handle_upgrade_screen(&event); break;
                         case GameStateGameplay:
-                            if((event.type == InputTypePress) || (event.type == InputTypeRepeat)) {
-                                switch(event.key) {
-                                    case InputKeyLeft:
-                                        game_state.player.x -= PLAYER_SPEED;
-                                        game_state.player.direction = DIR_LEFT;
-                                        if(game_state.player.x < 0) game_state.player.x = 0;
-                                        break;
-                                    case InputKeyRight:
-                                        game_state.player.x += PLAYER_SPEED;
-                                        game_state.player.direction = DIR_RIGHT;
-                                        if(game_state.player.x > SCREEN_WIDTH - 8) game_state.player.x = SCREEN_WIDTH - 8;
-                                        break;
-                                    case InputKeyUp:
-                                        game_state.player.y -= PLAYER_SPEED;
-                                        game_state.player.direction = DIR_UP;
-                                        if(game_state.player.y < 15) game_state.player.y = 15;
-                                        break;
-                                    case InputKeyDown:
-                                        game_state.player.y += PLAYER_SPEED;
-                                        game_state.player.direction = DIR_DOWN;
-                                        if(game_state.player.y > SCREEN_HEIGHT - 8) game_state.player.y = SCREEN_HEIGHT - 8;
-                                        break;
-                                    case InputKeyOk:
-                                        game_state.player.weapon_active = true;
-                                        game_state.player.weapon_timer = game_state.weapon_duration;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                            break;
-                        case GameStateBossFight:
+                        case GameStateBossFight: // Ensure weapon timer works on both screens
                             if((event.type == InputTypePress) || (event.type == InputTypeRepeat)) {
                                 switch(event.key) {
                                     case InputKeyLeft:
@@ -537,28 +506,30 @@ int32_t p1x_adventure_main(void* p) {
         }
 
         uint32_t current_tick = furi_get_tick();
-        if(game_state.state == GameStateGameplay && current_tick - last_tick > 100) {
+        if((game_state.state == GameStateGameplay || game_state.state == GameStateBossFight) && current_tick - last_tick > 100) {
             if(game_state.player.weapon_active) {
                 if(--game_state.player.weapon_timer <= 0) {
                     game_state.player.weapon_active = false;
                 }
             }
-            move_enemies();
-            check_collisions();
-            check_weapon_collisions();
-            if(check_castle_reached()) {
-                init_boss_fight();
-            }
-            if(all_enemies_defeated() && !game_state.wave_completed) {
-                game_state.wave_completed = true;
-                game_state.score += 20;
-                game_state.state = GameStateUpgrade;
+            if(game_state.state == GameStateGameplay) {
+                move_enemies();
+                check_collisions();
+                check_weapon_collisions();
+                if(check_castle_reached()) {
+                    init_boss_fight();
+                }
+                if(all_enemies_defeated() && !game_state.wave_completed) {
+                    game_state.wave_completed = true;
+                    game_state.score += 20;
+                    game_state.state = GameStateUpgrade;
+                }
+            } else if(game_state.state == GameStateBossFight) {
+                move_boss();
+                check_boss_weapon_collision();
+                check_boss_player_collision();
             }
             last_tick = current_tick;
-        } else if(game_state.state == GameStateBossFight) {
-            move_boss();
-            check_boss_weapon_collision();
-            check_boss_player_collision();
         }
 
         view_port_update(view_port);

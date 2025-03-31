@@ -1,0 +1,15 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="p1x_your_own_adventure",  # Must be unique
+    name="Your Own Adventure",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="p1x_your_own_adventure_app",
+    stack_size=2 * 1024,
+    fap_category="P1X",
+    fap_icon="p1x_your_own_adventure.png",  # 10x10 1-bit PNG
+    fap_description="Choose your own adventure text game",
+    fap_author="P1X",
+    # fap_weburl="https://github.com/user/p1x_your_own_adventure",
+    # fap_icon_assets="images",  # Image assets to compile for this application
+)
