@@ -224,6 +224,7 @@ public:
         }
 
         nextPagerIndex = count;
+        pagersArraySize = count;
         knownStationsLoaded = true;
     }
 

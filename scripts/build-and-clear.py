@@ -14,7 +14,7 @@ def clearSections():
 
     for i, sect in enumerate(binary.sections):
         if sect.name.find("_Z") >= 0:
-            newSectName = "_Z%d" % i
+            newSectName = "_s%d" % i
             cmd = '%s "%s" --rename-section %s=%s' % (
                 OBJCOPY_PATH,
                 FAP_LOCATION_AFTER_BUILD,
