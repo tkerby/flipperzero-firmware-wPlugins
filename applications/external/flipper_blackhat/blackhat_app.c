@@ -4,29 +4,25 @@
 
 #include "blackhat_app_i.h"
 
-static bool blackhat_app_custom_event_callback(void* context, uint32_t event)
-{
+static bool blackhat_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     BlackhatApp* app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
-static bool blackhat_app_back_event_callback(void* context)
-{
+static bool blackhat_app_back_event_callback(void* context) {
     furi_assert(context);
     BlackhatApp* app = context;
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-static void blackhat_app_tick_event_callback(void* context)
-{
+static void blackhat_app_tick_event_callback(void* context) {
     furi_assert(context);
     BlackhatApp* app = context;
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
-BlackhatApp* blackhat_app_alloc()
-{
+BlackhatApp* blackhat_app_alloc() {
     BlackhatApp* app = malloc(sizeof(BlackhatApp));
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
@@ -34,49 +30,38 @@ BlackhatApp* blackhat_app_alloc()
     app->gui = furi_record_open(RECORD_GUI);
 
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
 
     app->scene_manager = scene_manager_alloc(&blackhat_scene_handlers, app);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
     view_dispatcher_set_custom_event_callback(
-        app->view_dispatcher, blackhat_app_custom_event_callback
-    );
+        app->view_dispatcher, blackhat_app_custom_event_callback);
     view_dispatcher_set_navigation_event_callback(
-        app->view_dispatcher, blackhat_app_back_event_callback
-    );
+        app->view_dispatcher, blackhat_app_back_event_callback);
     view_dispatcher_set_tick_event_callback(
-        app->view_dispatcher, blackhat_app_tick_event_callback, 100
-    );
+        app->view_dispatcher, blackhat_app_tick_event_callback, 100);
 
-    view_dispatcher_attach_to_gui(
-        app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen
-    );
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     app->var_item_list = variable_item_list_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         BlackhatAppViewVarItemList,
-        variable_item_list_get_view(app->var_item_list)
-    );
+        variable_item_list_get_view(app->var_item_list));
 
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        BlackhatAppViewTextInput,
-        text_input_get_view(app->text_input)
-    );
+        app->view_dispatcher, BlackhatAppViewTextInput, text_input_get_view(app->text_input));
 
-    for (int i = 0; i < NUM_MENU_ITEMS; ++i) {
+    for(int i = 0; i < NUM_MENU_ITEMS; ++i) {
         app->selected_option_index[i] = 0;
     }
 
     app->text_box = text_box_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        BlackhatAppViewConsoleOutput,
-        text_box_get_view(app->text_box)
-    );
+        app->view_dispatcher, BlackhatAppViewConsoleOutput, text_box_get_view(app->text_box));
     app->text_box_store = furi_string_alloc();
     furi_string_reserve(app->text_box_store, BLACKHAT_TEXT_BOX_STORE_SIZE);
 
@@ -85,20 +70,15 @@ BlackhatApp* blackhat_app_alloc()
     return app;
 }
 
-void blackhat_app_free(BlackhatApp* app)
-{
+void blackhat_app_free(BlackhatApp* app) {
     furi_assert(app);
 
     // Views
-    view_dispatcher_remove_view(
-        app->view_dispatcher, BlackhatAppViewVarItemList
-    );
+    view_dispatcher_remove_view(app->view_dispatcher, BlackhatAppViewVarItemList);
     variable_item_list_free(app->var_item_list);
     view_dispatcher_remove_view(app->view_dispatcher, BlackhatAppViewTextInput);
     text_input_free(app->text_input);
-    view_dispatcher_remove_view(
-        app->view_dispatcher, BlackhatAppViewConsoleOutput
-    );
+    view_dispatcher_remove_view(app->view_dispatcher, BlackhatAppViewConsoleOutput);
     text_box_free(app->text_box);
     furi_string_free(app->text_box_store);
 
@@ -116,8 +96,7 @@ void blackhat_app_free(BlackhatApp* app)
     free(app);
 }
 
-int32_t blackhat_app(void* p)
-{
+int32_t blackhat_app(void* p) {
     UNUSED(p);
 
     // Disable expansion protocol to avoid interference with UART Handle
@@ -128,11 +107,11 @@ int32_t blackhat_app(void* p)
 
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
     // turn off 5v, so it gets reset on startup
-    if (otg_was_enabled) {
+    if(otg_was_enabled) {
         furi_hal_power_disable_otg();
     }
     uint8_t attempts = 0;
-    while (!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
+    while(!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
         furi_hal_power_enable_otg();
         furi_delay_ms(10);
     }
@@ -142,7 +121,7 @@ int32_t blackhat_app(void* p)
     view_dispatcher_run(blackhat_app->view_dispatcher);
     blackhat_app_free(blackhat_app);
 
-    if (furi_hal_power_is_otg_enabled() && !otg_was_enabled) {
+    if(furi_hal_power_is_otg_enabled() && !otg_was_enabled) {
         furi_hal_power_disable_otg();
     }
 

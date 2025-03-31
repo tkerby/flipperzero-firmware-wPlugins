@@ -14,31 +14,36 @@
 #include "blackhat_custom_event.h"
 #include "blackhat_uart.h"
 #include "scenes/blackhat_scene.h"
+#include <cfw/cfw.h>
 
 #define NUM_MENU_ITEMS (16)
 
 #define BLACKHAT_TEXT_BOX_STORE_SIZE (4096)
-#define UART_CH FuriHalSerialIdUsart
+#define UART_CH                      cfw_settings.uart_esp_channel
 
-#define SHELL_CMD "whoami"
-#define WIFI_CON_CMD "bh wifi connect"
+#define SHELL_CMD         "whoami"
+#define WIFI_CON_CMD      "bh wifi connect"
 #define SET_INET_SSID_CMD "bh set SSID"
-#define SET_INET_PWD_CMD "bh set PASS"
-#define SET_AP_SSID_CMD "bh set AP_SSID"
-#define LIST_AP_CMD "bh wifi list"
-#define DEV_CMD "bh wifi dev"
-#define START_AP_CMD "bh wifi ap"
-#define START_KISMET_CMD "bh kismet"
-#define GET_IP_CMD "bh wifi ip"
-#define START_SSH_CMD "bh ssh"
-#define ST_EVIL_TWIN_CMD "bh evil_twin"
-#define ST_EVIL_PORT_CMD "bh evil_portal"
-#define ST_RAT_CMD "bh rat_driver"
-#define GET_CMD "bh get"
-#define REBOOT_CMD "reboot"
-#define HELP_CMD "cat /mnt/help.txt"
+#define SET_INET_PWD_CMD  "bh set PASS"
+#define SET_AP_SSID_CMD   "bh set AP_SSID"
+#define LIST_AP_CMD       "bh wifi list"
+#define DEV_CMD           "bh wifi dev"
+#define START_AP_CMD      "bh wifi ap"
+#define START_KISMET_CMD  "bh kismet"
+#define GET_IP_CMD        "bh wifi ip"
+#define START_SSH_CMD     "bh ssh"
+#define ST_EVIL_TWIN_CMD  "bh evil_twin"
+#define ST_EVIL_PORT_CMD  "bh evil_portal"
+#define ST_RAT_CMD        "bh rat_driver"
+#define GET_CMD           "bh get"
+#define REBOOT_CMD        "reboot"
+#define HELP_CMD          "cat /mnt/help.txt"
 
-typedef enum { NO_ARGS = 0, INPUT_ARGS, TOGGLE_ARGS } InputArgs;
+typedef enum {
+    NO_ARGS = 0,
+    INPUT_ARGS,
+    TOGGLE_ARGS
+} InputArgs;
 
 typedef enum {
     FOCUS_CONSOLE_END = 0,

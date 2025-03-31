@@ -17,9 +17,7 @@ typedef enum {
 
 void blackhat_uart_set_handle_rx_data_cb(
     BlackhatUart* uart,
-    void (*handle_rx_data_cb)(uint8_t* buf, size_t len, void* context)
-)
-{
+    void (*handle_rx_data_cb)(uint8_t* buf, size_t len, void* context)) {
     furi_assert(uart);
     uart->handle_rx_data_cb = handle_rx_data_cb;
 }
@@ -27,37 +25,31 @@ void blackhat_uart_set_handle_rx_data_cb(
 #define WORKER_ALL_RX_EVENTS (WorkerEvtStop | WorkerEvtRxDone)
 
 void blackhat_uart_on_irq_cb(
-    FuriHalSerialHandle* handle, FuriHalSerialRxEvent event, void* context
-)
-{
+    FuriHalSerialHandle* handle,
+    FuriHalSerialRxEvent event,
+    void* context) {
     BlackhatUart* uart = (BlackhatUart*)context;
 
-    if (event == FuriHalSerialRxEventData) {
+    if(event == FuriHalSerialRxEventData) {
         uint8_t data = furi_hal_serial_async_rx(handle);
         furi_stream_buffer_send(uart->rx_stream, &data, 1, 0);
-        furi_thread_flags_set(
-            furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone
-        );
+        furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 }
 
-static int32_t uart_worker(void* context)
-{
+static int32_t uart_worker(void* context) {
     BlackhatUart* uart = (void*)context;
 
-    while (1) {
-        uint32_t events = furi_thread_flags_wait(
-            WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever
-        );
+    while(1) {
+        uint32_t events =
+            furi_thread_flags_wait(WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
         furi_check((events & FuriFlagError) == 0);
-        if (events & WorkerEvtStop) break;
-        if (events & WorkerEvtRxDone) {
-            size_t len = furi_stream_buffer_receive(
-                uart->rx_stream, uart->rx_buf, RX_BUF_SIZE, 0
-            );
+        if(events & WorkerEvtStop) break;
+        if(events & WorkerEvtRxDone) {
+            size_t len = furi_stream_buffer_receive(uart->rx_stream, uart->rx_buf, RX_BUF_SIZE, 0);
 
-            if (len > 0) {
-                if (uart->handle_rx_data_cb) {
+            if(len > 0) {
+                if(uart->handle_rx_data_cb) {
                     uart->handle_rx_data_cb(uart->rx_buf, len, uart->app);
                 } else {
                     uart->rx_buf[len] = '\0';
@@ -71,13 +63,11 @@ static int32_t uart_worker(void* context)
     return 0;
 }
 
-void blackhat_uart_tx(BlackhatUart* uart, char* data, size_t len)
-{
+void blackhat_uart_tx(BlackhatUart* uart, char* data, size_t len) {
     furi_hal_serial_tx(uart->serial_handle, (uint8_t*)data, len);
 }
 
-BlackhatUart* blackhat_uart_init(BlackhatApp* app)
-{
+BlackhatUart* blackhat_uart_init(BlackhatApp* app) {
     BlackhatUart* uart = malloc(sizeof(BlackhatUart));
     uart->app = app;
     // Init all rx stream and thread early to avoid crashes
@@ -93,15 +83,12 @@ BlackhatUart* blackhat_uart_init(BlackhatApp* app)
     uart->serial_handle = furi_hal_serial_control_acquire(UART_CH);
     furi_check(uart->serial_handle);
     furi_hal_serial_init(uart->serial_handle, 115200);
-    furi_hal_serial_async_rx_start(
-        uart->serial_handle, blackhat_uart_on_irq_cb, uart, false
-    );
+    furi_hal_serial_async_rx_start(uart->serial_handle, blackhat_uart_on_irq_cb, uart, false);
 
     return uart;
 }
 
-void blackhat_uart_free(BlackhatUart* uart)
-{
+void blackhat_uart_free(BlackhatUart* uart) {
     furi_assert(uart);
 
     furi_hal_serial_async_rx_stop(uart->serial_handle);
