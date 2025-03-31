@@ -380,7 +380,7 @@ static void init_boss_fight() {
     game_state.boss.x = 90;
     game_state.boss.y = 30;
     game_state.boss.active = true;
-    game_state.boss.hitpoints = 3; // Boss needs 3 hits
+    game_state.boss.hitpoints = 25; // was 3
     game_state.state = GameStateBossFight;
 }
 
