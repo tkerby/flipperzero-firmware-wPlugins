@@ -11,8 +11,9 @@
 #define MAX_ENEMIES 4
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define WEAPON_LENGTH 12
-#define WEAPON_DURATION 4  // frames that the weapon stays active
+// Change from constants to initial values
+#define INITIAL_WEAPON_LENGTH 8
+#define INITIAL_WEAPON_DURATION 4  // frames that the weapon stays active
 #define CASTLE_WIDTH 15    // Width of castle entrance
 #define CASTLE_HEIGHT 30   // Height of castle entrance
 #define PLAYER_SPEED 4     // Player moves 4 pixels per keypress
@@ -22,7 +23,8 @@ typedef enum {
     GameStateTitle,
     GameStateGameplay,
     GameStateGameOver,
-    GameStateWin
+    GameStateWin,
+    GameStateUpgrade  // New state for upgrade selection
 } GameStateEnum;
 
 // Direction constants
@@ -49,6 +51,11 @@ typedef struct {
     Player player;
     Enemy enemies[MAX_ENEMIES];
     int32_t score;
+    uint32_t gameover_timer;  // Timer to track game over cooldown
+    uint8_t selected_upgrade; // Track which upgrade is currently selected
+    bool wave_completed;      // Flag to track if a wave was just completed
+    int32_t weapon_length;    // Variable for weapon length that can be upgraded
+    int32_t weapon_duration;  // Variable for weapon duration that can be upgraded
 } GameState;
 
 static GameState game_state = {
@@ -62,6 +69,11 @@ static GameState game_state = {
         .weapon_timer = 0
     },
     .score = 0,
+    .gameover_timer = 0,
+    .selected_upgrade = 0,
+    .wave_completed = false,
+    .weapon_length = INITIAL_WEAPON_LENGTH,
+    .weapon_duration = INITIAL_WEAPON_DURATION
 };
 
 // Calculate weapon end point based on player position and direction
@@ -71,16 +83,16 @@ static void get_weapon_end_point(int* end_x, int* end_y) {
     
     switch(game_state.player.direction) {
         case DIR_UP:
-            *end_y -= WEAPON_LENGTH;
+            *end_y -= game_state.weapon_length;  // Use the variable instead of constant
             break;
         case DIR_RIGHT:
-            *end_x += WEAPON_LENGTH;
+            *end_x += game_state.weapon_length;  // Use the variable instead of constant
             break;
         case DIR_DOWN:
-            *end_y += WEAPON_LENGTH;
+            *end_y += game_state.weapon_length;  // Use the variable instead of constant
             break;
         case DIR_LEFT:
-            *end_x -= WEAPON_LENGTH;
+            *end_x -= game_state.weapon_length;  // Use the variable instead of constant
             break;
     }
 }
@@ -123,12 +135,15 @@ static void draw_title_screen(Canvas* canvas) {
     
     // Draw game title
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, "P1X Adventure");
+    canvas_draw_str_aligned(canvas, 64, 15, AlignCenter, AlignCenter, "P1X Adventure");
+    
+    // Draw story
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "Rescue the princess");
+    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "from the castle!");
     
     // Draw instructions
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "Press OK to start");
-    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Arrow keys to move, OK to attack");
+    canvas_draw_str_aligned(canvas, 64, 52, AlignCenter, AlignCenter, "Press OK to start");
 }
 
 // Draw game over screen
@@ -145,8 +160,12 @@ static void draw_game_over_screen(Canvas* canvas) {
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, score_str);
     
-    // Draw restart instructions
-    canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to restart");
+    // Draw restart instructions or cooldown message
+    if(game_state.gameover_timer > 0) {
+        canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Please wait...");
+    } else {
+        canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to restart");
+    }
 }
 
 // Draw win screen
@@ -167,6 +186,35 @@ static void draw_win_screen(Canvas* canvas) {
     canvas_draw_str_aligned(canvas, 64, 50, AlignCenter, AlignCenter, "Press OK to play again");
 }
 
+// Draw upgrade screen
+static void draw_upgrade_screen(Canvas* canvas) {
+    canvas_clear(canvas);
+    
+    // Draw title
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str_aligned(canvas, 64, 12, AlignCenter, AlignCenter, "LEVEL UP!");
+    
+    // Draw upgrade options
+    canvas_set_font(canvas, FontSecondary);
+    
+    // Option 1: Weapon Duration
+    if(game_state.selected_upgrade == 0) {
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "> Weapon Duration +1 <");
+    } else {
+        canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, "  Weapon Duration +1  ");
+    }
+    
+    // Option 2: Weapon Length
+    if(game_state.selected_upgrade == 1) {
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "> Weapon Length +2 <");
+    } else {
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignCenter, "  Weapon Length +2  ");
+    }
+    
+    // Instructions
+    canvas_draw_str_aligned(canvas, 64, 55, AlignCenter, AlignCenter, "Up/Down to select, OK to choose");
+}
+
 // Draw gameplay screen
 static void draw_gameplay_screen(Canvas* canvas) {
     // Draw castle entrance first (background)
@@ -184,6 +232,12 @@ static void draw_gameplay_screen(Canvas* canvas) {
     if(game_state.player.weapon_active) {
         int weapon_end_x, weapon_end_y;
         get_weapon_end_point(&weapon_end_x, &weapon_end_y);
+        
+        // Clip weapon endpoint to screen boundaries to prevent overdraw
+        if(weapon_end_x < 0) weapon_end_x = 0;
+        if(weapon_end_x >= SCREEN_WIDTH) weapon_end_x = SCREEN_WIDTH - 1;
+        if(weapon_end_y < 0) weapon_end_y = 0;
+        if(weapon_end_y >= SCREEN_HEIGHT) weapon_end_y = SCREEN_HEIGHT - 1;
         
         canvas_draw_line(
             canvas,
@@ -235,6 +289,9 @@ static void app_draw_callback(Canvas* canvas, void* ctx) {
         case GameStateWin:
             draw_win_screen(canvas);
             break;
+        case GameStateUpgrade:
+            draw_upgrade_screen(canvas);
+            break;
     }
 }
 
@@ -254,6 +311,10 @@ static void reset_game() {
     game_state.player.weapon_active = false;
     game_state.player.weapon_timer = 0;
     game_state.score = 0;
+    game_state.selected_upgrade = 0;
+    game_state.wave_completed = false;
+    game_state.weapon_length = INITIAL_WEAPON_LENGTH;    // Reset weapon length
+    game_state.weapon_duration = INITIAL_WEAPON_DURATION; // Reset weapon duration
 }
 
 static void init_enemies() {
@@ -355,6 +416,7 @@ static void check_collisions() {
     // Check if player died
     if (game_state.player.health <= 0) {
         game_state.state = GameStateGameOver;
+        game_state.gameover_timer = 3000; // 3 seconds cooldown (in milliseconds)
     }
 }
 
@@ -395,7 +457,10 @@ static void handle_title_screen(InputEvent* event) {
 
 // Handle the game over screen
 static void handle_game_over_screen(InputEvent* event) {
-    if(event->type == InputTypePress && event->key == InputKeyOk) {
+    // Only handle OK button press if cooldown timer has expired
+    if(game_state.gameover_timer == 0 && 
+       event->type == InputTypePress && 
+       event->key == InputKeyOk) {
         game_state.state = GameStateTitle;
     }
 }
@@ -404,6 +469,41 @@ static void handle_game_over_screen(InputEvent* event) {
 static void handle_win_screen(InputEvent* event) {
     if(event->type == InputTypePress && event->key == InputKeyOk) {
         game_state.state = GameStateTitle;
+    }
+}
+
+// Handle the upgrade screen
+static void handle_upgrade_screen(InputEvent* event) {
+    if(event->type == InputTypePress) {
+        switch(event->key) {
+            case InputKeyUp:
+            case InputKeyDown:
+                // Toggle between 0 and 1
+                game_state.selected_upgrade = 1 - game_state.selected_upgrade;
+                break;
+            case InputKeyOk:
+                // Apply the selected upgrade
+                if(game_state.selected_upgrade == 0) {
+                    // Increase weapon duration
+                    game_state.weapon_duration += 1;  // Now modifying a variable, not a constant
+                } else {
+                    // Increase weapon length
+                    game_state.weapon_length += 2;    // Now modifying a variable, not a constant
+                }
+                
+                // Return to gameplay with new enemies
+                init_enemies();
+                game_state.state = GameStateGameplay;
+                game_state.wave_completed = false;
+                
+                // Vibrate to confirm selection
+                furi_hal_vibro_on(true);
+                furi_delay_ms(50);
+                furi_hal_vibro_on(false);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -436,6 +536,7 @@ int32_t p1x_adventure_main(void* p) {
                     } else {
                         // From gameplay or game over, go back to title
                         game_state.state = GameStateTitle;
+                        game_state.gameover_timer = 0; // Clear any cooldown when going back to title
                     }
                 } 
                 // State-specific input handling
@@ -449,6 +550,9 @@ int32_t p1x_adventure_main(void* p) {
                             break;
                         case GameStateWin:
                             handle_win_screen(&event);
+                            break;
+                        case GameStateUpgrade:
+                            handle_upgrade_screen(&event);
                             break;
                         case GameStateGameplay:
                             // Handle gameplay inputs
@@ -479,7 +583,7 @@ int32_t p1x_adventure_main(void* p) {
                                 case InputKeyOk:
                                     // Activate weapon on OK button press
                                     game_state.player.weapon_active = true;
-                                    game_state.player.weapon_timer = WEAPON_DURATION;
+                                    game_state.player.weapon_timer = game_state.weapon_duration;  // Use the variable instead of constant
                                     break;
                                 default:
                                     break;
@@ -493,6 +597,17 @@ int32_t p1x_adventure_main(void* p) {
         
         // Update game logic only during gameplay
         uint32_t current_tick = furi_get_tick();
+        
+        // Update gameover timer if needed
+        if(game_state.state == GameStateGameOver && game_state.gameover_timer > 0) {
+            uint32_t elapsed = current_tick - last_tick;
+            if(elapsed < game_state.gameover_timer) {
+                game_state.gameover_timer -= elapsed;
+            } else {
+                game_state.gameover_timer = 0;
+            }
+        }
+        
         if(game_state.state == GameStateGameplay && current_tick - last_tick > 100) {
             // Update weapon timer
             if(game_state.player.weapon_active) {
@@ -513,9 +628,10 @@ int32_t p1x_adventure_main(void* p) {
             }
             
             // Check if level is complete
-            if(all_enemies_defeated()) {
-                init_enemies();
+            if(all_enemies_defeated() && !game_state.wave_completed) {
+                game_state.wave_completed = true;
                 game_state.score += 20; // Bonus for completing a wave
+                game_state.state = GameStateUpgrade; // Go to upgrade screen
             }
             
             last_tick = current_tick;
