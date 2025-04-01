@@ -1,6 +1,8 @@
 #include "passy_reader.h"
 
-#define TAG "PassyReader"
+#define TAG                         "PassyReader"
+#define PASSY_READER_DG1_CHUNK_SIZE 0x20
+#define PASSY_READER_DG2_CHUNK_SIZE 0x20
 
 static uint8_t passport_aid[] = {0xA0, 0x00, 0x00, 0x02, 0x47, 0x10, 0x01};
 static uint8_t select_header[] = {0x00, 0xA4, 0x04, 0x0C};
@@ -377,12 +379,12 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 break;
             }
             size_t body_size = asn1_length(header + 1);
-            uint8_t body_offset = 0x04;
+            uint8_t body_offset = sizeof(header);
             bit_buffer_append_bytes(passy_reader->DG1, header, sizeof(header));
             do {
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderReading);
-                uint8_t chunk[0x20];
+                uint8_t chunk[PASSY_READER_DG1_CHUNK_SIZE];
                 uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - body_offset));
 
                 ret = passy_reader_read_binary(passy_reader, body_offset, Le, chunk);
@@ -412,6 +414,27 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             }
             size_t body_size = asn1_length(header + 1);
             FURI_LOG_I(TAG, "DG2 length: %d", body_size);
+
+            uint8_t chunk[PASSY_READER_DG2_CHUNK_SIZE];
+            size_t body_offset = sizeof(header);
+            size_t chunk_count = (body_size + sizeof(chunk) - 1) / sizeof(chunk);
+            size_t i = 0;
+            do {
+                memset(chunk, 0, sizeof(chunk));
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderReading);
+                uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - body_offset));
+
+                ret = passy_reader_read_binary(passy_reader, body_offset, Le, chunk);
+                if(ret != NfcCommandContinue) {
+                    view_dispatcher_send_custom_event(
+                        passy->view_dispatcher, PassyCustomEventReaderError);
+                    break;
+                }
+                body_offset += sizeof(chunk);
+                FURI_LOG_I(TAG, "chunk %02x/%02x offset %d", ++i, chunk_count, body_offset);
+                passy_log_buffer(TAG, "chunk", chunk, sizeof(chunk));
+            } while(body_offset < body_size);
         }
 
         // Everything done
