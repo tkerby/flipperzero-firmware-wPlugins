@@ -16,8 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "app.h"
-#include "scenes/scenes.h"
+#include "app/app.h"
+
+#include "scenes.h"
 
 static void dialog_callback(DialogExResult result, void* context) {
     App* app = (App*)context;

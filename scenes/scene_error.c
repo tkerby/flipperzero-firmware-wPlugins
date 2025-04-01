@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "app.h"
+#include "app/app.h"
 
 static void error_dialog_callback(DialogExResult result, void* context) {
     App* app = (App*)context;

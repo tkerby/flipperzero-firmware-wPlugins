@@ -30,14 +30,14 @@
 #include <notification/notification_messages.h>
 #include <power/power_service/power.h>
 
-#include "app_common.h"
-#include "app_config.h"
-#include "sio_driver.h"
-#include "fdd_emulator.h"
-#include "xex_loader.h"
-
+#include "emu/sio_driver.h"
+#include "emu/fdd_emulator.h"
+#include "emu/xex_loader.h"
 #include "views/fdd_screen.h"
 #include "views/xex_screen.h"
+
+#include "app_common.h"
+#include "app_config.h"
 
 #define ATR_DATA_PATH_PREFIX STORAGE_APP_DATA_PATH_PREFIX "/atr"
 #define XEX_DATA_PATH_PREFIX STORAGE_APP_DATA_PATH_PREFIX "/xex"

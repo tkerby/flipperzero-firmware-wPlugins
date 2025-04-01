@@ -20,7 +20,7 @@
 
 #include <gui/view.h>
 
-#include "xex_loader.h"
+#include "emu/xex_loader.h"
 
 // The screen showing the XEX loader state
 typedef struct XexScreen XexScreen;

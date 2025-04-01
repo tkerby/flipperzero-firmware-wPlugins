@@ -18,8 +18,9 @@
 
 #include <dialogs/dialogs.h>
 
-#include "app.h"
-#include "scenes/scenes.h"
+#include "app/app.h"
+
+#include "scenes.h"
 
 static void file_browser_callback(void* context) {
     App* app = (App*)context;

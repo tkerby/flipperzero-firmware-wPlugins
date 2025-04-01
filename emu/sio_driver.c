@@ -21,8 +21,9 @@
 #include <furi_hal_serial_control.h>
 #include <furi_hal_gpio.h>
 
+#include "app/app_common.h"
+
 #include "sio_driver.h"
-#include "app_common.h"
 
 #define MAX_SIO_DEVICES 4
 

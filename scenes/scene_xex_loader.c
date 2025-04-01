@@ -16,9 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "app.h"
-#include "scenes/scenes.h"
+#include "app/app.h"
 #include "views/xex_screen.h"
+
+#include "scenes.h"
 
 static void xex_screen_callback(void* context, XexScreenMenuKey key) {
     App* app = (App*)context;

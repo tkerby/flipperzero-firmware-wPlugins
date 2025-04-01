@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "disk_image.h"
+#include "app/app_common.h"
 
-#include "app_common.h"
+#include "disk_image.h"
 
 #define ATR_FILE_HEADER_SIZE 16
 

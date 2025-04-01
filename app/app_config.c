@@ -18,9 +18,10 @@
 
 #include <storage/storage.h>
 
+#include "utils/slice.h"
+
 #include "app_common.h"
 #include "app_config.h"
-#include "slice.h"
 
 #define CONFIG_FILE_NAME APP_DATA_PATH("config.ini")
 

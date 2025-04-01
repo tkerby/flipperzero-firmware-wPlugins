@@ -20,7 +20,7 @@
 
 #include <gui/view.h>
 
-#include "fdd_emulator.h"
+#include "emu/fdd_emulator.h"
 
 // The screen showing the FDD emulator state
 typedef struct FddScreen FddScreen;
