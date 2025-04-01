@@ -53,6 +53,7 @@ enum PassyCustomEvent {
     PassyCustomEventReaderDetected,
     PassyCustomEventReaderAuthenticated,
     PassyCustomEventReaderReading,
+    PassyCustomEventReaderNoDGXData,
 };
 
 struct Passy {
@@ -88,6 +89,11 @@ struct Passy {
     char date_of_expiry[PASSY_DOE_MAX_LENGTH + 1];
 
     BitBuffer* DG1;
+
+    PassyReadType read_type;
+
+    size_t offset;
+    size_t bytes_total;
 };
 
 typedef enum {

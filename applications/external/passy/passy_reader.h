@@ -5,6 +5,9 @@
 #include <lib/nfc/helpers/iso14443_crc.h>
 #include <mbedtls/des.h>
 
+#include <lib/toolbox/stream/stream.h>
+#include <lib/toolbox/stream/file_stream.h>
+
 #include "passy_i.h"
 #include "passy_common.h"
 #include "secure_messaging.h"

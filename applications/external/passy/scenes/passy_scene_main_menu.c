@@ -3,8 +3,12 @@
 #define TAG "SceneMainMenu"
 
 enum SubmenuIndex {
-    SubmenuIndexRead,
+    SubmenuIndexEnterMRZInfo,
     SubmenuIndexDeleteMRZInfo,
+    SubmenuIndexReadCOM,
+    SubmenuIndexReadDG1,
+    SubmenuIndexReadDG2,
+    SubmenuIndexReadDG7,
 };
 
 void passy_scene_main_menu_submenu_callback(void* context, uint32_t index) {
@@ -17,14 +21,39 @@ void passy_scene_main_menu_on_enter(void* context) {
     Submenu* submenu = passy->submenu;
     submenu_reset(submenu);
 
+    passy_load_mrz_info(passy);
+
     submenu_add_item(
-        submenu, "Read", SubmenuIndexRead, passy_scene_main_menu_submenu_callback, passy);
+        submenu,
+        "Enter MRZ Info",
+        SubmenuIndexEnterMRZInfo,
+        passy_scene_main_menu_submenu_callback,
+        passy);
     if(strlen(passy->passport_number) > 0 && strlen(passy->date_of_birth) > 0 &&
        strlen(passy->date_of_expiry) > 0) {
         submenu_add_item(
             submenu,
             "Delete MRZ Info",
             SubmenuIndexDeleteMRZInfo,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+
+        submenu_add_item(
+            submenu,
+            "Read DG1",
+            SubmenuIndexReadDG1,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+        submenu_add_item(
+            submenu,
+            "Read DG2",
+            SubmenuIndexReadDG2,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+        submenu_add_item(
+            submenu,
+            "Read DG7",
+            SubmenuIndexReadDG7,
             passy_scene_main_menu_submenu_callback,
             passy);
     }
@@ -37,21 +66,24 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == SubmenuIndexRead) {
-            scene_manager_set_scene_state(
-                passy->scene_manager, PassySceneMainMenu, SubmenuIndexRead);
-
-            if(strlen(passy->passport_number) > 0 && strlen(passy->date_of_birth) > 0 &&
-               strlen(passy->date_of_expiry) > 0) {
-                scene_manager_next_scene(passy->scene_manager, PassySceneRead);
-            } else {
-                scene_manager_next_scene(passy->scene_manager, PassyScenePassportNumberInput);
-            }
+        scene_manager_set_scene_state(passy->scene_manager, PassySceneMainMenu, event.event);
+        if(event.event == SubmenuIndexEnterMRZInfo) {
+            scene_manager_next_scene(passy->scene_manager, PassyScenePassportNumberInput);
             consumed = true;
         } else if(event.event == SubmenuIndexDeleteMRZInfo) {
-            scene_manager_set_scene_state(
-                passy->scene_manager, PassySceneMainMenu, SubmenuIndexDeleteMRZInfo);
             scene_manager_next_scene(passy->scene_manager, PassySceneDelete);
+            consumed = true;
+        } else if(event.event == SubmenuIndexReadDG1) {
+            passy->read_type = PassyReadDG1;
+            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
+            consumed = true;
+        } else if(event.event == SubmenuIndexReadDG2) {
+            passy->read_type = PassyReadDG2;
+            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
+            consumed = true;
+        } else if(event.event == SubmenuIndexReadDG7) {
+            passy->read_type = PassyReadDG7;
+            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
             consumed = true;
         }
     }

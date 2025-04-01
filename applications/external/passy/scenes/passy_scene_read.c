@@ -15,6 +15,7 @@ void passy_scene_read_on_enter(void* context) {
 
     passy->poller = nfc_poller_alloc(passy->nfc, NfcProtocolIso14443_4b);
     nfc_poller_start(passy->poller, passy_reader_poller_callback, passy);
+    passy->bytes_total = 0;
 
     passy_blink_start(passy);
 
@@ -38,7 +39,21 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == PassyCustomEventReaderAuthenticated) {
             popup_set_header(popup, "Authenticated", 68, 30, AlignLeft, AlignTop);
         } else if(event.event == PassyCustomEventReaderReading) {
-            popup_set_header(popup, "Reading", 68, 30, AlignLeft, AlignTop);
+            if(passy->bytes_total == 0) {
+                popup_set_header(popup, "Reading", 68, 30, AlignLeft, AlignTop);
+            } else {
+                // Update the header with the current bytes read
+                char header[32];
+                snprintf(
+                    header,
+                    sizeof(header),
+                    "Reading\n%d/%dk",
+                    passy->offset,
+                    (passy->bytes_total / 1024));
+                popup_set_header(popup, header, 68, 30, AlignLeft, AlignTop);
+            }
+        } else if(event.event == PassyCustomEventReaderNoDGXData) {
+            popup_set_header(popup, "No Data", 68, 30, AlignLeft, AlignTop);
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_search_and_switch_to_previous_scene(
