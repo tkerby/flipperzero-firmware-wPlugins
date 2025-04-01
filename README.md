@@ -27,11 +27,11 @@ The wiring is quite simple; only three signals are need.
 | C0 (16)      | COMMAND   |
 | GND (18)     | GND       |
 
-Note: All signals on the Atari SIO use 5V TTL logic. Flipper Zero’s I/Os are 5V tolerant when configured as inputs. 
+Note: All signals on the Atari SIO use 5V TTL logic. Although the Flipper Zero’s I/Os are 5V tolerant when configured as inputs, be careful when connecting your Flipper Zero to your Atari computer, as incorrect wiring or improper use could potentially damage your Flipper or your precious Atari hardware.
 
 ## Instructions for Use
 
-The emulator accepts disk images in ATR format, which must be copied to the SD card to **/apps_data/sio2flip/atr/**.
+The emulator accepts disk images in ATR format and XEX executables. Copy the ATR files to the SD card at **/apps_data/sio2flip/atr/** and the XEX files to **/apps_data/sio2flip/xex/**.
 
 ## TODO
 
