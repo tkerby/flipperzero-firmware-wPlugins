@@ -465,6 +465,19 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             file_stream_close(stream);
             furi_record_close(RECORD_STORAGE);
             furi_string_free(path);
+        } else if(passy->read_type == PassyReadDG7) {
+            uint8_t header[100];
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
+            if(ret != NfcCommandContinue) {
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderError);
+                break;
+            }
+            view_dispatcher_send_custom_event(
+                passy->view_dispatcher, PassyCustomEventReaderReading);
+
+            size_t body_size = asn1_length(header + 1);
+            FURI_LOG_I(TAG, "DG7 length: %d", body_size);
         }
 
         // Everything done
