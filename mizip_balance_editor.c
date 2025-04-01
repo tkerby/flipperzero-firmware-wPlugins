@@ -85,7 +85,9 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->is_valid_mizip_data = false;
 
     app->credit_pointer = 0x09;
+    app->previous_credit_pointer = 0x08;
     app->current_balance = 0;
+    app->previous_balance = 0;
     app->min_value = 0;
     app->max_value = 65535;
 

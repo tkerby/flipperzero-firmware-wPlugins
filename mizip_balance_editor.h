@@ -82,7 +82,9 @@ typedef struct {
 
     //MiZip data
     uint8_t credit_pointer;
+    uint8_t previous_credit_pointer;
     uint16_t current_balance;
+    uint16_t previous_balance;
     uint16_t min_value;
     uint16_t max_value;
 } MiZipBalanceEditorApp;
