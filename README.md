@@ -14,7 +14,7 @@
 
 ## To do
  - Support other country passports
- - Support DG2, the photo
+ - Add event for file not found when selecting file, and UI
 
 ## Generate asn:
 
