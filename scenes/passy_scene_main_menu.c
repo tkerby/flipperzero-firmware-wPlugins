@@ -85,12 +85,6 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
             passy->read_type = PassyReadDG7;
             scene_manager_next_scene(passy->scene_manager, PassySceneRead);
             consumed = true;
-        } else if(event.event == SubmenuIndexReadDG7) {
-            passy->read_type = PassyReadDG7;
-            scene_manager_set_scene_state(
-                passy->scene_manager, PassySceneMainMenu, SubmenuIndexReadDG7);
-            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
-            consumed = true;
         }
     }
 
