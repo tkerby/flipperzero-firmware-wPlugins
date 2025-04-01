@@ -61,32 +61,57 @@ void passy_scene_read_success_on_enter(void* context) {
                 FURI_LOG_W(TAG, "MRZ length (%zu) is unexpected.", dg1->mrz.size);
             }
 
+            char name[40] = {0};
+            memset(name, 0, sizeof(name));
+            uint8_t name_offset = td_variant == 3 ? 5 : 60;
+            memcpy(name, dg1->mrz.buf + name_offset, 38);
+            // Work backwards replace < at the end with \0
+            for(size_t i = sizeof(name) - 1; i > 0; i--) {
+                if(name[i] == '<') {
+                    name[i] = '\0';
+                } else {
+                    break;
+                }
+            }
+            // Work forwards replace < with space
+            for(size_t i = 0; i < sizeof(name); i++) {
+                if(name[i] == '<') {
+                    name[i] = ' ';
+                }
+            }
+
             if(td_variant == 3) { // Passport form factor
-                char name[40] = {0};
-                memset(name, 0, sizeof(name));
-                memcpy(name, dg1->mrz.buf + 5, 38);
-                // Work backwards replace < at the end with \0
-                for(size_t i = sizeof(name) - 1; i > 0; i--) {
-                    if(name[i] == '<') {
-                        name[i] = '\0';
-                    } else {
-                        break;
-                    }
-                }
-                // Work forwards replace < with space
-                for(size_t i = 0; i < sizeof(name); i++) {
-                    if(name[i] == '<') {
-                        name[i] = ' ';
-                    }
-                }
-                furi_string_cat_printf(str, "Country: %.3s\n", dg1->mrz.buf + 2);
-                furi_string_cat_printf(str, "Name: %.38s\n", name);
-                furi_string_cat_printf(str, "Doc Number: %.9s\n", dg1->mrz.buf + 44);
-                furi_string_cat_printf(str, "DoB: %.6s\n", dg1->mrz.buf + 44 + 13);
-                furi_string_cat_printf(str, "Sex: %.1s\n", dg1->mrz.buf + 44 + 20);
-                furi_string_cat_printf(str, "Expiry: %.6s\n", dg1->mrz.buf + 44 + 21);
+                char* row_1 = (char*)dg1->mrz.buf + 0;
+                char* row_2 = (char*)dg1->mrz.buf + 44;
+
+                furi_string_cat_printf(str, "Country: %.3s\n", row_1 + 2);
+                furi_string_cat_printf(str, "Name: %s\n", name);
+                furi_string_cat_printf(str, "Doc Number: %.9s\n", row_2);
+                furi_string_cat_printf(str, "DoB: %.6s\n", row_2 + 13);
+                furi_string_cat_printf(str, "Sex: %.1s\n", row_2 + 20);
+                furi_string_cat_printf(str, "Expiry: %.6s\n", row_2 + 21);
+
+                furi_string_cat_printf(str, "\n");
+                furi_string_cat_printf(str, "Raw data:\n");
+                furi_string_cat_printf(str, "%.44s\n", row_1);
+                furi_string_cat_printf(str, "%.44s\n", row_2);
             } else if(td_variant == 1) { // ID form factor
-                furi_string_cat_printf(str, "%s\n", bit_buffer_get_data(passy->DG1));
+                char* row_1 = (char*)dg1->mrz.buf + 0;
+                char* row_2 = (char*)dg1->mrz.buf + 30;
+                char* row_3 = (char*)dg1->mrz.buf + 60;
+
+                furi_string_cat_printf(str, "Country: %.3s\n", row_1 + 2);
+                furi_string_cat_printf(str, "Name: %s\n", name);
+                furi_string_cat_printf(str, "Doc Number: %.9s\n", row_1 + 5);
+                furi_string_cat_printf(str, "DoB: %.6s\n", row_2);
+                furi_string_cat_printf(str, "Sex: %.1s\n", row_2 + 7);
+                furi_string_cat_printf(str, "Expiry: %.6s\n", row_2 + 8);
+
+                furi_string_cat_printf(str, "\n");
+                furi_string_cat_printf(str, "Raw data:\n");
+                furi_string_cat_printf(str, "%.30s\n", row_1);
+                furi_string_cat_printf(str, "%.30s\n", row_2);
+                furi_string_cat_printf(str, "%.30s\n", row_3);
             }
 
         } else {
