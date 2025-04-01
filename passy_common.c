@@ -4,6 +4,19 @@
 
 #define TAG "PassyCommon"
 
+static char asn1_log[PASSY_WORKER_MAX_BUFFER_SIZE];
+int print_struct_callback(const void* buffer, size_t size, void* app_key) {
+    if(app_key) {
+        char* str = (char*)app_key;
+        size_t next = strlen(str);
+        strncpy(str + next, buffer, size);
+    } else {
+        uint8_t next = strlen(asn1_log);
+        strncpy(asn1_log + next, buffer, size);
+    }
+    return 0;
+}
+
 void passy_log_bitbuffer(char* tag, char* prefix, BitBuffer* buffer) {
     furi_assert(buffer);
 

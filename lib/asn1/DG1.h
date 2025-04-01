@@ -21,7 +21,7 @@ extern "C" {
 
 /* DG1 */
 typedef struct DG1 {
-	MRZ_t	 mdz;
+	MRZ_t	 mrz;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;

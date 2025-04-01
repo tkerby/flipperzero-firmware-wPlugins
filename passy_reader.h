@@ -8,9 +8,6 @@
 #include <lib/toolbox/stream/stream.h>
 #include <lib/toolbox/stream/file_stream.h>
 
-#define ASN_EMIT_DEBUG 0
-#include <lib/asn1/DG1.h>
-
 #include "passy_i.h"
 #include "passy_common.h"
 #include "secure_messaging.h"

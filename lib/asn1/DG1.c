@@ -8,14 +8,14 @@
 #include "DG1.h"
 
 static asn_TYPE_member_t asn_MBR_DG1_1[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct DG1, mdz),
+	{ ATF_NOFLAGS, 0, offsetof(struct DG1, mrz),
 		(ASN_TAG_CLASS_APPLICATION | (31 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MRZ,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
-		"mdz"
+		"mrz"
 		},
 };
 static const ber_tlv_tag_t asn_DEF_DG1_tags_1[] = {
@@ -23,7 +23,7 @@ static const ber_tlv_tag_t asn_DEF_DG1_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static const asn_TYPE_tag2member_t asn_MAP_DG1_tag2el_1[] = {
-    { (ASN_TAG_CLASS_APPLICATION | (31 << 2)), 0, 0, 0 } /* mdz */
+    { (ASN_TAG_CLASS_APPLICATION | (31 << 2)), 0, 0, 0 } /* mrz */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_DG1_specs_1 = {
 	sizeof(struct DG1),
