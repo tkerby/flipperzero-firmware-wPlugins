@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -18,10 +18,11 @@
 
 #pragma once
 
-#include "slice.h"
-
 #include <storage/storage.h>
 #include "app_common.h"
+
+#include "app_common.h"
+#include "slice.h"
 
 typedef struct {
     // Enum value

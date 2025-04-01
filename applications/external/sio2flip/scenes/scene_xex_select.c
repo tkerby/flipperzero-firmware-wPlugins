@@ -26,51 +26,44 @@ static void file_browser_callback(void* context) {
 
     const char* new_path = furi_string_get_cstr(app->file_path);
 
-    for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
-        DiskImage* image = fdd_get_disk(app->fdd[i]);
-        if(image != NULL) {
-            const FuriString* image_path = disk_image_path(image);
-            if(furi_string_equal_str(image_path, new_path)) {
-                set_last_error("Image not loaded", "%s \n already loaded in D%d", new_path, i + 1);
-                scene_manager_next_scene(app->scene_manager, SceneError);
-                return;
-            }
-        }
-    }
-
-    DiskImage* image = disk_image_open(new_path, app->storage);
-
-    if(image != NULL && fdd_insert_disk(app->fdd[app->selected_fdd], image)) {
-        furi_string_set(app->config.fdd[app->selected_fdd].image, new_path);
-        scene_manager_search_and_switch_to_previous_scene(app->scene_manager, SceneFddInfo);
-    } else {
+    XexFile* xex = xex_file_open(new_path, app->storage);
+    if(xex == NULL) {
         scene_manager_next_scene(app->scene_manager, SceneError);
+        return;
     }
+
+    if(!xex_loader_start(app->xex_loader, xex, app->sio)) {
+        xex_file_close(xex);
+        scene_manager_next_scene(app->scene_manager, SceneError);
+        return;
+    }
+
+    scene_manager_search_and_switch_to_another_scene(app->scene_manager, SceneXexLoader);
 }
 
-void scene_fdd_select_on_enter(void* context) {
+void scene_xex_select_on_enter(void* context) {
     App* app = (App*)context;
 
     file_browser_configure(
-        app->file_browser, ".atr", ATR_DATA_PATH_PREFIX, true, true, NULL, false);
+        app->file_browser, ".xex", XEX_DATA_PATH_PREFIX, true, true, NULL, false);
 
     file_browser_set_callback(app->file_browser, file_browser_callback, app);
 
-    FuriString* path = furi_string_alloc_set(ATR_DATA_PATH_PREFIX);
+    FuriString* path = furi_string_alloc_set(XEX_DATA_PATH_PREFIX);
     file_browser_start(app->file_browser, path);
     furi_string_free(path);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewFileBrowser);
 }
 
-bool scene_fdd_select_on_event(void* context, SceneManagerEvent event) {
+bool scene_xex_select_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
 
     return false;
 }
 
-void scene_fdd_select_on_exit(void* context) {
+void scene_xex_select_on_exit(void* context) {
     App* app = (App*)context;
 
     file_browser_stop(app->file_browser);

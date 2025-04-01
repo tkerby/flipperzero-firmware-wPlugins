@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -53,27 +53,46 @@ struct FddEmulator {
     AppConfig* config;
 };
 
-FddEmulator* fdd_alloc(SIODevice device, SIODriver* sio, AppConfig* config) {
+FddEmulator* fdd_alloc(SIODevice device, AppConfig* config) {
     FddEmulator* fdd = (FddEmulator*)malloc(sizeof(FddEmulator));
     memset(fdd, 0, sizeof(FddEmulator));
 
     fdd->device = device;
-    fdd->sio = sio;
     fdd->config = config;
-
-    if(!sio_driver_attach(fdd->sio, device, fdd_command_callback, fdd_data_callback, fdd)) {
-        free(fdd);
-        return NULL;
-    }
+    fdd->sio = NULL;
 
     return fdd;
 }
 
 void fdd_free(FddEmulator* fdd) {
     if(fdd != NULL) {
-        sio_driver_detach(fdd->sio, fdd->device);
+        fdd_stop(fdd);
         disk_image_close(fdd->image);
         free(fdd);
+    }
+}
+
+bool fdd_start(FddEmulator* fdd, SIODriver* sio) {
+    furi_check(fdd != NULL);
+
+    if(fdd->sio != NULL) {
+        sio_driver_detach(fdd->sio, fdd->device);
+    }
+
+    if(sio_driver_attach(sio, fdd->device, fdd_command_callback, fdd_data_callback, fdd)) {
+        fdd->sio = sio;
+        return true;
+    }
+
+    return false;
+}
+
+void fdd_stop(FddEmulator* fdd) {
+    furi_check(fdd != NULL);
+
+    if(fdd->sio != NULL) {
+        sio_driver_detach(fdd->sio, fdd->device);
+        fdd->sio = NULL;
     }
 }
 
@@ -88,6 +107,7 @@ void fdd_set_activity_callback(
 
 // Returns the last accessed sector
 size_t fdd_get_last_sector(FddEmulator* fdd) {
+    furi_check(fdd != NULL);
     return fdd->last_sector;
 }
 

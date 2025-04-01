@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -20,7 +20,8 @@
 #include "scenes/scenes.h"
 
 typedef enum {
-    MenuIndex_Start,
+    MenuIndex_EmulateFdd,
+    MenuIndex_RunXex,
     MenuIndex_LedBlinking,
     MenuIndex_SioSpeedMode,
     MenuIndex_SioBaudrate,
@@ -55,8 +56,12 @@ static void scene_main_menu_enter_callback(void* context, uint32_t index) {
     App* app = (App*)context;
 
     switch(index) {
-    case MenuIndex_Start:
+    case MenuIndex_EmulateFdd:
+        app_start_fdd_emulation(app);
         scene_manager_next_scene(app->scene_manager, SceneFddInfo);
+        break;
+    case MenuIndex_RunXex:
+        scene_manager_next_scene(app->scene_manager, SceneXexSelect);
         break;
     case MenuIndex_WiringInfo:
         scene_manager_next_scene(app->scene_manager, SceneWiring);
@@ -69,7 +74,9 @@ void scene_main_menu_init(App* app) {
 
     VariableItem* item;
 
-    item = variable_item_list_add(list, "Start emulation...", 0, NULL, app);
+    item = variable_item_list_add(list, "Emulate FDD...", 0, NULL, app);
+
+    item = variable_item_list_add(list, "Run XEX file...", 0, NULL, app);
 
     item = variable_item_list_add(list, "LED blinking", 2, on_led_blinking_changed, app);
     variable_item_set_current_value_index(item, app->config.led_blinking ? 1 : 0);
@@ -94,6 +101,8 @@ void scene_main_menu_init(App* app) {
 
 void scene_main_menu_on_enter(void* context) {
     App* app = (App*)context;
+
+    app_stop_emulation(app);
 
     scene_main_menu_init(app);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewVariableList);

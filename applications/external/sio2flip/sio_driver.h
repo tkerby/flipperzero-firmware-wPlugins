@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -18,7 +18,7 @@
 
 #pragma once
 
-#define SIO_MAX_FRAME_SIZE 256
+#define SIO_MAX_FRAME_SIZE 1024U
 
 // SIO status codes
 typedef enum {
@@ -55,6 +55,9 @@ typedef enum {
     SIO_COMMAND_STATUS_HS = 0xD3, // Get status
     SIO_COMMAND_PUT_HS = 0xD0, // Write sector without verification
     SIO_COMMAND_FORMAT_HS = 0xA1, // Format disk
+
+    SIO_COMMAND_READ_BLOCK_HEADER = 0xF0, // Read XEX block header
+    SIO_COMMAND_READ_BLOCK = 0xF1, // Read XEX block
 
 } SIOCommand;
 

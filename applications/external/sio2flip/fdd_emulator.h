@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -24,8 +24,17 @@
 
 typedef struct FddEmulator FddEmulator;
 
-// Create a FDD emulator
-FddEmulator* fdd_alloc(SIODevice device, SIODriver* sio, AppConfig* config);
+// Creates a FDD emulator
+FddEmulator* fdd_alloc(SIODevice device, AppConfig* config);
+
+// Frees the FDD emulator
+void fdd_free(FddEmulator* fdd);
+
+// Starts the FDD emulator on specified SIO driver
+bool fdd_start(FddEmulator* fdd, SIODriver* sio);
+
+// Stops the FDD emulator
+void fdd_stop(FddEmulator* fdd);
 
 typedef enum {
     FddEmuActivity_Other,
@@ -37,9 +46,6 @@ typedef void (
     *FddActivityCallback)(void* context, SIODevice device, FddActivity activity, uint16_t sector);
 
 void fdd_set_activity_callback(FddEmulator* fdd, FddActivityCallback callback, void* context);
-
-// Free the FDD emulator
-void fdd_free(FddEmulator* fdd);
 
 // Returns the FDD device
 SIODevice fdd_get_device(FddEmulator* fdd);

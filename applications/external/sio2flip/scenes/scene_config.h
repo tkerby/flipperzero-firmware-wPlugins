@@ -1,5 +1,5 @@
 /* 
- * This file is part of the 8-bit ATARI FDD Emulator for Flipper Zero 
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
  * 
@@ -21,5 +21,7 @@ ADD_SCENE(fdd_info, FddInfo)
 ADD_SCENE(fdd_select, FddSelect)
 ADD_SCENE(fdd_settings, FddSettings)
 ADD_SCENE(fdd_new_disk, FddNewDisk)
+ADD_SCENE(xex_loader, XexLoader)
+ADD_SCENE(xex_select, XexSelect)
 ADD_SCENE(wiring, Wiring)
 ADD_SCENE(error, Error)

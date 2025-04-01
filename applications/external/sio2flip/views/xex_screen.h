@@ -20,34 +20,29 @@
 
 #include <gui/view.h>
 
-#include "fdd_emulator.h"
+#include "xex_loader.h"
 
-// The screen showing the FDD emulator state
-typedef struct FddScreen FddScreen;
+// The screen showing the XEX loader state
+typedef struct XexScreen XexScreen;
 
 typedef enum {
-    FddScreenMenuKey_Prev,
-    FddScreenMenuKey_Next,
-    FddScreenMenuKey_Config,
-} FddScreenMenuKey;
+    XexScreenMenuKey_Cancel,
+} XexScreenMenuKey;
 
 // Callback invoked when a menu button is pressed
-typedef void (*FddScreenMenuCallback)(void* context, FddScreenMenuKey key);
+typedef void (*XexScreenMenuCallback)(void* context, XexScreenMenuKey key);
 
-// Allocates FDD screen
-FddScreen* fdd_screen_alloc(void);
+// Allocates XEX loader screen
+XexScreen* xex_screen_alloc(void);
 
-// Frees FDD screen
-void fdd_screen_free(FddScreen* screen);
+// Frees XEX loader screen
+void xex_screen_free(XexScreen* screen);
 
-// Returns the view of the FDD screen
-View* fdd_screen_get_view(FddScreen* screen);
+// Returns the view of the XEX loader screen
+View* xex_screen_get_view(XexScreen* screen);
 
-// Updates the FDD screen according FDD emulator state
-void fdd_screen_update_state(FddScreen* screen, FddEmulator* emu);
-
-// Updates the FDD screen to show the FDD activity
-void fdd_screen_update_activity(FddScreen* screen, FddActivity activity, uint16_t sector);
+// Updates the XEX screen according XEX loader state
+void xex_screen_update_state(XexScreen* screen, XexLoader* xex_loader);
 
 // Sets the callback invoked when the menu button is pressed
-void fdd_screen_set_menu_callback(FddScreen* screen, FddScreenMenuCallback callback, void* context);
+void xex_screen_set_menu_callback(XexScreen* screen, XexScreenMenuCallback callback, void* context);

@@ -17,37 +17,38 @@
  */
 
 #include "app.h"
+#include "scenes/scenes.h"
+#include "views/xex_screen.h"
 
-void scene_wiring_on_enter(void* context) {
+static void xex_screen_callback(void* context, XexScreenMenuKey key) {
     App* app = (App*)context;
 
-    popup_set_header(app->popup, "Wiring", 0, 0, AlignLeft, AlignTop);
-
-    popup_set_text(
-        app->popup,
-        "TX (13) - DIN\n"
-        "RX (14) - DOUT\n"
-        "C0 (16) - COMMAND\n"
-        "GND (18) - GND\n",
-        4,
-        16,
-        AlignLeft,
-        AlignTop);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, AppViewWiring);
+    switch(key) {
+    case XexScreenMenuKey_Cancel:
+        scene_manager_previous_scene(app->scene_manager);
+        break;
+    }
 }
 
-bool scene_wiring_on_event(void* context, SceneManagerEvent event) {
-    bool consumed = false;
+void scene_xex_loader_on_enter(void* context) {
+    App* app = (App*)context;
 
+    xex_screen_set_menu_callback(app->xex_screen, xex_screen_callback, app);
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppViewXexScreen);
+
+    xex_screen_update_state(app->xex_screen, app->xex_loader);
+}
+
+bool scene_xex_loader_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
 
-    return consumed;
+    return false;
 }
 
-void scene_wiring_on_exit(void* context) {
+void scene_xex_loader_on_exit(void* context) {
     App* app = (App*)context;
 
-    popup_reset(app->popup);
+    UNUSED(app);
 }
