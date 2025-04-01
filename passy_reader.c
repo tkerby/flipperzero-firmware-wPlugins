@@ -11,6 +11,10 @@ static uint8_t get_challenge[] = {0x00, 0x84, 0x00, 0x00, 0x08};
 
 static uint8_t SW_success[] = {0x90, 0x00};
 
+static const uint8_t jpeg_header[4] = {0xFF, 0xD8, 0xFF, 0xE0};
+static const uint8_t jpeg2k_header[6] = {0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50};
+static const uint8_t jpeg2k_cs_header[4] = {0xFF, 0x4F, 0xFF, 0x51};
+
 size_t asn1_length(uint8_t data[3]) {
     if(data[0] <= 0x7F) {
         return data[0];
@@ -369,7 +373,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
         if(passy->read_type == PassyReadDG1) {
             bit_buffer_reset(passy->DG1);
             uint8_t header[4];
-            ret = passy_reader_read_binary(passy_reader, 0x00, 0x04, header);
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderError);
@@ -403,8 +407,8 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 break;
             }
 
-            uint8_t header[4];
-            ret = passy_reader_read_binary(passy_reader, 0x00, 0x04, header);
+            uint8_t header[100];
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderError);
@@ -416,15 +420,36 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             size_t body_size = asn1_length(header + 1);
             FURI_LOG_I(TAG, "DG2 length: %d", body_size);
 
+            void* jpeg = memmem(header, sizeof(header), jpeg_header, sizeof(jpeg_header));
+            void* jpeg2k = memmem(header, sizeof(header), jpeg2k_header, sizeof(jpeg2k_header));
+            void* jpeg2k_cs =
+                memmem(header, sizeof(header), jpeg2k_cs_header, sizeof(jpeg2k_cs_header));
+
             FuriString* path = furi_string_alloc();
-            furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".bin");
+            uint8_t start = 0;
+
+            if(jpeg) {
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jpeg");
+                start = (uint8_t*)jpeg - header;
+            } else if(jpeg2k) {
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jp2");
+                start = (uint8_t*)jpeg2k - header;
+            } else if(jpeg2k_cs) {
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jpc");
+                start = (uint8_t*)jpeg2k_cs - header;
+            } else {
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".bin");
+                start = 0;
+                passy_log_buffer(TAG, "header", header, sizeof(header));
+            }
+            FURI_LOG_I(TAG, "Writing offset %d to %s", start, furi_string_get_cstr(path));
 
             Storage* storage = furi_record_open(RECORD_STORAGE);
             Stream* stream = file_stream_alloc(storage);
             file_stream_open(stream, furi_string_get_cstr(path), FSAM_WRITE, FSOM_OPEN_ALWAYS);
 
             uint8_t chunk[PASSY_READER_DG2_CHUNK_SIZE];
-            size_t body_offset = sizeof(header);
+            size_t body_offset = start;
             size_t chunk_count = (body_size + sizeof(chunk) - 1) / sizeof(chunk);
             size_t i = 0;
             do {
