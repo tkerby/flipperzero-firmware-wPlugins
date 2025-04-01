@@ -21,7 +21,6 @@ void passy_scene_read_error_on_enter(void* context) {
     FuriString* primary_str = furi_string_alloc_set("Read Errror");
     FuriString* secondary_str = furi_string_alloc_set("Try again?");
 
-
     widget_add_button_element(
         widget, GuiButtonTypeLeft, "Retry", passy_scene_read_error_widget_callback, passy);
 

@@ -410,7 +410,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 body_offset += Le;
             } while(body_offset < body_size);
             passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
-        }  else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
+        } else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
             uint8_t header[100];
             ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
@@ -422,10 +422,13 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 passy->view_dispatcher, PassyCustomEventReaderReading);
 
             size_t body_size = 1 + asn1_length_length(header + 1) + asn1_length(header + 1);
-            FURI_LOG_I(TAG, "%s length: %d", passy->read_type == PassyReadDG2 ? "DG2" : "DG7", body_size);
+            FURI_LOG_I(
+                TAG, "%s length: %d", passy->read_type == PassyReadDG2 ? "DG2" : "DG7", body_size);
 
             if(body_size == 0) {
-                FURI_LOG_W(TAG, "This document does not contain data in %s.", 
+                FURI_LOG_W(
+                    TAG,
+                    "This document does not contain data in %s.",
                     passy->read_type == PassyReadDG2 ? "DG2" : "DG7");
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderNoDGXData);
@@ -442,7 +445,8 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             const char* dg_type = passy->read_type == PassyReadDG2 ? "DG2" : "DG7";
 
             if(jpeg) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpeg");
+                furi_string_printf(
+                    path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpeg");
                 start = (uint8_t*)jpeg - header;
             } else if(jpeg2k) {
                 furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jp2");
