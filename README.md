@@ -41,6 +41,12 @@ Also you can connect the RTL8720DN with 3V but it isn't redommended since the 3v
 
 ---
 
+## Future Improvements
+- **Visual Indicator for Beacon Frame Attacks**: Implement an LED indicator on the **RTL8720DN** module to provide real-time feedback on beacon frame attacks.
+- **Customizable WiFi Scanning Parameters**: Allow users to define specific parameters for scanning WiFi access points to improve efficiency and flexibility.
+
+---
+
 ## Disclaimer
 **This project is for educational and authorized security testing only.** Unauthorized use of WiFi attacks is illegal in many jurisdictions. The creators are not responsible for any misuse or legal consequences arising from this project.
 
