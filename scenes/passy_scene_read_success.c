@@ -122,7 +122,7 @@ void passy_scene_read_success_on_enter(void* context) {
         free(dg1);
         dg1 = 0;
 
-    } else if(passy->read_type == PassyReadDG2) {
+    } else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
         furi_string_cat_printf(str, "Saved to disk in apps_data/passy/\n");
     }
     text_box_set_font(passy->text_box, TextBoxFontText);
