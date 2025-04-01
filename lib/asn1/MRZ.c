@@ -8,25 +8,29 @@
 #include "MRZ.h"
 
 /*
- * This type is implemented using OCTET_STRING,
+ * This type is implemented using VisibleString,
  * so here we adjust the DEF accordingly.
  */
+asn_per_constraints_t asn_PER_type_MRZ_constr_1 CC_NOTUSED = {
+	{ APC_CONSTRAINED,	 7,  7,  32,  126 }	/* (32..126) */,
+	{ APC_SEMI_CONSTRAINED,	-1, -1,  0,  0 }	/* (SIZE(0..MAX)) */,
+	0, 0	/* No PER character map necessary */
+};
 static const ber_tlv_tag_t asn_DEF_MRZ_tags_1[] = {
-	(ASN_TAG_CLASS_APPLICATION | (31 << 2)),
-	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))
+	(ASN_TAG_CLASS_UNIVERSAL | (26 << 2))
 };
 asn_TYPE_descriptor_t asn_DEF_MRZ = {
 	"MRZ",
 	"MRZ",
-	&asn_OP_OCTET_STRING,
+	&asn_OP_VisibleString,
 	asn_DEF_MRZ_tags_1,
 	sizeof(asn_DEF_MRZ_tags_1)
-		/sizeof(asn_DEF_MRZ_tags_1[0]), /* 2 */
+		/sizeof(asn_DEF_MRZ_tags_1[0]), /* 1 */
 	asn_DEF_MRZ_tags_1,	/* Same as above */
 	sizeof(asn_DEF_MRZ_tags_1)
-		/sizeof(asn_DEF_MRZ_tags_1[0]), /* 2 */
-	{ 0, 0, OCTET_STRING_constraint },
+		/sizeof(asn_DEF_MRZ_tags_1[0]), /* 1 */
+	{ 0, &asn_PER_type_MRZ_constr_1, VisibleString_constraint },
 	0, 0,	/* No members */
-	&asn_SPC_OCTET_STRING_specs	/* Additional specs */
+	0	/* No specifics */
 };
 

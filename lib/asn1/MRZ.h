@@ -12,16 +12,17 @@
 #include <asn_application.h>
 
 /* Including external dependencies */
-#include <OCTET_STRING.h>
+#include <VisibleString.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* MRZ */
-typedef OCTET_STRING_t	 MRZ_t;
+typedef VisibleString_t	 MRZ_t;
 
 /* Implementation */
+extern asn_per_constraints_t asn_PER_type_MRZ_constr_1;
 extern asn_TYPE_descriptor_t asn_DEF_MRZ;
 asn_struct_free_f MRZ_free;
 asn_struct_print_f MRZ_print;

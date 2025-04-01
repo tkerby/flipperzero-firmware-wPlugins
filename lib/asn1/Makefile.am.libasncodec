@@ -1,21 +1,20 @@
 ASN_MODULE_SRCS=	\
 	./lib/asn1/MRZ.c	\
-	./lib/asn1/Application1.c	\
 	./lib/asn1/DG1.c
 
 ASN_MODULE_HDRS=	\
 	./lib/asn1/MRZ.h	\
-	./lib/asn1/Application1.h	\
 	./lib/asn1/DG1.h
 
 ASN_MODULE_HDRS+=./lib/asn1/OPEN_TYPE.h
 ASN_MODULE_SRCS+=./lib/asn1/OPEN_TYPE.c
 ASN_MODULE_HDRS+=./lib/asn1/constr_CHOICE.h
+ASN_MODULE_HDRS+=./lib/asn1/VisibleString.h
+ASN_MODULE_SRCS+=./lib/asn1/VisibleString.c
+ASN_MODULE_HDRS+=./lib/asn1/OCTET_STRING.h
 ASN_MODULE_SRCS+=./lib/asn1/constr_CHOICE.c
 ASN_MODULE_HDRS+=./lib/asn1/constr_SEQUENCE.h
 ASN_MODULE_SRCS+=./lib/asn1/constr_SEQUENCE.c
-ASN_MODULE_HDRS+=./lib/asn1/constr_SET.h
-ASN_MODULE_SRCS+=./lib/asn1/constr_SET.c
 ASN_MODULE_HDRS+=./lib/asn1/asn_application.h
 ASN_MODULE_SRCS+=./lib/asn1/asn_application.c
 ASN_MODULE_HDRS+=./lib/asn1/asn_ioc.h
@@ -27,7 +26,6 @@ ASN_MODULE_HDRS+=./lib/asn1/asn_random_fill.h
 ASN_MODULE_SRCS+=./lib/asn1/asn_random_fill.c
 ASN_MODULE_HDRS+=./lib/asn1/asn_bit_data.h
 ASN_MODULE_SRCS+=./lib/asn1/asn_bit_data.c
-ASN_MODULE_HDRS+=./lib/asn1/OCTET_STRING.h
 ASN_MODULE_SRCS+=./lib/asn1/OCTET_STRING.c
 ASN_MODULE_HDRS+=./lib/asn1/BIT_STRING.h
 ASN_MODULE_SRCS+=./lib/asn1/BIT_STRING.c
