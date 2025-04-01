@@ -6,8 +6,21 @@
 
 typedef enum {
     PassyReadNone = 0,
-    PassyReadDG1,
-    PassyReadDG2,
+    PassyReadDG1 = 0x0101,
+    PassyReadDG2 = 0x0102,
+    PassyReadDG3 = 0x0103,
+    PassyReadDG4 = 0x0104,
+    PassyReadDG5 = 0x0105,
+    PassyReadDG6 = 0x0106,
+    PassyReadDG7 = 0x0107,
+    PassyReadDG8 = 0x0108,
+    PassyReadDG9 = 0x0109,
+    PassyReadDG10 = 0x010A,
+    PassyReadDG11 = 0x010B,
+    PassyReadDG12 = 0x010C,
+    PassyReadDG13 = 0x010D,
+    PassyReadDG14 = 0x010E,
+    PassyReadDG15 = 0x010F,
 } PassyReadType;
 
 void passy_log_bitbuffer(char* tag, char* prefix, BitBuffer* buffer);
