@@ -104,6 +104,7 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
         FURI_LOG_W(TAG, "Invalid response length %d", length);
         return NfcCommandStop;
     }
+    passy_reader->last_sw = (data[length - 2] << 8) | data[length - 1];
     if(memcmp(data + length - 2, SW_success, sizeof(SW_success)) != 0) {
         FURI_LOG_W(TAG, "Invalid SW %02x %02x", data[length - 2], data[length - 1]);
         return NfcCommandStop;
@@ -355,16 +356,6 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
             size_t body_size = 1 + asn1_length_length(header + 1) + asn1_length(header + 1);
             FURI_LOG_I(
                 TAG, "%s length: %d", passy->read_type == PassyReadDG2 ? "DG2" : "DG7", body_size);
-
-            if(body_size == 0) {
-                FURI_LOG_W(
-                    TAG,
-                    "This document does not contain data in %s.",
-                    passy->read_type == PassyReadDG2 ? "DG2" : "DG7");
-                view_dispatcher_send_custom_event(
-                    passy->view_dispatcher, PassyCustomEventReaderNoDGXData);
-                break;
-            }
 
             void* jpeg = memmem(header, sizeof(header), jpeg_header, sizeof(jpeg_header));
             void* jpeg2k = memmem(header, sizeof(header), jpeg2k_header, sizeof(jpeg2k_header));

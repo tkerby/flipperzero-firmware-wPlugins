@@ -31,6 +31,7 @@ typedef struct {
 
     SecureMessaging* secure_messaging;
 
+    uint16_t last_sw;
 } PassyReader;
 
 PassyReader* passy_reader_alloc(Passy* passy);

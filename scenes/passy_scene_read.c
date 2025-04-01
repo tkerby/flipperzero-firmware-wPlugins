@@ -35,6 +35,7 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(passy->scene_manager, PassySceneReadSuccess);
             consumed = true;
         } else if(event.event == PassyCustomEventReaderError) {
+            passy->last_sw = passy_reader->last_sw;
             scene_manager_next_scene(passy->scene_manager, PassySceneReadError);
             consumed = true;
         } else if(event.event == PassyCustomEventReaderDetected) {
@@ -55,8 +56,6 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
                     (passy->bytes_total / 1024));
                 popup_set_header(popup, header, 68, 30, AlignLeft, AlignTop);
             }
-        } else if(event.event == PassyCustomEventReaderNoDGXData) {
-            popup_set_header(popup, "No Data", 68, 30, AlignLeft, AlignTop);
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_search_and_switch_to_previous_scene(
