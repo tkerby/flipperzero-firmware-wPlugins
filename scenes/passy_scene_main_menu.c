@@ -42,6 +42,12 @@ void passy_scene_main_menu_on_enter(void* context) {
             SubmenuIndexReadDG1,
             passy_scene_main_menu_submenu_callback,
             passy);
+        submenu_add_item(
+            submenu,
+            "Read DG2",
+            SubmenuIndexReadDG2,
+            passy_scene_main_menu_submenu_callback,
+            passy);
     }
 
     view_dispatcher_switch_to_view(passy->view_dispatcher, PassyViewMenu);

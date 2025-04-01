@@ -90,6 +90,9 @@ struct Passy {
     BitBuffer* DG1;
 
     PassyReadType read_type;
+
+    size_t offset;
+    size_t bytes_total;
 };
 
 typedef enum {

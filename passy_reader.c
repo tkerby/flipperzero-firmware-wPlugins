@@ -450,24 +450,24 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             file_stream_open(stream, furi_string_get_cstr(path), FSAM_WRITE, FSOM_OPEN_ALWAYS);
 
             uint8_t chunk[PASSY_READER_DG2_CHUNK_SIZE];
-            size_t body_offset = start;
-            size_t chunk_count = (body_size + sizeof(chunk) - 1) / sizeof(chunk);
-            size_t i = 0;
+            passy->offset = start;
+            passy->bytes_total = body_size;
             do {
                 memset(chunk, 0, sizeof(chunk));
-                uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - body_offset));
+                uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - passy->offset));
 
-                ret = passy_reader_read_binary(passy_reader, body_offset, Le, chunk);
+                ret = passy_reader_read_binary(passy_reader, passy->offset, Le, chunk);
                 if(ret != NfcCommandContinue) {
                     view_dispatcher_send_custom_event(
                         passy->view_dispatcher, PassyCustomEventReaderError);
                     break;
                 }
-                body_offset += sizeof(chunk);
-                FURI_LOG_D(TAG, "chunk %02x/%02x offset %d", ++i, chunk_count, body_offset);
+                passy->offset += sizeof(chunk);
                 // passy_log_buffer(TAG, "chunk", chunk, sizeof(chunk));
                 stream_write(stream, chunk, Le);
-            } while(body_offset < body_size);
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderReading);
+            } while(passy->offset < body_size);
 
             file_stream_close(stream);
             furi_record_close(RECORD_STORAGE);
