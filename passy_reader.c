@@ -420,6 +420,13 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             size_t body_size = asn1_length(header + 1);
             FURI_LOG_I(TAG, "DG7 length: %d", body_size);
 
+            if(body_size == 0) {
+                FURI_LOG_W(TAG, "This document does not contain data in DG7.");
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderNoDG7Data);
+                break;
+            }
+
             void* jpeg2k = memmem(header, sizeof(header), jpeg2k_header, sizeof(jpeg2k_header));
             void* jpeg2k_cs =
                 memmem(header, sizeof(header), jpeg2k_cs_header, sizeof(jpeg2k_cs_header));
