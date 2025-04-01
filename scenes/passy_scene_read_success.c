@@ -11,8 +11,12 @@ void passy_scene_read_success_on_enter(void* context) {
 
     furi_string_reset(passy->text_box_store);
     FuriString* str = passy->text_box_store;
-    furi_string_cat_printf(str, "%s\n", bit_buffer_get_data(passy->DG1) + 3);
-
+    if(passy->read_type == PassyReadDG1) {
+        // +5 is derived epirically, but really should be from parsing the ASN.1
+        furi_string_cat_printf(str, "%s\n", bit_buffer_get_data(passy->DG1) + 5);
+    } else if(passy->read_type == PassyReadDG2) {
+        furi_string_cat_printf(str, "Saved to disk");
+    }
     text_box_set_font(passy->text_box, TextBoxFontText);
     text_box_set_text(passy->text_box, furi_string_get_cstr(passy->text_box_store));
     view_dispatcher_switch_to_view(passy->view_dispatcher, PassyViewTextBox);
