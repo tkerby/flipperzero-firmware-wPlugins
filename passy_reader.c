@@ -37,11 +37,9 @@ size_t asn1_length_length(uint8_t data[3]) {
     return 0;
 }
 
-PassyReader* passy_reader_alloc(Passy* passy, Iso14443_4bPoller* iso14443_4b_poller) {
+PassyReader* passy_reader_alloc(Passy* passy) {
     PassyReader* passy_reader = malloc(sizeof(PassyReader));
     memset(passy_reader, 0, sizeof(PassyReader));
-
-    passy_reader->iso14443_4b_poller = iso14443_4b_poller;
 
     passy_reader->DG1 = passy->DG1;
     passy_reader->tx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
@@ -81,26 +79,20 @@ void passy_reader_free(PassyReader* passy_reader) {
     free(passy_reader);
 }
 
-NfcCommand passy_reader_select_application(PassyReader* passy_reader) {
+NfcCommand passy_reader_send(PassyReader* passy_reader) {
     NfcCommand ret = NfcCommandContinue;
-
     BitBuffer* tx_buffer = passy_reader->tx_buffer;
     BitBuffer* rx_buffer = passy_reader->rx_buffer;
     Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
     Iso14443_4bError error;
 
-    bit_buffer_append_bytes(tx_buffer, select_header, sizeof(select_header));
-    bit_buffer_append_byte(tx_buffer, sizeof(passport_aid));
-    bit_buffer_append_bytes(tx_buffer, passport_aid, sizeof(passport_aid));
-    bit_buffer_append_byte(tx_buffer, 0x00); // Le
-
+    passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
     error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
     if(error != Iso14443_4bErrorNone) {
         FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
         return NfcCommandStop;
     }
     bit_buffer_reset(tx_buffer);
-
     passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
 
     // Check SW
@@ -118,37 +110,33 @@ NfcCommand passy_reader_select_application(PassyReader* passy_reader) {
     return ret;
 }
 
-NfcCommand passy_reader_get_challenge(PassyReader* passy_reader) {
+NfcCommand passy_reader_select_application(PassyReader* passy_reader) {
     NfcCommand ret = NfcCommandContinue;
 
     BitBuffer* tx_buffer = passy_reader->tx_buffer;
-    BitBuffer* rx_buffer = passy_reader->rx_buffer;
-    Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
-    Iso14443_4bError error;
 
-    bit_buffer_append_bytes(tx_buffer, get_challenge, sizeof(get_challenge));
-
-    error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
-    if(error != Iso14443_4bErrorNone) {
-        FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
-        return NfcCommandStop;
-    }
-    bit_buffer_reset(tx_buffer);
-
-    passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
-
-    // Check SW
-    size_t length = bit_buffer_get_size_bytes(rx_buffer);
-    const uint8_t* data = bit_buffer_get_data(rx_buffer);
-    if(length < 2) {
-        FURI_LOG_W(TAG, "Invalid response length %d", length);
-        return NfcCommandStop;
-    }
-    if(memcmp(data + length - 2, SW_success, sizeof(SW_success)) != 0) {
-        FURI_LOG_W(TAG, "Invalid SW %02x %02x", data[length - 2], data[length - 1]);
-        return NfcCommandStop;
+    bit_buffer_append_bytes(tx_buffer, select_header, sizeof(select_header));
+    bit_buffer_append_byte(tx_buffer, sizeof(passport_aid));
+    bit_buffer_append_bytes(tx_buffer, passport_aid, sizeof(passport_aid));
+    bit_buffer_append_byte(tx_buffer, 0x00); // Le
+    ret = passy_reader_send(passy_reader);
+    if(ret != NfcCommandContinue) {
+        return ret;
     }
 
+    return ret;
+}
+
+NfcCommand passy_reader_get_challenge(PassyReader* passy_reader) {
+    NfcCommand ret = NfcCommandContinue;
+
+    bit_buffer_append_bytes(passy_reader->tx_buffer, get_challenge, sizeof(get_challenge));
+    ret = passy_reader_send(passy_reader);
+    if(ret != NfcCommandContinue) {
+        return ret;
+    }
+
+    const uint8_t* data = bit_buffer_get_data(passy_reader->rx_buffer);
     SecureMessaging* secure_messaging = passy_reader->secure_messaging;
     const uint8_t* rnd_icc = data;
     memcpy(secure_messaging->rndICC, rnd_icc, 8);
@@ -159,9 +147,6 @@ NfcCommand passy_reader_get_challenge(PassyReader* passy_reader) {
 NfcCommand passy_reader_authenticate(PassyReader* passy_reader) {
     NfcCommand ret = NfcCommandContinue;
     BitBuffer* tx_buffer = passy_reader->tx_buffer;
-    BitBuffer* rx_buffer = passy_reader->rx_buffer;
-    Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
-    Iso14443_4bError error;
 
     // TODO: move into secure_messaging
     SecureMessaging* secure_messaging = passy_reader->secure_messaging;
@@ -201,29 +186,13 @@ NfcCommand passy_reader_authenticate(PassyReader* passy_reader) {
     bit_buffer_append_bytes(tx_buffer, mifd, sizeof(mifd));
     bit_buffer_append_byte(tx_buffer, 0x28); // Le
 
-    passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
-
-    error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
-    if(error != Iso14443_4bErrorNone) {
-        FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
-        return NfcCommandStop;
-    }
-    bit_buffer_reset(tx_buffer);
-
-    passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
-
-    // Check SW
-    size_t length = bit_buffer_get_size_bytes(rx_buffer);
-    const uint8_t* data = bit_buffer_get_data(rx_buffer);
-    if(length < 2) {
-        FURI_LOG_W(TAG, "Invalid response length %d", length);
-        return NfcCommandStop;
-    }
-    if(memcmp(data + length - 2, SW_success, sizeof(SW_success)) != 0) {
-        FURI_LOG_W(TAG, "Invalid SW %02x %02x", data[length - 2], data[length - 1]);
-        return NfcCommandStop;
+    ret = passy_reader_send(passy_reader);
+    if(ret != NfcCommandContinue) {
+        return ret;
     }
 
+    const uint8_t* data = bit_buffer_get_data(passy_reader->rx_buffer);
+    size_t length = bit_buffer_get_size_bytes(passy_reader->rx_buffer);
     const uint8_t* mac = data + length - 2 - 8;
     uint8_t calculated_mac[8];
     passy_mac(secure_messaging->KMAC, (uint8_t*)data, length - 8 - 2, calculated_mac, false);
@@ -264,42 +233,20 @@ NfcCommand passy_reader_authenticate(PassyReader* passy_reader) {
 NfcCommand passy_reader_select_file(PassyReader* passy_reader, uint16_t file_id) {
     NfcCommand ret = NfcCommandContinue;
 
-    BitBuffer* tx_buffer = passy_reader->tx_buffer;
-    BitBuffer* rx_buffer = passy_reader->rx_buffer;
-    Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
-    Iso14443_4bError error;
-
     uint8_t select_0101[] = {0x00, 0xa4, 0x02, 0x0c, 0x02, 0x00, 0x00};
     select_0101[5] = (file_id >> 8) & 0xFF;
     select_0101[6] = file_id & 0xFF;
 
     secure_messaging_wrap_apdu(
-        passy_reader->secure_messaging, select_0101, sizeof(select_0101), tx_buffer);
+        passy_reader->secure_messaging, select_0101, sizeof(select_0101), passy_reader->tx_buffer);
 
-    passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
-    error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
-    if(error != Iso14443_4bErrorNone) {
-        FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
-        return NfcCommandStop;
-    }
-    bit_buffer_reset(tx_buffer);
-
-    passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
-
-    // Check SW
-    size_t length = bit_buffer_get_size_bytes(rx_buffer);
-    const uint8_t* data = bit_buffer_get_data(rx_buffer);
-    if(length < 2) {
-        FURI_LOG_W(TAG, "Invalid response length %d", length);
-        return NfcCommandStop;
-    }
-    if(memcmp(data + length - 2, SW_success, sizeof(SW_success)) != 0) {
-        FURI_LOG_W(TAG, "Invalid SW %02x %02x", data[length - 2], data[length - 1]);
-        return NfcCommandStop;
+    ret = passy_reader_send(passy_reader);
+    if(ret != NfcCommandContinue) {
+        return ret;
     }
 
-    secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, rx_buffer);
-    passy_log_bitbuffer(TAG, "NFC response (decrypted)", rx_buffer);
+    secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, passy_reader->rx_buffer);
+    passy_log_bitbuffer(TAG, "NFC response (decrypted)", passy_reader->rx_buffer);
 
     return ret;
 }
@@ -311,40 +258,21 @@ NfcCommand passy_reader_read_binary(
     uint8_t* output_buffer) {
     NfcCommand ret = NfcCommandContinue;
 
-    BitBuffer* tx_buffer = passy_reader->tx_buffer;
-    BitBuffer* rx_buffer = passy_reader->rx_buffer;
-    Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
-    Iso14443_4bError error;
-
     if(offset & 0x8000) {
         FURI_LOG_W(TAG, "Invalid offset %04x", offset);
     }
     uint8_t read_binary[] = {0x00, 0xB0, (offset >> 8) & 0xff, (offset >> 0) & 0xff, Le};
 
     secure_messaging_wrap_apdu(
-        passy_reader->secure_messaging, read_binary, sizeof(read_binary), tx_buffer);
+        passy_reader->secure_messaging, read_binary, sizeof(read_binary), passy_reader->tx_buffer);
 
-    error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
-    if(error != Iso14443_4bErrorNone) {
-        FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
-        return NfcCommandStop;
-    }
-    bit_buffer_reset(tx_buffer);
-
-    // Check SW
-    size_t length = bit_buffer_get_size_bytes(rx_buffer);
-    const uint8_t* data = bit_buffer_get_data(rx_buffer);
-    if(length < 2) {
-        FURI_LOG_W(TAG, "Invalid response length %d", length);
-        return NfcCommandStop;
-    }
-    if(memcmp(data + length - 2, SW_success, sizeof(SW_success)) != 0) {
-        FURI_LOG_W(TAG, "Invalid SW %02x %02x", data[length - 2], data[length - 1]);
-        return NfcCommandStop;
+    ret = passy_reader_send(passy_reader);
+    if(ret != NfcCommandContinue) {
+        return ret;
     }
 
-    secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, rx_buffer);
-    const uint8_t* decrypted_data = bit_buffer_get_data(rx_buffer);
+    secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, passy_reader->rx_buffer);
+    const uint8_t* decrypted_data = bit_buffer_get_data(passy_reader->rx_buffer);
     memcpy(output_buffer, decrypted_data, Le);
 
     return ret;
@@ -508,7 +436,8 @@ NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context) {
 
     FURI_LOG_D(TAG, "iso14443_4b_event->type %i", iso14443_4b_event->type);
 
-    PassyReader* passy_reader = passy_reader_alloc(passy, iso14443_4b_poller);
+    PassyReader* passy_reader = passy_reader_alloc(passy);
+    passy_reader->iso14443_4b_poller = iso14443_4b_poller;
 
     if(iso14443_4b_event->type == Iso14443_4bPollerEventTypeReady) {
         view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderDetected);
@@ -536,5 +465,6 @@ NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context) {
     }
 
     passy_reader_free(passy_reader);
+
     return ret;
 }

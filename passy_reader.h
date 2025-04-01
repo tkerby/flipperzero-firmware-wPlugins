@@ -1,5 +1,9 @@
 #pragma once
 
+#include <lib/nfc/nfc.h>
+#include <nfc/nfc_listener.h>
+#include <nfc/nfc_poller.h>
+#include <nfc/nfc_device.h>
 #include <lib/nfc/protocols/nfc_generic_event.h>
 #include <lib/nfc/protocols/iso14443_4b/iso14443_4b_poller.h>
 #include <lib/nfc/helpers/iso14443_crc.h>
@@ -27,7 +31,7 @@ typedef struct {
 
 } PassyReader;
 
-PassyReader* passy_reader_alloc(Passy* passy, Iso14443_4bPoller* iso14443_4b_poller);
+PassyReader* passy_reader_alloc(Passy* passy);
 
 void passy_reader_free(PassyReader* passy_reader);
 
