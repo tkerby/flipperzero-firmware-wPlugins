@@ -411,13 +411,6 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
             } while(body_offset < body_size);
             passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
         } else if(passy->read_type == PassyReadDG7) {
-            ret = passy_reader_select_file(passy_reader, PassyReadDG7);
-            if(ret != NfcCommandContinue) {
-                view_dispatcher_send_custom_event(
-                    passy->view_dispatcher, PassyCustomEventReaderError);
-                break;
-            }
-
             uint8_t header[100];
             ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
