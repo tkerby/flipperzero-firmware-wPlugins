@@ -6,6 +6,7 @@
 
 typedef enum {
     PassyReadNone = 0,
+    PassyReadCOM = 0x011E,
     PassyReadDG1 = 0x0101,
     PassyReadDG2 = 0x0102,
     PassyReadDG3 = 0x0103,

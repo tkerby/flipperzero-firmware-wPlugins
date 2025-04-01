@@ -5,6 +5,7 @@
 enum SubmenuIndex {
     SubmenuIndexEnterMRZInfo,
     SubmenuIndexDeleteMRZInfo,
+    SubmenuIndexReadCOM,
     SubmenuIndexReadDG1,
     SubmenuIndexReadDG2,
     SubmenuIndexReadDG7,
