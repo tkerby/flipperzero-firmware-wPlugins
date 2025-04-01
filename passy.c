@@ -306,8 +306,6 @@ int32_t passy_app(void* p) {
     UNUSED(p);
     Passy* passy = passy_alloc();
 
-    passy_load_mrz_info(passy);
-
     scene_manager_next_scene(passy->scene_manager, PassySceneMainMenu);
 
     view_dispatcher_run(passy->view_dispatcher);

@@ -48,8 +48,6 @@ PassyReader* passy_reader_alloc(Passy* passy, Iso14443_4bPoller* iso14443_4b_pol
     date_of_expiry[strlen(passy->date_of_expiry)] = passy_checksum(passy->date_of_expiry);
     FURI_LOG_I(TAG, "Date of expiry: %s", date_of_expiry);
 
-    passy_save_mrz_info(passy);
-
     passy_reader->secure_messaging = secure_messaging_alloc(
         (uint8_t*)passport_number, (uint8_t*)date_of_birth, (uint8_t*)date_of_expiry);
 
