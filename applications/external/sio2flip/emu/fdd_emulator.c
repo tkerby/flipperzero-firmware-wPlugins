@@ -19,9 +19,10 @@
 
 #include <furi.h>
 
-#include "app_common.h"
-#include "fdd_emulator.h"
+#include "app/app_common.h"
+
 #include "disk_image.h"
+#include "fdd_emulator.h"
 
 // POKEY clock frequency [Hz]
 // PAL: 1.7734MHz, NTSC: 1.7898MHz

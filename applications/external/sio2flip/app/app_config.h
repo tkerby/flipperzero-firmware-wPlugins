@@ -21,8 +21,9 @@
 #include <storage/storage.h>
 #include "app_common.h"
 
+#include "utils/slice.h"
+
 #include "app_common.h"
-#include "slice.h"
 
 typedef struct {
     // Enum value

@@ -21,7 +21,8 @@
 #include <furi.h>
 #include <storage/storage.h>
 
-#include "app_config.h"
+#include "app/app_config.h"
+
 #include "sio_driver.h"
 #include "xex_file.h"
 

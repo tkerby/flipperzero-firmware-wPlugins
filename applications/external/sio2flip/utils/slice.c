@@ -16,11 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "slice.h"
-
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "slice.h"
 
 Slice slice_trim_left(Slice slice) {
     while(slice.start < slice.end && isspace((unsigned char)*slice.start)) {

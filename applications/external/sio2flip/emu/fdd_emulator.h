@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "app_config.h"
+#include "app/app_config.h"
+
 #include "sio_driver.h"
 #include "disk_image.h"
 

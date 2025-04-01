@@ -16,7 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "app_common.h"
+#include "app/app_common.h"
+
 #include "xex_loader.h"
 
 #define CHUNK_SIZE SIO_MAX_FRAME_SIZE

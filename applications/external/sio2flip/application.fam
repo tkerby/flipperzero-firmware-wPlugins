@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="app_startup",
     stack_size=4 * 1024,
-    fap_icon="sio2flip.png",
+    fap_icon="images/sio2flip.png",
     fap_category="GPIO",
     fap_author="cepetr",
     fap_weburl="https://github.com/cepetr/sio2flip",

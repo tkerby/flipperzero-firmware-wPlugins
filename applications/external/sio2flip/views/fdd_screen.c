@@ -18,7 +18,8 @@
 
 #include <gui/elements.h>
 
-#include "app_common.h"
+#include "app/app_common.h"
+
 #include "fdd_screen.h"
 
 struct FddScreen {

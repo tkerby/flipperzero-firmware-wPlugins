@@ -21,8 +21,9 @@
 
 #include <notification/notification_messages.h>
 
-#include "app.h"
 #include "scenes/scenes.h"
+
+#include "app.h"
 
 static bool app_custom_event_callback(void* context, uint32_t event) {
     furi_check(context != NULL);
