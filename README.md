@@ -2,6 +2,11 @@
 
 sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, but now it features quite good support for floppy drive emulation. Additionally, besides FDD emulation, direct XEX executable file loading is now supported.
 
+<div>
+<img src="screenshots/screenshot_fdd.png" width="20%" />
+<img src="screenshots/screenshot_xex_loader.png" width="20%" />
+</div>
+
 ## What's tested
 
 The app has been tested with the PAL version of the Atari 800XL. It appears to be quite functional, allowing the system to boot from various ATR image files. The following features have already been implemented:
@@ -28,6 +33,8 @@ The wiring is quite simple; only three signals are need.
 | GND (18)     | GND       |
 
 Note: All signals on the Atari SIO use 5V TTL logic. Although the Flipper Zero’s I/Os are 5V tolerant when configured as inputs, be careful when connecting your Flipper Zero to your Atari computer, as incorrect wiring or improper use could potentially damage your Flipper or your precious Atari hardware.
+
+<img src="https://github.com/user-attachments/assets/71bd3d8d-ba43-493b-aad7-f414037da486" width="20%" />
 
 ## Instructions for Use
 
