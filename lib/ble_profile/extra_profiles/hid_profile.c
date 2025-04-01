@@ -374,10 +374,7 @@ bool ble_profile_hid_mouse_scroll(FuriHalBleProfileBase* profile, int8_t delta) 
 }
 
 static GapConfig template_config = {
-    .adv_service = {
-        .UUID_Type = UUID_TYPE_16,
-        .Service_UUID_16 = HUMAN_INTERFACE_DEVICE_SERVICE_UUID,
-    },
+    .adv_service_uuid = HUMAN_INTERFACE_DEVICE_SERVICE_UUID,
     .appearance_char = GAP_APPEARANCE_KEYBOARD,
     .bonding_mode = true,
     .pairing_method = GapPairingPinCodeVerifyYesNo,
