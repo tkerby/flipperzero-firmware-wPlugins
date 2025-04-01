@@ -410,75 +410,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 body_offset += Le;
             } while(body_offset < body_size);
             passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
-        } else if(passy->read_type == PassyReadDG7) {
-            uint8_t header[100];
-            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
-            if(ret != NfcCommandContinue) {
-                view_dispatcher_send_custom_event(
-                    passy->view_dispatcher, PassyCustomEventReaderError);
-                break;
-            }
-            view_dispatcher_send_custom_event(
-                passy->view_dispatcher, PassyCustomEventReaderReading);
-
-            size_t body_size = asn1_length(header + 1);
-            FURI_LOG_I(TAG, "DG7 length: %d", body_size);
-
-            if(body_size == 0) {
-                FURI_LOG_W(TAG, "This document does not contain data in DG7.");
-                view_dispatcher_send_custom_event(
-                    passy->view_dispatcher, PassyCustomEventReaderNoDG7Data);
-                break;
-            }
-
-            void* jpeg2k = memmem(header, sizeof(header), jpeg2k_header, sizeof(jpeg2k_header));
-            void* jpeg2k_cs =
-                memmem(header, sizeof(header), jpeg2k_cs_header, sizeof(jpeg2k_cs_header));
-
-            FuriString* path = furi_string_alloc();
-            uint8_t start = 0;
-
-            if(jpeg2k) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG7", ".jp2");
-                start = (uint8_t*)jpeg2k - header;
-            } else if(jpeg2k_cs) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG7", ".jpc");
-                start = (uint8_t*)jpeg2k_cs - header;
-            } else {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG7", ".bin");
-                start = 0;
-                passy_log_buffer(TAG, "header", header, sizeof(header));
-            }
-            FURI_LOG_I(TAG, "Writing offset %d to %s", start, furi_string_get_cstr(path));
-
-            Storage* storage = furi_record_open(RECORD_STORAGE);
-            Stream* stream = file_stream_alloc(storage);
-            file_stream_open(stream, furi_string_get_cstr(path), FSAM_WRITE, FSOM_OPEN_ALWAYS);
-
-            uint8_t chunk[PASSY_READER_DG2_CHUNK_SIZE];
-            passy->offset = start;
-            passy->bytes_total = body_size;
-            do {
-                memset(chunk, 0, sizeof(chunk));
-                uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - passy->offset));
-
-                ret = passy_reader_read_binary(passy_reader, passy->offset, Le, chunk);
-                if(ret != NfcCommandContinue) {
-                    view_dispatcher_send_custom_event(
-                        passy->view_dispatcher, PassyCustomEventReaderError);
-                    break;
-                }
-                passy->offset += sizeof(chunk);
-                // passy_log_buffer(TAG, "chunk", chunk, sizeof(chunk));
-                stream_write(stream, chunk, Le);
-                view_dispatcher_send_custom_event(
-                    passy->view_dispatcher, PassyCustomEventReaderReading);
-            } while(passy->offset < body_size);
-
-            file_stream_close(stream);
-            furi_record_close(RECORD_STORAGE);
-            furi_string_free(path);
-        } else if(passy->read_type == PassyReadDG2) {
+        }  else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
             uint8_t header[100];
             ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
@@ -490,7 +422,15 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
                 passy->view_dispatcher, PassyCustomEventReaderReading);
 
             size_t body_size = 1 + asn1_length_length(header + 1) + asn1_length(header + 1);
-            FURI_LOG_I(TAG, "DG2 length: %d", body_size);
+            FURI_LOG_I(TAG, "%s length: %d", passy->read_type == PassyReadDG2 ? "DG2" : "DG7", body_size);
+
+            if(body_size == 0) {
+                FURI_LOG_W(TAG, "This document does not contain data in %s.", 
+                    passy->read_type == PassyReadDG2 ? "DG2" : "DG7");
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderNoDGXData);
+                break;
+            }
 
             void* jpeg = memmem(header, sizeof(header), jpeg_header, sizeof(jpeg_header));
             void* jpeg2k = memmem(header, sizeof(header), jpeg2k_header, sizeof(jpeg2k_header));
@@ -499,18 +439,19 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
 
             FuriString* path = furi_string_alloc();
             uint8_t start = 0;
+            const char* dg_type = passy->read_type == PassyReadDG2 ? "DG2" : "DG7";
 
             if(jpeg) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jpeg");
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpeg");
                 start = (uint8_t*)jpeg - header;
             } else if(jpeg2k) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jp2");
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jp2");
                 start = (uint8_t*)jpeg2k - header;
             } else if(jpeg2k_cs) {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".jpc");
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpc");
                 start = (uint8_t*)jpeg2k_cs - header;
             } else {
-                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, "DG2", ".bin");
+                furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".bin");
                 start = 0;
                 passy_log_buffer(TAG, "header", header, sizeof(header));
             }

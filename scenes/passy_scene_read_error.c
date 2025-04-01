@@ -21,10 +21,6 @@ void passy_scene_read_error_on_enter(void* context) {
     FuriString* primary_str = furi_string_alloc_set("Read Errror");
     FuriString* secondary_str = furi_string_alloc_set("Try again?");
 
-    if(passy->read_type == PassyReadDG7) {
-        furi_string_set(primary_str, "No data in DG7");
-        furi_string_set(secondary_str, "This document does not contain data in DG7.");
-    }
 
     widget_add_button_element(
         widget, GuiButtonTypeLeft, "Retry", passy_scene_read_error_widget_callback, passy);

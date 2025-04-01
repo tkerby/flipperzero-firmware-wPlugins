@@ -53,7 +53,7 @@ enum PassyCustomEvent {
     PassyCustomEventReaderDetected,
     PassyCustomEventReaderAuthenticated,
     PassyCustomEventReaderReading,
-    PassyCustomEventReaderNoDG7Data,
+    PassyCustomEventReaderNoDGXData,
 };
 
 struct Passy {
