@@ -21,6 +21,8 @@
 NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context);
 
 typedef struct {
+    Passy* passy;
+
     Iso14443_4bPoller* iso14443_4b_poller;
     BitBuffer* tx_buffer;
     BitBuffer* rx_buffer;

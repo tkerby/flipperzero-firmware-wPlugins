@@ -4,6 +4,8 @@
 
 #define TAG "PassySceneRead"
 
+static PassyReader* passy_reader = NULL;
+
 void passy_scene_read_on_enter(void* context) {
     Passy* passy = context;
     dolphin_deed(DolphinDeedNfcRead);
@@ -14,7 +16,8 @@ void passy_scene_read_on_enter(void* context) {
     popup_set_icon(popup, 0, 3, &I_RFIDDolphinReceive_97x61);
 
     passy->poller = nfc_poller_alloc(passy->nfc, NfcProtocolIso14443_4b);
-    nfc_poller_start(passy->poller, passy_reader_poller_callback, passy);
+    passy_reader = passy_reader_alloc(passy);
+    nfc_poller_start(passy->poller, passy_reader_poller_callback, passy_reader);
     passy->bytes_total = 0;
 
     passy_blink_start(passy);
@@ -67,6 +70,10 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
 void passy_scene_read_on_exit(void* context) {
     Passy* passy = context;
 
+    if(passy_reader) {
+        passy_reader_free(passy_reader);
+        passy_reader = NULL;
+    }
     if(passy->poller) {
         nfc_poller_stop(passy->poller);
         nfc_poller_free(passy->poller);

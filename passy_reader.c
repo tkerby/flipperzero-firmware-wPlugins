@@ -41,6 +41,8 @@ PassyReader* passy_reader_alloc(Passy* passy) {
     PassyReader* passy_reader = malloc(sizeof(PassyReader));
     memset(passy_reader, 0, sizeof(PassyReader));
 
+    furi_assert(passy);
+    passy_reader->passy = passy;
     passy_reader->DG1 = passy->DG1;
     passy_reader->tx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
     passy_reader->rx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
@@ -278,8 +280,9 @@ NfcCommand passy_reader_read_binary(
     return ret;
 }
 
-NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
+NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
     furi_assert(passy_reader);
+    Passy* passy = passy_reader->passy;
     NfcCommand ret = NfcCommandContinue;
 
     do {
@@ -428,7 +431,7 @@ NfcCommand passy_reader_state_machine(Passy* passy, PassyReader* passy_reader) {
 
 NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(event.protocol == NfcProtocolIso14443_4b);
-    Passy* passy = context;
+    PassyReader* passy_reader = context;
     NfcCommand ret = NfcCommandContinue;
 
     const Iso14443_4bPollerEvent* iso14443_4b_event = event.event_data;
@@ -436,15 +439,17 @@ NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context) {
 
     FURI_LOG_D(TAG, "iso14443_4b_event->type %i", iso14443_4b_event->type);
 
-    PassyReader* passy_reader = passy_reader_alloc(passy);
     passy_reader->iso14443_4b_poller = iso14443_4b_poller;
 
     if(iso14443_4b_event->type == Iso14443_4bPollerEventTypeReady) {
-        view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderDetected);
+        view_dispatcher_send_custom_event(
+            passy_reader->passy->view_dispatcher, PassyCustomEventReaderDetected);
         nfc_device_set_data(
-            passy->nfc_device, NfcProtocolIso14443_4b, nfc_poller_get_data(passy->poller));
+            passy_reader->passy->nfc_device,
+            NfcProtocolIso14443_4b,
+            nfc_poller_get_data(passy_reader->passy->poller));
 
-        ret = passy_reader_state_machine(passy, passy_reader);
+        ret = passy_reader_state_machine(passy_reader);
 
         furi_thread_set_current_priority(FuriThreadPriorityLowest);
     } else if(iso14443_4b_event->type == Iso14443_4bPollerEventTypeError) {
@@ -463,8 +468,6 @@ NfcCommand passy_reader_poller_callback(NfcGenericEvent event, void* context) {
             break;
         }
     }
-
-    passy_reader_free(passy_reader);
 
     return ret;
 }
