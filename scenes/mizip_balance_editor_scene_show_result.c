@@ -6,7 +6,7 @@ static void
     view_dispatcher_send_custom_event(app->view_dispatcher, result);
 }
 
-void mizip_balance_editor_update_balance(void* context) {
+void mizip_balance_editor_show_current_balance(void* context) {
     MiZipBalanceEditorApp* app = context;
     FuriString* message;
     dialog_ex_reset(app->dialog_ex);
@@ -59,7 +59,7 @@ void mizip_balance_editor_update_balance(void* context) {
 void mizip_balance_editor_scene_show_result_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
-    mizip_balance_editor_update_balance(context);
+    mizip_balance_editor_show_current_balance(context);
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
 }
 
@@ -71,20 +71,24 @@ bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManager
         switch(event.event) {
         case DialogExResultCenter:
             if(app->is_valid_mizip_data) {
+                //Open NumberInput for custom value
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
             } else {
+                //Get back if data isn't valid
                 scene_manager_previous_scene(app->scene_manager);
             }
             consumed = true;
             break;
         case DialogExResultLeft:
+            //Remove 100 cents from balance
             mizip_balance_editor_write_new_balance(context, app->current_balance - 100);
-            mizip_balance_editor_update_balance(context);
+            mizip_balance_editor_show_current_balance(context);
             consumed = true;
             break;
         case DialogExResultRight:
+            //Add 100 cents from balance
             mizip_balance_editor_write_new_balance(context, app->current_balance + 100);
-            mizip_balance_editor_update_balance(context);
+            mizip_balance_editor_show_current_balance(context);
             consumed = true;
             break;
         default:
