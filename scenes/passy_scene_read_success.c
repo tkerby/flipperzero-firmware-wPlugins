@@ -5,6 +5,7 @@
 #include <lib/asn1/DG1.h>
 
 #define TAG "PassySceneReadCardSuccess"
+// Thank you proxmark code for your passport parsing
 
 void passy_scene_read_success_on_enter(void* context) {
     Passy* passy = context;
@@ -39,7 +40,55 @@ void passy_scene_read_success_on_enter(void* context) {
                 FURI_LOG_D(TAG, "Received empty Payload");
             }
 
-            furi_string_cat_printf(str, "%s\n", dg1->mrz.buf);
+            if(dg1->mrz.buf[0] == 'I' && dg1->mrz.buf[1] == 'P') {
+                furi_string_cat_printf(str, "Passport card\n");
+            } else if(dg1->mrz.buf[0] == 'I') {
+                furi_string_cat_printf(str, "ID Card\n");
+            } else if(dg1->mrz.buf[0] == 'P') {
+                furi_string_cat_printf(str, "Passport book\n");
+            } else if(dg1->mrz.buf[0] == 'A') {
+                furi_string_cat_printf(str, "Residency Permit\n");
+            } else {
+                furi_string_cat_printf(str, "Unknown\n");
+            }
+
+            uint8_t td_variant = 0;
+            if(dg1->mrz.size == 90) {
+                td_variant = 1;
+            } else if(dg1->mrz.size == 88) {
+                td_variant = 3;
+            } else {
+                FURI_LOG_W(TAG, "MRZ length (%zu) is unexpected.", dg1->mrz.size);
+            }
+
+            if(td_variant == 3) { // Passport form factor
+                char name[40] = {0};
+                memset(name, 0, sizeof(name));
+                memcpy(name, dg1->mrz.buf + 5, 38);
+                // Work backwards replace < at the end with \0
+                for(size_t i = sizeof(name) - 1; i > 0; i--) {
+                    if(name[i] == '<') {
+                        name[i] = '\0';
+                    } else {
+                        break;
+                    }
+                }
+                // Work forwards replace < with space
+                for(size_t i = 0; i < sizeof(name); i++) {
+                    if(name[i] == '<') {
+                        name[i] = ' ';
+                    }
+                }
+                furi_string_cat_printf(str, "Country: %.3s\n", dg1->mrz.buf + 2);
+                furi_string_cat_printf(str, "Name: %.38s\n", name);
+                furi_string_cat_printf(str, "Doc Number: %.9s\n", dg1->mrz.buf + 44);
+                furi_string_cat_printf(str, "DoB: %.6s\n", dg1->mrz.buf + 44 + 13);
+                furi_string_cat_printf(str, "Sex: %.1s\n", dg1->mrz.buf + 44 + 20);
+                furi_string_cat_printf(str, "Expiry: %.6s\n", dg1->mrz.buf + 44 + 21);
+            } else if(td_variant == 1) { // ID form factor
+                furi_string_cat_printf(str, "%s\n", bit_buffer_get_data(passy->DG1));
+            }
+
         } else {
             FURI_LOG_E(TAG, "ASN.1 decode failed: %d.  %d consumed", rval.code, rval.consumed);
             furi_string_cat_printf(str, "%s\n", bit_buffer_get_data(passy->DG1));
