@@ -52,6 +52,8 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
                     (passy->bytes_total / 1024));
                 popup_set_header(popup, header, 68, 30, AlignLeft, AlignTop);
             }
+        } else if(event.event == PassyCustomEventReaderNoDGXData) {
+            popup_set_header(popup, "No Data", 68, 30, AlignLeft, AlignTop);
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_search_and_switch_to_previous_scene(
