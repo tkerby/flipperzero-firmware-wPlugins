@@ -1,6 +1,6 @@
 App(
     appid="blackhat",
-    name="Flipper Blackhat",
+    name="Flipper Blackhat [A33]",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="blackhat_app",
     stack_size=1 * 1024,
