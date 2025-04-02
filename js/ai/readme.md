@@ -1,21 +1,23 @@
 # AI for JavaScript
 
 ## Overview
-This project was tested with [ChatGPT-4o](https://chatgpt.com/?model=gpt-4o).  The goal of this project is to use AI to generate JavaScript that runs on the Flipper Zero; without requiring the user to be familiar with JavaScript programming.
+This project was tested with [ChatGPT-4o](https://chatgpt.com/?model=gpt-4o) and [Grok](https://grok.com/chat).  The goal of this project is to use AI to generate JavaScript that runs on the Flipper Zero; without requiring the user to be familiar with JavaScript programming.
+
+JavaScript has a limited set of features. Be sure you request something that is in [Supported Capabilities](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#features) of JavaScript; or at least not in the [Not Supported](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#not-supported) for the best results.
 
 ## Directions
 - Step 1. Open [Chatgpt.com](https://chatgpt.com/?model=gpt-4o) and make sure you have `ChatGPT-4o` selected.
-- Step 2. Copy the contents of [intro.txt](./intro.txt) into the Message window of Chat.
-- Step 3. Drag the example script files from your firmware into the Message window.
-  - [Momentum](https://github.com/Next-Flip/Momentum-Firmware/tree/dev/applications/system/js_app/examples/apps/Scripts/Examples)
-  - [Official](https://github.com/flipperdevices/flipperzero-firmware/tree/dev/applications/system/js_app/examples/apps/Scripts)
-- Step 4. Press `Ctrl`+`Enter` to get a blank line.
-- Step 5. Request a script to do some feature for the Flipper Zero!  Be sure you request something that is in [Supported Capabilities](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#capabilities) of JavaScript; or at least not in the [Not Supported](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#not-supported) for the best results.
+- Step 2. Drag the files for your firmware into the Message window.
+  - [Official](./official-firmware/)
+  - [RogueMaster](./roguemaster-firmware/)
+  - [Momentum](./momentum-firmware)
+  - [Unleashed](./unleashed-firmware)
+- Step 3. Request a script to do some feature for the Flipper Zero!  Be sure you request something that is in [Supported Capabilities](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#features) of JavaScript; or at least not in the [Not Supported](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/JavaScript#not-supported) for the best results.
   Example: "Create a JavaScript program for the Flipper Zero that prints 'Hello World' on the screen."
-- Step 6. Click the `Copy code` button from the response.
-- Step 7. Paste the resulting script into a text file (I named my file `ai.js`).
-- Step 8. Copy the text file to your Flipper Zero on the SD Card at `sd card/apps/Scripts`.
-- Step 9. Run the script on the Flipper Zero (`Apps`, `Scripts`, *yourScript.js*).
+- Step 4. Click the `Copy code` button from the response.
+- Step 5. Paste the resulting script into a text file (I named my file `ai.js`).
+- Step 6. Copy the text file to your Flipper Zero on the SD Card at `sd card/apps/Scripts`.
+- Step 7. Run the script on the Flipper Zero (`Apps`, `Scripts`, *yourScript.js*).
 
 ## Troubleshooting
 If you get an error displayed on Flipper...
@@ -38,3 +40,4 @@ Support my work:
 - Option 2. [https://ko-fi.com/codeallnight](https://ko-fi.com/codeallnight) (donate $3 via PayPal or Venmo) 
 - Option 3. Click the "Thanks" button on [YouTube](https://youtu.be/DAUQGeG4pc4). 
 - Option 4. Purchase a [FlipBoard](https://github.com/MakeItHackin/FlipBoard) (I get a portion of the sale).
+- Option 5. Purchase from [Lab401.com](https://lab401.com/r?id=7c6mqp) using promo code: DEREK (You save 5% & I get a portion of the sale).
