@@ -16,10 +16,17 @@ void passy_scene_read_error_on_enter(void* context) {
     Passy* passy = context;
     Widget* widget = passy->widget;
 
+    FuriString* primary_str = furi_string_alloc_set("Read Error");
+    FuriString* secondary_str = furi_string_alloc();
+
     // Send notification
     notification_message(passy->notifications, &sequence_error);
-    FuriString* primary_str = furi_string_alloc_set("Read Errror");
-    FuriString* secondary_str = furi_string_alloc_set("Try again?");
+
+    if(passy->last_sw == 0x6a82) {
+        furi_string_printf(secondary_str, "File not found\nTry again?");
+    } else {
+        furi_string_printf(secondary_str, "%04x\nTry again?", passy->last_sw);
+    }
 
     widget_add_button_element(
         widget, GuiButtonTypeLeft, "Retry", passy_scene_read_error_widget_callback, passy);

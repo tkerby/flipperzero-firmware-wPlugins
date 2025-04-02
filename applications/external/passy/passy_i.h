@@ -53,7 +53,6 @@ enum PassyCustomEvent {
     PassyCustomEventReaderDetected,
     PassyCustomEventReaderAuthenticated,
     PassyCustomEventReaderReading,
-    PassyCustomEventReaderNoDGXData,
 };
 
 struct Passy {
@@ -94,6 +93,8 @@ struct Passy {
 
     size_t offset;
     size_t bytes_total;
+
+    uint16_t last_sw;
 };
 
 typedef enum {
