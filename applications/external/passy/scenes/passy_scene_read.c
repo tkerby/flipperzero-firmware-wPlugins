@@ -32,7 +32,11 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == PassyCustomEventReaderSuccess) {
-            scene_manager_next_scene(passy->scene_manager, PassySceneReadSuccess);
+            if(passy->read_type == PassyReadCOM) {
+                scene_manager_next_scene(passy->scene_manager, PassySceneAdvancedMenu);
+            } else {
+                scene_manager_next_scene(passy->scene_manager, PassySceneReadSuccess);
+            }
             consumed = true;
         } else if(event.event == PassyCustomEventReaderError) {
             passy->last_sw = passy_reader->last_sw;

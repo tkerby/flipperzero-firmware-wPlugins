@@ -193,6 +193,8 @@ Passy* passy_alloc() {
     passy->load_path = furi_string_alloc();
 
     passy->DG1 = bit_buffer_alloc(PASSY_DG1_MAX_LENGTH);
+    passy->COM = bit_buffer_alloc(PASSY_DG1_MAX_LENGTH);
+    passy->dg_header = bit_buffer_alloc(PASSY_DG1_MAX_LENGTH);
 
     return passy;
 }
@@ -253,6 +255,8 @@ void passy_free(Passy* passy) {
     furi_record_close(RECORD_DIALOGS);
 
     bit_buffer_free(passy->DG1);
+    bit_buffer_free(passy->COM);
+    bit_buffer_free(passy->dg_header);
 
     free(passy);
 }

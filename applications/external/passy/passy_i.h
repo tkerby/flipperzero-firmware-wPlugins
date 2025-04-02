@@ -88,6 +88,8 @@ struct Passy {
     char date_of_expiry[PASSY_DOE_MAX_LENGTH + 1];
 
     BitBuffer* DG1;
+    BitBuffer* COM;
+    BitBuffer* dg_header;
 
     PassyReadType read_type;
 

@@ -24,6 +24,8 @@ void passy_scene_read_error_on_enter(void* context) {
 
     if(passy->last_sw == 0x6a82) {
         furi_string_printf(secondary_str, "File not found\nTry again?");
+    } else if(passy->last_sw == 0x9000) {
+        furi_string_printf(secondary_str, "Try again?");
     } else {
         furi_string_printf(secondary_str, "%04x\nTry again?", passy->last_sw);
     }

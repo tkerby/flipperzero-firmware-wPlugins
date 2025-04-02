@@ -124,6 +124,18 @@ void passy_scene_read_success_on_enter(void* context) {
 
     } else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
         furi_string_cat_printf(str, "Saved to disk in apps_data/passy/\n");
+    } else {
+        char display[9]; // 4 byte header in hex + NULL
+        memset(display, 0, sizeof(display));
+        for(size_t i = 0; i < bit_buffer_get_size_bytes(passy->dg_header); i++) {
+            snprintf(
+                display + (i * 2),
+                sizeof(display),
+                "%02X",
+                bit_buffer_get_data(passy->dg_header)[i]);
+        }
+        furi_string_cat_printf(str, "Unparsed file\n");
+        furi_string_cat_printf(str, "File header: %s\n", display);
     }
     text_box_set_font(passy->text_box, TextBoxFontText);
     text_box_set_text(passy->text_box, furi_string_get_cstr(passy->text_box_store));
@@ -136,8 +148,9 @@ bool passy_scene_read_success_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
     } else if(event.type == SceneManagerEventTypeBack) {
-        scene_manager_search_and_switch_to_previous_scene(
-            passy->scene_manager, PassySceneMainMenu);
+        const uint32_t possible_scenes[] = {PassySceneAdvancedMenu, PassySceneMainMenu};
+        scene_manager_search_and_switch_to_previous_scene_one_of(
+            passy->scene_manager, possible_scenes, COUNT_OF(possible_scenes));
         consumed = true;
     }
     return consumed;
