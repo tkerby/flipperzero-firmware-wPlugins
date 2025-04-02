@@ -46,7 +46,7 @@ A real-time SPI communication tester for NRF24L01+ modules on Flipper Zero, feat
 
 ## Installation
 
-You can download the fap file directly from the repo directly and put it on the flipper through qflipper desktop application.
+You can download the fap file directly from the repo and put it on the flipper through Qflipper desktop application.
 
 ## Usage
 
