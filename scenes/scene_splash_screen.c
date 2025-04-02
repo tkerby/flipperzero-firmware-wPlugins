@@ -16,30 +16,33 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "app/app.h"
+#include "sio2flip_icons.h"
 
 #include "scenes.h"
 
-void scene_wiring_on_enter(void* context) {
+#include "app/app.h"
+
+static void popup_callback(void* context) {
     App* app = (App*)context;
 
-    popup_set_header(app->popup, "Wiring", 0, 0, AlignLeft, AlignTop);
+    scene_manager_search_and_switch_to_previous_scene(app->scene_manager, SceneMainMenu);
+}
 
-    popup_set_text(
-        app->popup,
-        "TX (13) - DIN\n"
-        "RX (14) - DOUT\n"
-        "C0 (16) - COMMAND\n"
-        "GND (18) - GND\n",
-        4,
-        16,
-        AlignLeft,
-        AlignTop);
+void scene_splash_screen_on_enter(void* context) {
+    App* app = (App*)context;
+
+    popup_set_icon(app->popup, 0, 0, &I_sio2flip_splash);
+
+    popup_set_timeout(app->popup, 1500);
+    popup_set_context(app->popup, app);
+    popup_set_callback(app->popup, popup_callback);
+
+    popup_enable_timeout(app->popup);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewPopup);
 }
 
-bool scene_wiring_on_event(void* context, SceneManagerEvent event) {
+bool scene_splash_screen_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     UNUSED(context);
@@ -48,7 +51,7 @@ bool scene_wiring_on_event(void* context, SceneManagerEvent event) {
     return consumed;
 }
 
-void scene_wiring_on_exit(void* context) {
+void scene_splash_screen_on_exit(void* context) {
     App* app = (App*)context;
 
     popup_reset(app->popup);
