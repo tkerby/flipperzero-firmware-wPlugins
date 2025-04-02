@@ -89,6 +89,7 @@ struct Passy {
 
     BitBuffer* DG1;
     BitBuffer* COM;
+    BitBuffer* dg_header;
 
     PassyReadType read_type;
 

@@ -48,6 +48,7 @@ PassyReader* passy_reader_alloc(Passy* passy) {
     passy_reader->passy = passy;
     passy_reader->DG1 = passy->DG1;
     passy_reader->COM = passy->COM;
+    passy_reader->dg_header = passy->dg_header;
     passy_reader->tx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
     passy_reader->rx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
 
@@ -443,6 +444,18 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
             file_stream_close(stream);
             furi_record_close(RECORD_STORAGE);
             furi_string_free(path);
+        } else {
+            // Until file specific handling is implemented, we just read the header
+            bit_buffer_reset(passy_reader->dg_header);
+            uint8_t header[4];
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
+            if(ret != NfcCommandContinue) {
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderError);
+
+                break;
+            }
+            bit_buffer_append_bytes(passy_reader->dg_header, header, sizeof(header));
         }
 
         // Everything done
