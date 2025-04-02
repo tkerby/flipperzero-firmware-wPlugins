@@ -32,13 +32,13 @@ void passy_scene_main_menu_on_enter(void* context) {
        strlen(passy->date_of_expiry) > 0) {
         submenu_add_item(
             submenu,
-            "Read DG1",
+            "Read DG1 (MRZ)",
             SubmenuIndexReadDG1,
             passy_scene_main_menu_submenu_callback,
             passy);
         submenu_add_item(
             submenu,
-            "Read DG2",
+            "Read DG2 (Face)",
             SubmenuIndexReadDG2,
             passy_scene_main_menu_submenu_callback,
             passy);

@@ -6,16 +6,16 @@
 #define TAG "SceneAdvancedMenu"
 
 static const char* dg_names[] = {
-    "DG3",
-    "DG4",
+    "DG3 (fingers)",
+    "DG4 (iris)",
     "DG5",
     "DG6",
-    "DG7",
+    "DG7 (signature)",
     "DG8",
     "DG9",
     "DG10",
-    "DG11",
-    "DG12",
+    "DG11 (addl person info)",
+    "DG12 (addl doc info)",
     "DG13",
     "DG14",
     "DG15"};
