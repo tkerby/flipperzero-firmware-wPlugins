@@ -32,8 +32,8 @@
 
 #define HID_INTERVAL 1
 
-#define HID_VID_DEFAULT 0x0e6f // Logic3
-#define HID_PID_DEFAULT 0x0241
+#define HID__VID_DEFAULT 0x0e6f // Logic3
+#define HID__PID_DEFAULT 0x0241
 
 #define USB_EP0_SIZE 64
 PLACE_IN_SECTION("MB_MEM2") static uint32_t ubuf[0x20];
@@ -279,8 +279,8 @@ static struct usb_device_descriptor hid_device_desc = {
     .bDeviceSubClass = USB_SUBCLASS_NONE,
     .bDeviceProtocol = USB_PROTO_NONE,
     .bMaxPacketSize0 = USB_EP0_SIZE,
-    .idVendor = HID_VID_DEFAULT,
-    .idProduct = HID_PID_DEFAULT,
+    .idVendor = HID__VID_DEFAULT,
+    .idProduct = HID__PID_DEFAULT,
     .bcdDevice = VERSION_BCD(1, 0, 0),
     .iManufacturer = 1,
     .iProduct = 2,
@@ -547,8 +547,8 @@ static void hid_init(usbd_device* dev, FuriHalUsbInterface* intf, void* ctx) {
     usb_hid.dev_descr->iProduct = 0;
     usb_hid.str_manuf_descr = NULL;
     usb_hid.str_prod_descr = NULL;
-    usb_hid.dev_descr->idVendor = HID_VID_DEFAULT;
-    usb_hid.dev_descr->idProduct = HID_PID_DEFAULT;
+    usb_hid.dev_descr->idVendor = HID__VID_DEFAULT;
+    usb_hid.dev_descr->idProduct = HID__PID_DEFAULT;
 
     if(cfg != NULL) {
         usb_hid.dev_descr->idVendor = cfg->vid;

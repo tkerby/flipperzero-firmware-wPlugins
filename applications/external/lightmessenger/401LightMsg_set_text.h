@@ -18,7 +18,6 @@
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 
-
 typedef enum {
     SetTextInputSaveEvent,
 } SetTextInputEvent;
