@@ -5,6 +5,7 @@
  *    + Tixlegeek
  */
 #include "401LightMsg_set_text.h"
+#include "401LightMsg_main.h"
 
 static const char* TAG = "401_LightMsgSetText";
 /**

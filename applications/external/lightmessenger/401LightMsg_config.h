@@ -104,7 +104,7 @@ extern const char* const lightmsg_speed_text[];
 extern const uint32_t lightmsg_width_value[];
 extern const char* const lightmsg_width_text[];
 
-AppConfig* app_config_alloc();
+AppConfig* app_config_alloc(void* ctx);
 void app_config_free(AppConfig* appConfig);
 View* app_config_get_view(AppConfig* appConfig);
 void app_scene_config_on_enter(void* ctx);

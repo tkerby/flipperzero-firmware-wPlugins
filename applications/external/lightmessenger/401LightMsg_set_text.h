@@ -18,7 +18,6 @@
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 
-#include "401LightMsg_main.h"
 
 typedef enum {
     SetTextInputSaveEvent,
