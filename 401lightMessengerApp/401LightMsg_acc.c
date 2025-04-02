@@ -521,7 +521,31 @@ void app_scene_acc_on_enter(void* ctx) {
         break;
     case APPACC_DISPLAYMODE_BITMAP:
         if(set_bitmap_dialog(ctx)) {
-            appAcc->bitmapMatrix = bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
+            // "demo_0.bmp"  strlen=10, path[4]='_', path[5]='0'
+            size_t len = strlen(light_msg_data->bitmapPath);
+            if((len > 6 /*strlen("_0.bmp")*/) && (light_msg_data->bitmapPath[len - 6] == '_') &&
+               (light_msg_data->bitmapPath[len - 5] == '0')) {
+                bitmapMatrix* bitMatrix_last = NULL;
+                for(int i = 0; i < 10; i++) {
+                    light_msg_data->bitmapPath[len - 5] = '0' + i;
+                    int res = bmp_header_check_1bpp(light_msg_data->bitmapPath);
+                    if(res == 0) {
+                        if(appAcc->bitmapMatrix == NULL) {
+                            appAcc->bitmapMatrix = bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
+                            bitMatrix_last = appAcc->bitmapMatrix;
+                        } else {
+                            bitMatrix_last->next_bitmap =
+                                bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
+                            bitMatrix_last = bitMatrix_last->next_bitmap;
+                        }
+                    } else {
+                        // Stop on first invalid (or missing) file.
+                        break;
+                    }
+                }
+            } else {
+                appAcc->bitmapMatrix = bmp_to_bitmapMatrix(light_msg_data->bitmapPath);
+            }
         } else {
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, AppSceneMainMenu);
