@@ -9,7 +9,6 @@
 #include "401LightMsg_config.h"
 #include "bmp.h"
 #include "font.h"
-#include "gui/gui.h"
 #include "gui/view_dispatcher.h"
 
 #define PI  3.14159

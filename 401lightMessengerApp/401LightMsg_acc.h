@@ -45,7 +45,7 @@ typedef struct AppAcc {
 
 #include "401LightMsg_main.h"
 
-AppAcc* app_acc_alloc();
+AppAcc* app_acc_alloc(void* ctx);
 View* app_acc_get_view(AppAcc* appAcc);
 void app_acc_render_callback(Canvas* canvas, void* model);
 void app_acc_free(AppAcc* appAcc);

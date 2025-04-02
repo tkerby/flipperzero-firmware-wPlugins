@@ -368,7 +368,7 @@ void on_change_width(VariableItem* item) {
 
 /**
  * @brief Allocate memory and initialize the app configuration.
- *
+ * @param ctx The application context.
  * @return Returns a pointer to the allocated AppConfig.
  */
 
