@@ -40,6 +40,12 @@ void passy_scene_main_menu_on_enter(void* context) {
 
         submenu_add_item(
             submenu,
+            "Read COM",
+            SubmenuIndexReadCOM,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+        submenu_add_item(
+            submenu,
             "Read DG1",
             SubmenuIndexReadDG1,
             passy_scene_main_menu_submenu_callback,
@@ -72,6 +78,10 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } else if(event.event == SubmenuIndexDeleteMRZInfo) {
             scene_manager_next_scene(passy->scene_manager, PassySceneDelete);
+            consumed = true;
+        } else if(event.event == SubmenuIndexReadCOM) {
+            passy->read_type = PassyReadCOM;
+            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
             consumed = true;
         } else if(event.event == SubmenuIndexReadDG1) {
             passy->read_type = PassyReadDG1;
