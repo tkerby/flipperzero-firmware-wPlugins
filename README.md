@@ -72,6 +72,14 @@ You can download the fap file directly from the repo directly and put it on the 
 │         [ OK to Exit ]       │
 └──────────────────────────────┘
 ```
+## Real Example 
+
+#### Connected 
+<img width="256" alt="Connected" src="https://github.com/user-attachments/assets/07fe8252-ff67-45f8-b02f-43aae2bfd305" />
+
+#### Disconnected 
+<img width="256" alt="Disconnected" src="https://github.com/user-attachments/assets/7567c1fc-2582-475b-96b4-4bda32da34b0" />
+
 
 ## Technical Details
 
