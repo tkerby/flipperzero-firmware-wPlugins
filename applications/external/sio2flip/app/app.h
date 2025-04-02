@@ -47,7 +47,7 @@ typedef enum {
     AppViewVariableList,
     AppViewFddScreen,
     AppViewXexScreen,
-    AppViewWiring,
+    AppViewPopup,
     AppViewDialog,
     AppViewFileBrowser,
 } AppView;

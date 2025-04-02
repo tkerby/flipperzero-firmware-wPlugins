@@ -138,7 +138,7 @@ static App* app_alloc() {
         app->view_dispatcher, AppViewXexScreen, xex_screen_get_view(app->xex_screen));
 
     app->popup = popup_alloc();
-    view_dispatcher_add_view(app->view_dispatcher, AppViewWiring, popup_get_view(app->popup));
+    view_dispatcher_add_view(app->view_dispatcher, AppViewPopup, popup_get_view(app->popup));
 
     app->dialog = dialog_ex_alloc();
     view_dispatcher_add_view(app->view_dispatcher, AppViewDialog, dialog_ex_get_view(app->dialog));
@@ -206,7 +206,7 @@ static void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppViewNumberInput);
     number_input_free(app->number_input);
 
-    view_dispatcher_remove_view(app->view_dispatcher, AppViewWiring);
+    view_dispatcher_remove_view(app->view_dispatcher, AppViewPopup);
     popup_free(app->popup);
 
     view_dispatcher_remove_view(app->view_dispatcher, AppViewDialog);
@@ -237,6 +237,7 @@ static void app_free(App* app) {
 static void app_run(App* app) {
     // Switch to the fdd emulator screen
     scene_manager_next_scene(app->scene_manager, SceneMainMenu);
+    scene_manager_next_scene(app->scene_manager, SceneSplashScreen);
 
     FURI_LOG_D(TAG, "Running view dispatcher...");
     view_dispatcher_run(app->view_dispatcher);
