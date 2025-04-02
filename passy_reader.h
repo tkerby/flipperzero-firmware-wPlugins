@@ -28,6 +28,7 @@ typedef struct {
     BitBuffer* rx_buffer;
 
     BitBuffer* DG1;
+    BitBuffer* COM;
 
     SecureMessaging* secure_messaging;
 

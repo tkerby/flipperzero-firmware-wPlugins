@@ -47,6 +47,7 @@ PassyReader* passy_reader_alloc(Passy* passy) {
     furi_assert(passy);
     passy_reader->passy = passy;
     passy_reader->DG1 = passy->DG1;
+    passy_reader->COM = passy->COM;
     passy_reader->tx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
     passy_reader->rx_buffer = bit_buffer_alloc(PASSY_READER_MAX_BUFFER_SIZE);
 
@@ -317,6 +318,7 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
         }
 
         if(passy->read_type == PassyReadCOM) {
+            bit_buffer_reset(passy_reader->COM);
             uint8_t header[4];
             ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
             if(ret != NfcCommandContinue) {
@@ -327,9 +329,7 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
             }
             size_t body_size = 1 + asn1_length_length(header + 1) + asn1_length(header + 1);
             uint8_t body_offset = sizeof(header);
-
-            BitBuffer* com_buffer = bit_buffer_alloc(body_size);
-            bit_buffer_append_bytes(com_buffer, header, sizeof(header));
+            bit_buffer_append_bytes(passy_reader->COM, header, sizeof(header));
             do {
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderReading);
@@ -342,42 +342,9 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
                         passy->view_dispatcher, PassyCustomEventReaderError);
                     break;
                 }
-                bit_buffer_append_bytes(com_buffer, chunk, Le);
+                bit_buffer_append_bytes(passy_reader->COM, chunk, Le);
                 body_offset += Le;
             } while(body_offset < body_size);
-
-            COM_t* com = 0;
-            com = calloc(1, sizeof *com);
-            assert(com);
-            asn_dec_rval_t rval = asn_decode(
-                0,
-                ATS_DER,
-                &asn_DEF_COM,
-                (void**)&com,
-                bit_buffer_get_data(com_buffer),
-                bit_buffer_get_size_bytes(com_buffer));
-
-            if(rval.code == RC_OK) {
-                FURI_LOG_I(TAG, "ASN.1 decode success");
-
-                char payloadDebug[384] = {0};
-                memset(payloadDebug, 0, sizeof(payloadDebug));
-                (&asn_DEF_COM)
-                    ->op->print_struct(&asn_DEF_COM, com, 1, print_struct_callback, payloadDebug);
-                if(strlen(payloadDebug) > 0) {
-                    FURI_LOG_D(TAG, "COM: %s", payloadDebug);
-                } else {
-                    FURI_LOG_D(TAG, "Received empty Payload");
-                }
-
-            } else {
-                FURI_LOG_E(TAG, "ASN.1 decode failed: %d.  %d consumed", rval.code, rval.consumed);
-                passy_log_bitbuffer(TAG, "COM", com_buffer);
-            }
-
-            bit_buffer_free(com_buffer);
-            free(com);
-            com = 0;
 
         } else if(passy->read_type == PassyReadDG1) {
             bit_buffer_reset(passy->DG1);
