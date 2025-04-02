@@ -93,14 +93,14 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
     Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
     Iso14443_4bError error;
 
-    passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
+    // passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
     error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
     if(error != Iso14443_4bErrorNone) {
         FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
         return NfcCommandStop;
     }
     bit_buffer_reset(tx_buffer);
-    passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    // passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
 
     // Check SW
     size_t length = bit_buffer_get_size_bytes(rx_buffer);
