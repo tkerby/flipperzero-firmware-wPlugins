@@ -1,10 +1,18 @@
 ASN_MODULE_SRCS=	\
 	./lib/asn1/MRZ.c	\
-	./lib/asn1/DG1.c
+	./lib/asn1/LDSVersion.c	\
+	./lib/asn1/UnicodeVersion.c	\
+	./lib/asn1/DataGroups.c	\
+	./lib/asn1/DG1.c	\
+	./lib/asn1/COM.c
 
 ASN_MODULE_HDRS=	\
 	./lib/asn1/MRZ.h	\
-	./lib/asn1/DG1.h
+	./lib/asn1/LDSVersion.h	\
+	./lib/asn1/UnicodeVersion.h	\
+	./lib/asn1/DataGroups.h	\
+	./lib/asn1/DG1.h	\
+	./lib/asn1/COM.h
 
 ASN_MODULE_HDRS+=./lib/asn1/OPEN_TYPE.h
 ASN_MODULE_SRCS+=./lib/asn1/OPEN_TYPE.c

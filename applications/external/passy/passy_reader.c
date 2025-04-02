@@ -4,6 +4,9 @@
 #define PASSY_READER_DG1_CHUNK_SIZE 0x20
 #define PASSY_READER_DG2_CHUNK_SIZE 0x20
 
+#define ASN_EMIT_DEBUG 0
+#include <lib/asn1/COM.h>
+
 static uint8_t passport_aid[] = {0xA0, 0x00, 0x00, 0x02, 0x47, 0x10, 0x01};
 static uint8_t select_header[] = {0x00, 0xA4, 0x04, 0x0C};
 
@@ -313,7 +316,70 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
             break;
         }
 
-        if(passy->read_type == PassyReadDG1) {
+        if(passy->read_type == PassyReadCOM) {
+            uint8_t header[4];
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
+            if(ret != NfcCommandContinue) {
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderError);
+
+                break;
+            }
+            size_t body_size = 1 + asn1_length_length(header + 1) + asn1_length(header + 1);
+            uint8_t body_offset = sizeof(header);
+
+            BitBuffer* com_buffer = bit_buffer_alloc(body_size);
+            bit_buffer_append_bytes(com_buffer, header, sizeof(header));
+            do {
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderReading);
+                uint8_t chunk[PASSY_READER_DG1_CHUNK_SIZE];
+                uint8_t Le = MIN(sizeof(chunk), (size_t)(body_size - body_offset));
+
+                ret = passy_reader_read_binary(passy_reader, body_offset, Le, chunk);
+                if(ret != NfcCommandContinue) {
+                    view_dispatcher_send_custom_event(
+                        passy->view_dispatcher, PassyCustomEventReaderError);
+                    break;
+                }
+                bit_buffer_append_bytes(com_buffer, chunk, Le);
+                body_offset += Le;
+            } while(body_offset < body_size);
+
+            COM_t* com = 0;
+            com = calloc(1, sizeof *com);
+            assert(com);
+            asn_dec_rval_t rval = asn_decode(
+                0,
+                ATS_DER,
+                &asn_DEF_COM,
+                (void**)&com,
+                bit_buffer_get_data(com_buffer),
+                bit_buffer_get_size_bytes(com_buffer));
+
+            if(rval.code == RC_OK) {
+                FURI_LOG_I(TAG, "ASN.1 decode success");
+
+                char payloadDebug[384] = {0};
+                memset(payloadDebug, 0, sizeof(payloadDebug));
+                (&asn_DEF_COM)
+                    ->op->print_struct(&asn_DEF_COM, com, 1, print_struct_callback, payloadDebug);
+                if(strlen(payloadDebug) > 0) {
+                    FURI_LOG_D(TAG, "COM: %s", payloadDebug);
+                } else {
+                    FURI_LOG_D(TAG, "Received empty Payload");
+                }
+
+            } else {
+                FURI_LOG_E(TAG, "ASN.1 decode failed: %d.  %d consumed", rval.code, rval.consumed);
+                passy_log_bitbuffer(TAG, "COM", com_buffer);
+            }
+
+            bit_buffer_free(com_buffer);
+            free(com);
+            com = 0;
+
+        } else if(passy->read_type == PassyReadDG1) {
             bit_buffer_reset(passy->DG1);
             uint8_t header[4];
             ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
