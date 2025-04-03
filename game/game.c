@@ -123,20 +123,20 @@ static void game_stop(void *ctx)
     imu_free(game_context->imu);
     game_context->imu = NULL;
 
-    if (game_context->game_mode == GAME_MODE_PVP)
-    {
-        // close websocket
-        if (game_context->fhttp)
-        {
-            flipper_http_websocket_stop(game_context->fhttp);
-            flipper_http_free(game_context->fhttp);
-        }
-    }
-
     // clear current level early
     if (game_context->levels[game_context->current_level])
     {
         level_clear(game_context->levels[game_context->current_level]);
+    }
+
+    if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        if (game_context->fhttp)
+        {
+            flipper_http_websocket_stop(game_context->fhttp); // close websocket
+            remove_player_from_lobby(game_context->fhttp);    // remove player from lobby
+            flipper_http_free(game_context->fhttp);
+        }
     }
 
     PlayerContext *player_context = malloc(sizeof(PlayerContext));
@@ -154,6 +154,7 @@ static void game_stop(void *ctx)
         easy_flipper_dialog(
             "Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
 
+    // save the player context
     if (load_player_context(player_context))
     {
         ViewPort *view_port = view_port_alloc();
