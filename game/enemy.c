@@ -16,7 +16,8 @@ static EntityContext *enemy_generic_alloc(
     float attack_timer,
     float strength,
     float health,
-    bool is_user)
+    bool is_user,
+    FuriString *username)
 {
     if (!enemy_context_generic)
     {
@@ -47,6 +48,15 @@ static EntityContext *enemy_generic_alloc(
     enemy_context_generic->radius = (size.x + size.y) / 4.0f;
     //
     enemy_context_generic->is_user = is_user;
+    //
+    if (username != NULL)
+    {
+        snprintf(enemy_context_generic->username, sizeof(enemy_context_generic->username), "%s", furi_string_get_cstr(username));
+    }
+    else
+    {
+        snprintf(enemy_context_generic->username, sizeof(enemy_context_generic->username), "SYSTEM_ENEMY");
+    }
     return enemy_context_generic;
 }
 
@@ -410,6 +420,23 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
         return;
     }
 
+    // Get player context
+    PlayerContext *pctx = entity_context_get(game_context->player);
+    if (!pctx)
+    {
+        FURI_LOG_E(TAG, "Failed to get player context");
+        return;
+    }
+
+    // check username
+    if (strlen(enemy->username) == 0 ||
+        is_str(enemy->username, "SYSTEM_ENEMY") ||
+        is_str(pctx->username, enemy->username))
+    {
+        // Invalid username
+        return;
+    }
+
     if (game_context->fhttp->last_response != NULL && strlen(game_context->fhttp->last_response) > 0)
     {
         // parse the response and set the enemy position
@@ -668,7 +695,8 @@ const EntityDescription *enemy(
     float attack_timer,
     float strength,
     float health,
-    bool is_user)
+    bool is_user,
+    FuriString *username)
 
 {
     SpriteContext *sprite_context = get_sprite_context(id);
@@ -690,7 +718,7 @@ const EntityDescription *enemy(
         attack_timer,
         strength,
         health,
-        is_user);
+        is_user, username);
     if (!enemy_context_generic)
     {
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
@@ -763,6 +791,9 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
         is_user_value = strstr(furi_string_get_cstr(is_user), "true") != NULL;
     }
 
+    FuriString *username = get_json_value_furi("username", json);
+    // no need to check for username, it is optional
+
     GameContext *game_context = game_manager_game_context_get(manager);
     if (game_context && game_context->enemy_count < MAX_ENEMIES && !game_context->enemies[game_context->enemy_count])
     {
@@ -777,7 +808,7 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
                                                                                        atof_furi(attack_timer),
                                                                                        atof_furi(strength),
                                                                                        atof_furi(health),
-                                                                                       is_user_value));
+                                                                                       is_user_value, username));
         game_context->enemy_count++;
     }
 
@@ -797,5 +828,9 @@ void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
     if (is_user)
     {
         furi_string_free(is_user);
+    }
+    if (username)
+    {
+        furi_string_free(username);
     }
 }
