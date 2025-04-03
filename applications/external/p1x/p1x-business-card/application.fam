@@ -1,0 +1,9 @@
+App(
+    appid="p1x_business_card",  # Must be lowercase, numbers and underscores only
+    name="P1X Business Card",    # Display name
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="p1x_business_card_main",  # Function name in C file
+    stack_size=1 * 1024,
+    fap_category="P1X",
+    fap_icon="p1x_business_card.png",  # Optional icon path
+)
