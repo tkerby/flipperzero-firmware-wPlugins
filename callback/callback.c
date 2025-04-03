@@ -1649,12 +1649,17 @@ static bool create_pvp_enemy(FuriString *lobby_details)
             furi_string_free(health);
         if (attack_timer)
             furi_string_free(attack_timer);
+        return false;
     }
 
     // create enemy data
     FuriString *enemy_data = furi_string_alloc();
-    furi_string_printf(enemy_data, "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},\"move_timer\":1,\"speed\":1,\"attack_timer\":%s,\"strength\":%s,\"health\":%s}]}",
-                       furi_string_get_cstr(attack_timer), furi_string_get_cstr(strength), furi_string_get_cstr(health));
+    furi_string_printf(
+        enemy_data,
+        "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},\"move_timer\":1,\"speed\":1,\"attack_timer\":%s,\"strength\":%s,\"health\":%s}]}",
+        furi_string_get_cstr(attack_timer),
+        furi_string_get_cstr(strength),
+        furi_string_get_cstr(health));
 
     char directory_path[128];
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
