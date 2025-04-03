@@ -648,6 +648,7 @@ void free_game_submenu(void *context)
         app->submenu_game = NULL;
     }
 }
+static uint32_t lobby_index = -1;
 static char *lobby_list[10];
 static void free_submenu_lobby(void *context)
 {
@@ -1544,6 +1545,7 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     }
 }
+
 static void callback_submenu_lobby_choices(void *context, uint32_t index)
 {
     /* Handle other game lobbies
@@ -1559,7 +1561,7 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
     }
     if (index >= FlipWorldSubmenuIndexLobby && index < FlipWorldSubmenuIndexLobby + 10)
     {
-        uint32_t lobby_index = index - FlipWorldSubmenuIndexLobby;
+        lobby_index = index - FlipWorldSubmenuIndexLobby;
 
         FlipperHTTP *fhttp = flipper_http_alloc();
         if (!fhttp)
@@ -1569,9 +1571,18 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             return;
         }
 
-        // send the request to fetch the lobby details
+        char username[64];
+        if (!load_char("Flip-Social-Username", username, sizeof(username)))
+        {
+            FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+            easy_flipper_dialog("Error", "Failed to load saved username. Go to settings to update.");
+            flipper_http_free(fhttp);
+            return;
+        }
+
+        // send the request to fetch the lobby details, with player_username
         char url[128];
-        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/%s/", lobby_list[lobby_index]);
+        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/get/%s/%s/", lobby_list[lobby_index], username);
         snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/lobbies/%s.json", lobby_list[lobby_index]);
         fhttp->save_received_data = true;
 
@@ -1588,16 +1599,6 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
 
         bool parse_lobby()
         {
-            /*
-            expected output from fhttp->file_path
-           {"id":"new","player_count":1,"player_list":["JBlanked"],"player_stats":[{"username":"JBlanked","level":16,"xp":25511,"health":90,"strength":12,"max_health":100,"health_regen":1,"elapsed_health_regen":0,"attack_timer":0.1,"elapsed_attack_timer":0,"direction":"up","state":"moving","start_position_x":450,"start_position_y":300,"dx":5,"dy":0}],"data":{}}
-
-           expected out to save
-           {"enemy_data":[{"id":"cyclops","index":0,"start_position":{"x":350,"y":210},"end_position":{"x":350,"y":210},"move_timer":1,"speed":1,"attack_timer":0.1,"strength":12,"health":100"}]}
-           */
-            // we need to save the first player's stats as enemy_data for the pvp_world, so that the game renders the player as an Enemy using EnemyContext
-            // saved at STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_json_data.json
-            // ensure flip_world directory exists
             char directory_path[128];
             snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
             Storage *storage = furi_record_open(RECORD_STORAGE);
@@ -1610,6 +1611,10 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
 
             snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world/pvp_world_enemy_data.json");
 
+            // remove the enemy_data file if it exists
+            storage_simply_remove_recursive(storage, directory_path);
+
+            // load the lobby details
             FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
             if (!lobby)
             {
@@ -1617,6 +1622,60 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
                 flipper_http_free(fhttp);
                 return false;
             }
+
+            // check if the player is in the lobby
+            FuriString *is_in_game = get_json_value_furi("is_in_game", lobby);
+            FuriString *player_count = get_json_value_furi("player_count", lobby);
+            if (!is_in_game || !player_count)
+            {
+                FURI_LOG_E(TAG, "Failed to get player count");
+                furi_string_free(lobby);
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            if (is_str(furi_string_get_cstr(is_in_game), "true"))
+            {
+                FURI_LOG_E(TAG, "Player is already in game");
+                furi_string_free(lobby);
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            // add the user to the lobby
+            bool join_lobby()
+            {
+                char url[128];
+                char payload[128];
+                snprintf(payload, sizeof(payload), "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, lobby_list[lobby_index]);
+                save_char("pvp_lobby_name", lobby_list[lobby_index]); // save the lobby name
+                snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/join/");
+                return flipper_http_request(fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload);
+            }
+            bool parse_join()
+            {
+                // true as long as the request was successful
+                return fhttp->state != ISSUE;
+            }
+
+            // well.. we need to wait for the response to be received
+            if (!flipper_http_process_response_async(fhttp, join_lobby, parse_join))
+            {
+                FURI_LOG_E(TAG, "Failed to join lobby");
+                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                return false;
+            }
+
+            if (atoi(furi_string_get_cstr(player_count)) == 0)
+            {
+                // player is the only one in lobby so don't process any enemies yet
+                FURI_LOG_I(TAG, "No enemies in lobby");
+                furi_string_free(lobby);
+                return true;
+            }
+
+            // only an enemy is in the lobby
 
             // parse the lobby details
             FuriString *player_stats = get_json_array_value_furi("player_stats", 0, lobby);
@@ -1629,12 +1688,12 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             }
 
             // available keys from player_stats
-            FuriString *username = get_json_value_furi("username", player_stats);
+            FuriString *fw_username = get_json_value_furi("username", player_stats);
             FuriString *strength = get_json_value_furi("strength", player_stats);
             FuriString *health = get_json_value_furi("health", player_stats);
             FuriString *attack_timer = get_json_value_furi("attack_timer", player_stats);
 
-            if (!username || !strength || !health || !attack_timer)
+            if (!fw_username || !strength || !health || !attack_timer)
             {
                 FURI_LOG_E(TAG, "Failed to get player stats");
                 furi_string_free(player_stats);
@@ -1657,10 +1716,11 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
                 furi_string_free(enemy_data);
                 furi_string_free(player_stats);
                 furi_string_free(lobby);
-                furi_string_free(username);
+                furi_string_free(fw_username);
                 furi_string_free(strength);
                 furi_string_free(health);
                 furi_string_free(attack_timer);
+                flipper_http_free(fhttp);
                 return false;
             }
 
@@ -1674,7 +1734,7 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             furi_string_free(enemy_data);
             furi_string_free(player_stats);
             furi_string_free(lobby);
-            furi_string_free(username);
+            furi_string_free(fw_username);
             furi_string_free(strength);
             furi_string_free(health);
             furi_string_free(attack_timer);
@@ -1694,15 +1754,12 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
         // start the websocket session
         bool start_ws()
         {
+            fhttp->state = IDLE; // ensure it's set to IDLE for the next request
             char websocket_url[128];
             snprintf(websocket_url, sizeof(websocket_url), "ws://www.jblanked.com/ws/game/%s/", lobby_list[lobby_index]);
-            if (!flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}"))
-            {
-                FURI_LOG_E(TAG, "Failed to start websocket session");
-                return false;
-            }
-            return true;
+            return flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}");
         }
+
         bool parse_ws()
         {
             // for now just return true and the game will handle the rest
