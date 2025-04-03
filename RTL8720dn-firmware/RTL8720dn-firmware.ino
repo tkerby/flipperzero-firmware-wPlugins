@@ -644,16 +644,8 @@ void loop() {
         }
         Serial.println();
         mac.replace(":","");
-        int ret = wifi_set_mac_address((char *)mac.c_str());
         Serial.println(mac.c_str());
-        wifi_change_mac_address_from_ram(1,customMac);
-        printCurrentNet();
-        if(ret>=0){
-          DEBUG_SER_PRINT("APMAC >0\n");
-        }else{
-          DEBUG_SER_PRINT("APMAC not >0\n");
-        }
-
+        int ret = wifi_change_mac_address_from_ram(1,customMac);
       }else{
         useCustomMac=false;
       }
@@ -801,7 +793,8 @@ void loop() {
               //if (path == "/") {
                 switch(portal){
                   case 0:
-                  handleRoot(client,"asdfg");
+                  DEBUG_SER_PRINT(scan_results[deauth_wifis[0]].ssid);
+                  handleRoot(client,scan_results[deauth_wifis[0]].ssid);
                   break;
                   case 1:
                   handleFB(client);
