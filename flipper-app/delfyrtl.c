@@ -97,7 +97,10 @@ const char* const deauth_reasons[25] = {
     "IEEE 802.1X authentication failed.",
     "Cipher suite rejected because of the security policy.",
 };
-
+static const Icon* rick[] = {&I_rick0,  &I_rick1,  &I_rick2,  &I_rick3,  &I_rick4,  &I_rick5,
+                             &I_rick6,  &I_rick7,  &I_rick8,  &I_rick9,  &I_rick10, &I_rick11,
+                             &I_rick12, &I_rick13, &I_rick14, &I_rick15, &I_rick16, &I_rick17,
+                             &I_rick18, &I_rick19, &I_rick20, &I_rick21, &I_rick22, &I_rick23};
 const char* const mac_type[4] = {
     "Default",
     "Same as AP",
@@ -141,6 +144,8 @@ typedef struct delfyRTL {
     int mac_type;
     char customMac[18];
     uint8_t byte_input_store[MAC_LENGH];
+    FuriTimer* timer;
+    int rickIndex;
 } delfyRTL;
 
 //Las opciones del menu
@@ -764,7 +769,9 @@ void beacon_info_scene_on_enter(void* context) {
         break;
     case 2:
         widget_add_string_element(
-            app->widget, 64, 10, AlignCenter, AlignTop, FontPrimary, "RickRoll");
+            app->widget, 90, 10, AlignCenter, AlignTop, FontPrimary, "RickRoll");
+        widget_add_icon_element(app->widget, 0, 0, rick[0]);
+        furi_timer_start(app->timer, 300);
         break;
     }
     view_dispatcher_switch_to_view(app->view_dispatcher, beaconInfoView);
@@ -779,6 +786,7 @@ bool beacon_info_scene_on_event(void* context, SceneManagerEvent event) {
 void beacon_info_scene_on_exit(void* context) {
     UNUSED(context);
     delfyRTL* app = context;
+    furi_timer_stop(app->timer);
     uart_helper_send(app->uart_helper, "STOP\n", 5);
 }
 
@@ -929,6 +937,40 @@ void uart_process_line(FuriString* line, void* context) {
     }
 }
 
+static void animation_timer_callback(void* context) {
+    delfyRTL* app = context;
+    if(app->rickIndex % 4 == 0) {
+        widget_reset(app->widget);
+        widget_add_string_element(
+            app->widget, 90, 10, AlignCenter, AlignTop, FontPrimary, "RickRoll");
+        if(app->rickIndex >= 8) {
+            widget_add_string_multiline_element(
+                app->widget,
+                128,
+                30,
+                AlignRight,
+                AlignCenter,
+                FontSecondary,
+                "Never gonna\ngive you up");
+        }
+        if(app->rickIndex >= 16) {
+            widget_add_string_multiline_element(
+                app->widget,
+                64,
+                53,
+                AlignLeft,
+                AlignCenter,
+                FontSecondary,
+                "Never gonna\nlet you down");
+        }
+    }
+    app->rickIndex = (app->rickIndex + 1) % 24;
+
+    widget_add_icon_element(app->widget, 0, 0, rick[app->rickIndex]);
+
+    //furi_timer_start(app->timer, 300);
+}
+
 static delfyRTL* app_alloc() {
     FURI_LOG_D(TAG, __func__);
     delfyRTL* app = malloc(sizeof(delfyRTL));
@@ -987,6 +1029,8 @@ static delfyRTL* app_alloc() {
     uart_helper_set_baud_rate(app->uart_helper, DEVICE_BAUDRATE);
     uart_helper_set_delimiter(app->uart_helper, LINE_DELIMITER, INCLUDE_LINE_DELIMITER);
     uart_helper_set_callback(app->uart_helper, uart_process_line, app);
+
+    app->timer = furi_timer_alloc(animation_timer_callback, FuriTimerTypePeriodic, app);
     return app;
 }
 
@@ -1018,6 +1062,8 @@ static void app_free(delfyRTL* app) {
 
     view_dispatcher_free(app->view_dispatcher); //Some events whre not processed
 
+    furi_timer_free(app->timer);
+
     menu_free(app->menu);
     submenu_free(app->submenu);
 
@@ -1030,6 +1076,7 @@ static void app_free(delfyRTL* app) {
     free(app->wifiList); // Liberar el array dinámico
     app->wifiList = NULL; // Evitar punteros colgantes
     app->wifiCount = 0; // Resetear el contador
+    app->rickIndex = 0;
 
     free(app->ssidAP);
     furi_record_close(RECORD_GUI);

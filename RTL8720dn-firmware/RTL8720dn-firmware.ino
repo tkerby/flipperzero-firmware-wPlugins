@@ -1,3 +1,4 @@
+
 #include "vector"
 #include "wifi_conf.h"
 #include "map"
@@ -99,7 +100,7 @@ const char* rick_roll[8] = {
 
 
 std::vector<WiFiScanResult> scan_results;
-std::vector<int> deauth_wifis, evil_wifis, wifis_temp;
+std::vector<int> deauth_wifis, wifis_temp;
 //WiFiServer server(80);
 uint8_t deauth_bssid[6];
 uint16_t deauth_reason = 2;
@@ -572,14 +573,14 @@ void loop() {
           wifis_temp.clear();
           unsigned int num_st_tmp;
           
-          for(int i=0; i<deauth_wifis.size(); i++){
+          for(unsigned int i=0; i<deauth_wifis.size(); i++){
             num_st_tmp=deauth_wifis[i];
             if(num_st_tmp != numStation){
               wifis_temp.push_back(num_st_tmp);
             }
           }
           deauth_wifis.clear();
-          for(int i=0; i<wifis_temp.size(); i++){
+          for(unsigned int i=0; i<wifis_temp.size(); i++){
             num_st_tmp=wifis_temp[i];
             deauth_wifis.push_back(num_st_tmp);
           }
@@ -591,6 +592,7 @@ void loop() {
         rickroll=false;
         ssid="";
       }
+      digitalWrite(LED_G, 0);
        
     }else if(readString.substring(0,6)=="RANDOM"){
       DEBUG_SER_PRINT("Start randomSSID\n");
@@ -735,6 +737,7 @@ void loop() {
   }
 
   if (randomSSID){
+    digitalWrite(LED_G, !digitalRead(LED_G));
     int randomIndex = random(0, 10);
     int randomChannel = allChannels[randomIndex];
     String ssid2 = generateRandomString(10);
@@ -750,6 +753,7 @@ void loop() {
     }
   }
   if (rickroll){
+    digitalWrite(LED_G, !digitalRead(LED_G));
     for (int v; v < 8; v++){
       String ssid2 = rick_roll[v];
       for(int i=0;i<7;i++){
@@ -766,7 +770,7 @@ void loop() {
   }
   if(ssid!=""){
     int channel = 5;
-    
+    digitalWrite(LED_G, !digitalRead(LED_G));
     wext_set_channel(WLAN0_NAME,channel);
     const char * ssid_cstr2 = ssid.c_str();
     for(int x=0; x<5; x++){
@@ -832,8 +836,3 @@ void loop() {
   }
   
 }
-
-
-  
-  
-
