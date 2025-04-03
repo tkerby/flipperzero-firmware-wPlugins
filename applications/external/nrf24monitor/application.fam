@@ -1,0 +1,20 @@
+App(
+    appid="nrf24_monitor",
+    name="NRF24 Monitor",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="nrf24_test_app",
+    stack_size=2048,  # Increased stack size for more complex operations
+    fap_version="1.0",
+    fap_icon="nrf24_10px.bmp",
+    fap_description="Monitor and analyze NRF24L01+ wireless traffic",
+    fap_author="CyberDemon73",
+    fap_weburl="https://github.com/CyberDemon73/flipperzero-nrf24monitor",
+    fap_category="GPIO",
+    requires=[
+        "gui",
+        "furi", 
+        "furi_hal", 
+        "furi_hal_gpio", 
+        "furi_hal_spi"
+    ]
+)
