@@ -3,7 +3,7 @@
 #include "flip_world.h"
 typedef struct
 {
-    char id[64];
+    char id[32];
     int index;
 } LevelContext;
 

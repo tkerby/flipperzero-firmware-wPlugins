@@ -6,12 +6,12 @@
 
 #define MAX_ENEMIES 5
 #define MAX_LEVELS 5
-#define MAX_NPCS 5
+#define MAX_NPCS 1
 
 // EntityContext definition
 typedef struct
 {
-    char id[64];                // Unique ID for the entity type
+    char id[32];                // Unique ID for the entity type
     int index;                  // Index for the specific entity instance
     Vector size;                // Size of the entity
     Sprite *sprite_right;       // Entity sprite when looking right
