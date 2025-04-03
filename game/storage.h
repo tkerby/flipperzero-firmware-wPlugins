@@ -7,6 +7,7 @@
 bool save_player_context(PlayerContext *player_context);
 bool save_player_context_api(PlayerContext *player_context, FlipperHTTP *fhttp);
 bool websocket_player_context(PlayerContext *player_context, FlipperHTTP *fhttp);
+bool remove_player_from_lobby(FlipperHTTP *fhttp);
 bool load_player_context(PlayerContext *player_context);
 bool set_player_context();
 
