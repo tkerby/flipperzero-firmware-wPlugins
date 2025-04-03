@@ -458,6 +458,15 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
 
         // FuriStrings are probably safer but we already last_response as a char*
 
+        // match username
+        char *u = get_json_value("u", game_context->fhttp->last_response);
+        if (!u || !is_str(u, enemy->username))
+        {
+            if (u)
+                free(u);
+            return;
+        }
+
         // we need the health, elapsed attack timer, direction, and position
         char *h = get_json_value("h", game_context->fhttp->last_response);
         char *eat = get_json_value("eat", game_context->fhttp->last_response);
