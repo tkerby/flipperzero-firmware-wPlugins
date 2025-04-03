@@ -20,7 +20,7 @@ bool is_enough_heap(size_t heap_size, bool check_blocks)
     const size_t min_free = memmgr_get_free_heap();
     if (min_free < min_heap)
     {
-        FURI_LOG_E(TAG, "Not enough heap memory: %zu bytes", min_free);
+        FURI_LOG_E(TAG, "Not enough heap memory: There are %zu bytes free.", min_free);
         return false;
     }
     if (check_blocks)
