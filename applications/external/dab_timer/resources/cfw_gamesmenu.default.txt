@@ -57,6 +57,9 @@ GamesMenuList Version 0
 /ext/apps/Games/montyhall.fap
 /ext/apps/Games/multi_counter.fap
 /ext/apps/Games/nu_pogodi.fap
+/ext/apps/Games/p1x_adventure.fap
+/ext/apps/Games/p1x_moon_phases.fap
+/ext/apps/Games/p1x_your_own_adventure.fap
 /ext/apps/Games/pacman.fap
 /ext/apps/Games/paint.fap
 /ext/apps/Games/paper_plane.fap
