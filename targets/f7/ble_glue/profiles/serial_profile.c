@@ -57,8 +57,8 @@ static const GapConfig serial_template_config = {
     .bonding_mode = true,
     .pairing_method = GapPairingPinCodeShow,
     .conn_param = {
-        .conn_int_min = 0x18, // AN5289: 4.7, we need at least 25ms + advertisement, which is 30 ms
-        .conn_int_max = 0x24, // 45 ms
+        .conn_int_min = CONNECTION_INTERVAL_MIN,
+        .conn_int_max = CONNECTION_INTERVAL_MAX,
         .slave_latency = 0,
         .supervisor_timeout = 0,
     }};
@@ -86,7 +86,7 @@ static const FuriHalBleProfileTemplate profile_callbacks = {
     .get_gap_config = ble_profile_serial_get_config,
 };
 
-const FuriHalBleProfileTemplate* ble_profile_serial = &profile_callbacks;
+const FuriHalBleProfileTemplate* const ble_profile_serial = &profile_callbacks;
 
 void ble_profile_serial_set_event_callback(
     FuriHalBleProfileBase* profile,
