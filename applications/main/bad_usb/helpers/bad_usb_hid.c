@@ -1,6 +1,7 @@
 #include "bad_usb_hid.h"
 #include "ble_hid_profile.h"
 #include <bt/bt_service/bt.h>
+#include <bt/bt_service/bt_i.h>
 #include <storage/storage.h>
 
 #define TAG "BadUSB HID"
@@ -13,14 +14,16 @@ void hid_usb_adjust_config(BadUsbHidConfig* hid_cfg) {
 }
 
 void* hid_usb_init(BadUsbHidConfig* hid_cfg) {
+    FuriHalUsbInterface* usb_if_prev = furi_hal_usb_get_config();
+    furi_hal_usb_unlock();
     hid_usb_adjust_config(hid_cfg);
     furi_check(furi_hal_usb_set_config(&usb_hid, &hid_cfg->usb));
-    return NULL;
+    return usb_if_prev;
 }
 
 void hid_usb_deinit(void* inst) {
-    UNUSED(inst);
-    furi_check(furi_hal_usb_set_config(NULL, NULL));
+    FuriHalUsbInterface* usb_if_prev = inst;
+    furi_check(furi_hal_usb_set_config(usb_if_prev, NULL));
 }
 
 void hid_usb_set_state_callback(void* inst, HidStateCallback cb, void* context) {
@@ -161,6 +164,7 @@ void hid_ble_adjust_config(BadUsbHidConfig* hid_cfg) {
 void* hid_ble_init(BadUsbHidConfig* hid_cfg) {
     BleHidInstance* ble_hid = malloc(sizeof(BleHidInstance));
     ble_hid->bt = furi_record_open(RECORD_BT);
+    ble_hid->bt->suppress_pin_screen = true;
     bt_disconnect(ble_hid->bt);
 
     // Wait 2nd core to update nvm storage
@@ -191,6 +195,7 @@ void hid_ble_deinit(void* inst) {
     bt_keys_storage_set_default_path(ble_hid->bt);
 
     furi_check(bt_profile_restore_default(ble_hid->bt));
+    ble_hid->bt->suppress_pin_screen = false;
     furi_record_close(RECORD_BT);
     free(ble_hid);
 }

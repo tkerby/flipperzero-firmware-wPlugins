@@ -180,6 +180,17 @@ void bad_usb_set_interface(BadUsbApp* app, BadUsbHidInterface interface) {
     bad_usb_view_set_interface(app->bad_usb_view, interface);
 }
 
+void bad_usb_app_show_loading_popup(BadUsbApp* app, bool show) {
+    if(show) {
+        // Raise timer priority so that animations can play
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
+        view_dispatcher_switch_to_view(app->view_dispatcher, BadUsbAppViewLoading);
+    } else {
+        // Restore default timer priority
+        furi_timer_set_thread_priority(FuriTimerThreadPriorityNormal);
+    }
+}
+
 BadUsbApp* bad_usb_app_alloc(char* arg) {
     BadUsbApp* app = malloc(sizeof(BadUsbApp));
 
@@ -236,23 +247,18 @@ BadUsbApp* bad_usb_app_alloc(char* arg) {
     view_dispatcher_add_view(
         app->view_dispatcher, BadUsbAppViewByteInput, byte_input_get_view(app->byte_input));
 
+    app->loading = loading_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, BadUsbAppViewLoading, loading_get_view(app->loading));
+
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    if(furi_hal_usb_is_locked()) {
-        app->error = BadUsbAppErrorCloseRpc;
-        app->usb_if_prev = NULL;
-        scene_manager_next_scene(app->scene_manager, BadUsbSceneError);
+    if(!furi_string_empty(app->file_path)) {
+        scene_manager_set_scene_state(app->scene_manager, BadUsbSceneWork, true);
+        scene_manager_next_scene(app->scene_manager, BadUsbSceneWork);
     } else {
-        app->usb_if_prev = furi_hal_usb_get_config();
-        furi_check(furi_hal_usb_set_config(NULL, NULL));
-
-        if(!furi_string_empty(app->file_path)) {
-            scene_manager_set_scene_state(app->scene_manager, BadUsbSceneWork, true);
-            scene_manager_next_scene(app->scene_manager, BadUsbSceneWork);
-        } else {
-            furi_string_set(app->file_path, BAD_USB_APP_BASE_FOLDER);
-            scene_manager_next_scene(app->scene_manager, BadUsbSceneFileSelect);
-        }
+        furi_string_set(app->file_path, BAD_USB_APP_BASE_FOLDER);
+        scene_manager_next_scene(app->scene_manager, BadUsbSceneFileSelect);
     }
 
     return app;
@@ -290,6 +296,10 @@ void bad_usb_app_free(BadUsbApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, BadUsbAppViewByteInput);
     byte_input_free(app->byte_input);
 
+    // Loading
+    view_dispatcher_remove_view(app->view_dispatcher, BadUsbAppViewLoading);
+    loading_free(app->loading);
+
     // View dispatcher
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
@@ -303,10 +313,6 @@ void bad_usb_app_free(BadUsbApp* app) {
 
     furi_string_free(app->file_path);
     furi_string_free(app->keyboard_layout);
-
-    if(app->usb_if_prev) {
-        furi_check(furi_hal_usb_set_config(app->usb_if_prev, NULL));
-    }
 
     free(app);
 }

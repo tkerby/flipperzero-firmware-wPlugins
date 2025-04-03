@@ -14,6 +14,7 @@
 #include <gui/modules/variable_item_list.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/byte_input.h>
+#include <gui/modules/loading.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/popup.h>
 #include "views/bad_usb_view.h"
@@ -26,7 +27,6 @@
 
 typedef enum {
     BadUsbAppErrorNoFiles,
-    BadUsbAppErrorCloseRpc,
 } BadUsbAppError;
 
 struct BadUsbApp {
@@ -40,6 +40,7 @@ struct BadUsbApp {
     VariableItemList* var_item_list;
     TextInput* text_input;
     ByteInput* byte_input;
+    Loading* loading;
 
     char ble_name_buf[FURI_HAL_BT_ADV_NAME_LENGTH];
     uint8_t ble_mac_buf[GAP_MAC_ADDR_SIZE];
@@ -55,7 +56,6 @@ struct BadUsbApp {
     BadUsbHidInterface interface;
     BadUsbHidConfig user_hid_cfg;
     BadUsbHidConfig script_hid_cfg;
-    FuriHalUsbInterface* usb_if_prev;
 };
 
 typedef enum {
@@ -65,6 +65,9 @@ typedef enum {
     BadUsbAppViewConfig,
     BadUsbAppViewByteInput,
     BadUsbAppViewTextInput,
+    BadUsbAppViewLoading,
 } BadUsbAppView;
 
 void bad_usb_set_interface(BadUsbApp* app, BadUsbHidInterface interface);
+
+void bad_usb_app_show_loading_popup(BadUsbApp* app, bool show);
