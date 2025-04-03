@@ -627,7 +627,7 @@ static bool alloc_game_submenu(void *context)
             return false;
         }
         submenu_add_item(app->submenu_game, "Tutorial", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
-        submenu_add_item(app->submenu_game, "PvP", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_game, "PvP (Beta)", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
         submenu_add_item(app->submenu_game, "PvE", FlipWorldSubmenuIndexPvE, callback_submenu_choices, app);
     }
     return true;
@@ -1378,6 +1378,7 @@ static void run(FlipWorldApp *app)
                 storage_common_mkdir(storage, directory_path);
                 furi_record_close(RECORD_STORAGE);
                 snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/pvp_lobbies.json");
+                storage_simply_remove_recursive(storage, fhttp->file_path); // ensure the file is empty
                 fhttp->save_received_data = true;
                 // 2 players max, 10 lobbies
                 return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/pvp/lobbies/2/10/", "{\"Content-Type\":\"application/json\"}", NULL);
