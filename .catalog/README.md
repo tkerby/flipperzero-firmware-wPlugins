@@ -2,14 +2,6 @@
 
 **Flipper Keyller** is an app for the [Flipper Zero](https://flipperzero.one/) that emulates the iconic sounds of the classic 80s keychain: the **Echo Keyller** (also known as the **Executor Keychain**). This vintage gadget produced laser-like sounds when pressing its buttons — and now, you can carry that nostalgic experience right on your Flipper!
 
-<p align='center'>
-<img src="./docs/portada.png" />
-</p>
-
-
-<p align='center'>
-<img src="./docs/Keychain-Executor.png" />
-</p>
 
 ## 🎮 Features
 
