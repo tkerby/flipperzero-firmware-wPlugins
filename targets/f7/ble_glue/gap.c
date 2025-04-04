@@ -201,8 +201,6 @@ BleEventFlowStatus ble_event_app_notification(void* pckt) {
 
             gap_verify_connection_parameters(gap);
 
-            // Save rssi for current connection
-            fetch_rssi();
             // Start pairing by sending security request
             if(gap->config->pairing_method != GapPairingNone) {
                 // Start pairing by sending security request
