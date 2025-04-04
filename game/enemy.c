@@ -3,7 +3,6 @@
 #include <notification/notification_messages.h>
 
 static EntityContext *enemy_context_generic;
-
 // Allocation function
 static EntityContext *enemy_generic_alloc(
     const char *id,
@@ -490,6 +489,7 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
                 free(x);
             if (y)
                 free(y);
+            free(u);
             return;
         }
 
@@ -514,10 +514,28 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
             enemy->direction = ENTITY_RIGHT;
             break;
         }
-        enemy->start_position.x = (float)atoi(x);
-        enemy->start_position.y = (float)atoi(y);
-        enemy->end_position.x = (float)atoi(x);
-        enemy->end_position.y = (float)atoi(y);
+
+        Vector new_pos = (Vector){
+            .x = (float)atoi(x),
+            .y = (float)atoi(y),
+        };
+
+        Entity *enemy_entity = game_context->enemies[enemy->index];
+        if (!enemy_entity)
+        {
+            FURI_LOG_E("Game", "PVP position: Enemy entity is NULL");
+            free(h);
+            free(eat);
+            free(d);
+            free(sp);
+            free(x);
+            free(y);
+            free(u);
+            return;
+        }
+
+        // set enemy position
+        entity_pos_set(entity_context_get(enemy_entity), new_pos);
 
         // free the strings
         free(h);
@@ -526,6 +544,7 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
         free(sp);
         free(x);
         free(y);
+        free(u);
     }
 }
 
