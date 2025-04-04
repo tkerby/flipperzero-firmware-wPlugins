@@ -3,6 +3,7 @@
 enum SubmenuIndex {
     SubmenuIndexSave,
     SubmenuIndexSaveAsLF,
+    SubmenuIndexParseSIO,
     SubmenuIndexSaveAsSeader,
     SubmenuIndexParse,
     SubmenuIndexChangeKey,
@@ -48,6 +49,12 @@ void picopass_scene_card_menu_on_enter(void* context) {
     }
 
     if(secured && has_sio) {
+        submenu_add_item(
+            submenu,
+            "Parse SIO",
+            SubmenuIndexParseSIO,
+            picopass_scene_card_menu_submenu_callback,
+            picopass);
         submenu_add_item(
             submenu,
             "Save in Seader fmt",
@@ -137,6 +144,11 @@ bool picopass_scene_card_menu_on_event(void* context, SceneManagerEvent event) {
                 picopass->scene_manager, PicopassSceneCardMenu, SubmenuIndexSave);
             scene_manager_next_scene(picopass->scene_manager, PicopassSceneSaveName);
             picopass->dev->format = PicopassDeviceSaveFormatPartial;
+            consumed = true;
+        } else if(event.event == SubmenuIndexParseSIO) {
+            scene_manager_set_scene_state(
+                picopass->scene_manager, PicopassSceneCardMenu, event.event);
+            scene_manager_next_scene(picopass->scene_manager, PicopassSceneParseSIO);
             consumed = true;
         } else if(event.event == SubmenuIndexSaveAsSeader) {
             scene_manager_set_scene_state(
