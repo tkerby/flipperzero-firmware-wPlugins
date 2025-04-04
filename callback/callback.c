@@ -166,11 +166,28 @@ static void vibration_on_change(VariableItem *item);
 static void player_on_change(VariableItem *item);
 static void vgm_x_change(VariableItem *item);
 static void vgm_y_change(VariableItem *item);
+//
+static uint8_t timer_iteration = 0; // timer iteration for the loading screen
+static uint8_t timer_refresh = 5;   // duration for timer to refresh
 
 uint32_t callback_to_submenu(void *context)
 {
     UNUSED(context);
     return FlipWorldViewSubmenu;
+}
+static uint32_t callback_to_submenu_lobby(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app);
+    // this is only called by WaitingLobby, so let's send the request
+    furi_timer_stop(app->timer);
+    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (fhttp)
+    {
+        remove_player_from_lobby(fhttp);
+        flipper_http_free(fhttp);
+    }
+    return FlipWorldViewLobby;
 }
 static uint32_t callback_to_wifi_settings(void *context)
 {
@@ -633,6 +650,40 @@ static bool alloc_game_submenu(void *context)
     return true;
 }
 
+static void waiting_lobby_draw_callback(Canvas *canvas, void *model)
+{
+    UNUSED(model);
+    canvas_clear(canvas);
+    canvas_draw_str(canvas, 0, 10, "Waiting for more players...");
+    // time elapsed based on timer_iteration and timer_refresh
+    // char str[32];
+    // snprintf(str, sizeof(str), "Time elapsed: %d seconds", timer_iteration * timer_refresh);
+    // FURI_LOG_I(TAG, "Time elapsed: %d seconds", timer_iteration * timer_refresh);
+    // canvas_draw_str(canvas, 0, 50, str);
+    canvas_draw_str(canvas, 0, 60, "Press BACK to cancel.");
+}
+static bool alloc_waiting_lobby_view(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return false;
+    }
+    if (!app->view_waiting_lobby)
+    {
+        if (!easy_flipper_set_view(&app->view_waiting_lobby, FlipWorldViewWaitingLobby, waiting_lobby_draw_callback, NULL, callback_to_submenu_lobby, &app->view_dispatcher, app))
+        {
+            return false;
+        }
+        if (!app->view_waiting_lobby)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void free_game_submenu(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -805,6 +856,35 @@ static void free_submenu_settings(void *context)
         app->submenu_settings = NULL;
     }
 }
+static void free_timer(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    if (app->timer)
+    {
+        furi_timer_free(app->timer);
+        app->timer = NULL;
+    }
+}
+static void free_waiting_lobby_view(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
+    if (app->view_waiting_lobby)
+    {
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewWaitingLobby);
+        view_free(app->view_waiting_lobby);
+        app->view_waiting_lobby = NULL;
+    }
+}
 static FuriThread *game_thread;
 static bool game_thread_running = false;
 void free_all_views(void *context, bool free_variable_list, bool free_settings_submenu, bool free_submenu_game)
@@ -848,6 +928,9 @@ void free_all_views(void *context, bool free_variable_list, bool free_settings_s
     {
         free_game_submenu(app);
     }
+
+    free_timer(app);
+    free_waiting_lobby_view(app);
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -1307,7 +1390,7 @@ static void run(FlipWorldApp *app)
         return;
     }
     free_all_views(app, true, true, false);
-    if (!is_enough_heap(60000, false)) // only need to check if they have 60k free (a 60k memory block is highly unlikely anyways)
+    if (!is_enough_heap(50000, false)) // only need to check if they have 50k free
     {
         easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
         return;
@@ -1709,83 +1792,54 @@ static bool create_pvp_enemy(FuriString *lobby_details)
 }
 // since we aren't using FURI_LOG, we will use easy_flipper_dialog and the last_error_message
 // char last_error_message[64];
-static bool parse_lobby(FlipperHTTP *fhttp)
+static size_t lobby_count(FlipperHTTP *fhttp, FuriString *lobby)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return -1;
+    }
+    if (!lobby)
+    {
+        FURI_LOG_E(TAG, "Lobby details are NULL");
+        return -1;
+    }
+    // check if the player is in the lobby
+    FuriString *player_count = get_json_value_furi("player_count", lobby);
+    if (!player_count)
+    {
+        FURI_LOG_E(TAG, "Failed to get player count");
+        return -1;
+    }
+    const size_t count = atoi(furi_string_get_cstr(player_count));
+    furi_string_free(player_count);
+    return count;
+}
+static bool in_lobby(FlipperHTTP *fhttp, FuriString *lobby)
 {
     if (!fhttp)
     {
         FURI_LOG_E(TAG, "FlipperHTTP is NULL");
         return false;
     }
-
-    // load the lobby details
-    FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
     if (!lobby)
     {
-        FURI_LOG_E(TAG, "Failed to load lobby details");
+        FURI_LOG_E(TAG, "Lobby details are NULL");
         return false;
     }
-
     // check if the player is in the lobby
     FuriString *is_in_game = get_json_value_furi("is_in_game", lobby);
-    FuriString *player_count = get_json_value_furi("player_count", lobby);
-    if (!is_in_game || !player_count)
+    if (!is_in_game)
     {
-        FURI_LOG_E(TAG, "Failed to get player count");
-        furi_string_free(lobby);
-        if (is_in_game)
-            furi_string_free(is_in_game);
-        if (player_count)
-            furi_string_free(player_count);
+        FURI_LOG_E(TAG, "Failed to get is_in_game");
+        furi_string_free(is_in_game);
         return false;
     }
-
-    if (is_str(furi_string_get_cstr(is_in_game), "true"))
-    {
-        FURI_LOG_E(TAG, "Player is already in game");
-        furi_string_free(lobby);
-        furi_string_free(is_in_game);
-        furi_string_free(player_count);
-        return false;
-    }
-
-    // add the user to the lobby
-    if (!join_lobby(fhttp, lobby_list[lobby_index]))
-    {
-        FURI_LOG_E(TAG, "Failed to join lobby");
-        furi_string_free(lobby);
-        furi_string_free(is_in_game);
-        furi_string_free(player_count);
-        return false;
-    }
-
-    if (atoi(furi_string_get_cstr(player_count)) == 0)
-    {
-        // player is the only one in lobby so don't process any enemies yet
-        FURI_LOG_I(TAG, "No enemies in lobby");
-        furi_string_free(lobby);
-        furi_string_free(is_in_game);
-        furi_string_free(player_count);
-        return true;
-    }
-
-    // only an enemy is in the lobby
-
-    // parse the lobby details
-    if (!create_pvp_enemy(lobby))
-    {
-        FURI_LOG_I(TAG, "Failed to create pvp enemy data");
-        furi_string_free(lobby);
-        furi_string_free(is_in_game);
-        furi_string_free(player_count);
-        return false;
-    }
-
-    furi_string_free(lobby);
+    const bool in_game = is_str(furi_string_get_cstr(is_in_game), "true");
     furi_string_free(is_in_game);
-    furi_string_free(player_count);
-
-    return true;
+    return in_game;
 }
+
 static bool start_ws(FlipperHTTP *fhttp, char *lobby_name)
 {
     if (!fhttp)
@@ -1813,6 +1867,126 @@ static bool start_ws(FlipperHTTP *fhttp, char *lobby_name)
     }
     return true;
 }
+// this will free both the fhttp and lobby
+static void start_pvp(FlipperHTTP *fhttp, FuriString *lobby, void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app, "FlipWorldApp is NULL");
+    // only thing left to do is create the enemy data and start the websocket session
+    if (!create_pvp_enemy(lobby))
+    {
+        FURI_LOG_E(TAG, "Failed to create pvp enemy context.");
+        easy_flipper_dialog("Error", "Failed to create pvp enemy context. Press BACK to return.");
+        flipper_http_free(fhttp);
+        furi_string_free(lobby);
+        return;
+    }
+
+    furi_string_free(lobby);
+
+    // start the websocket session
+    if (!start_ws(fhttp, lobby_list[lobby_index]))
+    {
+        FURI_LOG_E(TAG, "Failed to start websocket session");
+        easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
+        flipper_http_free(fhttp);
+        return;
+    }
+
+    flipper_http_free(fhttp);
+
+    // start the game thread
+    if (!start_game_thread(app))
+    {
+        FURI_LOG_E(TAG, "Failed to start game thread");
+        easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+        return;
+    }
+};
+static void waiting_timer_callback(void *context)
+{
+    furi_check(context, "timer_callback: Context is NULL");
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventWaitingLobby);
+}
+static void waiting_loader_process_callback(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app, "FlipWorldApp is NULL");
+    // check if another player has joined the lobby
+    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+        return;
+    }
+    // fetch the lobby details
+    if (!fetch_lobby(fhttp, lobby_list[lobby_index]))
+    {
+        FURI_LOG_E(TAG, "Failed to fetch lobby details");
+        easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
+        flipper_http_free(fhttp);
+        return;
+    }
+    // load the lobby details
+    FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
+    if (!lobby)
+    {
+        FURI_LOG_E(TAG, "Failed to load lobby details");
+        easy_flipper_dialog("Error", "Failed to load lobby details. Press BACK to return.");
+        flipper_http_free(fhttp);
+        return;
+    }
+    // get the player count
+    const size_t count = lobby_count(fhttp, lobby);
+    if (count == 2)
+    {
+        // break out of this and start the game
+        furi_timer_stop(app->timer);
+        free_timer(app);
+        start_pvp(fhttp, lobby, app); // this will free both the fhttp and lobby
+        return;
+    }
+    timer_iteration++;
+    if (timer_iteration >= 60) // 5 seconds per ieration * 60 = 5 minutes
+    {
+        // if no one has joined after 5 minutes, show an error message and return to the main menu
+        FURI_LOG_E(TAG, "No players joined within the timeout");
+        timer_iteration = -1;
+        furi_timer_stop(app->timer);
+        free_timer(app);
+        remove_player_from_lobby(fhttp);
+        easy_flipper_dialog("Error", "No players joined within the timeout. Press BACK to return.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewLobby);
+    }
+    furi_string_free(lobby);
+    flipper_http_free(fhttp);
+}
+static bool waiting_custom_event_callback(void *context, uint32_t index)
+{
+    UNUSED(index);
+    furi_check(context, "waiting_custom_event_callback: Context is NULL");
+    waiting_loader_process_callback(context);
+    return true;
+}
+static void waiting_lobby(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app, "FlipWorldApp is NULL");
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, waiting_custom_event_callback);
+    free_timer(app);
+    app->timer = furi_timer_alloc(waiting_timer_callback, FuriTimerTypePeriodic, app);
+    furi_timer_start(app->timer, 1000 * timer_refresh); // check if another player has joined every timer_refresh seconds
+    free_waiting_lobby_view(app);
+    if (!alloc_waiting_lobby_view(app))
+    {
+        FURI_LOG_E(TAG, "Failed to allocate waiting lobby view");
+        easy_flipper_dialog("Error", "Failed to allocate waiting lobby view. Press BACK to return.");
+        return;
+    }
+    timer_iteration = 0;
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewWaitingLobby);
+};
 static void callback_submenu_lobby_choices(void *context, uint32_t index)
 {
     /* Handle other game lobbies
@@ -1821,11 +1995,7 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
              3. start the game thread (the rest will be handled by game_start and player_update)
              */
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     if (index >= FlipWorldSubmenuIndexLobby && index < FlipWorldSubmenuIndexLobby + 10)
     {
         lobby_index = index - FlipWorldSubmenuIndexLobby;
@@ -1846,32 +2016,72 @@ static void callback_submenu_lobby_choices(void *context, uint32_t index)
             flipper_http_free(fhttp);
             return;
         }
-        if (!parse_lobby(fhttp))
+
+        // load the lobby details
+        FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
+        if (!lobby)
         {
-            FURI_LOG_E(TAG, "Failed to parse lobby details, join the lobby, or create pvp enemy context.")
-            easy_flipper_dialog("Error", "Failed to parse lobby details, join the lobby, or create pvp enemy context. Press BACK to return.");
+            FURI_LOG_E(TAG, "Failed to load lobby details");
             flipper_http_free(fhttp);
             return;
         }
 
-        // start the websocket session
-        if (!start_ws(fhttp, lobby_list[lobby_index]))
+        // if there are no players, add the user to the lobby and make the user wait until another player joins
+        // if there is one player and it's the user, make the user wait until another player joins
+        // if there is one player and it's not the user, parse_lobby and start websocket
+        // if there are 2 players (which there shouldn't be at this point), show an error message saying the lobby is full
+        switch (lobby_count(fhttp, lobby))
         {
-            FURI_LOG_E(TAG, "Failed to start websocket session");
-            easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
+        case -1:
+            FURI_LOG_E(TAG, "Failed to get player count");
+            easy_flipper_dialog("Error", "Failed to get player count. Press BACK to return.");
             flipper_http_free(fhttp);
+            furi_string_free(lobby);
             return;
-        }
-
-        flipper_http_free(fhttp);
-
-        // start the game thread
-        if (!start_game_thread(app))
-        {
-            FURI_LOG_E(TAG, "Failed to start game thread");
-            easy_flipper_dialog("Error", "Failed to start game thread. Press BACK to return.");
+        case 0:
+            // add the user to the lobby
+            if (!join_lobby(fhttp, lobby_list[lobby_index]))
+            {
+                FURI_LOG_E(TAG, "Failed to join lobby");
+                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
+            }
+            // send the user to the waiting screen
+            waiting_lobby(app);
             return;
-        }
+        case 1:
+            // check if the user is in the lobby
+            if (in_lobby(fhttp, lobby))
+            {
+                // send the user to the waiting screen
+                FURI_LOG_I(TAG, "User is in the lobby");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                waiting_lobby(app);
+                return;
+            }
+            // add the user to the lobby
+            if (!join_lobby(fhttp, lobby_list[lobby_index]))
+            {
+                FURI_LOG_E(TAG, "Failed to join lobby");
+                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
+            }
+            break;
+        case 2:
+            // show an error message saying the lobby is full
+            FURI_LOG_E(TAG, "Lobby is full");
+            easy_flipper_dialog("Error", "Lobby is full. Press BACK to return.");
+            flipper_http_free(fhttp);
+            furi_string_free(lobby);
+            return;
+        };
+
+        start_pvp(fhttp, lobby, app); // this will free both the fhttp and lobby, and start the game
     }
 }
 
