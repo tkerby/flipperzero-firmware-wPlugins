@@ -1024,7 +1024,7 @@ static bool start_game_thread(void *context)
     // free everything but message_view
     free_variable_item_list(app);
     free_text_input_view(app);
-    free_submenu_other(app); // free lobby list or settings
+    // free_submenu_other(app); // free lobby list or settings
     free_view_loader(app);
     free_game_submenu(app);
     free_waiting_lobby_view(app);
