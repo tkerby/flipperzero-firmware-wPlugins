@@ -4,7 +4,7 @@
 
 typedef struct
 {
-    char id[24];
+    char id[20];
     const Icon *icon;
     Vector size;
 } IconContext;
