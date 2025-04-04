@@ -12,7 +12,7 @@
 typedef struct
 {
     char id[32];                // Unique ID for the entity type
-    int8_t index;               // Index for the specific entity instance
+    uint8_t index;              // Index for the specific entity instance
     Vector size;                // Size of the entity
     Sprite *sprite_right;       // Entity sprite when looking right
     Sprite *sprite_left;        // Entity sprite when looking left
@@ -26,7 +26,7 @@ typedef struct
     float speed;                // Speed of the entity
     float attack_timer;         // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
-    int8_t strength;            // Damage the entity deals
+    uint32_t strength;          // Damage the entity deals
     float health;               // Health of the entity
     char message[64];           // Message to display when interacting with the entity
     bool is_user;               // Flag to indicate if the entity is a live player or not
