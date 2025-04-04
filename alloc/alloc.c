@@ -25,37 +25,34 @@ void flip_world_show_submenu()
 bool alloc_view_loader(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
+    furi_check(app, "FlipWorldApp is NULL");
+    if (app->view_loader)
     {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        FURI_LOG_E(TAG, "View loader already allocated");
         return false;
     }
-    if (!app->view_loader)
+    if (app->widget_result)
     {
-        if (!easy_flipper_set_view(&app->view_loader, FlipWorldViewLoader, loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
-        {
-            return false;
-        }
-        loader_init(app->view_loader);
+        FURI_LOG_E(TAG, "Widget result already allocated");
+        return false;
     }
-    if (!app->widget_result)
+
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, custom_event_callback);
+
+    if (!easy_flipper_set_view(&app->view_loader, FlipWorldViewLoader, loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
     {
-        if (!easy_flipper_set_widget(&app->widget_result, FlipWorldViewWidgetResult, "", callback_to_submenu, &app->view_dispatcher))
-        {
-            return false;
-        }
+        return false;
     }
-    return true;
+
+    loader_init(app->view_loader);
+
+    return easy_flipper_set_widget(&app->widget_result, FlipWorldViewWidgetResult, "", callback_to_submenu, &app->view_dispatcher);
 }
 
 void free_view_loader(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     // Free Widget(s)
     if (app->widget_result)
     {
@@ -87,7 +84,6 @@ FlipWorldApp *flip_world_app_alloc()
     {
         return NULL;
     }
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, custom_event_callback);
 
     // Submenu
     if (!easy_flipper_set_submenu(&app->submenu, FlipWorldViewSubmenu, VERSION_TAG, callback_exit_app, &app->view_dispatcher))
@@ -108,11 +104,7 @@ FlipWorldApp *flip_world_app_alloc()
 // Function to free the resources used by FlipWorldApp
 void flip_world_app_free(FlipWorldApp *app)
 {
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // Free Submenu(s)
     if (app->submenu)
