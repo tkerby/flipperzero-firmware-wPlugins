@@ -945,6 +945,8 @@ bool flipper_http_send_command(FlipperHTTP *fhttp, HTTPCommand command)
     case HTTP_CMD_PING:
         fhttp->state = INACTIVE; // set state as INACTIVE to be made IDLE if PONG is received
         return flipper_http_send_data(fhttp, "[PING]");
+    case HTTP_CMD_REBOOT:
+        return flipper_http_send_data(fhttp, "[REBOOT]");
     default:
         FURI_LOG_E(HTTP_TAG, "Invalid command.");
         return false;

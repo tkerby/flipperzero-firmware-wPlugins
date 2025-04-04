@@ -72,7 +72,8 @@ typedef enum
     HTTP_CMD_LIST_COMMANDS,
     HTTP_CMD_LED_ON,
     HTTP_CMD_LED_OFF,
-    HTTP_CMD_PING
+    HTTP_CMD_PING,
+    HTTP_CMD_REBOOT
 } HTTPCommand; // list of non-input commands
 
 // FlipperHTTP Structure
