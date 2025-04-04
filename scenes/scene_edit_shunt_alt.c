@@ -19,6 +19,8 @@
 static void scene_edit_shunt_input_callback(void* context, int32_t number) {
     App* app = (App*)context;
     app->config.shunt_resistor_alt = number / 1.0E3;
+
+    scene_manager_previous_scene(app->scene_manager);
 }
 
 static void scene_edit_shunt_init(App* app) {
