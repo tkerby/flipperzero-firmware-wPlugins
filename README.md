@@ -24,6 +24,8 @@ INA Meter is an application for Flipper Zero that allows you to read I2C-connect
 
 The application allows measured values to be saved to a CSV file on the SD card. A CSV file is automatically created when recording starts and is stored in the */apps_data/ina_meter/logs* folder. Its name is derived from the date and time the recording begins.
 
+You can quickly switch between two shunt resistors without manually changing the value each time, by long-pressing the down button on the gauge screen.
+
 ## Precision and Sampling Presets
 
 The application provides a simple way to configure conversion time and sample averaging with four preset levels: Low, Medium, High, and Max. These settings are sensor-specific:
