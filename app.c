@@ -35,7 +35,13 @@ static bool app_back_event_callback(void* context) {
     App* app = (App*)context;
     furi_assert(app != NULL);
 
-    return scene_manager_handle_back_event(app->scene_manager);
+    bool handled = scene_manager_handle_back_event(app->scene_manager);
+
+    if(!handled) {
+        scene_manager_next_scene(app->scene_manager, SceneDialogExit);
+    }
+
+    return true;
 }
 
 // Set RGB LED to white for 1ms
@@ -257,7 +263,6 @@ static void app_free(App* app) {
 
 static void app_run(App* app) {
     // Switch to the gauge screen
-    scene_manager_next_scene(app->scene_manager, SceneDialogExit);
     scene_manager_next_scene(app->scene_manager, SceneGauge);
 
     FURI_LOG_D(TAG, "Running view dispatcher...");
