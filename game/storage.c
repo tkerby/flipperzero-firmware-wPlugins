@@ -1105,6 +1105,10 @@ bool separate_world_data(char *id, FuriString *world_data)
     if (!file_json_data || furi_string_size(file_json_data) == 0)
     {
         FURI_LOG_E("Game", "Failed to get json data in separate_world_data");
+        if (file_json_data)
+        {
+            furi_string_free(file_json_data);
+        }
         return false;
     }
 
