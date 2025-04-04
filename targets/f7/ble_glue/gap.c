@@ -33,8 +33,6 @@ typedef struct {
     GapConfig* config;
     GapConnectionParams connection_params;
     GapState state;
-    int8_t conn_rssi;
-    uint32_t time_rssi_sample;
     FuriMutex* state_mutex;
     GapEventCallback on_event_cb;
     void* context;
@@ -64,19 +62,6 @@ static Gap* gap = NULL;
 
 static void gap_advertise_start(GapState new_state);
 static int32_t gap_app(void* context);
-
-/** function for updating rssi informations in global Gap object
- * 
-*/
-static inline void fetch_rssi(void) {
-    uint8_t ret_rssi = 127;
-    if(hci_read_rssi(gap->service.connection_handle, &ret_rssi) == BLE_STATUS_SUCCESS) {
-        gap->conn_rssi = (int8_t)ret_rssi;
-        gap->time_rssi_sample = furi_get_tick();
-        return;
-    }
-    FURI_LOG_D(TAG, "Failed to read RSSI");
-}
 
 static void gap_verify_connection_parameters(Gap* gap) {
     furi_check(gap);
@@ -181,9 +166,6 @@ BleEventFlowStatus ble_event_app_notification(void* pckt) {
             gap->connection_params.supervisor_timeout = event->Supervision_Timeout;
             FURI_LOG_I(TAG, "Connection parameters event complete");
             gap_verify_connection_parameters(gap);
-
-            // Save rssi for current connection
-            fetch_rssi();
             break;
         }
 
@@ -305,9 +287,6 @@ BleEventFlowStatus ble_event_app_notification(void* pckt) {
                     pairing_complete->Status);
                 aci_gap_terminate(gap->service.connection_handle, 5);
             } else {
-                // Save RSSI
-                fetch_rssi();
-
                 FURI_LOG_I(TAG, "Pairing complete");
                 GapEvent event = {.type = GapEventTypeConnected};
                 gap->on_event_cb(event, gap->context); //-V595
@@ -581,9 +560,6 @@ bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     gap->service.connection_handle = 0xFFFF;
     gap->enable_adv = true;
 
-    gap->conn_rssi = 127;
-    gap->time_rssi_sample = 0;
-
     // Command queue allocation
     gap->command_queue = furi_message_queue_alloc(8, sizeof(GapCommand));
 
@@ -621,17 +597,6 @@ bool gap_init(GapConfig* config, GapEventCallback on_event_cb, void* context) {
     gap->context = context;
 
     return true;
-}
-
-// Get RSSI
-uint32_t gap_get_remote_conn_rssi(int8_t* rssi) {
-    if(gap && gap->state == GapStateConnected) {
-        fetch_rssi();
-        *rssi = gap->conn_rssi;
-
-        if(gap->time_rssi_sample) return furi_get_tick() - gap->time_rssi_sample;
-    }
-    return 0;
 }
 
 GapState gap_get_state(void) {
