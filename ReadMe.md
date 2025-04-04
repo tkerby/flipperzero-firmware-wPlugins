@@ -25,10 +25,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0403-1850-0.420.0-f542dbf](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0404-1815-0.420.0-bc867da](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-04 18:10 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-04 18:10 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-04 18:15 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-04 18:15 EST`
 - Updated: [DTMF Dolphin v1.5 (By litui)](https://github.com/litui/dtmf_dolphin)
 - Added: [Doom animation (By doomwastaken)](https://github.com/flipperdevices/flipperzero-firmware/pull/4164)
 - Patreon Build Update:  [Doom animation (By doomwastaken) Added to Stock, Minimal and Manifest Switcher builds. Updated Dolphin animation set (By RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/25ffdb624a19a02a3a0bd8c95d248880833270c0)
