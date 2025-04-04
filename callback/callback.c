@@ -169,6 +169,8 @@ static void vgm_y_change(VariableItem *item);
 //
 static uint8_t timer_iteration = 0; // timer iteration for the loading screen
 static uint8_t timer_refresh = 5;   // duration for timer to refresh
+//
+static void free_timer(void *context);
 
 uint32_t callback_to_submenu(void *context)
 {
@@ -181,10 +183,14 @@ static uint32_t callback_to_submenu_lobby(void *context)
     furi_check(app);
     // this is only called by WaitingLobby, so let's send the request
     furi_timer_stop(app->timer);
+    free_timer(app);
     FlipperHTTP *fhttp = flipper_http_alloc();
     if (fhttp)
     {
         remove_player_from_lobby(fhttp);
+        // send command to reset board
+        // flipper_http_send_command(fhttp, HTTP_CMD_REBOOT);
+        // furi_delay_ms(500);
         flipper_http_free(fhttp);
     }
     return FlipWorldViewSubmenuOther;
@@ -604,7 +610,6 @@ static bool alloc_submenu_other(void *context, uint32_t view_id)
     case FlipWorldViewLobby:
         return easy_flipper_set_submenu(&app->submenu_other, FlipWorldViewSubmenuOther, "Lobbies", callback_to_submenu, &app->view_dispatcher);
     default:
-        FURI_LOG_E(TAG, "Unknown view_id: %d", view_id);
         return false;
     }
 }
@@ -612,11 +617,7 @@ static bool alloc_submenu_other(void *context, uint32_t view_id)
 static bool alloc_game_submenu(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
+    furi_check(app);
     if (!app->submenu_game)
     {
         if (!easy_flipper_set_submenu(&app->submenu_game, FlipWorldViewGameSubmenu, "Play", callback_to_submenu, &app->view_dispatcher))
@@ -1515,11 +1516,7 @@ static void run(FlipWorldApp *app)
 void callback_submenu_choices(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app);
     switch (index)
     {
     case FlipWorldSubmenuIndexGameSubmenu:
@@ -1705,10 +1702,13 @@ static bool create_pvp_enemy(FuriString *lobby_details)
     FuriString *enemy_data = furi_string_alloc();
     furi_string_printf(
         enemy_data,
-        "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},\"move_timer\":1,\"speed\":1,\"attack_timer\":%s,\"strength\":%s,\"health\":%s}]}",
-        furi_string_get_cstr(attack_timer),
-        furi_string_get_cstr(strength),
-        furi_string_get_cstr(health));
+        "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
+        "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
+        "\"move_timer\":1,\"speed\":1,\"attack_timer\":%f,\"strength\":%f,\"health\":%f}]}",
+        furi_string_get_cstr(username),
+        (double)atof_furi(attack_timer),
+        (double)atof_furi(strength),
+        (double)atof_furi(health));
 
     char directory_path[128];
     snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
@@ -1884,14 +1884,21 @@ static void waiting_loader_process_callback(void *context)
     if (!fhttp)
     {
         FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+        furi_timer_stop(app->timer);
+        free_timer(app);
+        easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         return;
     }
     // fetch the lobby details
     if (!fetch_lobby(fhttp, lobby_list[lobby_index]))
     {
         FURI_LOG_E(TAG, "Failed to fetch lobby details");
-        easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
+        furi_timer_stop(app->timer);
+        free_timer(app);
         flipper_http_free(fhttp);
+        easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         return;
     }
     // load the lobby details
@@ -1899,8 +1906,11 @@ static void waiting_loader_process_callback(void *context)
     if (!lobby)
     {
         FURI_LOG_E(TAG, "Failed to load lobby details");
-        easy_flipper_dialog("Error", "Failed to load lobby details. Press BACK to return.");
+        furi_timer_stop(app->timer);
+        free_timer(app);
         flipper_http_free(fhttp);
+        easy_flipper_dialog("Error", "Failed to load lobby details. Press BACK to return.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         return;
     }
     // get the player count
@@ -1941,12 +1951,29 @@ static void waiting_lobby(void *context)
     furi_check(app, "FlipWorldApp is NULL");
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, waiting_custom_event_callback);
     free_timer(app);
+    furi_timer_flush();
     app->timer = furi_timer_alloc(waiting_timer_callback, FuriTimerTypePeriodic, app);
-    furi_timer_start(app->timer, 1000 * timer_refresh); // check if another player has joined every timer_refresh seconds
+    if (!app->timer)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate timer");
+        free_timer(app);
+        easy_flipper_dialog("Error", "Failed to allocate timer. Press BACK to return.");
+        return;
+    }
+    // check if another player has joined every timer_refresh seconds
+    if (furi_timer_start(app->timer, 1000 * timer_refresh) != FuriStatusOk ||
+        furi_timer_is_running(app->timer) == 0) // 0: not running, 1: running
+    {
+        FURI_LOG_E(TAG, "Failed to start timer");
+        free_timer(app);
+        easy_flipper_dialog("Error", "Failed to start timer. Press BACK to return.");
+        return;
+    }
     free_waiting_lobby_view(app);
     if (!alloc_waiting_lobby_view(app))
     {
         FURI_LOG_E(TAG, "Failed to allocate waiting lobby view");
+        free_timer(app);
         easy_flipper_dialog("Error", "Failed to allocate waiting lobby view. Press BACK to return.");
         return;
     }
