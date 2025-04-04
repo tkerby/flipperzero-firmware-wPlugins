@@ -38,6 +38,7 @@ typedef enum
 {
     FlipWorldViewSubmenu,          // The submenu
     FlipWorldViewGameSubmenu,      // The game submenu
+    FlipWorldViewSubmenuOther,     // The submenu used by settings and lobby
     FlipWorldViewMessage,          // The about, loading screen
     FlipWorldViewSettings,         // The settings screen
     FlipWorldViewLobby,            // The lobby screen
@@ -68,8 +69,7 @@ typedef struct
     View *view_waiting_lobby;              // The waiting lobby screen
     Submenu *submenu;                      // The submenu
     Submenu *submenu_game;                 // The game submenu
-    Submenu *submenu_settings;             // The settings submenu
-    Submenu *submenu_lobby;                // The lobby submenu
+    Submenu *submenu_other;                // submenu used by settings and lobby
     VariableItemList *variable_item_list;  // The variable item list (settngs)
     VariableItem *variable_item_wifi_ssid; // The variable item for WiFi SSID
     VariableItem *variable_item_wifi_pass; // The variable item for WiFi password

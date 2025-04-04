@@ -187,7 +187,7 @@ static uint32_t callback_to_submenu_lobby(void *context)
         remove_player_from_lobby(fhttp);
         flipper_http_free(fhttp);
     }
-    return FlipWorldViewLobby;
+    return FlipWorldViewSubmenuOther;
 }
 static uint32_t callback_to_wifi_settings(void *context)
 {
@@ -197,7 +197,7 @@ static uint32_t callback_to_wifi_settings(void *context)
 static uint32_t callback_to_settings(void *context)
 {
     UNUSED(context);
-    return FlipWorldViewSettings;
+    return FlipWorldViewSubmenuOther;
 }
 
 static void message_draw_callback(Canvas *canvas, void *model)
@@ -580,51 +580,35 @@ static bool alloc_variable_item_list(void *context, uint32_t view_id)
     }
     return true;
 }
-static bool alloc_submenu_settings(void *context)
+static bool alloc_submenu_other(void *context, uint32_t view_id)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
+    furi_check(app);
+    if (app->submenu_other)
     {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        FURI_LOG_I(TAG, "Submenu already allocated");
+        return true;
+    }
+    switch (view_id)
+    {
+    case FlipWorldViewSettings:
+        if (!easy_flipper_set_submenu(&app->submenu_other, FlipWorldViewSubmenuOther, "Settings", callback_to_submenu, &app->view_dispatcher))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate submenu settings");
+            return false;
+        }
+        submenu_add_item(app->submenu_other, "WiFi", FlipWorldSubmenuIndexWiFiSettings, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_other, "Game", FlipWorldSubmenuIndexGameSettings, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_other, "User", FlipWorldSubmenuIndexUserSettings, callback_submenu_choices, app);
+        return true;
+    case FlipWorldViewLobby:
+        return easy_flipper_set_submenu(&app->submenu_other, FlipWorldViewSubmenuOther, "Lobbies", callback_to_submenu, &app->view_dispatcher);
+    default:
+        FURI_LOG_E(TAG, "Unknown view_id: %d", view_id);
         return false;
     }
-    if (!app->submenu_settings)
-    {
-        if (!easy_flipper_set_submenu(&app->submenu_settings, FlipWorldViewSettings, "Settings", callback_to_submenu, &app->view_dispatcher))
-        {
-            return false;
-        }
-        if (!app->submenu_settings)
-        {
-            return false;
-        }
-        submenu_add_item(app->submenu_settings, "WiFi", FlipWorldSubmenuIndexWiFiSettings, callback_submenu_choices, app);
-        submenu_add_item(app->submenu_settings, "Game", FlipWorldSubmenuIndexGameSettings, callback_submenu_choices, app);
-        submenu_add_item(app->submenu_settings, "User", FlipWorldSubmenuIndexUserSettings, callback_submenu_choices, app);
-    }
-    return true;
 }
-static bool alloc_submenu_lobby(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
-    if (!app->submenu_lobby)
-    {
-        if (!easy_flipper_set_submenu(&app->submenu_lobby, FlipWorldViewLobby, "Lobbies", callback_to_submenu, &app->view_dispatcher))
-        {
-            return false;
-        }
-        if (!app->submenu_lobby)
-        {
-            return false;
-        }
-    }
-    return true;
-}
+
 static bool alloc_game_submenu(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -701,19 +685,15 @@ void free_game_submenu(void *context)
 }
 static uint32_t lobby_index = -1;
 static char *lobby_list[10];
-static void free_submenu_lobby(void *context)
+static void free_submenu_other(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
+    furi_check(app);
+    if (app->submenu_other)
     {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-    if (app->submenu_lobby)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewLobby);
-        submenu_free(app->submenu_lobby);
-        app->submenu_lobby = NULL;
+        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
+        submenu_free(app->submenu_other);
+        app->submenu_other = NULL;
     }
     for (int i = 0; i < 10; i++)
     {
@@ -841,21 +821,7 @@ static void free_variable_item_list(void *context)
         app->variable_item_user_password = NULL;
     }
 }
-static void free_submenu_settings(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-    if (app->submenu_settings)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewSettings);
-        submenu_free(app->submenu_settings);
-        app->submenu_settings = NULL;
-    }
-}
+
 static void free_timer(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -887,7 +853,7 @@ static void free_waiting_lobby_view(void *context)
 }
 static FuriThread *game_thread;
 static bool game_thread_running = false;
-void free_all_views(void *context, bool free_variable_list, bool free_settings_submenu, bool free_submenu_game)
+void free_all_views(void *context, bool free_variable_list, bool free_settings_other, bool free_submenu_game)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     if (!app)
@@ -915,10 +881,9 @@ void free_all_views(void *context, bool free_variable_list, bool free_settings_s
         }
     }
 
-    if (free_settings_submenu)
+    if (free_settings_other)
     {
-        free_submenu_settings(app);
-        free_submenu_lobby(app);
+        free_submenu_other(app);
     }
 
     // free Derek's loader
@@ -1059,9 +1024,10 @@ static bool start_game_thread(void *context)
     // free everything but message_view
     free_variable_item_list(app);
     free_text_input_view(app);
-    free_submenu_settings(app);
-    free_submenu_lobby(app);
+    free_submenu_other(app); // free lobby list or settings
     free_view_loader(app);
+    free_game_submenu(app);
+    free_waiting_lobby_view(app);
 
     // free game thread
     if (game_thread_running)
@@ -1471,8 +1437,8 @@ static void run(FlipWorldApp *app)
             bool parse_pvp_lobbies()
             {
 
-                free_submenu_lobby(app);
-                if (!alloc_submenu_lobby(app))
+                free_submenu_other(app);
+                if (!alloc_submenu_other(app, FlipWorldViewLobby))
                 {
                     FURI_LOG_E(TAG, "Failed to allocate lobby submenu");
                     return false;
@@ -1503,7 +1469,7 @@ static void run(FlipWorldApp *app)
                         return false;
                     }
                     // add the lobby to the submenu
-                    submenu_add_item(app->submenu_lobby, furi_string_get_cstr(lobby_id), FlipWorldSubmenuIndexLobby + i, callback_submenu_lobby_choices, app);
+                    submenu_add_item(app->submenu_other, furi_string_get_cstr(lobby_id), FlipWorldSubmenuIndexLobby + i, callback_submenu_lobby_choices, app);
                     // add the lobby to the list
                     if (!easy_flipper_set_buffer(&lobby_list[i], 64))
                     {
@@ -1537,7 +1503,7 @@ static void run(FlipWorldApp *app)
             }
 
             // switch to the lobby submenu
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewLobby);
+            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         }
     }
     else
@@ -1590,12 +1556,12 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     case FlipWorldSubmenuIndexSettings:
         free_all_views(app, true, true, true);
-        if (!alloc_submenu_settings(app))
+        if (!alloc_submenu_other(app, FlipWorldViewSettings))
         {
             FURI_LOG_E(TAG, "Failed to allocate settings view");
             return;
         }
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSettings);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         break;
     case FlipWorldSubmenuIndexWiFiSettings:
         free_all_views(app, true, false, true);
@@ -1957,7 +1923,7 @@ static void waiting_loader_process_callback(void *context)
         free_timer(app);
         remove_player_from_lobby(fhttp);
         easy_flipper_dialog("Error", "No players joined within the timeout. Press BACK to return.");
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewLobby);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
     }
     furi_string_free(lobby);
     flipper_http_free(fhttp);
