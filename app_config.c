@@ -26,18 +26,20 @@
 #define SECTION_APP    "app"
 #define SECTION_SENSOR "sensor"
 
-#define KEY_SENSOR_TYPE       "sensorType"
-#define KEY_I2C_ADDRESS       "i2cAddress"
-#define KEY_SHUNT_RESISTOR    "shuntResistor"
-#define KEY_VOLTAGE_PRECISION "voltagePrecision"
-#define KEY_CURRENT_PRECISION "currentPrecision"
-#define KEY_LED_BLINKING      "ledBlinking"
+#define KEY_SENSOR_TYPE        "sensorType"
+#define KEY_I2C_ADDRESS        "i2cAddress"
+#define KEY_SHUNT_RESISTOR     "shuntResistor"
+#define KEY_SHUNT_RESISTOR_ALT "altShuntResistor"
+#define KEY_VOLTAGE_PRECISION  "voltagePrecision"
+#define KEY_CURRENT_PRECISION  "currentPrecision"
+#define KEY_LED_BLINKING       "ledBlinking"
 
 void app_config_init(AppConfig* config) {
     furi_check(config != NULL);
     config->sensor_type = SensorType_INA219;
     config->i2c_address = I2C_ADDRESS_MIN;
     config->shunt_resistor = 100000; // 100mOhm
+    config->shunt_resistor_alt = 100000; // 100mOhm
     config->voltage_precision = SensorPrecision_Medium;
     config->current_precision = SensorPrecision_Medium;
     config->led_blinking = true;
@@ -87,6 +89,7 @@ static FuriString* app_config_build(const AppConfig* config) {
     ini_add_keyval(s, KEY_SENSOR_TYPE, "%s", sensor_type_name(config->sensor_type));
     ini_add_keyval(s, KEY_I2C_ADDRESS, "0x%02X", config->i2c_address);
     ini_add_keyval(s, KEY_SHUNT_RESISTOR, "%f", config->shunt_resistor);
+    ini_add_keyval(s, KEY_SHUNT_RESISTOR_ALT, "%f", config->shunt_resistor_alt);
     ini_add_keyval(
         s, KEY_VOLTAGE_PRECISION, "%s", sensor_precision_name(config->voltage_precision));
     ini_add_keyval(
@@ -139,9 +142,20 @@ static void app_config_set(AppConfig* config, Slice section, Slice key, Slice va
             if(slice_parse_double(value, &temp)) {
                 config->shunt_resistor = temp;
                 FURI_LOG_I(
-                    TAG, "shunt_resistance=%.3fmOhm", config->shunt_resistor * (double)1000.0);
+                    TAG, "shunt_resistore=%.3fmOhm", config->shunt_resistor * (double)1000.0);
             } else {
-                FURI_LOG_E(TAG, "Failed to parse shunt resistance value");
+                FURI_LOG_E(TAG, "Failed to parse shunt resistor value");
+            }
+        } else if(key(KEY_SHUNT_RESISTOR_ALT)) {
+            double temp;
+            if(slice_parse_double(value, &temp)) {
+                config->shunt_resistor_alt = temp;
+                FURI_LOG_I(
+                    TAG,
+                    "shunt_resistor_alt=%.3fmOhm",
+                    config->shunt_resistor_alt * (double)1000.0);
+            } else {
+                FURI_LOG_E(TAG, "Failed to parse alternate shunt resistor value");
             }
         } else if(key(KEY_VOLTAGE_PRECISION)) {
             bool found = false;

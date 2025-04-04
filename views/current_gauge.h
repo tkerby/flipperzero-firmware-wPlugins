@@ -26,6 +26,7 @@ typedef struct CurrentGauge CurrentGauge;
 typedef enum {
     CurrentGaugeButton_Menu,
     CurrentGaugeButton_DataLog,
+    CurrentGaugeButton_ShuntSwitch,
 } CurrentGaugeButton;
 
 // Callback invoked when the menu button is pressed

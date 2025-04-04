@@ -22,6 +22,7 @@ typedef enum {
     MenuIndex_SensorType,
     MenuIndex_I2CAddress,
     MenuIndex_ShuntResistor,
+    MenuIndex_ShuntResistorAlt,
     MenuIndex_VoltagePrecision,
     MenuIndex_CurrentPrecision,
     MenuIndex_LedBlinking,
@@ -79,6 +80,9 @@ static void scene_settings_enter_callback(void* context, uint32_t index) {
     case MenuIndex_ShuntResistor:
         scene_manager_next_scene(app->scene_manager, SceneEditShunt);
         break;
+    case MenuIndex_ShuntResistorAlt:
+        scene_manager_next_scene(app->scene_manager, SceneEditShuntAlt);
+        break;
     case MenuIndex_WiringInfo:
         scene_manager_next_scene(app->scene_manager, SceneWiring);
         break;
@@ -103,6 +107,12 @@ void scene_settings_init(App* app) {
     item = variable_item_list_add(list, "Shunt Resistor", 1, NULL, app);
     FuriString* text = format_resistance_value(app->config.shunt_resistor);
     variable_item_set_current_value_text(item, furi_string_get_cstr(text));
+    furi_string_free(text);
+
+    item = variable_item_list_add(list, "Alt Resistor", 1, NULL, app);
+    text = format_resistance_value(app->config.shunt_resistor_alt);
+    variable_item_set_current_value_text(item, furi_string_get_cstr(text));
+    furi_string_free(text);
 
     item = variable_item_list_add(
         list, "V Precision", SensorPrecision_count, on_voltage_precision_changed, app);
@@ -121,8 +131,6 @@ void scene_settings_init(App* app) {
     item = variable_item_list_add(list, "Wiring info", 0, NULL, app);
 
     variable_item_list_set_enter_callback(list, scene_settings_enter_callback, app);
-
-    furi_string_free(text);
 }
 
 void scene_settings_on_enter(void* context) {

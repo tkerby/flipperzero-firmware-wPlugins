@@ -128,6 +128,9 @@ bool current_gauge_input_callback(InputEvent* event, void* context) {
     } else if(event->type == InputTypeShort && event->key == InputKeyRight) {
         invoke_button_callback(gauge, CurrentGaugeButton_DataLog);
         return true;
+    } else if(event->type == InputTypeLong && event->key == InputKeyDown) {
+        invoke_button_callback(gauge, CurrentGaugeButton_ShuntSwitch);
+        return true;
     }
 
     return false;

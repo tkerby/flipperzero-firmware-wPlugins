@@ -24,6 +24,8 @@ static void scene_gauge_button_callback(void* context, CurrentGaugeButton button
         scene_manager_next_scene(app->scene_manager, SceneSettings);
     } else if(button == CurrentGaugeButton_DataLog) {
         scene_manager_next_scene(app->scene_manager, SceneDatalog);
+    } else if(button == CurrentGaugeButton_ShuntSwitch) {
+        scene_manager_next_scene(app->scene_manager, SceneShuntSwitch);
     }
 }
 

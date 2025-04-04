@@ -18,7 +18,7 @@
 
 static void scene_edit_shunt_input_callback(void* context, int32_t number) {
     App* app = (App*)context;
-    app->config.shunt_resistor = number / 1.0E3;
+    app->config.shunt_resistor_alt = number / 1.0E3;
 }
 
 static void scene_edit_shunt_init(App* app) {
@@ -28,19 +28,19 @@ static void scene_edit_shunt_init(App* app) {
         app->number_input,
         scene_edit_shunt_input_callback,
         app,
-        round(app->config.shunt_resistor * (double)1E3),
+        round(app->config.shunt_resistor_alt * (double)1E3),
         0,
         1000000);
 }
 
-void scene_edit_shunt_on_enter(void* context) {
+void scene_edit_shunt_alt_on_enter(void* context) {
     App* app = (App*)context;
 
     scene_edit_shunt_init(app);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppViewNumberInput);
 }
 
-bool scene_edit_shunt_on_event(void* context, SceneManagerEvent event) {
+bool scene_edit_shunt_alt_on_event(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     UNUSED(context);
@@ -49,7 +49,7 @@ bool scene_edit_shunt_on_event(void* context, SceneManagerEvent event) {
     return consumed;
 }
 
-void scene_edit_shunt_on_exit(void* context) {
+void scene_edit_shunt_alt_on_exit(void* context) {
     App* app = (App*)context;
 
     UNUSED(app);

@@ -51,6 +51,8 @@ typedef struct {
     uint8_t i2c_address;
     // Shunt resistor value in micro ohms
     double shunt_resistor;
+    // Alternate shunt resistor value in micro ohms
+    double shunt_resistor_alt;
     // VBUS voltage measurement precision
     SensorPrecision voltage_precision;
     // Shunt current measurement precision
