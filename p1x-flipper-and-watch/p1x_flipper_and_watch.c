@@ -14,6 +14,9 @@
 #define PACKET_ANIMATION_TIME 300 // Faster animation for accepted packets
 #define PACKET_SPAWN_CHANCE 3  // Reduced packet spawn chance for easier start
 
+// Add upcoming packets queue to game state
+#define MAX_UPCOMING_PACKETS 3
+
 // System positions (4 corners)
 typedef struct {
     int x, y;
@@ -26,12 +29,12 @@ static const Position SYSTEM_POSITIONS[4] = {
     {96, 53}   // Bottom-right (moved down by 5px)
 };
 
-// Player positions (adjacent to systems)
+// Adjust player positions to be inside the computer boxes
 static const Position PLAYER_POSITIONS[4] = {
-    {24, 21},  // Left of top-left system (moved down by 5px)
-    {104, 21}, // Right of top-right system (moved down by 5px)
-    {24, 53},  // Left of bottom-left system (moved down by 5px)
-    {104, 53}  // Right of bottom-right system (moved down by 5px)
+    {32, 21},  // Inside top-left system
+    {96, 21},  // Inside top-right system
+    {32, 53},  // Inside bottom-left system
+    {96, 53}   // Inside bottom-right system
 };
 
 // Server position (center)
@@ -52,6 +55,7 @@ typedef struct {
     uint32_t anim_start;     // When animation began
     int anim_from;           // Which system accepted the packet
     int score;               // Player's score
+    int upcoming_packets[4][MAX_UPCOMING_PACKETS]; // Queue of upcoming packets for each system
 } GameState;
 
 // Game over reasons
@@ -71,6 +75,9 @@ static void game_init(GameState* state) {
         state->hack_start[i] = 0;
         state->warn_start[i] = 0;
         state->packets[i] = 0;
+        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
+            state->upcoming_packets[i][j] = rand() % 2; // Randomly initialize as 0 (normal) or 1 (hacking attempt)
+        }
     }
 }
 
@@ -121,8 +128,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 
         // Draw system (box)
         canvas_draw_frame(canvas, x - 6, y - 6, 12, 12);
-        char sysname[3] = {'S', '1' + i, 0};
-        canvas_draw_str(canvas, x - 4, y + 2, sysname);
 
         // Hacking warning or active hack
         uint32_t now = furi_get_tick();
@@ -138,7 +143,19 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 
         // Draw packets (dots)
         for(int p = 0; p < state->packets[i] && p < 3; p++) {
-            canvas_draw_disc(canvas, x - 10 - p*3, y, 1);
+            canvas_draw_disc(canvas, (i % 2 == 0) ? x + 10 + p*3 : x - 10 - p*3, y, 1);
+        }
+
+        // Adjust upcoming packets display to left and right sides
+        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
+            int packet_type = state->upcoming_packets[i][j];
+            int packet_x = (i % 2 == 0) ? x - 10 - j * 5 : x + 10 + j * 5; // Left for even-indexed systems, right for odd-indexed systems
+
+            if(packet_type == 0) {
+                canvas_draw_disc(canvas, packet_x, y, 1); // Normal packet
+            } else {
+                canvas_draw_circle(canvas, packet_x, y, 2); // Hacking attempt (larger circle)
+            }
         }
     }
 
@@ -243,7 +260,15 @@ static void update_game(GameState* state) {
     // Increase packet spawning slightly to compensate for fewer hacks
     if(rand() % 100 < PACKET_SPAWN_CHANCE) { // Increased from 3% to 5% chance for packets
         int target = rand() % 4;
-        if(state->packets[target] < 3) state->packets[target]++;
+        if(state->packets[target] < 3) {
+            state->packets[target]++;
+            // Shift upcoming packets queue
+            for(int j = 0; j < MAX_UPCOMING_PACKETS - 1; j++) {
+                state->upcoming_packets[target][j] = state->upcoming_packets[target][j + 1];
+            }
+            // Add new packet type to the end of the queue
+            state->upcoming_packets[target][MAX_UPCOMING_PACKETS - 1] = rand() % 2;
+        }
     }
 
     // Check DDOS - only active packets count towards the DDOS limit
