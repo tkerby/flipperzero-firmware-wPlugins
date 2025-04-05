@@ -1,6 +1,7 @@
 // enemy.c
 #include <game/enemy.h>
 #include <notification/notification_messages.h>
+#include <flip_storage/storage.h>
 
 static EntityContext *enemy_context_generic;
 // Allocation function
@@ -93,6 +94,7 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
     enemy_context->state = enemy_context_generic->state;
     enemy_context->radius = enemy_context_generic->radius;
     enemy_context->is_user = enemy_context_generic->is_user;
+    snprintf(enemy_context->username, sizeof(enemy_context->username), "%s", enemy_context_generic->username);
 
     // Set enemy's initial position based on start_position
     entity_pos_set(self, enemy_context->start_position);
@@ -411,9 +413,9 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
-static void pvp_position(GameContext *game_context, EntityContext *enemy)
+static void pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
 {
-    if (!game_context || !enemy)
+    if (!game_context || !enemy || !self)
     {
         FURI_LOG_E("Game", "PVP position: Invalid parameters");
         return;
@@ -438,6 +440,8 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
 
     if (game_context->fhttp->last_response != NULL && strlen(game_context->fhttp->last_response) > 0)
     {
+        // for debugging
+        // save_char("received_pvp_position", game_context->fhttp->last_response);
         // parse the response and set the enemy position
         /* expected response:
         {
@@ -476,7 +480,6 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
 
         if (!h || !eat || !d || !sp || !x || !y)
         {
-            FURI_LOG_E("Game", "PVP position: Failed to parse enemy data");
             if (h)
                 free(h);
             if (eat)
@@ -516,26 +519,12 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy)
         }
 
         Vector new_pos = (Vector){
-            .x = (float)atoi(x),
-            .y = (float)atoi(y),
+            .x = (float)atof_(x),
+            .y = (float)atof_(y),
         };
 
-        Entity *enemy_entity = game_context->enemies[enemy->index];
-        if (!enemy_entity)
-        {
-            FURI_LOG_E("Game", "PVP position: Enemy entity is NULL");
-            free(h);
-            free(eat);
-            free(d);
-            free(sp);
-            free(x);
-            free(y);
-            free(u);
-            return;
-        }
-
         // set enemy position
-        entity_pos_set(entity_context_get(enemy_entity), new_pos);
+        entity_pos_set(self, new_pos);
 
         // free the strings
         free(h);
@@ -567,123 +556,127 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
         return;
     }
 
+    const float delta_time = 1.0f / game_context->fps;
+
     if (game_context->game_mode == GAME_MODE_PVP)
     {
         // update enemy position
-        pvp_position(game_context, enemy_context);
+        pvp_position(game_context, enemy_context, self);
     }
-
-    float delta_time = 1.0f / game_context->fps;
-
-    // Increment the elapsed_attack_timer for the enemy
-    enemy_context->elapsed_attack_timer += delta_time;
-
-    switch (enemy_context->state)
+    else
     {
-    case ENTITY_IDLE:
-        // Increment the elapsed_move_timer
-        enemy_context->elapsed_move_timer += delta_time;
+        // Increment the elapsed_attack_timer for the enemy
+        enemy_context->elapsed_attack_timer += delta_time;
 
-        // Check if it's time to move again
-        if (enemy_context->elapsed_move_timer >= enemy_context->move_timer)
+        switch (enemy_context->state)
         {
-            // Determine the next state based on the current position
+        case ENTITY_IDLE:
+            // Increment the elapsed_move_timer
+            enemy_context->elapsed_move_timer += delta_time;
+
+            // Check if it's time to move again
+            if (enemy_context->elapsed_move_timer >= enemy_context->move_timer)
+            {
+                // Determine the next state based on the current position
+                Vector current_pos = entity_pos_get(self);
+                if (fabs(current_pos.x - enemy_context->start_position.x) < (double)1.0 &&
+                    fabs(current_pos.y - enemy_context->start_position.y) < (double)1.0)
+                {
+                    enemy_context->state = ENTITY_MOVING_TO_END;
+                }
+                else
+                {
+                    enemy_context->state = ENTITY_MOVING_TO_START;
+                }
+                enemy_context->elapsed_move_timer = 0.0f;
+            }
+
+            break;
+
+        case ENTITY_MOVING_TO_END:
+        case ENTITY_MOVING_TO_START:
+        case ENTITY_ATTACKED:
+        {
+            // Get current position
             Vector current_pos = entity_pos_get(self);
-            if (fabs(current_pos.x - enemy_context->start_position.x) < (double)1.0 &&
-                fabs(current_pos.y - enemy_context->start_position.y) < (double)1.0)
+            if (enemy_context->state == ENTITY_ATTACKED)
             {
-                enemy_context->state = ENTITY_MOVING_TO_END;
+                // set direction again
+                enemy_context->state = enemy_context->direction == ENTITY_LEFT ? ENTITY_MOVING_TO_START : ENTITY_MOVING_TO_END;
             }
-            else
+
+            // Determine the target position based on the current state
+            Vector target_position = (enemy_context->state == ENTITY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
+            Vector direction_vector = {0, 0};
+
+            // Calculate direction towards the target
+            if (current_pos.x < target_position.x)
             {
-                enemy_context->state = ENTITY_MOVING_TO_START;
+                direction_vector.x = 1.0f;
+                enemy_context->direction = ENTITY_RIGHT;
             }
-            enemy_context->elapsed_move_timer = 0.0f;
+            else if (current_pos.x > target_position.x)
+            {
+                direction_vector.x = -1.0f;
+                enemy_context->direction = ENTITY_LEFT;
+            }
+
+            if (current_pos.y < target_position.y)
+            {
+                direction_vector.y = 1.0f;
+                enemy_context->direction = ENTITY_DOWN;
+            }
+            else if (current_pos.y > target_position.y)
+            {
+                direction_vector.y = -1.0f;
+                enemy_context->direction = ENTITY_UP;
+            }
+
+            // Normalize direction vector
+            float length = sqrt(direction_vector.x * direction_vector.x + direction_vector.y * direction_vector.y);
+            if (length != 0)
+            {
+                direction_vector.x /= length;
+                direction_vector.y /= length;
+            }
+
+            // Update position based on direction and speed
+            Vector new_pos = current_pos;
+            new_pos.x += direction_vector.x * enemy_context->speed * delta_time;
+            new_pos.y += direction_vector.y * enemy_context->speed * delta_time;
+
+            // Clamp the position to the target to prevent overshooting
+            if ((direction_vector.x > 0.0f && new_pos.x > target_position.x) ||
+                (direction_vector.x < 0.0f && new_pos.x < target_position.x))
+            {
+                new_pos.x = target_position.x;
+            }
+
+            if ((direction_vector.y > 0.0f && new_pos.y > target_position.y) ||
+                (direction_vector.y < 0.0f && new_pos.y < target_position.y))
+            {
+                new_pos.y = target_position.y;
+            }
+
+            // Set the new position
+            entity_pos_set(self, new_pos);
+
+            // Check if the enemy has reached or surpassed the target_position
+            bool reached_x = fabs(new_pos.x - target_position.x) < (double)1.0;
+            bool reached_y = fabs(new_pos.y - target_position.y) < (double)1.0;
+
+            // If reached the target position on both axes, transition to IDLE
+            if (reached_x && reached_y)
+            {
+                enemy_context->state = ENTITY_IDLE;
+                enemy_context->elapsed_move_timer = 0.0f;
+            }
         }
         break;
 
-    case ENTITY_MOVING_TO_END:
-    case ENTITY_MOVING_TO_START:
-    case ENTITY_ATTACKED:
-    {
-        // Get current position
-        Vector current_pos = entity_pos_get(self);
-        if (enemy_context->state == ENTITY_ATTACKED)
-        {
-            // set direction again
-            enemy_context->state = enemy_context->direction == ENTITY_LEFT ? ENTITY_MOVING_TO_START : ENTITY_MOVING_TO_END;
+        default:
+            break;
         }
-
-        // Determine the target position based on the current state
-        Vector target_position = (enemy_context->state == ENTITY_MOVING_TO_END) ? enemy_context->end_position : enemy_context->start_position;
-        Vector direction_vector = {0, 0};
-
-        // Calculate direction towards the target
-        if (current_pos.x < target_position.x)
-        {
-            direction_vector.x = 1.0f;
-            enemy_context->direction = ENTITY_RIGHT;
-        }
-        else if (current_pos.x > target_position.x)
-        {
-            direction_vector.x = -1.0f;
-            enemy_context->direction = ENTITY_LEFT;
-        }
-
-        if (current_pos.y < target_position.y)
-        {
-            direction_vector.y = 1.0f;
-            enemy_context->direction = ENTITY_DOWN;
-        }
-        else if (current_pos.y > target_position.y)
-        {
-            direction_vector.y = -1.0f;
-            enemy_context->direction = ENTITY_UP;
-        }
-
-        // Normalize direction vector
-        float length = sqrt(direction_vector.x * direction_vector.x + direction_vector.y * direction_vector.y);
-        if (length != 0)
-        {
-            direction_vector.x /= length;
-            direction_vector.y /= length;
-        }
-
-        // Update position based on direction and speed
-        Vector new_pos = current_pos;
-        new_pos.x += direction_vector.x * enemy_context->speed * delta_time;
-        new_pos.y += direction_vector.y * enemy_context->speed * delta_time;
-
-        // Clamp the position to the target to prevent overshooting
-        if ((direction_vector.x > 0.0f && new_pos.x > target_position.x) ||
-            (direction_vector.x < 0.0f && new_pos.x < target_position.x))
-        {
-            new_pos.x = target_position.x;
-        }
-
-        if ((direction_vector.y > 0.0f && new_pos.y > target_position.y) ||
-            (direction_vector.y < 0.0f && new_pos.y < target_position.y))
-        {
-            new_pos.y = target_position.y;
-        }
-
-        entity_pos_set(self, new_pos);
-
-        // Check if the enemy has reached or surpassed the target_position
-        bool reached_x = fabs(new_pos.x - target_position.x) < (double)1.0;
-        bool reached_y = fabs(new_pos.y - target_position.y) < (double)1.0;
-
-        // If reached the target position on both axes, transition to IDLE
-        if (reached_x && reached_y)
-        {
-            enemy_context->state = ENTITY_IDLE;
-            enemy_context->elapsed_move_timer = 0.0f;
-        }
-    }
-    break;
-
-    default:
-        break;
     }
 }
 
