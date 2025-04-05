@@ -94,7 +94,14 @@ static IconContext *icon_generic_alloc(const char *id, const Icon *icon, uint8_t
         FURI_LOG_E("Game", "Failed to allocate IconContext");
         return NULL;
     }
-    snprintf(ctx->id, sizeof(ctx->id), "%s", id);
+    ctx->id = malloc(strlen(id) + 1);
+    if (!ctx->id)
+    {
+        FURI_LOG_E("Game", "Failed to allocate IconContext id");
+        free(ctx);
+        return NULL;
+    }
+    snprintf(ctx->id, strlen(id) + 1, "%s", id);
     ctx->icon = icon;
     ctx->size = (Vector){width, height};
     return ctx;
