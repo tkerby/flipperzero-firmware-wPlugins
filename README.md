@@ -44,7 +44,7 @@ If you build the source code just with regular `ufbt` command, the app will prob
 This is because after you compile the app with ufbt, the result executable will contain hundreds of sections with very long names like `.fast.rel.text._ZNSt17_Function_handlerIFvmEZN18PagerActionsScreenC4EP9AppConfigSt8functionIFP15StoredPagerDatavEEP12PagerDecoderP13PagerProtocolP12SubGhzModuleEUlmE_E9_M_invokeERKSt9_Any_dataOm`.
 **These names stay in RAM during the execution and consume about 20kb of heap!**
 
-The reason for it is [name mangling](https://en.wikipedia.org/wiki/Name_mangling). Perhaps, the gcc parameter `-fno-mangle` could disable it, but unfortunately, it is not possible to pass any gcc arguments to gcc when you compile app with `ufbt`. 
+The reason for it is [name mangling](https://en.wikipedia.org/wiki/Name_mangling). Perhaps, the gcc parameter `-fno-mangle` could disable it, but unfortunately, it is not possible to pass any arguments to gcc when you compile app with `ufbt`. 
 Luckily the sections inside the compiled file can be renamed using gcc's `objcopy` tool with `--rename-section` parameter. To automate it, I built a small python script which renames them all and gives them short names like `_s1`, `_s2`, `_s228` etc... 
 
 **Therfore you must use [scripts/build-and-clear.py](scripts/build-and-clear.py) script instead!** It will build, rename sections and upload the fap to flipper.
