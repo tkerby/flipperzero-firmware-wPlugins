@@ -1,5 +1,6 @@
 #include "callback/free.h"
 #include "callback/loader.h"
+#include "callback/game.h"
 
 void free_game_submenu(void *context)
 {
@@ -23,14 +24,14 @@ void free_submenu_other(void *context)
         submenu_free(app->submenu_other);
         app->submenu_other = NULL;
     }
-    // for (int i = 0; i < 10; i++)
-    // {
-    //     if (lobby_list[i])
-    //     {
-    //         free(lobby_list[i]);
-    //         lobby_list[i] = NULL;
-    //     }
-    // }
+    for (int i = 0; i < 10; i++)
+    {
+        if (lobby_list[i])
+        {
+            free(lobby_list[i]);
+            lobby_list[i] = NULL;
+        }
+    }
 }
 
 void free_message_view(void *context)
@@ -151,17 +152,17 @@ void free_all_views(void *context, bool free_variable_list, bool free_settings_o
     free_text_input_view(app);
 
     // free game thread
-    // if (game_thread_running)
-    // {
-    //     game_thread_running = false;
-    //     if (game_thread)
-    //     {
-    //         furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
-    //         furi_thread_join(game_thread);
-    //         furi_thread_free(game_thread);
-    //         game_thread = NULL;
-    //     }
-    // }
+    if (game_thread_running)
+    {
+        game_thread_running = false;
+        if (game_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(game_thread), WorkerEvtStop);
+            furi_thread_join(game_thread);
+            furi_thread_free(game_thread);
+            game_thread = NULL;
+        }
+    }
 
     if (free_settings_other)
     {
@@ -177,15 +178,15 @@ void free_all_views(void *context, bool free_variable_list, bool free_settings_o
     }
 
     // free waiting thread
-    // if (waiting_thread_running)
-    // {
-    //     waiting_thread_running = false;
-    //     if (waiting_thread)
-    //     {
-    //         furi_thread_flags_set(furi_thread_get_id(waiting_thread), WorkerEvtStop);
-    //         furi_thread_join(waiting_thread);
-    //         furi_thread_free(waiting_thread);
-    //         waiting_thread = NULL;
-    //     }
-    // }
+    if (waiting_thread_running)
+    {
+        waiting_thread_running = false;
+        if (waiting_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(waiting_thread), WorkerEvtStop);
+            furi_thread_join(waiting_thread);
+            furi_thread_free(waiting_thread);
+            waiting_thread = NULL;
+        }
+    }
 }

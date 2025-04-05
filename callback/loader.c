@@ -1,4 +1,5 @@
 #include <callback/loader.h>
+#include <callback/utils.h>
 #include <alloc/alloc.h>
 
 bool loader_view_alloc(void *context)
