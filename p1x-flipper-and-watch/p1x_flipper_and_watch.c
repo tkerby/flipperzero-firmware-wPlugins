@@ -20,22 +20,22 @@ typedef struct {
 } Position;
 
 static const Position SYSTEM_POSITIONS[4] = {
-    {32, 16},  // Top-left
-    {96, 16},  // Top-right
-    {32, 48},  // Bottom-left
-    {96, 48}   // Bottom-right
+    {32, 21},  // Top-left (moved down by 5px)
+    {96, 21},  // Top-right (moved down by 5px)
+    {32, 53},  // Bottom-left (moved down by 5px)
+    {96, 53}   // Bottom-right (moved down by 5px)
 };
 
 // Player positions (adjacent to systems)
 static const Position PLAYER_POSITIONS[4] = {
-    {24, 16},  // Left of top-left system
-    {104, 16}, // Right of top-right system
-    {24, 48},  // Left of bottom-left system
-    {104, 48}  // Right of bottom-right system
+    {24, 21},  // Left of top-left system (moved down by 5px)
+    {104, 21}, // Right of top-right system (moved down by 5px)
+    {24, 53},  // Left of bottom-left system (moved down by 5px)
+    {104, 53}  // Right of bottom-right system (moved down by 5px)
 };
 
 // Server position (center)
-static const Position SERVER_POSITION = {64, 32};
+static const Position SERVER_POSITION = {64, 37}; // Center server (moved down by 5px)
 
 // Game state
 typedef struct {
@@ -171,11 +171,11 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_disc(canvas, px, py, 3); // Player dot
     }
 
-    // Display score during gameplay
+    // Move score display to center-top
     canvas_set_font(canvas, FontSecondary);
     char score_text[16];
     snprintf(score_text, sizeof(score_text), "Score: %d", state->score);
-    canvas_draw_str(canvas, 5, 5, score_text);
+    canvas_draw_str(canvas, SCREEN_WIDTH / 2 - canvas_string_width(canvas, score_text) / 2, 10, score_text);
 }
 
 // Input handling
@@ -221,6 +221,7 @@ static void update_game(GameState* state) {
         if(state->hacking[pos]) {
             state->hacking[pos] = false;
             state->hack_start[pos] = 0;
+            state->score += 30; // Add 30 points for preventing hacking
             furi_hal_vibro_on(true); // Short vibrate for success
             furi_delay_ms(100);
             furi_hal_vibro_on(false);
