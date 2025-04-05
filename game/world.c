@@ -142,6 +142,7 @@ static void draw_pvp_world(Level *level, GameManager *manager, void *context)
     }
     furi_string_free(json_data_str);
     set_world(level, manager, "pvp_world");
+    game_context->is_switching_level = false;
     game_context->icon_offset = 0;
     if (!game_context->imu_present)
     {
