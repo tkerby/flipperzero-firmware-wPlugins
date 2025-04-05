@@ -170,31 +170,29 @@ static void vgm_y_change(VariableItem *item);
 static uint8_t timer_iteration = 0; // timer iteration for the loading screen
 static uint8_t timer_refresh = 5;   // duration for timer to refresh
 //
-static void free_timer(void *context);
-
+void waiting_loader_process_callback(FlipperHTTP *fhttp, void *context);
+static void waiting_lobby(void *context);
+static uint32_t lobby_index = -1;
+static char *lobby_list[10];
+static bool fetch_lobby(FlipperHTTP *fhttp, char *lobby_name);
+bool user_hit_back = false;
+static bool message_input_callback(InputEvent *event, void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app);
+    if (event->key == InputKeyBack)
+    {
+        FURI_LOG_I(TAG, "Message view - BACK pressed");
+        user_hit_back = true;
+    }
+    return true;
+}
 uint32_t callback_to_submenu(void *context)
 {
     UNUSED(context);
     return FlipWorldViewSubmenu;
 }
-static uint32_t callback_to_submenu_lobby(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    furi_check(app);
-    // this is only called by WaitingLobby, so let's send the request
-    furi_timer_stop(app->timer);
-    free_timer(app);
-    FlipperHTTP *fhttp = flipper_http_alloc();
-    if (fhttp)
-    {
-        remove_player_from_lobby(fhttp);
-        // send command to reset board
-        // flipper_http_send_command(fhttp, HTTP_CMD_REBOOT);
-        // furi_delay_ms(500);
-        flipper_http_free(fhttp);
-    }
-    return FlipWorldViewSubmenuOther;
-}
+
 static uint32_t callback_to_wifi_settings(void *context)
 {
     UNUSED(context);
@@ -205,7 +203,34 @@ static uint32_t callback_to_settings(void *context)
     UNUSED(context);
     return FlipWorldViewSubmenuOther;
 }
-
+static int32_t waiting_app_callback(void *p)
+{
+    FlipWorldApp *app = (FlipWorldApp *)p;
+    furi_check(app);
+    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+        easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP");
+        return -1;
+    }
+    user_hit_back = false;
+    timer_iteration = 0;
+    while (timer_iteration < 60 && !user_hit_back)
+    {
+        FURI_LOG_I(TAG, "Waiting for more players...");
+        waiting_loader_process_callback(fhttp, app);
+        FURI_LOG_I(TAG, "Waiting for more players... %d", timer_iteration);
+        timer_iteration++;
+        furi_delay_ms(1000 * timer_refresh);
+    }
+    // if we reach here, it means we timed out or the user hit back
+    FURI_LOG_E(TAG, "No players joined within the timeout or user hit back");
+    remove_player_from_lobby(fhttp);
+    flipper_http_free(fhttp);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
+    return 0;
+}
 static void message_draw_callback(Canvas *canvas, void *model)
 {
     MessageModel *message_model = model;
@@ -237,42 +262,60 @@ static void message_draw_callback(Canvas *canvas, void *model)
             canvas_draw_str(canvas, 0, 60, "Please wait....");
         }
     }
+    // well this is only called once so let's make a while loop
+    else if (message_model->message_state == MessageStateWaitingLobby)
+    {
+        canvas_draw_str(canvas, 0, 10, "Waiting for more players...");
+        // time elapsed based on timer_iteration and timer_refresh
+        // char str[32];
+        // snprintf(str, sizeof(str), "Time elapsed: %d seconds", timer_iteration * timer_refresh);
+        // canvas_draw_str(canvas, 0, 50, str);
+        canvas_draw_str(canvas, 0, 60, "Press BACK to cancel.");
+        canvas_commit(canvas); // make sure message is drawn
+    }
+    else
+    {
+        canvas_draw_str(canvas, 0, 10, "Unknown message state");
+    }
 }
 
 // alloc
 static bool alloc_message_view(void *context, MessageState state)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
+    furi_check(app);
+    if (app->view_message)
     {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        FURI_LOG_E(TAG, "Message view already allocated");
         return false;
+    }
+    switch (state)
+    {
+    case MessageStateAbout:
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app);
+        break;
+    case MessageStateLoading:
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, NULL, &app->view_dispatcher, app);
+        break;
+    case MessageStateWaitingLobby:
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, message_input_callback, NULL, &app->view_dispatcher, app);
+        break;
     }
     if (!app->view_message)
     {
-        if (!easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, (state == MessageStateLoading) ? NULL : callback_to_submenu, &app->view_dispatcher, app))
-        {
-            return false;
-        }
-        if (!app->view_message)
-        {
-            return false;
-        }
-        view_allocate_model(app->view_message, ViewModelTypeLockFree, sizeof(MessageModel));
-        MessageModel *model = view_get_model(app->view_message);
-        model->message_state = state;
+        FURI_LOG_E(TAG, "Failed to allocate message view");
+        return false;
     }
+    view_allocate_model(app->view_message, ViewModelTypeLockFree, sizeof(MessageModel));
+    MessageModel *model = view_get_model(app->view_message);
+    model->message_state = state;
     return true;
 }
 
 static bool alloc_text_input_view(void *context, char *title)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
+    furi_check(app);
     if (!title)
     {
         FURI_LOG_E(TAG, "Title is NULL");
@@ -635,40 +678,6 @@ static bool alloc_game_submenu(void *context)
     return true;
 }
 
-static void waiting_lobby_draw_callback(Canvas *canvas, void *model)
-{
-    UNUSED(model);
-    canvas_clear(canvas);
-    canvas_draw_str(canvas, 0, 10, "Waiting for more players...");
-    // time elapsed based on timer_iteration and timer_refresh
-    // char str[32];
-    // snprintf(str, sizeof(str), "Time elapsed: %d seconds", timer_iteration * timer_refresh);
-    // FURI_LOG_I(TAG, "Time elapsed: %d seconds", timer_iteration * timer_refresh);
-    // canvas_draw_str(canvas, 0, 50, str);
-    canvas_draw_str(canvas, 0, 60, "Press BACK to cancel.");
-}
-static bool alloc_waiting_lobby_view(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
-    if (!app->view_waiting_lobby)
-    {
-        if (!easy_flipper_set_view(&app->view_waiting_lobby, FlipWorldViewWaitingLobby, waiting_lobby_draw_callback, NULL, callback_to_submenu_lobby, &app->view_dispatcher, app))
-        {
-            return false;
-        }
-        if (!app->view_waiting_lobby)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void free_game_submenu(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -684,8 +693,7 @@ void free_game_submenu(void *context)
         app->submenu_game = NULL;
     }
 }
-static uint32_t lobby_index = -1;
-static char *lobby_list[10];
+
 static void free_submenu_other(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
@@ -823,45 +831,42 @@ static void free_variable_item_list(void *context)
     }
 }
 
-static void free_timer(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-    if (app->timer)
-    {
-        furi_timer_free(app->timer);
-        app->timer = NULL;
-    }
-}
-static void free_waiting_lobby_view(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
-    if (app->view_waiting_lobby)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewWaitingLobby);
-        view_free(app->view_waiting_lobby);
-        app->view_waiting_lobby = NULL;
-    }
-}
 static FuriThread *game_thread;
+static FuriThread *waiting_thread;
 static bool game_thread_running = false;
+static bool waiting_thread_running = false;
+static bool start_waiting_thread(void *context)
+{
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app);
+    // free game thread
+    if (waiting_thread_running)
+    {
+        waiting_thread_running = false;
+        if (waiting_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(waiting_thread), WorkerEvtStop);
+            furi_thread_join(waiting_thread);
+            furi_thread_free(waiting_thread);
+        }
+    }
+    // start waiting thread
+    FuriThread *thread = furi_thread_alloc_ex("waiting_thread", 2048, waiting_app_callback, app);
+    if (!thread)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate waiting thread");
+        easy_flipper_dialog("Error", "Failed to allocate waiting thread. Restart your Flipper.");
+        return false;
+    }
+    furi_thread_start(thread);
+    waiting_thread = thread;
+    waiting_thread_running = true;
+    return true;
+}
 void free_all_views(void *context, bool free_variable_list, bool free_settings_other, bool free_submenu_game)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app);
     if (free_variable_list)
     {
         free_variable_item_list(app);
@@ -895,8 +900,18 @@ void free_all_views(void *context, bool free_variable_list, bool free_settings_o
         free_game_submenu(app);
     }
 
-    free_timer(app);
-    free_waiting_lobby_view(app);
+    // free waiting thread
+    if (waiting_thread_running)
+    {
+        waiting_thread_running = false;
+        if (waiting_thread)
+        {
+            furi_thread_flags_set(furi_thread_get_id(waiting_thread), WorkerEvtStop);
+            furi_thread_join(waiting_thread);
+            furi_thread_free(waiting_thread);
+            waiting_thread = NULL;
+        }
+    }
 }
 static bool fetch_world_list(FlipperHTTP *fhttp)
 {
@@ -1028,7 +1043,6 @@ static bool start_game_thread(void *context)
     // free_submenu_other(app); // free lobby list or settings
     free_view_loader(app);
     free_game_submenu(app);
-    free_waiting_lobby_view(app);
 
     // free game thread
     if (game_thread_running)
@@ -1357,7 +1371,7 @@ static void run(FlipWorldApp *app)
         return;
     }
     free_all_views(app, true, true, false);
-    if (!is_enough_heap(60000, false)) // only need to check if they have 60k free
+    if (!is_enough_heap(40000, false)) // only need to check if they have 60k free
     {
         easy_flipper_dialog("Error", "Not enough heap memory.\nPlease restart your Flipper.");
         return;
@@ -1869,23 +1883,17 @@ static void start_pvp(FlipperHTTP *fhttp, FuriString *lobby, void *context)
         return;
     }
 };
-static void waiting_timer_callback(void *context)
-{
-    furi_check(context, "timer_callback: Context is NULL");
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    view_dispatcher_send_custom_event(app->view_dispatcher, FlipWorldCustomEventWaitingLobby);
-}
-static void waiting_loader_process_callback(void *context)
+void waiting_loader_process_callback(FlipperHTTP *fhttp, void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    furi_check(app, "FlipWorldApp is NULL");
-    // check if another player has joined the lobby
-    FlipperHTTP *fhttp = flipper_http_alloc();
+    if (!app)
+    {
+        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
+        return;
+    }
     if (!fhttp)
     {
         FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
-        furi_timer_stop(app->timer);
-        free_timer(app);
         easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
         return;
@@ -1894,8 +1902,6 @@ static void waiting_loader_process_callback(void *context)
     if (!fetch_lobby(fhttp, lobby_list[lobby_index]))
     {
         FURI_LOG_E(TAG, "Failed to fetch lobby details");
-        furi_timer_stop(app->timer);
-        free_timer(app);
         flipper_http_free(fhttp);
         easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
@@ -1906,8 +1912,6 @@ static void waiting_loader_process_callback(void *context)
     if (!lobby)
     {
         FURI_LOG_E(TAG, "Failed to load lobby details");
-        furi_timer_stop(app->timer);
-        free_timer(app);
         flipper_http_free(fhttp);
         easy_flipper_dialog("Error", "Failed to load lobby details. Press BACK to return.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
@@ -1918,67 +1922,30 @@ static void waiting_loader_process_callback(void *context)
     if (count == 2)
     {
         // break out of this and start the game
-        furi_timer_stop(app->timer);
-        free_timer(app);
         start_pvp(fhttp, lobby, app); // this will free both the fhttp and lobby
         return;
     }
-    timer_iteration++;
-    if (timer_iteration >= 60) // 5 seconds per ieration * 60 = 5 minutes
-    {
-        // if no one has joined after 5 minutes, show an error message and return to the main menu
-        FURI_LOG_E(TAG, "No players joined within the timeout");
-        timer_iteration = -1;
-        furi_timer_stop(app->timer);
-        free_timer(app);
-        remove_player_from_lobby(fhttp);
-        easy_flipper_dialog("Error", "No players joined within the timeout. Press BACK to return.");
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
-    }
     furi_string_free(lobby);
-    flipper_http_free(fhttp);
 }
-static bool waiting_custom_event_callback(void *context, uint32_t index)
-{
-    UNUSED(index);
-    furi_check(context, "waiting_custom_event_callback: Context is NULL");
-    waiting_loader_process_callback(context);
-    return true;
-}
+
 static void waiting_lobby(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    furi_check(app, "FlipWorldApp is NULL");
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, waiting_custom_event_callback);
-    free_timer(app);
-    furi_timer_flush();
-    app->timer = furi_timer_alloc(waiting_timer_callback, FuriTimerTypePeriodic, app);
-    if (!app->timer)
+    furi_check(app, "waiting_lobby: FlipWorldApp is NULL");
+    if (!start_waiting_thread(app))
     {
-        FURI_LOG_E(TAG, "Failed to allocate timer");
-        free_timer(app);
-        easy_flipper_dialog("Error", "Failed to allocate timer. Press BACK to return.");
+        FURI_LOG_E(TAG, "Failed to start waiting thread");
+        easy_flipper_dialog("Error", "Failed to start waiting thread. Press BACK to return.");
         return;
     }
-    // check if another player has joined every timer_refresh seconds
-    if (furi_timer_start(app->timer, 1000 * timer_refresh) != FuriStatusOk ||
-        furi_timer_is_running(app->timer) == 0) // 0: not running, 1: running
+    free_message_view(app);
+    if (!alloc_message_view(app, MessageStateWaitingLobby))
     {
-        FURI_LOG_E(TAG, "Failed to start timer");
-        free_timer(app);
-        easy_flipper_dialog("Error", "Failed to start timer. Press BACK to return.");
+        FURI_LOG_E(TAG, "Failed to allocate message view");
         return;
     }
-    free_waiting_lobby_view(app);
-    if (!alloc_waiting_lobby_view(app))
-    {
-        FURI_LOG_E(TAG, "Failed to allocate waiting lobby view");
-        free_timer(app);
-        easy_flipper_dialog("Error", "Failed to allocate waiting lobby view. Press BACK to return.");
-        return;
-    }
-    timer_iteration = 0;
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewWaitingLobby);
+    // finally, switch to the waiting lobby view
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 };
 static void callback_submenu_lobby_choices(void *context, uint32_t index)
 {

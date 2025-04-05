@@ -54,8 +54,7 @@ typedef enum
 typedef enum
 {
     FlipWorldCustomEventProcess,
-    FlipWorldCustomEventPlay,         // Play the game
-    FlipWorldCustomEventWaitingLobby, // waiting lobby for PvP
+    FlipWorldCustomEventPlay, // Play the game
 } FlipWorldCustomEvent;
 
 // Each screen will have its own view
@@ -66,7 +65,6 @@ typedef struct
     //
     ViewDispatcher *view_dispatcher;       // Switches between our views
     View *view_message;                    // The about, loading screen
-    View *view_waiting_lobby;              // The waiting lobby screen
     Submenu *submenu;                      // The submenu
     Submenu *submenu_game;                 // The game submenu
     Submenu *submenu_other;                // submenu used by settings and lobby
@@ -91,7 +89,6 @@ typedef struct
     char *text_input_temp_buffer;    // Temporary buffer for the text input
     uint32_t text_input_buffer_size; // Size of the text input buffer
     //
-    FuriTimer *timer;
 } FlipWorldApp;
 
 extern char *fps_choices_str[];
