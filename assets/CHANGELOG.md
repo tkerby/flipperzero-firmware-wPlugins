@@ -1,5 +1,7 @@
-## 0.8 (2025-03-22)
-- 
+## 0.8 (2025-04-05)
+- Improved memory allocation.
+- Added multiplayer support.
+- Updated the default vibration/sound settings.
 
 ## 0.7 (2025-03-21)
 - Sped up player movement.
