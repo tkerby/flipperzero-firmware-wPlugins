@@ -119,8 +119,7 @@ static void draw_title_screen(Canvas* canvas) {
 static void draw_menu_screen(Canvas* canvas, int selection) {
     canvas_clear(canvas);
     
-    // Add frame and title
-    canvas_draw_icon(canvas, 0, 0, &I_frame);
+    // Add title without frame
     canvas_draw_icon(canvas, 9, 5, &I_title_network);
     canvas_draw_icon(canvas, 10, 20, &I_title_defender);
     
@@ -135,46 +134,43 @@ static void draw_menu_screen(Canvas* canvas, int selection) {
     canvas_draw_str(canvas, 20, 60, "Quit");
 }
 
-// Draw help screen
+// Draw help screen with optimized layout
 static void draw_help_screen(Canvas* canvas, int page) {
     canvas_clear(canvas);
-    canvas_draw_icon(canvas, 0, 0, &I_frame);
-    
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 35, 12, "GAME HELP");
     
     canvas_set_font(canvas, FontSecondary);
     
     if(page == 0) {
-        // Page 1: Icons explanation
-        canvas_draw_str(canvas, 5, 24, "Icons:");
+        // Page 1: Icons explanation - more compact layout
+        canvas_draw_str(canvas, 5, 10, "ICONS:");
         
         // Packet icon
-        canvas_draw_icon(canvas, 10, 28, &I_packet);
-        canvas_draw_str(canvas, 20, 35, "- Data packet");
+        canvas_draw_icon(canvas, 10, 14, &I_packet);
+        canvas_draw_str(canvas, 20, 21, "- Data packet");
         
         // Computer icon
-        canvas_draw_icon(canvas, 10, 38, &I_pc);
-        canvas_draw_str(canvas, 20, 45, "- Computer system");
+        canvas_draw_icon(canvas, 10, 25, &I_pc);
+        canvas_draw_str(canvas, 20, 32, "- Computer system");
         
         // Warning icon
-        canvas_draw_str(canvas, 10, 55, "!");
-        canvas_draw_str(canvas, 20, 55, "- Hack warning");
+        canvas_draw_str(canvas, 10, 43, "!");
+        canvas_draw_str(canvas, 20, 43, "- Hack warning");
         
         // Active hack icon
-        canvas_draw_str(canvas, 10, 65, "!!!");
-        canvas_draw_str(canvas, 20, 65, "- Active hack attack");
+        canvas_draw_str(canvas, 10, 54, "!!!");
+        canvas_draw_str(canvas, 20, 54, "- Active hack attack");
     } else {
-        // Page 2: Gameplay instructions
-        canvas_draw_str(canvas, 5, 24, "How to play:");
-        canvas_draw_str(canvas, 5, 34, "- Move with D-pad");
-        canvas_draw_str(canvas, 5, 44, "- Press OK to accept packet");
-        canvas_draw_str(canvas, 5, 54, "- Press OK for 3s to stop hack");
-        canvas_draw_str(canvas, 5, 64, "- Prevent DDOS: <10 total packets");
+        // Page 2: Gameplay instructions - more compact layout
+        canvas_draw_str(canvas, 5, 10, "HOW TO PLAY:");
+        canvas_draw_str(canvas, 5, 20, "- Move with D-pad");
+        canvas_draw_str(canvas, 5, 30, "- Press OK to accept packet");
+        canvas_draw_str(canvas, 5, 40, "- Hold OK for 3s to patch");
+        canvas_draw_str(canvas, 5, 50, "- Keep packets below limit");
+        canvas_draw_str(canvas, 5, 60, "- Max 10 total packets");
     }
     
-    // Navigation hints
-    canvas_draw_str(canvas, 5, SCREEN_HEIGHT - 4, page == 0 ? "OK: Next page" : "OK: Back to menu");
+    // Small page indicator at bottom right
+    canvas_draw_str(canvas, SCREEN_WIDTH - 10, SCREEN_HEIGHT - 4, page == 0 ? "1/2" : "2/2");
 }
 
 // Draw callback for GUI
