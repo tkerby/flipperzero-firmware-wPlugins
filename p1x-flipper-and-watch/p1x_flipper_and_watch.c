@@ -326,7 +326,7 @@ static void input_callback(InputEvent* input, void* ctx) {
     furi_message_queue_put(queue, input, FuriWaitForever);
 }
 
-// Fixed update_upcoming_packets to ensure indicators are synced with arriving packets
+// Fixed update_upcoming_packets to give each computer a unique pattern
 static void update_upcoming_packets(GameState* state) {
     uint32_t now = furi_get_tick();
     
@@ -358,12 +358,11 @@ static void update_upcoming_packets(GameState* state) {
         }
     }
     
-    // 3. Generate new packets in the last position - synchronized for all computers
-    // Determine if this tick will generate packets (20% chance)
-    bool generate_packet = (rand() % 5 == 0);
-    
-    // Apply to all computers
+    // 3. Generate new packets in the last position - UNIQUE for each computer
+    //    but still maintaining synchronized timing
     for(int i = 0; i < 4; i++) {
+        // Each computer has its own 40% chance of getting a packet
+        bool generate_packet = (rand() % 5 < 2);
         state->upcoming_packets[i][MAX_UPCOMING_PACKETS - 1] = generate_packet ? 1 : 0;
     }
 }
