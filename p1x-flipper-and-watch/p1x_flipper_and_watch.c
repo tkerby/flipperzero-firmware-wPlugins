@@ -21,8 +21,9 @@
 
 // Define game states - remove duplicates
 #define GAME_STATE_TITLE 0
-#define GAME_STATE_PLAY 1
+#define GAME_STATE_MENU 1
 #define GAME_STATE_HELP 2
+#define GAME_STATE_PLAY 3
 
 // System positions (4 corners)
 typedef struct {
@@ -65,6 +66,8 @@ typedef struct {
     int upcoming_packets[4][MAX_UPCOMING_PACKETS]; // Queue of upcoming packets for each system
     uint32_t last_packet_spawn_time; // Last packet spawn time
     int current_state;       // Current game state
+    int help_page;           // Help page number
+    int menu_selection;      // Menu selection index
 } GameState;
 
 // Game over reasons
@@ -80,6 +83,8 @@ static void reset_game_state(GameState* state) {
     state->packet_animation = false;
     state->score = 0;
     state->last_packet_spawn_time = furi_get_tick();
+    state->menu_selection = 0;
+    state->help_page = 0;
     for(int i = 0; i < 4; i++) {
         state->hacking[i] = false;
         state->hack_start[i] = 0;
@@ -101,13 +106,75 @@ static void game_init(GameState* state) {
 static void draw_title_screen(Canvas* canvas) {
     canvas_clear(canvas);
     
-    // Display title graphics
+    // Display title graphics - using correct icon names
     canvas_draw_icon(canvas, 9, 10, &I_title_network);
     canvas_draw_icon(canvas, 10, 39, &I_title_defender);
     canvas_draw_icon(canvas, 94, 30, &I_player_left);
     
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 30, 59, "Press OK to Start");
+    canvas_draw_str(canvas, 30, 59, "Press OK to continue");
+}
+
+// Draw menu screen with selection indicator
+static void draw_menu_screen(Canvas* canvas, int selection) {
+    canvas_clear(canvas);
+    
+    // Add frame and title
+    canvas_draw_icon(canvas, 0, 0, &I_frame);
+    canvas_draw_icon(canvas, 9, 5, &I_title_network);
+    canvas_draw_icon(canvas, 10, 20, &I_title_defender);
+    
+    // Draw menu options with selection indicator
+    canvas_set_font(canvas, FontSecondary);
+    
+    // Selection indicator
+    canvas_draw_str(canvas, 10, 40 + (selection * 10), ">");
+    
+    canvas_draw_str(canvas, 20, 40, "Start Game");
+    canvas_draw_str(canvas, 20, 50, "Help");
+    canvas_draw_str(canvas, 20, 60, "Quit");
+}
+
+// Draw help screen
+static void draw_help_screen(Canvas* canvas, int page) {
+    canvas_clear(canvas);
+    canvas_draw_icon(canvas, 0, 0, &I_frame);
+    
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 35, 12, "GAME HELP");
+    
+    canvas_set_font(canvas, FontSecondary);
+    
+    if(page == 0) {
+        // Page 1: Icons explanation
+        canvas_draw_str(canvas, 5, 24, "Icons:");
+        
+        // Packet icon
+        canvas_draw_icon(canvas, 10, 28, &I_packet);
+        canvas_draw_str(canvas, 20, 35, "- Data packet");
+        
+        // Computer icon
+        canvas_draw_icon(canvas, 10, 38, &I_pc);
+        canvas_draw_str(canvas, 20, 45, "- Computer system");
+        
+        // Warning icon
+        canvas_draw_str(canvas, 10, 55, "!");
+        canvas_draw_str(canvas, 20, 55, "- Hack warning");
+        
+        // Active hack icon
+        canvas_draw_str(canvas, 10, 65, "!!!");
+        canvas_draw_str(canvas, 20, 65, "- Active hack attack");
+    } else {
+        // Page 2: Gameplay instructions
+        canvas_draw_str(canvas, 5, 24, "How to play:");
+        canvas_draw_str(canvas, 5, 34, "- Move with D-pad");
+        canvas_draw_str(canvas, 5, 44, "- Press OK to accept packet");
+        canvas_draw_str(canvas, 5, 54, "- Press OK for 3s to stop hack");
+        canvas_draw_str(canvas, 5, 64, "- Prevent DDOS: <10 total packets");
+    }
+    
+    // Navigation hints
+    canvas_draw_str(canvas, 5, SCREEN_HEIGHT - 4, page == 0 ? "OK: Next page" : "OK: Back to menu");
 }
 
 // Draw callback for GUI
@@ -116,6 +183,12 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 
     if(state->current_state == GAME_STATE_TITLE) {
         draw_title_screen(canvas);
+        return;
+    } else if(state->current_state == GAME_STATE_MENU) {
+        draw_menu_screen(canvas, state->menu_selection);
+        return;
+    } else if(state->current_state == GAME_STATE_HELP) {
+        draw_help_screen(canvas, state->help_page);
         return;
     }
 
@@ -411,17 +484,39 @@ int32_t system_defender_app(void* p) {
                 if(game_state->current_state == GAME_STATE_TITLE) {
                     // Title screen inputs
                     if(event.key == InputKeyOk) {
-                        game_state->current_state = GAME_STATE_PLAY;
-                        reset_game_state(game_state); // Reset game when starting
-                    } else if(event.key == InputKeyDown) {
-                        game_state->current_state = GAME_STATE_HELP;
+                        game_state->current_state = GAME_STATE_MENU; // Go to menu instead of play
                     } else if(event.key == InputKeyBack) {
                         running = false; // Quit from title screen
                     }
+                } else if(game_state->current_state == GAME_STATE_MENU) {
+                    // Menu screen inputs
+                    if(event.key == InputKeyUp && game_state->menu_selection > 0) {
+                        game_state->menu_selection--;
+                    } else if(event.key == InputKeyDown && game_state->menu_selection < 2) {
+                        game_state->menu_selection++;
+                    } else if(event.key == InputKeyOk) {
+                        if(game_state->menu_selection == 0) {
+                            game_state->current_state = GAME_STATE_PLAY;
+                            reset_game_state(game_state); // Reset game when starting
+                        } else if(game_state->menu_selection == 1) {
+                            game_state->current_state = GAME_STATE_HELP;
+                            game_state->help_page = 0; // Start at first help page
+                        } else if(game_state->menu_selection == 2) {
+                            running = false; // Quit
+                        }
+                    } else if(event.key == InputKeyBack) {
+                        game_state->current_state = GAME_STATE_TITLE;
+                    }
                 } else if(game_state->current_state == GAME_STATE_HELP) {
                     // Help screen inputs
-                    if(event.key == InputKeyBack) {
-                        game_state->current_state = GAME_STATE_TITLE;
+                    if(event.key == InputKeyOk) {
+                        if(game_state->help_page == 0) {
+                            game_state->help_page = 1; // Go to next page
+                        } else {
+                            game_state->current_state = GAME_STATE_MENU; // Return to menu
+                        }
+                    } else if(event.key == InputKeyBack) {
+                        game_state->current_state = GAME_STATE_MENU;
                     }
                 } else if(game_state->current_state == GAME_STATE_PLAY) {
                     // Game screen inputs
