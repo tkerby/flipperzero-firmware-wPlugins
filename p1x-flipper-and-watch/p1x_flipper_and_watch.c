@@ -3,6 +3,7 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <stdlib.h>
+#include "p1x_flipper_and_watch_icons.h"
 
 // Game constants
 #define SCREEN_WIDTH 128
@@ -70,9 +71,6 @@ typedef struct {
 #define GAME_OVER_HACK 1
 #define GAME_OVER_DDOS 2
 
-// Forward declaration for draw_upcoming_packets
-static void draw_upcoming_packets(Canvas* canvas, GameState* state);
-
 // Reset game state for new game
 static void reset_game_state(GameState* state) {
     state->player_pos = 0;
@@ -102,12 +100,14 @@ static void game_init(GameState* state) {
 // Draw title screen
 static void draw_title_screen(Canvas* canvas) {
     canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 20, 20, "Network Defender");
-
+    
+    // Display title graphics
+    canvas_draw_icon(canvas, 9, 10, &I_title_network);
+    canvas_draw_icon(canvas, 10, 39, &I_title_defender);
+    canvas_draw_icon(canvas, 94, 30, &I_player_left);
+    
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 30, 40, "Press OK to Start");
-    canvas_draw_str(canvas, 30, 50, "Press BACK to Quit");
+    canvas_draw_str(canvas, 30, 59, "Press OK to Start");
 }
 
 // Draw callback for GUI
@@ -119,8 +119,9 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         return;
     }
 
-    canvas_clear(canvas);
-
+    // Draw game frame
+    canvas_draw_icon(canvas, 0, 0, &I_frame);
+    
     if(state->game_over) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 30, 20, "GAME OVER");
@@ -133,18 +134,15 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         }
 
         char score_text[32];
-        snprintf(score_text, sizeof(score_text), "%d", state->score);
-        canvas_draw_str(canvas, 15, 45, score_text);
+        snprintf(score_text, sizeof(score_text), "Score: %d", state->score);
+        canvas_draw_str(canvas, 15, 50, score_text);
 
-        canvas_draw_str(canvas, 15, 55, "Press BACK to restart");
-
-
+        canvas_draw_str(canvas, 15, 60, "Press BACK to restart");
         return;
     }
 
-    // Draw server in center
-    canvas_draw_rframe(canvas, SERVER_POSITION.x - 8, SERVER_POSITION.y - 8, 16, 16, 2);
-    canvas_draw_str(canvas, SERVER_POSITION.x - 6, SERVER_POSITION.y + 2, "SRV");
+    // Draw server in center instead of a rectangle
+    canvas_draw_icon(canvas, SERVER_POSITION.x - 8, SERVER_POSITION.y - 8, &I_pc);
 
     // Packet count near server
     int total_packets = 0;
@@ -160,29 +158,51 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         int x = SYSTEM_POSITIONS[i].x;
         int y = SYSTEM_POSITIONS[i].y;
 
-        // Draw system (box)
-        canvas_draw_frame(canvas, x - 6, y - 6, 12, 12);
+        // Draw system (computer icon) - pc.png is the server, but we'll use it for computers too
+        canvas_draw_icon(canvas, x - 8, y - 8, &I_pc);
 
         // Hacking warning or active hack
         uint32_t now = furi_get_tick();
         if(state->warn_start[i] && !state->hacking[i]) {
             if((now - state->warn_start[i]) / 500 % 2 == 0) { // Flash every 0.5s
-                canvas_draw_str(canvas, x - 4, y - 8, "!");
+                canvas_draw_str(canvas, x - 4, y - 12, "!");
             }
         } else if(state->hacking[i]) {
             canvas_set_font(canvas, FontSecondary);
-            canvas_draw_str(canvas, x - 4, y - 8, "!!!");
+            canvas_draw_str(canvas, x - 4, y - 12, "!!!");
             canvas_set_font(canvas, FontPrimary);
         }
 
-        // Draw packets (dots)
+        // Draw packets at the system
         for(int p = 0; p < state->packets[i] && p < 3; p++) {
-            canvas_draw_disc(canvas, (i % 2 == 0) ? x + 10 + p*3 : x - 10 - p*3, y, 1);
+            int packet_x = (i % 2 == 0) ? x + 10 + p*5 : x - 14 - p*5;
+            canvas_draw_icon(canvas, packet_x, y - 3, &I_packet);
         }
     }
     
-    // Draw upcoming packets with clearer indicators
-    draw_upcoming_packets(canvas, state);
+    // Draw upcoming packets with icons instead of circles
+    for(int i = 0; i < 4; i++) {
+        int x = SYSTEM_POSITIONS[i].x;
+        int y = SYSTEM_POSITIONS[i].y;
+        
+        // Determine direction based on system position (left or right)
+        bool is_right_side = (i % 2 == 1); // Systems 1 and 3 are on the right
+        
+        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
+            // Calculate packet position with more spacing
+            int packet_x = is_right_side ? 
+                (x + 12 + j * 8) :  // Right side systems, packets on right
+                (x - 18 - j * 8);   // Left side systems, packets on left
+            
+            if(state->upcoming_packets[i][j] == 1) {
+                // Use packet icon instead of filled circle
+                canvas_draw_icon(canvas, packet_x, y - 3, &I_packet);
+            } else {
+                // Empty circle for empty slot - keep this as circle for visibility
+                canvas_draw_circle(canvas, packet_x + 3, y, 2);
+            }
+        }
+    }
 
     // Draw packet animation if active
     if(state->packet_animation) {
@@ -199,18 +219,24 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         int py = sy + (SERVER_POSITION.y - sy) * progress;
         
         // Draw packet moving toward server
-        canvas_draw_disc(canvas, px, py, 2);
+        canvas_draw_icon(canvas, px - 3, py - 3, &I_packet);
     }
 
-    // Draw player
+    // Draw player using appropriate sprite based on position
     int px = PLAYER_POSITIONS[state->player_pos].x;
     int py = PLAYER_POSITIONS[state->player_pos].y;
+    
     if(state->patching) {
-        canvas_draw_circle(canvas, px, py, 4); // Circle when patching
-        canvas_draw_line(canvas, px - 3, py - 3, px + 3, py + 3); // "+" sign when patching
-        canvas_draw_line(canvas, px - 3, py + 3, px + 3, py - 3);
+        // When patching, show a different animation
+        if((furi_get_tick() / 200) % 2) {
+            canvas_draw_icon(canvas, px - 8, py - 8, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
+        } else {
+            // Alternate frame for patching animation
+            canvas_draw_circle(canvas, px, py, 4);
+        }
     } else {
-        canvas_draw_disc(canvas, px, py, 3); // Player dot
+        // Normal player display - use left or right facing sprite based on position
+        canvas_draw_icon(canvas, px - 8, py - 8, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
     }
 
     // Move score display to center-top
@@ -224,32 +250,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 static void input_callback(InputEvent* input, void* ctx) {
     FuriMessageQueue* queue = (FuriMessageQueue*)ctx;
     furi_message_queue_put(queue, input, FuriWaitForever);
-}
-
-// Draw upcoming packets with clearer indicators
-static void draw_upcoming_packets(Canvas* canvas, GameState* state) {
-    for(int i = 0; i < 4; i++) {
-        int x = SYSTEM_POSITIONS[i].x;
-        int y = SYSTEM_POSITIONS[i].y;
-        
-        // Determine direction based on system position (left or right)
-        bool is_right_side = (i % 2 == 1); // Systems 1 and 3 are on the right
-        
-        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
-            // Calculate packet position with more spacing
-            int packet_x = is_right_side ? 
-                (x + 10 + j * 6) :  // Right side systems, packets on right
-                (x - 10 - j * 6);   // Left side systems, packets on left
-            
-            if(state->upcoming_packets[i][j] == 1) {
-                // Filled circle for packet
-                canvas_draw_disc(canvas, packet_x, y, 2);
-            } else {
-                // Empty circle for empty slot
-                canvas_draw_circle(canvas, packet_x, y, 2);
-            }
-        }
-    }
 }
 
 // Fixed update_upcoming_packets to ensure indicators are synced with arriving packets
