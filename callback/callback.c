@@ -1683,90 +1683,123 @@ static bool create_pvp_enemy(FuriString *lobby_details)
         return false;
     }
 
-    // parse the lobby details
-    FuriString *player_stats = get_json_array_value_furi("player_stats", 0, lobby_details);
-    if (!player_stats)
+    char current_user[64];
+    if (!load_char("Flip-Social-Username", current_user, sizeof(current_user)))
     {
-        FURI_LOG_E(TAG, "Failed to get player stats");
+        FURI_LOG_E(TAG, "Failed to load Flip-Social-Username");
+        save_char("create_pvp_error", "Failed to load Flip-Social-Username");
         return false;
     }
 
-    // available keys from player_stats
-    FuriString *username = get_json_value_furi("username", player_stats);
-    FuriString *strength = get_json_value_furi("strength", player_stats);
-    FuriString *health = get_json_value_furi("health", player_stats);
-    FuriString *attack_timer = get_json_value_furi("attack_timer", player_stats);
-
-    if (!username || !strength || !health || !attack_timer)
+    for (uint8_t i = 0; i < 2; i++)
     {
-        FURI_LOG_E(TAG, "Failed to get player stats");
-        furi_string_free(player_stats);
-        if (username)
+        // parse the lobby details
+        FuriString *player_stats = get_json_array_value_furi("player_stats", i, lobby_details);
+        if (!player_stats)
+        {
+            FURI_LOG_E(TAG, "Failed to get player stats");
+            save_char("create_pvp_error", "Failed to get player stats array");
+            return false;
+        }
+
+        // available keys from player_stats
+        FuriString *username = get_json_value_furi("username", player_stats);
+        if (!username)
+        {
+            FURI_LOG_E(TAG, "Failed to get username");
+            save_char("create_pvp_error", "Failed to get username");
+            furi_string_free(player_stats);
+            return false;
+        }
+
+        // check if the username is the same as the current user
+        if (is_str(furi_string_get_cstr(username), current_user))
+        {
+            furi_string_free(player_stats);
             furi_string_free(username);
-        if (strength)
-            furi_string_free(strength);
-        if (health)
-            furi_string_free(health);
-        if (attack_timer)
-            furi_string_free(attack_timer);
-        return false;
-    }
+            continue; // skip the current user
+        }
 
-    // create enemy data
-    FuriString *enemy_data = furi_string_alloc();
-    furi_string_printf(
-        enemy_data,
-        "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
-        "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
-        "\"move_timer\":1,\"speed\":1,\"attack_timer\":%f,\"strength\":%f,\"health\":%f}]}",
-        furi_string_get_cstr(username),
-        (double)atof_furi(attack_timer),
-        (double)atof_furi(strength),
-        (double)atof_furi(health));
+        FuriString *strength = get_json_value_furi("strength", player_stats);
+        FuriString *health = get_json_value_furi("health", player_stats);
+        FuriString *attack_timer = get_json_value_furi("attack_timer", player_stats);
 
-    char directory_path[128];
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
-    Storage *storage = furi_record_open(RECORD_STORAGE);
-    storage_common_mkdir(storage, directory_path);
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
-    storage_common_mkdir(storage, directory_path);
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world");
-    storage_common_mkdir(storage, directory_path);
-    furi_record_close(RECORD_STORAGE);
+        if (!strength || !health || !attack_timer)
+        {
+            FURI_LOG_E(TAG, "Failed to get player stats");
+            save_char("create_pvp_error", "Failed to get player stats");
+            furi_string_free(player_stats);
+            furi_string_free(username);
+            if (strength)
+                furi_string_free(strength);
+            if (health)
+                furi_string_free(health);
+            if (attack_timer)
+                furi_string_free(attack_timer);
+            return false;
+        }
 
-    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world/pvp_world_enemy_data.json");
+        // create enemy data
+        FuriString *enemy_data = furi_string_alloc();
+        furi_string_printf(
+            enemy_data,
+            "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
+            "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
+            "\"move_timer\":1,\"speed\":1,\"attack_timer\":%f,\"strength\":%f,\"health\":%f}]}",
+            furi_string_get_cstr(username),
+            (double)atof_furi(attack_timer),
+            (double)atof_furi(strength),
+            (double)atof_furi(health));
 
-    // remove the enemy_data file if it exists
-    storage_simply_remove_recursive(storage, directory_path);
-
-    File *file = storage_file_alloc(storage);
-    if (!storage_file_open(file, directory_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
-    {
-        FURI_LOG_E("Game", "Failed to open file for writing: %s", directory_path);
-        storage_file_free(file);
+        char directory_path[128];
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+        Storage *storage = furi_record_open(RECORD_STORAGE);
+        storage_common_mkdir(storage, directory_path);
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds");
+        storage_common_mkdir(storage, directory_path);
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world");
+        storage_common_mkdir(storage, directory_path);
         furi_record_close(RECORD_STORAGE);
+
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/pvp_world/pvp_world_enemy_data.json");
+
+        // remove the enemy_data file if it exists
+        storage_simply_remove_recursive(storage, directory_path);
+
+        File *file = storage_file_alloc(storage);
+        if (!storage_file_open(file, directory_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+        {
+            FURI_LOG_E("Game", "Failed to open file for writing: %s", directory_path);
+            save_char("create_pvp_error", "Failed to open file for writing");
+            storage_file_free(file);
+            furi_record_close(RECORD_STORAGE);
+            furi_string_free(enemy_data);
+            furi_string_free(player_stats);
+            furi_string_free(username);
+            furi_string_free(strength);
+            furi_string_free(health);
+            furi_string_free(attack_timer);
+            return false;
+        }
+
+        size_t data_size = furi_string_size(enemy_data);
+        if (storage_file_write(file, furi_string_get_cstr(enemy_data), data_size) != data_size)
+        {
+            FURI_LOG_E("Game", "Failed to write enemy_data");
+            save_char("create_pvp_error", "Failed to write enemy_data");
+        }
+        storage_file_close(file);
+
         furi_string_free(enemy_data);
         furi_string_free(player_stats);
         furi_string_free(username);
         furi_string_free(strength);
         furi_string_free(health);
         furi_string_free(attack_timer);
-        return false;
-    }
 
-    size_t data_size = furi_string_size(enemy_data);
-    if (storage_file_write(file, furi_string_get_cstr(enemy_data), data_size) != data_size)
-    {
-        FURI_LOG_E("Game", "Failed to write enemy_data");
+        // player is found so break
+        break;
     }
-    storage_file_close(file);
-
-    furi_string_free(enemy_data);
-    furi_string_free(player_stats);
-    furi_string_free(username);
-    furi_string_free(strength);
-    furi_string_free(health);
-    furi_string_free(attack_timer);
 
     return true;
 }
