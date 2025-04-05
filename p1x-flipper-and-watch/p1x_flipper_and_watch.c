@@ -110,9 +110,8 @@ static void draw_title_screen(Canvas* canvas) {
     canvas_draw_icon(canvas, 9, 10, &I_title_network);
     canvas_draw_icon(canvas, 10, 39, &I_title_defender);
     canvas_draw_icon(canvas, 94, 30, &I_player_left);
-    
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 30, 59, "Press OK to continue");
+    canvas_draw_icon(canvas, 28, 31, &I_pc_monitor);    
+
 }
 
 // Draw menu screen with selection indicator
@@ -120,9 +119,9 @@ static void draw_menu_screen(Canvas* canvas, int selection) {
     canvas_clear(canvas);
     
     // Add title without frame
-    canvas_draw_icon(canvas, 9, 5, &I_title_network);
-    canvas_draw_icon(canvas, 10, 20, &I_title_defender);
-    
+    canvas_draw_icon(canvas, 18, 12, &I_menu_title);
+    canvas_draw_icon(canvas, 102, 14, &I_player_left);
+    canvas_draw_icon(canvas, 79, 3, &I_pc_monitor);    
     // Draw menu options with selection indicator
     canvas_set_font(canvas, FontSecondary);
     
@@ -149,7 +148,7 @@ static void draw_help_screen(Canvas* canvas, int page) {
         canvas_draw_str(canvas, 20, 21, "- Data packet");
         
         // Computer icon
-        canvas_draw_icon(canvas, 10, 25, &I_pc);
+        canvas_draw_icon(canvas, 6, 22, &I_pc_monitor);
         canvas_draw_str(canvas, 20, 32, "- Computer system");
         
         // Warning icon
@@ -170,7 +169,7 @@ static void draw_help_screen(Canvas* canvas, int page) {
     }
     
     // Small page indicator at bottom right
-    canvas_draw_str(canvas, SCREEN_WIDTH - 10, SCREEN_HEIGHT - 4, page == 0 ? "1/2" : "2/2");
+    canvas_draw_str(canvas, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 2, page == 0 ? "1/2" : "2/2");
 }
 
 // Draw callback for GUI
@@ -187,9 +186,6 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         draw_help_screen(canvas, state->help_page);
         return;
     }
-
-    // Draw game frame
-    canvas_draw_icon(canvas, 0, 0, &I_frame);
     
     if(state->game_over) {
         canvas_set_font(canvas, FontPrimary);
@@ -210,24 +206,17 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         return;
     }
 
-    // Draw server in center instead of a rectangle
-    canvas_draw_icon(canvas, SERVER_POSITION.x - 8, SERVER_POSITION.y - 8, &I_pc);
+    // Draw server in center using server sprite instead of pc
+    canvas_draw_icon(canvas, SERVER_POSITION.x - 8, SERVER_POSITION.y - 8, &I_server);
 
-    // Packet count near server
-    int total_packets = 0;
-    for(int i = 0; i < 4; i++) total_packets += state->packets[i];
-    char buffer[16];
-    snprintf(buffer, sizeof(buffer), "%d/%d", total_packets, MAX_PACKETS);
-    canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, SERVER_POSITION.x - canvas_string_width(canvas, buffer)/2, 
-                   SERVER_POSITION.y + 12, buffer);
+    // Removed packet count near server (no more counter in center)
 
     // Draw systems and states
     for(int i = 0; i < 4; i++) {
         int x = SYSTEM_POSITIONS[i].x;
         int y = SYSTEM_POSITIONS[i].y;
 
-        // Draw system (computer icon) - pc.png is the server, but we'll use it for computers too
+        // Draw system (computer icon) 
         canvas_draw_icon(canvas, x - 8, y - 8, &I_pc);
 
         // Hacking warning or active hack
@@ -245,11 +234,11 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         // Draw packets at the system
         for(int p = 0; p < state->packets[i] && p < 3; p++) {
             int packet_x = (i % 2 == 0) ? x + 10 + p*5 : x - 14 - p*5;
-            canvas_draw_icon(canvas, packet_x, y - 3, &I_packet);
+            canvas_draw_icon(canvas, packet_x, y + 1, &I_packet);
         }
     }
     
-    // Draw upcoming packets with icons instead of circles
+    // Draw upcoming packets with icons - now using no_packet for empty slots
     for(int i = 0; i < 4; i++) {
         int x = SYSTEM_POSITIONS[i].x;
         int y = SYSTEM_POSITIONS[i].y;
@@ -257,6 +246,16 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         // Determine direction based on system position (left or right)
         bool is_right_side = (i % 2 == 1); // Systems 1 and 3 are on the right
         
+        // Draw network background first - adjust positioning to align correctly
+        if(is_right_side) {
+            // Right side networks
+            canvas_draw_icon(canvas, x + 8, y - 4, &I_network_right);
+        } else {
+            // Left side networks
+            canvas_draw_icon(canvas, x - 35, y - 4, &I_network_left);
+        }
+        
+        // Then draw the packets on top
         for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
             // Calculate packet position with more spacing
             int packet_x = is_right_side ? 
@@ -264,11 +263,11 @@ static void draw_callback(Canvas* canvas, void* ctx) {
                 (x - 18 - j * 8);   // Left side systems, packets on left
             
             if(state->upcoming_packets[i][j] == 1) {
-                // Use packet icon instead of filled circle
+                // Use packet icon for filled slot
                 canvas_draw_icon(canvas, packet_x, y - 3, &I_packet);
             } else {
-                // Empty circle for empty slot - keep this as circle for visibility
-                canvas_draw_circle(canvas, packet_x + 3, y, 2);
+                // Use no_packet icon for empty slot
+                canvas_draw_icon(canvas, packet_x, y - 3, &I_no_packet);
             }
         }
     }
@@ -298,21 +297,27 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     if(state->patching) {
         // When patching, show a different animation
         if((furi_get_tick() / 200) % 2) {
-            canvas_draw_icon(canvas, px - 8, py - 8, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
+            canvas_draw_icon(canvas, (state->player_pos % 2 == 0) ? px + 6 : px - 16, py - 14, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
         } else {
             // Alternate frame for patching animation
             canvas_draw_circle(canvas, px, py, 4);
         }
     } else {
         // Normal player display - use left or right facing sprite based on position
-        canvas_draw_icon(canvas, px - 8, py - 8, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
+        canvas_draw_icon(canvas, (state->player_pos % 2 == 0) ? px + 6 : px - 16, py - 14, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
     }
 
-    // Move score display to center-top
-    canvas_set_font(canvas, FontSecondary);
+    // Simplified score display: just padded numbers (0000)
+    // Position frame sprite behind score
     char score_text[16];
-    snprintf(score_text, sizeof(score_text), "Score: %d", state->score);
-    canvas_draw_str(canvas, SCREEN_WIDTH / 2 - canvas_string_width(canvas, score_text) / 2, 10, score_text);
+    snprintf(score_text, sizeof(score_text), "%04d", state->score);
+    
+    // Calculate position for score
+    int score_x = SCREEN_WIDTH / 2 - canvas_string_width(canvas, score_text) / 2;
+    
+    // Draw score
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, score_x, 10, score_text);
 }
 
 // Input handling
