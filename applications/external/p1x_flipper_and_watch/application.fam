@@ -1,0 +1,15 @@
+App(
+    appid="packet_defender",
+    name="Packet Defender",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="system_defender_app",
+    stack_size=2 * 1024,
+    fap_icon="p1x_flipper_and_watch.png",
+    #  fap_icon_assets="images",
+    fap_category="Games",
+    fap_author="w84death",
+    #  fap_author="Krzysztof Krystian Jankowski / P1X",
+    fap_weburl="https://github.com/w84death/flipper_zero_apps",
+    fap_version="0.1",
+    fap_description="A packet defender game",
+)
