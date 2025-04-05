@@ -1,5 +1,6 @@
 #include <alloc/alloc.h>
 #include <callback/callback.h>
+#include <callback/loader.h>
 
 /**
  * @brief Navigation callback for exiting the application
@@ -37,7 +38,7 @@ bool alloc_view_loader(void *context)
         return false;
     }
 
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, custom_event_callback);
+    view_dispatcher_set_custom_event_callback(app->view_dispatcher, loader_custom_event_callback);
 
     if (!easy_flipper_set_view(&app->view_loader, FlipWorldViewLoader, loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
     {
