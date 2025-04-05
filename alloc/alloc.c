@@ -1,16 +1,29 @@
 #include <alloc/alloc.h>
 #include <callback/callback.h>
 #include <callback/loader.h>
+#include <callback/free.h>
 
-/**
- * @brief Navigation callback for exiting the application
- * @param context The context - unused
- * @return next view id (VIEW_NONE to exit the app)
- */
-static uint32_t callback_exit_app(void *context)
+uint32_t callback_exit_app(void *context)
 {
     UNUSED(context);
-    return VIEW_NONE; // Return VIEW_NONE to exit the app
+    return VIEW_NONE;
+}
+
+uint32_t callback_to_submenu(void *context)
+{
+    UNUSED(context);
+    return FlipWorldViewSubmenu;
+}
+
+uint32_t callback_to_wifi_settings(void *context)
+{
+    UNUSED(context);
+    return FlipWorldViewVariableItemList;
+}
+uint32_t callback_to_settings(void *context)
+{
+    UNUSED(context);
+    return FlipWorldViewSubmenuOther;
 }
 
 void *global_app;
@@ -20,55 +33,6 @@ void flip_world_show_submenu()
     if (app->submenu)
     {
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
-    }
-}
-
-bool alloc_view_loader(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    furi_check(app, "FlipWorldApp is NULL");
-    if (app->view_loader)
-    {
-        FURI_LOG_E(TAG, "View loader already allocated");
-        return false;
-    }
-    if (app->widget_result)
-    {
-        FURI_LOG_E(TAG, "Widget result already allocated");
-        return false;
-    }
-
-    view_dispatcher_set_custom_event_callback(app->view_dispatcher, loader_custom_event_callback);
-
-    if (!easy_flipper_set_view(&app->view_loader, FlipWorldViewLoader, loader_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app))
-    {
-        return false;
-    }
-
-    loader_init(app->view_loader);
-
-    return easy_flipper_set_widget(&app->widget_result, FlipWorldViewWidgetResult, "", callback_to_submenu, &app->view_dispatcher);
-}
-
-void free_view_loader(void *context)
-{
-    FlipWorldApp *app = (FlipWorldApp *)context;
-    furi_check(app, "FlipWorldApp is NULL");
-    // Free Widget(s)
-    if (app->widget_result)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewWidgetResult);
-        widget_free(app->widget_result);
-        app->widget_result = NULL;
-    }
-
-    // Free View(s)
-    if (app->view_loader)
-    {
-        view_dispatcher_remove_view(app->view_dispatcher, FlipWorldViewLoader);
-        loader_free_model(app->view_loader);
-        view_free(app->view_loader);
-        app->view_loader = NULL;
     }
 }
 
