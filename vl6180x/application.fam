@@ -10,6 +10,6 @@ App(
     # Optional values
     fap_version="0.1",
     fap_icon="images/vl6180x.png",  # 10x10 1-bit PNG
-    fap_author="K. Diller",
+    fap_author="Kyle Diller",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
