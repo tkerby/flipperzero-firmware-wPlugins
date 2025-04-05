@@ -300,7 +300,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
             canvas_draw_icon(canvas, (state->player_pos % 2 == 0) ? px + 6 : px - 16, py - 14, (state->player_pos % 2 == 0) ? &I_player_left : &I_player_right);
         } else {
             // Alternate frame for patching animation
-            canvas_draw_circle(canvas, px, py, 4);
+            canvas_draw_icon(canvas, (state->player_pos % 2 == 0) ? px + 6 : px - 16, py - 14, (state->player_pos % 2 == 0) ? &I_player_hack_left : &I_player_hack_right);
         }
     } else {
         // Normal player display - use left or right facing sprite based on position
