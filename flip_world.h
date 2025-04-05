@@ -92,17 +92,17 @@ typedef struct
 } FlipWorldApp;
 
 extern char *fps_choices_str[];
-extern int fps_index;
+extern uint8_t fps_index;
 extern char *yes_or_no_choices[];
-extern int screen_always_on_index;
-extern int sound_on_index;
-extern int vibration_on_index;
+extern uint8_t screen_always_on_index;
+extern uint8_t sound_on_index;
+extern uint8_t vibration_on_index;
 extern char *player_sprite_choices[];
-extern int player_sprite_index;
+extern uint8_t player_sprite_index;
 extern char *vgm_levels[];
-extern int vgm_x_index;
-extern int vgm_y_index;
-extern int game_mode_index;
+extern uint8_t vgm_x_index;
+extern uint8_t vgm_y_index;
+extern uint8_t game_mode_index;
 float atof_(const char *nptr);
 float atof_furi(const FuriString *nptr);
 bool is_str(const char *src, const char *dst);
