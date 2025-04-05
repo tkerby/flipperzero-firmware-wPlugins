@@ -11,5 +11,5 @@ App(
     #  fap_author="Krzysztof Krystian Jankowski / P1X",
     fap_weburl="https://github.com/w84death/flipper_zero_apps",
     fap_version="0.1",
-    fap_description="A packet defender game",
+    fap_description="A Game & Watch style network security game for the Flipper Zero. Network Defender is a retro-style game inspired by the classic Nintendo Game & Watch handhelds. You play as a system administrator defending your network from incoming data packets and hacking attempts.",
 )
