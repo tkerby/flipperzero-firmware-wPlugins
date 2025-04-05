@@ -18,11 +18,7 @@
 // Add upcoming packets queue to game state
 #define MAX_UPCOMING_PACKETS 3
 
-// Add title screen state
-#define GAME_STATE_TITLE 0
-#define GAME_STATE_PLAY 1
-
-// Define game states
+// Define game states - remove duplicates
 #define GAME_STATE_TITLE 0
 #define GAME_STATE_PLAY 1
 #define GAME_STATE_HELP 2
@@ -73,6 +69,9 @@ typedef struct {
 // Game over reasons
 #define GAME_OVER_HACK 1
 #define GAME_OVER_DDOS 2
+
+// Forward declaration for draw_upcoming_packets
+static void draw_upcoming_packets(Canvas* canvas, GameState* state);
 
 // Reset game state for new game
 static void reset_game_state(GameState* state) {
@@ -134,7 +133,7 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         }
 
         char score_text[32];
-        snprintf(score_text, sizeof(score_text), "Score: %d", state->score);
+        snprintf(score_text, sizeof(score_text), "%d", state->score);
         canvas_draw_str(canvas, 15, 45, score_text);
 
         canvas_draw_str(canvas, 15, 55, "Press BACK to restart");
@@ -180,19 +179,10 @@ static void draw_callback(Canvas* canvas, void* ctx) {
         for(int p = 0; p < state->packets[i] && p < 3; p++) {
             canvas_draw_disc(canvas, (i % 2 == 0) ? x + 10 + p*3 : x - 10 - p*3, y, 1);
         }
-
-        // Adjust upcoming packets display to left and right sides
-        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
-            int packet_type = state->upcoming_packets[i][j];
-            int packet_x = (i % 2 == 0) ? x - 10 - j * 5 : x + 10 + j * 5; // Left for even-indexed systems, right for odd-indexed systems
-
-            if(packet_type == 0) {
-                canvas_draw_disc(canvas, packet_x, y, 1); // Normal packet
-            } else {
-                canvas_draw_circle(canvas, packet_x, y, 2); // Hacking attempt (larger circle)
-            }
-        }
     }
+    
+    // Draw upcoming packets with clearer indicators
+    draw_upcoming_packets(canvas, state);
 
     // Draw packet animation if active
     if(state->packet_animation) {
@@ -236,25 +226,75 @@ static void input_callback(InputEvent* input, void* ctx) {
     furi_message_queue_put(queue, input, FuriWaitForever);
 }
 
-// Update upcoming packets logic to show real-time network for all computers
-static void update_upcoming_packets(GameState* state) {
+// Draw upcoming packets with clearer indicators
+static void draw_upcoming_packets(Canvas* canvas, GameState* state) {
     for(int i = 0; i < 4; i++) {
-        // Shift all packets one step closer to the computer
-        for(int j = 0; j < MAX_UPCOMING_PACKETS - 1; j++) {
-            state->upcoming_packets[i][j] = state->upcoming_packets[i][j + 1];
-        }
-        // Add a new random packet at the end of the queue
-        state->upcoming_packets[i][MAX_UPCOMING_PACKETS - 1] = rand() % 2;
-
-        // If the first packet in the queue reaches the computer, add it to the system
-        if(state->upcoming_packets[i][0] == 1 && state->packets[i] < 3) {
-            state->packets[i]++;
-            state->upcoming_packets[i][0] = 0; // Clear the slot
+        int x = SYSTEM_POSITIONS[i].x;
+        int y = SYSTEM_POSITIONS[i].y;
+        
+        // Determine direction based on system position (left or right)
+        bool is_right_side = (i % 2 == 1); // Systems 1 and 3 are on the right
+        
+        for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
+            // Calculate packet position with more spacing
+            int packet_x = is_right_side ? 
+                (x + 10 + j * 6) :  // Right side systems, packets on right
+                (x - 10 - j * 6);   // Left side systems, packets on left
+            
+            if(state->upcoming_packets[i][j] == 1) {
+                // Filled circle for packet
+                canvas_draw_disc(canvas, packet_x, y, 2);
+            } else {
+                // Empty circle for empty slot
+                canvas_draw_circle(canvas, packet_x, y, 2);
+            }
         }
     }
 }
 
-// Game logic update
+// Fixed update_upcoming_packets to ensure indicators are synced with arriving packets
+static void update_upcoming_packets(GameState* state) {
+    uint32_t now = furi_get_tick();
+    
+    // Only update packets at fixed intervals
+    if(now - state->last_packet_spawn_time < PACKET_SPAWN_INTERVAL) {
+        return;
+    }
+    
+    state->last_packet_spawn_time = now;
+    
+    // Process all computers simultaneously - conveyor belt style
+    
+    // 1. Check if first packets arrive at computers
+    for(int i = 0; i < 4; i++) {
+        // If the first slot has a packet and computer can accept it
+        if(state->upcoming_packets[i][0] == 1) {
+            if(state->packets[i] < 3) {
+                state->packets[i]++;
+            }
+            // Always mark as processed whether it was accepted or not
+            state->upcoming_packets[i][0] = 0;
+        }
+    }
+    
+    // 2. Shift everything one step closer (conveyor belt movement)
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < MAX_UPCOMING_PACKETS - 1; j++) {
+            state->upcoming_packets[i][j] = state->upcoming_packets[i][j + 1];
+        }
+    }
+    
+    // 3. Generate new packets in the last position - synchronized for all computers
+    // Determine if this tick will generate packets (20% chance)
+    bool generate_packet = (rand() % 5 == 0);
+    
+    // Apply to all computers
+    for(int i = 0; i < 4; i++) {
+        state->upcoming_packets[i][MAX_UPCOMING_PACKETS - 1] = generate_packet ? 1 : 0;
+    }
+}
+
+// Update game logic - remove redundant packet handling code
 static void update_game(GameState* state) {
     // Only run game logic if we're in play state
     if(state->current_state != GAME_STATE_PLAY) return;
@@ -302,34 +342,29 @@ static void update_game(GameState* state) {
         state->patching = false;
     }
 
-    // Randomly spawn warnings or packets - adjusted probabilities
-    if(rand() % 100 < 1) { // Reduced from 5% to 1% chance for hack warnings
-        int target = rand() % 4;
-        if(!state->hacking[target] && !state->warn_start[target]) {
-            state->warn_start[target] = now;
-            furi_hal_vibro_on(true); // Short vibrate for warning
-            furi_delay_ms(100);
-            furi_hal_vibro_on(false);
-        }
-    }
-    
-    // Increase packet spawning slightly to compensate for fewer hacks
-    // Ensure PACKET_SPAWN_INTERVAL is properly enforced
-    if(now - state->last_packet_spawn_time >= PACKET_SPAWN_INTERVAL) {
-        int target = rand() % 4;
-        if(state->packets[target] < 3) {
-            state->packets[target]++;
-            // Shift upcoming packets queue
-            for(int j = 0; j < MAX_UPCOMING_PACKETS - 1; j++) {
-                state->upcoming_packets[target][j] = state->upcoming_packets[target][j + 1];
+    // Randomly spawn warnings or packets - limit to 2 active hack attempts
+    if(rand() % 100 < 1) { // 1% chance for hack warnings
+        // Count active warnings/hacking
+        int active_hacks = 0;
+        for(int i = 0; i < 4; i++) {
+            if(state->hacking[i] || state->warn_start[i]) {
+                active_hacks++;
             }
-            // Add new packet type to the end of the queue
-            state->upcoming_packets[target][MAX_UPCOMING_PACKETS - 1] = rand() % 2;
         }
-        state->last_packet_spawn_time = now; // Update last spawn time
+        
+        // Only spawn new warning if we have fewer than 2 active hack attempts
+        if(active_hacks < 2) {
+            int target = rand() % 4;
+            if(!state->hacking[target] && !state->warn_start[target]) {
+                state->warn_start[target] = now;
+                furi_hal_vibro_on(true); // Short vibrate for warning
+                furi_delay_ms(100);
+                furi_hal_vibro_on(false);
+            }
+        }
     } else {
-        // Prevent packet spawning if interval has not passed
-        return;
+        // Existing packet spawn logic continues here
+        // ...existing code...
     }
 
     // Check DDOS - only active packets count towards the DDOS limit
@@ -343,7 +378,7 @@ static void update_game(GameState* state) {
         furi_hal_vibro_on(false);
     }
 
-    // Call update_upcoming_packets in update_game
+    // Update upcoming packets
     update_upcoming_packets(state);
 }
 
