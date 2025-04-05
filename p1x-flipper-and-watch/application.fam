@@ -2,7 +2,7 @@
 
 App(
     appid="p1x_flipper_and_watch",  # Must be unique
-    name="Packet Defender",  # Displayed in menus
+    name="Network Defender",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="system_defender_app",
     stack_size=2 * 1024,

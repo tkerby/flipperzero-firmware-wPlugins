@@ -18,6 +18,15 @@
 // Add upcoming packets queue to game state
 #define MAX_UPCOMING_PACKETS 3
 
+// Add title screen state
+#define GAME_STATE_TITLE 0
+#define GAME_STATE_PLAY 1
+
+// Define game states
+#define GAME_STATE_TITLE 0
+#define GAME_STATE_PLAY 1
+#define GAME_STATE_HELP 2
+
 // System positions (4 corners)
 typedef struct {
     int x, y;
@@ -58,14 +67,15 @@ typedef struct {
     int score;               // Player's score
     int upcoming_packets[4][MAX_UPCOMING_PACKETS]; // Queue of upcoming packets for each system
     uint32_t last_packet_spawn_time; // Last packet spawn time
+    int current_state;       // Current game state
 } GameState;
 
 // Game over reasons
 #define GAME_OVER_HACK 1
 #define GAME_OVER_DDOS 2
 
-// Initialize game state
-static void game_init(GameState* state) {
+// Reset game state for new game
+static void reset_game_state(GameState* state) {
     state->player_pos = 0;
     state->patching = false;
     state->game_over = false;
@@ -79,14 +89,36 @@ static void game_init(GameState* state) {
         state->warn_start[i] = 0;
         state->packets[i] = 0;
         for(int j = 0; j < MAX_UPCOMING_PACKETS; j++) {
-            state->upcoming_packets[i][j] = rand() % 2; // Randomly initialize as 0 (normal) or 1 (hacking attempt)
+            state->upcoming_packets[i][j] = rand() % 2;
         }
     }
+}
+
+// Initialize game state
+static void game_init(GameState* state) {
+    state->current_state = GAME_STATE_TITLE;
+    reset_game_state(state);
+}
+
+// Draw title screen
+static void draw_title_screen(Canvas* canvas) {
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 20, 20, "Network Defender");
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 30, 40, "Press OK to Start");
+    canvas_draw_str(canvas, 30, 50, "Press BACK to Quit");
 }
 
 // Draw callback for GUI
 static void draw_callback(Canvas* canvas, void* ctx) {
     GameState* state = (GameState*)ctx;
+
+    if(state->current_state == GAME_STATE_TITLE) {
+        draw_title_screen(canvas);
+        return;
+    }
 
     canvas_clear(canvas);
 
@@ -224,6 +256,9 @@ static void update_upcoming_packets(GameState* state) {
 
 // Game logic update
 static void update_game(GameState* state) {
+    // Only run game logic if we're in play state
+    if(state->current_state != GAME_STATE_PLAY) return;
+    
     if(state->game_over) return;
 
     uint32_t now = furi_get_tick();
@@ -337,54 +372,77 @@ int32_t system_defender_app(void* p) {
     while(running) {
         if(furi_message_queue_get(event_queue, &event, 100) == FuriStatusOk) {
             if(event.type == InputTypePress) {
-                if(game_state->game_over) {
-                    if(event.key == InputKeyBack) {
-                        // Restart game instead of exiting
-                        game_init(game_state);
+                // Handle input based on current state
+                if(game_state->current_state == GAME_STATE_TITLE) {
+                    // Title screen inputs
+                    if(event.key == InputKeyOk) {
+                        game_state->current_state = GAME_STATE_PLAY;
+                        reset_game_state(game_state); // Reset game when starting
+                    } else if(event.key == InputKeyDown) {
+                        game_state->current_state = GAME_STATE_HELP;
+                    } else if(event.key == InputKeyBack) {
+                        running = false; // Quit from title screen
                     }
-                } else {
-                    switch(event.key) {
-                    case InputKeyUp:
-                        game_state->player_pos = (game_state->player_pos == 0 || game_state->player_pos == 1) ? game_state->player_pos : game_state->player_pos - 2;
-                        break;
-                    case InputKeyDown:
-                        game_state->player_pos = (game_state->player_pos == 2 || game_state->player_pos == 3) ? game_state->player_pos : game_state->player_pos + 2;
-                        break;
-                    case InputKeyLeft:
-                        game_state->player_pos = (game_state->player_pos == 0 || game_state->player_pos == 2) ? game_state->player_pos : game_state->player_pos - 1;
-                        break;
-                    case InputKeyRight:
-                        game_state->player_pos = (game_state->player_pos == 1 || game_state->player_pos == 3) ? game_state->player_pos : game_state->player_pos + 1;
-                        break;
-                    case InputKeyOk:
-                        if(game_state->hacking[game_state->player_pos] && !game_state->patching) {
-                            game_state->patching = true;
-                            game_state->patch_start = furi_get_tick();
-                        } else if(game_state->packets[game_state->player_pos] > 0) {
-                            game_state->packets[game_state->player_pos]--; // Correctly remove packet
-                            game_state->score += 10; // Increment score by 10 for each packet delivered
-
-                            // Start packet animation
-                            game_state->packet_animation = true;
-                            game_state->anim_start = furi_get_tick();
-                            game_state->anim_from = game_state->player_pos;
-                            
-                            furi_hal_vibro_on(true); // Vibrate for packet accept
-                            furi_delay_ms(100);
-                            furi_hal_vibro_on(false);
+                } else if(game_state->current_state == GAME_STATE_HELP) {
+                    // Help screen inputs
+                    if(event.key == InputKeyBack) {
+                        game_state->current_state = GAME_STATE_TITLE;
+                    }
+                } else if(game_state->current_state == GAME_STATE_PLAY) {
+                    // Game screen inputs
+                    if(game_state->game_over) {
+                        if(event.key == InputKeyBack) {
+                            game_state->current_state = GAME_STATE_TITLE;
+                            reset_game_state(game_state);
                         }
-                        break;
-                    case InputKeyBack:
-                        running = false; // Exit game
-                        break;
-                    default:
-                        break;
+                    } else {
+                        switch(event.key) {
+                        case InputKeyUp:
+                            game_state->player_pos = (game_state->player_pos == 0 || game_state->player_pos == 1) ? game_state->player_pos : game_state->player_pos - 2;
+                            break;
+                        case InputKeyDown:
+                            game_state->player_pos = (game_state->player_pos == 2 || game_state->player_pos == 3) ? game_state->player_pos : game_state->player_pos + 2;
+                            break;
+                        case InputKeyLeft:
+                            game_state->player_pos = (game_state->player_pos == 0 || game_state->player_pos == 2) ? game_state->player_pos : game_state->player_pos - 1;
+                            break;
+                        case InputKeyRight:
+                            game_state->player_pos = (game_state->player_pos == 1 || game_state->player_pos == 3) ? game_state->player_pos : game_state->player_pos + 1;
+                            break;
+                        case InputKeyOk:
+                            if(game_state->hacking[game_state->player_pos] && !game_state->patching) {
+                                game_state->patching = true;
+                                game_state->patch_start = furi_get_tick();
+                            } else if(game_state->packets[game_state->player_pos] > 0) {
+                                game_state->packets[game_state->player_pos]--; // Correctly remove packet
+                                game_state->score += 10; // Increment score by 10 for each packet delivered
+
+                                // Start packet animation
+                                game_state->packet_animation = true;
+                                game_state->anim_start = furi_get_tick();
+                                game_state->anim_from = game_state->player_pos;
+                                
+                                furi_hal_vibro_on(true); // Vibrate for packet accept
+                                furi_delay_ms(100);
+                                furi_hal_vibro_on(false);
+                            }
+                            break;
+                        case InputKeyBack:
+                            game_state->current_state = GAME_STATE_TITLE; // Return to title
+                            break;
+                        default:
+                            break;
+                        }
                     }
                 }
             }
         }
 
-        update_game(game_state);
+        // Only update game logic if we're in play mode
+        if(game_state->current_state == GAME_STATE_PLAY) {
+            update_game(game_state);
+        }
+        
         view_port_update(view_port);
     }
 
