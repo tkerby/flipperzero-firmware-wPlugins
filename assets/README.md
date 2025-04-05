@@ -1,5 +1,11 @@
 The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
+## Connect Online
+- Discord: https://discord.gg/5aN9qwkEc6
+- YouTube: https://www.youtube.com/@jblanked
+- Instagram: https://www.instagram.com/jblanked
+- Other: https://www.jblanked.com/social/
+
 ## Requirements
 - WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with FlipperHTTP v1.8.2 or higher: https://github.com/jblanked/FlipperHTTP
 - 2.4 GHz WiFi access point
