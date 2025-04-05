@@ -7,12 +7,13 @@
 // Game constants
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define MAX_PACKETS 5  // Increased DDOS limit for easier start
+#define MAX_PACKETS 10  // Increased DDOS limit for a smoother start
 #define HACK_WARN_TIME 2000  // 2 seconds warning (in ms)
 #define HACK_TIME 5000       // 5 seconds to fully hack (in ms)
 #define PATCH_TIME 2000      // 2 seconds to patch (in ms)
 #define PACKET_ANIMATION_TIME 300 // Faster animation for accepted packets
-#define PACKET_SPAWN_CHANCE 3  // Reduced packet spawn chance for easier start
+#define PACKET_SPAWN_CHANCE 1  // Reduced packet spawn chance for slower gameplay
+#define PACKET_SPAWN_INTERVAL 3000  // Increased interval to 300 seconds for much slower packet arrival
 
 // Add upcoming packets queue to game state
 #define MAX_UPCOMING_PACKETS 3
@@ -56,6 +57,7 @@ typedef struct {
     int anim_from;           // Which system accepted the packet
     int score;               // Player's score
     int upcoming_packets[4][MAX_UPCOMING_PACKETS]; // Queue of upcoming packets for each system
+    uint32_t last_packet_spawn_time; // Last packet spawn time
 } GameState;
 
 // Game over reasons
@@ -70,6 +72,7 @@ static void game_init(GameState* state) {
     state->game_over_reason = 0;
     state->packet_animation = false;
     state->score = 0;
+    state->last_packet_spawn_time = furi_get_tick();
     for(int i = 0; i < 4; i++) {
         state->hacking[i] = false;
         state->hack_start[i] = 0;
@@ -201,6 +204,24 @@ static void input_callback(InputEvent* input, void* ctx) {
     furi_message_queue_put(queue, input, FuriWaitForever);
 }
 
+// Update upcoming packets logic to show real-time network for all computers
+static void update_upcoming_packets(GameState* state) {
+    for(int i = 0; i < 4; i++) {
+        // Shift all packets one step closer to the computer
+        for(int j = 0; j < MAX_UPCOMING_PACKETS - 1; j++) {
+            state->upcoming_packets[i][j] = state->upcoming_packets[i][j + 1];
+        }
+        // Add a new random packet at the end of the queue
+        state->upcoming_packets[i][MAX_UPCOMING_PACKETS - 1] = rand() % 2;
+
+        // If the first packet in the queue reaches the computer, add it to the system
+        if(state->upcoming_packets[i][0] == 1 && state->packets[i] < 3) {
+            state->packets[i]++;
+            state->upcoming_packets[i][0] = 0; // Clear the slot
+        }
+    }
+}
+
 // Game logic update
 static void update_game(GameState* state) {
     if(state->game_over) return;
@@ -258,7 +279,8 @@ static void update_game(GameState* state) {
     }
     
     // Increase packet spawning slightly to compensate for fewer hacks
-    if(rand() % 100 < PACKET_SPAWN_CHANCE) { // Increased from 3% to 5% chance for packets
+    // Ensure PACKET_SPAWN_INTERVAL is properly enforced
+    if(now - state->last_packet_spawn_time >= PACKET_SPAWN_INTERVAL) {
         int target = rand() % 4;
         if(state->packets[target] < 3) {
             state->packets[target]++;
@@ -269,6 +291,10 @@ static void update_game(GameState* state) {
             // Add new packet type to the end of the queue
             state->upcoming_packets[target][MAX_UPCOMING_PACKETS - 1] = rand() % 2;
         }
+        state->last_packet_spawn_time = now; // Update last spawn time
+    } else {
+        // Prevent packet spawning if interval has not passed
+        return;
     }
 
     // Check DDOS - only active packets count towards the DDOS limit
@@ -281,6 +307,9 @@ static void update_game(GameState* state) {
         furi_delay_ms(500);
         furi_hal_vibro_on(false);
     }
+
+    // Call update_upcoming_packets in update_game
+    update_upcoming_packets(state);
 }
 
 // Main app entry
