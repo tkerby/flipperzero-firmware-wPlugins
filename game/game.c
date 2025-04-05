@@ -120,6 +120,7 @@ static void game_stop(void *ctx)
 {
     furi_check(ctx);
     GameContext *game_context = ctx;
+    const size_t heap_size = memmgr_heap_get_max_free_block();
     imu_free(game_context->imu);
     game_context->imu = NULL;
 
@@ -151,8 +152,11 @@ static void game_stop(void *ctx)
             "Game Over",
             "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
     else
-        easy_flipper_dialog(
-            "Game Over", "Ran out of memory so the\ngame ended early.\nHit BACK to exit.");
+    {
+        char message[128];
+        snprintf(message, sizeof(message), "Ran out of memory so the\ngame ended early. There were\n%zu bytes free.\n\nHit BACK to exit.", heap_size);
+        easy_flipper_dialog("Game Over", message);
+    }
 
     // save the player context
     if (load_player_context(player_context))
