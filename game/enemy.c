@@ -441,23 +441,6 @@ static void pvp_position(GameContext *game_context, EntityContext *enemy, Entity
         return;
     }
 
-    // Get player context
-    PlayerContext *pctx = entity_context_get(game_context->player);
-    if (!pctx)
-    {
-        FURI_LOG_E(TAG, "Failed to get player context");
-        return;
-    }
-
-    // check username
-    if (strlen(enemy->username) == 0 ||
-        is_str(enemy->username, "SYSTEM_ENEMY") ||
-        is_str(pctx->username, enemy->username))
-    {
-        // Invalid username
-        return;
-    }
-
     if (game_context->fhttp->last_response != NULL && strlen(game_context->fhttp->last_response) > 0)
     {
         // for debugging
