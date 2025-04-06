@@ -50,12 +50,12 @@ namespace VGMGameEngine
             return instance;
         }
 
-        Image *getImage(const char *name, uint8_t *data, Vector size)
+        Image *getImage(const char *name, uint8_t *data, Vector size, bool is_8bit = false)
         {
             std::string key(name);
             if (images.find(key) == images.end())
             {
-                Image *img = new Image();
+                Image *img = new Image(is_8bit);
                 if (!img->from_byte_array(data, size))
                 {
                     delete img;
@@ -66,12 +66,12 @@ namespace VGMGameEngine
             return images[key];
         }
 
-        Image *getImage(const char *name, const uint8_t *data, Vector size)
+        Image *getImage(const char *name, const uint8_t *data, Vector size, bool is_8bit = false)
         {
             std::string key(name);
             if (images.find(key) == images.end())
             {
-                Image *img = new Image();
+                Image *img = new Image(is_8bit);
                 if (!img->from_byte_array(data, size))
                 {
                     delete img;
