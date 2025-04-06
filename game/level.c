@@ -45,7 +45,7 @@ void set_world(Level *level, GameManager *manager, char *id)
         return;
     }
 
-    if (!is_enough_heap(25000, true))
+    if (!is_enough_heap(28400, true))
     {
         FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
         GameContext *game_context = game_manager_game_context_get(manager);
