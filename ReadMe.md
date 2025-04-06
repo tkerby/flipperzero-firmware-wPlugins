@@ -48,7 +48,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Lab401/Light MESSENGER v1.3.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
 - Updated: [Atari SIO Emulator v0.1.2 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Added: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Updated: [Passy v0.1.1 (By bettse)](https://github.com/bettse/passy)
 - OFW: [BLE advertising improvements #4151 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4151)
 - [BadUSB: Sync UI and code improvements from OFW PR (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2903718d723e7af2b43e83cc4d3a1a8c481d74e7)
 - Updated: [PC Monitor v1.1.2 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) [Fixes (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2fd3dd10e5737d817bdb63a1bef8629a357cf038)
@@ -66,12 +65,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher Bump [Marauder 1.4.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.0)
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Added: [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
-- Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - OFW: PR: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177)
+- Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
@@ -621,7 +621,7 @@ $ ./fbt dolphin_ext
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
-- [Passy v0.1.1 (By bettse)](https://github.com/bettse/passy)
+- [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 - [PC Monitor v1.1.2 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
 - [Pet Your Dolphin v0.1 (By dwight9339)](https://github.com/dwight9339/pet_your_dolphin)
