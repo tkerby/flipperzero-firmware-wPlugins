@@ -3,6 +3,13 @@
 
 // Entry point for the FlipWorld application
 int32_t flip_world_main(void* p) {
+    // check memory
+    if(!is_enough_heap(sizeof(FlipWorldApp) + sizeof(FlipperHTTP), true)) {
+        easy_flipper_dialog(
+            "Memory Error", "Not enough heap memory.\nPlease restart your Flipper Zero.");
+        return 0; // return success so the user can see the error
+    }
+
     // Suppress unused parameter warning
     UNUSED(p);
 

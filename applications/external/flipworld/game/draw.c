@@ -7,7 +7,7 @@ int camera_y = 0;
 // Draw the user stats (health, xp, and level)
 void draw_user_stats(Canvas* canvas, Vector pos, GameManager* manager) {
     GameContext* game_context = game_manager_game_context_get(manager);
-    PlayerContext* player = game_context->player_context;
+    PlayerContext* player = entity_context_get(game_context->player);
 
     // first draw a black rectangle to make the text more readable
     canvas_invert_color(canvas);
@@ -90,6 +90,7 @@ void spawn_icon_line(
 
 static void draw_menu(GameManager* manager, Canvas* canvas) {
     GameContext* game_context = game_manager_game_context_get(manager);
+    PlayerContext* player_context = entity_context_get(game_context->player);
 
     // draw background rectangle
     canvas_draw_icon(canvas, 0, 0, &I_icon_menu_128x64px);
@@ -110,17 +111,12 @@ static void draw_menu(GameManager* manager, Canvas* canvas) {
             char level[32];
             char strength[32];
 
-            snprintf(level, sizeof(level), "Level   : %ld", game_context->player_context->level);
-            snprintf(
-                health, sizeof(health), "Health  : %ld", game_context->player_context->health);
-            snprintf(xp, sizeof(xp), "XP      : %ld", game_context->player_context->xp);
-            snprintf(
-                strength,
-                sizeof(strength),
-                "Strength: %ld",
-                game_context->player_context->strength);
+            snprintf(level, sizeof(level), "Level   : %ld", player_context->level);
+            snprintf(health, sizeof(health), "Health  : %ld", player_context->health);
+            snprintf(xp, sizeof(xp), "XP      : %ld", player_context->xp);
+            snprintf(strength, sizeof(strength), "Strength: %ld", player_context->strength);
             canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 7, 16, game_context->player_context->username);
+            canvas_draw_str(canvas, 7, 16, player_context->username);
             canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
             canvas_draw_str(canvas, 7, 30, level);
             canvas_draw_str(canvas, 7, 37, health);
@@ -178,12 +174,13 @@ void background_render(Canvas* canvas, GameManager* manager) {
     if(!canvas || !manager) return;
 
     GameContext* game_context = game_manager_game_context_get(manager);
+    PlayerContext* player_context = entity_context_get(game_context->player);
     if(!game_context->is_menu_open) {
         // get player position
         Vector posi = entity_pos_get(game_context->player);
 
         // draw username over player's head
-        draw_username(canvas, posi, game_context->player_context->username);
+        draw_username(canvas, posi, player_context->username);
 
         if(game_context->is_switching_level)
             // draw switch world icon

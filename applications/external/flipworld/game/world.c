@@ -107,6 +107,43 @@ const LevelBehaviour* training_world() {
     return &_training_world;
 }
 
+static void draw_pvp_world(Level* level, GameManager* manager, void* context) {
+    UNUSED(context);
+    if(!manager || !level) {
+        FURI_LOG_E("Game", "Manager or level is NULL");
+        return;
+    }
+    GameContext* game_context = game_manager_game_context_get(manager);
+    level_clear(level);
+    FuriString* json_data_str = furi_string_alloc();
+    furi_string_cat_str(
+        json_data_str,
+        "{\"name\":\"pvp_world\",\"author\":\"ChatGPT\",\"json_data\":[{\"icon\":\"rock_medium\",\"x\":100,\"y\":100,\"amount\":10,\"horizontal\":true},{\"icon\":\"rock_medium\",\"x\":400,\"y\":300,\"amount\":6,\"horizontal\":true},{\"icon\":\"rock_small\",\"x\":600,\"y\":200,\"amount\":8,\"horizontal\":true},{\"icon\":\"fence\",\"x\":50,\"y\":50,\"amount\":10,\"horizontal\":true},{\"icon\":\"fence\",\"x\":250,\"y\":150,\"amount\":12,\"horizontal\":true},{\"icon\":\"fence\",\"x\":550,\"y\":350,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":400,\"y\":70,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":200,\"y\":200,\"amount\":6,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":44,\"horizontal\":true},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":347,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":364,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":735,\"y\":37,\"amount\":18,\"horizontal\":false},{\"icon\":\"tree\",\"x\":752,\"y\":37,\"amount\":18,\"horizontal\":false}]}");
+    if(!separate_world_data("pvp_world", json_data_str)) {
+        FURI_LOG_E("Game", "Failed to separate world data");
+    }
+    furi_string_free(json_data_str);
+    set_world(level, manager, "pvp_world");
+    game_context->is_switching_level = false;
+    game_context->icon_offset = 0;
+    if(!game_context->imu_present) {
+        game_context->icon_offset += ((game_context->icon_count / 10) / 15);
+    }
+    player_spawn(level, manager);
+}
+
+static const LevelBehaviour _pvp_world = {
+    .alloc = NULL,
+    .free = NULL,
+    .start = draw_pvp_world,
+    .stop = NULL,
+    .context_size = 0,
+};
+
+const LevelBehaviour* pvp_world() {
+    return &_pvp_world;
+}
+
 FuriString* fetch_world(const char* name) {
     if(!name) {
         FURI_LOG_E("Game", "World name is NULL");

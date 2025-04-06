@@ -4,14 +4,14 @@
 #include <game/game.h>
 #include "engine/sensors/imu.h"
 
-#define MAX_ENEMIES 10
-#define MAX_LEVELS  10
-#define MAX_NPCS    10
+#define MAX_ENEMIES 5
+#define MAX_LEVELS  5
+#define MAX_NPCS    1
 
 // EntityContext definition
 typedef struct {
-    char id[64]; // Unique ID for the entity type
-    int index; // Index for the specific entity instance
+    char id[32]; // Unique ID for the entity type
+    uint8_t index; // Index for the specific entity instance
     Vector size; // Size of the entity
     Sprite* sprite_right; // Entity sprite when looking right
     Sprite* sprite_left; // Entity sprite when looking left
@@ -25,9 +25,11 @@ typedef struct {
     float speed; // Speed of the entity
     float attack_timer; // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
-    float strength; // Damage the entity deals
+    uint32_t strength; // Damage the entity deals
     float health; // Health of the entity
     char message[64]; // Message to display when interacting with the entity
+    bool is_user; // Flag to indicate if the entity is a live player or not
+    char username[32]; // entity username
 } EntityContext;
 
 typedef struct {
@@ -44,7 +46,7 @@ typedef struct {
     uint32_t strength; // player strength
     uint32_t health; // player health
     uint32_t max_health; // player maximum health
-    uint32_t health_regen; // player health regeneration rate per second/frame
+    uint8_t health_regen; // player health regeneration rate per second/frame
     float elapsed_health_regen; // time elapsed since last health regeneration
     float attack_timer; // Cooldown duration between attacks
     float elapsed_attack_timer; // Time elapsed since the last attack
@@ -67,17 +69,16 @@ typedef enum {
 } GameMode;
 
 typedef struct {
-    PlayerContext* player_context;
     Level* levels[MAX_LEVELS];
     Entity* enemies[MAX_ENEMIES];
     Entity* npcs[MAX_NPCS];
     Entity* player;
     //
     float fps;
-    int level_count;
-    int enemy_count;
-    int npc_count;
-    int current_level;
+    int8_t level_count;
+    int8_t enemy_count;
+    int8_t npc_count;
+    int8_t current_level;
     bool ended_early;
     Imu* imu;
     bool imu_present;
@@ -85,20 +86,22 @@ typedef struct {
     bool is_switching_level;
     bool is_menu_open;
     //
-    uint32_t elapsed_button_timer;
-    uint32_t last_button;
+    uint16_t elapsed_button_timer;
+    uint8_t last_button;
     //
     GameMenuScreen menu_screen;
     uint8_t menu_selection;
     //
     GameMode game_mode;
     //
-    int icon_count;
-    int icon_offset;
+    uint32_t icon_count;
+    uint16_t icon_offset;
     //
     char message[64];
     //
     uint8_t tutorial_step;
+    //
+    FlipperHTTP* fhttp;
 } GameContext;
 
 typedef struct {

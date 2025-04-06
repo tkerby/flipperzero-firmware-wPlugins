@@ -1,7 +1,13 @@
 The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
+## Connect Online
+- Discord: https://discord.gg/5aN9qwkEc6
+- YouTube: https://www.youtube.com/@jblanked
+- Instagram: https://www.instagram.com/jblanked
+- Other: https://www.jblanked.com/social/
+
 ## Requirements
-- WiFi Developer Board, Raspberry Pi, or ESP32 device with the FlipperHTTP flash: https://github.com/jblanked/FlipperHTTP
+- WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with FlipperHTTP v1.8.2 or higher: https://github.com/jblanked/FlipperHTTP
 - 2.4 GHz WiFi access point
 
 ## How It Works
@@ -20,7 +26,7 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 - **Press/Hold RIGHT**: Turn right if not already facing right, then walk right if the button is still pressed.
 - **Press/Hold UP**: Walk up.
 - **Press/Hold DOWN**: Walk down.
-- **Press OK**: Interact/Attack/Teleport (set to attack until all enemies are defeated and interact when colliding with NPCs)
+- **Press OK**: Interact, attack, or teleport. Attacks enemies when colliding with them until all enemies are defeated. Interacts with NPCs when colliding with them.
 - **HOLD OK**: In-Game Menu.
 - **Press BACK**: Leave the menu.
 - **HOLD BACK**: Exit the game.
@@ -57,7 +63,7 @@ NPCs are friendly characters that players can interact with. Currently, you can 
 3. Restart your Flipper Zero, then open FlipWorld.
 4. Click "Settings -> WiFi", then input your WiFi SSID and password.
 5. Hit the "BACK" button, click "User". If your username is not present, click "Username" and add one. Do the same for the password field.
-6. Go back to the main menu and hit "Play". It will register an account if necessary and fetch data from our API that's used to render our graphics.
+6. Go back to the main menu and hit "Play", followed by "Tutorial". It will register an account if necessary and fetch data from our API that's used to render our graphics.
 
 ## Roadmap
 
@@ -84,7 +90,7 @@ NPCs are friendly characters that players can interact with. Currently, you can 
 - New game features
 
 **v0.8**
-- Multiplayer support
+- Multiplayer support (PvP Beta)
 
 **v1.0**
 - Official release
