@@ -135,8 +135,10 @@ static void npc_collision(Entity *self, Entity *other, GameManager *manager, voi
         // Retrieve NPC context
         EntityContext *npc_context = (EntityContext *)context;
         GameContext *game_context = game_manager_game_context_get(manager);
+        PlayerContext *player_context = entity_context_get(game_context->player);
         furi_check(npc_context);
         furi_check(game_context);
+        furi_check(player_context);
 
         // Get positions of the NPC and the player
         Vector npc_pos = entity_pos_get(self);
@@ -146,20 +148,20 @@ static void npc_collision(Entity *self, Entity *other, GameManager *manager, voi
         bool player_is_facing_npc = false;
 
         // Determine if the player is facing the NPC
-        if ((game_context->player_context->direction == ENTITY_LEFT && npc_pos.x < player_pos.x) ||
-            (game_context->player_context->direction == ENTITY_RIGHT && npc_pos.x > player_pos.x) ||
-            (game_context->player_context->direction == ENTITY_UP && npc_pos.y < player_pos.y) ||
-            (game_context->player_context->direction == ENTITY_DOWN && npc_pos.y > player_pos.y))
+        if ((player_context->direction == ENTITY_LEFT && npc_pos.x < player_pos.x) ||
+            (player_context->direction == ENTITY_RIGHT && npc_pos.x > player_pos.x) ||
+            (player_context->direction == ENTITY_UP && npc_pos.y < player_pos.y) ||
+            (player_context->direction == ENTITY_DOWN && npc_pos.y > player_pos.y))
         {
             player_is_facing_npc = true;
         }
 
         // bounce the player back to where it came from
         // Set the player's old position to prevent collision
-        entity_pos_set(other, game_context->player_context->old_position);
+        entity_pos_set(other, player_context->old_position);
         // Reset player's movement direction to prevent immediate re-collision
-        game_context->player_context->dx = 0;
-        game_context->player_context->dy = 0;
+        player_context->dx = 0;
+        player_context->dy = 0;
 
         // Press OK and facing NPC
         if (player_is_facing_npc && game_context->last_button == GameKeyOk)

@@ -143,9 +143,6 @@ void player_spawn(Level *level, GameManager *manager)
                 snprintf(pctx->username, sizeof(pctx->username), "Player");
             }
         }
-
-        game_context->player_context = pctx;
-
         // Save the initialized context
         if (!save_player_context(pctx))
         {
@@ -171,8 +168,6 @@ void player_spawn(Level *level, GameManager *manager)
     // set the player's left sprite direction
     pctx->left = pctx->direction == ENTITY_LEFT ? true : false;
 
-    // Assign loaded player context to game context
-    game_context->player_context = pctx;
     free(sprite_context);
 }
 
@@ -213,7 +208,7 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
         player->direction = ENTITY_UP;
     }
 }
-
+uint16_t elapsed_ws_timer = 0;
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
     if (!self || !manager || !context)
@@ -222,8 +217,38 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     PlayerContext *player = (PlayerContext *)context;
     InputState input = game_manager_input_get(manager);
     Vector pos = entity_pos_get(self);
-    player->old_position = pos;
     GameContext *game_context = game_manager_game_context_get(manager);
+
+    // update websocket player context
+    if (game_context->game_mode == GAME_MODE_PVP)
+    {
+        // if pvp, end the game if the player is dead
+        if (player->health <= 0)
+        {
+            player->health = player->max_health;
+            save_player_context(player);
+            furi_delay_ms(100);
+            game_manager_game_stop(manager);
+            return;
+        }
+
+        if (player->old_position.x != pos.x || player->old_position.y != pos.y)
+        {
+            elapsed_ws_timer++;
+            // only send the websocket update every 200ms
+            if (elapsed_ws_timer >= (game_context->fps / 5))
+            {
+                if (game_context->fhttp)
+                {
+                    player->start_position = player->old_position;
+                    websocket_player_context(player, game_context->fhttp);
+                }
+                elapsed_ws_timer = 0;
+            }
+        }
+    }
+
+    player->old_position = pos;
 
     // Determine the player's level based on XP
     player->level = get_player_level_iterative(player->xp);
@@ -357,7 +382,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
         // if all enemies are dead, allow the "OK" button to switch levels
         // otherwise the "OK" button will be used to attack
-        if (game_context->enemy_count == 0 && !game_context->is_switching_level)
+        if (game_context->game_mode != GAME_MODE_PVP && game_context->enemy_count == 0 && !game_context->is_switching_level)
         {
             game_context->is_switching_level = true;
             save_player_context(player);

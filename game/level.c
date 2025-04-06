@@ -40,11 +40,12 @@ void set_world(Level *level, GameManager *manager, char *id)
     if (!json_data_str || furi_string_empty(json_data_str))
     {
         FURI_LOG_E("Game", "Failed to load json data from file");
-        // draw_town_world(manager, level);
+        if (json_data_str)
+            furi_string_free(json_data_str);
         return;
     }
 
-    if (!is_enough_heap(28400))
+    if (!is_enough_heap(28400, true))
     {
         FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
         GameContext *game_context = game_manager_game_context_get(manager);
@@ -58,7 +59,6 @@ void set_world(Level *level, GameManager *manager, char *id)
     if (!draw_json_world_furi(manager, level, json_data_str))
     {
         FURI_LOG_E("Game", "Failed to draw world");
-        // draw_town_world(manager, level);
         furi_string_free(json_data_str);
     }
     else
@@ -73,7 +73,8 @@ void set_world(Level *level, GameManager *manager, char *id)
         if (!enemy_data_str || furi_string_empty(enemy_data_str))
         {
             FURI_LOG_E("Game", "Failed to get enemy data");
-            // draw_town_world(manager, level);
+            if (enemy_data_str)
+                furi_string_free(enemy_data_str);
             return;
         }
 
@@ -104,7 +105,8 @@ void set_world(Level *level, GameManager *manager, char *id)
         if (!npc_data_str || furi_string_empty(npc_data_str))
         {
             FURI_LOG_E("Game", "Failed to get npc data");
-            // draw_town_world(manager, level);
+            if (npc_data_str)
+                furi_string_free(npc_data_str);
             return;
         }
 

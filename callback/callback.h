@@ -1,57 +1,20 @@
 #pragma once
 #include <flip_world.h>
-#include <flip_storage/storage.h>
 
-void free_all_views(void *context, bool should_free_variable_item_list, bool should_free_submenu_settings);
 void callback_submenu_choices(void *context, uint32_t index);
-uint32_t callback_to_submenu(void *context);
-
-// Add edits by Derek Jamison
-typedef enum DataState DataState;
-enum DataState
-{
-    DataStateInitial,
-    DataStateRequested,
-    DataStateReceived,
-    DataStateParsed,
-    DataStateParseError,
-    DataStateError,
-};
-
-typedef enum MessageState MessageState;
-enum MessageState
-{
-    MessageStateAbout,
-    MessageStateLoading,
-};
-typedef struct MessageModel MessageModel;
-struct MessageModel
-{
-    MessageState message_state;
-};
-
-typedef struct DataLoaderModel DataLoaderModel;
-typedef bool (*DataLoaderFetch)(DataLoaderModel *model);
-typedef char *(*DataLoaderParser)(DataLoaderModel *model);
-struct DataLoaderModel
-{
-    char *title;
-    char *data_text;
-    DataState data_state;
-    DataLoaderFetch fetcher;
-    DataLoaderParser parser;
-    void *parser_context;
-    size_t request_index;
-    size_t request_count;
-    ViewNavigationCallback back_callback;
-    FuriTimer *timer;
-    FlipperHTTP *fhttp;
-};
-void generic_switch_to_view(FlipWorldApp *app, char *title, DataLoaderFetch fetcher, DataLoaderParser parser, size_t request_count, ViewNavigationCallback back, uint32_t view_id);
-
-void loader_draw_callback(Canvas *canvas, void *model);
-
-void loader_init(View *view);
-
-void loader_free_model(View *view);
-bool custom_event_callback(void *context, uint32_t index);
+bool message_input_callback(InputEvent *event, void *context);
+void message_draw_callback(Canvas *canvas, void *model);
+void wifi_settings_select(void *context, uint32_t index);
+void updated_wifi_ssid(void *context);
+void updated_wifi_pass(void *context);
+void updated_username(void *context);
+void updated_password(void *context);
+void fps_change(VariableItem *item);
+void game_settings_select(void *context, uint32_t index);
+void user_settings_select(void *context, uint32_t index);
+void screen_on_change(VariableItem *item);
+void sound_on_change(VariableItem *item);
+void vibration_on_change(VariableItem *item);
+void player_on_change(VariableItem *item);
+void vgm_x_change(VariableItem *item);
+void vgm_y_change(VariableItem *item);

@@ -10,7 +10,7 @@
 
 #undef FURI_LOG_I
 #define FURI_LOG_I(tag, msg, ...)
-//
+// //
 
 typedef enum
 {
