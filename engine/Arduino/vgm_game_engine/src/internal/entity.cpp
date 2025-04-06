@@ -74,18 +74,23 @@ namespace VGMGameEngine
         void (*update)(Entity *, Game *),
         void (*render)(Entity *, Draw *, Game *),
         void (*collision)(Entity *, Entity *, Game *),
-        bool is_8bit)
+        bool is_8bit_sprite)
     {
+#if PICO_GAME_ENGINE_BOARD_TYPE == PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
+        this->is_8bit = is_8bit_sprite;
+#else
+        this->is_8bit = false; // 8-bit images are not supported on non-VGM boards
+#endif
         this->name = name;
         this->type = type;
         this->position = position;
         this->old_position = position;
         this->size = size;
-        this->sprite = new Image(is_8bit);
+        this->sprite = new Image(this->is_8bit);
         this->sprite->from_byte_array(sprite_data, size);
         if (sprite_left_data != NULL)
         {
-            this->sprite_left = new Image(is_8bit);
+            this->sprite_left = new Image(this->is_8bit);
             this->sprite_left->from_byte_array(sprite_left_data, size);
         }
         else
@@ -94,7 +99,7 @@ namespace VGMGameEngine
         }
         if (sprite_right_data != NULL)
         {
-            this->sprite_right = new Image(is_8bit);
+            this->sprite_right = new Image(this->is_8bit);
             this->sprite_right->from_byte_array(sprite_right_data, size);
         }
         else

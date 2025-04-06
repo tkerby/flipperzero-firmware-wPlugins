@@ -1,5 +1,6 @@
 #pragma once
 #include "Arduino.h"
+#include "boards.h"
 #include "vector.h"
 #include <LittleFS.h> // storage
 #include <map>
@@ -30,7 +31,12 @@ namespace VGMGameEngine
         uint8_t *data;    // Raw image data (e.g. the BMP pixel data in file order)
         bool is_8bit;     // Flag to indicate if the image is 8-bit or not
 
-        Image(bool is_8bit = false) : size(0, 0), buffer(nullptr), data(nullptr), is_8bit(is_8bit) {} // Constructor
+        Image(bool is_8bit = false) : size(0, 0), buffer(nullptr), data(nullptr), is_8bit(is_8bit)
+        {
+#if PICO_GAME_ENGINE_BOARD_TYPE != PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
+            is_8bit = false; // 8-bit images are not supported on non-VGM boards
+#endif
+        } // Constructor
         ~Image();
 
         bool from_path(const char *path);                       // Create image from path: load the BMP file then create the image buffer.

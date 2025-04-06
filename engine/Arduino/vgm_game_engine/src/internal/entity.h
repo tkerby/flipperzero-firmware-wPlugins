@@ -102,7 +102,7 @@ namespace VGMGameEngine
             void (*update)(Entity *, Game *) = NULL,              // The update function of the entity.
             void (*render)(Entity *, Draw *, Game *) = NULL,      // The render function of the entity.
             void (*collision)(Entity *, Entity *, Game *) = NULL, // The collision function of the entity.
-            bool is_8bit = false                                  // Flag to indicate if the entity uses 8-bit graphics
+            bool is_8bit_sprite = false                           // Flag to indicate if the entity uses 8-bit graphics
         );
 
         ~Entity(); // Destructor
