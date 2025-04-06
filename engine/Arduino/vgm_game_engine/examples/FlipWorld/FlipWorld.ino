@@ -14,7 +14,15 @@ void setup()
     setup_fs();
 
     // Create the game instance with its name, start/stop callbacks, and colors.
-    Game *game = new Game("FlipWorld", Vector(320, 240), NULL, NULL, TFT_RED, TFT_WHITE);
+    Game *game = new Game(
+        "FlipWorld",      // name
+        Vector(320, 240), // size
+        NULL,             // start
+        NULL,             // stop
+        TFT_RED,          // foreground
+        TFT_WHITE,        // background
+        true              // use 8-bit?
+    );
 
     // set world size
     game->world_size = Vector(768, 384);
@@ -26,7 +34,7 @@ void setup()
     game->input_add(new Input(uart));
 
     // Create and add a level to the game.
-    Level *level = new Level("Level 1", Vector(768, 384), game, NULL, NULL, 400);
+    Level *level = new Level("Level 1", Vector(768, 384), game, NULL, NULL);
     game->level_add(level);
 
     // set game position to center of player
