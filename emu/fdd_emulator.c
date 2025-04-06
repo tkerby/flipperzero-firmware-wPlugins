@@ -31,6 +31,20 @@
 // XF551 high-speed mode baudrate
 #define XF551_BAUDRATE 38400
 
+// FDD emulator specific SIO commands
+#define SIO_COMMAND_PUT              0x50 // Write sector without verification
+#define SIO_COMMAND_FORMAT           0x21 // Format disk
+#define SIO_COMMAND_FORMAT_MEDIUM    0x22 // Format disk (medium density)
+#define SIO_COMMAND_GET_HSI          0x3F // Get high-speed index
+#define SIO_COMMAND_READ_PERCOM      0x4E // Read PERCOM configuration
+#define SIO_COMMAND_WRITE_PERCOM     0x4F // Write PERCOM configuration
+#define SIO_COMMAND_FORMAT_WITH_SKEW 0x66 // Format disk with skew
+#define SIO_COMMAND_READ_HS          0xD2 // Read sector
+#define SIO_COMMAND_WRITE_HS         0xD7 // Write sector
+#define SIO_COMMAND_STATUS_HS        0xD3 // Get status
+#define SIO_COMMAND_PUT_HS           0xD0 // Write sector without verification
+#define SIO_COMMAND_FORMAT_HS        0xA1 // Format disk
+
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
 

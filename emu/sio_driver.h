@@ -37,29 +37,12 @@ typedef enum {
     SIO_DEVICE_DISK4 = 0x34,
 } SIODevice;
 
-// SIO command codes
-typedef enum {
-    SIO_COMMAND_READ = 0x52, // Read sector
-    SIO_COMMAND_WRITE = 0x57, // Write sector
-    SIO_COMMAND_STATUS = 0x53, // Get status
-    SIO_COMMAND_PUT = 0x50, // Write sector without verification
-    SIO_COMMAND_FORMAT = 0x21, // Format disk
-    SIO_COMMAND_FORMAT_MEDIUM = 0x22, // Format disk (medium density)
-    SIO_COMMAND_GET_HSI = 0x3F, // Get high-speed index
-    SIO_COMMAND_READ_PERCOM = 0x4E, // Read PERCOM configuration
-    SIO_COMMAND_WRITE_PERCOM = 0x4F, // Write PERCOM configuration
-    SIO_COMMAND_FORMAT_WITH_SKEW = 0x66, // Format disk with skew
+typedef uint8_t SIOCommand;
 
-    SIO_COMMAND_READ_HS = 0xD2, // Read sector
-    SIO_COMMAND_WRITE_HS = 0xD7, // Write sector
-    SIO_COMMAND_STATUS_HS = 0xD3, // Get status
-    SIO_COMMAND_PUT_HS = 0xD0, // Write sector without verification
-    SIO_COMMAND_FORMAT_HS = 0xA1, // Format disk
-
-    SIO_COMMAND_READ_BLOCK_HEADER = 0xF0, // Read XEX block header
-    SIO_COMMAND_READ_BLOCK = 0xF1, // Read XEX block
-
-} SIOCommand;
+// Common SIO command codes
+#define SIO_COMMAND_READ   0x52
+#define SIO_COMMAND_WRITE  0x57
+#define SIO_COMMAND_STATUS 0x53
 
 // SIO request structure passed to the device driver
 typedef struct {
