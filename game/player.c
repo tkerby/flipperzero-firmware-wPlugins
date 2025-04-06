@@ -235,8 +235,8 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         if (player->old_position.x != pos.x || player->old_position.y != pos.y)
         {
             elapsed_ws_timer++;
-            // only send the websocket update every 100ms
-            if (elapsed_ws_timer >= (game_context->fps / 10))
+            // only send the websocket update every 200ms
+            if (elapsed_ws_timer >= (game_context->fps / 5))
             {
                 if (game_context->fhttp)
                 {
