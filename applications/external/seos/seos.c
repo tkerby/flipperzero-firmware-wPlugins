@@ -71,7 +71,7 @@ void seos_tick_event_callback(void* context) {
 Seos* seos_alloc() {
     Seos* seos = malloc(sizeof(Seos));
 
-    seos->has_ble = false;
+    seos->has_external_ble = false;
     furi_hal_power_enable_otg();
 
     seos->view_dispatcher = view_dispatcher_alloc();

@@ -70,6 +70,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 
 <a name="release">
 

@@ -29,6 +29,7 @@
 #include "keys.h"
 #include "seos_hci.h"
 #include "seos_characteristic.h"
+#include "seos_native_peripheral.h"
 #include "seos_central.h"
 #include "seos_common.h"
 #include "seos_reader.h"
@@ -93,7 +94,7 @@ struct Seos {
     SeosReader* seos_reader;
 
     // BLE
-    bool has_ble;
+    bool has_external_ble;
     SeosCharacteristic* seos_characteristic;
     SeosCentral* seos_central;
     FlowMode flow_mode;
@@ -103,6 +104,9 @@ struct Seos {
     DialogsApp* dialogs;
 
     bool keys_loaded;
+    Bt* bt;
+    FuriHalBleProfileBase* ble_profile;
+    SeosNativePeripheral* native_peripheral;
 };
 
 typedef enum {
