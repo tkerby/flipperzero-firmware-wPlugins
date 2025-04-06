@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0405-1756-0.420.0-15bb4dd](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-05 17:56 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-05 17:56 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-06 17:56 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-06 17:56 EST`
 - Updated: [DTMF Dolphin v1.5 (By litui)](https://github.com/litui/dtmf_dolphin)
 - Added: [Doom animation (By doomwastaken)](https://github.com/flipperdevices/flipperzero-firmware/pull/4164)
 - Patreon Build Update:  [Doom animation (By doomwastaken) Added to Stock, Minimal and Manifest Switcher builds. Updated Dolphin animation set (By RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/25ffdb624a19a02a3a0bd8c95d248880833270c0)
@@ -70,8 +70,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - OFW: PR: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177)
-- Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
+- Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 
 <a name="release">
 
