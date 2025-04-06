@@ -1,4 +1,3 @@
-# Passy: A Flipper Zero Passport reader
 
 ## Tested with the following countries:
 🇺🇸
@@ -13,10 +12,5 @@
  - Does not parse some of the optional DG (under 'advanced' menu)
 
 ## To do
- - Support other country passports
+ - Support more countries passports
 
-## Generate asn:
-
-```bash
-asn1c -D ./lib/asn1 -no-gen-example -pdu=all eMRTD.asn1
-```
