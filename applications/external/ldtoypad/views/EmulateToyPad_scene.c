@@ -68,32 +68,32 @@ struct LDToyPadSceneEmulate {
 uint8_t selectedBox = 1; // Variable to keep track of which toypad box is selected
 
 // function get uid from index
-uint8_t* get_uid_from_index(int index) {
-    if(index < 0 || index >= MAX_TOKENS) {
-        return NULL; // Invalid index
-    }
-    return emulator->tokens[index]->uid;
-}
+// uint8_t* get_uid_from_index(int index) {
+//     if(index < 0 || index >= MAX_TOKENS) {
+//         return NULL; // Invalid index
+//     }
+//     return emulator->tokens[index]->uid;
+// }
 
-int get_id_from_index(int index) {
-    if(index < 0 || index >= MAX_TOKENS) {
-        return 0; // Invalid index
-    }
+// int get_id_from_index(int index) {
+//     if(index < 0 || index >= MAX_TOKENS) {
+//         return 0; // Invalid index
+//     }
 
-    // when the token is a vehicle get the id from the token payload
-    // if(!emulator->tokens[index]->id) {
-    //     return emulator->tokens[index]->token[0x24 * 4] |
-    //            (emulator->tokens[index]->token[0x25 * 4] << 8);
-    // } else {
-    //     return emulator->tokens[index]->id;
-    // }
+//     // when the token is a vehicle get the id from the token payload
+//     // if(!emulator->tokens[index]->id) {
+//     //     return emulator->tokens[index]->token[0x24 * 4] |
+//     //            (emulator->tokens[index]->token[0x25 * 4] << 8);
+//     // } else {
+//     //     return emulator->tokens[index]->id;
+//     // }
 
-    if(emulator->tokens[index]->id) {
-        return emulator->tokens[index]->id;
-    } else {
-        return 0;
-    }
-}
+//     if(emulator->tokens[index]->id) {
+//         return emulator->tokens[index]->id;
+//     } else {
+//         return 0;
+//     }
+// }
 
 Token* get_token_from_index(int index) {
     if(index < 0 || index >= MAX_TOKENS) {
@@ -133,29 +133,42 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                     if(event->type == InputTypePress) {
                         model->ok_pressed = true;
                     }
-                    if(event->type == InputTypePress && model->show_mini_menu_selected) {
+                    if(event->type == InputTypeShort && model->show_mini_menu_selected) {
+                        bool isVehicle = get_token_from_index(boxInfo[selectedBox].index)->id == 0;
+
                         switch(model->mini_option_selected) {
                         case MiniSelectionFavorite:
                             // Save the token to favorites
-                            // get the id of the selected token and write that to favs.txt;
-
-                            int id = get_id_from_index(boxInfo[selectedBox].index);
-
-                            if(id) {
-                                save_favorite(id, app);
+                            if(!isVehicle) {
+                                int id = get_token_from_index(boxInfo[selectedBox].index)->id;
+                                if(id) {
+                                    // check if the minifigure is already a favorite then unfavorite it
+                                    if(is_favorite(id)) {
+                                        unfavorite(id, app);
+                                    } else {
+                                        // save the minifigure to favorites
+                                        favorite(id, app);
+                                    }
+                                }
+                            } else {
+                                // TODO: Implement vehicle favorites
                             }
-
+                            break;
+                        case MiniSelectionSave:
+                            // Handle Save
                             break;
                         default:
                             break;
                         }
+
+                        model->show_mini_menu_selected = false;
+                        model->ok_pressed = false;
+                        return true;
                     } else if(
                         event->type == InputTypeLong && model->connected &&
                         boxInfo[selectedBox].isFilled) {
                         model->show_mini_menu_selected = !model->show_mini_menu_selected;
-                    } else if(
-                        event->type == InputTypeShort && model->connected &&
-                        !model->show_mini_menu_selected) {
+                    } else if(event->type == InputTypeShort && model->connected) {
                         if(boxInfo[selectedBox].isFilled) {
                             // if the box is filled, we want to remove the minifigure from the selected box
                             int i = boxInfo[selectedBox].index;
@@ -187,8 +200,6 @@ bool ldtoypad_scene_emulate_input_callback(InputEvent* event, void* context) {
                 }
 
                 if(model->show_mini_menu_selected && event->type == InputTypePress) {
-                    // when the selectbox is a mifnig dont show the second menu so MiniSelectionCount  - 1
-
                     if(event->key == InputKeyUp) {
                         model->mini_option_selected =
                             (model->mini_option_selected + MiniSelectionCount - 1) %
@@ -360,10 +371,6 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
     } else if(!model->connected) {
         model->connection_status = "Trying to connect USB";
     }
-
-    // always connected for testing purposes
-    model->connected = true;
-    set_connected_status(1);
 
     if((model->selected_minifigure_index > 0 || model->selected_vehicle_index > 0) &&
        model->connected) {
@@ -539,6 +546,11 @@ static void ldtoypad_scene_emulate_draw_render_callback(Canvas* canvas, void* co
             // Only vehicle, show both options
             visible_labels[visible_count++] = all_mini_menu_labels[0];
             visible_labels[visible_count++] = all_mini_menu_labels[1];
+        }
+
+        // change add favorite to remove favorite if the minifigure is already a favorite
+        if(is_favorite(get_token_from_index(boxInfo[selectedBox].index)->id)) {
+            visible_labels[0] = "Remove favorite";
         }
 
         // Clamp selection to visible count
