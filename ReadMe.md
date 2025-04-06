@@ -71,6 +71,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- OFW: PR: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177)
 
 <a name="release">
 
