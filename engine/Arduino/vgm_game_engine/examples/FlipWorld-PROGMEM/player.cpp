@@ -171,9 +171,6 @@ static void enemy_render(Entity *self, Draw *draw, Game *game)
     char health_str[32];
     snprintf(health_str, sizeof(health_str), "%.0f", (double)self->health);
 
-    // clear the username's previous position
-    draw->clear(Vector(self->old_position.x - game->old_pos.x - (strlen(health_str) * 2), self->old_position.y - game->old_pos.y - 10), Vector(strlen(health_str) * 5 + 8, 10), TFT_WHITE);
-
     // skip if enemy is out of the screen
     if (self->position.x + self->size.x < game->pos.x || self->position.x > game->pos.x + game->size.x ||
         self->position.y + self->size.y < game->pos.y || self->position.y > game->pos.y + game->size.y)
@@ -196,10 +193,7 @@ static void enemy_render(Entity *self, Draw *draw, Game *game)
     // draw health of enemy
     draw_username(game, self->position, health_str);
 }
-void clear_screan(Game *game)
-{
-    game->draw->clear(Vector(0, 0), Vector(game->size.x, game->size.y), TFT_WHITE); // clear the screen
-}
+
 int last_button = -1;
 // Enemy collision function: when this is called, the enemy has collided with another entity
 static void enemy_collision(Entity *self, Entity *other, Game *game)
@@ -284,7 +278,6 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
                 if (other->health > 0)
                 {
                     other->state = ENTITY_ATTACKED;
-                    clear_player_username(other, game, true);
                     other->position_set(other->old_position);
                 }
             }
@@ -296,9 +289,7 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
             other->state = ENTITY_DEAD;
             other->position = other->start_position;
             other->health = other->max_health;
-            clear_player_username(other, game, true);
             other->position_set(other->start_position);
-            clear_screan(game);
         }
 
         // check if enemy is dead
@@ -308,9 +299,7 @@ static void enemy_collision(Entity *self, Entity *other, Game *game)
             self->position = Vector(-100, -100);
             self->health = 0;
             self->elapsed_move_timer = 0;
-            clear_player_username(self, game, true);
             self->position_set(self->position);
-            clear_screan(game);
         }
     }
 }
@@ -337,7 +326,7 @@ static void enemy_spawn(
     if (enemy_left.data != NULL && enemy_right.data != NULL)
     {
         // Create the enemy entity
-        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, enemy_left.data, enemy_left.data, enemy_right.data, NULL, NULL, enemy_update, enemy_render, enemy_collision);
+        Entity *entity = new Entity(name, ENTITY_ENEMY, start_position, enemy_left.size, enemy_left.data, enemy_left.data, enemy_right.data, NULL, NULL, enemy_update, enemy_render, enemy_collision, true);
         entity->direction = direction;
         entity->start_position = start_position;
         entity->end_position = end_position;
@@ -509,9 +498,6 @@ static void player_update(Entity *self, Game *game)
 // Draw the user stats (health, xp, and level)
 static void draw_user_stats(Entity *self, Vector pos, Game *game)
 {
-    // clear the previous game stats
-    game->draw->clear(Vector(pos.x - 2, pos.y - 5), Vector(56, 40), TFT_WHITE); // clear the user stats in the previous game position
-
     // first draw a white rectangle to make the text more readable
     game->draw->display->fillRect(pos.x - 2, pos.y - 5, 48, 32, TFT_WHITE);
 
@@ -533,20 +519,8 @@ static void draw_user_stats(Entity *self, Vector pos, Game *game)
     game->draw->text(Vector(pos.x, pos.y + 18), level, TFT_RED);
 }
 
-void clear_player_username(Entity *player, Game *game, bool clear_current)
-{
-    // clear the username's previous position
-    game->draw->clear(Vector(player->old_position.x - game->old_pos.x - (strlen("Player") * 2), player->old_position.y - game->old_pos.y - 10), Vector(strlen("Player") * 5 + 8, 10), TFT_WHITE);
-    if (clear_current)
-    {
-        // clear the username's current position
-        game->draw->clear(Vector(player->position.x - game->pos.x - (strlen("Player") * 2), player->position.y - game->pos.y - 10), Vector(strlen("Player") * 5 + 8, 10), TFT_WHITE);
-    }
-}
-
 static void player_render(Entity *self, Draw *draw, Game *game)
 {
-    clear_player_username(self, game);             // clear the username's previous position
     draw_username(game, self->position, "Player"); // draw the username at the new position
     draw_user_stats(self, Vector(5, 210), game);   // draw the user stats at the new position
 }
@@ -561,7 +535,7 @@ void player_spawn(Level *level, const char *name, Vector position)
     if (player_left.data != NULL && player_right.data != NULL)
     {
         // Create the player entity
-        Entity *player = new Entity("Player", ENTITY_PLAYER, position, player_left.size, player_left.data, player_left.data, player_right.data, NULL, NULL, player_update, player_render, NULL);
+        Entity *player = new Entity("Player", ENTITY_PLAYER, position, player_left.size, player_left.data, player_left.data, player_right.data, NULL, NULL, player_update, player_render, NULL, true);
         player->level = 1;
         player->health = 100;
         player->max_health = 100;
