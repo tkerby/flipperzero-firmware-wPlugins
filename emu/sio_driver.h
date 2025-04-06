@@ -18,7 +18,9 @@
 
 #pragma once
 
-#define SIO_MAX_FRAME_SIZE 1024U
+#include <toolbox/pipe.h>
+
+#define SIO_MAX_FRAME_SIZE 2048U
 
 // SIO status codes
 typedef enum {
@@ -35,6 +37,7 @@ typedef enum {
     SIO_DEVICE_DISK2 = 0x32,
     SIO_DEVICE_DISK3 = 0x33,
     SIO_DEVICE_DISK4 = 0x34,
+    SIO_DEVICE_RS232 = 0x50,
 } SIODevice;
 
 typedef uint8_t SIOCommand;
@@ -109,3 +112,25 @@ bool sio_driver_attach(
 
 // Detaches a periheral driver from the SIO driver
 void sio_driver_detach(SIODriver* sio, uint8_t device);
+
+// Stream mode callbacks
+typedef void (*SIORxCallback)(void* context, const void* data, size_t size);
+typedef size_t (*SIOTxCallback)(void* context, void* data, size_t size);
+
+// Sets callbacks for the stream mode. In this mode, the SIO driver
+// will not process SIO requests, but will pass the received data
+// to the `rx_callback` and will send data using the provided by
+// `tx_callback`.
+void sio_driver_set_stream_callbacks(
+    SIODriver* sio,
+    SIORxCallback rx_callback,
+    SIOTxCallback tx_callback,
+    void* context);
+
+// Enables the stream mode. Stream mode will be automatically
+// disable when a command frame is received.
+void sio_driver_activate_stream_mode(SIODriver* sio);
+
+// Wake up the SIO worker thread to call the `tx_callback`
+// and send data to the UART.
+void sio_driver_wakeup_tx(SIODriver* sio);

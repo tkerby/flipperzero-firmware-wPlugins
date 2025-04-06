@@ -82,6 +82,9 @@ typedef struct {
         FuriString* image;
     } fdd[FDD_EMULATOR_COUNT];
 
+    // Emulates Atari 850 modem
+    bool atari850;
+
 } AppConfig;
 
 // Initializes the application configuration and sets the default values
