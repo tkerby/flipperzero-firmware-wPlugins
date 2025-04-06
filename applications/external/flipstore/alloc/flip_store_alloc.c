@@ -106,12 +106,7 @@ FlipStoreApp* flip_store_app_alloc() {
         FlipStoreSubmenuIndexVGMFirmwares,
         callback_submenu_choices,
         app);
-    submenu_add_item(
-        app->submenu_options,
-        "GitHub Repository",
-        FlipStoreSubmenuIndexGitHub,
-        callback_submenu_choices,
-        app);
+    // submenu_add_item(app->submenu_options, "GitHub Repository", FlipStoreSubmenuIndexGitHub, callback_submenu_choices, app);
     //
     submenu_add_item(
         app->submenu_app_list,
