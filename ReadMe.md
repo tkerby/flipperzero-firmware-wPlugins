@@ -72,6 +72,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177)
 - Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 - Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- ESP Flasher Bump [Marauder 1.4.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.1)
 
 <a name="release">
 
