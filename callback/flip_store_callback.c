@@ -587,7 +587,7 @@ static bool alloc_about_view(FlipStoreApp *app)
         if (!easy_flipper_set_widget(
                 &app->widget_about,
                 FlipStoreViewAbout,
-                "Welcome to the FlipStore!\n------\nDownload apps via WiFi and\nrun them on your Flipper!\n------\nwww.github.com/jblanked",
+                "Welcome to FlipDownloader!\n------\nDownload apps and assets via WiFi\nand run them on your Flipper!\n------\nwww.github.com/jblanked",
                 callback_to_submenu,
                 &app->view_dispatcher))
         {
@@ -973,19 +973,21 @@ static void fetch_appropiate_app_list(FlipStoreApp *app, int iteration)
         char dir[256];
         snprintf(dir, sizeof(dir), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_store/data");
         storage_common_mkdir(storage, dir);
-        furi_record_close(RECORD_STORAGE);
         fhttp->state = IDLE;
         flip_catalog_free();
         snprintf(
             fhttp->file_path,
             sizeof(fhttp->file_path),
             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_store/data/%s.json", categories[flip_store_category_index]);
+        storage_simply_remove_recursive(storage, fhttp->file_path);
+        furi_record_close(RECORD_STORAGE);
         fhttp->save_received_data = true;
         fhttp->is_bytes_request = false;
         char url[256];
         // load 8 at a time
-        snprintf(url, sizeof(url), "https://catalog.flipperzero.one/api/v0/0/application?limit=8&is_latest_release_version=true&offset=%d&sort_by=updated_at&sort_order=-1&category_id=%s", iteration, category_ids[flip_store_category_index]);
-        return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
+        snprintf(url, sizeof(url), "https://catalog.flipperzero.one/api/v0/0/application?limit=%d&is_latest_release_version=true&offset=%d&sort_by=updated_at&sort_order=-1&category_id=%s", MAX_RECEIVED_APPS, iteration, category_ids[flip_store_category_index]);
+        // return flipper_http_get_request_with_headers(fhttp, url, "{\"Content-Type\":\"application/json\"}");
+        return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
     }
     bool parse_app_list()
     {
@@ -1452,7 +1454,7 @@ void flip_store_loader_draw_callback(Canvas *canvas, void *model)
     }
 
     DataLoaderModel *data_loader_model = (DataLoaderModel *)model;
-    SerialState http_state = data_loader_model->fhttp->state;
+    HTTPState http_state = data_loader_model->fhttp->state;
     DataState data_state = data_loader_model->data_state;
     char *title = data_loader_model->title;
 
@@ -1492,6 +1494,8 @@ void flip_store_loader_draw_callback(Canvas *canvas, void *model)
     if (http_state == RECEIVING || data_state == DataStateRequested)
     {
         canvas_draw_str(canvas, 0, 27, "Receiving...");
+        canvas_draw_str(canvas, 0, 37, "This may take two minutes...");
+        canvas_draw_str(canvas, 0, 47, "Please wait...");
         return;
     }
 

@@ -13,16 +13,18 @@
 #include <dialogs/dialogs.h>
 #include <jsmn/jsmn.h>
 #include <jsmn/jsmn_furi.h>
-#include <flip_store_icons.h>
+#include <flip_downloader_icons.h>
 
-#define TAG "FlipStore"
-#define VERSION_TAG "FlipStore v0.8"
+#define TAG "FlipDownloader"
+#define VERSION_TAG "FlipDownloader v1.0"
 
+// 1 for Black Magic, 1 for FlipperHTTP, 1 for Marauder
 #define FIRMWARE_COUNT 3
 #define FIRMWARE_LINKS 3
 
-#define VGM_FIRMWARE_COUNT 1
-#define VGM_FIRMWARE_LINKS 1
+// 1 for FlipperHTTP, 6 for VGM-Library screensavers, 13 for VGM-Library games
+#define VGM_FIRMWARE_COUNT 20
+#define VGM_FIRMWARE_LINKS 20
 
 #define MAX_GITHUB_FILES 30
 

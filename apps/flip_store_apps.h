@@ -1,7 +1,7 @@
 #ifndef FLIP_STORE_APPS_H
 #define FLIP_STORE_APPS_H
 
-#include <flip_store.h>
+#include <flip_downloader.h>
 #include <flip_storage/flip_store_storage.h>
 #include <callback/flip_store_callback.h>
 
@@ -11,6 +11,7 @@
 #define MAX_APP_COUNT 50
 #define MAX_APP_DESCRIPTION_LENGTH 100
 #define MAX_APP_VERSION_LENGTH 5
+#define MAX_RECEIVED_APPS 4
 
 // define the list of categories
 extern char *category_ids[];

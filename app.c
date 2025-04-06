@@ -1,8 +1,8 @@
-#include <flip_store.h>
+#include <flip_downloader.h>
 #include <alloc/flip_store_alloc.h>
 
 // Entry point for the Hello World application
-int32_t main_flip_store(void *p)
+int32_t main_flip_downloader(void *p)
 {
     // Suppress unused parameter warning
     UNUSED(p);
@@ -23,7 +23,7 @@ int32_t main_flip_store(void *p)
         return -1;
     }
 
-    if (!flipper_http_ping(fhttp))
+    if (!flipper_http_send_command(fhttp, HTTP_CMD_PING))
     {
         FURI_LOG_E(TAG, "Failed to ping the device");
         flipper_http_free(fhttp);
@@ -39,6 +39,7 @@ int32_t main_flip_store(void *p)
     }
 
     flipper_http_free(fhttp);
+
     if (counter == 0)
     {
         easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");

@@ -3,7 +3,7 @@
 
 #include <furi.h>
 #include <storage/storage.h>
-#include <flip_store.h>
+#include <flip_downloader.h>
 
 #define SETTINGS_PATH STORAGE_EXT_PATH_PREFIX "/apps_data/flip_store/settings.bin"
 #define BUFFER_SIZE 64

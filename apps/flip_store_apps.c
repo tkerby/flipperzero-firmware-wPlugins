@@ -37,7 +37,7 @@ char *categories[] = {
 
 FlipStoreAppInfo *flip_catalog_alloc()
 {
-    if (memmgr_get_free_heap() < MAX_APP_COUNT * sizeof(FlipStoreAppInfo))
+    if (memmgr_heap_get_max_free_block() < MAX_APP_COUNT * sizeof(FlipStoreAppInfo))
     {
         FURI_LOG_E(TAG, "Not enough memory to allocate flip_catalog.");
         return NULL;
@@ -91,7 +91,7 @@ bool flip_store_process_app_list(FlipperHTTP *fhttp)
         return NULL;
     }
     furi_string_cat_str(json_data_str, "{\"json_data\":");
-    if (memmgr_get_free_heap() < furi_string_size(feed_data) + furi_string_size(json_data_str) + 2)
+    if (memmgr_heap_get_max_free_block() < furi_string_size(feed_data) + furi_string_size(json_data_str) + 2)
     {
         FURI_LOG_E(TAG, "Not enough memory to allocate json_data_str.");
         furi_string_free(feed_data);
@@ -195,7 +195,8 @@ static bool flip_store_get_fap_file(FlipperHTTP *fhttp, char *build_id, uint8_t 
     fhttp->save_received_data = false;
     fhttp->is_bytes_request = true;
     snprintf(url, sizeof(url), "https://catalog.flipperzero.one/api/v0/application/version/%s/build/compatible?target=f%d&api=%d.%d", build_id, target, api_major, api_minor);
-    return flipper_http_get_request_bytes(fhttp, url, "{\"Content-Type\": \"application/octet-stream\"}");
+    // return flipper_http_get_request_bytes(fhttp, url, "{\"Content-Type\": \"application/octet-stream\"}");
+    return flipper_http_request(fhttp, BYTES, url, "{\"Content-Type\": \"application/octet-stream\"}", NULL);
 }
 
 bool flip_store_install_app(FlipperHTTP *fhttp, char *category)

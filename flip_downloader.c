@@ -1,4 +1,4 @@
-#include <flip_store.h>
+#include <flip_downloader.h>
 #include <apps/flip_store_apps.h>
 
 // Function to free the resources used by FlipStoreApp

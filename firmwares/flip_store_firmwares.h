@@ -1,20 +1,20 @@
 #ifndef FLIP_STORE_FIRMWARES_H
 #define FLIP_STORE_FIRMWARES_H
 
-#include <flip_store.h>
+#include <flip_downloader.h>
 #include <flip_storage/flip_store_storage.h>
 #include <callback/flip_store_callback.h>
 
 typedef struct
 {
     char name[16];
-    char links[FIRMWARE_LINKS][256];
+    char links[FIRMWARE_LINKS][136];
 } Firmware;
 
 typedef struct
 {
-    char name[16];
-    char link[256];
+    char name[32];
+    char link[128];
 } VGMFirmware;
 
 extern Firmware *firmwares;
