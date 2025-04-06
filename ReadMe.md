@@ -67,7 +67,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Added: [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
 - Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Added: [Netork Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
+- Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 
 <a name="release">
 
