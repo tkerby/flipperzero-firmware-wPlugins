@@ -2,6 +2,7 @@
 #include <game/enemy.h>
 #include <notification/notification_messages.h>
 #include <flip_storage/storage.h>
+#include <game/storage.h>
 
 static EntityContext *enemy_context_generic;
 // Allocation function
@@ -297,6 +298,16 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 {
                     enemy_context->state = ENTITY_DEAD;
 
+                    // if pvp, end the game
+                    if (game_context->game_mode == GAME_MODE_PVP)
+                    {
+                        player_context->health = player_context->max_health;
+                        save_player_context(player_context);
+                        furi_delay_ms(100);
+                        game_manager_game_stop(manager);
+                        return;
+                    }
+
                     // Reset enemy position and health
                     enemy_context->health = 100; // this needs to be set to the enemy's max health
 
@@ -343,6 +354,15 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 {
                     FURI_LOG_I("Game", "Player is dead.. resetting player position and health");
                     player_context->state = ENTITY_DEAD;
+
+                    // if pvp, end the game
+                    if (game_context->game_mode == GAME_MODE_PVP)
+                    {
+                        save_player_context(player_context);
+                        furi_delay_ms(100);
+                        game_manager_game_stop(manager);
+                        return;
+                    }
 
                     // Reset player position and health
                     entity_pos_set(other, player_context->start_position);

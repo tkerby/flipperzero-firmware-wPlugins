@@ -220,18 +220,31 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     GameContext *game_context = game_manager_game_context_get(manager);
 
     // update websocket player context
-    if (game_context->game_mode == GAME_MODE_PVP && (player->old_position.x != pos.x || player->old_position.y != pos.y))
+    if (game_context->game_mode == GAME_MODE_PVP)
     {
-        elapsed_ws_timer++;
-        // only send the websocket update every 100ms
-        if (elapsed_ws_timer >= (game_context->fps / 10))
+        // if pvp, end the game if the player is dead
+        if (player->health <= 0)
         {
-            if (game_context->fhttp)
+            player->health = player->max_health;
+            save_player_context(player);
+            furi_delay_ms(100);
+            game_manager_game_stop(manager);
+            return;
+        }
+
+        if (player->old_position.x != pos.x || player->old_position.y != pos.y)
+        {
+            elapsed_ws_timer++;
+            // only send the websocket update every 100ms
+            if (elapsed_ws_timer >= (game_context->fps / 10))
             {
-                player->start_position = player->old_position;
-                websocket_player_context(player, game_context->fhttp);
+                if (game_context->fhttp)
+                {
+                    player->start_position = player->old_position;
+                    websocket_player_context(player, game_context->fhttp);
+                }
+                elapsed_ws_timer = 0;
             }
-            elapsed_ws_timer = 0;
         }
     }
 
