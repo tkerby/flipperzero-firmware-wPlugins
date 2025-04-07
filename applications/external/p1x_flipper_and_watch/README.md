@@ -2,7 +2,7 @@
 
 A Game & Watch style network security game for the Flipper Zero.
 
-![Network Defender](p1x_flipper_and_watch.png)
+![Network Defender](media/screenshot5.png)
 
 ## Description
 
@@ -15,6 +15,15 @@ The game features:
 - Real-time hacking defense
 - Score tracking
 - Multiple difficulty aspects
+
+
+## Screenshots
+
+![Screenshot 2](media/screenshot4.png)
+![Screenshot 3](media/screenshot3.png)
+![Screenshot 4](media/screenshot2.png)
+![Screenshot 5](media/screenshot1.png)
+
 
 ## How to Play
 
