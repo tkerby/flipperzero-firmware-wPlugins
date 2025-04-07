@@ -162,6 +162,32 @@ typedef enum {
 } CustoAPInputEvent;
 
 bool scanFinish = false;
+
+bool parse_mac(const char* mac_str, uint8_t* out_bytes) {
+    if(!mac_str || !out_bytes) return false;
+
+    char mac_copy[18];
+    strncpy(mac_copy, mac_str, sizeof(mac_copy));
+    mac_copy[17] = '\0'; // Garantizar null terminator
+
+    char* token = strtok(mac_copy, ":");
+    int i = 0;
+
+    while(token != NULL && i < 6) {
+        char* endptr;
+        long value = strtol(token, &endptr, 16);
+
+        if(*endptr != '\0' || value < 0 || value > 255) {
+            return false; // Error en la conversión
+        }
+
+        out_bytes[i++] = (uint8_t)value;
+        token = strtok(NULL, ":");
+    }
+
+    return i == 6;
+}
+
 static void listed_wifis_item_callback(void* context, uint32_t index);
 void delfyRTL_menu_callback(void* context, uint32_t index) {
     FURI_LOG_D(TAG, __func__);
@@ -431,6 +457,19 @@ void info_wifi_button_press(GuiButtonType result, InputType type, void* context)
 void info_wifi_scene_on_enter(void* context) {
     FURI_LOG_D(TAG, __func__);
     delfyRTL* app = context;
+    char cadena[26] = "";
+    snprintf(cadena, 25, "APMAC %s\n", app->customMac);
+    uart_helper_send(app->uart_helper, cadena, strlen(cadena));
+    furi_delay_ms(200);
+
+    snprintf(cadena, 13, "REASON %d\n", app->deauthReason);
+    uart_helper_send(app->uart_helper, cadena, strlen(cadena));
+    furi_delay_ms(200);
+
+    snprintf(cadena, 13, "PORTAL %d\n", app->captivePortal);
+    uart_helper_send(app->uart_helper, cadena, strlen(cadena));
+    furi_delay_ms(200);
+
     widget_reset(app->widget);
     char infoWifi[100] = "No wifi";
     if(app->selectedWifi >= 0 && app->selectedWifi < app->wifiCount) {
@@ -490,17 +529,22 @@ void info_wifi_scene_on_enter(void* context) {
             app->wifiList[app->selectedWifi].chanel,
             app->wifiList[app->selectedWifi].rssi,
             app->wifiList[app->selectedWifi].APbssid);
-        if(app->wifiList[app->selectedWifi].deauth) {
+
+        if(furi_string_cmp(
+               furi_string_alloc_set(app->wifiList[app->selectedWifi].APssid), "<empty>")) {
+            if(app->wifiList[app->selectedWifi].deauth) {
+                widget_add_button_element(
+                    app->widget, GuiButtonTypeCenter, "Stop", info_wifi_button_press, app);
+            } else {
+                widget_add_button_element(
+                    app->widget, GuiButtonTypeCenter, "Deauth", info_wifi_button_press, app);
+            }
+
             widget_add_button_element(
-                app->widget, GuiButtonTypeCenter, "Stop", info_wifi_button_press, app);
-        } else {
+                app->widget, GuiButtonTypeRight, "Evil", info_wifi_button_press, app);
             widget_add_button_element(
-                app->widget, GuiButtonTypeCenter, "Deauth", info_wifi_button_press, app);
+                app->widget, GuiButtonTypeLeft, "Edit", info_wifi_button_press, app);
         }
-        widget_add_button_element(
-            app->widget, GuiButtonTypeRight, "Evil", info_wifi_button_press, app);
-        widget_add_button_element(
-            app->widget, GuiButtonTypeLeft, "Edit", info_wifi_button_press, app);
     }
     widget_add_string_multiline_element(
         app->widget, 64, 45, AlignCenter, AlignBottom, FontSecondary, infoWifi);
@@ -525,12 +569,6 @@ void portal_type_change_call_back(VariableItem* item) {
     delfyRTL* app = variable_item_get_context(item);
     variable_item_set_current_value_text(item, captive_portals[index]);
     app->captivePortal = index;
-
-    char cadena[13] = "";
-    snprintf(cadena, 13, "PORTAL %d\n", app->captivePortal);
-    uart_helper_send(app->uart_helper, cadena, strlen(cadena));
-
-    UNUSED(item);
 }
 
 void deauth_reason_change_call_back(VariableItem* item) {
@@ -539,10 +577,6 @@ void deauth_reason_change_call_back(VariableItem* item) {
     delfyRTL* app = variable_item_get_context(item);
     variable_item_set_current_value_text(item, deauth_reasons[index]);
     app->deauthReason = index;
-
-    char cadena[13] = "";
-    snprintf(cadena, 13, "REASON %d\n", app->deauthReason);
-    uart_helper_send(app->uart_helper, cadena, strlen(cadena));
 
     UNUSED(item);
 }
@@ -559,32 +593,29 @@ void mac_type_change_call_back(VariableItem* item) {
     delfyRTL* app = variable_item_get_context(item);
     variable_item_set_current_value_text(item, mac_type[index]);
     app->mac_type = index;
-    if(app->mac_type == 1) {
-        char cadena[26] = "";
-        snprintf(cadena, 25, "APMAC %s\n", app->wifiList[app->selectedWifi].APbssid);
-        uart_helper_send(app->uart_helper, cadena, strlen(cadena));
+    if(app->mac_type == 0) {
+        strncpy(app->customMac, "00:E0:4C:01:02:03", 18);
+        //snprintf(app->customMac, sizeof(app->customMac), "00:E0:4C:01:02:03");
+        parse_mac(app->customMac, app->byte_input_store);
+
+    } else if(app->mac_type == 1) {
+        strcpy(app->customMac, app->wifiList[app->selectedWifi].APbssid);
+        parse_mac(app->customMac, app->byte_input_store);
 
     } else if(app->mac_type == 2) {
         unsigned char random_mac[6];
         generate_mac_address(random_mac);
-        char cadena[26] = "";
-
         snprintf(
-            cadena,
-            25,
-            "APMAC %02X:%02X:%02X:%02X:%02X:%02X\n",
+            app->customMac,
+            18,
+            "%02X:%02X:%02X:%02X:%02X:%02X",
             random_mac[0],
             random_mac[1],
             random_mac[2],
             random_mac[3],
             random_mac[4],
             random_mac[5]);
-        uart_helper_send(app->uart_helper, cadena, strlen(cadena));
-
-    } else if(app->mac_type == 3) {
-        char cadena[26] = "";
-        snprintf(cadena, 25, "APMAC %s\n", app->customMac);
-        uart_helper_send(app->uart_helper, cadena, strlen(cadena));
+        parse_mac(app->customMac, app->byte_input_store);
     }
     config_attack_scene_on_enter(app);
     UNUSED(item);
@@ -593,11 +624,8 @@ void mac_type_change_call_back(VariableItem* item) {
 void mac_addres_change_call_back(void* context, uint32_t index) {
     FURI_LOG_D(TAG, __func__);
     FURI_LOG_D(TAG, "%p %ld", context, index);
-    UNUSED(index);
-    //UNUSED(context);
     delfyRTL* app = context;
-
-    scene_manager_next_scene(app->scene_manager, aPmacAddresScene);
+    if(index == 3) scene_manager_next_scene(app->scene_manager, aPmacAddresScene);
 }
 
 void config_attack_scene_on_enter(void* context) {
@@ -635,6 +663,7 @@ bool config_attack_scene_on_event(void* context, SceneManagerEvent event) {
 void config_attack_scene_on_exit(void* context) {
     //delfyRTL* app = context;
     //uart_helper_send(app->uart_helper, "STOP\n", 5);
+
     UNUSED(context);
 }
 
@@ -984,13 +1013,9 @@ static delfyRTL* app_alloc() {
     app->scene_manager = scene_manager_alloc(&delfyRTL_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_enable_queue(app->view_dispatcher);
-    strncpy(app->customMac, "11:22:33:44:55:66", 18);
-    app->byte_input_store[0] = 0x11;
-    app->byte_input_store[1] = 0x22;
-    app->byte_input_store[2] = 0x33;
-    app->byte_input_store[3] = 0x44;
-    app->byte_input_store[4] = 0x55;
-    app->byte_input_store[5] = 0x66;
+    //strncpy(app->customMac, "00:E0:4C:01:02:03", 18);
+    snprintf(app->customMac, sizeof(app->customMac), "00:E0:4C:01:02:03");
+    parse_mac(app->customMac, app->byte_input_store);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, delfyRTL_custom_callback);

@@ -73,6 +73,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
+- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 
 <a name="release">
 
