@@ -62,7 +62,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Spring Cleaning (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/12c91fc1392f623d0a62c6a2a5925270e9748f31)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - OFW: [Update BadUSB docs #4176 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4176)
-- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Added: [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
 - Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -72,6 +71,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 - Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - ESP Flasher Bump [Marauder 1.4.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.1)
+- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 
 <a name="release">
 
