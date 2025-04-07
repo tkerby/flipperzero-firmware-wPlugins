@@ -99,12 +99,14 @@ void picopass_scene_card_menu_on_enter(void* context) {
     }
 
     if(auth == PicopassDeviceAuthMethodNone || auth == PicopassDeviceAuthMethodKey) {
-        submenu_add_item(
-            submenu,
-            "Write",
-            SubmenuIndexWrite,
-            picopass_scene_card_menu_submenu_callback,
-            picopass);
+        if(!has_sio) {
+            submenu_add_item(
+                submenu,
+                "Write",
+                SubmenuIndexWrite,
+                picopass_scene_card_menu_submenu_callback,
+                picopass);
+        }
         submenu_add_item(
             submenu,
             "Emulate",
