@@ -63,7 +63,7 @@ Firmware* firmware_alloc() {
         fw[2].links[2],
         sizeof(fw[2].links[2]),
         "%s",
-        "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_4_0_20250404_flipper.bin");
+        "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_4_1_20250406_flipper.bin");
 
     return fw;
 }
