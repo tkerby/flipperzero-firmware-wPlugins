@@ -112,6 +112,9 @@ char randomString[19];
 int allChannels[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40, 44, 48, 149, 153, 157, 161};
 int portal=0;
 int localPortNew=1000;
+char wpa_pass[64];
+char ap_channel[4];
+bool secured=false;
 //"00:E0:4C:01:02:03"
 __u8 customMac[8]={0x00,0xE0,0x4C,0x01,0x02,0x03,0x00,0x00};
 bool useCustomMac=false;
@@ -311,6 +314,41 @@ void createAP(char* ssid, char* channel){
   apActive = true;
 }
 
+void createAP(char* ssid, char* channel, char* password){
+
+  DEBUG_SER_PRINT("CREATING AP");
+  DEBUG_SER_PRINT(ssid);
+  DEBUG_SER_PRINT(channel);
+  while (status != WL_CONNECTED) {
+    DEBUG_SER_PRINT("CREATING AP 2");
+      status = WiFi.apbegin(ssid, password, channel, (uint8_t) 0);
+      delay(1000);
+  }
+  //Buscamos el puerto udp de las dns para matarloo
+  struct udp_pcb *pcb;
+  for (pcb = udp_pcbs; pcb != NULL; pcb = pcb->next) {
+    
+    if(pcb->local_port==DNS_SERVER_PORT){
+      DEBUG_SER_PRINT("unbindg\n");
+      udp_remove(pcb);
+    }
+  }
+  delay(1000);
+
+  //Creamos un nuevo servicio de dns
+  dns_server_pcb = udp_new();
+  DEBUG_SER_PRINT("binding dns\n");
+  udp_bind(dns_server_pcb, IP4_ADDR_ANY, DNS_SERVER_PORT);
+  udp_recv(dns_server_pcb, (udp_recv_fn)dnss_receive_udp_packet_handler, NULL);
+  DEBUG_SER_PRINT("binded dns\n");
+  if(!serveBegined){
+    
+    server.begin();
+    serveBegined=true;
+  }
+  apActive = true;
+}
+
 void destroyAP(){
   //udp_remove(dns_server_pcb);
   
@@ -458,7 +496,8 @@ void loop() {
     }else if(readString.substring(0,4)=="STOP"){
       DEBUG_SER_PRINT("Stop deauthing\n");
       
-      
+      secured = false;
+      strcpy(wpa_pass,"");
       if(readString.length()>5 && !apActive){
         unsigned int numStation = readString.substring(5,readString.length()-1).toInt();
         if(numStation < scan_results.size()){
@@ -497,8 +536,16 @@ void loop() {
       DEBUG_SER_PRINT("Starting BSSID "+ssid+"\n");
        
     }else if(readString.substring(0,7)=="APSTART"){
+      char ssid[33];  // o el tamaño que necesites
+      
       String ap_ssid = readString.substring(8,readString.length()-1);
-      createAP("TESTT","10");
+      ap_ssid.toCharArray(ssid, 33);
+      if(secured){
+        createAP(ssid, ap_channel,wpa_pass);
+      }else{
+        createAP(ssid,ap_channel);
+      }
+      DEBUG_SER_PRINT("Starting BSSID "+ap_ssid+"\n");
         if(!serveBegined){
           server.begin();
           serveBegined=true;
@@ -516,6 +563,20 @@ void loop() {
     }else if(readString.substring(0,6)=="REASON"){
       deauth_reason = readString.substring(7,readString.length()-1).toInt();
        
+    }else if(readString.substring(0,8)=="PASSWORD"){
+      String password;
+      password = readString.substring(9,readString.length()-1).c_str();
+      password.toCharArray(wpa_pass, 64);
+      Serial.println(password);
+      Serial.println(wpa_pass);
+      secured=true;
+
+      
+    
+    }else if(readString.substring(0,7)=="CHANNEL"){
+    readString.substring(8,readString.length()-1).toCharArray(ap_channel,4);
+
+
     }else if(readString.substring(0,5)=="APMAC"){
       String mac;
       mac = readString.substring(6,readString.length()-1);
@@ -547,6 +608,10 @@ void loop() {
         Serial.println();
         mac.replace(":","");
         int ret = wifi_change_mac_address_from_ram(1,customMac);
+        if(ret==RTW_ERROR){
+          Serial1.println("ERROR:Bad Mac");
+          Serial.println("ERROR:Bad Mac");
+        }
       }else{
         useCustomMac=false;
       }
@@ -703,8 +768,6 @@ void loop() {
                   tcp_close(tcp);
                 }
 
-                
-              
               String path = parseRequest(request);
 
               //if (path == "/") {
