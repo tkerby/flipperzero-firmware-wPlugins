@@ -618,8 +618,8 @@ void game_run(FlipWorldApp *app)
         return;
     }
     free_all_views(app, true, true, false);
-    // only need to check if they have 50k free (game needs about 38k currently)
-    if (!is_enough_heap(40000, false))
+    // only need to check if they have 30k free (game needs about 12k currently)
+    if (!is_enough_heap(30000, false))
     {
         const size_t min_free = memmgr_get_free_heap();
         char message[64];
