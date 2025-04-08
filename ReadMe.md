@@ -76,6 +76,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177) (Already in RM)
 - OFW: [fbt: Deterministic STARTUP order & additional checks #4179 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4179)
 - OFW: [SubGhz: added support for 42-bit Prastel variation #4178 (By pmazzini)](https://github.com/flipperdevices/flipperzero-firmware/pull/4178)
+- Reverted a Spring Cleaning change to support slower storage
 
 <a name="release">
 
