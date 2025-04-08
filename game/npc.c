@@ -3,7 +3,7 @@ static EntityContext *npc_context_generic;
 
 // Allocation function
 static EntityContext *npc_generic_alloc(
-    const char *id,
+    SpriteID id,
     int index,
     Vector size,
     Vector start_position,
@@ -21,7 +21,7 @@ static EntityContext *npc_generic_alloc(
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
-    snprintf(npc_context_generic->id, sizeof(npc_context_generic->id), "%s", id);
+    npc_context_generic->id = id;
     npc_context_generic->index = index;
     npc_context_generic->size = size;
     npc_context_generic->start_position = start_position;
@@ -57,7 +57,7 @@ static void npc_start(Entity *self, GameManager *manager, void *context)
 
     EntityContext *npc_context = (EntityContext *)context;
     // Copy fields from generic context
-    snprintf(npc_context->id, sizeof(npc_context->id), "%s", npc_context_generic->id);
+    npc_context->id = npc_context_generic->id;
     snprintf(npc_context->message, sizeof(npc_context->message), "%s", npc_context_generic->message);
     npc_context->index = npc_context_generic->index;
     npc_context->size = npc_context_generic->size;
@@ -343,7 +343,7 @@ const EntityDescription *npc(
 
     // Allocate a new EntityContext with provided parameters
     npc_context_generic = npc_generic_alloc(
-        id,
+        sprite_context->id,
         index,
         (Vector){sprite_context->width, sprite_context->height},
         start_position,
@@ -439,4 +439,5 @@ void spawn_npc(Level *level, GameManager *manager, FuriString *json)
     furi_string_free(end_position_y);
     furi_string_free(move_timer);
     furi_string_free(speed);
+    furi_string_free(message);
 }

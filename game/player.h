@@ -8,10 +8,22 @@
 #define MAX_LEVELS 5
 #define MAX_NPCS 1
 
+typedef enum
+{
+    SPRITE_ID_AXE,
+    SPRITE_ID_BOW,
+    SPRITE_ID_NAKED,
+    SPRITE_ID_SWORD,
+    SPRITE_ID_CYCLOPS,
+    SPRITE_ID_GHOST,
+    SPRITE_ID_OGRE,
+    SPRITE_ID_FUNNY
+} SpriteID;
+
 // EntityContext definition
 typedef struct
 {
-    char id[32];                // Unique ID for the entity type
+    SpriteID id;                // Unique ID for the entity type
     uint8_t index;              // Index for the specific entity instance
     Vector size;                // Size of the entity
     Sprite *sprite_right;       // Entity sprite when looking right
@@ -108,18 +120,6 @@ typedef struct
     //
     FlipperHTTP *fhttp;
 } GameContext;
-
-typedef enum
-{
-    SPRITE_ID_AXE,
-    SPRITE_ID_BOW,
-    SPRITE_ID_NAKED,
-    SPRITE_ID_SWORD,
-    SPRITE_ID_CYCLOPS,
-    SPRITE_ID_GHOST,
-    SPRITE_ID_OGRE,
-    SPRITE_ID_FUNNY
-} SpriteID;
 
 typedef struct
 {
