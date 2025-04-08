@@ -3,7 +3,6 @@
 #include <string.h>
 #include <math.h>
 
-// --- Define the global variable so other modules can link to it.
 IconGroupContext *g_current_icon_group = NULL;
 
 // ---------------------------------------------------------------------
@@ -55,20 +54,7 @@ static void icon_group_free(Entity *self, GameManager *manager, void *context)
         free(igctx->icons);
         igctx->icons = NULL;
     }
-}
-
-// Optional helper to free an icon group context allocated dynamically.
-void icon_group_context_free(IconGroupContext *ctx)
-{
-    if (ctx)
-    {
-        if (ctx->icons)
-        {
-            free(ctx->icons);
-            ctx->icons = NULL;
-        }
-        free(ctx);
-    }
+    g_current_icon_group = NULL;
 }
 
 // The entity description for the icon group.
@@ -78,7 +64,6 @@ const EntityDescription icon_desc = {
     .stop = icon_group_free,
     .update = NULL,
     .render = icon_group_render,
-    // We leave collision as NULL because we now handle collisions in player_update.
     .collision = NULL,
     .event = NULL,
     .context_size = sizeof(IconGroupContext),

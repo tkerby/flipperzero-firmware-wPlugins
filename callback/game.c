@@ -612,11 +612,7 @@ static void game_switch_to_view(FlipWorldApp *app)
 }
 void game_run(FlipWorldApp *app)
 {
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     free_all_views(app, true, true, false);
     // only need to check if they have 30k free (game needs about 12k currently)
     if (!is_enough_heap(30000, false))
@@ -1091,11 +1087,7 @@ void game_start_pvp(FlipperHTTP *fhttp, FuriString *lobby, void *context)
 void game_waiting_process(FlipperHTTP *fhttp, void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     if (!fhttp)
     {
         FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");

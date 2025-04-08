@@ -148,11 +148,7 @@ void callback_submenu_choices(void *context, uint32_t index)
 void callback_updated_wifi_ssid(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -208,11 +204,7 @@ void callback_updated_wifi_ssid(void *context)
 void callback_updated_wifi_pass(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -268,11 +260,7 @@ void callback_updated_wifi_pass(void *context)
 void callback_updated_username(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -293,11 +281,7 @@ void callback_updated_username(void *context)
 void callback_updated_password(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -334,11 +318,7 @@ void callback_updated_password(void *context)
 void callback_wifi_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     char ssid[64];
     char pass[64];
     char username[64];
@@ -472,11 +452,7 @@ static void switch_to_view_get_worlds(FlipWorldApp *app)
 void callback_game_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     switch (index)
     {
     case 0: // Download all world data as one huge json
@@ -500,11 +476,7 @@ void callback_game_settings_select(void *context, uint32_t index)
 void callback_user_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     switch (index)
     {
     case 0: // Username

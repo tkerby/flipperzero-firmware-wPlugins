@@ -109,11 +109,7 @@ bool alloc_text_input_view(void *context, char *title)
 bool alloc_variable_item_list(void *context, uint32_t view_id)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     char ssid[64];
     char pass[64];
     char username[64];

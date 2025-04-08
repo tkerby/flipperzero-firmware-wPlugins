@@ -44,5 +44,3 @@ typedef struct
 extern IconGroupContext *g_current_icon_group;
 
 extern const EntityDescription icon_desc;
-// For debugging, you might want to declare functions to allocate and free the pool.
-void icon_group_context_free(IconGroupContext *ctx);
