@@ -1,5 +1,7 @@
 #include "game/icon.h"
 
+static IconContext *icon_context_generic = NULL;
+
 static void icon_collision(Entity *self, Entity *other, GameManager *manager, void *context)
 {
     UNUSED(manager);
@@ -28,9 +30,12 @@ static void icon_render(Entity *self, GameManager *manager, Canvas *canvas, void
     Vector pos = entity_pos_get(self);
     int x_pos = pos.x - camera_x - ictx->size.x / 2;
     int y_pos = pos.y - camera_y - ictx->size.y / 2;
-    // check if position is within the screen
-    if (x_pos + ictx->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + ictx->size.y < 0 || y_pos > SCREEN_HEIGHT)
+    // Check if position is within the screen
+    if (x_pos + ictx->size.x < 0 || x_pos > SCREEN_WIDTH ||
+        y_pos + ictx->size.y < 0 || y_pos > SCREEN_HEIGHT)
+    {
         return;
+    }
     canvas_draw_icon(canvas, x_pos, y_pos, ictx->icon);
 }
 
@@ -38,47 +43,53 @@ static void icon_start(Entity *self, GameManager *manager, void *context)
 {
     UNUSED(manager);
 
-    IconContext *ictx_self = (IconContext *)context;
-    if (!ictx_self)
+    // The entity's instance context
+    IconContext *ictx_instance = (IconContext *)context;
+    if (!ictx_instance)
     {
-        FURI_LOG_E("Game", "Icon context self is NULL");
-        return;
-    }
-    IconContext *ictx = entity_context_get(self);
-    if (!ictx)
-    {
-        FURI_LOG_E("Game", "Icon context is NULL");
+        FURI_LOG_E("Game", "Icon context instance is NULL");
         return;
     }
 
-    IconContext *loaded_data = get_icon_context(g_name);
-    if (!loaded_data)
+    // Instead of allocating a temporary context and freeing it immediately,
+    // reuse the global generic context (similar to npc_context_generic in npc.c)
+    IconContext *generic_ctx = get_icon_context(g_name);
+    if (!generic_ctx)
     {
-        FURI_LOG_E("Game", "Failed to find icon data for %s", g_name);
+        FURI_LOG_E("Game", "Failed to get icon context for %s", g_name);
         return;
     }
 
-    ictx_self->icon = loaded_data->icon;
-    ictx_self->size = (Vector){loaded_data->size.x, loaded_data->size.y};
-    ictx->icon = loaded_data->icon;
-    ictx->size = (Vector){loaded_data->size.x, loaded_data->size.y};
+    // Copy generic icon data into the instance context
+    ictx_instance->icon = generic_ctx->icon;
+    ictx_instance->size = generic_ctx->size;
 
+    // Adjust position to be centered on the icon
     Vector pos = entity_pos_get(self);
-    pos.x += ictx_self->size.x / 2;
-    pos.y += ictx_self->size.y / 2;
+    pos.x += ictx_instance->size.x / 2;
+    pos.y += ictx_instance->size.y / 2;
     entity_pos_set(self, pos);
 
-    entity_collider_add_circle(
-        self,
-        (ictx_self->size.x + ictx_self->size.y) / 4);
+    // Add a circular collider based on the icon's dimensions
+    entity_collider_add_circle(self, (ictx_instance->size.x + ictx_instance->size.y) / 4);
+}
 
-    free(loaded_data);
+static void icon_free(Entity *self, GameManager *manager, void *context)
+{
+    UNUSED(self);
+    UNUSED(manager);
+    UNUSED(context);
+    if (icon_context_generic)
+    {
+        free(icon_context_generic);
+        icon_context_generic = NULL;
+    }
 }
 
 // -------------- Entity description --------------
 const EntityDescription icon_desc = {
     .start = icon_start,
-    .stop = NULL,
+    .stop = icon_free,
     .update = NULL,
     .render = icon_render,
     .collision = icon_collision,
@@ -86,18 +97,22 @@ const EntityDescription icon_desc = {
     .context_size = sizeof(IconContext),
 };
 
+// Generic allocation using a global static pointer
 static IconContext *icon_generic_alloc(IconID id, const Icon *icon, uint8_t width, uint8_t height)
 {
-    IconContext *ctx = malloc(sizeof(IconContext));
-    if (!ctx)
+    if (!icon_context_generic)
     {
-        FURI_LOG_E("Game", "Failed to allocate IconContext");
-        return NULL;
+        icon_context_generic = malloc(sizeof(IconContext));
+        if (!icon_context_generic)
+        {
+            FURI_LOG_E("Game", "Failed to allocate IconContext");
+            return NULL;
+        }
     }
-    ctx->id = id;
-    ctx->icon = icon;
-    ctx->size = (Vector){width, height};
-    return ctx;
+    icon_context_generic->id = id;
+    icon_context_generic->icon = icon;
+    icon_context_generic->size = (Vector){width, height};
+    return icon_context_generic;
 }
 
 IconContext *get_icon_context(const char *name)
@@ -145,7 +160,7 @@ IconContext *get_icon_context(const char *name)
     else if (is_str(name, "rock_small"))
         return icon_generic_alloc(ICON_ID_ROCK_SMALL, &I_icon_rock_small_10x8px, 10, 8);
 
-    // If no match is found
+    // If no match is found, log an error and return NULL
     FURI_LOG_E("Game", "Icon not found: %s", name);
     return NULL;
 }
