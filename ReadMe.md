@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0407-1343-0.420.0-aa06ed0](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-07 13:43 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-07 13:43 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-07 22:40 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-07 22:40 EST`
 - Updated: [DTMF Dolphin v1.5 (By litui)](https://github.com/litui/dtmf_dolphin)
 - Added: [Doom animation (By doomwastaken)](https://github.com/flipperdevices/flipperzero-firmware/pull/4164)
 - Patreon Build Update:  [Doom animation (By doomwastaken) Added to Stock, Minimal and Manifest Switcher builds. Updated Dolphin animation set (By RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/25ffdb624a19a02a3a0bd8c95d248880833270c0)
@@ -66,7 +66,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- OFW: PR: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177)
 - Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 - Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - ESP Flasher Bump [Marauder 1.4.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.1)
@@ -74,6 +73,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
+- OFW: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177) (Already in RM)
+- OFW: [fbt: Deterministic STARTUP order & additional checks #4179 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4179)
+- OFW: [SubGhz: added support for 42-bit Prastel variation #4178 (By pmazzini)](https://github.com/flipperdevices/flipperzero-firmware/pull/4178)
 
 <a name="release">
 

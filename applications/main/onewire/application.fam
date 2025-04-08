@@ -12,5 +12,5 @@ App(
     apptype=FlipperAppType.STARTUP,
     entry_point="onewire_on_system_start",
     sources=["onewire_cli.c"],
-    order=60,
+    order=66,
 )
