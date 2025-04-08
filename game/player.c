@@ -599,7 +599,7 @@ const EntityDescription player_desc = {
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
-static SpriteContext *sprite_generic_alloc(const char *id, const char *type, uint8_t width, uint8_t height)
+static SpriteContext *sprite_generic_alloc(SpriteID id, const char *char_id, const char *type, uint8_t width, uint8_t height)
 {
     SpriteContext *ctx = malloc(sizeof(SpriteContext));
     if (!ctx)
@@ -607,23 +607,23 @@ static SpriteContext *sprite_generic_alloc(const char *id, const char *type, uin
         FURI_LOG_E("Game", "Failed to allocate SpriteContext");
         return NULL;
     }
-    snprintf(ctx->id, sizeof(ctx->id), "%s", id);
+    ctx->id = id;
     ctx->width = width;
     ctx->height = height;
     if (is_str(type, "player"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     else if (is_str(type, "enemy"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "enemy_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "enemy_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "enemy_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "enemy_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     else if (is_str(type, "npc"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "npc_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "npc_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "npc_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "npc_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     return ctx;
 }
@@ -631,23 +631,23 @@ static SpriteContext *sprite_generic_alloc(const char *id, const char *type, uin
 SpriteContext *get_sprite_context(const char *name)
 {
     if (is_str(name, "axe"))
-        return sprite_generic_alloc("axe", "player", 15, 11);
+        return sprite_generic_alloc(SPRITE_ID_AXE, "axe", "player", 15, 11);
     else if (is_str(name, "bow"))
-        return sprite_generic_alloc("bow", "player", 13, 11);
+        return sprite_generic_alloc(SPRITE_ID_BOW, "bow", "player", 13, 11);
     else if (is_str(name, "naked"))
-        return sprite_generic_alloc("naked", "player", 10, 10);
+        return sprite_generic_alloc(SPRITE_ID_NAKED, "naked", "player", 10, 10);
     else if (is_str(name, "sword"))
-        return sprite_generic_alloc("sword", "player", 15, 11);
+        return sprite_generic_alloc(SPRITE_ID_SWORD, "sword", "player", 15, 11);
     //
     else if (is_str(name, "cyclops"))
-        return sprite_generic_alloc("cyclops", "enemy", 10, 11);
+        return sprite_generic_alloc(SPRITE_ID_CYCLOPS, "cyclops", "enemy", 10, 11);
     else if (is_str(name, "ghost"))
-        return sprite_generic_alloc("ghost", "enemy", 15, 15);
+        return sprite_generic_alloc(SPRITE_ID_GHOST, "ghost", "enemy", 15, 15);
     else if (is_str(name, "ogre"))
-        return sprite_generic_alloc("ogre", "enemy", 10, 13);
+        return sprite_generic_alloc(SPRITE_ID_OGRE, "ogre", "enemy", 10, 13);
     //
     else if (is_str(name, "funny"))
-        return sprite_generic_alloc("funny", "npc", 15, 21);
+        return sprite_generic_alloc(SPRITE_ID_FUNNY, "funny", "npc", 15, 21);
 
     // If no match is found
     FURI_LOG_E("Game", "Sprite not found: %s", name);

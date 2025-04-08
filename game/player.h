@@ -109,11 +109,23 @@ typedef struct
     FlipperHTTP *fhttp;
 } GameContext;
 
+typedef enum
+{
+    SPRITE_ID_AXE,
+    SPRITE_ID_BOW,
+    SPRITE_ID_NAKED,
+    SPRITE_ID_SWORD,
+    SPRITE_ID_CYCLOPS,
+    SPRITE_ID_GHOST,
+    SPRITE_ID_OGRE,
+    SPRITE_ID_FUNNY
+} SpriteID;
+
 typedef struct
 {
-    char id[16];
-    char left_file_name[64];
-    char right_file_name[64];
+    SpriteID id;
+    char left_file_name[33];
+    char right_file_name[33];
     uint8_t width;
     uint8_t height;
 } SpriteContext;
