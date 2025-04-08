@@ -67,7 +67,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
-- Updated: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - ESP Flasher Bump [Marauder 1.4.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.1)
 - Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -77,6 +76,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [fbt: Deterministic STARTUP order & additional checks #4179 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4179)
 - OFW: [SubGhz: added support for 42-bit Prastel variation #4178 (By pmazzini)](https://github.com/flipperdevices/flipperzero-firmware/pull/4178)
 - Reverted a Spring Cleaning change to support slower storage
+- Updated: [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 
 <a name="release">
 
@@ -558,7 +558,7 @@ $ ./fbt dolphin_ext
 - [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
 - [LED Blinker v1.0 (By Cupprum)](https://github.com/Cupprum/Blinker)
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
-- [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - [LIDAR Emulator v0.1 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator)
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
 - [Lishi HU66 v0.2 (By evillero)](https://github.com/evillero/lishi_hu66)
