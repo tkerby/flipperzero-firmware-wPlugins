@@ -1,6 +1,7 @@
 #include <game/world.h>
 #include <game/storage.h>
 #include <flip_storage/storage.h>
+#include "game/icon.h"
 
 bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *json_data)
 {
@@ -9,81 +10,256 @@ bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *
         FURI_LOG_E("Game", "JSON data is NULL");
         return false;
     }
-    int levels_added = 0;
-    FURI_LOG_I("Game", "Looping through world data");
+
+    // Pass 1: Count the total number of icons.
+    int total_icons = 0;
     for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
     {
-        FURI_LOG_I("Game", "Looping through world data: %d", i);
         FuriString *data = get_json_array_value_furi("json_data", i, json_data);
         if (!data)
-        {
             break;
-        }
-
-        FuriString *icon = get_json_value_furi("icon", data);
-        FuriString *x = get_json_value_furi("x", data);
-        FuriString *y = get_json_value_furi("y", data);
         FuriString *amount = get_json_value_furi("amount", data);
-        FuriString *horizontal = get_json_value_furi("horizontal", data);
-
-        if (!icon || !x || !y || !amount || !horizontal)
+        if (amount)
         {
-            FURI_LOG_E("Game", "Failed Data: %s", furi_string_get_cstr(data));
-
-            if (data)
-                furi_string_free(data);
-            if (icon)
-                furi_string_free(icon);
-            if (x)
-                furi_string_free(x);
-            if (y)
-                furi_string_free(y);
-            if (amount)
-                furi_string_free(amount);
-            if (horizontal)
-                furi_string_free(horizontal);
-
-            level_clear(level);
-            return false;
+            int count = atoi(furi_string_get_cstr(amount));
+            if (count < 1)
+                count = 1;
+            total_icons += count;
+            furi_string_free(amount);
         }
-
-        int count = atoi(furi_string_get_cstr(amount));
-        if (count < 2)
-        {
-            // Just one icon
-            spawn_icon(
-                manager,
-                level,
-                furi_string_get_cstr(icon),
-                atoi(furi_string_get_cstr(x)),
-                atoi(furi_string_get_cstr(y)));
-        }
-        else
-        {
-            bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
-            spawn_icon_line(
-                manager,
-                level,
-                furi_string_get_cstr(icon),
-                atoi(furi_string_get_cstr(x)),
-                atoi(furi_string_get_cstr(y)),
-                count,
-                is_horizontal,
-                17 // set as 17 for now
-            );
-        }
-
         furi_string_free(data);
-        furi_string_free(icon);
-        furi_string_free(x);
-        furi_string_free(y);
-        furi_string_free(amount);
-        furi_string_free(horizontal);
-        levels_added++;
     }
+    FURI_LOG_I("Game", "Total icons to spawn: %d", total_icons);
+
+    // Allocate the icon group context (local instance)
+    IconGroupContext igctx;
+    igctx.count = total_icons;
+    igctx.icons = malloc(total_icons * sizeof(IconSpec));
+    if (!igctx.icons)
+    {
+        FURI_LOG_E("Game", "Failed to allocate icon group array for %d icons", total_icons);
+        return false;
+    }
+    GameContext *game_context = game_manager_game_context_get(manager);
+    game_context->icon_count = total_icons;
+
+    // Pass 2: Parse the JSON to fill the icon specs.
+    int spec_index = 0;
+    for (int i = 0; i < MAX_WORLD_OBJECTS; i++)
+    {
+        FuriString *data = get_json_array_value_furi("json_data", i, json_data);
+        if (!data)
+            break;
+
+        FuriString *icon_str = get_json_value_furi("icon", data);
+        FuriString *x_str = get_json_value_furi("x", data);
+        FuriString *y_str = get_json_value_furi("y", data);
+        FuriString *amount_str = get_json_value_furi("amount", data);
+        FuriString *horizontal_str = get_json_value_furi("horizontal", data);
+
+        if (!icon_str || !x_str || !y_str || !amount_str || !horizontal_str)
+        {
+            FURI_LOG_E("Game", "Incomplete icon data: %s", furi_string_get_cstr(data));
+            if (icon_str)
+                furi_string_free(icon_str);
+            if (x_str)
+                furi_string_free(x_str);
+            if (y_str)
+                furi_string_free(y_str);
+            if (amount_str)
+                furi_string_free(amount_str);
+            if (horizontal_str)
+                furi_string_free(horizontal_str);
+            furi_string_free(data);
+            continue;
+        }
+
+        int count = atoi(furi_string_get_cstr(amount_str));
+        if (count < 1)
+            count = 1;
+        float base_x = atof_furi(x_str);
+        float base_y = atof_furi(y_str);
+        bool is_horizontal = (furi_string_cmp(horizontal_str, "true") == 0);
+        int spacing = 17;
+
+        for (int j = 0; j < count; j++)
+        {
+            IconSpec *spec = &igctx.icons[spec_index];
+            if (is_horizontal)
+            {
+                spec->pos.x = base_x + (j * spacing);
+                spec->pos.y = base_y;
+            }
+            else
+            {
+                spec->pos.x = base_x;
+                spec->pos.y = base_y + (j * spacing);
+            }
+            const char *name = furi_string_get_cstr(icon_str);
+            if (is_str(name, "house"))
+            {
+                spec->id = ICON_ID_HOUSE;
+                spec->icon = &I_icon_house_48x32px;
+                spec->size = (Vector){48, 32};
+            }
+            else if (is_str(name, "man"))
+            {
+                spec->id = ICON_ID_MAN;
+                spec->icon = &I_icon_man_7x16;
+                spec->size = (Vector){7, 16};
+            }
+            else if (is_str(name, "plant"))
+            {
+                spec->id = ICON_ID_PLANT;
+                spec->icon = &I_icon_plant_16x16;
+                spec->size = (Vector){16, 16};
+            }
+            else if (is_str(name, "tree"))
+            {
+                spec->id = ICON_ID_TREE;
+                spec->icon = &I_icon_tree_16x16;
+                spec->size = (Vector){16, 16};
+            }
+            else if (is_str(name, "woman"))
+            {
+                spec->id = ICON_ID_WOMAN;
+                spec->icon = &I_icon_woman_9x16;
+                spec->size = (Vector){9, 16};
+            }
+            else if (is_str(name, "fence"))
+            {
+                spec->id = ICON_ID_FENCE;
+                spec->icon = &I_icon_fence_16x8px;
+                spec->size = (Vector){16, 8};
+            }
+            else if (is_str(name, "fence_end"))
+            {
+                spec->id = ICON_ID_FENCE_END;
+                spec->icon = &I_icon_fence_end_16x8px;
+                spec->size = (Vector){16, 8};
+            }
+            else if (is_str(name, "fence_vertical_end"))
+            {
+                spec->id = ICON_ID_FENCE_VERTICAL_END;
+                spec->icon = &I_icon_fence_vertical_end_6x8px;
+                spec->size = (Vector){6, 8};
+            }
+            else if (is_str(name, "fence_vertical_start"))
+            {
+                spec->id = ICON_ID_FENCE_VERTICAL_START;
+                spec->icon = &I_icon_fence_vertical_start_6x15px;
+                spec->size = (Vector){6, 15};
+            }
+            else if (is_str(name, "flower"))
+            {
+                spec->id = ICON_ID_FLOWER;
+                spec->icon = &I_icon_flower_16x16;
+                spec->size = (Vector){16, 16};
+            }
+            else if (is_str(name, "lake_bottom"))
+            {
+                spec->id = ICON_ID_LAKE_BOTTOM;
+                spec->icon = &I_icon_lake_bottom_31x12px;
+                spec->size = (Vector){31, 12};
+            }
+            else if (is_str(name, "lake_bottom_left"))
+            {
+                spec->id = ICON_ID_LAKE_BOTTOM_LEFT;
+                spec->icon = &I_icon_lake_bottom_left_24x22px;
+                spec->size = (Vector){24, 22};
+            }
+            else if (is_str(name, "lake_bottom_right"))
+            {
+                spec->id = ICON_ID_LAKE_BOTTOM_RIGHT;
+                spec->icon = &I_icon_lake_bottom_right_24x22px;
+                spec->size = (Vector){24, 22};
+            }
+            else if (is_str(name, "lake_left"))
+            {
+                spec->id = ICON_ID_LAKE_LEFT;
+                spec->icon = &I_icon_lake_left_11x31px;
+                spec->size = (Vector){11, 31};
+            }
+            else if (is_str(name, "lake_right"))
+            {
+                spec->id = ICON_ID_LAKE_RIGHT;
+                spec->icon = &I_icon_lake_right_11x31;
+                spec->size = (Vector){11, 31};
+            }
+            else if (is_str(name, "lake_top"))
+            {
+                spec->id = ICON_ID_LAKE_TOP;
+                spec->icon = &I_icon_lake_top_31x12px;
+                spec->size = (Vector){31, 12};
+            }
+            else if (is_str(name, "lake_top_left"))
+            {
+                spec->id = ICON_ID_LAKE_TOP_LEFT;
+                spec->icon = &I_icon_lake_top_left_24x22px;
+                spec->size = (Vector){24, 22};
+            }
+            else if (is_str(name, "lake_top_right"))
+            {
+                spec->id = ICON_ID_LAKE_TOP_RIGHT;
+                spec->icon = &I_icon_lake_top_right_24x22px;
+                spec->size = (Vector){24, 22};
+            }
+            else if (is_str(name, "rock_large"))
+            {
+                spec->id = ICON_ID_ROCK_LARGE;
+                spec->icon = &I_icon_rock_large_18x19px;
+                spec->size = (Vector){18, 19};
+            }
+            else if (is_str(name, "rock_medium"))
+            {
+                spec->id = ICON_ID_ROCK_MEDIUM;
+                spec->icon = &I_icon_rock_medium_16x14px;
+                spec->size = (Vector){16, 14};
+            }
+            else if (is_str(name, "rock_small"))
+            {
+                spec->id = ICON_ID_ROCK_SMALL;
+                spec->icon = &I_icon_rock_small_10x8px;
+                spec->size = (Vector){10, 8};
+            }
+            else
+            {
+                FURI_LOG_E("Game", "Icon name not recognized: %s", name);
+                continue;
+            }
+            spec_index++;
+        }
+
+        furi_string_free(icon_str);
+        furi_string_free(x_str);
+        furi_string_free(y_str);
+        furi_string_free(amount_str);
+        furi_string_free(horizontal_str);
+        furi_string_free(data);
+    }
+
+    // Spawn one icon group entity.
+    Entity *groupEntity = level_add_entity(level, &icon_desc);
+    IconGroupContext *entityContext = (IconGroupContext *)entity_context_get(groupEntity);
+    if (entityContext)
+    {
+        memcpy(entityContext, &igctx, sizeof(IconGroupContext));
+    }
+    else
+    {
+        FURI_LOG_E("Game", "Failed to get entity context for icon group");
+        free(igctx.icons);
+        return false;
+    }
+
+    // Set the global pointer so that player collision logic can use it.
+    g_current_icon_group = entityContext;
+
     FURI_LOG_I("Game", "Finished loading world data");
-    return levels_added > 0;
+    return true;
 }
+
+// The remainder of the file (draw_town_world, draw_pvp_world, etc.) remains unchanged.
 
 static void draw_town_world(Level *level, GameManager *manager, void *context)
 {

@@ -53,8 +53,7 @@ void spawn_icon(GameManager *manager, Level *level, const char *icon_id, float x
     snprintf(g_name, sizeof(g_name), "%s", icon_id);
     Entity *e = level_add_entity(level, &icon_desc);
     entity_pos_set(e, (Vector){x, y});
-    GameContext *game_context = game_manager_game_context_get(manager);
-    game_context->icon_count++;
+    UNUSED(manager);
 }
 // Draw a line of icons at a specific position (with collision detection)
 void spawn_icon_line(GameManager *manager, Level *level, const char *icon_id, float x, float y, uint8_t amount, bool horizontal, uint8_t spacing)

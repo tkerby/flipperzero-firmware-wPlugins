@@ -1,4 +1,5 @@
 #include <game/player.h>
+#include <game/icon.h>
 #include <game/storage.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,6 +209,39 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
         player->direction = ENTITY_UP;
     }
 }
+
+// This static function handles collisions with icons.
+// It receives the player entity pointer, the player's current position, and a pointer to PlayerContext.
+static void handle_collision(Entity *playerEntity, Vector playerPos, PlayerContext *player)
+{
+    // If there is no active icon group, do nothing.
+    if (!g_current_icon_group)
+        return;
+
+    // Loop over all icon specifications in the current icon group.
+    for (int i = 0; i < g_current_icon_group->count; i++)
+    {
+        IconSpec *spec = &g_current_icon_group->icons[i];
+
+        // Calculate the difference between player's position and the icon's center.
+        float dx = playerPos.x - spec->pos.x;
+        float dy = playerPos.y - spec->pos.y;
+
+        // Use an approximate collision radius:
+        float radius = (spec->size.x + spec->size.y) / 4.0f;
+
+        // Collision: if player's distance to the icon center is less than the collision radius.
+        if ((dx * dx + dy * dy) < (radius * radius))
+        {
+            // Revert the player's position and reset movement.
+            entity_pos_set(playerEntity, player->old_position);
+            player->dx = 0;
+            player->dy = 0;
+            break;
+        }
+    }
+}
+
 uint16_t elapsed_ws_timer = 0;
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
@@ -479,6 +513,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     }
     else
         player->state = ENTITY_MOVING;
+
+    // handle icon collision
+    handle_collision(self, pos, player);
 }
 
 static void draw_tutorial(Canvas *canvas, GameManager *manager)
