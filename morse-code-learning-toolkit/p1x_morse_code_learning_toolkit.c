@@ -15,7 +15,8 @@
 #define CHAR_SPACE_MS 300          // Space between characters
 #define WORD_SPACE_MS 1000         // Space between words
 #define DECODE_TIMEOUT_MS 2000     // Time after which decoder tries to decode (was 3000ms)
-#define MAX_MORSE_LENGTH 48        // Maximum length of morse code input
+#define MAX_MORSE_LENGTH 6        // Maximum length of morse code input
+#define TOP_WORDS_MAX_LENGTH 16    // Maximum length for top words marquee display
 #define INITIAL_VOLUME 0.25f      // Initial volume level (0.0 to 1.0)
 #define DEFAULT_FREQUENCY 800
 
@@ -71,6 +72,7 @@ typedef struct {
     // Practice
     uint32_t last_input_time;
     char decoded_text[MAX_MORSE_LENGTH];
+    char top_words[TOP_WORDS_MAX_LENGTH + 1];  // Buffer for marquee display
     char current_morse[MAX_MORSE_LENGTH];
     int current_morse_position;
     bool auto_add_space;
@@ -123,6 +125,7 @@ static int32_t sound_worker_thread(void* context);
 static char get_char_for_morse(const char* morse);
 static void try_decode_morse(MorseApp* app);
 static void draw_help_screen(Canvas* canvas, MorseApp* app);
+static void update_top_words_marquee(MorseApp* app, char new_char);
 
 // Get morse code for a character
 static const char* get_morse_for_char(char c) {
@@ -258,6 +261,7 @@ static void try_decode_morse(MorseApp* app) {
         
         // If we got a valid character, add it to the decoded text
         if(decoded != '?') {
+            // Add to decoded_text (used for internal tracking, limited by MAX_MORSE_LENGTH)
             size_t len = strlen(app->decoded_text);
             if(len < MAX_MORSE_LENGTH - 1) {
                 app->decoded_text[len] = decoded;
@@ -266,6 +270,9 @@ static void try_decode_morse(MorseApp* app) {
                 // Set flag to add space automatically on next input
                 app->auto_add_space = true;
             }
+            
+            // Update the top_words marquee (this handles the marquee effect)
+            update_top_words_marquee(app, decoded);
             
             // Copy the decoded character to user_input display
             if (app->input_position < MAX_MORSE_LENGTH - 1) {
@@ -337,12 +344,14 @@ static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
             canvas_draw_str(canvas, 2, 10, "PRACTICE");
             canvas_draw_line(canvas, 0, 12, 128, 12);
             
+            // Display top words marquee (new method)
+            canvas_set_font(canvas, FontPrimary);
+            
             // Try to decode if there's a pause
             try_decode_morse(app);
             
-            // Display input (only showing decoded characters and spaces, not dots/dashes)
-            canvas_draw_str(canvas, 5, 25, "Input:");
-            canvas_draw_str(canvas, 5, 37, app->decoded_text);
+            // Display words  (old)
+            canvas_draw_str(canvas, 5, 25, app->top_words);
             
             // Display current morse being decoded
             char current_status[64];
@@ -352,7 +361,7 @@ static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
             // Display decoded text with last decoded character
             char decoded_line[MAX_MORSE_LENGTH + 20];
             if (app->last_decoded_char == '?') {
-                snprintf(decoded_line, sizeof(decoded_line), "Decoded: [unknown code]");
+                snprintf(decoded_line, sizeof(decoded_line), "Decoded: [unknown]");
             } else if (app->last_decoded_char == 0) {
                 snprintf(decoded_line, sizeof(decoded_line), "Decoded:");
             } else {
@@ -484,6 +493,18 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
                 // Update last input time
                 app->last_input_time = furi_hal_rtc_get_timestamp();
                 
+                // Check if input has reached MAX_MORSE_LENGTH
+                if(app->input_position >= MAX_MORSE_LENGTH - 1) {
+                    // Clear all input to prevent buffer overflow
+                    memset(app->user_input, 0, sizeof(app->user_input));
+                    app->input_position = 0;
+                    
+                    // Show visual feedback (flash green LED) to indicate input was cleared
+                    notification_message(app->notifications, &sequence_set_only_green_255);
+                    furi_delay_ms(200);
+                    notification_message(app->notifications, &sequence_reset_green);
+                }
+                
                 if(input_event->type == InputTypeShort) {
                     // Short press OK - Add dot to input if there's room
                     if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
@@ -604,6 +625,7 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     app->volume = INITIAL_VOLUME; // Initialize volume to max
     memset(app->user_input, 0, sizeof(app->user_input));
     memset(app->decoded_text, 0, sizeof(app->decoded_text));
+    memset(app->top_words, 0, sizeof(app->top_words));
     memset(app->current_morse, 0, sizeof(app->current_morse));
     
     // Configure viewport
@@ -670,4 +692,24 @@ static void draw_help_screen(Canvas* canvas, MorseApp* app) {
     canvas_draw_str(canvas, 2, y_offset, "- RIGHT: Clear input");
     y_offset += 10;
     canvas_draw_str(canvas, 2, y_offset, "- UP/DOWN: Adjust volume");
+}
+
+// Function to update the top words marquee buffer
+static void update_top_words_marquee(MorseApp* app, char new_char) {
+    // If there's room in the buffer, just append
+    size_t len = strlen(app->top_words);
+    
+    if(len < TOP_WORDS_MAX_LENGTH) {
+        // There's still room, just append
+        app->top_words[len] = new_char;
+        app->top_words[len + 1] = '\0';
+    } else {
+        // Shift characters left by one position
+        for(size_t i = 0; i < TOP_WORDS_MAX_LENGTH - 1; i++) {
+            app->top_words[i] = app->top_words[i + 1];
+        }
+        // Add the new character at the end
+        app->top_words[TOP_WORDS_MAX_LENGTH - 1] = new_char;
+        app->top_words[TOP_WORDS_MAX_LENGTH] = '\0';
+    }
 }
