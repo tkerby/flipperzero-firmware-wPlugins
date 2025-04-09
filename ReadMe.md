@@ -74,9 +74,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [fbt: Deterministic STARTUP order & additional checks #4179 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4179)
 - OFW: [SubGhz: added support for 42-bit Prastel variation #4178 (By pmazzini)](https://github.com/flipperdevices/flipperzero-firmware/pull/4178)
 - Reverted a Spring Cleaning change to support slower storage
-- Updated: [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 - Updated: [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
+- Updated: [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 
 <a name="release">
 
