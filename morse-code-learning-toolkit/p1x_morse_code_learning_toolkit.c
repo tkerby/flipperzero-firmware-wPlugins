@@ -9,12 +9,12 @@
 #include <ctype.h>
 
 // Timing Configuration (in milliseconds)
-#define DOT_DURATION_MS 100
+#define DOT_DURATION_MS 150
 #define DASH_DURATION_MS 300
 #define ELEMENT_SPACE_MS 100       // Space between dots and dashes
 #define CHAR_SPACE_MS 300          // Space between characters
 #define WORD_SPACE_MS 1000         // Space between words
-#define DECODE_TIMEOUT_MS 1500     // Time after which decoder tries to decode (was 3000ms)
+#define DECODE_TIMEOUT_MS 2200     // Time after which decoder tries to decode (was 3000ms)
 #define MAX_MORSE_LENGTH 32        // Maximum length of morse code input
 
 #define DEFAULT_FREQUENCY 800
@@ -470,7 +470,7 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
             break;
             
         case MorseStatePractice:
-            if(input_event->key == InputKeyOk) {
+            if(input_event->key == InputKeyOk || input_event->key == InputKeyLeft) {
                 // Check if we need to add auto space from previous decode
                 if(app->auto_add_space) {
                     size_t len = strlen(app->decoded_text);
@@ -514,30 +514,6 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
                         play_dash(app);
                     }
                 }
-            }
-            else if(input_event->key == InputKeyLeft && input_event->type == InputTypeShort) {
-                // Manual space - also resets auto space flag
-                app->auto_add_space = false;
-                
-                // Add space if there's room
-                if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
-                    app->user_input[app->input_position++] = ' ';
-                    app->user_input[app->input_position] = '\0';
-                    
-                    // Add space to decoded text
-                    size_t len = strlen(app->decoded_text);
-                    if(len < MAX_MORSE_LENGTH - 1) {
-                        app->decoded_text[len] = ' ';
-                        app->decoded_text[len + 1] = '\0';
-                    }
-                    
-                    // Reset current morse being decoded
-                    app->current_morse_position = 0;
-                    app->current_morse[0] = '\0';
-                }
-                
-                // Reset last input time to avoid auto-decode right after manual space
-                app->last_input_time = furi_hal_rtc_get_timestamp();
             }
             else if(input_event->key == InputKeyRight && input_event->type == InputTypeShort) {
                 // Clear all input
