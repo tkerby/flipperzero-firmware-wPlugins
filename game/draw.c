@@ -3,7 +3,6 @@
 // Global variables to store camera position
 int draw_camera_x = 0;
 int draw_camera_y = 0;
-char draw_g_name[32];
 
 // Draw the user stats (health, xp, and level)
 void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager)

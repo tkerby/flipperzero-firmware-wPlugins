@@ -2,7 +2,6 @@
 #include "game.h"
 #include "game/icon.h"
 #include <game/player.h>
-extern char draw_g_name[32];
 extern int draw_camera_x;
 extern int draw_camera_y;
 void draw_user_stats(Canvas *canvas, Vector pos, GameManager *manager);
