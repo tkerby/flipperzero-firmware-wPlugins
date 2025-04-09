@@ -219,61 +219,6 @@ static bool game_fetch_player_stats(FlipperHTTP *fhttp)
     return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
 }
 
-// static bool fetch_app_update(FlipperHTTP *fhttp)
-// {
-//     if (!fhttp)
-//     {
-//         FURI_LOG_E(TAG, "fhttp is NULL");
-//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
-//         return false;
-//     }
-
-//     return flipper_http_get_request_with_headers(fhttp, "https://www.jblanked.com/flipper/api/app/last-updated/flip_world/", "{\"Content-Type\":\"application/json\"}");
-// }
-
-// static bool parse_app_update(FlipperHTTP *fhttp)
-// {
-//     if (!fhttp)
-//     {
-//         FURI_LOG_E(TAG, "fhttp is NULL");
-//         easy_flipper_dialog("Error", "fhttp is NULL. Press BACK to return.");
-//         return false;
-//     }
-//     if (fhttp->last_response == NULL || strlen(fhttp->last_response) == 0)
-//     {
-//         FURI_LOG_E(TAG, "fhttp->last_response is NULL or empty");
-//         easy_flipper_dialog("Error", "fhttp->last_response is NULL or empty. Press BACK to return.");
-//         return false;
-//     }
-//     bool last_update_available = false;
-//     char last_updated_old[32];
-//     // load the previous last_updated
-//     if (!load_char("last_updated", last_updated_old, sizeof(last_updated_old)))
-//     {
-//         FURI_LOG_E(TAG, "Failed to load last_updated");
-//         // it's okay, we'll just update it
-//     }
-//     // save the new last_updated
-//     save_char("last_updated", fhttp->last_response);
-
-//     // compare the two
-//     if (strlen(last_updated_old) == 0 || !is_str(last_updated_old, fhttp->last_response))
-//     {
-//         last_update_available = true;
-//     }
-
-//     if (last_update_available)
-//     {
-//         easy_flipper_dialog("Update Available", "An update is available. Press OK to update.");
-//         return true;
-//     }
-//     else
-//     {
-//         easy_flipper_dialog("No Update Available", "No update is available. Press OK to continue.");
-//         return false;
-//     }
-// }
-
 static bool game_thread_start(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
