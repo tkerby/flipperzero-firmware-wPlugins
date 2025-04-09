@@ -141,40 +141,41 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 
 void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
-    if(!is_moving && isGrounded && !is_facing_right) {
-        Idle_animation_play(manager, context);
-    }
-    
-    if(!is_moving && isGrounded && is_facing_right) {
-        Idle_animation_right_play(manager, context);
-    }
+    if(!playerContext->is_swinging_sword){
+        if(!is_moving && isGrounded && !is_facing_right) {
+            Idle_animation_play(manager, context);
+        }
+        
+        if(!is_moving && isGrounded && is_facing_right) {
+            Idle_animation_right_play(manager, context);
+        }
 
-    if(is_moving && isGrounded && !is_facing_right) {
-        Walking_animation_play(manager, context);
-    }
-    
-    if(is_moving && isGrounded && is_facing_right) {
-        Walking_right_animation_play(manager, context);
-    }
-    
-    if(playerContext->Yvelocity > 0 && !isGrounded){
-        if(!is_facing_right){
-            playerContext->sprite = jumping[3];
+        if(is_moving && isGrounded && !is_facing_right) {
+            Walking_animation_play(manager, context);
         }
-        else{
-            playerContext->sprite = jumping[1];
+        
+        if(is_moving && isGrounded && is_facing_right) {
+            Walking_right_animation_play(manager, context);
         }
-    }
+        
+        if(playerContext->Yvelocity > 0 && !isGrounded){
+            if(!is_facing_right){
+                playerContext->sprite = jumping[3];
+            }
+            else{
+                playerContext->sprite = jumping[1];
+            }
+        }
 
-    if(playerContext->Yvelocity < 0 && !isGrounded){
-        if(!is_facing_right){
-            playerContext->sprite = jumping[0];
-        }
-        else{
-            playerContext->sprite = jumping[4];
+        if(playerContext->Yvelocity < 0 && !isGrounded){
+            if(!is_facing_right){
+                playerContext->sprite = jumping[0];
+            }
+            else{
+                playerContext->sprite = jumping[4];
+            }
         }
     }
-
     UNUSED(manager);
 }
 
