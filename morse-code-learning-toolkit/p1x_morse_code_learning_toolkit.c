@@ -56,6 +56,7 @@ typedef struct {
     bool sound_running;
     SoundCommand current_sound;
     char sound_character;
+    float volume;  // Volume level from 0.0 to 1.0
     
     // Application state
     MorseAppState app_state;
@@ -121,6 +122,7 @@ static const char* get_morse_for_char(char c);
 static int32_t sound_worker_thread(void* context);
 static char get_char_for_morse(const char* morse);
 static void try_decode_morse(MorseApp* app);
+static void draw_help_screen(Canvas* canvas, MorseApp* app);
 
 // Get morse code for a character
 static const char* get_morse_for_char(char c) {
@@ -159,7 +161,7 @@ static int32_t sound_worker_thread(void* context) {
                 case SoundCommandDot:
                     // Play dot
                     if(furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(DEFAULT_FREQUENCY, 1.0f);
+                        furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume); // Use volume setting
                         notification_message(app->notifications, &sequence_set_only_red_255);
                         furi_delay_ms(DOT_DURATION_MS);
                         furi_hal_speaker_stop();
@@ -172,7 +174,7 @@ static int32_t sound_worker_thread(void* context) {
                 case SoundCommandDash:
                     // Play dash
                     if(furi_hal_speaker_acquire(1000)) {
-                        furi_hal_speaker_start(DEFAULT_FREQUENCY, 1.0f);
+                        furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume); // Use volume setting
                         notification_message(app->notifications, &sequence_set_only_blue_255);
                         furi_delay_ms(DASH_DURATION_MS);
                         furi_hal_speaker_stop();
@@ -358,22 +360,29 @@ static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
             }
             canvas_draw_str(canvas, 5, 61, decoded_line);
             
-            // Display instructions
+            // Display volume level
+            char volume_str[20];
+            int volume_bars = (int)(app->volume * 10);
+            snprintf(volume_str, sizeof(volume_str), "Vol: [");
+            for(int i = 0; i < 10; i++) {
+                if(i < volume_bars) {
+                    snprintf(volume_str + strlen(volume_str), sizeof(volume_str) - strlen(volume_str), "|");
+                } else {
+                    snprintf(volume_str + strlen(volume_str), sizeof(volume_str) - strlen(volume_str), " ");
+                }
+            }
+            snprintf(volume_str + strlen(volume_str), sizeof(volume_str) - strlen(volume_str), "]");
             canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 5, 75, volume_str);
+            
+            // Display instructions
             canvas_draw_str(canvas, 5, 94, "OK: Short=Dot Long=Dash");
             canvas_draw_str(canvas, 5, 104, "LEFT: Space  RIGHT: Clear");
             break;
         }
         
         case MorseStateHelp: {
-            // Draw help screen
-            canvas_draw_str(canvas, 2, 10, "MORSE HELP");
-            canvas_draw_line(canvas, 0, 12, 128, 12);
-            
-            canvas_draw_str(canvas, 5, 24, "Morse Code Basics:");
-            canvas_draw_str(canvas, 5, 36, "· = short press (dot)");
-            canvas_draw_str(canvas, 5, 48, "— = long press (dash)");
-            canvas_draw_str(canvas, 5, 60, "BACK: Return to menu");
+            draw_help_screen(canvas, app);
             break;
         }
         
@@ -541,6 +550,20 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
                 app->auto_add_space = false;
                 app->last_input_time = 0;
             }
+            else if(input_event->key == InputKeyUp && input_event->type == InputTypeShort) {
+                // Increase volume (with upper limit)
+                app->volume = (app->volume < 1.0f) ? app->volume + 0.1f : 1.0f;
+                notification_message(app->notifications, &sequence_set_only_green_255);
+                furi_delay_ms(100);
+                notification_message(app->notifications, &sequence_reset_green);
+            }
+            else if(input_event->key == InputKeyDown && input_event->type == InputTypeShort) {
+                // Decrease volume (with lower limit)
+                app->volume = (app->volume > 0.1f) ? app->volume - 0.1f : 0.1f;
+                notification_message(app->notifications, &sequence_set_only_green_255);
+                furi_delay_ms(100);
+                notification_message(app->notifications, &sequence_reset_green);
+            }
             else if(input_event->key == InputKeyBack && input_event->type == InputTypeShort) {
                 app->app_state = MorseStateMenu;
             }
@@ -602,6 +625,7 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     app->last_input_time = 0;
     app->current_morse_position = 0;
     app->auto_add_space = false;
+    app->volume = 1.0f; // Initialize volume to max
     memset(app->user_input, 0, sizeof(app->user_input));
     memset(app->decoded_text, 0, sizeof(app->decoded_text));
     memset(app->current_morse, 0, sizeof(app->current_morse));
@@ -649,4 +673,25 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     free(app);
     
     return 0;
+}
+
+static void draw_help_screen(Canvas* canvas, MorseApp* app) {
+    UNUSED(app);  // Mark parameter as unused to prevent compiler warning
+    
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 2, 10, "MORSE CODE HELP");
+    canvas_draw_line(canvas, 0, 12, 128, 12);
+    
+    canvas_set_font(canvas, FontSecondary);
+    
+    int16_t y_offset = 22;
+    canvas_draw_str(canvas, 2, y_offset, "PRACTICE MODE:");
+    y_offset += 10;
+    canvas_draw_str(canvas, 2, y_offset, "- OK: Short=dot, Long=dash");
+    y_offset += 10;
+    canvas_draw_str(canvas, 2, y_offset, "- LEFT: Add space");
+    y_offset += 10;
+    canvas_draw_str(canvas, 2, y_offset, "- RIGHT: Clear input");
+    y_offset += 10;
+    canvas_draw_str(canvas, 2, y_offset, "- UP/DOWN: Adjust volume");
 }
