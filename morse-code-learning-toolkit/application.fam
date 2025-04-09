@@ -1,17 +1,17 @@
 # For details & more options, see documentation/AppManifests.md in firmware repo
 
 App(
-    appid="p1x_morse_code_learning_toolkit",  # Must be unique
-    name="App p1x_morse_code_learning_toolkit",  # Displayed in menus
+    appid="morse_master",  # Must be unique
+    name="Morse Master",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="p1x_morse_code_learning_toolkit_app",
     stack_size=2 * 1024,
-    fap_category="Examples",
+    fap_category="Learning",
     # Optional values
-    # fap_version="0.1",
+    fap_version="1.0",
     fap_icon="p1x_morse_code_learning_toolkit.png",  # 10x10 1-bit PNG
-    # fap_description="A simple app",
-    # fap_author="J. Doe",
-    # fap_weburl="https://github.com/user/p1x_morse_code_learning_toolkit",
+    fap_description="Learn Morse code through interactive lessons and games",
+    fap_author="P1X",
+    # fap_weburl="https://github.com/user/morse_master",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
