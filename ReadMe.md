@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-1941-0.420.0-d161b19.tgz&channel=RM0329-1941-0.420.0-d161b19&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0409-1405-0.420.0-8e80580.tgz&channel=RM0409-1405-0.420.0-8e80580&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,53 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-09 13:32 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-09 13:32 EST`
-- Updated: [DTMF Dolphin v1.5 (By litui)](https://github.com/litui/dtmf_dolphin)
-- Added: [Doom animation (By doomwastaken)](https://github.com/flipperdevices/flipperzero-firmware/pull/4164)
-- Patreon Build Update:  [Doom animation (By doomwastaken) Added to Stock, Minimal and Manifest Switcher builds. Updated Dolphin animation set (By RogueMaster)](https://github.com/RogueMaster/awesome-flipperzero-withModules/commit/25ffdb624a19a02a3a0bd8c95d248880833270c0)
-- [Removed G0G374 & OPxFlipper animations from Minimal animations set (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d40aa6ce738fc97e2a5ba6dc5344b3a51359634d)
-- OFW: PR: [NFC: Fix crash on ISO15693-3 save when memory is empty or cannot be read #4165 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4165)
-- Added: [Passy v0.1 (By bettse)](https://github.com/bettse/passy)
-- OFW: [Reduce IEEE754 parser size #4154 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4154)
-- OFW: [Support binded and symlinked devices #4163 (By ssecsd)](https://github.com/flipperdevices/flipperzero-firmware/pull/4163)
-- OFW: [Fix app debug experience when dead code is culled #4144 (By GMMan)](https://github.com/flipperdevices/flipperzero-firmware/pull/4144)
-- Added: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
-- OFW: [NFC: Fix NDEF parser for MIFARE Classic #4153 (By Willy-JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4153)
-- OFW: [BadUSB arbitrary key combinations #4156 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4156)
-- Updated: [FindMy Flipper v3.5.2 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/FindMyFlipper) [Fix decryption issue #109 (By ArtemKiyashko)](https://github.com/MatthewKuKanich/FindMyFlipper/pull/109)
-- ESP Flasher Bump FlipperHTTP 1.8.2 (By jblanked) (Assets from Willy-JL)
-- Updated: [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Zelda Song Guides (By technobulb)](https://github.com/xMasterX/all-the-plugins/pull/180)) [icon display fixes (By DrEverr)](https://github.com/xMasterX/all-the-plugins/pull/181)
-- Updated: [Lab401/Light MESSENGER v1.3.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
-- Updated: [Atari SIO Emulator v0.1.2 (By cepetr)](https://github.com/cepetr/sio2flip)
-- Added: [LEGO Dimensions Toy Pad v0.2 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- OFW: [BLE advertising improvements #4151 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4151)
-- [BadUSB: Sync UI and code improvements from OFW PR (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2903718d723e7af2b43e83cc4d3a1a8c481d74e7)
-- Updated: [PC Monitor v1.1.2 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) [Fixes (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/2fd3dd10e5737d817bdb63a1bef8629a357cf038)
-- Added: [UART Pong v1.0 (By Olejka)](https://github.com/TheSainEyereg/flipper-uart-pong)
-- Added: [NRF24 Monitor v1.0 (By CyberDemon73)](https://github.com/CyberDemon73/flipperzero-nrf24monitor)
-- Added: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
-- Added: [P1X Adventure v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Added: [Moon Phases v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Added: [P1X Your Own Adventure v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Added: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [Moon Phases v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- [Spring Cleaning (By Willy-JL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/12c91fc1392f623d0a62c6a2a5925270e9748f31)
-- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
-- OFW: [Update BadUSB docs #4176 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4176)
-- Added: [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
-- Added: [Network Defender v0.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Updated: [FlipWorld v0.8 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Seos compatible v1.0 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
-- ESP Flasher Bump [Marauder 1.4.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.1)
-- Updated: [PicoPass (iClass) v1.18 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [FlipDownloader v1.0 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- OFW: [Slightly increase ble mfg_data size #4177 (By bettse)](https://github.com/flipperdevices/flipperzero-firmware/pull/4177) (Already in RM)
-- OFW: [fbt: Deterministic STARTUP order & additional checks #4179 (By portasynthinca3)](https://github.com/flipperdevices/flipperzero-firmware/pull/4179)
-- OFW: [SubGhz: added support for 42-bit Prastel variation #4178 (By pmazzini)](https://github.com/flipperdevices/flipperzero-firmware/pull/4178)
-- Reverted a Spring Cleaning change to support slower storage
-- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
-- Updated: [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Updated: [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 
 <a name="release">
 
@@ -749,4 +702,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0329-1941-0.420.0-d161b19.tgz&channel=RM0329-1941-0.420.0-d161b19&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0409-1405-0.420.0-8e80580.tgz&channel=RM0409-1405-0.420.0-8e80580&version=0.420.0)
