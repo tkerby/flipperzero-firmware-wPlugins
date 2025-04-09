@@ -2,4 +2,4 @@
 #include <game/game.h>
 #include "flip_world.h"
 
-void spawn_npc(Level *level, GameManager *manager, FuriString *json);
+void npc_spawn(Level *level, GameManager *manager, FuriString *json);

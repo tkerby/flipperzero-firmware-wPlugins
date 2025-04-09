@@ -324,7 +324,7 @@ static const EntityDescription _generic_npc = {
 };
 
 // Spawn function to return the entity description
-const EntityDescription *npc(
+static const EntityDescription *npc(
     GameManager *manager,
     const char *id,
     int index,
@@ -334,7 +334,7 @@ const EntityDescription *npc(
     float speed,
     const char *message)
 {
-    SpriteContext *sprite_context = get_sprite_context(id);
+    SpriteContext *sprite_context = sprite_context_get(id);
     if (!sprite_context)
     {
         FURI_LOG_E("Game", "Failed to get SpriteContext");
@@ -384,7 +384,7 @@ const EntityDescription *npc(
     return &_generic_npc;
 }
 
-void spawn_npc(Level *level, GameManager *manager, FuriString *json)
+void npc_spawn(Level *level, GameManager *manager, FuriString *json)
 {
     if (!level || !manager || !json)
     {
