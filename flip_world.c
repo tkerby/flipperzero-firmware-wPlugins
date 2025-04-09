@@ -281,7 +281,7 @@ static bool flip_world_get_fap_file(FlipperHTTP *fhttp, bool flipper_server)
     if (flipper_server)
     {
         char build_id[32];
-        snprintf(build_id, sizeof(build_id), "%s", "//--TODO--//");
+        snprintf(build_id, sizeof(build_id), "%s", "67f22eb325a4a6f1fb4a2c5d");
         uint8_t target;
         target = furi_hal_version_get_hw_target();
         uint16_t api_major, api_minor;
