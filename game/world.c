@@ -3,6 +3,54 @@
 #include <flip_storage/storage.h>
 #include "game/icon.h"
 
+static IconSpec world_get_icon_spec(const char *name)
+{
+    if (is_str(name, "house"))
+        return (IconSpec){.id = ICON_ID_HOUSE, .icon = &I_icon_house_48x32px, .size = (Vector){48, 32}};
+    else if (is_str(name, "man"))
+        return (IconSpec){.id = ICON_ID_MAN, .icon = &I_icon_man_7x16, .size = (Vector){7, 16}};
+    else if (is_str(name, "plant"))
+        return (IconSpec){.id = ICON_ID_PLANT, .icon = &I_icon_plant_16x16, .size = (Vector){16, 16}};
+    else if (is_str(name, "tree"))
+        return (IconSpec){.id = ICON_ID_TREE, .icon = &I_icon_tree_16x16, .size = (Vector){16, 16}};
+    else if (is_str(name, "woman"))
+        return (IconSpec){.id = ICON_ID_WOMAN, .icon = &I_icon_woman_9x16, .size = (Vector){9, 16}};
+    else if (is_str(name, "fence"))
+        return (IconSpec){.id = ICON_ID_FENCE, .icon = &I_icon_fence_16x8px, .size = (Vector){16, 8}};
+    else if (is_str(name, "fence_end"))
+        return (IconSpec){.id = ICON_ID_FENCE_END, .icon = &I_icon_fence_end_16x8px, .size = (Vector){16, 8}};
+    else if (is_str(name, "fence_vertical_end"))
+        return (IconSpec){.id = ICON_ID_FENCE_VERTICAL_END, .icon = &I_icon_fence_vertical_end_6x8px, .size = (Vector){6, 8}};
+    else if (is_str(name, "fence_vertical_start"))
+        return (IconSpec){.id = ICON_ID_FENCE_VERTICAL_START, .icon = &I_icon_fence_vertical_start_6x15px, .size = (Vector){6, 15}};
+    else if (is_str(name, "flower"))
+        return (IconSpec){.id = ICON_ID_FLOWER, .icon = &I_icon_flower_16x16, .size = (Vector){16, 16}};
+    else if (is_str(name, "lake_bottom"))
+        return (IconSpec){.id = ICON_ID_LAKE_BOTTOM, .icon = &I_icon_lake_bottom_31x12px, .size = (Vector){31, 12}};
+    else if (is_str(name, "lake_bottom_left"))
+        return (IconSpec){.id = ICON_ID_LAKE_BOTTOM_LEFT, .icon = &I_icon_lake_bottom_left_24x22px, .size = (Vector){24, 22}};
+    else if (is_str(name, "lake_bottom_right"))
+        return (IconSpec){.id = ICON_ID_LAKE_BOTTOM_RIGHT, .icon = &I_icon_lake_bottom_right_24x22px, .size = (Vector){24, 22}};
+    else if (is_str(name, "lake_left"))
+        return (IconSpec){.id = ICON_ID_LAKE_LEFT, .icon = &I_icon_lake_left_11x31px, .size = (Vector){11, 31}};
+    else if (is_str(name, "lake_right"))
+        return (IconSpec){.id = ICON_ID_LAKE_RIGHT, .icon = &I_icon_lake_right_11x31, .size = (Vector){11, 31}};
+    else if (is_str(name, "lake_top"))
+        return (IconSpec){.id = ICON_ID_LAKE_TOP, .icon = &I_icon_lake_top_31x12px, .size = (Vector){31, 12}};
+    else if (is_str(name, "lake_top_left"))
+        return (IconSpec){.id = ICON_ID_LAKE_TOP_LEFT, .icon = &I_icon_lake_top_left_24x22px, .size = (Vector){24, 22}};
+    else if (is_str(name, "lake_top_right"))
+        return (IconSpec){.id = ICON_ID_LAKE_TOP_RIGHT, .icon = &I_icon_lake_top_right_24x22px, .size = (Vector){24, 22}};
+    else if (is_str(name, "rock_large"))
+        return (IconSpec){.id = ICON_ID_ROCK_LARGE, .icon = &I_icon_rock_large_18x19px, .size = (Vector){18, 19}};
+    else if (is_str(name, "rock_medium"))
+        return (IconSpec){.id = ICON_ID_ROCK_MEDIUM, .icon = &I_icon_rock_medium_16x14px, .size = (Vector){16, 14}};
+    else if (is_str(name, "rock_small"))
+        return (IconSpec){.id = ICON_ID_ROCK_SMALL, .icon = &I_icon_rock_small_10x8px, .size = (Vector){10, 8}};
+
+    return (IconSpec){.id = -1, .icon = NULL, .size = (Vector){0, 0}};
+}
+
 bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_data)
 {
     if (!json_data)
@@ -84,150 +132,23 @@ bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_
 
         for (int j = 0; j < count; j++)
         {
-            IconSpec *spec = &igctx.icons[spec_index];
-            if (is_horizontal)
+            IconSpec spec = world_get_icon_spec(furi_string_get_cstr(icon_str));
+            if (!spec.icon)
             {
-                spec->pos.x = base_x + (j * spacing);
-                spec->pos.y = base_y;
-            }
-            else
-            {
-                spec->pos.x = base_x;
-                spec->pos.y = base_y + (j * spacing);
-            }
-            const char *name = furi_string_get_cstr(icon_str);
-            if (is_str(name, "house"))
-            {
-                spec->id = ICON_ID_HOUSE;
-                spec->icon = &I_icon_house_48x32px;
-                spec->size = (Vector){48, 32};
-            }
-            else if (is_str(name, "man"))
-            {
-                spec->id = ICON_ID_MAN;
-                spec->icon = &I_icon_man_7x16;
-                spec->size = (Vector){7, 16};
-            }
-            else if (is_str(name, "plant"))
-            {
-                spec->id = ICON_ID_PLANT;
-                spec->icon = &I_icon_plant_16x16;
-                spec->size = (Vector){16, 16};
-            }
-            else if (is_str(name, "tree"))
-            {
-                spec->id = ICON_ID_TREE;
-                spec->icon = &I_icon_tree_16x16;
-                spec->size = (Vector){16, 16};
-            }
-            else if (is_str(name, "woman"))
-            {
-                spec->id = ICON_ID_WOMAN;
-                spec->icon = &I_icon_woman_9x16;
-                spec->size = (Vector){9, 16};
-            }
-            else if (is_str(name, "fence"))
-            {
-                spec->id = ICON_ID_FENCE;
-                spec->icon = &I_icon_fence_16x8px;
-                spec->size = (Vector){16, 8};
-            }
-            else if (is_str(name, "fence_end"))
-            {
-                spec->id = ICON_ID_FENCE_END;
-                spec->icon = &I_icon_fence_end_16x8px;
-                spec->size = (Vector){16, 8};
-            }
-            else if (is_str(name, "fence_vertical_end"))
-            {
-                spec->id = ICON_ID_FENCE_VERTICAL_END;
-                spec->icon = &I_icon_fence_vertical_end_6x8px;
-                spec->size = (Vector){6, 8};
-            }
-            else if (is_str(name, "fence_vertical_start"))
-            {
-                spec->id = ICON_ID_FENCE_VERTICAL_START;
-                spec->icon = &I_icon_fence_vertical_start_6x15px;
-                spec->size = (Vector){6, 15};
-            }
-            else if (is_str(name, "flower"))
-            {
-                spec->id = ICON_ID_FLOWER;
-                spec->icon = &I_icon_flower_16x16;
-                spec->size = (Vector){16, 16};
-            }
-            else if (is_str(name, "lake_bottom"))
-            {
-                spec->id = ICON_ID_LAKE_BOTTOM;
-                spec->icon = &I_icon_lake_bottom_31x12px;
-                spec->size = (Vector){31, 12};
-            }
-            else if (is_str(name, "lake_bottom_left"))
-            {
-                spec->id = ICON_ID_LAKE_BOTTOM_LEFT;
-                spec->icon = &I_icon_lake_bottom_left_24x22px;
-                spec->size = (Vector){24, 22};
-            }
-            else if (is_str(name, "lake_bottom_right"))
-            {
-                spec->id = ICON_ID_LAKE_BOTTOM_RIGHT;
-                spec->icon = &I_icon_lake_bottom_right_24x22px;
-                spec->size = (Vector){24, 22};
-            }
-            else if (is_str(name, "lake_left"))
-            {
-                spec->id = ICON_ID_LAKE_LEFT;
-                spec->icon = &I_icon_lake_left_11x31px;
-                spec->size = (Vector){11, 31};
-            }
-            else if (is_str(name, "lake_right"))
-            {
-                spec->id = ICON_ID_LAKE_RIGHT;
-                spec->icon = &I_icon_lake_right_11x31;
-                spec->size = (Vector){11, 31};
-            }
-            else if (is_str(name, "lake_top"))
-            {
-                spec->id = ICON_ID_LAKE_TOP;
-                spec->icon = &I_icon_lake_top_31x12px;
-                spec->size = (Vector){31, 12};
-            }
-            else if (is_str(name, "lake_top_left"))
-            {
-                spec->id = ICON_ID_LAKE_TOP_LEFT;
-                spec->icon = &I_icon_lake_top_left_24x22px;
-                spec->size = (Vector){24, 22};
-            }
-            else if (is_str(name, "lake_top_right"))
-            {
-                spec->id = ICON_ID_LAKE_TOP_RIGHT;
-                spec->icon = &I_icon_lake_top_right_24x22px;
-                spec->size = (Vector){24, 22};
-            }
-            else if (is_str(name, "rock_large"))
-            {
-                spec->id = ICON_ID_ROCK_LARGE;
-                spec->icon = &I_icon_rock_large_18x19px;
-                spec->size = (Vector){18, 19};
-            }
-            else if (is_str(name, "rock_medium"))
-            {
-                spec->id = ICON_ID_ROCK_MEDIUM;
-                spec->icon = &I_icon_rock_medium_16x14px;
-                spec->size = (Vector){16, 14};
-            }
-            else if (is_str(name, "rock_small"))
-            {
-                spec->id = ICON_ID_ROCK_SMALL;
-                spec->icon = &I_icon_rock_small_10x8px;
-                spec->size = (Vector){10, 8};
-            }
-            else
-            {
-                FURI_LOG_E("Game", "Icon name not recognized: %s", name);
+                FURI_LOG_E("Game", "Icon name not recognized: %s", furi_string_get_cstr(icon_str));
                 continue;
             }
-            spec_index++;
+            if (is_horizontal)
+            {
+                spec.pos.x = base_x + (j * spacing);
+                spec.pos.y = base_y;
+            }
+            else
+            {
+                spec.pos.x = base_x;
+                spec.pos.y = base_y + (j * spacing);
+            }
+            igctx.icons[spec_index++] = spec;
         }
 
         furi_string_free(icon_str);
