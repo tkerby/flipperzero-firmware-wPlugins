@@ -14,9 +14,9 @@
 #define ELEMENT_SPACE_MS 100       // Space between dots and dashes
 #define CHAR_SPACE_MS 300          // Space between characters
 #define WORD_SPACE_MS 1000         // Space between words
-#define DECODE_TIMEOUT_MS 2200     // Time after which decoder tries to decode (was 3000ms)
-#define MAX_MORSE_LENGTH 32        // Maximum length of morse code input
-
+#define DECODE_TIMEOUT_MS 2000     // Time after which decoder tries to decode (was 3000ms)
+#define MAX_MORSE_LENGTH 48        // Maximum length of morse code input
+#define INITIAL_VOLUME 0.25f      // Initial volume level (0.0 to 1.0)
 #define DEFAULT_FREQUENCY 800
 
 // Application states
@@ -601,7 +601,7 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     app->last_input_time = 0;
     app->current_morse_position = 0;
     app->auto_add_space = false;
-    app->volume = 1.0f; // Initialize volume to max
+    app->volume = INITIAL_VOLUME; // Initialize volume to max
     memset(app->user_input, 0, sizeof(app->user_input));
     memset(app->decoded_text, 0, sizeof(app->decoded_text));
     memset(app->current_morse, 0, sizeof(app->current_morse));
@@ -663,9 +663,9 @@ static void draw_help_screen(Canvas* canvas, MorseApp* app) {
     int16_t y_offset = 22;
     canvas_draw_str(canvas, 2, y_offset, "PRACTICE MODE:");
     y_offset += 10;
-    canvas_draw_str(canvas, 2, y_offset, "- OK: Short=dot, Long=dash");
+    canvas_draw_str(canvas, 2, y_offset, "- OK and LEFT:");
     y_offset += 10;
-    canvas_draw_str(canvas, 2, y_offset, "- LEFT: Add space");
+    canvas_draw_str(canvas, 2, y_offset, "    Short=dot, Long=dash");
     y_offset += 10;
     canvas_draw_str(canvas, 2, y_offset, "- RIGHT: Clear input");
     y_offset += 10;
