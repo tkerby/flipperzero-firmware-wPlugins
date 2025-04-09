@@ -6,7 +6,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="p1x_morse_code_learning_toolkit_app",
     stack_size=2 * 1024,
-    fap_category="Tools",
+    fap_category="Media",
     # Optional values
     fap_version="1.0",
     fap_icon="p1x_morse_code_learning_toolkit.png",  # 10x10 1-bit PNG

@@ -6,12 +6,17 @@
 #include <furi_hal_rtc.h>
 #include <furi_hal_speaker.h>
 #include <string.h>
+#include <ctype.h>
 
+// Timing Configuration (in milliseconds)
 #define DOT_DURATION_MS 100
 #define DASH_DURATION_MS 300
-#define ELEMENT_SPACE_MS 100
-#define CHAR_SPACE_MS 300
-#define MAX_MORSE_LENGTH 16
+#define ELEMENT_SPACE_MS 100       // Space between dots and dashes
+#define CHAR_SPACE_MS 300          // Space between characters
+#define WORD_SPACE_MS 1000         // Space between words
+#define DECODE_TIMEOUT_MS 1500     // Time after which decoder tries to decode (was 3000ms)
+#define MAX_MORSE_LENGTH 32        // Maximum length of morse code input
+
 #define DEFAULT_FREQUENCY 800
 
 // Application states
@@ -61,6 +66,14 @@ typedef struct {
     char current_char;
     char user_input[MAX_MORSE_LENGTH];
     int input_position;
+    
+    // Practice
+    uint32_t last_input_time;
+    char decoded_text[MAX_MORSE_LENGTH];
+    char current_morse[MAX_MORSE_LENGTH];
+    int current_morse_position;
+    bool auto_add_space;
+    char last_decoded_char;  // Store the last decoded character
 } MorseApp;
 
 // International Morse Code mappings (simplified subset)
@@ -106,6 +119,8 @@ static void play_dash(MorseApp* app);
 static void play_character(MorseApp* app, char ch);
 static const char* get_morse_for_char(char c);
 static int32_t sound_worker_thread(void* context);
+static char get_char_for_morse(const char* morse);
+static void try_decode_morse(MorseApp* app);
 
 // Get morse code for a character
 static const char* get_morse_for_char(char c) {
@@ -118,6 +133,17 @@ static const char* get_morse_for_char(char c) {
     }
     
     return NULL;
+}
+
+// Get character for a morse code
+static char get_char_for_morse(const char* morse) {
+    for(size_t i = 0; i < sizeof(MORSE_TABLE) / sizeof(MORSE_TABLE[0]); i++) {
+        if(strcmp(MORSE_TABLE[i].code, morse) == 0) {
+            return MORSE_TABLE[i].character;
+        }
+    }
+    
+    return '?';  // Unknown morse code
 }
 
 // Sound worker thread function - handles all audio output
@@ -210,6 +236,48 @@ static void play_character(MorseApp* app, char ch) {
     furi_message_queue_put(app->sound_queue, &cmd, 0);
 }
 
+// Function to try to decode current morse code if there's been a pause
+static void try_decode_morse(MorseApp* app) {
+    uint32_t current_time = furi_hal_rtc_get_timestamp();
+    
+    // Check if enough time has passed since last input (pause detected)
+    if(app->last_input_time > 0 && 
+       (current_time - app->last_input_time) >= (DECODE_TIMEOUT_MS / 1000) && 
+       app->current_morse_position > 0) {
+        
+        // Null terminate the current morse code
+        app->current_morse[app->current_morse_position] = '\0';
+        
+        // Decode the morse code to a character
+        char decoded = get_char_for_morse(app->current_morse);
+        
+        // Store the last decoded character (regardless of validity)
+        app->last_decoded_char = decoded;
+        
+        // If we got a valid character, add it to the decoded text
+        if(decoded != '?') {
+            size_t len = strlen(app->decoded_text);
+            if(len < MAX_MORSE_LENGTH - 1) {
+                app->decoded_text[len] = decoded;
+                app->decoded_text[len + 1] = '\0';
+                
+                // Set flag to add space automatically on next input
+                app->auto_add_space = true;
+            }
+            
+            // Copy the decoded character to user_input display
+            if (app->input_position < MAX_MORSE_LENGTH - 1) {
+                app->user_input[app->input_position++] = decoded;
+                app->user_input[app->input_position] = '\0';
+            }
+        }
+        
+        // Reset the current morse code for next letter
+        app->current_morse_position = 0;
+        app->current_morse[0] = '\0';
+    }
+}
+
 // Draw application UI based on current state
 static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
     MorseApp* app = ctx;
@@ -267,13 +335,33 @@ static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
             canvas_draw_str(canvas, 2, 10, "PRACTICE");
             canvas_draw_line(canvas, 0, 12, 128, 12);
             
-            // Display morse code
-            canvas_draw_str(canvas, 5, 25, "Morse Code:");
-            canvas_draw_str(canvas, 5, 37, app->user_input);
+            // Try to decode if there's a pause
+            try_decode_morse(app);
+            
+            // Display input (only showing decoded characters and spaces, not dots/dashes)
+            canvas_draw_str(canvas, 5, 25, "Input:");
+            canvas_draw_str(canvas, 5, 37, app->decoded_text);
+            
+            // Display current morse being decoded
+            char current_status[64];
+            snprintf(current_status, sizeof(current_status), "Current: %s", app->current_morse);
+            canvas_draw_str(canvas, 5, 49, current_status);
+            
+            // Display decoded text with last decoded character
+            char decoded_line[MAX_MORSE_LENGTH + 20];
+            if (app->last_decoded_char == '?') {
+                snprintf(decoded_line, sizeof(decoded_line), "Decoded: [unknown code]");
+            } else if (app->last_decoded_char == 0) {
+                snprintf(decoded_line, sizeof(decoded_line), "Decoded:");
+            } else {
+                snprintf(decoded_line, sizeof(decoded_line), "Decoded: %c", app->last_decoded_char);
+            }
+            canvas_draw_str(canvas, 5, 61, decoded_line);
             
             // Display instructions
-            canvas_draw_str(canvas, 5, 55, "OK: Dot   DOWN: Dash");
-            canvas_draw_str(canvas, 5, 64, "LEFT: Space  RIGHT: Clear");
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 5, 94, "OK: Short=Dot Long=Dash");
+            canvas_draw_str(canvas, 5, 104, "LEFT: Space  RIGHT: Clear");
             break;
         }
         
@@ -299,9 +387,10 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
     MorseApp* app = ctx;
     if(!app || !input_event) return;
     
-    // Only handle press/hold events
-    if(input_event->type != InputTypeShort && input_event->type != InputTypeLong) {
-        return;
+    // Update last input time for practice mode
+    if(app->app_state == MorseStatePractice && 
+       (input_event->key == InputKeyOk || input_event->key == InputKeyRight)) {
+        app->last_input_time = furi_hal_rtc_get_timestamp();
     }
     
     switch(app->app_state) {
@@ -372,40 +461,91 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
             break;
             
         case MorseStatePractice:
-            if(input_event->key == InputKeyOk && input_event->type == InputTypeShort) {
-                // Add dot to input if there's room
-                if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
-                    app->user_input[app->input_position++] = '.';
-                    app->user_input[app->input_position] = '\0';
-                    play_dot(app);
+            if(input_event->key == InputKeyOk) {
+                // Check if we need to add auto space from previous decode
+                if(app->auto_add_space) {
+                    size_t len = strlen(app->decoded_text);
+                    if(len < MAX_MORSE_LENGTH - 1) {
+                        app->decoded_text[len] = ' ';
+                        app->decoded_text[len + 1] = '\0';
+                    }
+                    app->auto_add_space = false;
                 }
-            }
-            else if(input_event->key == InputKeyDown && 
-                   (input_event->type == InputTypeShort || input_event->type == InputTypeLong)) {
-                // Add dash to input if there's room
-                if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
-                    app->user_input[app->input_position++] = '-';
-                    app->user_input[app->input_position] = '\0';
-                    play_dash(app);
+                
+                // Update last input time
+                app->last_input_time = furi_hal_rtc_get_timestamp();
+                
+                if(input_event->type == InputTypeShort) {
+                    // Short press OK - Add dot to input if there's room
+                    if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
+                        app->user_input[app->input_position++] = '.';
+                        app->user_input[app->input_position] = '\0';
+                        
+                        // Also add to current morse code being decoded
+                        if(app->current_morse_position < MAX_MORSE_LENGTH - 1) {
+                            app->current_morse[app->current_morse_position++] = '.';
+                            app->current_morse[app->current_morse_position] = '\0';
+                        }
+                        
+                        play_dot(app);
+                    }
+                } 
+                else if(input_event->type == InputTypeLong) {
+                    // Long press OK - Add dash to input if there's room
+                    if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
+                        app->user_input[app->input_position++] = '-';
+                        app->user_input[app->input_position] = '\0';
+                        
+                        // Also add to current morse code being decoded
+                        if(app->current_morse_position < MAX_MORSE_LENGTH - 1) {
+                            app->current_morse[app->current_morse_position++] = '-';
+                            app->current_morse[app->current_morse_position] = '\0';
+                        }
+                        
+                        play_dash(app);
+                    }
                 }
             }
             else if(input_event->key == InputKeyLeft && input_event->type == InputTypeShort) {
+                // Manual space - also resets auto space flag
+                app->auto_add_space = false;
+                
                 // Add space if there's room
                 if(strlen(app->user_input) < MAX_MORSE_LENGTH - 1) {
                     app->user_input[app->input_position++] = ' ';
                     app->user_input[app->input_position] = '\0';
+                    
+                    // Add space to decoded text
+                    size_t len = strlen(app->decoded_text);
+                    if(len < MAX_MORSE_LENGTH - 1) {
+                        app->decoded_text[len] = ' ';
+                        app->decoded_text[len + 1] = '\0';
+                    }
+                    
+                    // Reset current morse being decoded
+                    app->current_morse_position = 0;
+                    app->current_morse[0] = '\0';
                 }
+                
+                // Reset last input time to avoid auto-decode right after manual space
+                app->last_input_time = furi_hal_rtc_get_timestamp();
             }
             else if(input_event->key == InputKeyRight && input_event->type == InputTypeShort) {
-                // Clear input
+                // Clear all input
                 memset(app->user_input, 0, sizeof(app->user_input));
                 app->input_position = 0;
+                
+                memset(app->decoded_text, 0, sizeof(app->decoded_text));
+                memset(app->current_morse, 0, sizeof(app->current_morse));
+                app->current_morse_position = 0;
+                app->auto_add_space = false;
+                app->last_input_time = 0;
             }
             else if(input_event->key == InputKeyBack && input_event->type == InputTypeShort) {
                 app->app_state = MorseStateMenu;
             }
             break;
-            
+        
         case MorseStateHelp:
             if(input_event->key == InputKeyBack && input_event->type == InputTypeShort) {
                 app->app_state = MorseStateMenu;
@@ -459,7 +599,12 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     app->sound_running = true;
     app->current_char = 'E'; // Start with simplest character
     app->input_position = 0;
+    app->last_input_time = 0;
+    app->current_morse_position = 0;
+    app->auto_add_space = false;
     memset(app->user_input, 0, sizeof(app->user_input));
+    memset(app->decoded_text, 0, sizeof(app->decoded_text));
+    memset(app->current_morse, 0, sizeof(app->current_morse));
     
     // Configure viewport
     view_port_draw_callback_set(app->view_port, morse_app_draw_callback, app);
@@ -479,8 +624,12 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
         // Wait for input with a timeout
         if(furi_message_queue_get(app->event_queue, &event, 100) == FuriStatusOk) {
             morse_app_input_callback(&event, app);
+        } else {
+            // No input - check if we need to decode morse after a pause
+            if(app->app_state == MorseStatePractice) {
+                view_port_update(app->view_port);  // Update to check for decoding
+            }
         }
-        view_port_update(app->view_port);
         furi_delay_ms(5); // Small delay to prevent CPU hogging
     }
     
