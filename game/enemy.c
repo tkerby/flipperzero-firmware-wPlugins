@@ -153,7 +153,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     }
 }
 
-static void atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
+static void enemy_atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
 {
     if (!game_context || !enemy_context)
     {
@@ -275,7 +275,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
             if (player_context->elapsed_attack_timer >= player_context->attack_timer)
             {
-                atk_notify(game_context, enemy_context, true);
+                enemy_atk_notify(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
                 player_context->elapsed_attack_timer = 0.0f;
@@ -342,7 +342,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                atk_notify(game_context, enemy_context, false);
+                enemy_atk_notify(game_context, enemy_context, false);
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;
@@ -433,7 +433,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
-static void pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
+static void enemy_pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
 {
     if (!game_context || !enemy || !self)
     {
@@ -564,7 +564,7 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     if (game_context->game_mode == GAME_MODE_PVP)
     {
         // update enemy position
-        pvp_position(game_context, enemy_context, self);
+        enemy_pvp_position(game_context, enemy_context, self);
     }
     else
     {
@@ -708,7 +708,7 @@ static const EntityDescription _generic_enemy = {
 };
 
 // Enemy function to return the entity description
-const EntityDescription *enemy(
+static const EntityDescription *enemy(
     GameManager *manager,
     const char *id,
     int index,
@@ -723,7 +723,7 @@ const EntityDescription *enemy(
     FuriString *username)
 
 {
-    SpriteContext *sprite_context = get_sprite_context(id);
+    SpriteContext *sprite_context = sprite_context_get(id);
     if (!sprite_context)
     {
         FURI_LOG_E("Game", "Failed to get SpriteContext");
@@ -776,7 +776,7 @@ const EntityDescription *enemy(
     return &_generic_enemy;
 }
 
-void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
+void enemy_spawn(Level *level, GameManager *manager, FuriString *json)
 {
     if (!level || !manager || !json)
     {
