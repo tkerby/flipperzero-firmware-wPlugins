@@ -37,38 +37,48 @@ void draw_help_screen(Canvas* canvas, int page) {
     canvas_set_font(canvas, FontSecondary);
 
     if(page == 0) {
-        // Page 1: Icons explanation - more compact layout
-        canvas_draw_str(canvas, 5, 10, "ICONS:");
-
-        // Packet icon
-        canvas_draw_icon(canvas, 10, 14, &I_packet);
-        canvas_draw_str(canvas, 20, 21, "- Data packet");
+        // Page 1: Computers and packets
+        canvas_draw_str(canvas, 5, 10, "COMPUTERS & PACKETS:");
 
         // Computer icon
-        canvas_draw_icon(canvas, 6, 22, &I_pc_monitor);
-        canvas_draw_str(canvas, 20, 32, "- Computer system");
+        canvas_draw_icon(canvas, 6, 18, &I_pc_monitor);
+        canvas_draw_str(canvas, 20, 24, "- Computer system");
 
-        // Warning icons - show both PC and PC_using icons instead of "!"
-        canvas_draw_icon(canvas, 6, 40, &I_pc);
-        canvas_draw_str(canvas, 20, 43, "- PC flashes when");
-        canvas_draw_icon(canvas, 6, 50, &I_pc_using);
-        canvas_draw_str(canvas, 20, 54, "  hack warning!");
+        // Packet icon
+        canvas_draw_icon(canvas, 10, 32, &I_packet);
+        canvas_draw_str(canvas, 20, 38, "- Data packet");
+        canvas_draw_str(canvas, 20, 46, "- Accept new packets");
+        canvas_draw_str(canvas, 20, 54, "- Max 4 per computer");
+
+    } else if(page == 1) {
+        // Page 2: Hacking attempts
+        canvas_draw_str(canvas, 5, 10, "HACKING ATTEMPTS:");
+
+        // Normal PC
+        canvas_draw_icon(canvas, 6, 18, &I_pc);
+        canvas_draw_str(canvas, 20, 24, "- Safe computer");
+
+        // Warning PC and PC Using
+        canvas_draw_str(canvas, 20, 34, "  Flashing = hack warning!");
 
         // Bug icon for active hack
-        canvas_draw_icon(canvas, 6, 60, &I_bug);
-        canvas_draw_str(canvas, 20, 64, "- Active hack");
+        canvas_draw_icon(canvas, 6, 48, &I_bug);
+        canvas_draw_str(canvas, 20, 54, "- Active hack");
+
     } else {
-        // Page 2: Gameplay instructions - more compact layout
+        // Page 3: Gameplay instructions
         canvas_draw_str(canvas, 5, 10, "HOW TO PLAY:");
         canvas_draw_str(canvas, 5, 20, "- Move with D-pad");
         canvas_draw_str(canvas, 5, 30, "- Press OK to accept packet");
         canvas_draw_str(canvas, 5, 40, "- Hold OK for 3s to patch");
         canvas_draw_str(canvas, 5, 50, "- Keep packets below limit");
-        canvas_draw_str(canvas, 5, 60, "- Max 10 total packets");
+        canvas_draw_str(canvas, 5, 60, "- Max 16 total packets");
     }
 
     // Small page indicator at bottom right
-    canvas_draw_str(canvas, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 2, page == 0 ? "1/2" : "2/2");
+    char page_indicator[16]; // Increased buffer size from 8 to 16
+    snprintf(page_indicator, sizeof(page_indicator), "%d/3", page + 1);
+    canvas_draw_str(canvas, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 2, page_indicator);
 }
 
 // Hide packet indicators for hacked computers by only drawing them for active computers

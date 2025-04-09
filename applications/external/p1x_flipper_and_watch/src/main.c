@@ -56,12 +56,13 @@ int32_t system_defender_app(void* p) {
                         game_state->current_state = GAME_STATE_TITLE;
                     }
                 } else if(game_state->current_state == GAME_STATE_HELP) {
-                    // Help screen inputs
+                    // Help screen inputs - updated for 3 pages
                     if(event.key == InputKeyOk) {
-                        if(game_state->help_page == 0) {
-                            game_state->help_page = 1; // Go to next page
+                        if(game_state->help_page < 2) {
+                            game_state->help_page++; // Go to next page
                         } else {
-                            game_state->current_state = GAME_STATE_MENU; // Return to menu
+                            game_state->current_state =
+                                GAME_STATE_MENU; // Return to menu after last page
                         }
                     } else if(event.key == InputKeyBack) {
                         game_state->current_state = GAME_STATE_MENU;

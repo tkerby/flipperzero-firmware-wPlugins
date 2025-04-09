@@ -1,21 +1,58 @@
 # Network Defender
 
-A Game & Watch style network security game for the Flipper Zero.
+A cybersecurity-themed game for the Flipper Zero where you defend computer networks from attacks.
 
 ![Network Defender](media/screenshot5.png)
 
-## Description
+## Game Overview
 
-Network Defender is a retro-style game inspired by the classic Nintendo Game & Watch handhelds. You play as a system administrator defending your network from incoming data packets and hacking attempts.
+You play as a network administrator protecting four computer systems from cyber attacks. Your goal is to prevent systems from being hacked and keep packet levels below the critical threshold.
 
-The game features:
-- Game & Watch inspired visuals
-- Strategic gameplay
-- Network traffic management
-- Real-time hacking defense
-- Score tracking
-- Multiple difficulty aspects
+## Gameplay Mechanics
 
+- **Movement**: Use the D-pad to move between the four computer systems
+- **Accept Packets**: Press OK button to accept packets at your current position
+- **Patching**: Hold OK for 3 seconds to patch a system with a warning or active hack
+- **DDOS Protection**: Each computer can handle at most 4 packets before being overloaded
+- **Global Packet Limit**: The total network can only handle 10 packets across all systems
+
+## Game Elements
+
+### Icons and Visual Indicators
+
+- ![Packet](images/packet.png) - Data packet that needs to be processed
+- ![Computer](images/pc.png) - Healthy computer system
+- ![Warning](images/pc_using.png) - Computer flashing between normal and active states indicates a hack warning
+- ![Hacked](images/pc_using.png)![Bug](images/bug.png) - Computer with active hack in progress
+- ![Dead](images/pc_hacked.png) - Fully compromised (dead) computer 
+- ![Bug](images/bug.png) - Indicates an active hack in progress
+- ![Server](images/server.png) - Central server that processes accepted packets
+- ![Player](images/player_left.png) - Your character (network admin) that moves between systems
+
+### Game States
+
+1. **Normal Operation**: Systems accept packets which you must regularly clear
+2. **Warning State**: A system starts flashing, indicating an imminent hack attempt
+3. **Hacking**: A system displays a bug icon, indicating an active hack in progress
+4. **Dead System**: A compromised system that can no longer be used
+
+## Game Over Conditions
+
+- **System Hack**: A system hack wasn't patched in time
+- **DDOS Attack**: Too many packets accumulated (more than 4 on one system or 10 total)
+
+## Tips
+
+- Stay vigilant for flashing computers - they indicate imminent attacks
+- Prioritize patching systems under active hacks
+- Keep packet count low on all systems
+- Balance your time between packet processing and security patching
+
+## Controls
+
+- **D-Pad**: Move between systems
+- **OK Button**: Accept packets (press) or patch systems (hold)
+- **Back Button**: Exit game or restart after game over
 
 ## Screenshots
 
@@ -23,35 +60,6 @@ The game features:
 ![Screenshot 3](media/screenshot3.png)
 ![Screenshot 4](media/screenshot2.png)
 ![Screenshot 5](media/screenshot1.png)
-
-
-## How to Play
-
-Navigate through four computer systems to manage network traffic and prevent hacking:
-
-- **Move** between computers using the D-pad
-- **Press OK** to accept incoming data packets
-- **Hold OK** for 3 seconds to patch a computer under attack
-- **Prevent DDOS** by keeping total packets below the limit (10)
-
-## Game Elements
-
-- **Computers**: Four systems you need to protect
-- **Server**: Central hub that processes accepted packets 
-- **Packets**: Data that arrives through network channels
-- **Warning "!"**: Indicates an imminent hacking attempt
-- **Warning "!!!"**: System is actively being hacked
-
-## Scoring
-
-- +10 points for each accepted packet
-- +30 points for successfully patching a hacked system
-
-## Game Over Conditions
-
-The game ends when:
-- A system gets fully hacked
-- The network suffers a DDOS attack (too many packets)
 
 ## Installation
 
