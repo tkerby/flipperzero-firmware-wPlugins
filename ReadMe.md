@@ -31,6 +31,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-09 13:32 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-09 13:32 EST`
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
+- Added: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 
 <a name="release">
 
@@ -305,6 +306,7 @@ $ ./fbt dolphin_ext
 - [Minesweeper v1.2 (By panki27)](https://github.com/panki27/minesweeper)
 - [Minesweeper Redux v1.5 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
 - [Monty Hall v1.2 (By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/203)
+- [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 - [Multi Counter v1.1 (By JadePossible)](https://github.com/JadePossible/Flipper-Multi-Counter)
 - [Network Defender v1.1 (By w84death)](https://github.com/w84death/flipper-zero-apps)

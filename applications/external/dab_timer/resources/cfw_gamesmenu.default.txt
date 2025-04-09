@@ -56,6 +56,7 @@ GamesMenuList Version 0
 /ext/apps/Games/minesweeper_redux.fap
 /ext/apps/Games/mode7_demo.fap
 /ext/apps/Games/montyhall.fap
+/ext/apps/Games/morse_master.fap
 /ext/apps/Games/multi_counter.fap
 /ext/apps/Games/nu_pogodi.fap
 /ext/apps/Games/p1x_adventure.fap
