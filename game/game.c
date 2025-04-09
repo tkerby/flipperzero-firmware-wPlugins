@@ -53,7 +53,7 @@ static void game_start(GameManager *game_manager, void *ctx)
             {
                 if (i == 0)
                 {
-                    game_context->levels[0] = game_manager_add_level(game_manager, training_world());
+                    game_context->levels[0] = game_manager_add_level(game_manager, world_training());
                     game_context->level_count = 1;
                 }
                 break;
@@ -65,13 +65,13 @@ static void game_start(GameManager *game_manager, void *ctx)
     else if (game_context->game_mode == GAME_MODE_STORY)
     {
         // show tutorial only for now
-        game_context->levels[0] = game_manager_add_level(game_manager, training_world());
+        game_context->levels[0] = game_manager_add_level(game_manager, world_training());
         game_context->level_count = 1;
     }
     else if (game_context->game_mode == GAME_MODE_PVP)
     {
         // show pvp
-        game_context->levels[0] = game_manager_add_level(game_manager, pvp_world());
+        game_context->levels[0] = game_manager_add_level(game_manager, world_pvp());
         game_context->level_count = 1;
     }
 

@@ -12,7 +12,7 @@ bool allocate_level(GameManager *manager, int index)
     if (!world_list)
     {
         FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] = game_manager_add_level(manager, training_world());
+        game_context->levels[0] = game_manager_add_level(manager, world_training());
         game_context->level_count = 1;
         return false;
     }
@@ -29,7 +29,7 @@ bool allocate_level(GameManager *manager, int index)
     furi_string_free(world_list);
     return true;
 }
-void set_world(Level *level, GameManager *manager, char *id)
+void level_set_world(Level *level, GameManager *manager, char *id)
 {
     char file_path[256];
     snprintf(file_path, sizeof(file_path),
@@ -56,7 +56,7 @@ void set_world(Level *level, GameManager *manager, char *id)
     }
 
     FURI_LOG_I("Game", "Drawing world");
-    if (!draw_json_world_furi(manager, level, json_data_str))
+    if (!world_json_draw(manager, level, json_data_str))
     {
         FURI_LOG_E("Game", "Failed to draw world");
         furi_string_free(json_data_str);
@@ -90,7 +90,7 @@ void set_world(Level *level, GameManager *manager, char *id)
                 break;
             }
 
-            spawn_enemy(level, manager, single_enemy_data);
+            enemy_spawn(level, manager, single_enemy_data);
             furi_string_free(single_enemy_data);
         }
         furi_string_free(enemy_data_str);
@@ -122,7 +122,7 @@ void set_world(Level *level, GameManager *manager, char *id)
                 break;
             }
 
-            spawn_npc(level, manager, single_npc_data);
+            npc_spawn(level, manager, single_npc_data);
             furi_string_free(single_npc_data);
         }
         furi_string_free(npc_data_str);
@@ -159,7 +159,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     if (!world_exists(level_context->id))
     {
         FURI_LOG_E("Game", "World does not exist.. downloading now");
-        FuriString *world_data = fetch_world(level_context->id);
+        FuriString *world_data = world_fetch(level_context->id);
         if (!world_data)
         {
             FURI_LOG_E("Game", "Failed to fetch world data");
@@ -171,7 +171,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
         }
         furi_string_free(world_data);
 
-        set_world(level, manager, level_context->id);
+        level_set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
         // furi_delay_ms(1000);
         game_context->is_switching_level = false;
@@ -179,7 +179,7 @@ static void level_start(Level *level, GameManager *manager, void *context)
     else
     {
         FURI_LOG_I("Game", "World exists.. loading now");
-        set_world(level, manager, level_context->id);
+        level_set_world(level, manager, level_context->id);
         FURI_LOG_I("Game", "World set.");
         // furi_delay_ms(1000);
         game_context->is_switching_level = false;

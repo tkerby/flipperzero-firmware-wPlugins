@@ -3,7 +3,7 @@
 #include <flip_storage/storage.h>
 #include "game/icon.h"
 
-bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *json_data)
+bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_data)
 {
     if (!json_data)
     {
@@ -259,9 +259,7 @@ bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *
     return true;
 }
 
-// The remainder of the file (draw_town_world, draw_pvp_world, etc.) remains unchanged.
-
-static void draw_town_world(Level *level, GameManager *manager, void *context)
+static void world_draw_town(Level *level, GameManager *manager, void *context)
 {
     UNUSED(context);
     if (!manager || !level)
@@ -278,7 +276,7 @@ static void draw_town_world(Level *level, GameManager *manager, void *context)
         FURI_LOG_E("Game", "Failed to separate world data");
     }
     furi_string_free(json_data_str);
-    set_world(level, manager, "shadow_woods_v5");
+    level_set_world(level, manager, "shadow_woods_v5");
     game_context->icon_offset = 0;
     if (!game_context->imu_present)
     {
@@ -287,20 +285,20 @@ static void draw_town_world(Level *level, GameManager *manager, void *context)
     player_spawn(level, manager);
 }
 
-static const LevelBehaviour _training_world = {
+static const LevelBehaviour _world_training = {
     .alloc = NULL,
     .free = NULL,
-    .start = draw_town_world,
+    .start = world_draw_town,
     .stop = NULL,
     .context_size = 0,
 };
 
-const LevelBehaviour *training_world()
+const LevelBehaviour *world_training()
 {
-    return &_training_world;
+    return &_world_training;
 }
 
-static void draw_pvp_world(Level *level, GameManager *manager, void *context)
+static void world_draw_pvp(Level *level, GameManager *manager, void *context)
 {
     UNUSED(context);
     if (!manager || !level)
@@ -317,7 +315,7 @@ static void draw_pvp_world(Level *level, GameManager *manager, void *context)
         FURI_LOG_E("Game", "Failed to separate world data");
     }
     furi_string_free(json_data_str);
-    set_world(level, manager, "pvp_world");
+    level_set_world(level, manager, "pvp_world");
     game_context->is_switching_level = false;
     game_context->icon_offset = 0;
     if (!game_context->imu_present)
@@ -327,20 +325,20 @@ static void draw_pvp_world(Level *level, GameManager *manager, void *context)
     player_spawn(level, manager);
 }
 
-static const LevelBehaviour _pvp_world = {
+static const LevelBehaviour _world_pvp = {
     .alloc = NULL,
     .free = NULL,
-    .start = draw_pvp_world,
+    .start = world_draw_pvp,
     .stop = NULL,
     .context_size = 0,
 };
 
-const LevelBehaviour *pvp_world()
+const LevelBehaviour *world_pvp()
 {
-    return &_pvp_world;
+    return &_world_pvp;
 }
 
-FuriString *fetch_world(const char *name)
+FuriString *world_fetch(const char *name)
 {
     if (!name)
     {
