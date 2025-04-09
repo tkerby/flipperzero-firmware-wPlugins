@@ -62,20 +62,14 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         if(input.held & GameKeyRight) pos.x += 1;        
     }
 
-    if(input.pressed & GameKeyOk && !is_facing_right){
+    if(input.pressed & GameKeyOk){
         playerContext->is_swinging_sword = true;
-        Swinging_sword_animation_play(manager, context);
-    }
-
-    if(input.pressed & GameKeyOk && is_facing_right){
-        playerContext->is_swinging_sword = true;
-        Swinging_sword_animation_right_play(manager, context);
     }
 
     if(playerContext->is_swinging_sword) can_move = false;
     else can_move = true;
 
-    if(input.held & GameKeyLeft || (input.held & GameKeyRight && can_move))
+    if((input.held & GameKeyLeft || input.held & GameKeyRight) && can_move)
         is_moving = true;
     else
         is_moving = false;
@@ -105,9 +99,7 @@ void player_update(Entity* self, GameManager* manager, void* context) {
         game_manager_game_stop(manager);
     }
 
-    if(!playerContext->is_swinging_sword){
-        Animations(manager, context);
-    }
+    Animations(manager, context);
 }
 
 void player_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
@@ -141,41 +133,52 @@ void player_render(Entity* self, GameManager* manager, Canvas* canvas, void* con
 
 void Animations(GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
-    if(!playerContext->is_swinging_sword){
-        if(!is_moving && isGrounded && !is_facing_right) {
-            Idle_animation_play(manager, context);
-        }
-        
-        if(!is_moving && isGrounded && is_facing_right) {
-            Idle_animation_right_play(manager, context);
-        }
 
-        if(is_moving && isGrounded && !is_facing_right) {
-            Walking_animation_play(manager, context);
-        }
-        
-        if(is_moving && isGrounded && is_facing_right) {
-            Walking_right_animation_play(manager, context);
-        }
-        
-        if(playerContext->Yvelocity > 0 && !isGrounded){
-            if(!is_facing_right){
-                playerContext->sprite = jumping[3];
-            }
-            else{
-                playerContext->sprite = jumping[1];
-            }
-        }
+    // swinging sword animation logic
+    if(playerContext->is_swinging_sword) {
+        if(is_facing_right)
+            Swinging_sword_animation_right_play(manager, context);
+        else
+            Swinging_sword_animation_play(manager, context);
 
-        if(playerContext->Yvelocity < 0 && !isGrounded){
-            if(!is_facing_right){
-                playerContext->sprite = jumping[0];
-            }
-            else{
-                playerContext->sprite = jumping[4];
-            }
+        return; // stop here so it doesn't play other animations during swing
+    }
+
+    // idle / walk / jump animations
+    if(!is_moving && isGrounded && !is_facing_right) {
+        Idle_animation_play(manager, context);
+    }
+    
+    if(!is_moving && isGrounded && is_facing_right) {
+        Idle_animation_right_play(manager, context);
+    }
+
+    if(is_moving && isGrounded && !is_facing_right) {
+        Walking_animation_play(manager, context);
+    }
+    
+    if(is_moving && isGrounded && is_facing_right) {
+        Walking_right_animation_play(manager, context);
+    }
+    
+    if(playerContext->Yvelocity > 0 && !isGrounded){
+        if(!is_facing_right){
+            playerContext->sprite = jumping[3];
+        }
+        else{
+            playerContext->sprite = jumping[1];
         }
     }
+
+    if(playerContext->Yvelocity < 0 && !isGrounded){
+        if(!is_facing_right){
+            playerContext->sprite = jumping[0];
+        }
+        else{
+            playerContext->sprite = jumping[4];
+        }
+    }
+
     UNUSED(manager);
 }
 

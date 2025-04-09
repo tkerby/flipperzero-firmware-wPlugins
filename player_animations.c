@@ -75,12 +75,13 @@ void Idle_animation_right_load(GameManager* manager) {
 }
 
 void Swinging_sword_right_animation_load(GameManager *manager){
-    sword_swing_right[0] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
+    sword_swing_right[0] = game_manager_sprite_load(manager, "other/player.fxbm");
+    sword_swing_right[1] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
     sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.fxbm");
-    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
-    sword_swing_right[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
-    sword_swing_right[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
-    sword_swing_right[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
+    sword_swing_right[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
+    sword_swing_right[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
+    sword_swing_right[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
+    sword_swing_right[6] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
 }
 
 void Walking_right_animation_load(GameManager* manager) {
