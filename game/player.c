@@ -103,7 +103,7 @@ void player_spawn(Level *level, GameManager *manager)
         return;
     }
 
-    SpriteContext *sprite_context = get_sprite_context(player_sprite_choices[player_sprite_index]);
+    SpriteContext *sprite_context = sprite_context_get(player_sprite_choices[player_sprite_index]);
     if (!sprite_context)
     {
         FURI_LOG_E(TAG, "Failed to get sprite context");
@@ -665,7 +665,7 @@ static SpriteContext *sprite_generic_alloc(SpriteID id, const char *char_id, con
     return ctx;
 }
 
-SpriteContext *get_sprite_context(const char *name)
+SpriteContext *sprite_context_get(const char *name)
 {
     if (is_str(name, "axe"))
         return sprite_generic_alloc(SPRITE_ID_AXE, "axe", "player", 15, 11);

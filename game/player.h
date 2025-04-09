@@ -132,4 +132,4 @@ typedef struct
 
 extern const EntityDescription player_desc;
 void player_spawn(Level *level, GameManager *manager);
-SpriteContext *get_sprite_context(const char *name);
+SpriteContext *sprite_context_get(const char *name);
