@@ -117,8 +117,8 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     Vector pos = entity_pos_get(self);
 
     // Get the camera position
-    int x_pos = pos.x - camera_x - enemy_context->size.x / 2;
-    int y_pos = pos.y - camera_y - enemy_context->size.y / 2;
+    int x_pos = pos.x - draw_camera_x - enemy_context->size.x / 2;
+    int y_pos = pos.y - draw_camera_y - enemy_context->size.y / 2;
 
     // check if position is within the screen
     if (x_pos + enemy_context->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + enemy_context->size.y < 0 || y_pos > SCREEN_HEIGHT)
@@ -143,8 +143,8 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         canvas_draw_sprite(
             canvas,
             current_sprite,
-            pos.x - camera_x - (enemy_context->size.x / 2),
-            pos.y - camera_y - (enemy_context->size.y / 2));
+            pos.x - draw_camera_x - (enemy_context->size.x / 2),
+            pos.y - draw_camera_y - (enemy_context->size.y / 2));
 
         // draw health of enemy
         char health_str[32];

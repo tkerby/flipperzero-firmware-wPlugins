@@ -91,8 +91,8 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
     // Get the position of the NPC
     Vector pos = entity_pos_get(self);
 
-    int x_pos = pos.x - camera_x - npc_context->size.x / 2;
-    int y_pos = pos.y - camera_y - npc_context->size.y / 2;
+    int x_pos = pos.x - draw_camera_x - npc_context->size.x / 2;
+    int y_pos = pos.y - draw_camera_y - npc_context->size.y / 2;
 
     // check if position is within the screen
     if (x_pos + npc_context->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + npc_context->size.y < 0 || y_pos > SCREEN_HEIGHT)
@@ -115,8 +115,8 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
         canvas_draw_sprite(
             canvas,
             current_sprite,
-            pos.x - camera_x - (npc_context->size.x / 2),
-            pos.y - camera_y - (npc_context->size.y / 2));
+            pos.x - draw_camera_x - (npc_context->size.x / 2),
+            pos.y - draw_camera_y - (npc_context->size.y / 2));
     }
 }
 

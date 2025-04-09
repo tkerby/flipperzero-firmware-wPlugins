@@ -23,8 +23,8 @@ static void icon_group_render(Entity *self, GameManager *manager, Canvas *canvas
     for (int i = 0; i < igctx->count; i++)
     {
         IconSpec *spec = &igctx->icons[i];
-        int x_pos = spec->pos.x - camera_x - (spec->size.x / 2);
-        int y_pos = spec->pos.y - camera_y - (spec->size.y / 2);
+        int x_pos = spec->pos.x - draw_camera_x - (spec->size.x / 2);
+        int y_pos = spec->pos.y - draw_camera_y - (spec->size.y / 2);
         if (x_pos + spec->size.x < 0 || x_pos > SCREEN_WIDTH ||
             y_pos + spec->size.y < 0 || y_pos > SCREEN_HEIGHT)
         {

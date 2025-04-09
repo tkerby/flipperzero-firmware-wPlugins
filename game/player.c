@@ -6,7 +6,7 @@
 #include <math.h>
 #include <engine/entity_i.h>
 /****** Entities: Player ******/
-static Level *next_level(GameManager *manager)
+static Level *player_next_level(GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     if (!game_context)
@@ -56,7 +56,7 @@ static Level *next_level(GameManager *manager)
 }
 
 // Update player stats based on XP using iterative method
-static int get_player_level_iterative(uint32_t xp)
+static int player_level_iterative_get(uint32_t xp)
 {
     int level = 1;
     uint32_t xp_required = 100; // Base XP for level 2
@@ -160,7 +160,7 @@ void player_spawn(Level *level, GameManager *manager)
     pctx->start_position = entity_pos_get(game_context->player);
 
     // Determine the player's level based on XP
-    pctx->level = get_player_level_iterative(pctx->xp);
+    pctx->level = player_level_iterative_get(pctx->xp);
 
     // Update strength and max health based on the new level
     pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
@@ -172,13 +172,13 @@ void player_spawn(Level *level, GameManager *manager)
     free(sprite_context);
 }
 
-static int vgm_increase(float value, float increase)
+static int player_vgm_increase(float value, float increase)
 {
     const int val = abs((int)(round(value + increase) / 2));
     return val < 1 ? 1 : val;
 }
 
-static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
+static void player_vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 {
     const float pitch = -imu_pitch_get(imu);
     const float roll = -imu_roll_get(imu);
@@ -186,25 +186,25 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
     const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
     if (pitch > min_x)
     {
-        pos->x += vgm_increase(pitch, min_x);
+        pos->x += player_vgm_increase(pitch, min_x);
         player->dx = 1;
         player->direction = ENTITY_RIGHT;
     }
     else if (pitch < -min_x)
     {
-        pos->x += -vgm_increase(pitch, min_x);
+        pos->x += -player_vgm_increase(pitch, min_x);
         player->dx = -1;
         player->direction = ENTITY_LEFT;
     }
     if (roll > min_y)
     {
-        pos->y += vgm_increase(roll, min_y);
+        pos->y += player_vgm_increase(roll, min_y);
         player->dy = 1;
         player->direction = ENTITY_DOWN;
     }
     else if (roll < -min_y)
     {
-        pos->y += -vgm_increase(roll, min_y);
+        pos->y += -player_vgm_increase(roll, min_y);
         player->dy = -1;
         player->direction = ENTITY_UP;
     }
@@ -212,7 +212,7 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 
 // This static function handles collisions with icons.
 // It receives the player entity pointer, the player's current position, and a pointer to PlayerContext.
-static void handle_collision(Entity *playerEntity, Vector playerPos, PlayerContext *player)
+static void player_handle_collision(Entity *playerEntity, Vector playerPos, PlayerContext *player)
 {
     // If there is no active icon group, do nothing.
     if (!g_current_icon_group)
@@ -285,7 +285,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     player->old_position = pos;
 
     // Determine the player's level based on XP
-    player->level = get_player_level_iterative(player->xp);
+    player->level = player_level_iterative_get(player->xp);
     player->strength = 10 + (player->level * 1);           // 1 strength per level
     player->max_health = 100 + ((player->level - 1) * 10); // 10 health per level
 
@@ -300,7 +300,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     if (game_context->imu_present)
     {
         // update position using the IMU
-        vgm_direction(game_context->imu, player, &pos);
+        player_vgm_direction(game_context->imu, player, &pos);
     }
 
     // Apply health regeneration
@@ -421,7 +421,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             game_context->is_switching_level = true;
             save_player_context(player);
             furi_delay_ms(100);
-            game_manager_next_level_set(manager, next_level(manager));
+            game_manager_next_level_set(manager, player_next_level(manager));
             return;
         }
 
@@ -515,10 +515,10 @@ static void player_update(Entity *self, GameManager *manager, void *context)
         player->state = ENTITY_MOVING;
 
     // handle icon collision
-    handle_collision(self, pos, player);
+    player_handle_collision(self, pos, player);
 }
 
-static void draw_tutorial(Canvas *canvas, GameManager *manager)
+static void player_draw_tutorial(Canvas *canvas, GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     canvas_set_font(canvas, FontPrimary);
@@ -577,12 +577,12 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     Vector pos = entity_pos_get(self);
 
     // Calculate camera offset to center the player
-    camera_x = pos.x - (SCREEN_WIDTH / 2);
-    camera_y = pos.y - (SCREEN_HEIGHT / 2);
+    draw_camera_x = pos.x - (SCREEN_WIDTH / 2);
+    draw_camera_y = pos.y - (SCREEN_HEIGHT / 2);
 
     // Clamp camera position to prevent showing areas outside the world
-    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
-    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
+    draw_camera_x = CLAMP(draw_camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
+    draw_camera_y = CLAMP(draw_camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
     // if player is moving right or left, draw the corresponding sprite
     if (player->direction == ENTITY_RIGHT || player->direction == ENTITY_LEFT)
@@ -590,8 +590,8 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         canvas_draw_sprite(
             canvas,
             player->direction == ENTITY_RIGHT ? player->sprite_right : player->sprite_left,
-            pos.x - camera_x - 5, // Center the sprite horizontally
-            pos.y - camera_y - 5  // Center the sprite vertically
+            pos.x - draw_camera_x - 5, // Center the sprite horizontally
+            pos.y - draw_camera_y - 5  // Center the sprite vertically
         );
         player->left = false;
     }
@@ -601,28 +601,28 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         canvas_draw_sprite(
             canvas,
             player->left ? player->sprite_left : player->sprite_right,
-            pos.x - camera_x - 5, // Center the sprite horizontally
-            pos.y - camera_y - 5  // Center the sprite vertically
+            pos.x - draw_camera_x - 5, // Center the sprite horizontally
+            pos.y - draw_camera_y - 5  // Center the sprite vertically
         );
     }
 
     // Draw the outer bounds adjusted by camera offset
-    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
+    canvas_draw_frame(canvas, -draw_camera_x, -draw_camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
     // render tutorial
     if (game_context->game_mode == GAME_MODE_STORY)
     {
-        draw_tutorial(canvas, manager);
+        player_draw_tutorial(canvas, manager);
 
         if (game_context->is_menu_open)
         {
-            background_render(canvas, manager);
+            draw_background_render(canvas, manager);
         }
     }
     else
     {
         // render background
-        background_render(canvas, manager);
+        draw_background_render(canvas, manager);
     }
 }
 
