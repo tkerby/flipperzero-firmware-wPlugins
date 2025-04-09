@@ -46,41 +46,6 @@ void draw_username(Canvas *canvas, Vector pos, char *username)
     canvas_draw_str(canvas, pos.x - draw_camera_x - (strlen(username) * 2), pos.y - draw_camera_y - 7, username);
 }
 
-// Draw an icon at a specific position (with collision detection)
-// void draw_spawn_icon(GameManager *manager, Level *level, float x, float y)
-// {
-//     Entity *e = level_add_entity(level, &icon_desc);
-//     entity_pos_set(e, (Vector){x, y});
-//     UNUSED(manager);
-// }
-// // Draw a line of icons at a specific position (with collision detection)
-// void draw_spawn_icon_line(GameManager *manager, Level *level, float x, float y, uint8_t amount, bool horizontal, uint8_t spacing)
-// {
-//     for (int i = 0; i < amount; i++)
-//     {
-//         if (horizontal)
-//         {
-//             // check if element is outside the world
-//             if (x + (i * spacing) > WORLD_WIDTH)
-//             {
-//                 break;
-//             }
-
-//             draw_spawn_icon(manager, level, icon_id, x + (i * spacing), y);
-//         }
-//         else
-//         {
-//             // check if element is outside the world
-//             if (y + (i * spacing) > WORLD_HEIGHT)
-//             {
-//                 break;
-//             }
-
-//             draw_spawn_icon(manager, level, icon_id, x, y + (i * spacing));
-//         }
-//     }
-// }
-
 static void draw_menu(GameManager *manager, Canvas *canvas)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
