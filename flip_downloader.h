@@ -16,7 +16,7 @@
 #include <flip_downloader_icons.h>
 
 #define TAG "FlipDownloader"
-#define VERSION_TAG "FlipDownloader v1.0"
+#define VERSION_TAG TAG " v1.1"
 
 // 1 for Black Magic, 1 for FlipperHTTP, 1 for Marauder
 #define FIRMWARE_COUNT 3
