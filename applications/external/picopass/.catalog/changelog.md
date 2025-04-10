@@ -1,3 +1,6 @@
+## 1.19
+ - Capture longer SIO
+ - 'Save as Seader' for iClass SE Captured with NR-MAC
 ## 1.18
  - Added Save SR as legacy from saved menu
  - Fix write key 'retry' when presented with new card
