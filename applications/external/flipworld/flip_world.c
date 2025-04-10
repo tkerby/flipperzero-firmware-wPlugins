@@ -373,6 +373,8 @@ static bool
 
         if(fhttp->state == ISSUE) {
             FURI_LOG_E(TAG, "Failed to fetch fap file 2");
+            easy_flipper_dialog(
+                "Update Error", "Failed to download the\nupdate file.\nPlease try again.");
             return false;
         }
         return true;
