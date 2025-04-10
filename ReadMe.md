@@ -36,6 +36,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Updated: [FlipWorld v0.8.1 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 
 <a name="release">
 

