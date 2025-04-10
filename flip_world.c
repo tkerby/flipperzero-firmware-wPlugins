@@ -400,6 +400,7 @@ static bool flip_world_update_app(FlipperHTTP *fhttp, DateTime *time_current, bo
         if (fhttp->state == ISSUE)
         {
             FURI_LOG_E(TAG, "Failed to fetch fap file 2");
+            easy_flipper_dialog("Update Error", "Failed to download the\nupdate file.\nPlease try again.");
             return false;
         }
         return true;
