@@ -1,77 +1,199 @@
 #include <game/world.h>
 #include <game/storage.h>
 #include <flip_storage/storage.h>
+#include "game/icon.h"
 
-bool draw_json_world_furi(GameManager* manager, Level* level, const FuriString* json_data) {
+static IconSpec world_get_icon_spec(const char* name) {
+    if(is_str(name, "house"))
+        return (IconSpec){
+            .id = ICON_ID_HOUSE, .icon = &I_icon_house_48x32px, .size = (Vector){48, 32}};
+    else if(is_str(name, "man"))
+        return (IconSpec){.id = ICON_ID_MAN, .icon = &I_icon_man_7x16, .size = (Vector){7, 16}};
+    else if(is_str(name, "plant"))
+        return (
+            IconSpec){.id = ICON_ID_PLANT, .icon = &I_icon_plant_16x16, .size = (Vector){16, 16}};
+    else if(is_str(name, "tree"))
+        return (
+            IconSpec){.id = ICON_ID_TREE, .icon = &I_icon_tree_16x16, .size = (Vector){16, 16}};
+    else if(is_str(name, "woman"))
+        return (
+            IconSpec){.id = ICON_ID_WOMAN, .icon = &I_icon_woman_9x16, .size = (Vector){9, 16}};
+    else if(is_str(name, "fence"))
+        return (
+            IconSpec){.id = ICON_ID_FENCE, .icon = &I_icon_fence_16x8px, .size = (Vector){16, 8}};
+    else if(is_str(name, "fence_end"))
+        return (IconSpec){
+            .id = ICON_ID_FENCE_END, .icon = &I_icon_fence_end_16x8px, .size = (Vector){16, 8}};
+    else if(is_str(name, "fence_vertical_end"))
+        return (IconSpec){
+            .id = ICON_ID_FENCE_VERTICAL_END,
+            .icon = &I_icon_fence_vertical_end_6x8px,
+            .size = (Vector){6, 8}};
+    else if(is_str(name, "fence_vertical_start"))
+        return (IconSpec){
+            .id = ICON_ID_FENCE_VERTICAL_START,
+            .icon = &I_icon_fence_vertical_start_6x15px,
+            .size = (Vector){6, 15}};
+    else if(is_str(name, "flower"))
+        return (IconSpec){
+            .id = ICON_ID_FLOWER, .icon = &I_icon_flower_16x16, .size = (Vector){16, 16}};
+    else if(is_str(name, "lake_bottom"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_BOTTOM,
+            .icon = &I_icon_lake_bottom_31x12px,
+            .size = (Vector){31, 12}};
+    else if(is_str(name, "lake_bottom_left"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_BOTTOM_LEFT,
+            .icon = &I_icon_lake_bottom_left_24x22px,
+            .size = (Vector){24, 22}};
+    else if(is_str(name, "lake_bottom_right"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_BOTTOM_RIGHT,
+            .icon = &I_icon_lake_bottom_right_24x22px,
+            .size = (Vector){24, 22}};
+    else if(is_str(name, "lake_left"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_LEFT, .icon = &I_icon_lake_left_11x31px, .size = (Vector){11, 31}};
+    else if(is_str(name, "lake_right"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_RIGHT, .icon = &I_icon_lake_right_11x31, .size = (Vector){11, 31}};
+    else if(is_str(name, "lake_top"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_TOP, .icon = &I_icon_lake_top_31x12px, .size = (Vector){31, 12}};
+    else if(is_str(name, "lake_top_left"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_TOP_LEFT,
+            .icon = &I_icon_lake_top_left_24x22px,
+            .size = (Vector){24, 22}};
+    else if(is_str(name, "lake_top_right"))
+        return (IconSpec){
+            .id = ICON_ID_LAKE_TOP_RIGHT,
+            .icon = &I_icon_lake_top_right_24x22px,
+            .size = (Vector){24, 22}};
+    else if(is_str(name, "rock_large"))
+        return (IconSpec){
+            .id = ICON_ID_ROCK_LARGE,
+            .icon = &I_icon_rock_large_18x19px,
+            .size = (Vector){18, 19}};
+    else if(is_str(name, "rock_medium"))
+        return (IconSpec){
+            .id = ICON_ID_ROCK_MEDIUM,
+            .icon = &I_icon_rock_medium_16x14px,
+            .size = (Vector){16, 14}};
+    else if(is_str(name, "rock_small"))
+        return (IconSpec){
+            .id = ICON_ID_ROCK_SMALL, .icon = &I_icon_rock_small_10x8px, .size = (Vector){10, 8}};
+
+    return (IconSpec){.id = -1, .icon = NULL, .size = (Vector){0, 0}};
+}
+
+bool world_json_draw(GameManager* manager, Level* level, const FuriString* json_data) {
     if(!json_data) {
         FURI_LOG_E("Game", "JSON data is NULL");
         return false;
     }
-    int levels_added = 0;
-    FURI_LOG_I("Game", "Looping through world data");
+
+    // Pass 1: Count the total number of icons.
+    int total_icons = 0;
     for(int i = 0; i < MAX_WORLD_OBJECTS; i++) {
-        FURI_LOG_I("Game", "Looping through world data: %d", i);
         FuriString* data = get_json_array_value_furi("json_data", i, json_data);
-        if(!data) {
-            break;
-        }
-
-        FuriString* icon = get_json_value_furi("icon", data);
-        FuriString* x = get_json_value_furi("x", data);
-        FuriString* y = get_json_value_furi("y", data);
+        if(!data) break;
         FuriString* amount = get_json_value_furi("amount", data);
-        FuriString* horizontal = get_json_value_furi("horizontal", data);
-
-        if(!icon || !x || !y || !amount || !horizontal) {
-            FURI_LOG_E("Game", "Failed Data: %s", furi_string_get_cstr(data));
-
-            if(data) furi_string_free(data);
-            if(icon) furi_string_free(icon);
-            if(x) furi_string_free(x);
-            if(y) furi_string_free(y);
-            if(amount) furi_string_free(amount);
-            if(horizontal) furi_string_free(horizontal);
-
-            level_clear(level);
-            return false;
+        if(amount) {
+            int count = atoi(furi_string_get_cstr(amount));
+            if(count < 1) count = 1;
+            total_icons += count;
+            furi_string_free(amount);
         }
-
-        int count = atoi(furi_string_get_cstr(amount));
-        if(count < 2) {
-            // Just one icon
-            spawn_icon(
-                manager,
-                level,
-                furi_string_get_cstr(icon),
-                atoi(furi_string_get_cstr(x)),
-                atoi(furi_string_get_cstr(y)));
-        } else {
-            bool is_horizontal = (furi_string_cmp(horizontal, "true") == 0);
-            spawn_icon_line(
-                manager,
-                level,
-                furi_string_get_cstr(icon),
-                atoi(furi_string_get_cstr(x)),
-                atoi(furi_string_get_cstr(y)),
-                count,
-                is_horizontal,
-                17 // set as 17 for now
-            );
-        }
-
         furi_string_free(data);
-        furi_string_free(icon);
-        furi_string_free(x);
-        furi_string_free(y);
-        furi_string_free(amount);
-        furi_string_free(horizontal);
-        levels_added++;
     }
+    FURI_LOG_I("Game", "Total icons to spawn: %d", total_icons);
+
+    // Allocate the icon group context (local instance)
+    IconGroupContext igctx;
+    igctx.count = total_icons;
+    igctx.icons = malloc(total_icons * sizeof(IconSpec));
+    if(!igctx.icons) {
+        FURI_LOG_E("Game", "Failed to allocate icon group array for %d icons", total_icons);
+        return false;
+    }
+    GameContext* game_context = game_manager_game_context_get(manager);
+    game_context->icon_count = total_icons;
+
+    // Pass 2: Parse the JSON to fill the icon specs.
+    int spec_index = 0;
+    for(int i = 0; i < MAX_WORLD_OBJECTS; i++) {
+        FuriString* data = get_json_array_value_furi("json_data", i, json_data);
+        if(!data) break;
+
+        FuriString* icon_str = get_json_value_furi("icon", data);
+        FuriString* x_str = get_json_value_furi("x", data);
+        FuriString* y_str = get_json_value_furi("y", data);
+        FuriString* amount_str = get_json_value_furi("amount", data);
+        FuriString* horizontal_str = get_json_value_furi("horizontal", data);
+
+        if(!icon_str || !x_str || !y_str || !amount_str || !horizontal_str) {
+            FURI_LOG_E("Game", "Incomplete icon data: %s", furi_string_get_cstr(data));
+            if(icon_str) furi_string_free(icon_str);
+            if(x_str) furi_string_free(x_str);
+            if(y_str) furi_string_free(y_str);
+            if(amount_str) furi_string_free(amount_str);
+            if(horizontal_str) furi_string_free(horizontal_str);
+            furi_string_free(data);
+            continue;
+        }
+
+        int count = atoi(furi_string_get_cstr(amount_str));
+        if(count < 1) count = 1;
+        float base_x = atof_furi(x_str);
+        float base_y = atof_furi(y_str);
+        bool is_horizontal = (furi_string_cmp(horizontal_str, "true") == 0);
+        int spacing = 17;
+
+        for(int j = 0; j < count; j++) {
+            IconSpec spec = world_get_icon_spec(furi_string_get_cstr(icon_str));
+            if(!spec.icon) {
+                FURI_LOG_E("Game", "Icon name not recognized: %s", furi_string_get_cstr(icon_str));
+                continue;
+            }
+            if(is_horizontal) {
+                spec.pos.x = base_x + (j * spacing);
+                spec.pos.y = base_y;
+            } else {
+                spec.pos.x = base_x;
+                spec.pos.y = base_y + (j * spacing);
+            }
+            igctx.icons[spec_index++] = spec;
+        }
+
+        furi_string_free(icon_str);
+        furi_string_free(x_str);
+        furi_string_free(y_str);
+        furi_string_free(amount_str);
+        furi_string_free(horizontal_str);
+        furi_string_free(data);
+    }
+
+    // Spawn one icon group entity.
+    Entity* groupEntity = level_add_entity(level, &icon_desc);
+    IconGroupContext* entityContext = (IconGroupContext*)entity_context_get(groupEntity);
+    if(entityContext) {
+        memcpy(entityContext, &igctx, sizeof(IconGroupContext));
+    } else {
+        FURI_LOG_E("Game", "Failed to get entity context for icon group");
+        free(igctx.icons);
+        return false;
+    }
+
+    // Set the global pointer so that player collision logic can use it.
+    g_current_icon_group = entityContext;
+
     FURI_LOG_I("Game", "Finished loading world data");
-    return levels_added > 0;
+    return true;
 }
 
-static void draw_town_world(Level* level, GameManager* manager, void* context) {
+static void world_draw_town(Level* level, GameManager* manager, void* context) {
     UNUSED(context);
     if(!manager || !level) {
         FURI_LOG_E("Game", "Manager or level is NULL");
@@ -87,7 +209,7 @@ static void draw_town_world(Level* level, GameManager* manager, void* context) {
         FURI_LOG_E("Game", "Failed to separate world data");
     }
     furi_string_free(json_data_str);
-    set_world(level, manager, "shadow_woods_v5");
+    level_set_world(level, manager, "shadow_woods_v5");
     game_context->icon_offset = 0;
     if(!game_context->imu_present) {
         game_context->icon_offset += ((game_context->icon_count / 10) / 15);
@@ -95,19 +217,19 @@ static void draw_town_world(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 }
 
-static const LevelBehaviour _training_world = {
+static const LevelBehaviour _world_training = {
     .alloc = NULL,
     .free = NULL,
-    .start = draw_town_world,
+    .start = world_draw_town,
     .stop = NULL,
     .context_size = 0,
 };
 
-const LevelBehaviour* training_world() {
-    return &_training_world;
+const LevelBehaviour* world_training() {
+    return &_world_training;
 }
 
-static void draw_pvp_world(Level* level, GameManager* manager, void* context) {
+static void world_draw_pvp(Level* level, GameManager* manager, void* context) {
     UNUSED(context);
     if(!manager || !level) {
         FURI_LOG_E("Game", "Manager or level is NULL");
@@ -123,7 +245,7 @@ static void draw_pvp_world(Level* level, GameManager* manager, void* context) {
         FURI_LOG_E("Game", "Failed to separate world data");
     }
     furi_string_free(json_data_str);
-    set_world(level, manager, "pvp_world");
+    level_set_world(level, manager, "pvp_world");
     game_context->is_switching_level = false;
     game_context->icon_offset = 0;
     if(!game_context->imu_present) {
@@ -132,19 +254,19 @@ static void draw_pvp_world(Level* level, GameManager* manager, void* context) {
     player_spawn(level, manager);
 }
 
-static const LevelBehaviour _pvp_world = {
+static const LevelBehaviour _world_pvp = {
     .alloc = NULL,
     .free = NULL,
-    .start = draw_pvp_world,
+    .start = world_draw_pvp,
     .stop = NULL,
     .context_size = 0,
 };
 
-const LevelBehaviour* pvp_world() {
-    return &_pvp_world;
+const LevelBehaviour* world_pvp() {
+    return &_world_pvp;
 }
 
-FuriString* fetch_world(const char* name) {
+FuriString* world_fetch(const char* name) {
     if(!name) {
         FURI_LOG_E("Game", "World name is NULL");
         return NULL;
