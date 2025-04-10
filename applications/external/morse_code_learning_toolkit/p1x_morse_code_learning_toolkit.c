@@ -68,6 +68,7 @@ typedef struct {
     char current_char;
     char user_input[MAX_MORSE_LENGTH];
     int input_position;
+    bool learning_letters_mode; // True for letters, false for numbers
 
     // Practice
     uint32_t last_input_time;
@@ -81,12 +82,12 @@ typedef struct {
 
 // International Morse Code mappings (simplified subset)
 static const MorseCode MORSE_TABLE[] = {
-    {'A', ".-"},    {'B', "-..."}, {'C', "-.-."},  {'D', "-.."},   {'E', "."},     {'F', "..-."},
-    {'G', "--."},   {'H', "...."}, {'I', ".."},    {'J', ".---"},  {'K', "-.-"},   {'L', ".-.."},
-    {'M', "--"},    {'N', "-."},   {'O', "---"},   {'P', ".--."},  {'Q', "--.-"},  {'R', ".-."},
-    {'S', "..."},   {'T', "-"},    {'U', "..-"},   {'V', "...-"},  {'W', ".--"},   {'X', "-..-"},
-    {'Y', "-.--"},  {'Z', "--.."}, {'1', ".----"}, {'2', "..---"}, {'3', "...--"}, {'4', "....-"},
-    {'5', "....."},
+    {'A', ".-"},    {'B', "-..."},  {'C', "-.-."},  {'D', "-.."},   {'E', "."},     {'F', "..-."},
+    {'G', "--."},   {'H', "...."},  {'I', ".."},    {'J', ".---"},  {'K', "-.-"},   {'L', ".-.."},
+    {'M', "--"},    {'N', "-."},    {'O', "---"},   {'P', ".--."},  {'Q', "--.-"},  {'R', ".-."},
+    {'S', "..."},   {'T', "-"},     {'U', "..-"},   {'V', "...-"},  {'W', ".--"},   {'X', "-..-"},
+    {'Y', "-.--"},  {'Z', "--.."},  {'0', "-----"}, {'1', ".----"}, {'2', "..---"}, {'3', "...--"},
+    {'4', "....-"}, {'5', "....."}, {'6', "-...."}, {'7', "--..."}, {'8', "---.."}, {'9', "----."},
 };
 
 // Function prototypes
@@ -167,17 +168,65 @@ static int32_t sound_worker_thread(void* context) {
                 {
                     const char* morse = get_morse_for_char(app->sound_character);
                     if(morse) {
-                        for(size_t i = 0; morse[i] != '\0'; i++) {
+                        // Start playing immediately with first element
+                        if(morse[0] != '\0') {
+                            if(morse[0] == '.') {
+                                // Play dot directly for immediate feedback
+                                if(furi_hal_speaker_acquire(1000)) {
+                                    furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume);
+                                    notification_message(
+                                        app->notifications, &sequence_set_only_red_255);
+                                    furi_delay_ms(DOT_DURATION_MS);
+                                    furi_hal_speaker_stop();
+                                    notification_message(app->notifications, &sequence_reset_red);
+                                    furi_hal_speaker_release();
+                                }
+                                // Only add a small pause between elements without full delay
+                                furi_delay_ms(ELEMENT_SPACE_MS / 2);
+                            } else if(morse[0] == '-') {
+                                // Play dash directly for immediate feedback
+                                if(furi_hal_speaker_acquire(1000)) {
+                                    furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume);
+                                    notification_message(
+                                        app->notifications, &sequence_set_only_blue_255);
+                                    furi_delay_ms(DASH_DURATION_MS);
+                                    furi_hal_speaker_stop();
+                                    notification_message(app->notifications, &sequence_reset_blue);
+                                    furi_hal_speaker_release();
+                                }
+                                // Only add a small pause between elements without full delay
+                                furi_delay_ms(ELEMENT_SPACE_MS / 2);
+                            }
+                        }
+
+                        // Queue the rest of the elements - directly play them without queuing
+                        for(size_t i = 1; morse[i] != '\0'; i++) {
                             if(morse[i] == '.') {
-                                // Send dot sound command
-                                SoundCommand dot_cmd = SoundCommandDot;
-                                furi_message_queue_put(app->sound_queue, &dot_cmd, 0);
-                                furi_delay_ms(DOT_DURATION_MS + ELEMENT_SPACE_MS);
+                                // Play dot directly without queueing
+                                if(furi_hal_speaker_acquire(1000)) {
+                                    furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume);
+                                    notification_message(
+                                        app->notifications, &sequence_set_only_red_255);
+                                    furi_delay_ms(DOT_DURATION_MS);
+                                    furi_hal_speaker_stop();
+                                    notification_message(app->notifications, &sequence_reset_red);
+                                    furi_hal_speaker_release();
+                                }
+                                // Normal delay between elements
+                                furi_delay_ms(ELEMENT_SPACE_MS);
                             } else if(morse[i] == '-') {
-                                // Send dash sound command
-                                SoundCommand dash_cmd = SoundCommandDash;
-                                furi_message_queue_put(app->sound_queue, &dash_cmd, 0);
-                                furi_delay_ms(DASH_DURATION_MS + ELEMENT_SPACE_MS);
+                                // Play dash directly without queueing
+                                if(furi_hal_speaker_acquire(1000)) {
+                                    furi_hal_speaker_start(DEFAULT_FREQUENCY, app->volume);
+                                    notification_message(
+                                        app->notifications, &sequence_set_only_blue_255);
+                                    furi_delay_ms(DASH_DURATION_MS);
+                                    furi_hal_speaker_stop();
+                                    notification_message(app->notifications, &sequence_reset_blue);
+                                    furi_hal_speaker_release();
+                                }
+                                // Normal delay between elements
+                                furi_delay_ms(ELEMENT_SPACE_MS);
                             }
                         }
                     }
@@ -292,19 +341,30 @@ static void morse_app_draw_callback(Canvas* canvas, void* ctx) {
         canvas_draw_str(canvas, 2, 10, "LEARN MORSE");
         canvas_draw_line(canvas, 0, 12, 128, 12);
 
+        // Display current mode
+        char mode_str[32];
+        snprintf(
+            mode_str,
+            sizeof(mode_str),
+            "Mode: %s",
+            app->learning_letters_mode ? "Letters" : "Numbers");
+        canvas_draw_str(canvas, 5, 25, mode_str);
+
         // Display current character
         char txt[32];
         snprintf(txt, sizeof(txt), "Character: %c", app->current_char);
-        canvas_draw_str(canvas, 5, 25, txt);
+        canvas_draw_str(canvas, 5, 37, txt);
 
         // Display Morse code
         const char* morse = get_morse_for_char(app->current_char);
         snprintf(txt, sizeof(txt), "Morse: %s", morse ? morse : "");
-        canvas_draw_str(canvas, 5, 37, txt);
+        canvas_draw_str(canvas, 5, 49, txt);
 
         // Display instructions
-        canvas_draw_str(canvas, 5, 55, "OK: Play sound");
-        canvas_draw_str(canvas, 5, 64, "DOWN: Next char");
+        canvas_draw_str(canvas, 5, 64, "OK: Play sound");
+        canvas_draw_str(canvas, 5, 73, "UP/DOWN: Prev/Next char");
+        canvas_draw_str(canvas, 5, 82, "LEFT: Letters mode");
+        canvas_draw_str(canvas, 5, 91, "RIGHT: Numbers mode");
         break;
     }
 
@@ -416,26 +476,44 @@ static void morse_app_input_callback(InputEvent* input_event, void* ctx) {
         if(input_event->key == InputKeyOk && input_event->type == InputTypeShort) {
             // Play the character's morse code
             play_character(app, app->current_char);
+        } else if(input_event->key == InputKeyLeft && input_event->type == InputTypeShort) {
+            // Switch to letters mode
+            app->learning_letters_mode = true;
+            app->current_char = 'A';
+        } else if(input_event->key == InputKeyRight && input_event->type == InputTypeShort) {
+            // Switch to numbers mode
+            app->learning_letters_mode = false;
+            app->current_char = '0';
         } else if(input_event->key == InputKeyDown && input_event->type == InputTypeShort) {
-            // Show next character
-            if(app->current_char == 'Z')
-                app->current_char = 'A';
-            else if(app->current_char == '5')
-                app->current_char = 'A';
-            else if(app->current_char >= 'A' && app->current_char < 'Z')
-                app->current_char++;
-            else
-                app->current_char = '1';
+            // Show next character based on current mode
+            if(app->learning_letters_mode) {
+                // Letters mode
+                if(app->current_char == 'Z')
+                    app->current_char = 'A';
+                else
+                    app->current_char++;
+            } else {
+                // Numbers mode
+                if(app->current_char == '9')
+                    app->current_char = '0';
+                else
+                    app->current_char++;
+            }
         } else if(input_event->key == InputKeyUp && input_event->type == InputTypeShort) {
-            // Show previous character
-            if(app->current_char == 'A')
-                app->current_char = '5';
-            else if(app->current_char == '1')
-                app->current_char = 'Z';
-            else if(app->current_char > 'A' && app->current_char <= 'Z')
-                app->current_char--;
-            else
-                app->current_char = '5';
+            // Show previous character based on current mode
+            if(app->learning_letters_mode) {
+                // Letters mode
+                if(app->current_char == 'A')
+                    app->current_char = 'Z';
+                else
+                    app->current_char--;
+            } else {
+                // Numbers mode
+                if(app->current_char == '0')
+                    app->current_char = '9';
+                else
+                    app->current_char--;
+            }
         } else if(input_event->key == InputKeyBack && input_event->type == InputTypeShort) {
             app->app_state = MorseStateMenu;
         }
@@ -575,7 +653,8 @@ int32_t p1x_morse_code_learning_toolkit_app(void* p) {
     app->menu_selection = 0;
     app->is_running = true;
     app->sound_running = true;
-    app->current_char = 'E'; // Start with simplest character
+    app->current_char = 'A'; // Start with A instead of E
+    app->learning_letters_mode = true; // Start in letters mode
     app->input_position = 0;
     app->last_input_time = 0;
     app->current_morse_position = 0;
