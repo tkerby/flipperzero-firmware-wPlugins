@@ -43,9 +43,8 @@ int32_t flip_world_main(void *p)
     while (fhttp->state == INACTIVE && --counter > 0)
     {
         FURI_LOG_D(TAG, "Waiting for PONG");
-        furi_delay_ms(100); // this causes a BusFault
+        furi_delay_ms(100);
     }
-    flipper_http_free(fhttp);
 
     if (counter == 0)
         easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
@@ -54,6 +53,15 @@ int32_t flip_world_main(void *p)
     // char app_version[16];
     // snprintf(app_version, sizeof(app_version), "%f", (double)VERSION);
     save_char("app_version", VERSION);
+
+    // for now use the catalog API until I implement caching on the server
+
+    if (flip_world_handle_app_update(fhttp, true))
+    {
+        easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+    }
+
+    flipper_http_free(fhttp);
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
