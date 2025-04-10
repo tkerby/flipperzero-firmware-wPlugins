@@ -15,13 +15,13 @@ bool alloc_message_view(void *context, MessageState state)
     switch (state)
     {
     case MessageStateAbout:
-        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, callback_to_submenu, &app->view_dispatcher, app);
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, callback_message_draw, NULL, callback_to_submenu, &app->view_dispatcher, app);
         break;
     case MessageStateLoading:
-        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, NULL, NULL, &app->view_dispatcher, app);
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, callback_message_draw, NULL, NULL, &app->view_dispatcher, app);
         break;
     case MessageStateWaitingLobby:
-        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, message_draw_callback, message_input_callback, NULL, &app->view_dispatcher, app);
+        easy_flipper_set_view(&app->view_message, FlipWorldViewMessage, callback_message_draw, callback_message_input, NULL, &app->view_dispatcher, app);
         break;
     }
     if (!app->view_message)
@@ -67,9 +67,9 @@ bool alloc_text_input_view(void *context, char *title)
                 title,
                 app->text_input_temp_buffer,
                 app->text_input_buffer_size,
-                is_str(title, "SSID") ? updated_wifi_ssid : is_str(title, "Password")     ? updated_wifi_pass
-                                                        : is_str(title, "Username-Login") ? updated_username
-                                                                                          : updated_password,
+                is_str(title, "SSID") ? callback_updated_wifi_ssid : is_str(title, "Password")     ? callback_updated_wifi_pass
+                                                                 : is_str(title, "Username-Login") ? callback_updated_username
+                                                                                                   : callback_updated_password,
                 callback_to_wifi_settings,
                 &app->view_dispatcher,
                 app))
@@ -109,11 +109,7 @@ bool alloc_text_input_view(void *context, char *title)
 bool alloc_variable_item_list(void *context, uint32_t view_id)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return false;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     char ssid[64];
     char pass[64];
     char username[64];
@@ -123,7 +119,7 @@ bool alloc_variable_item_list(void *context, uint32_t view_id)
         switch (view_id)
         {
         case FlipWorldSubmenuIndexWiFiSettings:
-            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, wifi_settings_select, callback_to_settings, &app->view_dispatcher, app))
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, callback_wifi_settings_select, callback_to_settings, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate variable item list");
                 return false;
@@ -156,7 +152,7 @@ bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
             break;
         case FlipWorldSubmenuIndexGameSettings:
-            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, game_settings_select, callback_to_settings, &app->view_dispatcher, app))
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, callback_game_settings_select, callback_to_settings, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate variable item list");
                 return false;
@@ -175,43 +171,43 @@ bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
             if (!app->variable_item_game_player_sprite)
             {
-                app->variable_item_game_player_sprite = variable_item_list_add(app->variable_item_list, "Weapon", 4, player_on_change, NULL);
+                app->variable_item_game_player_sprite = variable_item_list_add(app->variable_item_list, "Weapon", 4, callback_player_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_player_sprite, 1);
                 variable_item_set_current_value_text(app->variable_item_game_player_sprite, player_sprite_choices[1]);
             }
             if (!app->variable_item_game_fps)
             {
-                app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, fps_change, NULL);
+                app->variable_item_game_fps = variable_item_list_add(app->variable_item_list, "FPS", 4, callback_fps_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_fps, 0);
                 variable_item_set_current_value_text(app->variable_item_game_fps, fps_choices_str[0]);
             }
             if (!app->variable_item_game_vgm_x)
             {
-                app->variable_item_game_vgm_x = variable_item_list_add(app->variable_item_list, "VGM Horizontal", 12, vgm_x_change, NULL);
+                app->variable_item_game_vgm_x = variable_item_list_add(app->variable_item_list, "VGM Horizontal", 12, callback_vgm_x_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_vgm_x, 2);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_x, vgm_levels[2]);
             }
             if (!app->variable_item_game_vgm_y)
             {
-                app->variable_item_game_vgm_y = variable_item_list_add(app->variable_item_list, "VGM Vertical", 12, vgm_y_change, NULL);
+                app->variable_item_game_vgm_y = variable_item_list_add(app->variable_item_list, "VGM Vertical", 12, callback_vgm_y_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_vgm_y, 2);
                 variable_item_set_current_value_text(app->variable_item_game_vgm_y, vgm_levels[2]);
             }
             if (!app->variable_item_game_screen_always_on)
             {
-                app->variable_item_game_screen_always_on = variable_item_list_add(app->variable_item_list, "Keep Screen On?", 2, screen_on_change, NULL);
+                app->variable_item_game_screen_always_on = variable_item_list_add(app->variable_item_list, "Keep Screen On?", 2, callback_screen_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_screen_always_on, 1);
                 variable_item_set_current_value_text(app->variable_item_game_screen_always_on, yes_or_no_choices[1]);
             }
             if (!app->variable_item_game_sound_on)
             {
-                app->variable_item_game_sound_on = variable_item_list_add(app->variable_item_list, "Sound On?", 2, sound_on_change, NULL);
+                app->variable_item_game_sound_on = variable_item_list_add(app->variable_item_list, "Sound On?", 2, callback_sound_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_sound_on, 0);
                 variable_item_set_current_value_text(app->variable_item_game_sound_on, yes_or_no_choices[0]);
             }
             if (!app->variable_item_game_vibration_on)
             {
-                app->variable_item_game_vibration_on = variable_item_list_add(app->variable_item_list, "Vibration On?", 2, vibration_on_change, NULL);
+                app->variable_item_game_vibration_on = variable_item_list_add(app->variable_item_list, "Vibration On?", 2, callback_vibration_on_change, NULL);
                 variable_item_set_current_value_index(app->variable_item_game_vibration_on, 0);
                 variable_item_set_current_value_text(app->variable_item_game_vibration_on, yes_or_no_choices[0]);
             }
@@ -303,7 +299,7 @@ bool alloc_variable_item_list(void *context, uint32_t view_id)
             }
             break;
         case FlipWorldSubmenuIndexUserSettings:
-            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, user_settings_select, callback_to_settings, &app->view_dispatcher, app))
+            if (!easy_flipper_set_variable_item_list(&app->variable_item_list, FlipWorldViewVariableItemList, callback_user_settings_select, callback_to_settings, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate variable item list");
                 return false;

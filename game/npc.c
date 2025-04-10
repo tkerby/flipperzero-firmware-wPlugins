@@ -3,7 +3,7 @@ static EntityContext *npc_context_generic;
 
 // Allocation function
 static EntityContext *npc_generic_alloc(
-    const char *id,
+    SpriteID id,
     int index,
     Vector size,
     Vector start_position,
@@ -21,7 +21,7 @@ static EntityContext *npc_generic_alloc(
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
-    snprintf(npc_context_generic->id, sizeof(npc_context_generic->id), "%s", id);
+    npc_context_generic->id = id;
     npc_context_generic->index = index;
     npc_context_generic->size = size;
     npc_context_generic->start_position = start_position;
@@ -57,7 +57,7 @@ static void npc_start(Entity *self, GameManager *manager, void *context)
 
     EntityContext *npc_context = (EntityContext *)context;
     // Copy fields from generic context
-    snprintf(npc_context->id, sizeof(npc_context->id), "%s", npc_context_generic->id);
+    npc_context->id = npc_context_generic->id;
     snprintf(npc_context->message, sizeof(npc_context->message), "%s", npc_context_generic->message);
     npc_context->index = npc_context_generic->index;
     npc_context->size = npc_context_generic->size;
@@ -91,8 +91,8 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
     // Get the position of the NPC
     Vector pos = entity_pos_get(self);
 
-    int x_pos = pos.x - camera_x - npc_context->size.x / 2;
-    int y_pos = pos.y - camera_y - npc_context->size.y / 2;
+    int x_pos = pos.x - draw_camera_x - npc_context->size.x / 2;
+    int y_pos = pos.y - draw_camera_y - npc_context->size.y / 2;
 
     // check if position is within the screen
     if (x_pos + npc_context->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + npc_context->size.y < 0 || y_pos > SCREEN_HEIGHT)
@@ -115,8 +115,8 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
         canvas_draw_sprite(
             canvas,
             current_sprite,
-            pos.x - camera_x - (npc_context->size.x / 2),
-            pos.y - camera_y - (npc_context->size.y / 2));
+            pos.x - draw_camera_x - (npc_context->size.x / 2),
+            pos.y - draw_camera_y - (npc_context->size.y / 2));
     }
 }
 
@@ -324,7 +324,7 @@ static const EntityDescription _generic_npc = {
 };
 
 // Spawn function to return the entity description
-const EntityDescription *npc(
+static const EntityDescription *npc(
     GameManager *manager,
     const char *id,
     int index,
@@ -334,7 +334,7 @@ const EntityDescription *npc(
     float speed,
     const char *message)
 {
-    SpriteContext *sprite_context = get_sprite_context(id);
+    SpriteContext *sprite_context = sprite_context_get(id);
     if (!sprite_context)
     {
         FURI_LOG_E("Game", "Failed to get SpriteContext");
@@ -343,7 +343,7 @@ const EntityDescription *npc(
 
     // Allocate a new EntityContext with provided parameters
     npc_context_generic = npc_generic_alloc(
-        id,
+        sprite_context->id,
         index,
         (Vector){sprite_context->width, sprite_context->height},
         start_position,
@@ -384,7 +384,7 @@ const EntityDescription *npc(
     return &_generic_npc;
 }
 
-void spawn_npc(Level *level, GameManager *manager, FuriString *json)
+void npc_spawn(Level *level, GameManager *manager, FuriString *json)
 {
     if (!level || !manager || !json)
     {
@@ -439,4 +439,5 @@ void spawn_npc(Level *level, GameManager *manager, FuriString *json)
     furi_string_free(end_position_y);
     furi_string_free(move_timer);
     furi_string_free(speed);
+    furi_string_free(message);
 }

@@ -7,7 +7,7 @@
 static EntityContext *enemy_context_generic;
 // Allocation function
 static EntityContext *enemy_generic_alloc(
-    const char *id,
+    SpriteID id,
     int index,
     Vector size,
     Vector start_position,
@@ -29,7 +29,7 @@ static EntityContext *enemy_generic_alloc(
         FURI_LOG_E("Game", "Failed to allocate EntityContext");
         return NULL;
     }
-    snprintf(enemy_context_generic->id, sizeof(enemy_context_generic->id), "%s", id);
+    enemy_context_generic->id = id;
     enemy_context_generic->index = index;
     enemy_context_generic->size = size;
     enemy_context_generic->start_position = start_position;
@@ -78,7 +78,7 @@ static void enemy_start(Entity *self, GameManager *manager, void *context)
 
     EntityContext *enemy_context = (EntityContext *)context;
     // Copy fields from generic context
-    snprintf(enemy_context->id, sizeof(enemy_context->id), "%s", enemy_context_generic->id);
+    enemy_context->id = enemy_context_generic->id;
     enemy_context->index = enemy_context_generic->index;
     enemy_context->size = enemy_context_generic->size;
     enemy_context->start_position = enemy_context_generic->start_position;
@@ -117,8 +117,8 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     Vector pos = entity_pos_get(self);
 
     // Get the camera position
-    int x_pos = pos.x - camera_x - enemy_context->size.x / 2;
-    int y_pos = pos.y - camera_y - enemy_context->size.y / 2;
+    int x_pos = pos.x - draw_camera_x - enemy_context->size.x / 2;
+    int y_pos = pos.y - draw_camera_y - enemy_context->size.y / 2;
 
     // check if position is within the screen
     if (x_pos + enemy_context->size.x < 0 || x_pos > SCREEN_WIDTH || y_pos + enemy_context->size.y < 0 || y_pos > SCREEN_HEIGHT)
@@ -143,8 +143,8 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
         canvas_draw_sprite(
             canvas,
             current_sprite,
-            pos.x - camera_x - (enemy_context->size.x / 2),
-            pos.y - camera_y - (enemy_context->size.y / 2));
+            pos.x - draw_camera_x - (enemy_context->size.x / 2),
+            pos.y - draw_camera_y - (enemy_context->size.y / 2));
 
         // draw health of enemy
         char health_str[32];
@@ -153,7 +153,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     }
 }
 
-static void atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
+static void enemy_atk_notify(GameContext *game_context, EntityContext *enemy_context, bool player_attacked)
 {
     if (!game_context || !enemy_context)
     {
@@ -185,7 +185,7 @@ static void atk_notify(GameContext *game_context, EntityContext *enemy_context, 
         {
             notification_message(notifications, &sequence_blink_blue_100);
         }
-        FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
+        FURI_LOG_I("Game", "Player attacked enemy '%d'!", enemy_context->id);
     }
     else
     {
@@ -207,7 +207,7 @@ static void atk_notify(GameContext *game_context, EntityContext *enemy_context, 
             notification_message(notifications, &sequence_blink_red_100);
         }
 
-        FURI_LOG_I("Game", "Enemy '%s' attacked the player!", enemy_context->id);
+        FURI_LOG_I("Game", "Enemy '%d' attacked the player!", enemy_context->id);
     }
 
     // close the notifications
@@ -267,7 +267,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4)
             {
-                // FURI_LOG_I("Game", "Player attacked enemy '%s'!", enemy_context->id);
+                // FURI_LOG_I("Game", "Player attacked enemy '%d'!", enemy_context->id);
                 game_context->tutorial_step++;
             }
             // Reset last button
@@ -275,7 +275,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
 
             if (player_context->elapsed_attack_timer >= player_context->attack_timer)
             {
-                atk_notify(game_context, enemy_context, true);
+                enemy_atk_notify(game_context, enemy_context, true);
 
                 // Reset player's elapsed attack timer
                 player_context->elapsed_attack_timer = 0.0f;
@@ -334,7 +334,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
             }
             else
             {
-                FURI_LOG_I("Game", "Player attack on enemy '%s' is on cooldown: %f seconds remaining", enemy_context->id, (double)(player_context->attack_timer - player_context->elapsed_attack_timer));
+                FURI_LOG_I("Game", "Player attack on enemy '%d' is on cooldown: %f seconds remaining", enemy_context->id, (double)(player_context->attack_timer - player_context->elapsed_attack_timer));
             }
         }
         // Handle Enemy Attacking Player (enemy facing player)
@@ -342,7 +342,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         {
             if (enemy_context->elapsed_attack_timer >= enemy_context->attack_timer)
             {
-                atk_notify(game_context, enemy_context, false);
+                enemy_atk_notify(game_context, enemy_context, false);
 
                 // Reset enemy's elapsed attack timer
                 enemy_context->elapsed_attack_timer = 0.0f;
@@ -377,7 +377,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                 }
                 else
                 {
-                    FURI_LOG_I("Game", "Player took %f damage from enemy '%s'", (double)enemy_context->strength, enemy_context->id);
+                    FURI_LOG_I("Game", "Player took %f damage from enemy '%d'", (double)enemy_context->strength, enemy_context->id);
                     player_context->state = ENTITY_ATTACKED;
 
                     // Bounce the player back by X units opposite their last movement direction
@@ -433,7 +433,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
-static void pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
+static void enemy_pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
 {
     if (!game_context || !enemy || !self)
     {
@@ -564,7 +564,7 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     if (game_context->game_mode == GAME_MODE_PVP)
     {
         // update enemy position
-        pvp_position(game_context, enemy_context, self);
+        enemy_pvp_position(game_context, enemy_context, self);
     }
     else
     {
@@ -708,7 +708,7 @@ static const EntityDescription _generic_enemy = {
 };
 
 // Enemy function to return the entity description
-const EntityDescription *enemy(
+static const EntityDescription *enemy(
     GameManager *manager,
     const char *id,
     int index,
@@ -723,7 +723,7 @@ const EntityDescription *enemy(
     FuriString *username)
 
 {
-    SpriteContext *sprite_context = get_sprite_context(id);
+    SpriteContext *sprite_context = sprite_context_get(id);
     if (!sprite_context)
     {
         FURI_LOG_E("Game", "Failed to get SpriteContext");
@@ -732,7 +732,7 @@ const EntityDescription *enemy(
 
     // Allocate a new EntityContext with provided parameters
     enemy_context_generic = enemy_generic_alloc(
-        id,
+        sprite_context->id,
         index,
         (Vector){sprite_context->width, sprite_context->height},
         start_position,
@@ -776,7 +776,7 @@ const EntityDescription *enemy(
     return &_generic_enemy;
 }
 
-void spawn_enemy(Level *level, GameManager *manager, FuriString *json)
+void enemy_spawn(Level *level, GameManager *manager, FuriString *json)
 {
     if (!level || !manager || !json)
     {

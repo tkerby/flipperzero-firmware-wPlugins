@@ -1,11 +1,12 @@
 #include <game/player.h>
+#include <game/icon.h>
 #include <game/storage.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <engine/entity_i.h>
 /****** Entities: Player ******/
-static Level *next_level(GameManager *manager)
+static Level *player_next_level(GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     if (!game_context)
@@ -55,7 +56,7 @@ static Level *next_level(GameManager *manager)
 }
 
 // Update player stats based on XP using iterative method
-static int get_player_level_iterative(uint32_t xp)
+static int player_level_iterative_get(uint32_t xp)
 {
     int level = 1;
     uint32_t xp_required = 100; // Base XP for level 2
@@ -102,7 +103,7 @@ void player_spawn(Level *level, GameManager *manager)
         return;
     }
 
-    SpriteContext *sprite_context = get_sprite_context(player_sprite_choices[player_sprite_index]);
+    SpriteContext *sprite_context = sprite_context_get(player_sprite_choices[player_sprite_index]);
     if (!sprite_context)
     {
         FURI_LOG_E(TAG, "Failed to get sprite context");
@@ -159,7 +160,7 @@ void player_spawn(Level *level, GameManager *manager)
     pctx->start_position = entity_pos_get(game_context->player);
 
     // Determine the player's level based on XP
-    pctx->level = get_player_level_iterative(pctx->xp);
+    pctx->level = player_level_iterative_get(pctx->xp);
 
     // Update strength and max health based on the new level
     pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
@@ -171,13 +172,13 @@ void player_spawn(Level *level, GameManager *manager)
     free(sprite_context);
 }
 
-static int vgm_increase(float value, float increase)
+static int player_vgm_increase(float value, float increase)
 {
     const int val = abs((int)(round(value + increase) / 2));
     return val < 1 ? 1 : val;
 }
 
-static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
+static void player_vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
 {
     const float pitch = -imu_pitch_get(imu);
     const float roll = -imu_roll_get(imu);
@@ -185,29 +186,62 @@ static void vgm_direction(Imu *imu, PlayerContext *player, Vector *pos)
     const float min_y = atof_(vgm_levels[vgm_y_index]) + 5.0; // minimum of 3
     if (pitch > min_x)
     {
-        pos->x += vgm_increase(pitch, min_x);
+        pos->x += player_vgm_increase(pitch, min_x);
         player->dx = 1;
         player->direction = ENTITY_RIGHT;
     }
     else if (pitch < -min_x)
     {
-        pos->x += -vgm_increase(pitch, min_x);
+        pos->x += -player_vgm_increase(pitch, min_x);
         player->dx = -1;
         player->direction = ENTITY_LEFT;
     }
     if (roll > min_y)
     {
-        pos->y += vgm_increase(roll, min_y);
+        pos->y += player_vgm_increase(roll, min_y);
         player->dy = 1;
         player->direction = ENTITY_DOWN;
     }
     else if (roll < -min_y)
     {
-        pos->y += -vgm_increase(roll, min_y);
+        pos->y += -player_vgm_increase(roll, min_y);
         player->dy = -1;
         player->direction = ENTITY_UP;
     }
 }
+
+// This static function handles collisions with icons.
+// It receives the player entity pointer, the player's current position, and a pointer to PlayerContext.
+static void player_handle_collision(Entity *playerEntity, Vector playerPos, PlayerContext *player)
+{
+    // If there is no active icon group, do nothing.
+    if (!g_current_icon_group)
+        return;
+
+    // Loop over all icon specifications in the current icon group.
+    for (int i = 0; i < g_current_icon_group->count; i++)
+    {
+        IconSpec *spec = &g_current_icon_group->icons[i];
+
+        // Calculate the difference between player's position and the icon's center.
+        float dx = playerPos.x - spec->pos.x;
+        float dy = playerPos.y - spec->pos.y;
+
+        // Use an approximate collision radius:
+        float radius = (spec->size.x + spec->size.y) / 4.0f;
+
+        // Collision: if player's distance to the icon center is less than the collision radius.
+        if ((dx * dx + dy * dy) < (radius * radius))
+        {
+            // Revert the player's position and reset movement.
+            entity_pos_set(playerEntity, player->old_position);
+            player->dx = 0;
+            player->dy = 0;
+            break;
+        }
+    }
+}
+
 uint16_t elapsed_ws_timer = 0;
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
@@ -251,7 +285,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     player->old_position = pos;
 
     // Determine the player's level based on XP
-    player->level = get_player_level_iterative(player->xp);
+    player->level = player_level_iterative_get(player->xp);
     player->strength = 10 + (player->level * 1);           // 1 strength per level
     player->max_health = 100 + ((player->level - 1) * 10); // 10 health per level
 
@@ -266,7 +300,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     if (game_context->imu_present)
     {
         // update position using the IMU
-        vgm_direction(game_context->imu, player, &pos);
+        player_vgm_direction(game_context->imu, player, &pos);
     }
 
     // Apply health regeneration
@@ -387,7 +421,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
             game_context->is_switching_level = true;
             save_player_context(player);
             furi_delay_ms(100);
-            game_manager_next_level_set(manager, next_level(manager));
+            game_manager_next_level_set(manager, player_next_level(manager));
             return;
         }
 
@@ -479,9 +513,12 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     }
     else
         player->state = ENTITY_MOVING;
+
+    // handle icon collision
+    player_handle_collision(self, pos, player);
 }
 
-static void draw_tutorial(Canvas *canvas, GameManager *manager)
+static void player_draw_tutorial(Canvas *canvas, GameManager *manager)
 {
     GameContext *game_context = game_manager_game_context_get(manager);
     canvas_set_font(canvas, FontPrimary);
@@ -540,12 +577,12 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     Vector pos = entity_pos_get(self);
 
     // Calculate camera offset to center the player
-    camera_x = pos.x - (SCREEN_WIDTH / 2);
-    camera_y = pos.y - (SCREEN_HEIGHT / 2);
+    draw_camera_x = pos.x - (SCREEN_WIDTH / 2);
+    draw_camera_y = pos.y - (SCREEN_HEIGHT / 2);
 
     // Clamp camera position to prevent showing areas outside the world
-    camera_x = CLAMP(camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
-    camera_y = CLAMP(camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
+    draw_camera_x = CLAMP(draw_camera_x, WORLD_WIDTH - SCREEN_WIDTH, 0);
+    draw_camera_y = CLAMP(draw_camera_y, WORLD_HEIGHT - SCREEN_HEIGHT, 0);
 
     // if player is moving right or left, draw the corresponding sprite
     if (player->direction == ENTITY_RIGHT || player->direction == ENTITY_LEFT)
@@ -553,8 +590,8 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         canvas_draw_sprite(
             canvas,
             player->direction == ENTITY_RIGHT ? player->sprite_right : player->sprite_left,
-            pos.x - camera_x - 5, // Center the sprite horizontally
-            pos.y - camera_y - 5  // Center the sprite vertically
+            pos.x - draw_camera_x - 5, // Center the sprite horizontally
+            pos.y - draw_camera_y - 5  // Center the sprite vertically
         );
         player->left = false;
     }
@@ -564,28 +601,28 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
         canvas_draw_sprite(
             canvas,
             player->left ? player->sprite_left : player->sprite_right,
-            pos.x - camera_x - 5, // Center the sprite horizontally
-            pos.y - camera_y - 5  // Center the sprite vertically
+            pos.x - draw_camera_x - 5, // Center the sprite horizontally
+            pos.y - draw_camera_y - 5  // Center the sprite vertically
         );
     }
 
     // Draw the outer bounds adjusted by camera offset
-    canvas_draw_frame(canvas, -camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT);
+    canvas_draw_frame(canvas, -draw_camera_x, -draw_camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
     // render tutorial
     if (game_context->game_mode == GAME_MODE_STORY)
     {
-        draw_tutorial(canvas, manager);
+        player_draw_tutorial(canvas, manager);
 
         if (game_context->is_menu_open)
         {
-            background_render(canvas, manager);
+            draw_background_render(canvas, manager);
         }
     }
     else
     {
         // render background
-        background_render(canvas, manager);
+        draw_background_render(canvas, manager);
     }
 }
 
@@ -599,7 +636,7 @@ const EntityDescription player_desc = {
     .context_size = sizeof(PlayerContext), // size of entity context, will be automatically allocated and freed
 };
 
-static SpriteContext *sprite_generic_alloc(const char *id, const char *type, uint8_t width, uint8_t height)
+static SpriteContext *sprite_generic_alloc(SpriteID id, const char *char_id, const char *type, uint8_t width, uint8_t height)
 {
     SpriteContext *ctx = malloc(sizeof(SpriteContext));
     if (!ctx)
@@ -607,47 +644,47 @@ static SpriteContext *sprite_generic_alloc(const char *id, const char *type, uin
         FURI_LOG_E("Game", "Failed to allocate SpriteContext");
         return NULL;
     }
-    snprintf(ctx->id, sizeof(ctx->id), "%s", id);
+    ctx->id = id;
     ctx->width = width;
     ctx->height = height;
     if (is_str(type, "player"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "player_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "player_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     else if (is_str(type, "enemy"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "enemy_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "enemy_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "enemy_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "enemy_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     else if (is_str(type, "npc"))
     {
-        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "npc_right_%s_%dx%dpx.fxbm", id, width, height);
-        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "npc_left_%s_%dx%dpx.fxbm", id, width, height);
+        snprintf(ctx->right_file_name, sizeof(ctx->right_file_name), "npc_right_%s_%dx%dpx.fxbm", char_id, width, height);
+        snprintf(ctx->left_file_name, sizeof(ctx->left_file_name), "npc_left_%s_%dx%dpx.fxbm", char_id, width, height);
     }
     return ctx;
 }
 
-SpriteContext *get_sprite_context(const char *name)
+SpriteContext *sprite_context_get(const char *name)
 {
     if (is_str(name, "axe"))
-        return sprite_generic_alloc("axe", "player", 15, 11);
+        return sprite_generic_alloc(SPRITE_ID_AXE, "axe", "player", 15, 11);
     else if (is_str(name, "bow"))
-        return sprite_generic_alloc("bow", "player", 13, 11);
+        return sprite_generic_alloc(SPRITE_ID_BOW, "bow", "player", 13, 11);
     else if (is_str(name, "naked"))
-        return sprite_generic_alloc("naked", "player", 10, 10);
+        return sprite_generic_alloc(SPRITE_ID_NAKED, "naked", "player", 10, 10);
     else if (is_str(name, "sword"))
-        return sprite_generic_alloc("sword", "player", 15, 11);
+        return sprite_generic_alloc(SPRITE_ID_SWORD, "sword", "player", 15, 11);
     //
     else if (is_str(name, "cyclops"))
-        return sprite_generic_alloc("cyclops", "enemy", 10, 11);
+        return sprite_generic_alloc(SPRITE_ID_CYCLOPS, "cyclops", "enemy", 10, 11);
     else if (is_str(name, "ghost"))
-        return sprite_generic_alloc("ghost", "enemy", 15, 15);
+        return sprite_generic_alloc(SPRITE_ID_GHOST, "ghost", "enemy", 15, 15);
     else if (is_str(name, "ogre"))
-        return sprite_generic_alloc("ogre", "enemy", 10, 13);
+        return sprite_generic_alloc(SPRITE_ID_OGRE, "ogre", "enemy", 10, 13);
     //
     else if (is_str(name, "funny"))
-        return sprite_generic_alloc("funny", "npc", 15, 21);
+        return sprite_generic_alloc(SPRITE_ID_FUNNY, "funny", "npc", 15, 21);
 
     // If no match is found
     FURI_LOG_E("Game", "Sprite not found: %s", name);

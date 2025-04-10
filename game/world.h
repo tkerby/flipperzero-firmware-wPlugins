@@ -9,8 +9,9 @@
 #define WORLD_HEIGHT 384
 
 // Maximum number of world objects
-#define MAX_WORLD_OBJECTS 25 // any more than that and we may run out of heap when switching worlds
-const LevelBehaviour *training_world();
-const LevelBehaviour *pvp_world();
-bool draw_json_world_furi(GameManager *manager, Level *level, const FuriString *json_data);
-FuriString *fetch_world(const char *name);
+#define MAX_WORLD_OBJECTS 25
+
+const LevelBehaviour *world_training();
+const LevelBehaviour *world_pvp();
+bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_data);
+FuriString *world_fetch(const char *name);

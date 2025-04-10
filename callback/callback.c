@@ -6,7 +6,7 @@
 #include "alloc/alloc.h"
 #include <flip_storage/storage.h>
 
-bool message_input_callback(InputEvent *event, void *context)
+bool callback_message_input(InputEvent *event, void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     furi_check(app);
@@ -18,7 +18,7 @@ bool message_input_callback(InputEvent *event, void *context)
     return true;
 }
 
-void message_draw_callback(Canvas *canvas, void *model)
+void callback_message_draw(Canvas *canvas, void *model)
 {
     MessageModel *message_model = model;
     canvas_clear(canvas);
@@ -83,15 +83,15 @@ void callback_submenu_choices(void *context, uint32_t index)
         break;
     case FlipWorldSubmenuIndexStory:
         game_mode_index = 2; // GAME_MODE_STORY
-        run(app);
+        game_run(app);
         break;
     case FlipWorldSubmenuIndexPvP:
         game_mode_index = 1; // GAME_MODE_PVP
-        run(app);
+        game_run(app);
         break;
     case FlipWorldSubmenuIndexPvE:
         game_mode_index = 0; // GAME_MODE_PVE
-        run(app);
+        game_run(app);
         break;
     case FlipWorldSubmenuIndexMessage:
         // About menu.
@@ -145,14 +145,10 @@ void callback_submenu_choices(void *context, uint32_t index)
     }
 }
 
-void updated_wifi_ssid(void *context)
+void callback_updated_wifi_ssid(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -205,14 +201,10 @@ void updated_wifi_ssid(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-void updated_wifi_pass(void *context)
+void callback_updated_wifi_pass(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -265,14 +257,10 @@ void updated_wifi_pass(void *context)
     // switch to the settings view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList);
 }
-void updated_username(void *context)
+void callback_updated_username(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -290,14 +278,10 @@ void updated_username(void *context)
     }
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
-void updated_password(void *context)
+void callback_updated_password(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
 
     // store the entered text
     strncpy(app->text_input_buffer, app->text_input_temp_buffer, app->text_input_buffer_size);
@@ -331,14 +315,10 @@ void updated_password(void *context)
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewVariableItemList); // back to user settings
 }
 
-void wifi_settings_select(void *context, uint32_t index)
+void callback_wifi_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     char ssid[64];
     char pass[64];
     char username[64];
@@ -380,7 +360,7 @@ void wifi_settings_select(void *context, uint32_t index)
         break;
     }
 }
-void fps_change(VariableItem *item)
+void callback_fps_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     fps_index = index;
@@ -388,7 +368,7 @@ void fps_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-FPS", fps_choices_str[index]);
 }
-void screen_on_change(VariableItem *item)
+void callback_screen_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     screen_always_on_index = index;
@@ -396,7 +376,7 @@ void screen_on_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-Screen-Always-On", yes_or_no_choices[index]);
 }
-void sound_on_change(VariableItem *item)
+void callback_sound_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     sound_on_index = index;
@@ -404,7 +384,7 @@ void sound_on_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-Sound-On", yes_or_no_choices[index]);
 }
-void vibration_on_change(VariableItem *item)
+void callback_vibration_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     vibration_on_index = index;
@@ -412,7 +392,7 @@ void vibration_on_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-Vibration-On", yes_or_no_choices[index]);
 }
-void player_on_change(VariableItem *item)
+void callback_player_on_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     player_sprite_index = index;
@@ -420,7 +400,7 @@ void player_on_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-Player-Sprite", player_sprite_choices[index]);
 }
-void vgm_x_change(VariableItem *item)
+void callback_vgm_x_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     vgm_x_index = index;
@@ -428,7 +408,7 @@ void vgm_x_change(VariableItem *item)
     variable_item_set_current_value_index(item, index);
     save_char("Game-VGM-X", vgm_levels[index]);
 }
-void vgm_y_change(VariableItem *item)
+void callback_vgm_y_change(VariableItem *item)
 {
     uint8_t index = variable_item_get_current_value_index(item);
     vgm_y_index = index;
@@ -460,7 +440,7 @@ static char *_parse_worlds(DataLoaderModel *model)
     UNUSED(model);
     return "World Pack Installed";
 }
-void switch_to_view_get_worlds(FlipWorldApp *app)
+static void switch_to_view_get_worlds(FlipWorldApp *app)
 {
     if (!loader_view_alloc(app))
     {
@@ -469,14 +449,10 @@ void switch_to_view_get_worlds(FlipWorldApp *app)
     }
     loader_switch_to_view(app, "Fetching World Pack..", _fetch_worlds, _parse_worlds, 1, callback_to_submenu, FlipWorldViewLoader);
 }
-void game_settings_select(void *context, uint32_t index)
+void callback_game_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     switch (index)
     {
     case 0: // Download all world data as one huge json
@@ -497,14 +473,10 @@ void game_settings_select(void *context, uint32_t index)
         break;
     }
 }
-void user_settings_select(void *context, uint32_t index)
+void callback_user_settings_select(void *context, uint32_t index)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
-    if (!app)
-    {
-        FURI_LOG_E(TAG, "FlipWorldApp is NULL");
-        return;
-    }
+    furi_check(app, "FlipWorldApp is NULL");
     switch (index)
     {
     case 0: // Username
@@ -525,5 +497,103 @@ void user_settings_select(void *context, uint32_t index)
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewTextInput);
         break;
+    }
+}
+
+void callback_submenu_lobby_choices(void *context, uint32_t index)
+{
+    /* Handle other game lobbies
+             1. when clicked on, send request to fetch the selected game lobby details
+             2. start the websocket session
+             3. start the game thread (the rest will be handled by game_start and player_update)
+             */
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app, "FlipWorldApp is NULL");
+    if (index >= FlipWorldSubmenuIndexLobby && index < FlipWorldSubmenuIndexLobby + 10)
+    {
+        lobby_index = index - FlipWorldSubmenuIndexLobby;
+
+        FlipperHTTP *fhttp = flipper_http_alloc();
+        if (!fhttp)
+        {
+            FURI_LOG_E(TAG, "Failed to allocate FlipperHTTP");
+            easy_flipper_dialog("Error", "Failed to allocate FlipperHTTP. Press BACK to return.");
+            return;
+        }
+
+        // fetch the lobby details
+        if (!game_fetch_lobby(fhttp, lobby_list[lobby_index]))
+        {
+            FURI_LOG_E(TAG, "Failed to fetch lobby details");
+            easy_flipper_dialog("Error", "Failed to fetch lobby details. Press BACK to return.");
+            flipper_http_free(fhttp);
+            return;
+        }
+
+        // load the lobby details
+        FuriString *lobby = flipper_http_load_from_file(fhttp->file_path);
+        if (!lobby)
+        {
+            FURI_LOG_E(TAG, "Failed to load lobby details");
+            flipper_http_free(fhttp);
+            return;
+        }
+
+        // if there are no players, add the user to the lobby and make the user wait until another player joins
+        // if there is one player and it's the user, make the user wait until another player joins
+        // if there is one player and it's not the user, parse_lobby and start websocket
+        // if there are 2 players (which there shouldn't be at this point), show an error message saying the lobby is full
+        switch (game_lobby_count(fhttp, lobby))
+        {
+        case -1:
+            FURI_LOG_E(TAG, "Failed to get player count");
+            easy_flipper_dialog("Error", "Failed to get player count. Press BACK to return.");
+            flipper_http_free(fhttp);
+            furi_string_free(lobby);
+            return;
+        case 0:
+            // add the user to the lobby
+            if (!game_join_lobby(fhttp, lobby_list[lobby_index]))
+            {
+                FURI_LOG_E(TAG, "Failed to join lobby");
+                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
+            }
+            // send the user to the waiting screen
+            game_waiting_lobby(app);
+            return;
+        case 1:
+            // check if the user is in the lobby
+            if (game_in_lobby(fhttp, lobby))
+            {
+                // send the user to the waiting screen
+                FURI_LOG_I(TAG, "User is in the lobby");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                game_waiting_lobby(app);
+                return;
+            }
+            // add the user to the lobby
+            if (!game_join_lobby(fhttp, lobby_list[lobby_index]))
+            {
+                FURI_LOG_E(TAG, "Failed to join lobby");
+                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
+            }
+            break;
+        case 2:
+            // show an error message saying the lobby is full
+            FURI_LOG_E(TAG, "Lobby is full");
+            easy_flipper_dialog("Error", "Lobby is full. Press BACK to return.");
+            flipper_http_free(fhttp);
+            furi_string_free(lobby);
+            return;
+        };
+
+        game_start_pvp(fhttp, lobby, app); // this will free both the fhttp and lobby, and start the game
     }
 }
