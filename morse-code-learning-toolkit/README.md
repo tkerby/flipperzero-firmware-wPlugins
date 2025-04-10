@@ -1,13 +1,13 @@
-# Morse Code Learning Toolkit for Flipper Zero
+# Morse Master: Morse Code Learning Toolkit for Flipper Zero
 
 <div align="center">
-  <img src="p1x_morse_code_learning_toolkit.png" alt="Morse Code Learning Toolkit" width="320"/>
+  <img src="media/titlescreen.png" alt="Morse Code Learning Toolkit" width="320"/>
   <p><em>A comprehensive Morse code learning and practice app for Flipper Zero</em></p>
 </div>
 
 ## Overview
 
-The Morse Code Learning Toolkit is an interactive application for Flipper Zero that helps you learn and practice Morse code. The app offers two main modes: a Learning Mode to familiarize yourself with Morse code patterns and a Practice Mode to test your skills.
+The Morse Master is an interactive application for Flipper Zero that helps you learn and practice Morse code. The app offers two main modes: a Learning Mode to familiarize yourself with Morse code patterns and a Practice Mode to test your skills.
 
 ## Features
 
