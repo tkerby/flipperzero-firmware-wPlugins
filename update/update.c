@@ -1,5 +1,8 @@
 #include <update/update.h>
 #include <flip_storage/flip_store_storage.h>
+#include <apps/flip_store_apps.h>
+#include <storage/storage.h>
+
 static bool update_is_str(const char *src, const char *dst) { return strcmp(src, dst) == 0; }
 static bool update_json_to_datetime(DateTime *rtc_time, FuriString *str)
 {
@@ -424,6 +427,101 @@ bool update_is_ready(FlipperHTTP *fhttp, bool use_flipper_api)
         return false; // No update necessary.
     }
 }
+static bool update_app_list_category(Storage *storage, File *file, const char *category, bool save_file_extension)
+{
+    if (!storage || !file || !category)
+    {
+        FURI_LOG_E(TAG, "storage, file or category is NULL");
+        return false;
+    }
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps/%s", category);
+    if (!storage_common_exists(storage, directory_path) || !storage_dir_open(file, directory_path))
+    {
+        FURI_LOG_E(TAG, "Directory %s does not exist, or failed to open.", directory_path);
+        return false;
+    }
+    FileInfo fileinfo;
+    char name[128];
+    FuriString *json_app_list = furi_string_alloc();
+    furi_string_cat_str(json_app_list, "{\"apps\":[");
+    bool while_flag = true;
+    while (while_flag)
+    {
+        if (!storage_dir_read(file, &fileinfo, name, sizeof(name)))
+        {
+            FURI_LOG_E(TAG, "Failed to get the next item in the directory.");
+            while_flag = false;
+            break;
+        }
+        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps/%s/%s", category, name);
+        if (storage_dir_exists(storage, directory_path))
+        {
+            FURI_LOG_I(TAG, "Directory: %s", name);
+            continue;
+        }
+        if (strstr(name, ".fap") == NULL)
+        {
+            FURI_LOG_I(TAG, "Not a .fap file: %s", name);
+            continue;
+        }
+        furi_string_push_back(json_app_list, '"');
+        if (save_file_extension)
+        {
+            furi_string_cat_str(json_app_list, name);
+        }
+        else
+        {
+            char *dot = strrchr(name, '.');
+            if (dot)
+            {
+                *dot = '\0'; // Remove the file extension
+            }
+            furi_string_cat_str(json_app_list, name);
+        }
+        furi_string_push_back(json_app_list, '"');
+        furi_string_push_back(json_app_list, ',');
+    };
+    if (furi_string_size(json_app_list) > 1)
+    {
+        furi_string_set_char(json_app_list, furi_string_size(json_app_list) - 1, ']'); // remove the last comma
+        furi_string_cat_str(json_app_list, "}");
+        char json_path[32];
+        snprintf(json_path, sizeof(json_path), "apps_%s", category);
+        save_char(json_path, furi_string_get_cstr(json_app_list));
+        furi_string_free(json_app_list);
+        return true;
+    }
+    else
+    {
+        FURI_LOG_E(TAG, "No apps found in the directory.");
+        furi_string_free(json_app_list);
+        return false;
+    }
+}
+static bool update_app_list()
+{
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    File *file = storage_file_alloc(storage);
+    if (!file || !storage)
+    {
+        FURI_LOG_E(TAG, "Failed to allocate storage or file");
+        return false;
+    }
+    // categories array from apps/flip_store_apps.h
+    for (int i = 0; i < 11; i++)
+    {
+        if (!update_app_list_category(storage, file, categories[i], false))
+        {
+            FURI_LOG_E(TAG, "Failed to update app list for category: %s", categories[i]);
+            return false;
+        }
+    }
+    // storage_file_close(file);
+    storage_file_free(file);
+    furi_record_close(RECORD_STORAGE);
+    return true;
+}
 void update_all_apps(FlipperHTTP *fhttp)
 {
     if (!fhttp)
@@ -431,5 +529,46 @@ void update_all_apps(FlipperHTTP *fhttp)
         FURI_LOG_E(TAG, "fhttp is NULL");
         return;
     }
-    // do nothing else for now
+    /* Steps
+    1. Get the current time
+    2. Check if the last update time is more than one hour ago
+    3. if yes, loop through all the apps available and create a list of apps
+    4. loop through each app and download information from the server
+    5. check if the version is different from the server version
+    6. if the version is different, download the app
+    7. repeat for all apps
+    8. save the current time
+    9. return true if any app was updated, false otherwise
+    */
+
+    //--- 1: Get the current time
+    DateTime rtc_time;
+    furi_hal_rtc_get_datetime(&rtc_time);
+
+    //--- 2: Check if the last update time is more than one hour ago
+    char last_checked[32];
+    if (!load_char("last_checked_all", last_checked, sizeof(last_checked)))
+    {
+        // First time – save the current time and check for an update.
+        if (!update_save_rtc_time(&rtc_time))
+        {
+            FURI_LOG_E(TAG, "Failed to save RTC time");
+            return;
+        }
+        // No need to check for an update
+        return;
+    }
+    // Check if the current RTC time is at least one hour past the stored time.
+    if (!update_is_update_time(&rtc_time))
+    {
+        FURI_LOG_I(TAG, "No update necessary");
+        return;
+    }
+
+    //--- 3: Loop through all the apps available and create a list of apps
+    if (!update_app_list())
+    {
+        FURI_LOG_E(TAG, "Failed to update app list");
+        return;
+    }
 }
