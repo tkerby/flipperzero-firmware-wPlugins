@@ -55,7 +55,6 @@ static void game_state_free(GameState* game_state) {
 
 static void draw_cross(Canvas* const canvas, uint8_t x, uint8_t y, uint8_t lifetime) {
     FURI_LOG_T(LOG, __func__);
-    UNUSED(lifetime);
     
     canvas_draw_line(canvas, x, y, x + 9, y + 9); // top left - bottom right slash
     canvas_draw_line(canvas, x + 9, y, x, y + 9); // down left - top right slash
@@ -72,7 +71,6 @@ static void draw_cross(Canvas* const canvas, uint8_t x, uint8_t y, uint8_t lifet
 
 static void draw_circle(Canvas* const canvas, uint8_t x, uint8_t y, uint8_t lifetime) {
     FURI_LOG_T(LOG, __func__);
-    UNUSED(lifetime);
     
     canvas_draw_circle(canvas, x + 4, y + 5, 5);
     
@@ -204,7 +202,7 @@ int32_t infinite_tic_tac_toe_app(void* p) {
                 break;
             case InputKeyOk:
                 if(game_state->inprogress) {
-                    // Play Squence
+                    // Play Sequence
                     // 1. Check that square's lifetime is 0
                     // 2. Place Piece
                     // 3. Decrement Pieces
