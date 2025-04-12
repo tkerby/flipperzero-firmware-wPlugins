@@ -11,18 +11,10 @@ A Flipper Zero application that blinks LEDs with a decreasing frequency over tim
     * **Flash** - start blinking the LED light and move to execution screen
 
 ### Number picker screen
-* **Header:** selected mode, options are max interval, min interval and duration. Header also includes unit, beats per minute or BPM for intervals and minutes for duration.
+* **Header:** name of selected mode selected mode and unit.
+    * Available modes are max interval, min interval and duration.
+    * Units: Beats per minute or BPM for intervals, minutes for duration.
 * **Number picker:** keyboard with buffer to choose a number in correct constrains. 1 - 200 for intervals and 1-60 for duration.
 
 ### Execution screen
-
-### Configuration
-
-The following parameters can be configured:
-* `Max interval`: Starting cadence in beats per minute (BPM)
-* `Min interval`: Target ending cadence in BPM
-* `Duration`: Time period (in minutes) over which the cadence gradually changes from max to min
-
-### Operation
-
-When running, all three LEDs (red, green, and blue) blink simultaneously, creating a white flash. The display shows the current BPM, which gradually decreases from max to min interval over the set duration.
+* **Text:** showing current tempo of blinking in beats per minute.
