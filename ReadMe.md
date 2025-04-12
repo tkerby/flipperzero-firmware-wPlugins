@@ -37,10 +37,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 - Updated: [Pomodoro Timer v1.4 (By sbrin)](https://github.com/sbrin/flipperzero_pomodoro) [Pomodoro long break (By DrEverr)](https://github.com/xMasterX/all-the-plugins/pull/183)
 - ESP Flasher Bump [Marauder 1.4.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.2)
-- Updated: [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [FlipWorld v0.8.1 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [LEGO Dimensions Toy Pad v0.3 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Updated: [Passy v1.1 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
@@ -591,7 +591,7 @@ $ ./fbt dolphin_ext
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
-- [Passy v1.0 (By bettse)](https://github.com/bettse/passy)
+- [Passy v1.1 (By bettse)](https://github.com/bettse/passy)
 - [PC Monitor v1.1.2 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)
 - [Pet Your Dolphin v0.1 (By dwight9339)](https://github.com/dwight9339/pet_your_dolphin)
