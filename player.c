@@ -35,8 +35,70 @@ void player_spawn(Level* level, GameManager* manager) {
     Swinging_sword_right_animation_load(manager);
 }
 
-void player_movement() {
+void player_movement(Entity* self, GameManager* manager, void* context) {
+    PlayerContext* playerContext = (PlayerContext*)context;
+    GameContext* game_context = game_manager_game_context_get(manager);
+    InputState input = game_manager_input_get(manager);
 
+    if(input.pressed & GameKeyOk){
+        playerContext->is_swinging_sword = true;
+    }
+
+    can_move = !playerContext->is_swinging_sword;
+
+    Vector pos = entity_pos_get(self);
+
+
+    // isGrounded check
+    if((pos.y + 12) >= game_context->ground_hight && playerContext->Yvelocity >= 0) {
+        pos.y = game_context->ground_hight - 12;
+        playerContext->Yvelocity = 0;
+        isGrounded = true;
+    } else {
+        isGrounded = false;
+    }
+
+    // gravity
+    if(!isGrounded) {
+        playerContext->Yvelocity += 0.5;
+        pos.y += playerContext->Yvelocity;
+    }
+    
+    if(can_move){
+        if(input.held & GameKeyLeft) pos.x -= 1;
+        if(input.held & GameKeyRight) pos.x += 1;
+    }
+    
+
+    if((input.held & GameKeyLeft || input.held & GameKeyRight) && can_move)
+        is_moving = true;
+    else
+        is_moving = false;
+
+    if(input.held & GameKeyLeft){
+        is_facing_right = false;
+    }
+    
+    if(input.held & GameKeyRight){
+        is_facing_right = true;
+    }
+
+    // jump
+    if(input.pressed & GameKeyUp && isGrounded) {
+        playerContext->Yvelocity = -3.5;
+    }
+
+    // clamp player position to screen bounds
+    pos.x = CLAMP(pos.x, 123, 5);
+    pos.y = CLAMP(pos.y, 59, 5);
+
+    // set new player position
+    entity_pos_set(self, pos);
+
+    // control game exit
+    if(input.pressed & GameKeyBack) {
+        game_manager_game_stop(manager);
+    }
 }
 
 void player_collision(Entity* self, Entity* other, GameManager* manager, void* context) {
@@ -123,68 +185,12 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     PlayerContext* playerContext = (PlayerContext*)context;
     GameContext* game_context = game_manager_game_context_get(manager);
     InputState input = game_manager_input_get(manager);
-    
-    if(input.pressed & GameKeyOk){
-        playerContext->is_swinging_sword = true;
-    }
-
-    can_move = !playerContext->is_swinging_sword;
-
-    Vector pos = entity_pos_get(self);
+    UNUSED(game_context);
+    UNUSED(input);
+    UNUSED(playerContext);
 
 
-    // isGrounded check
-    if((pos.y + 12) >= game_context->ground_hight && playerContext->Yvelocity >= 0) {
-        pos.y = game_context->ground_hight - 12;
-        playerContext->Yvelocity = 0;
-        isGrounded = true;
-    } else {
-        isGrounded = false;
-    }
-
-    // gravity
-    if(!isGrounded) {
-        playerContext->Yvelocity += 0.5;
-        pos.y += playerContext->Yvelocity;
-    }
-    
-    if(can_move){
-        if(input.held & GameKeyLeft) pos.x -= 1;
-        if(input.held & GameKeyRight) pos.x += 1;
-    }
-    
-
-    if((input.held & GameKeyLeft || input.held & GameKeyRight) && can_move)
-        is_moving = true;
-    else
-        is_moving = false;
-
-    if(input.held & GameKeyLeft){
-        is_facing_right = false;
-    }
-    
-    if(input.held & GameKeyRight){
-        is_facing_right = true;
-    }
-
-    // jump
-    if(input.pressed & GameKeyUp && isGrounded) {
-        playerContext->Yvelocity = -3.5;
-    }
-
-    // clamp player position to screen bounds
-    pos.x = CLAMP(pos.x, 123, 5);
-    pos.y = CLAMP(pos.y, 59, 5);
-
-    // set new player position
-    entity_pos_set(self, pos);
-
-    // control game exit
-    if(input.pressed & GameKeyBack) {
-        game_manager_game_stop(manager);
-    }
-
-    player_movement();
+    player_movement(self, manager, context);
     Animations(manager, context);
 }
 
