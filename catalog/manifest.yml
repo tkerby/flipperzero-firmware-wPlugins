@@ -1,0 +1,13 @@
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/Cupprum/Blinker.git
+    commit_sha: 7733cebdaa9fb284dc978d5fcd50fdf9e7909fa7
+short_description: "App that blinks LEDs with a decreasing frequency over time"
+description: "@catalog/README.md"
+changelog: "@catalog/changelog.md"
+author: "@Cupprum"
+screenshots:
+  - "screenshots/blinker_blinking.png"
+  - "screenshots/blinker_menu.png"
+  - "screenshots/blinker_number_menu.png"
