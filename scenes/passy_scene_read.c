@@ -35,12 +35,7 @@ void passy_scene_read_on_enter(void* context) {
     passy->scanner = nfc_scanner_alloc(passy->nfc);
     nfc_scanner_start(
         passy->scanner, passy_scene_detect_scan_callback, passy); // starts a scanner instance
-    /*
-    passy->poller = nfc_poller_alloc(passy->nfc, NfcProtocolIso14443_4b);
-    passy_reader = passy_reader_alloc(passy);
-    nfc_poller_start(passy->poller, passy_reader_poller_callback, passy_reader);
-    passy->bytes_total = 0;
-    */
+
     passy_blink_start(passy);
 
     view_dispatcher_switch_to_view(passy->view_dispatcher, PassyViewPopup);
