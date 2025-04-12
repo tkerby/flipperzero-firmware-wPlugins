@@ -6,11 +6,11 @@
 #include "helpers/storage.h"
 #include "flipper_hero_icons.h"
 
-#define MIN_ARROWS 3
-#define MAX_ARROWS 8
-#define SCORE_MULTIPLIER 5
+#define MIN_ARROWS                3
+#define MAX_ARROWS                8
+#define SCORE_MULTIPLIER          5
 #define TIMER_INCREMENT_PER_ARROW 25
-#define TIMER_MAX 1000
+#define TIMER_MAX                 1000
 
 int generate_numArrows() {
     return MIN_ARROWS + rand() % (MAX_ARROWS - MIN_ARROWS + 1);
@@ -47,7 +47,6 @@ void end_game(PluginState* plugin_state) {
 }
 
 static void input_callback(InputEvent* input_event, void* ctx) {
-
     FuriMessageQueue* event_queue = ctx;
     PluginEvent event = {.type = EventTypeKey, .input = *input_event};
     furi_message_queue_put(event_queue, &event, FuriWaitForever);
