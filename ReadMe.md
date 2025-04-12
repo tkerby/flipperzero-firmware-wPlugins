@@ -46,6 +46,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [HC-11 Modem v1.2 (By Giraut)](https://github.com/Giraut/flipper_zero_hc11_wireless_modem) `Req: HC-11`
 - OFW: [sdk: bump API to force SDK re-upload for the catalog backend #4186 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4186)
 - OFW: [FBT: Fix for Python 3.13 #4187 (By Willy=JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4187)
+- Updated: [Noptel LRF Sampler v2.1 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 
 <a name="release">
 
@@ -584,7 +585,7 @@ $ ./fbt dolphin_ext
 - [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
 - [Nightstand Clock v1.2 (By nymda)](https://github.com/nymda/FlipperNightStand)
-- [Noptel LRF Sampler v2.0 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
+- [Noptel LRF Sampler v2.1 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 - [Notes for FZ WIP (By AdrianN001)](https://github.com/AdrianN001/Flipper-Zero-Note-Application)
 - [NRF Sniff v1.1 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) `Req: NRF24`
 - [NRF Sniffer for MS Mouse (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/nrfsniff_ms) `Req: NRF24`
