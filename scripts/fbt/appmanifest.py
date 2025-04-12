@@ -159,7 +159,7 @@ class AppManager:
                     f"App {kw.get('appid')} cannot have fal_embedded set"
                 )
 
-        if apptype in AppBuildset.dist_app_types:
+        if apptype in AppBuildset.DIST_APP_TYPES:
             # For distributing .fap's resources, there's "fap_file_assets"
             # for app_property in ("resources",):
             for app_property in ():
@@ -265,13 +265,12 @@ class AppBuildset:
         FlipperAppType.EXTSETTINGS: False,
     }
 
-    @classmethod
-    @property
-    def dist_app_types(cls):
-        """Applications that are installed on SD card"""
-        return list(
-            entry[0] for entry in cls.EXTERNAL_APP_TYPES_MAP.items() if entry[1]
-        )
+    DIST_APP_TYPES = list(
+        # Applications that are installed on SD card
+        entry[0]
+        for entry in EXTERNAL_APP_TYPES_MAP.items()
+        if entry[1]
+    )
 
     @staticmethod
     def print_writer(message):
