@@ -1,3 +1,6 @@
+v0.5:
+- Fixed build with the SDK version 1.3.0-rc
+
 v0.4:
 - Added support for an alternate shunt resistor, switchable via long press of the down button on the gauge screen.
 - Fixed shunt resistor dialog - it  now closes by pressing the save button

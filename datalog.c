@@ -48,7 +48,7 @@ static int32_t datalog_worker(void* context) {
     Datalog* log = (Datalog*)context;
     while(!log->stopped) {
         uint8_t buffer[512];
-        size_t nrecved = pipe_receive(log->pipe.bobs_side, buffer, sizeof(buffer), 100);
+        size_t nrecved = pipe_receive(log->pipe.bobs_side, buffer, sizeof(buffer));
 
         size_t nwritten = storage_file_write(log->file, buffer, nrecved);
         if(nrecved != nwritten) {
@@ -136,7 +136,7 @@ size_t datalog_get_file_size(Datalog* log) {
 
 static void datalog_append_string(Datalog* log, const char* str) {
     size_t len = strlen(str);
-    pipe_send(log->pipe.alices_side, str, len, FuriWaitForever);
+    pipe_send(log->pipe.alices_side, str, len);
 }
 
 void datalog_append_record(Datalog* log, const SensorState* state) {
