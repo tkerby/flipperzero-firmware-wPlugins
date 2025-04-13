@@ -1,25 +1,26 @@
 # Atari SIO Peripheral Emulator for Flipper Zero
 
-sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, but now it features quite good support for floppy drive emulation. Additionally, besides FDD emulation, direct XEX executable file loading is now supported.
+sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8-bit computers. The project is still in its early stages, but it already features:
+
+- **Floppy drive emulation**
+  - Sector reading and writing commands
+  - Disk formatting commands
+  - Commands for reading and writing PERCOM configuration
+  - US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
+  - XF-551 High Speed mode is emulated 
+  - Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
+  - 128- or 256-byte sectors are supported
+  - Up to four floppy disk drives can be emulated.
+- **Direct XEX executable file loading**
+  - Now runs at 19200 Bd, using 1 KB transfer blocks
+- **Atari 850 modem emulation**
+  - Modem bridged to a second USB CDC (virtual COM port)
+
 
 <div>
 <img src="screenshots/screenshot_fdd.png" width="20%" />
 <img src="screenshots/screenshot_xex_loader.png" width="20%" />
 </div>
-
-## What's tested
-
-The app has been tested with the PAL version of the Atari 800XL. It appears to be quite functional, allowing the system to boot from various ATR image files. The following features have already been implemented:
-
-- Sector reading and writing commands
-- Disk formatting commands
-- Commands for reading and writing PERCOM configuration
-- US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
-- XF-551 High Speed mode is emulated 
-- Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
-- 128- or 256-byte sectors are supported
-- Up to four floppy disk drives can be emulated.
-- Direct XEX executable file loading
 
 ## Wiring
 
@@ -38,12 +39,23 @@ Note: All signals on the Atari SIO use 5V TTL logic. Although the Flipper Zero�
 
 ## Instructions for Use
 
-The emulator accepts disk images in ATR format and XEX executables. Copy the ATR files to the SD card at **/apps_data/sio2flip/atr/** and the XEX files to **/apps_data/sio2flip/xex/**.
+The emulator supports ATR disk images and XEX executables. To use them, copy the files to the SD card as follows:
+- ATR files: **/apps_data/sio2flip/atr/**
+- XEX files: **/apps_data/sio2flip/xex/**
 
-## TODO
+For Atari 850 emulation, you need to provide the Atari 850 ROM file. Copy the ROM content to:
+- **/apps_data/sio2flip/atari850.rom**
 
-I have some plans, but I’m not sure if or when I’ll be able to complete them all.
+Note: I cannot include the ROM file with the app, so you’ll need to provide it yourself. The file must be exactly 4 KB in size and have the following SHA-256 checksum:
+5c490a04d9936a87d3f9b6919ddaccbde30e3fb37f03a7557695d0c33f47bb8a.
 
-- Use how-speed SIO with XEX file loader
-- Add CAS file emulation
-- Improve error signaling to host via FDD status byte
+## About This Project
+
+There are several great SIO peripheral emulators available, many more advanced than this project. 
+However, none run on the Flipper Zero - so I built this purely for enjoyment. 😄
+
+Contributions, ideas, feedback, and bug reports are welcome!
+
+Planned improvements (time permitting):
+- Add high-speed SIO support to the XEX file loader
+- Add CAS file playback (cassette recorder emulation)
