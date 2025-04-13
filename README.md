@@ -49,6 +49,29 @@ For Atari 850 emulation, you need to provide the Atari 850 ROM file. Copy the RO
 Note: I cannot include the ROM file with the app, so you’ll need to provide it yourself. The file must be exactly 4 KB in size and have the following SHA-256 checksum:
 5c490a04d9936a87d3f9b6919ddaccbde30e3fb37f03a7557695d0c33f47bb8a.
 
+
+## How to Connect Your Atari to the Internet
+
+You can use the excellent 80-column Ice-T terminal, available on the AtariAge forum.
+There you’ll also find there a link to ready-to-run ATR images that include everything you need.
+
+Steps:
+1.	Enable Atari 850 emulation from the sio2flip main menu and select Start emulation…
+2.	Boot an ATR image containing DOS, RS232.COM, and ICET.COM
+(Hold the OPTION key during boot to disable the built-in BASIC ROM)
+3.	Load and run RS232.COM. This will download the R: driver from the emulator and install it.
+4.	Load and run ICET.COM.
+5.	Connect your Flipper Zero via USB. Two virtual COM ports will appear:
+    - First port: Flipper CLI
+    - Second port: Atari SIO bridge
+
+6. Run the bridge.py script from this repository:
+
+```sh
+python3 bridge.py <sio_vcp> <server>
+```
+
+
 ## About This Project
 
 There are several great SIO peripheral emulators available, many more advanced than this project. 
