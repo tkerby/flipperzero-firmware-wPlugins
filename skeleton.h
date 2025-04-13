@@ -6,6 +6,7 @@
 typedef struct {
     Sprite* sprite;
     bool is_going_right;
+    float Yvelocity;
 } SkeletonContext;
 
 void skeleton_spawn(Level* level, GameManager* manager);

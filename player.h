@@ -6,7 +6,6 @@
 typedef struct {
     Sprite* sprite;
     float Yvelocity;
-    bool isGrounded;
     bool is_swinging_sword;
 } PlayerContext;
 
