@@ -15,10 +15,15 @@ void blackhat_console_output_handle_rx_data_cb(
             furi_string_size(app->text_box_store) + len;
     }
 
+    // We gotta parse the output
+    if (app->is_script_scan) {
+        memcpy(&app->script_text[app->script_text_ptr], buf, len);
+        app->script_text_ptr += len;
+    }
+
     // Null-terminate buf and append to text box store
     buf[len] = '\0';
     furi_string_cat_printf(app->text_box_store, "%s", buf);
-
     text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
 }
 
@@ -40,6 +45,23 @@ void blackhat_scene_console_output_on_enter(void* context)
         return;
     }
 
+    app->is_script_scan = false;
+    if (!strcmp(app->selected_tx_string, SCAN_CMD)) {
+        app->is_script_scan = true;
+        app->script_text_ptr = 0;
+        app->scanned = true;
+    }
+
+    if (!strcmp(app->selected_tx_string, RUN_CMD)) {
+        if (app->scanned) {
+            app->script_text_ptr++;
+            app->script_text[app->script_text_ptr] = 0x00;
+            scene_manager_next_scene(app->scene_manager, BlackhatSceneScripts);
+        }
+        return;
+    }
+
+    FURI_LOG_I("selected_tx_string", "%s", app->selected_tx_string);
     snprintf(
         app->text_store,
         sizeof(app->text_store),
@@ -51,9 +73,11 @@ void blackhat_scene_console_output_on_enter(void* context)
     FURI_LOG_I("tag/app name", "%s", app->text_store);
 
     text_box_set_text(app->text_box, furi_string_get_cstr(app->text_box_store));
+
     scene_manager_set_scene_state(
         app->scene_manager, BlackhatSceneConsoleOutput, 0
     );
+
     view_dispatcher_switch_to_view(
         app->view_dispatcher, BlackhatAppViewConsoleOutput
     );
