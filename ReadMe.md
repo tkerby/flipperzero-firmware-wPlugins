@@ -30,7 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-13 02:32 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-13 02:32 EST`
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - Added: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
@@ -47,6 +46,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [sdk: bump API to force SDK re-upload for the catalog backend #4186 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4186)
 - OFW: [FBT: Fix for Python 3.13 #4187 (By Willy=JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4187)
 - Updated: [Noptel LRF Sampler v2.1 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
+- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 
 <a name="release">
 

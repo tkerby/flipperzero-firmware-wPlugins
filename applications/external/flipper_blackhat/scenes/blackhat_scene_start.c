@@ -2,6 +2,8 @@
 
 BlackhatItem items[] = {
     {"Shell", {""}, 1, NULL, SHELL_CMD, false},
+    {"Scan for Scripts", {""}, 1, NULL, SCAN_CMD, false},
+    {"Run Script", {""}, 1, NULL, RUN_CMD, false},
     {"Connect WiFi", {""}, 1, NULL, WIFI_CON_CMD, FOCUS_CONSOLE_END},
     {"Set inet SSID", {""}, 1, NULL, SET_INET_SSID_CMD, true},
     {"Set inet Password", {""}, 1, NULL, SET_INET_PWD_CMD, true},
