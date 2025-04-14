@@ -36,7 +36,8 @@ static void blackhat_scene_start_var_list_enter_callback(void* context, uint32_t
     app->selected_menu_index = index;
 
     app->selected_option_item_text = item->selected_option;
-    view_dispatcher_send_custom_event(app->view_dispatcher, BlackhatEventStartConsole);
+
+    scene_manager_next_scene(app->scene_manager, BlackhatAppViewConsoleOutput);
 }
 
 static void blackhat_scene_start_var_list_change_callback(VariableItem* item) {
@@ -79,37 +80,13 @@ void blackhat_scene_start_on_enter(void* context) {
             item, items[i].options_menu[app->selected_option_index[i]]);
     }
 
-    variable_item_list_set_selected_item(
-        var_item_list, scene_manager_get_scene_state(app->scene_manager, BlackhatSceneStart));
-
     view_dispatcher_switch_to_view(app->view_dispatcher, BlackhatAppViewVarItemList);
 }
 
 bool blackhat_scene_start_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
-    BlackhatApp* app = context;
-    bool consumed = false;
-
-    if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == BlackhatEventStartPortal) {
-            scene_manager_set_scene_state(
-                app->scene_manager, BlackhatSceneStart, app->selected_menu_index);
-            scene_manager_next_scene(app->scene_manager, BlackhatAppViewStartPortal);
-        } else if(event.event == BlackhatEventStartKeyboard) {
-            scene_manager_set_scene_state(
-                app->scene_manager, BlackhatSceneStart, app->selected_menu_index);
-        } else if(event.event == BlackhatEventStartConsole) {
-            scene_manager_set_scene_state(
-                app->scene_manager, BlackhatSceneStart, app->selected_menu_index);
-            scene_manager_next_scene(app->scene_manager, BlackhatAppViewConsoleOutput);
-        }
-        consumed = true;
-    } else if(event.type == SceneManagerEventTypeTick) {
-        app->selected_menu_index = variable_item_list_get_selected_item_index(app->var_item_list);
-        consumed = true;
-    }
-
-    return consumed;
+    UNUSED(event);
+    return false;
 }
 
 void blackhat_scene_start_on_exit(void* context) {

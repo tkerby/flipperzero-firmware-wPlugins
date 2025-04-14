@@ -27,6 +27,8 @@ BlackhatApp* blackhat_app_alloc() {
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
 
+    memset(app->cmd, 0x00, sizeof(app->cmd));
+
     app->gui = furi_record_open(RECORD_GUI);
 
     app->view_dispatcher = view_dispatcher_alloc();
@@ -84,6 +86,10 @@ BlackhatApp* blackhat_app_alloc() {
 
 void blackhat_app_free(BlackhatApp* app) {
     furi_assert(app);
+
+    for(int i = 0; i < app->num_scripts; i++) {
+        if(app->cmd[i]) free(app->cmd[i]);
+    }
 
     // Views
     view_dispatcher_remove_view(app->view_dispatcher, BlackhatAppViewVarItemList);
