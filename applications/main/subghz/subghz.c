@@ -61,7 +61,7 @@ static void subghz_rpc_command_callback(const RpcAppSystemEvent* event, void* co
     }
 }
 
- /*
+/*
 static void subghz_load_custom_presets(SubGhzSetting* setting) {
     furi_assert(setting);
 
@@ -213,28 +213,6 @@ SubGhz* subghz_alloc(bool alloc_for_tx_only) {
     furi_hal_subghz_set_ext_leds_and_amp(subghz->last_settings->leds_and_amp);
 
     if(!alloc_for_tx_only) {
-        // Make sure we select a frequency available in loaded setting configuration
-        uint32_t last_frequency = subghz->last_settings->frequency;
-        size_t count = subghz_setting_get_frequency_count(setting);
-        bool found_last = false;
-        bool found_default = false;
-        for(size_t i = 0; i < count; i++) {
-            uint32_t frequency = subghz_setting_get_frequency(setting, i);
-            if(frequency == last_frequency) {
-                found_last = true;
-                break;
-            }
-            if(frequency == SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY) found_default = true;
-        }
-        if(!found_last) {
-            if(found_default) {
-                last_frequency = SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY;
-            } else if(count > 0) {
-                last_frequency = subghz_setting_get_frequency(setting, 0);
-            }
-            subghz->last_settings->frequency = last_frequency;
-        }
-
         subghz_txrx_set_preset_internal(
             subghz->txrx, subghz->last_settings->frequency, subghz->last_settings->preset_index);
         subghz->history = subghz_history_alloc();
