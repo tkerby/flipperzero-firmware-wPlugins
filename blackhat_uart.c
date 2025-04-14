@@ -1,6 +1,5 @@
-#include "blackhat_uart.h"
-
 #include "blackhat_app_i.h"
+#include "blackhat_uart.h"
 
 struct BlackhatUart {
     BlackhatApp* app;

@@ -27,8 +27,8 @@
 #define UART_CH FuriHalSerialIdUsart
 
 #define SHELL_CMD "whoami"
-#define SCAN_CMD "bh scripts"
-#define RUN_CMD "bh scripts run"
+#define SCAN_CMD "bh script scan"
+#define RUN_CMD "bh scriptrun"
 #define WIFI_CON_CMD "bh wifi connect"
 #define SET_INET_SSID_CMD "bh set SSID"
 #define SET_INET_PWD_CMD "bh set PASS"

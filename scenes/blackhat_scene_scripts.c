@@ -23,7 +23,7 @@ static void blackhat_scene_script_list_enter_callback(
 
 static void blackhat_scene_script_list_change_callback(VariableItem* item)
 {
-    furi_assert(item);  // REMOVE
+    UNUSED(item);
 }
 
 void blackhat_scene_scripts_on_enter(void* context)
@@ -68,9 +68,8 @@ void blackhat_scene_scripts_on_enter(void* context)
 
 bool blackhat_scene_scripts_on_event(void* context, SceneManagerEvent event)
 {
-    BlackhatApp* app = context;
-    furi_assert(app);    // REMOVE
-    furi_assert(event);  // REMOVE
+    UNUSED(context);
+    UNUSED(event);
     return false;
 }
 
