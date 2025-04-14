@@ -79,14 +79,16 @@ typedef struct {
     //Mifare Classic data
     MfClassicData* mf_classic_data;
     bool is_valid_mizip_data;
+    bool is_number_input_active;
 
     //MiZip data
     uint8_t credit_pointer;
     uint8_t previous_credit_pointer;
     uint16_t current_balance;
     uint16_t previous_balance;
+    uint16_t new_balance;
     uint16_t min_value;
     uint16_t max_value;
 } MiZipBalanceEditorApp;
 
-void mizip_balance_editor_write_new_balance(void* context, uint16_t new_balance);
+void mizip_balance_editor_write_new_balance(void* context);

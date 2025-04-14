@@ -2,7 +2,7 @@
 
 void mizip_balance_editor_scene_input_number_callback(void* context, int32_t number) {
     MiZipBalanceEditorApp* app = context;
-    mizip_balance_editor_write_new_balance(context, number);
+    app->new_balance = number;
     view_dispatcher_send_custom_event(app->view_dispatcher, 0);
 }
 
