@@ -2,6 +2,7 @@
 #include "player.h"
 
 bool isSkeletonGrounded;
+int health = 3;
 
 void skeleton_spawn(Level *level, GameManager *manager){
     Entity* skeleton = level_add_entity(level, &skel_desc);
@@ -16,11 +17,20 @@ void skeleton_spawn(Level *level, GameManager *manager){
 }
 
 void skel_behavior(Vector* pos) {
-    if(player != NULL) {
-        Vector player_pos = entity_pos_get(player);
+    Vector player_pos = entity_pos_get(player);
+    PlayerContext* player_context = entity_context_get(player);
 
+    if(player != NULL) {
         if(player_pos.x > pos->x) pos->x += 0.5;
         if(player_pos.x < pos->x) pos->x -= 0.5;
+    }
+
+    // hit logic //
+    if(is_player_facing_right && player_pos.x > pos->x && player_context->is_swinging_sword){
+        health--;
+    }
+    if(!is_player_facing_right && player_pos.x < pos->x && player_context->is_swinging_sword) {
+        health--;
     }
 }
 

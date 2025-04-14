@@ -12,8 +12,9 @@ typedef struct {
 // making player accessible globaly
 extern Entity* player;
 
-
 extern float ground_hight;
+
+extern bool is_player_facing_right;
 
 extern const EntityDescription player_desc;
 

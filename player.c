@@ -7,7 +7,7 @@ bool isJumping;
 bool is_moving;
 bool can_move = true;
 
-bool is_facing_right;
+bool is_player_facing_right;
 
 
 Entity* player = NULL;
@@ -74,11 +74,11 @@ void player_movement(Entity* self, GameManager* manager, void* context) {
             is_moving = false;
 
         if(input.held & GameKeyLeft) {
-            is_facing_right = false;
+            is_player_facing_right = false;
         }
 
         if(input.held & GameKeyRight) {
-            is_facing_right = true;
+            is_player_facing_right = true;
         }
 
         // jump
@@ -132,7 +132,7 @@ void Animations(GameManager* manager, void* context) {
 
     // swinging sword animation logic
     if(playerContext->is_swinging_sword) {
-        if(is_facing_right)
+        if(is_player_facing_right)
             Swinging_sword_animation_right_play(manager, context);
         else
             Swinging_sword_animation_play(manager, context);
@@ -140,24 +140,24 @@ void Animations(GameManager* manager, void* context) {
 
     if(!playerContext->is_swinging_sword){
         // idle / walk / jump animations
-        if(!is_moving && isGrounded && !is_facing_right) {
+        if(!is_moving && isGrounded && !is_player_facing_right) {
             Idle_animation_play(manager, context);
         }
         
-        if(!is_moving && isGrounded && is_facing_right) {
+        if(!is_moving && isGrounded && is_player_facing_right) {
             Idle_animation_right_play(manager, context);
         }
     
-        if(is_moving && isGrounded && !is_facing_right) {
+        if(is_moving && isGrounded && !is_player_facing_right) {
             Walking_animation_play(manager, context);
         }
         
-        if(is_moving && isGrounded && is_facing_right) {
+        if(is_moving && isGrounded && is_player_facing_right) {
             Walking_right_animation_play(manager, context);
         }
         
         if(playerContext->Yvelocity > 0 && !isGrounded){
-            if(!is_facing_right){
+            if(!is_player_facing_right){
                 playerContext->sprite = jumping[3];
             }
             else{
@@ -166,7 +166,7 @@ void Animations(GameManager* manager, void* context) {
         }
     
         if(playerContext->Yvelocity < 0 && !isGrounded){
-            if(!is_facing_right){
+            if(!is_player_facing_right){
                 playerContext->sprite = jumping[0];
             }
             else{
