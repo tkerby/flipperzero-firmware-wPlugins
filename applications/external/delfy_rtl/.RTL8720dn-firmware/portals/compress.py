@@ -3,6 +3,7 @@ import os
 import gzip
 from pathlib import Path
 
+
 def generate_header(input_file):
     input_path = Path(input_file)
     if not input_path.is_file():
@@ -12,10 +13,10 @@ def generate_header(input_file):
     # Nombre del archivo sin extensión
     var_name = input_path.stem
     # Nombre del archivo de salida .h
-    header_file = input_path.with_suffix('.h')
+    header_file = input_path.with_suffix(".h")
 
     # Leer y comprimir el archivo
-    with open(input_file, 'rb') as f:
+    with open(input_file, "rb") as f:
         data = f.read()
     compressed_data = gzip.compress(data)
 
@@ -26,8 +27,8 @@ def generate_header(input_file):
 
     # Dividir los bytes en líneas de 16
     for i in range(0, len(compressed_data), 16):
-        chunk = compressed_data[i:i+16]
-        line = ', '.join(f"0x{byte:02X}" for byte in chunk)
+        chunk = compressed_data[i : i + 16]
+        line = ", ".join(f"0x{byte:02X}" for byte in chunk)
         lines.append(f"  {line},")
 
     # Quitar la coma final de la última línea
@@ -37,10 +38,11 @@ def generate_header(input_file):
     lines.append("};")
 
     # Escribir a archivo .h
-    with open(header_file, 'w') as f:
-        f.write('\n'.join(lines))
-    
+    with open(header_file, "w") as f:
+        f.write("\n".join(lines))
+
     print(f"Archivo '{header_file}' generado correctamente.")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -48,4 +50,3 @@ if __name__ == "__main__":
         sys.exit(1)
 
     generate_header(sys.argv[1])
-
