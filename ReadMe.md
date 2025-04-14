@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Archive: Fix memory leak with Search+Info (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bce27a14635c584eeb92739ce7f775d20e7d8423)
 - NFC: [Use default UL/UL-C pwd/key as default value for key input (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/891)
 - [SubGHz Preset Optimizations (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/43606872b750d129cedc0af0772fdd4714fe4081)
+- Updated: [NRF24 Channel Scanner v1.4 (by htotoo)](https://github.com/htotoo/NRF24ChannelScanner)
 
 <a name="release">
 
@@ -594,7 +595,7 @@ $ ./fbt dolphin_ext
 - [NRF Sniff v1.1 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/nrfsniff) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/nrfsniff) `Req: NRF24`
 - [NRF Sniffer for MS Mouse (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/nrfsniff_ms) `Req: NRF24`
 - [NRF24 Batch v2.0 (By vad7)](https://github.com/vad7/nRF24-Batch)
-- [NRF24 Channel Scanner v1.3 (by htotoo)](https://github.com/htotoo/NRF24ChannelScanner)
+- [NRF24 Channel Scanner v1.4 (by htotoo)](https://github.com/htotoo/NRF24ChannelScanner)
 - [NRF24 Monitor v1.0 (By CyberDemon73)](https://github.com/CyberDemon73/flipperzero-nrf24monitor)
 - [NRF24 Scanner v2.3 (By vad7)](https://github.com/vad7/nrf24scan)
 - [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
