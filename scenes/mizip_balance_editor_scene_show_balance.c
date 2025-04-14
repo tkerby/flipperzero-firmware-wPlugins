@@ -43,7 +43,7 @@ void mizip_balance_editor_show_balances(void* context) {
         snprintf(
             str,
             sizeof(str),
-            "Previous balance:  %d.%02d E\nCurrent balance: %d.%02d E\nPress back to write",
+            "Original balance:  %d.%02d E\nNew balance: %d.%02d E\nPress back to write",
             app->current_balance / 100,
             app->current_balance % 100,
             app->new_balance / 100,
