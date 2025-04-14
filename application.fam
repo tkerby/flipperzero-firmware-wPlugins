@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="executor_keychain_app",
     stack_size=2 * 1024,
-    fap_category="Misc",
+    fap_category="Media",
     fap_version="0.1",
     fap_icon="assets/executor_keychain_10px.png", 
     fap_description="Echo Keyller/Executor Keychain",
