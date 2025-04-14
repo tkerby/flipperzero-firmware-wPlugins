@@ -37,6 +37,7 @@ void subghz_last_settings_free(SubGhzLastSettings* instance) {
 }
 
 void subghz_last_settings_load(SubGhzLastSettings* instance, size_t preset_count) {
+    UNUSED(preset_count);
     furi_assert(instance);
 
     // Default values (all others set to 0, if read from file fails these are used)
@@ -187,7 +188,7 @@ void subghz_last_settings_load(SubGhzLastSettings* instance, size_t preset_count
         instance->frequency = SUBGHZ_LAST_SETTING_DEFAULT_FREQUENCY;
     }
 
-    if(instance->preset_index > (uint32_t)preset_count - 1) {
+    if(instance->preset_index > 3) {
         instance->preset_index = SUBGHZ_LAST_SETTING_DEFAULT_PRESET;
     }
 }

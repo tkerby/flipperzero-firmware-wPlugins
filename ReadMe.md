@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board` (Version Only)
 - [Archive: Fix memory leak with Search+Info (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bce27a14635c584eeb92739ce7f775d20e7d8423)
 - NFC: [Use default UL/UL-C pwd/key as default value for key input (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/891)
+- [SubGHz Preset Optimizations (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/)
 
 <a name="release">
 
