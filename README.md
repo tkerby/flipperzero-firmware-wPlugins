@@ -10,6 +10,6 @@ Features:
 
 TODO:
 - [ ] Write to tag
-- [ ] Write to file only on scene exit
+- [ ] File writing success scene
 - [ ] Update previous balance bytes
 - [ ] Support for shadow file (.shd) to keep original data
