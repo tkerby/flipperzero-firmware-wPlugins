@@ -25,17 +25,24 @@ void mizip_balance_editor_show_current_balance(void* context) {
 
         //Get and show current balance
         if(app->mf_classic_data->block[10].data[0] == 0x55) {
+            app->previous_credit_pointer = 0x08;
             app->credit_pointer = 0x09;
         } else {
+            app->previous_credit_pointer = 0x09;
             app->credit_pointer = 0x08;
         }
+        app->previous_balance =
+            (app->mf_classic_data->block[app->previous_credit_pointer].data[2] << 8) |
+            (app->mf_classic_data->block[app->previous_credit_pointer].data[1]);
         app->current_balance = (app->mf_classic_data->block[app->credit_pointer].data[2] << 8) |
                                (app->mf_classic_data->block[app->credit_pointer].data[1]);
-        char str[50];
+        char str[100];
         snprintf(
             str,
             sizeof(str),
-            "Current balance: %d.%02d E",
+            "Previous balance:  %d.%02d E\nCurrent balance: %d.%02d E\nPress back to write",
+            app->previous_balance / 100,
+            app->previous_balance % 100,
             app->current_balance / 100,
             app->current_balance % 100);
 
