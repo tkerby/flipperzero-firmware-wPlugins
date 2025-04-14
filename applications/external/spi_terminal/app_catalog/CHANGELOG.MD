@@ -1,3 +1,7 @@
+## v0.4
+
+Fixes for Flipper Firmware 1.3.x
+
 ## v3.0
 
 Flipper App Catalog fix

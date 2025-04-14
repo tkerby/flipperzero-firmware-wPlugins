@@ -33,7 +33,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 - Updated: [Pomodoro Timer v1.4 (By sbrin)](https://github.com/sbrin/flipperzero_pomodoro) [Pomodoro long break (By DrEverr)](https://github.com/xMasterX/all-the-plugins/pull/183)
 - ESP Flasher Bump [Marauder 1.4.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.2)
 - Updated: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
@@ -41,6 +40,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.1 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Flipper Hero v1.2 (By mentoster)](https://github.com/mentoster/Flipper-hero)
 - Updated: [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) (Version Only)
+- Updated: [LEGO Dimensions Toy Pad v0.4 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
 - Updated: [HC-11 Modem v1.2 (By Giraut)](https://github.com/Giraut/flipper_zero_hc11_wireless_modem) `Req: HC-11`
 - OFW: [sdk: bump API to force SDK re-upload for the catalog backend #4186 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4186)
 - OFW: [FBT: Fix for Python 3.13 #4187 (By Willy=JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4187)
@@ -52,7 +52,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SubGHz Preset Optimizations (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/43606872b750d129cedc0af0772fdd4714fe4081)
 - Updated: [NRF24 Channel Scanner v1.4 (by htotoo)](https://github.com/htotoo/NRF24ChannelScanner)
 - Updated: [FlipWifi v1.5 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [LEGO Dimensions Toy Pad v0.4 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
+- Updated: [SPI Terminal v0.4 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal) (Version Only)
 
 <a name="release">
 
@@ -655,7 +656,7 @@ $ ./fbt dolphin_ext
 - [Spectrum Analyzer v1.3 (By jolcese)](https://github.com/jolcese/flipperzero-firmware/tree/spectrum/applications/spectrum_analyzer)
 - [Spotify Remote v0.1 (By benjamindrussell)](https://github.com/benjamindrussell/flipper-spotify-remote) `Req: ESP32` with [ESP32 Spotify Remote](https://github.com/benjamindrussell/esp32-spotify-remote)
 - [SPI Mem Manager v1.4 (By drunkbatya)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/spi_mem_manager)
-- [SPI Terminal v0.3 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal)
+- [SPI Terminal v0.4 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal)
 - [StroboMeter v1.1 (By LeanderJDev)](https://github.com/LeanderJDev/FlipperStroboMeterApp)
 - [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - [Sub-GHz Playlist v1.0 (By darmiel)](https://github.com/darmiel/flipper-playlist)
