@@ -27,8 +27,9 @@
 #include "mizip_balance_editor.h"
 #include "adapted_from_ofw/mizip.h"
 
-#define NFC_APP_FOLDER    EXT_PATH("nfc")
-#define NFC_APP_EXTENSION ".nfc"
+#define NFC_APP_FOLDER           EXT_PATH("nfc")
+#define NFC_APP_EXTENSION        ".nfc"
+#define NFC_APP_SHADOW_EXTENSION ".shd"
 
 // Enumeration of the view indexes.
 typedef enum {
