@@ -1,4 +1,4 @@
-#include "../mizip_balance_editor.h"
+#include "../mizip_balance_editor_i.h"
 
 void mizip_balance_editor_scene_input_number_callback(void* context, int32_t number) {
     MiZipBalanceEditorApp* app = context;

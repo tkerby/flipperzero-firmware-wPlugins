@@ -1,4 +1,4 @@
-#include "../mizip_balance_editor.h"
+#include "../mizip_balance_editor_i.h"
 
 void mizip_balance_editor_app_submenu_callback(void* context, uint32_t index) {
     MiZipBalanceEditorApp* app = context;

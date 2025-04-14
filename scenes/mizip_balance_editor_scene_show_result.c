@@ -1,4 +1,4 @@
-#include "../mizip_balance_editor.h"
+#include "../mizip_balance_editor_i.h"
 
 static void
     mizip_balance_editor_scene_confirm_dialog_callback(DialogExResult result, void* context) {
@@ -55,7 +55,7 @@ void mizip_balance_editor_show_balances(void* context) {
 void mizip_balance_editor_scene_show_result_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
-    dialog_ex_reset(app->dialog_ex);
+
     if(app->is_valid_mizip_data) {
         //Get and show UID
         char uid[18];
@@ -117,13 +117,19 @@ bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManager
             consumed = true;
             break;
         case DialogExResultRight:
-            //Add 100 cents from balance
+            //Add 100 cents to balance
             app->new_balance = app->new_balance + 100;
             mizip_balance_editor_show_balances(context);
             consumed = true;
             break;
         default:
             break;
+        }
+    } else if(event.type == SceneManagerEventTypeBack) {
+        if(app->new_balance != app->current_balance) {
+            mizip_balance_editor_write_new_balance(context);
+            /*scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            consumed = true;*/
         }
     }
     return consumed;
@@ -134,7 +140,7 @@ void mizip_balance_editor_scene_show_result_on_exit(void* context) {
 
     if(app->is_number_input_active) {
         return;
-    } else if(app->new_balance != app->current_balance) {
-        mizip_balance_editor_write_new_balance(context);
+    } else {
+        dialog_ex_reset(app->dialog_ex);
     }
 }

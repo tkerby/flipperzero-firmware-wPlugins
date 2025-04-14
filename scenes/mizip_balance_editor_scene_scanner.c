@@ -1,4 +1,4 @@
-#include "../mizip_balance_editor.h"
+#include "../mizip_balance_editor_i.h"
 
 static NfcCommand
     mizip_balance_editor_scene_scanner_poller_callback(NfcGenericEvent event, void* context) {
@@ -24,7 +24,6 @@ static NfcCommand
 void mizip_balance_editor_scene_scanner_scan_callback(NfcScannerEvent event, void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
-    FURI_LOG_T("SCANNER", "Scanner event raised");
     if(event.type == NfcScannerEventTypeDetected) {
         view_dispatcher_send_custom_event(
             app->view_dispatcher, MiZipBalanceEditorCustomEventCardDetected);
@@ -50,7 +49,6 @@ void mizip_balance_editor_scene_scanner_on_enter(void* context) {
     app->scanner = nfc_scanner_alloc(app->nfc);
     nfc_scanner_start(app->scanner, mizip_balance_editor_scene_scanner_scan_callback, app);
     app->is_scan_active = true;
-    FURI_LOG_T("SCANNER", "Scanner view initiated");
 }
 
 bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEvent event) {
@@ -59,18 +57,15 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == MiZipBalanceEditorCustomEventCardDetected) {
-            FURI_LOG_T("SCANNER", "Reading in progress");
             popup_set_header(app->popup, "Reading...", 65, 40, AlignLeft, AlignTop);
             consumed = true;
         } else if(event.event == MiZipBalanceEditorCustomEventWrongCard) {
-            FURI_LOG_T("SCANNER", "Wrong card");
             nfc_scanner_stop(app->scanner);
             nfc_scanner_free(app->scanner);
             app->is_scan_active = false;
             popup_set_header(app->popup, "Wrong tag", 65, 40, AlignLeft, AlignTop);
             consumed = true;
         } else if(event.event == MiZipBalanceEditorCustomEventMfClassicCard) {
-            FURI_LOG_T("SCANNER", "MfClassic Card");
             nfc_scanner_stop(app->scanner);
             nfc_scanner_free(app->scanner);
             app->is_scan_active = false;

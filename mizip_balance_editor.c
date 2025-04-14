@@ -1,4 +1,4 @@
-#include <mizip_balance_editor.h>
+#include <mizip_balance_editor_i.h>
 
 // This function is called when there are custom events to process.
 bool mizip_balance_editor_app_custom_event_callback(void* context, uint32_t event) {
@@ -62,7 +62,7 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     //Initialize Dialogs for file browser
     app->dialogs = furi_record_open(RECORD_DIALOGS);
 
-    //Initialize Popup for NFC scanner
+    //Initialize Popup for NFC scanner and Write Success
     app->popup = popup_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdScanner, popup_get_view(app->popup));

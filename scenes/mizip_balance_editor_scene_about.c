@@ -1,4 +1,4 @@
-#include "../mizip_balance_editor.h"
+#include "../mizip_balance_editor_i.h"
 
 void mizip_balance_editor_scene_about_on_enter(void* context) {
     furi_assert(context);
