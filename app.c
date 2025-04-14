@@ -1,5 +1,7 @@
 #include <flip_wifi.h>
 #include <alloc/flip_wifi_alloc.h>
+#include <update/update.h>
+#include <flip_storage/flip_wifi_storage.h>
 
 // Entry point for the FlipWiFi application
 int32_t flip_wifi_main(void *p)
@@ -36,10 +38,19 @@ int32_t flip_wifi_main(void *p)
         FURI_LOG_D(TAG, "Waiting for PONG");
         furi_delay_ms(100); // this causes a BusFault
     }
-    flipper_http_free(fhttp);
 
     if (counter == 0)
         easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+
+    save_char("app_version", VERSION);
+
+    // for now use the catalog API until I implement caching on the server
+    if (update_is_ready(fhttp, true))
+    {
+        easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+    }
+
+    flipper_http_free(fhttp);
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
