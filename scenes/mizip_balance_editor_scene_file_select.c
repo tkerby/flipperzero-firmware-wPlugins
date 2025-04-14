@@ -25,7 +25,7 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
                 app->mf_classic_data, nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
             app->is_valid_mizip_data = mizip_verify(context);
             nfc_device_free(app->nfc_device);
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
         } else {
             scene_manager_previous_scene(app->scene_manager);
         }

@@ -37,7 +37,7 @@ typedef enum {
     MiZipBalanceEditorViewIdScanner,
     MiZipBalanceEditorViewIdFileSelect,
     MiZipBalanceEditorViewIdNumberInput,
-    MiZipBalanceEditorViewIdShowResult,
+    MiZipBalanceEditorViewIdShowBalance,
     MiZipBalanceEditorViewIdWriteSuccess,
     MiZipBalanceEditorViewIdAbout,
 } MiZipBalanceEditorViewId;

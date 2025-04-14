@@ -11,7 +11,7 @@ void mizip_balance_editor_scene_write_success_on_enter(void* context) {
 
     popup_set_icon(app->popup, 36, 5, &I_DolphinSaved_92x58);
     popup_set_header(app->popup, "Saved", 15, 19, AlignLeft, AlignBottom);
-    popup_set_timeout(app->popup, 1500);
+    popup_set_timeout(app->popup, 2000);
     popup_set_context(app->popup, context);
     popup_set_callback(app->popup, mizip_balance_editor_scene_write_success_popup_callback);
     popup_enable_timeout(app->popup);
@@ -25,8 +25,8 @@ bool mizip_balance_editor_scene_write_success_on_event(void* context, SceneManag
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == MiZipBalanceEditorCustomEventViewExit) {
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
-            consumed = true;
+            consumed = scene_manager_search_and_switch_to_previous_scene(
+                app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
         }
     }
     return consumed;

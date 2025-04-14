@@ -77,7 +77,7 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
             nfc_poller_stop(app->poller);
             nfc_poller_free(app->poller);
             app->is_valid_mizip_data = mizip_verify(context);
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowResult);
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
             consumed = true;
         }
     }

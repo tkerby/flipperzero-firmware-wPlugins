@@ -66,6 +66,8 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->popup = popup_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdScanner, popup_get_view(app->popup));
+    view_dispatcher_add_view(
+        app->view_dispatcher, MiZipBalanceEditorViewIdWriteSuccess, popup_get_view(app->popup));
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
 
@@ -73,7 +75,7 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->dialog_ex = dialog_ex_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
-        MiZipBalanceEditorViewIdShowResult,
+        MiZipBalanceEditorViewIdShowBalance,
         dialog_ex_get_view(app->dialog_ex));
 
     //Create the NumberInput for custom value balance
@@ -113,7 +115,7 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdScanner);
     popup_free(app->popup);
 
-    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowBalance);
     dialog_ex_free(app->dialog_ex);
 
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdNumberInput);

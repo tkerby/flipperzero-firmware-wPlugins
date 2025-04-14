@@ -52,7 +52,7 @@ void mizip_balance_editor_show_balances(void* context) {
     dialog_ex_set_text(app->dialog_ex, str, 64, 29, AlignCenter, AlignCenter);
 }
 
-void mizip_balance_editor_scene_show_result_on_enter(void* context) {
+void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
 
@@ -90,10 +90,10 @@ void mizip_balance_editor_scene_show_result_on_enter(void* context) {
     dialog_ex_set_result_callback(
         app->dialog_ex, mizip_balance_editor_scene_confirm_dialog_callback);
     dialog_ex_set_context(app->dialog_ex, app);
-    view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowResult);
+    view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdShowBalance);
 }
 
-bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManagerEvent event) {
+bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManagerEvent event) {
     MiZipBalanceEditorApp* app = context;
     bool consumed = false;
 
@@ -128,14 +128,14 @@ bool mizip_balance_editor_scene_show_result_on_event(void* context, SceneManager
     } else if(event.type == SceneManagerEventTypeBack) {
         if(app->new_balance != app->current_balance) {
             mizip_balance_editor_write_new_balance(context);
-            /*scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
-            consumed = true;*/
+            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
+            consumed = true;
         }
     }
     return consumed;
 }
 
-void mizip_balance_editor_scene_show_result_on_exit(void* context) {
+void mizip_balance_editor_scene_show_balance_on_exit(void* context) {
     MiZipBalanceEditorApp* app = context;
 
     if(app->is_number_input_active) {
