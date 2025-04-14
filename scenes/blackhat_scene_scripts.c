@@ -1,5 +1,7 @@
 #include "../blackhat_app_i.h"
 
+static bool console = false;
+
 static void blackhat_scene_script_list_enter_callback(
     void* context, uint32_t index
 )
@@ -7,6 +9,7 @@ static void blackhat_scene_script_list_enter_callback(
     furi_assert(context);
     BlackhatApp* app = context;
 
+    console = true;
     app->selected_tx_string = "bh script run";
     app->selected_option_item_text = app->cmd[index + 1];
     app->text_input_req = false;
@@ -14,11 +17,9 @@ static void blackhat_scene_script_list_enter_callback(
 
     FURI_LOG_I("tag/app name", "%s", app->selected_tx_string);
 
-    scene_manager_set_scene_state(
-        app->scene_manager, BlackhatSceneStart, app->selected_menu_index
+    scene_manager_search_and_switch_to_previous_scene(
+        app->scene_manager, BlackhatAppViewConsoleOutput
     );
-
-    scene_manager_next_scene(app->scene_manager, BlackhatAppViewConsoleOutput);
 }
 
 static void blackhat_scene_script_list_change_callback(VariableItem* item)
@@ -32,13 +33,20 @@ void blackhat_scene_scripts_on_enter(void* context)
     VariableItemList* var_item_list = app->script_item_list;
     size_t i = 0;
     int start = 0;
-    memset(app->cmd, 0x00, sizeof(app->cmd));
     app->num_scripts = 0;
+
+    console = false;
 
     while (app->script_text[i++]) {
         if (app->script_text[i] == '\n') {
             i++;
+
+            if(app->cmd[app->num_scripts]) {
+                free(app->cmd[app->num_scripts]);
+            }
+
             app->cmd[app->num_scripts] = malloc(i - start);
+
             memcpy(
                 app->cmd[app->num_scripts], &app->script_text[start], i - start
             );
@@ -70,20 +78,18 @@ bool blackhat_scene_scripts_on_event(void* context, SceneManagerEvent event)
 {
     UNUSED(context);
     UNUSED(event);
+
     return false;
 }
 
 void blackhat_scene_scripts_on_exit(void* context)
 {
     BlackhatApp* app = context;
-
-    // for(int i = 0 ; i < app->num_scripts ; i++) {
-    //     free(app->cmd[i]);
-    // }
-
     variable_item_list_reset(app->script_item_list);
 
-    scene_manager_search_and_switch_to_previous_scene(
-        app->scene_manager, BlackhatSceneStart
-    );
+    if(!console) {
+        scene_manager_search_and_switch_to_previous_scene(
+            app->scene_manager, BlackhatSceneStart
+        );
+    }
 }

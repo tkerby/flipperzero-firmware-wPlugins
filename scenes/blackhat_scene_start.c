@@ -50,10 +50,6 @@ static void blackhat_scene_start_var_list_enter_callback(
 
     app->selected_option_item_text = item->selected_option;
 
-    scene_manager_set_scene_state(
-        app->scene_manager, BlackhatSceneStart, app->selected_menu_index
-    );
-
     scene_manager_next_scene(
         app->scene_manager, BlackhatAppViewConsoleOutput
     );
@@ -108,11 +104,6 @@ void blackhat_scene_start_on_enter(void* context)
             item, items[i].options_menu[app->selected_option_index[i]]
         );
     }
-
-    variable_item_list_set_selected_item(
-        var_item_list,
-        scene_manager_get_scene_state(app->scene_manager, BlackhatSceneStart)
-    );
 
     view_dispatcher_switch_to_view(
         app->view_dispatcher, BlackhatAppViewVarItemList
