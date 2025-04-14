@@ -54,6 +54,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWifi v1.5 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
 - Updated: [SPI Terminal v0.4 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal) (Version Only)
+- [NFC: Split NfcProtocolSupport handlers into plugins for ~23kb less RAM usage & Improve loading of parser plugins (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/396)
 
 <a name="release">
 
