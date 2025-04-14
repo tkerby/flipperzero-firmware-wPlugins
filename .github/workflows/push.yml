@@ -17,7 +17,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-            sudo pip install ufbt --break-system-packages.
+            sudo pip install ufbt --break-system-packages
 
       - name: Build
         run: |
