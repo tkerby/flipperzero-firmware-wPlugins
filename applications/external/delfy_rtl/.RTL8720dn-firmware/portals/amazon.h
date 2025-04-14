@@ -1,4 +1,4 @@
-const char* amazon = R"(
+const char *amazon=R"(
   <!DOCTYPE html>
 <html>
 <head>

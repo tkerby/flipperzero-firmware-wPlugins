@@ -1,4 +1,4 @@
-const char* facebook = R"(
+const char *facebook =R"(
 
 <!DOCTYPE html>
 <!-- saved from url=(0046)file:///D:/@ESP8266/webpages/fb4/facebook.html -->

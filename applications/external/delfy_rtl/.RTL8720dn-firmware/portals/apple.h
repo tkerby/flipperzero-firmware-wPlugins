@@ -1,4 +1,4 @@
-const char* apple = R"(
+const char *apple=R"(
   <!-- Original code : https://github.com/ai-dev-official/Apple-Dev-Login-Page- by ai-dev-official -->
 <!-- Edited and adapted by : Jules0835 for educational purposes -->
 

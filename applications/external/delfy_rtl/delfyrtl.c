@@ -71,11 +71,15 @@ typedef enum {
 
 } delfyRTLView;
 
-const char* const captive_portals[4] = {
+#define CAPTIVE_PORTAL_SIZE 6
+const char* const captive_portals[CAPTIVE_PORTAL_SIZE] = {
     "Default",
     "Facebook",
     "Amazon",
     "Apple",
+    "Microsoft",
+    "Google",
+
 };
 
 const char* const deauth_reasons[25] = {
@@ -685,7 +689,7 @@ void config_attack_scene_on_enter(void* context) {
     variable_item_set_current_value_index(item, app->deauthReason);
     variable_item_set_current_value_text(item, deauth_reasons[app->deauthReason]);
     item = variable_item_list_add(
-        app->variableList, "Portal Type", 4, portal_type_change_call_back, app);
+        app->variableList, "Portal Type", CAPTIVE_PORTAL_SIZE, portal_type_change_call_back, app);
     variable_item_set_current_value_index(item, app->captivePortal);
     variable_item_set_current_value_text(item, captive_portals[app->captivePortal]);
 
@@ -1056,7 +1060,7 @@ void config_ap_scene_on_enter(void* context) {
     variable_item_set_current_value_index(item, app->channelAP);
 
     item = variable_item_list_add(
-        app->variableList, "Portal Type", 4, portal_type_change_call_back, app);
+        app->variableList, "Portal Type", CAPTIVE_PORTAL_SIZE, portal_type_change_call_back, app);
     variable_item_set_current_value_index(item, app->captivePortal);
     variable_item_set_current_value_text(item, captive_portals[app->captivePortal]);
 

