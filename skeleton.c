@@ -4,6 +4,8 @@
 bool isSkeletonGrounded;
 int health = 3;
 
+bool is_dead;
+
 void skeleton_spawn(Level *level, GameManager *manager){
     Entity* skeleton = level_add_entity(level, &skel_desc);
     // TEMP//
@@ -26,10 +28,11 @@ void skel_behavior(Vector* pos) {
     }
 
     // hit logic //
-    if(is_player_facing_right && player_pos.x > pos->x && player_context->is_swinging_sword){
+    // hit logic is calculated by checking if the skeleton is in cerating range of the player
+    if(is_player_facing_right && pos->x == player_pos.x + player_sword_reach && player_context->is_swinging_sword){
         health--;
     }
-    if(!is_player_facing_right && player_pos.x < pos->x && player_context->is_swinging_sword) {
+    if(!is_player_facing_right && pos->x == player_pos.x - player_sword_reach && player_context->is_swinging_sword) {
         health--;
     }
 }
@@ -38,6 +41,8 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
     Vector pos = entity_pos_get(self);
     SkeletonContext* skeleton_context = entity_context_get(self);
     GameContext* game_context = game_manager_game_context_get(manager);
+
+    Level* level = game_manager_current_level_get(manager);
 
     if((pos.y + 31) >= game_context->ground_hight && skeleton_context->Yvelocity >= 0) {
         pos.y = game_context->ground_hight - 31;
@@ -58,6 +63,11 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
     skel_behavior(&pos);
 
     entity_pos_set(self, pos);
+
+    
+    if(health <= 0){
+        level_remove_entity(level, self);
+    }
     UNUSED(manager);
     UNUSED(context);
 }

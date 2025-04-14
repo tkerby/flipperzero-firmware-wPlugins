@@ -9,6 +9,7 @@ bool can_move = true;
 
 bool is_player_facing_right;
 
+float player_sword_reach = 37;
 
 Entity* player = NULL;
 

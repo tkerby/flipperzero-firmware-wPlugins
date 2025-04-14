@@ -9,7 +9,8 @@ typedef struct {
     bool is_swinging_sword;
 } PlayerContext;
 
-// making player accessible globaly
+extern float player_sword_reach;
+
 extern Entity* player;
 
 extern float ground_hight;
