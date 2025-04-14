@@ -17,6 +17,16 @@ bool mizip_balance_editor_app_back_event_callback(void* context) {
 void mizip_balance_editor_write_new_balance(void* context) {
     MiZipBalanceEditorApp* app = context;
 
+    //Updating previous balance
+    app->mf_classic_data->block[app->previous_credit_pointer].data[2] =
+        (app->current_balance >> 8) & 0xFF; // High byte
+    app->mf_classic_data->block[app->previous_credit_pointer].data[1] = app->current_balance &
+                                                                        0xFF; // Low byte
+    app->mf_classic_data->block[app->previous_credit_pointer].data[3] =
+        app->mf_classic_data->block[app->previous_credit_pointer].data[1] ^
+        app->mf_classic_data->block[app->previous_credit_pointer].data[2]; //Checksum
+
+    //Updating current balance
     app->mf_classic_data->block[app->credit_pointer].data[2] = (app->new_balance >> 8) &
                                                                0xFF; // High byte
     app->mf_classic_data->block[app->credit_pointer].data[1] = app->new_balance & 0xFF; // Low byte
@@ -28,7 +38,6 @@ void mizip_balance_editor_write_new_balance(void* context) {
     nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
     nfc_device_save(nfc_device, furi_string_get_cstr(app->filePath));
     nfc_device_free(nfc_device);
-    app->current_balance = app->new_balance;
 }
 
 // Application constructor function.

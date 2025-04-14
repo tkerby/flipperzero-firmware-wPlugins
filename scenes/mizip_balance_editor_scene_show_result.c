@@ -30,14 +30,25 @@ void mizip_balance_editor_show_balances(void* context) {
     MiZipBalanceEditorApp* app = context;
 
     char str[100];
-    snprintf(
-        str,
-        sizeof(str),
-        "Previous balance:  %d.%02d E\nCurrent balance: %d.%02d E\nPress back to write",
-        app->previous_balance / 100,
-        app->previous_balance % 100,
-        app->new_balance / 100,
-        app->new_balance % 100);
+    if(app->new_balance == app->current_balance) {
+        snprintf(
+            str,
+            sizeof(str),
+            "Previous balance:  %d.%02d E\nCurrent balance: %d.%02d E\nPress back to write",
+            app->previous_balance / 100,
+            app->previous_balance % 100,
+            app->current_balance / 100,
+            app->current_balance % 100);
+    } else {
+        snprintf(
+            str,
+            sizeof(str),
+            "Previous balance:  %d.%02d E\nCurrent balance: %d.%02d E\nPress back to write",
+            app->current_balance / 100,
+            app->current_balance % 100,
+            app->new_balance / 100,
+            app->new_balance % 100);
+    }
     dialog_ex_set_text(app->dialog_ex, str, 64, 29, AlignCenter, AlignCenter);
 }
 
@@ -123,7 +134,7 @@ void mizip_balance_editor_scene_show_result_on_exit(void* context) {
 
     if(app->is_number_input_active) {
         return;
-    } else {
+    } else if(app->new_balance != app->current_balance) {
         mizip_balance_editor_write_new_balance(context);
     }
 }
