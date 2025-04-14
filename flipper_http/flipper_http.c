@@ -153,22 +153,26 @@ static void get_timeout_timer_callback(void *context)
 }
 
 static void flipper_http_rx_callback(const char *line, void *context); // forward declaration
+// Instead of two globals, we use a single static pointer to the active instance.
+static FlipperHTTP *active_fhttp = NULL;
 
-// UART initialization function
-/**
- * @brief      Initialize UART.
- * @return     FlipperHTTP context if the UART was initialized successfully, NULL otherwise.
- * @note       The received data will be handled asynchronously via the callback.
- */
 FlipperHTTP *flipper_http_alloc()
 {
-    FlipperHTTP *fhttp = (FlipperHTTP *)malloc(sizeof(FlipperHTTP));
+    // If an active instance already exists, free it first.
+    if (active_fhttp != NULL)
+    {
+        FURI_LOG_E(HTTP_TAG, "Existing UART instance detected, freeing previous instance.");
+        flipper_http_free(active_fhttp);
+        active_fhttp = NULL;
+    }
+
+    FlipperHTTP *fhttp = malloc(sizeof(FlipperHTTP));
     if (!fhttp)
     {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate FlipperHTTP.");
         return NULL;
     }
-    memset(fhttp, 0, sizeof(FlipperHTTP)); // Initialize allocated memory to zero
+    memset(fhttp, 0, sizeof(FlipperHTTP));
 
     fhttp->flipper_http_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     if (!fhttp->flipper_http_stream)
@@ -189,7 +193,7 @@ FlipperHTTP *flipper_http_alloc()
 
     furi_thread_set_name(fhttp->rx_thread, "FlipperHTTP_RxThread");
     furi_thread_set_stack_size(fhttp->rx_thread, 1024);
-    furi_thread_set_context(fhttp->rx_thread, fhttp); // Corrected context
+    furi_thread_set_context(fhttp->rx_thread, fhttp);
     furi_thread_set_callback(fhttp->rx_thread, flipper_http_worker);
 
     fhttp->handle_rx_line_cb = flipper_http_rx_callback;
@@ -198,24 +202,11 @@ FlipperHTTP *flipper_http_alloc()
     furi_thread_start(fhttp->rx_thread);
     fhttp->rx_thread_id = furi_thread_get_id(fhttp->rx_thread);
 
-    // Handle when the UART control is busy to avoid furi_check failed
-    if (furi_hal_serial_control_is_busy(UART_CH))
-    {
-        FURI_LOG_E(HTTP_TAG, "UART control is busy.");
-        // Cleanup resources
-        furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
-        furi_thread_join(fhttp->rx_thread);
-        furi_thread_free(fhttp->rx_thread);
-        furi_stream_buffer_free(fhttp->flipper_http_stream);
-        free(fhttp);
-        return NULL;
-    }
-
+    // Acquire UART control
     fhttp->serial_handle = furi_hal_serial_control_acquire(UART_CH);
     if (!fhttp->serial_handle)
     {
         FURI_LOG_E(HTTP_TAG, "Failed to acquire UART control - handle is NULL");
-        // Cleanup resources
         furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
         furi_thread_join(fhttp->rx_thread);
         furi_thread_free(fhttp->rx_thread);
@@ -224,29 +215,17 @@ FlipperHTTP *flipper_http_alloc()
         return NULL;
     }
 
-    // Initialize UART with acquired handle
+    // Initialize and enable UART
     furi_hal_serial_init(fhttp->serial_handle, BAUDRATE);
-
-    // Enable RX direction
     furi_hal_serial_enable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
-
-    // Start asynchronous RX with the corrected callback and context
-    furi_hal_serial_async_rx_start(fhttp->serial_handle, _flipper_http_rx_callback, fhttp, false); // Corrected context
-
-    // Wait for the TX to complete to ensure UART is ready
+    furi_hal_serial_async_rx_start(fhttp->serial_handle, _flipper_http_rx_callback, fhttp, false);
     furi_hal_serial_tx_wait_complete(fhttp->serial_handle);
 
-    // Allocate the timer for handling timeouts
-    fhttp->get_timeout_timer = furi_timer_alloc(
-        get_timeout_timer_callback, // Callback function
-        FuriTimerTypeOnce,          // One-shot timer
-        fhttp                       // Corrected context
-    );
-
+    // Allocate the timeout timer
+    fhttp->get_timeout_timer = furi_timer_alloc(get_timeout_timer_callback, FuriTimerTypeOnce, fhttp);
     if (!fhttp->get_timeout_timer)
     {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate HTTP request timeout timer.");
-        // Cleanup resources
         furi_hal_serial_async_rx_stop(fhttp->serial_handle);
         furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
         furi_hal_serial_control_release(fhttp->serial_handle);
@@ -258,15 +237,12 @@ FlipperHTTP *flipper_http_alloc()
         free(fhttp);
         return NULL;
     }
-
-    // Set the timer thread priority if needed
     furi_timer_set_thread_priority(FuriTimerThreadPriorityElevated);
 
-    fhttp->last_response = (char *)malloc(RX_BUF_SIZE);
+    fhttp->last_response = malloc(RX_BUF_SIZE);
     if (!fhttp->last_response)
     {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate memory for last_response.");
-        // Cleanup resources
         furi_timer_free(fhttp->get_timeout_timer);
         furi_hal_serial_async_rx_stop(fhttp->serial_handle);
         furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
@@ -279,21 +255,18 @@ FlipperHTTP *flipper_http_alloc()
         free(fhttp);
         return NULL;
     }
-    memset(fhttp->last_response, 0, RX_BUF_SIZE); // Initialize last_response
-
+    memset(fhttp->last_response, 0, RX_BUF_SIZE);
     fhttp->state = IDLE;
 
-    // FURI_LOG_I(HTTP_TAG, "UART initialized successfully.");
+    fhttp->last_response_str = furi_string_alloc();
+    // furi_string_reserve(fhttp->last_response_str, MAX_FILE_SHOW);
+
+    // Track the active instance globally.
+    active_fhttp = fhttp;
+
     return fhttp;
 }
 
-// Deinitialize UART
-/**
- * @brief      Deinitialize UART.
- * @return     void
- * @param fhttp The FlipperHTTP context
- * @note       This function will stop the asynchronous RX, release the serial handle, and free the resources.
- */
 void flipper_http_free(FlipperHTTP *fhttp)
 {
     if (!fhttp)
@@ -306,43 +279,49 @@ void flipper_http_free(FlipperHTTP *fhttp)
         FURI_LOG_E(HTTP_TAG, "UART handle is NULL. Already deinitialized?");
         return;
     }
-    // Stop asynchronous RX
+    // Stop asynchronous RX and clean up UART
     furi_hal_serial_async_rx_stop(fhttp->serial_handle);
-
-    // Release and deinitialize the serial handle
     furi_hal_serial_disable_direction(fhttp->serial_handle, FuriHalSerialDirectionRx);
-    furi_hal_serial_control_release(fhttp->serial_handle);
     furi_hal_serial_deinit(fhttp->serial_handle);
+    furi_hal_serial_control_release(fhttp->serial_handle);
 
-    // Signal the worker thread to stop
+    // Signal and free the worker thread
     furi_thread_flags_set(fhttp->rx_thread_id, WorkerEvtStop);
-    // Wait for the thread to finish
     furi_thread_join(fhttp->rx_thread);
-    // Free the thread resources
     furi_thread_free(fhttp->rx_thread);
 
     // Free the stream buffer
     furi_stream_buffer_free(fhttp->flipper_http_stream);
 
-    // Free the timer
+    // Free the timer, if allocated
     if (fhttp->get_timeout_timer)
     {
         furi_timer_free(fhttp->get_timeout_timer);
         fhttp->get_timeout_timer = NULL;
     }
 
-    // Free the last response
+    // Free the last_response buffer
     if (fhttp->last_response)
     {
         free(fhttp->last_response);
         fhttp->last_response = NULL;
     }
 
-    // Free the FlipperHTTP context
-    free(fhttp);
-    fhttp = NULL;
+    // Free the last response string
+    if (fhttp->last_response_str)
+    {
+        furi_string_free(fhttp->last_response_str);
+        fhttp->last_response_str = NULL;
+    }
 
-    // FURI_LOG_I("FlipperHTTP", "UART deinitialized successfully.");
+    // If this instance is the active instance, clear the static pointer.
+    if (active_fhttp == fhttp)
+    {
+        free(active_fhttp);
+        active_fhttp = NULL;
+    }
+
+    free(fhttp);
 }
 
 /**
@@ -446,6 +425,29 @@ FuriString *flipper_http_load_from_file(char *file_path)
         return NULL;
     }
 
+    size_t file_size = storage_file_size(file);
+
+    // final memory check
+    if (memmgr_heap_get_max_free_block() < file_size)
+    {
+        FURI_LOG_E(HTTP_TAG, "Not enough heap to read file.");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    // Allocate a buffer to hold the read data
+    uint8_t *buffer = (uint8_t *)malloc(file_size);
+    if (!buffer)
+    {
+        FURI_LOG_E(HTTP_TAG, "Failed to allocate buffer");
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
     // Allocate a FuriString to hold the received data
     FuriString *str_result = furi_string_alloc();
     if (!str_result)
@@ -459,18 +461,6 @@ FuriString *flipper_http_load_from_file(char *file_path)
 
     // Reset the FuriString to ensure it's empty before reading
     furi_string_reset(str_result);
-
-    // Define a buffer to hold the read data
-    uint8_t *buffer = (uint8_t *)malloc(MAX_FILE_SHOW);
-    if (!buffer)
-    {
-        FURI_LOG_E(HTTP_TAG, "Failed to allocate buffer");
-        furi_string_free(str_result);
-        storage_file_close(file);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
-        return NULL;
-    }
 
     // Read data into the buffer
     size_t read_count = storage_file_read(file, buffer, MAX_FILE_SHOW);
@@ -506,6 +496,12 @@ FuriString *flipper_http_load_from_file(char *file_path)
  */
 FuriString *flipper_http_load_from_file_with_limit(char *file_path, size_t limit)
 {
+    if (memmgr_heap_get_max_free_block() < limit)
+    {
+        FURI_LOG_E(HTTP_TAG, "Not enough heap to read file.");
+        return NULL;
+    }
+
     // Open the storage record
     Storage *storage = furi_record_open(RECORD_STORAGE);
     if (!storage)
@@ -532,7 +528,19 @@ FuriString *flipper_http_load_from_file_with_limit(char *file_path, size_t limit
         return NULL;
     }
 
-    if (memmgr_get_free_heap() < limit)
+    size_t file_size = storage_file_size(file);
+
+    if (file_size > limit)
+    {
+        FURI_LOG_E(HTTP_TAG, "File size exceeds limit: %d > %d", file_size, limit);
+        storage_file_close(file);
+        storage_file_free(file);
+        furi_record_close(RECORD_STORAGE);
+        return NULL;
+    }
+
+    // final memory check
+    if (memmgr_heap_get_max_free_block() < file_size)
     {
         FURI_LOG_E(HTTP_TAG, "Not enough heap to read file.");
         storage_file_close(file);
@@ -542,7 +550,7 @@ FuriString *flipper_http_load_from_file_with_limit(char *file_path, size_t limit
     }
 
     // Allocate a buffer to hold the read data
-    uint8_t *buffer = (uint8_t *)malloc(limit);
+    uint8_t *buffer = (uint8_t *)malloc(file_size);
     if (!buffer)
     {
         FURI_LOG_E(HTTP_TAG, "Failed to allocate buffer");
@@ -563,10 +571,10 @@ FuriString *flipper_http_load_from_file_with_limit(char *file_path, size_t limit
         furi_record_close(RECORD_STORAGE);
         return NULL;
     }
-    furi_string_reserve(str_result, limit);
+    furi_string_reserve(str_result, file_size);
 
     // Read data into the buffer
-    size_t read_count = storage_file_read(file, buffer, limit);
+    size_t read_count = storage_file_read(file, buffer, file_size);
     if (storage_file_get_error(file) != FSE_OK)
     {
         FURI_LOG_E(HTTP_TAG, "Error reading from file.");
@@ -935,6 +943,7 @@ bool flipper_http_send_command(FlipperHTTP *fhttp, HTTPCommand command)
     case HTTP_CMD_IP_WIFI:
         return flipper_http_send_data(fhttp, "[WIFI/IP]");
     case HTTP_CMD_SCAN:
+        fhttp->method = GET;
         return flipper_http_send_data(fhttp, "[WIFI/SCAN]");
     case HTTP_CMD_LIST_COMMANDS:
         return flipper_http_send_data(fhttp, "[LIST]");
@@ -945,6 +954,8 @@ bool flipper_http_send_command(FlipperHTTP *fhttp, HTTPCommand command)
     case HTTP_CMD_PING:
         fhttp->state = INACTIVE; // set state as INACTIVE to be made IDLE if PONG is received
         return flipper_http_send_data(fhttp, "[PING]");
+    case HTTP_CMD_REBOOT:
+        return flipper_http_send_data(fhttp, "[REBOOT]");
     default:
         FURI_LOG_E(HTTP_TAG, "Invalid command.");
         return false;
@@ -1147,6 +1158,12 @@ static void flipper_http_rx_callback(const char *line, void *context)
             strstr(trimmed_line, "[DELETE/END]") == NULL)
         {
             strncpy(fhttp->last_response, trimmed_line, RX_BUF_SIZE);
+            if (strlen(furi_string_get_cstr(fhttp->last_response_str)) > MAX_FILE_SHOW)
+            {
+                furi_string_reset(fhttp->last_response_str);
+            }
+            furi_string_cat(fhttp->last_response_str, "\n");
+            furi_string_cat(fhttp->last_response_str, line);
         }
     }
     free(trimmed_line); // Free the allocated memory for trimmed_line
@@ -1157,7 +1174,7 @@ static void flipper_http_rx_callback(const char *line, void *context)
     }
 
     // Uncomment below line to log the data received over UART
-    // FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
+    FURI_LOG_I(HTTP_TAG, "Received UART line: %s", line);
 
     // Check if we've started receiving data from a GET request
     if (fhttp->started_receiving && (fhttp->method == GET || fhttp->method == BYTES))

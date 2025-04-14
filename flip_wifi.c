@@ -1,5 +1,5 @@
 #include "flip_wifi.h"
-#include <callback/flip_wifi_callback.h>
+#include <callback/free.h>
 WiFiPlaylist *wifi_playlist = NULL;
 // Function to free the resources used by FlipWiFiApp
 void flip_wifi_app_free(FlipWiFiApp *app)
@@ -17,7 +17,7 @@ void flip_wifi_app_free(FlipWiFiApp *app)
         submenu_free(app->submenu_main);
     }
 
-    flip_wifi_free_all(app);
+    free_all(app);
 
     // free the view dispatcher
     if (app->view_dispatcher)
@@ -30,3 +30,8 @@ void flip_wifi_app_free(FlipWiFiApp *app)
     if (app)
         free(app);
 }
+char *ssid_list[64];
+uint32_t ssid_index = 0;
+char current_ssid[64];
+char current_password[64];
+bool back_from_ap = false;
