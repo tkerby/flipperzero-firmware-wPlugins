@@ -62,7 +62,8 @@ typedef enum {
     HTTP_CMD_LIST_COMMANDS,
     HTTP_CMD_LED_ON,
     HTTP_CMD_LED_OFF,
-    HTTP_CMD_PING
+    HTTP_CMD_PING,
+    HTTP_CMD_REBOOT
 } HTTPCommand; // list of non-input commands
 
 // FlipperHTTP Structure
@@ -76,6 +77,7 @@ typedef struct {
     HTTPState state; // State of the UART
     HTTPMethod method; // HTTP method
     char* last_response; // variable to store the last received data from the UART
+    FuriString* last_response_str; // String to store the last received data
     char file_path[256]; // Path to save the received data
     FuriTimer* get_timeout_timer; // Timer for HTTP request timeout
     bool started_receiving; // Indicates if a request has started

@@ -265,4 +265,21 @@ bool easy_flipper_set_loading(
  */
 bool easy_flipper_set_char_to_furi_string(FuriString** furi_string, char* buffer);
 
+/**
+ * @brief Initialize a TextBox object
+ * @param text_box The TextBox object to initialize
+ * @param view_id The ID/Index of the view
+ * @param text The text to display in the text box
+ * @param start_at_end Start the text box at the end
+ * @param previous_callback The previous callback function (can be set to NULL)
+ * @param view_dispatcher The ViewDispatcher object
+ * @return true if successful, false otherwise
+ */
+bool easy_flipper_set_text_box(
+    TextBox** text_box,
+    int32_t view_id,
+    char* text,
+    bool start_at_end,
+    uint32_t(previous_callback)(void*),
+    ViewDispatcher** view_dispatcher);
 #endif

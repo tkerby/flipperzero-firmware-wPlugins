@@ -1,3 +1,8 @@
+## v1.5
+- Added AP mode (host a network and display a custom HTML)
+- Restructured the code.
+- Updated to the latest FlipperHTTP library.
+
 ## v1.4
 - Updated to the latest FlipperHTTP library.
 - Added a check to verify the WiFi connection was successful.
