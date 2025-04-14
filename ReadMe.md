@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0413-0232-0.420.0-c314c29](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0414-1800-0.420.0-9f08239](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-13 02:32 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-13 02:32 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-14 18:00 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-14 18:00 EST`
 - Added: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
