@@ -11,5 +11,4 @@ Features:
 TODO:
 - [ ] Write to tag
 - [ ] File writing success scene
-- [ ] Update previous balance bytes
 - [ ] Support for shadow file (.shd) to keep original data
