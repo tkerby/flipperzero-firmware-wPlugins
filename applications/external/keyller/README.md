@@ -21,7 +21,7 @@
 
 ## 📦 Installation
 
-Install directly from the official Flipper Zero app catalog.
+Install directly from the [official Flipper Zero app catalog here](https://lab.flipper.net/apps/executor_keychain).
 
 ---
 
