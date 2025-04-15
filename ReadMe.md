@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0409-1405-0.420.0-8e80580.tgz&channel=RM0409-1405-0.420.0-8e80580&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0415-1708-0.420.0-3a0d588.tgz&channel=RM0415-1708-0.420.0-3a0d588&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,31 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-15 02:15 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-15 02:15 EST`
-- Added: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [Pomodoro Timer v1.4 (By sbrin)](https://github.com/sbrin/flipperzero_pomodoro) [Pomodoro long break (By DrEverr)](https://github.com/xMasterX/all-the-plugins/pull/183)
-- ESP Flasher Bump [Marauder 1.4.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.2)
-- Updated: [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
-- Updated: [FlipWorld v0.8.1 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Passy v1.1 (By bettse)](https://github.com/bettse/passy)
-- Updated: [Flipper Hero v1.2 (By mentoster)](https://github.com/mentoster/Flipper-hero)
-- Updated: [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) (Version Only)
-- Updated: [LEGO Dimensions Toy Pad v0.4 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
-- Updated: [HC-11 Modem v1.2 (By Giraut)](https://github.com/Giraut/flipper_zero_hc11_wireless_modem) `Req: HC-11`
-- OFW: [sdk: bump API to force SDK re-upload for the catalog backend #4186 (By hedger)](https://github.com/flipperdevices/flipperzero-firmware/pull/4186)
-- OFW: [FBT: Fix for Python 3.13 #4187 (By Willy=JL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4187)
-- Updated: [Noptel LRF Sampler v2.1 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
-- Updated: [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board` (Version Only)
-- [Archive: Fix memory leak with Search+Info (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/commit/bce27a14635c584eeb92739ce7f775d20e7d8423)
-- NFC: [Use default UL/UL-C pwd/key as default value for key input (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/891)
-- [SubGHz Preset Optimizations (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/43606872b750d129cedc0af0772fdd4714fe4081)
-- Updated: [NRF24 Channel Scanner v1.4 (by htotoo)](https://github.com/htotoo/NRF24ChannelScanner)
-- Updated: [FlipWifi v1.5 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [DelfiRTL v0.1 (By gorebrau)](https://github.com/gorebrau/delfyRTL) `Req: RTL8720DN`
-- Updated: [SPI Terminal v0.4 (By janwiesemann)](https://github.com/janwiesemann/flipper-spi-terminal) (Version Only)
-- [NFC: Split NfcProtocolSupport handlers into plugins for ~23kb less RAM usage & Improve loading of parser plugins (By Willy-JL)](https://github.com/Next-Flip/Momentum-Firmware/pull/396)
 
 <a name="release">
 
@@ -728,4 +703,4 @@ $ ./fbt dolphin_ext
 - [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0409-1405-0.420.0-8e80580.tgz&channel=RM0409-1405-0.420.0-8e80580&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0415-1708-0.420.0-3a0d588.tgz&channel=RM0415-1708-0.420.0-3a0d588&version=0.420.0)
