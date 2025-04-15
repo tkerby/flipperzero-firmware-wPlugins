@@ -22,6 +22,8 @@ void skel_behavior(Vector* pos) {
     Vector player_pos = entity_pos_get(player);
     PlayerContext* player_context = entity_context_get(player);
 
+    float distance_to_player = pos->x - player_pos.x;
+
     if(player != NULL) {
         if(player_pos.x > pos->x) pos->x += 0.5;
         if(player_pos.x < pos->x) pos->x -= 0.5;
@@ -29,12 +31,14 @@ void skel_behavior(Vector* pos) {
 
     // hit logic //
     // hit logic is calculated by checking if the skeleton is in cerating range of the player
-    if(is_player_facing_right && pos->x == player_pos.x + player_sword_reach && player_context->is_swinging_sword){
+if (player_context->is_swinging_sword) {
+    if (is_player_facing_right && distance_to_player > 0 && distance_to_player <= player_sword_reach) {
         health--;
     }
-    if(!is_player_facing_right && pos->x == player_pos.x - player_sword_reach && player_context->is_swinging_sword) {
+    if (!is_player_facing_right && distance_to_player < 0 && -distance_to_player <= player_sword_reach) {
         health--;
     }
+}
 }
 
 void skel_update(Entity* self, GameManager* manager, void* context) {
@@ -63,7 +67,6 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
     skel_behavior(&pos);
 
     entity_pos_set(self, pos);
-
     
     if(health <= 0){
         level_remove_entity(level, self);
