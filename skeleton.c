@@ -30,15 +30,15 @@ void skel_behavior(Vector* pos) {
     }
 
     // hit logic //
-    // hit logic is calculated by checking if the skeleton is in cerating range of the player
-if (player_context->is_swinging_sword) {
-    if (is_player_facing_right && distance_to_player > 0 && distance_to_player <= player_sword_reach) {
-        health--;
+    // hit logic is calculated by checking if the skeleton is in ceratin range of the player
+    if (player_context->is_hitting) {
+        if (is_player_facing_right && distance_to_player > 0 && distance_to_player <= player_sword_reach) {
+            health -= player_context->weapon_damage;
+        }
+        if (!is_player_facing_right && distance_to_player < 0 && -distance_to_player <= player_sword_reach) {
+            health -= player_context->weapon_damage;
+        }
     }
-    if (!is_player_facing_right && distance_to_player < 0 && -distance_to_player <= player_sword_reach) {
-        health--;
-    }
-}
 }
 
 void skel_update(Entity* self, GameManager* manager, void* context) {

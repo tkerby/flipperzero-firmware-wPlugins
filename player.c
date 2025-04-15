@@ -25,6 +25,8 @@ void player_spawn(Level* level, GameManager* manager) {
 
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
     
+    player_context->weapon_damage = 1;
+
     Jumping_animations_load(manager);
 
     Idle_animation_load(manager);

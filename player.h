@@ -7,6 +7,8 @@ typedef struct {
     Sprite* sprite;
     float Yvelocity;
     bool is_swinging_sword;
+    bool is_hitting;
+    int weapon_damage;
 } PlayerContext;
 
 extern float player_sword_reach;

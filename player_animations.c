@@ -129,6 +129,9 @@ void Swinging_sword_animation_play(GameManager *manager, void *context){
         swinging_sword_current_frame++;
         sword_i = 0;
     }
+
+    if(swinging_sword_current_frame == 5) playerContext->is_hitting = true;
+    else playerContext->is_hitting = false;
 }
 
 void Walking_animation_play(GameManager* manager, void* context) {
@@ -183,6 +186,10 @@ void Swinging_sword_animation_right_play(GameManager *manager, void *context){
         swinging_sword_right_current_frame++;
         sword_right_i = 0;
     }
+
+
+    if(swinging_sword_right_current_frame == 5) playerContext->is_hitting = true;
+    else playerContext->is_hitting = false;
 }
 
 void Walking_right_animation_play(GameManager *manager, void *context){
