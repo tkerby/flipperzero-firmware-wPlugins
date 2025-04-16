@@ -16,14 +16,16 @@ void passy_scene_detect_scan_callback(NfcScannerEvent event, void* context) {
             passy->proto = "4a";
         } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_4b) {
             passy->proto = "4b";
-        } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_3b) {
-            passy->proto = "4b";
         } else {
             FURI_LOG_E(TAG, "Unknown protocol detected, %d", *event.data.protocols);
-            passy->proto = "";
-            // just continue as expected..
         }
-        view_dispatcher_send_custom_event(passy->view_dispatcher, PassyCustomEventReaderDetected);
+        if(passy->proto && strlen(passy->proto) > 0) {
+            view_dispatcher_send_custom_event(
+                passy->view_dispatcher, PassyCustomEventReaderDetected);
+        } else {
+            view_dispatcher_send_custom_event(
+                passy->view_dispatcher, PassyCustomEventReaderRestart);
+        }
     }
 }
 
@@ -60,6 +62,10 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == PassyCustomEventReaderError) {
             passy->last_sw = passy_reader->last_sw;
             scene_manager_next_scene(passy->scene_manager, PassySceneReadError);
+            consumed = true;
+        } else if(event.event == PassyCustomEventReaderRestart) {
+            nfc_scanner_stop(passy->scanner);
+            nfc_scanner_start(passy->scanner, passy_scene_detect_scan_callback, passy);
             consumed = true;
         } else if(event.event == PassyCustomEventReaderDetected) {
             nfc_scanner_stop(passy->scanner);
