@@ -66,7 +66,6 @@ bool passy_scene_read_on_event(void* context, SceneManagerEvent event) {
                 FURI_LOG_I(TAG, "detected 4B protocol");
                 passy->poller = nfc_poller_alloc(passy->nfc, NfcProtocolIso14443_4b);
                 passy_reader = passy_reader_alloc(passy);
-                FURI_LOG_I(TAG, "mhm");
                 nfc_poller_start(passy->poller, passy_reader_poller_callback, passy_reader);
                 passy->bytes_total = 0;
             } else if(strcmp(passy->proto, "4a") == 0) {
