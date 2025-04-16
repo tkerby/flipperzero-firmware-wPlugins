@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Passport: Gunnm Gally Profile Pic (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/faf5a19140fae7bd3650a5122e5e645820f759e6)
 - Decreased FURI_HAL_FLASH_C2_LOCK_TIMEOUT_MS to 3 seconds
 - ESP Flasher Bump [Marauder 1.4.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.3)
+- Updated: [Passy v1.1 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
