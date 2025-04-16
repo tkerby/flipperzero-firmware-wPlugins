@@ -16,7 +16,10 @@ void passy_scene_detect_scan_callback(NfcScannerEvent event, void* context) {
             passy->proto = "4a";
         } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_4b) {
             passy->proto = "4b";
+        } else if(event.data.protocols && *event.data.protocols == NfcProtocolIso14443_3b) {
+            passy->proto = "4b";
         } else {
+            FURI_LOG_E(TAG, "Unknown protocol detected, %d", *event.data.protocols);
             passy->proto = "";
             // just continue as expected..
         }
