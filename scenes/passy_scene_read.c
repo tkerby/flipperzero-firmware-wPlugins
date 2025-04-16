@@ -9,6 +9,7 @@ static PassyReader* passy_reader = NULL;
 void passy_scene_detect_scan_callback(NfcScannerEvent event, void* context) {
     furi_assert(context);
     Passy* passy = context;
+    passy->proto = NULL;
 
     // detect the type of protocol, either 4a/4b and then run the specific poller callback functions yada yada yada
     if(event.type == NfcScannerEventTypeDetected) {
