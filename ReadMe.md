@@ -31,6 +31,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-15 02:15 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-15 02:15 EST`
 - Removal of Ultralight password protected write support to avoid card bricking with non-zero passwords (OFW 3364)
+- [Passport: Furipass Background Fixed (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/d30ef51408ec9d2ba1dc9977fdb636db9cc7dbee)
+- [Passport: Gunnm Gally Profile Pic (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/faf5a19140fae7bd3650a5122e5e645820f759e6)
 
 <a name="release">
 
@@ -140,7 +142,7 @@ $ ./fbt dolphin_ext
 - Desktop: Hold Right goes to About with Battery Info [(Thanks to Willy-JL)]
 - Development free space thanks to removal of unused debug tools and [thanks to ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/46/files) for removal of first start assets.
 - Dolphin: Assigned profile pic for levels 1-10 (Happy Lvl 1 Dolphin), 11-15 (Happy Lvl 2 Dolphin), 16-18 (Happy Lvl 3 Dolphin), 19-21 (Kid G0ku), 22-24 (Adult G0ku), 25-27 (SSJ G0ku) and 28-30 (SSJ3 G0ku)
-- Dolphin: CFW Settings: Passport: Now has 15 selectable backgrounds options and 73 profile image options. (Changes By RogueMaster with thanks to ESurge) (Section By ESurge)
+- Dolphin: CFW Settings: Passport: Now has 15 selectable backgrounds options and 74 profile image options. (Changes By RogueMaster with thanks to ESurge) (Section By ESurge)
 - Dolphin: Expanded max level from 3 to 30 using [Roll20](https://roll20.net/compendium/dnd5e/Monsters#h-Experience%20Points), Increased max deed XP per action type from 15 to 45 exp daily & updated animation manifest for max level 30 for all animations (By RogueMaster)
 - Dolphin: Level animation sequence for level 3+ to be lvl1->2 for levels 1-20 and lvl2->3 for levels 21-30.
 - Dolphin: Mood Stays Happy [(Thanks to biocage)](https://github.com/biocage/flipperzero-firmware), changed to Mood Stays Less Than 6 / Mood Stays High (but not in game mode) (By RogueMaster)
