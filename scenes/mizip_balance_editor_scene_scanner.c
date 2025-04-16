@@ -1,4 +1,6 @@
 #include "../mizip_balance_editor_i.h"
+#include "adapted_from_ofw/mizip.h"
+#include <nfc/protocols/mf_classic/mf_classic_poller_sync.h>
 
 static NfcCommand
     mizip_balance_editor_scene_scanner_poller_callback(NfcGenericEvent event, void* context) {
@@ -11,11 +13,15 @@ static NfcCommand
         const MfClassicData* mf_classic_data = nfc_poller_get_data(app->poller);
         nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, mf_classic_data);
         mf_classic_copy(app->mf_classic_data, mf_classic_data);
+
+        //Get UID
+        memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
+        app->is_valid_mizip_data = mizip_parse(context);
+
         view_dispatcher_send_custom_event(
             app->view_dispatcher, MiZipBalanceEditorCustomEventPollerSuccess);
         command = NfcCommandStop;
     }
-
     return command;
 }
 
@@ -74,7 +80,6 @@ bool mizip_balance_editor_scene_scanner_on_event(void* context, SceneManagerEven
         } else if(event.event == MiZipBalanceEditorCustomEventPollerSuccess) {
             nfc_poller_stop(app->poller);
             nfc_poller_free(app->poller);
-            app->is_valid_mizip_data = mizip_verify(context);
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
             consumed = true;
         }

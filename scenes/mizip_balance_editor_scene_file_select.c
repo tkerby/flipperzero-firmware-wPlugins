@@ -23,7 +23,8 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
         if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
             mf_classic_copy(
                 app->mf_classic_data, nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
-            app->is_valid_mizip_data = mizip_verify(context);
+            memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
+            app->is_valid_mizip_data = mizip_parse(context);
             nfc_device_free(app->nfc_device);
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
         } else {

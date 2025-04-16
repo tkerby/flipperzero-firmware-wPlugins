@@ -55,20 +55,19 @@ void mizip_balance_editor_show_balances(void* context) {
 void mizip_balance_editor_scene_show_balance_on_enter(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
+    //Get and show UID
+    char uid[18];
+    snprintf(
+        uid,
+        sizeof(uid),
+        "UID: %02X %02X %02X %02X",
+        app->uid[0],
+        app->uid[1],
+        app->uid[2],
+        app->uid[3]);
+    dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
 
     if(app->is_valid_mizip_data) {
-        //Get and show UID
-        char uid[18];
-        snprintf(
-            uid,
-            sizeof(uid),
-            "UID: %02X %02X %02X %02X",
-            app->mf_classic_data->block[0].data[0],
-            app->mf_classic_data->block[0].data[1],
-            app->mf_classic_data->block[0].data[2],
-            app->mf_classic_data->block[0].data[3]);
-        dialog_ex_set_header(app->dialog_ex, uid, 64, 0, AlignCenter, AlignTop);
-
         //Get balances
         if(!app->is_number_input_active) {
             mizip_balance_editor_get_balances(context);
@@ -130,6 +129,9 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
             mizip_balance_editor_write_new_balance(context);
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdWriteSuccess);
             consumed = true;
+        } else {
+            scene_manager_search_and_switch_to_another_scene(
+                app->scene_manager, MiZipBalanceEditorViewIdMainMenu);
         }
     }
     return consumed;

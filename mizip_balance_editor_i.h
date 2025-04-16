@@ -88,6 +88,7 @@ struct MiZipBalanceEditorApp {
     bool is_number_input_active;
 
     //MiZip data
+    uint8_t uid[4];
     uint8_t credit_pointer;
     uint8_t previous_credit_pointer;
     uint16_t current_balance;
