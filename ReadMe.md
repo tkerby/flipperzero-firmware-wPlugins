@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Removal of Ultralight password protected write support to avoid card bricking with non-zero passwords (OFW 3364)
 - [Passport: Furipass Background Fixed (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/d30ef51408ec9d2ba1dc9977fdb636db9cc7dbee)
 - [Passport: Gunnm Gally Profile Pic (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/faf5a19140fae7bd3650a5122e5e645820f759e6)
+- Decreased FURI_HAL_FLASH_C2_LOCK_TIMEOUT_MS to 3 seconds
 
 <a name="release">
 
