@@ -18,8 +18,8 @@ sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8
 
 
 <div>
-<img src="screenshots/screenshot_fdd.png" width="20%" />
-<img src="screenshots/screenshot_xex_loader.png" width="20%" />
+<img src="screenshots/screenshot_fdd.png" width="30%" />
+<img src="screenshots/screenshot_xex_loader.png" width="30%" />
 </div>
 
 ## Wiring
@@ -35,7 +35,7 @@ The wiring is quite simple; only three signals are need.
 
 Note: All signals on the Atari SIO use 5V TTL logic. Although the Flipper Zero’s I/Os are 5V tolerant when configured as inputs, be careful when connecting your Flipper Zero to your Atari computer, as incorrect wiring or improper use could potentially damage your Flipper or your precious Atari hardware.
 
-<img src="https://github.com/user-attachments/assets/71bd3d8d-ba43-493b-aad7-f414037da486" width="20%" />
+<img src="https://github.com/user-attachments/assets/71bd3d8d-ba43-493b-aad7-f414037da486" width="30%" />
 
 ## Instructions for Use
 
@@ -54,6 +54,8 @@ Note: I cannot include the ROM file with the app, so you’ll need to provide it
 
 You can use the excellent 80-column Ice-T terminal, available on the AtariAge forum.
 There you’ll also find there a link to ready-to-run ATR images that include everything you need.
+
+<img src="https://github.com/user-attachments/assets/cbd06cf6-13fe-474f-af09-8f857970b5eb" width="80%" />
 
 Steps:
 1.	Enable Atari 850 emulation from the sio2flip main menu and select Start emulation…
