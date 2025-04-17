@@ -42,7 +42,7 @@ static void level_alloc(Level* level, GameManager* manager, void* context) {
     UNUSED(context);
     // add the player to the level
     player_spawn(level, manager);
-    
+
     skeleton_spawn(level, manager);
 
     // add the ground to the level
@@ -63,7 +63,6 @@ static const LevelBehaviour level = {
     .stop = NULL, // called when level is changed from this level
     .context_size = 0, // size of level context, will be automatically allocated and freed
 };
-
 /****** Game ******/
 
 /* 
