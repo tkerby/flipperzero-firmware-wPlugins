@@ -84,12 +84,12 @@ static void usb_vcp_on_rx_ep_data(void* context) {
     sio_driver_wakeup_tx(vcp->sio);
 }
 
-static void usb_vcp_on_state_changed(void* context, CdcState state) {
+static void usb_vcp_on_state_changed(void* context, uint8_t state) {
     UNUSED(context);
     UNUSED(state);
 }
 
-static void usb_vcp_on_line_changed(void* context, CdcCtrlLine ctrl_lines) {
+static void usb_vcp_on_line_changed(void* context, uint8_t ctrl_lines) {
     UNUSED(context);
     UNUSED(ctrl_lines);
 }
