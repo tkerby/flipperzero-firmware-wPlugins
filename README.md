@@ -9,5 +9,6 @@ Features:
 - [x] Change balance of a MiZip saved file
 
 TODO:
+- [ ] Read a tag
 - [ ] Write to tag
 - [ ] Support for shadow file (.shd) to keep original data
