@@ -29,9 +29,7 @@ Since UV radiation poses greater risks to the eyes, the app includes a setting t
 
 The displayed percentages indicate how much each UV type (UV-A, UV-B, UV-C) contributes to the maximum daily exposure. This helps illustrate that higher sensor readings don't necessarily mean a greater health risk; for example, even though UV-A sensor values are typically higher, they usually contribute less to the recommended maximum exposure limit compared to UV-B or UV-C.
 
-When following the maximum daily exposure duration, the TLV/BEI guidelines ensure:
-
-> “[...] nearly all healthy workers may be repeatedly exposed without acute adverse health effects such as erythema and photokeratitis.”
+When following the maximum daily exposure duration, the TLV/BEI guidelines ensure: “[...] nearly all healthy workers may be repeatedly exposed without acute adverse health effects such as erythema and photokeratitis.”
 
 
 ## Disclaimer
