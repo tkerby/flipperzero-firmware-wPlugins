@@ -218,9 +218,68 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
             copy->idx = saved_idx; /* Restore the index as we are scanning
                                       the signal in the loop. */
 
+            /* Section added to store TPMS records */
+            if((decoded && info->decoder != &UnknownDecoder)) {
+                char uom[4];
+                if(strcmp("Toyota TPMS", info->decoder->name) == 0) {
+                    strcpy(uom, "PSI");
+                } else if(strcmp("Renault TPMS", info->decoder->name) == 0) {
+                    strcpy(uom, "KPA");
+                } else if(strcmp("Schrader EG53MA4 TPMS kpa", info->decoder->name) == 0) {
+                    strcpy(uom, "KPA");
+                } else if(strcmp("Schrader TPMS", info->decoder->name) == 0) {
+                    strcpy(uom, "KPA");
+                } else if(strcmp("Ford TPMS", info->decoder->name) == 0) {
+                    strcpy(uom, "PSI");
+                } else if(strcmp("Citroen TPMS", info->decoder->name) == 0) {
+                    strcpy(uom, "KPA");
+                } else {
+                    FURI_LOG_D(TAG, "UOM is unknown");
+                    strcpy(uom, "???");
+                }
+                // If UOM is unknown the decoder is not TPMS so ignore for tyre list
+                if(strcmp(uom, "???") != 0) {
+                    char tyreid[32];
+                    char psi[32];
+                    char temp[32];
+                    int i;
+
+                    bool found;
+                    found = false;
+                    field_to_string(tyreid, sizeof(tyreid), info->fieldset->fields[0]);
+                    field_to_string(psi, sizeof(psi), info->fieldset->fields[1]);
+                    field_to_string(temp, sizeof(temp), info->fieldset->fields[2]);
+
+                    FURI_LOG_D(
+                        TAG, "Decoder %s ID %s %s %s", info->decoder->name, tyreid, uom, psi);
+                    for(i = 0; i < app->tyre_list_count; i++) {
+                        if(strcmp(app->tyre_list[i].serial, tyreid) == 0) {
+                            FURI_LOG_D(TAG, "Updating existing list entry");
+                            strcpy(app->tyre_list[i].pressure, psi);
+                            strcpy(app->tyre_list[i].temperature, temp);
+                            found = true;
+                            notify_signal_detected(app, false); //Blink light
+                        }
+                    }
+                    if(found == false && app->tyre_list_count < 30) {
+                        strcpy(app->tyre_list[app->tyre_list_count].serial, tyreid);
+                        strcpy(app->tyre_list[app->tyre_list_count].pressure, psi);
+                        strcpy(app->tyre_list[app->tyre_list_count].temperature, temp);
+                        strcpy(app->tyre_list[i].uom, uom);
+                        app->tyre_list[i].favorite = false;
+                        app->tyre_list[i].favorite_set = false;
+                        app->tyre_list_count++;
+                        app->dirty = true;
+                        FURI_LOG_D(TAG, "Added new entry to list");
+                        notify_signal_detected(app, true); //Blink light and vibrate
+                    }
+                }
+            }
+
             /* Accept this signal as the new signal if either it's longer
              * than the previous undecoded one, or the previous one was
              * unknown and this is decoded. */
+
             bool oldsignal_not_decoded = app->signal_decoded == false ||
                                          app->msg_info->decoder == &UnknownDecoder;
 
