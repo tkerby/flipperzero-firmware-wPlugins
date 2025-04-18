@@ -214,16 +214,17 @@ bool callback_view_input_callback_saved(InputEvent *event, void *context)
             furi_delay_ms(100);
         }
 
-        flipper_http_free(fhttp);
-
-        // check success (if [SUCCESS] is in the response)
+                // check success (if [SUCCESS] is in the response)
         if (strstr(fhttp->last_response, "[SUCCESS]") == NULL)
         {
-            char response[512];
+            char response[256];
             snprintf(response, sizeof(response), "Failed to save WiFi settings:\n%s", fhttp->last_response);
             easy_flipper_dialog("[ERROR]", response);
+            flipper_http_free(fhttp);
             return false;
         }
+
+        flipper_http_free(fhttp);
 
         easy_flipper_dialog("[SUCCESS]", "All FlipperHTTP apps will now\nuse the selected network.");
         return true;
