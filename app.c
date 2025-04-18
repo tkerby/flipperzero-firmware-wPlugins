@@ -55,7 +55,6 @@ int32_t flip_world_main(void *p)
     save_char("app_version", VERSION);
 
     // for now use the catalog API until I implement caching on the server
-
     if (flip_world_handle_app_update(fhttp, true))
     {
         easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
