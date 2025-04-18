@@ -318,7 +318,9 @@ bool alloc_widgets(void *context, uint32_t widget)
     case FlipWiFiViewAbout:
         if (!app->widget_info)
         {
-            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, "FlipWiFi v1.4\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", callback_to_submenu_main, &app->view_dispatcher))
+            char about_text[128];
+            snprintf(about_text, sizeof(about_text), "FlipWiFi v%s\n-----\nFlipperHTTP companion app.\nScan and save WiFi networks.\n-----\nwww.github.com/jblanked", VERSION);
+            if (!easy_flipper_set_widget(&app->widget_info, FlipWiFiViewAbout, about_text, callback_to_submenu_main, &app->view_dispatcher))
             {
                 return false;
             }
