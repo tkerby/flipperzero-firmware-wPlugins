@@ -72,6 +72,8 @@ struct MiZipBalanceEditorApp {
     NumberInput* number_input;
     TextBox* text_box;
 
+    SubmenuIndex last_selected_submenu_index;
+
     //NFC
     Nfc* nfc;
     NfcScanner* scanner;

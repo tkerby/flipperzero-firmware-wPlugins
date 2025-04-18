@@ -25,6 +25,7 @@ void mizip_balance_editor_scene_main_menu_on_enter(void* context) {
     submenu_add_item(
         app->submenu, "About", SubmenuIndexAbout, mizip_balance_editor_app_submenu_callback, app);
 
+    submenu_set_selected_item(app->submenu, app->last_selected_submenu_index);
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdMainMenu);
 }
 
@@ -33,6 +34,7 @@ bool mizip_balance_editor_scene_main_menu_on_event(void* context, SceneManagerEv
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
+        app->last_selected_submenu_index = event.event;
         switch(event.event) {
         case SubmenuIndexDirectToTag:
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdScanner);

@@ -102,6 +102,8 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->min_value = 0;
     app->max_value = 65535;
 
+    app->last_selected_submenu_index = SubmenuIndexDirectToTag;
+
     return app;
 }
 
