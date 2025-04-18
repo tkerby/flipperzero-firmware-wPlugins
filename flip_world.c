@@ -129,7 +129,7 @@ static bool flip_world_save_rtc_time(DateTime *rtc_time)
 }
 
 //
-// Returns true if time_current is one hour (or more) later than the stored last_updated time
+// Returns true if time_current is one hour (or more) later than the stored last_checked time
 //
 static bool flip_world_is_update_time(DateTime *time_current)
 {
@@ -138,14 +138,14 @@ static bool flip_world_is_update_time(DateTime *time_current)
         FURI_LOG_E(TAG, "time_current is NULL");
         return false;
     }
-    char last_updated_old[128];
-    if (!load_char("last_updated", last_updated_old, sizeof(last_updated_old)))
+    char last_checked_old[128];
+    if (!load_char("last_checked", last_checked_old, sizeof(last_checked_old)))
     {
-        FURI_LOG_E(TAG, "Failed to load last_updated");
+        FURI_LOG_E(TAG, "Failed to load last_checked");
         FuriString *json = flip_world_datetime_to_json(time_current);
         if (json)
         {
-            save_char("last_updated", furi_string_get_cstr(json));
+            save_char("last_checked", furi_string_get_cstr(json));
             furi_string_free(json);
         }
         return false;
@@ -153,7 +153,7 @@ static bool flip_world_is_update_time(DateTime *time_current)
 
     DateTime last_updated_time;
 
-    FuriString *last_updated_furi = char_to_furi_string(last_updated_old);
+    FuriString *last_updated_furi = char_to_furi_string(last_checked_old);
     if (!last_updated_furi)
     {
         FURI_LOG_E(TAG, "Failed to convert char to FuriString");
@@ -213,18 +213,63 @@ static bool flip_world_last_app_update(FlipperHTTP *fhttp, bool flipper_server)
         storage_simply_remove_recursive(storage, directory_path); // ensure the file is empty
         furi_record_close(RECORD_STORAGE);
 
-        fhttp->save_received_data = true;
-        fhttp->is_bytes_request = false;
+        fhttp->save_received_data = false;
+        fhttp->is_bytes_request = true;
 
         snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/data/last_update_request.txt");
-        snprintf(url, sizeof(url), "https://catalog.flipperzero.one/api/v0/0/application/%s?is_latest_release_version=true", BUILD_ID);
-        return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
+        snprintf(url, sizeof(url), "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/main/applications/GPIO/flip_world/manifest.yml");
+        return flipper_http_request(fhttp, BYTES, url, "{\"Content-Type\":\"application/json\"}", NULL);
     }
     else
     {
         snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/app/last-updated/flip_world/");
         return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
     }
+}
+
+/*
+ * Scans a NUL‐terminated YAML buffer for a top‐level “version:” key,
+ * and writes its (unquoted) value into out_version.
+ * Returns true on success.
+ */
+static bool parse_yaml_version(const char *yaml, char *out_version, size_t out_len)
+{
+    const char *p = strstr(yaml, "\nversion:");
+    if (!p)
+    {
+        // maybe it's the very first line
+        p = yaml;
+    }
+    else
+    {
+        // skip the “\n”
+        p++;
+    }
+    // skip the key name and colon
+    p = strstr(p, "version");
+    if (!p)
+        return false;
+    p += strlen("version");
+    // skip whitespace and colon
+    while (*p == ' ' || *p == ':')
+        p++;
+    // handle optional quote
+    bool quoted = (*p == '"');
+    if (quoted)
+        p++;
+    // copy up until end‐quote or newline/space
+    size_t i = 0;
+    while (*p && i + 1 < out_len)
+    {
+        if ((quoted && *p == '"') ||
+            (!quoted && (*p == '\n' || *p == ' ')))
+        {
+            break;
+        }
+        out_version[i++] = *p++;
+    }
+    out_version[i] = '\0';
+    return (i > 0);
 }
 
 // Parses the server response and returns true if an update is available.
@@ -265,34 +310,20 @@ static bool flip_world_parse_last_app_update(FlipperHTTP *fhttp, DateTime *time_
     }
     else
     {
-        FuriString *app_data = flipper_http_load_from_file_with_limit(fhttp->file_path, memmgr_heap_get_max_free_block());
-        if (!app_data)
+        FuriString *manifest_data = flipper_http_load_from_file(fhttp->file_path);
+        if (!manifest_data)
         {
             FURI_LOG_E(TAG, "Failed to load app data");
             return false;
         }
-        FuriString *current_version = get_json_value_furi("current_version", app_data);
-        if (!current_version)
+        // parse version out of the YAML
+        if (!parse_yaml_version(furi_string_get_cstr(manifest_data), version_str, sizeof(version_str)))
         {
-            FURI_LOG_E(TAG, "Failed to get current version");
-            furi_string_free(app_data);
+            FURI_LOG_E(TAG, "Failed to parse version from YAML manifest");
             return false;
         }
-        furi_string_free(app_data);
-        FuriString *version = get_json_value_furi("version", current_version);
-        if (!version)
-        {
-            FURI_LOG_E(TAG, "Failed to get version");
-            furi_string_free(current_version);
-            furi_string_free(app_data);
-            return false;
-        }
-        // Save the server app version: it should save something like: 0.8
-        save_char("server_app_version", furi_string_get_cstr(version));
-        snprintf(version_str, sizeof(version_str), "%s", furi_string_get_cstr(version));
-        furi_string_free(current_version);
-        furi_string_free(version);
-        // furi_string_free(app_data);
+        save_char("server_app_version", version_str);
+        furi_string_free(manifest_data);
     }
     // Only check for an update if an hour or more has passed.
     if (flip_world_is_update_time(time_current))
@@ -303,8 +334,6 @@ static bool flip_world_parse_last_app_update(FlipperHTTP *fhttp, DateTime *time_
             FURI_LOG_E(TAG, "Failed to load app version");
             return false;
         }
-        FURI_LOG_I(TAG, "App version: %s", app_version);
-        FURI_LOG_I(TAG, "Server version: %s", version_str);
         // Check if the app version is different from the server version.
         if (!is_str(app_version, version_str))
         {
@@ -405,8 +434,6 @@ static bool flip_world_update_app(FlipperHTTP *fhttp, DateTime *time_current, bo
         }
         return true;
     }
-
-    FURI_LOG_I(TAG, "No update available");
     return false; // No update available.
 }
 
@@ -439,8 +466,7 @@ bool flip_world_handle_app_update(FlipperHTTP *fhttp, bool use_flipper_api)
         {
             if (!flip_world_update_app(fhttp, &rtc_time, use_flipper_api))
             {
-                FURI_LOG_E(TAG, "Failed to update app");
-                // save the current time for the next check.
+                // save the last_checked for the next check.
                 if (!flip_world_save_rtc_time(&rtc_time))
                 {
                     FURI_LOG_E(TAG, "Failed to save RTC time");
