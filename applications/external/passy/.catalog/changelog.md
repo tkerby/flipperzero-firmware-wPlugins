@@ -1,5 +1,6 @@
 ## 1.2
  - Fix bug with detecting wrong protocol
+ - Fix bug with check number of alpha characters (Thanks @WillyJL)
  - Confirmed British passport support
 ## 1.1
  - ISO14443a-4 support for French passports (Thanks @luu176)
