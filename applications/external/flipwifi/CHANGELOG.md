@@ -1,3 +1,7 @@
+## v1.5.1
+- Fixed a crash when setting an SSID in the Saved APs view.
+- Fixed auto-update functionality.
+
 ## v1.5
 - Added AP mode (host a network and display a custom HTML)
 - Restructured the code.
