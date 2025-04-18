@@ -38,6 +38,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [added piece hard-dropping (By GGORG0)](https://github.com/xMasterX/all-the-plugins/pull/186)
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS)
+- Added: [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 
 <a name="release">
 
@@ -671,6 +672,7 @@ $ ./fbt dolphin_ext
 - [USB HID Autofire v0.6 (By pbek)](https://github.com/pbek/usb_hid_autofire)
 - [USB Mass Storage v1.4 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
 - [USB Midi (By DrZlo13)](https://github.com/DrZlo13/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
+- [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - [VB Migration Assistant v1.3 (By GMMan)](https://github.com/GMMan/flipperzero-vb-migrate)
 - [VGM Air Mouse v1.3 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/motion_mouse_app) `Req: ICM42688, or Video Game Module By Flipper Devices`
 - [Video Player v0.3 (By LTVA1)](https://github.com/LTVA1/flipper-zero-video-player)

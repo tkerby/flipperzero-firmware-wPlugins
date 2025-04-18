@@ -1,10 +1,10 @@
 #include "uv_meter_app_i.hpp"
 
 #define UV_METER_VERSION_APP FAP_VERSION
-#define UV_METER_DEVELOPER "Michael Baisch"
-#define UV_METER_GITHUB "https://github.com/michaelbaisch/uv_meter"
-#define UV_METER_NAME "\e#\e!             UV Meter             \e!\n"
-#define UV_METER_BLANK_INV "\e#\e!                                                      \e!\n"
+#define UV_METER_DEVELOPER   "Michael Baisch"
+#define UV_METER_GITHUB      "https://github.com/michaelbaisch/uv_meter"
+#define UV_METER_NAME        "\e#\e!             UV Meter             \e!\n"
+#define UV_METER_BLANK_INV   "\e#\e!                                                      \e!\n"
 
 void uv_meter_scene_about_on_enter(void* context) {
     furi_assert(context);
