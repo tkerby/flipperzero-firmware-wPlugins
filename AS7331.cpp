@@ -113,7 +113,7 @@ bool AS7331::setGain(const as7331_gain_t& gain) {
     }
 
     // Read CREG1
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg1, creg1.byte)) {
+    if(!readRegister(RegCfgCreg1, creg1.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG1 register from device.");
         return false;
@@ -121,7 +121,7 @@ bool AS7331::setGain(const as7331_gain_t& gain) {
 
     // Write new gain value
     creg1.gain = gain;
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg1, creg1.byte)) {
+    if(!writeRegister(RegCfgCreg1, creg1.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to write gain value to device: %d.", creg1.gain);
         return false;
@@ -173,7 +173,7 @@ bool AS7331::setIntegrationTime(const as7331_integration_time_t& time) {
     }
 
     // Read CREG1
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg1, creg1.byte)) {
+    if(!readRegister(RegCfgCreg1, creg1.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG1 register from device.");
         return false;
@@ -181,7 +181,7 @@ bool AS7331::setIntegrationTime(const as7331_integration_time_t& time) {
 
     // Write new integration time value
     creg1.integration_time = time;
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg1, creg1.byte)) {
+    if(!writeRegister(RegCfgCreg1, creg1.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E(
             "AS7331",
@@ -218,7 +218,7 @@ bool AS7331::setDivider(const as7331_divider_t& divider, const bool enable) {
     }
 
     // Read CREG2
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg2, creg2.byte)) {
+    if(!readRegister(RegCfgCreg2, creg2.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG2 register from device.");
         return false;
@@ -227,7 +227,7 @@ bool AS7331::setDivider(const as7331_divider_t& divider, const bool enable) {
     // Write new divider value and enable/disable it
     creg2.divider = divider;
     creg2.enable_divider = enable;
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg2, creg2.byte)) {
+    if(!writeRegister(RegCfgCreg2, creg2.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E(
             "AS7331",
@@ -266,7 +266,7 @@ bool AS7331::setClockFrequency(const as7331_clock_frequency_t& frequency) {
     }
 
     // Read CREG3
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+    if(!readRegister(RegCfgCreg3, creg3.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG3 register from device.");
         return false;
@@ -274,7 +274,7 @@ bool AS7331::setClockFrequency(const as7331_clock_frequency_t& frequency) {
 
     // Write new clock frequency value
     creg3.clock_frequency = frequency;
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+    if(!writeRegister(RegCfgCreg3, creg3.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E(
             "AS7331",
@@ -311,7 +311,7 @@ bool AS7331::setMeasurementMode(const as7331_measurement_mode_t& mode) {
     }
 
     // Read CREG3
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+    if(!readRegister(RegCfgCreg3, creg3.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG3 register from device.");
         return false;
@@ -319,7 +319,7 @@ bool AS7331::setMeasurementMode(const as7331_measurement_mode_t& mode) {
 
     // Write new measurement mode value
     creg3.measurement_mode = mode;
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+    if(!writeRegister(RegCfgCreg3, creg3.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E(
             "AS7331", "Failed to write measurement mode to device: %d.", creg3.measurement_mode);
@@ -390,7 +390,7 @@ bool AS7331::setStandby(const bool& standby) {
     }
 
     // Read CREG3
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+    if(!readRegister(RegCfgCreg3, creg3.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read CREG3 register from device.");
         return false;
@@ -401,7 +401,7 @@ bool AS7331::setStandby(const bool& standby) {
         creg3.standby = standby; // Set SB bit
 
         // Write back the CREG3 register
-        if(!writeRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte)) {
+        if(!writeRegister(RegCfgCreg3, creg3.byte)) {
             furi_hal_i2c_release(&furi_hal_i2c_handle_external);
             FURI_LOG_E("AS7331", "Failed to write standby state to device: %d.", standby);
             return false;
@@ -507,7 +507,7 @@ bool AS7331::getRawResults(RawResults& rawResults) {
     }
 
     // Read all measurement results in one I²C transaction
-    if(!readRegisters(furi_hal_i2c_handle_external, RegMeasResultA, buffer, 6)) {
+    if(!readRegisters(RegMeasResultA, buffer, 6)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read measurement results from device.");
         return false;
@@ -606,7 +606,7 @@ bool AS7331::getTemperature(double& temperature) {
     }
 
     // Read temperature register
-    if(!readRegister16(furi_hal_i2c_handle_external, RegMeasTemp, temperature_raw)) {
+    if(!readRegister16(RegMeasTemp, temperature_raw)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read temperature register from device.");
         return false;
@@ -680,7 +680,7 @@ bool AS7331::reset() {
 bool AS7331::getDeviceID(as7331_agen_reg_t& deviceID) {
     furi_hal_i2c_acquire(&furi_hal_i2c_handle_external);
 
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgAgen, deviceID.byte)) {
+    if(!readRegister(RegCfgAgen, deviceID.byte)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read device ID register from device.");
         return false;
@@ -702,7 +702,7 @@ bool AS7331::getStatus(as7331_osr_status_reg_t& status) {
         return false;
     }
 
-    if(!readRegister16(furi_hal_i2c_handle_external, RegMeasOsrStatus, status.word)) {
+    if(!readRegister16(RegMeasOsrStatus, status.word)) {
         furi_hal_i2c_release(&furi_hal_i2c_handle_external);
         FURI_LOG_E("AS7331", "Failed to read status register from device.");
         return false;
@@ -840,7 +840,7 @@ bool AS7331::setDeviceMode(const as7331_device_mode_t& mode) {
 
 // Read OSR register and update local config
 bool AS7331::readOSRRegister(as7331_osr_reg_t& osr) {
-    if(!readRegister(furi_hal_i2c_handle_external, RegCfgOsr, osr.byte)) {
+    if(!readRegister(RegCfgOsr, osr.byte)) {
         FURI_LOG_E("AS7331", "Failed to read OSR Register from device.");
         return false;
     }
@@ -866,7 +866,7 @@ bool AS7331::writeOSRRegister(const as7331_osr_reg_t& osr) {
     }
 
     // Write back OSR register
-    if(!writeRegister(furi_hal_i2c_handle_external, RegCfgOsr, osr.byte)) {
+    if(!writeRegister(RegCfgOsr, osr.byte)) {
         FURI_LOG_E("AS7331", "Failed to write OSR to device: %d.", osr.byte);
         return false;
     }
@@ -879,16 +879,12 @@ bool AS7331::writeOSRRegister(const as7331_osr_reg_t& osr) {
 }
 
 // Generalized method to read multiple bytes from consecutive registers
-bool AS7331::readRegisters(
-    FuriHalI2cBusHandle& handle,
-    uint8_t start_register_addr,
-    uint8_t* buffer,
-    size_t length) {
+bool AS7331::readRegisters(uint8_t start_register_addr, uint8_t* buffer, size_t length) {
     bool success;
 
     // Write Phase: Send the start register address, end with AwaitRestart
     success = furi_hal_i2c_tx_ext(
-        &handle,
+        &furi_hal_i2c_handle_external,
         _i2c_addr_8bit,
         false, // 7-bit address
         &start_register_addr,
@@ -903,7 +899,7 @@ bool AS7331::readRegisters(
 
     // Read Phase: Read the data, begin with Restart, end with Stop
     success = furi_hal_i2c_rx_ext(
-        &handle,
+        &furi_hal_i2c_handle_external,
         _i2c_addr_8bit,
         false, // 7-bit address
         buffer,
@@ -920,14 +916,14 @@ bool AS7331::readRegisters(
 }
 
 // Function to read an 8-bit register
-bool AS7331::readRegister(FuriHalI2cBusHandle& handle, uint8_t register_addr, uint8_t& data) {
-    return readRegisters(handle, register_addr, &data, 1);
+bool AS7331::readRegister(uint8_t register_addr, uint8_t& data) {
+    return readRegisters(register_addr, &data, 1);
 }
 
 // Function to read a 16-bit register
-bool AS7331::readRegister16(FuriHalI2cBusHandle& handle, uint8_t register_addr, uint16_t& data) {
+bool AS7331::readRegister16(uint8_t register_addr, uint16_t& data) {
     uint8_t buffer[2];
-    bool success = readRegisters(handle, register_addr, buffer, 2);
+    bool success = readRegisters(register_addr, buffer, 2);
     if(!success) {
         return false;
     }
@@ -939,13 +935,13 @@ bool AS7331::readRegister16(FuriHalI2cBusHandle& handle, uint8_t register_addr, 
 }
 
 // Function to write an 8-bit register
-bool AS7331::writeRegister(FuriHalI2cBusHandle& handle, uint8_t register_addr, const uint8_t& data) {
+bool AS7331::writeRegister(uint8_t register_addr, const uint8_t& data) {
     bool success;
     uint8_t buffer[2] = {register_addr, data};
 
     // Write the register address and data in one transaction
     success = furi_hal_i2c_tx_ext(
-        &handle,
+        &furi_hal_i2c_handle_external,
         _i2c_addr_8bit,
         false, // 7-bit address
         buffer,
@@ -1001,9 +997,9 @@ bool AS7331::updateLocalConfig() {
     success &= setDeviceMode(DEVICE_MODE_CONFIG);
 
     // Read configuration registers
-    success &= readRegister(furi_hal_i2c_handle_external, RegCfgCreg1, creg1.byte);
-    success &= readRegister(furi_hal_i2c_handle_external, RegCfgCreg2, creg2.byte);
-    success &= readRegister(furi_hal_i2c_handle_external, RegCfgCreg3, creg3.byte);
+    success &= readRegister(RegCfgCreg1, creg1.byte);
+    success &= readRegister(RegCfgCreg2, creg2.byte);
+    success &= readRegister(RegCfgCreg3, creg3.byte);
 
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 

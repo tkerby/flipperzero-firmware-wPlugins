@@ -154,7 +154,11 @@ enum as7331_measurement_mode_t : uint8_t {
 };
 
 /** @brief UV Type Selection */
-enum as7331_uv_type_t : uint8_t { UV_A, UV_B, UV_C };
+enum as7331_uv_type_t : uint8_t {
+    UV_A,
+    UV_B,
+    UV_C
+};
 
 /** @} */ // End of AS7331_Enums group
 
@@ -175,11 +179,11 @@ const uint8_t RegCfgOsr = 0x00;
 typedef union {
     struct {
         as7331_device_mode_t
-            operating_state : 3; /**< DOS (010) - Device Operating State (OSR[2:0]) */
+            operating_state    : 3; /**< DOS (010) - Device Operating State (OSR[2:0]) */
         uint8_t software_reset : 1; /**< SW_RES (0) - Software Reset (OSR[3]) */
-        uint8_t reserved : 2; /**< Reserved, do not write (OSR[5:4]) */
-        uint8_t power_down : 1; /**< PD (1) - Power Down (OSR[6]) */
-        uint8_t start_state : 1; /**< SS (0) - Start State (OSR[7]) */
+        uint8_t reserved       : 2; /**< Reserved, do not write (OSR[5:4]) */
+        uint8_t power_down     : 1; /**< PD (1) - Power Down (OSR[6]) */
+        uint8_t start_state    : 1; /**< SS (0) - Start State (OSR[7]) */
     };
     uint8_t byte;
 } as7331_osr_reg_t;
@@ -209,7 +213,7 @@ typedef union {
     struct {
         as7331_integration_time_t
             integration_time : 4; /**< TIME (0110) - Integration time (CREG1[3:0]) */
-        as7331_gain_t gain : 4; /**< GAIN (1010) - Sensor gain (CREG1[7:4]) */
+        as7331_gain_t gain   : 4; /**< GAIN (1010) - Sensor gain (CREG1[7:4]) */
     };
     uint8_t byte;
 } as7331_creg1_reg_t;
@@ -223,8 +227,8 @@ const uint8_t RegCfgCreg2 = 0x07;
 typedef union {
     struct {
         as7331_divider_t divider : 3; /**< DIV (000) - Divider value (CREG2[2:0]) */
-        uint8_t enable_divider : 1; /**< EN_DIV (0) - Divider enable (CREG2[3]) */
-        uint8_t reserved : 2; /**< Reserved, do not write (CREG2[5:4]) */
+        uint8_t enable_divider   : 1; /**< EN_DIV (0) - Divider enable (CREG2[3]) */
+        uint8_t reserved         : 2; /**< Reserved, do not write (CREG2[5:4]) */
         uint8_t
             enable_temp : 1; /**< EN_TM (1) - Temperature measurement enable in SYND mode (CREG2[6]) */
         uint8_t reserved1 : 1; /**< Reserved, do not write (CREG2[7]) */
@@ -242,10 +246,10 @@ typedef union {
     struct {
         as7331_clock_frequency_t
             clock_frequency : 2; /**< CCLK (00) - Internal clock frequency (CREG3[1:0]) */
-        uint8_t reserved : 1; /**< Reserved, do not write (CREG3[2]) */
-        uint8_t ready_mode : 1; /**< RDYOD (0) - Ready pin mode (CREG3[3]) */
-        uint8_t standby : 1; /**< SB (0) - Standby mode (CREG3[4]) */
-        uint8_t reserved1 : 1; /**< Reserved, do not write (CREG3[5]) */
+        uint8_t reserved    : 1; /**< Reserved, do not write (CREG3[2]) */
+        uint8_t ready_mode  : 1; /**< RDYOD (0) - Ready pin mode (CREG3[3]) */
+        uint8_t standby     : 1; /**< SB (0) - Standby mode (CREG3[4]) */
+        uint8_t reserved1   : 1; /**< Reserved, do not write (CREG3[5]) */
         as7331_measurement_mode_t
             measurement_mode : 2; /**< MMODE (01) - Measurement mode selection (CREG3[7:6]) */
     };
@@ -292,12 +296,12 @@ const uint8_t RegMeasOsrStatus = 0x00;
 typedef union {
     struct {
         as7331_osr_reg_t osr; /**< OSR settings (lower byte) (OSRSTAT[7:0]) */
-        uint8_t power_state : 1; /**< POWERSTATE - Power Down state (OSRSTAT[8]) */
+        uint8_t power_state   : 1; /**< POWERSTATE - Power Down state (OSRSTAT[8]) */
         uint8_t standby_state : 1; /**< STANDBYSTATE - Standby mode state (OSRSTAT[9]) */
-        uint8_t not_ready : 1; /**< NOTREADY - Inverted ready pin state (OSRSTAT[10]) */
-        uint8_t new_data : 1; /**< NDATA - New data available (OSRSTAT[11]) */
-        uint8_t lost_data : 1; /**< LDATA - Data overwritten before retrieval (OSRSTAT[12]) */
-        uint8_t adc_overflow : 1; /**< ADCOF - Overflow of ADC channel (OSRSTAT[13]) */
+        uint8_t not_ready     : 1; /**< NOTREADY - Inverted ready pin state (OSRSTAT[10]) */
+        uint8_t new_data      : 1; /**< NDATA - New data available (OSRSTAT[11]) */
+        uint8_t lost_data     : 1; /**< LDATA - Data overwritten before retrieval (OSRSTAT[12]) */
+        uint8_t adc_overflow  : 1; /**< ADCOF - Overflow of ADC channel (OSRSTAT[13]) */
         uint8_t result_overflow : 1; /**< MRESOF - Overflow of MRES1...MRES3 (OSRSTAT[14]) */
         uint8_t
             out_conv_overflow : 1; /**< OUTCONVOF - Overflow of internal 24-bit OUTCONV (OSRSTAT[15]) */
@@ -650,51 +654,43 @@ private:
     /**
      * @brief Read multiple bytes from consecutive registers
      *
-     * @param handle I2C bus handle
      * @param start_register_addr Starting register address
      * @param buffer Buffer to store read data
      * @param length Number of bytes to read
      * @return true if successful, false otherwise
      * @ingroup AS7331_I2C_Methods
      */
-    bool readRegisters(
-        FuriHalI2cBusHandle& handle,
-        uint8_t start_register_addr,
-        uint8_t* buffer,
-        size_t length);
+    bool readRegisters(uint8_t start_register_addr, uint8_t* buffer, size_t length);
 
     /**
      * @brief Read an 8-bit register
      *
-     * @param handle I2C bus handle
      * @param register_addr Register address to read
      * @param data Variable to store read data
      * @return true if successful, false otherwise
      * @ingroup AS7331_I2C_Methods
      */
-    bool readRegister(FuriHalI2cBusHandle& handle, uint8_t register_addr, uint8_t& data);
+    bool readRegister(uint8_t register_addr, uint8_t& data);
 
     /**
      * @brief Read a 16-bit register
      *
-     * @param handle I2C bus handle
      * @param register_addr Register address to read
      * @param data Variable to store read data
      * @return true if successful, false otherwise
      * @ingroup AS7331_I2C_Methods
      */
-    bool readRegister16(FuriHalI2cBusHandle& handle, uint8_t register_addr, uint16_t& data);
+    bool readRegister16(uint8_t register_addr, uint16_t& data);
 
     /**
      * @brief Write an 8-bit register
      *
-     * @param handle I2C bus handle
      * @param register_addr Register address to write
      * @param data Data to write
      * @return true if successful, false otherwise
      * @ingroup AS7331_I2C_Methods
      */
-    bool writeRegister(FuriHalI2cBusHandle& handle, uint8_t register_addr, const uint8_t& data);
+    bool writeRegister(uint8_t register_addr, const uint8_t& data);
 
     /** @} */ // End of AS7331_I2C_Methods group
 
