@@ -87,6 +87,12 @@ struct MiZipBalanceEditorApp {
     bool is_valid_mizip_data;
     bool is_number_input_active;
 
+    //MfClassic data
+    uint8_t sectors_total;
+    uint8_t sectors_read;
+    uint8_t current_sector;
+    uint8_t keys_found;
+
     //MiZip data
     uint8_t uid[4];
     uint8_t credit_pointer;
