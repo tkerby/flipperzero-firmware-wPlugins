@@ -41,10 +41,9 @@
 #define START_SSH_CMD "bh ssh"
 #define ST_EVIL_TWIN_CMD "bh evil_twin"
 #define ST_EVIL_PORT_CMD "bh evil_portal"
-#define ST_RAT_CMD "bh rat_driver"
+#define TEST_INET "bh test_inet"
 #define GET_CMD "bh get"
 #define REBOOT_CMD "reboot"
-#define HELP_CMD "cat /mnt/help.txt"
 
 typedef enum { NO_ARGS = 0, INPUT_ARGS, TOGGLE_ARGS } InputArgs;
 

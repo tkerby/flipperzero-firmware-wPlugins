@@ -26,7 +26,7 @@ BlackhatItem items[] = {
     {"Enable SSH", {""}, 1, NULL, START_SSH_CMD, false},
     {"Start Evil Twin", {""}, 1, NULL, ST_EVIL_TWIN_CMD, false},
     {"Start Evil Portal", {""}, 1, NULL, ST_EVIL_PORT_CMD, false},
-    {"Start RAT Driver", {""}, 1, NULL, ST_RAT_CMD, false},
+    {"Test Internet (ping)", {""}, 1, NULL, TEST_INET, false},
     {"Get Params", {""}, 1, NULL, GET_CMD, false},
     {"Reboot", {""}, 1, NULL, REBOOT_CMD, false},
     {"Help", {""}, 1, NULL, HELP_CMD, false},
