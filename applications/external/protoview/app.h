@@ -104,6 +104,7 @@ typedef struct ProtoViewTxRx ProtoViewTxRx;
 typedef struct {
     char serial[11]; // These seem to always be 8, but playing it safe
     char pressure[10];
+    char pressure_bar[5];
     char temperature[10];
     char uom[4];
     bool favorite;

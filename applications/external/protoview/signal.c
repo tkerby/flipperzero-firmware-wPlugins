@@ -234,18 +234,33 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
                 } else if(strcmp("Citroen TPMS", info->decoder->name) == 0) {
                     strcpy(uom, "KPA");
                 } else {
-                    FURI_LOG_D(TAG, "UOM is unknown");
-                    strcpy(uom, "???");
+                    strcpy(uom, "???"); // Effectively just means "not a TPMS signal"
                 }
-                // If UOM is unknown the decoder is not TPMS so ignore for tyre list
+                // If UOM is unknown, the decoder is not TPMS so ignore for tyre list
                 if(strcmp(uom, "???") != 0) {
                     char tyreid[32];
-                    char psi[32];
+                    char psi[32]; // Used for both psi and kpa
                     char temp[32];
+                    float raw_pressure;
+                    float fbar;
+                    char barstring[5];
                     int i;
-
                     bool found;
+
                     found = false;
+                    raw_pressure = info->fieldset->fields[1]->fvalue;
+                    // Convert to BAR
+                    if(strcmp(uom, "PSI") == 0) {
+                        fbar = (raw_pressure / 14.504);
+                    } else { // the only other possibility is KPA
+                        fbar = (raw_pressure / 100);
+                    }
+                    snprintf(
+                        barstring,
+                        sizeof(barstring),
+                        "%.1f",
+                        (double)fbar); // round to a single decimal
+
                     field_to_string(tyreid, sizeof(tyreid), info->fieldset->fields[0]);
                     field_to_string(psi, sizeof(psi), info->fieldset->fields[1]);
                     field_to_string(temp, sizeof(temp), info->fieldset->fields[2]);
@@ -256,6 +271,7 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
                         if(strcmp(app->tyre_list[i].serial, tyreid) == 0) {
                             FURI_LOG_D(TAG, "Updating existing list entry");
                             strcpy(app->tyre_list[i].pressure, psi);
+                            strcpy(app->tyre_list[i].pressure_bar, barstring);
                             strcpy(app->tyre_list[i].temperature, temp);
                             found = true;
                             notify_signal_detected(app, false); //Blink light
@@ -264,6 +280,7 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
                     if(found == false && app->tyre_list_count < 30) {
                         strcpy(app->tyre_list[app->tyre_list_count].serial, tyreid);
                         strcpy(app->tyre_list[app->tyre_list_count].pressure, psi);
+                        strcpy(app->tyre_list[app->tyre_list_count].pressure_bar, barstring);
                         strcpy(app->tyre_list[app->tyre_list_count].temperature, temp);
                         strcpy(app->tyre_list[i].uom, uom);
                         app->tyre_list[i].favorite = false;

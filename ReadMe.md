@@ -37,12 +37,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher Bump [Marauder 1.4.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.3)
 - Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [added piece hard-dropping (By GGORG0)](https://github.com/xMasterX/all-the-plugins/pull/186)
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS)
 - Added: [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - Updated: [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793) (Version Only)
 - Updated: [FlipWorld v0.8.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
 
 <a name="release">
 

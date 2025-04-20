@@ -16,6 +16,7 @@ char mytyres[16][12]; // Up to 16 tires read from file
 bool fileread = false; // Used to only read file once
 bool readfailed = false; // Retrying caused crashes, so using flag to only try once
 bool showonlymine = false;
+bool show_in_bar = false;
 
 #define LINES_PER_PAGE 6
 
@@ -54,26 +55,48 @@ static void render_tyre_info(Canvas* const canvas, ProtoViewApp* app) {
     for(i = firstrow; i < app->tyre_list_count; i++) {
         canvas_set_font(canvas, FontSecondary);
         if(app->tyre_list[i].favorite) {
-            snprintf(
-                buf,
-                sizeof(buf),
-                "*: %s %s: %s %sC",
-                app->tyre_list[i].serial,
-                app->tyre_list[i].uom,
-                app->tyre_list[i].pressure,
-                app->tyre_list[i].temperature);
+            if(show_in_bar) {
+                snprintf(
+                    buf,
+                    sizeof(buf),
+                    "*: %s %s: %s %sC",
+                    app->tyre_list[i].serial,
+                    "Bar",
+                    app->tyre_list[i].pressure_bar,
+                    app->tyre_list[i].temperature);
+            } else {
+                snprintf(
+                    buf,
+                    sizeof(buf),
+                    "*: %s %s: %s %sC",
+                    app->tyre_list[i].serial,
+                    app->tyre_list[i].uom,
+                    app->tyre_list[i].pressure,
+                    app->tyre_list[i].temperature);
+            }
             canvas_draw_str(canvas, x, y, buf);
             y += lineheight;
             i2++;
         } else if(!showonlymine) {
-            snprintf(
-                buf,
-                sizeof(buf),
-                "ID: %s %s: %s %sC",
-                app->tyre_list[i].serial,
-                app->tyre_list[i].uom,
-                app->tyre_list[i].pressure,
-                app->tyre_list[i].temperature);
+            if(show_in_bar) {
+                snprintf(
+                    buf,
+                    sizeof(buf),
+                    "ID: %s %s: %s %sC",
+                    app->tyre_list[i].serial,
+                    "Bar",
+                    app->tyre_list[i].pressure_bar,
+                    app->tyre_list[i].temperature);
+            } else {
+                snprintf(
+                    buf,
+                    sizeof(buf),
+                    "ID: %s %s: %s %sC",
+                    app->tyre_list[i].serial,
+                    app->tyre_list[i].uom,
+                    app->tyre_list[i].pressure,
+                    app->tyre_list[i].temperature);
+            }
             canvas_draw_str(canvas, x, y, buf);
             y += lineheight;
             i2++;
@@ -222,6 +245,12 @@ void tyre_list_process_input(ProtoViewApp* app, InputEvent input) {
         if(app->tyre_list_count > 0) {
             clear_tyre_list(app);
             ui_show_alert(app, "Tyre list cleared", 1000);
+        }
+    } else if(input.type == InputTypeLong && input.key == InputKeyDown) {
+        if(!show_in_bar) {
+            show_in_bar = true;
+        } else {
+            show_in_bar = false;
         }
     }
 }
