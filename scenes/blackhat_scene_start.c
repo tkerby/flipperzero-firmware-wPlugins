@@ -29,7 +29,6 @@ BlackhatItem items[] = {
     {"Test Internet (ping)", {""}, 1, NULL, TEST_INET, false},
     {"Get Params", {""}, 1, NULL, GET_CMD, false},
     {"Reboot", {""}, 1, NULL, REBOOT_CMD, false},
-    {"Help", {""}, 1, NULL, HELP_CMD, false},
 };
 
 static void blackhat_scene_start_var_list_enter_callback(
