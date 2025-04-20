@@ -24,7 +24,7 @@ void player_spawn(Level* level, GameManager* manager) {
     PlayerContext* player_context = entity_context_get(player);
 
     player_context->sprite = game_manager_sprite_load(manager, "other/player.fxbm");
-    
+
     player_context->weapon_damage = 1;
 
     Jumping_animations_load(manager);
@@ -67,7 +67,6 @@ void player_movement(Entity* self, GameManager* manager, void* context) {
             playerContext->is_swinging_sword = true;
         }
 
-
         if(input.held & GameKeyLeft) pos.x -= 1;
         if(input.held & GameKeyRight) pos.x += 1;
 
@@ -93,7 +92,7 @@ void player_movement(Entity* self, GameManager* manager, void* context) {
     }
 
     pos.x = CLAMP(pos.x, 123, 5);
-    pos.y = CLAMP(pos.y, 59, 5); 
+    pos.y = CLAMP(pos.y, 59, 5);
 
     if(pos.y < 5) pos.y = 5;
     if(pos.y > 59) pos.y = 59;
@@ -141,38 +140,36 @@ void Animations(GameManager* manager, void* context) {
             Swinging_sword_animation_play(manager, context);
     }
 
-    if(!playerContext->is_swinging_sword){
+    if(!playerContext->is_swinging_sword) {
         // idle / walk / jump animations
         if(!is_moving && isGrounded && !is_player_facing_right) {
             Idle_animation_play(manager, context);
         }
-        
+
         if(!is_moving && isGrounded && is_player_facing_right) {
             Idle_animation_right_play(manager, context);
         }
-    
+
         if(is_moving && isGrounded && !is_player_facing_right) {
             Walking_animation_play(manager, context);
         }
-        
+
         if(is_moving && isGrounded && is_player_facing_right) {
             Walking_right_animation_play(manager, context);
         }
-        
-        if(playerContext->Yvelocity > 0 && !isGrounded){
-            if(!is_player_facing_right){
+
+        if(playerContext->Yvelocity > 0 && !isGrounded) {
+            if(!is_player_facing_right) {
                 playerContext->sprite = jumping[3];
-            }
-            else{
+            } else {
                 playerContext->sprite = jumping[1];
             }
         }
-    
-        if(playerContext->Yvelocity < 0 && !isGrounded){
-            if(!is_player_facing_right){
+
+        if(playerContext->Yvelocity < 0 && !isGrounded) {
+            if(!is_player_facing_right) {
                 playerContext->sprite = jumping[0];
-            }
-            else{
+            } else {
                 playerContext->sprite = jumping[4];
             }
         }
@@ -196,7 +193,6 @@ void player_update(Entity* self, GameManager* manager, void* context) {
     player_movement(self, manager, context);
     Animations(manager, context);
 }
-
 
 const EntityDescription player_desc = {
     .start = NULL, // called when entity is added to the level

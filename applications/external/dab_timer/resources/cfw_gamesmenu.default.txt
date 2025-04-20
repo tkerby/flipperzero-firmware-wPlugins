@@ -55,6 +55,7 @@ GamesMenuList Version 0
 /ext/apps/Games/minesweeper.fap
 /ext/apps/Games/minesweeper_redux.fap
 /ext/apps/Games/mode7_demo.fap
+/ext/apps/Games/monster_slayer.fap
 /ext/apps/Games/montyhall.fap
 /ext/apps/Games/morse_master.fap
 /ext/apps/Games/multi_counter.fap

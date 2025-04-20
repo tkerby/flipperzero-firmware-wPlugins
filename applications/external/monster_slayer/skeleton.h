@@ -10,7 +10,7 @@ typedef struct {
 } SkeletonContext;
 
 void skeleton_spawn(Level* level, GameManager* manager);
-    
+
 extern const EntityDescription skel_desc;
 
 #endif

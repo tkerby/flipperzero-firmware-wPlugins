@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
+- Added: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 
 <a name="release">
 
@@ -316,6 +317,7 @@ $ ./fbt dolphin_ext
 - [Matagotchi v1.1 (By MrModd)](https://github.com/MrModd/Matagotchi)
 - [Minesweeper v1.2 (By panki27)](https://github.com/panki27/minesweeper)
 - [Minesweeper Redux v1.5 (By squee72564)](https://github.com/squee72564/F0_Minesweeper_Fap)
+- [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - [Monty Hall v1.2 (By DevMilanIan)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/203)
 - [Morse Master v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
