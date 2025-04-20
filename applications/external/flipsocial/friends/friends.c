@@ -1,46 +1,51 @@
-#include "flip_social_friends.h"
-
-FlipSocialModel* flip_social_friends_alloc() {
-    // Allocate memory for each username only if not already allocated
-    FlipSocialModel* friends = malloc(sizeof(FlipSocialModel));
-    if(friends == NULL) {
-        FURI_LOG_E(TAG, "Failed to allocate memory for friends usernames.");
-        return NULL;
-    }
-    return friends;
-}
+#include <friends/friends.h>
+#include <alloc/alloc.h>
 
 // for now we're just listing the current users
 // as the feed is upgraded, then we can port more to the friends view
-bool flip_social_get_friends() {
+bool friends_fetch(FlipperHTTP* fhttp) {
     if(!app_instance) {
         FURI_LOG_E(TAG, "App instance is NULL");
         return false;
     }
-    // will return true unless the devboard is not connected
+    if(!fhttp) {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+
+    // create the friends directory
+    if(!flip_social_subfolder_mkdir("friends")) {
+        FURI_LOG_E(TAG, "Failed to create friends directory");
+        return false;
+    }
+
     char url[100];
     snprintf(
-        fhttp.file_path,
-        sizeof(fhttp.file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/friends.json");
+        fhttp->file_path,
+        sizeof(fhttp->file_path),
+        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_social/friends/friends.json");
 
-    fhttp.save_received_data = true;
-    auth_headers_alloc();
+    fhttp->save_received_data = true;
+    alloc_headers();
     snprintf(
         url,
         sizeof(url),
-        "https://www.jblanked.com/flipper/api/user/friends/%s/",
-        app_instance->login_username_logged_in);
-    if(!flipper_http_get_request_with_headers(url, auth_headers)) {
+        "https://www.jblanked.com/flipper/api/user/friends/%s/%d/",
+        app_instance->login_username_logged_in,
+        MAX_FRIENDS);
+    if(!flipper_http_request(fhttp, GET, url, auth_headers, NULL)) {
         FURI_LOG_E(TAG, "Failed to send HTTP request for friends");
-        fhttp.state = ISSUE;
+        fhttp->state = ISSUE;
         return false;
     }
-    fhttp.state = RECEIVING;
     return true;
 }
 
-bool flip_social_update_friends() {
+bool friends_update() {
+    if(!app_instance) {
+        FURI_LOG_E(TAG, "App instance is NULL");
+        return false;
+    }
     if(!app_instance->submenu) {
         FURI_LOG_E(TAG, "Friends submenu is NULL");
         return false;
@@ -57,23 +62,35 @@ bool flip_social_update_friends() {
             app_instance->submenu,
             flip_social_friends->usernames[i],
             FlipSocialSubmenuLoggedInIndexFriendsStart + i,
-            flip_social_callback_submenu_choices,
+            callback_submenu_choices,
             app_instance);
     }
     return true;
 }
 
-bool flip_social_parse_json_friends() {
+bool friends_parse_json(FlipperHTTP* fhttp) {
+    if(!fhttp) {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    if(!app_instance) {
+        FURI_LOG_E(TAG, "App instance is NULL");
+        return false;
+    }
+    if(!app_instance->submenu) {
+        FURI_LOG_E(TAG, "Friends submenu is NULL");
+        return false;
+    }
+
     // load the received data from the saved file
-    FuriString* friend_data = flipper_http_load_from_file(fhttp.file_path);
+    FuriString* friend_data = flipper_http_load_from_file(fhttp->file_path);
     if(friend_data == NULL) {
         FURI_LOG_E(TAG, "Failed to load received data from file.");
-        flipper_http_deinit();
         return false;
     }
 
     //  Allocate memory for each username only if not already allocated
-    flip_social_friends = flip_social_friends_alloc();
+    flip_social_friends = alloc_friends_model();
     if(flip_social_friends == NULL) {
         FURI_LOG_E(TAG, "Failed to allocate memory for friends usernames.");
         furi_string_free(friend_data);
@@ -101,12 +118,12 @@ bool flip_social_parse_json_friends() {
             app_instance->submenu,
             flip_social_friends->usernames[i],
             FlipSocialSubmenuLoggedInIndexFriendsStart + i,
-            flip_social_callback_submenu_choices,
+            callback_submenu_choices,
             app_instance);
         flip_social_friends->count++;
         furi_string_free(friend);
     }
     furi_string_free(friend_data);
-    // flipper_http_deinit();
+
     return true;
 }

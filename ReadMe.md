@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793) (Version Only)
 - Updated: [FlipWorld v0.8.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
@@ -462,7 +463,7 @@ $ ./fbt dolphin_ext
 - [FlipLibrary v1.4 (By jblanked)](https://github.com/jblanked/FlipLibrary) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - [FlipRPI v1.0 (By jblanked)](https://github.com/jblanked/FlipRPI) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- [FlipSocial v1.0.4 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipTrader v1.1.2 (By jblanked)](https://github.com/jblanked/FlipTrader) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWeather v1.2 (By jblanked)](https://github.com/jblanked/FlipWeather) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
