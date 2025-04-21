@@ -46,6 +46,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - Updated: [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
+- SubGHz: [Add Feron protocol (static 32 bit) full support (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d8bdf500ea4feb0cce0023892f5f0c43441780)
+- Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 
 <a name="release">
 
@@ -249,7 +251,7 @@ $ ./fbt dolphin_ext
 - SubGhz: [Protocol integrations (Pocsag) (By htotoo)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/d6a7bb66c370e44775f9cbb8b7b12c00d6bdbdc6)
 - SubGHz: Protocols An-Motors, Keeloq BFT Mitto, Came Atomo, FAAC SLH (Spa), HCS101, Keeloq, Keeloq Common, Nice Flor S, SecPlus v1+v2 and Star Line updates from [Eng1n33r](https://github.com/DarkFlippers/unleashed-firmware) Check out new [instructions](https://github.com/DarkFlippers/unleashed-firmware/blob/dev/documentation/SubGHzRemoteProg.md)
 - SubGHz: [Protocols: Hay21, Hollarm, Marantec24 (static 24 bit) and GangQi (static 34 bit) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/bc19dbfbda5db4aee1ed39e2ccf29cfa1d8bd508)
-- SubGHz: Protocols Keeloq: Dea Mio, Genius Bravo, GSN, HCS101, AN-Motors, JCM Tech, MHouse, Nice Smilo, DTM Neo, FAAC RC,XT, Mutancode, Normstahl, Beninca + Allmatic, Stilmatic, CAME Space, Aprimatic (model TR and similar), Centurion Nova (Many added and updated by the community and xMasterX)
+- SubGHz: Protocols Feron (static 32 bit), Keeloq: Dea Mio, Genius Bravo, GSN, HCS101, AN-Motors, JCM Tech, MHouse, Nice Smilo, DTM Neo, FAAC RC,XT, Mutancode, Normstahl, Beninca + Allmatic, Stilmatic, CAME Space, Aprimatic (model TR and similar), Centurion Nova (Many added and updated by the community and xMasterX)
 - SubGHz: [Protocols: ReversRB2 / RB2M (static 64 bit) (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/813626c03b426547fa439a291cab08824c374ed3)
 - SubGHz: Region Locked -  To transmit to outside ranges (Unlock), use the CFW Settings or Extend Range app under Applications=>Settings.
 - SubGHz: [Transmit Indicator before Out of Region Frequency Use (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/e24d4a0689db555ae083fec23a471e878adb6cd4)
