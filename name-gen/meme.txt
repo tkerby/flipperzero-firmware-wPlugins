@@ -1,4 +1,0 @@
-jnsl
-fdf
-dfd
-stack_size
