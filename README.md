@@ -3,7 +3,8 @@ Nickname Generator in flipper zero
 Easily create unique names using this app for flipper zero.
 
 *Instructions: Press "left" or "right" to change the subject of the name. 
-Click OK to generate the name.*
+
+Click "OK" to generate the name.*
 
 Screenshots:
 
