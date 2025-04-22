@@ -36,7 +36,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Decreased FURI_HAL_FLASH_C2_LOCK_TIMEOUT_MS to 3 seconds
 - ESP Flasher Bump [Marauder 1.4.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.3)
 - Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [added piece hard-dropping (By GGORG0)](https://github.com/xMasterX/all-the-plugins/pull/186)
-- Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Added: [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
 - Updated: [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793) (Version Only)
 - Updated: [FlipWorld v0.8.2 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
@@ -48,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
 - SubGHz: [Add Feron protocol (static 32 bit) full support (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d8bdf500ea4feb0cce0023892f5f0c43441780)
 - Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
+- Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
