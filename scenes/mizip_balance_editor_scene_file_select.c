@@ -6,6 +6,8 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
 
     //Resetting data
     furi_string_set(app->filePath, NFC_APP_FOLDER);
+    furi_string_set(app->shadowFilePath, NFC_APP_FOLDER);
+    app->is_shadow_file_exists = false;
     mf_classic_reset(app->mf_classic_data);
 
     DialogsFileBrowserOptions browser_options;
@@ -16,19 +18,46 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
     if(!dialog_file_browser_show(app->dialogs, app->filePath, app->filePath, &browser_options)) {
         scene_manager_previous_scene(app->scene_manager);
         return;
-    }
-    //Check if file is MiZip file
-    app->nfc_device = nfc_device_alloc();
-    if(nfc_device_load(app->nfc_device, furi_string_get_cstr(app->filePath))) {
-        if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
-            mf_classic_copy(
-                app->mf_classic_data, nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
-            memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
-            app->is_valid_mizip_data = mizip_parse(context);
-            nfc_device_free(app->nfc_device);
-            scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
+    } else {
+        //When file is selected, calculate his shadow file path
+        FURI_LOG_D("MiZipBalanceEditor", "File selected: %s", furi_string_get_cstr(app->filePath));
+        furi_string_set(app->shadowFilePath, app->filePath);
+        furi_string_replace(
+            app->shadowFilePath,
+            NFC_APP_EXTENSION,
+            NFC_APP_SHADOW_EXTENSION,
+            furi_string_size(app->shadowFilePath) - 4);
+        FURI_LOG_D(
+            "MiZipBalanceEditor", "Shadow file: %s", furi_string_get_cstr(app->shadowFilePath));
+
+        //Check if shadow file exists
+        app->is_shadow_file_exists =
+            storage_file_exists(app->storage, furi_string_get_cstr(app->shadowFilePath));
+
+        //Set filePath to shadow file to load the correct data
+        if(app->is_shadow_file_exists) {
+            FURI_LOG_D("MiZipBalanceEditor", "Shadow file exists!");
+            app->filePath = app->shadowFilePath;
         } else {
-            scene_manager_previous_scene(app->scene_manager);
+            FURI_LOG_D("MiZipBalanceEditor", "No shadow file found.");
+        }
+
+        //Check if file is MiZip file
+        app->nfc_device = nfc_device_alloc();
+        if(nfc_device_load(app->nfc_device, furi_string_get_cstr(app->filePath))) {
+            FURI_LOG_D(
+                "MiZipBalanceEditor", "Loaded file: %s", furi_string_get_cstr(app->filePath));
+            if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolMfClassic) {
+                mf_classic_copy(
+                    app->mf_classic_data,
+                    nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
+                memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
+                app->is_valid_mizip_data = mizip_parse(context);
+                nfc_device_free(app->nfc_device);
+                scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdShowBalance);
+            } else {
+                scene_manager_previous_scene(app->scene_manager);
+            }
         }
     }
 }

@@ -84,7 +84,10 @@ struct MiZipBalanceEditorApp {
     bool is_scan_active;
 
     //File
+    Storage* storage;
     FuriString* filePath;
+    FuriString* shadowFilePath;
+    bool is_shadow_file_exists;
 
     //Mifare Classic data
     MfClassicData* mf_classic_data;

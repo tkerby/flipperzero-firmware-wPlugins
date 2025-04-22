@@ -45,6 +45,8 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     MiZipBalanceEditorApp* app = malloc(sizeof(MiZipBalanceEditorApp));
     app->gui = furi_record_open(RECORD_GUI);
 
+    app->storage = furi_record_open(RECORD_STORAGE);
+
     // Create the ViewDispatcher and SceneManager instance
     app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&mizip_balance_editor_scene_handlers, app);
@@ -93,6 +95,7 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     //Initiate data for MfClassic data store
     app->mf_classic_data = mf_classic_alloc();
     app->filePath = furi_string_alloc();
+    app->shadowFilePath = furi_string_alloc();
     app->is_valid_mizip_data = false;
 
     app->credit_pointer = 0x09;
@@ -131,6 +134,9 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     furi_record_close(RECORD_GUI);
     app->gui = NULL;
 
+    furi_record_close(RECORD_STORAGE);
+    app->storage = NULL;
+
     furi_record_close(RECORD_DIALOGS);
     app->dialogs = NULL;
 
@@ -138,6 +144,7 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     nfc_device_free(app->nfc_device);
     mf_classic_free(app->mf_classic_data);
     furi_string_free(app->filePath);
+    furi_string_free(app->shadowFilePath);
 
     free(app);
 }
