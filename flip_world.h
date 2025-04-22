@@ -15,7 +15,7 @@
 //
 
 #define TAG "FlipWorld"
-#define VERSION "0.8.2"
+#define VERSION "0.8.3"
 #define VERSION_TAG TAG " " FAP_VERSION
 //
 

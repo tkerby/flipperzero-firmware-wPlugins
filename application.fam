@@ -17,5 +17,5 @@ App(
     ),
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipWorld",
-    fap_version="0.8.2",
+    fap_version="0.8.3",
 )
