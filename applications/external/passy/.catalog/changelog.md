@@ -1,3 +1,5 @@
+## 1.3
+ - Show both issuing state and nationality (Thanks @portasynthinca3)
 ## 1.2
  - Fix bug with detecting wrong protocol
  - Fix bug with check number of alpha characters (Thanks @WillyJL)
