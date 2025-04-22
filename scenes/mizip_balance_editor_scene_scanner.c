@@ -10,52 +10,39 @@ static NfcCommand
 
     const MfClassicPollerEvent* mfc_event = event.event_data;
     if(mfc_event->type == MfClassicPollerEventTypeRequestMode) {
-        FURI_LOG_I("MiZipBalanceEditor", "Request mode");
-        const MfClassicData* mfc_data = nfc_poller_get_data(app->poller);
+        FURI_LOG_D("MiZipBalanceEditor", "Poller request mode");
+        nfc_device_set_data(
+            app->nfc_device, NfcProtocolMfClassic, nfc_poller_get_data(app->poller));
+        mfc_event->data->poller_mode.mode = MfClassicPollerModeRead;
+    } else if(mfc_event->type == MfClassicPollerEventTypeRequestReadSector) {
+        FURI_LOG_D("MiZipBalanceEditor", "Poller read sector");
+        if(app->current_sector < MIZIP_KEY_TO_GEN) {
+            MizipCardConfig cfg = {};
+            mizip_get_card_config(&cfg, app->mf_classic_data->type);
 
-        if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolInvalid) {
-            nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, mfc_data);
+            MfClassicKey key = {};
+            key.data[app->current_sector] = cfg.keys[app->current_sector].a;
+            mfc_event->data->read_sector_request_data.sector_num = app->current_sector;
+            mfc_event->data->read_sector_request_data.key = key;
+            mfc_event->data->read_sector_request_data.key_type = MfClassicKeyTypeA;
+            mfc_event->data->key_request_data.key_provided = true;
+            app->current_sector++;
         } else {
-            mfc_data = nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
+            mfc_event->data->read_sector_request_data.key_provided = false;
         }
-
-        mfc_event->data->poller_mode.mode = MfClassicPollerModeDictAttackStandard;
-        mfc_event->data->poller_mode.data = mfc_data;
-        app->sectors_total = mf_classic_get_total_sectors_num(mfc_data->type);
-        mf_classic_get_read_sectors_and_keys(mfc_data, &app->sectors_read, &app->keys_found);
-    } else if(mfc_event->type == MfClassicPollerEventTypeRequestKey) {
-        FURI_LOG_I("MiZipBalanceEditor", "Request key");
-        const MfClassicData* mfc_data = nfc_poller_get_data(app->poller);
-
-        if(nfc_device_get_protocol(app->nfc_device) == NfcProtocolInvalid) {
-            nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, mfc_data);
-        } else {
-            mfc_data = nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic);
-        }
-
-        MizipCardConfig cfg = {};
-        mizip_get_card_config(&cfg, mfc_data->type);
-
-        MfClassicKey key = {};
-        key.data[app->current_sector] = cfg.keys[app->current_sector].a;
-        mfc_event->data->key_request_data.key = key;
-        mfc_event->data->key_request_data.key_provided = true;
-    } else if(mfc_event->type == MfClassicPollerEventTypeDataUpdate) {
-        FURI_LOG_I("MiZipBalanceEditor", "Data update");
-        MfClassicPollerEventDataUpdate* data_update = &mfc_event->data->data_update;
-        app->sectors_read = data_update->sectors_read;
-        app->current_sector = data_update->current_sector;
     } else if(mfc_event->type == MfClassicPollerEventTypeSuccess) {
-        FURI_LOG_I("MiZipBalanceEditor", "Success");
-        const MfClassicData* mf_classic_data = nfc_poller_get_data(app->poller);
-        nfc_device_set_data(app->nfc_device, NfcProtocolMfClassic, mf_classic_data);
-        mf_classic_copy(app->mf_classic_data, mf_classic_data);
-        if(mf_classic_is_card_read(mf_classic_data)) {
-            FURI_LOG_I("MiZipBalanceEditor", "Card readed");
-        }
+        FURI_LOG_D("MiZipBalanceEditor", "Poller success");
+        nfc_device_set_data(
+            app->nfc_device, NfcProtocolMfClassic, nfc_poller_get_data(app->poller));
+        mf_classic_copy(
+            app->mf_classic_data, nfc_device_get_data(app->nfc_device, NfcProtocolMfClassic));
         memcpy(app->uid, app->mf_classic_data->iso14443_3a_data->uid, UID_LENGTH);
+        if(mf_classic_is_card_read(app->mf_classic_data)) {
+            FURI_LOG_D("MiZipBalanceEditor", "Card readed");
+        } else {
+            FURI_LOG_D("MiZipBalanceEditor", "Card not readed");
+        }
         app->is_valid_mizip_data = mizip_parse(context);
-
         view_dispatcher_send_custom_event(
             app->view_dispatcher, MiZipBalanceEditorCustomEventPollerSuccess);
         command = NfcCommandStop;

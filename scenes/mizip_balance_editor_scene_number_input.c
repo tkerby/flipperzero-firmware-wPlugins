@@ -13,7 +13,12 @@ void mizip_balance_editor_scene_number_input_on_enter(void* context) {
     NumberInput* number_input = app->number_input;
 
     char str[50];
-    snprintf(str, sizeof(str), "Balance in cents (%d - %d)", app->min_value, app->max_value);
+    snprintf(
+        str,
+        sizeof(str),
+        "Balance in cents (%d - %d)",
+        MIZIP_BALANCE_MIN_VALUE,
+        MIZIP_BALANCE_MAX_VALUE);
 
     number_input_set_header_text(number_input, str);
     number_input_set_result_callback(
@@ -21,8 +26,8 @@ void mizip_balance_editor_scene_number_input_on_enter(void* context) {
         mizip_balance_editor_scene_input_number_callback,
         context,
         app->current_balance,
-        app->min_value,
-        app->max_value);
+        MIZIP_BALANCE_MIN_VALUE,
+        MIZIP_BALANCE_MAX_VALUE);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdNumberInput);
 }

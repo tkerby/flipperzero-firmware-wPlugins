@@ -99,8 +99,6 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     app->previous_credit_pointer = 0x08;
     app->current_balance = 0;
     app->previous_balance = 0;
-    app->min_value = 0;
-    app->max_value = 65535;
 
     app->last_selected_submenu_index = SubmenuIndexDirectToTag;
 

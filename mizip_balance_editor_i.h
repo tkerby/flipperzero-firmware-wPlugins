@@ -30,6 +30,8 @@
 #define NFC_APP_FOLDER           EXT_PATH("nfc")
 #define NFC_APP_EXTENSION        ".nfc"
 #define NFC_APP_SHADOW_EXTENSION ".shd"
+#define MIZIP_BALANCE_MIN_VALUE  0
+#define MIZIP_BALANCE_MAX_VALUE  65535
 
 // Enumeration of the view indexes.
 typedef enum {
@@ -102,8 +104,6 @@ struct MiZipBalanceEditorApp {
     uint16_t current_balance;
     uint16_t previous_balance;
     uint16_t new_balance;
-    uint16_t min_value;
-    uint16_t max_value;
 };
 
 void mizip_balance_editor_write_new_balance(void* context);

@@ -110,14 +110,24 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
             consumed = true;
             break;
         case DialogExResultLeft:
-            //Remove 100 cents from balance
-            app->new_balance = app->new_balance - 100;
+            if(app->new_balance < 100) {
+                //If balance is already under 100 cents, set it to zero
+                app->new_balance = MIZIP_BALANCE_MIN_VALUE;
+            } else {
+                //Remove 100 cents from balance
+                app->new_balance = app->new_balance - 100;
+            }
             mizip_balance_editor_show_balances(context);
             consumed = true;
             break;
         case DialogExResultRight:
-            //Add 100 cents to balance
-            app->new_balance = app->new_balance + 100;
+            if(app->new_balance >= 65500) {
+                //If balance is already superior to 65500 cents, set it to the max allowed
+                app->new_balance = MIZIP_BALANCE_MAX_VALUE;
+            } else {
+                //Add 100 cents to balance
+                app->new_balance = app->new_balance + 100;
+            }
             mizip_balance_editor_show_balances(context);
             consumed = true;
             break;
