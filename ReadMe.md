@@ -48,6 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Add Feron protocol (static 32 bit) full support (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d8bdf500ea4feb0cce0023892f5f0c43441780)
 - Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
+- Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
 
 <a name="release">
 
@@ -389,7 +390,7 @@ $ ./fbt dolphin_ext
 - [Atari SIO Emulator v0.1.2 (By cepetr)](https://github.com/cepetr/sio2flip)
 - [Atomic Dice Roller v1.1 (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
 - [Authenticator/TOTP v5.17.1 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
-- [AVR Flasher v1.4 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
+- [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
 - [AZERTY Mouse Jacker v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) `Req: NRF24` (Uses AZERTY keyboard - Source Unknown)
 - [Bad KB (Modified PR#738 from pengu1ndev - Original from Willy-JL) #739 (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/739) (Part of BadUSB)
 - [Barcode App v1.3 (By Kingal1337)](https://github.com/Kingal1337/flipper-barcode-generator)
