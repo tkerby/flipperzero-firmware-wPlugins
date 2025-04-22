@@ -8,7 +8,7 @@
 #include <string.h>
 
 #define MAX_PARTS 10
-#define MAX_NICKNAME_LENGTH 8
+#define MAX_NICKNAME_LENGTH 12
 
 typedef struct {
     const char* name;
