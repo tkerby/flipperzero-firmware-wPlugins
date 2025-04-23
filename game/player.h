@@ -81,9 +81,9 @@ typedef enum
 // game modes
 typedef enum
 {
-    GAME_MODE_PVE = 0,      // player(s) vs everyone
-    GAME_MODE_PVP = 1,      // player vs player
-    GAME_MODE_TUTORIAL = 2, // tutorial mode
+    GAME_MODE_PVE = 0,   // player(s) vs everyone
+    GAME_MODE_PVP = 1,   // player vs player
+    GAME_MODE_STORY = 2, // story mode
 } GameMode;
 
 // game ending reasons
@@ -127,7 +127,7 @@ typedef struct
     //
     char message[64];
     //
-    uint8_t tutorial_step;
+    uint32_t story_step;
     //
     FlipperHTTP *fhttp;
     //

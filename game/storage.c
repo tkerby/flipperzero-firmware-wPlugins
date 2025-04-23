@@ -1,6 +1,6 @@
 #include <game/storage.h>
 
-static bool save_uint32(const char *path_name, uint32_t value)
+bool save_uint32(const char *path_name, uint32_t value)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lu", value);
@@ -621,7 +621,7 @@ static bool load_int8(const char *path_name, int8_t *value)
 }
 
 // Helper function to load a uint32_t
-static bool load_uint32(const char *path_name, uint32_t *value)
+bool load_uint32(const char *path_name, uint32_t *value)
 {
     if (!path_name || !value)
     {

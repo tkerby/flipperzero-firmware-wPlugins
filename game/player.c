@@ -490,37 +490,37 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     }
 
     // adjust tutorial step
-    if (game_context->game_mode == GAME_MODE_TUTORIAL)
+    if (game_context->game_mode == GAME_MODE_STORY)
     {
-        switch (game_context->tutorial_step)
+        switch (game_context->story_step)
         {
         case 0:
             if (input.held & GameKeyLeft)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 1:
             if (input.held & GameKeyRight)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 2:
             if (input.held & GameKeyUp)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 3:
             if (input.held & GameKeyDown)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 5:
             if (input.held & GameKeyOk && game_context->is_menu_open)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 6:
             if (input.held & GameKeyBack)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         case 7:
             if (input.held & GameKeyBack)
-                game_context->tutorial_step++;
+                game_context->story_step++;
             break;
         }
     }
@@ -544,51 +544,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     // handle icon collision
     player_handle_collision(self, pos, player);
-}
-
-static void player_draw_tutorial(Canvas *canvas, GameManager *manager)
-{
-    GameContext *game_context = game_manager_game_context_get(manager);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 45, 12, "Tutorial");
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    switch (game_context->tutorial_step)
-    {
-    case 0:
-        canvas_draw_str(canvas, 15, 20, "Press LEFT to move left");
-        break;
-    case 1:
-        canvas_draw_str(canvas, 15, 20, "Press RIGHT to move right");
-        break;
-    case 2:
-        canvas_draw_str(canvas, 15, 20, "Press UP to move up");
-        break;
-    case 3:
-        canvas_draw_str(canvas, 15, 20, "Press DOWN to move down");
-        break;
-    case 4:
-        canvas_draw_str(canvas, 0, 20, "Press OK + collide with an enemy to attack");
-        break;
-    case 5:
-        canvas_draw_str(canvas, 15, 20, "Hold OK to open the menu");
-        break;
-    case 6:
-        canvas_draw_str(canvas, 15, 20, "Press BACK to escape the menu");
-        break;
-    case 7:
-        canvas_draw_str(canvas, 15, 20, "Hold BACK to save and exit");
-        break;
-    case 8:
-        // end of tutorial so quit
-        save_char("tutorial_done", "J You BLANKED on this one");
-        game_context->tutorial_step = 0;
-        game_context->is_menu_open = false;
-        game_context->is_switching_level = true;
-        game_manager_game_stop(manager);
-        return;
-    default:
-        break;
-    }
 }
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
@@ -639,14 +594,9 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     canvas_draw_frame(canvas, -draw_camera_x, -draw_camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
     // render tutorial
-    if (game_context->game_mode == GAME_MODE_TUTORIAL)
+    if (game_context->game_mode == GAME_MODE_STORY)
     {
-        player_draw_tutorial(canvas, manager);
-
-        if (game_context->is_menu_open)
-        {
-            draw_background_render(canvas, manager);
-        }
+        story_draw(self, canvas, manager);
     }
     else
     {

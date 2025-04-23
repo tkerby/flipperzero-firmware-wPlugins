@@ -87,8 +87,13 @@ static void game_start(GameManager *game_manager, void *ctx)
                 game_context->level_count++;
         }
     }
-    else if (game_context->game_mode == GAME_MODE_TUTORIAL)
+    else if (game_context->game_mode == GAME_MODE_STORY)
     {
+        if (load_uint32("story_step", &game_context->story_step) == false)
+        {
+            game_context->story_step = 0;
+        }
+
         // show tutorial only for now
         game_context->levels[0] = game_manager_add_level(game_manager, world_training());
         game_context->level_count = 1;
@@ -175,6 +180,10 @@ static void game_stop(void *ctx)
             furi_string_free(game_context->ws_info);
             game_context->ws_info = NULL;
         }
+    }
+    else if (game_context->game_mode == GAME_MODE_STORY)
+    {
+        save_uint32("story_step", game_context->story_step);
     }
 
     if (!game_context->ended_early)
