@@ -107,6 +107,7 @@ typedef struct {
     char pressure_bar[5];
     char temperature[10];
     char uom[4];
+    char decoder[2];
     bool favorite;
     bool favorite_set;
 } Tyre;

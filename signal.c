@@ -221,18 +221,25 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
             /* Section added to store TPMS records */
             if((decoded && info->decoder != &UnknownDecoder)) {
                 char uom[4];
+                char decoder[2];
                 if (strcmp("Toyota TPMS", info->decoder->name)==0) {
                     strcpy(uom, "PSI");
+                    strcpy(decoder,"T");
                 } else if ( strcmp("Renault TPMS", info->decoder->name)==0) {
                     strcpy(uom, "KPA");
+                    strcpy(decoder,"R");
                 } else if ( strcmp("Schrader EG53MA4 TPMS kpa", info->decoder->name)==0) {
                     strcpy(uom, "KPA");
+                    strcpy(decoder,"S");
                 } else if ( strcmp("Schrader TPMS", info->decoder->name)==0) {
                     strcpy(uom, "KPA");
+                    strcpy(decoder,"S");
                 } else if ( strcmp("Ford TPMS", info->decoder->name)==0) {
                     strcpy(uom, "PSI");
+                    strcpy(decoder,"F");
                 } else if ( strcmp("Citroen TPMS", info->decoder->name)==0) {
                     strcpy(uom, "KPA");
+                    strcpy(decoder,"C");
                 } else
                 {
                     strcpy(uom, "???"); // Effectively just means "not a TPMS signal"
@@ -279,6 +286,7 @@ void scan_for_signal(ProtoViewApp* app, RawSamplesBuffer* source, uint32_t min_d
                             strcpy(app->tyre_list[app->tyre_list_count].pressure_bar, barstring);
                             strcpy(app->tyre_list[app->tyre_list_count].temperature, temp);
                             strcpy(app->tyre_list[i].uom, uom);
+                            strcpy(app->tyre_list[i].decoder, decoder);
                             app->tyre_list[i].favorite = false;
                             app->tyre_list[i].favorite_set = false;
                             app->tyre_list_count++;

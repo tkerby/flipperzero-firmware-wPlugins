@@ -65,9 +65,9 @@ static void render_tyre_info(Canvas* const canvas, ProtoViewApp* app) {
             i2++;
         } else if (!showonlymine) {
             if (show_in_bar) {
-                snprintf(buf, sizeof(buf), "ID: %s %s: %s %sC", app->tyre_list[i].serial, "Bar", app->tyre_list[i].pressure_bar, app->tyre_list[i].temperature);
+                snprintf(buf, sizeof(buf), "%s: %s %s: %s %sC", app->tyre_list[i].decoder, app->tyre_list[i].serial, "Bar", app->tyre_list[i].pressure_bar, app->tyre_list[i].temperature);
             } else {
-               snprintf(buf, sizeof(buf), "ID: %s %s: %s %sC", app->tyre_list[i].serial, app->tyre_list[i].uom, app->tyre_list[i].pressure, app->tyre_list[i].temperature);
+               snprintf(buf, sizeof(buf), "%s: %s %s: %s %sC", app->tyre_list[i].decoder, app->tyre_list[i].serial, app->tyre_list[i].uom, app->tyre_list[i].pressure, app->tyre_list[i].temperature);
             }
             canvas_draw_str(canvas, x, y, buf);
             y += lineheight;
