@@ -1,0 +1,9 @@
+App(
+    appid="password_manager",
+    name="Password Manager",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="password_manager_app",
+    requires=["gui", "usb_hid"],
+    stack_size=2 * 1024,
+    fap_category="Tools",
+)
