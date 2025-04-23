@@ -1,0 +1,13 @@
+App(
+    appid="combo_cracker",
+    name="Combo Cracker",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="combo_cracker_app",
+    stack_size=4 * 1024,
+    requires=["gui", "input"],
+    order=10,
+    fap_icon="assets/app.png",
+    fap_category="Tools",
+    fap_icon_assets="assets",
+    fap_description="Crack Combo Locks by feeling the gates and resistance, then calculating the value to pop.",
+)
