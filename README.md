@@ -3,10 +3,6 @@
 
 Inspired by [this repo](https://github.com/dipdowel/flipper-fire-rng) I have implemented a similar functionality entirely in the flipper zero
 
-![image info](./screenshots/SaveMessage.png)
-![image info](./screenshots/AllZeros.png)
-
-
 
 It uses the IR sensor on the Flipper Zero to gather entropy from IR sources (such as a lighter) to seed a random number generator. The idea is that fire and other similar IR sources are not predictable sources of data, and thus it can be a reliable source of entropy. Obviously the flipper doesn't gather enough data (unless you *really* like flicking a lighter near your nearly $200 toy) to get any sort of decent entropy, this is more of a PoC.
 
