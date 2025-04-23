@@ -467,7 +467,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     }
 
     // adjust tutorial step
-    if (game_context->game_mode == GAME_MODE_STORY)
+    if (game_context->game_mode == GAME_MODE_TUTORIAL)
     {
         switch (game_context->tutorial_step)
         {
@@ -615,7 +615,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     canvas_draw_frame(canvas, -draw_camera_x, -draw_camera_y, WORLD_WIDTH, WORLD_HEIGHT);
 
     // render tutorial
-    if (game_context->game_mode == GAME_MODE_STORY)
+    if (game_context->game_mode == GAME_MODE_TUTORIAL)
     {
         player_draw_tutorial(canvas, manager);
 

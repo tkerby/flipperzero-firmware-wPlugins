@@ -81,8 +81,8 @@ void callback_submenu_choices(void *context, uint32_t index)
         }
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewGameSubmenu);
         break;
-    case FlipWorldSubmenuIndexStory:
-        game_mode_index = 2; // GAME_MODE_STORY
+    case FlipWorldSubmenuIndexTutorial:
+        game_mode_index = 2; // GAME_MODE_TUTORIAL
         game_run(app);
         break;
     case FlipWorldSubmenuIndexPvP:

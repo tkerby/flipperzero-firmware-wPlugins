@@ -136,7 +136,7 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     }
 
     // no enemies in story mode for now
-    if (game_context->game_mode != GAME_MODE_STORY || (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4))
+    if (game_context->game_mode != GAME_MODE_TUTORIAL || (game_context->game_mode == GAME_MODE_TUTORIAL && game_context->tutorial_step == 4))
     {
 
         // Draw enemy sprite relative to camera, centered on the enemy's position
@@ -227,7 +227,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     GameContext *game_context = game_manager_game_context_get(manager);
     furi_check(game_context, "Enemy collision: GameContext is NULL");
     PlayerContext *player_context = entity_context_get(game_context->player);
-    if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step != 4)
+    if (game_context->game_mode == GAME_MODE_TUTORIAL && game_context->tutorial_step != 4)
     {
         // FURI_LOG_I("Game", "Enemy collision: No enemies in story mode");
         return;
@@ -265,7 +265,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
         if (player_is_facing_enemy && game_context->last_button == GameKeyOk && !enemy_is_facing_player)
         {
-            if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4)
+            if (game_context->game_mode == GAME_MODE_TUTORIAL && game_context->tutorial_step == 4)
             {
                 // FURI_LOG_I("Game", "Player attacked enemy '%d'!", enemy_context->id);
                 game_context->tutorial_step++;

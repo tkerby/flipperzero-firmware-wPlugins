@@ -63,7 +63,7 @@ static void game_start(GameManager *game_manager, void *ctx)
                 game_context->level_count++;
         }
     }
-    else if (game_context->game_mode == GAME_MODE_STORY)
+    else if (game_context->game_mode == GAME_MODE_TUTORIAL)
     {
         // show tutorial only for now
         game_context->levels[0] = game_manager_add_level(game_manager, world_training());
