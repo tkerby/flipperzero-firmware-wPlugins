@@ -52,6 +52,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` We can finally take existing Amiibo and re-emulate dupes to loot farm or to pull dupe opponents in smash!
+- Updated: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo)
 
 <a name="release">
 
