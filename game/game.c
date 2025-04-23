@@ -78,7 +78,7 @@ static void game_start(GameManager *game_manager, void *ctx)
                 FURI_LOG_E("Game", "Failed to allocate level %d", i);
                 if (i == 0)
                 {
-                    game_context->levels[0] = game_manager_add_level(game_manager, world_training());
+                    game_context->levels[0] = game_manager_add_level(game_manager, story_world());
                     game_context->level_count = 1;
                 }
                 break;
@@ -95,7 +95,7 @@ static void game_start(GameManager *game_manager, void *ctx)
         }
 
         // show tutorial only for now
-        game_context->levels[0] = game_manager_add_level(game_manager, world_training());
+        game_context->levels[0] = game_manager_add_level(game_manager, story_world());
         game_context->level_count = 1;
         for (int i = 1; i < MAX_LEVELS; i++)
         {

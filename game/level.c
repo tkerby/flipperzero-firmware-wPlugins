@@ -12,7 +12,7 @@ bool allocate_level(GameManager *manager, int index)
     if (!world_list)
     {
         FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] = game_manager_add_level(manager, world_training());
+        game_context->levels[0] = game_manager_add_level(manager, story_world());
         game_context->level_count = 1;
         return false;
     }

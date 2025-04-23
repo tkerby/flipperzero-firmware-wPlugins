@@ -492,37 +492,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // adjust tutorial step
     if (game_context->game_mode == GAME_MODE_STORY)
     {
-        switch (game_context->story_step)
-        {
-        case 0:
-            if (input.held & GameKeyLeft)
-                game_context->story_step++;
-            break;
-        case 1:
-            if (input.held & GameKeyRight)
-                game_context->story_step++;
-            break;
-        case 2:
-            if (input.held & GameKeyUp)
-                game_context->story_step++;
-            break;
-        case 3:
-            if (input.held & GameKeyDown)
-                game_context->story_step++;
-            break;
-        case 5:
-            if (input.held & GameKeyOk && game_context->is_menu_open)
-                game_context->story_step++;
-            break;
-        case 6:
-            if (input.held & GameKeyBack)
-                game_context->story_step++;
-            break;
-        case 7:
-            if (input.held & GameKeyBack)
-                game_context->story_step++;
-            break;
-        }
+        story_update(self, manager);
     }
 
     // Clamp the player's position to stay within world bounds
