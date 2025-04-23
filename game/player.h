@@ -91,6 +91,7 @@ typedef enum
 {
     GAME_END_MEMORY = 0,              // ran out of memory
     GAME_END_TUTORIAL_INCOMPLETE = 1, // tutorial incomplete
+    GAME_END_PVP_REQUIREMENT = 2,     // player level too low for pvp
 } GameEndReason;
 
 typedef struct

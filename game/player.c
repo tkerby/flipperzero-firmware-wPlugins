@@ -136,6 +136,14 @@ void player_spawn(Level *level, GameManager *manager)
         pctx->elapsed_health_regen = 0;
         pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
+        // level 10 level required for PvP
+        if (game_context->game_mode == GAME_MODE_PVP)
+        {
+            FURI_LOG_E(TAG, "Player level is not high enough for PvP");
+            game_context->end_reason = GAME_END_PVP_REQUIREMENT;
+            game_context->ended_early = true;
+        }
+
         // Set player username
         if (!load_char("Flip-Social-Username", pctx->username, sizeof(pctx->username)))
         {
@@ -163,6 +171,14 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Determine the player's level based on XP
     pctx->level = player_level_iterative_get(pctx->xp);
+
+    // level 10 level required for PvP
+    if (game_context->game_mode == GAME_MODE_PVP && pctx->level < 10)
+    {
+        FURI_LOG_E(TAG, "Player level %ld is not high enough for PvP", pctx->level);
+        game_context->end_reason = GAME_END_PVP_REQUIREMENT;
+        game_context->ended_early = true;
+    }
 
     // Update strength and max health based on the new level
     pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level

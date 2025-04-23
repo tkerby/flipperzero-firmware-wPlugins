@@ -192,6 +192,9 @@ static void game_stop(void *ctx)
         case GAME_END_TUTORIAL_INCOMPLETE:
             snprintf(message, sizeof(message), "The tutorial is not complete.\nPlease finish the tutorial to\nsave your game.\n\nHit BACK to exit.");
             break;
+        case GAME_END_PVP_REQUIREMENT:
+            snprintf(message, sizeof(message), "You need to be level 10 to\nplay PvP.\n\nHit BACK to exit.");
+            break;
         };
         easy_flipper_dialog("Game Over", message);
     }
