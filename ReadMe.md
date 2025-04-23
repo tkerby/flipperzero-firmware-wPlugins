@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
 - Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
+- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
