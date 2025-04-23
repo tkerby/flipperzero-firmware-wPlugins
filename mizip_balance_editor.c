@@ -14,7 +14,7 @@ bool mizip_balance_editor_app_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-void mizip_balance_editor_write_new_balance(void* context) {
+bool mizip_balance_editor_write_new_balance(void* context) {
     MiZipBalanceEditorApp* app = context;
 
     //Updating previous balance
@@ -36,8 +36,14 @@ void mizip_balance_editor_write_new_balance(void* context) {
 
     NfcDevice* nfc_device = nfc_device_alloc();
     nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
-    nfc_device_save(nfc_device, furi_string_get_cstr(app->filePath));
+    bool write_success = nfc_device_save(nfc_device, furi_string_get_cstr(app->shadowFilePath));
+    if(write_success) {
+        FURI_LOG_D("MiZipBalanceEditor", "Data successfully writen to %s", app->shadowFilePath);
+    } else {
+        FURI_LOG_D("MiZipBalanceEditor", "Failed to write to %s", app->shadowFilePath);
+    }
     nfc_device_free(nfc_device);
+    return write_success;
 }
 
 // Application constructor function.

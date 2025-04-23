@@ -39,7 +39,7 @@ void mizip_balance_editor_scene_file_select_on_enter(void* context) {
             FURI_LOG_D("MiZipBalanceEditor", "Shadow file exists!");
             app->filePath = app->shadowFilePath;
         } else {
-            FURI_LOG_D("MiZipBalanceEditor", "No shadow file found.");
+            FURI_LOG_D("MiZipBalanceEditor", "No shadow file found, will be create on write");
         }
 
         //Check if file is MiZip file
