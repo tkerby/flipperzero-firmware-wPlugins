@@ -56,7 +56,7 @@ static Level *player_next_level(GameManager *manager)
 }
 
 // Update player stats based on XP using iterative method
-static int player_level_iterative_get(uint32_t xp)
+int player_level_iterative_get(uint32_t xp)
 {
     int level = 1;
     uint32_t xp_required = 100; // Base XP for level 2
@@ -68,6 +68,26 @@ static int player_level_iterative_get(uint32_t xp)
     }
 
     return level;
+}
+
+// Fetch last_response once then store it in ws_info to parse later
+static void player_ws_info_update(GameManager *manager)
+{
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!game_context || !game_context->fhttp)
+    {
+        FURI_LOG_E(TAG, "Failed to get game context or FlipperHTTP");
+        return;
+    }
+    if (!game_context->ws_info || !game_context->fhttp->last_response)
+    {
+        return;
+    }
+    // validate response
+    if (strlen(game_context->fhttp->last_response) > 0)
+    {
+        furi_string_set_str(game_context->ws_info, game_context->fhttp->last_response);
+    }
 }
 
 void player_spawn(Level *level, GameManager *manager)
@@ -256,6 +276,9 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // update websocket player context
     if (game_context->game_mode == GAME_MODE_PVP)
     {
+        // load the websocket info
+        player_ws_info_update(manager);
+
         // if pvp, end the game if the player is dead
         if (player->health <= 0)
         {

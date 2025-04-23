@@ -43,6 +43,8 @@ typedef struct
     char message[64];           // Message to display when interacting with the entity
     bool is_user;               // Flag to indicate if the entity is a live player or not
     char username[32];          // entity username
+    uint32_t xp;                // experience points
+    uint32_t level;             // entity level
 } EntityContext;
 
 typedef struct
@@ -119,6 +121,8 @@ typedef struct
     uint8_t tutorial_step;
     //
     FlipperHTTP *fhttp;
+    //
+    FuriString *ws_info;
 } GameContext;
 
 typedef struct
@@ -133,3 +137,4 @@ typedef struct
 extern const EntityDescription player_desc;
 void player_spawn(Level *level, GameManager *manager);
 SpriteContext *sprite_context_get(const char *name);
+int player_level_iterative_get(uint32_t xp);
