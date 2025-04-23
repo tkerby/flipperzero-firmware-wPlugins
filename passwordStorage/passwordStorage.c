@@ -103,3 +103,49 @@ bool write_password_to_file(const char* filename, const char* service, const cha
     
     return success;
 }
+
+bool delete_line_from_file(const char* path, size_t line_to_delete) {
+    // Open original file for reading
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    File* source = storage_file_alloc(storage);
+
+    if(!storage_file_open(source, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        FURI_LOG_E("FileEdit", "Failed to open source file");
+        return false;
+    }
+
+    // Open a temporary file for writing
+    File* tmp = storage_file_alloc(storage); 
+    if(!storage_file_open(tmp, "/ext/passowordManager_tmp.txt", FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FURI_LOG_E("FileEdit", "Failed to open temporary file");
+        storage_file_close(source);
+        return false;
+    }
+
+    // Line read buffer
+    char line[300];
+    size_t current_line = 0;
+
+    while(true) {
+        ssize_t len = storage_file_read_line(source, line, sizeof(line));
+        if(len <= 0) break;
+
+        // Write all lines except the one to delete
+        if(current_line != line_to_delete) {
+            storage_file_write(tmp, line, strlen(line));
+            storage_file_write(tmp, "\n", 1); // Add newline back
+        }
+        current_line++;
+    }
+
+    storage_file_close(source);
+    storage_file_close(tmp);
+
+    // Delete original and rename temp
+    storage_simply_remove(storage, path);
+    storage_common_rename(storage, "/ext/passowordManager_tmp.txt", path);
+
+    furi_record_close(RECORD_STORAGE);
+
+    return true;
+}

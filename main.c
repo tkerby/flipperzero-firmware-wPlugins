@@ -1,5 +1,6 @@
 #include "main.h"
 #include "views/saved_passwords.h"
+#include "views/delete_password.h"
 #include "textInput/textInput.h"
 #include "passwordStorage/passwordStorage.h"
 
@@ -72,8 +73,9 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
             } else if(app->selected == 2) {
                 app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 // Delete password view - disabled for now
-                FURI_LOG_I("Password Manager", "Delete password view not implemented yet");
-                // app->selected = 0;
+                view_dispatcher_switch_to_view(app->view_dispatcher, ViewDeletePassword);
+                // FURI_LOG_I("Password Manager", "Delete password view not implemented yet");
+                app->selected = 0;
                 return true;
             }
         }
@@ -160,6 +162,9 @@ int32_t password_manager_app(void* p) {
     app->saved_passwords_view = saved_passwords_view_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, ViewSavedPasswords, app->saved_passwords_view);
 
+    app->delete_password_view = delete_password_view_alloc(app);
+    view_dispatcher_add_view(app->view_dispatcher, ViewDeletePassword, app->delete_password_view);
+
     app->textInput_credential_name = credential_name_TextInput_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, ViewTextInputCredentialName, text_input_get_view(app->textInput_credential_name));
 
@@ -180,6 +185,8 @@ int32_t password_manager_app(void* p) {
     view_free(app->main_menu_view);
     view_dispatcher_remove_view(app->view_dispatcher, ViewSavedPasswords);
     view_free(app->saved_passwords_view);
+    view_dispatcher_remove_view(app->view_dispatcher, ViewDeletePassword);
+    view_free(app->delete_password_view);
     view_dispatcher_remove_view(app->view_dispatcher, ViewTextInputCredentialName);
     view_free(text_input_get_view(app->textInput_credential_name));
     view_dispatcher_remove_view(app->view_dispatcher, ViewTextInputUsername);

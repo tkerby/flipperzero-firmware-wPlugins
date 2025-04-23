@@ -20,10 +20,10 @@
 typedef enum {
     ViewMainMenu,
     ViewSavedPasswords,
+    ViewDeletePassword,
     ViewTextInputCredentialName,
     ViewTextInputUsername,
-    ViewTextInputPassword,
-    ViewDialog
+    ViewTextInputPassword
 } ViewID;
 
 typedef struct {
@@ -42,7 +42,8 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     View* main_menu_view;
     View* saved_passwords_view;
-    
+    View* delete_password_view;
+
     Credential credentials[100];
     size_t credentials_number;
 
