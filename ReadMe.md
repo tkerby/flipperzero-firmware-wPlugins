@@ -726,7 +726,6 @@ $ ./fbt dolphin_ext
 ## Current Bounties $$ (Sorted By Difficulty - Easiest to Hardest)
 
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
-- [Amiibo Remixer ($200 ETH or BTC BOUNTY AND 6 Months Subscriber Builds)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/issues/1026)
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
 # Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0415-1708-0.420.0-3a0d588.tgz&channel=RM0415-1708-0.420.0-3a0d588&version=0.420.0)
