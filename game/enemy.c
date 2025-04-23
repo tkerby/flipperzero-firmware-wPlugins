@@ -526,6 +526,7 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
         furi_string_free(sp);
         furi_string_free(x);
         furi_string_free(y);
+        furi_string_free(xp);
         PlayerContext *player_context = entity_context_get(game_context->player);
         if (player_context)
         {
@@ -575,6 +576,7 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
     furi_string_free(sp);
     furi_string_free(x);
     furi_string_free(y);
+    furi_string_free(xp);
 }
 
 // Enemy update function
