@@ -54,17 +54,4 @@ typedef struct {
     TextInput* textInput_username;
     TextInput* textInput_password;
 
-
-    // // For adding passwords
-    // TextInput* text_input;
-    // DialogEx* dialog;
-    
-    // // Password data
-    // char credential_name[32];
-    // char username[32];
-    // char password[32];
-    // bool confirm_selected;
-    
-    // // Current add password state
-    // uint8_t add_state;
 } AppContext;
