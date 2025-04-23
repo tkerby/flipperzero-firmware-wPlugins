@@ -10,6 +10,7 @@ The flipper stores your usernames and password and can write them on your PC act
 - See saved credentials:
     - The flipper shows a lists of website names
     - If OK is clicked, the flipper will write on the PC ```username + /t + password + /n```
+        - *Perfect for web forms!!!*
 - Delete credentials:
     - The flipper shows a lists of website names
     - If OK is clicked, the flipper will remove the selected line from the credentials file
