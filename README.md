@@ -1,5 +1,5 @@
 # ComboCracker-FZ
-A compact combo cracking tool for the Flipper Zero, based on Samy Kamkar's Master Lock vulnerability research. This app helps deduce the attempts of cracking a combination lock with only 8 attempt(s)
+A compact combo cracking tool for the Flipper Zero, based on Samy Kamkar's Master Lock vulnerability research. This app helps deduce the attempts of cracking a combination lock with only 8 attempts!
 
 # How it works 🤔 
 You can find information about how such works by watching Samy Kamkar's wonderful [video(s)!](https://www.youtube.com/watch?v=qkolWO6pAL8)
