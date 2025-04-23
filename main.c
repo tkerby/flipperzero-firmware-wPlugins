@@ -1,6 +1,7 @@
 #include "main.h"
 #include "views/saved_passwords.h"
 #include "textInput/textInput.h"
+#include "passwordStorage/passwordStorage.h"
 
 static void render_main_menu(Canvas* canvas, void* model) {
 
@@ -57,16 +58,19 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
             return true;
         } else if(event->key == InputKeyOk) {
             if(app->selected == 0) {
+                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewSavedPasswords);
                 // FURI_LOG_I("Password Manager", "Saved passwords view not implemented yet");
                 return true;
             } else if(app->selected == 1) {
+                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 // Add password flow - disabled for now
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewTextInputCredentialName);
                 // FURI_LOG_I("Password Manager", "Add password flow not implemented yet");
                 app->selected = 0;
                 return true;
             } else if(app->selected == 2) {
+                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 // Delete password view - disabled for now
                 FURI_LOG_I("Password Manager", "Delete password view not implemented yet");
                 // app->selected = 0;
@@ -107,12 +111,13 @@ int32_t password_manager_app(void* p) {
     app->items[2] = "Delete";
 
     // TODO: remove hardcoded credentials to read file
-    app->credentials_number = 2;
-    Credential first = {"Github", "User1", "Password"};
-    Credential second = {"Gmail", "User1@gmail.com", "Password2"};
-    app->credentials[0] = first;
-    app->credentials[1] = second;
+    // app->credentials_number = 2;
+    // Credential first = {"Github", "User1", "Password"};
+    // Credential second = {"Gmail", "User1@gmail.com", "Password2"};
+    // app->credentials[0] = first;
+    // app->credentials[1] = second;
     // END TODO
+    app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
 
     // Initialize GUI and View Dispatcher
     app->gui = furi_record_open(RECORD_GUI);

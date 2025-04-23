@@ -1,5 +1,6 @@
 #include "textInput.h"
 #include "../main.h" 
+#include "../passwordStorage/passwordStorage.h"
 #include <string.h>
 
 static void credential_name_callback(void* context) {
@@ -23,9 +24,13 @@ static void password_callback(void* context) {
 
     strcpy(app->credentials[app->credentials_number].password, app->tmp_password);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
+    // Add to file!!!
+    write_password_to_file("/ext/passwordManager.txt", app->tmp_credential_name, app->tmp_username, app->tmp_password);
+    strcpy(app->tmp_credential_name, "");
+    strcpy(app->tmp_username, "");
+    strcpy(app->tmp_password, "");
 
-    //TODO: Write on credentials and file and increase number!!!
+    view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
 }
 
 TextInput* credential_name_TextInput_alloc(void* context) {
