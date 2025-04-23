@@ -19,9 +19,6 @@
 #define VERSION_TAG TAG " " FAP_VERSION
 //
 
-#define APP_ID "67f22e9a25a4a6f1fb4a2c4a"
-#define BUILD_ID "676900d983aa88302bc114c6"
-
 // Define the submenu items for our FlipWorld application
 typedef enum
 {
@@ -111,4 +108,3 @@ float atof_(const char *nptr);
 float atof_furi(const FuriString *nptr);
 bool is_str(const char *src, const char *dst);
 bool is_enough_heap(size_t heap_size, bool check_blocks);
-bool flip_world_handle_app_update(FlipperHTTP *fhttp, bool use_flipper_api);
