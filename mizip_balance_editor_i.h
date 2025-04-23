@@ -109,4 +109,4 @@ struct MiZipBalanceEditorApp {
     uint16_t new_balance;
 };
 
-void mizip_balance_editor_write_new_balance(void* context);
+bool mizip_balance_editor_write_new_balance(void* context);

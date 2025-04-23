@@ -38,9 +38,15 @@ bool mizip_balance_editor_write_new_balance(void* context) {
     nfc_device_set_data(nfc_device, NfcProtocolMfClassic, app->mf_classic_data);
     bool write_success = nfc_device_save(nfc_device, furi_string_get_cstr(app->shadowFilePath));
     if(write_success) {
-        FURI_LOG_D("MiZipBalanceEditor", "Data successfully writen to %s", app->shadowFilePath);
+        FURI_LOG_D(
+            "MiZipBalanceEditor",
+            "Data successfully writen to %s",
+            furi_string_get_cstr(app->shadowFilePath));
     } else {
-        FURI_LOG_D("MiZipBalanceEditor", "Failed to write to %s", app->shadowFilePath);
+        FURI_LOG_D(
+            "MiZipBalanceEditor",
+            "Failed to write to %s",
+            furi_string_get_cstr(app->shadowFilePath));
     }
     nfc_device_free(nfc_device);
     return write_success;
