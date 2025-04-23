@@ -3,8 +3,8 @@
 
 Inspired by [this repo](https://github.com/dipdowel/flipper-fire-rng) I have implemented a similar functionality entirely in the flipper zero
 
-![image info](./pics/SaveMessage.png)
-![image info](./pics/AllZeros.png)
+![image info](./screenshots/SaveMessage.png)
+![image info](./screenshots/AllZeros.png)
 
 
 
