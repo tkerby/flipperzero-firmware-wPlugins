@@ -433,6 +433,25 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
+static bool enemy_is_game_enemy(GameManager *manager, const char *username)
+{
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (game_context)
+    {
+        for (int i = 0; i < MAX_ENEMIES; i++)
+        {
+            if (!game_context->enemies[i])
+                break;
+            EntityContext *enemy_context = entity_context_get(game_context->enemies[i]);
+            if (enemy_context && is_str(enemy_context->username, username))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entity *self)
 {
     if (!manager || !enemy || !self)
@@ -478,12 +497,42 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
         return;
     }
     // check if the username matches
-    if (!is_str(furi_string_get_cstr(u), enemy->username))
+    const char *u_str = furi_string_get_cstr(u);
+    furi_string_free(u);
+    if (!is_str(u_str, enemy->username))
     {
-        furi_string_free(u);
+        if (strlen(u_str) == 0 || enemy_is_game_enemy(manager, u_str))
+        {
+            return;
+        }
+
+        PlayerContext *player_context = entity_context_get(game_context->player);
+        if (!player_context)
+            return;
+        if (is_str(player_context->username, u_str))
+        {
+            return;
+        }
+
+        FuriString *h = get_json_value_furi("h", game_context->ws_info);
+        if (!h)
+        {
+            return;
+        }
+        FuriString *enemy_data = furi_string_alloc();
+        furi_string_printf(
+            enemy_data,
+            "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
+            "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
+            "\"move_timer\":1,\"speed\":1,\"attack_timer\":\"0.1\",\"strength\":\"100\",\"health\":%f}]}",
+            u_str,
+            (double)atoi(furi_string_get_cstr(h)) // h is an int
+        );
+        furi_string_free(h);                                                                 // free health
+        enemy_spawn(game_context->levels[game_context->current_level], manager, enemy_data); // add the enemy to the game context
+        furi_string_free(enemy_data);                                                        // free enemy data
         return;
     }
-    furi_string_free(u);
 
     // we need the health, elapsed attack timer, direction, xp, and position
     FuriString *h = get_json_value_furi("h", game_context->ws_info);
