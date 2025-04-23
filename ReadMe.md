@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0421-1620-0.420.0-3522f34](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0423-1652-0.420.0-db737b9](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-21 16:20 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-21 16:20 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-23 16:52 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-23 16:52 EST`
 - Removal of Ultralight password protected write support to avoid card bricking with non-zero passwords (OFW 3364)
 - [Passport: Furipass Background Fixed (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/d30ef51408ec9d2ba1dc9977fdb636db9cc7dbee)
 - [Passport: Gunnm Gally Profile Pic (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/faf5a19140fae7bd3650a5122e5e645820f759e6)
@@ -51,7 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
 - Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
-- Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo`
+- Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` We can finally take existing Amiibo and re-emulate dupes to loot farm or to pull dupe opponents in smash!
 
 <a name="release">
 
