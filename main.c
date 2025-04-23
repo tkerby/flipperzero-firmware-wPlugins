@@ -1,5 +1,6 @@
 #include "main.h"
 #include "views/saved_passwords.h"
+#include "textInput/textInput.h"
 
 static void render_main_menu(Canvas* canvas, void* model) {
 
@@ -61,8 +62,9 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
                 return true;
             } else if(app->selected == 1) {
                 // Add password flow - disabled for now
-                FURI_LOG_I("Password Manager", "Add password flow not implemented yet");
-                // app->selected = 0;
+                view_dispatcher_switch_to_view(app->view_dispatcher, ViewTextInputCredentialName);
+                // FURI_LOG_I("Password Manager", "Add password flow not implemented yet");
+                app->selected = 0;
                 return true;
             } else if(app->selected == 2) {
                 // Delete password view - disabled for now
@@ -153,6 +155,15 @@ int32_t password_manager_app(void* p) {
     app->saved_passwords_view = saved_passwords_view_alloc(app);
     view_dispatcher_add_view(app->view_dispatcher, ViewSavedPasswords, app->saved_passwords_view);
 
+    app->textInput_credential_name = credential_name_TextInput_alloc(app);
+    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputCredentialName, text_input_get_view(app->textInput_credential_name));
+
+    app->textInput_username = credential_username_TextInput_alloc(app);
+    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputUsername, text_input_get_view(app->textInput_username));
+
+    app->textInput_password = credential_password_TextInput_alloc(app);
+    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputPassword, text_input_get_view(app->textInput_password));
+
     // Start with main menu
     view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
 
@@ -164,6 +175,12 @@ int32_t password_manager_app(void* p) {
     view_free(app->main_menu_view);
     view_dispatcher_remove_view(app->view_dispatcher, ViewSavedPasswords);
     view_free(app->saved_passwords_view);
+    view_dispatcher_remove_view(app->view_dispatcher, ViewTextInputCredentialName);
+    view_free(text_input_get_view(app->textInput_credential_name));
+    view_dispatcher_remove_view(app->view_dispatcher, ViewTextInputUsername);
+    view_free(text_input_get_view(app->textInput_username));
+    view_dispatcher_remove_view(app->view_dispatcher, ViewTextInputPassword);
+    view_free(text_input_get_view(app->textInput_password));
 
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);

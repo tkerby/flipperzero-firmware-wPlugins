@@ -20,7 +20,9 @@
 typedef enum {
     ViewMainMenu,
     ViewSavedPasswords,
-    ViewTextInput,
+    ViewTextInputCredentialName,
+    ViewTextInputUsername,
+    ViewTextInputPassword,
     ViewDialog
 } ViewID;
 
@@ -47,9 +49,9 @@ typedef struct {
     char tmp_credential_name[100];
     char tmp_username[100];
     char tmp_password[100];
-    View* TextInput_credential_name;
-    View* TextInput_username;
-    View* TextInput_password;
+    TextInput* textInput_credential_name;
+    TextInput* textInput_username;
+    TextInput* textInput_password;
 
 
     // // For adding passwords
