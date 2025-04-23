@@ -12,47 +12,29 @@ static Level *player_next_level(GameManager *manager)
     if (!game_context)
     {
         FURI_LOG_E(TAG, "Failed to get game context");
-        game_context->is_switching_level = false;
         return NULL;
     }
-    // check if there are more levels to load
-    if (game_context->current_level + 1 >= game_context->level_count)
+
+    int next_index = game_context->current_level + 1;
+    if (next_index >= game_context->level_count)
     {
-        game_context->current_level = 0;
-        if (!game_context->levels[game_context->current_level])
-        {
-            if (!allocate_level(manager, game_context->current_level))
-            {
-                FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
-                game_context->is_switching_level = false;
-                furi_delay_ms(100);
-                return NULL;
-            }
-        }
-        game_context->is_switching_level = false;
-        furi_delay_ms(100);
-        return game_context->levels[game_context->current_level];
+        FURI_LOG_E(TAG, "No more levels to load (index %d)", next_index);
+        return game_context->levels[0];
     }
-    for (int i = game_context->current_level + 1; i < game_context->level_count; i++)
+
+    // Allocate the level if it hasn't been loaded yet
+    if (!game_context->levels[next_index])
     {
-        if (!game_context->levels[i])
+        if (!allocate_level(manager, next_index))
         {
-            if (!allocate_level(manager, i))
-            {
-                FURI_LOG_E(TAG, "Failed to allocate level %d", i);
-                game_context->is_switching_level = false;
-                furi_delay_ms(100);
-                return NULL;
-            }
+            FURI_LOG_E(TAG, "Failed to allocate level %d", next_index);
+            return NULL;
         }
-        game_context->current_level = i;
-        game_context->is_switching_level = false;
-        furi_delay_ms(100);
-        return game_context->levels[i];
     }
-    game_context->is_switching_level = false;
-    furi_delay_ms(100);
-    return NULL;
+
+    // Update current level and return it
+    game_context->current_level = next_index;
+    return game_context->levels[next_index];
 }
 
 // Update player stats based on XP using iterative method

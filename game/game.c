@@ -51,6 +51,7 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             if (!allocate_level(game_manager, i))
             {
+                FURI_LOG_E("Game", "Failed to allocate level %d", i);
                 if (i == 0)
                 {
                     game_context->levels[0] = game_manager_add_level(game_manager, world_training());
