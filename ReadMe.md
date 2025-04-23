@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
 - Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
+- Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo`
 
 <a name="release">
 
@@ -699,6 +700,7 @@ $ ./fbt dolphin_ext
 - [WHC SWIO Flasher v1.1 (By sukvojte)](https://github.com/sukvojte/wch_swio_flasher)
 - [Weather Station v1.9.3 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
 - [Web Crawler v1.0.1 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo`
 - [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - [Wiegand Reader v1.4 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [WiFi (Deauther) V2 (By Timmotools)](https://github.com/Timmotools/flipperzero_esp8266_deautherv2) `Req: ESP8266`
