@@ -255,6 +255,13 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     Vector pos = entity_pos_get(self);
     GameContext *game_context = game_manager_game_context_get(manager);
 
+    // ensure game is stopped
+    if (game_context->ended_early)
+    {
+        game_manager_game_stop(manager);
+        return;
+    }
+
     // update websocket player context
     if (game_context->game_mode == GAME_MODE_PVP)
     {
@@ -557,6 +564,7 @@ static void player_draw_tutorial(Canvas *canvas, GameManager *manager)
         break;
     case 8:
         // end of tutorial so quit
+        save_char("tutorial_done", "J You BLANKED on this one");
         game_context->tutorial_step = 0;
         game_context->is_menu_open = false;
         game_context->is_switching_level = true;

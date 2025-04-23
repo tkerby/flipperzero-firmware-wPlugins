@@ -49,6 +49,7 @@ void level_set_world(Level *level, GameManager *manager, char *id)
     {
         FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
         GameContext *game_context = game_manager_game_context_get(manager);
+        game_context->end_reason = GAME_END_MEMORY;
         game_context->ended_early = true;
         game_manager_game_stop(manager); // end game early
         furi_string_free(json_data_str);

@@ -86,6 +86,13 @@ typedef enum
     GAME_MODE_TUTORIAL = 2, // tutorial mode
 } GameMode;
 
+// game ending reasons
+typedef enum
+{
+    GAME_END_MEMORY = 0,              // ran out of memory
+    GAME_END_TUTORIAL_INCOMPLETE = 1, // tutorial incomplete
+} GameEndReason;
+
 typedef struct
 {
     Level *levels[MAX_LEVELS];
@@ -112,6 +119,7 @@ typedef struct
     uint8_t menu_selection;
     //
     GameMode game_mode;
+    GameEndReason end_reason;
     //
     uint32_t icon_count;
     uint16_t icon_offset;
