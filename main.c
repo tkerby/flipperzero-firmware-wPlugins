@@ -21,6 +21,7 @@ typedef struct {
     uint8_t history_index;
     bool new_value;
     FuriMutex* mutex;
+    uint32_t message_timestamp;
 } FlameRngState;
 
 static uint32_t generate_rng_from_ir(InfraredWorkerSignal* signal) {
@@ -50,6 +51,7 @@ static void ir_callback(void* ctx, InfraredWorkerSignal* signal) {
     state->seed = seed;
     update_history(state, state->rng_value);
     state->new_value = true;
+    state->message_timestamp = furi_get_tick(); // Record when the message appeared
     furi_mutex_release(state->mutex);
 
     FURI_LOG_I(TAG, "Generated RNG: %lu (seed: %lu)", state->rng_value, state->seed);
@@ -106,17 +108,23 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 2, 10, "Flame RNG");
 
-    // Main random number display
+    // Main random number display (always updates)
     canvas_set_font(canvas, FontBigNumbers);
     char value_str[32];
     snprintf(value_str, sizeof(value_str), "%06lu", state->rng_value);
     canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignCenter, value_str);
 
-    // Status message
+    // Status message (disappears after some time)
     if(state->new_value) {
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 2, 55, "New value! Press OK to save");
-        state->new_value = false;
+        uint32_t current_time = furi_get_tick();
+        uint32_t elapsed_time = current_time - state->message_timestamp;
+
+        if(elapsed_time < 1000) {
+            canvas_set_font(canvas, FontSecondary);
+            canvas_draw_str(canvas, 2, 55, "New value! Press OK to save");
+        } else {
+            state->new_value = false; // Clear the message after delay
+        }
     } else {
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 2, 55, "Waiting for IR signal...");
