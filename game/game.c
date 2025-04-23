@@ -97,6 +97,16 @@ static void game_start(GameManager *game_manager, void *ctx)
         // show tutorial only for now
         game_context->levels[0] = game_manager_add_level(game_manager, world_training());
         game_context->level_count = 1;
+        for (int i = 1; i < MAX_LEVELS; i++)
+        {
+            if (!allocate_level(game_manager, i))
+            {
+                FURI_LOG_E("Game", "Failed to allocate level %d", i);
+                break;
+            }
+            else
+                game_context->level_count++;
+        }
     }
     else if (game_context->game_mode == GAME_MODE_PVP)
     {
