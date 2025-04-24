@@ -25,6 +25,7 @@ typedef enum
     FlipWorldSubmenuIndexPvE,
     FlipWorldSubmenuIndexStory,
     FlipWorldSubmenuIndexPvP,
+    //
     FlipWorldSubmenuIndexGameSubmenu,
     FlipWorldSubmenuIndexMessage,
     FlipWorldSubmenuIndexSettings,
