@@ -1154,8 +1154,8 @@ bool separate_world_data(char *id, FuriString *world_data)
     FuriString *file_npc_data = json_data(world_data, "npc_data");
     if (!file_npc_data)
     {
-        FURI_LOG_E("Game", "Failed to get npc data");
-        return false;
+        FURI_LOG_I("Game", "NPC data is not present");
+        // not every map has npc_data, so we can skip this
     }
     else
     {
