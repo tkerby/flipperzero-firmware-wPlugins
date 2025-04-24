@@ -94,6 +94,8 @@ typedef enum
     GAME_END_PVP_REQUIREMENT = 2,     // player level too low for pvp
     GAME_END_PVP_ENEMY_DEAD = 3,      // enemy dead
     GAME_END_PVP_PLAYER_DEAD = 4,     // player dead
+    GAME_END_NETWORK = 5,             // network error
+    GAME_END_APP = 6,                 // app issue
 } GameEndReason;
 
 typedef struct

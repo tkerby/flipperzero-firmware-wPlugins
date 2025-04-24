@@ -210,6 +210,12 @@ static void game_stop(void *ctx)
         case GAME_END_PVP_PLAYER_DEAD:
             snprintf(message, sizeof(message), "You have been defeated!\n\nHit BACK to exit.");
             break;
+        case GAME_END_NETWORK:
+            snprintf(message, sizeof(message), "Network error. Please check\nyour connection and try again.\n\nHit BACK to exit.");
+            break;
+        case GAME_END_APP:
+            snprintf(message, sizeof(message), "App error.\n\nHit BACK to exit.");
+            break;
         };
         easy_flipper_dialog("Game Over", message);
     }
