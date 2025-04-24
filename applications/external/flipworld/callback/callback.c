@@ -417,7 +417,7 @@ static bool _fetch_worlds(DataLoaderModel* model) {
     return flipper_http_request(
         model->fhttp,
         GET,
-        "https://www.jblanked.com/flipper/api/world/v5/get/10/",
+        "https://www.jblanked.com/flipper/api/world/v8/get/10/",
         "{\"Content-Type\":\"application/json\"}",
         NULL);
 }
@@ -484,7 +484,7 @@ void callback_user_settings_select(void* context, uint32_t index) {
     }
 }
 
-void callback_submenu_lobby_choices(void* context, uint32_t index) {
+void callback_submenu_lobby_pvp_choices(void* context, uint32_t index) {
     /* Handle other game lobbies
              1. when clicked on, send request to fetch the selected game lobby details
              2. start the websocket session
@@ -522,34 +522,63 @@ void callback_submenu_lobby_choices(void* context, uint32_t index) {
         // if there is one player and it's the user, make the user wait until another player joins
         // if there is one player and it's not the user, parse_lobby and start websocket
         // if there are 2 players (which there shouldn't be at this point), show an error message saying the lobby is full
-        switch(game_lobby_count(fhttp, lobby)) {
-        case -1:
-            FURI_LOG_E(TAG, "Failed to get player count");
-            easy_flipper_dialog("Error", "Failed to get player count. Press BACK to return.");
-            flipper_http_free(fhttp);
-            furi_string_free(lobby);
-            return;
-        case 0:
-            // add the user to the lobby
-            if(!game_join_lobby(fhttp, lobby_list[lobby_index])) {
-                FURI_LOG_E(TAG, "Failed to join lobby");
-                easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+        if(game_mode_index == 1) // pvp
+        {
+            switch(game_lobby_count(fhttp, lobby)) {
+            case -1:
+                FURI_LOG_E(TAG, "Failed to get player count");
+                easy_flipper_dialog("Error", "Failed to get player count. Press BACK to return.");
                 flipper_http_free(fhttp);
                 furi_string_free(lobby);
                 return;
-            }
-            // send the user to the waiting screen
-            game_waiting_lobby(app);
-            return;
-        case 1:
-            // check if the user is in the lobby
-            if(game_in_lobby(fhttp, lobby)) {
+            case 0:
+                // add the user to the lobby
+                if(!game_join_lobby(fhttp, lobby_list[lobby_index])) {
+                    FURI_LOG_E(TAG, "Failed to join lobby");
+                    easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                    flipper_http_free(fhttp);
+                    furi_string_free(lobby);
+                    return;
+                }
                 // send the user to the waiting screen
-                FURI_LOG_I(TAG, "User is in the lobby");
-                flipper_http_free(fhttp);
-                furi_string_free(lobby);
                 game_waiting_lobby(app);
                 return;
+            case 1:
+                // check if the user is in the lobby
+                if(game_in_lobby(fhttp, lobby)) {
+                    FURI_LOG_I(TAG, "User is in the lobby");
+                    easy_flipper_dialog(
+                        "Error", "You are already in the lobby. Press BACK to return.");
+                    flipper_http_free(fhttp);
+                    furi_string_free(lobby);
+                    return;
+                }
+                // add the user to the lobby
+                if(!game_join_lobby(fhttp, lobby_list[lobby_index])) {
+                    FURI_LOG_E(TAG, "Failed to join lobby");
+                    easy_flipper_dialog("Error", "Failed to join lobby. Press BACK to return.");
+                    flipper_http_free(fhttp);
+                    furi_string_free(lobby);
+                    return;
+                }
+                break;
+            case 2:
+                // show an error message saying the lobby is full
+                FURI_LOG_E(TAG, "Lobby is full");
+                easy_flipper_dialog("Error", "Lobby is full. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
+            };
+        } else {
+            // check if the user is in the lobby
+            if(game_in_lobby(fhttp, lobby)) {
+                FURI_LOG_I(TAG, "User is in the lobby");
+                easy_flipper_dialog(
+                    "Error", "You are already in the lobby. Press BACK to return.");
+                flipper_http_free(fhttp);
+                furi_string_free(lobby);
+                return;
             }
             // add the user to the lobby
             if(!game_join_lobby(fhttp, lobby_list[lobby_index])) {
@@ -559,17 +588,9 @@ void callback_submenu_lobby_choices(void* context, uint32_t index) {
                 furi_string_free(lobby);
                 return;
             }
-            break;
-        case 2:
-            // show an error message saying the lobby is full
-            FURI_LOG_E(TAG, "Lobby is full");
-            easy_flipper_dialog("Error", "Lobby is full. Press BACK to return.");
-            flipper_http_free(fhttp);
-            furi_string_free(lobby);
-            return;
-        };
+        }
 
-        game_start_pvp(
+        game_start(
             fhttp, lobby, app); // this will free both the fhttp and lobby, and start the game
     }
 }

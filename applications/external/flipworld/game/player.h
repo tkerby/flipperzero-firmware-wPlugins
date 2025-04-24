@@ -4,7 +4,7 @@
 #include <game/game.h>
 #include "engine/sensors/imu.h"
 
-#define MAX_ENEMIES 5
+#define MAX_ENEMIES 12
 #define MAX_LEVELS  5
 #define MAX_NPCS    1
 
@@ -41,6 +41,8 @@ typedef struct {
     char message[64]; // Message to display when interacting with the entity
     bool is_user; // Flag to indicate if the entity is a live player or not
     char username[32]; // entity username
+    uint32_t xp; // experience points
+    uint32_t level; // entity level
 } EntityContext;
 
 typedef struct {
@@ -79,6 +81,15 @@ typedef enum {
     GAME_MODE_STORY = 2, // story mode
 } GameMode;
 
+// game ending reasons
+typedef enum {
+    GAME_END_MEMORY = 0, // ran out of memory
+    GAME_END_TUTORIAL_INCOMPLETE = 1, // tutorial incomplete
+    GAME_END_PVP_REQUIREMENT = 2, // player level too low for pvp
+    GAME_END_PVP_ENEMY_DEAD = 3, // enemy dead
+    GAME_END_PVP_PLAYER_DEAD = 4, // player dead
+} GameEndReason;
+
 typedef struct {
     Level* levels[MAX_LEVELS];
     Entity* enemies[MAX_ENEMIES];
@@ -104,15 +115,17 @@ typedef struct {
     uint8_t menu_selection;
     //
     GameMode game_mode;
+    GameEndReason end_reason;
     //
     uint32_t icon_count;
     uint16_t icon_offset;
     //
     char message[64];
     //
-    uint8_t tutorial_step;
+    uint32_t story_step;
     //
     FlipperHTTP* fhttp;
+    //
 } GameContext;
 
 typedef struct {
@@ -126,3 +139,4 @@ typedef struct {
 extern const EntityDescription player_desc;
 void player_spawn(Level* level, GameManager* manager);
 SpriteContext* sprite_context_get(const char* name);
+int player_level_iterative_get(uint32_t xp);

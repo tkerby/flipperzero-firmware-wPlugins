@@ -3,6 +3,24 @@
 #include <game/storage.h>
 #include <alloc/alloc.h>
 
+// very simple tutorial check
+static bool game_tutorial_done(GameContext* game_context) {
+    furi_check(game_context);
+    char tutorial_done[32];
+    if(!load_char("tutorial_done", tutorial_done, sizeof(tutorial_done))) {
+        FURI_LOG_E("Game", "Failed to load tutorial_done");
+        game_context->ended_early = true;
+        game_context->end_reason = GAME_END_TUTORIAL_INCOMPLETE;
+        return false;
+    }
+    if(!is_str(tutorial_done, "J You BLANKED on this one")) {
+        FURI_LOG_E("Game", "Tutorial not done");
+        game_context->ended_early = true;
+        game_context->end_reason = GAME_END_TUTORIAL_INCOMPLETE;
+    }
+    return true;
+}
+
 /****** Game ******/
 /*
     Write here the start code for your game, for example: creating a level and so on.
@@ -15,6 +33,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
         FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
         GameContext* game_context = ctx;
         game_context->ended_early = true;
+        game_context->end_reason = GAME_END_MEMORY;
         game_manager_game_stop(game_manager); // end game early
         return;
     }
@@ -27,7 +46,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
     game_context->level_count = 0;
     game_context->enemy_count = 0;
     game_context->npc_count = 0;
-
+    game_context->end_reason = GAME_END_MEMORY; // default value
     game_context->game_mode = game_mode_index;
 
     // set all levels to NULL
@@ -43,12 +62,14 @@ static void game_start(GameManager* game_manager, void* ctx) {
         game_context->npcs[i] = NULL;
 
     if(game_context->game_mode == GAME_MODE_PVE) {
+        game_tutorial_done(game_context); // the game will end if tutorial is not done
+
         // attempt to allocate all levels
         for(int i = 0; i < MAX_LEVELS; i++) {
             if(!allocate_level(game_manager, i)) {
+                FURI_LOG_E("Game", "Failed to allocate level %d", i);
                 if(i == 0) {
-                    game_context->levels[0] =
-                        game_manager_add_level(game_manager, world_training());
+                    game_context->levels[0] = game_manager_add_level(game_manager, story_world());
                     game_context->level_count = 1;
                 }
                 break;
@@ -56,10 +77,21 @@ static void game_start(GameManager* game_manager, void* ctx) {
                 game_context->level_count++;
         }
     } else if(game_context->game_mode == GAME_MODE_STORY) {
-        // show tutorial only for now
-        game_context->levels[0] = game_manager_add_level(game_manager, world_training());
+        if(load_uint32("story_step", &game_context->story_step) == false) {
+            game_context->story_step = 0;
+        }
+        game_context->levels[0] = game_manager_add_level(game_manager, story_world());
         game_context->level_count = 1;
+        for(int i = 1; i < MAX_LEVELS; i++) {
+            if(!allocate_level(game_manager, i)) {
+                FURI_LOG_E("Game", "Failed to allocate level %d", i);
+                break;
+            } else
+                game_context->level_count++;
+        }
     } else if(game_context->game_mode == GAME_MODE_PVP) {
+        game_tutorial_done(game_context); // the game will end if tutorial is not done
+
         // show pvp
         game_context->levels[0] = game_manager_add_level(game_manager, world_pvp());
         game_context->level_count = 1;
@@ -70,10 +102,11 @@ static void game_start(GameManager* game_manager, void* ctx) {
     game_context->imu_present = imu_present(game_context->imu);
 
     // FlipperHTTP
-    if(game_context->game_mode == GAME_MODE_PVP) {
+    if(game_context->game_mode != GAME_MODE_STORY) {
         // check if enough memory
         if(!is_enough_heap(sizeof(FlipperHTTP), true)) {
             FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
+            game_context->end_reason = GAME_END_MEMORY;
             game_context->ended_early = true;
             game_manager_game_stop(game_manager); // end game early
             return;
@@ -81,6 +114,7 @@ static void game_start(GameManager* game_manager, void* ctx) {
         game_context->fhttp = flipper_http_alloc();
         if(!game_context->fhttp) {
             FURI_LOG_E("Game", "Failed to allocate FlipperHTTP");
+            game_context->end_reason = GAME_END_MEMORY;
             game_context->ended_early = true;
             game_manager_game_stop(game_manager); // end game early
             return;
@@ -114,12 +148,51 @@ static void game_stop(void* ctx) {
         level_clear(game_context->levels[game_context->current_level]);
     }
 
-    if(game_context->game_mode == GAME_MODE_PVP) {
+    if(game_context->game_mode != GAME_MODE_STORY) {
         if(game_context->fhttp) {
             flipper_http_websocket_stop(game_context->fhttp); // close websocket
             remove_player_from_lobby(game_context->fhttp); // remove player from lobby
             flipper_http_free(game_context->fhttp);
         }
+    } else {
+        save_uint32("story_step", game_context->story_step);
+    }
+
+    if(!game_context->ended_early) {
+        easy_flipper_dialog(
+            "Game Over",
+            "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
+    } else {
+        char message[128];
+        switch(game_context->end_reason) {
+        case GAME_END_MEMORY:
+            snprintf(
+                message,
+                sizeof(message),
+                "Ran out of memory so the\ngame ended early. There were\n%zu bytes free.\n\nHit BACK to exit.",
+                heap_size);
+            break;
+        case GAME_END_TUTORIAL_INCOMPLETE:
+            snprintf(
+                message,
+                sizeof(message),
+                "The tutorial is not complete.\nPlease finish the tutorial to\nsave your game.\n\nHit BACK to exit.");
+            break;
+        case GAME_END_PVP_REQUIREMENT:
+            snprintf(
+                message,
+                sizeof(message),
+                "You need to be level 10 to\nplay PvP.\n\nHit BACK to exit.");
+            break;
+        case GAME_END_PVP_ENEMY_DEAD:
+            snprintf(
+                message, sizeof(message), "You have defeated the enemy!\n\nHit BACK to exit.");
+            break;
+        case GAME_END_PVP_PLAYER_DEAD:
+            snprintf(message, sizeof(message), "You have been defeated!\n\nHit BACK to exit.");
+            break;
+        };
+        easy_flipper_dialog("Game Over", message);
     }
 
     PlayerContext* player_context = malloc(sizeof(PlayerContext));
@@ -127,21 +200,6 @@ static void game_stop(void* ctx) {
         FURI_LOG_E("Game", "Failed to allocate PlayerContext");
         return;
     }
-
-    if(!game_context->ended_early)
-        easy_flipper_dialog(
-            "Game Over",
-            "Thanks for playing FlipWorld!\nHit BACK then wait for\nthe game to save.");
-    else {
-        char message[128];
-        snprintf(
-            message,
-            sizeof(message),
-            "Ran out of memory so the\ngame ended early. There were\n%zu bytes free.\n\nHit BACK to exit.",
-            heap_size);
-        easy_flipper_dialog("Game Over", message);
-    }
-
     // save the player context
     if(load_player_context(player_context)) {
         ViewPort* view_port = view_port_alloc();

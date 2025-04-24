@@ -13,7 +13,7 @@ bool allocate_level(GameManager* manager, int index) {
     FuriString* world_list = flipper_http_load_from_file(file_path);
     if(!world_list) {
         FURI_LOG_E("Game", "Failed to load world list");
-        game_context->levels[0] = game_manager_add_level(manager, world_training());
+        game_context->levels[0] = game_manager_add_level(manager, story_world());
         game_context->level_count = 1;
         return false;
     }
@@ -50,6 +50,7 @@ void level_set_world(Level* level, GameManager* manager, char* id) {
     if(!is_enough_heap(20000, true)) {
         FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
         GameContext* game_context = game_manager_game_context_get(manager);
+        game_context->end_reason = GAME_END_MEMORY;
         game_context->ended_early = true;
         game_manager_game_stop(manager); // end game early
         furi_string_free(json_data_str);

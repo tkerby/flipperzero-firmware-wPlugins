@@ -60,7 +60,8 @@ static void draw_menu(GameManager* manager, Canvas* canvas) {
     // draw background rectangle
     canvas_draw_icon(canvas, 0, 0, &I_icon_menu_128x64px);
 
-    if(game_context->game_mode == GAME_MODE_STORY) {
+    if(game_context->game_mode == GAME_MODE_STORY &&
+       game_context->story_step < STORY_TUTORIAL_STEPS) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, 45, 15, "Tutorial");
         canvas_set_font_custom(canvas, FONT_SIZE_SMALL);

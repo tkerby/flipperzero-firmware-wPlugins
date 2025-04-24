@@ -1,6 +1,6 @@
 #include <game/storage.h>
 
-static bool save_uint32(const char* path_name, uint32_t value) {
+bool save_uint32(const char* path_name, uint32_t value) {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lu", value);
     return save_char(path_name, buffer);
@@ -576,7 +576,7 @@ static bool load_int8(const char* path_name, int8_t* value) {
 }
 
 // Helper function to load a uint32_t
-static bool load_uint32(const char* path_name, uint32_t* value) {
+bool load_uint32(const char* path_name, uint32_t* value) {
     if(!path_name || !value) {
         FURI_LOG_E(TAG, "Invalid arguments to load_uint32");
         return false;
@@ -1068,36 +1068,36 @@ bool separate_world_data(char* id, FuriString* world_data) {
     if(!file_npc_data) {
         FURI_LOG_E("Game", "Failed to get npc data");
         return false;
-    }
+    } else {
+        snprintf(
+            file_path,
+            sizeof(file_path),
+            STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
+            id,
+            id);
 
-    snprintf(
-        file_path,
-        sizeof(file_path),
-        STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
-        id,
-        id);
+        if(!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+            FURI_LOG_E("Game", "Failed to open file for writing: %s", file_path);
+            storage_file_free(file);
+            furi_record_close(RECORD_STORAGE);
+            furi_string_free(file_npc_data);
+            return false;
+        }
 
-    if(!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-        FURI_LOG_E("Game", "Failed to open file for writing: %s", file_path);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
+        data_size = furi_string_size(file_npc_data);
+        if(storage_file_write(file, furi_string_get_cstr(file_npc_data), data_size) != data_size) {
+            FURI_LOG_E("Game", "Failed to write npc_data");
+        }
+        storage_file_close(file);
+
+        furi_string_replace_at(file_npc_data, 0, 1, "");
+        furi_string_replace_at(file_npc_data, furi_string_size(file_npc_data) - 1, 1, "");
+        // include the comma at the end of the npc_data array
+        furi_string_cat_str(file_npc_data, ",");
+
+        furi_string_remove_str(world_data, furi_string_get_cstr(file_npc_data));
         furi_string_free(file_npc_data);
-        return false;
     }
-
-    data_size = furi_string_size(file_npc_data);
-    if(storage_file_write(file, furi_string_get_cstr(file_npc_data), data_size) != data_size) {
-        FURI_LOG_E("Game", "Failed to write npc_data");
-    }
-    storage_file_close(file);
-
-    furi_string_replace_at(file_npc_data, 0, 1, "");
-    furi_string_replace_at(file_npc_data, furi_string_size(file_npc_data) - 1, 1, "");
-    // include the comma at the end of the npc_data array
-    furi_string_cat_str(file_npc_data, ",");
-
-    furi_string_remove_str(world_data, furi_string_get_cstr(file_npc_data));
-    furi_string_free(file_npc_data);
 
     // Save enemy_data to disk
     FuriString* file_enemy_data = json_data(world_data, "enemy_data");
