@@ -181,7 +181,7 @@ static bool game_fetch_world_list(FlipperHTTP *fhttp)
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
+    return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/v8/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -386,7 +386,7 @@ static bool game_fetch(DataLoaderModel *model)
 
         model->fhttp->save_received_data = true;
         char url[128];
-        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v5/get/world/%s/", furi_string_get_cstr(first_world));
+        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v8/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
         return flipper_http_request(model->fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);

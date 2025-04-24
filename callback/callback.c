@@ -433,7 +433,7 @@ static bool _fetch_worlds(DataLoaderModel *model)
     furi_record_close(RECORD_STORAGE);
     snprintf(model->fhttp->file_path, sizeof(model->fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list_full.json");
     model->fhttp->save_received_data = true;
-    return flipper_http_request(model->fhttp, GET, "https://www.jblanked.com/flipper/api/world/v5/get/10/", "{\"Content-Type\":\"application/json\"}", NULL);
+    return flipper_http_request(model->fhttp, GET, "https://www.jblanked.com/flipper/api/world/v8/get/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 static char *_parse_worlds(DataLoaderModel *model)
 {
