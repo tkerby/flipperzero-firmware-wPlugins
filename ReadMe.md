@@ -51,10 +51,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` We can finally take existing Amiibo and re-emulate dupes to loot farm or to pull dupe opponents in smash!
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac)
-- Updated: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo)
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
 - Added: [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
+- Updated: [Weebo v0.1.1 (By bettse)](https://github.com/bettse/weebo) [Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/306b4292c0c6c1c94e01c4eab434cbeb9386b5a8)
 
 <a name="release">
 
@@ -704,7 +704,7 @@ $ ./fbt dolphin_ext
 - [WHC SWIO Flasher v1.1 (By sukvojte)](https://github.com/sukvojte/wch_swio_flasher)
 - [Weather Station v1.9.3 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
 - [Web Crawler v1.0.1 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo`
+- [Weebo v0.1.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo`
 - [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - [Wiegand Reader v1.4 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [WiFi (Deauther) V2 (By Timmotools)](https://github.com/Timmotools/flipperzero_esp8266_deautherv2) `Req: ESP8266`

@@ -16,6 +16,7 @@ App(
     fap_category="NFC",
     fap_author="bettse",
     fap_weburl="https://github.com/bettse/weebo",
-    fap_version="0.1",
+    fap_version="0.1.1",
     fap_description="A maker/emulator/remixer for A figure files",
+    #  [v0.1.1: Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/306b4292c0c6c1c94e01c4eab434cbeb9386b5a8)
 )
