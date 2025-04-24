@@ -18,5 +18,4 @@ App(
     fap_weburl="https://github.com/bettse/weebo",
     fap_version="0.2",
     fap_description="An NTAG215 parser, writer, emulator, remixer, duplicator",
-    #  [v0.2: Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed6b16e94253ebe629e8bf9ccc644673e21f64f9)
 )
