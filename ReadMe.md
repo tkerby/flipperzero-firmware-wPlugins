@@ -47,11 +47,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
 - SubGHz: [Add Feron protocol (static 32 bit) full support (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d8bdf500ea4feb0cce0023892f5f0c43441780)
 - Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
 - Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` We can finally take existing Amiibo and re-emulate dupes to loot farm or to pull dupe opponents in smash!
+- Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
+- Updated: [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac)
 - Updated: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo)
 
 <a name="release">
