@@ -46,12 +46,26 @@ static void ir_callback(void* ctx, InfraredWorkerSignal* signal) {
     uint32_t seed = generate_rng_from_ir(signal);
 
     furi_mutex_acquire(state->mutex, FuriWaitForever);
-    srand(seed);
-    state->rng_value = furi_hal_random_get() % 1000000;
+
+    // Better entropy mixing pipeline
+    uint32_t rng_number = furi_hal_random_get();
+
+    // 1. Combine with seed using non-linear operation
+    rng_number += (seed * 0x9E3779B9); // Golden ratio constant for mixing
+
+    // 2. Improved bit diffusion (xorshift variant)
+    rng_number ^= rng_number >> 15;
+    rng_number *= 0x85EBCA77;
+    rng_number ^= rng_number >> 13;
+    rng_number *= 0xC2B2AE3D;
+    rng_number ^= rng_number >> 16;
+
+    // 3. Safer range reduction (better than simple modulo)
+    state->rng_value = (uint32_t)((rng_number & 0xFFFFFFFF) * 1000000ULL) % 1000000;
     state->seed = seed;
     update_history(state, state->rng_value);
     state->new_value = true;
-    state->message_timestamp = furi_get_tick(); // Record when the message appeared
+    state->message_timestamp = furi_get_tick();
     furi_mutex_release(state->mutex);
 
     FURI_LOG_I(TAG, "Generated RNG: %lu (seed: %lu)", state->rng_value, state->seed);
