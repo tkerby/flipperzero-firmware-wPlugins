@@ -93,8 +93,6 @@ static void game_start(GameManager *game_manager, void *ctx)
         {
             game_context->story_step = 0;
         }
-
-        // show tutorial only for now
         game_context->levels[0] = game_manager_add_level(game_manager, story_world());
         game_context->level_count = 1;
         for (int i = 1; i < MAX_LEVELS; i++)
@@ -122,7 +120,7 @@ static void game_start(GameManager *game_manager, void *ctx)
     game_context->imu_present = imu_present(game_context->imu);
 
     // FlipperHTTP
-    if (game_context->game_mode == GAME_MODE_PVP)
+    if (game_context->game_mode != GAME_MODE_STORY)
     {
         // check if enough memory
         if (!is_enough_heap(sizeof(FlipperHTTP), true))
@@ -177,7 +175,7 @@ static void game_stop(void *ctx)
         level_clear(game_context->levels[game_context->current_level]);
     }
 
-    if (game_context->game_mode == GAME_MODE_PVP)
+    if (game_context->game_mode != GAME_MODE_STORY)
     {
         if (game_context->fhttp)
         {
@@ -191,7 +189,7 @@ static void game_stop(void *ctx)
             game_context->ws_info = NULL;
         }
     }
-    else if (game_context->game_mode == GAME_MODE_STORY)
+    else
     {
         save_uint32("story_step", game_context->story_step);
     }
@@ -213,6 +211,12 @@ static void game_stop(void *ctx)
             break;
         case GAME_END_PVP_REQUIREMENT:
             snprintf(message, sizeof(message), "You need to be level 10 to\nplay PvP.\n\nHit BACK to exit.");
+            break;
+        case GAME_END_PVP_ENEMY_DEAD:
+            snprintf(message, sizeof(message), "You have defeated the enemy!\n\nHit BACK to exit.");
+            break;
+        case GAME_END_PVP_PLAYER_DEAD:
+            snprintf(message, sizeof(message), "You have been defeated!\n\nHit BACK to exit.");
             break;
         };
         easy_flipper_dialog("Game Over", message);

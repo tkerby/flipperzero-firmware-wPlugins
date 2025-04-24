@@ -303,6 +303,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                         player_context->health = player_context->max_health;
                         save_player_context(player_context);
                         furi_delay_ms(100);
+                        game_context->end_reason = GAME_END_PVP_ENEMY_DEAD;
                         game_manager_game_stop(manager);
                         return;
                     }
@@ -310,12 +311,16 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     // Reset enemy position and health
                     enemy_context->health = 100; // this needs to be set to the enemy's max health
 
-                    // remove from game context and set in safe zone
-                    game_context->enemies[enemy_context->index] = NULL;
-                    game_context->enemy_count--;
-                    entity_collider_remove(self);
-                    entity_pos_set(self, (Vector){-100, -100});
-                    return;
+                    // in PVE mode, enemies can respawn
+                    if (game_context->game_mode != GAME_MODE_PVE)
+                    {
+                        // remove from game context and set in safe zone
+                        game_context->enemies[enemy_context->index] = NULL;
+                        game_context->enemy_count--;
+                        entity_collider_remove(self);
+                        entity_pos_set(self, (Vector){-100, -100});
+                        return;
+                    }
                 }
                 else
                 {
@@ -359,6 +364,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     {
                         save_player_context(player_context);
                         furi_delay_ms(100);
+                        game_context->end_reason = GAME_END_PVP_PLAYER_DEAD;
                         game_manager_game_stop(manager);
                         return;
                     }
@@ -655,6 +661,12 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     }
     else
     {
+        // update enemy position for pve mode
+        if (game_context->game_mode == GAME_MODE_PVE)
+        {
+            enemy_pvp_position(manager, enemy_context, self);
+        }
+
         // Increment the elapsed_attack_timer for the enemy
         enemy_context->elapsed_attack_timer += delta_time;
 
