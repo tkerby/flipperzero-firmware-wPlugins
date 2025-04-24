@@ -140,9 +140,6 @@ static void game_start(GameManager *game_manager, void *ctx)
             game_manager_game_stop(game_manager); // end game early
             return;
         }
-
-        game_context->ws_info = furi_string_alloc();
-        furi_string_reserve(game_context->ws_info, sizeof(game_context->fhttp->last_response));
     }
 }
 
@@ -182,11 +179,6 @@ static void game_stop(void *ctx)
             flipper_http_websocket_stop(game_context->fhttp); // close websocket
             remove_player_from_lobby(game_context->fhttp);    // remove player from lobby
             flipper_http_free(game_context->fhttp);
-        }
-        if (game_context->ws_info)
-        {
-            furi_string_free(game_context->ws_info);
-            game_context->ws_info = NULL;
         }
     }
     else

@@ -466,13 +466,7 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
     }
 
     GameContext *game_context = game_manager_game_context_get(manager);
-    if (!game_context)
-    {
-        FURI_LOG_E("Game", "enemy_pvp_position: Failed to get GameContext");
-        return;
-    }
-
-    if (!game_context->ws_info || furi_string_size(game_context->ws_info) == 0)
+    if (!game_context->fhttp->last_response || strlen(game_context->fhttp->last_response) == 0)
     {
         return;
     }
@@ -495,33 +489,32 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
     */
 
     // match username
-    FuriString *u = get_json_value_furi("u", game_context->ws_info);
+    char *u = get_json_value("u", game_context->fhttp->last_response);
     if (!u)
     {
         FURI_LOG_E("Game", "enemy_pvp_position: Failed to get username");
         return;
     }
     // check if the username matches
-    const char *u_str = furi_string_get_cstr(u);
-    furi_string_free(u);
-    if (!is_str(u_str, enemy->username))
+    if (!is_str(u, enemy->username))
     {
-        if (strlen(u_str) == 0 || enemy_is_game_enemy(manager, u_str))
+        if (strlen(u) == 0 || enemy_is_game_enemy(manager, u))
         {
+            free(u);
             return;
         }
 
         PlayerContext *player_context = entity_context_get(game_context->player);
-        if (!player_context)
-            return;
-        if (is_str(player_context->username, u_str))
+        if (is_str(player_context->username, u))
         {
+            free(u);
             return;
         }
 
-        FuriString *h = get_json_value_furi("h", game_context->ws_info);
+        char *h = get_json_value("h", game_context->fhttp->last_response);
         if (!h)
         {
+            free(u);
             return;
         }
         FuriString *enemy_data = furi_string_alloc();
@@ -530,57 +523,61 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
             "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
             "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
             "\"move_timer\":1,\"speed\":1,\"attack_timer\":\"0.1\",\"strength\":\"100\",\"health\":%f}]}",
-            u_str,
-            (double)atoi(furi_string_get_cstr(h)) // h is an int
+            u,
+            (double)atoi(h) // h is an int
         );
-        furi_string_free(h);                                                                 // free health
+        free(h);                                                                             // free health
         enemy_spawn(game_context->levels[game_context->current_level], manager, enemy_data); // add the enemy to the game context
-        furi_string_free(enemy_data);                                                        // free enemy data
+        FURI_LOG_I("Game", "enemy_pvp_position: Added enemy '%s' to the game context", u);
+        free(u);
+        furi_string_free(enemy_data); // free enemy data
         return;
     }
 
+    free(u); // free username
+
     // we need the health, elapsed attack timer, direction, xp, and position
-    FuriString *h = get_json_value_furi("h", game_context->ws_info);
-    FuriString *eat = get_json_value_furi("eat", game_context->ws_info);
-    FuriString *d = get_json_value_furi("d", game_context->ws_info);
-    FuriString *xp = get_json_value_furi("xp", game_context->ws_info);
-    FuriString *sp = get_json_value_furi("sp", game_context->ws_info);
-    FuriString *x = get_json_value_furi("x", sp);
-    FuriString *y = get_json_value_furi("y", sp);
+    char *h = get_json_value("h", game_context->fhttp->last_response);
+    char *eat = get_json_value("eat", game_context->fhttp->last_response);
+    char *d = get_json_value("d", game_context->fhttp->last_response);
+    char *xp = get_json_value("xp", game_context->fhttp->last_response);
+    char *sp = get_json_value("sp", game_context->fhttp->last_response);
+    char *x = get_json_value("x", sp);
+    char *y = get_json_value("y", sp);
 
     if (!h || !eat || !d || !sp || !x || !y || !xp)
     {
         if (h)
-            furi_string_free(h);
+            free(h);
         if (eat)
-            furi_string_free(eat);
+            free(eat);
         if (d)
-            furi_string_free(d);
+            free(d);
         if (sp)
-            furi_string_free(sp);
+            free(sp);
         if (x)
-            furi_string_free(x);
+            free(x);
         if (y)
-            furi_string_free(y);
+            free(y);
         if (xp)
-            furi_string_free(xp);
+            free(xp);
         return;
     }
 
     // set enemy info
-    enemy->health = (float)atoi(furi_string_get_cstr(h)); // h is an int
+    enemy->health = (float)atoi(h); // h is an int
     if (enemy->health <= 0)
     {
         enemy->health = 0;
         enemy->state = ENTITY_DEAD;
         entity_pos_set(self, (Vector){-100, -100});
-        furi_string_free(h);
-        furi_string_free(eat);
-        furi_string_free(d);
-        furi_string_free(sp);
-        furi_string_free(x);
-        furi_string_free(y);
-        furi_string_free(xp);
+        free(h);
+        free(eat);
+        free(d);
+        free(sp);
+        free(x);
+        free(y);
+        free(xp);
         PlayerContext *player_context = entity_context_get(game_context->player);
         if (player_context)
         {
@@ -591,9 +588,9 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
         return;
     }
 
-    enemy->elapsed_attack_timer = atof_furi(eat);
+    enemy->elapsed_attack_timer = atof_(eat);
 
-    switch (atoi(furi_string_get_cstr(d)))
+    switch (atoi(d))
     {
     case 0:
         enemy->direction = ENTITY_LEFT;
@@ -612,25 +609,25 @@ static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entit
         break;
     }
 
-    enemy->xp = (atoi)(furi_string_get_cstr(xp)); // xp is an int
+    enemy->xp = (atoi)(xp); // xp is an int
     enemy->level = player_level_iterative_get(enemy->xp);
 
     Vector new_pos = (Vector){
-        .x = atof_furi(x),
-        .y = atof_furi(y),
+        .x = atof_(x),
+        .y = atof_(y),
     };
 
     // set enemy position
     entity_pos_set(self, new_pos);
 
     // free the strings
-    furi_string_free(h);
-    furi_string_free(eat);
-    furi_string_free(d);
-    furi_string_free(sp);
-    furi_string_free(x);
-    furi_string_free(y);
-    furi_string_free(xp);
+    free(h);
+    free(eat);
+    free(d);
+    free(sp);
+    free(x);
+    free(y);
+    free(xp);
 }
 
 // Enemy update function

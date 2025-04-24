@@ -133,7 +133,6 @@ typedef struct
     //
     FlipperHTTP *fhttp;
     //
-    FuriString *ws_info;
 } GameContext;
 
 typedef struct
