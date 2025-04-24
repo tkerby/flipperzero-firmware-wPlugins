@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0415-1708-0.420.0-3a0d588.tgz&channel=RM0415-1708-0.420.0-3a0d588&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0424-1537-0.420.0-a44cce6.tgz&channel=RM0424-1537-0.420.0-a44cce6&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,31 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-04-24 12:25 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-04-24 12:25 EST`
-- Removal of Ultralight password protected write support to avoid card bricking with non-zero passwords (OFW 3364)
-- [Passport: Furipass Background Fixed (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/d30ef51408ec9d2ba1dc9977fdb636db9cc7dbee)
-- [Passport: Gunnm Gally Profile Pic (By Kuronons)](https://github.com/Kuronons/FZ_graphics/commit/faf5a19140fae7bd3650a5122e5e645820f759e6)
-- Decreased FURI_HAL_FLASH_C2_LOCK_TIMEOUT_MS to 3 seconds
-- ESP Flasher Bump [Marauder 1.4.3 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.3)
-- Updated: [Tetris v1.5 (By jeffplang)](https://github.com/jeffplang/flipperzero-firmware/tree/tetris_game/applications/tetris_game) [added piece hard-dropping (By GGORG0)](https://github.com/xMasterX/all-the-plugins/pull/186)
-- Added: [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
-- Updated: [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793) (Version Only)
-- Updated: [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Added: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
-- Updated: [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
-- SubGHz: [Add Feron protocol (static 32 bit) full support (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d8bdf500ea4feb0cce0023892f5f0c43441780)
-- Updated: [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
-- Updated: [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475) (Version Only)
-- Added: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
-- Added: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` We can finally take existing Amiibo and re-emulate dupes to loot farm or to pull dupe opponents in smash!
-- Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
-- Updated: [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac)
-- Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
-- Added: [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
-- Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) [Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed6b16e94253ebe629e8bf9ccc644673e21f64f9)
 
 <a name="release">
 
@@ -732,4 +707,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0415-1708-0.420.0-3a0d588.tgz&channel=RM0415-1708-0.420.0-3a0d588&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0424-1537-0.420.0-a44cce6.tgz&channel=RM0424-1537-0.420.0-a44cce6&version=0.420.0)
