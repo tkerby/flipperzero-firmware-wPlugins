@@ -16,4 +16,21 @@ The flipper stores your usernames and password and can write them on your PC act
     - If OK is clicked, the flipper will remove the selected line from the credentials file
 
 ## Example usage
-![usage](img/video.gif)
+
+### Add new password
+
+![usage](img/add.gif)
+
+
+### Web login
+
+![usage](img/login.gif)
+
+### Show passwords
+
+![usage](img/passwords.gif)
+
+
+### Delete passwords
+
+![usage](img/delete.gif)
