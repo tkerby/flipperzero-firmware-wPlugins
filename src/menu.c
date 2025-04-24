@@ -745,16 +745,12 @@ static void text_input_result_callback(void* context) {
 }
 
 static void execute_menu_command(AppState* state, const MenuCommand* command) {
-    // Check ESP connection first
     if(!uart_is_esp_connected(state->uart_context)) {
-        // Save current view
         state->previous_view = state->current_view;
-
-        // Show error and return
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
         confirmation_view_set_text(
             state->confirmation_view,
-            "ESP Not Connected!\nTry Rebooting ESP.\nRestarting the app.\nCheck UART Pins.\nReflash if issues persist.\n");
+            "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.");
         confirmation_view_set_ok_callback(state->confirmation_view, error_callback, state);
         confirmation_view_set_cancel_callback(state->confirmation_view, error_callback, state);
 
