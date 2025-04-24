@@ -59,23 +59,23 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
             return true;
         } else if(event->key == InputKeyOk) {
             if(app->selected == 0) {
+                // Show stored credentials
                 app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewSavedPasswords);
-                // FURI_LOG_I("Password Manager", "Saved passwords view not implemented yet");
                 return true;
             } else if(app->selected == 1) {
                 app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
-                // Add password flow - disabled for now
+                // Add password flow 
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewTextInputCredentialName);
-                // FURI_LOG_I("Password Manager", "Add password flow not implemented yet");
                 app->selected = 0;
+                app->scroll_offset = 0;
                 return true;
             } else if(app->selected == 2) {
                 app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
-                // Delete password view - disabled for now
+                // Delete password view
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewDeletePassword);
-                // FURI_LOG_I("Password Manager", "Delete password view not implemented yet");
                 app->selected = 0;
+                app->scroll_offset = 0;
                 return true;
             }
         }
@@ -106,6 +106,7 @@ int32_t password_manager_app(void* p) {
     memset(app, 0, sizeof(AppContext));
 
     app->selected = 0;
+    app->scroll_offset = 0;
     app->running = true;
 
     app->items[0] = "Saved";

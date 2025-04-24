@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
     const char* items[MENU_ITEMS];
     size_t selected;
+    size_t scroll_offset;
     bool running;
 
     // For view management

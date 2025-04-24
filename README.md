@@ -17,7 +17,6 @@ The flipper stores your usernames and password and can write them on your PC act
 
 ## TODOs:
 - Dialog box to confirm delete operation
-- Scroll or paging mechanism to display more password than the ones fitting the display of the flipper
 
 ## Example usage
 ![usage](img/video.gif)
