@@ -54,6 +54,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo)
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
+- Added: [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
 
 <a name="release">
 
@@ -593,6 +594,7 @@ $ ./fbt dolphin_ext
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
+- [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
 - [Nightstand Clock v1.2 (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [Noptel LRF Sampler v2.1 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
 - [Notes for FZ WIP (By AdrianN001)](https://github.com/AdrianN001/Flipper-Zero-Note-Application)
