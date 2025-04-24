@@ -18,10 +18,13 @@ static void render_main_menu(Canvas* canvas, void* model) {
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-
+    // Draw header
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_str(canvas, 20, 10, "Password Manager");
+    canvas_draw_line(canvas, 0, 12, 128, 12);
 
     for(size_t i = 0; i < MENU_ITEMS; i++) {
-        int y = 15 + i * 12;
+        int y = 25 + i * 12;
 
         if(i == app->selected) {
             // Highlight selected item with black box
@@ -110,9 +113,9 @@ int32_t password_manager_app(void* p) {
     app->running = true;
     app->confirm_delete = false;
 
-    app->items[0] = "Saved";
-    app->items[1] = "Add";
-    app->items[2] = "Delete";
+    app->items[0] = "Saved passwords";
+    app->items[1] = "Add new password";
+    app->items[2] = "Delete password";
 
     app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
 
