@@ -18,5 +18,5 @@ App(
     fap_weburl="https://github.com/bettse/weebo",
     fap_version="0.1.1",
     fap_description="A maker/emulator/remixer for A figure files",
-    #  [v0.1.1: Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/306b4292c0c6c1c94e01c4eab434cbeb9386b5a8)
+    #  [v0.1.1: Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed6b16e94253ebe629e8bf9ccc644673e21f64f9)
 )

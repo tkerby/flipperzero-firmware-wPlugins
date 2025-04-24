@@ -54,7 +54,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
 - Added: [Nickname Generator v0.1 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
-- Updated: [Weebo v0.1.1 (By bettse)](https://github.com/bettse/weebo) [Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/306b4292c0c6c1c94e01c4eab434cbeb9386b5a8)
+- Updated: [Weebo v0.1.1 (By bettse)](https://github.com/bettse/weebo) [Expanded DB of Amiibo for Info (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ed6b16e94253ebe629e8bf9ccc644673e21f64f9)
 
 <a name="release">
 
