@@ -52,13 +52,22 @@ static void delete_passwords_draw_callback(Canvas* canvas, void* model) {
         int scroll_range = app->credentials_number - max_visible;
         int indicator_y = bar_y + (bar_height - indicator_height) * app->scroll_offset / scroll_range;
 
-        // Draw scroll background (optional)
-        // canvas_set_color(canvas, ColorBlack);
-        // canvas_draw_box(canvas, bar_x, bar_y, 3, bar_height);
-
         // Draw scroll indicator
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_box(canvas, bar_x, indicator_y, 3, indicator_height);
+    }
+
+    // Delete confirm box
+    if(app->confirm_delete) {
+        canvas_set_color(canvas, ColorWhite);
+        canvas_draw_box(canvas, 6, 20, 114, 36);
+        canvas_set_color(canvas, ColorBlack);
+        canvas_draw_frame(canvas, 6, 20, 114, 36);
+        char confirm_text[64];
+        snprintf(confirm_text, sizeof(confirm_text), "Delete \"%s\"?", app->credentials[app->selected].name);
+        canvas_draw_str(canvas, 10, 34, confirm_text);        
+        canvas_draw_str(canvas, 10, 48, "[OK] Yes   [Back] No");
+        return;
     }
 
 }
@@ -67,6 +76,24 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
     AppContext* app = context;
 
     if(event->type == InputTypeShort) {
+
+        if(app->confirm_delete) {
+            if(event->key == InputKeyOk) {
+                // Confirm deletion
+                delete_line_from_file("/ext/passwordManager.txt", app->selected);
+                app->selected = 0;
+                app->scroll_offset = 0;
+                app->confirm_delete = false;
+                view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
+                return true;
+            } else if(event->key == InputKeyBack) {
+                // Cancel confirmation
+                app->confirm_delete = false;
+                return true;
+            }
+            return false;
+        }
+
         if(event->key == InputKeyUp) {
             if(app->selected > 0) app->selected--;
 
@@ -93,9 +120,10 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
             app->scroll_offset = 0;
             return false;
         } else if(event->key == InputKeyOk) {
-            // Delete selected password!
-            delete_line_from_file("/ext/passwordManager.txt", app->selected);
-            view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
+            // Ask for confirmation
+            app->confirm_delete = true;
+            // delete_line_from_file("/ext/passwordManager.txt", app->selected);
+            // view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
             return true;
         }
     }

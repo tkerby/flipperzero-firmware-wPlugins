@@ -55,4 +55,6 @@ typedef struct {
     TextInput* textInput_username;
     TextInput* textInput_password;
 
+    bool confirm_delete;
+
 } AppContext;

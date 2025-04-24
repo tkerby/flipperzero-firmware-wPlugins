@@ -15,8 +15,5 @@ The flipper stores your usernames and password and can write them on your PC act
     - The flipper shows a lists of website names
     - If OK is clicked, the flipper will remove the selected line from the credentials file
 
-## TODOs:
-- Dialog box to confirm delete operation
-
 ## Example usage
 ![usage](img/video.gif)

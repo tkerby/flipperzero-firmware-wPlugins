@@ -108,18 +108,12 @@ int32_t password_manager_app(void* p) {
     app->selected = 0;
     app->scroll_offset = 0;
     app->running = true;
+    app->confirm_delete = false;
 
     app->items[0] = "Saved";
     app->items[1] = "Add";
     app->items[2] = "Delete";
 
-    // TODO: remove hardcoded credentials to read file
-    // app->credentials_number = 2;
-    // Credential first = {"Github", "User1", "Password"};
-    // Credential second = {"Gmail", "User1@gmail.com", "Password2"};
-    // app->credentials[0] = first;
-    // app->credentials[1] = second;
-    // END TODO
     app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
 
     // Initialize GUI and View Dispatcher
