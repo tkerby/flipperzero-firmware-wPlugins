@@ -3,6 +3,7 @@
 - Added a level requirement to play multiplayer.
 - Updated to the latest auto-update library.
 - Fixed world transitions.
+- Updated game ending responses.
 
 ## 0.8.2 (2025-04-19)
 - Fixed an out-of-memory crash.
