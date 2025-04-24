@@ -818,7 +818,6 @@ void subghz_cli_command_tx_from_file(Cli* cli, FuriString* args, void* context) 
     subghz_devices_deinit();
     // Reset custom settings
     subghz_environment_reset_keeloq(environment);
-    faac_slh_reset_prog_mode();
     subghz_custom_btns_reset();
     // Free environment
     subghz_environment_free(environment);

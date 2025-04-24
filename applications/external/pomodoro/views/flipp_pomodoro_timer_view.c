@@ -137,6 +137,7 @@ static void
         hint_width - 4,
         displayed_hint_string,
         scroll_offset,
+        true,
         true);
     furi_string_free(displayed_hint_string);
     model->scroll_counter = scroll_offset;
