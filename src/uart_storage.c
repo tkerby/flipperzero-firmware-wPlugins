@@ -265,20 +265,29 @@ void uart_storage_free(UartStorageContext *ctx) {
     if(!ctx) return;
 
     // Do safe cleanup first
+    FURI_LOG_I("Storage", "Safe cleanup: closing open files");
     uart_storage_safe_cleanup(ctx);
-
-    // Free resources
+    
+    // Free file handles
+    FURI_LOG_I("Storage", "Freeing file handles");
     if(ctx->current_file) {
         storage_file_free(ctx->current_file);
+        ctx->current_file = NULL;
     }
 
     if(ctx->log_file) {
         storage_file_free(ctx->log_file);
+        ctx->log_file = NULL;
     }
 
+    // Close storage record at the very end
     if(ctx->storage_api) {
+        FURI_LOG_I("Storage", "Closing RECORD_STORAGE");
         furi_record_close(RECORD_STORAGE);
+        ctx->storage_api = NULL;
     }
 
+    FURI_LOG_I("Storage", "Freeing storage context memory");
     free(ctx);
+    FURI_LOG_I("Storage", "Storage context freed");
 }

@@ -1058,60 +1058,6 @@ bool back_event_callback(void* context) {
             state->buffer_length = 0;
         }
 
-        // Send stop commands if enabled in settings
-        if(state->settings.stop_on_back_index) {
-            FURI_LOG_D("Ghost ESP", "Stopping active operations");
-
-            // First stop any packet captures to ensure proper file saving
-            send_uart_command("capture -stop\n", state);
-
-            // Give more time for PCAP stop command to process
-            furi_delay_ms(200);
-
-            // Wait for any pending PCAP data
-            if(state->uart_context->pcap) {
-                // Wait for pcap buffer to empty
-                for(uint8_t i = 0; i < 10; i++) { // Try up to 10 times
-                    if(state->uart_context->pcap_buf_len > 0) {
-                        furi_delay_ms(50);
-                    } else {
-                        break;
-                    }
-                }
-
-                // Now safe to reset PCAP state
-                state->uart_context->pcap = false;
-                furi_stream_buffer_reset(state->uart_context->pcap_stream);
-            }
-
-            // Stop operations in a logical order
-            const char* stop_commands[] = {
-                "capture -stop\n", // Stop any WiFi packet captures
-                "capture -blestop\n", // Stop any BLE captures
-                "stopscan\n", // Stop WiFi scanning
-                "stopspam\n", // Stop beacon spam attacks
-                "stopdeauth\n", // Stop deauth attacks
-                "stopportal\n", // Stop evil portal
-                "blescan -s\n", // Stop BLE scanning
-                "gpsinfo -s\n", // Stop GPS info updates
-                "startwd -s\n", // Stop wardriving
-                "blewardriving -s\n", // Stop BLE wardriving
-                "stop\n", // General stop command
-                "rgbmode off\n" // Stop LED effects
-            };
-
-            for(size_t i = 0; i < COUNT_OF(stop_commands); i++) {
-                send_uart_command(stop_commands[i], state);
-                furi_delay_ms(50);
-            }
-        }
-
-        // Clean up files using the safe cleanup
-        if(state->uart_context && state->uart_context->storageContext) {
-            uart_storage_safe_cleanup(state->uart_context->storageContext);
-            FURI_LOG_D("Ghost ESP", "Performed safe storage cleanup");
-        }
-
         // Return to previous menu with selection restored
         switch(state->previous_view) {
         case 1:
