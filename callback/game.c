@@ -126,7 +126,7 @@ static int32_t game_waiting_app_callback(void *p)
     }
     // if we reach here, it means we timed out or the user hit back
     FURI_LOG_E(TAG, "No players joined within the timeout or user hit back");
-    remove_player_from_lobby(fhttp);
+    game_remove_from_lobby(fhttp);
     flipper_http_free(fhttp);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
     return 0;
@@ -1036,7 +1036,7 @@ bool game_in_lobby(FlipperHTTP *fhttp, FuriString *lobby)
 }
 
 // this will free both the fhttp and lobby
-void game_start(FlipperHTTP *fhttp, FuriString *lobby, void *context)
+void game_start_game(FlipperHTTP *fhttp, FuriString *lobby, void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     furi_check(app, "FlipWorldApp is NULL");
@@ -1112,7 +1112,7 @@ void game_waiting_process(FlipperHTTP *fhttp, void *context)
     if (count == 2)
     {
         // break out of this and start the game
-        game_start(fhttp, lobby, app); // this will free both the fhttp and lobby
+        game_start_game(fhttp, lobby, app); // this will free both the fhttp and lobby
         return;
     }
     furi_string_free(lobby);
@@ -1139,3 +1139,36 @@ void game_waiting_lobby(void *context)
     // finally, switch to the waiting lobby view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 };
+
+bool game_remove_from_lobby(FlipperHTTP *fhttp)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    char username[32];
+    if (!load_char("Flip-Social-Username", username, sizeof(username)))
+    {
+        FURI_LOG_E(TAG, "Failed to load data/Flip-Social-Username");
+        return false;
+    }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
+    char url[128];
+    char payload[128];
+    snprintf(payload, sizeof(payload), "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, game_ws_lobby_name);
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/%s/lobby/remove/", lobby_type);
+    fhttp->state = IDLE;
+    if (!flipper_http_request(fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload))
+    {
+        FURI_LOG_E(TAG, "Failed to remove player from lobby");
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while (fhttp->state != IDLE)
+    {
+        furi_delay_ms(100);
+    }
+    return true;
+}

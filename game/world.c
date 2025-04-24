@@ -245,7 +245,9 @@ FuriString *world_fetch(FlipperHTTP *fhttp, const char *name)
     char url[256];
     snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v8/get/world/%s/", name);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+
     fhttp->save_received_data = true;
+    fhttp->state = IDLE;
     if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL))
     {
         FURI_LOG_E("Game", "world_fetch: Failed to send HTTP request");
@@ -253,18 +255,9 @@ FuriString *world_fetch(FlipperHTTP *fhttp, const char *name)
         return NULL;
     }
     fhttp->state = RECEIVING;
-    furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
-    while (fhttp->state == RECEIVING && furi_timer_is_running(fhttp->get_timeout_timer) > 0)
+    while (fhttp->state != IDLE)
     {
-        // Wait for the request to be received
         furi_delay_ms(100);
-    }
-    furi_timer_stop(fhttp->get_timeout_timer);
-    if (fhttp->state != IDLE)
-    {
-        FURI_LOG_E("Game", "Failed to receive world data");
-
-        return NULL;
     }
 
     FuriString *returned_data = load_furi_world(name);

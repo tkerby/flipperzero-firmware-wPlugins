@@ -2,6 +2,7 @@
 #include <game/game.h>
 #include <game/storage.h>
 #include <alloc/alloc.h>
+#include <callback/game.h>
 
 // very simple tutorial check
 static bool game_tutorial_done(GameContext *game_context)
@@ -177,7 +178,7 @@ static void game_stop(void *ctx)
         if (game_context->fhttp)
         {
             flipper_http_websocket_stop(game_context->fhttp); // close websocket
-            remove_player_from_lobby(game_context->fhttp);    // remove player from lobby
+            game_remove_from_lobby(game_context->fhttp);      // remove player from lobby
             flipper_http_free(game_context->fhttp);
         }
     }
