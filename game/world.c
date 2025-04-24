@@ -228,7 +228,7 @@ const LevelBehaviour *world_pvp()
     return &_world_pvp;
 }
 
-FuriString *world_fetch(const char *name)
+FuriString *world_fetch(FlipperHTTP *fhttp, const char *name)
 {
     if (!name)
     {
@@ -236,10 +236,9 @@ FuriString *world_fetch(const char *name)
         return NULL;
     }
 
-    FlipperHTTP *fhttp = flipper_http_alloc();
     if (!fhttp)
     {
-        FURI_LOG_E("Game", "Failed to allocate HTTP");
+        FURI_LOG_E("Game", "world_fetch: FlipperHTTP is NULL");
         return NULL;
     }
 
@@ -249,8 +248,8 @@ FuriString *world_fetch(const char *name)
     fhttp->save_received_data = true;
     if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL))
     {
-        FURI_LOG_E("Game", "Failed to send HTTP request");
-        flipper_http_free(fhttp);
+        FURI_LOG_E("Game", "world_fetch: Failed to send HTTP request");
+
         return NULL;
     }
     fhttp->state = RECEIVING;
@@ -264,10 +263,10 @@ FuriString *world_fetch(const char *name)
     if (fhttp->state != IDLE)
     {
         FURI_LOG_E("Game", "Failed to receive world data");
-        flipper_http_free(fhttp);
+
         return NULL;
     }
-    flipper_http_free(fhttp);
+
     FuriString *returned_data = load_furi_world(name);
     if (!returned_data)
     {
