@@ -23,6 +23,7 @@ typedef enum
 #include "flip_world.h"
 #include <game/world.h>
 #include <game/level.h>
+#include <game/story.h>
 #include <game/enemy.h>
 #include <game/player.h>
 #include <game/npc.h>

@@ -1,6 +1,6 @@
 #include <game/storage.h>
 
-static bool save_uint32(const char *path_name, uint32_t value)
+bool save_uint32(const char *path_name, uint32_t value)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lu", value);
@@ -499,43 +499,6 @@ bool websocket_player_context(PlayerContext *player_context, FlipperHTTP *fhttp)
     return true;
 }
 
-bool remove_player_from_lobby(FlipperHTTP *fhttp)
-{
-    if (!fhttp)
-    {
-        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
-        return false;
-    }
-    char username[32];
-    if (!load_char("Flip-Social-Username", username, sizeof(username)))
-    {
-        FURI_LOG_E(TAG, "Failed to load data/Flip-Social-Username");
-        return false;
-    }
-    char lobby_name[32];
-    if (!load_char("pvp_lobby_name", lobby_name, sizeof(lobby_name)))
-    {
-        FURI_LOG_E(TAG, "Failed to load data/pvp_lobby_name");
-        return false;
-    }
-    char url[128];
-    char payload[128];
-    snprintf(payload, sizeof(payload), "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, lobby_name);
-    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/remove/");
-    fhttp->state = IDLE;
-    if (!flipper_http_request(fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload))
-    {
-        FURI_LOG_E(TAG, "Failed to remove player from lobby");
-        return false;
-    }
-    fhttp->state = RECEIVING;
-    while (fhttp->state != IDLE)
-    {
-        furi_delay_ms(100);
-    }
-    return true;
-}
-
 // Helper function to load an integer
 static bool load_number(const char *path_name, int *value)
 {
@@ -621,7 +584,7 @@ static bool load_int8(const char *path_name, int8_t *value)
 }
 
 // Helper function to load a uint32_t
-static bool load_uint32(const char *path_name, uint32_t *value)
+bool load_uint32(const char *path_name, uint32_t *value)
 {
     if (!path_name || !value)
     {
@@ -1154,37 +1117,40 @@ bool separate_world_data(char *id, FuriString *world_data)
     FuriString *file_npc_data = json_data(world_data, "npc_data");
     if (!file_npc_data)
     {
-        FURI_LOG_E("Game", "Failed to get npc data");
-        return false;
+        FURI_LOG_I("Game", "NPC data is not present");
+        // not every map has npc_data, so we can skip this
     }
-
-    snprintf(file_path, sizeof(file_path),
-             STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
-             id, id);
-
-    if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+    else
     {
-        FURI_LOG_E("Game", "Failed to open file for writing: %s", file_path);
-        storage_file_free(file);
-        furi_record_close(RECORD_STORAGE);
+
+        snprintf(file_path, sizeof(file_path),
+                 STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s/%s_npc_data.json",
+                 id, id);
+
+        if (!storage_file_open(file, file_path, FSAM_WRITE, FSOM_CREATE_ALWAYS))
+        {
+            FURI_LOG_E("Game", "Failed to open file for writing: %s", file_path);
+            storage_file_free(file);
+            furi_record_close(RECORD_STORAGE);
+            furi_string_free(file_npc_data);
+            return false;
+        }
+
+        data_size = furi_string_size(file_npc_data);
+        if (storage_file_write(file, furi_string_get_cstr(file_npc_data), data_size) != data_size)
+        {
+            FURI_LOG_E("Game", "Failed to write npc_data");
+        }
+        storage_file_close(file);
+
+        furi_string_replace_at(file_npc_data, 0, 1, "");
+        furi_string_replace_at(file_npc_data, furi_string_size(file_npc_data) - 1, 1, "");
+        // include the comma at the end of the npc_data array
+        furi_string_cat_str(file_npc_data, ",");
+
+        furi_string_remove_str(world_data, furi_string_get_cstr(file_npc_data));
         furi_string_free(file_npc_data);
-        return false;
     }
-
-    data_size = furi_string_size(file_npc_data);
-    if (storage_file_write(file, furi_string_get_cstr(file_npc_data), data_size) != data_size)
-    {
-        FURI_LOG_E("Game", "Failed to write npc_data");
-    }
-    storage_file_close(file);
-
-    furi_string_replace_at(file_npc_data, 0, 1, "");
-    furi_string_replace_at(file_npc_data, furi_string_size(file_npc_data) - 1, 1, "");
-    // include the comma at the end of the npc_data array
-    furi_string_cat_str(file_npc_data, ",");
-
-    furi_string_remove_str(world_data, furi_string_get_cstr(file_npc_data));
-    furi_string_free(file_npc_data);
 
     // Save enemy_data to disk
     FuriString *file_enemy_data = json_data(world_data, "enemy_data");

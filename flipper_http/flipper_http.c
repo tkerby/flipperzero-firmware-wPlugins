@@ -784,7 +784,7 @@ bool flipper_http_request(FlipperHTTP *fhttp, HTTPMethod method, const char *url
 {
     if (!fhttp)
     {
-        FURI_LOG_E("FlipperHTTP", "Failed to get context.");
+        FURI_LOG_E("FlipperHTTP", "flipper_http_request: Failed to get context.");
         return false;
     }
     if (!url)
@@ -919,7 +919,7 @@ bool flipper_http_send_command(FlipperHTTP *fhttp, HTTPCommand command)
 {
     if (!fhttp)
     {
-        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "flipper_http_send_command: Failed to get context.");
         return false;
     }
     switch (command)
@@ -962,7 +962,7 @@ bool flipper_http_send_data(FlipperHTTP *fhttp, const char *data)
 {
     if (!fhttp)
     {
-        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "flipper_http_send_data: Failed to get context.");
         return false;
     }
 
@@ -1127,7 +1127,7 @@ static void flipper_http_rx_callback(const char *line, void *context)
     FlipperHTTP *fhttp = (FlipperHTTP *)context;
     if (!fhttp)
     {
-        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "flipper_http_rx_callback: Failed to get context.");
         return;
     }
     if (!line)
@@ -1498,7 +1498,7 @@ bool flipper_http_websocket_start(FlipperHTTP *fhttp, const char *url, uint16_t 
 {
     if (!fhttp)
     {
-        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "flipper_http_websocket_start: Failed to get context.");
         return false;
     }
     if (!url || !headers)
@@ -1537,7 +1537,7 @@ bool flipper_http_websocket_stop(FlipperHTTP *fhttp)
 {
     if (!fhttp)
     {
-        FURI_LOG_E(HTTP_TAG, "Failed to get context.");
+        FURI_LOG_E(HTTP_TAG, "flipper_http_websocket_stop: Failed to get context.");
         return false;
     }
     return flipper_http_send_data(fhttp, "[SOCKET/STOP]");

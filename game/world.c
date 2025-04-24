@@ -66,7 +66,7 @@ bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_
         FuriString *data = get_json_array_value_furi("json_data", i, json_data);
         if (!data)
             break;
-        FuriString *amount = get_json_value_furi("amount", data);
+        FuriString *amount = get_json_value_furi("a", data);
         if (amount)
         {
             int count = atoi(furi_string_get_cstr(amount));
@@ -99,11 +99,19 @@ bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_
         if (!data)
             break;
 
-        FuriString *icon_str = get_json_value_furi("icon", data);
+        /*
+        i - icon name
+        x - x position
+        y - y position
+        a - amount
+        h - horizontal (true/false)
+        */
+
+        FuriString *icon_str = get_json_value_furi("i", data);
         FuriString *x_str = get_json_value_furi("x", data);
         FuriString *y_str = get_json_value_furi("y", data);
-        FuriString *amount_str = get_json_value_furi("amount", data);
-        FuriString *horizontal_str = get_json_value_furi("horizontal", data);
+        FuriString *amount_str = get_json_value_furi("a", data);
+        FuriString *horizontal_str = get_json_value_furi("h", data);
 
         if (!icon_str || !x_str || !y_str || !amount_str || !horizontal_str)
         {
@@ -180,45 +188,6 @@ bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_
     return true;
 }
 
-static void world_draw_town(Level *level, GameManager *manager, void *context)
-{
-    UNUSED(context);
-    if (!manager || !level)
-    {
-        FURI_LOG_E("Game", "Manager or level is NULL");
-        return;
-    }
-    GameContext *game_context = game_manager_game_context_get(manager);
-    level_clear(level);
-    FuriString *json_data_str = furi_string_alloc();
-    furi_string_cat_str(json_data_str, "{\"name\":\"shadow_woods_v5\",\"author\":\"ChatGPT\",\"json_data\":[{\"icon\":\"rock_medium\",\"x\":100,\"y\":100,\"amount\":10,\"horizontal\":true},{\"icon\":\"rock_medium\",\"x\":400,\"y\":300,\"amount\":6,\"horizontal\":true},{\"icon\":\"rock_small\",\"x\":600,\"y\":200,\"amount\":8,\"horizontal\":true},{\"icon\":\"fence\",\"x\":50,\"y\":50,\"amount\":10,\"horizontal\":true},{\"icon\":\"fence\",\"x\":250,\"y\":150,\"amount\":12,\"horizontal\":true},{\"icon\":\"fence\",\"x\":550,\"y\":350,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":400,\"y\":70,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":200,\"y\":200,\"amount\":6,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":44,\"horizontal\":true},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":347,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":364,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":735,\"y\":37,\"amount\":18,\"horizontal\":false},{\"icon\":\"tree\",\"x\":752,\"y\":37,\"amount\":18,\"horizontal\":false}],\"enemy_data\":[{\"id\":\"cyclops\",\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":390,\"y\":210},\"move_timer\":2,\"speed\":30,\"attack_timer\":0.4,\"strength\":10,\"health\":100},{\"id\":\"ogre\",\"index\":1,\"start_position\":{\"x\":200,\"y\":320},\"end_position\":{\"x\":220,\"y\":320},\"move_timer\":0.5,\"speed\":45,\"attack_timer\":0.6,\"strength\":20,\"health\":200},{\"id\":\"ghost\",\"index\":2,\"start_position\":{\"x\":100,\"y\":80},\"end_position\":{\"x\":180,\"y\":85},\"move_timer\":2.2,\"speed\":55,\"attack_timer\":0.5,\"strength\":30,\"health\":300},{\"id\":\"ogre\",\"index\":3,\"start_position\":{\"x\":400,\"y\":50},\"end_position\":{\"x\":490,\"y\":50},\"move_timer\":1.7,\"speed\":35,\"attack_timer\":1.0,\"strength\":20,\"health\":200}],\"npc_data\":[{\"id\":\"funny\",\"index\":0,\"start_position\":{\"x\":350,\"y\":180},\"end_position\":{\"x\":350,\"y\":180},\"move_timer\":0,\"speed\":0,\"message\":\"Hello there!\"}]}");
-    if (!separate_world_data("shadow_woods_v5", json_data_str))
-    {
-        FURI_LOG_E("Game", "Failed to separate world data");
-    }
-    furi_string_free(json_data_str);
-    level_set_world(level, manager, "shadow_woods_v5");
-    game_context->icon_offset = 0;
-    if (!game_context->imu_present)
-    {
-        game_context->icon_offset += ((game_context->icon_count / 10) / 15);
-    }
-    player_spawn(level, manager);
-}
-
-static const LevelBehaviour _world_training = {
-    .alloc = NULL,
-    .free = NULL,
-    .start = world_draw_town,
-    .stop = NULL,
-    .context_size = 0,
-};
-
-const LevelBehaviour *world_training()
-{
-    return &_world_training;
-}
-
 static void world_draw_pvp(Level *level, GameManager *manager, void *context)
 {
     UNUSED(context);
@@ -230,7 +199,7 @@ static void world_draw_pvp(Level *level, GameManager *manager, void *context)
     GameContext *game_context = game_manager_game_context_get(manager);
     level_clear(level);
     FuriString *json_data_str = furi_string_alloc();
-    furi_string_cat_str(json_data_str, "{\"name\":\"pvp_world\",\"author\":\"ChatGPT\",\"json_data\":[{\"icon\":\"rock_medium\",\"x\":100,\"y\":100,\"amount\":10,\"horizontal\":true},{\"icon\":\"rock_medium\",\"x\":400,\"y\":300,\"amount\":6,\"horizontal\":true},{\"icon\":\"rock_small\",\"x\":600,\"y\":200,\"amount\":8,\"horizontal\":true},{\"icon\":\"fence\",\"x\":50,\"y\":50,\"amount\":10,\"horizontal\":true},{\"icon\":\"fence\",\"x\":250,\"y\":150,\"amount\":12,\"horizontal\":true},{\"icon\":\"fence\",\"x\":550,\"y\":350,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":400,\"y\":70,\"amount\":12,\"horizontal\":true},{\"icon\":\"rock_large\",\"x\":200,\"y\":200,\"amount\":6,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":5,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":44,\"horizontal\":true},{\"icon\":\"tree\",\"x\":22,\"y\":22,\"amount\":20,\"horizontal\":false},{\"icon\":\"tree\",\"x\":5,\"y\":347,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":5,\"y\":364,\"amount\":45,\"horizontal\":true},{\"icon\":\"tree\",\"x\":735,\"y\":37,\"amount\":18,\"horizontal\":false},{\"icon\":\"tree\",\"x\":752,\"y\":37,\"amount\":18,\"horizontal\":false}]}");
+    furi_string_cat_str(json_data_str, "{\"name\":\"pvp_world\",\"author\":\"ChatGPT\",\"json_data\":[{\"i\":\"rock_medium\",\"x\":100,\"y\":100,\"a\":10,\"h\":true},{\"i\":\"rock_medium\",\"x\":400,\"y\":300,\"a\":6,\"h\":true},{\"i\":\"rock_small\",\"x\":600,\"y\":200,\"a\":8,\"h\":true},{\"i\":\"fence\",\"x\":50,\"y\":50,\"a\":10,\"h\":true},{\"i\":\"fence\",\"x\":250,\"y\":150,\"a\":12,\"h\":true},{\"i\":\"fence\",\"x\":550,\"y\":350,\"a\":12,\"h\":true},{\"i\":\"rock_large\",\"x\":400,\"y\":70,\"a\":12,\"h\":true},{\"i\":\"rock_large\",\"x\":200,\"y\":200,\"a\":6,\"h\":false},{\"i\":\"tree\",\"x\":5,\"y\":5,\"a\":45,\"h\":true},{\"i\":\"tree\",\"x\":5,\"y\":5,\"a\":20,\"h\":false},{\"i\":\"tree\",\"x\":22,\"y\":22,\"a\":44,\"h\":true},{\"i\":\"tree\",\"x\":22,\"y\":22,\"a\":20,\"h\":false},{\"i\":\"tree\",\"x\":5,\"y\":347,\"a\":45,\"h\":true},{\"i\":\"tree\",\"x\":5,\"y\":364,\"a\":45,\"h\":true},{\"i\":\"tree\",\"x\":735,\"y\":37,\"a\":18,\"h\":false},{\"i\":\"tree\",\"x\":752,\"y\":37,\"a\":18,\"h\":false}]}");
     if (!separate_world_data("pvp_world", json_data_str))
     {
         FURI_LOG_E("Game", "Failed to separate world data");
@@ -259,7 +228,7 @@ const LevelBehaviour *world_pvp()
     return &_world_pvp;
 }
 
-FuriString *world_fetch(const char *name)
+FuriString *world_fetch(FlipperHTTP *fhttp, const char *name)
 {
     if (!name)
     {
@@ -267,38 +236,30 @@ FuriString *world_fetch(const char *name)
         return NULL;
     }
 
-    FlipperHTTP *fhttp = flipper_http_alloc();
     if (!fhttp)
     {
-        FURI_LOG_E("Game", "Failed to allocate HTTP");
+        FURI_LOG_E("Game", "world_fetch: FlipperHTTP is NULL");
         return NULL;
     }
 
     char url[256];
-    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v5/get/world/%s/", name);
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v8/get/world/%s/", name);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json", name);
+
     fhttp->save_received_data = true;
+    fhttp->state = IDLE;
     if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL))
     {
-        FURI_LOG_E("Game", "Failed to send HTTP request");
-        flipper_http_free(fhttp);
+        FURI_LOG_E("Game", "world_fetch: Failed to send HTTP request");
+
         return NULL;
     }
     fhttp->state = RECEIVING;
-    furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
-    while (fhttp->state == RECEIVING && furi_timer_is_running(fhttp->get_timeout_timer) > 0)
+    while (fhttp->state != IDLE)
     {
-        // Wait for the request to be received
         furi_delay_ms(100);
     }
-    furi_timer_stop(fhttp->get_timeout_timer);
-    if (fhttp->state != IDLE)
-    {
-        FURI_LOG_E("Game", "Failed to receive world data");
-        flipper_http_free(fhttp);
-        return NULL;
-    }
-    flipper_http_free(fhttp);
+
     FuriString *returned_data = load_furi_world(name);
     if (!returned_data)
     {

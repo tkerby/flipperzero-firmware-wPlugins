@@ -11,7 +11,6 @@
 // Maximum number of world objects
 #define MAX_WORLD_OBJECTS 25
 
-const LevelBehaviour *world_training();
 const LevelBehaviour *world_pvp();
 bool world_json_draw(GameManager *manager, Level *level, const FuriString *json_data);
-FuriString *world_fetch(const char *name);
+FuriString *world_fetch(FlipperHTTP *fhttp, const char *name);

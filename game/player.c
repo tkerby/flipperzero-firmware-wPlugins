@@ -12,51 +12,33 @@ static Level *player_next_level(GameManager *manager)
     if (!game_context)
     {
         FURI_LOG_E(TAG, "Failed to get game context");
-        game_context->is_switching_level = false;
         return NULL;
     }
-    // check if there are more levels to load
-    if (game_context->current_level + 1 >= game_context->level_count)
+
+    int next_index = game_context->current_level + 1;
+    if (next_index >= game_context->level_count)
     {
-        game_context->current_level = 0;
-        if (!game_context->levels[game_context->current_level])
-        {
-            if (!allocate_level(manager, game_context->current_level))
-            {
-                FURI_LOG_E(TAG, "Failed to allocate level %d", game_context->current_level);
-                game_context->is_switching_level = false;
-                furi_delay_ms(100);
-                return NULL;
-            }
-        }
-        game_context->is_switching_level = false;
-        furi_delay_ms(100);
-        return game_context->levels[game_context->current_level];
+        FURI_LOG_E(TAG, "No more levels to load (index %d)", next_index);
+        return game_context->levels[0];
     }
-    for (int i = game_context->current_level + 1; i < game_context->level_count; i++)
+
+    // Allocate the level if it hasn't been loaded yet
+    if (!game_context->levels[next_index])
     {
-        if (!game_context->levels[i])
+        if (!allocate_level(manager, next_index))
         {
-            if (!allocate_level(manager, i))
-            {
-                FURI_LOG_E(TAG, "Failed to allocate level %d", i);
-                game_context->is_switching_level = false;
-                furi_delay_ms(100);
-                return NULL;
-            }
+            FURI_LOG_E(TAG, "Failed to allocate level %d", next_index);
+            return NULL;
         }
-        game_context->current_level = i;
-        game_context->is_switching_level = false;
-        furi_delay_ms(100);
-        return game_context->levels[i];
     }
-    game_context->is_switching_level = false;
-    furi_delay_ms(100);
-    return NULL;
+
+    // Update current level and return it
+    game_context->current_level = next_index;
+    return game_context->levels[next_index];
 }
 
 // Update player stats based on XP using iterative method
-static int player_level_iterative_get(uint32_t xp)
+int player_level_iterative_get(uint32_t xp)
 {
     int level = 1;
     uint32_t xp_required = 100; // Base XP for level 2
@@ -134,6 +116,14 @@ void player_spawn(Level *level, GameManager *manager)
         pctx->elapsed_health_regen = 0;
         pctx->max_health = 100 + ((pctx->level - 1) * 10); // 10 health per level
 
+        // level 10 level required for PvP
+        if (game_context->game_mode == GAME_MODE_PVP)
+        {
+            FURI_LOG_E(TAG, "Player level is not high enough for PvP");
+            game_context->end_reason = GAME_END_PVP_REQUIREMENT;
+            game_context->ended_early = true;
+        }
+
         // Set player username
         if (!load_char("Flip-Social-Username", pctx->username, sizeof(pctx->username)))
         {
@@ -161,6 +151,14 @@ void player_spawn(Level *level, GameManager *manager)
 
     // Determine the player's level based on XP
     pctx->level = player_level_iterative_get(pctx->xp);
+
+    // level 10 level required for PvP
+    if (game_context->game_mode == GAME_MODE_PVP && pctx->level < 10)
+    {
+        FURI_LOG_E(TAG, "Player level %ld is not high enough for PvP", pctx->level);
+        game_context->end_reason = GAME_END_PVP_REQUIREMENT;
+        game_context->ended_early = true;
+    }
 
     // Update strength and max health based on the new level
     pctx->strength = 10 + (pctx->level * 1);           // 1 strength per level
@@ -243,6 +241,7 @@ static void player_handle_collision(Entity *playerEntity, Vector playerPos, Play
 }
 
 uint16_t elapsed_ws_timer = 0;
+uint16_t elpased_ws_info = 0;
 static void player_update(Entity *self, GameManager *manager, void *context)
 {
     if (!self || !manager || !context)
@@ -253,9 +252,17 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     Vector pos = entity_pos_get(self);
     GameContext *game_context = game_manager_game_context_get(manager);
 
+    // ensure game is stopped
+    if (game_context->ended_early)
+    {
+        game_manager_game_stop(manager);
+        return;
+    }
+
     // update websocket player context
     if (game_context->game_mode == GAME_MODE_PVP)
     {
+
         // if pvp, end the game if the player is dead
         if (player->health <= 0)
         {
@@ -464,37 +471,7 @@ static void player_update(Entity *self, GameManager *manager, void *context)
     // adjust tutorial step
     if (game_context->game_mode == GAME_MODE_STORY)
     {
-        switch (game_context->tutorial_step)
-        {
-        case 0:
-            if (input.held & GameKeyLeft)
-                game_context->tutorial_step++;
-            break;
-        case 1:
-            if (input.held & GameKeyRight)
-                game_context->tutorial_step++;
-            break;
-        case 2:
-            if (input.held & GameKeyUp)
-                game_context->tutorial_step++;
-            break;
-        case 3:
-            if (input.held & GameKeyDown)
-                game_context->tutorial_step++;
-            break;
-        case 5:
-            if (input.held & GameKeyOk && game_context->is_menu_open)
-                game_context->tutorial_step++;
-            break;
-        case 6:
-            if (input.held & GameKeyBack)
-                game_context->tutorial_step++;
-            break;
-        case 7:
-            if (input.held & GameKeyBack)
-                game_context->tutorial_step++;
-            break;
-        }
+        story_update(self, manager);
     }
 
     // Clamp the player's position to stay within world bounds
@@ -516,50 +493,6 @@ static void player_update(Entity *self, GameManager *manager, void *context)
 
     // handle icon collision
     player_handle_collision(self, pos, player);
-}
-
-static void player_draw_tutorial(Canvas *canvas, GameManager *manager)
-{
-    GameContext *game_context = game_manager_game_context_get(manager);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 45, 12, "Tutorial");
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    switch (game_context->tutorial_step)
-    {
-    case 0:
-        canvas_draw_str(canvas, 15, 20, "Press LEFT to move left");
-        break;
-    case 1:
-        canvas_draw_str(canvas, 15, 20, "Press RIGHT to move right");
-        break;
-    case 2:
-        canvas_draw_str(canvas, 15, 20, "Press UP to move up");
-        break;
-    case 3:
-        canvas_draw_str(canvas, 15, 20, "Press DOWN to move down");
-        break;
-    case 4:
-        canvas_draw_str(canvas, 0, 20, "Press OK + collide with an enemy to attack");
-        break;
-    case 5:
-        canvas_draw_str(canvas, 15, 20, "Hold OK to open the menu");
-        break;
-    case 6:
-        canvas_draw_str(canvas, 15, 20, "Press BACK to escape the menu");
-        break;
-    case 7:
-        canvas_draw_str(canvas, 15, 20, "Hold BACK to save and exit");
-        break;
-    case 8:
-        // end of tutorial so quit
-        game_context->tutorial_step = 0;
-        game_context->is_menu_open = false;
-        game_context->is_switching_level = true;
-        game_manager_game_stop(manager);
-        return;
-    default:
-        break;
-    }
 }
 
 static void player_render(Entity *self, GameManager *manager, Canvas *canvas, void *context)
@@ -612,12 +545,7 @@ static void player_render(Entity *self, GameManager *manager, Canvas *canvas, vo
     // render tutorial
     if (game_context->game_mode == GAME_MODE_STORY)
     {
-        player_draw_tutorial(canvas, manager);
-
-        if (game_context->is_menu_open)
-        {
-            draw_background_render(canvas, manager);
-        }
+        story_draw(self, canvas, manager);
     }
     else
     {

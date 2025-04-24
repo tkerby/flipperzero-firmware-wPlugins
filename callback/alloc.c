@@ -390,9 +390,9 @@ bool alloc_game_submenu(void *context)
         {
             return false;
         }
-        submenu_add_item(app->submenu_game, "Tutorial", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
-        submenu_add_item(app->submenu_game, "PvP (Beta)", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_game, "Story", FlipWorldSubmenuIndexStory, callback_submenu_choices, app);
         submenu_add_item(app->submenu_game, "PvE", FlipWorldSubmenuIndexPvE, callback_submenu_choices, app);
+        submenu_add_item(app->submenu_game, "PvP", FlipWorldSubmenuIndexPvP, callback_submenu_choices, app);
     }
     return true;
 }

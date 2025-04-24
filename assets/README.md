@@ -64,33 +64,3 @@ NPCs are friendly characters that players can interact with. Currently, you can 
 4. Click "Settings -> WiFi", then input your WiFi SSID and password.
 5. Hit the "BACK" button, click "User". If your username is not present, click "Username" and add one. Do the same for the password field.
 6. Go back to the main menu and hit "Play", followed by "Tutorial". It will register an account if necessary and fetch data from our API that's used to render our graphics.
-
-## Roadmap
-
-**v0.2**
-- Game Mechanics
-- Video Game Module support
-
-**v0.3**
-- Stability patch
-
-**v0.4**
-- New game features
-- Stability patch
-- World expansion
-
-**v0.5**
-- Stability patch
-- NPCs
-
-**v0.6**
-- New game features
-
-**v0.7**
-- New game features
-
-**v0.8**
-- Multiplayer support (PvP Beta)
-
-**v1.0**
-- Official release

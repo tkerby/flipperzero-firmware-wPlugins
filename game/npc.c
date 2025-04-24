@@ -109,7 +109,7 @@ static void npc_render(Entity *self, GameManager *manager, Canvas *canvas, void 
         current_sprite = npc_context->sprite_right;
     }
     // no NPCs in story mode for now
-    if (game_context->game_mode != GAME_MODE_STORY)
+    if (game_context->game_mode != GAME_MODE_STORY || game_context->story_step >= STORY_TUTORIAL_STEPS)
     {
         // Draw NPC sprite relative to camera, centered on the NPC's position
         canvas_draw_sprite(

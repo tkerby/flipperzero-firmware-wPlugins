@@ -1,3 +1,13 @@
+## 0.8.3 (2025-04-24)
+- Added PVE multiplayer (up to 5 users per game).
+- Added a level requirement to play multiplayer.
+- Updated to the latest auto-update library.
+- Fixed world transitions.
+- Updated game ending responses.
+
+## 0.8.2 (2025-04-19)
+- Fixed an out-of-memory crash.
+
 ## 0.8.1 (2025-04-09)
 - Improved memory allocation, saving 26 KB.
 - Added auto-updating (currently uses the catalog API).

@@ -136,9 +136,8 @@ static void enemy_render(Entity *self, GameManager *manager, Canvas *canvas, voi
     }
 
     // no enemies in story mode for now
-    if (game_context->game_mode != GAME_MODE_STORY || (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4))
+    if (game_context->game_mode != GAME_MODE_STORY || (game_context->story_step == 4 || game_context->story_step >= STORY_TUTORIAL_STEPS))
     {
-
         // Draw enemy sprite relative to camera, centered on the enemy's position
         canvas_draw_sprite(
             canvas,
@@ -227,7 +226,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     GameContext *game_context = game_manager_game_context_get(manager);
     furi_check(game_context, "Enemy collision: GameContext is NULL");
     PlayerContext *player_context = entity_context_get(game_context->player);
-    if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step != 4)
+    if (game_context->game_mode == GAME_MODE_STORY && game_context->story_step != 4 && game_context->story_step < STORY_TUTORIAL_STEPS)
     {
         // FURI_LOG_I("Game", "Enemy collision: No enemies in story mode");
         return;
@@ -265,10 +264,10 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
         // Handle Player Attacking Enemy (Press OK, facing enemy, and enemy not facing player)
         if (player_is_facing_enemy && game_context->last_button == GameKeyOk && !enemy_is_facing_player)
         {
-            if (game_context->game_mode == GAME_MODE_STORY && game_context->tutorial_step == 4)
+            if (game_context->game_mode == GAME_MODE_STORY && game_context->story_step == 4)
             {
                 // FURI_LOG_I("Game", "Player attacked enemy '%d'!", enemy_context->id);
-                game_context->tutorial_step++;
+                game_context->story_step++;
             }
             // Reset last button
             game_context->last_button = -1;
@@ -304,6 +303,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                         player_context->health = player_context->max_health;
                         save_player_context(player_context);
                         furi_delay_ms(100);
+                        game_context->end_reason = GAME_END_PVP_ENEMY_DEAD;
                         game_manager_game_stop(manager);
                         return;
                     }
@@ -311,12 +311,16 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     // Reset enemy position and health
                     enemy_context->health = 100; // this needs to be set to the enemy's max health
 
-                    // remove from game context and set in safe zone
-                    game_context->enemies[enemy_context->index] = NULL;
-                    game_context->enemy_count--;
-                    entity_collider_remove(self);
-                    entity_pos_set(self, (Vector){-100, -100});
-                    return;
+                    // in PVE mode, enemies can respawn
+                    if (game_context->game_mode != GAME_MODE_PVE)
+                    {
+                        // remove from game context and set in safe zone
+                        game_context->enemies[enemy_context->index] = NULL;
+                        game_context->enemy_count--;
+                        entity_collider_remove(self);
+                        entity_pos_set(self, (Vector){-100, -100});
+                        return;
+                    }
                 }
                 else
                 {
@@ -360,6 +364,7 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
                     {
                         save_player_context(player_context);
                         furi_delay_ms(100);
+                        game_context->end_reason = GAME_END_PVP_PLAYER_DEAD;
                         game_manager_game_stop(manager);
                         return;
                     }
@@ -433,111 +438,196 @@ static void enemy_collision(Entity *self, Entity *other, GameManager *manager, v
     }
 }
 
-static void enemy_pvp_position(GameContext *game_context, EntityContext *enemy, Entity *self)
+static bool enemy_is_game_enemy(GameManager *manager, const char *username)
 {
-    if (!game_context || !enemy || !self)
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (game_context)
     {
-        FURI_LOG_E("Game", "PVP position: Invalid parameters");
+        for (int i = 0; i < MAX_ENEMIES; i++)
+        {
+            if (!game_context->enemies[i])
+                break;
+            EntityContext *enemy_context = entity_context_get(game_context->enemies[i]);
+            if (enemy_context && is_str(enemy_context->username, username))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void enemy_pvp_position(GameManager *manager, EntityContext *enemy, Entity *self)
+{
+    if (!manager || !enemy || !self)
+    {
+        FURI_LOG_E("Game", "enemy_pvp_position: Invalid parameters");
         return;
     }
 
-    if (game_context->fhttp->last_response != NULL && strlen(game_context->fhttp->last_response) > 0)
+    GameContext *game_context = game_manager_game_context_get(manager);
+    if (!game_context->fhttp->last_response || strlen(game_context->fhttp->last_response) == 0)
     {
-        // for debugging
-        // save_char("received_pvp_position", game_context->fhttp->last_response);
-        // parse the response and set the enemy position
-        /* expected response:
-        {
-            "u": "JBlanked",
-            "xp": 37743,
-            "h": 207,
-            "ehr": 0.7,
-            "eat": 127.5,
-            "d": 2,
-            "s": 1,
-            "sp": {
-                "x": 381.0,
-                "y": 192.0
-            }
+        return;
+    }
+
+    // parse the response and set the enemy position
+    /* expected response:
+    {
+        "u": "JBlanked",
+        "xp": 37743,
+        "h": 207,
+        "ehr": 0.7,
+        "eat": 127.5,
+        "d": 2,
+        "s": 1,
+        "sp": {
+            "x": 381.0,
+            "y": 192.0
         }
-        */
+    }
+    */
 
-        // FuriStrings are probably safer but we already last_response as a char*
-
-        // match username
-        char *u = get_json_value("u", game_context->fhttp->last_response);
-        if (!u || !is_str(u, enemy->username))
+    // match username
+    char *u = get_json_value("u", game_context->fhttp->last_response);
+    if (!u)
+    {
+        FURI_LOG_E("Game", "enemy_pvp_position: Failed to get username");
+        return;
+    }
+    // check if the username matches
+    if (!is_str(u, enemy->username))
+    {
+        if (strlen(u) == 0 || enemy_is_game_enemy(manager, u))
         {
-            if (u)
-                free(u);
-            return;
-        }
-
-        // we need the health, elapsed attack timer, direction, and position
-        char *h = get_json_value("h", game_context->fhttp->last_response);
-        char *eat = get_json_value("eat", game_context->fhttp->last_response);
-        char *d = get_json_value("d", game_context->fhttp->last_response);
-        char *sp = get_json_value("sp", game_context->fhttp->last_response);
-        char *x = get_json_value("x", sp);
-        char *y = get_json_value("y", sp);
-
-        if (!h || !eat || !d || !sp || !x || !y)
-        {
-            if (h)
-                free(h);
-            if (eat)
-                free(eat);
-            if (d)
-                free(d);
-            if (sp)
-                free(sp);
-            if (x)
-                free(x);
-            if (y)
-                free(y);
             free(u);
             return;
         }
 
-        // set enemy info
-        enemy->health = (float)atoi(h);
-        enemy->elapsed_attack_timer = (float)atof_(eat);
-        switch (atoi(d))
+        PlayerContext *player_context = entity_context_get(game_context->player);
+        if (is_str(player_context->username, u))
         {
-        case 0:
-            enemy->direction = ENTITY_LEFT;
-            break;
-        case 1:
-            enemy->direction = ENTITY_RIGHT;
-            break;
-        case 2:
-            enemy->direction = ENTITY_UP;
-            break;
-        case 3:
-            enemy->direction = ENTITY_DOWN;
-            break;
-        default:
-            enemy->direction = ENTITY_RIGHT;
-            break;
+            free(u);
+            return;
         }
 
-        Vector new_pos = (Vector){
-            .x = (float)atof_(x),
-            .y = (float)atof_(y),
-        };
+        char *h = get_json_value("h", game_context->fhttp->last_response);
+        if (!h)
+        {
+            free(u);
+            return;
+        }
+        FuriString *enemy_data = furi_string_alloc();
+        furi_string_printf(
+            enemy_data,
+            "{\"enemy_data\":[{\"id\":\"sword\",\"is_user\":\"true\",\"username\":\"%s\","
+            "\"index\":0,\"start_position\":{\"x\":350,\"y\":210},\"end_position\":{\"x\":350,\"y\":210},"
+            "\"move_timer\":1,\"speed\":1,\"attack_timer\":\"0.1\",\"strength\":\"100\",\"health\":%f}]}",
+            u,
+            (double)atoi(h) // h is an int
+        );
+        free(h);                                                                             // free health
+        enemy_spawn(game_context->levels[game_context->current_level], manager, enemy_data); // add the enemy to the game context
+        FURI_LOG_I("Game", "enemy_pvp_position: Added enemy '%s' to the game context", u);
+        free(u);
+        furi_string_free(enemy_data); // free enemy data
+        return;
+    }
 
-        // set enemy position
-        entity_pos_set(self, new_pos);
+    free(u); // free username
 
-        // free the strings
+    // we need the health, elapsed attack timer, direction, xp, and position
+    char *h = get_json_value("h", game_context->fhttp->last_response);
+    char *eat = get_json_value("eat", game_context->fhttp->last_response);
+    char *d = get_json_value("d", game_context->fhttp->last_response);
+    char *xp = get_json_value("xp", game_context->fhttp->last_response);
+    char *sp = get_json_value("sp", game_context->fhttp->last_response);
+    char *x = get_json_value("x", sp);
+    char *y = get_json_value("y", sp);
+
+    if (!h || !eat || !d || !sp || !x || !y || !xp)
+    {
+        if (h)
+            free(h);
+        if (eat)
+            free(eat);
+        if (d)
+            free(d);
+        if (sp)
+            free(sp);
+        if (x)
+            free(x);
+        if (y)
+            free(y);
+        if (xp)
+            free(xp);
+        return;
+    }
+
+    // set enemy info
+    enemy->health = (float)atoi(h); // h is an int
+    if (enemy->health <= 0)
+    {
+        enemy->health = 0;
+        enemy->state = ENTITY_DEAD;
+        entity_pos_set(self, (Vector){-100, -100});
         free(h);
         free(eat);
         free(d);
         free(sp);
         free(x);
         free(y);
-        free(u);
+        free(xp);
+        PlayerContext *player_context = entity_context_get(game_context->player);
+        if (player_context)
+        {
+            save_player_context(player_context);
+            furi_delay_ms(100);
+            game_manager_game_stop(manager);
+        }
+        return;
     }
+
+    enemy->elapsed_attack_timer = atof_(eat);
+
+    switch (atoi(d))
+    {
+    case 0:
+        enemy->direction = ENTITY_LEFT;
+        break;
+    case 1:
+        enemy->direction = ENTITY_RIGHT;
+        break;
+    case 2:
+        enemy->direction = ENTITY_UP;
+        break;
+    case 3:
+        enemy->direction = ENTITY_DOWN;
+        break;
+    default:
+        enemy->direction = ENTITY_RIGHT;
+        break;
+    }
+
+    enemy->xp = (atoi)(xp); // xp is an int
+    enemy->level = player_level_iterative_get(enemy->xp);
+
+    Vector new_pos = (Vector){
+        .x = atof_(x),
+        .y = atof_(y),
+    };
+
+    // set enemy position
+    entity_pos_set(self, new_pos);
+
+    // free the strings
+    free(h);
+    free(eat);
+    free(d);
+    free(sp);
+    free(x);
+    free(y);
+    free(xp);
 }
 
 // Enemy update function
@@ -564,10 +654,16 @@ static void enemy_update(Entity *self, GameManager *manager, void *context)
     if (game_context->game_mode == GAME_MODE_PVP)
     {
         // update enemy position
-        enemy_pvp_position(game_context, enemy_context, self);
+        enemy_pvp_position(manager, enemy_context, self);
     }
     else
     {
+        // update enemy position for pve mode
+        if (game_context->game_mode == GAME_MODE_PVE)
+        {
+            enemy_pvp_position(manager, enemy_context, self);
+        }
+
         // Increment the elapsed_attack_timer for the enemy
         enemy_context->elapsed_attack_timer += delta_time;
 

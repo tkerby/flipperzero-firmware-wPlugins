@@ -18,6 +18,7 @@
 bool user_hit_back = false;
 uint32_t lobby_index = -1;
 char *lobby_list[10];
+char game_ws_lobby_name[64];
 
 static uint8_t timer_iteration = 0; // timer iteration for the loading screen
 static uint8_t timer_refresh = 5;   // duration for timer to refresh
@@ -125,7 +126,7 @@ static int32_t game_waiting_app_callback(void *p)
     }
     // if we reach here, it means we timed out or the user hit back
     FURI_LOG_E(TAG, "No players joined within the timeout or user hit back");
-    remove_player_from_lobby(fhttp);
+    game_remove_from_lobby(fhttp);
     flipper_http_free(fhttp);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
     return 0;
@@ -181,7 +182,7 @@ static bool game_fetch_world_list(FlipperHTTP *fhttp)
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/world_list.json");
 
     fhttp->save_received_data = true;
-    return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/v5/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
+    return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/v8/list/10/", "{\"Content-Type\":\"application/json\"}", NULL);
 }
 // we will load the palyer stats from the API and save them
 // in player_spawn game method, it will load the player stats that we saved
@@ -386,7 +387,7 @@ static bool game_fetch(DataLoaderModel *model)
 
         model->fhttp->save_received_data = true;
         char url[128];
-        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v5/get/world/%s/", furi_string_get_cstr(first_world));
+        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/v8/get/world/%s/", furi_string_get_cstr(first_world));
         furi_string_free(world_list);
         furi_string_free(first_world);
         return flipper_http_request(model->fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
@@ -555,6 +556,134 @@ static void game_switch_to_view(FlipWorldApp *app)
     }
     loader_switch_to_view(app, "Starting Game..", game_fetch, game_parse, 5, callback_to_submenu, FlipWorldViewLoader);
 }
+bool game_start_ws(FlipperHTTP *fhttp, char *lobby_name)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    if (!lobby_name || strlen(lobby_name) == 0)
+    {
+        FURI_LOG_E(TAG, "Lobby name is NULL or empty");
+        return false;
+    }
+    fhttp->state = IDLE; // ensure it's set to IDLE for the next request
+    char websocket_url[128];
+    snprintf(websocket_url, sizeof(websocket_url), "ws://www.jblanked.com/ws/game/%s/", lobby_name);
+    if (!flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}"))
+    {
+        FURI_LOG_E(TAG, "Failed to start websocket");
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while (fhttp->state != IDLE)
+    {
+        furi_delay_ms(100);
+    }
+    return true;
+}
+// load pvp info (this returns the lobbies available)
+static bool game_fetch_lobbies(FlipperHTTP *fhttp, uint8_t max_players, uint8_t max_lobbies)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
+    // ensure flip_world directory exists
+    char directory_path[128];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/%s", lobby_type);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/%s/lobbies", lobby_type);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/%s/%s_lobbies.json", lobby_type, lobby_type);
+    storage_simply_remove_recursive(storage, fhttp->file_path); // ensure the file is empty
+    furi_record_close(RECORD_STORAGE);
+    //
+    char url[128];
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/%s/lobbies/%d/%d/", lobby_type, max_players, max_lobbies);
+    fhttp->save_received_data = true;
+    return flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL);
+}
+
+static bool game_parse_lobbies(FlipperHTTP *fhttp, uint8_t max_lobbies, void *context)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    FlipWorldApp *app = (FlipWorldApp *)context;
+    furi_check(app);
+    // add the lobbies to the submenu
+    FuriString *lobbies = flipper_http_load_from_file(fhttp->file_path);
+    if (!lobbies)
+    {
+        FURI_LOG_E(TAG, "Failed to load lobbies");
+        return false;
+    }
+
+    // parse the lobbies
+    for (uint32_t i = 0; i < max_lobbies; i++)
+    {
+        FuriString *lobby = get_json_array_value_furi("lobbies", i, lobbies);
+        if (!lobby)
+        {
+            FURI_LOG_I(TAG, "No more lobbies");
+            break;
+        }
+        FuriString *lobby_id = get_json_value_furi("id", lobby);
+        if (!lobby_id)
+        {
+            FURI_LOG_E(TAG, "Failed to get lobby id");
+            furi_string_free(lobby);
+            return false;
+        }
+        // add the lobby to the submenu
+        submenu_add_item(app->submenu_other, furi_string_get_cstr(lobby_id), FlipWorldSubmenuIndexLobby + i, callback_submenu_lobby_pvp_choices, app);
+        // add the lobby to the list
+        if (!easy_flipper_set_buffer(&lobby_list[i], 64))
+        {
+            FURI_LOG_E(TAG, "Failed to allocate lobby list");
+            furi_string_free(lobby);
+            furi_string_free(lobby_id);
+            return false;
+        }
+        snprintf(lobby_list[i], 64, "%s", furi_string_get_cstr(lobby_id));
+        furi_string_free(lobby);
+        furi_string_free(lobby_id);
+    }
+    furi_string_free(lobbies);
+    return true;
+}
+
+static bool game_lobbies(FlipperHTTP *fhttp, uint8_t max_players, uint8_t max_lobbies, void *context)
+{
+    if (!fhttp || !context)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP or context is NULL");
+        return false;
+    }
+    if (!game_fetch_lobbies(fhttp, max_players, max_lobbies))
+    {
+        FURI_LOG_E(TAG, "Failed to fetch lobbies");
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while (fhttp->state != IDLE)
+    {
+        // Wait for the request to be received
+        furi_delay_ms(100);
+    }
+    return game_parse_lobbies(fhttp, max_lobbies, context);
+}
+
 void game_run(FlipWorldApp *app)
 {
     furi_check(app, "FlipWorldApp is NULL");
@@ -600,17 +729,15 @@ void game_run(FlipWorldApp *app)
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 
         // Make the request
-        if (game_mode_index != 1) // not GAME_MODE_PVP
+        if (game_mode_index == 2) // GAME_MODE_STORY
         {
             if (!flipper_http_process_response_async(fhttp, game_fetch_world_list_i, parse_world_list_i) || !flipper_http_process_response_async(fhttp, game_fetch_player_stats_i, set_player_context))
             {
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
                 flipper_http_free(fhttp);
             }
-            else
-            {
-                flipper_http_free(fhttp);
-            }
+
+            flipper_http_free(fhttp);
 
             if (!game_thread_start(app))
             {
@@ -621,96 +748,34 @@ void game_run(FlipWorldApp *app)
         }
         else
         {
-            // load pvp info (this returns the lobbies available)
-            bool fetch_pvp_lobbies()
+            free_submenu_other(app);
+            if (!alloc_submenu_other(app, FlipWorldViewLobby))
             {
-                // ensure flip_world directory exists
-                char directory_path[128];
-                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world");
-                Storage *storage = furi_record_open(RECORD_STORAGE);
-                storage_common_mkdir(storage, directory_path);
-                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp");
-                storage_common_mkdir(storage, directory_path);
-                snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/lobbies");
-                storage_common_mkdir(storage, directory_path);
-                snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/pvp_lobbies.json");
-                storage_simply_remove_recursive(storage, fhttp->file_path); // ensure the file is empty
-                furi_record_close(RECORD_STORAGE);
-                fhttp->save_received_data = true;
-                // 2 players max, 10 lobbies
-                return flipper_http_request(fhttp, GET, "https://www.jblanked.com/flipper/api/world/pvp/lobbies/2/10/", "{\"Content-Type\":\"application/json\"}", NULL);
-            }
-
-            bool parse_pvp_lobbies()
-            {
-
-                free_submenu_other(app);
-                if (!alloc_submenu_other(app, FlipWorldViewLobby))
-                {
-                    FURI_LOG_E(TAG, "Failed to allocate lobby submenu");
-                    return false;
-                }
-
-                // add the lobbies to the submenu
-                FuriString *lobbies = flipper_http_load_from_file(fhttp->file_path);
-                if (!lobbies)
-                {
-                    FURI_LOG_E(TAG, "Failed to load lobbies");
-                    return false;
-                }
-
-                // parse the lobbies
-                for (uint32_t i = 0; i < 10; i++)
-                {
-                    FuriString *lobby = get_json_array_value_furi("lobbies", i, lobbies);
-                    if (!lobby)
-                    {
-                        FURI_LOG_I(TAG, "No more lobbies");
-                        break;
-                    }
-                    FuriString *lobby_id = get_json_value_furi("id", lobby);
-                    if (!lobby_id)
-                    {
-                        FURI_LOG_E(TAG, "Failed to get lobby id");
-                        furi_string_free(lobby);
-                        return false;
-                    }
-                    // add the lobby to the submenu
-                    submenu_add_item(app->submenu_other, furi_string_get_cstr(lobby_id), FlipWorldSubmenuIndexLobby + i, callback_submenu_lobby_choices, app);
-                    // add the lobby to the list
-                    if (!easy_flipper_set_buffer(&lobby_list[i], 64))
-                    {
-                        FURI_LOG_E(TAG, "Failed to allocate lobby list");
-                        furi_string_free(lobby);
-                        furi_string_free(lobby_id);
-                        return false;
-                    }
-                    snprintf(lobby_list[i], 64, "%s", furi_string_get_cstr(lobby_id));
-                    furi_string_free(lobby);
-                    furi_string_free(lobby_id);
-                }
-                furi_string_free(lobbies);
-                return true;
+                FURI_LOG_E(TAG, "Failed to allocate lobby submenu");
+                return;
             }
 
             // load pvp lobbies and player stats
-            if (!flipper_http_process_response_async(fhttp, fetch_pvp_lobbies, parse_pvp_lobbies) || !flipper_http_process_response_async(fhttp, game_fetch_player_stats_i, set_player_context))
+            if (!game_lobbies(
+                    fhttp,
+                    game_mode_index == 1 ? 2 : MAX_ENEMIES,
+                    10,
+                    app))
             {
                 // unlike the pve/story, receiving data is necessary
                 // so send the user back to the main menu if it fails
                 FURI_LOG_E(HTTP_TAG, "Failed to make request");
                 easy_flipper_dialog("Error", "Failed to make request. Press BACK to return.");
-                view_dispatcher_switch_to_view(app->view_dispatcher,
-                                               FlipWorldViewSubmenu);
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenu);
                 flipper_http_free(fhttp);
             }
             else
             {
                 flipper_http_free(fhttp);
-            }
 
-            // switch to the lobby submenu
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
+                // switch to the lobby submenu
+                view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
+            }
         }
     }
     else
@@ -719,7 +784,7 @@ void game_run(FlipWorldApp *app)
     }
 }
 
-bool game_fetch_lobby(FlipperHTTP *fhttp, char *lobby_name)
+bool game_fetch_lobby(FlipperHTTP *fhttp, const char *lobby_name)
 {
     if (!fhttp)
     {
@@ -731,6 +796,8 @@ bool game_fetch_lobby(FlipperHTTP *fhttp, char *lobby_name)
         FURI_LOG_E(TAG, "Lobby name is NULL or empty");
         return false;
     }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
     char username[64];
     if (!load_char("Flip-Social-Username", username, sizeof(username)))
     {
@@ -739,7 +806,7 @@ bool game_fetch_lobby(FlipperHTTP *fhttp, char *lobby_name)
     }
     // send the request to fetch the lobby details, with player_username
     char url[128];
-    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/get/%s/%s/", lobby_name, username);
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/%s/lobby/get/%s/%s/", lobby_type, lobby_name, username);
     snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/pvp/lobbies/%s.json", lobby_name);
     fhttp->save_received_data = true;
     if (!flipper_http_request(fhttp, GET, url, "{\"Content-Type\":\"application/json\"}", NULL))
@@ -754,7 +821,7 @@ bool game_fetch_lobby(FlipperHTTP *fhttp, char *lobby_name)
     }
     return true;
 }
-bool game_join_lobby(FlipperHTTP *fhttp, char *lobby_name)
+bool game_join_lobby(FlipperHTTP *fhttp, const char *lobby_name)
 {
     if (!fhttp)
     {
@@ -766,6 +833,8 @@ bool game_join_lobby(FlipperHTTP *fhttp, char *lobby_name)
         FURI_LOG_E(TAG, "Lobby name is NULL or empty");
         return false;
     }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
     char username[64];
     if (!load_char("Flip-Social-Username", username, sizeof(username)))
     {
@@ -776,7 +845,7 @@ bool game_join_lobby(FlipperHTTP *fhttp, char *lobby_name)
     char payload[128];
     snprintf(payload, sizeof(payload), "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, lobby_name);
     save_char("pvp_lobby_name", lobby_name); // save the lobby name
-    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/join/");
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/%s/lobby/join/", lobby_type);
     if (!flipper_http_request(fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload))
     {
         FURI_LOG_E(TAG, "Failed to join lobby");
@@ -966,52 +1035,31 @@ bool game_in_lobby(FlipperHTTP *fhttp, FuriString *lobby)
     return in_game;
 }
 
-static bool game_start_ws(FlipperHTTP *fhttp, char *lobby_name)
-{
-    if (!fhttp)
-    {
-        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
-        return false;
-    }
-    if (!lobby_name || strlen(lobby_name) == 0)
-    {
-        FURI_LOG_E(TAG, "Lobby name is NULL or empty");
-        return false;
-    }
-    fhttp->state = IDLE; // ensure it's set to IDLE for the next request
-    char websocket_url[128];
-    snprintf(websocket_url, sizeof(websocket_url), "ws://www.jblanked.com/ws/game/%s/", lobby_name);
-    if (!flipper_http_websocket_start(fhttp, websocket_url, 80, "{\"Content-Type\":\"application/json\"}"))
-    {
-        FURI_LOG_E(TAG, "Failed to start websocket");
-        return false;
-    }
-    fhttp->state = RECEIVING;
-    while (fhttp->state != IDLE)
-    {
-        furi_delay_ms(100);
-    }
-    return true;
-}
 // this will free both the fhttp and lobby
-void game_start_pvp(FlipperHTTP *fhttp, FuriString *lobby, void *context)
+void game_start_game(FlipperHTTP *fhttp, FuriString *lobby, void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     furi_check(app, "FlipWorldApp is NULL");
-    // only thing left to do is create the enemy data and start the websocket session
-    if (!game_create_pvp_enemy(lobby))
-    {
-        FURI_LOG_E(TAG, "Failed to create pvp enemy context.");
-        easy_flipper_dialog("Error", "Failed to create pvp enemy context. Press BACK to return.");
-        flipper_http_free(fhttp);
-        furi_string_free(lobby);
-        return;
-    }
 
+    if (game_mode_index == 1) // pvp (in pve, we will apennd the enemies as they are read from the websocket)
+    {
+        // only thing left to do is create the enemy data and start the websocket session
+        if (!game_create_pvp_enemy(lobby))
+        {
+            FURI_LOG_E(TAG, "Failed to create pvp enemy context.");
+            easy_flipper_dialog("Error", "Failed to create pvp enemy context. Press BACK to return.");
+            flipper_http_free(fhttp);
+            furi_string_free(lobby);
+            return;
+        }
+    }
     furi_string_free(lobby);
 
+    // used later in PVE mode if needed to fetch worlds
+    snprintf(game_ws_lobby_name, sizeof(game_ws_lobby_name), "%s", lobby_list[lobby_index]);
+
     // start the websocket session
-    if (!game_start_ws(fhttp, lobby_list[lobby_index]))
+    if (!game_start_ws(fhttp, game_ws_lobby_name))
     {
         FURI_LOG_E(TAG, "Failed to start websocket session");
         easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
@@ -1064,7 +1112,7 @@ void game_waiting_process(FlipperHTTP *fhttp, void *context)
     if (count == 2)
     {
         // break out of this and start the game
-        game_start_pvp(fhttp, lobby, app); // this will free both the fhttp and lobby
+        game_start_game(fhttp, lobby, app); // this will free both the fhttp and lobby
         return;
     }
     furi_string_free(lobby);
@@ -1074,12 +1122,14 @@ void game_waiting_lobby(void *context)
 {
     FlipWorldApp *app = (FlipWorldApp *)context;
     furi_check(app, "waiting_lobby: FlipWorldApp is NULL");
+
     if (!game_start_waiting_thread(app))
     {
         FURI_LOG_E(TAG, "Failed to start waiting thread");
         easy_flipper_dialog("Error", "Failed to start waiting thread. Press BACK to return.");
         return;
     }
+
     free_message_view(app);
     if (!alloc_message_view(app, MessageStateWaitingLobby))
     {
@@ -1089,3 +1139,36 @@ void game_waiting_lobby(void *context)
     // finally, switch to the waiting lobby view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
 };
+
+bool game_remove_from_lobby(FlipperHTTP *fhttp)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    char username[32];
+    if (!load_char("Flip-Social-Username", username, sizeof(username)))
+    {
+        FURI_LOG_E(TAG, "Failed to load data/Flip-Social-Username");
+        return false;
+    }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
+    char url[128];
+    char payload[128];
+    snprintf(payload, sizeof(payload), "{\"username\":\"%s\", \"game_id\":\"%s\"}", username, game_ws_lobby_name);
+    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/%s/lobby/remove/", lobby_type);
+    fhttp->state = IDLE;
+    if (!flipper_http_request(fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload))
+    {
+        FURI_LOG_E(TAG, "Failed to remove player from lobby");
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while (fhttp->state != IDLE)
+    {
+        furi_delay_ms(100);
+    }
+    return true;
+}
