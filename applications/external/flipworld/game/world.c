@@ -238,15 +238,14 @@ const LevelBehaviour* world_pvp() {
     return &_world_pvp;
 }
 
-FuriString* world_fetch(const char* name) {
+FuriString* world_fetch(FlipperHTTP* fhttp, const char* name) {
     if(!name) {
         FURI_LOG_E("Game", "World name is NULL");
         return NULL;
     }
 
-    FlipperHTTP* fhttp = flipper_http_alloc();
     if(!fhttp) {
-        FURI_LOG_E("Game", "Failed to allocate HTTP");
+        FURI_LOG_E("Game", "world_fetch: FlipperHTTP is NULL");
         return NULL;
     }
 
@@ -258,25 +257,19 @@ FuriString* world_fetch(const char* name) {
         sizeof(fhttp->file_path),
         STORAGE_EXT_PATH_PREFIX "/apps_data/flip_world/worlds/%s.json",
         name);
+
     fhttp->save_received_data = true;
+    fhttp->state = IDLE;
     if(!flipper_http_request(fhttp, GET, url, "{\"Content-Type\": \"application/json\"}", NULL)) {
-        FURI_LOG_E("Game", "Failed to send HTTP request");
-        flipper_http_free(fhttp);
+        FURI_LOG_E("Game", "world_fetch: Failed to send HTTP request");
+
         return NULL;
     }
     fhttp->state = RECEIVING;
-    furi_timer_start(fhttp->get_timeout_timer, TIMEOUT_DURATION_TICKS);
-    while(fhttp->state == RECEIVING && furi_timer_is_running(fhttp->get_timeout_timer) > 0) {
-        // Wait for the request to be received
+    while(fhttp->state != IDLE) {
         furi_delay_ms(100);
     }
-    furi_timer_stop(fhttp->get_timeout_timer);
-    if(fhttp->state != IDLE) {
-        FURI_LOG_E("Game", "Failed to receive world data");
-        flipper_http_free(fhttp);
-        return NULL;
-    }
-    flipper_http_free(fhttp);
+
     FuriString* returned_data = load_furi_world(name);
     if(!returned_data) {
         FURI_LOG_E("Game", "Failed to load world data from file");

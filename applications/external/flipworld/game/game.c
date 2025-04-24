@@ -2,6 +2,7 @@
 #include <game/game.h>
 #include <game/storage.h>
 #include <alloc/alloc.h>
+#include <callback/game.h>
 
 // very simple tutorial check
 static bool game_tutorial_done(GameContext* game_context) {
@@ -151,7 +152,7 @@ static void game_stop(void* ctx) {
     if(game_context->game_mode != GAME_MODE_STORY) {
         if(game_context->fhttp) {
             flipper_http_websocket_stop(game_context->fhttp); // close websocket
-            remove_player_from_lobby(game_context->fhttp); // remove player from lobby
+            game_remove_from_lobby(game_context->fhttp); // remove player from lobby
             flipper_http_free(game_context->fhttp);
         }
     } else {
@@ -190,6 +191,15 @@ static void game_stop(void* ctx) {
             break;
         case GAME_END_PVP_PLAYER_DEAD:
             snprintf(message, sizeof(message), "You have been defeated!\n\nHit BACK to exit.");
+            break;
+        case GAME_END_NETWORK:
+            snprintf(
+                message,
+                sizeof(message),
+                "Network error. Please check\nyour connection and try again.\n\nHit BACK to exit.");
+            break;
+        case GAME_END_APP:
+            snprintf(message, sizeof(message), "App error.\n\nHit BACK to exit.");
             break;
         };
         easy_flipper_dialog("Game Over", message);

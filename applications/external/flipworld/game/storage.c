@@ -466,43 +466,6 @@ bool websocket_player_context(PlayerContext* player_context, FlipperHTTP* fhttp)
     return true;
 }
 
-bool remove_player_from_lobby(FlipperHTTP* fhttp) {
-    if(!fhttp) {
-        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
-        return false;
-    }
-    char username[32];
-    if(!load_char("Flip-Social-Username", username, sizeof(username))) {
-        FURI_LOG_E(TAG, "Failed to load data/Flip-Social-Username");
-        return false;
-    }
-    char lobby_name[32];
-    if(!load_char("pvp_lobby_name", lobby_name, sizeof(lobby_name))) {
-        FURI_LOG_E(TAG, "Failed to load data/pvp_lobby_name");
-        return false;
-    }
-    char url[128];
-    char payload[128];
-    snprintf(
-        payload,
-        sizeof(payload),
-        "{\"username\":\"%s\", \"game_id\":\"%s\"}",
-        username,
-        lobby_name);
-    snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/world/pvp/lobby/remove/");
-    fhttp->state = IDLE;
-    if(!flipper_http_request(
-           fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload)) {
-        FURI_LOG_E(TAG, "Failed to remove player from lobby");
-        return false;
-    }
-    fhttp->state = RECEIVING;
-    while(fhttp->state != IDLE) {
-        furi_delay_ms(100);
-    }
-    return true;
-}
-
 // Helper function to load an integer
 static bool load_number(const char* path_name, int* value) {
     if(!path_name || !value) {
@@ -1066,8 +1029,8 @@ bool separate_world_data(char* id, FuriString* world_data) {
     // save npc_data to disk
     FuriString* file_npc_data = json_data(world_data, "npc_data");
     if(!file_npc_data) {
-        FURI_LOG_E("Game", "Failed to get npc data");
-        return false;
+        FURI_LOG_I("Game", "NPC data is not present");
+        // not every map has npc_data, so we can skip this
     } else {
         snprintf(
             file_path,

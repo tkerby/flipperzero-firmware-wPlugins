@@ -1,6 +1,7 @@
 #include <game/level.h>
 #include <flip_storage/storage.h>
 #include <game/storage.h>
+#include <callback/game.h>
 bool allocate_level(GameManager* manager, int index) {
     GameContext* game_context = game_manager_game_context_get(manager);
 
@@ -48,7 +49,7 @@ void level_set_world(Level* level, GameManager* manager, char* id) {
     }
 
     if(!is_enough_heap(20000, true)) {
-        FURI_LOG_E("Game", "Not enough heap memory.. ending game early.");
+        FURI_LOG_E("Game", "level_set_world: Not enough heap memory.. ending game early.");
         GameContext* game_context = game_manager_game_context_get(manager);
         game_context->end_reason = GAME_END_MEMORY;
         game_context->ended_early = true;
@@ -150,11 +151,44 @@ static void level_start(Level* level, GameManager* manager, void* context) {
     // check if the world exists
     if(!world_exists(level_context->id)) {
         FURI_LOG_E("Game", "World does not exist.. downloading now");
-        FuriString* world_data = world_fetch(level_context->id);
+        FuriString* world_data = NULL;
+        if(game_context->game_mode != GAME_MODE_STORY) {
+            if(game_context->fhttp) {
+                flipper_http_free(game_context->fhttp);
+            }
+            game_context->fhttp = flipper_http_alloc();
+            if(!game_context->fhttp) {
+                FURI_LOG_E("Game", "Failed to allocate FlipperHTTP");
+                game_context->is_switching_level = false;
+                game_context->ended_early = true;
+                game_context->end_reason = GAME_END_MEMORY;
+                player_spawn(level, manager);
+                return;
+            }
+            flipper_http_websocket_stop(game_context->fhttp); // close websocket if open
+            furi_delay_ms(200);
+            world_data = world_fetch(game_context->fhttp, level_context->id);
+            furi_delay_ms(200);
+            game_start_ws(game_context->fhttp, game_ws_lobby_name); // start websocket again
+        } else {
+            FlipperHTTP* fhttp = flipper_http_alloc();
+            if(!fhttp) {
+                FURI_LOG_E("Game", "Failed to allocate FlipperHTTP");
+                game_context->is_switching_level = false;
+                game_context->ended_early = true;
+                game_context->end_reason = GAME_END_MEMORY;
+                player_spawn(level, manager);
+                return;
+            }
+            world_data = world_fetch(fhttp, "pvp_world");
+            flipper_http_free(fhttp);
+        }
         if(!world_data) {
             FURI_LOG_E("Game", "Failed to fetch world data");
             // draw_town_world(manager, level);
             game_context->is_switching_level = false;
+            game_context->ended_early = true;
+            game_context->end_reason = GAME_END_NETWORK;
             // furi_delay_ms(1000);
             player_spawn(level, manager);
             return;

@@ -18,6 +18,7 @@
 bool user_hit_back = false;
 uint32_t lobby_index = -1;
 char* lobby_list[10];
+char game_ws_lobby_name[64];
 
 static uint8_t timer_iteration = 0; // timer iteration for the loading screen
 static uint8_t timer_refresh = 5; // duration for timer to refresh
@@ -115,7 +116,7 @@ static int32_t game_waiting_app_callback(void* p) {
     }
     // if we reach here, it means we timed out or the user hit back
     FURI_LOG_E(TAG, "No players joined within the timeout or user hit back");
-    remove_player_from_lobby(fhttp);
+    game_remove_from_lobby(fhttp);
     flipper_http_free(fhttp);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewSubmenuOther);
     return 0;
@@ -1047,7 +1048,7 @@ bool game_in_lobby(FlipperHTTP* fhttp, FuriString* lobby) {
 }
 
 // this will free both the fhttp and lobby
-void game_start(FlipperHTTP* fhttp, FuriString* lobby, void* context) {
+void game_start_game(FlipperHTTP* fhttp, FuriString* lobby, void* context) {
     FlipWorldApp* app = (FlipWorldApp*)context;
     furi_check(app, "FlipWorldApp is NULL");
 
@@ -1066,8 +1067,11 @@ void game_start(FlipperHTTP* fhttp, FuriString* lobby, void* context) {
     }
     furi_string_free(lobby);
 
+    // used later in PVE mode if needed to fetch worlds
+    snprintf(game_ws_lobby_name, sizeof(game_ws_lobby_name), "%s", lobby_list[lobby_index]);
+
     // start the websocket session
-    if(!game_start_ws(fhttp, lobby_list[lobby_index])) {
+    if(!game_start_ws(fhttp, game_ws_lobby_name)) {
         FURI_LOG_E(TAG, "Failed to start websocket session");
         easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
         flipper_http_free(fhttp);
@@ -1113,7 +1117,7 @@ void game_waiting_process(FlipperHTTP* fhttp, void* context) {
     const size_t count = game_lobby_count(fhttp, lobby);
     if(count == 2) {
         // break out of this and start the game
-        game_start(fhttp, lobby, app); // this will free both the fhttp and lobby
+        game_start_game(fhttp, lobby, app); // this will free both the fhttp and lobby
         return;
     }
     furi_string_free(lobby);
@@ -1136,4 +1140,42 @@ void game_waiting_lobby(void* context) {
     }
     // finally, switch to the waiting lobby view
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipWorldViewMessage);
+}
+
+bool game_remove_from_lobby(FlipperHTTP* fhttp) {
+    if(!fhttp) {
+        FURI_LOG_E(TAG, "FlipperHTTP is NULL");
+        return false;
+    }
+    char username[32];
+    if(!load_char("Flip-Social-Username", username, sizeof(username))) {
+        FURI_LOG_E(TAG, "Failed to load data/Flip-Social-Username");
+        return false;
+    }
+    char lobby_type[4];
+    snprintf(lobby_type, sizeof(lobby_type), game_mode_index == 0 ? "pve" : "pvp");
+    char url[128];
+    char payload[128];
+    snprintf(
+        payload,
+        sizeof(payload),
+        "{\"username\":\"%s\", \"game_id\":\"%s\"}",
+        username,
+        game_ws_lobby_name);
+    snprintf(
+        url,
+        sizeof(url),
+        "https://www.jblanked.com/flipper/api/world/%s/lobby/remove/",
+        lobby_type);
+    fhttp->state = IDLE;
+    if(!flipper_http_request(
+           fhttp, POST, url, "{\"Content-Type\":\"application/json\"}", payload)) {
+        FURI_LOG_E(TAG, "Failed to remove player from lobby");
+        return false;
+    }
+    fhttp->state = RECEIVING;
+    while(fhttp->state != IDLE) {
+        furi_delay_ms(100);
+    }
+    return true;
 }
