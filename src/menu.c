@@ -1152,6 +1152,8 @@ bool back_event_callback(void* context) {
     }
     // Handle text input view (view 6)
     else if(current_view == 6) {
+        // Clear any command setup state
+        state->uart_command = NULL;
         // Return to previous menu with selection restored
         switch(state->previous_view) {
         case 1:
