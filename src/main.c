@@ -30,21 +30,6 @@
 #define UART_INIT_STACK_SIZE 2048
 #define UART_INIT_TIMEOUT_MS 1500 // ms 
 
-static int32_t init_uart_task(void* context) {
-   AppState* state = context;
-   
-   // Add some delay to let system stabilize
-   furi_delay_ms(50);
-   
-   state->uart_context = uart_init(state);
-   if (state->uart_context) {
-       FURI_LOG_I("Ghost_ESP", "UART initialized successfully");
-   } else {
-       FURI_LOG_E("Ghost_ESP", "UART initialization failed");
-   }
-   return 0;
-}
-
 int32_t ghost_esp_app(void* p) {
    UNUSED(p);
 
@@ -149,27 +134,11 @@ int32_t ghost_esp_app(void* p) {
    settings_setup_gui(state->settings_menu, &state->settings_ui_context);
 
    // Start UART init in background thread
-   FuriThread* uart_init_thread = furi_thread_alloc_ex(
-       "UartInit", 
-       UART_INIT_STACK_SIZE,  
-       init_uart_task,
-       state);
-   furi_thread_start(uart_init_thread);
-
-   bool uart_init_success = false;
-   uint32_t start_time = furi_get_tick();
-   while(furi_get_tick() - start_time < UART_INIT_TIMEOUT_MS) {
-       if(furi_thread_join(uart_init_thread) == 0) {
-           uart_init_success = true;
-           break;
-       }
-       furi_delay_ms(50);
-   }
-
-   if(!uart_init_success) {
-       FURI_LOG_E("Main", "UART init timeout! OTG not ready?");
-       furi_thread_flags_set(furi_thread_get_id(uart_init_thread), WorkerEvtStop);
-       furi_thread_join(uart_init_thread);
+   state->uart_context = uart_init(state);
+   if(state->uart_context) {
+       FURI_LOG_I("Ghost_ESP", "UART initialized successfully");
+   } else {
+       FURI_LOG_E("Ghost_ESP", "UART initialization failed");
    }
 
    // Add views to dispatcher - check each component before adding
