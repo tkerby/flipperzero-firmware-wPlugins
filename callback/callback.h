@@ -18,4 +18,4 @@ void callback_vibration_on_change(VariableItem *item);
 void callback_player_on_change(VariableItem *item);
 void callback_vgm_x_change(VariableItem *item);
 void callback_vgm_y_change(VariableItem *item);
-void callback_submenu_lobby_choices(void *context, uint32_t index);
+void callback_submenu_lobby_pvp_choices(void *context, uint32_t index);
