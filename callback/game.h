@@ -3,6 +3,7 @@
 extern bool user_hit_back;
 extern uint32_t lobby_index;
 extern char *lobby_list[10];
+extern char game_ws_lobby_name[64];
 extern FuriThread *game_thread;
 extern FuriThread *waiting_thread;
 extern bool game_thread_running;

@@ -18,6 +18,7 @@
 bool user_hit_back = false;
 uint32_t lobby_index = -1;
 char *lobby_list[10];
+char game_ws_lobby_name[64];
 
 static uint8_t timer_iteration = 0; // timer iteration for the loading screen
 static uint8_t timer_refresh = 5;   // duration for timer to refresh
@@ -1054,8 +1055,11 @@ void game_start(FlipperHTTP *fhttp, FuriString *lobby, void *context)
     }
     furi_string_free(lobby);
 
+    // used later in PVE mode if needed to fetch worlds
+    snprintf(game_ws_lobby_name, sizeof(game_ws_lobby_name), "%s", lobby_list[lobby_index]);
+
     // start the websocket session
-    if (!game_start_ws(fhttp, lobby_list[lobby_index]))
+    if (!game_start_ws(fhttp, game_ws_lobby_name))
     {
         FURI_LOG_E(TAG, "Failed to start websocket session");
         easy_flipper_dialog("Error", "Failed to start websocket session. Press BACK to return.");
