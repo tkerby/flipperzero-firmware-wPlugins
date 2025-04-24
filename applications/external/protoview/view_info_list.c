@@ -82,7 +82,8 @@ static void render_tyre_info(Canvas* const canvas, ProtoViewApp* app) {
                 snprintf(
                     buf,
                     sizeof(buf),
-                    "ID: %s %s: %s %sC",
+                    "%s: %s %s: %s %sC",
+                    app->tyre_list[i].decoder,
                     app->tyre_list[i].serial,
                     "Bar",
                     app->tyre_list[i].pressure_bar,
@@ -91,7 +92,8 @@ static void render_tyre_info(Canvas* const canvas, ProtoViewApp* app) {
                 snprintf(
                     buf,
                     sizeof(buf),
-                    "ID: %s %s: %s %sC",
+                    "%s: %s %s: %s %sC",
+                    app->tyre_list[i].decoder,
                     app->tyre_list[i].serial,
                     app->tyre_list[i].uom,
                     app->tyre_list[i].pressure,

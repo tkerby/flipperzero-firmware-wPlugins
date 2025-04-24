@@ -40,7 +40,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793) (Version Only)
 - Updated: [FlipWifi v1.5.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipSocial v1.1 (By jblanked)](https://github.com/jblanked/FlipSocial) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
 - Added: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board` with [Blackhat OS](https://github.com/o7-machinehum/flipper-blackhat-os)
 - Updated: [LaserCat v1.1 (By DroWez)](https://github.com/DroWez/LaserCat)
@@ -54,6 +53,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac)
 - Updated: [Weebo v0.1 (By bettse)](https://github.com/bettse/weebo)
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview) [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS) [Add optional display in bar (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS/commit/f2c61eafdfb70f2ac0510b09577ec37c3c18b8d1)
 
 <a name="release">
 
