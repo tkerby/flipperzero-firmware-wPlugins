@@ -502,7 +502,7 @@ extern "C" int32_t pinball0_app(void* p) {
                             app.table->balls[0].prev_p.y -= MANUAL_ADJUSTMENT;
                             break;
                         }
-                        if(event.type == InputTypePress) {
+                        if(event.type == InputTypePress && app.table->balls_released) {
                             // Table bump and Tilt tracking
                             uint32_t current_tick = furi_get_tick();
                             if(current_tick - app.table->last_bump >= BUMP_COOLDOWN) {

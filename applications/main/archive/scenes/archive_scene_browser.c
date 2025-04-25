@@ -23,14 +23,16 @@ const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
         return "125 kHz RFID";
     case ArchiveFileTypeInfrared:
         return "Infrared";
+    case ArchiveFileTypeCrossRemote:
+        return EXT_PATH("apps/Infrared/cross_remote.fap");
     case ArchiveFileTypeSubghzPlaylist:
         return EXT_PATH("apps/Sub-GHz/subghz_playlist.fap");
     case ArchiveFileTypeSubghzRemote:
         return EXT_PATH("apps/Sub-GHz/subghz_remote_refactored.fap");
     case ArchiveFileTypeInfraredRemote:
         return EXT_PATH("apps/Infrared/ir_remote.fap");
-    case ArchiveFileTypeBadKb:
-        return EXT_PATH("apps/USB/bad_kb.fap");
+    case ArchiveFileTypeBadUsb:
+        return EXT_PATH("apps/USB/bad_usb.fap");
     case ArchiveFileTypeWAV:
         return EXT_PATH("apps/Media/wav_player.fap");
     case ArchiveFileTypeMag:
@@ -404,10 +406,10 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             bool open =
                 !scene_manager_get_scene_state(archive->scene_manager, ArchiveAppSceneSearch);
             scene_manager_set_scene_state(archive->scene_manager, ArchiveAppSceneSearch, false);
-            if(archive->thread) {
-                furi_thread_join(archive->thread);
-                furi_thread_free(archive->thread);
-                archive->thread = NULL;
+            if(archive->search_thread) {
+                furi_thread_join(archive->search_thread);
+                furi_thread_free(archive->search_thread);
+                archive->search_thread = NULL;
             }
             if(open) scene_manager_next_scene(archive->scene_manager, ArchiveAppSceneSearch);
             consumed = true;

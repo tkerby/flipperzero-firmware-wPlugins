@@ -467,7 +467,7 @@ bool load_char(const char* path_name, char* value, size_t value_size) {
     if(!storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_free(file);
         furi_record_close(RECORD_STORAGE);
-        return NULL; // Return false if the file does not exist
+        return false;
     }
 
     // Read data into the buffer

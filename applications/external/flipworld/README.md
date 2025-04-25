@@ -1,10 +1,14 @@
 # FlipWorld
-
 The first open-world multiplayer game for the Flipper Zero, best played with the VGM. Here's a video tutorial: https://www.youtube.com/watch?v=Qp7qmYMfdUA
 
-## Requirements
+## Connect Online
+- Discord: https://discord.gg/5aN9qwkEc6
+- YouTube: https://www.youtube.com/@jblanked
+- Instagram: https://www.instagram.com/jblanked
+- Other: https://www.jblanked.com/social/
 
-- WiFi Developer Board, Raspberry Pi, or ESP32 device with the FlipperHTTP flash: [FlipperHTTP GitHub](https://github.com/jblanked/FlipperHTTP)
+## Requirements
+- WiFi Developer Board, Raspberry Pi, or ESP32 device flashed with [FlipperHTTP v1.8.2](https://github.com/jblanked/FlipperHTTP) or higher.
 - 2.4 GHz WiFi access point
 
 ## How It Works
@@ -15,7 +19,7 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 
 - **WiFi**: Enter your SSID and password to connect to your 2.4 GHz network.
 - **User**: Add or update your username and password (this is the same login information as your FlipSocial account).
-- **Game**: Install the Official World Pack, set your FPS (30, 60, 120, or 240), and select whether you want the screen backlight to always be on, the sound to be on, and the vibration to be on.
+- **Game**: Install the Official World Pack, choose your weapon, set your FPS (30, 60, 120, or 240), and select whether you want the screen backlight to always be on, the sound to be on, and the vibration to be on.
 
 **Controls**
 
@@ -23,7 +27,10 @@ FlipWorld and FlipSocial are connected. Your login information is the same in bo
 - **Press/Hold RIGHT**: Turn right if not already facing right, then walk right if the button is still pressed.
 - **Press/Hold UP**: Walk up.
 - **Press/Hold DOWN**: Walk down.
-- **Press/Hold OK**: Attack/Teleport (set to attack until all enemies are defeated).
+- **Press OK**: Interact, attack, or teleport. Attacks enemies when colliding with them until all enemies are defeated. Interacts with NPCs when colliding with them.
+- **HOLD OK**: In-Game Menu.
+- **Press BACK**: Leave the menu.
+- **HOLD BACK**: Exit the game.
 
 **Player Attributes**
 
@@ -46,6 +53,9 @@ If an enemy attacks you, your health decreases by the enemy's strength (attack p
 
 An enemy attack registers if the enemy is facing you and collides with you. However, to attack an enemy successfully, the enemy must be facing away from you, and you must collide with them while pressing `OK`.
 
+**NPCs**
+
+NPCs are friendly characters that players can interact with. Currently, you can interact with them by clicking `OK` while colliding with them.
 
 ## Short Tutorial
 
@@ -55,30 +65,3 @@ An enemy attack registers if the enemy is facing you and collides with you. Howe
 4. Click `Settings -> WiFi`, then input your WiFi SSID and password.
 5. Hit the `BACK` button, click `User`. If your username is not present, click `Username` and add one. Do the same for the password field.
 6. Go back to the main menu and hit `Play`. It will register an account if necessary and fetch data from our API that's used to render our graphics.
-
-## Roadmap
-
-**v0.2**
-- Game Mechanics
-- Video Game Module support
-
-**v0.3**
-- Stability patch
-
-**v0.4**
-- New game features
-
-**v0.5**
-- ???
-
-**v0.6**
-- ???
-
-**v0.7**
-- ???
-
-**v0.8**
-- Multiplayer support
-
-**v1.0**
-- Official release

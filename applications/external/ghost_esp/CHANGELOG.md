@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.3
+
+- Added LED Effects command
+
+## v1.2.2
+
+- fixed race condition and blocking of UART initialization causing freeze on launch
+- slightly improved startup time
+
+## v1.2.1
+
+- Added 'apcred' commands to change and reset WebUI SSID & Password
+
 ## v1.2.0
 
 - Added Variable Sniff command replacing individual commands

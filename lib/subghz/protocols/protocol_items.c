@@ -3,7 +3,6 @@
 const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_gate_tx,
     &subghz_protocol_keeloq,
-    &subghz_protocol_genie,
     &subghz_protocol_star_line,
     &subghz_protocol_nice_flo,
     &subghz_protocol_came,
@@ -54,6 +53,8 @@ const SubGhzProtocol* subghz_protocol_registry_items[] = {
     &subghz_protocol_marantec24,
     &subghz_protocol_hollarm,
     &subghz_protocol_hay21,
+    &subghz_protocol_revers_rb2,
+    &subghz_protocol_feron,
 };
 
 const SubGhzProtocolRegistry subghz_protocol_registry = {

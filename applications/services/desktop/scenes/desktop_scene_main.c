@@ -13,14 +13,8 @@
 
 #define TAG "DesktopSrv"
 
-#define CLOCK_APP         EXT_PATH("apps/Main/dab_timer.fap")
-#define DOOM_APP          EXT_PATH("apps/Games/doom.fap")
-#define IMPROVED_2048_APP EXT_PATH("apps/Games/2048_improved.fap")
-#define PASSPORT_APP      EXT_PATH("apps/Settings/passport.fap")
-#define SNAKE_APP         EXT_PATH("apps/Games/snake.fap")
-#define TETRIS_APP        EXT_PATH("apps/Games/tetris.fap")
-#define ZOMBIEZ_APP       EXT_PATH("apps/Games/zombiez.fap")
-#define JETPACK_APP       EXT_PATH("apps/Games/jetpack.fap")
+#define CLOCK_APP    EXT_PATH("apps/Main/dab_timer.fap")
+#define PASSPORT_APP EXT_PATH("apps/Settings/passport.fap")
 
 static void desktop_scene_main_new_idle_animation_callback(void* context) {
     furi_assert(context);
@@ -256,30 +250,6 @@ bool desktop_scene_main_on_event(void* context, SceneManagerEvent event) {
             break;
         case DesktopMainEventOpenPassport: {
             desktop_scene_main_open_app_or_profile(desktop, PASSPORT_APP);
-            break;
-        }
-        case DesktopMainEventOpenSnake: {
-            desktop_scene_main_open_app_or_profile(desktop, SNAKE_APP);
-            break;
-        }
-        case DesktopMainEventOpen2048: {
-            desktop_scene_main_open_app_or_profile(desktop, IMPROVED_2048_APP);
-            break;
-        }
-        case DesktopMainEventOpenZombiez: {
-            desktop_scene_main_open_app_or_profile(desktop, ZOMBIEZ_APP);
-            break;
-        }
-        case DesktopMainEventOpenTetris: {
-            desktop_scene_main_open_app_or_profile(desktop, TETRIS_APP);
-            break;
-        }
-        case DesktopMainEventOpenDOOM: {
-            desktop_scene_main_open_app_or_profile(desktop, DOOM_APP);
-            break;
-        }
-        case DesktopMainEventOpenJetPack: {
-            desktop_scene_main_open_app_or_profile(desktop, JETPACK_APP);
             break;
         }
         case DesktopMainEventOpenClock: {

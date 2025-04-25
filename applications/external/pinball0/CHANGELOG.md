@@ -1,3 +1,8 @@
+## 0.5.2
+
+- Prevent tilt before ball is in play
+- Fixed Endless table by making bottom portal extend full width
+
 ## 0.5.1
 
 - Stop scores when moving ball in debug mode

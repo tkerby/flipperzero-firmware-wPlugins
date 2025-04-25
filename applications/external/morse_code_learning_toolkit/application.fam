@@ -1,0 +1,15 @@
+App(
+    appid="morse_master",
+    name="Morse Master",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="p1x_morse_code_learning_toolkit_app",
+    stack_size=2 * 1024,
+    fap_icon="p1x_morse_code_learning_toolkit.png",
+    fap_icon_assets="images",
+    fap_category="Games",
+    fap_author="w84death",
+    #  fap_author="Krzysztof Krystian Jankowski / P1X",
+    fap_weburl="https://github.com/w84death/flipper-zero-apps",
+    fap_version="1.0",
+    fap_description="Learn Morse code through interactive lessons and games",
+)

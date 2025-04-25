@@ -12,5 +12,5 @@ App(
     apptype=FlipperAppType.STARTUP,
     entry_point="crypto_on_system_start",
     sources=["crypto_cli.c"],
-    order=10,
+    order=20,
 )

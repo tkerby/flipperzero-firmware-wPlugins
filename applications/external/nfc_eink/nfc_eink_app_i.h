@@ -4,27 +4,27 @@
 #include <furi.h>
 #include <furi_hal.h>
 
-#include <applications/services/dolphin/dolphin.h>
-#include <applications/services/dolphin/helpers/dolphin_deed.h>
-#include <applications/services/notification/notification_messages.h>
+#include <dolphin/dolphin.h>
+#include <dolphin/helpers/dolphin_deed.h>
+#include <notification/notification_messages.h>
 
-#include <applications/services/gui/gui.h>
-#include <applications/services/gui/view.h>
-#include <applications/services/gui/view_dispatcher.h>
-#include <applications/services/gui/scene_manager.h>
-#include <applications/services/gui/modules/submenu.h>
-#include <applications/services/gui/modules/empty_screen.h>
-#include <applications/services/gui/modules/dialog_ex.h>
-#include <applications/services/gui/modules/popup.h>
-#include <applications/services/gui/modules/loading.h>
-#include <applications/services/gui/modules/text_input.h>
-#include <applications/services/gui/modules/byte_input.h>
-#include <applications/services/gui/modules/text_box.h>
-#include <applications/services/gui/modules/widget.h>
-#include <applications/services/gui/modules/variable_item_list.h>
+#include <gui/gui.h>
+#include <gui/view.h>
+#include <gui/view_dispatcher.h>
+#include <gui/scene_manager.h>
+#include <gui/modules/submenu.h>
+#include <gui/modules/empty_screen.h>
+#include <gui/modules/dialog_ex.h>
+#include <gui/modules/popup.h>
+#include <gui/modules/loading.h>
+#include <gui/modules/text_input.h>
+#include <gui/modules/byte_input.h>
+#include <gui/modules/text_box.h>
+#include <gui/modules/widget.h>
+#include <gui/modules/variable_item_list.h>
 
-#include <applications/services/dialogs/dialogs.h>
-#include <applications/services/storage/storage.h>
+#include <dialogs/dialogs.h>
+#include <storage/storage.h>
 
 #include <nfc/nfc_listener.h>
 #include <nfc/nfc_poller.h>
@@ -79,6 +79,12 @@ typedef enum {
     NfcEinkWriteModeFree
 } NfcEinkWriteMode;
 
+typedef enum {
+    NfcEinkLoadResultFailed,
+    NfcEinkLoadResultSuccess,
+    NfcEinkLoadResultCanceled,
+} NfcEinkLoadResult;
+
 typedef struct {
     NfcEinkWriteMode write_mode;
     bool invert_image;
@@ -121,7 +127,7 @@ struct NfcEinkApp {
     FuriString* file_name;
 };
 
-bool nfc_eink_load_from_file_select(NfcEinkApp* instance);
+NfcEinkLoadResult nfc_eink_load_from_file_select(NfcEinkApp* instance);
 void nfc_eink_blink_emulate_start(NfcEinkApp* app);
 void nfc_eink_blink_write_start(NfcEinkApp* app);
 void nfc_eink_blink_stop(NfcEinkApp* app);

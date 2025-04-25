@@ -45,8 +45,10 @@ void cfw_settings_load(void) {
         x->manifest_name = strdup(furi_string_get_cstr(manifest_name));
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "menu_style", (uint32_t*)&x->menu_style, 1);
+        if(x->menu_style >= MenuStyleCount) x->menu_style = MenuStyleList;
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "game_menu_style", (uint32_t*)&x->game_menu_style, 1);
+        if(x->game_menu_style >= MenuStyleCount) x->game_menu_style = MenuStyleWii;
         flipper_format_rewind(file);
         flipper_format_read_uint32(file, "start_point", &x->start_point, 1);
         flipper_format_rewind(file);
@@ -93,7 +95,6 @@ void cfw_settings_load(void) {
     furi_record_close(RECORD_STORAGE);
 
     rgb_backlight_load_settings(x->rgb_backlight);
-    FURI_LOG_I(TAG, "RM WUZ HERE");
 }
 
 void cfw_settings_save() {

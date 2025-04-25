@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "engine/engine.h" // IWYU pragma: keep
+#include <quadrastic_icons.h>
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 64

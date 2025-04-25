@@ -1,6 +1,4 @@
 #pragma once
-#include <furi.h>
-#include <furi_hal.h>
 
 #include "nfc_comparator_icons.h"
 
@@ -15,6 +13,8 @@
 #include <nfc_listener.h>
 #include <nfc_scanner.h>
 
+#include <notification/notification_messages.h>
+
 #include <storage/storage.h>
 
 #include <toolbox/stream/stream.h>
@@ -24,11 +24,15 @@
 #include "scenes/nfc_comparator_scene.h"
 
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
+#include "lib/led_worker/nfc_comparator_led_worker.h"
+
+#define NFC_ITEM_LOCATION "/ext/nfc/"
 
 typedef enum {
     NfcComparatorView_Submenu,
     NfcComparatorView_FileBrowser,
-    NfcComparatorView_Popup
+    NfcComparatorView_Popup,
+    NfcComparatorView_Count
 } NfcComparatorViews;
 
 typedef struct {
@@ -38,7 +42,7 @@ typedef struct {
     FileBrowser* file_browser;
     FuriString* file_browser_output;
     Popup* popup;
-    NfcComparatorReaderWorker* worker;
+    NotificationApp* notification_app;
+    FuriThread* thread;
+    NfcComparatorReaderWorker* nfc_comparator_reader_worker;
 } NfcComparator;
-
-#define NFC_ITEM_LOCATION "/ext/nfc/"

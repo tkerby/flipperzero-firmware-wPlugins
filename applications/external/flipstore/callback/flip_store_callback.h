@@ -1,6 +1,6 @@
 #ifndef FLIP_STORE_CALLBACK_H
 #define FLIP_STORE_CALLBACK_H
-#include <flip_store.h>
+#include <flip_downloader.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

@@ -28,6 +28,8 @@
 #include "settings_ui.h"
 
 #define UART_INIT_STACK_SIZE 2048
+#define UART_INIT_TIMEOUT_MS 1500 // ms
+
 static int32_t init_uart_task(void* context) {
     AppState* state = context;
 
@@ -50,14 +52,16 @@ int32_t ghost_esp_app(void* p) {
     Expansion* expansion = furi_record_open(RECORD_EXPANSION);
     expansion_disable(expansion);
 
-    // Power initialization
+    // Modified power initialization
     uint8_t attempts = 0;
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
-    while(!furi_hal_power_is_otg_enabled() && attempts++ < 5) {
+
+    // Simply try to enable OTG if not already enabled
+    while(!furi_hal_power_is_otg_enabled() && attempts++ < 3) {
         furi_hal_power_enable_otg();
-        furi_delay_ms(10);
+        furi_delay_ms(20);
     }
-    furi_delay_ms(200); // Longer delay for power stabilization
+    furi_delay_ms(50); // Reduced stabilization time
 
     // Set up bare minimum UI state
     AppState* state = malloc(sizeof(AppState));
@@ -148,6 +152,23 @@ int32_t ghost_esp_app(void* p) {
     // Start UART init in background thread
     FuriThread* uart_init_thread =
         furi_thread_alloc_ex("UartInit", UART_INIT_STACK_SIZE, init_uart_task, state);
+    furi_thread_start(uart_init_thread);
+
+    bool uart_init_success = false;
+    uint32_t start_time = furi_get_tick();
+    while(furi_get_tick() - start_time < UART_INIT_TIMEOUT_MS) {
+        if(furi_thread_join(uart_init_thread) == 0) {
+            uart_init_success = true;
+            break;
+        }
+        furi_delay_ms(50);
+    }
+
+    if(!uart_init_success) {
+        FURI_LOG_E("Main", "UART init timeout! OTG not ready?");
+        furi_thread_flags_set(furi_thread_get_id(uart_init_thread), WorkerEvtStop);
+        furi_thread_join(uart_init_thread);
+    }
 
     // Add views to dispatcher - check each component before adding
     if(state->view_dispatcher) {
@@ -181,21 +202,13 @@ int32_t ghost_esp_app(void* p) {
             state->view_dispatcher, settings_custom_event_callback);
     }
 
+    if(!state->text_box) {
+        FURI_LOG_E("Main", "Text box allocation failed!");
+        return -1; // Don't try to fuck with broken UI
+    }
+
     // Show main menu immediately
     show_main_menu(state);
-
-    // Initialize UART in background
-    state->uart_context = uart_init(state);
-
-    // Check if ESP is connected, if not, try to initialize it
-    if(!uart_is_esp_connected(state->uart_context)) {
-        FURI_LOG_W("Ghost_ESP", "ESP not connected, trying to initialize...");
-        if(uart_init(state) != NULL) {
-            FURI_LOG_I("Ghost_ESP", "ESP initialized successfully");
-        } else {
-            FURI_LOG_E("Ghost_ESP", "Failed to initialize ESP");
-        }
-    }
 
     // Set up and run GUI
     Gui* gui = furi_record_open("gui");
@@ -206,10 +219,6 @@ int32_t ghost_esp_app(void* p) {
         view_dispatcher_run(state->view_dispatcher);
     }
     furi_record_close("gui");
-
-    // Wait for UART initialization to complete
-    furi_thread_join(uart_init_thread);
-    furi_thread_free(uart_init_thread);
 
     // Start cleanup - first remove views
     if(state->view_dispatcher) {

@@ -438,19 +438,6 @@ static void bt_close_connection(Bt* bt, BtMessage* message) {
     if(message->lock) api_lock_unlock(message->lock);
 }
 
-bool bt_remote_rssi(Bt* bt, uint8_t* rssi) {
-    furi_assert(bt);
-
-    uint8_t rssi_val;
-    uint32_t since = furi_hal_bt_get_conn_rssi(&rssi_val);
-
-    if(since == 0) return false;
-
-    *rssi = rssi_val;
-
-    return true;
-}
-
 int32_t bt_srv(void* p) {
     UNUSED(p);
     Bt* bt = bt_alloc();

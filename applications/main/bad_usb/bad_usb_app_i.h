@@ -6,13 +6,17 @@
 #include "helpers/bad_usb_hid.h"
 
 #include <gui/gui.h>
-#include "bad_usb_icons.h"
+#include <bad_usb_icons.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <dialogs/dialogs.h>
 #include <notification/notification_messages.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/text_input.h>
+#include <gui/modules/byte_input.h>
+#include <gui/modules/loading.h>
 #include <gui/modules/widget.h>
+#include <gui/modules/popup.h>
 #include "views/bad_usb_view.h"
 #include <furi_hal_usb.h>
 
@@ -23,7 +27,6 @@
 
 typedef enum {
     BadUsbAppErrorNoFiles,
-    BadUsbAppErrorCloseRpc,
 } BadUsbAppError;
 
 struct BadUsbApp {
@@ -33,7 +36,16 @@ struct BadUsbApp {
     NotificationApp* notifications;
     DialogsApp* dialogs;
     Widget* widget;
+    Popup* popup;
     VariableItemList* var_item_list;
+    TextInput* text_input;
+    ByteInput* byte_input;
+    Loading* loading;
+
+    char ble_name_buf[FURI_HAL_BT_ADV_NAME_LENGTH];
+    uint8_t ble_mac_buf[GAP_MAC_ADDR_SIZE];
+    char usb_name_buf[HID_MANUF_PRODUCT_NAME_LEN];
+    uint16_t usb_vidpid_buf[2];
 
     BadUsbAppError error;
     FuriString* file_path;
@@ -42,11 +54,20 @@ struct BadUsbApp {
     BadUsbScript* bad_usb_script;
 
     BadUsbHidInterface interface;
-    FuriHalUsbInterface* usb_if_prev;
+    BadUsbHidConfig user_hid_cfg;
+    BadUsbHidConfig script_hid_cfg;
 };
 
 typedef enum {
-    BadUsbAppViewError,
+    BadUsbAppViewWidget,
+    BadUsbAppViewPopup,
     BadUsbAppViewWork,
     BadUsbAppViewConfig,
+    BadUsbAppViewByteInput,
+    BadUsbAppViewTextInput,
+    BadUsbAppViewLoading,
 } BadUsbAppView;
+
+void bad_usb_set_interface(BadUsbApp* app, BadUsbHidInterface interface);
+
+void bad_usb_app_show_loading_popup(BadUsbApp* app, bool show);

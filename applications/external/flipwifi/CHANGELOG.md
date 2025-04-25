@@ -1,3 +1,17 @@
+## v1.5.1
+- Fixed a crash when setting an SSID in the Saved APs view.
+- Fixed auto-update functionality.
+
+## v1.5
+- Added AP mode (host a network and display a custom HTML)
+- Restructured the code.
+- Updated to the latest FlipperHTTP library.
+
+## v1.4
+- Updated to the latest FlipperHTTP library.
+- Added a check to verify the WiFi connection was successful.
+- Updated the WiFi scan to use JSON for handling unconventional network names.
+
 ## v1.3.2
 - Fixed a crash that occurred when deleting a network from the Saved APs list.
 - Updated to connect to the network after clicking "Set" on the selected SSID in the Saved APs list.

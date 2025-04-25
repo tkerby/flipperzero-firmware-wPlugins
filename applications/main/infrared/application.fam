@@ -35,5 +35,5 @@ App(
     targets=["f7"],
     entry_point="infrared_on_system_start",
     sources=["infrared_cli.c"],
-    order=20,
+    order=25,
 )

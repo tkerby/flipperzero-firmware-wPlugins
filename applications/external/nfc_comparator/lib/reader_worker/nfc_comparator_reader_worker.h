@@ -1,7 +1,6 @@
 #pragma once
-#include <furi.h>
-#include <furi_hal.h>
 
+#include <furi.h>
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
 #include <nfc/nfc_poller.h>
@@ -41,8 +40,7 @@ NfcCommand nfc_comparator_reader_worker_poller_callback(NfcGenericEvent event, v
 
 int32_t nfc_comparator_reader_worker_task(void* context);
 
-void nfc_comparator_reader_worker_set_loaded_nfc_card(void* context, const char* path_to_nfc_card);
-bool nfc_comparator_reader_worker_is_running(void* context);
+bool nfc_comparator_reader_worker_set_loaded_nfc_card(void* context, const char* path_to_nfc_card);
 NfcComparatorReaderWorkerState nfc_comparator_reader_worker_get_state(void* context);
 NfcComparatorReaderWorkerCompareChecks
    nfc_comparator_reader_worker_get_compare_checks(void* context);

@@ -112,6 +112,18 @@ bool infrared_scene_rpc_on_event(void* context, SceneManagerEvent event) {
             }
             rpc_system_app_confirm(infrared->rpc_ctx, result);
 
+        } else if(event.event == InfraredCustomEventTypeRpcButtonRelease) {
+            bool result = false;
+
+            if(rpc_state == InfraredRpcStateSending) {
+                infrared_tx_stop(infrared);
+                result = true;
+                scene_manager_set_scene_state(
+                    infrared->scene_manager, InfraredSceneRpc, InfraredRpcStateLoaded);
+            }
+
+            rpc_system_app_confirm(infrared->rpc_ctx, result);
+
         } else if(
             event.event == InfraredCustomEventTypeRpcButtonPressReleaseName ||
             event.event == InfraredCustomEventTypeRpcButtonPressReleaseIndex) {
@@ -155,18 +167,6 @@ bool infrared_scene_rpc_on_event(void* context, SceneManagerEvent event) {
                     infrared->scene_manager, InfraredSceneRpc, InfraredRpcStateLoaded);
             }
             rpc_system_app_confirm(infrared->rpc_ctx, result);
-        } else if(event.event == InfraredCustomEventTypeRpcButtonRelease) {
-            bool result = false;
-
-            if(rpc_state == InfraredRpcStateSending) {
-                infrared_tx_stop(infrared);
-                result = true;
-                scene_manager_set_scene_state(
-                    infrared->scene_manager, InfraredSceneRpc, InfraredRpcStateLoaded);
-            }
-
-            rpc_system_app_confirm(infrared->rpc_ctx, result);
-
         } else if(
             event.event == InfraredCustomEventTypeRpcExit ||
             event.event == InfraredCustomEventTypeRpcSessionClose ||

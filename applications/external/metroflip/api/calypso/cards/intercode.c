@@ -1,7 +1,175 @@
 #include <stdlib.h>
 #include "intercode.h"
+#include "../../metroflip/metroflip_api.h"
 
-CalypsoApp* get_intercode_contract_structure() {
+CalypsoApp* get_intercode_structure_env_holder() {
+    CalypsoApp* IntercodeEnvHolderStructure = malloc(sizeof(CalypsoApp));
+    if(!IntercodeEnvHolderStructure) {
+        return NULL;
+    }
+
+    int app_elements_count = 3;
+
+    IntercodeEnvHolderStructure->type = CALYPSO_APP_ENV_HOLDER;
+    IntercodeEnvHolderStructure->container = malloc(sizeof(CalypsoContainerElement));
+    IntercodeEnvHolderStructure->container->elements =
+        malloc(app_elements_count * sizeof(CalypsoElement));
+    IntercodeEnvHolderStructure->container->size = app_elements_count;
+
+    IntercodeEnvHolderStructure->container->elements[0] = make_calypso_final_element(
+        "EnvApplicationVersionNumber",
+        6,
+        "Numéro de version de l’application Billettique",
+        CALYPSO_FINAL_TYPE_NUMBER);
+    IntercodeEnvHolderStructure->container->elements[1] = make_calypso_bitmap_element(
+        "Env",
+        7,
+        (CalypsoElement[]){
+            make_calypso_final_element(
+                "EnvNetworkId", 24, "Identification du réseau", CALYPSO_FINAL_TYPE_NUMBER),
+            make_calypso_final_element(
+                "EnvApplicationIssuerId",
+                8,
+                "Identification de l’émetteur de l’application",
+                CALYPSO_FINAL_TYPE_UNKNOWN),
+            make_calypso_final_element(
+                "EnvApplicationValidityEndDate",
+                14,
+                "Date de fin de validité de l’application",
+                CALYPSO_FINAL_TYPE_DATE),
+            make_calypso_final_element(
+                "EnvPayMethod", 11, "Code mode de paiement", CALYPSO_FINAL_TYPE_PAY_METHOD),
+            make_calypso_final_element(
+                "EnvAuthenticator",
+                16,
+                "Code de contrôle de l’intégrité des données",
+                CALYPSO_FINAL_TYPE_UNKNOWN),
+            make_calypso_final_element(
+                "EnvSelectList",
+                32,
+                "Bitmap de tableau de paramètre multiple",
+                CALYPSO_FINAL_TYPE_UNKNOWN),
+            make_calypso_container_element(
+                "EnvData",
+                2,
+                (CalypsoElement[]){
+                    make_calypso_final_element(
+                        "EnvDataCardStatus", 1, "Statut de la carte", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "EnvData2", 0, "Données complémentaires", CALYPSO_FINAL_TYPE_UNKNOWN),
+                }),
+        });
+    IntercodeEnvHolderStructure->container->elements[2] = make_calypso_bitmap_element(
+        "Holder",
+        8,
+        (CalypsoElement[]){
+            make_calypso_bitmap_element(
+                "HolderName",
+                2,
+                (CalypsoElement[]){
+                    make_calypso_final_element(
+                        "HolderSurname", 85, "Nom du porteur", CALYPSO_FINAL_TYPE_STRING),
+                    make_calypso_final_element(
+                        "HolderForename",
+                        85,
+                        "Prénom de naissance du porteur",
+                        CALYPSO_FINAL_TYPE_STRING),
+                }),
+            make_calypso_bitmap_element(
+                "HolderBirth",
+                2,
+                (CalypsoElement[]){
+                    make_calypso_final_element(
+                        "HolderBirthDate", 32, "Date de naissance", CALYPSO_FINAL_TYPE_DATE),
+                    make_calypso_final_element(
+                        "HolderBirthPlace",
+                        115,
+                        "Lieu de naissance (23 caractères)",
+                        CALYPSO_FINAL_TYPE_STRING),
+                }),
+            make_calypso_final_element(
+                "HolderBirthName",
+                85,
+                "Nom de naissance du porteur (17 caractères)",
+                CALYPSO_FINAL_TYPE_STRING),
+            make_calypso_final_element(
+                "HolderIdNumber", 32, "Identifiant Porteur", CALYPSO_FINAL_TYPE_NUMBER),
+            make_calypso_final_element(
+                "HolderCountryAlpha", 24, "Pays du titulaire", CALYPSO_FINAL_TYPE_UNKNOWN),
+            make_calypso_final_element(
+                "HolderCompany", 32, "Société du titulaire", CALYPSO_FINAL_TYPE_UNKNOWN),
+            make_calypso_bitmap_element(
+                "HolderProfiles",
+                4,
+                (CalypsoElement[]){
+                    make_calypso_bitmap_element(
+                        "HolderProfileBitmap",
+                        3,
+                        (CalypsoElement[]){
+                            make_calypso_final_element(
+                                "HolderNetworkId", 24, "Réseau", CALYPSO_FINAL_TYPE_UNKNOWN),
+                            make_calypso_final_element(
+                                "HolderProfileNumber",
+                                8,
+                                "Numéro du statut",
+                                CALYPSO_FINAL_TYPE_NUMBER),
+                            make_calypso_final_element(
+                                "HolderProfileDate",
+                                14,
+                                "Date de fin de validité du statut",
+                                CALYPSO_FINAL_TYPE_DATE),
+                        }),
+                }),
+            make_calypso_bitmap_element(
+                "HolderData",
+                12,
+                (CalypsoElement[]){
+                    make_calypso_final_element(
+                        "HolderDataCardStatus", 4, "Type de carte", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataTeleReglement", 4, "Télérèglement", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataResidence", 17, "Ville du domicile", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataCommercialID", 6, "Produit carte", CALYPSO_FINAL_TYPE_NUMBER),
+                    make_calypso_final_element(
+                        "HolderDataWorkPlace", 17, "Lieu de travail", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataStudyPlace", 17, "Lieu d'étude", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataSaleDevice",
+                        16,
+                        "Numéro logique de SAM",
+                        CALYPSO_FINAL_TYPE_NUMBER),
+                    make_calypso_final_element(
+                        "HolderDataAuthenticator", 16, "Signature", CALYPSO_FINAL_TYPE_UNKNOWN),
+                    make_calypso_final_element(
+                        "HolderDataProfileStartDate1",
+                        14,
+                        "Date de début de validité du statut",
+                        CALYPSO_FINAL_TYPE_DATE),
+                    make_calypso_final_element(
+                        "HolderDataProfileStartDate2",
+                        14,
+                        "Date de début de validité du statut",
+                        CALYPSO_FINAL_TYPE_DATE),
+                    make_calypso_final_element(
+                        "HolderDataProfileStartDate3",
+                        14,
+                        "Date de début de validité du statut",
+                        CALYPSO_FINAL_TYPE_DATE),
+                    make_calypso_final_element(
+                        "HolderDataProfileStartDate4",
+                        14,
+                        "Date de début de validité du statut",
+                        CALYPSO_FINAL_TYPE_DATE),
+                }),
+        });
+
+    return IntercodeEnvHolderStructure;
+}
+
+CalypsoApp* get_intercode_structure_contract() {
     CalypsoApp* IntercodeContractStructure = malloc(sizeof(CalypsoApp));
     if(!IntercodeContractStructure) {
         return NULL;
@@ -248,7 +416,7 @@ CalypsoApp* get_intercode_contract_structure() {
     return IntercodeContractStructure;
 }
 
-CalypsoApp* get_intercode_event_structure() {
+CalypsoApp* get_intercode_structure_event() {
     CalypsoApp* IntercodeEventStructure = malloc(sizeof(CalypsoApp));
     if(!IntercodeEventStructure) {
         return NULL;
@@ -382,169 +550,211 @@ CalypsoApp* get_intercode_event_structure() {
     return IntercodeEventStructure;
 }
 
-CalypsoApp* get_intercode_env_holder_structure() {
-    CalypsoApp* IntercodeEnvHolderStructure = malloc(sizeof(CalypsoApp));
-    if(!IntercodeEnvHolderStructure) {
+CalypsoApp* get_intercode_structure_counter() {
+    CalypsoApp* IntercodeCounterStructure = malloc(sizeof(CalypsoApp));
+    if(!IntercodeCounterStructure) {
         return NULL;
     }
 
-    int app_elements_count = 3;
+    int app_elements_count = 2;
 
-    IntercodeEnvHolderStructure->type = CALYPSO_APP_ENV_HOLDER;
-    IntercodeEnvHolderStructure->container = malloc(sizeof(CalypsoContainerElement));
-    IntercodeEnvHolderStructure->container->elements =
+    IntercodeCounterStructure->type = CALYPSO_APP_COUNTER;
+    IntercodeCounterStructure->container = malloc(sizeof(CalypsoContainerElement));
+    IntercodeCounterStructure->container->elements =
         malloc(app_elements_count * sizeof(CalypsoElement));
-    IntercodeEnvHolderStructure->container->size = app_elements_count;
+    IntercodeCounterStructure->container->size = app_elements_count;
 
-    IntercodeEnvHolderStructure->container->elements[0] = make_calypso_final_element(
-        "EnvApplicationVersionNumber",
-        6,
-        "Numéro de version de l’application Billettique",
+    IntercodeCounterStructure->container->elements[0] = make_calypso_final_element(
+        "CounterContractCount", 6, "Nombre de titres du carnet", CALYPSO_FINAL_TYPE_NUMBER);
+
+    IntercodeCounterStructure->container->elements[1] = make_calypso_final_element(
+        "CounterRelativeFirstStamp15mn",
+        18,
+        "Temps relatif de la première validation (au quart d'heure près)",
         CALYPSO_FINAL_TYPE_NUMBER);
-    IntercodeEnvHolderStructure->container->elements[1] = make_calypso_bitmap_element(
-        "Env",
-        7,
-        (CalypsoElement[]){
-            make_calypso_final_element(
-                "EnvNetworkId", 24, "Identification du réseau", CALYPSO_FINAL_TYPE_NUMBER),
-            make_calypso_final_element(
-                "EnvApplicationIssuerId",
-                8,
-                "Identification de l’émetteur de l’application",
-                CALYPSO_FINAL_TYPE_UNKNOWN),
-            make_calypso_final_element(
-                "EnvApplicationValidityEndDate",
-                14,
-                "Date de fin de validité de l’application",
-                CALYPSO_FINAL_TYPE_DATE),
-            make_calypso_final_element(
-                "EnvPayMethod", 11, "Code mode de paiement", CALYPSO_FINAL_TYPE_PAY_METHOD),
-            make_calypso_final_element(
-                "EnvAuthenticator",
-                16,
-                "Code de contrôle de l’intégrité des données",
-                CALYPSO_FINAL_TYPE_UNKNOWN),
-            make_calypso_final_element(
-                "EnvSelectList",
-                32,
-                "Bitmap de tableau de paramètre multiple",
-                CALYPSO_FINAL_TYPE_UNKNOWN),
-            make_calypso_container_element(
-                "EnvData",
-                2,
-                (CalypsoElement[]){
-                    make_calypso_final_element(
-                        "EnvDataCardStatus", 1, "Statut de la carte", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "EnvData2", 0, "Données complémentaires", CALYPSO_FINAL_TYPE_UNKNOWN),
-                }),
-        });
-    IntercodeEnvHolderStructure->container->elements[2] = make_calypso_bitmap_element(
-        "Holder",
-        8,
-        (CalypsoElement[]){
-            make_calypso_bitmap_element(
-                "HolderName",
-                2,
-                (CalypsoElement[]){
-                    make_calypso_final_element(
-                        "HolderSurname", 85, "Nom du porteur", CALYPSO_FINAL_TYPE_STRING),
-                    make_calypso_final_element(
-                        "HolderForename",
-                        85,
-                        "Prénom de naissance du porteur",
-                        CALYPSO_FINAL_TYPE_STRING),
-                }),
-            make_calypso_bitmap_element(
-                "HolderBirth",
-                2,
-                (CalypsoElement[]){
-                    make_calypso_final_element(
-                        "HolderBirthDate", 32, "Date de naissance", CALYPSO_FINAL_TYPE_DATE),
-                    make_calypso_final_element(
-                        "HolderBirthPlace",
-                        115,
-                        "Lieu de naissance (23 caractères)",
-                        CALYPSO_FINAL_TYPE_STRING),
-                }),
-            make_calypso_final_element(
-                "HolderBirthName",
-                85,
-                "Nom de naissance du porteur (17 caractères)",
-                CALYPSO_FINAL_TYPE_STRING),
-            make_calypso_final_element(
-                "HolderIdNumber", 32, "Identifiant Porteur", CALYPSO_FINAL_TYPE_NUMBER),
-            make_calypso_final_element(
-                "HolderCountryAlpha", 24, "Pays du titulaire", CALYPSO_FINAL_TYPE_UNKNOWN),
-            make_calypso_final_element(
-                "HolderCompany", 32, "Société du titulaire", CALYPSO_FINAL_TYPE_UNKNOWN),
-            make_calypso_bitmap_element(
-                "HolderProfiles",
-                4,
-                (CalypsoElement[]){
-                    make_calypso_bitmap_element(
-                        "HolderProfileBitmap",
-                        3,
-                        (CalypsoElement[]){
-                            make_calypso_final_element(
-                                "HolderNetworkId", 24, "Réseau", CALYPSO_FINAL_TYPE_UNKNOWN),
-                            make_calypso_final_element(
-                                "HolderProfileNumber",
-                                8,
-                                "Numéro du statut",
-                                CALYPSO_FINAL_TYPE_NUMBER),
-                            make_calypso_final_element(
-                                "HolderProfileDate",
-                                14,
-                                "Date de fin de validité du statut",
-                                CALYPSO_FINAL_TYPE_DATE),
-                        }),
-                }),
-            make_calypso_bitmap_element(
-                "HolderData",
-                12,
-                (CalypsoElement[]){
-                    make_calypso_final_element(
-                        "HolderDataCardStatus", 4, "Type de carte", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataTeleReglement", 4, "Télérèglement", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataResidence", 17, "Ville du domicile", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataCommercialID", 6, "Produit carte", CALYPSO_FINAL_TYPE_NUMBER),
-                    make_calypso_final_element(
-                        "HolderDataWorkPlace", 17, "Lieu de travail", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataStudyPlace", 17, "Lieu d'étude", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataSaleDevice",
-                        16,
-                        "Numéro logique de SAM",
-                        CALYPSO_FINAL_TYPE_NUMBER),
-                    make_calypso_final_element(
-                        "HolderDataAuthenticator", 16, "Signature", CALYPSO_FINAL_TYPE_UNKNOWN),
-                    make_calypso_final_element(
-                        "HolderDataProfileStartDate1",
-                        14,
-                        "Date de début de validité du statut",
-                        CALYPSO_FINAL_TYPE_DATE),
-                    make_calypso_final_element(
-                        "HolderDataProfileStartDate2",
-                        14,
-                        "Date de début de validité du statut",
-                        CALYPSO_FINAL_TYPE_DATE),
-                    make_calypso_final_element(
-                        "HolderDataProfileStartDate3",
-                        14,
-                        "Date de début de validité du statut",
-                        CALYPSO_FINAL_TYPE_DATE),
-                    make_calypso_final_element(
-                        "HolderDataProfileStartDate4",
-                        14,
-                        "Date de début de validité du statut",
-                        CALYPSO_FINAL_TYPE_DATE),
-                }),
-        });
 
-    return IntercodeEnvHolderStructure;
+    return IntercodeCounterStructure;
+}
+
+const char* get_intercode_string_transition_type(int transition) {
+    switch(transition) {
+    case 0x1:
+        return "Entry (First validation)";
+    case 0x2:
+        return "Exit";
+    case 0x3:
+        return "Validation";
+    case 0x4:
+        return "Inspection";
+    case 0x5:
+        return "Test validation";
+    case 0x6:
+        return "Entry (Interchange)";
+    case 0x7:
+        return "Exit (Interchange)";
+    case 0x9:
+        return "Validation cancelled";
+    case 0xA:
+        return "Entry (Public road)";
+    case 0xB:
+        return "Exit (Public road)";
+    case 0xD:
+        return "Distribution";
+    case 0xF:
+        return "Invalidation";
+    default: {
+        char* transition_str = malloc(6 * sizeof(char));
+        snprintf(transition_str, 6, "%d", transition);
+        return transition_str;
+    }
+    }
+}
+
+const char* get_intercode_string_transport_type(int type) {
+    switch(type) {
+    case URBAN_BUS:
+        return "Urban Bus";
+    case INTERURBAN_BUS:
+        return "Interurban Bus";
+    case METRO:
+        return "Metro";
+    case TRAM:
+        return "Tram";
+    case COMMUTER_TRAIN:
+        return "Train";
+    case PARKING:
+        return "Parking";
+    default:
+        return "Unknown";
+    }
+}
+
+const char* get_intercode_string_pay_method(int pay_method) {
+    switch(pay_method) {
+    case 0x30:
+        return "Apple Pay/Google Pay";
+    case 0x80:
+        return "Debit PME";
+    case 0x90:
+        return "Cash";
+    case 0xA0:
+        return "Mobility Check";
+    case 0xB3:
+        return "Payment Card";
+    case 0xA4:
+        return "Check";
+    case 0xA5:
+        return "Vacation Check";
+    case 0xB7:
+        return "Telepayment";
+    case 0xD0:
+        return "Remote Payment";
+    case 0xD7:
+        return "Voucher, Prepayment, Exchange Voucher, Travel Voucher";
+    case 0xD9:
+        return "Discount Voucher";
+    default:
+        return "Unknown";
+    }
+}
+
+const char* get_intercode_string_event_result(int result) {
+    switch(result) {
+    case 0x0:
+        return "OK";
+    case 0x7:
+        return "Transfer / Dysfunction";
+    case 0x8:
+        return "Disabled due to fraud";
+    case 0x9:
+        return "Disabled due to monetary fraud";
+    case 0xA:
+        return "Invalidation impossible";
+    case 0x30:
+        return "Double validation (Entry)";
+    case 0x31:
+        return "Invalid zone";
+    case 0x32:
+        return "Contract expired";
+    case 0x33:
+        return "Double validation (Exit)";
+    default: {
+        char* result_str = malloc(6 * sizeof(char));
+        if(!result_str) {
+            return "Unknown";
+        }
+        snprintf(result_str, 6, "%d", result);
+        return result_str;
+    }
+    }
+}
+
+const char* get_intercode_string_version(int version) {
+    // version is a 6 bits int
+    // if the first 3 bits are 000, it's a 1.x version
+    // if the first 3 bits are 001, it's a 2.x version
+    // else, it's unknown
+    int major = (version >> 3) & 0x07;
+    if(major == 0) {
+        return "Intercode I";
+    } else if(major == 1) {
+        return "Intercode II";
+    }
+    return "Unknown";
+}
+
+int get_intercode_string_subversion(int version) {
+    // subversion is a 3 bits int
+    return version & 0x07;
+}
+
+const char* get_intercode_string_holder_type(int card_status) {
+    // b3 -> RFU
+    // b2 -> linked to an organization
+    // b1..b0 -> personalization status (0: anonymous, 1: identified, 2: personalized, 3: networkSpecific)
+    int status = card_status & 0x03;
+    switch(status) {
+    case 0:
+        return "Anonymous";
+    case 1:
+        return "Identified";
+    case 2:
+        return "Personalized";
+    case 3:
+        return "Network Specific";
+    default:
+        return "Unknown";
+    }
+}
+
+bool is_intercode_string_holder_linked(int card_status) {
+    // b3 -> RFU
+    // b2 -> linked to an organization
+    // b1..b0 -> personalization status (0: anonymous, 1: identified, 2: personalized, 3: networkSpecific)
+    return card_status & 0x04;
+}
+
+const char* get_intercode_string_contract_status(int status) {
+    switch(status) {
+    case 0x0:
+        return "Valid (never used)";
+    case 0x1:
+        return "Valid (used)";
+    case 0x3:
+        return "Renewal required";
+    case 0xD:
+        return "Not validable";
+    case 0x13:
+        return "Blocked";
+    case 0x3F:
+        return "Suspended";
+    case 0x58:
+        return "Invalid";
+    case 0x7F:
+        return "Refunded";
+    case 0xFF:
+        return "Erasable";
+    default:
+        return "Unknown";
+    }
 }

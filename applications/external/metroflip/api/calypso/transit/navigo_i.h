@@ -10,6 +10,7 @@ typedef struct {
     int service_provider;
     int station_group_id;
     int station_id;
+    int station_sub_id;
     int location_gate;
     bool location_gate_available;
     int device;
@@ -28,6 +29,21 @@ typedef struct {
 } NavigoCardEvent;
 
 typedef struct {
+    int transport_type;
+    int transition;
+    int result;
+    int service_provider;
+    int station_group_id;
+    int station_id;
+    int station_sub_id;
+    int device;
+    bool device_available;
+    int route_number;
+    bool route_number_available;
+    DateTime date;
+} NavigoCardSpecialEvent;
+
+typedef struct {
     int app_version;
     int country_num;
     int network_num;
@@ -43,6 +59,7 @@ typedef struct {
     int count;
     int relative_first_stamp_15mn;
     int struct_number;
+    int last_load;
 } NavigoCardContractCounter;
 
 typedef struct {
@@ -64,6 +81,7 @@ typedef struct {
     int status;
     int authenticator;
     NavigoCardContractCounter counter;
+    bool counter_present;
     bool present;
 } NavigoCardContract;
 
@@ -72,6 +90,7 @@ typedef struct {
     NavigoCardHolder holder;
     NavigoCardContract contracts[4];
     NavigoCardEvent events[3];
+    NavigoCardSpecialEvent special_events[3];
 } NavigoCardData;
 
 #endif // NAVIGO_I_H

@@ -338,6 +338,9 @@ static void render_callback(Canvas* const canvas, void* ctx) {
         case PIMG_GTAVTREVOR:
             canvas_draw_icon(canvas, 11, 2, &I_GTAV_Trevor);
             break;
+        case PIMG_GUNNMGALLY:
+            canvas_draw_icon(canvas, 11, 2, &I_GUNNM_Gally);
+            break;
         case PIMG_GUYFAWKES:
             canvas_draw_icon(canvas, 11, 2, &I_Guy_Fawkes_Mask);
             break;

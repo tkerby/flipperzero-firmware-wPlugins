@@ -1,5 +1,6 @@
 #include "../metroflip_i.h"
 #include <dolphin/dolphin.h>
+#include "../api/metroflip/metroflip_api.h"
 
 #define TAG "Metroflip:Scene:Credits"
 
@@ -15,19 +16,21 @@ void metroflip_scene_credits_on_enter(void* context) {
     furi_string_printf(str, "\e#Credits:\n\n");
     furi_string_cat_printf(str, "Created by luu176\n");
     furi_string_cat_printf(str, "Inspired by Metrodroid\n\n");
+    furi_string_cat_printf(str, "Special Thanks:\n Willy-JL\n");
+    furi_string_cat_printf(str, "Info Slaves:\n Equip, TheDingo8MyBaby\n\n");
     furi_string_cat_printf(str, "\e#Parser Credits:\n\n");
-    furi_string_cat_printf(str, "Rav-Kav Parser: luu176\n\n");
-    furi_string_cat_printf(str, "Navigo Parser: \n luu176, DocSystem \n\n");
-    furi_string_cat_printf(str, "Opus Parser: DocSystem\n\n");
-    furi_string_cat_printf(str, "Metromoney Parser:\n Leptopt1los\n\n");
     furi_string_cat_printf(str, "Bip! Parser:\n rbasoalto, gornekich\n\n");
     furi_string_cat_printf(str, "CharlieCard Parser:\n zacharyweiss\n\n");
     furi_string_cat_printf(str, "Clipper Parser:\n ke6jjj\n\n");
-    furi_string_cat_printf(str, "Troika Parser:\n gornekich\n\n");
     furi_string_cat_printf(str, "ITSO Parser:\n gsp8181, hedger, gornekich\n\n");
-    furi_string_cat_printf(str, "Opal Parser:\n gornekich\n\n");
+    furi_string_cat_printf(str, "Metromoney Parser:\n Leptopt1los\n\n");
     furi_string_cat_printf(str, "myki Parser:\n gornekich\n\n");
-    furi_string_cat_printf(str, "Info Slaves:\n Equip, TheDingo8MyBaby\n\n");
+    furi_string_cat_printf(str, "Navigo Parser: \n luu176, DocSystem \n\n");
+    furi_string_cat_printf(str, "Opal Parser:\n gornekich\n\n");
+    furi_string_cat_printf(str, "Opus Parser: DocSystem\n\n");
+    furi_string_cat_printf(str, "Rav-Kav Parser: luu176\n\n");
+    furi_string_cat_printf(str, "Suica Parser: Torron\n\n");
+    furi_string_cat_printf(str, "Troika Parser:\n gornekich\n\n");
 
     widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(str));
 

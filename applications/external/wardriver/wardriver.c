@@ -82,8 +82,8 @@ void save_file(Context* ctx) {
             ap.datetime.hour,
             ap.datetime.minute,
             ap.datetime.second,
-            ap.rssi,
             ap.channel,
+            ap.rssi,
             (double)ap.latitude,
             (double)ap.longitude);
 

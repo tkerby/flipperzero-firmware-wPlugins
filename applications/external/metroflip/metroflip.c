@@ -1,6 +1,10 @@
 
 #include "metroflip_i.h"
 
+#define TAG "Metroflip"
+#include "api/metroflip/metroflip_api.h"
+#include "api/metroflip/metroflip_api_interface.h"
+#include "metroflip_plugins.h"
 struct MfClassicKeyCache {
     MfClassicDeviceKeys keys;
     MfClassicKeyType current_key_type;
@@ -26,6 +30,7 @@ Metroflip* metroflip_alloc() {
     //nfc device
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
+    app->detected_protocols = nfc_detected_protocols_alloc();
 
     // key cache
     app->mfc_key_cache = mf_classic_key_cache_alloc();
@@ -74,6 +79,10 @@ Metroflip* metroflip_alloc() {
         app->view_dispatcher, MetroflipViewTextBox, text_box_get_view(app->text_box));
     app->text_box_store = furi_string_alloc();
 
+    // Dialog for loading
+    app->dialogs = furi_record_open(RECORD_DIALOGS);
+
+    app->data_loaded = false;
     return app;
 }
 
@@ -83,6 +92,7 @@ void metroflip_free(Metroflip* app) {
     //nfc device
     nfc_free(app->nfc);
     nfc_device_free(app->nfc_device);
+    nfc_detected_protocols_free(app->detected_protocols);
 
     // key cache
     mf_classic_key_cache_free(app->mfc_key_cache);
@@ -116,6 +126,10 @@ void metroflip_free(Metroflip* app) {
 
     // Records
     furi_record_close(RECORD_GUI);
+
+    // Dialogs
+    furi_record_close(RECORD_DIALOGS);
+
     free(app);
 }
 
@@ -145,6 +159,25 @@ void metroflip_exit_widget_callback(GuiButtonType result, InputType type, void* 
 
     if(type == InputTypeShort) {
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
+        scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
+    }
+}
+
+void metroflip_save_widget_callback(GuiButtonType result, InputType type, void* context) {
+    Metroflip* app = context;
+    UNUSED(result);
+
+    if(type == InputTypeShort) {
+        scene_manager_next_scene(app->scene_manager, MetroflipSceneSave);
+    }
+}
+
+void metroflip_delete_widget_callback(GuiButtonType result, InputType type, void* context) {
+    Metroflip* app = context;
+    UNUSED(result);
+
+    if(type == InputTypeShort) {
+        scene_manager_next_scene(app->scene_manager, MetroflipSceneDelete);
     }
 }
 
@@ -212,19 +245,24 @@ int bit_slice_to_dec(const char* bit_representation, int start, int end) {
 
 extern int32_t metroflip(void* p) {
     UNUSED(p);
+
+    /*
+    plugin_manager_load_single(PluginManager * manager, const char* path)
+        uint32_t plugin_count = plugin_manager_get_count(manager);
+    FURI_LOG_I(TAG, "Loaded %lu plugin(s)", plugin_count);
+
+    for(uint32_t i = 0; i < plugin_count; i++) {
+        const MetroflipPlugin* plugin = plugin_manager_get_ep(manager, i);
+        FURI_LOG_I(TAG, "plugin name: %s", plugin->name);
+    }
+    */
+
     Metroflip* app = metroflip_alloc();
-    scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneRavKav);
+    scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
     scene_manager_next_scene(app->scene_manager, MetroflipSceneStart);
     view_dispatcher_run(app->view_dispatcher);
     metroflip_free(app);
     return 0;
-}
-
-void dec_to_bits(char dec_representation, char* bit_representation) {
-    int decimal = dec_representation - '0';
-    for(int i = 7; i >= 0; --i) {
-        bit_representation[i] = (decimal & (1 << i)) ? '1' : '0';
-    }
 }
 
 KeyfileManager manage_keyfiles(
@@ -286,9 +324,7 @@ KeyfileManager manage_keyfiles(
             return SUCCESSFUL;
         }
     } else {
-        FURI_LOG_I("TAG", "testing 1");
         size_t source_file_length = storage_file_size(source);
-        FURI_LOG_I("TAG", "testing 2");
 
         storage_file_close(source);
         mf_classic_key_cache_load(instance, uid, uid_len);
@@ -361,4 +397,14 @@ void handle_keyfile_case(
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewWidget);
     metroflip_app_blink_stop(app);
+}
+
+void metroflip_plugin_manager_alloc(Metroflip* app) {
+    app->resolver = composite_api_resolver_alloc();
+    composite_api_resolver_add(app->resolver, firmware_api_interface);
+    composite_api_resolver_add(app->resolver, metroflip_api_interface);
+    app->plugin_manager = plugin_manager_alloc(
+        METROFLIP_SUPPORTED_CARD_PLUGIN_APP_ID,
+        METROFLIP_SUPPORTED_CARD_PLUGIN_API_VERSION,
+        composite_api_resolver_get(app->resolver));
 }

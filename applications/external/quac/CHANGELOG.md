@@ -1,3 +1,12 @@
+## 0.8
+
+- Added Import Link Here, which creates Quac Link files
+- Scroll long action names
+
+## 0.7.2
+
+- Updated for firmware SDK 1.2
+
 ## 0.7.1
 
 - Updated for firmware SDK 1.1.12

@@ -44,7 +44,8 @@ struct ArchiveApp {
     FuriString* file_extension;
 
     WidgetElement* element;
-    FuriThread* thread;
+    FuriThread* info_thread;
+    FuriThread* search_thread;
 };
 
 void archive_show_loading_popup(ArchiveApp* context, bool show);

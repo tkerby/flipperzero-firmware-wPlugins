@@ -8,6 +8,6 @@ App(
     fap_category="Tools",
     fap_author="evillero",
     fap_weburl="https://github.com/evillero/vin_decoder",
-    fap_version="0.1",
-    fap_description="Simple VIN Decoder",
+    fap_version="0.2",
+    fap_description="Vehicle Identification Number decoder",
 )

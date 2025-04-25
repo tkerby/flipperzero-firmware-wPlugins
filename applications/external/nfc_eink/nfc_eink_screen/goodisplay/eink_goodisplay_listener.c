@@ -255,6 +255,8 @@ static NfcCommand nfc_eink_goodisplay_command_handler_02(
     NfcEinkGoodisplayScreenResponse* response,
     uint8_t* response_length) {
     //FURI_LOG_D(TAG, "02");
+    NfcCommand command = NfcCommandContinue;
+
     response->response_code = 0x02;
     NfcEinkScreenSpecificGoodisplayContext* ctx = screen->device->screen_context;
 
@@ -268,13 +270,16 @@ static NfcCommand nfc_eink_goodisplay_command_handler_02(
             memcpy(data, (uint8_t*)apdu, 2);
             screen->device->received_data += 2;
             screen->device->block_current++;
+
+            *response_length = 3;
+            response->response_code = 0x02;
+            response->apdu_resp.apdu_response.status = __builtin_bswap16(0x9000);
+        } else {
+            nfc_eink_screen_set_error(screen, NfcEinkScreenErrorUnableToWrite);
+            command = NfcCommandStop;
         }
-        FURI_LOG_D(TAG, "Data: %d", screen->device->received_data);
-        *response_length = 3;
-        response->response_code = 0x02;
-        response->apdu_resp.apdu_response.status = __builtin_bswap16(0x9000);
     }
-    return NfcCommandContinue;
+    return command;
 }
 
 static NfcCommand nfc_eink_goodisplay_command_handler_03(

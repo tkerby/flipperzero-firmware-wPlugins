@@ -30,6 +30,7 @@ void* js_flipper_create(struct mjs* mjs, mjs_val_t* object) {
     mjs_set(mjs, flipper_obj, "getModel", ~0, MJS_MK_FN(js_flipper_get_model));
     mjs_set(mjs, flipper_obj, "getName", ~0, MJS_MK_FN(js_flipper_get_name));
     mjs_set(mjs, flipper_obj, "getBatteryCharge", ~0, MJS_MK_FN(js_flipper_get_battery));
+    mjs_set(mjs, flipper_obj, "firmwareVendor", ~0, mjs_mk_string(mjs, "roguemaster", ~0, true));
     *object = flipper_obj;
 
     return (void*)1;

@@ -8,9 +8,12 @@
 #include <gui/modules/validators.h>
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
-#include <metroflip_icons.h>
 #include "api/nfc/mf_classic_key_cache.h"
-
+#include <flipper_application/plugins/composite_resolver.h>
+#include <loader/firmware_api/firmware_api.h>
+#include <flipper_application/plugins/plugin_manager.h>
+#include <loader/firmware_api/firmware_api.h>
+#include <flipper_application/flipper_application.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/loading.h>
@@ -27,6 +30,9 @@
 #include <furi_hal_bt.h>
 #include <notification/notification_messages.h>
 
+#include "scenes/desfire.h"
+#include "scenes/nfc_detected_protocols.h"
+#include "scenes/keys.h"
 #include <lib/nfc/nfc.h>
 #include <nfc/nfc_poller.h>
 #include <nfc/nfc_scanner.h>
@@ -37,13 +43,16 @@
 #include <strings.h>
 #include <flipper_application/flipper_application.h>
 #include <loader/firmware_api/firmware_api.h>
+#include <storage/storage.h>
+#include <dialogs/dialogs.h>
 
 #include "scenes/metroflip_scene.h"
 
 #include "api/calypso/calypso_i.h"
+#include "api/suica/suica_structs.h"
 
 #define KEY_MASK_BIT_CHECK(key_mask_1, key_mask_2) (((key_mask_1) & (key_mask_2)) == (key_mask_1))
-
+#define METROFLIP_FILE_EXTENSION                   ".nfc"
 typedef struct {
     Gui* gui;
     SceneManager* scene_manager;
@@ -63,6 +72,19 @@ typedef struct {
     NfcScanner* scanner;
     NfcDevice* nfc_device;
     MfClassicKeyCache* mfc_key_cache;
+    NfcDetectedProtocols* detected_protocols;
+    DesfireCardType desfire_card_type;
+    MfDesfireData* mfdes_data;
+    MfClassicData* mfc_data;
+
+    // save stuff
+    char save_buf[248];
+
+    //plugin manager
+    PluginManager* plugin_manager;
+
+    //api
+    CompositeApiResolver* resolver;
 
     // card details:
     uint32_t balance_lari;
@@ -71,10 +93,23 @@ typedef struct {
     size_t sec_num;
     float value;
     char currency[4];
-    char card_type[32];
+    const char* card_type;
+    bool auto_mode;
+    CardType mfc_card_type;
+    NfcProtocol protocol;
+    const char* file_path;
+    char delete_file_path[256];
 
     // Calypso specific context
     CalypsoContext* calypso_context;
+
+    // Suica
+    SuicaContext* suica_context;
+
+    DialogsApp* dialogs;
+
+    bool data_loaded;
+
 } Metroflip;
 
 enum MetroflipCustomEvent {
@@ -115,6 +150,7 @@ typedef enum {
     MetroflipViewTextBox,
     MetroflipViewWidget,
     MetroflipViewUart,
+    MetroflipViewCanvas,
 } MetroflipView;
 
 typedef enum {
@@ -123,16 +159,7 @@ typedef enum {
     MISSING_KEYFILE
 } KeyfileManager;
 
-KeyfileManager manage_keyfiles(
-    char uid_str[],
-    const uint8_t* uid,
-    size_t uid_len,
-    MfClassicKeyCache* instance,
-    uint64_t key_mask_a_required,
-    uint64_t key_mask_b_required);
-
-void metroflip_app_blink_start(Metroflip* metroflip);
-void metroflip_app_blink_stop(Metroflip* metroflip);
+CardType determine_card_type(Nfc* nfc, MfClassicData* mfc_data, bool data_loaded);
 
 #ifdef FW_ORIGIN_Official
 #define submenu_add_lockable_item(                                             \
@@ -140,18 +167,9 @@ void metroflip_app_blink_stop(Metroflip* metroflip);
     if(!(locked)) submenu_add_item(submenu, label, index, callback, callback_context)
 #endif
 
-void metroflip_exit_widget_callback(GuiButtonType result, InputType type, void* context);
-
-void uid_to_string(const uint8_t* uid, size_t uid_len, char* uid_str, size_t max_len);
-
-void handle_keyfile_case(
-    Metroflip* app,
-    const char* message_title,
-    const char* log_message,
-    FuriString* parsed_data,
-    char card_type[]);
-
 char* bit_slice(const char* bit_representation, int start, int end);
+
+void metroflip_plugin_manager_alloc(Metroflip* app);
 
 ///////////////////////////////// Calypso / EN1545 /////////////////////////////////
 
@@ -161,14 +179,4 @@ char* bit_slice(const char* bit_representation, int start, int end);
 
 void locale_format_datetime_cat(FuriString* out, const DateTime* dt, bool time);
 
-extern uint8_t read_file[5];
-extern uint8_t apdu_success[2];
-extern uint8_t select_app[8];
-
-void byte_to_binary(uint8_t byte, char* bits);
-
 int binary_to_decimal(const char binary[]);
-
-int bit_slice_to_dec(const char* bit_representation, int start, int end);
-
-void dec_to_bits(char dec_representation, char* bit_representation);

@@ -26,6 +26,8 @@ void nfc_maker_scene_wifi_pass_on_enter(void* context) {
         sizeof(app->small_buf2),
         true);
 
+    nfc_maker_text_input_show_illegal_symbols(text_input, true);
+
     view_dispatcher_switch_to_view(app->view_dispatcher, NfcMakerViewTextInput);
 }
 

@@ -4,6 +4,7 @@ App(
     apptype=FlipperAppType.MENUEXTERNAL,
     entry_point="dab_timer_app",
     stack_size=2 * 1024,
+    order=1,
     icon="A_DabTimer_14",
     fap_file_assets="resources",
     fap_category="Main",

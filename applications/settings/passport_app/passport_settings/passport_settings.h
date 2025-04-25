@@ -43,7 +43,7 @@ extern "C" {
 #define BG_SCROLL    13
 #define BG_SLUT      14
 
-#define PROFILE_IMG_COUNT 73
+#define PROFILE_IMG_COUNT 74
 
 #define PIMG_NONE         0
 #define PIMG_ADPOLICE     1
@@ -85,39 +85,40 @@ extern "C" {
 #define PIMG_GTAVFRANKLIN 37 // (By evillero)
 #define PIMG_GTAVMICHAEL  38 // (By evillero)
 #define PIMG_GTAVTREVOR   39 // (By evillero)
-#define PIMG_GUYFAWKES    40
-#define PIMG_HAUNTER      41
-#define PIMG_LAIN         42
-#define PIMG_LEEROY       43
-#define PIMG_MARIO        44
-#define PIMG_MARVIN       45
-#define PIMG_MORELEELLOO  46
-#define PIMG_NEUROMANCER  47
-#define PIMG_O808Benten   48
-#define PIMG_O808Gogul    49
-#define PIMG_O808Sengoku  50
-#define PIMG_PIKASLEEPY   51
-#define PIMG_PIRATE       52 // Pirate Profile Pic (By cyberartemio)
-#define PIMG_PKMNTR       53
-#define PIMG_PSYDUCK      54
-#define PIMG_RABBIT       55
-#define PIMG_SCARMLA      56
-#define PIMG_SCCOBRA      57
-#define PIMG_SCCRYBO      58
-#define PIMG_SCDOMRO      59
-#define PIMG_SCSANDRA     60
-#define PIMG_SCTARBEIGE   61
-#define PIMG_SHINKAI      62
-#define PIMG_SKULL        63
-#define PIMG_SLIME        64
-#define PIMG_SONIC        65
-#define PIMG_SPIDER       66
-#define PIMG_TANKGIRL     67
-#define PIMG_TOTORO       68
-#define PIMG_WAIFU1       69
-#define PIMG_WAIFU2       70
-#define PIMG_WAIFU3       71
-#define PIMG_WRENCH       72
+#define PIMG_GUNNMGALLY   40
+#define PIMG_GUYFAWKES    41
+#define PIMG_HAUNTER      42
+#define PIMG_LAIN         43
+#define PIMG_LEEROY       44
+#define PIMG_MARIO        45
+#define PIMG_MARVIN       46
+#define PIMG_MORELEELLOO  47
+#define PIMG_NEUROMANCER  48
+#define PIMG_O808Benten   49
+#define PIMG_O808Gogul    50
+#define PIMG_O808Sengoku  51
+#define PIMG_PIKASLEEPY   52
+#define PIMG_PIRATE       53 // Pirate Profile Pic (By cyberartemio)
+#define PIMG_PKMNTR       54
+#define PIMG_PSYDUCK      55
+#define PIMG_RABBIT       56
+#define PIMG_SCARMLA      57
+#define PIMG_SCCOBRA      58
+#define PIMG_SCCRYBO      59
+#define PIMG_SCDOMRO      60
+#define PIMG_SCSANDRA     61
+#define PIMG_SCTARBEIGE   62
+#define PIMG_SHINKAI      63
+#define PIMG_SKULL        64
+#define PIMG_SLIME        65
+#define PIMG_SONIC        66
+#define PIMG_SPIDER       67
+#define PIMG_TANKGIRL     68
+#define PIMG_TOTORO       69
+#define PIMG_WAIFU1       70
+#define PIMG_WAIFU2       71
+#define PIMG_WAIFU3       72
+#define PIMG_WRENCH       73
 
 typedef struct {
     uint8_t background;

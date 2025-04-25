@@ -1,3 +1,12 @@
+## v1.0
+- Changed app name to FlipDownloader (for official firmware)
+- Updated Marauder to 1.4
+- Added all firmwares from VGM-Library: https://github.com/jblanked/VGM-Library
+- Improved memory allocation
+
+## v0.8.1
+- Updated GitHub repository downloads
+
 ## v0.8
 - Updated FlipperHTTP to the latest library.
 - Switched to use Flipper catalog API.
@@ -34,7 +43,7 @@
 - Stability patch
 
 ## v0.2
-- Added categories: Users can now navigate through categories, and when FlipStore installs a selected app, it downloads directly to the corresponding category folder in the apps directory
+- Added categories: Users can now navigate through categories, and when FlipDownloader installs a selected app, it downloads directly to the corresponding category folder in the apps directory
 - Improved memory allocation to prevent "Out of Memory" warnings
 - Updated installation messages
 

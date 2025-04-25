@@ -6,7 +6,6 @@
 #include "settings_def.h"
 #include "confirmation_view.h"
 
-// Struct definitions must come before they are used
 typedef struct {
     const char* label; // Display label in menu
     const char* command; // UART command to send
@@ -55,8 +54,6 @@ static void app_info_ok_callback(void* context);
 static void execute_menu_command(AppState* state, const MenuCommand* command);
 static void error_callback(void* context);
 
-// Remove redundant declarations of public functions since they're already in menu.h
-
 // Sniff command definitions
 static const SniffCommandDef sniff_commands[] = {
     {"< Sniff WPS >", "capture -wps\n", "wps_capture"},
@@ -74,6 +71,23 @@ static const BeaconSpamDef beacon_spam_commands[] = {
     {"< Beacon Spam (Rickroll) >", "beaconspam -rr\n"},
     {"< Beacon Spam (Custom) >", "beaconspam"},
 };
+
+static size_t current_rgb_index = 0;
+
+static const BeaconSpamDef rgbmode_commands[] = {
+    {"< LED: Rainbow >", "rgbmode rainbow\n"},
+    {"< LED: Police >", "rgbmode police\n"},
+    {"< LED: Strobe >", "rgbmode strobe\n"},
+    {"< LED: Off >", "rgbmode off\n"},
+    {"< LED: Red >", "rgbmode red\n"},
+    {"< LED: Green >", "rgbmode green\n"},
+    {"< LED: Blue >", "rgbmode blue\n"},
+    {"< LED: Yellow >", "rgbmode yellow\n"},
+    {"< LED: Purple >", "rgbmode purple\n"},
+    {"< LED: Cyan >", "rgbmode cyan\n"},
+    {"< LED: Orange >", "rgbmode orange\n"},
+    {"< LED: White >", "rgbmode white\n"},
+    {"< LED: Pink >", "rgbmode pink\n"}};
 
 static size_t current_sniff_index = 0;
 static size_t current_beacon_index = 0;
@@ -250,6 +264,42 @@ static const MenuCommand wifi_commands[] = {
                         "- Landing page\n",
     },
     {
+        .label = "Set WebUI Creds",
+        .command = "apcred",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = true,
+        .input_text = "MySSID MyPassword",
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Set AP Credentials",
+        .details_text = "Set custom WebUI AP:\n"
+                        "Format:\nMySSID MyPassword\n"
+                        "Example: GhostNet,spooky123\n",
+    },
+    {
+        .label = "Reset WebUI Creds",
+        .command = "apcred -r\n",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = true,
+        .confirm_header = "Reset AP Credentials",
+        .confirm_text = "Reset WebUI AP to\n"
+                        "default credentials?\n"
+                        "SSID: GhostNet\n"
+                        "Password: GhostNet\n",
+        .details_header = "Reset AP Credentials",
+        .details_text = "Restores default WebUI AP:\n"
+                        "SSID: GhostNet\n"
+                        "Password: GhostNet\n"
+                        "Requires ESP reboot\n",
+    },
+    {
         .label = "Connect To WiFi",
         .command = "connect",
         .capture_prefix = NULL,
@@ -355,6 +405,23 @@ static const MenuCommand wifi_commands[] = {
                         "- Deauth Attacks\n"
                         "- Packet Captures\n"
                         "- Evil Portal\n",
+    },
+    // New variable LED effects command (this becomes index 17)
+    {
+        .label = "< LED: Rainbow >",
+        .command = "rgbmode rainbow\n",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = "LED Effects",
+        .confirm_text = NULL,
+        .details_header = "LED Effects",
+        .details_text = "Control LED effects:\n"
+                        "- rainbow, police, strobe, off, or fixed colors\n"
+                        "Cycle with Left/Right to select an effect\n",
     },
 };
 
@@ -778,6 +845,15 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         return;
     }
 
+    // Handle variable rgbmode command (new branch for index 17)
+    if(state->current_view == 1 && state->current_index == 17) {
+        const BeaconSpamDef* current_rgb = &rgbmode_commands[current_rgb_index];
+        uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
+        furi_delay_ms(5);
+        send_uart_command(current_rgb->command, state);
+        return;
+    }
+
     // Handle capture commands
     if(command->capture_prefix || command->file_ext || command->folder) {
         bool file_opened = uart_receive_data(
@@ -1027,7 +1103,8 @@ bool back_event_callback(void* context) {
                 "gpsinfo -s\n", // Stop GPS info updates
                 "startwd -s\n", // Stop wardriving
                 "blewardriving -s\n", // Stop BLE wardriving
-                "stop\n" // General stop command
+                "stop\n", // General stop command
+                "rgbmode off\n" // Stop LED effects
             };
 
             for(size_t i = 0; i < COUNT_OF(stop_commands); i++) {
@@ -1224,6 +1301,19 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 }
                 submenu_change_item_label(
                     current_menu, current_index, beacon_spam_commands[current_beacon_index].label);
+                consumed = true;
+            }
+            // Handle rgbmode command cycling (new branch for index 17)
+            else if(state->current_view == 1 && current_index == 17) {
+                if(event->key == InputKeyRight) {
+                    current_rgb_index = (current_rgb_index + 1) % COUNT_OF(rgbmode_commands);
+                } else {
+                    current_rgb_index = (current_rgb_index == 0) ?
+                                            (COUNT_OF(rgbmode_commands) - 1) :
+                                            (current_rgb_index - 1);
+                }
+                submenu_change_item_label(
+                    current_menu, current_index, rgbmode_commands[current_rgb_index].label);
                 consumed = true;
             }
             break;

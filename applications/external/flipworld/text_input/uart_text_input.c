@@ -4,6 +4,13 @@
 #include <gui/elements.h>
 #include "flip_world_icons.h"
 #include <furi.h>
+// added by Derek Jamison to lower memory usage
+#undef FURI_LOG_E
+#define FURI_LOG_E(tag, msg, ...)
+
+#undef FURI_LOG_I
+#define FURI_LOG_I(tag, msg, ...)
+//
 
 struct UART_TextInput {
     View* view;

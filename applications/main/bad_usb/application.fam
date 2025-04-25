@@ -1,13 +1,13 @@
 App(
     appid="bad_usb",
     name="Bad USB",
-    apptype=FlipperAppType.EXTERNAL,
+    apptype=FlipperAppType.MENUEXTERNAL,
     entry_point="bad_usb_app",
     stack_size=2 * 1024,
-    # icon="A_BadUsb_14",
+    icon="A_BadUsb_14",
+    order=70,
     resources="resources",
-    fap_libs=["ble_profile"],
-    fap_category="USB",
-    fap_icon="icon.png",
+    fap_icon="images/badusb_10px.png",
     fap_icon_assets="images",
+    fap_category="USB",
 )

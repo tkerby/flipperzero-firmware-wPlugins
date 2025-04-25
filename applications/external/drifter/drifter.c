@@ -32,7 +32,7 @@
 #define GAP_DEC         0.004L // Gap reduction each tick
 #define GAP_MIN         20.0L // Minimum gap size
 #define SCORE_INC_START 0.07L // Initial score increment
-#define SCORE_INC_MULT  1.05L // Score increment multiplier each tick without keypress
+#define SCORE_INC_MULT  1.04L // Score increment multiplier each tick without keypress
 #define SPEED_DIV \
     200.0L // Horizontal speed will increase by length-of-button-push in ms divided by this
 #define CHANGE_DIR 21 // How often to change direction, less is more
@@ -51,6 +51,7 @@ typedef struct {
     uint8_t head;
     int8_t dir;
     double gap;
+    uint8_t game_mode; // 0=the boat moves - 1=the walls move
 
     double boat;
     double speed;
@@ -63,6 +64,7 @@ typedef struct {
     uint32_t highscore;
 
     uint8_t dead;
+    uint8_t verydead;
 } DrifterState;
 
 typedef enum {
@@ -82,8 +84,8 @@ static uint32_t load_highscore() {
 
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        char line[8];
-        storage_file_read(file, line, 8);
+        char line[9];
+        storage_file_read(file, line, 9);
         ret = atoi(line);
     }
 
@@ -99,8 +101,8 @@ void save_highscore(uint32_t score) {
 
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-        char line[8];
-        snprintf(line, 8, "%ld", score);
+        char line[9];
+        snprintf(line, 9, "%ld", score);
         storage_file_write(file, line, strlen(line));
         storage_file_write(file, "\n", 1);
     } else {
@@ -123,24 +125,28 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
     for(int i = 0; i <= YMAX; ++i) {
         uint8_t val = drifter_state->map[pos];
         uint8_t gap = drifter_state->gap;
-        if(val > 0) {
-            canvas_draw_line(canvas, 0, i, val, i);
+        int8_t gap_start = val;
+        if(drifter_state->game_mode == 1) {
+            gap_start -= boat - 62;
         }
-        if(val < XMAX) {
-            canvas_draw_line(canvas, val + gap, i, XMAX, i);
+        if(gap_start >= 0) {
+            canvas_draw_line(canvas, 0, i, gap_start, i);
+        }
+        if(gap_start + gap <= XMAX) {
+            canvas_draw_line(canvas, gap_start + gap, i, XMAX, i);
         }
         // Handle collisions here instead of adding a loop to game step function
         if(((i >= 58 && i <= 59) && (val >= boat + 1 || val + gap <= boat + 2)) ||
            ((i >= 60 && i <= 63) && (val >= boat + 0 || val + gap <= boat + 3))) {
             drifter_state->dead = 1;
             canvas_invert_color(canvas);
-            canvas_draw_box(canvas, 0, 10, 91, 11);
+            canvas_draw_box(canvas, 0, 10, 97, 11);
             canvas_invert_color(canvas);
             if(drifter_state->score > drifter_state->highscore) {
                 canvas_draw_str(canvas, 0, 18, "New High Score!");
             } else {
-                char msg[20];
-                snprintf(msg, 20, "High Score: %ld", drifter_state->highscore);
+                char msg[21];
+                snprintf(msg, 21, "High Score: %ld", drifter_state->highscore);
                 canvas_draw_str(canvas, 0, 18, msg);
             }
         }
@@ -152,18 +158,21 @@ static void drifter_game_render_callback(Canvas* const canvas, void* ctx) {
         }
     }
 
+    if(drifter_state->game_mode == 1) {
+        boat = 62;
+    }
     canvas_draw_line(canvas, boat, 60, boat, 63);
     canvas_draw_box(canvas, boat + 1, 58, 2, 5);
     canvas_draw_line(canvas, boat + 3, 60, boat + 3, 63);
     canvas_invert_color(canvas);
-    canvas_draw_box(canvas, 0, 0, 42, 8);
+    canvas_draw_box(canvas, 0, 0, 48, 8);
 #ifdef SHOW_MULTIPLIER
     canvas_draw_box(canvas, XMAX - 41, 0, 42, 8);
 #endif
     canvas_invert_color(canvas);
     uint32_t score = drifter_state->score;
-    char s[8] = {0};
-    snprintf(s, 8, "%07ld", score);
+    char s[9] = {0};
+    snprintf(s, 9, "%08ld", score);
     canvas_draw_str(canvas, 0, 7, s);
 #ifdef SHOW_MULTIPLIER
     double multiplier = drifter_state->increment;
@@ -205,6 +214,7 @@ static void drifter_game_init_state(DrifterState* const drifter_state) {
     drifter_state->increment = SCORE_INC_START;
 
     drifter_state->dead = 0;
+    drifter_state->verydead = 0;
 }
 
 static void drifter_game_init_game(DrifterState* const drifter_state) {
@@ -228,14 +238,21 @@ static void drifter_game_init_game(DrifterState* const drifter_state) {
 
 static void drifter_game_process_game_step(DrifterState* const drifter_state) {
     UNUSED(drifter_state);
-    if(drifter_state->dead) {
+
+    // Just died
+    if(drifter_state->dead && !drifter_state->verydead) {
         uint32_t score = drifter_state->score;
         if(score > drifter_state->highscore) {
             drifter_state->highscore = score;
             save_highscore(score);
         }
+        drifter_state->verydead = 1;
+    }
+
+    if(drifter_state->dead) {
         return;
     }
+
     uint8_t head = drifter_state->head;
     uint8_t new = drifter_state->map[head];
     if(head == 0) {
@@ -266,8 +283,8 @@ static void drifter_game_process_game_step(DrifterState* const drifter_state) {
         drifter_state->speed = 0;
     }
     drifter_state->score += drifter_state->increment;
-    if(drifter_state->score > 9999999) {
-        drifter_state->score = 9999999;
+    if(drifter_state->score > 99999999) {
+        drifter_state->score = 99999999;
     }
     // Increase the speed increment by mulitplying by SCORE_INC_MULT + some gap-related amount
     drifter_state->increment *= SCORE_INC_MULT * ((GAP_START - drifter_state->gap) / 100 + 1);
@@ -291,6 +308,7 @@ int32_t drifter_app(void* p) {
     UNUSED(p);
 
     DrifterState* drifter_state = malloc(sizeof(DrifterState));
+    drifter_state->game_mode = 0;
     drifter_game_init_game(drifter_state);
 
     DrifterEvent event;
@@ -328,6 +346,9 @@ int32_t drifter_app(void* p) {
                     }
                 } else if(event.input.type == InputTypeRelease) {
                     switch(event.input.key) {
+                    case InputKeyDown:
+                        drifter_state->game_mode = !drifter_state->game_mode;
+                        break;
                     case InputKeyRight:
                         factor = 1;
                         __attribute__((fallthrough));

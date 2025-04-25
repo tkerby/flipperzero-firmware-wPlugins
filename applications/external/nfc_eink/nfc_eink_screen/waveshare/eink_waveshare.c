@@ -3,7 +3,7 @@
 #include "eink_waveshare_config.h"
 
 static NfcDevice* eink_waveshare_nfc_device_alloc() {
-    //const uint8_t uid[] = {0x46, 0x53, 0x54, 0x5E, 0x31, 0x30, 0x6D}; //FSTN10m
+    //const uint8_t uid[] = {0x46, 0x53, 0x54, 0x4E, 0x31, 0x30, 0x6D}; //FSTN10m
     const uint8_t uid[] = {0x57, 0x53, 0x44, 0x5A, 0x31, 0x30, 0x6D}; //WSDZ10m
     const uint8_t atqa[] = {0x44, 0x00};
 
@@ -44,10 +44,11 @@ static void eink_waveshare_free(NfcEinkScreenDevice* instance) {
 void eink_waveshare_parse_config(NfcEinkScreen* screen, const uint8_t* data, uint8_t data_length) {
     UNUSED(data_length);
 
-    uint8_t protocol_type = data[0];
+    uint8_t protocol_screen_type = data[0];
+    const char* name =
+        eink_waveshare_config_get_screen_name_by_protocol_screen_type(protocol_screen_type);
+    furi_string_set(screen->name, name);
 
-    screen->device->screen_type =
-        eink_waveshare_config_translate_protocol_to_screen_type(protocol_type);
     eink_waveshare_on_config_received(screen);
 }
 
