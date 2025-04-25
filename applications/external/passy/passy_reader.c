@@ -1,11 +1,13 @@
 #include "passy_reader.h"
 
+#define ASN_EMIT_DEBUG 0
+#include <lib/asn1/COM.h>
+
 #define TAG                         "PassyReader"
 #define PASSY_READER_DG1_CHUNK_SIZE 0x20
 #define PASSY_READER_DG2_CHUNK_SIZE 0x20
 
-#define ASN_EMIT_DEBUG 0
-#include <lib/asn1/COM.h>
+#define PASSY_DG2_LOOKAHEAD 120
 
 static uint8_t passport_aid[] = {0xA0, 0x00, 0x00, 0x02, 0x47, 0x10, 0x01};
 static uint8_t select_header[] = {0x00, 0xA4, 0x04, 0x0C};
@@ -101,7 +103,7 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
             FURI_LOG_W(TAG, "iso14443_4a_poller_send_block error %d", error);
             return NfcCommandStop;
         }
-    } else {
+    } else if(strcmp(passy->proto, "4b") == 0) {
         Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
         Iso14443_4bError error;
 
@@ -111,6 +113,9 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
             FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
             return NfcCommandStop;
         }
+    } else {
+        FURI_LOG_W(TAG, "Unknown protocol %s", passy->proto);
+        return NfcCommandStop;
     }
     bit_buffer_reset(tx_buffer);
     passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
@@ -390,13 +395,22 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
             } while(body_offset < body_size);
             passy_log_bitbuffer(TAG, "DG1", passy_reader->DG1);
         } else if(passy->read_type == PassyReadDG2 || passy->read_type == PassyReadDG7) {
-            uint8_t header[100];
-            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header), header);
+            uint8_t header[PASSY_DG2_LOOKAHEAD];
+            ret = passy_reader_read_binary(passy_reader, 0x00, sizeof(header) / 2, header);
             if(ret != NfcCommandContinue) {
                 view_dispatcher_send_custom_event(
                     passy->view_dispatcher, PassyCustomEventReaderError);
                 break;
             }
+            // Issue with reading whole 120 bytes at once, so we read 60 bytes and then
+            ret = passy_reader_read_binary(
+                passy_reader, sizeof(header) / 2, sizeof(header) / 2, header + sizeof(header) / 2);
+            if(ret != NfcCommandContinue) {
+                view_dispatcher_send_custom_event(
+                    passy->view_dispatcher, PassyCustomEventReaderError);
+                break;
+            }
+
             view_dispatcher_send_custom_event(
                 passy->view_dispatcher, PassyCustomEventReaderReading);
 
