@@ -139,7 +139,6 @@ NfcCommand passy_reader_select_application(PassyReader* passy_reader) {
     bit_buffer_append_bytes(tx_buffer, select_header, sizeof(select_header));
     bit_buffer_append_byte(tx_buffer, sizeof(passport_aid));
     bit_buffer_append_bytes(tx_buffer, passport_aid, sizeof(passport_aid));
-    bit_buffer_append_byte(tx_buffer, 0x00); // Le
     ret = passy_reader_send(passy_reader);
     if(ret != NfcCommandContinue) {
         return ret;
