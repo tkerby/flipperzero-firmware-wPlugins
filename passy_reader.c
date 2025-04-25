@@ -397,21 +397,23 @@ NfcCommand passy_reader_read_dg2_or_dg7(PassyReader* passy_reader) {
     FuriString* path = furi_string_alloc();
     uint8_t start = 0;
     const char* dg_type = passy->read_type == PassyReadDG2 ? "DG2" : "DG7";
+    char* dg_ext = ".bin";
 
     if(jpeg) {
-        furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpeg");
+        dg_ext = ".jpeg";
         start = (uint8_t*)jpeg - header;
     } else if(jpeg2k) {
-        furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jp2");
+        dg_ext = ".jp2";
         start = (uint8_t*)jpeg2k - header;
     } else if(jpeg2k_cs) {
-        furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".jpc");
+        dg_ext = ".jpc";
         start = (uint8_t*)jpeg2k_cs - header;
     } else {
         furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, ".bin");
         start = 0;
         passy_log_buffer(TAG, "header", header, sizeof(header));
     }
+    furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, dg_ext);
     FURI_LOG_I(TAG, "Writing offset %d to %s", start, furi_string_get_cstr(path));
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
