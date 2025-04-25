@@ -101,7 +101,7 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
             FURI_LOG_W(TAG, "iso14443_4a_poller_send_block error %d", error);
             return NfcCommandStop;
         }
-    } else {
+    } else if(strcmp(passy->proto, "4b") == 0) {
         Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
         Iso14443_4bError error;
 
@@ -111,6 +111,9 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
             FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
             return NfcCommandStop;
         }
+    } else {
+        FURI_LOG_W(TAG, "Unknown protocol %s", passy->proto);
+        return NfcCommandStop;
     }
     bit_buffer_reset(tx_buffer);
     passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
