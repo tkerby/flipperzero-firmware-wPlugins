@@ -6,7 +6,7 @@ App(
     requires=["gui"],
     stack_size=2 * 1024,
     fap_category="GPIO",
-    sources=["*.c*", "!documentation"],
+    sources=["*.c*", "!magic_numbers"],
     fap_version="1.0",
     fap_icon="uv_meter.png",
     fap_description="Measure UV radiation using the AS7331 sensor",
