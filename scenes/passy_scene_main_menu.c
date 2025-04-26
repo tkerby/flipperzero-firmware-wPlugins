@@ -7,6 +7,7 @@ enum SubmenuIndex {
     SubmenuIndexReadDG1,
     SubmenuIndexReadDG2,
     SubmenuIndexReadAdvanced,
+    SubmenuIndexKnownIssues,
     SubmenuIndexDeleteMRZInfo,
 };
 
@@ -50,6 +51,13 @@ void passy_scene_main_menu_on_enter(void* context) {
             passy);
         submenu_add_item(
             submenu,
+            "Known Issues",
+            SubmenuIndexKnownIssues,
+            passy_scene_main_menu_submenu_callback,
+            passy);
+
+        submenu_add_item(
+            submenu,
             "Delete MRZ Info",
             SubmenuIndexDeleteMRZInfo,
             passy_scene_main_menu_submenu_callback,
@@ -84,6 +92,9 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == SubmenuIndexReadAdvanced) {
             passy->read_type = PassyReadCOM;
             scene_manager_next_scene(passy->scene_manager, PassySceneRead);
+            consumed = true;
+        } else if(event.event == SubmenuIndexKnownIssues) {
+            scene_manager_next_scene(passy->scene_manager, PassySceneKnownIssues);
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
