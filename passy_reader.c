@@ -209,7 +209,7 @@ NfcCommand passy_reader_authenticate(PassyReader* passy_reader) {
     bit_buffer_append_byte(tx_buffer, sizeof(eifd) + sizeof(mifd));
     bit_buffer_append_bytes(tx_buffer, eifd, sizeof(eifd));
     bit_buffer_append_bytes(tx_buffer, mifd, sizeof(mifd));
-    bit_buffer_append_byte(tx_buffer, 0x28); // Le
+    bit_buffer_append_byte(tx_buffer, 0); // Le
 
     ret = passy_reader_send(passy_reader);
     if(ret != NfcCommandContinue) {
