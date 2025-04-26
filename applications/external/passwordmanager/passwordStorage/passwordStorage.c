@@ -3,12 +3,16 @@
 #include <string.h>
 
 // Add entry to password list
-bool password_list_add(Credential* credentials, size_t i, const char* service, const char* username, const char* password) {
-    
+bool password_list_add(
+    Credential* credentials,
+    size_t i,
+    const char* service,
+    const char* username,
+    const char* password) {
     strcpy(credentials[i].name, service);
     strcpy(credentials[i].username, username);
     strcpy(credentials[i].password, password);
-    
+
     return true;
 }
 
@@ -39,7 +43,7 @@ ssize_t storage_file_read_line(File* file, char* buffer, size_t max_len) {
 size_t read_passwords_from_file(const char* filename, Credential* credentials) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) return 0;
-    
+
     File* file = storage_file_alloc(storage);
     if(!storage_file_open(file, filename, FSAM_READ, FSOM_OPEN_EXISTING)) {
         FURI_LOG_E("PasswordManager", "Failed to open file: %s", filename);
@@ -47,10 +51,10 @@ size_t read_passwords_from_file(const char* filename, Credential* credentials) {
         furi_record_close(RECORD_STORAGE);
         return 0;
     }
-    
+
     char line[300];
     char service[100], username[100], password[100];
-    
+
     size_t i = 0;
     while(true) {
         // Read a line
@@ -58,27 +62,31 @@ size_t read_passwords_from_file(const char* filename, Credential* credentials) {
         if(storage_file_read_line(file, line, sizeof(line)) <= 0) {
             break; // End of file or error
         }
-        
+
         // Parse the line (expected format: "service,username,password")
         if(sscanf(line, "%99[^,],%99[^,],%99[^\n]", service, username, password) == 3) {
             // Add to our list
-            password_list_add(credentials, i, service, username, password);   
+            password_list_add(credentials, i, service, username, password);
             i++;
         }
     }
-    
+
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
-    
+
     return i;
 }
 
 // Write a new entry to the password file
-bool write_password_to_file(const char* filename, const char* service, const char* username, const char* password) {
+bool write_password_to_file(
+    const char* filename,
+    const char* service,
+    const char* username,
+    const char* password) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) return false;
-    
+
     File* file = storage_file_alloc(storage);
     if(!storage_file_open(file, filename, FSAM_WRITE, FSOM_OPEN_APPEND)) {
         // If file doesn't exist, create it
@@ -89,18 +97,18 @@ bool write_password_to_file(const char* filename, const char* service, const cha
             return false;
         }
     }
-    
+
     // Format the line
     char line[100];
     snprintf(line, sizeof(line), "%s,%s,%s\n", service, username, password);
-    
+
     // Write to file
     bool success = storage_file_write(file, line, strlen(line)) == strlen(line);
-    
+
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
-    
+
     return success;
 }
 
@@ -115,7 +123,7 @@ bool delete_line_from_file(const char* path, size_t line_to_delete) {
     }
 
     // Open a temporary file for writing
-    File* tmp = storage_file_alloc(storage); 
+    File* tmp = storage_file_alloc(storage);
     if(!storage_file_open(tmp, "/ext/passowordManager_tmp.txt", FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
         FURI_LOG_E("FileEdit", "Failed to open temporary file");
         storage_file_close(source);

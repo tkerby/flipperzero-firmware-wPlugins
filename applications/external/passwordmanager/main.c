@@ -5,8 +5,7 @@
 #include "passwordStorage/passwordStorage.h"
 
 static void render_main_menu(Canvas* canvas, void* model) {
-
-    if (!model) {
+    if(!model) {
         FURI_LOG_E("Password Manager", "render_main_menu: model is NULL!");
         return;
     }
@@ -37,14 +36,12 @@ static void render_main_menu(Canvas* canvas, void* model) {
 
         canvas_draw_str(canvas, 5, y, app->items[i]);
     }
-
 }
 
 static bool handle_main_menu_input(InputEvent* event, void* context) {
-
     AppContext* app = context;
 
-    if (!context) {
+    if(!context) {
         FURI_LOG_E("Password Manager", "handle_main_menu_input: context is NULL!");
         return false;
     }
@@ -63,18 +60,21 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
         } else if(event->key == InputKeyOk) {
             if(app->selected == 0) {
                 // Show stored credentials
-                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                app->credentials_number =
+                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewSavedPasswords);
                 return true;
             } else if(app->selected == 1) {
-                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
-                // Add password flow 
+                app->credentials_number =
+                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                // Add password flow
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewTextInputCredentialName);
                 app->selected = 0;
                 app->scroll_offset = 0;
                 return true;
             } else if(app->selected == 2) {
-                app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                app->credentials_number =
+                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
                 // Delete password view
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewDeletePassword);
                 app->selected = 0;
@@ -83,7 +83,7 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
             }
         }
     }
-    
+
     return false;
 }
 
@@ -100,11 +100,11 @@ int32_t password_manager_app(void* p) {
     // Initialize the app context
     AppContext* app = malloc(sizeof(AppContext));
 
-    if (!app) {
+    if(!app) {
         // Handle allocation failure
         return -1;
     }
-    
+
     // Initialize app context fields to avoid nullptr issues
     memset(app, 0, sizeof(AppContext));
 
@@ -117,22 +117,24 @@ int32_t password_manager_app(void* p) {
     app->items[1] = "Add new password";
     app->items[2] = "Delete password";
 
-    app->credentials_number = read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+    app->credentials_number =
+        read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
 
     // Initialize GUI and View Dispatcher
     app->gui = furi_record_open(RECORD_GUI);
-    if (!app->gui) {
+    if(!app->gui) {
         free(app);
         return -2;
     }
-    
+
     app->view_dispatcher = view_dispatcher_alloc();
-    if (!app->view_dispatcher) {
+    view_dispatcher_enable_queue(app->view_dispatcher);
+    if(!app->view_dispatcher) {
         furi_record_close(RECORD_GUI);
         free(app);
         return -3;
     }
-    
+
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, view_dispatcher_navigation_event_callback);
@@ -140,7 +142,7 @@ int32_t password_manager_app(void* p) {
 
     // Initialize Main Menu View
     app->main_menu_view = view_alloc();
-    if (!app->main_menu_view) {
+    if(!app->main_menu_view) {
         view_dispatcher_free(app->view_dispatcher);
         furi_record_close(RECORD_GUI);
         free(app);
@@ -164,13 +166,18 @@ int32_t password_manager_app(void* p) {
     view_dispatcher_add_view(app->view_dispatcher, ViewDeletePassword, app->delete_password_view);
 
     app->textInput_credential_name = credential_name_TextInput_alloc(app);
-    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputCredentialName, text_input_get_view(app->textInput_credential_name));
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        ViewTextInputCredentialName,
+        text_input_get_view(app->textInput_credential_name));
 
     app->textInput_username = credential_username_TextInput_alloc(app);
-    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputUsername, text_input_get_view(app->textInput_username));
+    view_dispatcher_add_view(
+        app->view_dispatcher, ViewTextInputUsername, text_input_get_view(app->textInput_username));
 
     app->textInput_password = credential_password_TextInput_alloc(app);
-    view_dispatcher_add_view(app->view_dispatcher, ViewTextInputPassword, text_input_get_view(app->textInput_password));
+    view_dispatcher_add_view(
+        app->view_dispatcher, ViewTextInputPassword, text_input_get_view(app->textInput_password));
 
     // Start with main menu
     view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
@@ -194,7 +201,7 @@ int32_t password_manager_app(void* p) {
 
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
-    
+
     free(app);
 
     return 0;

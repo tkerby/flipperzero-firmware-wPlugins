@@ -11,18 +11,16 @@
 #include "../badusb/badusb.h"
 
 static void delete_passwords_draw_callback(Canvas* canvas, void* model) {
-
     AppContext** model_ = model;
     AppContext* app = *model_;
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    
+
     // Draw header
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_str(canvas, 20, 10, "Delete Password:");
     canvas_draw_line(canvas, 0, 12, 128, 12);
-
 
     size_t max_visible = 4;
     size_t start = app->scroll_offset;
@@ -45,12 +43,13 @@ static void delete_passwords_draw_callback(Canvas* canvas, void* model) {
     if(app->credentials_number > max_visible) {
         int bar_x = 124;
         int bar_y = 14;
-        int bar_height = 48;  // total scroll area height
+        int bar_height = 48; // total scroll area height
         int indicator_height = bar_height * max_visible / app->credentials_number;
         if(indicator_height < 6) indicator_height = 6; // minimum size for visibility
 
         int scroll_range = app->credentials_number - max_visible;
-        int indicator_y = bar_y + (bar_height - indicator_height) * app->scroll_offset / scroll_range;
+        int indicator_y =
+            bar_y + (bar_height - indicator_height) * app->scroll_offset / scroll_range;
 
         // Draw scroll indicator
         canvas_set_color(canvas, ColorBlack);
@@ -64,19 +63,21 @@ static void delete_passwords_draw_callback(Canvas* canvas, void* model) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_frame(canvas, 6, 20, 114, 36);
         char confirm_text[64];
-        snprintf(confirm_text, sizeof(confirm_text), "Delete \"%s\"?", app->credentials[app->selected].name);
-        canvas_draw_str(canvas, 10, 34, confirm_text);        
+        snprintf(
+            confirm_text,
+            sizeof(confirm_text),
+            "Delete \"%s\"?",
+            app->credentials[app->selected].name);
+        canvas_draw_str(canvas, 10, 34, confirm_text);
         canvas_draw_str(canvas, 10, 48, "[OK] Yes   [Back] No");
         return;
     }
-
 }
 
 static bool delete_passwords_input_callback(InputEvent* event, void* context) {
     AppContext* app = context;
 
     if(event->type == InputTypeShort) {
-
         if(app->confirm_delete) {
             if(event->key == InputKeyOk) {
                 // Confirm deletion
@@ -127,12 +128,11 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
             return true;
         }
     }
-    
+
     return false;
 }
 
 View* delete_password_view_alloc(AppContext* app_context) {
-
     View* view = view_alloc();
 
     AppContext* app = app_context;
@@ -142,6 +142,6 @@ View* delete_password_view_alloc(AppContext* app_context) {
     *app_view = app;
     view_set_draw_callback(view, delete_passwords_draw_callback);
     view_set_input_callback(view, delete_passwords_input_callback);
-    
+
     return view;
 }

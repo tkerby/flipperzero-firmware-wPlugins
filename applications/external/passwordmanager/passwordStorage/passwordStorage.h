@@ -7,5 +7,9 @@
 #include "../main.h"
 
 size_t read_passwords_from_file(const char* filename, Credential* credentials);
-bool write_password_to_file(const char* filename, const char* service, const char* username, const char* password);
+bool write_password_to_file(
+    const char* filename,
+    const char* service,
+    const char* username,
+    const char* password);
 bool delete_line_from_file(const char* path, size_t line_to_delete);

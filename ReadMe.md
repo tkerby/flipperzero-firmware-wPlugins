@@ -37,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
+- Added: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 
 <a name="release">
 
@@ -591,6 +592,7 @@ $ ./fbt dolphin_ext
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
+- [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)

@@ -42,12 +42,13 @@ static void saved_passwords_draw_callback(Canvas* canvas, void* model) {
     if(app->credentials_number > max_visible) {
         int bar_x = 124;
         int bar_y = 14;
-        int bar_height = 48;  // total scroll area height
+        int bar_height = 48; // total scroll area height
         int indicator_height = bar_height * max_visible / app->credentials_number;
         if(indicator_height < 6) indicator_height = 6; // minimum size for visibility
 
         int scroll_range = app->credentials_number - max_visible;
-        int indicator_y = bar_y + (bar_height - indicator_height) * app->scroll_offset / scroll_range;
+        int indicator_y =
+            bar_y + (bar_height - indicator_height) * app->scroll_offset / scroll_range;
 
         // Draw scroll indicator
         canvas_set_color(canvas, ColorBlack);
@@ -86,7 +87,7 @@ static bool saved_passwords_input_callback(InputEvent* event, void* context) {
             type_string(app->credentials[app->selected].username);
             press_key(HID_KEYBOARD_TAB);
             type_string(app->credentials[app->selected].password);
-            press_key(HID_KEYBOARD_RETURN); 
+            press_key(HID_KEYBOARD_RETURN);
             release_all_keys();
             return true;
         }
@@ -96,7 +97,6 @@ static bool saved_passwords_input_callback(InputEvent* event, void* context) {
 }
 
 View* saved_passwords_view_alloc(AppContext* app_context) {
-
     View* view = view_alloc();
 
     AppContext* app = app_context;
@@ -106,6 +106,6 @@ View* saved_passwords_view_alloc(AppContext* app_context) {
     *app_view = app;
     view_set_draw_callback(view, saved_passwords_draw_callback);
     view_set_input_callback(view, saved_passwords_input_callback);
-    
+
     return view;
 }

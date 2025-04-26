@@ -3,7 +3,10 @@ App(
     name="Password Manager",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="password_manager_app",
-    requires=["gui", "usb_hid"],
     stack_size=2 * 1024,
     fap_category="Tools",
+    fap_author="Rrycbarm",
+    fap_weburl="https://github.com/Rrycbarm/flipperZeroPasswordManager",
+    fap_version="0.1",
+    fap_description="Use you flipper zero as a password manager and authenticator! The flipper stores your usernames and password and can write them on your PC acting as a keyboard!",
 )
