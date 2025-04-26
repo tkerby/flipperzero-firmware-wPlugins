@@ -43,12 +43,14 @@ void passy_scene_main_menu_on_enter(void* context) {
             SubmenuIndexReadDG2,
             passy_scene_main_menu_submenu_callback,
             passy);
-        submenu_add_item(
-            submenu,
-            "Read Advanced",
-            SubmenuIndexReadAdvanced,
-            passy_scene_main_menu_submenu_callback,
-            passy);
+        if(furi_hal_rtc_is_flag_set(FuriHalRtcFlagDebug)) {
+            submenu_add_item(
+                submenu,
+                "Read Advanced",
+                SubmenuIndexReadAdvanced,
+                passy_scene_main_menu_submenu_callback,
+                passy);
+        }
         submenu_add_item(
             submenu,
             "Known Issues",
