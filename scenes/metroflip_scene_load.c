@@ -66,36 +66,24 @@ void metroflip_scene_load_on_enter(void* context) {
                         FURI_LOG_I(TAG, "Detected: go card\n");
                         break;
                     case CARD_TYPE_UNKNOWN:
-                        app->card_type = "unknown";
+                        app->card_type = "Unknown Card";
                         //popup_set_header(popup, "Unsupported\n card", 58, 31, AlignLeft, AlignTop);
                         break;
                     default:
-                        app->card_type = "unknown";
+                        app->card_type = "Unknown Card";
                         FURI_LOG_I(TAG, "Detected: Unknown card type\n");
                         //popup_set_header(popup, "Unsupported\n card", 58, 31, AlignLeft, AlignTop);
                         break;
                     }
+                    app->is_desfire = false;
                     mf_classic_free(mfc_data);
                 } else if(strcmp(protocol_name, "Mifare DESFire") == 0) {
                     MfDesfireData* data = mf_desfire_alloc();
                     if(!mf_desfire_load(data, format, 2)) break;
+                    app->is_desfire = true;
                     app->data_loaded = true;
-                    if(clipper_verify(data)) {
-                        app->card_type = "clipper";
-                        FURI_LOG_I(TAG, "Detected: Clipper");
-                    } else if(itso_verify(data)) {
-                        app->card_type = "itso";
-                        FURI_LOG_I(TAG, "Detected: ITSO");
-                    } else if(myki_verify(data)) {
-                        app->card_type = "myki";
-                        FURI_LOG_I(TAG, "Detected: Myki");
-                    } else if(opal_verify(data)) {
-                        app->card_type = "opal";
-                        FURI_LOG_I(TAG, "Detected: Opal");
-                    } else {
-                        app->card_type = "unknown";
-                        FURI_LOG_I(TAG, "Detected: none");
-                    }
+                    app->card_type = desfire_type(data);
+
                     mf_desfire_free(data);
                     has_card_type = true;
                 } else {
@@ -108,10 +96,16 @@ void metroflip_scene_load_on_enter(void* context) {
                     FURI_LOG_I(TAG, "Detected: Suica");
                     app->data_loaded = true;
                     app->card_type = "suica";
+                    app->is_desfire = false;
                     load_suica_data(app, format);
                 }
             }
-            app->file_path = furi_string_get_cstr(file_path);
+            
+            strncpy(
+                app->file_path,
+                furi_string_get_cstr(file_path),
+                sizeof(app->file_path) - 1);
+            app->file_path[sizeof(app->file_path) - 1] = '\0';
             strncpy(
                 app->delete_file_path,
                 furi_string_get_cstr(file_path),
@@ -119,6 +113,7 @@ void metroflip_scene_load_on_enter(void* context) {
             app->delete_file_path[sizeof(app->delete_file_path) - 1] = '\0';
 
             app->data_loaded = true;
+            
         } while(0);
         flipper_format_free(format);
     }
