@@ -4,7 +4,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="uv_meter_app",
     stack_size=2 * 1024,
-    sources=["*.c*", "!documentation"],
+    sources=["*.c*", "!magic_numbers"],
     fap_icon="uv_meter.png",
     fap_icon_assets="assets",
     fap_category="GPIO/Sensors",

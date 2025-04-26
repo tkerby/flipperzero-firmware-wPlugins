@@ -4,6 +4,8 @@ A Flipper Zero application designed to measure ultraviolet (UV) radiation levels
 
 ![wiring](images/flipper_with_sensor.jpeg)
 
+
+
 ## Wiring
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
@@ -18,6 +20,7 @@ Connect the AS7331 sensor to your Flipper Zero via I²C:
 | **GND**    | GND [pin 11 or 18] |
 
 By default, the application scans all possible I²C addresses for the sensor. However, you can manually set a specific address in the settings menu, accessible by pressing the **Enter** button.
+
 
 
 ## Usage
@@ -37,6 +40,28 @@ The displayed percentages indicate how much each UV type (UV-A, UV-B, UV-C) cont
 When following the maximum daily exposure duration, the TLV/BEI guidelines ensure:
 
 > “[...] nearly all healthy workers may be repeatedly exposed without acute adverse health effects such as erythema and photokeratitis.”
+
+
+
+## Magic Numbers
+
+In the source code, specifically the [`uv_meter_data_calculate_effective_results()`](views/uv_meter_data.cpp#L668) function, you'll find some numbers that might look mysterious ("magic numbers"). They're used to calculate the maximum daily UV exposure duration based on sensor readings:
+
+```cpp
+// Weighted Spectral Effectiveness
+double w_spectral_eff_uv_a = 0.0002824;
+double w_spectral_eff_uv_b = 0.3814;
+double w_spectral_eff_uv_c = 0.6047;
+
+if(eyes_protected) { // 😎
+    // w_spectral_eff_uv_a is the same
+    w_spectral_eff_uv_b = 0.2009;
+    w_spectral_eff_uv_c = 0.2547;
+}
+```
+
+You might wonder, "Where do these numbers come from?" Good question! To uncover the full story behind these values, check out the detailed explanation in the [Magic Numbers documentation](magic_numbers/README.md).
+
 
 
 ## Disclaimer
