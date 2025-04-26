@@ -81,7 +81,7 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
         if(app->confirm_delete) {
             if(event->key == InputKeyOk) {
                 // Confirm deletion
-                delete_line_from_file("/ext/passwordManager.txt", app->selected);
+                delete_line_from_file(PASS_SAVE_PATH, app->selected);
                 app->selected = 0;
                 app->scroll_offset = 0;
                 app->confirm_delete = false;
@@ -123,7 +123,7 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
         } else if(event->key == InputKeyOk) {
             // Ask for confirmation
             app->confirm_delete = true;
-            // delete_line_from_file("/ext/passwordManager.txt", app->selected);
+            // delete_line_from_file(PASS_SAVE_PATH, app->selected);
             // view_dispatcher_switch_to_view(app->view_dispatcher, ViewMainMenu);
             return true;
         }

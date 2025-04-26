@@ -26,7 +26,7 @@ static void password_callback(void* context) {
 
     // Add to file!!!
     write_password_to_file(
-        "/ext/passwordManager.txt", app->tmp_credential_name, app->tmp_username, app->tmp_password);
+        PASS_SAVE_PATH, app->tmp_credential_name, app->tmp_username, app->tmp_password);
     strcpy(app->tmp_credential_name, "");
     strcpy(app->tmp_username, "");
     strcpy(app->tmp_password, "");

@@ -61,12 +61,12 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
             if(app->selected == 0) {
                 // Show stored credentials
                 app->credentials_number =
-                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                    read_passwords_from_file(PASS_SAVE_PATH, app->credentials);
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewSavedPasswords);
                 return true;
             } else if(app->selected == 1) {
                 app->credentials_number =
-                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                    read_passwords_from_file(PASS_SAVE_PATH, app->credentials);
                 // Add password flow
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewTextInputCredentialName);
                 app->selected = 0;
@@ -74,7 +74,7 @@ static bool handle_main_menu_input(InputEvent* event, void* context) {
                 return true;
             } else if(app->selected == 2) {
                 app->credentials_number =
-                    read_passwords_from_file("/ext/passwordManager.txt", app->credentials);
+                    read_passwords_from_file(PASS_SAVE_PATH, app->credentials);
                 // Delete password view
                 view_dispatcher_switch_to_view(app->view_dispatcher, ViewDeletePassword);
                 app->selected = 0;
