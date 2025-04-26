@@ -20,16 +20,33 @@ typedef struct {
     bool locked;
 } TransitCardInfo;
 
-TransitCardInfo cards[9] = {
+TransitCardInfo cards[26] = {
     { 0x9011F2, "clipper", "Clipper", false},
     { 0x9111F2, "clipper", "Clipper",false},
-    { 0x422201, "istanbulkart", "Istanbulkart", true},
-    { 0x050000, "tmb", "T-mobilitat Barcelona", true},
+    { 0x422201, "istanbulkart", "IST", true},
+    { 0x050000, "tmb", "T-Mobilitat BCN", true},
     { 0x314553, "opal", "Opal", false},
     { 0x0011f2, "myki", "myki", false},
     { 0x1602a0, "itso", "ITSO", false},
-    { 0x000001, "crtm", "CRTM Madrid", true},
-    { 0x010000, "marta", "MARTA Atlanta", true},
+    { 0x000001, "crtm", "CRTM MAD", true},
+    { 0x010000, "marta", "MARTA ATL", true},
+    { 0xF206B0, "metroCARD", "metroCARD ADL", true},
+    { 0x554000, "at_hop", "AT HOP AKL", true},
+    { 0xF21050, "metrocard", "metrocard CHC", true},
+    { 0xCC00CC, "COTA", "COTA Smartcard CMH", true},
+    { 0xD000D0, "rtatapp", "RTA Tapp Pay", true},
+    { 0xDD00DD, "myride", "MyRide DEN", true},
+    { 0x2211AF, "leap", "Leap DUB", true},
+    { 0xF21390, "bee", "Bee DUD", true},
+    { 0x0000F0, "omny", "OMNY JFK", true},
+    { 0xA00216, "mcard", "MCard LBA", true},
+    { 0x4F5931, "oyster", "Oyster LHR", true},
+    { 0xF210E0, "hopfastpass", "hop fastpass PDX", true},
+    { 0xF213F0, "orca", "ORCA SEA", true},
+    { 0x9034CA, "sofia", "Sofia City Card SOF", true},
+    { 0xF21201, "peggo", "peggo YWG", true},
+    { 0xFF30FF, "presto", "Presto YYZ", true},
+    { 0x002000, "presto", "Presto YYZ", true},
 };
 
 int num_cards = sizeof(cards) / sizeof(cards[0]);
