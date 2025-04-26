@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - Updated: [Passy v1.2 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
+- ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
 
 <a name="release">
 
