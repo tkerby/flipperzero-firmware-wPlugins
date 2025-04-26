@@ -93,7 +93,7 @@ bool passy_scene_main_menu_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } else if(event.event == SubmenuIndexReadAdvanced) {
             passy->read_type = PassyReadCOM;
-            scene_manager_next_scene(passy->scene_manager, PassySceneRead);
+            scene_manager_next_scene(passy->scene_manager, PassySceneAdvWarning);
             consumed = true;
         } else if(event.event == SubmenuIndexKnownIssues) {
             scene_manager_next_scene(passy->scene_manager, PassySceneKnownIssues);
