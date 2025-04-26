@@ -36,6 +36,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
+- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
