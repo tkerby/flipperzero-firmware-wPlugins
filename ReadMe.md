@@ -40,9 +40,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager) (Fixed Saving Issue)
 - Updated: [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com) (Version Only)
-- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
+- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 

@@ -20,6 +20,8 @@ static const uint8_t jpeg_header[4] = {0xFF, 0xD8, 0xFF, 0xE0};
 static const uint8_t jpeg2k_header[6] = {0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50};
 static const uint8_t jpeg2k_cs_header[4] = {0xFF, 0x4F, 0xFF, 0x51};
 
+static bool print_logs = true;
+
 size_t asn1_length(uint8_t data[3]) {
     if(data[0] <= 0x7F) {
         return data[0];
@@ -97,7 +99,9 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
         Iso14443_4aPoller* iso14443_4a_poller = passy_reader->iso14443_4a_poller;
         Iso14443_4aError error;
 
-        passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
+        if(print_logs) {
+            passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
+        }
         error = iso14443_4a_poller_send_block(iso14443_4a_poller, tx_buffer, rx_buffer);
         if(error != Iso14443_4aErrorNone) {
             FURI_LOG_W(TAG, "iso14443_4a_poller_send_block error %d", error);
@@ -107,7 +111,9 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
         Iso14443_4bPoller* iso14443_4b_poller = passy_reader->iso14443_4b_poller;
         Iso14443_4bError error;
 
-        passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
+        if(print_logs) {
+            passy_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
+        }
         error = iso14443_4b_poller_send_block(iso14443_4b_poller, tx_buffer, rx_buffer);
         if(error != Iso14443_4bErrorNone) {
             FURI_LOG_W(TAG, "iso14443_4b_poller_send_block error %d", error);
@@ -118,7 +124,9 @@ NfcCommand passy_reader_send(PassyReader* passy_reader) {
         return NfcCommandStop;
     }
     bit_buffer_reset(tx_buffer);
-    passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    if(print_logs) {
+        passy_log_bitbuffer(TAG, "NFC response", rx_buffer);
+    }
 
     // Check SW
     size_t length = bit_buffer_get_size_bytes(rx_buffer);
@@ -237,7 +245,10 @@ NfcCommand passy_reader_authenticate(PassyReader* passy_reader) {
         mbedtls_des3_crypt_cbc(&ctx, MBEDTLS_DES_DECRYPT, length - 2 - 8, iv, data, decrypted);
         mbedtls_des3_free(&ctx);
     } while(false);
-    passy_log_buffer(TAG, "decrypted", decrypted, sizeof(decrypted));
+
+    if(print_logs) {
+        passy_log_buffer(TAG, "decrypted", decrypted, sizeof(decrypted));
+    }
 
     uint8_t* rnd_icc = decrypted;
     uint8_t* rnd_ifd = decrypted + 8;
@@ -271,7 +282,9 @@ NfcCommand passy_reader_select_file(PassyReader* passy_reader, uint16_t file_id)
     }
 
     secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, passy_reader->rx_buffer);
-    passy_log_bitbuffer(TAG, "NFC response (decrypted)", passy_reader->rx_buffer);
+    if(print_logs) {
+        passy_log_bitbuffer(TAG, "NFC response (decrypted)", passy_reader->rx_buffer);
+    }
 
     return ret;
 }
@@ -297,7 +310,9 @@ NfcCommand passy_reader_read_binary(
     }
 
     secure_messaging_unwrap_rapdu(passy_reader->secure_messaging, passy_reader->rx_buffer);
-    passy_log_bitbuffer(TAG, "NFC response (decrypted)", passy_reader->rx_buffer);
+    if(print_logs) {
+        passy_log_bitbuffer(TAG, "NFC response (decrypted)", passy_reader->rx_buffer);
+    }
     const uint8_t* decrypted_data = bit_buffer_get_data(passy_reader->rx_buffer);
     memcpy(output_buffer, decrypted_data, Le);
 
@@ -482,9 +497,13 @@ NfcCommand passy_reader_state_machine(PassyReader* passy_reader) {
         } else if(passy->read_type == PassyReadDG1) {
             ret = passy_reader_read_dg1(passy_reader);
         } else if(passy->read_type == PassyReadDG2) {
+            print_logs = false;
             ret = passy_reader_read_dg2_or_dg7(passy_reader);
+            print_logs = true;
         } else if(passy->read_type == PassyReadDG7) {
+            print_logs = false;
             ret = passy_reader_read_dg2_or_dg7(passy_reader);
+            print_logs = true;
         } else {
             // Until file specific handling is implemented, we just read the header
             bit_buffer_reset(passy_reader->dg_header);
