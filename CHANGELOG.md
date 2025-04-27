@@ -1,6 +1,10 @@
 # Changelog
     
 
+## v1.2.5
+
+- Added new and missing commands to the menu
+
 ## v1.2.4
 
 - Fixed race condition and blocking of UART initialization causing freeze on launch
