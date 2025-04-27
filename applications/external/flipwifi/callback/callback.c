@@ -11,11 +11,6 @@ uint32_t callback_exit_app(void* context) {
 uint32_t callback_submenu_ap(void* context) {
     FlipWiFiApp* app = (FlipWiFiApp*)context;
     furi_check(app);
-    if(app->timer) {
-        furi_timer_stop(app->timer);
-        furi_timer_free(app->timer);
-        app->timer = NULL;
-    }
     back_from_ap = true;
     return FlipWiFiViewSubmenu;
 }
@@ -329,7 +324,7 @@ static bool callback_run_ap_mode(void* context) {
         app->fhttp->state = SENDING;
         size_t offset = 0;
         while(offset < send_buffer_size) {
-            size_t chunk_size = send_buffer_size - offset > 64 ? 64 : send_buffer_size - offset;
+            size_t chunk_size = send_buffer_size - offset > 512 ? 512 : send_buffer_size - offset;
             furi_hal_serial_tx(
                 app->fhttp->serial_handle, (const uint8_t*)(send_buffer + offset), chunk_size);
             offset += chunk_size;
