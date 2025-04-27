@@ -900,7 +900,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
         confirmation_view_set_text(
             state->confirmation_view,
-            "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.");
+            "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.\n\n");
         confirmation_view_set_ok_callback(state->confirmation_view, error_callback, state);
         confirmation_view_set_cancel_callback(state->confirmation_view, error_callback, state);
 
