@@ -6,7 +6,7 @@
 #include <storage/storage.h>
 
 #define TAG "FlipWiFi"
-#define VERSION "1.5.1"
+#define VERSION "1.5.2"
 #define VERSION_TAG TAG " " VERSION
 #define MAX_SCAN_NETWORKS 100
 #define MAX_SAVED_NETWORKS 25
