@@ -41,6 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com) (Version Only)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
+- Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 
 <a name="release">
 
