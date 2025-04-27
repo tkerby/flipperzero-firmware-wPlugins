@@ -5,7 +5,7 @@ App(
     entry_point="password_manager_app",
     requires=["gui", "usb_hid"],
     stack_size=2 * 1024,
-    author="Rrycbarm"
+    author="Rrycbarm",
     fap_category="Tools",
     fap_icon="key.png",
     fap_description="This app stores your usernames and password and can write them on your PC acting as a keyboard",
