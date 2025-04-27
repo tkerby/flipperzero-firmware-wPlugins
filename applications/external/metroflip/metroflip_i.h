@@ -102,6 +102,7 @@ typedef struct {
 
     // Calypso specific context
     CalypsoContext* calypso_context;
+    FuriString* calypso_file_data;
 
     // Suica
     SuicaContext* suica_context;

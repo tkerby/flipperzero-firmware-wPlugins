@@ -99,6 +99,14 @@ void metroflip_scene_load_on_enter(void* context) {
                     app->is_desfire = false;
                     load_suica_data(app, format);
                 }
+                if(furi_string_equal_str(card_type_str, "calypso")) {
+                    FURI_LOG_I(TAG, "Detected: Calypso");
+                    app->data_loaded = true;
+                    app->card_type = "suica";
+                    app->is_desfire = false;
+                    uint8_t* file_data = read_calypso_data(format, "2010", "01");
+                    free(file_data);
+                }
             }
 
             strncpy(app->file_path, furi_string_get_cstr(file_path), sizeof(app->file_path) - 1);
