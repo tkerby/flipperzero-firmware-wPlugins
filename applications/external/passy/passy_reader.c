@@ -413,8 +413,7 @@ NfcCommand passy_reader_read_dg2_or_dg7(PassyReader* passy_reader) {
         start = 0;
         passy_log_buffer(TAG, "header", header, sizeof(header));
     }
-    furi_string_printf(
-        path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, dg_ext);
+    furi_string_printf(path, "%s/%s%s", STORAGE_APP_DATA_PATH_PREFIX, dg_type, dg_ext);
     FURI_LOG_I(TAG, "Writing offset %d to %s", start, furi_string_get_cstr(path));
 
     Storage* storage = furi_record_open(RECORD_STORAGE);

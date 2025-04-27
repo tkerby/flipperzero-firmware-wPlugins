@@ -99,7 +99,7 @@ void metroflip_free(Metroflip* app) {
 
     //calypso data
     furi_string_free(app->calypso_file_data);
-    
+
     // key cache
     mf_classic_key_cache_free(app->mfc_key_cache);
 

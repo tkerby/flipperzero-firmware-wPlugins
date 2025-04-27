@@ -19,7 +19,7 @@ void metroflip_scene_save_result_on_enter(void* context) {
     snprintf(path, sizeof(path), "/ext/apps_data/metroflip/%s.nfc", app->save_buf);
     FURI_LOG_I("path", "path: %s", path);
     bool success;
-    if (strcmp(app->card_type, "calypso") != 0) {
+    if(strcmp(app->card_type, "calypso") != 0) {
         success = nfc_device_save(app->nfc_device, path);
         Storage* storage = furi_record_open(RECORD_STORAGE);
         FlipperFormat* ff = flipper_format_file_alloc(storage);
@@ -33,7 +33,10 @@ void metroflip_scene_save_result_on_enter(void* context) {
         Storage* storage = furi_record_open(RECORD_STORAGE);
         FlipperFormat* ff = flipper_format_file_alloc(storage);
         flipper_format_file_open_new(ff, path);
-        success = flipper_format_write_string_cstr(ff, "Filetype: Flipper Metroflip File\n Version", furi_string_get_cstr(app->calypso_file_data));
+        success = flipper_format_write_string_cstr(
+            ff,
+            "Filetype: Flipper Metroflip File\n Version",
+            furi_string_get_cstr(app->calypso_file_data));
         flipper_format_file_close(ff);
         flipper_format_free(ff);
         furi_record_close(RECORD_STORAGE);
