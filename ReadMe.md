@@ -35,12 +35,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
-- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Added: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - Updated: [FlipWifi v1.5.2 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com) (Version Only)
+- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
