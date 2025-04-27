@@ -28,6 +28,7 @@ Should you have any Intercards from other institutions, you may find the [Techni
 Running `ufbt` / `ufbt launch` is sufficient.
 
 A release to the *Flipper Application Catalog* is in preparation.
+In the meantime, you can take a look at the release section on the right and download it there.
 
 
 ## Usage
