@@ -20,6 +20,10 @@ In some of my measurements, the safe daily exposure duration, for example, tripl
 
 
 
+https://github.com/user-attachments/assets/cabb948c-9c79-4a1d-aab7-8789f0833f28
+
+
+
 ## Wiring
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
