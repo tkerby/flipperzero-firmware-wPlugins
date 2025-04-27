@@ -382,20 +382,6 @@ UartContext* uart_init(AppState* state) {
     uart->handle_rx_data_cb = handle_uart_rx_data;
     uart->handle_rx_pcap_cb = uart_storage_rx_callback;
 
-    // Initialize thread
-    uart->rx_thread = furi_thread_alloc();
-    if(uart->rx_thread) {
-        furi_thread_set_name(uart->rx_thread, "UART_Receive");
-        furi_thread_set_stack_size(uart->rx_thread, 2048);
-        furi_thread_set_context(uart->rx_thread, uart);
-        furi_thread_set_callback(uart->rx_thread, uart_worker);
-        furi_thread_start(uart->rx_thread);
-    } else {
-        FURI_LOG_E("UART", "Failed to allocate rx thread");
-        uart_free(uart);
-        return NULL;
-    }
-
     // Initialize storage
     uart->storageContext = uart_storage_init(uart);
     if(!uart->storageContext) {
@@ -416,7 +402,6 @@ UartContext* uart_init(AppState* state) {
     if(uart->serial_handle) {
         furi_hal_serial_init(uart->serial_handle, 115200);
         uart->is_serial_active = true;
-        furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
     } else {
         FURI_LOG_E("UART", "Failed to acquire serial handle");
         uart_free(uart);
@@ -427,6 +412,22 @@ UartContext* uart_init(AppState* state) {
     uart->text_manager = text_buffer_alloc();
     if(!uart->text_manager) {
         FURI_LOG_E("UART", "Failed to allocate text manager");
+        uart_free(uart);
+        return NULL;
+    }
+
+    furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
+
+    // Initialize RX thread
+    uart->rx_thread = furi_thread_alloc();
+    if(uart->rx_thread) {
+        furi_thread_set_name(uart->rx_thread, "UART_Receive");
+        furi_thread_set_stack_size(uart->rx_thread, 2048);
+        furi_thread_set_context(uart->rx_thread, uart);
+        furi_thread_set_callback(uart->rx_thread, uart_worker);
+        furi_thread_start(uart->rx_thread);
+    } else {
+        FURI_LOG_E("UART", "Failed to allocate rx thread");
         uart_free(uart);
         return NULL;
     }
