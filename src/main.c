@@ -180,27 +180,6 @@ int32_t ghost_esp_app(void* p) {
    // ---- Start Cleanup Sequence ----
    FURI_LOG_I("Ghost_ESP", "Starting cleanup sequence...");
 
-   // Free settings item contexts BEFORE removing views from dispatcher
-   if(state && state->settings_menu) {
-       FURI_LOG_I("Ghost_ESP", "Freeing settings item contexts...");
-       // Iterate through the list until we get a NULL item
-       for(uint16_t i = 0; ; i++) {
-           VariableItem* item = variable_item_list_get(state->settings_menu, i);
-           // Stop if we've reached the end of the list
-           if(!item) {
-               break;
-           }
-           void* item_context = variable_item_get_context(item);
-           if(item_context) {
-               // Only free if we know it's our VariableItemContext
-               // Check based on structure or a magic number if possible,
-               // but for now, assume all non-NULL contexts are ours to free.
-               free(item_context);
-           }
-       }
-       FURI_LOG_I("Ghost_ESP", "Settings item contexts freed.");
-   }
-
    // Send stop commands if enabled
    if(state && state->settings.stop_on_back_index) {
        FURI_LOG_I("Ghost_ESP", "Sending stop commands...");
