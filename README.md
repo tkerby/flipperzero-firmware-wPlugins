@@ -6,6 +6,20 @@ A Flipper Zero application designed to measure ultraviolet (UV) radiation levels
 
 
 
+## Motivation
+
+Have you heard that sitting behind a window protects you from sunburn? Sounds good, right? Unless you do a bit of research and find it's only *kind of* true. While potentially some UV-B (the stuff that causes immediate sunburn) gets blocked, a lot of UV-A could still get through. And guess what? UV-A plays a role in developing melanoma—a deadly form of skin cancer. Now it almost sounds even *more* dangerous: you lose the immediate “sunburn feedback” yet still face a long-term risk.
+
+It gets even more complicated because it depends on the specific type of window and possible surface treatments; I have also heard that some car windows might be better in this regard. In the end, things seem less predictable, with more questions than before. And it doesn't stop there: do my sunglasses really work? Does my shirt actually protect me? How bad is it really in the shade or on a cloudy day?
+
+What we need is **data**. Being able to actually *measure* something can be surprisingly empowering. I found the AS7331 sensor, which can independently measure UV-A, UV-B, and UV-C—and this project was born.
+
+In general, it's surprising how low the maximum daily exposure durations actually are (based on the 2024 TLVs and BEIs by the [ACGIH](https://en.wikipedia.org/wiki/American_Conference_of_Governmental_Industrial_Hygienists)). Sure, compared to direct sunlight, you're better off behind a window, in the shade, or under clouds—but probably not *as much* as you'd expect.
+
+In some of my measurements, the safe daily exposure duration, for example, tripled—but when you're starting with just 3 minutes, tripling still leaves you under 10 minutes. My takeaway? I should protect my eyes and skin more than I once thought necessary.
+
+
+
 ## Wiring
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
