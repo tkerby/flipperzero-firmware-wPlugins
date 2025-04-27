@@ -13,12 +13,6 @@ uint32_t callback_submenu_ap(void *context)
 {
     FlipWiFiApp *app = (FlipWiFiApp *)context;
     furi_check(app);
-    if (app->timer)
-    {
-        furi_timer_stop(app->timer);
-        furi_timer_free(app->timer);
-        app->timer = NULL;
-    }
     back_from_ap = true;
     return FlipWiFiViewSubmenu;
 }
@@ -214,7 +208,7 @@ bool callback_view_input_callback_saved(InputEvent *event, void *context)
             furi_delay_ms(100);
         }
 
-                // check success (if [SUCCESS] is in the response)
+        // check success (if [SUCCESS] is in the response)
         if (strstr(fhttp->last_response, "[SUCCESS]") == NULL)
         {
             char response[256];
@@ -357,7 +351,7 @@ static bool callback_run_ap_mode(void *context)
         size_t offset = 0;
         while (offset < send_buffer_size)
         {
-            size_t chunk_size = send_buffer_size - offset > 64 ? 64 : send_buffer_size - offset;
+            size_t chunk_size = send_buffer_size - offset > 512 ? 512 : send_buffer_size - offset;
             furi_hal_serial_tx(app->fhttp->serial_handle, (const uint8_t *)(send_buffer + offset), chunk_size);
             offset += chunk_size;
             furi_delay_ms(50); // cant go faster than this, no matter the chunk size

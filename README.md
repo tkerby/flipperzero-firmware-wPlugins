@@ -1,12 +1,19 @@
 FlipWiFi is the companion app for the popular FlipperHTTP flash, originally introduced in the https://github.com/jblanked/WebCrawler-FlipperZero/tree/main/assets/FlipperHTTP. It allows you to scan and save WiFi networks for use across all FlipperHTTP apps.
 
 ## Requirements
-- WiFi Developer Board, BW16, Raspberry Pi, or ESP32 Device flashed with FlipperHTTP v1.8.3 or higher: https://github.com/jblanked/FlipperHTTP
+- WiFi Developer Board, BW16, Raspberry Pi, or ESP32 Device flashed with FlipperHTTP v1.8.5 or higher: https://github.com/jblanked/FlipperHTTP
 - 2.4 GHz WiFi Access Point
+
+## Connect Online
+- Discord: https://discord.gg/5aN9qwkEc6
+- YouTube: https://www.youtube.com/@jblanked
+- Instagram: https://www.instagram.com/jblanked
+- Other: https://www.jblanked.com/social/
 
 ## Features
 
 - **Scan**: Discover nearby WiFi networks and add them to your list.
+- **AP Mode**: Create a captive portal with custom HTML and auto-input routing.
 - **Saved Access Points**: View your saved networks, manually add new ones, or configure the WiFi network to be used across all FlipperHTTP apps.
 
 ## Setup
