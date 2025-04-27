@@ -15,7 +15,7 @@
 
 // TODO: VOID HARDCODED STUFF
 #define MENU_ITEMS     3
-#define PASS_SAVE_PATH APP_ASSETS_PATH("passwordManager.txt")
+#define PASS_SAVE_PATH "/ext/passwordManager.txt"
 
 // Define view IDs
 typedef enum {
