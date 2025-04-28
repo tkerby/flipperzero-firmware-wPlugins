@@ -30,21 +30,6 @@
 #define UART_INIT_STACK_SIZE 2048
 #define UART_INIT_TIMEOUT_MS 1500 // ms
 
-static int32_t init_uart_task(void* context) {
-    AppState* state = context;
-
-    // Add some delay to let system stabilize
-    furi_delay_ms(50);
-
-    state->uart_context = uart_init(state);
-    if(state->uart_context) {
-        FURI_LOG_I("Ghost_ESP", "UART initialized successfully");
-    } else {
-        FURI_LOG_E("Ghost_ESP", "UART initialization failed");
-    }
-    return 0;
-}
-
 int32_t ghost_esp_app(void* p) {
     UNUSED(p);
 
@@ -150,24 +135,11 @@ int32_t ghost_esp_app(void* p) {
     settings_setup_gui(state->settings_menu, &state->settings_ui_context);
 
     // Start UART init in background thread
-    FuriThread* uart_init_thread =
-        furi_thread_alloc_ex("UartInit", UART_INIT_STACK_SIZE, init_uart_task, state);
-    furi_thread_start(uart_init_thread);
-
-    bool uart_init_success = false;
-    uint32_t start_time = furi_get_tick();
-    while(furi_get_tick() - start_time < UART_INIT_TIMEOUT_MS) {
-        if(furi_thread_join(uart_init_thread) == 0) {
-            uart_init_success = true;
-            break;
-        }
-        furi_delay_ms(50);
-    }
-
-    if(!uart_init_success) {
-        FURI_LOG_E("Main", "UART init timeout! OTG not ready?");
-        furi_thread_flags_set(furi_thread_get_id(uart_init_thread), WorkerEvtStop);
-        furi_thread_join(uart_init_thread);
+    state->uart_context = uart_init(state);
+    if(state->uart_context) {
+        FURI_LOG_I("Ghost_ESP", "UART initialized successfully");
+    } else {
+        FURI_LOG_E("Ghost_ESP", "UART initialization failed");
     }
 
     // Add views to dispatcher - check each component before adding
@@ -213,97 +185,100 @@ int32_t ghost_esp_app(void* p) {
     // Set up and run GUI
     Gui* gui = furi_record_open("gui");
     if(gui && state->view_dispatcher) {
+        // Reset any pending custom events that might be in the queue
+        view_dispatcher_send_custom_event(state->view_dispatcher, 0);
+        furi_delay_ms(5); // Short delay to let events clear
+
         view_dispatcher_attach_to_gui(state->view_dispatcher, gui, ViewDispatcherTypeFullscreen);
         view_dispatcher_set_navigation_event_callback(state->view_dispatcher, back_event_callback);
         view_dispatcher_set_event_callback_context(state->view_dispatcher, state);
         view_dispatcher_run(state->view_dispatcher);
     }
-    furi_record_close("gui");
 
-    // Start cleanup - first remove views
-    if(state->view_dispatcher) {
-        for(size_t i = 0; i <= 8; i++) {
-            view_dispatcher_remove_view(state->view_dispatcher, i);
+    // ---- Start Cleanup Sequence ----
+    FURI_LOG_I("Ghost_ESP", "Starting cleanup sequence...");
+
+    // Send stop commands if enabled
+    if(state && state->settings.stop_on_back_index) {
+        FURI_LOG_I("Ghost_ESP", "Sending stop commands...");
+        const char* stop_commands[] = {"stop\n"};
+        for(size_t i = 0; i < COUNT_OF(stop_commands); i++) {
+            // Check if UART context is still valid before sending
+            if(state->uart_context && state->uart_context->is_serial_active) {
+                send_uart_command(stop_commands[i], state);
+                furi_delay_ms(50); // Add delay between commands
+            } else {
+                FURI_LOG_W(
+                    "Ghost_ESP", "UART inactive, skipping stop command: %s", stop_commands[i]);
+            }
         }
+        furi_delay_ms(100); // Extra delay after sending all stop commands
     }
 
-    // Clear callbacks before cleanup
-    if(state->confirmation_view) {
-        confirmation_view_set_ok_callback(state->confirmation_view, NULL, NULL);
-        confirmation_view_set_cancel_callback(state->confirmation_view, NULL, NULL);
-    }
-
-    // Clean up UART first
-    if(state->uart_context) {
+    // Clean up UART context (this will also handle storage cleanup)
+    if(state && state->uart_context) {
+        FURI_LOG_I("Ghost_ESP", "Freeing UART context...");
         uart_free(state->uart_context);
         state->uart_context = NULL;
+        FURI_LOG_I("Ghost_ESP", "UART context freed.");
     }
 
-    // Cleanup UI components in reverse order
-    if(state->confirmation_view) {
-        confirmation_view_free(state->confirmation_view);
-        state->confirmation_view = NULL;
-    }
-    if(state->text_input) {
-        text_input_free(state->text_input);
-        state->text_input = NULL;
-    }
-    if(state->text_box) {
-        text_box_free(state->text_box);
-        state->text_box = NULL;
-    }
-    if(state->settings_actions_menu) {
-        submenu_free(state->settings_actions_menu);
-        state->settings_actions_menu = NULL;
-    }
-    if(state->settings_menu) {
-        variable_item_list_free(state->settings_menu);
-        state->settings_menu = NULL;
-    }
-    if(state->wifi_menu) {
-        submenu_free(state->wifi_menu);
-        state->wifi_menu = NULL;
-    }
-    if(state->ble_menu) {
-        submenu_free(state->ble_menu);
-        state->ble_menu = NULL;
-    }
-    if(state->gps_menu) {
-        submenu_free(state->gps_menu);
-        state->gps_menu = NULL;
-    }
-    if(state->main_menu) {
-        main_menu_free(state->main_menu);
-        state->main_menu = NULL;
-    }
-
-    // Free view dispatcher last after all views are removed
-    if(state->view_dispatcher) {
+    // Remove views from dispatcher
+    if(state && state->view_dispatcher) {
+        FURI_LOG_I("Ghost_ESP", "Removing views from dispatcher...");
+        if(state->main_menu) view_dispatcher_remove_view(state->view_dispatcher, 0);
+        if(state->wifi_menu) view_dispatcher_remove_view(state->view_dispatcher, 1);
+        if(state->ble_menu) view_dispatcher_remove_view(state->view_dispatcher, 2);
+        if(state->gps_menu) view_dispatcher_remove_view(state->view_dispatcher, 3);
+        if(state->settings_menu) view_dispatcher_remove_view(state->view_dispatcher, 4);
+        if(state->text_box) view_dispatcher_remove_view(state->view_dispatcher, 5);
+        if(state->text_input) view_dispatcher_remove_view(state->view_dispatcher, 6);
+        if(state->confirmation_view) view_dispatcher_remove_view(state->view_dispatcher, 7);
+        if(state->settings_actions_menu) view_dispatcher_remove_view(state->view_dispatcher, 8);
+        FURI_LOG_I("Ghost_ESP", "Views removed.");
         view_dispatcher_free(state->view_dispatcher);
         state->view_dispatcher = NULL;
     }
 
+    // Clear callbacks before cleanup
+    if(state && state->confirmation_view) {
+        confirmation_view_set_ok_callback(state->confirmation_view, NULL, NULL);
+        confirmation_view_set_cancel_callback(state->confirmation_view, NULL, NULL);
+    }
+
+    // Cleanup UI components
+    FURI_LOG_I("Ghost_ESP", "Freeing UI components...");
+    if(state && state->confirmation_view) confirmation_view_free(state->confirmation_view);
+    if(state && state->text_input) text_input_free(state->text_input);
+    if(state && state->text_box) text_box_free(state->text_box);
+    if(state && state->settings_actions_menu) submenu_free(state->settings_actions_menu);
+    if(state && state->settings_menu) variable_item_list_free(state->settings_menu);
+    if(state && state->wifi_menu) submenu_free(state->wifi_menu);
+    if(state && state->ble_menu) submenu_free(state->ble_menu);
+    if(state && state->gps_menu) submenu_free(state->gps_menu);
+    if(state && state->main_menu) main_menu_free(state->main_menu);
+    FURI_LOG_I("Ghost_ESP", "UI components freed.");
+    // Close GUI record after all GUI-related components are freed
+    furi_record_close("gui");
+    FURI_LOG_I("Ghost_ESP", "GUI record closed.");
+
     // Cleanup buffers
-    if(state->input_buffer) {
-        free(state->input_buffer);
-        state->input_buffer = NULL;
-    }
-    if(state->textBoxBuffer) {
-        free(state->textBoxBuffer);
-        state->textBoxBuffer = NULL;
-    }
-    // Add filter config cleanup
-    if(state->filter_config) {
-        free(state->filter_config);
-        state->filter_config = NULL;
-    }
+    FURI_LOG_I("Ghost_ESP", "Freeing buffers...");
+    if(state && state->input_buffer) free(state->input_buffer);
+    if(state && state->textBoxBuffer) free(state->textBoxBuffer);
+    if(state && state->filter_config) free(state->filter_config);
+    FURI_LOG_I("Ghost_ESP", "Buffers freed.");
 
     // Final state cleanup
-    free(state);
+    FURI_LOG_I("Ghost_ESP", "Freeing app state...");
+    if(state) free(state);
+    FURI_LOG_I("Ghost_ESP", "App state freed.");
 
-    // Return previous state of expansion
+    // Close record handles at the very end after all resources are freed
+    FURI_LOG_I("Ghost_ESP", "Restoring expansion state...");
     expansion_enable(expansion);
     furi_record_close(RECORD_EXPANSION);
+    FURI_LOG_I("Ghost_ESP", "Expansion state restored.");
 
     // Power cleanup
     if(furi_hal_power_is_otg_enabled() && !otg_was_enabled) {

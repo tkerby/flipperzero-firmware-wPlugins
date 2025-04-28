@@ -465,6 +465,13 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
     AppState* app_state = (AppState*)context;
     if(!app_state) return false;
 
+    // Skip processing events if the dispatcher is no longer running
+    // This helps prevent crashes during shutdown
+    if(!app_state->view_dispatcher) {
+        FURI_LOG_I("Settings", "Ignoring custom event during shutdown: %lu", event_id);
+        return false;
+    }
+
     switch(event_id) {
     case SETTING_CLEAR_LOGS:
         show_confirmation_dialog_ex(
@@ -524,7 +531,7 @@ bool settings_custom_event_callback(void* context, uint32_t event_id) {
                                 "Updated by: Jay Candel\n"
                                 "Built with <3";
 
-        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.2.3");
+        confirmation_view_set_header(app_state->confirmation_view, "Ghost ESP v1.2.5");
         confirmation_view_set_text(app_state->confirmation_view, info_text);
 
         // Save current view before switching

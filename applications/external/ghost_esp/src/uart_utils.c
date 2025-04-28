@@ -371,20 +371,6 @@ UartContext* uart_init(AppState* state) {
     uart->handle_rx_data_cb = handle_uart_rx_data;
     uart->handle_rx_pcap_cb = uart_storage_rx_callback;
 
-    // Initialize thread
-    uart->rx_thread = furi_thread_alloc();
-    if(uart->rx_thread) {
-        furi_thread_set_name(uart->rx_thread, "UART_Receive");
-        furi_thread_set_stack_size(uart->rx_thread, 2048);
-        furi_thread_set_context(uart->rx_thread, uart);
-        furi_thread_set_callback(uart->rx_thread, uart_worker);
-        furi_thread_start(uart->rx_thread);
-    } else {
-        FURI_LOG_E("UART", "Failed to allocate rx thread");
-        uart_free(uart);
-        return NULL;
-    }
-
     // Initialize storage
     uart->storageContext = uart_storage_init(uart);
     if(!uart->storageContext) {
@@ -398,7 +384,6 @@ UartContext* uart_init(AppState* state) {
     if(uart->serial_handle) {
         furi_hal_serial_init(uart->serial_handle, 115200);
         uart->is_serial_active = true;
-        furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
     } else {
         FURI_LOG_E("UART", "Failed to acquire serial handle");
         uart_free(uart);
@@ -413,6 +398,22 @@ UartContext* uart_init(AppState* state) {
         return NULL;
     }
 
+    furi_hal_serial_async_rx_start(uart->serial_handle, uart_rx_callback, uart, false);
+
+    // Initialize RX thread
+    uart->rx_thread = furi_thread_alloc();
+    if(uart->rx_thread) {
+        furi_thread_set_name(uart->rx_thread, "UART_Receive");
+        furi_thread_set_stack_size(uart->rx_thread, 2048);
+        furi_thread_set_context(uart->rx_thread, uart);
+        furi_thread_set_callback(uart->rx_thread, uart_worker);
+        furi_thread_start(uart->rx_thread);
+    } else {
+        FURI_LOG_E("UART", "Failed to allocate rx thread");
+        uart_free(uart);
+        return NULL;
+    }
+
     uint32_t duration = furi_get_tick() - start_time;
     FURI_LOG_I("UART", "UART initialization complete (Time taken: %lu ms)", duration);
 
@@ -422,45 +423,57 @@ UartContext* uart_init(AppState* state) {
 void uart_free(UartContext* uart) {
     if(!uart) return;
 
-    // Stop the worker thread
-    if(uart->rx_thread) {
-        furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtStop);
-        furi_thread_join(uart->rx_thread);
-        furi_thread_free(uart->rx_thread);
-        uart->rx_thread = NULL;
-    }
-
     // Clean up serial
     if(uart->serial_handle) {
+        FURI_LOG_I("UART", "Stopping serial hardware...");
         furi_hal_serial_async_rx_stop(uart->serial_handle);
         furi_hal_serial_deinit(uart->serial_handle);
         furi_hal_serial_control_release(uart->serial_handle);
         uart->serial_handle = NULL;
+        FURI_LOG_I("UART", "Serial hardware stopped.");
+    }
+
+    // Now stop and free the worker thread
+    if(uart->rx_thread) {
+        FURI_LOG_I("UART", "Signaling and joining worker thread...");
+        furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtStop);
+        furi_thread_join(uart->rx_thread);
+        furi_thread_free(uart->rx_thread);
+        uart->rx_thread = NULL;
+        FURI_LOG_I("UART", "Worker thread freed.");
     }
 
     // Free streams
     if(uart->rx_stream) {
+        FURI_LOG_I("UART", "Freeing stream buffers...");
         furi_stream_buffer_free(uart->rx_stream);
         uart->rx_stream = NULL;
     }
     if(uart->pcap_stream) {
         furi_stream_buffer_free(uart->pcap_stream);
         uart->pcap_stream = NULL;
+        FURI_LOG_I("UART", "Stream buffers freed.");
     }
 
     // Clean up storage context
     if(uart->storageContext) {
+        FURI_LOG_I("UART", "Starting storage context cleanup...");
         uart_storage_free(uart->storageContext);
         uart->storageContext = NULL;
+        FURI_LOG_I("UART", "Storage context cleanup complete.");
     }
 
     // Free text manager
     if(uart->text_manager) {
+        FURI_LOG_I("UART", "Freeing text buffer manager...");
         text_buffer_free(uart->text_manager);
         uart->text_manager = NULL;
+        FURI_LOG_I("UART", "Text buffer manager freed.");
     }
 
+    FURI_LOG_I("UART", "Freeing UART context...");
     free(uart);
+    FURI_LOG_I("UART", "UART context freed.");
 }
 
 // Stop the UART thread (typically when exiting)
