@@ -36,7 +36,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
 - Added: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
-- Updated: [FlipWifi v1.5.2 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager) (Fixed Saving Issue)
 - Updated: [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com) (Version Only)
@@ -44,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - Updated: [Ghost ESP v1.2.5 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [FlipWifi v1.5.2 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 
 <a name="release">
 
