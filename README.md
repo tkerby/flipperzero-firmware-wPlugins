@@ -35,14 +35,14 @@ In the meantime, you can take a look at the release section on the right and dow
 
 ### Reading directly from the card
 
-- Select **Read**
+- Select **Read**.
 - Place the card on the back of the flipper.
 
 
 ### Loading previously made dump
 
-- Use the Flipper app's built-in NFC App to create a dump of your card.
-- Open UDECard and select **Load**
+- Use the Flipper’s built-in NFC App to create a dump of your card.
+- Open UDECard and select **Load**.
 - Select the previously created dump.
 
 
