@@ -144,6 +144,5 @@ UDECardLoadingResult udecard_load_from_nfc_device(UDECard* udecard, NfcDevice* n
 UDECardLoadingResult udecard_load_from_path(UDECard* udecard, FuriString* path);
 
 char* udecard_loading_error_string(UDECardLoadingResult loading_result);
-char* udecard_parsing_error_string(UDECardParsingResult parsing_result);
 
 #endif

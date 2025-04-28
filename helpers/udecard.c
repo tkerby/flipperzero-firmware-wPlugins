@@ -264,18 +264,3 @@ char* udecard_loading_error_string(UDECardLoadingResult loading_result) {
         return "Unknown error.";
     }
 }
-
-char* udecard_parsing_error_string(UDECardParsingResult parsing_result) {
-#define udecard_parsing_error_string_prefix "Parsing error: "
-#define udecard_parsing_error_string_size   (sizeof(udecard_parsing_error_string_prefix) + 2)
-
-    static char error_string[udecard_parsing_error_string_size] = {0};
-    snprintf(
-        error_string,
-        udecard_parsing_error_string_size,
-        "%s%i",
-        udecard_parsing_error_string_prefix,
-        parsing_result % 100);
-
-    return error_string;
-}
