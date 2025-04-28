@@ -16,6 +16,8 @@ int32_t flip_wifi_main(void *p)
         return -1;
     }
 
+    save_char("app_version", VERSION);
+
     // check if board is connected (Derek Jamison)
     FlipperHTTP *fhttp = flipper_http_alloc();
     if (!fhttp)
@@ -31,23 +33,29 @@ int32_t flip_wifi_main(void *p)
         return -1;
     }
 
+    furi_delay_ms(100);
+
     // Try to wait for pong response.
     uint32_t counter = 10;
     while (fhttp->state == INACTIVE && --counter > 0)
     {
         FURI_LOG_D(TAG, "Waiting for PONG");
-        furi_delay_ms(100); // this causes a BusFault
+        furi_delay_ms(100);
     }
 
-    if (counter == 0)
-        easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
-
-    save_char("app_version", VERSION);
-
-    // for now use the catalog API until I implement caching on the server
-    if (update_is_ready(fhttp, true))
+    // last response should be PONG
+    if (!fhttp->last_response || strcmp(fhttp->last_response, "[PONG]") != 0)
     {
-        easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+        easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
+        FURI_LOG_E(TAG, "Failed to receive PONG");
+    }
+    else
+    {
+        // for now use the catalog API until I implement caching on the server
+        if (update_is_ready(fhttp, true))
+        {
+            easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+        }
     }
 
     flipper_http_free(fhttp);
