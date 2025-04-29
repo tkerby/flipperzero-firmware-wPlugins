@@ -25,10 +25,16 @@ Should you have any Intercards from other institutions, you may find the [Techni
 
 ## Build/Install
 
-Running `ufbt` / `ufbt launch` is sufficient.
+### Flipper Application Catalog
 
-A release to the *Flipper Application Catalog* is in preparation.
-In the meantime, you can take a look at the release section on the right and download it there.
+You can install it [from the Flipper Application Catalog](https://lab.flipper.net/apps/udecard) using the Flipper Mobile App or Flipper Lab.
+
+
+### Manual installation
+
+Alternatively, you can manually download the latest release [here on GitHub](https://github.com/hahnworks/UDECard/releases).
+
+For building/installing from source, running `ufbt` / `ufbt launch` is sufficient.
 
 
 ## Usage
