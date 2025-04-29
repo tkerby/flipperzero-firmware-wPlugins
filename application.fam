@@ -2,7 +2,6 @@ App(
     appid="udecard",
     name="UDECard",
     apptype=FlipperAppType.EXTERNAL,
-    targets=["f7"],
     entry_point="udecard_app",
     requires=["storage", "gui", "nfc"],
     sources=[
