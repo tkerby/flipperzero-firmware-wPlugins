@@ -30,41 +30,42 @@ void udecard_results_scene_on_enter(void* context) {
     widget_reset(app->widget);
 
     char ksnr_string[sizeof("KS-Nr. ") + UDECARD_KSNR_SIZE_MAX_LENGTH] = {0};
-    char member_type_string[sizeof("Member type: Employee")] = {0};
-    char member_number_string[sizeof("Employee number: ") + UDECARD_MEMBER_NUMBER_SIZE] = {0};
-    char balance_string[sizeof("Balance: 000.00 EUR")] = {0};
-    char transaction_string[sizeof("Transactions: 00000")] = {0};
-    char error_string[sizeof("(Parsing error(s): 000)")] = {0};
+    char member_type_string[sizeof("[!?] Member type: Employee")] = {0};
+    char member_number_string[sizeof("[!?] Employee No.: ") + UDECARD_MEMBER_NUMBER_SIZE] = {0};
+    char balance_string[sizeof("[!?] Balance: 000.00 EUR")] = {0};
+    char transaction_string[sizeof("[!?] Transactions: 00000")] = {0};
+    char error_string[sizeof("(Parsing error: 000)")] = {0};
 
     snprintf(ksnr_string, sizeof(ksnr_string), "KS-Nr. %s", udecard->ksnr);
     snprintf(
         member_type_string,
         sizeof(member_type_string),
-        "Member type: %s",
-        UDECARD_MEMBER_TYPE_TO_STRING(udecard->member_type));
+        "Member type: %s %s",
+        UDECARD_MEMBER_TYPE_TO_STRING(udecard->member_type),
+        udecard->parsing_result & UDECardParsingResultErrorMemberType ? "[!?]" : "");
     snprintf(
         member_number_string,
         sizeof(member_number_string),
-        "%s number: %s",
+        "%s No.: %s %s",
         UDECARD_MEMBER_TYPE_TO_STRING(udecard->member_type),
-        udecard->member_number);
+        udecard->member_number,
+        udecard->parsing_result & UDECardParsingResultErrorMemberNumber ? "[!?]" : "");
     snprintf(
         balance_string,
         sizeof(balance_string),
-        "Balance: %d.%02d EUR",
+        "Balance: %d.%02d EUR %s",
         udecard->balance / 100,
-        udecard->balance % 100);
+        udecard->balance % 100,
+        udecard->parsing_result & UDECardParsingResultErrorBalance ? "[!?]" : "");
     snprintf(
         transaction_string,
         sizeof(transaction_string),
-        "Transactions: %d",
-        udecard->transaction_count);
+        "Transactions: %d %s",
+        udecard->transaction_count,
+        udecard->parsing_result & UDECardParsingResultErrorTransactionCount ? "[!?]" : "");
     if(udecard->parsing_result != UDECardParsingResultSuccess)
         snprintf(
-            error_string,
-            sizeof(error_string),
-            "(Parsing error(s): %03i)",
-            udecard->parsing_result);
+            error_string, sizeof(error_string), "(Parsing error: %03i)", udecard->parsing_result);
 
     widget_add_string_element(app->widget, 0, 0, AlignLeft, AlignTop, FontPrimary, ksnr_string);
     widget_add_string_element(

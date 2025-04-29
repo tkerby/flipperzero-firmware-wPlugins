@@ -47,8 +47,8 @@ UDECard* udecard_alloc() {
     udecard->member_type = UDECardMemberTypeUnknown;
     memset(udecard->member_number, 0, sizeof(udecard->member_number));
 
-    udecard->balance = -1;
-    udecard->transaction_count = -1;
+    udecard->balance = 0;
+    udecard->transaction_count = 0;
 
     return udecard;
 }
@@ -126,7 +126,7 @@ bool udecard_parse_balance(UDECard* udecard) {
     int balance_1 = xor3_to_int(balance_data_1);
     int balance_2 = xor3_to_int(balance_data_2);
     if(balance_1 != balance_2 || balance_1 == -1) {
-        udecard->balance = -1;
+        udecard->balance = 0;
         return false;
     } else
         udecard->balance = balance_1;
@@ -144,7 +144,7 @@ bool udecard_parse_transaction_count(UDECard* udecard) {
     int transaction_count_1 = xor3_to_int(transaction_count_data_1);
     int transaction_count_2 = xor3_to_int(transaction_count_data_2);
     if(transaction_count_1 != transaction_count_2 || transaction_count_1 == -1) {
-        udecard->transaction_count = -1;
+        udecard->transaction_count = 0;
         return false;
     } else
         udecard->transaction_count = transaction_count_1;
