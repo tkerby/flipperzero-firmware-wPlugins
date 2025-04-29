@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [iButton Converter v1.0 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
 - OFW: PR: [SubGhz: fix sample durations when using external CC1101 #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- UL: [NFC: Ultralight C - Attempt of authentication with default key (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/898)
 
 <a name="release">
 
