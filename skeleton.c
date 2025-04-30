@@ -13,6 +13,9 @@ int hurt_timer = 0;
 Sprite* skel_walking[8];
 Sprite* skel_walking_right[8];
 
+Sprite* death[3];
+Sprite* death_right[3];
+
 
 int skel_walking_current_frame = 0;
 int skel_walking_fps = 4;
@@ -24,7 +27,6 @@ int skel_walking_right_i;
 
 
 void skeleton_sprites_load(GameManager* manager){
-    // walking
     skel_walking[0] = game_manager_sprite_load(manager, "enemies/skeleton/walking_0.fxbm");
     skel_walking[1] = game_manager_sprite_load(manager, "enemies/skeleton/walking_1.fxbm");
     skel_walking[2] = game_manager_sprite_load(manager, "enemies/skeleton/walking_2.fxbm");
@@ -34,7 +36,11 @@ void skeleton_sprites_load(GameManager* manager){
     skel_walking[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_6.fxbm");
     skel_walking[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_7.fxbm");
 
-    // walking right
+    death[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_0.fxbm");
+    death[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_1.fxbm");
+    death[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_2.fxbm");
+
+    // animations right
     skel_walking_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_0.fxbm");
     skel_walking_right[1] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_1.fxbm");
     skel_walking_right[2] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_2.fxbm");
@@ -43,6 +49,10 @@ void skeleton_sprites_load(GameManager* manager){
     skel_walking_right[5] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_5.fxbm");
     skel_walking_right[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_6.fxbm");
     skel_walking_right[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_7.fxbm");
+
+    death_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_0.fxbm");
+    death_right[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_1.fxbm");
+    death_right[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_2.fxbm");
 }
 
 void Skel_walking_animation_play(GameManager* manager, void* context) {
