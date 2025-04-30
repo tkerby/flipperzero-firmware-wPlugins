@@ -1,8 +1,8 @@
 # UV Meter
 
-A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html).
+A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html). The application is available in the [Flipper App Catalog](https://lab.flipper.net/apps/uv_meter_as7331) and comes pre-installed on some custom firmware builds, such as the [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware).
 
-![wiring](images/flipper_with_sensor.jpeg)
+![Flipper with Sensor](images/flipper_with_sensor.jpeg)
 
 
 
@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/cabb948c-9c79-4a1d-aab7-8789f0833f28
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
 
-![wiring](screenshots/wiring.png)
+![Wiring](screenshots/wiring.png)
 
 | Sensor Pin | Flipper Zero Pin   |
 |------------|--------------------|
@@ -45,7 +45,7 @@ By default, the application scans all possible I²C addresses for the sensor. Ho
 
 Once connected, the application automatically displays real-time UV measurements. The main screen shows individual UV-A, UV-B, and UV-C readings. Beneath the numbers you see the currently used unit (µW/cm², W/m² or mW/m²).
 
-![wiring](screenshots/data_1.png)
+![Data Screen](screenshots/data_1.png)
 
 Next to each UV reading is a small meter indicating the raw sensor value. If this value is too high or too low, a warning symbol will appear, signaling potential sensor overexposure or underexposure. This condition will probably result in unreliable measurements. Adjusting the **Gain** and **Exposure Time** settings (similar to camera ISO and shutter speed) at the bottom of the screen can help correct this.
 
