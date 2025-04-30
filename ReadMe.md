@@ -33,7 +33,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flame RNG v0.1 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Added: [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
 - Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
-- ESP Flasher Bump [ESP Marauder v1.4.5 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.5)
 - Added: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - Updated: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager) (Fixed Saving Issue)
@@ -46,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Authenticator/TOTP v5.18.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - Added: [UDECard v1.0.1 (By hahnworks](https://github.com/hahnworks/UDECard)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
+- ESP Flasher Bump [ESP Marauder v1.4.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.6)
 
 <a name="release">
 
