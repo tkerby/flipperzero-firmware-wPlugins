@@ -13,11 +13,14 @@ int hurt_timer = 0;
 Sprite* skel_walking[8];
 Sprite* skel_walking_right[8];
 
+
 int skel_walking_current_frame = 0;
-
 int skel_walking_fps = 4;
-
 int skel_walking_i;
+
+int skel_walking_right_current_frame = 0;
+int skel_walking_right_fps = 4;
+int skel_walking_right_i;
 
 
 void skeleton_sprites_load(GameManager* manager){
@@ -56,6 +59,23 @@ void Skel_walking_animation_play(GameManager* manager, void* context) {
     if(skel_walking_i >= skel_walking_fps) {
         skel_walking_current_frame++;
         skel_walking_i = 0;
+    }
+}
+
+void Skel_walking_right_animation_play(GameManager* manager, void* context) {
+    UNUSED(manager);
+    int total_frames = sizeof(skel_walking_right) / sizeof(skel_walking_right[0]);
+    if(skel_walking_right_current_frame == total_frames) {
+        skel_walking_right_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = skel_walking_right[skel_walking_right_current_frame];
+
+    skel_walking_right_i++;
+    if(skel_walking_right_i >= skel_walking_fps) {
+        skel_walking_right_current_frame++;
+        skel_walking_right_i = 0;
     }
 }
 
@@ -123,12 +143,20 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
                 previous_health = health;
             }
         }
+
+        
     }
 
     if (!is_hurt && player != NULL) {
         Vector player_pos = entity_pos_get(player);
-        if (player_pos.x > pos.x) pos.x += 0.5;
-        if (player_pos.x < pos.x) pos.x -= 0.5;
+        if (player_pos.x > pos.x){
+            pos.x += 0.5;
+            Skel_walking_right_animation_play(manager, context);
+        }
+        if (player_pos.x < pos.x){
+            pos.x -= 0.5;
+            Skel_walking_animation_play(manager, context);
+        }
     }
 
     entity_pos_set(self, pos);
