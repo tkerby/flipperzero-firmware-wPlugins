@@ -10,12 +10,62 @@ bool is_hurt;
 int hurt_frames_to_wait = 30;
 int hurt_timer = 0;
 
+Sprite* skel_walking[8];
+Sprite* skel_walking_right[8];
+
+int skel_walking_current_frame = 0;
+
+int skel_walking_fps = 4;
+
+int skel_walking_i;
+
+
+void skeleton_sprites_load(GameManager* manager){
+    // walking
+    skel_walking[0] = game_manager_sprite_load(manager, "enemies/skeleton/walking_0.fxbm");
+    skel_walking[1] = game_manager_sprite_load(manager, "enemies/skeleton/walking_1.fxbm");
+    skel_walking[2] = game_manager_sprite_load(manager, "enemies/skeleton/walking_2.fxbm");
+    skel_walking[3] = game_manager_sprite_load(manager, "enemies/skeleton/walking_3.fxbm");
+    skel_walking[4] = game_manager_sprite_load(manager, "enemies/skeleton/walking_4.fxbm");
+    skel_walking[5] = game_manager_sprite_load(manager, "enemies/skeleton/walking_5.fxbm");
+    skel_walking[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_6.fxbm");
+    skel_walking[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_7.fxbm");
+
+    // walking right
+    skel_walking_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_0.fxbm");
+    skel_walking_right[1] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_1.fxbm");
+    skel_walking_right[2] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_2.fxbm");
+    skel_walking_right[3] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_3.fxbm");
+    skel_walking_right[4] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_4.fxbm");
+    skel_walking_right[5] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_5.fxbm");
+    skel_walking_right[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_6.fxbm");
+    skel_walking_right[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_7.fxbm");
+}
+
+void Skel_walking_animation_play(GameManager* manager, void* context) {
+    UNUSED(manager);
+    int total_frames = sizeof(skel_walking) / sizeof(skel_walking[0]);
+    if(skel_walking_current_frame == total_frames) {
+        skel_walking_current_frame = 0;
+    }
+
+    PlayerContext* playerContext = (PlayerContext*)context;
+    playerContext->sprite = skel_walking[skel_walking_current_frame];
+
+    skel_walking_i++;
+    if(skel_walking_i >= skel_walking_fps) {
+        skel_walking_current_frame++;
+        skel_walking_i = 0;
+    }
+}
+
 void skeleton_spawn(Level *level, GameManager *manager){
     Entity* skeleton = level_add_entity(level, &skel_desc);
     entity_pos_set(skeleton, (Vector){30, 30});
     entity_collider_add_rect(skeleton, 15, 31);
 
     SkeletonContext* skeleton_context = entity_context_get(skeleton);
+    skeleton_sprites_load(manager);
     skeleton_context->sprite = game_manager_sprite_load(manager, "enemies/skeleton/walking_0.fxbm");
 
     previous_health = health;

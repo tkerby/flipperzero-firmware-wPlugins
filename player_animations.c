@@ -33,14 +33,12 @@ int idle_right_i;
 int sword_right_i;
 int walking_right_i;
 
-
-void Jumping_animations_load(GameManager *manager){
+void Jumping_animations_load(GameManager* manager) {
     jumping[0] = game_manager_sprite_load(manager, "jumping/jumping.fxbm");
     jumping[1] = game_manager_sprite_load(manager, "jumping/jumping_right.fxbm");
     jumping[3] = game_manager_sprite_load(manager, "jumping/falling.fxbm");
     jumping[4] = game_manager_sprite_load(manager, "jumping/falling_right.fxbm");
 }
-
 
 void Idle_animation_load(GameManager* manager) {
     idle[0] = game_manager_sprite_load(manager, "other/player.fxbm");
@@ -74,14 +72,20 @@ void Idle_animation_right_load(GameManager* manager) {
     idle_right[1] = game_manager_sprite_load(manager, "other/idle_right.fxbm");
 }
 
-void Swinging_sword_right_animation_load(GameManager *manager){
+void Swinging_sword_right_animation_load(GameManager* manager) {
     sword_swing_right[0] = game_manager_sprite_load(manager, "other/player_right.fxbm");
-    sword_swing_right[1] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
-    sword_swing_right[2] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.fxbm");
-    sword_swing_right[3] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
-    sword_swing_right[4] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
-    sword_swing_right[5] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
-    sword_swing_right[6] = game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
+    sword_swing_right[1] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_1.fxbm");
+    sword_swing_right[2] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_2.fxbm");
+    sword_swing_right[3] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_3.fxbm");
+    sword_swing_right[4] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_4.fxbm");
+    sword_swing_right[5] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_5.fxbm");
+    sword_swing_right[6] =
+        game_manager_sprite_load(manager, "swinging_sword/swinging_sword_right_6.fxbm");
 }
 
 void Walking_right_animation_load(GameManager* manager) {
@@ -112,10 +116,10 @@ void Idle_animation_play(GameManager* manager, void* context) {
     }
 }
 
-void Swinging_sword_animation_play(GameManager *manager, void *context){
+void Swinging_sword_animation_play(GameManager* manager, void* context) {
     UNUSED(manager);
     int total_frames = sizeof(sword_swing) / sizeof(sword_swing[0]);
-    
+
     PlayerContext* playerContext = (PlayerContext*)context;
     playerContext->sprite = sword_swing[swinging_sword_current_frame];
     if(swinging_sword_current_frame == total_frames) {
@@ -123,15 +127,16 @@ void Swinging_sword_animation_play(GameManager *manager, void *context){
         playerContext->is_swinging_sword = false;
     }
 
-
     sword_i++;
     if(sword_i >= swinging_sword_fps) {
         swinging_sword_current_frame++;
         sword_i = 0;
     }
 
-    if(swinging_sword_current_frame == 5) playerContext->is_hitting = true;
-    else playerContext->is_hitting = false;
+    if(swinging_sword_current_frame == 5)
+        playerContext->is_hitting = true;
+    else
+        playerContext->is_hitting = false;
 }
 
 void Walking_animation_play(GameManager* manager, void* context) {
@@ -152,7 +157,7 @@ void Walking_animation_play(GameManager* manager, void* context) {
 }
 
 // facing right animations
-void Idle_animation_right_play(GameManager *manager, void *context){
+void Idle_animation_right_play(GameManager* manager, void* context) {
     UNUSED(manager);
     int total_frames = sizeof(idle_right) / sizeof(idle_right[0]);
     if(idle_right_current_frame == total_frames) {
@@ -169,9 +174,9 @@ void Idle_animation_right_play(GameManager *manager, void *context){
     }
 }
 
-void Swinging_sword_animation_right_play(GameManager *manager, void *context){
+void Swinging_sword_animation_right_play(GameManager* manager, void* context) {
     UNUSED(manager);
-    
+
     PlayerContext* playerContext = (PlayerContext*)context;
     playerContext->sprite = sword_swing_right[swinging_sword_right_current_frame];
 
@@ -187,13 +192,14 @@ void Swinging_sword_animation_right_play(GameManager *manager, void *context){
         sword_right_i = 0;
     }
 
-
-    if(swinging_sword_right_current_frame == 5) playerContext->is_hitting = true;
-    else playerContext->is_hitting = false;
+    if(swinging_sword_right_current_frame == 5)
+        playerContext->is_hitting = true;
+    else
+        playerContext->is_hitting = false;
 }
 
-void Walking_right_animation_play(GameManager *manager, void *context){
-    UNUSED(manager); 
+void Walking_right_animation_play(GameManager* manager, void* context) {
+    UNUSED(manager);
     int total_frames = sizeof(walking_right) / sizeof(walking_right[0]);
     if(walking_right_current_frame == total_frames) {
         walking_right_current_frame = 0;
