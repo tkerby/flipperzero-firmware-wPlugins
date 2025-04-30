@@ -47,6 +47,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - ESP Flasher Bump [ESP Marauder v1.4.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.6)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
+- Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 
 <a name="release">
 
