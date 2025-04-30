@@ -5,13 +5,6 @@ static const char* known_issues_text = "Passy only uses BAC, not PACE for auth\n
                                        "  - German Personalausweis\n"
                                        "  - German Aufenthaltstitel post 2015\n";
 
-void passy_scene_known_issues_widget_callback(GuiButtonType result, InputType type, void* context) {
-    Passy* passy = context;
-    if(type == InputTypeShort) {
-        view_dispatcher_send_custom_event(passy->view_dispatcher, result);
-    }
-}
-
 void passy_scene_known_issues_on_enter(void* context) {
     Passy* passy = context;
 
