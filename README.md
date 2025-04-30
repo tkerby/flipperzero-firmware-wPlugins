@@ -2,7 +2,11 @@
 
 Flipper Zero application to analyse student ID cards from the University of Duisburg-Essen (Intercard)
 
+> [!TIP]
+> Download UDECard [directly from the Flipper Application Catalog](https://lab.flipper.net/apps/udecard)
+
 ![Screen capture of UDECard](.readme_assets/animation.gif)
+
 
 ## Motivation
 
