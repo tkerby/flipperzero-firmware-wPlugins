@@ -40,7 +40,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.2.5 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [FlipWifi v1.5.2 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Authenticator/TOTP v5.18.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - Added: [UDECard v1.0.1 (By hahnworks](https://github.com/hahnworks/UDECard)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
@@ -49,6 +48,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - Updated: [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Added: [iButton Converter v1.0 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
+- OFW: PR: [SubGhz: fix sample durations when using external CC1101 #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
+- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 
 <a name="release">
 
@@ -642,7 +643,7 @@ $ ./fbt dolphin_ext
 - [Oscilloscope v0.4 (By anfractuosity)](https://github.com/anfractuosity/flipperscope)
 - [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board`
 - [Sentry Safe v1.3 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/sentry_safe) from [UberGuidoZ](https://github.com/UberGuidoZ/)
-- [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - [SERMA CAN-FD-HS v1.0 (By serma-safety-security)](https://github.com/serma-safety-security/Flipper-Zero-CAN-FD-HS-SW) `Req: SERMA CAN FD GPIO Board`
 - [Servotester v1.2 (By spin7ion)](https://github.com/spin7ion/flipper-servotester)
 - [ServoTester (2) v0.2 (By mhasbini)](https://github.com/mhasbini/ServoTesterApp)
