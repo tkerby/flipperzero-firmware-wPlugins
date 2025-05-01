@@ -33,4 +33,4 @@ Special thanks to [li0ard](https://github.com/li0ard) for implementing the Cyfra
 ## References
 
 - [Partial list of intercoms and suitable recodings](https://www.rmxlabs.ru/products/rw_keys/conv_table/)
-- [Article about conversions from Cyfral to Metakom](https://domofondocs.blogspot.com/2021/12/cyfral-cyfral-dallas.html)
+- [Article about conversions from Cyfral to Dallas](https://domofondocs.blogspot.com/2021/12/cyfral-cyfral-dallas.html)
