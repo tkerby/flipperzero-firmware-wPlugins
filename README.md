@@ -29,7 +29,7 @@ Kamkar's technique reduces the problem space dramatically — from over **60,000
 [Samy Kamkar's Page](https://samy.pl/masterlock/)
 
 ## 🧠 How It Works
-This Flipper Zero app allows you to input physical resistance value(s) and "lock positions" observed from turning the lock dial. The app uses that data to run Kamkar’s deduction algorithm and outputs a short list of combinations. You can find information about how such works by watching Samy Kamkar's wonderful [video(s)](https://www.youtube.com/watch?v=qkolWO6pAL8)!
+This Flipper Zero app allows you to input physical resistance value(s) and "lock positions" observed from turning the lock dial. The app uses that data to run Kamkar’s approach to output a short list of combinations. You can find information about how such works by watching Samy Kamkar's wonderful [video(s)](https://www.youtube.com/watch?v=qkolWO6pAL8)!
 
 # Usage 🔧 
 ```
