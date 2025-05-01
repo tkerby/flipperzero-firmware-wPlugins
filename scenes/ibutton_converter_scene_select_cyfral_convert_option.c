@@ -5,6 +5,7 @@
 
 enum SubmenuIndex {
     SubmenuIndexC1,
+    SubmenuIndexC2,
     SubmenuIndexC3,
     SubmenuIndexC4,
     SubmenuIndexC5,
@@ -18,6 +19,9 @@ void ibutton_converter_scene_select_cyfral_convert_option_on_enter(void* context
 
     submenu_add_item(
         submenu, "C1", SubmenuIndexC1, ibutton_converter_submenu_callback, ibutton_converter);
+
+    submenu_add_item(
+        submenu, "C2", SubmenuIndexC2, ibutton_converter_submenu_callback, ibutton_converter);
 
     submenu_add_item(
         submenu, "C3", SubmenuIndexC3, ibutton_converter_submenu_callback, ibutton_converter);
@@ -76,6 +80,8 @@ bool ibutton_converter_scene_select_cyfral_convert_option_on_event(
 
         if(event.event == SubmenuIndexC1) {
             cyfral_to_dallas_c1(cyfral_data, dallas_editable_data.ptr);
+        } else if(event.event == SubmenuIndexC2) {
+            cyfral_to_dallas_c2(cyfral_data, dallas_editable_data.ptr);
         } else if(event.event == SubmenuIndexC3) {
             cyfral_to_dallas_c3(cyfral_data, dallas_editable_data.ptr);
         } else if(event.event == SubmenuIndexC4) {

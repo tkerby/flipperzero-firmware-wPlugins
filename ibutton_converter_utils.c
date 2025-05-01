@@ -63,7 +63,7 @@ void cyfral_to_dallas_c1(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     dallas_code[7] = maxim_crc8(dallas_code, 7, 0);
 }
 
-void cyfral_to_dallas_c7(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
+void cyfral_to_dallas_c2(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     dallas_code[0] = 0x01;
 
     uint8_t first_hi = (cyfral_code[0] >> 4) & 0x0F;
