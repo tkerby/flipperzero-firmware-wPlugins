@@ -13,17 +13,27 @@ int hurt_timer = 0;
 Sprite* skel_walking[8];
 Sprite* skel_walking_right[8];
 
-Sprite* death[3];
-Sprite* death_right[3];
+Sprite* skel_death[3];
+Sprite* skel_death_right[3];
 
+
+bool is_skel_facing_right;
 
 int skel_walking_current_frame = 0;
 int skel_walking_fps = 4;
 int skel_walking_i;
 
 int skel_walking_right_current_frame = 0;
-int skel_walking_right_fps = 4;
+int skel_walking_right_fps = 6;
 int skel_walking_right_i;
+
+int skel_death_current_frame = 0;
+int skel_death_fps = 6;
+int skel_death_i;
+
+int skel_death_right_current_frame = 0;
+int skel_death_right_fps = 8;
+int skel_death_right_i;
 
 
 void skeleton_sprites_load(GameManager* manager){
@@ -36,9 +46,9 @@ void skeleton_sprites_load(GameManager* manager){
     skel_walking[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_6.fxbm");
     skel_walking[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_7.fxbm");
 
-    death[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_0.fxbm");
-    death[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_1.fxbm");
-    death[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_2.fxbm");
+    skel_death[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_0.fxbm");
+    skel_death[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_1.fxbm");
+    skel_death[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_2.fxbm");
 
     // animations right
     skel_walking_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_0.fxbm");
@@ -50,9 +60,9 @@ void skeleton_sprites_load(GameManager* manager){
     skel_walking_right[6] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_6.fxbm");
     skel_walking_right[7] = game_manager_sprite_load(manager, "enemies/skeleton/walking_right_7.fxbm");
 
-    death_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_0.fxbm");
-    death_right[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_1.fxbm");
-    death_right[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_2.fxbm");
+    skel_death_right[0] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_0.fxbm");
+    skel_death_right[1] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_1.fxbm");
+    skel_death_right[2] = game_manager_sprite_load(manager, "enemies/skeleton/death_right_2.fxbm");
 }
 
 void Skel_walking_animation_play(GameManager* manager, void* context) {
@@ -89,6 +99,45 @@ void Skel_walking_right_animation_play(GameManager* manager, void* context) {
     }
 }
 
+void Skel_death_animation_play(GameManager* manager, void* context, Entity* self) {
+    UNUSED(manager);
+    Level* level = game_manager_current_level_get(manager);
+
+    SkeletonContext* skelContext = (SkeletonContext*)context;
+    skelContext->sprite = skel_death[skel_death_current_frame];
+
+    int total_frames = sizeof(skel_death) / sizeof(skel_death[0]);
+
+    skel_death_i++;
+    if(skel_death_i >= skel_death_fps) {
+        skel_death_current_frame++;
+        skel_death_i = 0;
+    }
+
+    if(skel_death_current_frame == total_frames)
+        level_remove_entity(level, self);
+}
+
+void Skel_death_right_animation_play(GameManager* manager, void* context, Entity* self) {
+    UNUSED(manager);
+    Level* level = game_manager_current_level_get(manager);
+
+    SkeletonContext* skelContext = (SkeletonContext*)context;
+    skelContext->sprite = skel_death_right[skel_death_right_current_frame];
+
+    int total_frames = sizeof(skel_death_right) / sizeof(skel_death_right[0]);
+
+    skel_death_right_i++;
+    if(skel_death_right_i >= skel_death_right_fps) {
+        skel_death_right_current_frame++;
+        skel_death_right_i = 0;
+    }
+
+    if(skel_death_right_current_frame == total_frames)
+        level_remove_entity(level, self);
+}
+
+
 void skeleton_spawn(Level *level, GameManager *manager){
     Entity* skeleton = level_add_entity(level, &skel_desc);
     entity_pos_set(skeleton, (Vector){30, 30});
@@ -105,7 +154,6 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
     Vector pos = entity_pos_get(self);
     SkeletonContext* skeleton_context = entity_context_get(self);
     GameContext* game_context = game_manager_game_context_get(manager);
-    Level* level = game_manager_current_level_get(manager);
 
     if((pos.y + 31) >= game_context->ground_hight && skeleton_context->Yvelocity >= 0) {
         pos.y = game_context->ground_hight - 31;
@@ -157,14 +205,16 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
         
     }
 
-    if (!is_hurt && player != NULL) {
+    if (!is_hurt && !is_dead && player != NULL) {
         Vector player_pos = entity_pos_get(player);
         if (player_pos.x > pos.x){
             pos.x += 0.5;
+            is_skel_facing_right = false;
             Skel_walking_right_animation_play(manager, context);
         }
         if (player_pos.x < pos.x){
             pos.x -= 0.5;
+            is_skel_facing_right = true;
             Skel_walking_animation_play(manager, context);
         }
     }
@@ -172,7 +222,12 @@ void skel_update(Entity* self, GameManager* manager, void* context) {
     entity_pos_set(self, pos);
 
     if(health <= 0){
-        level_remove_entity(level, self);
+        is_dead = true;
+    }
+
+    if(is_dead){
+        if(is_skel_facing_right) Skel_death_animation_play(manager,context, self);
+        if(!is_skel_facing_right) Skel_death_right_animation_play(manager,context, self);
     }
 
     UNUSED(manager);
