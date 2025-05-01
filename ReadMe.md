@@ -45,12 +45,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - ESP Flasher Bump [ESP Marauder v1.4.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.6)
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 - Updated: [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Added: [iButton Converter v1.0 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
 - OFW: PR: [SubGhz: fix sample durations when using external CC1101 #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - UL: [NFC: Ultralight C - Attempt of authentication with default key (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/898)
+- Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
 
 <a name="release">
 
