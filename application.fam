@@ -15,7 +15,7 @@ App(
     fap_icon="assets/icon.png",
     fap_category="iButton",
     fap_author="@leptopt1los",
-    fap_weburl="https://github.com/Leptopt1los/ibutton_converter"
+    fap_weburl="https://github.com/Leptopt1los/ibutton_converter",
     fap_description="Cyfral and Metakom to Dallas converter",
     fap_icon_assets="assets",
 )
