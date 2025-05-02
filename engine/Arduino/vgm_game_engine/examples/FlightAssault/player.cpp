@@ -73,8 +73,6 @@ static const uint8_t bonus_life_icon[] PROGMEM = {0x36, 0x49, 0x41, 0x22, 0x14, 
 
 bool running = true;
 
-static void clear(Game *game) { game->draw->clear(Vector(0, 0), game->size, game->bg_color); }
-
 void shoot()
 {
     for (int i = 0; i < MAX_BULLETS; ++i)
@@ -121,7 +119,6 @@ static void restart_game(Game *game)
         enemy_y[i] = enemy_y[i] < 50 ? 50 : enemy_y[i];
         enemy_speed[i] = rand() % 1 + 1;
     }
-    clear(game);
 }
 static void player_update(Entity *self, Game *game)
 {
@@ -221,7 +218,6 @@ static void player_update(Entity *self, Game *game)
                 if (player_lives <= 0)
                 {
                     running = false;
-                    clear(game);
                 }
             }
             enemy_x[i] = SCREEN_WIDTH;
@@ -235,14 +231,11 @@ static void player_update(Entity *self, Game *game)
 }
 static void player_render(Entity *self, Draw *draw, Game *game)
 {
-    // canvas_clear(canvas);
-    // clear(game);
 
     // Draw game over message if necessary
     if (player_lives <= 0)
     {
         // canvas_draw_str(canvas, 30, 30, "Game Over");
-        draw->clear(Vector(135, 120), Vector(100, 10), game->bg_color);
         draw->text(Vector(135, 120), "Game Over", game->fg_color);
         return;
     }
@@ -250,7 +243,6 @@ static void player_render(Entity *self, Draw *draw, Game *game)
     // // Draw player
     // canvas_set_bitmap_mode(canvas, true);
     // canvas_draw_xbm(canvas, player_x, player_y, PLAYER_WIDTH, PLAYER_HEIGHT, player_bitmap);
-    draw->clear(Vector(player_x_old, player_y_old), Vector(PLAYER_WIDTH, PLAYER_HEIGHT), game->bg_color);
     draw->display->drawBitmap(player_x, player_y, player_bitmap, PLAYER_WIDTH, PLAYER_HEIGHT, TFT_DARKCYAN);
 
     // // Draw enemies
@@ -259,7 +251,6 @@ static void player_render(Entity *self, Draw *draw, Game *game)
         // canvas_set_bitmap_mode(canvas, true);
         // canvas_draw_xbm(canvas, enemy_x[i], enemy_y[i], 9, 8, enemy_bitmap);
         // canvas_set_bitmap_mode(canvas, false);
-        draw->clear(Vector(enemy_x_old[i], enemy_y_old[i]), Vector(9, 8), game->bg_color);
         draw->display->drawBitmap(enemy_x[i], enemy_y[i], enemy_bitmap, 9, 8, TFT_RED);
     }
 
@@ -275,14 +266,12 @@ static void player_render(Entity *self, Draw *draw, Game *game)
             // canvas_set_bitmap_mode(canvas, true);
             // canvas_draw_box(canvas, bullet_center_x, bullet_center_y, BULLET_WIDTH, BULLET_HEIGHT);
             // canvas_set_bitmap_mode(canvas, false);
-            draw->clear(Vector(bullet_center_x_old, bullet_center_y_old), Vector(BULLET_WIDTH, BULLET_HEIGHT), game->bg_color);
             draw->display->fillRect(bullet_center_x, bullet_center_y, BULLET_WIDTH, BULLET_HEIGHT, TFT_BLACK);
         }
         else if (bullet_was_active[i])
         {
             int bullet_center_x_old = bullet_x_old[i] - BULLET_WIDTH / 2;
             int bullet_center_y_old = bullet_y_old[i] - BULLET_HEIGHT / 2;
-            draw->clear(Vector(bullet_center_x_old, bullet_center_y_old), Vector(BULLET_WIDTH, BULLET_HEIGHT), game->bg_color);
             bullet_was_active[i] = false;
         }
     }
@@ -292,7 +281,6 @@ static void player_render(Entity *self, Draw *draw, Game *game)
     for (int i = 0; i < player_lives; ++i)
     {
         // canvas_draw_xbm(canvas, SCREEN_WIDTH - (i + 1) * 12, 0, 7, 7, life_icon);
-        draw->clear(Vector(SCREEN_WIDTH - (i + 1) * 12, 8), Vector(7, 7), game->bg_color);
         draw->display->drawBitmap(SCREEN_WIDTH - (i + 1) * 12, 8, life_icon, 7, 7, TFT_BLACK);
     }
 
@@ -300,7 +288,6 @@ static void player_render(Entity *self, Draw *draw, Game *game)
     if (bonus_life_active)
     {
         // canvas_draw_xbm(canvas, bonus_life_x, bonus_life_y, 7, 7, bonus_life_icon);
-        draw->clear(Vector(bonus_life_x, bonus_life_y), Vector(7, 7), game->bg_color);
         draw->display->drawBitmap(bonus_life_x, bonus_life_y, bonus_life_icon, 7, 7, TFT_BLACK);
     }
 
@@ -308,17 +295,14 @@ static void player_render(Entity *self, Draw *draw, Game *game)
     if (shield_active)
     {
         // canvas_draw_str(canvas, 30, 50, "Shield Active");
-        draw->clear(Vector(130, 8), Vector(100, 10), game->bg_color);
         draw->text(Vector(130, 8), "Shield Active", TFT_BLUE);
     }
 
     // Draw score
     // canvas_draw_str(canvas, 2, 8, "Score:");
-    draw->clear(Vector(2, 8), Vector(40, 8), game->bg_color);
     draw->text(Vector(2, 8), "Score:", game->fg_color);
     itoa(score, score_str, 10);
     // canvas_draw_str(canvas, 40, 8, score_str);
-    draw->clear(Vector(40, 8), Vector(40, 8), game->bg_color);
     draw->text(Vector(40, 8), score_str, game->fg_color);
 }
 void player_spawn(Level *level, Game *game)
@@ -331,7 +315,8 @@ void player_spawn(Level *level, Game *game)
                                 NULL, NULL, NULL, NULL, NULL,
                                 player_update,
                                 player_render,
-                                NULL);
+                                NULL,
+                                true);
     level->entity_add(player);
     restart_game(game);
 }
