@@ -8,7 +8,7 @@
 #define DINO_H 22
 #define CACTUS_W 10
 #define CACTUS_H 10
-#define BACKGROUND_W 320
+#define BACKGROUND_W 128
 #define BACKGROUND_H 12
 #define HORIZON_Y (SCREEN_H - BACKGROUND_H)
 #define DINO_START_X 10
@@ -61,18 +61,14 @@ typedef struct
     bool has_cactus;
     bool had_cactus;
 
-    // Horizontal line
+    // Horizontal background lines - now using three positions
     int background_position;
     int background_position_old;
 
     bool lost;
     bool just_start;
     int score;
-    Image *dino;
-    Image *dino_left;
-    Image *dino_right;
-    Image *cactus;
-    Image *horizon_line;
+    const uint8_t *dino;
 } GameState;
 
 GameState *game_state = new GameState();
@@ -92,10 +88,7 @@ static void game_state_reinit(GameState *game_state)
     game_state->score = 0;
     game_state->just_start = true;
 }
-static void clear(Game *game)
-{
-    game->draw->clear(Vector(0, 0), Vector(SCREEN_W, SCREEN_H), game->bg_color);
-}
+
 static void player_update(Entity *self, Game *game)
 {
     // set old positions
@@ -130,10 +123,10 @@ static void player_update(Entity *self, Game *game)
     if (game_state->dino_frame_ms >= DINO_RUNNING_MS_PER_FRAME)
     {
         // toggle
-        if (game_state->dino == game_state->dino_left)
-            game_state->dino = game_state->dino_right;
+        if (game_state->dino == dino_run_0_20x22)
+            game_state->dino = dino_run_1_20x22;
         else
-            game_state->dino = game_state->dino_left;
+            game_state->dino = dino_run_0_20x22;
 
         game_state->dino_frame_ms = 0;
     }
@@ -178,19 +171,27 @@ static void player_update(Entity *self, Game *game)
         }
     }
 
+    // Update background position for smooth scrolling
+    int increase = (int)(game_state->x_speed * (delta_time_ms / 1000.0f));
+    if (increase <= 0)
+        increase = 1; // Ensure at least some movement
+
+    // Move background position left
+    game_state->background_position -= increase;
+
+    // Wrap around when first background moves out of view
+    // We use modulo to ensure the position always stays within one background width
+    // This creates a seamless wrap-around effect
     if (game_state->background_position <= -BACKGROUND_W)
     {
-        game_state->background_position += BACKGROUND_W;
+        game_state->background_position = game_state->background_position % BACKGROUND_W;
     }
-    int increase = (int)(game_state->x_speed * (delta_time_ms / 1000.0f));
-    game_state->background_position -= increase == 0 ? 1 : increase;
 
     if (game_state->has_cactus && ((game_state->y_position + DINO_H >= CACTUS_BASE_Y) &&
                                    ((DINO_START_X + DINO_W) >= game_state->cactus_position) &&
                                    (DINO_START_X <= (game_state->cactus_position + CACTUS_W))))
     {
         game_state->lost = true;
-        clear(game);
     }
 }
 
@@ -201,46 +202,45 @@ static void player_render(Entity *self, Draw *draw, Game *game)
         if (game_state->just_start)
         {
             game_state->just_start = false;
-            clear(game);
         }
 
-        // clear previous horizon lines
-        draw->clear(Vector(game_state->background_position_old, HORIZON_Y), Vector(BACKGROUND_W, BACKGROUND_H), game->bg_color);
-        draw->clear(Vector(game_state->background_position_old + BACKGROUND_W, HORIZON_Y), Vector(BACKGROUND_W, BACKGROUND_H), game->bg_color);
+        // Calculate the number of segments needed to cover the screen width
+        int segments_needed = (SCREEN_W / BACKGROUND_W) + 2; // +2 to ensure we cover any partial segments
 
-        // Draw horizon line twice for scrolling wrap-around
-        draw->image(Vector(game_state->background_position, HORIZON_Y), game_state->horizon_line);
-        draw->image(Vector(game_state->background_position + BACKGROUND_W, HORIZON_Y), game_state->horizon_line);
+        // Draw enough horizon line segments to cover the entire screen width
+        for (int i = 0; i < segments_needed; i++)
+        {
+            int segment_pos = game_state->background_position + (i * BACKGROUND_W);
+            // Only draw segments that might be visible on screen
+            if (segment_pos > -BACKGROUND_W && segment_pos < SCREEN_W)
+            {
+                draw->image(Vector(segment_pos, HORIZON_Y), horizon_line_0_128x12,
+                            Vector(BACKGROUND_W, BACKGROUND_H), nullptr, false);
+            }
+        }
 
         // Dino
-        draw->clear(Vector(DINO_START_X, game_state->y_position_old), game_state->dino->size, game->bg_color);
-        draw->image(Vector(DINO_START_X, game_state->y_position), game_state->dino);
+        draw->image(Vector(DINO_START_X, game_state->y_position), game_state->dino, Vector(DINO_W, DINO_H));
 
         // Cactus
         if (game_state->has_cactus)
         {
-            draw->clear(Vector(game_state->cactus_position_old, CACTUS_BASE_Y),
-                        Vector(CACTUS_W, CACTUS_H), game->bg_color);
             draw->image(Vector(game_state->cactus_position,
                                CACTUS_BASE_Y),
-                        game_state->cactus);
+                        cactus_10x10, Vector(CACTUS_W, CACTUS_H));
             game_state->had_cactus = true;
         }
         else if (game_state->had_cactus)
         {
             game_state->had_cactus = false;
-            draw->clear(Vector(game_state->cactus_position_old, CACTUS_BASE_Y),
-                        Vector(CACTUS_W, CACTUS_H), game->bg_color);
         }
 
         char score_string[20];
         snprintf(score_string, sizeof(score_string), "Score: %d", game_state->score);
-        draw->clear(Vector(10, 10), Vector(60, 10), game->bg_color);
         draw->text(Vector(10, 10), score_string, game->fg_color);
     }
     else
     {
-        draw->clear(Vector(SCREEN_W / 2 - 30, SCREEN_H / 2), Vector(60, 10), game->bg_color);
         draw->text(Vector(SCREEN_W / 2 - 30, SCREEN_H / 2),
                    "You lost :c", game->fg_color);
     }
@@ -259,14 +259,9 @@ void player_spawn(Level *level)
                                 NULL, NULL, NULL, NULL, NULL,
                                 player_update,
                                 player_render,
-                                NULL);
+                                NULL,
+                                true // is 8-bit?
+    );
     level->entity_add(player);
-
     game_state_reinit(game_state);
-
-    game_state->dino = ImageManager::getInstance().getImage("dino", dino_20x22, Vector(DINO_W, DINO_H));
-    game_state->dino_left = ImageManager::getInstance().getImage("dino_left", dino_run_0_20x22, Vector(DINO_W, DINO_H));
-    game_state->dino_right = ImageManager::getInstance().getImage("dino_right", dino_run_1_20x22, Vector(DINO_W, DINO_H));
-    game_state->cactus = ImageManager::getInstance().getImage("cactus", cactus_10x10, Vector(CACTUS_W, CACTUS_H));
-    game_state->horizon_line = ImageManager::getInstance().getImage("horizon_line", horizon_line_0_320x12, Vector(BACKGROUND_W, BACKGROUND_H));
 }
