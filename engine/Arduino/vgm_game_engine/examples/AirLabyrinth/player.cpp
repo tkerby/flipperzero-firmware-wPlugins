@@ -101,7 +101,7 @@ static void player_render(Entity *self, Draw *draw, Game *game)
 void player_spawn(Level *level)
 {
     // Create the player entity
-    Entity *player = new Entity("Player", ENTITY_PLAYER, Vector(160, 130), Vector(10, 10), player_10x10, NULL, NULL, NULL, NULL, player_update, player_render, NULL);
+    Entity *player = new Entity("Player", ENTITY_PLAYER, Vector(160, 130), Vector(10, 10), player_10x10, NULL, NULL, NULL, NULL, player_update, player_render, NULL, true);
     level->entity_add(player);
 }
 
@@ -128,7 +128,7 @@ static void wall_start(Level *level, Vector position, Vector size)
     // Create the wall entity
     // the real position is Vector(position.x + size.x / 2, position.y + size.y / 2)
     Vector real_position = Vector(position.x - size.x / 2, position.y - size.y / 2);
-    Entity *wall = new Entity("Wall", ENTITY_ICON, real_position, size, NULL, NULL, NULL, NULL, NULL, NULL, wall_render, wall_collision);
+    Entity *wall = new Entity("Wall", ENTITY_ICON, real_position, size, NULL, NULL, NULL, NULL, NULL, NULL, wall_render, wall_collision, true);
     level->entity_add(wall);
 }
 
