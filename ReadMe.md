@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - UL: [NFC: Ultralight C - Attempt of authentication with default key (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/898)
 - Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
+- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 
 <a name="release">
 
