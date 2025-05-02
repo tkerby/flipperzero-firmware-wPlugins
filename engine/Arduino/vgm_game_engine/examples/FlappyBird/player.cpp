@@ -20,16 +20,6 @@
 #define FLIPPER_LCD_WIDTH 320
 #define FLIPPER_LCD_HEIGHT 240
 
-#ifndef TFT_DARKGREEN
-#define TFT_DARKGREEN 0x03E0
-#endif
-#ifndef TFT_BLACK
-#define TFT_BLACK 0x0000
-#endif
-#ifndef TFT_WHITE
-#define TFT_WHITE 0xFFFF
-#endif
-
 typedef enum
 {
     BirdState0 = 0,
@@ -86,7 +76,6 @@ typedef enum
 
 GameState *game_state = new GameState();
 
-static void clear(Game *game) { game->draw->clear(Vector(0, 0), game->size, game->bg_color); }
 static void flappy_game_random_pilar()
 {
     PILAR pilar;
@@ -105,7 +94,6 @@ static void flappy_game_random_pilar()
 
 static void flappy_game_state_init(Game *game)
 {
-    clear(game);
     BIRD bird;
     bird.gravity = 0.0f;
     // Start near left, vertically centered on 240px screen
@@ -140,19 +128,16 @@ static void flappy_game_tick(Game *game)
         if (pilar->point.x == (FLIPPER_LCD_WIDTH - FLAPPY_PILAR_DIST) + 1)
             flappy_game_random_pilar();
 
-        // === FIX: top/bottom collision should trigger game over, not warp the bird. ===
         // If the bird's top goes above y=0 => game over
         if (game_state->bird.point.y <= 0)
         {
             game_state->bird.point.y = 0;
-            clear(game);
             game_state->state = GameStateGameOver;
         }
         // If the bird's bottom (y + FLAPPY_BIRD_HEIGHT) goes below screen => game over
         if (game_state->bird.point.y + FLAPPY_BIRD_HEIGHT >= FLIPPER_LCD_HEIGHT)
         {
             game_state->bird.point.y = FLIPPER_LCD_HEIGHT - FLAPPY_BIRD_HEIGHT;
-            clear(game);
             game_state->state = GameStateGameOver;
         }
 
@@ -190,14 +175,12 @@ static void flappy_game_tick(Game *game)
                     if (game_state->bird.point.y + FLAPPY_BIRD_WIDTH - 2 >=
                         p->height + FLAPPY_GAB_HEIGHT)
                     {
-                        clear(game);
                         game_state->state = GameStateGameOver;
                         break;
                     }
                     // Top pipe collision:
                     if (game_state->bird.point.y < p->height)
                     {
-                        clear(game);
                         game_state->state = GameStateGameOver;
                         break;
                     }
@@ -240,8 +223,8 @@ static void player_update(Entity *self, Game *game)
 
 static void player_render(Entity *self, Draw *draw, Game *game)
 {
-    // Draw a border (no need to clear previous frame)
-    draw->display->drawRect(0, 0, FLIPPER_LCD_WIDTH, FLIPPER_LCD_HEIGHT, TFT_BLACK); // black border
+    // Draw a border
+    draw->drawRect(Vector(0, 0), Vector(FLIPPER_LCD_WIDTH, FLIPPER_LCD_HEIGHT), TFT_BLACK); // black border
 
     if (game_state->state == GameStateLife)
     {
@@ -252,17 +235,12 @@ static void player_render(Entity *self, Draw *draw, Game *game)
             if (pilar && pilar->visible == 1)
             {
                 // Top pillar outline
-                draw->clear(Vector(pilar->point.x2, pilar->point.y2), Vector(FLAPPY_GAB_WIDTH, pilar->height), TFT_WHITE);
-                draw->display->drawRect(pilar->point.x, pilar->point.y, FLAPPY_GAB_WIDTH, pilar->height, TFT_DARKGREEN);
+                draw->drawRect(Vector(pilar->point.x, pilar->point.y), Vector(FLAPPY_GAB_WIDTH, pilar->height), TFT_BLACK);
 
                 // Bottom pillar outline
-                draw->clear(Vector(pilar->point.x2, pilar->point.y2 + pilar->height + FLAPPY_GAB_HEIGHT), Vector(FLAPPY_GAB_WIDTH, FLIPPER_LCD_HEIGHT - (pilar->height + FLAPPY_GAB_HEIGHT)), TFT_WHITE);
-                draw->display->drawRect(pilar->point.x, pilar->point.y + pilar->height + FLAPPY_GAB_HEIGHT, FLAPPY_GAB_WIDTH, FLIPPER_LCD_HEIGHT - (pilar->height + FLAPPY_GAB_HEIGHT), TFT_DARKGREEN);
+                draw->drawRect(Vector(pilar->point.x, pilar->point.y + pilar->height + FLAPPY_GAB_HEIGHT), Vector(FLAPPY_GAB_WIDTH, FLIPPER_LCD_HEIGHT - (pilar->height + FLAPPY_GAB_HEIGHT)), TFT_BLACK);
             }
         }
-
-        // clear previous bird position
-        draw->clear(Vector(game_state->bird.point.x2, game_state->bird.point.y2), Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT), TFT_WHITE);
 
         // Decide bird sprite based on gravity
         BirdState bird_state = BirdState1;
@@ -272,12 +250,8 @@ static void player_render(Entity *self, Draw *draw, Game *game)
             bird_state = BirdState2;
 
         // Draw the bird
-        draw->image(
-            Vector(game_state->bird.point.x, game_state->bird.point.y),
-            game_state->bird_states[bird_state]);
-
-        // clear previous score
-        draw->clear(Vector(100, 12), Vector(50, 10), TFT_WHITE);
+        self->position.x = game_state->bird.point.x;
+        self->position.y = game_state->bird.point.y;
 
         // Score
         char buffer[12];
@@ -286,9 +260,12 @@ static void player_render(Entity *self, Draw *draw, Game *game)
     }
     else if (game_state->state == GameStateGameOver)
     {
+        self->position.x = -100;
+        self->position.y = -100;
+
         // Simple "Game Over" box in upper-left area
-        draw->display->fillRect(129, 108, 62, 24, TFT_WHITE);
-        draw->display->drawRect(129, 108, 62, 24, TFT_BLACK);
+        draw->fillRect(Vector(129, 108), Vector(62, 24), TFT_WHITE);
+        draw->drawRect(Vector(129, 108), Vector(62, 24), TFT_BLACK);
         draw->text(Vector(132, 110), "Game Over", TFT_BLACK);
 
         char buffer[12];
@@ -300,29 +277,21 @@ static void player_render(Entity *self, Draw *draw, Game *game)
 void player_spawn(Level *level, Game *game)
 {
     // Same entity creation
-    Entity *player = new Entity("Player",
-                                ENTITY_PLAYER,
-                                Vector(-100, -100),
-                                Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT),
-                                NULL, NULL, NULL, NULL, NULL,
+    Entity *player = new Entity("Player",                                      // entity name
+                                ENTITY_PLAYER,                                 // entity type
+                                Vector(-100, -100),                            // initial position
+                                Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT), // entity size
+                                bird,
+                                NULL, // sprite left
+                                NULL, // sprite right
+                                NULL, // start callback
+                                NULL, // stop callback
                                 player_update,
                                 player_render,
-                                NULL);
+                                NULL,
+                                true // is 8-bit?
+    );
     level->entity_add(player);
 
     flappy_game_state_init(game);
-
-    // Load the same bird images
-    game_state->bird_states[BirdState0] = ImageManager::getInstance().getImage(
-        "bird_01",
-        bird,
-        Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT));
-    game_state->bird_states[BirdState1] = ImageManager::getInstance().getImage(
-        "bird_02",
-        bird,
-        Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT));
-    game_state->bird_states[BirdState2] = ImageManager::getInstance().getImage(
-        "bird_03",
-        bird,
-        Vector(FLAPPY_BIRD_WIDTH, FLAPPY_BIRD_HEIGHT));
 }
