@@ -114,9 +114,9 @@ void canvas_draw_line(Canvas *canvas, int32_t x1, int32_t y1, int32_t x2, int32_
 void canvas_draw_rframe(Canvas *canvas, int32_t x, int32_t y, size_t width, size_t height, size_t radius, uint16_t color = TFT_BLACK);
 void canvas_draw_str(Canvas *canvas, int32_t x, int32_t y, const char *str, uint16_t color = TFT_BLACK);
 void canvas_draw_str_aligned(Canvas *canvas, int32_t x, int32_t y, int32_t align_x, int32_t align_y, const char *str, uint16_t color = TFT_BLACK);
-size_t canvas_height(const Canvas *canvas);
+size_t canvas_height(Canvas *canvas);
 void canvas_set_bitmap_mode(Canvas *canvas, bool alpha);
 void canvas_set_color(Canvas *canvas, FlipperColor color);
 void canvas_set_font(Canvas *canvas, FlipperFont font);
 uint16_t canvas_string_width(Canvas *canvas, const char *str);
-size_t canvas_width(const Canvas *canvas);
+size_t canvas_width(Canvas *canvas);

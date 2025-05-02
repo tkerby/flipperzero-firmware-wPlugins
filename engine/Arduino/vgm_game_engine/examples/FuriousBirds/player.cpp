@@ -112,11 +112,6 @@ typedef struct
 } AppModel;
 
 AppModel *amodel = new AppModel();
-Image *red = new Image();
-Image *piggy = new Image();
-Image *slingshot = new Image();
-
-static void clear(Game *game) { game->draw->clear(Vector(0, 0), game->size, game->bg_color); }
 
 static void draw_red(Canvas *canvas)
 {
@@ -124,15 +119,8 @@ static void draw_red(Canvas *canvas)
     amodel->red_pos.x = amodel->red->x - RED_CENTER_X;
     amodel->red_pos.y = amodel->red->y - RED_CENTER_Y;
 
-    // If the red's position has changed, clear the old red.
-    if (amodel->red_pos.x != amodel->red_pos_prev.x ||
-        amodel->red_pos.y != amodel->red_pos_prev.y)
-    {
-        canvas->clear(amodel->red_pos_prev, Vector(RED_WIDTH, RED_HEIGHT), TFT_WHITE);
-    }
-
     // Draw the red at its new position.
-    canvas->image(amodel->red_pos, red);
+    canvas->image(amodel->red_pos, I_Red, Vector(RED_WIDTH, RED_HEIGHT));
 
     // Update the previous red position.
     amodel->red_pos_prev = amodel->red_pos;
@@ -141,7 +129,8 @@ static void draw_red(Canvas *canvas)
 static void draw_slingshot(Canvas *canvas)
 {
     // canvas_draw_icon(canvas, SLINGSHOT_X - SLINGSHOT_CENTER_X, SLINGSHOT_Y, I_Slingshot, 10, 25, TFT_BROWN);
-    canvas->image(Vector(SLINGSHOT_X - SLINGSHOT_CENTER_X, SLINGSHOT_Y), slingshot);
+    canvas->image(Vector(SLINGSHOT_X - SLINGSHOT_CENTER_X, SLINGSHOT_Y), I_Slingshot,
+                  Vector(SLINGSHOT_WIDTH, SLINGSHOT_HEIGHT));
 }
 
 static uint8_t distance_between(Pig *pig1, Pig *pig2)
@@ -207,7 +196,6 @@ static Pig *create_random_pig(uint8_t i, Pig *pigs[])
 
 static void reset_game(Game *game)
 {
-    clear(game);
     amodel->angle = ANGLE_START;
     amodel->angle_radians = degree_to_radian(amodel->angle);
     amodel->state = GameStateAiming;
@@ -226,7 +214,6 @@ static void reset_game(Game *game)
 
 static void draw_stats(Canvas *canvas)
 {
-    canvas->clear(Vector(5, 0), Vector(100, 40), TFT_WHITE);
     char xstr[64];
     snprintf(xstr, 64, "score: %ld", amodel->score);
     canvas_draw_str(canvas, 5, 8, xstr);
@@ -244,7 +231,8 @@ static void draw_pigs(Canvas *canvas)
         if (pig->visible)
         {
             // canvas_draw_icon(canvas, pig->x - PIG_CENTER_X, pig->y - PIG_CENTER_Y, I_Pig, PIG_WIDTH, PIG_HEIGHT, TFT_PINK);
-            canvas->image(Vector(pig->x - PIG_CENTER_X, pig->y - PIG_CENTER_Y), piggy);
+            canvas->image(Vector(pig->x - PIG_CENTER_X, pig->y - PIG_CENTER_Y), I_Pig,
+                          Vector(PIG_WIDTH, PIG_HEIGHT));
         }
     }
 }
@@ -299,7 +287,6 @@ static void draw_aiming_line(Canvas *canvas)
 
 static void next_level(Game *game)
 {
-    clear(game);
     amodel->level++;
     amodel->state = GameStateAiming;
     amodel->red->x = RED_START_X;
@@ -457,12 +444,6 @@ static void player_update(Entity *self, Game *game)
             {
                 amodel->score++;
                 amodel->pigs[i]->visible = false;
-
-                // clear pig from screen
-                game->draw->clear(Vector(amodel->pigs[i]->x - PIG_CENTER_X,
-                                         amodel->pigs[i]->y - PIG_CENTER_Y),
-                                  Vector(PIG_WIDTH, PIG_HEIGHT),
-                                  game->bg_color);
             }
         }
 
@@ -478,7 +459,6 @@ static void player_update(Entity *self, Game *game)
                 if (amodel->remaining_attempts == 0)
                 {
                     amodel->state = GameStateLoosing;
-                    clear(game);
                 }
             }
         }
@@ -514,10 +494,9 @@ void player_spawn(Level *level, Game *game)
                                 NULL, NULL, NULL, NULL, NULL,
                                 player_update,
                                 player_render,
-                                NULL);
+                                NULL,
+                                true // is 8-bit?
+    );
     level->entity_add(player);
     reset_game(game);
-    red->from_byte_array(I_Red, Vector(RED_WIDTH, RED_HEIGHT));
-    piggy->from_byte_array(I_Pig, Vector(PIG_WIDTH, PIG_HEIGHT));
-    slingshot->from_byte_array(I_Slingshot, Vector(SLINGSHOT_WIDTH, SLINGSHOT_HEIGHT));
 }
