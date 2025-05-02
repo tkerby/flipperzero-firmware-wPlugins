@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "VGMGameEngine.h"
 #include "player.h"
+// Note: Use the Doom_8bit for no screen flickering/tearing
 // Translated from https://github.com/xMasterX/all-the-plugins/tree/dev/base_pack/doom
 // All credits to @xMasterX @Svarich @hedger (original code by @p4nic4ttack)
 
@@ -9,16 +10,27 @@
 - Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
 - CPU Speed: 200MHz
 */
+auto board = VGMConfig; // Video Game Module Configuration
 void setup()
 {
   // Setup file system (must be called in setup)
   setup_fs();
 
   // Create the game instance with its name, start/stop callbacks, and colors.
-  Game *game = new Game("Doom", Vector(320, 240), NULL, NULL, TFT_WHITE, TFT_BLACK);
+  Game *game = new Game(
+      "Doom",                            // Game name
+      Vector(board.width, board.height), // Game size
+      NULL,                              // start callback
+      NULL,                              // stop callback
+      TFT_WHITE,                         // Foreground color
+      TFT_BLACK,                         // Background color
+      false,                             // Use 8-bit graphics?
+      board,                             // Board configuration
+      false                              // Use double buffering for TFT
+  );
 
   // set world size
-  game->world_size = Vector(320, 240);
+  game->world_size = Vector(board.width, board.height);
 
   // UART buttons
   ButtonUART *uart = new ButtonUART();
@@ -27,7 +39,7 @@ void setup()
   game->input_add(new Input(uart));
 
   // Create and add a level to the game.
-  Level *level = new Level("Level 1", Vector(320, 240), game);
+  Level *level = new Level("Level 1", Vector(board.width, board.height), game);
   game->level_add(level);
 
   // Add the player entity to the level
