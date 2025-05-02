@@ -15,8 +15,6 @@
 #define BALL_SPEED 1
 #define MAX_SPEED 1
 
-static void clear(Game *game) { game->draw->clear(Vector(0, 0), game->size, game->bg_color); }
-
 typedef struct
 {
     // Brick Bounds used in collision detection
@@ -226,9 +224,6 @@ void move_ball(Draw *canvas)
 
 void draw_lives(Draw *canvas)
 {
-    // Clear old lives
-    canvas->clear(Vector(0, FLIPPER_LCD_HEIGHT - 20), Vector(20, 20), TFT_WHITE);
-
     // Draw lives
     if (arkanoid_state->lives == 3)
     {
@@ -270,9 +265,6 @@ void draw_lives(Draw *canvas)
 
 void draw_score(Draw *canvas)
 {
-    // Clear old score
-    canvas->clear(Vector(FLIPPER_LCD_WIDTH - 16, FLIPPER_LCD_HEIGHT - 10), Vector(16, 10), TFT_WHITE);
-
     // Draw score
     snprintf(arkanoid_state->text, sizeof(arkanoid_state->text), "%u", arkanoid_state->score);
     canvas_draw_str_aligned(
@@ -290,11 +282,6 @@ void draw_ball(Draw *canvas)
 
     move_ball(canvas);
 
-    Vector clearPos = Vector(arkanoid_state->ball_state.pos_old.x - 2,
-                             arkanoid_state->ball_state.pos_old.y - 2);
-    Vector clearSize = Vector(radius * 4, radius * 4);
-    canvas->clear(clearPos, clearSize, TFT_WHITE);
-
     canvas->display->fillCircle(arkanoid_state->ball_state.pos.x,
                                 arkanoid_state->ball_state.pos.y, radius, TFT_RED);
 
@@ -303,10 +290,6 @@ void draw_ball(Draw *canvas)
 
 void draw_paddle(Draw *canvas)
 {
-    // Clear old paddle
-    if (arkanoid_state->xPaddleOld != arkanoid_state->xPaddle)
-        canvas->clear(Vector(arkanoid_state->xPaddleOld, FLIPPER_LCD_HEIGHT - 5), Vector(PADDLE_WIDTH, PADDLE_HEIGHT), TFT_WHITE);
-
     // Draw paddle
     canvas_draw_frame(canvas, arkanoid_state->xPaddle, FLIPPER_LCD_HEIGHT - 5, PADDLE_WIDTH, PADDLE_HEIGHT);
 }
@@ -356,8 +339,6 @@ static void arkanoid_state_init(Game *game)
     // Reset initial state
     arkanoid_state->initialDraw = false;
     arkanoid_state->gameStarted = false;
-
-    clear(game);
 }
 
 static void player_update(Entity *self, Game *game)
@@ -428,7 +409,6 @@ static void player_render(Entity *self, Draw *canvas, Game *game)
 
         // Draws the new level
         reset_level(canvas);
-        clear(game);
     }
 
     // Draws new bricks and resets their values
@@ -443,7 +423,6 @@ static void player_render(Entity *self, Draw *canvas, Game *game)
             }
             else if (arkanoid_state->brick_state.wasHit[row][column])
             {
-                canvas->clear(Vector(BRICK_SPACING_X * column, 2 + BRICK_SPACING_Y * row), Vector(BRICK_WIDTH, BRICK_HEIGHT), TFT_WHITE);
                 arkanoid_state->brick_state.wasHit[row][column] = false;
             }
         }
@@ -480,7 +459,9 @@ void player_spawn(Level *level, Game *game)
                                 NULL, NULL, NULL, NULL, NULL,
                                 player_update,
                                 player_render,
-                                NULL);
+                                NULL,
+                                true // 8-bit sprite
+    );
     level->entity_add(player);
     arkanoid_state_init(game);
 }
