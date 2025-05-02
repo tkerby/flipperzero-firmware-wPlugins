@@ -33,7 +33,9 @@ namespace VGMGameEngine
         void (*stop)(),
         uint16_t fg_color,
         uint16_t bg_color,
-        bool use_8bit)
+        bool use_8bit,
+        Board board,
+        bool tftDoubleBuffer)
         : name(name), size(size),
           _start(start), _stop(stop),
           fg_color(fg_color), bg_color(bg_color),
@@ -44,22 +46,19 @@ namespace VGMGameEngine
           is_active(false), input(-1), is_uart_input(false), is_8bit(use_8bit)
     {
         this->is_8bit = use_8bit;
-#if PICO_GAME_ENGINE_BOARD_TYPE != PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
-        this->is_8bit = false; // 8-bit images are not supported on non-VGM boards
-#endif
         for (int i = 0; i < MAX_LEVELS; i++)
         {
             levels[i] = nullptr;
         }
-        draw = new Draw(this->is_8bit);
+        draw = new Draw(board, this->is_8bit, tftDoubleBuffer);
         draw->background(bg_color);
         draw->display->setFont();
         draw->color(fg_color);
 
         if (this->is_8bit)
         {
-            memcpy(draw->display->getPalette(), vgm_engine_palette, sizeof(vgm_engine_palette));
-            draw->display->swap(false, true); // Duplicate same palette into front & back buffers
+            memcpy(draw->getPalette(), vgm_engine_palette, sizeof(vgm_engine_palette));
+            draw->swap(false, true); // Duplicate same palette into front & back buffers
         }
     }
 

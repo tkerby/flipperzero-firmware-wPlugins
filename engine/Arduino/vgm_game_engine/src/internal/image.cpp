@@ -110,14 +110,15 @@ namespace VGMGameEngine
                 buffer[i] = ((uint16_t)srcData[2 * i + 1] << 8) | srcData[2 * i];
             }
 
-#if PICO_GAME_ENGINE_BOARD_TYPE == PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
-            // write in big-endian
-            for (uint32_t i = 0; i < numPixels; i++)
+            if (board.libraryType == LIBRARY_TYPE_PICO_DVI)
             {
-                uint16_t pixel = buffer[i];
-                buffer[i] = (pixel >> 8) | (pixel << 8);
+                // write in big-endian
+                for (uint32_t i = 0; i < numPixels; i++)
+                {
+                    uint16_t pixel = buffer[i];
+                    buffer[i] = (pixel >> 8) | (pixel << 8);
+                }
             }
-#endif
         }
         else
         {
@@ -154,14 +155,15 @@ namespace VGMGameEngine
                 buffer[i] = ((uint16_t)srcData[2 * i + 1] << 8) | srcData[2 * i];
             }
 
-#if PICO_GAME_ENGINE_BOARD_TYPE == PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
-            // write in big-endian
-            for (uint32_t i = 0; i < numPixels; i++)
+            if (board.libraryType == LIBRARY_TYPE_PICO_DVI)
             {
-                uint16_t pixel = buffer[i];
-                buffer[i] = (pixel >> 8) | (pixel << 8);
+                // write in big-endian
+                for (uint32_t i = 0; i < numPixels; i++)
+                {
+                    uint16_t pixel = buffer[i];
+                    buffer[i] = (pixel >> 8) | (pixel << 8);
+                }
             }
-#endif
         }
         else
         {

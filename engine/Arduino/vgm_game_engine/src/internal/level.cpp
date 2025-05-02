@@ -204,7 +204,7 @@ namespace VGMGameEngine
         if (game->is_8bit)
         {
             // send newly drawn pixels to the display
-            game->draw->display->swap();
+            game->draw->swap();
         }
     }
 

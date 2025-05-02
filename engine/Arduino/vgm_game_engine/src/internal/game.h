@@ -22,7 +22,9 @@ namespace VGMGameEngine
             void (*stop)() = NULL,
             uint16_t fg_color = 0xFFFF,
             uint16_t bg_color = 0x0000,
-            bool use_8bit = false);
+            bool use_8bit = false,
+            Board board = VGMConfig,
+            bool tftDoubleBuffer = false);
         ~Game();
         // Clamp a value between a lower and upper bound.
         void clamp(float &value, float min, float max);

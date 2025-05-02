@@ -30,12 +30,12 @@ namespace VGMGameEngine
         uint16_t *buffer; // Pointer to the image buffer (each pixel is 2 bytes, RGB565)
         uint8_t *data;    // Raw image data (e.g. the BMP pixel data in file order)
         bool is_8bit;     // Flag to indicate if the image is 8-bit or not
+        Board board;      // Board configuration
 
-        Image(bool is_8bit = false) : size(0, 0), buffer(nullptr), data(nullptr), is_8bit(is_8bit)
+        Image(bool is_8bit = false, Board board = VGMConfig) : size(0, 0), buffer(nullptr), data(nullptr),
+                                                               is_8bit(is_8bit), board(board)
         {
-#if PICO_GAME_ENGINE_BOARD_TYPE != PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
-            is_8bit = false; // 8-bit images are not supported on non-VGM boards
-#endif
+
         } // Constructor
         ~Image();
 

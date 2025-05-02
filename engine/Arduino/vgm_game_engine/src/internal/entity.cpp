@@ -76,11 +76,7 @@ namespace VGMGameEngine
         void (*collision)(Entity *, Entity *, Game *),
         bool is_8bit_sprite)
     {
-#if PICO_GAME_ENGINE_BOARD_TYPE == PICO_GAME_ENGINE_BOARD_TYPE_FLIPPER_VGM
         this->is_8bit = is_8bit_sprite;
-#else
-        this->is_8bit = false; // 8-bit images are not supported on non-VGM boards
-#endif
         this->name = name;
         this->type = type;
         this->position = position;
