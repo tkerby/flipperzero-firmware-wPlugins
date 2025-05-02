@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include "VGMGameEngine.h"
+// Note: Use the example_8bit for no screen flickering/tearing
 /*
     Board Manager: Raspberry Pi Pico
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
     CPU Speed: 200MHz
 */
-
+auto board = VGMConfig; // Video Game Module Configuration
 const PROGMEM uint8_t player_10x10px[200] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF,
@@ -86,7 +87,17 @@ void setup()
     setup_fs();
 
     // Create the game instance with its name, start/stop callbacks, and colors.
-    Game *game = new Game("VGM Game Engine", Vector(320, 240), NULL, NULL, TFT_RED, TFT_WHITE);
+    Game *game = new Game(
+        "VGM Game Engine",                 // Game name
+        Vector(board.width, board.height), // Game size
+        NULL,                              // start callback
+        NULL,                              // stop callback
+        TFT_RED,                           // Foreground color
+        TFT_WHITE,                         // Background color
+        false,                             // Use 8-bit graphics?
+        board,                             // Board configuration
+        false                              // Use double buffering for TFT
+    );
 
     // set world size
     game->world_size = game->size;
@@ -98,13 +109,13 @@ void setup()
     game->input_add(new Input(uart));
 
     // Create and add a level to the game.
-    Level *level = new Level("Level 1", Vector(320, 240), game);
+    Level *level = new Level("Level 1", Vector(board.width, board.height), game);
     game->level_add(level);
 
     Entity *player = new Entity(
         "Player",
         ENTITY_PLAYER,
-        Vector(160, 120), // Initial position
+        Vector(board.width / 2, board.height / 2), // Initial position
         Vector(10, 10),
         player_10x10px,
         NULL,          // No sprite left
@@ -113,7 +124,8 @@ void setup()
         NULL,          // No custom destruction routine
         player_update, // Update callback
         player_render, // Render callback
-        NULL           // No collision callback
+        NULL,          // No collision callback
+        false          // 8-bit sprite?
     );
 
     // Add the player entity to the level
