@@ -29,7 +29,6 @@ static void furi_hal_random_fill_buf(void *buffer, size_t len)
         buf[i] = (uint8_t)random(256);
     }
 }
-static void clear(Game *game) { game->draw->clear(Vector(0, 0), game->size, game->bg_color); }
 
 typedef struct
 {
@@ -242,20 +241,17 @@ static void player_update(Entity *self, Game *game)
 }
 static void player_render(Entity *self, Draw *draw, Game *game)
 {
-    // clear(game);
+
     //  canvas_draw_frame(canvas, 0, 0, 128, 64);
     draw->display->drawRect(0, 0, SCREEN_SIZE_X, SCREEN_SIZE_Y, TFT_BLACK);
     // canvas_draw_box(canvas, playersMutex->player1_X, playersMutex->player1_Y, PAD_SIZE_X, PAD_SIZE_Y);
-    if (players->player1_old != players->player1)
-        draw->clear(players->player1_old, Vector(PAD_SIZE_X, PAD_SIZE_Y), game->bg_color);
+
     draw->display->fillRect(players->player1.x, players->player1.y, PAD_SIZE_X, PAD_SIZE_Y, TFT_DARKCYAN);
     // canvas_draw_box(canvas, playersMutex->player2_X, playersMutex->player2_Y, PAD_SIZE_X, PAD_SIZE_Y);
-    if (players->player2_old != players->player2)
-        draw->clear(players->player2_old, Vector(PAD_SIZE_X, PAD_SIZE_Y), game->bg_color);
+
     draw->display->fillRect(players->player2.x, players->player2.y, PAD_SIZE_X, PAD_SIZE_Y, TFT_DARKGREEN);
     // canvas_draw_box(canvas, playersMutex->ball_X, playersMutex->ball_Y, BALL_SIZE, BALL_SIZE);
-    if (players->ball_old != players->ball)
-        draw->clear(players->ball_old, Vector(BALL_SIZE, BALL_SIZE), game->bg_color);
+
     draw->display->fillRect(players->ball.x, players->ball.y, BALL_SIZE, BALL_SIZE, TFT_BLACK);
 
     // canvas_set_font(canvas, FontPrimary);
@@ -268,7 +264,6 @@ static void player_render(Entity *self, Draw *draw, Game *game)
         players->player1_score,
         players->player2_score);
     // canvas_draw_str_aligned(canvas, SCREEN_SIZE_X / 2 + 15, SCREEN_SIZE_Y / 2 + 2, AlignCenter, AlignTop, buffer);
-    draw->clear(Vector(140, 120), Vector(40, 20), game->bg_color);
     draw->text(Vector(140, 120), buffer, game->fg_color);
 }
 void player_spawn(Level *level, Game *game)
@@ -283,7 +278,7 @@ void player_spawn(Level *level, Game *game)
                                 player_render,
                                 NULL);
     level->entity_add(player);
-    clear(game);
+
     players->player1.x = SCREEN_SIZE_X - PAD_SIZE_X - 5;
     players->player1.y = SCREEN_SIZE_Y / 2 - PAD_SIZE_Y / 2;
     players->player1_score = 0;
