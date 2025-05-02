@@ -32,6 +32,7 @@ namespace VGMGameEngine
                 void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);                                                // Draws a rectangle on the display at the specified position.
                 void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w, int16_t h);                                   // Draws a bitmap on the display at the specified position.
                 void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);                                // Draws a rounded rectangle on the display at the specified position.
+                void fillCircle(int16_t x, int16_t y, int16_t r, uint16_t color);                                                         // Fills a circle on the display at the specified position with the specified radius and color.
                 void fillScreen(uint16_t color);                                                                                          // Fills the entire screen with the specified color.
                 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);                                                // Fills a rectangle on the display with the specified color.
                 uint16_t *getPalette();                                                                                                   // Returns the color palette.
