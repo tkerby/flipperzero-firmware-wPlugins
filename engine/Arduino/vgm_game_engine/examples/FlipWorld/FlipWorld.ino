@@ -8,6 +8,7 @@
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)
     CPU Speed: 200MHz
 */
+auto board = VGMConfig; // Video Game Module Configuration
 void setup()
 {
     // Setup file system (must be called in setup)
@@ -15,13 +16,15 @@ void setup()
 
     // Create the game instance with its name, start/stop callbacks, and colors.
     Game *game = new Game(
-        "FlipWorld",      // name
-        Vector(320, 240), // size
-        NULL,             // start
-        NULL,             // stop
-        TFT_RED,          // foreground
-        TFT_WHITE,        // background
-        true              // use 8-bit?
+        "FlipWorld",                       // Game name
+        Vector(board.width, board.height), // Game size
+        NULL,                              // start callback
+        NULL,                              // stop callback
+        TFT_BLACK,                         // Foreground color
+        TFT_WHITE,                         // Background color
+        true,                              // Use 8-bit graphics?
+        board,                             // Board configuration
+        true                               // Use double buffering for TFT?
     );
 
     // set world size
