@@ -13,7 +13,7 @@
 #define CANTransceiver_ADD_SCENE(name) CANTransceiver_Scene##name,
 typedef enum {
 #include "can_transceiver_scene_config.h"
-	CANTransceiver_SceneNone,
+    CANTransceiver_SceneNone,
 } CANTransceiver_Scene;
 #undef CANTransceiver_ADD_SCENE
 
@@ -29,7 +29,8 @@ extern const SceneManagerHandlers CANTransceiver_Scene_Handlers;
 #undef CANTransceiver_ADD_SCENE
 
 // Scene event handler prototypes.
-#define CANTransceiver_ADD_SCENE(name) bool CANTransceiver_Scene##name##_OnEvent(void* pContext, SceneManagerEvent event);
+#define CANTransceiver_ADD_SCENE(name) \
+    bool CANTransceiver_Scene##name##_OnEvent(void* pContext, SceneManagerEvent event);
 #include "can_transceiver_scene_config.h"
 #undef CANTransceiver_ADD_SCENE
 
@@ -38,4 +39,4 @@ extern const SceneManagerHandlers CANTransceiver_Scene_Handlers;
 #include "can_transceiver_scene_config.h"
 #undef CANTransceiver_ADD_SCENE
 
-#endif	// CAN_TRANSCEIVER_SCENE_H
+#endif // CAN_TRANSCEIVER_SCENE_H

@@ -26,8 +26,8 @@ void (*const CANTransceiver_Scene_ExitHandlers[])(void* pContext) = {
 
 // Struct of scene handlers.
 const SceneManagerHandlers CANTransceiver_Scene_Handlers = {
-	.on_enter_handlers = CANTransceiver_Scene_EntryHandlers,
-	.on_event_handlers = CANTransceiver_Scene_EventHandlers,
-	.on_exit_handlers = CANTransceiver_Scene_ExitHandlers,
-	.scene_num = CANTransceiver_SceneNone,
+    .on_enter_handlers = CANTransceiver_Scene_EntryHandlers,
+    .on_event_handlers = CANTransceiver_Scene_EventHandlers,
+    .on_exit_handlers = CANTransceiver_Scene_ExitHandlers,
+    .scene_num = CANTransceiver_SceneNone,
 };
