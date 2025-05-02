@@ -733,25 +733,26 @@ namespace VGMGameEngine
         return this->display->getPalette();
     }
 
-    void Draw::image(Vector position, Image *image)
+    void Draw::image(Vector position, Image *image, bool imageCheck)
     {
-        if (image->buffer != nullptr &&
-            position.x < this->size.x &&
-            position.y < this->size.y &&
-            image->size.x > 0 &&
-            image->size.y > 0)
+        if (!imageCheck || (imageCheck && image->buffer != nullptr &&
+                            position.x < this->size.x &&
+                            position.y < this->size.y &&
+                            image->size.x > 0 &&
+                            image->size.y > 0))
         {
             this->display->drawRGBBitmap(position.x, position.y, image->buffer, image->size.x, image->size.y);
         }
     }
 
-    void Draw::image(Vector position, const uint8_t *bitmap, Vector size, const uint16_t *palette)
+    void Draw::image(Vector position, const uint8_t *bitmap, Vector size, const uint16_t *palette, bool imageCheck)
     {
-        if (bitmap != nullptr &&
-            position.x < this->size.x &&
-            position.y < this->size.y &&
-            size.x > 0 &&
-            size.y > 0)
+        if (!imageCheck || (imageCheck &&
+                            bitmap != nullptr &&
+                            position.x < this->size.x &&
+                            position.y < this->size.y &&
+                            size.x > 0 &&
+                            size.y > 0))
         {
             if (this->is_8bit)
             {
