@@ -54,6 +54,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [CAN Transceiver v0.1 (By Chainmanner)](https://github.com/Chainmanner/Flipper-CAN-Transceiver)
 - Added: [VGM Game Remote v1.0 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
+- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 
 <a name="release">
 

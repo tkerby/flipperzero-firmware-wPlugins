@@ -87,7 +87,7 @@ void bytes_to_str_b16(const uint8_t* src, char* dist, uint8_t len) {
 
 static void t_union_decode_app_meta(TUnionMessage* msg, const uint8_t* buff) {
     // 卡类型
-    msg->type = bytes_to_num_bcd(&buff[0x01], sizeof(uint8_t));
+    msg->type = bytes_to_num_bcd(&buff[0x00], sizeof(uint8_t));
     // 发卡地
     bytes_to_str_b16(&buff[0x02], msg->area_id, 2);
     // 卡号
