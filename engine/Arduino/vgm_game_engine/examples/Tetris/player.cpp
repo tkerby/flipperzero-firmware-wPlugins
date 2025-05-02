@@ -80,11 +80,6 @@ typedef enum
     GameStatePaused
 } GameState;
 
-static void clear(Game *game)
-{
-    game->draw->clear(Vector(0, 0), game->size, game->bg_color);
-}
-
 typedef struct
 {
     bool playField[FIELD_HEIGHT][FIELD_WIDTH];
@@ -107,27 +102,6 @@ TetrisState *tetris_state = new TetrisState();
 Piece *newPiece = new Piece();
 uint8_t downRepeatCounter = 0;
 bool wasDownMove = false;
-
-static void clear_changed_blocks(Canvas *const canvas, Vector *prevPositions, int prevCount, Vector *currPositions, int currCount)
-{
-    for (int i = 0; i < prevCount; i++)
-    {
-        bool stillPresent = false;
-        for (int j = 0; j < currCount; j++)
-        {
-            if (prevPositions[i].x == currPositions[j].x && prevPositions[i].y == currPositions[j].y)
-            {
-                stillPresent = true;
-                break;
-            }
-        }
-        if (!stillPresent)
-        {
-            // Clear the block at the old position
-            canvas->clear(prevPositions[i], Vector(BLOCK_WIDTH, BLOCK_HEIGHT), TFT_WHITE);
-        }
-    }
-}
 
 static void tetris_game_draw_border(Canvas *const canvas)
 {
@@ -181,18 +155,9 @@ static void tetris_game_draw_playfield(Canvas *const canvas)
         }
     }
 
-    // Clear only those blocks that were drawn last frame but are not drawn this frame.
-    clear_changed_blocks(canvas, tetris_state->prevBlockPositions, tetris_state->prevBlockCount, currBlockPositions, currBlockCount);
-
     // Update previous positions for the next frame.
     memcpy(tetris_state->prevBlockPositions, currBlockPositions, sizeof(Vector) * currBlockCount);
     tetris_state->prevBlockCount = currBlockCount;
-}
-
-static void clear_next_piece(Canvas *const canvas)
-{
-    // Clear the area where the next piece is drawn
-    canvas->clear(Vector(5 * BLOCK_WIDTH - BLOCK_WIDTH, 32), Vector(4 * BLOCK_WIDTH, 4 * BLOCK_HEIGHT), TFT_WHITE);
 }
 
 static void tetris_game_draw_next_piece(Canvas *const canvas)
@@ -225,10 +190,6 @@ static void tetris_game_render_callback(Canvas *const canvas)
         tetris_game_draw_next_piece(canvas);
         char buffer2[6];
         snprintf(buffer2, sizeof(buffer2), "%u", tetris_state->numLines);
-        if (strcmp(score, buffer2) != 0)
-        {
-            canvas->clear(Vector(62, 10), Vector(20, 10), TFT_WHITE);
-        }
         canvas_draw_str_aligned(canvas, 62, 10, AlignRight, AlignBottom, buffer2);
         strcpy(score, buffer2);
     }
@@ -284,7 +245,6 @@ static uint8_t tetris_game_get_next_piece()
 
 static void tetris_game_init_state(Game *game)
 {
-    clear(game);
 
     tetris_state->gameState = GameStatePlaying;
     tetris_state->numLines = 0;
@@ -459,7 +419,6 @@ static void tetris_game_process_step(Game *game, Piece *newPiece, bool wasDownMo
         if (tetris_state->playField[0][x])
         {
             tetris_state->gameState = GameStateGameOver;
-            clear(game);
             return;
         }
     }
@@ -515,11 +474,9 @@ static void tetris_game_process_step(Game *game, Piece *newPiece, bool wasDownMo
             if (!tetris_game_is_valid_pos(spawnedPiece->p))
             {
                 tetris_state->gameState = GameStateGameOver;
-                clear(game);
             }
             else
             {
-                clear_next_piece(game->draw);
                 memcpy(&tetris_state->currPiece, spawnedPiece, sizeof(tetris_state->currPiece));
                 memcpy(newPiece, spawnedPiece, sizeof(Piece)); // <-- Reset newPiece after spawning
                 // furi_timer_start(tetris_state->timer, tetris_state->fallSpeed);

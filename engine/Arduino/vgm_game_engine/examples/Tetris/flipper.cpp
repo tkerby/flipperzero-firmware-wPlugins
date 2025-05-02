@@ -11,7 +11,7 @@ void furi_hal_random_fill_buf(void *buffer, size_t len)
 
 void canvas_clear(Canvas *canvas, uint16_t color)
 {
-    canvas->clear(Vector(0, 0), canvas->size, color);
+    canvas->clear(Vector(0, 0), canvas->getSize(), color);
 }
 
 size_t canvas_current_font_height(const Canvas *canvas)
@@ -91,9 +91,9 @@ void canvas_draw_str_aligned(Canvas *canvas, int32_t x, int32_t y, int32_t align
 #endif
 }
 
-size_t canvas_height(const Canvas *canvas)
+size_t canvas_height(Canvas *canvas)
 {
-    return canvas->size.y;
+    return canvas->getSize().y;
 }
 
 void canvas_set_bitmap_mode(Canvas *canvas, bool alpha)
@@ -117,7 +117,7 @@ uint16_t canvas_string_width(Canvas *canvas, const char *str)
     return strlen(str) * 8;
 }
 
-size_t canvas_width(const Canvas *canvas)
+size_t canvas_width(Canvas *canvas)
 {
-    return canvas->size.x;
+    return canvas->getSize().x;
 }
