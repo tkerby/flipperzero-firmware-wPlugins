@@ -122,6 +122,16 @@ bool xex_file_parse(XexFile* xex) {
         ++xex->block_count;
     }
 
+    // Add extra block with start address if not present in the file
+    if(xex->block_count > 0 && xex->blocks[xex->block_count - 1].addr != 0x2E0) {
+        FURI_LOG_I(TAG, "Adding extra block at 0x2E0");
+        XexBlock* block = &xex->blocks[xex->block_count];
+        block->offset = 2; // First block address
+        block->addr = 0x2E0;
+        block->size = 2;
+        xex->block_count++;
+    }
+
     return true;
 }
 

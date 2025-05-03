@@ -1,4 +1,5 @@
 v0.3:
+- Added auto-start of executables without a RUNAD block
 - Added detection of overlaps between the XEX file and boot code
 - Fixed XEX file loading
 
