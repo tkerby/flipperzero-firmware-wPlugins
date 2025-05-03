@@ -324,15 +324,15 @@ static const MenuCommand wifi_commands[] = {
         .file_ext = NULL,
         .folder = NULL,
         .needs_input = true,
-        .input_text = "SSID,Password",
+        .input_text = "SSID Password",
         .needs_confirmation = false,
         .confirm_header = NULL,
         .confirm_text = NULL,
         .details_header = "WiFi Connect",
         .details_text = "Connect ESP to WiFi:\n"
                         "Enter SSID & password\n"
-                        "separated by comma.\n"
-                        "Example: network,pass\n",
+                        "separated by a space.\n"
+                        "Example: network pass\n",
     },
     {
         .label = "Cast Random Video",
