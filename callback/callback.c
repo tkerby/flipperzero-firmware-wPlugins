@@ -110,6 +110,29 @@ void callback_text_updated_deauth(void *context)
             return;
         }
     }
+    // first check version number
+    if (!flipper_http_send_data(app->fhttp, "[VERSION]"))
+    {
+        easy_flipper_dialog("[ERROR]", "Failed to send version command");
+        flipper_http_free(app->fhttp);
+        return;
+    }
+    while (app->fhttp->last_response == NULL || strlen(app->fhttp->last_response) == 0)
+    {
+        furi_delay_ms(100);
+    }
+    // check if verison is 2.0
+    if (strstr(app->fhttp->last_response, "2.0") == NULL)
+    {
+        FURI_LOG_I(TAG, app->fhttp->last_response);
+        easy_flipper_dialog("[ERROR]", "FlipperHTTP version 2.0 or\nhigher is required");
+        flipper_http_free(app->fhttp);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
+        return;
+    }
+    // erase the response
+    if (app->fhttp->last_response)
+        snprintf(app->fhttp->last_response, RX_BUF_SIZE, "%s", "");
     Loading *loading = loading_alloc();
     int32_t loading_view_id = 87654321; // Random ID
     view_dispatcher_add_view(app->view_dispatcher, loading_view_id, loading_get_view(loading));
@@ -118,7 +141,7 @@ void callback_text_updated_deauth(void *context)
     {
         easy_flipper_dialog("[ERROR]", "Failed to start deauth attack");
         flipper_http_free(app->fhttp);
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewTextInput);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
         view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
         loading_free(loading);
         loading = NULL;
@@ -134,7 +157,7 @@ void callback_text_updated_deauth(void *context)
         snprintf(response, sizeof(response), "Failed to start deauth attack:\n%s", app->fhttp->last_response);
         easy_flipper_dialog("[ERROR]", response);
         flipper_http_free(app->fhttp);
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewTextInput);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
         view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
         loading_free(loading);
         loading = NULL;
@@ -150,7 +173,7 @@ void callback_text_updated_deauth(void *context)
         snprintf(response, sizeof(response), "Failed to start deauth attack:\n%s", app->fhttp->last_response);
         easy_flipper_dialog("[ERROR]", response);
         flipper_http_free(app->fhttp);
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewTextInput);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
         view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
         loading_free(loading);
         loading = NULL;
@@ -160,7 +183,7 @@ void callback_text_updated_deauth(void *context)
     if (!alloc_views(app, FlipWiFiViewWiFiDeauth))
     {
         FURI_LOG_E(TAG, "Failed to allocate view for WiFi Deauth");
-        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewTextInput);
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipWiFiViewSubmenuMain);
         view_dispatcher_remove_view(app->view_dispatcher, loading_view_id);
         loading_free(loading);
         loading = NULL;
