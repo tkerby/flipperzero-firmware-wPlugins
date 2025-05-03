@@ -1,4 +1,5 @@
 v0.3:
+- Added detection of overlaps between the XEX file and boot code
 - Fixed XEX file loading
 
 v0.2:

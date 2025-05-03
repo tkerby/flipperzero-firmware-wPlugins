@@ -197,3 +197,17 @@ size_t xex_file_read(
 
     return retval < 0 ? 0 : retval;
 }
+
+bool xex_file_overlaps_with(XexFile* xex, uint16_t addr, size_t size) {
+    furi_check(xex != NULL);
+
+    for(uint16_t i = 0; i < xex->block_count; ++i) {
+        XexBlock* block = &xex->blocks[i];
+
+        if((addr < block->addr + block->size) && (addr + size > block->addr)) {
+            return true;
+        }
+    }
+
+    return false;
+}

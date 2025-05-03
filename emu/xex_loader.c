@@ -22,6 +22,8 @@
 
 #define CHUNK_SIZE 1024
 
+#define ERROR_TITLE "Executable not loaded"
+
 // XEX loader specific SIO commands
 #define SIO_COMMAND_READ_BLOCK_HEADER 0xF0 // Read XEX block header
 #define SIO_COMMAND_READ_BLOCK        0xF1 // Read XEX block
@@ -33,6 +35,9 @@ struct XexLoader {
     size_t last_offset;
     XexActivityCallback activity_callback;
     void* callback_context;
+
+    const uint8_t* boot_sys;
+    size_t boot_sys_len;
 };
 
 static SIOStatus xex_loader_command_callback(void* context, SIORequest* request);
@@ -71,6 +76,31 @@ static void xex_loader_notify_activity(XexLoader* fdd) {
     }
 }
 
+// Try to get binary to boot that does not overlap with the XEX file
+static bool get_boot_sys(XexFile* xex, const uint8_t** boot_sys, size_t* boot_sys_len) {
+    furi_check(xex != NULL);
+    furi_check(boot_sys != NULL);
+    furi_check(boot_sys_len != NULL);
+
+    extern unsigned char xex_boot600_sys[];
+    extern unsigned int xex_boot600_sys_len;
+    extern unsigned char xex_boot700_sys[];
+    extern unsigned int xex_boot700_sys_len;
+
+    if(!xex_file_overlaps_with(xex, 0x700, xex_boot700_sys_len)) {
+        *boot_sys = xex_boot700_sys;
+        *boot_sys_len = xex_boot700_sys_len;
+    } else if(!xex_file_overlaps_with(xex, 0x600, xex_boot600_sys_len)) {
+        *boot_sys = xex_boot600_sys;
+        *boot_sys_len = xex_boot600_sys_len;
+    } else {
+        set_last_error(ERROR_TITLE, "XEX file overlaps with boot binary");
+        return false;
+    }
+
+    return true;
+}
+
 bool xex_loader_start(XexLoader* loader, XexFile* xex, SIODriver* sio) {
     furi_check(loader != NULL);
 
@@ -80,19 +110,23 @@ bool xex_loader_start(XexLoader* loader, XexFile* xex, SIODriver* sio) {
         xex_file_close(loader->xex);
     }
 
+    if(!get_boot_sys(xex, &loader->boot_sys, &loader->boot_sys_len)) {
+        return false;
+    }
+
     loader->xex = xex;
 
     if(loader->sio != NULL) {
         sio_driver_detach(loader->sio, SIO_DEVICE_DISK1);
     }
 
-    if(sio_driver_attach(
+    if(!sio_driver_attach(
            sio, SIO_DEVICE_DISK1, xex_loader_command_callback, xex_loader_data_callback, loader)) {
-        loader->sio = sio;
-        return true;
+        return false;
     }
 
-    return false;
+    loader->sio = sio;
+    return true;
 }
 
 void xex_loader_stop(XexLoader* loader) {
@@ -164,14 +198,11 @@ static SIOStatus xex_loader_data_callback(void* context, SIORequest* request) {
 
         memset(request->tx_data, 0, request->tx_size);
 
-        extern unsigned char xex_boot_sys[];
-        extern unsigned int xex_boot_sys_len;
-
-        if(sector >= 1 && sector <= (xex_boot_sys_len + 127) / 128) {
+        if(sector >= 1 && sector <= (loader->boot_sys_len + 127) / 128) {
             uintptr_t offset = (sector - 1) * request->tx_size;
-            size_t copysize = MIN(request->tx_size, xex_boot_sys_len - offset);
+            size_t copysize = MIN(request->tx_size, loader->boot_sys_len - offset);
             FURI_LOG_D(TAG, "Copying %zu bytes from offset %zu", copysize, offset);
-            memcpy(request->tx_data, &xex_boot_sys[offset], copysize);
+            memcpy(request->tx_data, &loader->boot_sys[offset], copysize);
         }
         return SIO_COMPLETE;
     }
