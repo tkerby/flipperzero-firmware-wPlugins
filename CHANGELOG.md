@@ -1,3 +1,6 @@
+## v1.6
+- Added Deauthentication mode.
+
 ## v1.5.2
 - Fixed a BusFault when leaving the AP Mode.
 - Increased the buffer size for sending HTML data.

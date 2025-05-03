@@ -393,6 +393,54 @@ bool flipper_http_append_to_file(
 }
 
 /**
+ * @brief      Send a command to deauthenticate a WiFi network.
+ * @return     true if the request was successful, false otherwise.
+ * @param fhttp The FlipperHTTP context
+ * @note       The received data will be handled asynchronously via the callback.
+ */
+bool flipper_http_deauth_start(FlipperHTTP *fhttp, const char *ssid)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(HTTP_TAG, "flipper_http_deauth_start: Failed to get context.");
+        return false;
+    }
+    if (!ssid)
+    {
+        FURI_LOG_E("FlipperHTTP", "Invalid arguments provided to flipper_http_deauth_start.");
+        return false;
+    }
+
+    char buffer[256];
+
+    int ret = snprintf(buffer, sizeof(buffer), "[DEAUTH]{\"ssid\":\"%s\"}", ssid);
+
+    if (ret < 0 || ret >= (int)sizeof(buffer))
+    {
+        FURI_LOG_E("FlipperHTTP", "Failed to format WiFi deauth command.");
+        return false;
+    }
+
+    return flipper_http_send_data(fhttp, buffer);
+}
+
+/**
+ * @brief      Send a request to stop the deauth
+ * @return     true if the request was successful, false otherwise.
+ * @param fhttp The FlipperHTTP context
+ * @note       The received data will be handled asynchronously via the callback.
+ */
+bool flipper_http_deauth_stop(FlipperHTTP *fhttp)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(HTTP_TAG, "flipper_http_deauth_stop: Failed to get context.");
+        return false;
+    }
+    return flipper_http_send_data(fhttp, "[DEAUTH/STOP]");
+}
+
+/**
  * @brief      Load data from a file.
  * @return     The loaded data as a FuriString.
  * @param      file_path The path to the file to load.
