@@ -254,7 +254,7 @@ bool alloc_text_inputs(void *context, uint32_t view)
     case FlipWiFiSubmenuIndexWiFiAPSetSSID:
         if (!app->uart_text_input)
         {
-            if (!easy_flipper_set_uart_text_input(&app->uart_text_input, FlipWiFiViewTextInput, "Enter AP SSID", app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size, callback_ap_ssid_updated, callback_to_submenu_saved, &app->view_dispatcher, app))
+            if (!easy_flipper_set_uart_text_input(&app->uart_text_input, FlipWiFiViewTextInput, "Enter AP SSID", app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size, callback_ap_ssid_updated, callback_to_submenu_main, &app->view_dispatcher, app))
             {
                 FURI_LOG_E(TAG, "Failed to allocate text input for Fast Command");
                 return false;
@@ -263,6 +263,27 @@ bool alloc_text_inputs(void *context, uint32_t view)
             {
                 FURI_LOG_E(TAG, "Failed to allocate text input for Fast Command");
                 return false;
+            }
+        }
+        return true;
+    case FlipWiFiViewTextInputDeauth:
+        if (!app->uart_text_input)
+        {
+            if (!easy_flipper_set_uart_text_input(&app->uart_text_input, FlipWiFiViewTextInput, "Enter SSID", app->uart_text_input_temp_buffer, app->uart_text_input_buffer_size, callback_text_updated_deauth, callback_to_submenu_scan, &app->view_dispatcher, app))
+            {
+                FURI_LOG_E(TAG, "Failed to allocate text input for WiFi Deauth");
+                return false;
+            }
+            if (!app->uart_text_input)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate text input for WiFi Deauth");
+                return false;
+            }
+            char deauth_ssid[64];
+            if (load_char("deauth_ssid", deauth_ssid, sizeof(deauth_ssid)))
+            {
+                strncpy(app->uart_text_input_temp_buffer, deauth_ssid, app->uart_text_input_buffer_size);
+                app->uart_text_input_temp_buffer[app->uart_text_input_buffer_size - 1] = '\0';
             }
         }
         return true;
@@ -300,6 +321,20 @@ bool alloc_views(void *context, uint32_t view)
             if (!app->view_wifi)
             {
                 FURI_LOG_E(TAG, "Failed to allocate view for WiFi Scan");
+                return false;
+            }
+        }
+        return true;
+    case FlipWiFiViewWiFiDeauth:
+        if (!app->view_wifi)
+        {
+            if (!easy_flipper_set_view(&app->view_wifi, FlipWiFiViewGeneric, callback_view_draw_callback_deauth, callback_view_input_callback_deauth, callback_to_submenu_main, &app->view_dispatcher, app))
+            {
+                return false;
+            }
+            if (!app->view_wifi)
+            {
+                FURI_LOG_E(TAG, "Failed to allocate view for WiFi Deauth");
                 return false;
             }
         }

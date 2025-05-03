@@ -125,6 +125,22 @@ void flipper_http_free(FlipperHTTP *fhttp);
 bool flipper_http_append_to_file(const void *data, size_t data_size, bool start_new_file, char *file_path);
 
 /**
+ * @brief      Send a command to deauthenticate a WiFi network.
+ * @return     true if the request was successful, false otherwise.
+ * @param fhttp The FlipperHTTP context
+ * @note       The received data will be handled asynchronously via the callback.
+ */
+bool flipper_http_deauth_start(FlipperHTTP *fhttp, const char *ssid);
+
+/**
+ * @brief      Send a request to stop the deauth
+ * @return     true if the request was successful, false otherwise.
+ * @param fhttp The FlipperHTTP context
+ * @note       The received data will be handled asynchronously via the callback.
+ */
+bool flipper_http_deauth_stop(FlipperHTTP *fhttp);
+
+/**
  * @brief      Load data from a file.
  * @return     The loaded data as a FuriString.
  * @param      file_path The path to the file to load.
