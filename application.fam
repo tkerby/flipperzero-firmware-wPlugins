@@ -8,7 +8,7 @@ App(
     stack_size=4 * 1024,
     fap_category="GPIO",
     # Optional values
-    fap_version="0.2",
+    fap_version="0.3",
     fap_icon="images/sio2flip.png",  # 10x10 1-bit PNG
     fap_description="Atari 8-bit computer SIO peripheral emulator",
     fap_author="cepetr",
