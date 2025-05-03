@@ -1,3 +1,6 @@
+v0.3:
+- Fixed XEX file loading
+
 v0.2:
 - Added Atari 850 modem emulation
 

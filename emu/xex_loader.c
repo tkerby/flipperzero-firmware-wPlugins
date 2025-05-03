@@ -20,7 +20,7 @@
 
 #include "xex_loader.h"
 
-#define CHUNK_SIZE SIO_MAX_FRAME_SIZE
+#define CHUNK_SIZE 1024
 
 // XEX loader specific SIO commands
 #define SIO_COMMAND_READ_BLOCK_HEADER 0xF0 // Read XEX block header
