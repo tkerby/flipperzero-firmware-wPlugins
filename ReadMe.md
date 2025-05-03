@@ -57,6 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - Updated: [SWD Probe v1.3 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe) (Version Only)
 - Updated: [NFC Magic v1.15 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) (Version Only)
+- OFW: PR: [Infrared: Add text scroll to remote buttons #4210 (By 956MB)](https://github.com/flipperdevices/flipperzero-firmware/pull/4210)
 
 <a name="release">
 
