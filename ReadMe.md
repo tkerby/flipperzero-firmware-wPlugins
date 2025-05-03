@@ -58,6 +58,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: PR: [Infrared: Add text scroll to remote buttons #4210 (By 956MB)](https://github.com/flipperdevices/flipperzero-firmware/pull/4210)
 - Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [FlipWifi v1.6 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [Atari SIO Emulator v0.3 (By cepetr)](https://github.com/cepetr/sio2flip)
 
 <a name="release">
 
@@ -396,7 +397,7 @@ $ ./fbt dolphin_ext
 - [Analog Clock v1.2 (By scrolltex)](https://github.com/scrolltex/flipper_analog_clock)
 - [Analog Output v0.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/dac)
 - [ASCII Table v1.0 (By x10102)](https://github.com/x10102/flipper_ascii)
-- [Atari SIO Emulator v0.1.2 (By cepetr)](https://github.com/cepetr/sio2flip)
+- [Atari SIO Emulator v0.3 (By cepetr)](https://github.com/cepetr/sio2flip)
 - [Atomic Dice Roller v1.1 (By nmrr)](https://github.com/nmrr/flipperzero-atomicdiceroller)
 - [Authenticator/TOTP v5.18.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - [AVR Flasher v1.5 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2475)
