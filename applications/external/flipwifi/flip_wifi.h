@@ -6,7 +6,7 @@
 #include <storage/storage.h>
 
 #define TAG                "FlipWiFi"
-#define VERSION            "1.5.2"
+#define VERSION            "1.6"
 #define VERSION_TAG        TAG " " VERSION
 #define MAX_SCAN_NETWORKS  100
 #define MAX_SAVED_NETWORKS 25
@@ -17,6 +17,7 @@ typedef enum {
     FlipWiFiSubmenuIndexAbout,
     //
     FlipWiFiSubmenuIndexWiFiScan,
+    FlipWiFiSubmenuIndexWiFiDeauth,
     FlipWiFiSubmenuIndexWiFiAP,
     FlipWiFiSubmenuIndexWiFiSaved,
     FlipWiFiSubmenuIndexCommands,
@@ -36,6 +37,8 @@ typedef enum {
 // Define a single view for our FlipWiFi application
 typedef enum {
     FlipWiFiViewWiFiScan, // The view for the wifi scan screen
+    FlipWiFiViewWiFiDeauth, // The view for the wifi scan screen
+    FlipWiFiViewWiFiDeauthWait, // The view for the wifi scan screen
     FlipWiFiViewWiFiAP, // The view for the wifi AP screen
     FlipWiFiViewWiFiSaved, // The view for the wifi scan screen
     //
@@ -46,6 +49,7 @@ typedef enum {
     FlipWiFiViewSubmenuCommands, // The submenu for the fast commands screen
     FlipWiFiViewAbout, // The about screen
     FlipWiFiViewTextInputScan, // The text input screen for the wifi scan screen
+    FlipWiFiViewTextInputDeauth, // The text input screen for the wifi scan screen
     FlipWiFiViewTextInputSaved, // The text input screen for the wifi saved screen
     //
     FlipWiFiViewTextInputSavedAddSSID, // The text input screen for the wifi saved screen

@@ -23,7 +23,17 @@ FlipWiFiApp* flip_wifi_app_alloc() {
     submenu_add_item(
         app->submenu_main, "Scan", FlipWiFiSubmenuIndexWiFiScan, callback_submenu_choices, app);
     submenu_add_item(
-        app->submenu_main, "AP Mode", FlipWiFiSubmenuIndexWiFiAP, callback_submenu_choices, app);
+        app->submenu_main,
+        "Deauthentication",
+        FlipWiFiSubmenuIndexWiFiDeauth,
+        callback_submenu_choices,
+        app);
+    submenu_add_item(
+        app->submenu_main,
+        "Captive Portal",
+        FlipWiFiSubmenuIndexWiFiAP,
+        callback_submenu_choices,
+        app);
     submenu_add_item(
         app->submenu_main,
         "Saved APs",
