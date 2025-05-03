@@ -93,6 +93,13 @@ bool xex_file_parse(XexFile* xex) {
             return false;
         }
 
+        if(header[0] == 0x1A1A && header[1] == 0x1A1A) {
+            offset -= 4;
+            FURI_LOG_I(TAG, "XEX file truncated from %d to %d bytes", xex->file_size, offset);
+            xex->file_size = offset;
+            break;
+        }
+
         XexBlock* block = &xex->blocks[xex->block_count];
 
         block->offset = offset;
@@ -113,14 +120,6 @@ bool xex_file_parse(XexFile* xex) {
 
         offset += block->size;
         ++xex->block_count;
-
-        if(block->addr == 0x2E0) {
-            if(xex->file_size != offset) {
-                FURI_LOG_I(TAG, "XEX file truncated from %d to %d bytes", xex->file_size, offset);
-            }
-            xex->file_size = offset;
-            break;
-        }
     }
 
     return true;
