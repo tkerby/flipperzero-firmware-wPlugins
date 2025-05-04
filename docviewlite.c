@@ -7,12 +7,12 @@
 #include <gui/modules/text_input.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/dialog_ex.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 #include <storage/storage.h>
 #include <dialogs/dialogs.h>
 #include <flipper_format/flipper_format.h>
-// #include "docviewlite_icons.h"
 
 #define TAG "docviewlite"
 
@@ -23,6 +23,9 @@
 #define MAX_FILE_SIZE   8192
 #define MAX_LINES       100
 #define MAX_LINE_LENGTH 128
+
+// File extension filter
+#define FILE_EXTENSION_FILTER ".txt"
 
 // Our application menu items
 typedef enum {
@@ -66,6 +69,7 @@ typedef struct {
     uint16_t lines_per_screen; // How many lines fit on screen
     uint16_t line_offsets[MAX_LINES]; // Offset of each line in content
     DocViewSettings settings; // Viewer settings
+    bool is_file_loaded; // Flag to indicate if file has been loaded successfully
 } DocViewModel;
 
 typedef struct {
@@ -73,7 +77,7 @@ typedef struct {
     NotificationApp* notifications;
     Submenu* submenu;
     Widget* widget_about;
-    View* text_viewer; // Changed from Widget* to View*
+    View* text_viewer;
     VariableItemList* settings_menu;
     DialogsApp* dialogs;
     Storage* storage;
@@ -83,6 +87,9 @@ typedef struct {
     DocViewModel* doc_model; // Document content and state
     FuriTimer* timer; // For any timed operations
 } DocViewApp;
+
+// Forward declaration of app free function to fix ordering issues
+static void docview_app_free(DocViewApp* app);
 
 /**
  * Navigation callbacks
@@ -98,31 +105,82 @@ static uint32_t docview_navigation_submenu_callback(void* _context) {
 }
 
 /**
+ * Button callback for error dialog
+ */
+static void docview_error_ok_callback(GuiButtonType button, InputType type, void* context) {
+    DocViewApp* app = context;
+    if(type == InputTypeShort && button == GuiButtonTypeCenter && app != NULL) {
+        view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewSubmenu);
+    }
+}
+
+/**
+ * Display an error message as a widget
+ */
+static void docview_show_error(DocViewApp* app, const char* error_text) {
+    if(app == NULL) {
+        return;
+    }
+
+    // Create widget to display error
+    Widget* widget = widget_alloc();
+    widget_add_string_element(widget, 64, 32, AlignCenter, AlignCenter, FontPrimary, error_text);
+    widget_add_button_element(widget, GuiButtonTypeCenter, "OK", docview_error_ok_callback, app);
+
+    // Show error dialog
+    view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewAbout);
+    // Free the old about widget and replace it with our error widget
+    view_dispatcher_remove_view(app->view_dispatcher, DocViewViewAbout);
+    if(app->widget_about != NULL) {
+        widget_free(app->widget_about);
+    }
+    app->widget_about = widget;
+    view_dispatcher_add_view(app->view_dispatcher, DocViewViewAbout, widget_get_view(widget));
+    view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewAbout);
+}
+
+/**
  * Submenu callbacks
  */
 static void docview_submenu_callback(void* context, uint32_t index) {
     DocViewApp* app = (DocViewApp*)context;
+
+    if(app == NULL) {
+        FURI_LOG_E(TAG, "App context is NULL in submenu callback");
+        return;
+    }
+
     switch(index) {
     case DocViewSubmenuIndexBrowse:
         // Open file browser dialog
         {
-            FuriString* selected_file = furi_string_alloc();
             DialogsFileBrowserOptions browser_options;
-            dialog_file_browser_set_basic_options(&browser_options, ".txt", NULL);
+            dialog_file_browser_set_basic_options(&browser_options, FILE_EXTENSION_FILTER, NULL);
+
+            // Make sure file path is initialized
+            if(app->file_path == NULL) {
+                app->file_path = furi_string_alloc_set("/ext");
+            }
 
             bool result = dialog_file_browser_show(
                 app->dialogs, app->file_path, app->file_path, &browser_options);
 
             if(result) {
-                // Load selected file - instead of non-existent duplicate function, use set
-                furi_string_set(app->doc_model->file_path, app->file_path);
+                // Make sure doc_model and file_path are initialized
+                if(app->doc_model != NULL && app->doc_model->file_path != NULL) {
+                    // Load selected file using set instead of duplicate
+                    furi_string_set(app->doc_model->file_path, app->file_path);
+                    app->doc_model->is_file_loaded = false; // Reset file loaded flag
 
-                // Create text viewer to display file
-                view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewTextViewer);
-                view_dispatcher_send_custom_event(app->view_dispatcher, DocViewEventIdLoadFile);
+                    // Switch to text viewer and load the file
+                    view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewTextViewer);
+                    view_dispatcher_send_custom_event(
+                        app->view_dispatcher, DocViewEventIdLoadFile);
+                } else {
+                    FURI_LOG_E(TAG, "Doc model or file path is NULL");
+                    docview_show_error(app, "Internal error: NULL model");
+                }
             }
-
-            furi_string_free(selected_file);
         }
         break;
     case DocViewSubmenuIndexSettings:
@@ -141,54 +199,116 @@ static void docview_submenu_callback(void* context, uint32_t index) {
  */
 static bool docview_load_file(DocViewApp* app) {
     bool success = false;
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FuriString* content = furi_string_alloc();
 
-    File* file = storage_file_alloc(storage);
-    if(storage_file_open(
-           file, furi_string_get_cstr(app->doc_model->file_path), FSAM_READ, FSOM_OPEN_EXISTING)) {
-        // Get file size
-        uint64_t file_size = storage_file_size(file);
-        if(file_size > MAX_FILE_SIZE) {
-            file_size = MAX_FILE_SIZE; // Limit file size
-        }
-
-        if(app->file_buffer) {
-            free(app->file_buffer);
-        }
-        app->file_buffer = malloc(file_size + 1);
-
-        if(app->file_buffer) {
-            // Read file content
-            uint16_t bytes_read = storage_file_read(file, app->file_buffer, file_size);
-            app->file_buffer[bytes_read] = '\0';
-
-            furi_string_set(app->doc_model->content, app->file_buffer);
-            app->doc_model->content_length = bytes_read;
-
-            // Parse line positions
-            uint16_t line_count = 0;
-            app->doc_model->line_offsets[line_count++] = 0;
-
-            for(uint16_t i = 0; i < bytes_read && line_count < MAX_LINES; i++) {
-                if(app->file_buffer[i] == '\n') {
-                    app->doc_model->line_offsets[line_count++] = i + 1;
-                }
-            }
-
-            app->doc_model->total_lines = line_count;
-            app->doc_model->current_line = 0;
-
-            // Default to about 8 lines per screen, will be adjusted based on font size
-            app->doc_model->lines_per_screen = 8;
-
-            success = true;
-        }
+    // Basic error checking
+    if(app == NULL || app->doc_model == NULL || app->doc_model->file_path == NULL) {
+        FURI_LOG_E(TAG, "Invalid app or doc model pointers");
+        return false;
     }
 
+    // Get file path
+    const char* file_path = furi_string_get_cstr(app->doc_model->file_path);
+    if(file_path == NULL || strlen(file_path) == 0) {
+        FURI_LOG_E(TAG, "Invalid file path");
+        return false;
+    }
+
+    FURI_LOG_I(TAG, "Loading file: %s", file_path);
+
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(storage == NULL) {
+        FURI_LOG_E(TAG, "Failed to open storage record");
+        return false;
+    }
+
+    File* file = storage_file_alloc(storage);
+    if(file == NULL) {
+        FURI_LOG_E(TAG, "Failed to allocate file");
+        furi_record_close(RECORD_STORAGE);
+        return false;
+    }
+
+    if(storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        // Get file size
+        uint64_t file_size = storage_file_size(file);
+        if(file_size > 0) {
+            if(file_size > MAX_FILE_SIZE) {
+                file_size = MAX_FILE_SIZE; // Limit file size
+                FURI_LOG_W(TAG, "File truncated to %d bytes", MAX_FILE_SIZE);
+            }
+
+            // Free old buffer if it exists
+            if(app->file_buffer) {
+                free(app->file_buffer);
+                app->file_buffer = NULL;
+            }
+
+            // Allocate new buffer
+            app->file_buffer = malloc(file_size + 1);
+            if(app->file_buffer) {
+                // Read file content
+                uint16_t bytes_read = storage_file_read(file, app->file_buffer, file_size);
+                if(bytes_read > 0) {
+                    app->file_buffer[bytes_read] = '\0';
+
+                    // Set content and length
+                    furi_string_set(app->doc_model->content, app->file_buffer);
+                    app->doc_model->content_length = bytes_read;
+
+                    // Parse line positions
+                    uint16_t line_count = 0;
+                    app->doc_model->line_offsets[line_count++] = 0;
+
+                    for(uint16_t i = 0; i < bytes_read && line_count < MAX_LINES; i++) {
+                        if(app->file_buffer[i] == '\n') {
+                            app->doc_model->line_offsets[line_count++] = i + 1;
+                        }
+                    }
+
+                    // Ensure we have at least one line
+                    if(line_count == 0) {
+                        line_count = 1;
+                    }
+
+                    app->doc_model->total_lines = line_count;
+                    app->doc_model->current_line = 0;
+
+                    // Lines per screen based on current font size
+                    switch(app->doc_model->settings.font_size) {
+                    case 1: // Medium
+                        app->doc_model->lines_per_screen = 6;
+                        break;
+                    case 2: // Large
+                        app->doc_model->lines_per_screen = 4;
+                        break;
+                    default: // Small
+                        app->doc_model->lines_per_screen = 8;
+                        break;
+                    }
+
+                    app->doc_model->is_file_loaded = true;
+                    success = true;
+                    FURI_LOG_I(
+                        TAG,
+                        "File loaded successfully: %d bytes, %d lines",
+                        bytes_read,
+                        line_count);
+                } else {
+                    FURI_LOG_E(TAG, "Failed to read file or file is empty");
+                }
+            } else {
+                FURI_LOG_E(TAG, "Failed to allocate memory for file content");
+            }
+        } else {
+            FURI_LOG_E(TAG, "File is empty");
+        }
+    } else {
+        FURI_LOG_E(TAG, "Failed to open file: %s", file_path);
+    }
+
+    storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
-    furi_string_free(content);
 
     return success;
 }
@@ -198,9 +318,31 @@ static bool docview_load_file(DocViewApp* app) {
  */
 static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
     DocViewModel* doc_model = (DocViewModel*)model;
+    if(doc_model == NULL) {
+        FURI_LOG_E(TAG, "DocViewModel is NULL in draw callback");
+        canvas_clear(canvas);
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Error: NULL model");
+        return;
+    }
 
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
+
+    // If file is not loaded, show message
+    if(!doc_model->is_file_loaded) {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Loading file...");
+        return;
+    }
+
+    // Check if content exists
+    if(doc_model->content == NULL || furi_string_size(doc_model->content) == 0 ||
+       doc_model->total_lines == 0) {
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "No content to display");
+        return;
+    }
 
     // Header with file name and position indicator
     canvas_set_font(canvas, FontPrimary);
@@ -215,13 +357,17 @@ static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
         filename = path;
     }
 
+    // Calculate total pages (ensure we don't divide by zero)
+    uint16_t total_pages = 1;
+    uint16_t current_page = 1;
+    if(doc_model->lines_per_screen > 0) {
+        total_pages = (doc_model->total_lines + doc_model->lines_per_screen - 1) /
+                      doc_model->lines_per_screen;
+        current_page = doc_model->current_line / doc_model->lines_per_screen + 1;
+    }
+
     // Show filename and position in file
-    furi_string_printf(
-        header,
-        "%s (%d/%d)",
-        filename,
-        doc_model->current_line / doc_model->lines_per_screen + 1,
-        (doc_model->total_lines + doc_model->lines_per_screen - 1) / doc_model->lines_per_screen);
+    furi_string_printf(header, "%s (%d/%d)", filename, current_page, total_pages);
 
     canvas_draw_str(canvas, 2, 10, furi_string_get_cstr(header));
     furi_string_free(header);
@@ -234,33 +380,54 @@ static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
     uint8_t y_offset = 24;
     uint8_t line_height = 10;
 
+    const char* content = furi_string_get_cstr(doc_model->content);
+    if(content == NULL) {
+        FURI_LOG_E(TAG, "Content string is NULL");
+        return;
+    }
+
     for(uint16_t i = 0; i < doc_model->lines_per_screen; i++) {
         uint16_t line_idx = doc_model->current_line + i;
         if(line_idx >= doc_model->total_lines) {
             break;
         }
 
-        // Get line content
-        uint16_t start = doc_model->line_offsets[line_idx];
-        uint16_t end;
+        // Get line content with bounds checking
+        uint16_t start = 0;
+        if(line_idx < doc_model->total_lines) {
+            start = doc_model->line_offsets[line_idx];
+        }
 
+        uint16_t end = doc_model->content_length;
         if(line_idx + 1 < doc_model->total_lines) {
             end = doc_model->line_offsets[line_idx + 1] - 1; // -1 to exclude newline
-        } else {
+        }
+
+        // Ensure end is not beyond content length
+        if(end > doc_model->content_length) {
             end = doc_model->content_length;
         }
 
-        // Copy line content to temporary buffer for display
-        if(end > start && (end - start) < MAX_LINE_LENGTH) {
+        // Ensure end is greater than start
+        if(end <= start) {
+            continue;
+        }
+
+        // Copy line content to temporary buffer with bounds checking
+        if((end - start) < MAX_LINE_LENGTH) {
             char line_buf[MAX_LINE_LENGTH];
             size_t line_len = end - start;
-            if(line_len > 0) {
-                memcpy(line_buf, furi_string_get_cstr(doc_model->content) + start, line_len);
-                line_buf[line_len] = '\0';
+
+            if(line_len > 0 && start < doc_model->content_length) {
+                // Safely copy content to line buffer
+                size_t copy_len = (line_len < MAX_LINE_LENGTH - 1) ? line_len :
+                                                                     MAX_LINE_LENGTH - 1;
+                memcpy(line_buf, content + start, copy_len);
+                line_buf[copy_len] = '\0';
 
                 // Remove CR if present
-                if(line_len > 0 && line_buf[line_len - 1] == '\r') {
-                    line_buf[line_len - 1] = '\0';
+                if(copy_len > 0 && line_buf[copy_len - 1] == '\r') {
+                    line_buf[copy_len - 1] = '\0';
                 }
 
                 canvas_draw_str(canvas, 2, y_offset, line_buf);
@@ -280,10 +447,13 @@ static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
         canvas_draw_line(
             canvas, scrollbar_x, scrollbar_y, scrollbar_x, scrollbar_y + scrollbar_height);
 
-        // Draw scrollbar position indicator
-        float position_ratio = (float)doc_model->current_line /
-                               (float)(doc_model->total_lines - doc_model->lines_per_screen);
-        if(position_ratio > 1.0f) position_ratio = 1.0f;
+        // Calculate position ratio safely
+        float position_ratio = 0.0f;
+        if(doc_model->total_lines > doc_model->lines_per_screen) {
+            position_ratio = (float)doc_model->current_line /
+                             (float)(doc_model->total_lines - doc_model->lines_per_screen);
+            if(position_ratio > 1.0f) position_ratio = 1.0f;
+        }
 
         uint8_t indicator_pos = scrollbar_y + (position_ratio * scrollbar_height);
         uint8_t indicator_height = 5;
@@ -297,6 +467,16 @@ static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
 static bool docview_text_viewer_input_callback(InputEvent* event, void* context) {
     DocViewApp* app = (DocViewApp*)context;
     bool consumed = false;
+
+    if(app == NULL || app->doc_model == NULL) {
+        FURI_LOG_E(TAG, "App or doc_model is NULL in input callback");
+        return false;
+    }
+
+    // Don't process inputs if file isn't loaded
+    if(!app->doc_model->is_file_loaded) {
+        return false;
+    }
 
     if(event->type == InputTypeShort || event->type == InputTypeRepeat) {
         if(event->key == InputKeyUp) {
@@ -355,24 +535,46 @@ static bool docview_text_viewer_custom_event_callback(uint32_t event, void* cont
     DocViewApp* app = (DocViewApp*)context;
     bool handled = false;
 
+    if(app == NULL || app->doc_model == NULL || app->text_viewer == NULL) {
+        FURI_LOG_E(TAG, "App, doc_model or text_viewer is NULL in custom event callback");
+        return false;
+    }
+
     switch(event) {
-    case DocViewEventIdLoadFile:
-        docview_load_file(app);
-        with_view_model(
-            app->text_viewer, DocViewModel * model, { *model = *app->doc_model; }, true);
-        handled = true;
-        break;
+    case DocViewEventIdLoadFile: {
+        bool success = docview_load_file(app);
+        if(success) {
+            with_view_model(
+                app->text_viewer, DocViewModel * model, { *model = *app->doc_model; }, true);
+            handled = true;
+        } else {
+            // Show error if loading failed
+            docview_show_error(app, "Failed to load file");
+            view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewAbout);
+        }
+    } break;
+
     case DocViewEventIdNextPage:
-        if(app->doc_model->current_line + app->doc_model->lines_per_screen <
-           app->doc_model->total_lines) {
+        if(app->doc_model->is_file_loaded &&
+           app->doc_model->current_line + app->doc_model->lines_per_screen <
+               app->doc_model->total_lines) {
             app->doc_model->current_line += app->doc_model->lines_per_screen;
+            if(app->doc_model->current_line + app->doc_model->lines_per_screen >
+               app->doc_model->total_lines) {
+                app->doc_model->current_line =
+                    app->doc_model->total_lines - app->doc_model->lines_per_screen;
+                if(app->doc_model->current_line >= app->doc_model->total_lines) {
+                    app->doc_model->current_line = app->doc_model->total_lines - 1;
+                }
+            }
             with_view_model(
                 app->text_viewer, DocViewModel * model, { *model = *app->doc_model; }, true);
         }
         handled = true;
         break;
+
     case DocViewEventIdPrevPage:
-        if(app->doc_model->current_line > 0) {
+        if(app->doc_model->is_file_loaded && app->doc_model->current_line > 0) {
             if(app->doc_model->current_line >= app->doc_model->lines_per_screen) {
                 app->doc_model->current_line -= app->doc_model->lines_per_screen;
             } else {
@@ -392,10 +594,16 @@ static bool docview_text_viewer_custom_event_callback(uint32_t event, void* cont
 static const char* const font_size_names[] = {"Small", "Medium", "Large"};
 static void docview_font_size_changed(VariableItem* item) {
     DocViewApp* app = variable_item_get_context(item);
+    if(app == NULL || app->doc_model == NULL) {
+        FURI_LOG_E(TAG, "App or doc_model is NULL in font size callback");
+        return;
+    }
+
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, font_size_names[index]);
 
     app->doc_model->settings.font_size = index;
+
     // Adjust lines per screen based on font size
     switch(index) {
     case 0: // Small
@@ -414,6 +622,11 @@ static void docview_font_size_changed(VariableItem* item) {
 static const char* const word_wrap_names[] = {"Off", "On"};
 static void docview_word_wrap_changed(VariableItem* item) {
     DocViewApp* app = variable_item_get_context(item);
+    if(app == NULL || app->doc_model == NULL) {
+        FURI_LOG_E(TAG, "App or doc_model is NULL in word wrap callback");
+        return;
+    }
+
     uint8_t index = variable_item_get_current_value_index(item);
     variable_item_set_current_value_text(item, word_wrap_names[index]);
 
@@ -425,6 +638,24 @@ static void docview_word_wrap_changed(VariableItem* item) {
  */
 static DocViewApp* docview_app_alloc() {
     DocViewApp* app = malloc(sizeof(DocViewApp));
+    if(app == NULL) {
+        FURI_LOG_E(TAG, "Failed to allocate app memory");
+        return NULL;
+    }
+
+    // Initialize with NULL to avoid undefined behavior if allocation fails
+    app->view_dispatcher = NULL;
+    app->notifications = NULL;
+    app->submenu = NULL;
+    app->widget_about = NULL;
+    app->text_viewer = NULL;
+    app->settings_menu = NULL;
+    app->dialogs = NULL;
+    app->storage = NULL;
+    app->file_path = NULL;
+    app->file_buffer = NULL;
+    app->doc_model = NULL;
+    app->timer = NULL;
 
     // Open required records
     Gui* gui = furi_record_open(RECORD_GUI);
@@ -442,6 +673,12 @@ static DocViewApp* docview_app_alloc() {
 
     // Initialize document model
     app->doc_model = malloc(sizeof(DocViewModel));
+    if(app->doc_model == NULL) {
+        FURI_LOG_E(TAG, "Failed to allocate doc_model memory");
+        docview_app_free(app);
+        return NULL;
+    }
+
     app->doc_model->file_path = furi_string_alloc();
     app->doc_model->content = furi_string_alloc();
     app->doc_model->content_length = 0;
@@ -451,6 +688,7 @@ static DocViewApp* docview_app_alloc() {
     app->doc_model->settings.font_size = 0;
     app->doc_model->settings.word_wrap = false;
     app->doc_model->settings.scroll_speed = 0;
+    app->doc_model->is_file_loaded = false; // Initialize as not loaded
 
     // Initialize main menu
     app->submenu = submenu_alloc();
@@ -464,7 +702,7 @@ static DocViewApp* docview_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, DocViewViewSubmenu, submenu_get_view(app->submenu));
 
-    // Initialize text viewer - fixed to be View* instead of Widget*
+    // Initialize text viewer - View* type
     app->text_viewer = view_alloc();
     view_set_context(app->text_viewer, app);
     view_set_draw_callback(app->text_viewer, docview_text_viewer_draw_callback);
@@ -472,6 +710,25 @@ static DocViewApp* docview_app_alloc() {
     view_set_previous_callback(app->text_viewer, docview_navigation_submenu_callback);
     view_set_custom_callback(app->text_viewer, docview_text_viewer_custom_event_callback);
     view_allocate_model(app->text_viewer, ViewModelTypeLocking, sizeof(DocViewModel));
+
+    // Initialize the model safely
+    with_view_model(
+        app->text_viewer,
+        DocViewModel * model,
+        {
+            model->file_path = furi_string_alloc();
+            model->content = furi_string_alloc();
+            model->content_length = 0;
+            model->current_line = 0;
+            model->total_lines = 0;
+            model->lines_per_screen = 8;
+            model->settings.font_size = 0;
+            model->settings.word_wrap = false;
+            model->settings.scroll_speed = 0;
+            model->is_file_loaded = false;
+        },
+        true);
+
     view_dispatcher_add_view(app->view_dispatcher, DocViewViewTextViewer, app->text_viewer);
 
     // Initialize settings menu
@@ -545,23 +802,39 @@ static DocViewApp* docview_app_alloc() {
  * Free application resources
  */
 static void docview_app_free(DocViewApp* app) {
+    if(app == NULL) {
+        return;
+    }
+
 #ifdef BACKLIGHT_ON
-    notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+    if(app->notifications) {
+        notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+        furi_record_close(RECORD_NOTIFICATION);
+    }
 #endif
-    furi_record_close(RECORD_NOTIFICATION);
 
-    // Free views
-    view_dispatcher_remove_view(app->view_dispatcher, DocViewViewSubmenu);
-    submenu_free(app->submenu);
+    // Free views if they exist
+    if(app->view_dispatcher) {
+        if(app->submenu) {
+            view_dispatcher_remove_view(app->view_dispatcher, DocViewViewSubmenu);
+            submenu_free(app->submenu);
+        }
 
-    view_dispatcher_remove_view(app->view_dispatcher, DocViewViewTextViewer);
-    view_free(app->text_viewer); // Now correct since text_viewer is View*
+        if(app->text_viewer) {
+            view_dispatcher_remove_view(app->view_dispatcher, DocViewViewTextViewer);
+            view_free(app->text_viewer);
+        }
 
-    view_dispatcher_remove_view(app->view_dispatcher, DocViewViewSettings);
-    variable_item_list_free(app->settings_menu);
+        if(app->settings_menu) {
+            view_dispatcher_remove_view(app->view_dispatcher, DocViewViewSettings);
+            variable_item_list_free(app->settings_menu);
+        }
 
-    view_dispatcher_remove_view(app->view_dispatcher, DocViewViewAbout);
-    widget_free(app->widget_about);
+        if(app->widget_about) {
+            view_dispatcher_remove_view(app->view_dispatcher, DocViewViewAbout);
+            widget_free(app->widget_about);
+        }
+    }
 
     // Free file resources
     if(app->file_buffer) {
@@ -569,20 +842,34 @@ static void docview_app_free(DocViewApp* app) {
     }
 
     // Free document model
-    furi_string_free(app->doc_model->file_path);
-    furi_string_free(app->doc_model->content);
-    free(app->doc_model);
+    if(app->doc_model) {
+        if(app->doc_model->file_path) {
+            furi_string_free(app->doc_model->file_path);
+        }
+        if(app->doc_model->content) {
+            furi_string_free(app->doc_model->content);
+        }
+        free(app->doc_model);
+    }
 
     // Free file path
-    furi_string_free(app->file_path);
+    if(app->file_path) {
+        furi_string_free(app->file_path);
+    }
 
     // Free view dispatcher
-    view_dispatcher_free(app->view_dispatcher);
+    if(app->view_dispatcher) {
+        view_dispatcher_free(app->view_dispatcher);
+    }
 
     // Close records
+    if(app->storage) {
+        furi_record_close(RECORD_STORAGE);
+    }
+    if(app->dialogs) {
+        furi_record_close(RECORD_DIALOGS);
+    }
     furi_record_close(RECORD_GUI);
-    furi_record_close(RECORD_DIALOGS);
-    furi_record_close(RECORD_STORAGE);
 
     // Free the app
     free(app);
@@ -594,8 +881,17 @@ static void docview_app_free(DocViewApp* app) {
 int32_t docviewlite_app(void* p) {
     UNUSED(p);
 
+    FURI_LOG_I(TAG, "Doc Viewer Lite starting");
+
     DocViewApp* app = docview_app_alloc();
+    if(app == NULL) {
+        FURI_LOG_E(TAG, "Failed to allocate app");
+        return -1;
+    }
+
     view_dispatcher_run(app->view_dispatcher);
+
+    FURI_LOG_I(TAG, "Doc Viewer Lite cleaning up");
     docview_app_free(app);
 
     return 0;

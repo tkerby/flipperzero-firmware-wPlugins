@@ -12,13 +12,4 @@ App(
     fap_author="FlipperDev",
     fap_weburl="https://github.com/C0d3-5t3w/docviewlite",
     fap_icon_assets="images",  # Image assets to compile for this application
-    requires=[
-        "storage",
-        "dialogs",
-        "furi",
-        "furi_hal",
-        "gui",
-        "notifications",
-        "flipper_format",
-    ],
 )
