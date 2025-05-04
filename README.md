@@ -76,20 +76,26 @@ T-Union Master（交通卡大师）是基于 [flipper zero](https://flipperzero.
 
 ## 🔨 Building
 
-使用 [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) 进行构建
+使用 Flipper Zero SDK 工具（[ufbt](https://github.com/flipperdevices/flipperzero-ufbt) ）进行构建，基于[mntm-010](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-010) 固件开发，需手动指定 SDK 版本
 
-项目基于[mntm-010](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-010) SDK 开发，需手动指定 SDK 版本
+城市 id 数据库及线路站台数据库需要在构建前手动执行脚本生成，构建脚本需要安装依赖库
+
+ufbt 与数据库生成脚本均需要 Python3 运行环境，确保系统中已安装 Python3
 
 ```bash
 # 克隆本项目(或下载源码包)
 git clone https://github.com/SocialSisterYi/T-Union_Master
 cd T-Union_Master
 
-# 安装ufbt
+# 安装ufbt和数据库生成脚本的依赖
 pip install ufbt
+pip install -r requirements.txt
 
 # 安装指定的SDK
 ufbt update -t f7 -u https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-010/flipper-z-f7-sdk-mntm-010.zip
+
+# 生成数据库
+python compile_database.py
 
 # 构建项目
 ufbt
