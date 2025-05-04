@@ -60,6 +60,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWifi v1.6 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [Atari SIO Emulator v0.3 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Updated: [Drifter v0.2 (By jean-edouard)](https://github.com/jean-edouard/drifter) (Version Only)
+- Updated: [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 
 <a name="release">
 
@@ -661,7 +662,7 @@ $ ./fbt dolphin_ext
 - [ShapShup v1.2 (By derskythe)](https://github.com/derskythe/flipperzero-shapshup)
 - [SI4713 Tuner v0.1 (By rullinoiz)](https://github.com/rullinoiz/flipper-si4713) `Req: SI4713`
 - [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793)
-- [Simultanious UHF RFID Reader v1.1.1 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
+- [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 - [Skeleton App v1.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app)
 - [Sleep Counter v2.0 (By silverwolf2r)](https://github.com/silverwolf2r/flipper-sleep-counter) `Req: RCWL-0516`
 - [Smack My Dolphin Up! (By siberianbot)](https://github.com/siberianbot/smack-my-dolphin-up)
