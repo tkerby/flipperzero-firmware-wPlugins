@@ -12,7 +12,7 @@
 #include <storage/storage.h>
 #include <dialogs/dialogs.h>
 #include <flipper_format/flipper_format.h>
-#include "docviewlite_icons.h"
+// #include "docviewlite_icons.h"
 
 #define TAG "docviewlite"
 
@@ -73,7 +73,7 @@ typedef struct {
     NotificationApp* notifications;
     Submenu* submenu;
     Widget* widget_about;
-    Widget* text_viewer;
+    View* text_viewer; // Changed from Widget* to View*
     VariableItemList* settings_menu;
     DialogsApp* dialogs;
     Storage* storage;
@@ -114,8 +114,8 @@ static void docview_submenu_callback(void* context, uint32_t index) {
                 app->dialogs, app->file_path, app->file_path, &browser_options);
 
             if(result) {
-                // Load selected file
-                app->doc_model->file_path = furi_string_duplicate(app->file_path);
+                // Load selected file - instead of non-existent duplicate function, use set
+                furi_string_set(app->doc_model->file_path, app->file_path);
 
                 // Create text viewer to display file
                 view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewTextViewer);
@@ -319,8 +319,9 @@ static bool docview_text_viewer_input_callback(InputEvent* event, void* context)
         } else if(event->key == InputKeyLeft) {
             // Page up
             if(app->doc_model->current_line > 0) {
-                app->doc_model->current_line -= app->doc_model->lines_per_screen;
-                if(app->doc_model->current_line < 0) {
+                if(app->doc_model->current_line >= app->doc_model->lines_per_screen) {
+                    app->doc_model->current_line -= app->doc_model->lines_per_screen;
+                } else {
                     app->doc_model->current_line = 0;
                 }
                 with_view_model(
@@ -336,9 +337,6 @@ static bool docview_text_viewer_input_callback(InputEvent* event, void* context)
                    app->doc_model->total_lines) {
                     app->doc_model->current_line =
                         app->doc_model->total_lines - app->doc_model->lines_per_screen;
-                    if(app->doc_model->current_line < 0) {
-                        app->doc_model->current_line = 0;
-                    }
                 }
                 with_view_model(
                     app->text_viewer, DocViewModel * model, { *model = *app->doc_model; }, true);
@@ -375,8 +373,9 @@ static bool docview_text_viewer_custom_event_callback(uint32_t event, void* cont
         break;
     case DocViewEventIdPrevPage:
         if(app->doc_model->current_line > 0) {
-            app->doc_model->current_line -= app->doc_model->lines_per_screen;
-            if(app->doc_model->current_line < 0) {
+            if(app->doc_model->current_line >= app->doc_model->lines_per_screen) {
+                app->doc_model->current_line -= app->doc_model->lines_per_screen;
+            } else {
                 app->doc_model->current_line = 0;
             }
             with_view_model(
@@ -465,7 +464,7 @@ static DocViewApp* docview_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, DocViewViewSubmenu, submenu_get_view(app->submenu));
 
-    // Initialize text viewer
+    // Initialize text viewer - fixed to be View* instead of Widget*
     app->text_viewer = view_alloc();
     view_set_context(app->text_viewer, app);
     view_set_draw_callback(app->text_viewer, docview_text_viewer_draw_callback);
@@ -556,7 +555,7 @@ static void docview_app_free(DocViewApp* app) {
     submenu_free(app->submenu);
 
     view_dispatcher_remove_view(app->view_dispatcher, DocViewViewTextViewer);
-    view_free(app->text_viewer);
+    view_free(app->text_viewer); // Now correct since text_viewer is View*
 
     view_dispatcher_remove_view(app->view_dispatcher, DocViewViewSettings);
     variable_item_list_free(app->settings_menu);
