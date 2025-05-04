@@ -5,3 +5,5 @@ dist/*
 .editorconfig
 .env
 .ufbt
+resources/stations
+resources/city_code.txt
