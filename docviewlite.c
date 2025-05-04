@@ -70,6 +70,11 @@ typedef struct {
     uint16_t line_offsets[MAX_LINES]; // Offset of each line in content
     DocViewSettings settings; // Viewer settings
     bool is_file_loaded; // Flag to indicate if file has been loaded successfully
+    // Title scrolling variables
+    int16_t title_scroll_offset; // Current horizontal scroll position of title
+    uint8_t title_scroll_direction; // 0 = left to right, 1 = right to left
+    bool title_needs_scrolling; // Whether the title is wider than the display
+    uint16_t title_width; // Width of the title in pixels
 } DocViewModel;
 
 typedef struct {
@@ -195,6 +200,43 @@ static void docview_submenu_callback(void* context, uint32_t index) {
 }
 
 /**
+ * Timer callback to update title scroll position
+ */
+static void docview_scroll_timer_callback(void* context) {
+    DocViewApp* app = context;
+    if(app == NULL || app->doc_model == NULL || app->text_viewer == NULL) {
+        return;
+    }
+
+    // Only update if we have a file loaded and title needs scrolling
+    if(app->doc_model->is_file_loaded && app->doc_model->title_needs_scrolling) {
+        // Update the scroll position based on direction
+        if(app->doc_model->title_scroll_direction == 0) {
+            // Scrolling from left to right
+            app->doc_model->title_scroll_offset++;
+            // If we've scrolled to the end, change direction
+            if(app->doc_model->title_scroll_offset >= 40) {
+                app->doc_model->title_scroll_direction = 1;
+            }
+        } else {
+            // Scrolling from right to left
+            app->doc_model->title_scroll_offset--;
+            // If we've scrolled back to start, change direction
+            if(app->doc_model->title_scroll_offset <= -app->doc_model->title_width + 88) {
+                app->doc_model->title_scroll_direction = 0;
+            }
+        }
+
+        // Update the view to show the new scroll position
+        with_view_model(
+            app->text_viewer,
+            DocViewModel * model,
+            { model->title_scroll_offset = app->doc_model->title_scroll_offset; },
+            true);
+    }
+}
+
+/**
  * Load and parse a text file
  */
 static bool docview_load_file(DocViewApp* app) {
@@ -205,6 +247,12 @@ static bool docview_load_file(DocViewApp* app) {
         FURI_LOG_E(TAG, "Invalid app or doc model pointers");
         return false;
     }
+
+    // Reset scrolling parameters when loading a new file
+    app->doc_model->title_scroll_offset = 0;
+    app->doc_model->title_scroll_direction = 0;
+    app->doc_model->title_needs_scrolling = false;
+    app->doc_model->title_width = 0;
 
     // Get file path
     const char* file_path = furi_string_get_cstr(app->doc_model->file_path);
@@ -369,7 +417,24 @@ static void docview_text_viewer_draw_callback(Canvas* canvas, void* model) {
     // Show filename and position in file
     furi_string_printf(header, "%s (%d/%d)", filename, current_page, total_pages);
 
-    canvas_draw_str(canvas, 2, 10, furi_string_get_cstr(header));
+    // Get the title's width to determine if scrolling is needed
+    canvas_set_font(canvas, FontPrimary);
+    uint16_t title_width = canvas_string_width(canvas, furi_string_get_cstr(header));
+
+    // Set title width for scrolling logic
+    doc_model->title_width = title_width;
+
+    // Determine if title needs scrolling (wider than ~100 pixels to leave room for scrollbar)
+    doc_model->title_needs_scrolling = (title_width > 100);
+
+    // Draw the title with horizontal scrolling if needed
+    if(doc_model->title_needs_scrolling) {
+        canvas_draw_str(
+            canvas, 2 + doc_model->title_scroll_offset, 10, furi_string_get_cstr(header));
+    } else {
+        canvas_draw_str(canvas, 2, 10, furi_string_get_cstr(header));
+    }
+
     furi_string_free(header);
 
     // Draw separator line
@@ -689,6 +754,11 @@ static DocViewApp* docview_app_alloc() {
     app->doc_model->settings.word_wrap = false;
     app->doc_model->settings.scroll_speed = 0;
     app->doc_model->is_file_loaded = false; // Initialize as not loaded
+    // Initialize title scrolling variables
+    app->doc_model->title_scroll_offset = 0;
+    app->doc_model->title_scroll_direction = 0;
+    app->doc_model->title_needs_scrolling = false;
+    app->doc_model->title_width = 0;
 
     // Initialize main menu
     app->submenu = submenu_alloc();
@@ -726,6 +796,11 @@ static DocViewApp* docview_app_alloc() {
             model->settings.word_wrap = false;
             model->settings.scroll_speed = 0;
             model->is_file_loaded = false;
+            // Initialize title scrolling variables
+            model->title_scroll_offset = 0;
+            model->title_scroll_direction = 0;
+            model->title_needs_scrolling = false;
+            model->title_width = 0;
         },
         true);
 
@@ -792,6 +867,10 @@ static DocViewApp* docview_app_alloc() {
     notification_message(app->notifications, &sequence_display_backlight_enforce_on);
 #endif
 
+    // Create timer for title scrolling
+    app->timer = furi_timer_alloc(docview_scroll_timer_callback, FuriTimerTypePeriodic, app);
+    furi_timer_start(app->timer, 200); // Update every 200ms
+
     // Start with the main menu
     view_dispatcher_switch_to_view(app->view_dispatcher, DocViewViewSubmenu);
 
@@ -812,6 +891,13 @@ static void docview_app_free(DocViewApp* app) {
         furi_record_close(RECORD_NOTIFICATION);
     }
 #endif
+
+    // Stop and free the timer
+    if(app->timer != NULL) {
+        furi_timer_stop(app->timer);
+        furi_timer_free(app->timer);
+        app->timer = NULL;
+    }
 
     // Free views if they exist
     if(app->view_dispatcher) {
