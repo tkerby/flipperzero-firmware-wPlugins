@@ -1,6 +1,7 @@
-# 重庆
+# 重庆市-6900
 prefix-len: 2 4
 
+0001: yunb
 01: 1
 02: 2
 03: 3
@@ -13,4 +14,4 @@ prefix-len: 2 4
 50: huan
 51: jiangt
 56: guob
-0001: yunb
+72: bit

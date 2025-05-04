@@ -1,4 +1,5 @@
-name: 3号线/空港线
+# 重庆市-6900
+name: 3号线
 len: 4
 type: mtr
 
