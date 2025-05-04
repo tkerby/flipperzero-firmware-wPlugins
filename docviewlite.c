@@ -773,7 +773,7 @@ static DocViewApp* docview_app_alloc() {
         64,
         "Doc Viewer Lite\n"
         "Version 0.1\n"
-        "-----------------\n"
+        "--Made by: C0d3-5t3w--\n"
         "A simple document viewer\n"
         "for Flipper Zero.\n\n"
         "Controls:\n"
