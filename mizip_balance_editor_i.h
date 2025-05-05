@@ -29,17 +29,20 @@
 #include "mizip_balance_editor.h"
 #include "adapted_from_ofw/mizip.h"
 
-#define NFC_APP_FOLDER                      EXT_PATH("nfc")
-#define NFC_APP_MF_CLASSIC_DICT_SYSTEM_PATH (NFC_APP_FOLDER "/assets/mf_classic_dict.nfc")
-#define NFC_APP_EXTENSION                   ".nfc"
-#define NFC_APP_SHADOW_EXTENSION            ".shd"
-#define MIZIP_BALANCE_MIN_VALUE             0
-#define MIZIP_BALANCE_MAX_VALUE             65535
+#define NFC_APP_FOLDER           EXT_PATH("nfc")
+#define NFC_APP_EXTENSION        ".nfc"
+#define NFC_APP_SHADOW_EXTENSION ".shd"
+#define MIZIP_SECTOR_COUNT       5
+#define MIZIP_KEY_LENGTH         6
+#define MIZIP_KEYA_0_BYTES       {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}
+#define MIZIP_BALANCE_MIN_VALUE  0
+#define MIZIP_BALANCE_MAX_VALUE  65535
 
 // Enumeration of the view indexes.
 typedef enum {
     MiZipBalanceEditorViewIdMainMenu,
     MiZipBalanceEditorViewIdScanner,
+    MiZipBalanceEditorViewIdReader,
     MiZipBalanceEditorViewIdFileSelect,
     MiZipBalanceEditorViewIdNumberInput,
     MiZipBalanceEditorViewIdShowBalance,
@@ -54,34 +57,21 @@ typedef enum {
     SubmenuIndexAbout,
 } SubmenuIndex;
 
+// Custom view events
 enum MiZipBalanceEditorCustomEvent {
     MiZipBalanceEditorCustomEventCardDetected,
     MiZipBalanceEditorCustomEventCardLost,
-    MiZipBalanceEditorCustomEventDictAttackDataUpdate,
     MiZipBalanceEditorCustomEventMfClassicCard,
-    MiZipBalanceEditorCustomEventPollerSuccess,
+    MiZipBalanceEditorCustomEventPollerDone,
     MiZipBalanceEditorCustomEventWrongCard,
     MiZipBalanceEditorCustomEventViewExit,
 };
 
-typedef struct {
-    KeysDict* dict;
-    uint8_t sectors_total;
-    uint8_t sectors_read;
-    uint8_t current_sector;
-    uint8_t keys_found;
-    size_t dict_keys_total;
-    size_t dict_keys_current;
-    bool is_key_attack;
-    uint8_t key_attack_current_sector;
-    bool is_card_present;
-    MfClassicNestedPhase nested_phase;
-    MfClassicPrngType prng_type;
-    MfClassicBackdoor backdoor;
-    uint16_t nested_target_key;
-    uint16_t msb_count;
-    bool enhanced_dict;
-} NfcMfClassicDictAttackContext;
+// Data source
+typedef enum {
+    FileSource,
+    NfcSource,
+} DataSource;
 
 // Main application structure.
 struct MiZipBalanceEditorApp {
@@ -100,6 +90,8 @@ struct MiZipBalanceEditorApp {
 
     SubmenuIndex last_selected_submenu_index;
 
+    DataSource dataSource;
+
     //NFC
     Nfc* nfc;
     NfcScanner* scanner;
@@ -114,8 +106,10 @@ struct MiZipBalanceEditorApp {
     bool is_shadow_file_exists;
 
     //Mifare Classic data
+    uint8_t current_sector;
+    uint8_t calculated_keyA[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
+    uint8_t calculated_keyB[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
     MfClassicData* mf_classic_data;
-    NfcMfClassicDictAttackContext nfc_dict_context;
     bool is_valid_mizip_data;
     bool is_number_input_active;
 

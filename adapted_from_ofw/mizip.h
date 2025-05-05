@@ -7,9 +7,7 @@
 
 #define TAG "MiZIP"
 
-#define KEY_LENGTH       6
-#define MIZIP_KEY_TO_GEN 5
-#define UID_LENGTH       4
+#define UID_LENGTH 4
 
 typedef struct {
     uint64_t a;
@@ -21,7 +19,7 @@ typedef struct {
     uint32_t verify_sector;
 } MizipCardConfig;
 
-void mizip_generate_key(uint8_t* uid, uint8_t keyA[5][KEY_LENGTH], uint8_t keyB[5][KEY_LENGTH]);
+void mizip_generate_key(uint8_t* uid, uint8_t keyA[5][6], uint8_t keyB[5][6]);
 bool mizip_get_card_config(MizipCardConfig* config, MfClassicType type);
 bool mizip_verify(Nfc* nfc);
 bool mizip_read(void* context);

@@ -105,7 +105,17 @@ bool mizip_balance_editor_scene_show_balance_on_event(void* context, SceneManage
                 scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdNumberInput);
             } else {
                 //Get back if data isn't valid
-                scene_manager_previous_scene(app->scene_manager);
+                switch(app->dataSource) {
+                case NfcSource:
+                    scene_manager_search_and_switch_to_previous_scene(
+                        app->scene_manager, MiZipBalanceEditorViewIdScanner);
+                    break;
+                case FileSource:
+                    scene_manager_previous_scene(app->scene_manager);
+                    break;
+                default:
+                    break;
+                }
             }
             consumed = true;
             break;

@@ -30,7 +30,10 @@ static MfClassicKeyPair mizip_mini_keys[] = {
 };
 
 //KDF
-void mizip_generate_key(uint8_t* uid, uint8_t keyA[5][KEY_LENGTH], uint8_t keyB[5][KEY_LENGTH]) {
+void mizip_generate_key(
+    uint8_t* uid,
+    uint8_t keyA[5][MIZIP_KEY_LENGTH],
+    uint8_t keyB[5][MIZIP_KEY_LENGTH]) {
     // Static XOR table for key generation
     static const uint8_t xor_table_keyA[4][6] = {
         {0x09, 0x12, 0x5A, 0x25, 0x89, 0xE5},
@@ -124,15 +127,15 @@ bool mizip_read(void* context) {
         if(!mizip_get_card_config(&cfg, app->mf_classic_data->type)) break;
         FURI_LOG_I(TAG, "Got conf");
 
-        uint8_t keyA[MIZIP_KEY_TO_GEN][KEY_LENGTH];
-        uint8_t keyB[MIZIP_KEY_TO_GEN][KEY_LENGTH];
+        uint8_t keyA[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
+        uint8_t keyB[MIZIP_SECTOR_COUNT][MIZIP_KEY_LENGTH];
         mizip_generate_key(app->uid, keyA, keyB);
         FURI_LOG_I(TAG, "Gen key");
 
         for(size_t i = 0; i < mf_classic_get_total_sectors_num(app->mf_classic_data->type); i++) {
             if(cfg.keys[i].a == 0x000000000000 && cfg.keys[i].b == 0x000000000000) {
-                cfg.keys[i].a = bit_lib_bytes_to_num_be(keyA[i], KEY_LENGTH);
-                cfg.keys[i].b = bit_lib_bytes_to_num_be(keyB[i], KEY_LENGTH);
+                cfg.keys[i].a = bit_lib_bytes_to_num_be(keyA[i], MIZIP_KEY_LENGTH);
+                cfg.keys[i].b = bit_lib_bytes_to_num_be(keyB[i], MIZIP_KEY_LENGTH);
             }
         }
 

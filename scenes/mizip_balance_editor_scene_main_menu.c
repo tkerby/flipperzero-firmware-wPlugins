@@ -37,9 +37,11 @@ bool mizip_balance_editor_scene_main_menu_on_event(void* context, SceneManagerEv
         app->last_selected_submenu_index = event.event;
         switch(event.event) {
         case SubmenuIndexDirectToTag:
+            app->dataSource = NfcSource;
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdScanner);
             break;
         case SubmenuIndexEditMiZipFile:
+            app->dataSource = FileSource;
             scene_manager_next_scene(app->scene_manager, MiZipBalanceEditorViewIdFileSelect);
             break;
         case SubmenuIndexAbout:

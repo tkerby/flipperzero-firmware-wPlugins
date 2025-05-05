@@ -81,6 +81,8 @@ static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdScanner, popup_get_view(app->popup));
     view_dispatcher_add_view(
+        app->view_dispatcher, MiZipBalanceEditorViewIdReader, popup_get_view(app->popup));
+    view_dispatcher_add_view(
         app->view_dispatcher, MiZipBalanceEditorViewIdWriteSuccess, popup_get_view(app->popup));
     app->nfc = nfc_alloc();
     app->nfc_device = nfc_device_alloc();
@@ -128,6 +130,7 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
     submenu_free(app->submenu);
 
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdScanner);
+    view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdReader);
     view_dispatcher_remove_view(app->view_dispatcher, MiZipBalanceEditorViewIdWriteSuccess);
     popup_free(app->popup);
 
