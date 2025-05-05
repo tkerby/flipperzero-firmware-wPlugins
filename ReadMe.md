@@ -61,6 +61,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Atari SIO Emulator v0.3 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Updated: [Drifter v0.2 (By jean-edouard)](https://github.com/jean-edouard/drifter) (Version Only)
 - Updated: [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
+- OFW: PR: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
 
 <a name="release">
 
