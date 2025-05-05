@@ -62,6 +62,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Drifter v0.2 (By jean-edouard)](https://github.com/jean-edouard/drifter) (Version Only)
 - Updated: [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 - OFW: PR: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
+- Updated: [Fortune Cookie v0.1 (By evillero)](https://github.com/evillero/fortune_cookie) [Added Fortunes (By Gosheto1234)](https://github.com/evillero/fortune_cookie/pull/1)
 
 <a name="release">
 
