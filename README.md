@@ -72,6 +72,44 @@ When done, select "**save**". To draw, just move the cursor using the arrows, an
 
 The bitmap editor allows you to modify any bitmap files that meet the app's requirement.
 
+#### v1.4 - Bitmap Animations
+
+Starting from version 1.4, you can display animations thanks to [@jamisonderek in his latest pull request](https://github.com/lab-401/fzLightMessenger/pull/23). To create an animation, simply name your frames following this pattern: `name_x.bmp`, where `x` is a number between 0 and 9. Here's a quick tool to automatically resize, crop, and convert GIF animations.
+
+##### Using the Script:
+
+1. Download [convertFzLM.sh](./convertFzLM.sh).
+
+2. Grab a cool GIF. For this example, we'll use a short sequence from BadApple:
+
+   ![badapple](./README.assets/badaple.gif)
+
+3. Use the script to convert the image into a BMP sequence:
+
+   ```
+   $ ./convertFzLM.sh badaple.gif
+   [+] Frames have been extracted and saved in "./badaple/...":
+   badaple_0.bmp	badaple_2.bmp  badaple_5.bmp  badaple_8.bmp
+   badaple_10.bmp	badaple_3.bmp  badaple_6.bmp  badaple_9.bmp
+   badaple_1.bmp	badaple_4.bmp  badaple_7.bmp
+   ```
+
+4. This will give you a sequence of BMP files like this:
+5. ![bitmap squence](./README.assets/sequence_screenshot.png) 
+6. 4. Using QFlipper, copy the directory in ```SD Card/app_assets/401_light_msg```
+
+
+
+5. Open "badaple/badaple_0.bmp", and swipe
+
+   > [!NOTE]
+   >
+   > A Flipper Zero reboot may be necessary after closing QFlipper.
+
+6. You may need to squint a little to see it:
+
+![badapple_hw](./README.assets/badapple_hw.gif)
+
 ### FlashLight
 
 With this amount of ultra-bright leds, it would have been sad to not propose a nice flashlight mode. You can access it by selecting the "**FlashLight**" mode.
