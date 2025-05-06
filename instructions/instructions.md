@@ -42,3 +42,18 @@ And what's this? A new signal? Yes, but not completely new. Street Food just cal
 <img src="screenshots/scan-capture2.png" width="256">
 
 ## Your second use
+
+## App's screens explanation
+
+### Scan stations screen
+
+<img src="screenshots/scan-capture1.png" width="256">
+
+The values here are:
+- `CBC042` - signal hex code
+- `815` - station number (in current encoding)
+- `4` - pager number (in current encoding)
+- `RING` - action (in current encoding)
+- `x8` - number of detected signal repeats, will not show more than `x99`
+
+Note: if you change the signal's encoding in "Edit" menu, station number, pager and action here will also change. 
