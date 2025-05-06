@@ -17,6 +17,8 @@ I've built this app for research and learning purposes. But please, don't use it
 
 Use it responsibly, okay?
 
+## [Usage instructions](instructions/instructions.md)
+
 ## Features
 - **Receive** signals from pager stations
 - Automatically **decode** them and dsiplay station number, pager number and action (Ring/Mute/etc)
