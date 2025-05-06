@@ -15,3 +15,6 @@ v1.3
 
 v1.3.1
 - Workaround for allowing older core to compile while maintaining current core fixes.
+
+v1.4
+- Merge of the animation function from @jamisonderek
