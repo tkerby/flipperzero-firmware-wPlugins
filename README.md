@@ -5,6 +5,13 @@ This app supports receiving, decoding, editing and sending restaurant pager sign
 
 Developed for [Momentum firmware](https://github.com/Next-Flip/Momentum-Firmware). 
 
+## Video demo
+[![Video 1](https://img.youtube.com/vi/iuQSyesS9-o/0.jpg)](https://youtube.com/shorts/iuQSyesS9-o)
+
+More demos:
+- [Video 2](https://youtube.com/shorts/KGDAGblbtFo)
+- [Video 3](https://youtube.com/shorts/QqbfHF-yDiE)
+
 ## Disclaimer
 I've built this app for research and learning purposes. But please, don't use it in a way that could hurt anyone or anything.
 
@@ -37,13 +44,6 @@ Use it responsibly, okay?
 If you want to add any new pager encoding, please feel free to create PR with it!
 
 Also you can open issue and share with me any captured data (and at least pager number) if you have any and maybe I'll try create a decoder for it
-
-## Video demo
-[![Video 1](https://img.youtube.com/vi/iuQSyesS9-o/0.jpg)](https://youtube.com/shorts/iuQSyesS9-o)
-
-More demos:
-- [Video 2](https://youtube.com/shorts/KGDAGblbtFo)
-- [Video 3](https://youtube.com/shorts/QqbfHF-yDiE)
 
 ## Building
 If you build the source code just with regular `ufbt` command, the app will probably crash due to out of memory error because your device will have less that 10 kb of free RAM on the "Scan" screen.
