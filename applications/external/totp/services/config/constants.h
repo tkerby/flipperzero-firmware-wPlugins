@@ -10,6 +10,7 @@
 #define TOTP_CONFIG_KEY_TIMEZONE                  "Timezone"
 #define TOTP_CONFIG_KEY_TOKEN_NAME                "TokenName"
 #define TOTP_CONFIG_KEY_TOKEN_SECRET              "TokenSecret"
+#define TOTP_CONFIG_KEY_TOKEN_SECRET_LENGTH       "TokenSecretLength"
 #define TOTP_CONFIG_KEY_TOKEN_ALGO                "TokenAlgo"
 #define TOTP_CONFIG_KEY_TOKEN_DIGITS              "TokenDigits"
 #define TOTP_CONFIG_KEY_TOKEN_DURATION            "TokenDuration"

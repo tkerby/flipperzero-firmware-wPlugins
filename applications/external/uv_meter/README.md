@@ -1,14 +1,34 @@
 # UV Meter
 
-A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html).
+A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html). The application is available in the [Flipper App Catalog](https://lab.flipper.net/apps/uv_meter_as7331) and comes pre-installed on some custom firmware builds, such as the [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware).
 
-![wiring](images/flipper_with_sensor.jpeg)
+![Flipper with Sensor](images/flipper_with_sensor.jpeg)
+
+
+
+## Motivation
+
+Have you heard that sitting behind a window protects you from sunburn? Sounds good, right? Unless you do a bit of research and find it's only *kind of* true. While potentially some UV-B (the stuff that causes immediate sunburn) gets blocked, a lot of UV-A could still get through. And guess what? UV-A plays a role in developing melanoma—a deadly form of skin cancer. Now it almost sounds even *more* dangerous: you lose the immediate “sunburn feedback” yet still face a long-term risk.
+
+It gets even more complicated because it depends on the specific type of window and possible surface treatments; I have also heard that some car windows might be better in this regard. In the end, things seem less predictable, with more questions than before. And it doesn't stop there: do my sunglasses really work? Does my shirt actually protect me? How bad is it really in the shade or on a cloudy day?
+
+What we need is **data**. Being able to actually *measure* something can be surprisingly empowering. I found the AS7331 sensor, which can independently measure UV-A, UV-B, and UV-C—and this project was born.
+
+In general, it's surprising how low the maximum daily exposure durations actually are (based on the 2024 TLVs and BEIs by the [ACGIH](https://en.wikipedia.org/wiki/American_Conference_of_Governmental_Industrial_Hygienists)). Sure, compared to direct sunlight, you're better off behind a window, in the shade, or under clouds—but probably not *as much* as you'd expect.
+
+In some of my measurements, the safe daily exposure duration, for example, tripled—but when you're starting with just 3 minutes, tripling still leaves you under 10 minutes. My takeaway? I should protect my eyes and skin more than I once thought necessary.
+
+
+
+https://github.com/user-attachments/assets/cabb948c-9c79-4a1d-aab7-8789f0833f28
+
+
 
 ## Wiring
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
 
-![wiring](screenshots/wiring.png)
+![Wiring](screenshots/wiring.png)
 
 | Sensor Pin | Flipper Zero Pin   |
 |------------|--------------------|
@@ -20,11 +40,12 @@ Connect the AS7331 sensor to your Flipper Zero via I²C:
 By default, the application scans all possible I²C addresses for the sensor. However, you can manually set a specific address in the settings menu, accessible by pressing the **Enter** button.
 
 
+
 ## Usage
 
 Once connected, the application automatically displays real-time UV measurements. The main screen shows individual UV-A, UV-B, and UV-C readings. Beneath the numbers you see the currently used unit (µW/cm², W/m² or mW/m²).
 
-![wiring](screenshots/data_1.png)
+![Data Screen](screenshots/data_1.png)
 
 Next to each UV reading is a small meter indicating the raw sensor value. If this value is too high or too low, a warning symbol will appear, signaling potential sensor overexposure or underexposure. This condition will probably result in unreliable measurements. Adjusting the **Gain** and **Exposure Time** settings (similar to camera ISO and shutter speed) at the bottom of the screen can help correct this.
 
@@ -37,6 +58,28 @@ The displayed percentages indicate how much each UV type (UV-A, UV-B, UV-C) cont
 When following the maximum daily exposure duration, the TLV/BEI guidelines ensure:
 
 > “[...] nearly all healthy workers may be repeatedly exposed without acute adverse health effects such as erythema and photokeratitis.”
+
+
+
+## Magic Numbers
+
+In the source code, specifically the [`uv_meter_data_calculate_effective_results()`](views/uv_meter_data.cpp#L668) function, you'll find some numbers that might look mysterious ("magic numbers"). They're used to calculate the maximum daily UV exposure duration based on sensor readings:
+
+```cpp
+// Weighted Spectral Effectiveness
+double w_spectral_eff_uv_a = 0.0002824;
+double w_spectral_eff_uv_b = 0.3814;
+double w_spectral_eff_uv_c = 0.6047;
+
+if(eyes_protected) { // 😎
+    // w_spectral_eff_uv_a is the same
+    w_spectral_eff_uv_b = 0.2009;
+    w_spectral_eff_uv_c = 0.2547;
+}
+```
+
+You might wonder, "Where do these numbers come from?" Good question! To uncover the full story behind these values, check out the detailed explanation in the [Magic Numbers documentation](magic_numbers/README.md).
+
 
 
 ## Disclaimer

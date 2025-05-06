@@ -93,6 +93,13 @@ bool xex_file_parse(XexFile* xex) {
             return false;
         }
 
+        if(header[0] == 0x1A1A && header[1] == 0x1A1A) {
+            offset -= 4;
+            FURI_LOG_I(TAG, "XEX file truncated from %d to %d bytes", xex->file_size, offset);
+            xex->file_size = offset;
+            break;
+        }
+
         XexBlock* block = &xex->blocks[xex->block_count];
 
         block->offset = offset;
@@ -113,14 +120,16 @@ bool xex_file_parse(XexFile* xex) {
 
         offset += block->size;
         ++xex->block_count;
+    }
 
-        if(block->addr == 0x2E0) {
-            if(xex->file_size != offset) {
-                FURI_LOG_I(TAG, "XEX file truncated from %d to %d bytes", xex->file_size, offset);
-            }
-            xex->file_size = offset;
-            break;
-        }
+    // Add extra block with start address if not present in the file
+    if(xex->block_count > 0 && xex->blocks[xex->block_count - 1].addr != 0x2E0) {
+        FURI_LOG_I(TAG, "Adding extra block at 0x2E0");
+        XexBlock* block = &xex->blocks[xex->block_count];
+        block->offset = 2; // First block address
+        block->addr = 0x2E0;
+        block->size = 2;
+        xex->block_count++;
     }
 
     return true;
@@ -196,4 +205,18 @@ size_t xex_file_read(
     int retval = storage_file_read(xex->file, buffer, bytes_to_read);
 
     return retval < 0 ? 0 : retval;
+}
+
+bool xex_file_overlaps_with(XexFile* xex, uint16_t addr, size_t size) {
+    furi_check(xex != NULL);
+
+    for(uint16_t i = 0; i < xex->block_count; ++i) {
+        XexBlock* block = &xex->blocks[i];
+
+        if((addr < block->addr + block->size) && (addr + size > block->addr)) {
+            return true;
+        }
+    }
+
+    return false;
 }

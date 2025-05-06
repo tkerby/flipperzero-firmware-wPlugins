@@ -1,5 +1,8 @@
 ## 1.3
  - Show both issuing state and nationality (Thanks @portasynthinca3)
+ - Handle Passport numbers < 9 char
+ - Fix bug with SELECT AID APDU Le
+ - New Icon (Thank you @equipter for the idea)
 ## 1.2
  - Fix bug with detecting wrong protocol
  - Fix bug with check number of alpha characters (Thanks @WillyJL)

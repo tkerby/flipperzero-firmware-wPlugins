@@ -8,6 +8,6 @@ App(
     fap_icon="flame_rng.png",
     fap_author="OrionW06",
     fap_weburl="https://github.com/OrionW06/Flame-RNG",
-    fap_version="0.1",
+    fap_version="0.3",
     fap_description="An RNG intended for use with Flames and other IR sources.",
 )

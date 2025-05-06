@@ -8,11 +8,6 @@ static uint8_t select[] =
 static uint8_t SEOS_APPLET_FCI[] =
     {0x6F, 0x0C, 0x84, 0x0A, 0xA0, 0x00, 0x00, 0x04, 0x40, 0x00, 0x01, 0x01, 0x00, 0x01};
 
-// TODO: support value from keys file
-static uint8_t select_adf[] = {0x80, 0xa5, 0x04, 0x00, 0x13, 0x06, 0x11, 0x2b, 0x06,
-                               0x01, 0x04, 0x01, 0x81, 0xe4, 0x38, 0x01, 0x01, 0x02,
-                               0x01, 0x18, 0x01, 0x01, 0x02, 0x02, 0x00};
-
 static uint8_t general_authenticate_1[] =
     {0x00, 0x87, 0x00, 0x01, 0x04, 0x7c, 0x02, 0x81, 0x00, 0x00};
 
@@ -187,6 +182,7 @@ NfcCommand seos_reader_select_aid(SeosReader* seos_reader) {
     Iso14443_4aError error;
 
     bit_buffer_append_bytes(tx_buffer, select, sizeof(select));
+    seos_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
     error = iso14443_4a_poller_send_block(iso14443_4a_poller, tx_buffer, rx_buffer);
     if(error != Iso14443_4aErrorNone) {
         FURI_LOG_W(TAG, "iso14443_4a_poller_send_block error %d", error);
@@ -222,12 +218,20 @@ NfcCommand seos_reader_select_adf(SeosReader* seos_reader) {
     NfcCommand ret = NfcCommandContinue;
     Iso14443_4aError error;
 
-    bit_buffer_append_bytes(tx_buffer, select_adf, sizeof(select_adf));
+    uint8_t select_adf_header[] = {
+        0x80, 0xa5, 0x04, 0x00, (uint8_t)SEOS_ADF_OID_LEN + 2, 0x06, (uint8_t)SEOS_ADF_OID_LEN};
+
+    bit_buffer_append_bytes(tx_buffer, select_adf_header, sizeof(select_adf_header));
+    bit_buffer_append_bytes(tx_buffer, SEOS_ADF_OID, SEOS_ADF_OID_LEN);
+    bit_buffer_append_byte(tx_buffer, 0x00); // Le
+
+    seos_log_bitbuffer(TAG, "NFC transmit", tx_buffer);
     error = iso14443_4a_poller_send_block(iso14443_4a_poller, tx_buffer, rx_buffer);
     if(error != Iso14443_4aErrorNone) {
         FURI_LOG_W(TAG, "iso14443_4a_poller_send_block error %d", error);
         return NfcCommandStop;
     }
+    seos_log_bitbuffer(TAG, "NFC response", rx_buffer);
     bit_buffer_reset(tx_buffer);
     return ret;
 }
@@ -257,24 +261,39 @@ bool seos_reader_select_adf_response(
     params->cipher = rx_data[2];
     params->hash = rx_data[3];
 
+    memset(credential->adf_response, 0, sizeof(credential->adf_response));
+    size_t response_length = bit_buffer_get_size_bytes(rx_buffer) - offset - sizeof(success);
+    if(response_length > sizeof(credential->adf_response)) {
+        FURI_LOG_W(
+            TAG,
+            "adf_response too large %zu > %zu",
+            response_length,
+            sizeof(credential->adf_response));
+        response_length = sizeof(credential->adf_response);
+    }
+    memcpy(credential->adf_response, rx_data, response_length);
+
     size_t bufLen = 0;
     uint8_t clear[0x40];
+    memset(clear, 0, sizeof(clear));
 
+    // Copy IV because mbedtls methods mutate it
     if(params->cipher == AES_128_CBC) {
-        size_t ivLen = 16;
-        bufLen = rx_data[5] - ivLen;
-        uint8_t* iv = (uint8_t*)rx_data + 6;
-        uint8_t* enc = (uint8_t*)rx_data + 6 + ivLen;
+        uint8_t iv[16];
+        memcpy(iv, rx_data + 6, sizeof(iv));
+        bufLen = rx_data[5] - sizeof(iv);
+        uint8_t* enc = (uint8_t*)rx_data + 6 + sizeof(iv);
+
         mbedtls_aes_context ctx;
         mbedtls_aes_init(&ctx);
         mbedtls_aes_setkey_dec(&ctx, SEOS_ADF1_PRIV_ENC, sizeof(SEOS_ADF1_PRIV_ENC) * 8);
         mbedtls_aes_crypt_cbc(&ctx, MBEDTLS_AES_DECRYPT, bufLen, iv, enc, clear);
         mbedtls_aes_free(&ctx);
     } else if(params->cipher == TWO_KEY_3DES_CBC_MODE) {
-        size_t ivLen = 8;
-        bufLen = rx_data[5] - ivLen;
-        uint8_t* iv = (uint8_t*)rx_data + 6;
-        uint8_t* enc = (uint8_t*)rx_data + 6 + ivLen;
+        uint8_t iv[8];
+        memcpy(iv, rx_data + 6, sizeof(iv));
+        bufLen = rx_data[5] - sizeof(iv);
+        uint8_t* enc = (uint8_t*)rx_data + 6 + sizeof(iv);
 
         mbedtls_des3_context ctx;
         mbedtls_des3_init(&ctx);
@@ -282,6 +301,7 @@ bool seos_reader_select_adf_response(
         mbedtls_des3_crypt_cbc(&ctx, MBEDTLS_DES_DECRYPT, bufLen, iv, enc, clear);
         mbedtls_des3_free(&ctx);
     }
+    seos_log_buffer(TAG, "clear", clear, sizeof(clear));
 
     // 06112b0601040181e438010102011801010202 cf 07 3d4c010c71cfa7 e2d0b41a00cc5e494c8d52b6e562592399fe614a
     if(clear[0] != 0x06) {
@@ -399,7 +419,7 @@ NfcCommand seos_state_machine(Seos* seos, Iso14443_4aPoller* iso14443_4a_poller)
     furi_assert(seos);
     NfcCommand ret = NfcCommandContinue;
 
-    SeosReader* seos_reader = seos_reader_alloc(&seos->credential, iso14443_4a_poller);
+    SeosReader* seos_reader = seos_reader_alloc(seos->credential, iso14443_4a_poller);
     seos->seos_reader = seos_reader;
 
     do {
@@ -414,13 +434,24 @@ NfcCommand seos_state_machine(Seos* seos, Iso14443_4aPoller* iso14443_4a_poller)
             break;
         }
 
+        FURI_LOG_D(TAG, "General Authenticate 1");
         ret = seos_reader_general_authenticate_1(seos_reader);
         if(ret == NfcCommandStop) break;
 
+        FURI_LOG_D(TAG, "General Authenticate 2");
         ret = seos_reader_general_authenticate_2(seos_reader);
         if(ret == NfcCommandStop) break;
 
+        FURI_LOG_D(TAG, "Request SIO");
         if(seos_reader_request_sio(seos_reader)) {
+            SeosCredential* credential = seos_reader->credential;
+            AuthParameters* params = &seos_reader->params;
+
+            memcpy(credential->priv_key, params->priv_key, sizeof(credential->priv_key));
+            memcpy(credential->auth_key, params->auth_key, sizeof(credential->auth_key));
+            credential->adf_oid_len = SEOS_ADF_OID_LEN;
+            memcpy(credential->adf_oid, SEOS_ADF_OID, sizeof(credential->adf_oid));
+
             view_dispatcher_send_custom_event(seos->view_dispatcher, SeosCustomEventReaderSuccess);
         }
 

@@ -66,3 +66,6 @@ size_t xex_file_read(
     uintptr_t offset,
     void* buffer,
     size_t buffer_size);
+
+// Checks if the XEX file overlaps with the given address range
+bool xex_file_overlaps_with(XexFile* xex, uint16_t addr, size_t size);

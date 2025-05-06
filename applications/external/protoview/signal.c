@@ -165,6 +165,7 @@ uint32_t search_coherent_signal(RawSamplesBuffer* s, uint32_t idx, uint32_t min_
 void notify_signal_detected(ProtoViewApp* app, bool decoded) {
     static const NotificationSequence decoded_seq = {
         &message_vibro_on,
+        &message_display_backlight_on,
         &message_green_255,
         &message_delay_50,
         &message_green_0,

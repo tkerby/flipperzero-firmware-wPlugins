@@ -62,6 +62,7 @@ static const SniffCommandDef sniff_commands[] = {
     {"< Sniff Deauth >", "capture -deauth\n", "deauth_capture"},
     {"< Sniff Beacons >", "capture -beacon\n", "beacon_capture"},
     {"< Sniff EAPOL >", "capture -eapol\n", "eapol_capture"},
+    {"< Sniff Pwn >", "capture -pwn\n", "pwn_capture"},
 };
 
 // Beacon spam command definitions
@@ -130,6 +131,21 @@ static const MenuCommand wifi_commands[] = {
                         "- Network SSID\n"
                         "- Signal level\n"
                         "Range: ~50-100m\n",
+    },
+    {
+        .label = "Scan All (AP+STA)",
+        .command = "scanall\n",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Scan All",
+        .details_text = "Combined AP/Station scan\n"
+                        "and display results.\n",
     },
     {
         .label = "List APs",
@@ -369,7 +385,7 @@ static const MenuCommand wifi_commands[] = {
                         "- Printers\n"
                         "- Smart devices\n"
                         "- Cast devices\n"
-                        "Requires WiFi connection\n",
+                        "- Requires WiFi connection\n",
     },
     {
         .label = "Pineapple Detect",
@@ -384,6 +400,39 @@ static const MenuCommand wifi_commands[] = {
         .confirm_text = NULL,
         .details_header = "Pineapple Detection",
         .details_text = "Detects WiFi Pineapple devices\n",
+    },
+    {
+        .label = "Channel Congestion",
+        .command = "congestion\n",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Channel Congestion",
+        .details_text = "Display Wi-Fi channel\n"
+                        "congestion chart.\n",
+    },
+    {
+        .label = "Scan Ports",
+        .command = "scanports",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = true,
+        .input_text = "local or IP [options]",
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Port Scanner",
+        .details_text = "Scan ports on local net\n"
+                        "or specific IP.\n"
+                        "Options: -C, -A, range\n"
+                        "Ex: local -C\n"
+                        "Ex: 192.168.1.1 80-1000",
     },
     // Unified Stop Command for WiFi Operations
     {
@@ -422,6 +471,92 @@ static const MenuCommand wifi_commands[] = {
         .details_text = "Control LED effects:\n"
                         "- rainbow, police, strobe, off, or fixed colors\n"
                         "Cycle with Left/Right to select an effect\n",
+    },
+    // Hardware/Settings Commands
+    {
+        .label = "Set RGB Pins",
+        .command = "setrgbpins",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = true,
+        .input_text = "<red> <green> <blue>",
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Set RGB Pins",
+        .details_text = "Change RGB LED pins.\n"
+                        "Requires restart.\n"
+                        "Use same value for all\n"
+                        "pins for single-pin LED.",
+    },
+    {
+        .label = "Show SD Pin Config",
+        .command = "sd_config",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "SD Pin Config",
+        .details_text = "Show current SD GPIO\n"
+                        "pin configuration for\n"
+                        "MMC and SPI modes.",
+    },
+    {
+        .label = "Set SD Pins (MMC)",
+        .command = "sd_pins_mmc",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = true,
+        .input_text = "<clk> <cmd> <d0..d3>",
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Set SD Pins (MMC)",
+        .details_text = "Set GPIO pins for SDMMC.\n"
+                        "Requires restart.\n"
+                        "Only if firmware built\n"
+                        "for SDMMC mode.",
+    },
+    {
+        .label = "Set SD Pins (SPI)",
+        .command = "sd_pins_spi",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = true,
+        .input_text = "<cs> <clk> <miso> <mosi>",
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "Set SD Pins (SPI)",
+        .details_text = "Set GPIO pins for SPI.\n"
+                        "Requires restart.\n"
+                        "Only if firmware built\n"
+                        "for SPI mode.",
+    },
+    {
+        .label = "Save SD Pin Config",
+        .command = "sd_save_config",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = true,
+        .confirm_header = "Save SD Config",
+        .confirm_text = "Save current SD pin\n"
+                        "config to SD card?\n"
+                        "Requires SD mounted.",
+        .details_header = "Save SD Pin Config",
+        .details_text = "Save current SD pin\n"
+                        "config (both modes) to\n"
+                        "SD card (sd_config.conf).",
     },
 };
 
@@ -496,6 +631,21 @@ static const MenuCommand ble_commands[] = {
         .details_text = "Captures raw BLE\n"
                         "traffic and data.\n"
                         "Range: ~10-30m\n",
+    },
+    {
+        .label = "BLE Spam Detect",
+        .command = "blescan -ds\n",
+        .capture_prefix = NULL,
+        .file_ext = NULL,
+        .folder = NULL,
+        .needs_input = false,
+        .input_text = NULL,
+        .needs_confirmation = false,
+        .confirm_header = NULL,
+        .confirm_text = NULL,
+        .details_header = "BLE Spam Detector",
+        .details_text = "Detects BLE spam\n"
+                        "(e.g., advertising floods).\n",
     },
     // Unified Stop Command for BLE Operations
     {
@@ -743,16 +893,12 @@ static void text_input_result_callback(void* context) {
 }
 
 static void execute_menu_command(AppState* state, const MenuCommand* command) {
-    // Check ESP connection first
     if(!uart_is_esp_connected(state->uart_context)) {
-        // Save current view
         state->previous_view = state->current_view;
-
-        // Show error and return
         confirmation_view_set_header(state->confirmation_view, "Connection Error");
         confirmation_view_set_text(
             state->confirmation_view,
-            "ESP Not Connected!\nTry Rebooting ESP.\nRestarting the app.\nCheck UART Pins.\nReflash if issues persist.\n");
+            "No response from ESP!\nIs a command running?\nRestart the app.\nRestart ESP.\nCheck UART Pins.\nReflash if issues persist.\nYou can disable this check in the settings menu.\n\n");
         confirmation_view_set_ok_callback(state->confirmation_view, error_callback, state);
         confirmation_view_set_cancel_callback(state->confirmation_view, error_callback, state);
 
@@ -789,7 +935,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     }
 
     // Handle variable sniff command
-    if(state->current_view == 1 && state->current_index == 5) {
+    if(state->current_view == 1 && state->current_index == 6) {
         const SniffCommandDef* current_sniff = &sniff_commands[current_sniff_index];
         // Handle capture commands
         if(current_sniff->capture_prefix) {
@@ -819,7 +965,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     }
 
     // Handle variable beacon spam command
-    if(state->current_view == 1 && state->current_index == 6) { // Adjust index if needed
+    if(state->current_view == 1 && state->current_index == 7) {
         const BeaconSpamDef* current_beacon = &beacon_spam_commands[current_beacon_index];
 
         // If it's custom mode (last index), handle text input
@@ -846,7 +992,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     }
 
     // Handle variable rgbmode command (new branch for index 17)
-    if(state->current_view == 1 && state->current_index == 17) {
+    if(state->current_view == 1 && state->current_index == 20) {
         const BeaconSpamDef* current_rgb = &rgbmode_commands[current_rgb_index];
         uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
         furi_delay_ms(5);
@@ -1065,60 +1211,6 @@ bool back_event_callback(void* context) {
             state->buffer_length = 0;
         }
 
-        // Send stop commands if enabled in settings
-        if(state->settings.stop_on_back_index) {
-            FURI_LOG_D("Ghost ESP", "Stopping active operations");
-
-            // First stop any packet captures to ensure proper file saving
-            send_uart_command("capture -stop\n", state);
-
-            // Give more time for PCAP stop command to process
-            furi_delay_ms(200);
-
-            // Wait for any pending PCAP data
-            if(state->uart_context->pcap) {
-                // Wait for pcap buffer to empty
-                for(uint8_t i = 0; i < 10; i++) { // Try up to 10 times
-                    if(state->uart_context->pcap_buf_len > 0) {
-                        furi_delay_ms(50);
-                    } else {
-                        break;
-                    }
-                }
-
-                // Now safe to reset PCAP state
-                state->uart_context->pcap = false;
-                furi_stream_buffer_reset(state->uart_context->pcap_stream);
-            }
-
-            // Stop operations in a logical order
-            const char* stop_commands[] = {
-                "capture -stop\n", // Stop any WiFi packet captures
-                "capture -blestop\n", // Stop any BLE captures
-                "stopscan\n", // Stop WiFi scanning
-                "stopspam\n", // Stop beacon spam attacks
-                "stopdeauth\n", // Stop deauth attacks
-                "stopportal\n", // Stop evil portal
-                "blescan -s\n", // Stop BLE scanning
-                "gpsinfo -s\n", // Stop GPS info updates
-                "startwd -s\n", // Stop wardriving
-                "blewardriving -s\n", // Stop BLE wardriving
-                "stop\n", // General stop command
-                "rgbmode off\n" // Stop LED effects
-            };
-
-            for(size_t i = 0; i < COUNT_OF(stop_commands); i++) {
-                send_uart_command(stop_commands[i], state);
-                furi_delay_ms(50);
-            }
-        }
-
-        // Clean up files using the safe cleanup
-        if(state->uart_context && state->uart_context->storageContext) {
-            uart_storage_safe_cleanup(state->uart_context->storageContext);
-            FURI_LOG_D("Ghost ESP", "Performed safe storage cleanup");
-        }
-
         // Return to previous menu with selection restored
         switch(state->previous_view) {
         case 1:
@@ -1159,6 +1251,8 @@ bool back_event_callback(void* context) {
     }
     // Handle text input view (view 6)
     else if(current_view == 6) {
+        // Clear any command setup state
+        state->uart_command = NULL;
         // Return to previous menu with selection restored
         switch(state->previous_view) {
         case 1:
@@ -1277,7 +1371,7 @@ static bool menu_input_handler(InputEvent* event, void* context) {
         case InputKeyRight:
         case InputKeyLeft:
             // Handle sniff command cycling
-            if(state->current_view == 1 && current_index == 5) {
+            if(state->current_view == 1 && current_index == 6) {
                 if(event->key == InputKeyRight) {
                     current_sniff_index = (current_sniff_index + 1) % COUNT_OF(sniff_commands);
                 } else {
@@ -1290,7 +1384,7 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 consumed = true;
             }
             // Handle beacon spam command cycling
-            else if(state->current_view == 1 && current_index == 6) { // Adjust index based on menu position
+            else if(state->current_view == 1 && current_index == 7) {
                 if(event->key == InputKeyRight) {
                     current_beacon_index =
                         (current_beacon_index + 1) % COUNT_OF(beacon_spam_commands);
@@ -1304,7 +1398,7 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 consumed = true;
             }
             // Handle rgbmode command cycling (new branch for index 17)
-            else if(state->current_view == 1 && current_index == 17) {
+            else if(state->current_view == 1 && current_index == 20) {
                 if(event->key == InputKeyRight) {
                     current_rgb_index = (current_rgb_index + 1) % COUNT_OF(rgbmode_commands);
                 } else {
