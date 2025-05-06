@@ -5,6 +5,7 @@ Flipper Zero application to analyse student ID cards from the University of Duis
 > [!IMPORTANT]
 > The functionality of this application is limited to reading the contents of the card.
 > No modifications are possible or will be made possible in the future.
+> **[See legal information (in German)](docs/Legal.md)**
 
 > [!TIP]
 > Download UDECard [directly from the Flipper Application Catalog](https://lab.flipper.net/apps/udecard)

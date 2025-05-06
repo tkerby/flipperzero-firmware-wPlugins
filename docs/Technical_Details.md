@@ -6,6 +6,7 @@
 > [!IMPORTANT]
 > The functionality of this application is limited to reading the contents of the card.
 > No modifications are possible or will be made possible in the future.
+> **[See legal information (in German)](Legal.md)**
 
 Intercards are MIFARE Classic 1K cards with a 4 Byte UID.
 They are divided into 16 sectors (0 to 15) with each sector containing four blocks (0 to 3).
@@ -71,7 +72,7 @@ If this is not the case, the first occurrence is used.
 ## Can I perform modifications to my card with this application (e.g. changing my balance)?
 
 Short answer: **No you cannot and it will not be supported.**
-This would not only be illegal, it would also raise ethical questions.
+This would not only be illegal, it would also be unethical.
 
 If you lack a strong moral compass: Changes to the balance are traceable, since every card has a KS-Nummer (which is a decimal representation of the UID, see `uid_to_ksnr()` in `udecard.c`).
 **It is tracked at every checkout.**
