@@ -43,6 +43,8 @@ And what's this? A new signal? Yes, but not completely new. Street Food just cal
 
 ## Your second use
 
+Now imagine you came to the same food court next day and want to call somebody's pager at the Street Food.
+
 ## App's screens explanation
 
 ### Scan stations screen
