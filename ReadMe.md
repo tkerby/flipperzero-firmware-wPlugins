@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0424-1537-0.420.0-a44cce6.tgz&channel=RM0424-1537-0.420.0-a44cce6&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0506-0048-0.420.0-e443b34.tgz&channel=RM0506-0048-0.420.0-e443b34&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,39 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-06 00:16 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-06 00:16 EST`
-- Added: [Combo Cracker v0.1 (By CharlesTheGreat77)](https://github.com/CharlesTheGreat77/ComboCracker-FZ)
-- Updated: [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
-- Added: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
-- Updated: [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
-- Updated: [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager) (Fixed Saving Issue)
-- Updated: [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com) (Version Only)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [Ghost ESP v1.2.5 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Authenticator/TOTP v5.18.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
-- Added: [UDECard v1.0.1 (By hahnworks](https://github.com/hahnworks/UDECard)
-- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
-- ESP Flasher Bump [ESP Marauder v1.4.6 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.4.6)
-- Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- Updated: [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
-- Added: [iButton Converter v1.0 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
-- OFW: PR: [SubGhz: fix sample durations when using external CC1101 #4205 (By Aerosnail)](https://github.com/flipperdevices/flipperzero-firmware/pull/4205)
-- UL: [NFC: Ultralight C - Attempt of authentication with default key (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/898)
-- Updated: [Monster Slayer v0.1 (By ratmanZorry)](https://github.com/ratmanZorry/monster_slayer_flipper_zero)
-- Updated: [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
-- Added: [CAN Transceiver v0.1 (By Chainmanner)](https://github.com/Chainmanner/Flipper-CAN-Transceiver)
-- Added: [VGM Game Remote v1.0 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
-- Updated: [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
-- Updated: [SWD Probe v1.3 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe) (Version Only)
-- Updated: [NFC Magic v1.15 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) (Version Only)
-- OFW: PR: [Infrared: Add text scroll to remote buttons #4210 (By 956MB)](https://github.com/flipperdevices/flipperzero-firmware/pull/4210)
-- Updated: [Seos compatible v1.2 (By bettse)](https://gitlab.com/bettse/flipper_seos)
-- Updated: [FlipWifi v1.6 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [Atari SIO Emulator v0.3 (By cepetr)](https://github.com/cepetr/sio2flip)
-- Updated: [Drifter v0.2 (By jean-edouard)](https://github.com/jean-edouard/drifter) (Version Only)
-- Updated: [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
-- OFW: PR: [FeliCa Emulation: Handle certain Polling commands in firmware #4204 (By dogtopus)](https://github.com/flipperdevices/flipperzero-firmware/pull/4204)
-- Updated: [Fortune Cookie v0.1 (By evillero)](https://github.com/evillero/fortune_cookie) [Added Fortunes (By Gosheto1234)](https://github.com/evillero/fortune_cookie/pull/1)
 
 <a name="release">
 
@@ -746,4 +713,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0424-1537-0.420.0-a44cce6.tgz&channel=RM0424-1537-0.420.0-a44cce6&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0506-0048-0.420.0-e443b34.tgz&channel=RM0506-0048-0.420.0-e443b34&version=0.420.0)
