@@ -1,4 +1,6 @@
 #include "pof_usb.h"
+#include "xsm3/xsm3.h"
+#include "furi_hal_random.h"
 
 #define TAG "POF USB XBOX360"
 
@@ -56,7 +58,6 @@ static int32_t pof_thread_worker(void* context) {
         uint32_t now = furi_get_tick();
         uint32_t flags = furi_thread_flags_wait(EventAll, FuriFlagWaitAny, timeout);
         if (flags & EventRx) {  // fast flag
-
             uint8_t buf[POF_USB_RX_MAX_SIZE];
             len_data = pof_usb_receive(dev, buf, POF_USB_RX_MAX_SIZE);
             // 360 controller packets have a header of 0x0b 0x14
@@ -514,13 +515,14 @@ static const struct PoFUsbDescriptorXbox360 usb_pof_cfg_descr_x360 = {
         {0x06, 0x41, 0x00, 0x01, 0x01, 0x03},
 };
 
+uint8_t serial[0x0C];
+short state = 2;  // 1 = in-progress, 2 = complete
 /* Control requests handler */
 static usbd_respond
 pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
     UNUSED(callback);
     uint8_t wValueH = req->wValue >> 8;
     uint8_t wValueL = req->wValue & 0xFF;
-
     if (req->bmRequestType == 0xC0 && req->bRequest == USB_HID_GETREPORT && req->wValue == 0x0000) {
         dev->status.data_ptr = (uint8_t*)xbox_serial;
         dev->status.data_count = sizeof(xbox_serial);
@@ -538,6 +540,35 @@ pof_hid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback)
     }
     if (req->bmRequestType == 0x41 && req->bRequest == 00 && (req->wValue == 0x1F || req->wValue == 0x1E)) {
         return usbd_ack;
+    }
+    switch (req->bRequest) {
+        case 0x81:
+            uint8_t serial[0x0C];
+            for (size_t i = 0; i < sizeof(serial); i++) {
+                serial[i] = furi_hal_random_get() & 0xFF;
+            }
+            xsm3_set_vid_pid(serial, POF_USB_VID, POF_USB_PID);
+            xsm3_initialise_state();
+            xsm3_set_identification_data(xsm3_id_data_ms_controller);
+            dev->status.data_ptr = (uint8_t*)(xsm3_id_data_ms_controller);
+            dev->status.data_count = sizeof(xsm3_id_data_ms_controller);
+            return usbd_ack;
+        case 0x82:
+            xsm3_do_challenge_init((uint8_t *)dev->status.data_ptr);
+            return usbd_ack;
+        case 0x87:
+            xsm3_do_challenge_verify((uint8_t *)dev->status.data_ptr);
+            return usbd_ack;
+        case 0x84:
+            return usbd_ack;
+        case 0x83:
+            dev->status.data_ptr = (uint8_t*)(xsm3_challenge_response);
+            dev->status.data_count = req->wLength;
+            return usbd_ack;
+        case 0x86:
+            dev->status.data_ptr = (uint8_t*)&(state);
+            dev->status.data_count = sizeof(state);
+            return usbd_ack;
     }
 
     if (((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
