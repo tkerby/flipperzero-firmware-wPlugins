@@ -70,10 +70,8 @@ static const uint8_t UDECARD_CONSTANT_BLOCK2_CONTENTS[] = UDECARD_CONSTANT_BLOCK
 #define UDECARD_MEMBER_NUMBER_SIZE       12
 
 // keys
-// these are widely present in a lot of dictionaries (including the Flipper’s),
-// therefore they cannot be really considered private.
-// They only allow reading, no modification.
-// I am in no way publishing them, I am just using them.
+// source: https://github.com/flipperdevices/flipperzero-firmware/blob/dev/applications/main/nfc/resources/nfc/assets/mf_classic_dict.nfc
+// This keys do only enable reading, no modifications are possible.
 #define UDECARD_KEY_SIZE 6
 
 #define UDECARD_KEYA_0_BYTES {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}
