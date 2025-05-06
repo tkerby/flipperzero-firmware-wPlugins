@@ -3,7 +3,14 @@ Your ultimate Flipper Zero restaurant pager tool. Be a _real chief_ of all the r
 
 This app supports receiving, decoding, editing and sending restaurant pager signals. 
 
-Developed for [Momentum firmware](https://github.com/Next-Flip/Momentum-Firmware). 
+**Developed & compatible with [Momentum firmware](https://github.com/Next-Flip/Momentum-Firmware).** Other firmwares are most likely not supported (but I've not tried).
+
+## Video demo
+[![Video 1](https://img.youtube.com/vi/iuQSyesS9-o/0.jpg)](https://youtube.com/shorts/iuQSyesS9-o)
+
+More demos:
+- [Video 2](https://youtube.com/shorts/KGDAGblbtFo)
+- [Video 3](https://youtube.com/shorts/QqbfHF-yDiE)
 
 ## Disclaimer
 I've built this app for research and learning purposes. But please, don't use it in a way that could hurt anyone or anything.
