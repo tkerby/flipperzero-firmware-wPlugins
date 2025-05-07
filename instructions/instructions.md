@@ -1,6 +1,8 @@
 # Usage instructions
 
-## Your first use
+## Tutorial
+
+### Your first use
 Imagine you are on a food court you want to become chief on. 
 
 First, open the app and select "Scan for station signals". 
@@ -17,7 +19,7 @@ To do this, click on center button (actions) and select the first one, "Resend t
 
 Where are they all running? Is the dinner ready yet? Unfortunately it's not. Just their new chief is learning...
 
-Let's assume that you somehow found out, that it was a restaurant called "Street Food" who sent the signal. Now let's save it's signal to your SD card!
+Let's assume that you somehow found out, that it was a restaurant called "Street Food" who sent the signal. Now let's save it's signal to your SD card.
 
 Go back from actions and push the "Edit >" (right arrow) button. Then scroll down to "Save signal as...", give it a name and then create a new category for it. It's convenient to use restaurant name for signal name and mall (or food court/place name where restaurant are located) for the category name to make sure that signals from different places will not mess up. 
 
@@ -41,9 +43,35 @@ And what's this? A new signal? Yes, but not completely new. Street Food just cal
 
 <img src="screenshots/scan-capture2.png" width="256">
 
-## Your second use
+### Your second use
 
-Now imagine you came to the same food court next day and want to call somebody's pager at the Street Food.
+Now imagine you came to the same food court next day and want to call somebody's pager at the Street Food restaurant (that your saved yesterday).
+
+Navigate to "Saved stations" and then select the category of current place / mall / food court:
+
+<img src="screenshots/main-saved.png" width="256"> <img src="screenshots/saved-by-you.png" width="256"> <img src="screenshots/scan-capture1-categories-with-new.png" width="256">
+
+Here your will see your saved signal:
+
+<img src="screenshots/saved-category.png" width="256">
+
+Now your can do with it whatever you want exactly like when you captured it. 
+
+Let's assume now you need to call only single pager with number 9.
+
+Go to "Edit >" menu, scroll down to "Pager" and change it value to 9. Now just press center button. Your flipper will blink purple LED - like when you were resending to all pagers, remember? This means that it sent the signal.
+
+<img src="screenshots/pager-9.png" width="256">
+
+Now imagine we need want to receive more signals here. There are two ways to do it:
+- Go to "Scan" menu like on your first usage
+- Click on "Scan here for more".
+
+The second way is better because you will have all you previously saved signals in quick access in cause you urgently need one of them. New signals will appear here once your flipper receive them.
+
+<img src="screenshots/saved-category-scan-here.png" width="256"> <img src="screenshots/saved-category-scanning.png" width="256"> <img src="screenshots/saved-category-scanning-new.png" width="256">
+
+Congratulations! You have successfully completed the tutorial! ~~Now go and troll someone real.~~
 
 ## App's screens explanation
 
