@@ -63,6 +63,10 @@ After building and cleaning your `.fap` with it, you'll get extra +20kb of free 
 
 The `.fap` files under the release tab are already cleared with this script, so if you just want to use this app without modifications, just forget about it and download the latest one from releases.
 
+## Support & Donate
+
+> [PayPal](https://paypal.me/denr01)
+
 ## Special Thanks
 - [meoker/pagger](https://github.com/meoker/pagger) for Retekess pager encodings
 - This [awesome repository](https://dev.xcjs.com/r0073dl053r/flipper-playground/-/tree/main/Sub-GHz/Restaurant_Pagers?ref_type=heads) for Retekess T111 and iBells ZJ-68 files
