@@ -86,6 +86,28 @@ void cyfral_to_dallas_c2(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     dallas_code[7] = maxim_crc8(dallas_code, 7, 0);
 }
 
+void cyfral_to_dallas_c2_alt(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
+    dallas_code[0] = 0x01;
+
+    uint8_t mask_high = cyfral_code[1] & 0xAA;
+
+    uint8_t first_lo = mask_high >> 3;
+    uint8_t first = cyfral_code[1] | first_lo;
+
+    uint8_t second_lo = (mask_high << 5) & 0xFF;
+    uint8_t second = cyfral_code[0] | second_lo;
+
+    dallas_code[1] = second;
+    dallas_code[2] = first;
+
+    dallas_code[3] = 0x01;
+    dallas_code[4] = 0x00;
+    dallas_code[5] = 0x00;
+    dallas_code[6] = 0x00;
+
+    dallas_code[7] = maxim_crc8(dallas_code, 7, 0);
+}
+
 void cyfral_to_dallas_c3(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     uint8_t intermediate[4];
 
@@ -105,12 +127,12 @@ void cyfral_to_dallas_c4(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     UNUSED(cyfral_code);
 
     dallas_code[0] = 0x01;
-    dallas_code[1] = 0x00;
-    dallas_code[2] = 0x00;
+    dallas_code[1] = 0xFF;
+    dallas_code[2] = 0xFF;
     dallas_code[3] = 0xFF;
     dallas_code[4] = 0xFF;
-    dallas_code[5] = 0xFF;
-    dallas_code[6] = 0xFF;
+    dallas_code[5] = 0x00;
+    dallas_code[6] = 0x00;
     dallas_code[7] = 0x9B;
 }
 
