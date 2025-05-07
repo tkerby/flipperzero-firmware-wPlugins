@@ -379,6 +379,19 @@ static void app_free(VGMGameRemote* app) {
     app = NULL;
 }
 
+#define FLIPPER_PIN_2  gpio_ext_pa7
+#define FLIPPER_PIN_3  gpio_ext_pa6
+#define FLIPPER_PIN_4  gpio_ext_pa4
+#define FLIPPER_PIN_5  gpio_ext_pb3
+#define FLIPPER_PIN_6  gpio_ext_pb2
+#define FLIPPER_PIN_7  gpio_ext_pc3
+//
+#define FLIPPER_PIN_10 gpio_swclk
+#define FLIPPER_PIN_12 gpio_swdio
+//
+#define FLIPPER_PIN_15 gpio_ext_pc1
+#define FLIPPER_PIN_16 gpio_ext_pc0
+
 // Entry point for the [VGM] Game Remote application
 int32_t vgm_game_remote_main(void* p) {
     // Suppress unused parameter warning
@@ -387,6 +400,10 @@ int32_t vgm_game_remote_main(void* p) {
     // Initialize the [VGM] Game Remote application
     VGMGameRemote* app = app_alloc();
     furi_check(app);
+
+    // initialize the VGM
+    furi_hal_gpio_init_simple(&gpio_ext_pc1, GpioModeOutputPushPull);
+    furi_hal_gpio_write(&gpio_ext_pc1, false); // pull pin 15 low
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);
