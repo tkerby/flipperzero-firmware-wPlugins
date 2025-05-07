@@ -36,7 +36,8 @@
 #define MIZIP_KEY_LENGTH         6
 #define MIZIP_KEYA_0_BYTES       {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}
 #define MIZIP_BALANCE_MIN_VALUE  0
-#define MIZIP_BALANCE_MAX_VALUE  65535
+//Theorical max value is 65535 but it makes the checksum be 00, which prevent some machine to recognize the tag correctly
+#define MIZIP_BALANCE_MAX_VALUE  65534
 
 // Enumeration of the view indexes.
 typedef enum {
