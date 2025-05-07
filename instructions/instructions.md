@@ -104,3 +104,15 @@ _Note: pager number is editable only if it's decoded value is less than 255 in c
 
 **Also note: pressing the center button on anywhere on the edit screen (except for save as / delete options) will trigger signal transmission with current pager/action/hex value!**
 
+### Config screen
+
+Here some description about config parameters:
+- **Category** - the category to load saved station names from. Does not affect if you use option "Scan here for more" in saved stations screen.
+- **Scan frequency** - the frequency to receive signals on. For EU/Russia default is 433.92 Mhz, but in US 315.00 Mhz and 467.75 Mhz may be also used.
+- **Max pager value** - how many pagers should signal be sent to when using "Resend to ALL" action. Also affects automatic encoding detection feature: the algorithm will use the first encoding which will give a pager number less or equal than current setting value. 
+- **Times to repeat signal** - speaks for itself, don't recommend changing it as the default value (10) should work in most cases.
+- **Saved stations** - what to do when receive a signal from known station (saved in current category). Possible values are: 
+  1. **Ignore** - treat station as unknown, show signal hex and station number.
+  2. **Show name** (default) - show saved station name instead of hex value and station number
+  3. **Hide** - do not show signals from saved stations at all. Show only unknown signals
+- **Autosave found signals** - any found signals will be saved to "Autosaved" folder in the subdirectory with current date. Useful in case app crashes or you accidentally close it without saving. 
