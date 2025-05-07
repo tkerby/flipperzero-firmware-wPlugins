@@ -1,5 +1,12 @@
 # Usage instructions
 
+## Installation
+To install this app simply download the `.fap` file from [latest release](https://github.com/denr01/FZ-ChiefCooker/releases/latest).
+
+Then just copy it to your flipper (to `ext/apps/Sub-GHz` folder).
+
+On your flipper, open up Apps -> Sub-GHz and you should see it there. Just open it as a regular app. 
+
 ## Tutorial
 
 ### Your first use
