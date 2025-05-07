@@ -1,0 +1,9 @@
+App(
+    name="Wave",
+    appid="wave",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="wave_app",
+    stack_size=1024,
+    fap_icon="icon.png",
+    sources=["main.c"]
+)
