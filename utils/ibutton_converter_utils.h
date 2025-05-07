@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ibutton_converter_i.h"
+#include "../ibutton_converter_i.h"
 
 void metakom_to_dallas(uint8_t metakom_code[4], uint8_t dallas_code[8], int reversed);
 
