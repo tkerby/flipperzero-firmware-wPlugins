@@ -1,5 +1,4 @@
 #include "solight_te44.h"
-#include "furi/core/log.h"
 #define TAG "WSProtocolSolightTE44"
 
 /*
@@ -92,11 +91,10 @@ const SubGhzProtocolEncoder ws_protocol_solight_te44_encoder = {
 
 const SubGhzProtocol ws_protocol_solight_te44 = {
     .name = WS_PROTOCOL_SOLIGHT_TE44_NAME,
-    .type = SubGhzProtocolTypeStatic,
+    .type = SubGhzProtocolWeatherStation,
     .flag = SubGhzProtocolFlag_433 | SubGhzProtocolFlag_315 | SubGhzProtocolFlag_868 |
-            SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable | SubGhzProtocolFlag_Load |
-            SubGhzProtocolFlag_Save,
-    .filter = SubGhzProtocolFilter_Weather,
+            SubGhzProtocolFlag_AM | SubGhzProtocolFlag_Decodable,
+
     .decoder = &ws_protocol_solight_te44_decoder,
     .encoder = &ws_protocol_solight_te44_encoder,
 };
@@ -255,5 +253,19 @@ SubGhzProtocolStatus
 void ws_protocol_decoder_solight_te44_get_string(void* context, FuriString* output) {
     furi_assert(context);
     WSProtocolDecoderSolightTE44* instance = context;
-    ws_block_generic_get_string(&instance->generic, output);
+    furi_string_printf(
+        output,
+        "%s %dbit\r\n"
+        "Key:0x%lX%08lX\r\n"
+        "Sn:0x%lX Ch:%d  Bat:%d\r\n"
+        "Temp:%3.1f C Hum:%d%%",
+        instance->generic.protocol_name,
+        instance->generic.data_count_bit,
+        (uint32_t)(instance->generic.data >> 32),
+        (uint32_t)(instance->generic.data),
+        instance->generic.id,
+        instance->generic.channel,
+        instance->generic.battery_low,
+        (double)instance->generic.temp,
+        instance->generic.humidity);
 }

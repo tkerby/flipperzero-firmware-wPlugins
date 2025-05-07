@@ -35,6 +35,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [VGM Game Remote v1.0 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
 - Updated: [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - Updated: [iButton Converter v1.1 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
+- Updated: [Weather Station v1.9.4 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station) [BL999 (By gazirov) & Some Fixes (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1d4135f18f3f3fd4a1ef97ebbdefb8ea9c895680)
 
 <a name="release">
 
@@ -688,7 +689,7 @@ $ ./fbt dolphin_ext
 - [WAV Player v1.3 (By DrZlo13)](https://github.com/flipperdevices/flipperzero-firmware/tree/zlo/wav-player)
 - [WAV Recorder v0.2 (By scrolltex)](https://github.com/scrolltex/flipper-wav-recorder)
 - [WHC SWIO Flasher v1.1 (By sukvojte)](https://github.com/sukvojte/wch_swio_flasher)
-- [Weather Station v1.9.3 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
+- [Weather Station v1.9.4 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station)
 - [Web Crawler v1.0.1 (By jblanked)](https://github.com/jblanked/WebCrawler-FlipperZero) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Weebo v0.2 (By bettse)](https://github.com/bettse/weebo) `Req: key_retail.bin on SD card /apps_data/weebo` (Amiibo Remixer)
 - [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
