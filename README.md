@@ -18,6 +18,7 @@ I've built this app for research and learning purposes. But please, don't use it
 Use it responsibly, okay?
 
 ## [Usage instructions](instructions/instructions.md)
+Please, read the [instructions](instructions/instructions.md) before using the app. It will definitely make your life easier!
 
 ## Features
 - **Receive** signals from pager stations
