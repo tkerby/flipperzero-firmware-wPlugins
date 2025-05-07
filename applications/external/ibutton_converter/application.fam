@@ -10,6 +10,6 @@ App(
     fap_category="iButton",
     fap_author="Leptopt1los",
     fap_weburl="https://github.com/Leptopt1los/ibutton_converter",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_description="Cyfral and Metakom to Dallas converter",
 )
