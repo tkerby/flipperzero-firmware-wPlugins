@@ -127,12 +127,12 @@ void cyfral_to_dallas_c4(uint8_t cyfral_code[2], uint8_t dallas_code[8]) {
     UNUSED(cyfral_code);
 
     dallas_code[0] = 0x01;
-    dallas_code[1] = 0x00;
-    dallas_code[2] = 0x00;
+    dallas_code[1] = 0xFF;
+    dallas_code[2] = 0xFF;
     dallas_code[3] = 0xFF;
     dallas_code[4] = 0xFF;
-    dallas_code[5] = 0xFF;
-    dallas_code[6] = 0xFF;
+    dallas_code[5] = 0x00;
+    dallas_code[6] = 0x00;
     dallas_code[7] = 0x9B;
 }
 
