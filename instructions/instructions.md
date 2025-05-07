@@ -106,6 +106,8 @@ _Note: pager number is editable only if it's decoded value is less than 255 in c
 
 ### Config screen
 
+<img src="screenshots/scan-capture1-config.png" width="256">
+
 Here some description about config parameters:
 - **Category** - the category to load saved station names from. Does not affect if you use option "Scan here for more" in saved stations screen.
 - **Scan frequency** - the frequency to receive signals on. For EU/Russia default is 433.92 Mhz, but in US 315.00 Mhz and 467.75 Mhz may be also used.
