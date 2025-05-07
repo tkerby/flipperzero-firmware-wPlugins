@@ -14,7 +14,7 @@
 #define LEVEL_WIDTH SCREEN_WIDTH
 #define HIGHSCORE_PATH APP_DATA_PATH("highscore.txt")
 #define TRAIL_LENGTH 64
-#define START_DELAY_MS 1000 // Задержка подготовки в миллисекундах
+#define START_DELAY_MS 1000
 
 typedef struct {
     float x, y;
@@ -140,7 +140,7 @@ void check_collision(GameState* g) {
 }
 
 void draw_player(Canvas* c, GameState* g) {
-    (void)c; // убираем предупреждение о неиспользуемом параметре
+    (void)c;
     float angle = g->player.button_pressed ? -0.8f : 0.8f;
     float center_x = g->player.x;
     float center_y = g->player.y + PLAYER_HEIGHT / 2.0f;
@@ -189,7 +189,6 @@ void game_update(GameState* g) {
     if(g->restart_requested) { game_reset(g); furi_mutex_release(g->mutex); return; }
     if(g->game_over || g->paused) { furi_mutex_release(g->mutex); return; }
 
-    // Задержка подготовки
     uint32_t now = furi_get_tick();
     if(g->start_delay_active && now - g->start_time < START_DELAY_MS) {
         furi_mutex_release(g->mutex);
@@ -197,19 +196,16 @@ void game_update(GameState* g) {
     }
     g->start_delay_active = false;
 
-    // Движение игрока
     if(g->player.button_pressed) g->player.y -= g->player.speed;
     else g->player.y += g->player.speed;
     if(g->player.y < 0) g->player.y = 0;
     if(g->player.y > SCREEN_HEIGHT - PLAYER_HEIGHT) g->player.y = SCREEN_HEIGHT - PLAYER_HEIGHT;
 
-    // Генерация и след
     generate_next_column(g);
     for(int i = 0; i < TRAIL_LENGTH-1; i++) g->trail[i] = g->trail[i+1];
     g->trail[TRAIL_LENGTH-1] = (TrailSegment){.x=g->player.x, .y=g->player.y + PLAYER_HEIGHT/2 -1, .active=true};
     for(int i = 0; i < TRAIL_LENGTH; i++) if(g->trail[i].active) g->trail[i].x -= 1;
 
-    // Счёт с бонусом близости
     int obs_idx = (g->write_index + (int)g->player.x) % LEVEL_WIDTH;
     float gs = g->level[obs_idx];
     float center = gs + g->gap/2;
@@ -240,22 +236,17 @@ void game_render(Canvas* c, void* ctx) {
         int bar_w = (bar_w_max * (int)elapsed) / START_DELAY_MS;
         if(bar_w > bar_w_max) bar_w = bar_w_max;
 
-        // Текст "WAVE" над прогресс-баром
         canvas_set_font(c, FontPrimary);
         canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, bar_y - 14, AlignCenter, AlignCenter, "WAVE");
 
-        // Рамка прогресс-бара
         canvas_draw_frame(c, bar_x, bar_y, bar_w_max, bar_h);
 
-        // Заливка прогресса
         canvas_draw_box(c, bar_x + 1, bar_y + 1, bar_w - 2, bar_h - 2);
 
-        // Инверсированный текст "get ready" по центру
         canvas_set_font(c, FontSecondary);
         canvas_set_color(c, ColorWhite);
         canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, bar_y + bar_h / 2, AlignCenter, AlignCenter, "get ready");
 
-        // Вернуть цвет в чёрный
         canvas_set_color(c, ColorBlack);
     } else if(!g->game_over) {
         draw_tunnel(c, g);
