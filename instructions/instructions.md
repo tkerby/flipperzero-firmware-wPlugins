@@ -63,7 +63,7 @@ Go to "Edit >" menu, scroll down to "Pager" and change it value to 9. Now just p
 
 <img src="screenshots/pager-9.png" width="256">
 
-Now imagine we need want to receive more signals here. There are two ways to do it:
+Now imagine we want to receive more signals here. There are two ways to do it:
 - Go to "Scan" menu like on your first usage
 - Click on "Scan here for more".
 
@@ -84,7 +84,7 @@ The values here are:
 - `815` - station number (in current encoding)
 - `4` - pager number (in current encoding)
 - `RING` - action (in current encoding)
-- `x8` - number of detected signal repeats, will not show more than `x99`
+- `x8` - number of signal repeats, will not show more than `x99`
 
 _Note: if you change the signal's encoding in "Edit" menu, station number, pager and action here will also change._
 
