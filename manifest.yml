@@ -2,9 +2,9 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/misterwaztaken/fmatrix.git
-    commit_sha: ba0e9fb3a798c9c180220e743e1fad1ecb5da22e
+    commit_sha: 1a54a13dbd50be98574035ada9616c6327ac297b
 short_description: The 'matrix rain' effect for the Flipper Zero.
-version: 0.3
+version: 0.3.5
 description: |
   fmatrix displays the 'matrix rain' effect on your Flipper Zero.
   For more info, please visit https://github.com/misterwaztaken/fmatrix/
