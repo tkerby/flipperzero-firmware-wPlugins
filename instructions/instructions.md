@@ -86,4 +86,21 @@ The values here are:
 - `RING` - action (in current encoding)
 - `x8` - number of detected signal repeats, will not show more than `x99`
 
-Note: if you change the signal's encoding in "Edit" menu, station number, pager and action here will also change. 
+_Note: if you change the signal's encoding in "Edit" menu, station number, pager and action here will also change._
+
+### Edit station screen
+
+There are several things you can edit in captured signal using "Edit >" menu.
+
+First thing is **encoding**. App tries to detect encoding automatically when it receives signal. But in some cases you may need to specify it manually. Here you can change the encoding and see how the values (station number, pager number and action) are changing in real-time:
+
+<img src="screenshots/edit-decode-1.png" width="256"> <img src="screenshots/edit-decode-2.png" width="256"> <img src="screenshots/edit-decode-3.png" width="256">
+
+Also you may need to change pager or action value. You can do it here and see how the hex value changes in real time:
+
+<img src="screenshots/edit-pager-1.png" width="256"> <img src="screenshots/edit-pager-2.png" width="256">
+
+_Note: pager number is editable only if it's decoded value is less than 255 in current encoding_
+
+**Also note: pressing the center button on anywhere on the edit screen (except for save as / delete options) will trigger signal transmission with current pager/action/hex value!**
+
