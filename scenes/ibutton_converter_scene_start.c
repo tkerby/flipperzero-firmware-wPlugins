@@ -1,6 +1,5 @@
 #include "../ibutton_converter_i.h"
 #include "ibutton_converter_scene.h"
-#include <dolphin/dolphin.h>
 
 enum SubmenuIndex {
     SubmenuIndexSelectFile,

@@ -108,7 +108,6 @@ bool ibutton_converter_scene_select_cyfral_convert_option_on_event(
         if(ibutton_converter->converted_key) {
             ibutton_key_free(ibutton_converter->converted_key);
         }
-
         ibutton_converter->converted_key = converted_key;
 
         scene_manager_next_scene(
