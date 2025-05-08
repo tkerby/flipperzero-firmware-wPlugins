@@ -1,6 +1,8 @@
 # Changelog
     
-
+## v1.2.6
+- Fix connect command syntax (#2 @tototo31)
+  
 ## v1.2.5
 
 - Added new and missing commands to the menu

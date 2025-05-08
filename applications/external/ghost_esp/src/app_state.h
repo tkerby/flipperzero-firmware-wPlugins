@@ -55,4 +55,6 @@ struct AppState {
     size_t buffer_length;
     size_t buffer_capacity;
     size_t buffer_size;
+    uint8_t connect_input_stage;
+    char connect_ssid[128];
 };
