@@ -36,6 +36,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
 - Updated: [iButton Converter v1.1 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
 - Updated: [Weather Station v1.9.4 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station) [BL999 (By gazirov) & Some Fixes (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1d4135f18f3f3fd4a1ef97ebbdefb8ea9c895680)
+- Updated: [Ghost ESP v1.2.5 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
+- ESP Flasher Bump [ESP Marauder v1.5.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.5.0)
 
 <a name="release">
 
