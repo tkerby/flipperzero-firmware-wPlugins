@@ -324,15 +324,13 @@ static const MenuCommand wifi_commands[] = {
         .file_ext = NULL,
         .folder = NULL,
         .needs_input = true,
-        .input_text = "SSID Password",
+        .input_text = "SSID",
         .needs_confirmation = false,
         .confirm_header = NULL,
         .confirm_text = NULL,
         .details_header = "WiFi Connect",
         .details_text = "Connect ESP to WiFi:\n"
-                        "Enter SSID & password\n"
-                        "separated by a space.\n"
-                        "Example: network pass\n",
+                        "Enter SSID followed by password.\n",
     },
     {
         .label = "Cast Random Video",
@@ -889,7 +887,28 @@ static void error_callback(void* context) {
 // Text input callback implementation
 static void text_input_result_callback(void* context) {
     AppState* input_state = (AppState*)context;
-    send_uart_command_with_text(input_state->uart_command, input_state->input_buffer, input_state);
+    if(input_state->connect_input_stage == 1) {
+        size_t len = strlen(input_state->input_buffer);
+        if(len >= sizeof(input_state->connect_ssid)) len = sizeof(input_state->connect_ssid) - 1;
+        memcpy(input_state->connect_ssid, input_state->input_buffer, len);
+        input_state->connect_ssid[len] = '\0';
+        input_state->connect_input_stage = 2;
+        text_input_reset(input_state->text_input);
+        text_input_set_header_text(input_state->text_input, "PASSWORD");
+        text_input_set_result_callback(
+            input_state->text_input, text_input_result_callback, input_state, input_state->input_buffer, 128, true);
+        view_dispatcher_switch_to_view(input_state->view_dispatcher, 6);
+        return;
+    }
+    if(input_state->connect_input_stage == 2) {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "connect \"%s\" \"%s\"\n", input_state->connect_ssid, input_state->input_buffer);
+        uart_send(input_state->uart_context, (uint8_t*)buffer, strlen(buffer));
+        input_state->connect_input_stage = 0;
+        input_state->connect_ssid[0] = '\0';
+    } else {
+        send_uart_command_with_text(input_state->uart_command, input_state->input_buffer, input_state);
+    }
     uart_receive_data(
         input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
 }
@@ -906,6 +925,17 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
         view_dispatcher_switch_to_view(state->view_dispatcher, 7);
         state->current_view = 7;
+        return;
+    }
+
+    if(command->needs_input && strcmp(command->command, "connect") == 0) {
+        state->connect_input_stage = 1;
+        state->uart_command = command->command;
+        text_input_reset(state->text_input);
+        text_input_set_header_text(state->text_input, "SSID");
+        text_input_set_result_callback(
+            state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
+        view_dispatcher_switch_to_view(state->view_dispatcher, 6);
         return;
     }
 
