@@ -6,7 +6,7 @@ sourcecode:
     ## Specify the git URL of your repository
     origin: https://github.com/lab-401/fzLightMessenger.git
     ## Put the full commit SHA of the commit with the app's code you want to submit
-    commit_sha: 8ce53900afdb2aae9dd2a19e787483af7a4b583f
+    commit_sha: 469117c22037c15c57234ed771760edd2ae1b96b
     ## (Optional) If your app is located in a subdirectory of the repository, specify it here
     subdir: ./401lightMessengerApp
 ## If application.fam contains 'fap_description', it will be used as a short description
