@@ -149,6 +149,7 @@ static void swipes_init(void* ctx, uint8_t direction) {
     }
 
     if(appAcc->direction != direction) {
+        appAcc->swipes_count ++;
         if(appAcc->cyclesAvg != 0)
             appAcc->cyclesAvg = (appAcc->cyclesAvg + appAcc->cycles) / 2;
         else
@@ -220,11 +221,10 @@ static int32_t app_acc_worker(void* ctx) {
 
     uint32_t render_delay_us = lightmsg_width_value[light_msg_data->width];
 
-    uint32_t tick = furi_get_tick();
     uint32_t direction_change_count = 0;
     uint8_t end_message_count = 0;
 
-    uint32_t message_duration_ms = lightmsg_speed_value[light_msg_data->speed];
+    uint32_t message_duration_swipe = lightmsg_speed_value[light_msg_data->speed];
     uint32_t flush_counter = 0;
 
     while(running) {
@@ -247,15 +247,11 @@ static int32_t app_acc_worker(void* ctx) {
             direction_change_count++;
         }
 
-        // Don't start the timer if we have changed direction more than 3 times
-        if(direction_change_count < 3) {
-            tick = furi_get_tick();
-        }
 
         // Beginning of the swipe
         if(appAcc->cycles == 1) {
             // Change the bitmap if we have exceeded the message duration
-            if((furi_get_tick() - tick) > message_duration_ms) {
+            if(!(appAcc->swipes_count % message_duration_swipe)) {
                 if(bitmapMatrix->next_bitmap) {
                     bitmapMatrix = bitmapMatrix->next_bitmap;
                 } else {
@@ -265,9 +261,6 @@ static int32_t app_acc_worker(void* ctx) {
                         bitmapMatrix = bitmapMatrix->next_bitmap;
                     }
                 }
-
-                // Reset the timer
-                tick = furi_get_tick();
             }
 
             // Start the animation again once we have reached the end of the bitmaps
@@ -276,7 +269,8 @@ static int32_t app_acc_worker(void* ctx) {
                 bitmapMatrix = appAcc->bitmapMatrix;
 
                 // If we have multiple bitmaps, play a short vibration to signal the end of the message
-                if(bitmapMatrix->next_bitmap != NULL) {
+                //(but not in fast mode)
+                if(bitmapMatrix->next_bitmap != NULL && (message_duration_swipe>2)) {
                     for(int i = 0; i < 2; i++) {
                         furi_hal_vibro_on(true);
                         furi_delay_ms(100 * i);
@@ -285,7 +279,6 @@ static int32_t app_acc_worker(void* ctx) {
                     }
 
                     direction_change_count = 0;
-                    tick = furi_get_tick();
                 }
             }
         }

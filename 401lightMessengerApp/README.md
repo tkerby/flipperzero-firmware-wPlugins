@@ -78,35 +78,34 @@ Starting from version 1.4, you can display animations thanks to [@jamisonderek i
 
 ##### Using the Script:
 
-1. Download [convertFzLM.sh](./convertFzLM.sh).
+1. Download [convertFzLM.sh](./401lightMessengerApp/convertFzLM.sh).
 
-2. Grab a cool GIF. For this example, we'll use a short sequence from BadApple:
+2. Grab a cool GIF. For this example, we'll use a short GIF sequence:
 
-   ![badapple](./README.assets/badaple.gif)
+   ![badapple](./README.assets/pacman.gif)
 
 3. Use the script to convert the image into a BMP sequence:
 
-   ```
-   $ ./convertFzLM.sh badaple.gif
-   [+] Frames have been extracted and saved in "./badaple/...":
-   badaple_0.bmp	badaple_2.bmp  badaple_5.bmp  badaple_8.bmp
-   badaple_10.bmp	badaple_3.bmp  badaple_6.bmp  badaple_9.bmp
-   badaple_1.bmp	badaple_4.bmp  badaple_7.bmp
+   ```bash
+   $ ./convertFzLM.sh pacman-video-game.gif # (-i to invert colors)
+   [*] Frame 0 ← index 0
+   [*] Frame 1 ← index 1
+   [*] Frame 2 ← index 2
+   [*] Frame 3 ← index 3
+   [✓] Done. 4 frame(s) written to 'pacman-video-game' (true 1bpp BMPv1, no dithering)
    ```
 
 ​	This should give you this:![bitmap squence](./README.assets/sequence_screenshot.png) 
 
-4. Using QFlipper, copy the directory in ```SD Card/app_assets/401_light_msg```
+4. Using **QFlipper**, copy the directory in ```SD Card/app_assets/401_light_msg```
 
 > [!NOTE]
 >
 > A Flipper Zero reboot may be necessary after closing QFlipper.
 
-5. On lightMessenger app, go to **Configuration** and set "A Flipper Zero reboot may be necessary after closing QFlipper." to **Slow** or **Fast**
-6. Open "badaple/badaple_0.bmp" as Bitmap, and swipe
-7. You may need to squint a little to see it:
-
-![badapple_hw](./README.assets/badapple_hw.gif)
+5. On lightMessenger app, go to **Configuration** and set Word by word " to **Slow** ,**Medium** or **Fast**
+6. Open "pacman/pacman_0.bmp" as **Bitmap**, and swipe
+7. You may need to squint a little to see it
 
 ### FlashLight
 

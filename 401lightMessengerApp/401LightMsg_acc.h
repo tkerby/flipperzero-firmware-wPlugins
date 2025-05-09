@@ -39,6 +39,7 @@ typedef struct AppAcc {
     uint16_t cycles; // Cycles counter
     uint16_t cyclesAvg; // Average cycles
     uint16_t cyclesCenter;
+    uint32_t swipes_count;
     bool direction;
     // void *data;
 } AppAcc;
