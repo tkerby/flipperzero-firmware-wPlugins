@@ -12,7 +12,7 @@ This modules embeds an i2c **accelerometer**(LIS2XX12), and an array of **16 RGB
 
 ## How to use
 
-Plug the device on the GPIO header of the flipper zero, then download an install the latest firmware's version on your flipper zero. 
+Plug the device on the GPIO header of the flipper zero, then download an install the latest firmware's version on your flipper zero.
 Once everything is installed, navigate to **/Apps/GPIO/401LightMessenger** to launch the application.
 
 ![lm02](./README.assets/lm01.png)
@@ -29,38 +29,38 @@ Entering the "**Text**" application, you're prompted with a text-input, allowing
 
 ![text](./README.assets/doc_text.png)
 
-Select "save" to save your text. The module should flash once, and the text "Swipe" appears on the screen. 
+Select "save" to save your text. The module should flash once, and the text "Swipe" appears on the screen.
 
 ### Bitmap
 
-Entering the "**Bitmap**" application, you're invited to select a bitmap file to be displayed. 
+Entering the "**Bitmap**" application, you're invited to select a bitmap file to be displayed.
 
 ![lm_bmp02](./README.assets/doc_bitmap.png)
 
 
 
-Only 1bpp bitmaps, with a hight of 16px can be displayed. Once selected, the text "Swipe" appears on the screen. 
+Only 1bpp bitmaps, with a hight of 16px can be displayed. Once selected, the text "Swipe" appears on the screen.
 
 
 
 ### Bitmap Editor
 
-Entering "**BitmapEditor**", you have two options: Create a new doodle, or edit one you've already created/imported. 
+Entering "**BitmapEditor**", you have two options: Create a new doodle, or edit one you've already created/imported.
 
 ![lm_bmp02](./README.assets/doc_bitmap_edit.png)
 
 #### New bitmap
 
-When selecting "New", you shall enter the width of the doodle you want to draw. 
+When selecting "New", you shall enter the width of the doodle you want to draw.
 
 ![lm_bmp02](./README.assets/lm_bmpedit03.png)
 
 Choose the desired width by using left and right arrows, then press OK.
-You'll then have to choose a name for the new file. 
+You'll then have to choose a name for the new file.
 
 ![lm_bmp02](./README.assets/lm_bmpedit04.png)
 
-When done, select "**save**". To draw, just move the cursor using the arrows, and toggle pixels by pressing the "**Ok**" button. To save, press "**Return**". 
+When done, select "**save**". To draw, just move the cursor using the arrows, and toggle pixels by pressing the "**Ok**" button. To save, press "**Return**".
 
 **V1.3:** If you press longer on "**Ok**", then "**Hold**" will be activated, continuously drawing by flipping underlying pixels. No more Ok button smashing.
 
@@ -78,7 +78,7 @@ Starting from version 1.4, you can display animations thanks to [@jamisonderek i
 
 ##### Using the Script:
 
-1. Download [convertFzLM.sh](./401lightMessengerApp/convertFzLM.sh).
+1. Download [convertFzLM.sh](https://raw.githubusercontent.com/tixlegeek/fzLightMessenger/refs/heads/tixlegeek/enhance_swipe_anim/401lightMessengerApp/convertFzLM.sh).
 
 2. Grab a cool GIF. For this example, we'll use a short GIF sequence:
 
@@ -95,7 +95,7 @@ Starting from version 1.4, you can display animations thanks to [@jamisonderek i
    [✓] Done. 4 frame(s) written to 'pacman-video-game' (true 1bpp BMPv1, no dithering)
    ```
 
-​	This should give you this:![bitmap squence](./README.assets/sequence_screenshot.png) 
+​	This should give you this:![bitmap squence](./README.assets/sequence_screenshot.png)
 
 4. Using **QFlipper**, copy the directory in ```SD Card/app_assets/401_light_msg```
 
@@ -125,9 +125,9 @@ The orientation allows to choose between "Wheel Up" and "WheelDown". Select the 
 
 #### Color
 
-Multiple color shaders are available: 
+Multiple color shaders are available:
 
-- Single colors (R3d, 0r4ng3, Y3ll0w, Gr33n, Cy4n, Blu3, Purpl3) 
+- Single colors (R3d, 0r4ng3, Y3ll0w, Gr33n, Cy4n, Blu3, Purpl3)
 - Animated (Ny4nC4t, R4inb0w, Sp4rkl3, V4p0rw4v3, R3dBlu3)
 
 ## Swipe
@@ -143,7 +143,7 @@ The display is based on [PoV](https://en.wikipedia.org/wiki/Persistence_of_visio
 
 
 
-You can also photobomb if you build up enought skill. 
+You can also photobomb if you build up enought skill.
 
 ![lm02](./README.assets/doc01.png)
 
@@ -201,7 +201,7 @@ ufbt launch
 - If you get `[ERROR] Error: could not open port : PermissionError(13, 'Access is denied.', None, 5)` verify that no other applications are running. If needed press Back+Left to reboot the Flipper Zero.
 - If you are not on Official firmware, you may need to update your [index-url](https://github.com/jamisonderek/flipper-zero-tutorials/wiki/UFBT#switching-target-firmware).
 
-### Hardware 
+### Hardware
 
 ![schematics](./README.assets/schematics.png)
 
@@ -232,12 +232,12 @@ To add a new configuration entry:
 - Update the [401_config.h](401lightMessengerApp/401_config.h) file:
    - Add a new property to the `Configuration` structure.
    - Define a new `LIGHTMSG_DEFAULT_{name}` with a default setting. Typically indexes are used instead of values.
-   
+
 - Update the [401_config.c](401lightMessengerApp/401_config.c) file:
    - Add an entry in `config_default_init` to initialize your property.
    - Add an entry in `config_to_json` to serialize your property.
    - Add an entry in `json_to_config` to deserialize your property.
-   
+
 
 > [!NOTE]
 >
@@ -264,4 +264,3 @@ AppData* appData = (AppData*)app->data;
 Configuration* light_msg_data = (Configuration*)appData->config;
 uint8_t value = listmsg_{name}_value[light_msg_data->{name}]; // Replace {name} with your feature name.
 ```
-
