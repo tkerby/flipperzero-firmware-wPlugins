@@ -78,7 +78,7 @@ Starting from version 1.4, you can display animations thanks to [@jamisonderek i
 
 ##### Using the Script:
 
-1. Download [convertFzLM.sh](https://raw.githubusercontent.com/tixlegeek/fzLightMessenger/refs/heads/tixlegeek/enhance_swipe_anim/401lightMessengerApp/convertFzLM.sh).
+1. Download [convertFzLM.sh](https://raw.githubusercontent.com/lab-401/fzLightMessenger/refs/heads/main/401lightMessengerApp/convertFzLM.sh).
 
 2. Grab a cool GIF. For this example, we'll use a short GIF sequence:
 
