@@ -43,7 +43,7 @@ A Flipper Zero application for interfacing with the Ghost ESP32 firmware
 
 
 ## Support
-- For support, please open an [issue](https://github.com/jaylikesbunda/ghost_esp_app/issues) on the repository or contact [Jay](https://github.com/jaylikesbunda) (@fuckyoudeki on Discord).
+- For support, please open an [issue](https://github.com/jaylikesbunda/ghost_esp_app/issues) on the repository or contact [Jay](https://github.com/jaylikesbunda) (@fuckyoudeki on [Discord](https://discord.gg/5cyNmUMgwh)).
 
 
 
