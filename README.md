@@ -11,9 +11,14 @@ The flipper stores your usernames and password and can write them on your PC act
     - The flipper shows a lists of website names
     - If OK is clicked, the flipper will write on the PC ```username + /t + password + /n```
         - *Perfect for web forms!!!*
+        - (If the username is not set, it will write only ```password + /n```)
 - Delete credentials:
     - The flipper shows a lists of website names
     - If OK is clicked, the flipper will remove the selected line from the credentials file
+
+### Storage
+Credentials are stored as ```service,username,password``` in a .txt file.    
+```\``` and ```,``` needs to be escaped as ```\\``` and ```\,``` if you handle the file manually.
 
 ## Add new password
 

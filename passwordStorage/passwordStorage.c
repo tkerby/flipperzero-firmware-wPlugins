@@ -1,6 +1,61 @@
 #include "passwordStorage.h"
 #include "../main.h"
 #include <string.h>
+#include <stdio.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+bool parse_escaped_line(const char *line, char *field1, char *field2, char *field3) {
+    char *fields[3] = { field1, field2, field3 };
+    int current_field = 0;
+    int field_letter = 0;
+    bool escape = false;
+
+    for (int i = 0; line[i] != '\0'; ++i) {
+        char c = line[i];
+
+        if (escape) {
+            // Copy the next character
+            if (field_letter < 99) {
+                fields[current_field][field_letter++] = c;
+            }
+            escape = false;
+        } else if (c == '\\') {
+            escape = true;
+        } else if (c == ',' && current_field < 2) {
+            // End of current field, move to next
+            fields[current_field][field_letter] = '\0';
+            current_field++;
+            field_letter = 0;
+        } else {
+            if (field_letter < 99) {
+                fields[current_field][field_letter++] = c;
+            }
+        }
+    }
+
+    if (escape) {
+        // Dangling backslash at end of input
+        return false;
+    }
+
+    // Terminate last field
+    if (current_field > 2) return false;  // Too many commas
+    fields[current_field][field_letter] = '\0';
+
+    // Require exactly 3 fields
+    return current_field == 2;
+}
 
 // Add entry to password list
 bool password_list_add(Credential* credentials, size_t i, const char* service, const char* username, const char* password) {
@@ -58,9 +113,8 @@ size_t read_passwords_from_file(const char* filename, Credential* credentials) {
         if(storage_file_read_line(file, line, sizeof(line)) <= 0) {
             break; // End of file or error
         }
-        
         // Parse the line (expected format: "service,username,password")
-        if(sscanf(line, "%99[^,],%99[^,],%99[^\n]", service, username, password) == 3) {
+        if(parse_escaped_line(line, service, username, password)) {
             // Add to our list
             password_list_add(credentials, i, service, username, password);   
             i++;

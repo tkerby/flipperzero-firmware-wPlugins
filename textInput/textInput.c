@@ -56,6 +56,7 @@ TextInput* credential_username_TextInput_alloc(void* context) {
     AppContext* app = context;
 
     TextInput* textInput = text_input_alloc();
+    text_input_set_minimum_length(textInput, 0);
     text_input_set_header_text(textInput, "Insert Username:");
     text_input_set_result_callback(
         textInput,
