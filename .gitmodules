@@ -1,3 +1,0 @@
-[submodule "CircuitPython/src/picogui"]
-	path = CircuitPython/src/picogui
-	url = https://github.com/jblanked/PicoGUI.git
