@@ -19,6 +19,7 @@ void protocol_select_scene_on_enter(void* context) {
     UI* ui = context;
     
     submenu_reset(ui->protocol_select_scene->protocol_menu);
+    submenu_set_header(ui->protocol_select_scene->protocol_menu, "Select NFC Protocol");
     
     for(int i = 0; i < NfcTechNum; i++){
         if(i == NfcTechIso14443b){
