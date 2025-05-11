@@ -48,6 +48,7 @@ class Game:
         self.button_center: Input = None
         self.button_back: Input = None
         self.button_start: Input = None
+        self.button_uart: Input = None
         self.input: int = -1  # last button pressed
         self.draw = draw
         self.camera = Vector(0, 0)
@@ -57,6 +58,7 @@ class Game:
         self.is_active = False
         self.foreground_color = foreground_color
         self.background_color = background_color
+        self.is_uart_input = False
 
     def clamp(self, value, lower, upper):
         """Clamp a value between a lower and upper bound."""
@@ -74,7 +76,10 @@ class Game:
 
     def input_add(self, control: Input):
         """Add an input control to the game"""
-        if control.button == BUTTON_UP:
+        if control.uart:
+            self.button_uart = control
+            self.is_uart_input = True
+        elif control.button == BUTTON_UP:
             self.button_up = control
         elif control.button == BUTTON_DOWN:
             self.button_down = control
@@ -91,7 +96,10 @@ class Game:
 
     def input_remove(self, control: Input):
         """Remove an input control"""
-        if control.button == BUTTON_UP:
+        if control.uart:
+            self.button_uart = None
+            self.is_uart_input = False
+        elif control.button == BUTTON_UP:
             self.button_up = None
         elif control.button == BUTTON_DOWN:
             self.button_down = None
@@ -105,6 +113,7 @@ class Game:
             self.button_back = None
         elif control.button == BUTTON_START:
             self.button_start = None
+        free()
 
     def level_add(self, level: Level):
         """Add a level to the game"""
@@ -127,7 +136,9 @@ class Game:
 
     def manage_input(self):
         """Check for input from the user"""
-        if self.button_up and self.button_up.is_pressed():
+        if self.is_uart_input and self.button_uart:
+            self.input = self.button_uart.last_button
+        elif self.button_up and self.button_up.is_pressed():
             self.input = BUTTON_UP
         elif self.button_down and self.button_down.is_pressed():
             self.input = BUTTON_DOWN
@@ -155,13 +166,12 @@ class Game:
             print("The game has no levels.")
             return False
         self.current_level = self.levels[0]
-        free()
-        # Clear the screen initially.
-        self.draw.fill(self.background_color)
         if self._start:
             self._start(self)
+
         self.current_level.start()
         self.is_active = True
+        free()
         return True
 
     def stop(self):
@@ -195,6 +205,22 @@ class Game:
 
     def update(self):
         """Update the game input and entity positions in a thread-safe manner."""
+        if self.is_uart_input:
+            self.button_uart.run()
+        else:
+            if self.button_up:
+                self.button_up.run()
+            if self.button_down:
+                self.button_down.run()
+            if self.button_left:
+                self.button_left.run()
+            if self.button_right:
+                self.button_right.run()
+            if self.button_center:
+                self.button_center.run()
+            if self.button_back:
+                self.button_back.run()
+
         self.manage_input()
 
         # Run user-defined update functions for each entity.
