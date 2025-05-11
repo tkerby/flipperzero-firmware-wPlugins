@@ -1,4 +1,5 @@
 from picogui.vector import Vector
+from displayio import TileGrid, OnDiskBitmap
 
 
 class Entity:
@@ -31,7 +32,16 @@ class Entity:
         is_player: bool = False,  # is_player is a boolean that specifies whether the entity is the player
     ):
         self.name = name
-        self.pos = Vector(position.x, position.y)
+        self.pos = position
+        self.sprite_path = sprite_file_path
+        bitmap = OnDiskBitmap(sprite_file_path)
+        self.tile_grid = TileGrid(
+            bitmap,
+            pixel_shader=bitmap.pixel_shader,
+            x=int(position.x),
+            y=int(position.y),
+        )
+        del bitmap
         self.size = sprite_size
         self._start = start
         self._stop = stop
@@ -39,7 +49,6 @@ class Entity:
         self._render = render
         self._collision = collision
         self.is_player = is_player
-        self.sprite_path = sprite_file_path
         self.is_active = False
 
     def collision(self, other, game):

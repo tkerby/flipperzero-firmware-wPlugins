@@ -10,8 +10,8 @@ class Level:
     - name: str - the name of the level
     - size: Vector - the size of the level
     - game: Game - the game to which the level belongs
-    - start: function() - the function called when the level is created
-    - stop: function() - the function called when the level is destroyed
+    - start: function(Level) - the function called when the level is created
+    - stop: function(Level) - the function called when the level is destroyed
     """
 
     def __init__(
@@ -76,11 +76,11 @@ class Level:
         for entity in self.entities:
             if entity.is_active:
                 entity.render(self.game.draw, self.game)
-                self.game.draw.image_file_bmp(
+                self.game.draw.tile_grid(
                     Vector(
                         entity.pos.x - self.game.pos.x, entity.pos.y - self.game.pos.y
                     ),
-                    entity.sprite_path,
+                    entity.tile_grid,
                 )
         self.game.draw.swap()
 

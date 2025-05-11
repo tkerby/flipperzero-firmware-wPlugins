@@ -190,7 +190,7 @@ class Game:
         self.button_back = None
         self.button_start = None
 
-        self.draw.clear(color=self.background_color)
+        self.draw.fill(self.background_color)
         free()
 
     def update(self):

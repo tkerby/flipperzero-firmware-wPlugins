@@ -23,7 +23,7 @@ class GameEngine:
 
         # start the game
         if not self.game.is_active:
-            self.game.start(self)
+            self.game.start()
 
         # start the game loop
         while True:
@@ -38,8 +38,7 @@ class GameEngine:
             sleep(1 / self.fps)
 
         # stop the game
-        self.game.stop(self)
-
+        self.game.stop()
         # clear the screen
         self.game.draw.clear()
         free()
