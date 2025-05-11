@@ -29,11 +29,13 @@ from pico_game_engine.input import (
     BUTTON_DOWN,
     BUTTON_RIGHT,
     BUTTON_LEFT,
+    BUTTON_UART,
 )
 from picogui.vector import Vector
 from picogui.image import Image
 from picogui.draw import Draw, TFT_BLACK, TFT_WHITE
 from picogui.boards import VGM_BOARD_CONFIG, JBLANKED_BOARD_CONFIG
+from uart import UART
 
 
 class PicoGameEngine:
@@ -43,7 +45,7 @@ class PicoGameEngine:
 
     def __init__(self):
         # create a new TFT display
-        self.screen = Draw(JBLANKED_BOARD_CONFIG)
+        self.screen = Draw(VGM_BOARD_CONFIG)
         # create a new game
         self.game: Game = None
 
@@ -55,10 +57,7 @@ class PicoGameEngine:
 
     def add_input(self):
         """Add input controls"""
-        self.game.input_add(Input(board.GP16, BUTTON_UP))
-        self.game.input_add(Input(board.GP17, BUTTON_RIGHT))
-        self.game.input_add(Input(board.GP18, BUTTON_DOWN))
-        self.game.input_add(Input(board.GP19, BUTTON_LEFT))
+        self.game.input_add(Input(button=BUTTON_UART, uart=UART()))
 
     def add_level(self):
         """Add a new level"""
@@ -85,13 +84,13 @@ class PicoGameEngine:
     def game_input(self, player: Entity, game: Game):
         """Move the player entity based on input"""
         if game.input == BUTTON_UP:
-            player.position += Vector(0, -5)
+            player.pos += Vector(0, -5)
         elif game.input == BUTTON_RIGHT:
-            player.position += Vector(5, 0)
+            player.pos += Vector(5, 0)
         elif game.input == BUTTON_DOWN:
-            player.position += Vector(0, 5)
+            player.pos += Vector(0, 5)
         elif game.input == BUTTON_LEFT:
-            player.position += Vector(-5, 0)
+            player.pos += Vector(-5, 0)
 
     def game_start(self, game: Game, engine: GameEngine):
         """Handle your game start logic here"""
