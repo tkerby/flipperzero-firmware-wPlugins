@@ -1,4 +1,4 @@
-import gc
+from gc import collect as free
 from time import sleep
 from .game import Game
 
@@ -13,20 +13,21 @@ class GameEngine:
     - game: Game - the game to run
     """
 
-    def __init__(self, name: str, fps: int, game: Game):
-        self.name = name
+    def __init__(self, fps: int, game: Game):
         self.fps = fps
         self.game = game
 
     def run(self):
         """Run the game engine"""
+        free()
 
         # start the game
-        self.game.start(self)
+        if not self.game.is_active:
+            self.game.start()
 
         # start the game loop
         while True:
-            gc.collect()
+            free()
             self.game.update()  # update positions, input, etc.
             self.game.render()  # update graphics
 
@@ -37,8 +38,7 @@ class GameEngine:
             sleep(1 / self.fps)
 
         # stop the game
-        self.game.stop(self)
-
+        self.game.stop()
         # clear the screen
         self.game.draw.clear()
-        gc.collect()
+        free()

@@ -1,9 +1,17 @@
-import gc
+from gc import collect as free
+from picogui.vector import Vector
+from picogui.draw import Draw
 from .level import Level
-from .input import Input, Button
-from .vector import Vector
-from .draw import Draw
-from .ILI9341 import ILI9341, color565
+from .input import (
+    Input,
+    BUTTON_UP,
+    BUTTON_DOWN,
+    BUTTON_LEFT,
+    BUTTON_RIGHT,
+    BUTTON_CENTER,
+    BUTTON_BACK,
+    BUTTON_START,
+)
 
 
 class Game:
@@ -12,26 +20,26 @@ class Game:
 
     Parameters:
     - name: str - the name of the game
-    - start: function(Game) - the function called when the game is created
-    - stop: function(Game) - the function called when the game is destroyed
-    - display: ILI9341 - the display to render the game on
+    - draw: Draw - the draw object to be used for rendering
     - foreground_color: int - the color of the foreground
     - background_color: int - the color of the background
+    - start: function() - the function called when the game is created
+    - stop: function() - the function called when the game is destroyed
     """
 
     def __init__(
         self,
         name: str,
+        draw: Draw,
+        foreground_color: int,
+        background_color: int,
         start=None,
         stop=None,
-        display: ILI9341 = None,
-        foreground_color=color565(255, 255, 255),
-        background_color=color565(0, 0, 0),
     ):
         self.name = name
         self._start = start
         self._stop = stop
-        self.levels = []  # List of levels in the game
+        self.levels: list[Level] = []  # List of levels in the game
         self.current_level: Level = None  # holds the current level
         self.button_up: Input = None
         self.button_down: Input = None
@@ -41,11 +49,11 @@ class Game:
         self.button_back: Input = None
         self.button_start: Input = None
         self.input: int = -1  # last button pressed
-        self.draw = Draw(display)
+        self.draw = draw
         self.camera = Vector(0, 0)
         self.pos = Vector(0, 0)
-        self.size = Vector(display.width, display.height)
-        self.world_size = Vector(display.width, display.height)
+        self.size = Vector(draw.size.x, draw.size.y)
+        self.world_size = Vector(draw.size.x, draw.size.y)
         self.is_active = False
         self.foreground_color = foreground_color
         self.background_color = background_color
@@ -66,51 +74,45 @@ class Game:
 
     def input_add(self, control: Input):
         """Add an input control to the game"""
-        if control.button == Button.UP:
+        if control.button == BUTTON_UP:
             self.button_up = control
-        elif control.button == Button.DOWN:
+        elif control.button == BUTTON_DOWN:
             self.button_down = control
-        elif control.button == Button.LEFT:
+        elif control.button == BUTTON_LEFT:
             self.button_left = control
-        elif control.button == Button.RIGHT:
+        elif control.button == BUTTON_RIGHT:
             self.button_right = control
-        elif control.button == Button.CENTER:
+        elif control.button == BUTTON_CENTER:
             self.button_center = control
-        elif control.button == Button.BACK:
+        elif control.button == BUTTON_BACK:
             self.button_back = control
-        elif control.button == Button.START:
+        elif control.button == BUTTON_START:
             self.button_start = control
-
-        gc.collect()
 
     def input_remove(self, control: Input):
         """Remove an input control"""
-        if control.button == Button.UP:
+        if control.button == BUTTON_UP:
             self.button_up = None
-        elif control.button == Button.DOWN:
+        elif control.button == BUTTON_DOWN:
             self.button_down = None
-        elif control.button == Button.LEFT:
+        elif control.button == BUTTON_LEFT:
             self.button_left = None
-        elif control.button == Button.RIGHT:
+        elif control.button == BUTTON_RIGHT:
             self.button_right = None
-        elif control.button == Button.CENTER:
+        elif control.button == BUTTON_CENTER:
             self.button_center = None
-        elif control.button == Button.BACK:
+        elif control.button == BUTTON_BACK:
             self.button_back = None
-        elif control.button == Button.START:
+        elif control.button == BUTTON_START:
             self.button_start = None
-
-        gc.collect()
 
     def level_add(self, level: Level):
         """Add a level to the game"""
         self.levels.append(level)
-        gc.collect()
 
     def level_remove(self, level: Level):
         """Remove a level from the game"""
         self.levels.remove(level)
-        gc.collect()
 
     def level_switch(self, level: Level):
         """Switch to a new level"""
@@ -122,79 +124,54 @@ class Game:
         old_level.stop()
         old_level.clear()
         self.current_level.start()
-        gc.collect()
 
     def manage_input(self):
         """Check for input from the user"""
         if self.button_up and self.button_up.is_pressed():
-            self.input = Button.UP
+            self.input = BUTTON_UP
         elif self.button_down and self.button_down.is_pressed():
-            self.input = Button.DOWN
+            self.input = BUTTON_DOWN
         elif self.button_left and self.button_left.is_pressed():
-            self.input = Button.LEFT
+            self.input = BUTTON_LEFT
         elif self.button_right and self.button_right.is_pressed():
-            self.input = Button.RIGHT
+            self.input = BUTTON_RIGHT
         elif self.button_center and self.button_center.is_pressed():
-            self.input = Button.CENTER
+            self.input = BUTTON_CENTER
         elif self.button_back and self.button_back.is_pressed():
-            self.input = Button.BACK
+            self.input = BUTTON_BACK
         elif self.button_start and self.button_start.is_pressed():
-            self.input = Button.START
+            self.input = BUTTON_START
         else:
             self.input = -1
 
-        gc.collect()
-
     def render(self):
-        """Render the game entities in a thread-safe manner."""
-        # Draw each entity.
-        for entity in self.current_level.entities:
-            if entity.pos_did_change and entity.old_pos is not entity.pos:
-                # delete old pos
-                draw_x = entity.old_pos.x - self.camera.x
-                draw_y = entity.old_pos.y - self.camera.y
+        """Render the current level"""
+        if self.current_level:
+            self.current_level.render()
 
-                self.draw.clear(
-                    Vector(draw_x, draw_y), entity.size, self.background_color
-                )
-
-                entity.old_pos = entity.pos
-            # If you need to run any custom rendering function:
-            if entity.render:
-                entity.render(self.draw, self)
-
-            # Compute on-screen coordinates (using camera offset).
-            draw_x = entity.pos.x - self.camera.x
-            draw_y = entity.pos.y - self.camera.y
-
-            # Draw the entity's sprite.
-            if entity.sprite:
-                self.draw.image(entity.sprite, draw_x, draw_y)
-
-    def start(self, engine) -> bool:
+    def start(self) -> bool:
         """Start the game"""
         if not self.levels:
             print("The game has no levels.")
             return False
         self.current_level = self.levels[0]
-        gc.collect()
+        free()
         # Clear the screen initially.
-        self.draw.clear(color=self.background_color)
+        self.draw.fill(self.background_color)
         if self._start:
-            self._start(self, engine)
-        self.current_level.start(engine)
+            self._start(self)
+        self.current_level.start()
         self.is_active = True
         return True
 
-    def stop(self, engine):
+    def stop(self):
         """Stop the game"""
-        gc.collect()
 
         if not self.is_active:
             return
 
         if self._stop:
-            self._stop(self, engine)
+            self._stop(self)
 
         self.is_active = False
 
@@ -213,8 +190,8 @@ class Game:
         self.button_back = None
         self.button_start = None
 
-        self.draw.clear(color=self.background_color)
-        gc.collect()
+        self.draw.fill(self.background_color)
+        free()
 
     def update(self):
         """Update the game input and entity positions in a thread-safe manner."""
@@ -232,3 +209,7 @@ class Game:
         # Clamp camera position to prevent going outside the world.
         self.camera.x = self.clamp(self.camera.x, 0, self.world_size.x - self.size.x)
         self.camera.y = self.clamp(self.camera.y, 0, self.world_size.y - self.size.y)
+
+        # update the level
+        if self.current_level:
+            self.current_level.update()

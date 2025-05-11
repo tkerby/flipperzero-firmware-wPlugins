@@ -1,4 +1,4 @@
-from .vector import Vector
+from picogui.vector import Vector
 from .entity import Entity
 
 
@@ -9,20 +9,23 @@ class Level:
     Parameters:
     - name: str - the name of the level
     - size: Vector - the size of the level
-    - start: function(Level, GameEngine) - the function called when the level is created
-    - stop: function(Level, GameEngine) - the function called when the level is destroyed
+    - game: Game - the game to which the level belongs
+    - start: function(Level) - the function called when the level is created
+    - stop: function(Level) - the function called when the level is destroyed
     """
 
     def __init__(
         self,
         name: str,
         size: Vector,
+        game,
         start=None,  # start is a function that is called when the level is created
         stop=None,  # stop is a function that is called when the level is destroyed
     ):
         self.name = name
         self.size = size
-        self.entities = []  # List of entities in the level
+        self.game = game
+        self.entities: list[Entity] = []  # List of entities in the level
         self._start = start
         self._stop = stop
 
@@ -41,6 +44,8 @@ class Level:
     def entity_add(self, entity: Entity):
         """Add an entity to the level"""
         self.entities.append(entity)
+        entity.start(self.game)
+        entity.is_active = True
 
     def entity_remove(self, entity: Entity):
         """Remove an entity from the level"""
@@ -55,8 +60,8 @@ class Level:
 
     def is_collision(self, entity: Entity, other: Entity) -> bool:
         """Check if two entities collided using AABB logic"""
-        entity_pos = entity.position
-        other_pos = other.position
+        entity_pos = entity.pos
+        other_pos = other.pos
         entity_size = entity.size
         other_size = other.size
         return (
@@ -66,12 +71,34 @@ class Level:
             and entity_pos.y + entity_size.y > other_pos.y
         )
 
-    def start(self, engine):
+    def render(self):
+        """Render the level"""
+        for entity in self.entities:
+            if entity.is_active:
+                entity.render(self.game.draw, self.game)
+                self.game.draw.tile_grid(
+                    Vector(
+                        entity.pos.x - self.game.pos.x, entity.pos.y - self.game.pos.y
+                    ),
+                    entity.tile_grid,
+                )
+        self.game.draw.swap()
+
+    def start(self):
         """Start the level"""
         if self._start:
-            self._start(self, engine)
+            self._start(self)
 
-    def stop(self, engine):
+    def stop(self):
         """Stop the level"""
         if self._stop:
-            self._stop(self, engine)
+            self._stop(self)
+
+    def update(self):
+        """Update the level"""
+        for entity in self.entities:
+            if entity.is_active:
+                entity.update(self.game)
+                collided = self.collision_list(entity)
+                for other in collided:
+                    entity.collision(other, self.game)

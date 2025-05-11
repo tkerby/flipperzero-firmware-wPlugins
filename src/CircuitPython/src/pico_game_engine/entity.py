@@ -1,5 +1,5 @@
-from .vector import Vector
-from .image import Image
+from picogui.vector import Vector
+from displayio import TileGrid, OnDiskBitmap
 
 
 class Entity:
@@ -21,8 +21,9 @@ class Entity:
     def __init__(
         self,
         name: str,  # name is a string that represents the name of the entity
-        sprite: Image,  # path is a string that represents the path to the image or the image data
         position: Vector,  # position is a Vector that represents the x and y coordinates of the entity
+        sprite_file_path: str,  # sprite_file_path is a string that represents the path to the image or the image data
+        sprite_size: Vector,  # sprite_size is a Vector that represents the width and height of the image
         start=None,  # start is a function that is called when the entity is created
         stop=None,  # stop is a function that is called when the entity is destroyed
         update=None,  # update is a function that is called every frame
@@ -31,36 +32,29 @@ class Entity:
         is_player: bool = False,  # is_player is a boolean that specifies whether the entity is the player
     ):
         self.name = name
-        self.pos = Vector(position.x, position.y)
-        self.old_pos = Vector(0, 0)
+        self.pos = position
+        self.sprite_path = sprite_file_path
+        bitmap = OnDiskBitmap(sprite_file_path)
+        self.tile_grid = TileGrid(
+            bitmap,
+            pixel_shader=bitmap.pixel_shader,
+            x=int(position.x),
+            y=int(position.y),
+        )
+        del bitmap
+        self.size = sprite_size
         self._start = start
         self._stop = stop
         self._update = update
         self._render = render
         self._collision = collision
         self.is_player = is_player
-        self.sprite = sprite
-        self.pos_did_change = False
-
-        # Set the size of the entity based on the image size
-        self.size = self.sprite.size if self.sprite else Vector(0, 0)
+        self.is_active = False
 
     def collision(self, other, game):
         """Called when the entity collides with another entity."""
         if self._collision:
             self._collision(self, other, game)
-
-    @property
-    def position(self) -> Vector:
-        """Used by the engine to get the position of the entity."""
-        return Vector(self.pos.x, self.pos.y)
-
-    @position.setter
-    def position(self, value: Vector):
-        """Used by the engine to set the position of the entity."""
-        self.old_pos = Vector(self.pos.x, self.pos.y)
-        self.pos = Vector(value.x, value.y)
-        self.pos_did_change = True
 
     def render(self, draw, game):
         """Called every frame to render the entity."""
