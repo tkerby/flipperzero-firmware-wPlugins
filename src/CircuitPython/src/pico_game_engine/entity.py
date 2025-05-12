@@ -67,7 +67,7 @@ class Entity:
     @position.setter
     def position(self, value: Vector):
         """Used by the engine to set the position of the entity."""
-        self.old_pos = Vector(self.__position.x, self.__position.y)
+        self.position_old = Vector(self.__position.x, self.__position.y)
         self.__position = Vector(value.x, value.y)
 
     def render(self, draw, game):
