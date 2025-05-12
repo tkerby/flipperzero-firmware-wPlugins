@@ -1,44 +1,85 @@
 #!/bin/bash
 
-# Create a 10 frame 1bpp bitmap sequence from any gif:
+# Converts a GIF to up to 10 true 1bpp BMPv1 frames (≤42x16) without dithering.
+# Optional -i flag inverts black/white logic.
+# Dependencies: ffmpeg, ImageMagick (`convert`)
 
-# Check if an input file is provided
-if [ -z "$1" ]; then
-  echo "[?] Usage: $0 <input_gif>"
+set -euo pipefail
+
+# --- Dependency checks ---
+command -v ffmpeg >/dev/null || { echo "[x] ffmpeg not found. Install it with: sudo apt install ffmpeg"; exit 1; }
+command -v convert >/dev/null || { echo "[x] ImageMagick 'convert' not found. Install it with: sudo apt install imagemagick"; exit 1; }
+
+# --- Parse options ---
+INVERT=0
+while getopts "i" opt; do
+  case "$opt" in
+    i) INVERT=1 ;;  # -i: Invert black/white logic
+  esac
+done
+shift $((OPTIND - 1))
+
+# --- Check arguments ---
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 [-i] input.gif"
   exit 1
 fi
 
-# Input GIF file from arguments
-input_gif="$1"
+INPUT_GIF="$1"
+[ ! -f "$INPUT_GIF" ] && { echo "[x] File not found: $INPUT_GIF"; exit 1; }
 
-# Extract the file name without the extension
-file_name=$(basename "$input_gif" | sed 's/\(.*\)\..*/\1/')
+# --- Setup ---
+BASE=$(basename "$INPUT_GIF" .gif)
+OUTDIR="$BASE"
+mkdir -p "$OUTDIR"
 
-if [ ! -d $file_name ]; then
-  echo "[+] Creating $file_name directory..."
-  mkdir -p $file_name || exit 1
-fi
+# --- Count frames ---
+TOTAL_FRAMES=$(ffprobe -v error -select_streams v:0 -count_frames \
+  -show_entries stream=nb_read_frames \
+  -of default=nokey=1:noprint_wrappers=1 "$INPUT_GIF")
+TOTAL_FRAMES=${TOTAL_FRAMES:-1}
+FRAME_COUNT=$(( TOTAL_FRAMES < 10 ? TOTAL_FRAMES : 10 ))
 
-# Get the total number of frames using ffprobe
-total_frames=$(ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames -of default=noprint_wrappers=1:nokey=1 "$input_gif")
+# --- Compute evenly spaced frame indices ---
+INDICES=()
+for i in $(seq 0 $((FRAME_COUNT - 1))); do
+  INDICES+=($((i * TOTAL_FRAMES / FRAME_COUNT)))
+done
 
-# Check if total_frames is successfully retrieved
-if [ -z "$total_frames" ]; then
-  echo "[x] Failed to get the total frame count from the GIF."
-  exit 1
-fi
+# --- Extract all frames as PNGs ---
+ffmpeg -v error -i "$INPUT_GIF" -vsync 0 -start_number 0 "$OUTDIR/${BASE}_raw_%d.png"
 
-# Calculate the frame interval (total_frames / 10)
-frame_interval=$((total_frames / 10))
+# --- Process selected frames ---
+COUNT=0
+for IDX in "${INDICES[@]}"; do
+  RAW="$OUTDIR/${BASE}_raw_${IDX}.png"
+  CROP="$OUTDIR/${BASE}_crop_${COUNT}.png"
+  OUT="$OUTDIR/${BASE}_${COUNT}.bmp"
 
-# Check if the interval is valid (greater than 0)
-if [ "$frame_interval" -le 0 ]; then
-  echo "[x] Frame interval is too small. The GIF might have fewer than 10 frames."
-  exit 1
-fi
+  echo "[*] Frame $COUNT ← index $IDX"
 
-# Run ffmpeg to select 10 frames, resize, and crop
-ffmpeg -i "$input_gif" -pix_fmt monow -loglevel quiet -start_number 0 -vf "select='not(mod(n\,$frame_interval))',scale=42:-1,crop=42:16" -vsync vfr "${file_name}/${file_name}_%d.bmp"
+  # Resize to 16px height, crop 42x16 from top-left
+  convert "$RAW" -resize x16 \
+    -gravity NorthWest -crop 42x16+0+0 +repage \
+    "$CROP"
 
-echo "[+] Frames have been extracted and saved in \"./${file_name}/...\":"
-ls "${file_name}/"
+  # Threshold and optional inversion
+  if [ "$INVERT" -eq 1 ]; then
+    FILTER="format=gray,geq=lum_expr='gt(lum(X,Y)\,128)*255'"
+  else
+    FILTER="format=gray,geq=lum_expr='lte(lum(X,Y)\,128)*255'"
+  fi
+
+  # Convert to true 1bpp BMP
+  ffmpeg -v error -y -i "$CROP" \
+    -vf "$FILTER" \
+    -pix_fmt monow "$OUT"
+
+  rm -f "$CROP"
+  COUNT=$((COUNT + 1))
+done
+
+# --- Cleanup ---
+rm -f "$OUTDIR/${BASE}_raw_"*.png
+
+echo "[✓] Done. $COUNT frame(s) written to '$OUTDIR' (true 1bpp BMPv1, no dithering)"

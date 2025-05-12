@@ -10,6 +10,6 @@ App(
     fap_category="GPIO",
     fap_author="Lab401 & tixlegeek",
     fap_weburl="https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp",
-    fap_version="1.4",
+    fap_version="1.4.1",
     fap_description="Lab401's LightMessenger companion app.",
 )

@@ -18,3 +18,6 @@ v1.3.1
 
 v1.4
 - Merge of the animation function from @jamisonderek
+
+v1.4.1
+- Enhance animation display
