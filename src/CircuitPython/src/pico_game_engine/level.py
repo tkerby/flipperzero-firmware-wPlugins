@@ -76,12 +76,14 @@ class Level:
         for entity in self.entities:
             if entity.is_active:
                 entity.render(self.game.draw, self.game)
-                self.game.draw.tile_grid(
-                    Vector(
-                        entity.pos.x - self.game.pos.x, entity.pos.y - self.game.pos.y
-                    ),
-                    entity.tile_grid,
-                )
+                if entity.tile_grid and entity.sprite_path != "":
+                    self.game.draw.tile_grid(
+                        Vector(
+                            entity.pos.x - self.game.pos.x,
+                            entity.pos.y - self.game.pos.y,
+                        ),
+                        entity.tile_grid,
+                    )
         self.game.draw.swap()
 
     def start(self):
