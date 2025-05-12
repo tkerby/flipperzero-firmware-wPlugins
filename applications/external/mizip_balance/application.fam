@@ -1,0 +1,17 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="mizip_balance_editor",  # Must be unique
+    name="MiZip Balance Editor",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="mizip_balance_editor_app",
+    stack_size=2 * 1024,
+    fap_category="NFC",
+    # Optional values
+    fap_version="0.1",
+    fap_icon="mizip_balance_editor.png",  # 10x10 1-bit PNG
+    fap_description="Easily modify your MiZip tags balance",
+    fap_author="Téo Humeau",
+    fap_weburl="https://github.com/teohumeau/MiZipBalanceEditor",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
