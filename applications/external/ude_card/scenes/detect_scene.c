@@ -60,6 +60,11 @@ void udecard_detect_scene_on_enter(void* context) {
     popup_set_icon(app->popup, 0, 8, &I_ApplyFlipperToUDE_60x50);
     view_dispatcher_switch_to_view(app->view_dispatcher, UDECardPopupView);
 
+    if(!udecard_gather_keys(app->sector_keys)) {
+        udecard_app_error_dialog(app, "Gathering keys failed.");
+        view_dispatcher_send_custom_event(app->view_dispatcher, UDECardDetectSceneFatalErrorEvent);
+    }
+
     // start nfc scanner
     app->nfc_scanner = nfc_scanner_alloc(app->nfc);
     nfc_scanner_start(app->nfc_scanner, udecard_detect_scene_nfc_scanner_callback, app);
@@ -83,6 +88,8 @@ bool udecard_detect_scene_on_event(void* context, SceneManagerEvent event) {
             nfc_scanner_start(
                 app->nfc_scanner, udecard_detect_scene_nfc_scanner_callback, context);
             break;
+        case UDECardDetectSceneFatalErrorEvent:
+            scene_manager_previous_scene(app->scene_manager);
         }
         break;
     default:

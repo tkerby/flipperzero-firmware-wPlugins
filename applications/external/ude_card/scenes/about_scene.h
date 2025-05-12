@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <gui/scene_manager.h>
 
-#define VERSION "v1.0.1"
+#define VERSION "v1.0.2"
 #define ABOUT_TEXT                                                          \
     "UDECard Parser " VERSION "\n"                                          \
     "by Alexander Hahn\n(github.com/hahnworks)\n\n"                         \

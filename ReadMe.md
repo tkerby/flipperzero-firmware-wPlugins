@@ -48,6 +48,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: [SubGHz: Fix CAME 24bit decoder (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/760079ee2c70fc02a1c7b4c3aaeec6cdbb670daa)
 - UL: [SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/fb02568fab8d02491631d1fa752535ed04824aad)
 - UL: [Fix Rename scene bug, that was replacing file name with random name when Rename is opened then closed then opened again (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/6c798a5d4b505a643ca64e6c8a2df2480b13287b)
+- Updated: [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
 
 <a name="release">
 
@@ -682,7 +683,7 @@ $ ./fbt dolphin_ext
 - [u-blox GPS v0.5 (By liamhays)](https://github.com/liamhays/ublox)
 - [UART Echo (By DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/831)
 - [UART Terminal v1.5 (By cool4uma)](https://github.com/cool4uma/UART_Terminal)
-- [UDECard v1.0.1 (By hahnworks](https://github.com/hahnworks/UDECard)
+- [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
 - [UHF RFID WIP v1.1 (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: M100 or QM100`
 - [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)

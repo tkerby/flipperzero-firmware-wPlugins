@@ -43,6 +43,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <nfc/nfc_device.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 #include <nfc/protocols/mf_classic/mf_classic_poller.h>
+#include <toolbox/keys_dict.h>
 
 // scenes
 #include "scenes/main_menu_scene.h"
@@ -59,6 +60,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // icons
 #include <udecard_icons.h>
+
+#include <dolphin/dolphin.h>
 
 typedef struct App {
     SceneManager* scene_manager;
@@ -78,6 +81,8 @@ typedef struct App {
     NfcDevice* nfc_device; // allocated and free'd on demand
 
     ReadTargetManager* target_manager; // allocated and free'd on demand
+
+    uint8_t sector_keys[16][UDECARD_KEY_SIZE];
 
     FuriString* file_path;
 

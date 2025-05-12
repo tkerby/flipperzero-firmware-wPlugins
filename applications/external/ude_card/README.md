@@ -2,11 +2,6 @@
 
 Flipper Zero application to analyse student ID cards from the University of Duisburg-Essen (Intercard)
 
-> [!IMPORTANT]
-> The functionality of this application is limited to reading the contents of the card.
-> No modifications are possible or will be made possible in the future.
-> **[See legal information (in German)](docs/Legal.md)**
-
 > [!TIP]
 > Download UDECard [directly from the Flipper Application Catalog](https://lab.flipper.net/apps/udecard)
 
@@ -18,6 +13,13 @@ The University of Duisburg-Essen utilises a system known as Intercard for the pu
 These are MIFARE Classic 1K cards, whose keys are readily available in the Flippers dictionary.
 However, the Flipper lacks any support for useful information extraction.
 This application enables parsing of such cards.
+
+> [!IMPORTANT]
+> For legal reasons, no keys for reading the card are included in this application.
+> Hence, your Flipper Zero has to have the usual `mf_classic_dict.nfc` installed (it probably does).
+> The functionality of this application is limited to parsing the contents of the card.
+> No modifications are possible or will be made possible in the future.
+> **[See legal information (in German)](docs/Legal.md)**
 
 Should you have any Intercards from other institutions, you may find the [Technical Details](docs/Technical_Details.md) document helpful.
 
