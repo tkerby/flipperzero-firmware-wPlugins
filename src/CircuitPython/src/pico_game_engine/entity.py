@@ -57,14 +57,16 @@ class Entity:
         if self._collision:
             self._collision(self, other, game)
 
-    def position(self, position: Vector = None):
-        """Get or set the position of the entity."""
-        if position is not None:
-            self.position_old = self.__position
-            self.__position = position
-            self.tile_grid.x = int(position.x)
-            self.tile_grid.y = int(position.y)
-        return self.__position
+    @property
+    def position(self) -> Vector:
+        """Used by the engine to get the position of the entity."""
+        return Vector(self.__position.x, self.__position.y)
+
+    @position.setter
+    def position(self, value: Vector):
+        """Used by the engine to set the position of the entity."""
+        self.old_pos = Vector(self.__position.x, self.__position.y)
+        self.__position = Vector(value.x, value.y)
 
     def render(self, draw, game):
         """Called every frame to render the entity."""
