@@ -31,7 +31,10 @@ class UART:
 
     def read_line(self) -> str:
         """Read a line of data from the UART interface."""
-        return self.uart.readline().decode("utf-8").strip()
+        line = self.uart.readline()
+        if line:
+            return line.decode("utf-8").strip()
+        return ""
 
     def read_string(self, size=1) -> str:
         """Read a string of data from the UART interface."""
