@@ -12,7 +12,7 @@
 typedef struct {
     TextBox* log_display;
     FuriString* log_text;
-    
+
     NfcLogger* nfc_sniffer;
 } LogScene;
 
@@ -26,14 +26,14 @@ typedef struct {
     NotificationApp* notifications;
     Storage* storage;
     Gui* gui;
-    
+
     // The scenes that will be displayed by the manager
     LogScene* log_scene;
     ProtocolSelectScene* protocol_select_scene;
-    
+
     // Log File
     File* log_file;
-    
+
     // NFC Data
     Nfc* nfc;
     NfcTech nfc_protocol;

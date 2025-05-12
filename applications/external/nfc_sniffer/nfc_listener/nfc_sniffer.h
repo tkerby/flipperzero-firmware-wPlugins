@@ -7,7 +7,7 @@ typedef enum {
     NfcLoggerEventReady,
 } NfcLoggerEventType;
 
-typedef struct { 
+typedef struct {
     NfcLoggerEventType type;
     void* data;
 } NfcLoggerEvent;

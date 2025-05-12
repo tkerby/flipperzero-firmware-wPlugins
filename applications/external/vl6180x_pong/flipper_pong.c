@@ -49,33 +49,44 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     Players* playersMutex = ctx;
     furi_mutex_acquire(playersMutex->mutex, FuriWaitForever);
     notification_message(playersMutex->notification, &sequence_display_backlight_on);
-    
+
     canvas_draw_frame(canvas, 0, 0, 128, 64);
     // Player 1 is stored on the right hand side, while it should be displayed on the left.
     // Flipping the view to achieve this quickly
-    canvas_draw_box(canvas, SCREEN_SIZE_X - PAD_SIZE_X - playersMutex->player1_X, playersMutex->player1_Y, PAD_SIZE_X, PAD_SIZE_Y);
-    canvas_draw_box(canvas, SCREEN_SIZE_X - PAD_SIZE_X - playersMutex->player2_X, playersMutex->player2_Y, PAD_SIZE_X, PAD_SIZE_Y);
-    canvas_draw_box(canvas, SCREEN_SIZE_X - BALL_SIZE - playersMutex->ball_X, playersMutex->ball_Y, BALL_SIZE, BALL_SIZE);
+    canvas_draw_box(
+        canvas,
+        SCREEN_SIZE_X - PAD_SIZE_X - playersMutex->player1_X,
+        playersMutex->player1_Y,
+        PAD_SIZE_X,
+        PAD_SIZE_Y);
+    canvas_draw_box(
+        canvas,
+        SCREEN_SIZE_X - PAD_SIZE_X - playersMutex->player2_X,
+        playersMutex->player2_Y,
+        PAD_SIZE_X,
+        PAD_SIZE_Y);
+    canvas_draw_box(
+        canvas,
+        SCREEN_SIZE_X - BALL_SIZE - playersMutex->ball_X,
+        playersMutex->ball_Y,
+        BALL_SIZE,
+        BALL_SIZE);
 
     canvas_set_font(canvas, FontPrimary);
     char buffer[16];
-    
-    if(playersMutex->vl6180x_address == VL6180X_NO_DEVICE_FOUND_ADDRESS){
-        snprintf(
-            buffer,
-            sizeof(buffer),
-            "Missing VL6180X"
-        );
-    }else{
+
+    if(playersMutex->vl6180x_address == VL6180X_NO_DEVICE_FOUND_ADDRESS) {
+        snprintf(buffer, sizeof(buffer), "Missing VL6180X");
+    } else {
         snprintf(
             buffer,
             sizeof(buffer),
             "%u - %u",
             playersMutex->player1_score,
-            playersMutex->player2_score
-        );
+            playersMutex->player2_score);
     }
-    canvas_draw_str_aligned(canvas, SCREEN_SIZE_X / 2, SCREEN_SIZE_Y / 2, AlignCenter, AlignTop, buffer);
+    canvas_draw_str_aligned(
+        canvas, SCREEN_SIZE_X / 2, SCREEN_SIZE_Y / 2, AlignCenter, AlignTop, buffer);
 
     furi_mutex_release(playersMutex->mutex);
 }
@@ -98,7 +109,7 @@ static void clock_tick(void* ctx) {
 
 bool insidePad(uint8_t x, uint8_t y, uint8_t playerX, uint8_t playerY) {
     FURI_LOG_T(LOG_TAG, __func__);
-    
+
     return x >= playerX && x <= playerX + PAD_SIZE_X && y >= playerY && y <= playerY + PAD_SIZE_Y;
 }
 
@@ -148,11 +159,11 @@ int32_t flipper_pong_app(void* p) {
         furi_message_queue_free(event_queue);
         return 255;
     }
-    
+
     players.vl6180x_address = find_vl6180x_address();
-    if(players.vl6180x_address == VL6180X_NO_DEVICE_FOUND_ADDRESS){
+    if(players.vl6180x_address == VL6180X_NO_DEVICE_FOUND_ADDRESS) {
         FURI_LOG_I(LOG_TAG, "Failed to find VL6180X");
-    }else{
+    } else {
         configure_vl6180x(players.vl6180x_address);
     }
 
@@ -179,33 +190,39 @@ int32_t flipper_pong_app(void* p) {
                     furi_mutex_release(players.mutex);
                     break;
                 }
-            } else if(event.type == ClockEventTypeTick){
+            } else if(event.type == ClockEventTypeTick) {
                 if(players.vl6180x_address == VL6180X_NO_DEVICE_FOUND_ADDRESS) {
                     players.vl6180x_address = find_vl6180x_address();
-                    
+
                     // If the sensor is found afterwards, configure it and start it
-                    if(players.vl6180x_address != VL6180X_NO_DEVICE_FOUND_ADDRESS){
+                    if(players.vl6180x_address != VL6180X_NO_DEVICE_FOUND_ADDRESS) {
                         configure_vl6180x(players.vl6180x_address);
                     }
-                }else{
+                } else {
                     uint8_t distance = read_vl6180x_range(players.vl6180x_address);
                     FURI_LOG_T(LOG_TAG, "Distance Read: %d mm", distance);
-                    
+
                     if(distance == VL6180X_FAILED_DISTANCE) {
                         players.vl6180x_address = VL6180X_NO_DEVICE_FOUND_ADDRESS;
-                    }else{
+                    } else {
                         if(distance < 20) distance = 20;
                         if(distance > 150) distance = 150;
-                        players.player1_Y = SCREEN_SIZE_Y - PAD_SIZE_Y - (distance - 20) * (SCREEN_SIZE_Y - PAD_SIZE_Y) / 130;
-                        
-                        if(players.ball_X + BALL_SIZE / 2 <= SCREEN_SIZE_X * 0.35 && players.ball_X_direction == 0) {
-                            if(players.ball_Y + BALL_SIZE / 2 < players.player2_Y + PAD_SIZE_Y / 2) {
+                        players.player1_Y = SCREEN_SIZE_Y - PAD_SIZE_Y -
+                                            (distance - 20) * (SCREEN_SIZE_Y - PAD_SIZE_Y) / 130;
+
+                        if(players.ball_X + BALL_SIZE / 2 <= SCREEN_SIZE_X * 0.35 &&
+                           players.ball_X_direction == 0) {
+                            if(players.ball_Y + BALL_SIZE / 2 <
+                               players.player2_Y + PAD_SIZE_Y / 2) {
                                 if(players.player2_Y >= 1 + PLAYER2_PAD_SPEED)
                                     players.player2_Y -= PLAYER2_PAD_SPEED;
                                 else
                                     players.player2_Y = 1;
-                            } else if(players.ball_Y + BALL_SIZE / 2 > players.player2_Y + PAD_SIZE_Y / 2) {
-                                if(players.player2_Y <= SCREEN_SIZE_Y - PAD_SIZE_Y - PLAYER2_PAD_SPEED - 1)
+                            } else if(
+                                players.ball_Y + BALL_SIZE / 2 >
+                                players.player2_Y + PAD_SIZE_Y / 2) {
+                                if(players.player2_Y <=
+                                   SCREEN_SIZE_Y - PAD_SIZE_Y - PLAYER2_PAD_SPEED - 1)
                                     players.player2_Y += PLAYER2_PAD_SPEED;
                                 else
                                     players.player2_Y = SCREEN_SIZE_Y - PAD_SIZE_Y - 1;
@@ -216,23 +233,29 @@ int32_t flipper_pong_app(void* p) {
                             players.ball_X,
                             players.ball_X + BALL_SIZE,
                             players.ball_X + BALL_SIZE,
-                            players.ball_X
-                        };
+                            players.ball_X};
                         uint8_t ball_corner_Y[4] = {
                             players.ball_Y,
                             players.ball_Y,
                             players.ball_Y + BALL_SIZE,
-                            players.ball_Y + BALL_SIZE
-                        };
+                            players.ball_Y + BALL_SIZE};
                         bool insidePlayer1 = false, insidePlayer2 = false;
 
                         for(int i = 0; i < 4; i++) {
-                            if(insidePad(ball_corner_X[i], ball_corner_Y[i], players.player1_X, players.player1_Y) == true) {
+                            if(insidePad(
+                                   ball_corner_X[i],
+                                   ball_corner_Y[i],
+                                   players.player1_X,
+                                   players.player1_Y) == true) {
                                 insidePlayer1 = true;
                                 break;
                             }
 
-                            if(insidePad(ball_corner_X[i], ball_corner_Y[i], players.player2_X, players.player2_Y) == true) {
+                            if(insidePad(
+                                   ball_corner_X[i],
+                                   ball_corner_Y[i],
+                                   players.player2_X,
+                                   players.player2_Y) == true) {
                                 insidePlayer2 = true;
                                 break;
                             }
@@ -250,7 +273,8 @@ int32_t flipper_pong_app(void* p) {
                             players.ball_Y_speed = changeSpeed();
                         } else {
                             if(players.ball_X_direction == 1) {
-                                if(players.ball_X <= SCREEN_SIZE_X - BALL_SIZE - 1 - players.ball_X_speed) {
+                                if(players.ball_X <=
+                                   SCREEN_SIZE_X - BALL_SIZE - 1 - players.ball_X_speed) {
                                     players.ball_X += players.ball_X_speed;
                                 } else {
                                     players.ball_X = SCREEN_SIZE_X / 2 - BALL_SIZE / 2;
@@ -275,7 +299,8 @@ int32_t flipper_pong_app(void* p) {
                         }
 
                         if(players.ball_Y_direction == 1) {
-                            if(players.ball_Y <= SCREEN_SIZE_Y - BALL_SIZE - 1 - players.ball_Y_speed) {
+                            if(players.ball_Y <=
+                               SCREEN_SIZE_Y - BALL_SIZE - 1 - players.ball_Y_speed) {
                                 players.ball_Y += players.ball_Y_speed;
                             } else {
                                 players.ball_Y = SCREEN_SIZE_Y - BALL_SIZE - 1;

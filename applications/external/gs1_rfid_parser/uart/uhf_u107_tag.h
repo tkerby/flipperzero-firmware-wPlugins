@@ -2,7 +2,12 @@
 
 #define MAX_UHF_BANK_SIZE 256
 
-typedef enum { ReservedBank, EPCBank, TIDBank, UserBank } BankType;
+typedef enum {
+    ReservedBank,
+    EPCBank,
+    TIDBank,
+    UserBank
+} BankType;
 
 typedef struct {
     bool is_valid;
