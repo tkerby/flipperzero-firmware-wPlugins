@@ -1,0 +1,15 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="vl6180x",  # Must be unique
+    name="[I2C] VL6180X Distance Sensor",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="vl6180x_app",
+    stack_size=2 * 1024,
+    fap_category="GPIO/Sensors",
+    # Optional values
+    fap_version="0.1",
+    fap_icon="images/vl6180x.png",  # 10x10 1-bit PNG
+    fap_author="Kyle Diller",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
