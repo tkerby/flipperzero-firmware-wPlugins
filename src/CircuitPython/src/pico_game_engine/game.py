@@ -168,7 +168,7 @@ class Game:
         self.current_level = self.levels[0]
         if self._start:
             self._start(self)
-
+        self.draw.fill(self.background_color)
         self.current_level.start()
         self.is_active = True
         free()
