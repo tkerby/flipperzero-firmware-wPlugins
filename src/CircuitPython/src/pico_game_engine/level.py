@@ -61,7 +61,7 @@ class Level:
     def is_collision(self, entity: Entity, other: Entity) -> bool:
         """Check if two entities collided using AABB logic"""
         entity_pos = entity.position
-        other_pos = other.pos
+        other_pos = other.position
         entity_size = entity.size
         other_size = other.size
         return (
