@@ -18,7 +18,6 @@ def report():
     print(mem_free())
 
 
-import microcontroller, board
 from pico_game_engine.game import Game
 from pico_game_engine.engine import GameEngine
 from pico_game_engine.entity import Entity
@@ -84,18 +83,18 @@ class PicoGameEngine:
     def game_input(self, player: Entity, game: Game):
         """Move the player entity based on input"""
         if game.input == BUTTON_UP:
-            player.pos += Vector(0, -5)
+            player.position += Vector(0, -5)
         elif game.input == BUTTON_RIGHT:
-            player.pos += Vector(5, 0)
+            player.position += Vector(5, 0)
         elif game.input == BUTTON_DOWN:
-            player.pos += Vector(0, 5)
+            player.position += Vector(0, 5)
         elif game.input == BUTTON_LEFT:
-            player.pos += Vector(-5, 0)
+            player.position += Vector(-5, 0)
 
-    def game_start(self, game: Game, engine: GameEngine):
+    def game_start(self, game: Game):
         """Handle your game start logic here"""
 
-    def game_stop(self, game: Game, engine: GameEngine):
+    def game_stop(self, game: Game):
         """Handle your game stop logic here"""
 
     def player_update(self, player: Entity, game: Game):
@@ -115,9 +114,9 @@ class PicoGameEngine:
 
         # create a new game
         self.game = Game(
-            name="Pico-Game",
-            start=None,  # no custom start
-            stop=None,  # no custom stop
+            name="Example",
+            start=self.game_start,
+            stop=self.game_stop,
             draw=self.screen,
             foreground_color=TFT_BLACK,
             background_color=TFT_WHITE,

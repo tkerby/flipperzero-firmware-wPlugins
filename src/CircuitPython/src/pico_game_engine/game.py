@@ -52,7 +52,7 @@ class Game:
         self.input: int = -1  # last button pressed
         self.draw = draw
         self.camera = Vector(0, 0)
-        self.pos = Vector(0, 0)
+        self.position = Vector(0, 0)
         self.size = Vector(draw.size.x, draw.size.y)
         self.world_size = Vector(draw.size.x, draw.size.y)
         self.is_active = False
@@ -229,8 +229,8 @@ class Game:
                 entity.update(self)
 
         # Calculate camera offset to center the player.
-        self.camera.x = self.pos.x - (self.size.x // 2)
-        self.camera.y = self.pos.y - (self.size.y // 2)
+        self.camera.x = self.position.x - (self.size.x // 2)
+        self.camera.y = self.position.y - (self.size.y // 2)
 
         # Clamp camera position to prevent going outside the world.
         self.camera.x = self.clamp(self.camera.x, 0, self.world_size.x - self.size.x)

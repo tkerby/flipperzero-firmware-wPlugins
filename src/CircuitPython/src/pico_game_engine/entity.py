@@ -32,7 +32,7 @@ class Entity:
         is_player: bool = False,  # is_player is a boolean that specifies whether the entity is the player
     ):
         self.name = name
-        self.pos = position
+        self.position = position
         self.sprite_path = sprite_file_path
         bitmap = OnDiskBitmap(sprite_file_path)
         self.tile_grid = TileGrid(
