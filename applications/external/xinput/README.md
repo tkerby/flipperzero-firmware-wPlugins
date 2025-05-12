@@ -11,7 +11,7 @@ From there, open the app and it should connect automatically. The D-Pad acts as 
 
 [Dave Madison's "Understanding the Xbox 360 Wired Controller’s USB Data"](https://www.partsnotincluded.com/understanding-the-xbox-360-wired-controllers-usb-data/) - Detailed documentation of the protocol
 
-[Willy-JL](https://github.com/Willy-JL) - Help with bugs
+[WillyJL](https://github.com/WillyJL) - Help with bugs
 
 Microsoft - Creating the Xbox itself
 

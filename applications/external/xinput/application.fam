@@ -11,5 +11,5 @@ App(
     fap_weburl="https://github.com/expected-ingot/flipper-xinput",
     fap_version="0.2",
     fap_description="An app that emulates XInput controllers. Simple Xbox 360 controller emulator for the Flipper Zero",
-    #  v0.2:  [USB Game Controller: Restore prev profile (By Willy-JL)](https://github.com/Next-Flip/Momentum-Apps/commit/b83dbad6c635741953e6dc41556fbc046d2764ab)
+    #  v0.2:  [USB Game Controller: Restore prev profile (By WillyJL)](https://github.com/Next-Flip/Momentum-Apps/commit/b83dbad6c635741953e6dc41556fbc046d2764ab)
 )

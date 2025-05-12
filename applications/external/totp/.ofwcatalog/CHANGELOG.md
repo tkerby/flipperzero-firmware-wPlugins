@@ -221,7 +221,7 @@
 
 ## v1.8.8 - 11 Apr 2023
 
-* Xtreme: fixed BT name length according to latest XFW changes (by [@Willy-JL](https://github.com/Willy-JL))
+* Xtreme: fixed BT name length according to latest XFW changes (by [@WillyJL](https://github.com/WillyJL))
 * Updated firmware submodules
 
 

@@ -3,8 +3,8 @@
 - Removal of deprecated view dispatcher queue
 
 ## v1.5
-- Additional Memory Management fixes by Willy-JL
-- Redraw Issue fixed by Willy-JL
+- Additional Memory Management fixes by WillyJL
+- Redraw Issue fixed by WillyJL
 - Added GNU License
 - Added version number
 
