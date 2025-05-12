@@ -5,15 +5,15 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define PLAYER_WIDTH 9
-#define PLAYER_HEIGHT 8
-#define PLAYER_SPEED 1.0f
-#define GAP_START 40.0f
-#define LEVEL_WIDTH SCREEN_WIDTH
+#define SCREEN_WIDTH   128
+#define SCREEN_HEIGHT  64
+#define PLAYER_WIDTH   9
+#define PLAYER_HEIGHT  8
+#define PLAYER_SPEED   1.0f
+#define GAP_START      40.0f
+#define LEVEL_WIDTH    SCREEN_WIDTH
 #define HIGHSCORE_PATH APP_DATA_PATH("highscore.txt")
-#define TRAIL_LENGTH 64
+#define TRAIL_LENGTH   64
 #define START_DELAY_MS 1000
 
 typedef struct {
@@ -57,7 +57,7 @@ int load_highscore() {
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, HIGHSCORE_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         char buf[16];
-        int len = storage_file_read(file, buf, sizeof(buf)-1);
+        int len = storage_file_read(file, buf, sizeof(buf) - 1);
         if(len > 0) buf[len] = '\0', hs = atoi(buf);
     }
     storage_file_free(file);
@@ -86,7 +86,8 @@ void game_reset(GameState* g) {
     g->dir = 1;
     g->gap = GAP_START;
     uint8_t start = (SCREEN_HEIGHT + 1 - (int)g->gap) / 2;
-    for(int i = 0; i < LEVEL_WIDTH; i++) g->level[i] = start;
+    for(int i = 0; i < LEVEL_WIDTH; i++)
+        g->level[i] = start;
     for(int i = 0; i < TRAIL_LENGTH; i++) {
         g->trail[i].y = -1;
         g->trail[i].x = -1;
@@ -105,9 +106,12 @@ void game_reset(GameState* g) {
 void generate_next_column(GameState* g) {
     int prev = (g->write_index + LEVEL_WIDTH - 1) % LEVEL_WIDTH;
     uint8_t cur = g->level[prev];
-    if(cur == 0) g->dir = 1;
-    else if(cur + (int)g->gap >= SCREEN_HEIGHT) g->dir = -1;
-    else if(rand() % 21 == 0) g->dir = -g->dir;
+    if(cur == 0)
+        g->dir = 1;
+    else if(cur + (int)g->gap >= SCREEN_HEIGHT)
+        g->dir = -1;
+    else if(rand() % 21 == 0)
+        g->dir = -g->dir;
     cur += g->dir;
     g->level[g->write_index] = cur;
     g->write_index = (g->write_index + 1) % LEVEL_WIDTH;
@@ -155,8 +159,12 @@ void draw_player(Canvas* c, GameState* g) {
     float cos_a = cosf(angle);
     float sin_a = sinf(angle);
 
-    float rotate_x(float x, float y) { return cos_a * (x - center_x) - sin_a * (y - center_y) + center_x; }
-    float rotate_y(float x, float y) { return sin_a * (x - center_x) + cos_a * (y - center_y) + center_y; }
+    float rotate_x(float x, float y) {
+        return cos_a * (x - center_x) - sin_a * (y - center_y) + center_x;
+    }
+    float rotate_y(float x, float y) {
+        return sin_a * (x - center_x) + cos_a * (y - center_y) + center_y;
+    }
 
     int x1 = (int)rotate_x(nose_x, nose_y);
     int y1 = (int)rotate_y(nose_x, nose_y);
@@ -165,9 +173,27 @@ void draw_player(Canvas* c, GameState* g) {
     int x3 = (int)rotate_x(base_right_x, base_right_y);
     int y3 = (int)rotate_y(base_right_x, base_right_y);
 
-    if(y2 > y3) { int tx = x2, ty = y2; x2 = x3; y2 = y3; x3 = tx; y3 = ty; }
-    if(y1 > y2) { int tx = x1, ty = y1; x1 = x2; y1 = y2; x2 = tx; y2 = ty; }
-    if(y2 > y3) { int tx = x2, ty = y2; x2 = x3; y2 = y3; x3 = tx; y3 = ty; }
+    if(y2 > y3) {
+        int tx = x2, ty = y2;
+        x2 = x3;
+        y2 = y3;
+        x3 = tx;
+        y3 = ty;
+    }
+    if(y1 > y2) {
+        int tx = x1, ty = y1;
+        x1 = x2;
+        y1 = y2;
+        x2 = tx;
+        y2 = ty;
+    }
+    if(y2 > y3) {
+        int tx = x2, ty = y2;
+        x2 = x3;
+        y2 = y3;
+        x3 = tx;
+        y3 = ty;
+    }
 
     for(int y = y1; y <= y3; ++y) {
         int xa, xb;
@@ -178,16 +204,30 @@ void draw_player(Canvas* c, GameState* g) {
             xa = interpolate(x2, y2, x3, y3, y);
             xb = interpolate(x1, y1, x3, y3, y);
         }
-        if(xa > xb) { int tmp = xa; xa = xb; xb = tmp; }
+        if(xa > xb) {
+            int tmp = xa;
+            xa = xb;
+            xb = tmp;
+        }
         canvas_draw_line(c, xa, y, xb, y);
     }
 }
 
 void game_update(GameState* g) {
     if(furi_mutex_acquire(g->mutex, FuriWaitForever) != FuriStatusOk) return;
-    if(g->exit_requested) { furi_mutex_release(g->mutex); return; }
-    if(g->restart_requested) { game_reset(g); furi_mutex_release(g->mutex); return; }
-    if(g->game_over || g->paused) { furi_mutex_release(g->mutex); return; }
+    if(g->exit_requested) {
+        furi_mutex_release(g->mutex);
+        return;
+    }
+    if(g->restart_requested) {
+        game_reset(g);
+        furi_mutex_release(g->mutex);
+        return;
+    }
+    if(g->game_over || g->paused) {
+        furi_mutex_release(g->mutex);
+        return;
+    }
 
     uint32_t now = furi_get_tick();
     if(g->start_delay_active && now - g->start_time < START_DELAY_MS) {
@@ -196,21 +236,26 @@ void game_update(GameState* g) {
     }
     g->start_delay_active = false;
 
-    if(g->player.button_pressed) g->player.y -= g->player.speed;
-    else g->player.y += g->player.speed;
+    if(g->player.button_pressed)
+        g->player.y -= g->player.speed;
+    else
+        g->player.y += g->player.speed;
     if(g->player.y < 0) g->player.y = 0;
     if(g->player.y > SCREEN_HEIGHT - PLAYER_HEIGHT) g->player.y = SCREEN_HEIGHT - PLAYER_HEIGHT;
 
     generate_next_column(g);
-    for(int i = 0; i < TRAIL_LENGTH-1; i++) g->trail[i] = g->trail[i+1];
-    g->trail[TRAIL_LENGTH-1] = (TrailSegment){.x=g->player.x, .y=g->player.y + PLAYER_HEIGHT/2 -1, .active=true};
-    for(int i = 0; i < TRAIL_LENGTH; i++) if(g->trail[i].active) g->trail[i].x -= 1;
+    for(int i = 0; i < TRAIL_LENGTH - 1; i++)
+        g->trail[i] = g->trail[i + 1];
+    g->trail[TRAIL_LENGTH - 1] =
+        (TrailSegment){.x = g->player.x, .y = g->player.y + PLAYER_HEIGHT / 2 - 1, .active = true};
+    for(int i = 0; i < TRAIL_LENGTH; i++)
+        if(g->trail[i].active) g->trail[i].x -= 1;
 
     int obs_idx = (g->write_index + (int)g->player.x) % LEVEL_WIDTH;
     float gs = g->level[obs_idx];
-    float center = gs + g->gap/2;
+    float center = gs + g->gap / 2;
     float dist = fabsf(g->player.y - center);
-    float closeness = fmaxf(0.0f, 1.0f - (dist / (g->gap/2)));
+    float closeness = fmaxf(0.0f, 1.0f - (dist / (g->gap / 2)));
     float rate = 0.2f + closeness * 0.1f;
     g->score_acc += rate;
     g->score = g->score_acc;
@@ -245,7 +290,8 @@ void game_render(Canvas* c, void* ctx) {
 
         canvas_set_font(c, FontSecondary);
         canvas_set_color(c, ColorWhite);
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, bar_y + bar_h / 2, AlignCenter, AlignCenter, "get ready");
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, bar_y + bar_h / 2, AlignCenter, AlignCenter, "get ready");
 
         canvas_set_color(c, ColorBlack);
     } else if(!g->game_over) {
@@ -259,16 +305,21 @@ void game_render(Canvas* c, void* ctx) {
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", (int)g->score);
         canvas_set_font(c, FontSecondary);
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, AlignCenter, AlignCenter, buf);
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, AlignCenter, AlignCenter, buf);
     } else {
         canvas_set_font(c, FontSecondary);
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 18, AlignCenter, AlignCenter, "GAME OVER");
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 18, AlignCenter, AlignCenter, "GAME OVER");
 
         char hs_buf[32];
         snprintf(hs_buf, sizeof(hs_buf), "High Score - %d", g->highscore);
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 6, AlignCenter, AlignCenter, hs_buf);
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 6, AlignCenter, AlignCenter, "Ok - Restart");
-        canvas_draw_str_aligned(c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 18, AlignCenter, AlignCenter, "Back - Exit");
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 6, AlignCenter, AlignCenter, hs_buf);
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 6, AlignCenter, AlignCenter, "Ok - Restart");
+        canvas_draw_str_aligned(
+            c, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 18, AlignCenter, AlignCenter, "Back - Exit");
     }
 
     furi_mutex_release(g->mutex);
@@ -278,12 +329,16 @@ void input_callback(InputEvent* ev, void* ctx) {
     GameState* g = ctx;
     if(furi_mutex_acquire(g->mutex, FuriWaitForever) != FuriStatusOk) return;
     if(ev->key == InputKeyBack && ev->type == InputTypePress) {
-        if(g->game_over) g->exit_requested = true;
-        else g->paused = !g->paused;
+        if(g->game_over)
+            g->exit_requested = true;
+        else
+            g->paused = !g->paused;
     } else if(ev->key == InputKeyOk || ev->key == InputKeyUp) {
         if(ev->type == InputTypePress) {
-            if(g->game_over) g->restart_requested = true;
-            else g->player.button_pressed = true;
+            if(g->game_over)
+                g->restart_requested = true;
+            else
+                g->player.button_pressed = true;
         } else if(ev->type == InputTypeRelease) {
             g->player.button_pressed = false;
         }

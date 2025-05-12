@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: [Fix Rename scene bug, that was replacing file name with random name when Rename is opened then closed then opened again (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/6c798a5d4b505a643ca64e6c8a2df2480b13287b)
 - Updated: [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
 - Updated: [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
+- Added: [Wave v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
 
 <a name="release">
 
@@ -376,6 +377,7 @@ $ ./fbt dolphin_ext
 - [Vexed v1.0.1 (By dlvoy)](https://github.com/dlvoy/flipper-zero-vexed)
 - [Video Game Module Tool v1.3 (By gsurkov)](https://github.com/flipperdevices/flipperzero-good-faps/pull/127) `Req: Video Game Module By Flipper Devices`
 - [Video Poker v1.2 (By PixlEmly)](https://github.com/PixlEmly/flipperzero-firmware-testing/blob/420/applications/VideoPoker/poker.c)
+- [Wave v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
 - [Yappy Invaders (By dagnazty)](https://github.com/dagnazty/Yappy_Invaders)
 - [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee)
 - [Zero v1.4 (By Racso)](https://github.com/Racso/fzero-apps)
