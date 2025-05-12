@@ -1,3 +1,4 @@
+from time import monotonic
 from digitalio import DigitalInOut, Direction
 from microcontroller import Pin
 from uart import UART
@@ -21,7 +22,9 @@ class Input:
     @param button: The button to be checked.
     """
 
-    def __init__(self, button: int, pin: Pin = None, uart: UART = None):
+    def __init__(
+        self, button: int, pin: Pin = None, uart: UART = None, debounce: float = 0.5
+    ):
         if not pin and not uart:
             raise ValueError("Either pin or uart must be provided.")
         elif pin and uart is None:
@@ -36,6 +39,8 @@ class Input:
         self.elapsed_time = 0
         self.was_pressed = False
         self.last_button = 0
+        self.start_time = monotonic()
+        self.debounce = debounce
 
     def is_pressed(self) -> bool:
         """
@@ -57,28 +62,27 @@ class Input:
         This should be looped in the main loop.
         """
         if self.uart:
-            # Check if data is available to read
-            if self.uart.available() > 0:
-                # Read the incoming byte as a character
-                incoming_char = ord(self.uart.read())
-                if incoming_char == 48:
-                    self.last_button = BUTTON_UP
-                elif incoming_char == 49:
-                    self.last_button = BUTTON_DOWN
-                elif incoming_char == 50:
-                    self.last_button = BUTTON_LEFT
-                elif incoming_char == 51:
-                    self.last_button = BUTTON_RIGHT
-                elif incoming_char == 52:
-                    self.last_button = BUTTON_CENTER
-                elif incoming_char == 53:
-                    self.last_button = BUTTON_BACK
-                elif incoming_char == 54:
-                    self.last_button = BUTTON_START
-                else:
-                    self.last_button = -1
-            else:
+            # check if it's been more than the debounce time since the last button press
+            if monotonic() - self.start_time > self.debounce:
                 self.last_button = -1
+                # Check if data is available to read
+                if self.uart.available() > 0:
+                    # Read the incoming byte as a character
+                    incoming_char = ord(self.uart.read())
+                    if incoming_char == 48:
+                        self.last_button = BUTTON_UP
+                    elif incoming_char == 49:
+                        self.last_button = BUTTON_DOWN
+                    elif incoming_char == 50:
+                        self.last_button = BUTTON_LEFT
+                    elif incoming_char == 51:
+                        self.last_button = BUTTON_RIGHT
+                    elif incoming_char == 52:
+                        self.last_button = BUTTON_CENTER
+                    elif incoming_char == 53:
+                        self.last_button = BUTTON_BACK
+                    elif incoming_char == 54:
+                        self.last_button = BUTTON_START
             return
         if self.is_pressed():
             self.elapsed_time += 1
