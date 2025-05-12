@@ -1,7 +1,9 @@
 # Flipper Zero: QRCode Generator
 Generates and displays QRCodes on the flipper zero.
 
-<IMAGE/GIF>
+| ![](screenshots/Screenshot-menu.png) | ![](screenshots/Screenshot-entered-text.png) | ![](screenshots/Screenshot-saved-qrcodes.png)  |
+| ------------- | ------------- | ------------- |
+| ![](screenshots/Screenshot-open-saved-qrcode.png)  | ![](screenshots/Screenshot-readme.png)  | &nbsp;  |
 
 ## Download
 Grab the `qrcode_generator.fap` from the latest release. 
