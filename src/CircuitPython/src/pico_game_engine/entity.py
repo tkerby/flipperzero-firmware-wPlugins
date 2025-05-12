@@ -32,16 +32,19 @@ class Entity:
         is_player: bool = False,  # is_player is a boolean that specifies whether the entity is the player
     ):
         self.name = name
-        self.pos = position
+        self.__position = position
+        self.position_old = position
         self.sprite_path = sprite_file_path
-        bitmap = OnDiskBitmap(sprite_file_path)
-        self.tile_grid = TileGrid(
-            bitmap,
-            pixel_shader=bitmap.pixel_shader,
-            x=int(position.x),
-            y=int(position.y),
-        )
-        del bitmap
+        self.tile_grid = None
+        if sprite_file_path != "":
+            bitmap = OnDiskBitmap(sprite_file_path)
+            self.tile_grid = TileGrid(
+                bitmap,
+                pixel_shader=bitmap.pixel_shader,
+                x=int(position.x),
+                y=int(position.y),
+            )
+            del bitmap
         self.size = sprite_size
         self._start = start
         self._stop = stop
@@ -55,6 +58,17 @@ class Entity:
         """Called when the entity collides with another entity."""
         if self._collision:
             self._collision(self, other, game)
+
+    @property
+    def position(self) -> Vector:
+        """Used by the engine to get the position of the entity."""
+        return Vector(self.__position.x, self.__position.y)
+
+    @position.setter
+    def position(self, value: Vector):
+        """Used by the engine to set the position of the entity."""
+        self.position_old = Vector(self.__position.x, self.__position.y)
+        self.__position = Vector(value.x, value.y)
 
     def render(self, draw, game):
         """Called every frame to render the entity."""

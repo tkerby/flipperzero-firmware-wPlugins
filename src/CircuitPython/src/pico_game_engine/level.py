@@ -60,8 +60,8 @@ class Level:
 
     def is_collision(self, entity: Entity, other: Entity) -> bool:
         """Check if two entities collided using AABB logic"""
-        entity_pos = entity.pos
-        other_pos = other.pos
+        entity_pos = entity.position
+        other_pos = other.position
         entity_size = entity.size
         other_size = other.size
         return (
@@ -76,12 +76,14 @@ class Level:
         for entity in self.entities:
             if entity.is_active:
                 entity.render(self.game.draw, self.game)
-                self.game.draw.tile_grid(
-                    Vector(
-                        entity.pos.x - self.game.pos.x, entity.pos.y - self.game.pos.y
-                    ),
-                    entity.tile_grid,
-                )
+                if entity.tile_grid and entity.sprite_path != "":
+                    self.game.draw.tile_grid(
+                        Vector(
+                            entity.position.x - self.game.position.x,
+                            entity.position.y - self.game.position.y,
+                        ),
+                        entity.tile_grid,
+                    )
         self.game.draw.swap()
 
     def start(self):
