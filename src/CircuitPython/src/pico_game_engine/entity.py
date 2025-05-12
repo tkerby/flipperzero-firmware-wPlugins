@@ -69,6 +69,8 @@ class Entity:
         """Used by the engine to set the position of the entity."""
         self.position_old = Vector(self.__position.x, self.__position.y)
         self.__position = Vector(value.x, value.y)
+        self.tile_grid.x = int(self.__position.x)
+        self.tile_grid.y = int(self.__position.y)
 
     def render(self, draw, game):
         """Called every frame to render the entity."""
