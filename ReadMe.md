@@ -49,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: [SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/fb02568fab8d02491631d1fa752535ed04824aad)
 - UL: [Fix Rename scene bug, that was replacing file name with random name when Rename is opened then closed then opened again (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/6c798a5d4b505a643ca64e6c8a2df2480b13287b)
 - Updated: [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
+- Updated: [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 
 <a name="release">
 
@@ -605,7 +606,7 @@ $ ./fbt dolphin_ext
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
-- [Password Manager v0.1 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
+- [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 - [PC Monitor v1.1.3 (By TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/TheSainEyereg/flipper-pc-monitor-backend)`
 - [Pet a Dolphin v1.2 (By ugeneSmile)](https://github.com/EugeneSmile/PetADolphin)

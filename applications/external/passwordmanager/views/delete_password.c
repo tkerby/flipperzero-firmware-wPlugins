@@ -120,7 +120,7 @@ static bool delete_passwords_input_callback(InputEvent* event, void* context) {
             app->selected = 0;
             app->scroll_offset = 0;
             return false;
-        } else if(event->key == InputKeyOk) {
+        } else if(event->key == InputKeyOk && app->credentials_number > 0) {
             // Ask for confirmation
             app->confirm_delete = true;
             // delete_line_from_file(PASS_SAVE_PATH, app->selected);
