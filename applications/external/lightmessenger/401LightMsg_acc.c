@@ -149,7 +149,7 @@ static void swipes_init(void* ctx, uint8_t direction) {
     }
 
     if(appAcc->direction != direction) {
-        appAcc->swipes_count ++;
+        appAcc->swipes_count++;
         if(appAcc->cyclesAvg != 0)
             appAcc->cyclesAvg = (appAcc->cyclesAvg + appAcc->cycles) / 2;
         else
@@ -247,7 +247,6 @@ static int32_t app_acc_worker(void* ctx) {
             direction_change_count++;
         }
 
-
         // Beginning of the swipe
         if(appAcc->cycles == 1) {
             // Change the bitmap if we have exceeded the message duration
@@ -270,7 +269,7 @@ static int32_t app_acc_worker(void* ctx) {
 
                 // If we have multiple bitmaps, play a short vibration to signal the end of the message
                 //(but not in fast mode)
-                if(bitmapMatrix->next_bitmap != NULL && (message_duration_swipe>2)) {
+                if(bitmapMatrix->next_bitmap != NULL && (message_duration_swipe > 2)) {
                     for(int i = 0; i < 2; i++) {
                         furi_hal_vibro_on(true);
                         furi_delay_ms(100 * i);

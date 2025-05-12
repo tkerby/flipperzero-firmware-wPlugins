@@ -139,12 +139,7 @@ const uint32_t lightmsg_speed_value[] = {
     2,
 };
 
-const char* const lightmsg_speed_text[] = {
-    "Off",
-    "Slow",
-    "Medium",
-    "Fast"
-};
+const char* const lightmsg_speed_text[] = {"Off", "Slow", "Medium", "Fast"};
 
 // Delay in microseconds (us) to wait after rendering a column
 const uint32_t lightmsg_width_value[] = {
