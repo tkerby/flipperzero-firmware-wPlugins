@@ -1,19 +1,19 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * 
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -30,6 +30,22 @@
 
 // XF551 high-speed mode baudrate
 #define XF551_BAUDRATE 38400
+
+// FDD emulator specific SIO commands
+#define SIO_COMMAND_PUT              0x50 // Write sector without verification
+#define SIO_COMMAND_FORMAT           0x21 // Format disk
+#define SIO_COMMAND_FORMAT_MEDIUM    0x22 // Format disk (medium density)
+#define SIO_COMMAND_GET_HSI          0x3F // Get high-speed index
+#define SIO_COMMAND_READ_PERCOM      0x4E // Read PERCOM configuration
+#define SIO_COMMAND_WRITE_PERCOM     0x4F // Write PERCOM configuration
+#define SIO_COMMAND_FORMAT_WITH_SKEW 0x66 // Format disk with skew
+#define SIO_COMMAND_READ_HS          0xD2 // Read sector
+#define SIO_COMMAND_WRITE_HS         0xD7 // Write sector
+#define SIO_COMMAND_STATUS_HS        0xD3 // Get status
+#define SIO_COMMAND_PUT_HS           0xD0 // Write sector without verification
+#define SIO_COMMAND_FORMAT_HS        0xA1 // Format disk
+#define SIO_COMMAND_READ_PERCOM_HS   0xCE // Read PERCOM configuration
+#define SIO_COMMAND_WRITE_PERCOM_HS  0xCF // Write PERCOM configuration
 
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
@@ -188,6 +204,12 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
+    case SIO_COMMAND_STATUS_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_STATUS:
         return SIO_ACK;
 
@@ -222,9 +244,21 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
         }
     }
 
+    case SIO_COMMAND_READ_PERCOM_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_READ_PERCOM:
         return SIO_ACK;
 
+    case SIO_COMMAND_WRITE_PERCOM_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_WRITE_PERCOM:
         request->rx_size = 12;
         return SIO_ACK;
@@ -267,7 +301,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
-    case SIO_COMMAND_STATUS: {
+    case SIO_COMMAND_STATUS:
+    case SIO_COMMAND_STATUS_HS: {
         DiskGeometry geom = disk_geometry(fdd->image);
         bool write_protect = disk_image_get_write_protect(fdd->image);
 
@@ -321,6 +356,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
     }
 
+    case SIO_COMMAND_READ_PERCOM_HS:
     case SIO_COMMAND_READ_PERCOM: {
         DiskGeometry geom = fdd->geometry;
         request->tx_data[0] = geom.tracks;
@@ -339,6 +375,7 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
         return SIO_COMPLETE;
     }
 
+    case SIO_COMMAND_WRITE_PERCOM_HS:
     case SIO_COMMAND_WRITE_PERCOM: {
         DiskGeometry geom = decode_percom_config(request->rx_data);
         fdd->geometry = geom;

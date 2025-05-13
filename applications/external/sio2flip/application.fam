@@ -9,6 +9,6 @@ App(
     fap_category="GPIO",
     fap_author="cepetr",
     fap_weburl="https://github.com/cepetr/sio2flip",
-    fap_version="0.3",
+    fap_version="0.4",
     fap_description="Atari 8-bit computer SIO peripheral emulator",
 )
