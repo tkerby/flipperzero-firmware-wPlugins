@@ -54,12 +54,14 @@ namespace PicoGameEngine
     class ButtonUART
     {
     public:
-        ButtonUART();
+        ButtonUART(float debounce = 0.05);
         void run();
         int last_button;
 
     private:
         SerialPIO *serial;
+        float debounce;
+        unsigned long startTime;
     };
 
     class Input
@@ -78,7 +80,6 @@ namespace PicoGameEngine
         bool is_pressed();
         bool is_held(int duration = 3);
         void run();
-
         operator bool() const;
     };
 

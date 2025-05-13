@@ -56,7 +56,7 @@ class PicoGameEngine:
 
     def add_input(self):
         """Add input controls"""
-        self.game.input_add(Input(button=BUTTON_UART, uart=UART()))
+        self.game.input_add(Input(button=BUTTON_UART, uart=UART(), debounce=0.05))
 
     def add_level(self):
         """Add a new level"""

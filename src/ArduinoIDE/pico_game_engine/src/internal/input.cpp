@@ -75,49 +75,54 @@ namespace PicoGameEngine
         }
     }
 
-    ButtonUART::ButtonUART()
+    ButtonUART::ButtonUART(float debounce)
     {
         this->serial = new SerialPIO(0, 1);
         this->serial->begin(115200);
+        this->debounce = debounce;
+        this->startTime = millis();
     }
 
     void ButtonUART::run()
     {
-        // Check if data is available to read
-        if (this->serial->available() > 0)
+        if (millis() - this->startTime > this->debounce)
         {
-            // Read the incoming byte as a character
-            char incomingChar = this->serial->read();
-            switch ((int)incomingChar)
+            this->last_button = -1;
+            this->startTime = millis();
+            // Check if data is available to read
+            if (this->serial->available() > 0)
             {
-            case 48:
-                this->last_button = BUTTON_UP;
-                break;
-            case 49:
-                this->last_button = BUTTON_DOWN;
-                break;
-            case 50:
-                this->last_button = BUTTON_LEFT;
-                break;
-            case 51:
-                this->last_button = BUTTON_RIGHT;
-                break;
-            case 52:
-                this->last_button = BUTTON_CENTER;
-                break;
-            case 53:
-                this->last_button = BUTTON_BACK;
-                break;
-            case 54:
-                this->last_button = BUTTON_START;
-                break;
-            default:
-                this->last_button = -1;
-                break;
+                // Read the incoming byte as a character
+                char incomingChar = this->serial->read();
+                switch ((int)incomingChar)
+                {
+                case 48:
+                    this->last_button = BUTTON_UP;
+                    break;
+                case 49:
+                    this->last_button = BUTTON_DOWN;
+                    break;
+                case 50:
+                    this->last_button = BUTTON_LEFT;
+                    break;
+                case 51:
+                    this->last_button = BUTTON_RIGHT;
+                    break;
+                case 52:
+                    this->last_button = BUTTON_CENTER;
+                    break;
+                case 53:
+                    this->last_button = BUTTON_BACK;
+                    break;
+                case 54:
+                    this->last_button = BUTTON_START;
+                    break;
+                default:
+                    this->last_button = -1;
+                    break;
+                }
             }
         }
-        else
-            this->last_button = -1;
     }
 
     Input::Input()
