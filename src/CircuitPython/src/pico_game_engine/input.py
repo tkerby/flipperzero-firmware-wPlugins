@@ -23,7 +23,7 @@ class Input:
     """
 
     def __init__(
-        self, button: int, pin: Pin = None, uart: UART = None, debounce: float = 0.5
+        self, button: int, pin: Pin = None, uart: UART = None, debounce: float = 0.0
     ):
         if not pin and not uart:
             raise ValueError("Either pin or uart must be provided.")
