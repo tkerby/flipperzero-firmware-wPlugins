@@ -1,19 +1,19 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * 
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -202,6 +202,12 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
+    case SIO_COMMAND_STATUS_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_STATUS:
         return SIO_ACK;
 
@@ -281,7 +287,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
-    case SIO_COMMAND_STATUS: {
+    case SIO_COMMAND_STATUS:
+    case SIO_COMMAND_STATUS_HS: {
         DiskGeometry geom = disk_geometry(fdd->image);
         bool write_protect = disk_image_get_write_protect(fdd->image);
 
