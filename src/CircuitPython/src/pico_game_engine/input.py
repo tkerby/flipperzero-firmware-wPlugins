@@ -65,6 +65,7 @@ class Input:
             # check if it's been more than the debounce time since the last button press
             if monotonic() - self.start_time > self.debounce:
                 self.last_button = -1
+                self.start_time = monotonic()
                 # Check if data is available to read
                 if self.uart.available() > 0:
                     # Read the incoming byte as a character
