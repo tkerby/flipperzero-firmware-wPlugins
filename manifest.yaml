@@ -1,0 +1,14 @@
+sourcecode:
+  type: git
+  location:
+    origin: https://github.com/qw3rtty/flipperzero-qrcode-generator.git
+    ## Put the full commit SHA of the commit with the app's code you want to submit
+    commit_sha: a614af3979876fdc1e9f7d2f6c93b4c8f32b1d03 ## TODO!!
+short_description: Generates and displays QRCodes
+description: Generates and displays QRCodes on the flipper zero.
+changelog: "@CHANGELOG.md"
+screenshots:
+  - screenshots/Screenshot-menu.png
+  - screenshots/Screenshot-entered-text.png
+  - screenshots/Screenshot-saved-qrcodes.png
+  - screenshots/Screenshot-open-saved-qrcode.png
