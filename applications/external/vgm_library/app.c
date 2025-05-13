@@ -27,6 +27,8 @@ typedef struct {
     uint8_t choices_index; // The current choice index
     char* choices[2]; // The choices
     FuriTimer* timer;
+    uint8_t elapsed;
+    bool input_ready; // Flag to indicate input is ready to be sent
 } VGMGameRemote;
 
 typedef enum {
@@ -35,47 +37,76 @@ typedef enum {
 
 static bool send_data(VGMGameRemote* app) {
     furi_check(app);
-    return strlen(app->last_input) == 0 || flipper_http_send_data(app->fhttp, app->last_input);
+
+    if(!app->input_ready) {
+        return false; // Don't send if input isn't ready
+    }
+
+    if(strlen(app->last_input) != 0 && strcmp(app->last_input, " ") != 0) {
+        flipper_http_send_data(app->fhttp, app->last_input);
+        app->input_ready = false; // Mark input as sent
+    }
+    return true;
 }
+
 static void timer_callback(void* context) {
     furi_check(context, "timer_callback: Context is NULL");
     VGMGameRemote* app = (VGMGameRemote*)context;
-    view_dispatcher_send_custom_event(app->view_dispatcher, VGMGameRemoteCustomEventSend);
+
+    // Only send custom event if in spam mode and input is ready
+    if(app->choices_index == 0 && app->input_ready) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, VGMGameRemoteCustomEventSend);
+    }
 }
+
 static void loader_process_callback(void* context) {
     VGMGameRemote* app = (VGMGameRemote*)context;
     furi_check(app, "VGMGameRemote is NULL");
     send_data(app);
 }
+
 static bool custom_event_callback(void* context, uint32_t index) {
     furi_check(context, "custom_event_callback: Context is NULL");
     UNUSED(index);
     loader_process_callback(context);
     return true;
 }
+
 static void draw_callback(Canvas* canvas, void* model) {
     UNUSED(model);
     canvas_clear(canvas);
     canvas_draw_str(canvas, 0, 10, "Press any button");
 }
+
 static bool input_callback(InputEvent* event, void* context) {
     VGMGameRemote* app = (VGMGameRemote*)context;
     furi_check(app);
+
+    // Only handle press events, ignore release events
+    if(event->type == InputTypeRelease) {
+        return false;
+    }
+
     if(event->key == InputKeyUp) {
         app->last_input[0] = '0';
         app->last_input[1] = '\0';
+        app->input_ready = true; // Mark new input as ready
     } else if(event->key == InputKeyDown) {
         app->last_input[0] = '1';
         app->last_input[1] = '\0';
+        app->input_ready = true; // Mark new input as ready
     } else if(event->key == InputKeyLeft) {
         app->last_input[0] = '2';
         app->last_input[1] = '\0';
+        app->input_ready = true; // Mark new input as ready
     } else if(event->key == InputKeyRight) {
         app->last_input[0] = '3';
         app->last_input[1] = '\0';
+        app->input_ready = true; // Mark new input as ready
     } else if(event->key == InputKeyOk) {
         app->last_input[0] = '4';
         app->last_input[1] = '\0';
+        app->input_ready = true; // Mark new input as ready
     }
     // if held back button
     else if(event->key == InputKeyBack) {
@@ -84,9 +115,16 @@ static bool input_callback(InputEvent* event, void* context) {
         else {
             app->last_input[0] = '5';
             app->last_input[1] = '\0';
+            app->input_ready = true; // Mark new input as ready
         }
     }
-    return app->choices_index == 0 ? true : send_data(app);
+
+    // If in "Once" mode, send immediately
+    if(app->choices_index == 1 && app->input_ready && event->type == InputTypePress) {
+        return send_data(app);
+    }
+
+    return true;
 }
 
 static void free_fhttp(VGMGameRemote* app) {
@@ -96,6 +134,7 @@ static void free_fhttp(VGMGameRemote* app) {
         app->fhttp = NULL;
     }
 }
+
 static void free_timer(VGMGameRemote* app) {
     furi_check(app);
     if(app->timer) {
@@ -103,6 +142,7 @@ static void free_timer(VGMGameRemote* app) {
         app->timer = NULL;
     }
 }
+
 static void callback_submenu_choices(void* context, uint32_t index) {
     VGMGameRemote* app = (VGMGameRemote*)context;
     furi_check(app);
@@ -133,6 +173,7 @@ static void callback_submenu_choices(void* context, uint32_t index) {
         break;
     }
 }
+
 static uint32_t callback_to_submenu(void* context) {
     VGMGameRemote* app = (VGMGameRemote*)context;
     furi_check(app);
@@ -242,6 +283,7 @@ static bool load_char(const char* path_name, char* value, size_t value_size) {
 
     return strlen(value) > 0;
 }
+
 static void choices_on_change(VariableItem* item) {
     VGMGameRemote* app = (VGMGameRemote*)variable_item_get_context(item);
     uint8_t index = variable_item_get_current_value_index(item);
@@ -249,11 +291,22 @@ static void choices_on_change(VariableItem* item) {
     variable_item_set_current_value_text(item, app->choices[app->choices_index]);
     variable_item_set_current_value_index(item, app->choices_index);
     save_char("button-choices", app->choices[app->choices_index]);
+
+    // Reset timer when switching modes
+    free_timer(app);
+    if(app->choices_index == 0) {
+        app->timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, app);
+        furi_timer_start(app->timer, 100);
+    }
 }
+
 static VGMGameRemote* app_alloc() {
     VGMGameRemote* app = (VGMGameRemote*)malloc(sizeof(VGMGameRemote));
 
     Gui* gui = furi_record_open(RECORD_GUI);
+
+    // Initialize input_ready flag
+    app->input_ready = false;
 
     // Allocate ViewDispatcher
     if(!easy_flipper_set_view_dispatcher(&app->view_dispatcher, gui, app)) {
