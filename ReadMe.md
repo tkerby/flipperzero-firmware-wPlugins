@@ -57,7 +57,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [VL6180X Pong v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x_pong) `Req: Adafruit VL6180X`
 - Added: [VL6180X Distance Sensor I2C v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x) `Req: Adafruit VL6180X`
 - Updated: [VGM Game Remote v1.1 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
-- Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip)
+- Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip) (Version Only)
 
 <a name="release">
 
