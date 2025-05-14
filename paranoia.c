@@ -173,7 +173,9 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
             canvas_draw_str(canvas, 105, 50, "~IR~");
         }
 
-        elements_button_center(canvas, "Scan");
+        // Change button text based on current scanning state
+        bool is_scanning = (paranoia->state != ParanoiaStateIdle);
+        elements_button_center(canvas, is_scanning ? "Stop" : "Scan");
         elements_button_left(canvas, "Menu");
         elements_button_right(canvas, "Info");
     }
@@ -428,10 +430,24 @@ int32_t paranoia_app(void* p) {
 
                     if(paranoia->state == ParanoiaStateOptionsMenu) {
                         paranoia_handle_menu_input(paranoia, event.input.key);
+                    } else if(paranoia->state == ParanoiaStateInfoMenu) {
+                        if(event.input.key == InputKeyLeft || event.input.key == InputKeyBack) {
+                            paranoia->state = ParanoiaStateIdle;
+                        }
                     } else {
                         if(event.input.key == InputKeyOk) {
-                            if(paranoia->rf_scan_enabled || paranoia->nfc_scan_enabled ||
-                               paranoia->ir_scan_enabled) {
+                            // Check if we're already scanning
+                            bool is_scanning = (paranoia->state != ParanoiaStateIdle);
+
+                            if(is_scanning) {
+                                // Stop the scan and return to idle
+                                paranoia->state = ParanoiaStateIdle;
+                                notification_message(
+                                    paranoia->notifications, &sequence_blink_stop);
+                            } else if(
+                                paranoia->rf_scan_enabled || paranoia->nfc_scan_enabled ||
+                                paranoia->ir_scan_enabled) {
+                                // Start a new scan
                                 paranoia->threat_level = 0;
                                 paranoia->rf_anomaly = false;
                                 paranoia->nfc_anomaly = false;
