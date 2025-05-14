@@ -1,6 +1,6 @@
 App(
     appid="paranoia", 
-    name="Paranoia Mode", 
+    name="Paranoia", 
     apptype=FlipperAppType.EXTERNAL,
     entry_point="paranoia_app",
     stack_size=2 * 1024,

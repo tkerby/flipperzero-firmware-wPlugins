@@ -7,7 +7,6 @@
 #include <notification/notification_messages.h>
 #include <stdlib.h>
 
-// Hardware interface headers with correct paths
 #include <furi_hal_infrared.h>
 #include <furi_hal_nfc.h>
 #include <furi_hal_subghz.h>
@@ -68,7 +67,7 @@ typedef struct {
 
 static void paranoia_draw_info_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_set_font(canvas, FontPrimary);
-    // canvas_draw_str(canvas, 2, 10, "Paranoia Info");
+
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 2, 10, "RF Scan: ");
     canvas_draw_str(canvas, 90, 10, paranoia->rf_scan_enabled ? "ON" : "OFF");
@@ -83,7 +82,6 @@ static void paranoia_draw_info_menu(Canvas* canvas, Paranoia* paranoia) {
 
 static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_set_font(canvas, FontPrimary);
-    // canvas_draw_str(canvas, 2, 10, "Paranoia Options");
 
     canvas_set_font(canvas, FontSecondary);
 
@@ -92,7 +90,7 @@ static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
 
     for(MenuItem i = 0; i < MenuItemCount; i++) {
         if(i == paranoia->selected_menu_item) {
-            canvas_draw_str(canvas, 2, 10 + i * 10, ">"); //was y: 22
+            canvas_draw_str(canvas, 2, 10 + i * 10, ">");
         }
         canvas_draw_str(canvas, 10, 10 + i * 10, menu_titles[i]);
 
@@ -125,12 +123,11 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
         paranoia_draw_info_menu(canvas, paranoia);
     } else {
         canvas_set_font(canvas, FontPrimary);
-        // canvas_draw_str(canvas, 2, 10, "Paranoia Mode");
 
         canvas_set_font(canvas, FontSecondary);
         switch(paranoia->state) {
         case ParanoiaStateIdle:
-            canvas_draw_str(canvas, 2, 10, "Status: Idle"); // was y:24
+            canvas_draw_str(canvas, 2, 10, "Status: Idle");
             break;
         case ParanoiaStateRfScan:
             canvas_draw_str(canvas, 2, 10, "Status: Scanning RF");
@@ -147,7 +144,7 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
 
         char threat_str[32];
         snprintf(threat_str, sizeof(threat_str), "Threat Level: %d/10", paranoia->threat_level);
-        canvas_draw_str(canvas, 2, 24, threat_str); // was y: 36
+        canvas_draw_str(canvas, 2, 24, threat_str);
 
         char enabled_str[32];
         snprintf(
@@ -157,9 +154,9 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
             paranoia->rf_scan_enabled ? "RF " : "",
             paranoia->nfc_scan_enabled ? "NFC " : "",
             paranoia->ir_scan_enabled ? "IR" : "");
-        canvas_draw_str(canvas, 2, 36, enabled_str); // was y: 40
+        canvas_draw_str(canvas, 2, 36, enabled_str);
 
-        canvas_draw_str(canvas, 2, 50, "Detected:"); //was y:60
+        canvas_draw_str(canvas, 2, 50, "Detected:");
 
         if(paranoia->rf_anomaly) {
             canvas_draw_str(canvas, 55, 50, "~RF~");
@@ -173,7 +170,6 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
             canvas_draw_str(canvas, 105, 50, "~IR~");
         }
 
-        // Change button text based on current scanning state
         bool is_scanning = (paranoia->state != ParanoiaStateIdle);
         elements_button_center(canvas, is_scanning ? "Stop" : "Scan");
         elements_button_left(canvas, "Menu");
@@ -238,10 +234,8 @@ static void paranoia_scan_nfc(Paranoia* paranoia) {
     paranoia->nfc_signal_count = 0;
     bool field_present = false;
 
-    // Initialize NFC hardware
     furi_hal_nfc_init();
 
-    // Try to detect NFC fields
     for(uint8_t i = 0; i < 5; i++) {
         field_present = furi_hal_nfc_field_is_present();
         if(field_present) {
@@ -250,10 +244,8 @@ static void paranoia_scan_nfc(Paranoia* paranoia) {
         furi_delay_ms(100);
     }
 
-    // Use proper function to close NFC operations
     furi_hal_nfc_event_stop();
 
-    // Fix: ensure consistent type comparison
     uint32_t threshold = 3 - paranoia->sensitivity + 1;
     paranoia->nfc_anomaly = (paranoia->nfc_signal_count >= threshold);
 
@@ -271,19 +263,15 @@ static void paranoia_scan_ir(Paranoia* paranoia) {
 
     paranoia->ir_signal_count = 0;
 
-    // Initialize IR receiver with correct function name
     furi_hal_infrared_async_rx_set_capture_isr_callback(NULL, NULL);
 
-    // Try to detect IR signals through RSSI or direct GPIO monitoring
     for(uint8_t i = 0; i < 10; i++) {
-        // Check if IR signal is present through GPIO status or alternative method
         if(furi_hal_infrared_is_busy()) {
             paranoia->ir_signal_count++;
         }
         furi_delay_ms(100);
     }
 
-    // Clean up IR receiver with correct function name
     furi_hal_infrared_async_rx_set_capture_isr_callback(NULL, NULL);
 
     uint8_t threshold = 2 - (paranoia->sensitivity - 1);
@@ -436,18 +424,15 @@ int32_t paranoia_app(void* p) {
                         }
                     } else {
                         if(event.input.key == InputKeyOk) {
-                            // Check if we're already scanning
                             bool is_scanning = (paranoia->state != ParanoiaStateIdle);
 
                             if(is_scanning) {
-                                // Stop the scan and return to idle
                                 paranoia->state = ParanoiaStateIdle;
                                 notification_message(
                                     paranoia->notifications, &sequence_blink_stop);
                             } else if(
                                 paranoia->rf_scan_enabled || paranoia->nfc_scan_enabled ||
                                 paranoia->ir_scan_enabled) {
-                                // Start a new scan
                                 paranoia->threat_level = 0;
                                 paranoia->rf_anomaly = false;
                                 paranoia->nfc_anomaly = false;
