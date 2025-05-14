@@ -13,10 +13,6 @@ After the download copy the **.fap** file onto your flipper in the folder
 - Generating QRCodes based on the entered input
 - Open QRCodes which are saved on the sdcard
 
-## Future Features
-- [ ] Save newly generated QRCodes on the sdcard
-- [ ] Export generated QRCodes as bitmap (.pbm image)
-
 ## Data format
 To generate newly QRCodes, you can just enter the data you want to stored 
 in the QRCode.
