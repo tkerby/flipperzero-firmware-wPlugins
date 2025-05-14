@@ -20,6 +20,7 @@ typedef enum {
     ParanoiaStateNfcScan,
     ParanoiaStateIrScan,
     ParanoiaStateOptionsMenu,
+    ParanoiaStateInfoMenu
 } ParanoiaState;
 
 typedef enum {
@@ -56,12 +57,29 @@ typedef struct {
 typedef enum {
     EventTypeTick,
     EventTypeKey,
+    EventTypeNotification,
 } EventType;
 
 typedef struct {
     EventType type;
     InputEvent input;
+    NotificationMessage notification;
 } ParanoiaEvent;
+
+static void paranoia_draw_info_menu(Canvas* canvas, Paranoia* paranoia) {
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 2, 10, "Paranoia Info");
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 30, "RF Scan: ");
+    canvas_draw_str(canvas, 90, 20, paranoia->rf_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 40, "NFC Scan: ");
+    canvas_draw_str(canvas, 90, 40, paranoia->nfc_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 50, "IR Scan: ");
+    canvas_draw_str(canvas, 90, 50, paranoia->ir_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 60, "App Created by: ");
+    canvas_draw_str(canvas, 90, 60, "C0d3-5t3w");
+    elements_button_center(canvas, "OK");
+}
 
 static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_set_font(canvas, FontPrimary);
@@ -103,6 +121,8 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
 
     if(paranoia->state == ParanoiaStateOptionsMenu) {
         paranoia_draw_options_menu(canvas, paranoia);
+    } else if(paranoia->state == ParanoiaStateInfoMenu) {
+        paranoia_draw_info_menu(canvas, paranoia);
     } else {
         canvas_set_font(canvas, FontPrimary);
         // canvas_draw_str(canvas, 2, 10, "Paranoia Mode");
@@ -142,20 +162,20 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
         canvas_draw_str(canvas, 2, 50, "Detected:"); //was y:60
 
         if(paranoia->rf_anomaly) {
-            canvas_draw_str(canvas, 55, 50, "RF");
+            canvas_draw_str(canvas, 55, 50, "~RF~");
         }
 
         if(paranoia->nfc_anomaly) {
-            canvas_draw_str(canvas, 75, 50, "NFC");
+            canvas_draw_str(canvas, 75, 50, "~NFC~");
         }
 
         if(paranoia->ir_anomaly) {
-            canvas_draw_str(canvas, 105, 50, "IR");
+            canvas_draw_str(canvas, 105, 50, "~IR~");
         }
 
         elements_button_center(canvas, "Scan");
         elements_button_left(canvas, "Menu");
-        elements_button_right(canvas, "Exit");
+        elements_button_right(canvas, "Info");
     }
 
     furi_mutex_release(paranoia->mutex);
@@ -305,6 +325,9 @@ static void paranoia_state_machine(Paranoia* paranoia) {
 
     case ParanoiaStateOptionsMenu:
         break;
+
+    case ParanoiaStateInfoMenu:
+        break;
     }
 
     if(paranoia->threat_level > 10) paranoia->threat_level = 10;
@@ -427,6 +450,8 @@ int32_t paranoia_app(void* p) {
                             }
                         } else if(event.input.key == InputKeyLeft) {
                             paranoia->state = ParanoiaStateOptionsMenu;
+                        } else if(event.input.key == InputKeyRight) {
+                            paranoia->state = ParanoiaStateInfoMenu;
                         } else if(event.input.key == InputKeyBack) {
                             paranoia->running = false;
                         }
