@@ -7,8 +7,9 @@ sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8
   - Disk formatting commands
   - Commands for reading and writing PERCOM configuration
   - US Doubler mode is emulated (with either 38400 Bd or 57600 Bd).
-  - XF-551 High Speed mode is emulated 
+  - XF-551 High Speed mode is emulated
   - Support for 90K, 130K, 180K, 360K, and 720K ATR disk images
+  - Support for hard disk images up to 16MB
   - 128- or 256-byte sectors are supported
   - Up to four floppy disk drives can be emulated.
 - **Direct XEX executable file loading**
@@ -24,7 +25,7 @@ sio2flip is a Flipper Zero application that emulates SIO peripherals for Atari 8
 
 ## Wiring
 
-The wiring is quite simple; only three signals are need. 
+The wiring is quite simple; only three signals are need.
 
 | Flipper pin  | Atari SIO |
 | ------------ | --------- |
@@ -76,7 +77,7 @@ python3 bridge.py <sio_vcp> <server>
 
 ## About This Project
 
-There are several great SIO peripheral emulators available, many more advanced than this project. 
+There are several great SIO peripheral emulators available, many more advanced than this project.
 However, none run on the Flipper Zero - so I built this purely for enjoyment. 😄
 
 Contributions, ideas, feedback, and bug reports are welcome!
