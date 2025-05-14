@@ -68,17 +68,17 @@ typedef struct {
 
 static void paranoia_draw_info_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "Paranoia Info");
+    // canvas_draw_str(canvas, 2, 10, "Paranoia Info");
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 30, "RF Scan: ");
-    canvas_draw_str(canvas, 90, 20, paranoia->rf_scan_enabled ? "ON" : "OFF");
-    canvas_draw_str(canvas, 2, 40, "NFC Scan: ");
-    canvas_draw_str(canvas, 90, 40, paranoia->nfc_scan_enabled ? "ON" : "OFF");
-    canvas_draw_str(canvas, 2, 50, "IR Scan: ");
-    canvas_draw_str(canvas, 90, 50, paranoia->ir_scan_enabled ? "ON" : "OFF");
-    canvas_draw_str(canvas, 2, 60, "App Created by: ");
-    canvas_draw_str(canvas, 90, 60, "C0d3-5t3w");
-    elements_button_center(canvas, "OK");
+    canvas_draw_str(canvas, 2, 10, "RF Scan: ");
+    canvas_draw_str(canvas, 90, 10, paranoia->rf_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 20, "NFC Scan: ");
+    canvas_draw_str(canvas, 90, 20, paranoia->nfc_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 30, "IR Scan: ");
+    canvas_draw_str(canvas, 90, 30, paranoia->ir_scan_enabled ? "ON" : "OFF");
+    canvas_draw_str(canvas, 2, 40, "App Created by: ");
+    canvas_draw_str(canvas, 70, 40, "C0d3-5t3w");
+    elements_button_left(canvas, "Back");
 }
 
 static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
@@ -452,6 +452,8 @@ int32_t paranoia_app(void* p) {
                             paranoia->state = ParanoiaStateOptionsMenu;
                         } else if(event.input.key == InputKeyRight) {
                             paranoia->state = ParanoiaStateInfoMenu;
+                        } else if(event.input.key == InputKeyUp) {
+                            paranoia->state = ParanoiaStateIdle;
                         } else if(event.input.key == InputKeyBack) {
                             paranoia->running = false;
                         }
