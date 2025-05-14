@@ -545,7 +545,7 @@ static int32_t ir_worker_thread(void* context) {
             uint32_t cmd = rand() % 256;
 
             snprintf(
-                signature, sizeof(signature), "%s:%04X:%02X", protocols[rand() % 6], addr, cmd);
+                signature, sizeof(signature), "%s:%04lX:%02lX", protocols[rand() % 6], addr, cmd);
 
             SigDiaryEvent event = {.type = SigDiaryEventSignalDetected, .signal_type = SigTypeIR};
             event.signal_data = furi_string_alloc();
@@ -577,7 +577,7 @@ static int32_t rf_worker_thread(void* context) {
             snprintf(
                 signature,
                 sizeof(signature),
-                "%sMHz:%s:%08X",
+                "%sMHz:%s:%08lX",
                 freqs[rand() % 4],
                 modulations[rand() % 5],
                 (uint32_t)rand());
@@ -616,7 +616,7 @@ static int32_t nfc_worker_thread(void* context) {
                 "EMV"};
             uint32_t uid = rand() % 0xFFFFFFFF;
 
-            snprintf(signature, sizeof(signature), "%s:%08X", card_types[rand() % 7], uid);
+            snprintf(signature, sizeof(signature), "%s:%08lX", card_types[rand() % 7], uid);
 
             SigDiaryEvent event = {.type = SigDiaryEventSignalDetected, .signal_type = SigTypeNFC};
             event.signal_data = furi_string_alloc();
