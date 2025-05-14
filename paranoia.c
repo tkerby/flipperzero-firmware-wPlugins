@@ -65,7 +65,7 @@ typedef struct {
 
 static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "Paranoia Options");
+    // canvas_draw_str(canvas, 2, 10, "Paranoia Options");
 
     canvas_set_font(canvas, FontSecondary);
 
@@ -74,20 +74,20 @@ static void paranoia_draw_options_menu(Canvas* canvas, Paranoia* paranoia) {
 
     for(MenuItem i = 0; i < MenuItemCount; i++) {
         if(i == paranoia->selected_menu_item) {
-            canvas_draw_str(canvas, 2, 22 + i * 10, ">");
+            canvas_draw_str(canvas, 2, 10 + i * 10, ">"); //was y: 22
         }
-        canvas_draw_str(canvas, 10, 22 + i * 10, menu_titles[i]);
+        canvas_draw_str(canvas, 10, 10 + i * 10, menu_titles[i]);
 
         if(i == MenuItemRfEnabled) {
-            canvas_draw_str(canvas, 90, 22 + i * 10, paranoia->rf_scan_enabled ? "ON" : "OFF");
+            canvas_draw_str(canvas, 90, 10 + i * 10, paranoia->rf_scan_enabled ? "ON" : "OFF");
         } else if(i == MenuItemNfcEnabled) {
-            canvas_draw_str(canvas, 90, 22 + i * 10, paranoia->nfc_scan_enabled ? "ON" : "OFF");
+            canvas_draw_str(canvas, 90, 10 + i * 10, paranoia->nfc_scan_enabled ? "ON" : "OFF");
         } else if(i == MenuItemIrEnabled) {
-            canvas_draw_str(canvas, 90, 22 + i * 10, paranoia->ir_scan_enabled ? "ON" : "OFF");
+            canvas_draw_str(canvas, 90, 10 + i * 10, paranoia->ir_scan_enabled ? "ON" : "OFF");
         } else if(i == MenuItemSensitivity) {
             const char* sensitivity_levels[] = {"Low", "Medium", "High"};
             canvas_draw_str(
-                canvas, 90, 22 + i * 10, sensitivity_levels[paranoia->sensitivity - 1]);
+                canvas, 90, 10 + i * 10, sensitivity_levels[paranoia->sensitivity - 1]);
         }
     }
 
@@ -105,21 +105,21 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
         paranoia_draw_options_menu(canvas, paranoia);
     } else {
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 2, 10, "Paranoia Mode");
+        // canvas_draw_str(canvas, 2, 10, "Paranoia Mode");
 
         canvas_set_font(canvas, FontSecondary);
         switch(paranoia->state) {
         case ParanoiaStateIdle:
-            canvas_draw_str(canvas, 2, 24, "Status: Idle");
+            canvas_draw_str(canvas, 2, 10, "Status: Idle"); // was y:24
             break;
         case ParanoiaStateRfScan:
-            canvas_draw_str(canvas, 2, 24, "Status: Scanning RF");
+            canvas_draw_str(canvas, 2, 10, "Status: Scanning RF");
             break;
         case ParanoiaStateNfcScan:
-            canvas_draw_str(canvas, 2, 24, "Status: Scanning NFC");
+            canvas_draw_str(canvas, 2, 10, "Status: Scanning NFC");
             break;
         case ParanoiaStateIrScan:
-            canvas_draw_str(canvas, 2, 24, "Status: Scanning IR");
+            canvas_draw_str(canvas, 2, 10, "Status: Scanning IR");
             break;
         default:
             break;
@@ -127,7 +127,7 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
 
         char threat_str[32];
         snprintf(threat_str, sizeof(threat_str), "Threat Level: %d/10", paranoia->threat_level);
-        canvas_draw_str(canvas, 2, 36, threat_str);
+        canvas_draw_str(canvas, 2, 24, threat_str); // was y: 36
 
         char enabled_str[32];
         snprintf(
@@ -137,20 +137,20 @@ static void paranoia_draw_callback(Canvas* canvas, void* context) {
             paranoia->rf_scan_enabled ? "RF " : "",
             paranoia->nfc_scan_enabled ? "NFC " : "",
             paranoia->ir_scan_enabled ? "IR" : "");
-        canvas_draw_str(canvas, 2, 48, enabled_str);
+        canvas_draw_str(canvas, 2, 36, enabled_str); // was y: 40
 
-        canvas_draw_str(canvas, 2, 60, "Detected:");
+        canvas_draw_str(canvas, 2, 50, "Detected:"); //was y:60
 
         if(paranoia->rf_anomaly) {
-            canvas_draw_str(canvas, 55, 60, "RF");
+            canvas_draw_str(canvas, 55, 50, "RF");
         }
 
         if(paranoia->nfc_anomaly) {
-            canvas_draw_str(canvas, 75, 60, "NFC");
+            canvas_draw_str(canvas, 75, 50, "NFC");
         }
 
         if(paranoia->ir_anomaly) {
-            canvas_draw_str(canvas, 105, 60, "IR");
+            canvas_draw_str(canvas, 105, 50, "IR");
         }
 
         elements_button_center(canvas, "Scan");
