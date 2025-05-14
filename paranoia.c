@@ -376,9 +376,9 @@ int32_t paranoia_app(void* p) {
     paranoia->nfc_anomaly = false;
     paranoia->ir_anomaly = false;
 
-    paranoia->rf_scan_enabled = true;
-    paranoia->nfc_scan_enabled = true;
-    paranoia->ir_scan_enabled = true;
+    paranoia->rf_scan_enabled = false;
+    paranoia->nfc_scan_enabled = false;
+    paranoia->ir_scan_enabled = false;
     paranoia->sensitivity = 2;
     paranoia->selected_menu_item = 0;
 
