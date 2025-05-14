@@ -1,18 +1,18 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -24,6 +24,7 @@ typedef enum {
     MenuIndex_InsertDisk,
     MenuIndex_EjectDisk,
     MenuIndex_NewDisk,
+    MenuIndex_SwapDisk,
     MenuIndex_WriteProtect,
 } MenuIndex;
 
@@ -55,6 +56,17 @@ static void scene_settings_enter_callback(void* context, uint32_t index) {
     case MenuIndex_NewDisk:
         scene_manager_next_scene(app->scene_manager, SceneFddNewDisk);
         break;
+
+    case MenuIndex_SwapDisk:
+        if(app->selected_fdd == 0) {
+            // D1 <--> D2
+            fdd_swap_disk(app->fdd[0], app->fdd[1]);
+        } else {
+            // Dx <--> D1
+            fdd_swap_disk(app->fdd[app->selected_fdd], app->fdd[0]);
+        }
+        scene_manager_next_scene(app->scene_manager, SceneFddSwapDisk);
+        break;
     }
 }
 
@@ -68,6 +80,12 @@ void scene_fdd_settings_init(App* app) {
     item = variable_item_list_add(list, "Eject disk", 0, NULL, app);
 
     item = variable_item_list_add(list, "New disk...", 0, NULL, app);
+
+    if(app->selected_fdd == 0) {
+        item = variable_item_list_add(list, "Swap with D2:", 0, NULL, app);
+    } else {
+        item = variable_item_list_add(list, "Swap with D1:", 0, NULL, app);
+    }
 
     DiskImage* image = fdd_get_disk(app->fdd[app->selected_fdd]);
     if(image != NULL) {

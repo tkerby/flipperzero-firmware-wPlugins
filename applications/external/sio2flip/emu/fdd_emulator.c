@@ -162,6 +162,27 @@ void fdd_eject_disk(FddEmulator* fdd) {
     }
 }
 
+void fdd_swap_disk(FddEmulator* fdd, FddEmulator* other_fdd) {
+    furi_check(fdd != NULL);
+    furi_check(other_fdd != NULL);
+
+    DiskImage* tmp = fdd->image;
+    fdd->image = other_fdd->image;
+    other_fdd->image = tmp;
+
+    DiskGeometry tmp_geom = fdd->geometry;
+    fdd->geometry = other_fdd->geometry;
+    other_fdd->geometry = tmp_geom;
+
+    bool tmp_geom_changed = fdd->geometry_changed;
+    fdd->geometry_changed = other_fdd->geometry_changed;
+    other_fdd->geometry_changed = tmp_geom_changed;
+
+    size_t tmp_last_sector = fdd->last_sector;
+    fdd->last_sector = other_fdd->last_sector;
+    other_fdd->last_sector = tmp_last_sector;
+}
+
 SIODevice fdd_get_device(FddEmulator* fdd) {
     furi_check(fdd != NULL);
     return fdd->device;
