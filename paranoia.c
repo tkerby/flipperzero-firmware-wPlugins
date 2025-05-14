@@ -76,8 +76,8 @@ static void paranoia_draw_info_menu(Canvas* canvas, Paranoia* paranoia) {
     canvas_draw_str(canvas, 90, 20, paranoia->nfc_scan_enabled ? "ON" : "OFF");
     canvas_draw_str(canvas, 2, 30, "IR Scan: ");
     canvas_draw_str(canvas, 90, 30, paranoia->ir_scan_enabled ? "ON" : "OFF");
-    canvas_draw_str(canvas, 2, 40, "App Created by: ");
-    canvas_draw_str(canvas, 70, 40, "C0d3-5t3w");
+    canvas_draw_str(canvas, 2, 50, "App Created by: ");
+    canvas_draw_str(canvas, 70, 50, "C0d3-5t3w");
     elements_button_left(canvas, "Back");
 }
 
