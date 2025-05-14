@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0506-0048-0.420.0-e443b34.tgz&channel=RM0506-0048-0.420.0-e443b34&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0514-1243-0.420.0-23c7dca.tgz&channel=RM0514-1243-0.420.0-23c7dca&version=0.420.0)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,38 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-15 12:15 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-14 12:15 EST`
-- Updated: [Portal of Flipper v1.3 (By bettse)](https://gitlab.com/bettse/portal_of_flipper)
-- Updated: [Authenticator/TOTP v5.19.0 (By akopachov)](https://github.com/akopachov/flipper-zero_authenticator)
-- Updated: [iButton Converter v1.1 (By Leptopt1los)](https://github.com/Leptopt1los/ibutton_converter)
-- Updated: [Weather Station v1.9.4 (By Skorpionm)-OFW](https://github.com/flipperdevices/flipperzero-good-faps/tree/dev/weather_station) [BL999 (By gazirov) & Some Fixes (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1d4135f18f3f3fd4a1ef97ebbdefb8ea9c895680)
-- Updated: [Ghost ESP v1.2.5 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
-- ESP Flasher Bump [ESP Marauder v1.5.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.5.0)
-- Updated: [Lab401/Light MESSENGER v1.4.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
-- Updated: [ESP32CAM Camera v1.0.0 (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- Updated: [ESP32CAM Marauder v0.7.2 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- [BadUSB: Fix key combos main keys being case sensitive & Fix temporary `nfc apdu` command (By WillyJL)](https://github.com/DarkFlippers/unleashed-firmware/commit/c5d077fc7a73893d67958c984483347e2d0b0741)
-- [NFC: Fix card info not being parsed when using Extra Actions > Read Specific Card Type (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/2fd18802a5c6e690aae20c8e4edd21a82c5d4125)
-- [Infrared: Fix crash with `ir universal` command (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/4868e6e089f10c2b4acb1d8dc5bf66be650966d3)
-- UL: [SubGHz: Add keeloq ironlogic (aka il100) smart clone cloners support (thanks to Vitaly for RAWs) (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/32d104c591ea1bd66cbeb18252dc6e555c7faf6b)
-- UL: [SubGHz: Fix CAME 24bit decoder (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/760079ee2c70fc02a1c7b4c3aaeec6cdbb670daa)
-- UL: [SubGHz: Tune holtek ht12x to decode holtek only and not conflict with came 12bit (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/fb02568fab8d02491631d1fa752535ed04824aad)
-- UL: [Fix Rename scene bug, that was replacing file name with random name when Rename is opened then closed then opened again (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/6c798a5d4b505a643ca64e6c8a2df2480b13287b)
-- Updated: [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
-- Updated: [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
-- Added: [Wave v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
-- Added: [MiZip Balance Editor v0.1 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
-- Added: [NFC Sniffer v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/nfc_sniffer)
-- Added: [Infinite Tic Tac Toe v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/infinite_tic_tac_toe)
-- Added: [GS1 Parser v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/gs1_rfid_parser) `Req: U107 or YRM100`
-- Added: [VL6180X Pong v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x_pong) `Req: Adafruit VL6180X`
-- Added: [VL6180X Distance Sensor I2C v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x) `Req: Adafruit VL6180X`
-- Updated: [VGM Game Remote v1.1 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
-- Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip) (Version Only)
-- Added: [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
-- OFW: PR: [BadUSB: string from file function #4231 (By p4p1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4231)
-- OFW: PR: [TM01x Dallas ID write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
-- UL: [SubGHz: Add 462.750 MHz to default subghz freqs list (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e108405fe42d2fe343ddc00cc8d897e6fc5bb20d)
 
 <a name="release">
 
@@ -753,4 +721,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0506-0048-0.420.0-e443b34.tgz&channel=RM0506-0048-0.420.0-e443b34&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0514-1243-0.420.0-23c7dca.tgz&channel=RM0514-1243-0.420.0-23c7dca&version=0.420.0)
