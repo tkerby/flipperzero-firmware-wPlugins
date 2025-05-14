@@ -33,15 +33,12 @@ mailto:example@example.com
 **Open link:**
 https://github.com/qw3rtty
 
-**Connect to a WIFI:**
-WIFI:S:[ssid];P:[password];T:[encryption];
-
 ## Using the App
 The app is acutally straightforward. If you start it, you have three menu
 options. One to generate a new QRCode, one to open existing ones from the 
 sdcard and one to get the basic information about this app.
 
 ## qrcode library
-The application uses the awesome C library from [nayuki](https://github.com/nayuki/QR-Code-generator)
+The application uses the awesome C library from **nayuki**
 to generate and display the QRCodes. 
 
