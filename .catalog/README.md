@@ -2,12 +2,12 @@
 Generates and displays QRCodes on the flipper zero.
 
 ## Download
-Grab the `qrcode_generator.fap` from the latest release. 
+Grab the **qrcode_generator.fap** from the latest release. 
 
 ## Installation 
-After the download copy the `.fap` file onto your flipper in the folder 
-`apps/Tools`. Then create in the `apps_data` folder the subfolder 
-`qrcode_generator` to open existing QRCodes or to save it on the sdcard.
+After the download copy the **.fap** file onto your flipper in the folder 
+**apps/Tools**. Then create in the **apps_data** folder the subfolder 
+**qrcode_generator** to open existing QRCodes or to save it on the sdcard.
 
 ## Features
 - Generating QRCodes based on the entered input
@@ -21,22 +21,20 @@ After the download copy the `.fap` file onto your flipper in the folder
 To generate newly QRCodes, you can just enter the data you want to stored 
 in the QRCode.
 
-To open saved QRCodes you need on a regular basis, just create a `.txt` file 
-in the `apps_data/qrcode_generator/` folder on the sdcard with just the 
+To open saved QRCodes you need on a regular basis, just create a **.txt** file 
+in the **apps_data/qrcode_generator/** folder on the sdcard with just the 
 data in it. The app reads the content of the file and creates an QRCode with 
 it. You need no further specific format or something else. 
 
-**Examples:**
-```text
-# Open new mail:
+## Examples:
+##### Open new mail:
 mailto:example@example.com
 
-# Open link:
+##### Open link:
 https://github.com/qw3rtty
 
-# Connect to a WIFI:
+##### Connect to a WIFI:
 WIFI:S:<ssid>;P:<password>;T:<encryption>;
-```
 
 ## Using the App
 The app is acutally straightforward. If you start it, you have three menu
