@@ -60,6 +60,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip) (Version Only)
 - Added: [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - OFW: PR: [BadUSB: string from file function #4231 (By p4p1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4231)
+- OFW: PR: [TM01x Dallas ID write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
 
 <a name="release">
 
