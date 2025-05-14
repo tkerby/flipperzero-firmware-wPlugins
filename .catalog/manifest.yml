@@ -3,8 +3,8 @@ sourcecode:
   location:
     origin: https://github.com/qw3rtty/flipperzero-qrcode-generator.git
     commit_sha: ## TODO!!
-description: "@README.md"
-changelog: "@CHANGELOG.md"
+description: "@./.catalog/README.md"
+changelog: "@./.catalog/CHANGELOG.md"
 screenshots:
   - screenshots/Screenshot-menu.png
   - screenshots/Screenshot-entered-text.png
