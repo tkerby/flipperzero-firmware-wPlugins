@@ -59,6 +59,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [VGM Game Remote v1.1 (By jblanked)](https://github.com/jblanked/VGM-Library) `Req: Video Game Module By Flipper Devices`
 - Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip) (Version Only)
 - Added: [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
+- OFW: PR: [BadUSB: string from file function #4231 (By p4p1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4231)
 
 <a name="release">
 
