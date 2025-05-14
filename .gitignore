@@ -1,0 +1,11 @@
+dist
+.vscode
+.clang-format
+.clangd
+.editorconfig
+.env
+.ufbt
+.DS_Store
+*.swp
+.*.swp
+.*.*.swp

@@ -1,0 +1,34 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="sigdiary",  # Must be unique
+    name="Sig Diary",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="sigdiary_app",
+    stack_size=2 * 1024,
+    fap_category="Tools",
+    # Optional values
+    fap_version="0.1",
+    fap_icon="sigdiary.png",  # 10x10 1-bit PNG
+    fap_description="Background scanner that logs signals and annotates them",
+    fap_author="C0d3-5t3w",
+    fap_weburl="https://github.com/C0d3-5t3w/flipper-sigdiary",
+    fap_icon_assets="images",  # Image assets to compile for this application
+    requires=[
+        "gui",
+        "dialogs",
+        "furi",
+        "furi_hal",
+        "storage",
+        "subghz",
+        "infrared",
+        "nfc",
+        "furi_record_storage", 
+        "furi_ota", 
+        "furi_events", 
+        "furi_string",
+        "furi_stream",
+        "furi_file_storage",
+        "furi_file_system",
+    ],  # Required modules for scanning different signals
+)
