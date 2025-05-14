@@ -61,6 +61,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - OFW: PR: [BadUSB: string from file function #4231 (By p4p1)](https://github.com/flipperdevices/flipperzero-firmware/pull/4231)
 - OFW: PR: [TM01x Dallas ID write support #4230 (By Leptopt1los)](https://github.com/flipperdevices/flipperzero-firmware/pull/4230)
+- UL: [SubGHz: Add 462.750 MHz to default subghz freqs list (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e108405fe42d2fe343ddc00cc8d897e6fc5bb20d)
 
 <a name="release">
 
