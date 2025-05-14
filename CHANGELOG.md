@@ -1,5 +1,6 @@
 v0.4
 - Fixed XF-551 speed mode
+- Added disk swapping feature accessible through the FDD menu
 
 v0.3:
 - Added auto-start of executables without a RUNAD block
