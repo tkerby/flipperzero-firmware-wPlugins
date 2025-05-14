@@ -34,7 +34,7 @@ mailto:example@example.com
 https://github.com/qw3rtty
 
 **Connect to a WIFI:**
-WIFI:S:<ssid>;P:<password>;T:<encryption>;
+WIFI:S:[ssid];P:[password];T:[encryption];
 
 ## Using the App
 The app is acutally straightforward. If you start it, you have three menu
