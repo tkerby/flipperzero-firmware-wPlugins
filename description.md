@@ -6,12 +6,10 @@ sio2flip emulates SIO peripherals for Atari 8-bit computers, currently featuring
 
 Only three signals plus ground are used. Note that Atari SIO uses 5V TTL logic; although the Flipper Zero I/Os are 5V tolerant when configured correctly, careful wiring is essential to avoid damage.
 
-| Flipper pin  | Atari SIO |
-| ------------ | --------- |
-| TX (13)      | DIN       |
-| RX (14)      | DOUT      |
-| C0 (16)      | COMMAND   |
-| GND (18)     | GND       |
+- TX (13) - SIO DIN
+- RX (14) - SIO DOUT
+- C0 (16) - SIO COMMAND
+- GND (18) - SIO GND
 
 ## Instructions
 
