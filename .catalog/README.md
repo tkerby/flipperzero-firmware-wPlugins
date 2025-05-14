@@ -27,13 +27,13 @@ data in it. The app reads the content of the file and creates an QRCode with
 it. You need no further specific format or something else. 
 
 ## Examples:
-##### Open new mail:
+**Open new mail:**
 mailto:example@example.com
 
-##### Open link:
+**Open link:**
 https://github.com/qw3rtty
 
-##### Connect to a WIFI:
+**Connect to a WIFI:**
 WIFI:S:<ssid>;P:<password>;T:<encryption>;
 
 ## Using the App
