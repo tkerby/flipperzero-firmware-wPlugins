@@ -85,6 +85,14 @@ You might wonder, "Where do these numbers come from?" Good question! To uncover 
 
 
 
+## Adapter PCB
+
+As a final touch, I designed a tiny adapter PCB in KiCad that lets me connect the breakout board to the Flipper — no more cable fiddling required. (One might even call its color ~~dark purple~~ ultraviolet.) The front only shows the application icon and minimal labeling to help you avoid plugging things in the wrong way. On the back, the labels show which Flipper pins connect to which sensor pins. See the [adapter_pcb](adapter_pcb) directory for the KiCad and Gerber files.
+
+![Render of the UV Meter Adapter PCB](images/adapter_pcb.jpg)
+
+
+
 ## Disclaimer
 
 This application is provided for informational purposes only and should not be used as a sole basis for safety-critical decisions. Always follow official guidelines, regulations, and professional advice regarding UV exposure. The developer assumes no responsibility for any damages, injuries, or consequences arising from decisions or actions based on the information provided by this application.
