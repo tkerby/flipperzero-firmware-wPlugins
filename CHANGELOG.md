@@ -1,7 +1,8 @@
 v0.4
-- Fixed XF-551 high-speed mode
 - Added disk swapping feature accessible via the FDD menu
 - Improved support for hard disk images
+- Increased maximum US Doubler speed to 73.7 KBd
+- Fixed XF-551 high-speed mode
 
 v0.3:
 - Added auto-start of executables without a RUNAD block
