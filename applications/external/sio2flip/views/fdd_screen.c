@@ -90,18 +90,26 @@ static void fdd_screen_draw_callback(Canvas* canvas, void* _model) {
     canvas_draw_str(canvas, 28, 46, furi_string_get_cstr(text));
 
     // FDD sector index
-    x = 66;
-    y = 27;
-    canvas_set_color(canvas, ColorBlack);
-    canvas_draw_rframe(canvas, x, y, 52, 20, 3);
-    canvas_set_color(canvas, ColorBlack);
-    canvas_set_font(canvas, FontBigNumbers);
     if(model->sector == 0) {
         furi_string_printf(text, "----");
-    } else {
+    } else if(model->sector < 10000) {
         furi_string_printf(text, "%04u", model->sector);
+    } else {
+        furi_string_printf(text, "%05u", model->sector);
     }
 
+    canvas_set_color(canvas, ColorBlack);
+    if(furi_string_size(text) <= 4) { // 4 and less digits
+        x = 66;
+        y = 27;
+        canvas_draw_rframe(canvas, x, y, 52, 20, 3);
+    } else { // 5 digits
+        x = 60;
+        y = 27;
+        canvas_draw_rframe(canvas, x, y, 64, 20, 3);
+    }
+    canvas_set_color(canvas, ColorBlack);
+    canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str(canvas, x + 3, y + 17, furi_string_get_cstr(text));
 
     // Left and right borders
