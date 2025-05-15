@@ -9,10 +9,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <toolbox/stream/file_stream.h>
+#include <toolbox/name_generator.h>
 
 #define TAG             "flame_rng"
 #define HISTORY_SIZE    5
 #define MAX_PATH_LENGTH 256
+#define MAX_NAME_LENGTH 128
 
 typedef struct {
     uint32_t rng_value;
@@ -97,7 +99,9 @@ static bool save_random_numbers(FlameRngState* state) {
 
     // Generate random filename
     char filename[MAX_PATH_LENGTH];
-    snprintf(filename, sizeof(filename), "/ext/random_gen/RANDOM-%u.rng", rand());
+    char name_buffer[MAX_NAME_LENGTH]; // You might need to define MAX_NAME_LENGTH
+    name_generator_make_auto(name_buffer, sizeof(name_buffer), "RANDOM");
+    snprintf(filename, sizeof(filename), "/ext/random_gen/%s.rng", name_buffer);
 
     file = file_stream_alloc(storage);
     if(!file_stream_open(file, filename, FSAM_WRITE, FSOM_CREATE_NEW)) {
