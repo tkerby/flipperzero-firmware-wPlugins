@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Seos compatible v1.1 (By bettse)](https://gitlab.com/bettse/flipper_seos)
 - Updated: [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip)
+- Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
 
 <a name="release">
 
