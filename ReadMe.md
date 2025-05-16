@@ -34,6 +34,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flame RNG v0.3 (By OrionW06)](https://github.com/OrionW06/Flame-RNG)
 - Updated: [Atari SIO Emulator v0.4 (By cepetr)](https://github.com/cepetr/sio2flip)
 - Updated: [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
+- Updated: [ESP32 Camera Suite v1.9 (By CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite)
 
 <a name="release">
 
@@ -435,7 +436,7 @@ $ ./fbt dolphin_ext
 - [Encoder Reader v0.1 (By Engineegor)](https://github.com/Engineegor/Enc_reader)
 - [Enhanced Sub-Ghz Chat v1.3 (By twisted-pear)](https://github.com/twisted-pear/esubghz_chat)
 - [Enigma v1.1 (By xtruan)](https://github.com/xtruan/flipper-enigma)
-- [ESP32 Camera Suite v1.8 (By CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite)
+- [ESP32 Camera Suite v1.9 (By CodyTolene)](https://github.com/CodyTolene/Flipper-Zero-Camera-Suite)
 - [ESP Flasher v1.7.2 (By 0xchocolate)](https://github.com/0xchocolate/flipperzero-esp-flasher)
 - [ESP WiFi Scanner v1.1 (By SequoiaSan)](https://github.com/SequoiaSan/FlipperZero-WiFi-Scanner_Module-ESP8266) `Req: ESP8266 or ESP32`
 - [ESP32 Gravity v0.6.0 (By chris-bc)](https://github.com/chris-bc/Flipper-Gravity) `Req: ESP32`
