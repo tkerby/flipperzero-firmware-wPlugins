@@ -1,5 +1,8 @@
 # MiZip Balance Editor for Flipper Zero
 
+[![FAP: Build and lint](https://github.com/teohumeau/MiZipBalanceEditor/actions/workflows/build.yml/badge.svg)](https://github.com/teohumeau/MiZipBalanceEditor/actions/workflows/build.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/teohumeau/mizipbalanceeditor/badge)](https://www.codefactor.io/repository/github/teohumeau/mizipbalanceeditor)
+
 For educational purpose only.
 Modify a tag balance to use it on your company coffee machine may lead you to legal issues, you should always use this on your own tag and reader.
 
