@@ -3,10 +3,8 @@
 [![FAP: Build and lint](https://github.com/teohumeau/MiZipBalanceEditor/actions/workflows/build.yml/badge.svg)](https://github.com/teohumeau/MiZipBalanceEditor/actions/workflows/build.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/teohumeau/mizipbalanceeditor/badge)](https://www.codefactor.io/repository/github/teohumeau/mizipbalanceeditor)
 
-For educational purpose only.
-Modify a tag balance to use it on your company coffee machine may lead you to legal issues, you should always use this on your own tag and reader.
-
 This app main goal is to make it easy to modify a MiZip tag balance.
+Work in progress.
 
 Features:
 - [ ] Modify a tag balance directly
@@ -15,3 +13,8 @@ Features:
 TODO:
 - [ ] Read a tag
 - [ ] Write to tag
+
+## Disclaimer
+For educational purpose only.
+
+Modify a tag balance to use it on your company coffee machine may lead you to legal issues, you should always use this on your own tag and reader.
