@@ -48,4 +48,9 @@ ABOUT -> RIGHT - Brief description
 
 # 🙏 Credits & Acknowledgement:
 Inspired by: [Samy Kamkar’s](https://github.com/samyk) lock cracking research
+
+
 Built for: [Flipper Zero](https://github.com/flipperdevices/flipperzero-firmware)
+
+# Roadmap
+Update the input to allow "press and hold" to increase/decrease the value(s).
