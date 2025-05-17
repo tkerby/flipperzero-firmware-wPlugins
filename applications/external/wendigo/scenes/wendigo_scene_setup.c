@@ -41,11 +41,11 @@ static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t 
         */
         if(selected_option_index == RADIO_MAC) {
             // Configure byte_input's value based on item->item_string
-            if (!strncmp(item->item_string, "BLE", 3)) {
+            if(!strncmp(item->item_string, "BLE", 3)) {
                 app->active_interface = IF_BLE;
-            } else if (!strncmp(item->item_string, "BT", 2)) {
+            } else if(!strncmp(item->item_string, "BT", 2)) {
                 app->active_interface = IF_BT_CLASSIC;
-            } else if (!strncmp(item->item_string, "WiFi", 4)) {
+            } else if(!strncmp(item->item_string, "WiFi", 4)) {
                 app->active_interface = IF_WIFI;
             } else {
                 // TODO: Panic
@@ -88,17 +88,17 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
         break;
     case LIST_DEVICES:
         /* An interface is selected. Determine which one */
-        if (!strncmp(menu_item->item_string, "BLE", 3)) {
+        if(!strncmp(menu_item->item_string, "BLE", 3)) {
             app->active_interface = IF_BLE;
-        } else if (!strncmp(menu_item->item_string, "BT", 2)) {
+        } else if(!strncmp(menu_item->item_string, "BT", 2)) {
             app->active_interface = IF_BT_CLASSIC;
-        } else if (!strncmp(menu_item->item_string, "WiFi", 4)) {
+        } else if(!strncmp(menu_item->item_string, "WiFi", 4)) {
             app->active_interface = IF_WIFI;
         } else {
             // TODO: Panic
         }
         /* Mark the interface as active or inactive if "On" or "Off" is selected */
-        if (item_index == RADIO_ON || item_index == RADIO_OFF) {
+        if(item_index == RADIO_ON || item_index == RADIO_OFF) {
             app->interfaces[app->active_interface].active = (item_index == RADIO_ON);
         }
         break;
