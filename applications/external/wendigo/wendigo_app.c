@@ -73,6 +73,7 @@ WendigoApp* wendigo_app_alloc() {
     /* Initialise the channel bitmasks */
     app->CH_MASK[0] = 0;
     for(int i = 1; i <= SETUP_CHANNEL_MENU_ITEMS; ++i) {
+        // TODO YAGNI: pow() is slow. Seed CH_MASK[1] and calculate the rest by multiplying the previous element by 2
         app->CH_MASK[i] = pow(2, i - 1);
     }
 
@@ -147,6 +148,10 @@ void wendigo_app_free(WendigoApp* app) {
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
 
+    /* Free device cache and UART buffer */
+    // TODO After device caches are implemented
+    wendigo_free_uart_buffer();
+
     wendigo_uart_free(app->uart);
 
     // Close records
@@ -164,6 +169,8 @@ int32_t wendigo_app(void* p) {
     WendigoApp* wendigo_app = wendigo_app_alloc();
 
     wendigo_app->uart = wendigo_uart_init(wendigo_app);
+    /* Set UART callback using wendigo_scan */
+    wendigo_uart_set_handle_rx_data_cb(wendigo_app->uart, wendigo_scan_handle_rx_data_cb);
 
     view_dispatcher_run(wendigo_app->view_dispatcher);
 

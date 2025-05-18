@@ -2,12 +2,6 @@
 
 #include "wendigo_app_i.h"
 
-#define NUM_RADIOS (3)
-
-bool wendigo_scan_start(WendigoApp* app);
-bool wendigo_scan_wifi_start(WendigoApp* app);
-bool wendigo_scan_bt_start(WendigoApp* app);
-bool wendigo_scan_ble_start(WendigoApp* app);
-bool wendigo_scan_wifi_stop(WendigoApp* app);
-bool wendigo_scan_bt_stop(WendigoApp* app);
-bool wendigo_scan_ble_stop(WendigoApp* app);
+void wendigo_set_scanning_active(WendigoApp* app, bool starting);
+void wendigo_scan_handle_rx_data_cb(uint8_t* buf, size_t len, void* context);
+void wendigo_free_uart_buffer();
