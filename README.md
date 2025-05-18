@@ -40,7 +40,8 @@ ABOUT -> RIGHT - Brief description
 
 
 # Main Menu 📺 
-![Main Menu](https://github.com/user-attachments/assets/8fcc9a16-8765-425c-a1a9-a3be7ef6c4d8)
+![Main-Menu](https://github.com/user-attachments/assets/5483bbae-05ba-465c-a3a4-bd6809954f8a)
+
 
 # Combination Output 🔒 
 ![Combo Output](https://github.com/user-attachments/assets/0af467b1-27f7-45b5-971a-efd6bf1d58be)
