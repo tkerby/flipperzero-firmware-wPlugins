@@ -8,7 +8,7 @@ App(
         "gui",
     ],
     order=10,
-    fap_icon="app.png",
+    fap_icon="icons/app10x10.png",
     fap_category="Tools",
     fap_icon_assets="assets",
     fap_description="Crack Combo Locks by feeling the gates and resistance, then calculating the value to pop.",
