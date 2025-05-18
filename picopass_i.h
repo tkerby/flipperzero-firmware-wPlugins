@@ -84,6 +84,11 @@ typedef struct {
     size_t macs_collected;
 } PicopassLoclassContext;
 
+typedef enum {
+    ManualNRMAC,
+    AutoNRMAC
+} NRMACType;
+
 struct Picopass {
     ViewDispatcher* view_dispatcher;
     Gui* gui;
@@ -119,7 +124,7 @@ struct Picopass {
     PicopassWriteKeyContext write_key_context;
     PicopassLoclassContext loclass_context;
 
-    bool auto_nr_mac;
+    NRMACType nr_mac_type;
 };
 
 typedef enum {

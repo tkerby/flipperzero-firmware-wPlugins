@@ -117,7 +117,7 @@ Picopass* picopass_alloc() {
         }
     }
 
-    picopass->auto_nr_mac = false;
+    picopass->nr_mac_type = ManualNRMAC;
 
     return picopass;
 }
