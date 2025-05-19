@@ -8,7 +8,9 @@ This Flipper Zero app allows you to input physical resistance value(s) and "lock
 
 # Usage
 UP/DOWN - Select the Lock/Resistance position(s)
+
 LEFT/RIGHT - Increment/Decrease the position
+
 ABOUT -> RIGHT - Brief description
 
 
