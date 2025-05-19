@@ -175,7 +175,7 @@ void picopass_free(Picopass* picopass) {
     furi_record_close(RECORD_NOTIFICATION);
     picopass->notifications = NULL;
 
-    plugin_manager_free(picopass->plugin_manager);
+    plugin_manager_free(picopass->plugin_wiegand_manager);
 
     free(picopass);
 }
