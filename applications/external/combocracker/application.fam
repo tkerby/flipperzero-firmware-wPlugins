@@ -10,5 +10,5 @@ App(
     fap_author="CharlesTheGreat77",
     fap_weburl="https://github.com/CharlesTheGreat77/ComboCracker-FZ",
     fap_version="0.1",
-    fap_description="Crack Combo Locks by feeling the gates and resistance, then calculating the value to pop.",
+    fap_description="Crack combo locks in 8 attempts or less",
 )

@@ -7,13 +7,14 @@ Using a clever approach/exploit and feedback from the lock’s dial resistance, 
 This Flipper Zero app allows you to input physical resistance value(s) and "lock positions" observed from turning the lock dial. The app uses that data to run Kamkar’s approach to output a short list of combinations. You can find information about how such works by watching Samy Kamkar's wonderful [video(s)](https://www.youtube.com/watch?v=qkolWO6pAL8)!
 
 # Usage
-```
 UP/DOWN - Select the Lock/Resistance position(s)
-LEFT/RIGHT - Increment/Decrease the position
-ABOUT -> RIGHT - Brief description
-```
 
-# 🙏 Credits & Acknowledgement:
+LEFT/RIGHT - Increment/Decrease the position
+
+ABOUT -> RIGHT - Brief description
+
+
+# Credits & Acknowledgement:
 Inspired by: [Samy Kamkar’s](https://github.com/samyk) lock cracking research
 
 
