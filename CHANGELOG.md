@@ -1,3 +1,6 @@
+v0.5
+- Added new high-speed options (up to 127K)
+
 v0.4
 - Added disk swapping feature accessible via the FDD menu
 - Improved support for hard disk images

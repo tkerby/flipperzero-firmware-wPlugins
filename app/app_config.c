@@ -42,7 +42,7 @@ void app_config_init(AppConfig* config) {
 
     config->led_blinking = true;
     config->speed_mode = SpeedMode_Standard;
-    config->speed_index = SpeedIndex_57600;
+    config->speed_index = SpeedIndex_8_56K;
     for(size_t i = 0; i < FDD_EMULATOR_COUNT; i++) {
         config->fdd[i].image = furi_string_alloc();
     }
@@ -83,12 +83,16 @@ const AppConfigOption* speed_mode_by_id(Slice slice) {
 }
 
 const AppConfigOption speed_index_options[] = {
-    {SpeedIndex_38400, "38400", "38.4K"},
-    {SpeedIndex_57600, "57600", "57.6K"},
-    {SpeedIndex_61440, "61440", "61.4K"},
-    {SpeedIndex_68266, "68266", "68.3K"},
-    {SpeedIndex_73728, "73728", "73.7K"},
-};
+    {SpeedIndex_16_38K, "16", "38K"},
+    {SpeedIndex_8_56K, "8", "57K"},
+    {SpeedIndex_7_61K, "7", "61K"},
+    {SpeedIndex_6_68K, "6", "68K"},
+    {SpeedIndex_5_74K, "5", "74K"},
+    {SpeedIndex_4_81K, "4", "81K"},
+    {SpeedIndex_3_89K, "3", "89K"},
+    {SpeedIndex_2_99K, "2", "99K"},
+    {SpeedIndex_1_111K, "1", "111K"},
+    {SpeedIndex_0_127K, "0", "127K"}};
 
 const AppConfigOption* speed_index_by_value(SpeedIndex value) {
     for(size_t i = 0; i < ARRAY_SIZE(speed_index_options); i++) {
