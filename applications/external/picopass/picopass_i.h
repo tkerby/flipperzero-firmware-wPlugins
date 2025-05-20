@@ -117,7 +117,7 @@ struct Picopass {
     DictAttack* dict_attack;
     Loclass* loclass;
 
-    PluginManager* plugin_manager;
+    PluginManager* plugin_wiegand_manager;
     PluginWiegand* plugin_wiegand;
 
     PicopassDictAttackContext dict_attack_ctx;
