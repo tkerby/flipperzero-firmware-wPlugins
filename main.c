@@ -630,7 +630,7 @@ void cipher_input_scene_on_enter(void* context) {
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter Key");
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->xor_decrypt_keyword_input, app->xor_decrypt_keyword_input_size, true);
+                                           app, app->xor_keyword_input, app->xor_keyword_input_size, true);
             break;
         case FlipCryptXorInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
@@ -715,13 +715,16 @@ void cipher_output_scene_on_enter(void* context) {
                 rail_fence_encrypt(app->railfence_input, 3));
             break;
         case FlipCryptXorOutputScene:
+            size_t xor_encrypt_len;
+            uint8_t* xor_encrypt_result = xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input, &xor_encrypt_len);
+            char hex_output1[256] = {0};
             widget_add_text_scroll_element(
                 app->widget,
                 0,
                 0,
                 128,
                 64,
-                xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input));
+                bytes_to_hex(xor_encrypt_result, xor_encrypt_len, hex_output1, sizeof(hex_output1)));
             break;
         case FlipCryptVigenereOutputScene:
             // furi_string_printf(message, "Encrypted Text:\n%s", app->xor_input);
@@ -830,13 +833,16 @@ void cipher_output_scene_on_enter(void* context) {
                 rail_fence_decrypt(app->railfence_input, 3));
             break;
         case FlipCryptXorDecryptOutputScene:
+            size_t xor_decrypt_len = app->xor_input_size;
+            uint8_t* xor_decrypt_result = xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input, &xor_encrypt_len);
+            char hex_output2[256] = {0};
             widget_add_text_scroll_element(
                 app->widget,
                 0,
                 0,
                 128,
                 64,
-                xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input));
+                bytes_to_hex(xor_decrypt_result, xor_decrypt_len, hex_output2, sizeof(hex_output2)));
             break;
         case FlipCryptVigenereDecryptOutputScene:
             widget_add_text_scroll_element(
