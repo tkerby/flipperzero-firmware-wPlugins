@@ -114,3 +114,33 @@ char* playfair_encrypt(const char* plaintext, const char* table) {
     free(prepared);
     return encrypted;
 }
+
+char* playfair_decrypt(const char* ciphertext, const char* table) {
+    size_t len = strlen(ciphertext);
+    if (len % 2 != 0) return "unable to decrypt -- encrypted text must have even character count"; // ciphertext must be even-length
+
+    char* decrypted = (char*)malloc(len + 1);
+    if (!decrypted) return NULL;
+
+    for (size_t i = 0; i < len; i += 2) {
+        int r1, c1, r2, c2;
+        find_position(ciphertext[i], table, &r1, &c1);
+        find_position(ciphertext[i+1], table, &r2, &c2);
+
+        if (r1 == r2) {
+            // Same row: letter to the left (wrap around)
+            decrypted[i]   = table[r1 * 5 + (c1 + 4) % 5];
+            decrypted[i+1] = table[r2 * 5 + (c2 + 4) % 5];
+        } else if (c1 == c2) {
+            // Same column: letter above (wrap around)
+            decrypted[i]   = table[((r1 + 4) % 5) * 5 + c1];
+            decrypted[i+1] = table[((r2 + 4) % 5) * 5 + c2];
+        } else {
+            // Rectangle swap: swap columns
+            decrypted[i]   = table[r1 * 5 + c2];
+            decrypted[i+1] = table[r2 * 5 + c1];
+        }
+    }
+    decrypted[len] = '\0';
+    return decrypted;
+}

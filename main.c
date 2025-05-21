@@ -51,8 +51,6 @@ typedef enum {
 // Railfence scenes
     FlipCryptRailfenceSubmenuScene,
     FlipCryptRailfenceInputScene,
-    FlipCryptRailfenceKeyInputScene,
-    FlipCryptRailfenceDecryptKeyInputScene,
     FlipCryptRailfenceOutputScene,
     FlipCryptRailfenceDecryptInputScene,
     FlipCryptRailfenceDecryptOutputScene,
@@ -118,7 +116,6 @@ typedef struct App {
     char* playfair_keyword_input;
     char* playfair_decrypt_input;
     char* railfence_input;
-    char* railfence_key_input;
     char* railfence_decrypt_input;
     char* xor_input;
     char* xor_decrypt_input;
@@ -133,7 +130,6 @@ typedef struct App {
     uint8_t playfair_input_size;
     uint8_t playfair_keyword_input_size;
     uint8_t railfence_input_size;
-    uint8_t railfence_key_input_size;
     uint8_t xor_input_size;
     uint8_t vigenere_input_size;
     uint8_t blake2_input_size;
@@ -314,7 +310,7 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
             scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairKeywordInputScene);
             break;
         case FlipCryptRailfenceSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceKeyInputScene);
+            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceInputScene);
             break;
         case FlipCryptXorSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptXorInputScene);
@@ -356,7 +352,7 @@ void cipher_decrypt_submenu_callback(void* context, uint32_t index) {
             scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairDecryptKeywordInputScene);
             break;
         case FlipCryptRailfenceSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptKeyInputScene);
+            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptInputScene);
             break;
         case FlipCryptXorSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptXorDecryptInputScene);
@@ -524,12 +520,6 @@ void flip_crypt_text_input_callback(void* context) {
         case FlipCryptPlayfairDecryptInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairDecryptOutputScene);
             break;
-        case FlipCryptRailfenceKeyInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceInputScene);
-            break;
-        case FlipCryptRailfenceDecryptKeyInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptInputScene);
-            break;
         case FlipCryptRailfenceInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceOutputScene);
             break;
@@ -611,20 +601,6 @@ void cipher_input_scene_on_enter(void* context) {
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
                                            app, app->playfair_decrypt_input, app->playfair_decrypt_input_size, true);
             break;
-        case FlipCryptRailfenceKeyInputScene:
-            text_input_reset(app->text_input);
-            text_input_set_header_text(app->text_input, "Enter Key");
-
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->railfence_key_input, app->railfence_key_input_size, true);
-            break;
-        case FlipCryptRailfenceDecryptKeyInputScene:
-            text_input_reset(app->text_input);
-            text_input_set_header_text(app->text_input, "Enter Key");
-
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->railfence_key_input, app->railfence_key_input_size, true);
-            break;
         case FlipCryptRailfenceInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
                                            app, app->railfence_input, app->railfence_input_size, true);
@@ -698,15 +674,13 @@ void cipher_output_scene_on_enter(void* context) {
                 baconian_encrypt(app->baconian_input));
             break;
         case FlipCryptPlayfairOutputScene:
-            char* table = playfair_make_table(app->playfair_keyword_input);
-
             widget_add_text_scroll_element(
                 app->widget,
                 0,
                 0,
                 128,
                 64,
-                playfair_encrypt(app->playfair_input, table));
+                playfair_encrypt(app->playfair_input, playfair_make_table(app->playfair_keyword_input)));
             break;
         case FlipCryptRailfenceOutputScene:
             widget_add_text_scroll_element(
@@ -815,7 +789,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "Decrypted Playfair goes here");
+                playfair_decrypt(app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)));
             break;
         case FlipCryptRailfenceDecryptOutputScene:
             widget_add_text_scroll_element(
@@ -975,7 +949,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
         0,
         128,
         64,
-        "\nThis is a sample application.\n---\nReplace code and message\nwith your content!\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
+        "\nFlipCrypt\nv0.1\nReplace code and message\nwith your content!\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
@@ -1014,8 +988,6 @@ void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     cipher_learn_scene_on_enter,   // PlayfairLearn
     cipher_submenu_scene_on_enter, // RailfenceSubmenu
     cipher_input_scene_on_enter,   // RailfenceInput
-    cipher_input_scene_on_enter,   // RailfenceKeyInput
-    cipher_input_scene_on_enter,   // RailfenceDecryptKeyInput
     cipher_output_scene_on_enter,  // RailfenceOutput
     cipher_input_scene_on_enter,   // RailfenceDecryptInput
     cipher_output_scene_on_enter,  // RailfenceDecryptOutput
@@ -1075,8 +1047,6 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // PlayfairLearn
     flip_crypt_generic_event_handler, // RailfenceSubmenu
     flip_crypt_generic_event_handler, // RailfenceInput
-    flip_crypt_generic_event_handler, // RailfenceKeyInput
-    flip_crypt_generic_event_handler, // RailfenceDecryptKeyInput
     flip_crypt_generic_event_handler, // RailfenceOutput
     flip_crypt_generic_event_handler, // RailfenceDecryptInput
     flip_crypt_generic_event_handler, // RailfenceDecryptOutput
@@ -1136,8 +1106,6 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // PlayfairLearn
     flip_crypt_generic_on_exit, // RailfenceSubmenu
     flip_crypt_generic_on_exit, // RailfenceInput
-    flip_crypt_generic_on_exit, // RailfenceKeyInput
-    flip_crypt_generic_on_exit, // RailfenceDecryptKeyInput
     flip_crypt_generic_on_exit, // RailfenceOutput
     flip_crypt_generic_on_exit, // RailfenceDecryptInput
     flip_crypt_generic_on_exit, // RailfenceDecryptOutput
@@ -1211,8 +1179,6 @@ static App* app_alloc() {
     app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
     app->railfence_input_size = 64;
     app->railfence_input = malloc(app->railfence_input_size);
-    app->railfence_key_input_size = 64;
-    app->railfence_key_input = malloc(app->railfence_key_input_size);
     app->xor_input_size = 64;
     app->xor_input = malloc(app->xor_input_size);
     app->vigenere_input_size = 64;
@@ -1264,7 +1230,6 @@ static void app_free(App* app) {
     free(app->playfair_input);
     free(app->playfair_keyword_input);
     free(app->railfence_input);
-    free(app->railfence_key_input);
     free(app->xor_input);
     free(app->vigenere_input);
     free(app->blake2_input);
