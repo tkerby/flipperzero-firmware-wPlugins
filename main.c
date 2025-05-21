@@ -15,6 +15,7 @@
 #include "ciphers/baconian.h"
 #include "ciphers/playfair.h"
 #include "ciphers/railfence.h"
+#include "ciphers/xor.h"
 
 #include "hashes/blake2.h"
 #include "hashes/md5.h"
@@ -692,7 +693,13 @@ void cipher_output_scene_on_enter(void* context) {
                 rail_fence_encrypt(app->railfence_input, 3));
             break;
         case FlipCryptXorOutputScene:
-            // furi_string_printf(message, "Encrypted Text:\n%s", app->xor_input);
+            widget_add_text_scroll_element(
+                app->widget,
+                0,
+                0,
+                128,
+                64,
+                xor_encrypt_and_decrypt(app->xor_input, "KEYISME"));
             break;
         case FlipCryptVigenereOutputScene:
             // furi_string_printf(message, "Encrypted Text:\n%s", app->xor_input);

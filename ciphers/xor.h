@@ -1,0 +1,1 @@
+char* xor_encrypt_and_decrypt(const char* text, const char* key);
