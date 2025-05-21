@@ -7,7 +7,7 @@ App(
     fap_category="Tools",
     fap_version="0.1",
     fap_icon="icon.png",
-    fap_description="A collection of cryptography functions",
+    fap_description="A simple app with some cryptography functions",
     fap_author="TAxelAnderson",
     fap_weburl="https://github.com/TAxelAnderson/FlipCrypt",
 )

@@ -6,6 +6,7 @@
 #include <gui/modules/widget.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
+#include <lib/toolbox/value_index.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -411,6 +412,17 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
     }
 }
 
+void cipher_do_nothing_submenu_callback(void* context, uint32_t index) {
+    UNUSED(index);
+    UNUSED(context);
+    App* app = context;
+    FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
+    switch(current) {
+        default:
+            break;
+    }
+}
+
 // Cipher / Hash submenu initialization
 void cipher_submenu_scene_on_enter(void* context) {
     App* app = context;
@@ -439,6 +451,7 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_set_header(app->submenu, "Railfence Cipher");
             submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Rails: 3", 1, cipher_do_nothing_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptXorSubmenuScene:
@@ -702,7 +715,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "Encrypted railfence goes here");
+                rail_fence_encrypt(app->railfence_input, 3));
             break;
         case FlipCryptXorOutputScene:
             // furi_string_printf(message, "Encrypted Text:\n%s", app->xor_input);
@@ -811,7 +824,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "decrypted railfence goes here");
+                rail_fence_decrypt(app->railfence_input, 3));
             break;
         case FlipCryptXorDecryptOutputScene:
             widget_add_text_scroll_element(
@@ -845,8 +858,6 @@ void cipher_output_scene_on_enter(void* context) {
 void cipher_learn_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
-    
-
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
         case FlipCryptAtbashLearnScene:
