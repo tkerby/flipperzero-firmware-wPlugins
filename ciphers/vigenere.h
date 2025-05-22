@@ -1,0 +1,1 @@
+char* vigenere_cipher(const char* text, const char* key);

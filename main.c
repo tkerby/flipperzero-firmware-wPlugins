@@ -15,14 +15,14 @@
 #include "ciphers/baconian.h"
 #include "ciphers/playfair.h"
 #include "ciphers/railfence.h"
-#include "ciphers/xor.h"
+#include "ciphers/vigenere.h"
 
 #include "hashes/blake2.h"
 #include "hashes/md5.h"
 #include "hashes/sha1.h"
 #include "hashes/sha256.h"
 
-// Every view in the app must be declared here
+// Scene declarations
 typedef enum {
 // Main menu
     FlipCryptMainMenuScene,
@@ -56,18 +56,11 @@ typedef enum {
     FlipCryptRailfenceDecryptInputScene,
     FlipCryptRailfenceDecryptOutputScene,
     FlipCryptRailfenceLearnScene,
-// XOR scenes
-    FlipCryptXorSubmenuScene,
-    FlipCryptXorInputScene,
-    FlipCryptXorKeywordInputScene,
-    FlipCryptXorDecryptKeywordInputScene,
-    FlipCryptXorOutputScene,
-    FlipCryptXorDecryptInputScene,
-    FlipCryptXorDecryptOutputScene,
-    FlipCryptXorLearnScene,
 // Vigenere Cipher
     FlipCryptVigenereSubmenuScene,
     FlipCryptVigenereInputScene,
+    FlipCryptVigenereKeywordInputScene,
+    FlipCryptVigenereDecryptKeywordInputScene,
     FlipCryptVigenereOutputScene,
     FlipCryptVigenereDecryptInputScene,
     FlipCryptVigenereDecryptOutputScene,
@@ -120,10 +113,8 @@ typedef struct App {
     char* playfair_decrypt_input;
     char* railfence_input;
     char* railfence_decrypt_input;
-    char* xor_input;
-    char* xor_keyword_input;
-    char* xor_decrypt_input;
     char* vigenere_input;
+    char* vigenere_keyword_input;
     char* vigenere_decrypt_input;
     char* blake2_input;
     char* md5_input;
@@ -134,9 +125,8 @@ typedef struct App {
     uint8_t playfair_input_size;
     uint8_t playfair_keyword_input_size;
     uint8_t railfence_input_size;
-    uint8_t xor_input_size;
-    uint8_t xor_keyword_input_size;
     uint8_t vigenere_input_size;
+    uint8_t vigenere_keyword_input_size;
     uint8_t blake2_input_size;
     uint8_t md5_input_size;
     uint8_t sha1_input_size;
@@ -145,7 +135,6 @@ typedef struct App {
     uint8_t baconian_decrypt_input_size;
     uint8_t playfair_decrypt_input_size;
     uint8_t railfence_decrypt_input_size;
-    uint8_t xor_decrypt_input_size;
     uint8_t vigenere_decrypt_input_size;
 } App;
 
@@ -155,7 +144,6 @@ typedef enum {
     MenuIndexBaconian,
     MenuIndexPlayfair,
     MenuIndexRailfence,
-    MenuIndexXor,
     MenuIndexVigenere,
     MenuIndexBlake2,
     MenuIndexMD5,
@@ -170,7 +158,6 @@ typedef enum {
     EventBaconian,
     EventPlayfair,
     EventRailfence,
-    EventXor,
     EventVigenere,
     EventBlake2,
     EventMD5,
@@ -194,9 +181,6 @@ void flip_crypt_menu_callback(void* context, uint32_t index) {
             break;
         case MenuIndexRailfence:
             scene_manager_handle_custom_event(app->scene_manager, EventRailfence);
-            break;
-        case MenuIndexXor:
-            scene_manager_handle_custom_event(app->scene_manager, EventXor);
             break;
         case MenuIndexVigenere:
             scene_manager_handle_custom_event(app->scene_manager, EventVigenere);
@@ -228,7 +212,6 @@ void flip_crypt_main_menu_scene_on_enter(void* context) {
     submenu_add_item(app->submenu, "Baconian Cipher", MenuIndexBaconian, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Playfair Cipher", MenuIndexPlayfair, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Railfence Cipher", MenuIndexRailfence, flip_crypt_menu_callback, app);
-    submenu_add_item(app->submenu, "XOR Cipher", MenuIndexXor, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Vigenere Cipher", MenuIndexVigenere, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "BLAKE-2 Hash", MenuIndexBlake2, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "MD5 Hash", MenuIndexMD5, flip_crypt_menu_callback, app);
@@ -258,10 +241,6 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
                 break;
             case EventRailfence:
                 scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceSubmenuScene);
-                consumed = true;
-                break;
-            case EventXor:
-                scene_manager_next_scene(app->scene_manager, FlipCryptXorSubmenuScene);
                 consumed = true;
                 break;
             case EventVigenere:
@@ -317,11 +296,8 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
         case FlipCryptRailfenceSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceInputScene);
             break;
-        case FlipCryptXorSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorKeywordInputScene);
-            break;
         case FlipCryptVigenereSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereInputScene);
+            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereKeywordInputScene);
             break;
         case FlipCryptBlake2SubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptBlake2InputScene);
@@ -359,11 +335,8 @@ void cipher_decrypt_submenu_callback(void* context, uint32_t index) {
         case FlipCryptRailfenceSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptInputScene);
             break;
-        case FlipCryptXorSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorDecryptKeywordInputScene);
-            break;
         case FlipCryptVigenereSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereDecryptInputScene);
+            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereDecryptKeywordInputScene);
             break;
         // Can't decrypt hashes so they are absent
         default:
@@ -389,9 +362,6 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
             break;
         case FlipCryptRailfenceSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceLearnScene);
-            break;
-        case FlipCryptXorSubmenuScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorLearnScene);
             break;
         case FlipCryptVigenereSubmenuScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptVigenereLearnScene);
@@ -453,12 +423,6 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Rails: 3", 1, cipher_do_nothing_submenu_callback, app);
-            submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
-            break;
-        case FlipCryptXorSubmenuScene:
-            submenu_set_header(app->submenu, "XOR Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptVigenereSubmenuScene:
@@ -531,20 +495,14 @@ void flip_crypt_text_input_callback(void* context) {
         case FlipCryptRailfenceDecryptInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptOutputScene);
             break;
-        case FlipCryptXorKeywordInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorInputScene);
-            break;
-        case FlipCryptXorInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorOutputScene);
-            break;
-        case FlipCryptXorDecryptKeywordInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorDecryptInputScene);
-            break;
-        case FlipCryptXorDecryptInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptXorDecryptOutputScene);
-            break;
         case FlipCryptVigenereInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptVigenereOutputScene);
+            break;
+        case FlipCryptVigenereKeywordInputScene: 
+            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereInputScene);
+            break;
+        case FlipCryptVigenereDecryptKeywordInputScene: 
+            scene_manager_next_scene(app->scene_manager, FlipCryptVigenereDecryptInputScene);
             break;
         case FlipCryptVigenereDecryptInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptVigenereDecryptOutputScene);
@@ -620,25 +578,17 @@ void cipher_input_scene_on_enter(void* context) {
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
                                            app, app->railfence_decrypt_input, app->railfence_decrypt_input_size, true);
             break;
-        case FlipCryptXorKeywordInputScene:
+        case FlipCryptVigenereKeywordInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter Key");
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->xor_keyword_input, app->xor_keyword_input_size, true);
+                                           app, app->vigenere_keyword_input, app->vigenere_keyword_input_size, true);
             break;
-        case FlipCryptXorDecryptKeywordInputScene:
+        case FlipCryptVigenereDecryptKeywordInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter Key");
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->xor_keyword_input, app->xor_keyword_input_size, true);
-            break;
-        case FlipCryptXorInputScene:
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->xor_input, app->xor_input_size, true);
-            break;
-        case FlipCryptXorDecryptInputScene:
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
-                                           app, app->xor_decrypt_input, app->xor_decrypt_input_size, true);
+                                           app, app->vigenere_keyword_input, app->vigenere_keyword_input_size, true);
             break;
         case FlipCryptVigenereInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback,
@@ -714,20 +664,14 @@ void cipher_output_scene_on_enter(void* context) {
                 64,
                 rail_fence_encrypt(app->railfence_input, 3));
             break;
-        case FlipCryptXorOutputScene:
-            size_t xor_encrypt_len;
-            uint8_t* xor_encrypt_result = xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input, &xor_encrypt_len);
-            char hex_output1[256] = {0};
+        case FlipCryptVigenereOutputScene:
             widget_add_text_scroll_element(
                 app->widget,
                 0,
                 0,
                 128,
                 64,
-                bytes_to_hex(xor_encrypt_result, xor_encrypt_len, hex_output1, sizeof(hex_output1)));
-            break;
-        case FlipCryptVigenereOutputScene:
-            // furi_string_printf(message, "Encrypted Text:\n%s", app->xor_input);
+                vigenere_cipher(app->vigenere_input, app->vigenere_keyword_input));
             break;
         case FlipCryptBlake2OutputScene:
             Blake2sContext blake2_ctx;
@@ -832,18 +776,6 @@ void cipher_output_scene_on_enter(void* context) {
                 64,
                 rail_fence_decrypt(app->railfence_input, 3));
             break;
-        case FlipCryptXorDecryptOutputScene:
-            size_t xor_decrypt_len = app->xor_input_size;
-            uint8_t* xor_decrypt_result = xor_encrypt_and_decrypt(app->xor_input, app->xor_keyword_input, &xor_encrypt_len);
-            char hex_output2[256] = {0};
-            widget_add_text_scroll_element(
-                app->widget,
-                0,
-                0,
-                128,
-                64,
-                bytes_to_hex(xor_decrypt_result, xor_decrypt_len, hex_output2, sizeof(hex_output2)));
-            break;
         case FlipCryptVigenereDecryptOutputScene:
             widget_add_text_scroll_element(
                 app->widget,
@@ -851,7 +783,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "Decrypted Vigenere goes here");
+                vigenere_cipher(app->vigenere_decrypt_input, app->vigenere_keyword_input));
             break;
         default:
             furi_string_printf(message, "Unknown output scene.");
@@ -907,16 +839,6 @@ void cipher_learn_scene_on_enter(void* context) {
                 128,
                 64,
                 "The Rail Fence cipher is a form of transposition cipher that rearranges the letters of the plaintext in a zigzag pattern across multiple \'rails\' (or rows), and then reads them off row by row to create the ciphertext. For example, using 3 rails, the message \'HELLO WORLD\' would be written in a zigzag across three lines and then read horizontally to produce the encrypted message. It\'s a simple method that relies on obscuring the letter order rather than substituting characters, and it\'s relatively easy to decrypt with enough trial and error.");
-            view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
-            break;
-        case FlipCryptXorLearnScene:
-            widget_add_text_scroll_element(
-                app->widget,
-                0,
-                0,
-                128,
-                64,
-                "The XOR cipher is a type of symmetric encryption that uses the bitwise exclusive OR (XOR) operation to combine plaintext data with a key. Each bit of the plaintext is XORed with a corresponding bit of the key; if the key is shorter, it's typically repeated. XOR encryption is very fast and is the foundation of many modern encryption algorithms, especially in stream ciphers. Its security depends heavily on the randomness and secrecy of the key—when used with a truly random key that is as long as the message and never reused, it forms an unbreakable one-time pad.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptVigenereLearnScene:
@@ -984,10 +906,11 @@ void flip_crypt_about_scene_on_enter(void* context) {
         0,
         128,
         64,
-        "\nFlipCrypt\nv0.1\nReplace code and message\nwith your content!\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
+        "FlipCrypt\nv0.1\nReplace code and message\nwith your content!\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
+// Event handlers
 bool flip_crypt_generic_event_handler(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
@@ -998,7 +921,6 @@ void flip_crypt_generic_on_exit(void* context) {
     UNUSED(context);
 }
 
-// Every view must have an on enter, on event, and on exit handler.
 void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     flip_crypt_main_menu_scene_on_enter,
     cipher_submenu_scene_on_enter, // AtbashSubmenu
@@ -1027,16 +949,10 @@ void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
     cipher_input_scene_on_enter,   // RailfenceDecryptInput
     cipher_output_scene_on_enter,  // RailfenceDecryptOutput
     cipher_learn_scene_on_enter,   // RailfenceLearn
-    cipher_submenu_scene_on_enter, // XorSubmenu
-    cipher_input_scene_on_enter,   // XorInput
-    cipher_input_scene_on_enter,   // XorKeywordInput
-    cipher_input_scene_on_enter,   // XorDecryptKeywordInput
-    cipher_output_scene_on_enter,  // XorOutput
-    cipher_input_scene_on_enter,   // XorDecryptInput
-    cipher_output_scene_on_enter,  // XorDecryptOutput
-    cipher_learn_scene_on_enter,   // XorLearn
     cipher_submenu_scene_on_enter, // VigenereSubmenu
     cipher_input_scene_on_enter,   // VigenereInput
+    cipher_input_scene_on_enter,   // VigenereKeywordInput
+    cipher_input_scene_on_enter,   // VigenereDecryptKeywordInput
     cipher_output_scene_on_enter,  // VigenereOutput
     cipher_input_scene_on_enter,   // VigenereDecryptInput
     cipher_output_scene_on_enter,  // VigenereDecryptOutput
@@ -1088,16 +1004,10 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // RailfenceDecryptInput
     flip_crypt_generic_event_handler, // RailfenceDecryptOutput
     flip_crypt_generic_event_handler, // RailfenceLearn
-    flip_crypt_generic_event_handler, // XorSubmenu
-    flip_crypt_generic_event_handler, // XorInput
-    flip_crypt_generic_event_handler, // XorKeywordInput
-    flip_crypt_generic_event_handler, // XorDecryptKeywordInput
-    flip_crypt_generic_event_handler, // XorOutput
-    flip_crypt_generic_event_handler, // XorDecryptInput
-    flip_crypt_generic_event_handler, // XorDecryptOutput
-    flip_crypt_generic_event_handler, // XorLearn
     flip_crypt_generic_event_handler, // VigenereSubmenu
     flip_crypt_generic_event_handler, // VigenereInput
+    flip_crypt_generic_event_handler, // VigenereKeywordInput
+    flip_crypt_generic_event_handler, // VigenereDecryptKeywordInput
     flip_crypt_generic_event_handler, // VigenereOutput
     flip_crypt_generic_event_handler, // VigenereDecryptInput
     flip_crypt_generic_event_handler, // VigenereDecryptOutput
@@ -1149,16 +1059,10 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // RailfenceDecryptInput
     flip_crypt_generic_on_exit, // RailfenceDecryptOutput
     flip_crypt_generic_on_exit, // RailfenceLearn
-    flip_crypt_generic_on_exit, // XorSubmenu
-    flip_crypt_generic_on_exit, // XorInput
-    flip_crypt_generic_on_exit, // XorKeywordInput
-    flip_crypt_generic_on_exit, // XorDecryptKeywordInput
-    flip_crypt_generic_on_exit, // XorOutput
-    flip_crypt_generic_on_exit, // XorDecryptInput
-    flip_crypt_generic_on_exit, // XorDecryptOutput
-    flip_crypt_generic_on_exit, // XorLearn
     flip_crypt_generic_on_exit, // VigenereSubmenu
     flip_crypt_generic_on_exit, // VigenereInput
+    flip_crypt_generic_on_exit, // VigenereKeywordInput
+    flip_crypt_generic_on_exit, // VigenereDecryptKeywordInput
     flip_crypt_generic_on_exit, // VigenereOutput
     flip_crypt_generic_on_exit, // VigenereDecryptInput
     flip_crypt_generic_on_exit, // VigenereDecryptOutput
@@ -1189,6 +1093,7 @@ static const SceneManagerHandlers flip_crypt_scene_manager_handlers = {
     .scene_num = FlipCryptSceneCount,
 };
 
+// Custom event callbacks
 static bool basic_scene_custom_callback(void* context, uint32_t custom_event) {
     furi_assert(context);
     App* app = context;
@@ -1201,47 +1106,43 @@ bool basic_scene_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-// Memory allocations
+// Memory allocation
 static App* app_alloc() {
     // App
     App* app = malloc(sizeof(App));
     // Vars
     app->atbash_input_size = 64;
-    app->atbash_input = malloc(app->atbash_input_size);
     app->atbash_decrypt_input_size = 64;
-    app->atbash_decrypt_input = malloc(app->atbash_decrypt_input_size);
     app->baconian_input_size = 64;
-    app->baconian_input = malloc(app->baconian_input_size);
-    app->baconian_decrypt_input_size = 64;
-    app->baconian_decrypt_input = malloc(app->baconian_decrypt_input_size);
+    app->baconian_decrypt_input_size = 128;
     app->playfair_input_size = 64;
-    app->playfair_input = malloc(app->playfair_input_size);
     app->playfair_keyword_input_size = 26;
-    app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
-    app->railfence_input_size = 64;
-    app->railfence_input = malloc(app->railfence_input_size);
-    app->xor_input_size = 64;
-    app->xor_input = malloc(app->xor_input_size);
-    app->xor_keyword_input_size = 64;
-    app->xor_keyword_input = malloc(app->xor_keyword_input_size);
-    app->vigenere_input_size = 64;
-    app->vigenere_input = malloc(app->vigenere_input_size);
-    app->blake2_input_size = 64;
-    app->blake2_input = malloc(app->blake2_input_size);
-    app->md5_input_size = 64;
-    app->md5_input = malloc(app->md5_input_size);
-    app->sha1_input_size = 64;
-    app->sha1_input = malloc(app->sha1_input_size);
-    app->sha256_input_size = 64;
-    app->sha256_input = malloc(app->sha256_input_size);
     app->playfair_decrypt_input_size = 64;
-    app->playfair_decrypt_input = malloc(app->playfair_decrypt_input_size);
+    app->railfence_input_size = 64;
     app->railfence_decrypt_input_size = 64;
-    app->railfence_decrypt_input = malloc(app->railfence_decrypt_input_size);
-    app->xor_decrypt_input_size = 64;
-    app->xor_decrypt_input = malloc(app->xor_decrypt_input_size);
+    app->vigenere_input_size = 64;
+    app->vigenere_keyword_input_size = 64;
     app->vigenere_decrypt_input_size = 64;
+    app->blake2_input_size = 64;
+    app->md5_input_size = 64;
+    app->sha1_input_size = 64;
+    app->sha256_input_size = 64;
+    app->atbash_input = malloc(app->atbash_input_size);
+    app->atbash_decrypt_input = malloc(app->atbash_decrypt_input_size);
+    app->baconian_input = malloc(app->baconian_input_size);
+    app->baconian_decrypt_input = malloc(app->baconian_decrypt_input_size);
+    app->playfair_input = malloc(app->playfair_input_size);
+    app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
+    app->playfair_decrypt_input = malloc(app->playfair_decrypt_input_size);
+    app->railfence_input = malloc(app->railfence_input_size);
+    app->railfence_decrypt_input = malloc(app->railfence_decrypt_input_size);
+    app->vigenere_input = malloc(app->vigenere_input_size);
+    app->vigenere_keyword_input = malloc(app->vigenere_keyword_input_size);
     app->vigenere_decrypt_input = malloc(app->vigenere_decrypt_input_size);
+    app->blake2_input = malloc(app->blake2_input_size);
+    app->md5_input = malloc(app->md5_input_size);
+    app->sha1_input = malloc(app->sha1_input_size);
+    app->sha256_input = malloc(app->sha256_input_size);
     // Other
     app->scene_manager = scene_manager_alloc(&flip_crypt_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
@@ -1269,23 +1170,21 @@ static void app_free(App* app) {
     widget_free(app->widget);
     text_input_free(app->text_input);
     free(app->atbash_input);
+    free(app->atbash_decrypt_input);
     free(app->baconian_input);
+    free(app->baconian_decrypt_input);
     free(app->playfair_input);
     free(app->playfair_keyword_input);
+    free(app->playfair_decrypt_input);
     free(app->railfence_input);
-    free(app->xor_input);
-    free(app->xor_keyword_input);
+    free(app->railfence_decrypt_input);
     free(app->vigenere_input);
+    free(app->vigenere_keyword_input);
+    free(app->vigenere_decrypt_input);
     free(app->blake2_input);
     free(app->md5_input);
     free(app->sha1_input);
     free(app->sha256_input);
-    free(app->atbash_decrypt_input);
-    free(app->baconian_decrypt_input);
-    free(app->playfair_decrypt_input);
-    free(app->railfence_decrypt_input);
-    free(app->xor_decrypt_input);
-    free(app->vigenere_decrypt_input);
     free(app);
 }
 
