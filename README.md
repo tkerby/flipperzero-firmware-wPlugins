@@ -12,7 +12,7 @@
 - **Vigenère**
 
 ### Hashing Algorithms
-- **BLAKE2s**
+- **BLAKE-2s**
 - **MD5**
 - **SHA-1**
 - **SHA-256**
