@@ -23,4 +23,4 @@ Navigate through the app's menu on your Flipper Zero to:
 - Select a hashing algorithm to generate a hash from input data.
 
 ## 
-Feel free to leave an issue with a feature request!
+Feel free to leave a Github issue with a feature request!
