@@ -1,15 +1,44 @@
 #include "wendigo_scan.h"
 
+/* Device caches */
+flipper_bt_device** bt_devices = NULL;
+uint16_t bt_devices_count = 0;
+uint16_t bt_devices_capacity = 0;
+// TODO: WiFi
+
 uint8_t* buffer = NULL;
 uint16_t bufferLen = 0; // 65535 should be plenty of length
 uint16_t bufferCap =
     0; // Buffer capacity - I don't want to allocate 65kb, but don't want to constantly realloc
+char* wendigo_popup_text =
+    NULL; // I suspect the popup text is going out of scope when declared at function scope
 
 /* Packet identifiers */
 uint8_t PREAMBLE_LEN = 8;
 uint8_t PREAMBLE_BT_BLE[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xAA, 0xAA, 0xAA, 0xAA};
 uint8_t PREAMBLE_WIFI[] = {0x99, 0x99, 0x99, 0x99, 0x11, 0x11, 0x11, 0x11};
 uint8_t PREAMBLE_VER[] = {'W', 'e', 'n', 'd', 'i', 'g', 'o', ' '};
+
+/* Returns the index of the first occurrence of `\n` in `theString`, searching the first `size` characters.
+   Returns size if not found (which is outside the array bounds). */
+uint16_t bytes_contains_newline(uint8_t* theBytes, uint16_t size) {
+    uint16_t result = 0;
+    for(; result < size && theBytes[result] != '\n'; ++result) {
+    }
+    return result;
+}
+
+/* Returns the index of the first occurrence of '\n' in `theString`, or strlen(theString) if not found.
+   This function requires `theString` to be null terminated. */
+uint16_t string_contains_newline(char* theString) {
+    return bytes_contains_newline((uint8_t*)theString, strlen(theString));
+}
+
+/* Send the version command to ESP32 */
+void wendigo_esp_version(WendigoApp* app) {
+    char cmd[] = "v\n";
+    wendigo_uart_tx(app->uart, (uint8_t*)cmd, strlen(cmd) + 1);
+}
 
 /* Enable or disable Wendigo scanning on all interfaces, using app->interfaces
    to determine which radios should be enabled/disabled when starting to scan.
@@ -34,29 +63,265 @@ void wendigo_set_scanning_active(WendigoApp* app, bool starting) {
     app->is_scanning = starting;
 }
 
+/* Returns the index into bt_devices[] of the device with BDA matching dev->bda.
+   Returns bt_devices_count if the device was not found. */
+uint16_t bt_device_index(flipper_bt_device* dev) {
+    uint16_t result;
+    for(result = 0;
+        result < bt_devices_count && memcmp(dev->dev.bda, bt_devices[result]->dev.bda, BDA_LEN);
+        ++result) {
+    }
+    return result;
+}
+
+/* Determines whether a device with the BDA dev->bda exists in bt_devices[] */
+bool bt_device_exists(flipper_bt_device* dev) {
+    return bt_device_index(dev) < bt_devices_count;
+}
+
+/* Adds the specified device to bt_devices[], extending the length of bt_devices[] if necessary.
+   DOES NOT check to ensure the device is not already present in bt_devices[].
+   Return true if the device was successfully added to bt_devices[].
+   NOTE: The provided flipper_bt_device object is retained in bt_devices[] - It MUST NOT be freed by the caller */
+bool wendigo_add_bt_device(flipper_bt_device* dev) {
+    /* Increase capacity of bt_devices[] by an additional 10 if necessary */
+    if(bt_devices == NULL || bt_devices_capacity == bt_devices_count) {
+        flipper_bt_device** new_devices =
+            realloc(bt_devices, sizeof(flipper_bt_device*) * (bt_devices_capacity + 10));
+        if(new_devices == NULL) {
+            /* Can't store the device */
+            return false;
+        }
+        bt_devices = new_devices;
+        bt_devices_capacity += 10;
+    }
+    bt_devices[bt_devices_count++] = dev;
+    return true;
+}
+
+/* Locates a device in bt_devices[] with the same BDA as `dev` and updates the object's fields to match `dev`.
+   If the specified device does not exist in bt_devices[], or another error occurs, the function returns false,
+   otherwise true is returned to indicate success. */
+bool wendigo_update_bt_device(flipper_bt_device* dev) {
+    uint16_t idx = bt_device_index(dev);
+    if(idx == bt_devices_count) {
+        /* Device doesn't exist in bt_devices[] */
+        return false;
+    }
+    /* Update bt_devices[idx] */
+    if(dev->cod_str != NULL) {
+        if(bt_devices[idx]->cod_str != NULL) {
+            free(bt_devices[idx]->cod_str);
+        }
+        bt_devices[idx]->cod_str = dev->cod_str;
+    }
+    if(dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
+        if(bt_devices[idx]->dev.bdname_len > 0 && bt_devices[idx]->dev.bdname != NULL) {
+            free(bt_devices[idx]->dev.bdname);
+        }
+        bt_devices[idx]->dev.bdname_len = dev->dev.bdname_len;
+        bt_devices[idx]->dev.bdname = dev->dev.bdname;
+    }
+    if(dev->dev.cod != 0) {
+        bt_devices[idx]->dev.cod = dev->dev.cod;
+    }
+    if(dev->dev.eir_len > 0 && dev->dev.eir != NULL) {
+        if(bt_devices[idx]->dev.eir_len > 0 && bt_devices[idx]->dev.eir != NULL) {
+            free(bt_devices[idx]->dev.eir);
+        }
+        bt_devices[idx]->dev.eir_len = dev->dev.eir_len;
+        bt_devices[idx]->dev.eir = dev->dev.eir;
+    }
+    bt_devices[idx]->dev.lastSeen = dev->dev.lastSeen;
+    bt_devices[idx]->dev.rssi = dev->dev.rssi;
+    bt_devices[idx]->dev.scanType = dev->dev.scanType;
+    bt_devices[idx]->dev.tagged = dev->dev.tagged;
+    /* Now update service descriptors */
+    if(dev->dev.bt_services.num_services > 0 &&
+       dev->dev.bt_services.num_services != bt_devices[idx]->dev.bt_services.num_services) {
+        if(bt_devices[idx]->dev.bt_services.num_services > 0 &&
+           bt_devices[idx]->dev.bt_services.service_uuids != NULL) {
+            free(bt_devices[idx]->dev.bt_services.service_uuids);
+        }
+        bt_devices[idx]->dev.bt_services.num_services = dev->dev.bt_services.num_services;
+        bt_devices[idx]->dev.bt_services.service_uuids = dev->dev.bt_services.service_uuids;
+    }
+    if(dev->dev.bt_services.known_services_len > 0 &&
+       dev->dev.bt_services.known_services_len !=
+           bt_devices[idx]->dev.bt_services.known_services_len) {
+        if(bt_devices[idx]->dev.bt_services.known_services_len > 0 &&
+           bt_devices[idx]->dev.bt_services.known_services != NULL) {
+            free(bt_devices[idx]->dev.bt_services.known_services);
+        }
+        bt_devices[idx]->dev.bt_services.known_services_len =
+            dev->dev.bt_services.known_services_len;
+        bt_devices[idx]->dev.bt_services.known_services = dev->dev.bt_services.known_services;
+    }
+    return true;
+}
+
+void wendigo_free_bt_devices() {
+    flipper_bt_device* dev;
+    if(bt_devices_capacity > 0 && bt_devices != NULL) {
+        for(int i = 0; i < bt_devices_count; ++i) {
+            dev = bt_devices[i];
+            if(dev->cod_str != NULL) {
+                free(dev->cod_str);
+            }
+            if(dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
+                free(dev->dev.bdname);
+                dev->dev.bdname = NULL;
+                dev->dev.bdname_len = 0;
+            }
+            if(dev->dev.eir_len > 0 && dev->dev.eir != NULL) {
+                free(dev->dev.eir);
+                dev->dev.eir = NULL;
+                dev->dev.eir_len = 0;
+            }
+            if(dev->dev.bt_services.known_services_len > 0 &&
+               dev->dev.bt_services.known_services != NULL) {
+                // TODO: This is a ** - Loop through it's contents when services are implemented
+                free(dev->dev.bt_services.known_services);
+                dev->dev.bt_services.known_services = NULL;
+                dev->dev.bt_services.known_services_len = 0;
+            }
+            if(dev->dev.bt_services.num_services > 0 &&
+               dev->dev.bt_services.service_uuids != NULL) {
+                free(dev->dev.bt_services.service_uuids);
+                dev->dev.bt_services.service_uuids = NULL;
+                dev->dev.bt_services.num_services = 0;
+            }
+            dev = NULL;
+            free(bt_devices[i]);
+        }
+        free(bt_devices);
+        bt_devices = NULL;
+        bt_devices_count = 0;
+        bt_devices_capacity = 0;
+    }
+}
+
 /* Returns the number of bytes consumed from the buffer - DOES NOT
    remove consumed bytes from the buffer, this must be handled by
-   the calling function. */
-uint16_t parseBufferBluetooth() {
-    // TODO
+   the calling function.
+   The received packet must follow this structure:
+   * 4 bytes of 0xFF followed by 4 bytes of 0xAA
+   * Device structure (sizeof(wendigo_bt_device))
+   * bdname if present (wendigo_bt_device.bdname_len + 1 bytes)
+   * eir if present (wendigo_bt_device.eir_len bytes)
+   * strlen(cod_short) (1 byte)
+   * cod_short (strlen(cod_short) + 1 bytes)
+   * Newline ('\n')
+*/
+uint16_t parseBufferBluetooth(WendigoApp* app) {
+    /* Skip the preamble */
+    uint16_t index = PREAMBLE_LEN;
+    /* Ensure we have enough bytes for a wendigo_bt_device */
+    if(bufferLen >= index + sizeof(wendigo_bt_device)) {
+        flipper_bt_device* dev = malloc(sizeof(flipper_bt_device));
+        if(dev == NULL) {
+            // TODO: Panic. For now just skip the device
+            return bytes_contains_newline(buffer, bufferLen);
+        }
+        /* Copy bytes into `dev->dev` */
+        memcpy(&(dev->dev), buffer + index, sizeof(wendigo_bt_device));
+        index += sizeof(wendigo_bt_device);
+        dev->dev.bdname = NULL;
+        dev->dev.bt_services.known_services = NULL;
+        dev->dev.bt_services.service_uuids = NULL;
+        dev->dev.bt_services.known_services_len = 0;
+        dev->dev.bt_services.num_services = 0;
+        dev->dev.eir = NULL;
+        dev->dev.cod = 0;
+        dev->cod_str = NULL;
+        /* Do we have a bdname? */
+        if(dev->dev.bdname_len > 0 && bufferLen >= (index + dev->dev.bdname_len + 1)) {
+            dev->dev.bdname = malloc(sizeof(char) * (dev->dev.bdname_len + 1));
+            if(dev->dev.bdname == NULL) {
+                // TODO: Panic. For now just skip the name
+                index += (dev->dev.bdname_len + 1);
+                dev->dev.bdname_len = 0;
+            } else {
+                memcpy(
+                    dev->dev.bdname,
+                    buffer + index,
+                    dev->dev.bdname_len + 1); // Include NULL terminator
+                index += (dev->dev.bdname_len + 1);
+            }
+        }
+        /* Do we have EIR? */
+        if(dev->dev.eir_len > 0 && bufferLen >= index + dev->dev.eir_len) {
+            dev->dev.eir = malloc(dev->dev.eir_len);
+            if(dev->dev.eir == NULL) {
+                // TODO: Panic. For now just skip EIR
+                index += dev->dev.eir_len;
+                dev->dev.eir_len = 0;
+            } else {
+                memcpy(dev->dev.eir, buffer + index, dev->dev.eir_len);
+                index += dev->dev.eir_len;
+            }
+        }
+        /* Do we have class of device? */
+        if(bufferLen >= index) {
+            uint8_t cod_len = buffer[index++];
+            if(cod_len > 0 && bufferLen >= (index + cod_len + 1)) {
+                dev->cod_str = malloc(sizeof(char) * (cod_len + 1));
+                if(dev->cod_str == NULL) {
+                    // TODO: Panic. For now just skip the field
+                } else {
+                    memcpy(dev->cod_str, buffer + index, cod_len + 1);
+                }
+                index += (cod_len + 1);
+            }
+        }
+        // TODO: Services to go here
 
+        if(buffer[index] != '\n') {
+            // TODO: Panic & recover
+        }
+        ++index;
+
+        /* Does this device already exist in bt_devices[]? */
+        if(bt_device_exists(dev)) {
+            wendigo_update_bt_device(dev);
+        } else {
+            wendigo_add_bt_device(dev);
+        }
+    }
+    UNUSED(app);
+    return index;
+}
+
+/* Returns the number of bytes consumed from the buffer - DOES NOT
+   remove consumed bytes, this must be handled by the calling function. */
+uint16_t parseBufferWifi(WendigoApp* app) {
+    // TODO
+    UNUSED(app);
     return 0;
 }
 
 /* Returns the number of bytes consumed from the buffer - DOES NOT
    remove consumed bytes, this must be handled by the calling function. */
-uint16_t parseBufferWifi() {
-    // TODO
-
-    return 0;
-}
-
-/* Returns the number of bytes consumed from the buffer - DOES NOT
-   remove consumed bytes, this must be handled by the calling function. */
-uint16_t parseBufferVersion() {
-    // TODO
-
-    return 0;
+uint16_t parseBufferVersion(WendigoApp* app) {
+    char* versionStr = realloc(wendigo_popup_text, sizeof(char) * bufferLen);
+    if(versionStr == NULL) {
+        // TODO: Panic
+        // For now just consume this message
+        return bytes_contains_newline(buffer, bufferLen);
+    }
+    wendigo_popup_text = versionStr;
+    int i = 0;
+    for(; i < bufferLen && buffer[i] != '\n'; ++i) {
+        wendigo_popup_text[i] = buffer[i];
+    }
+    // TODO: Consider handling a missing newline more elegantly - Although it's currently
+    //       the end-of-transmission marker so not possible to get here without one
+    if(i == bufferLen) {
+        --i; // Replace the last byte with NULL. This should never happen.
+    }
+    wendigo_popup_text[i] = '\0';
+    wendigo_display_popup(app, "ESP32 Version", wendigo_popup_text);
+    return i + 1;
 }
 
 /* When the end of a transmission is reached this function is called to parse the
@@ -65,21 +330,26 @@ uint16_t parseBufferVersion() {
     * Begin with 0x99,0x99,0x99,0x99,0x11,0x11,0x11,0x11: WiFi packet
     * Begin with "Wendigo "                              : Version message
 */
-void parseBuffer() {
-    /* It should be impossible to reach here with fewer than 8 bytes in the buffer */
-    if(bufferLen < 8) {
-        // TODO: Panic
-        return;
-    }
+void parseBuffer(WendigoApp* app) {
     uint16_t consumedBytes = 0;
-    if(!memcmp(PREAMBLE_BT_BLE, buffer, PREAMBLE_LEN)) {
-        consumedBytes = parseBufferBluetooth();
-    } else if(!memcmp(PREAMBLE_WIFI, buffer, PREAMBLE_LEN)) {
-        consumedBytes = parseBufferWifi();
-    } else if(!memcmp(PREAMBLE_VER, buffer, PREAMBLE_LEN)) {
-        consumedBytes = parseBufferVersion();
+    if(bufferLen >= 8 && !memcmp(PREAMBLE_BT_BLE, buffer, PREAMBLE_LEN)) {
+        consumedBytes = parseBufferBluetooth(app);
+    } else if(bufferLen >= 8 && !memcmp(PREAMBLE_WIFI, buffer, PREAMBLE_LEN)) {
+        consumedBytes = parseBufferWifi(app);
+    } else if(bufferLen >= 8 && !memcmp(PREAMBLE_VER, buffer, PREAMBLE_LEN)) {
+        consumedBytes = parseBufferVersion(app);
     } else {
-        // TODO: Panic
+        /* Extraneous content - Remove everything up to and including the first newline */
+        for(consumedBytes = 0; consumedBytes < bufferLen && buffer[consumedBytes] != '\n';
+            ++consumedBytes) {
+        }
+        if(consumedBytes < bufferLen) {
+            /* Found a newline at buffer[consumedBytes] - Also consume the newline */
+            ++consumedBytes;
+        } else {
+            /* No newline found. This should never occur with the existing implementation */
+            consumedBytes = 0;
+        }
     }
     if(consumedBytes == 0) {
         // That was a bit of a waste
@@ -113,7 +383,6 @@ void parseBuffer() {
 void wendigo_scan_handle_rx_data_cb(uint8_t* buf, size_t len, void* context) {
     furi_assert(context);
     WendigoApp* app = context;
-    UNUSED(app);
 
     /* Extend the buffer if necessary */
     if(bufferLen + len >= bufferCap) {
@@ -132,12 +401,11 @@ void wendigo_scan_handle_rx_data_cb(uint8_t* buf, size_t len, void* context) {
     memcpy(buffer + bufferLen, buf, len);
     bufferLen += len;
 
-    /* Have we reached the end of transmission? */
-    if(buffer[bufferLen - 1] ==
-       '\n') { // TODO: Test whether multiple messages can be received at once even though stdout is flushed after each message
-        //       Or a complete message followed by part of the next message (which would require finding a newline in
-        //       the buffer, parsing the first part and shuffling bytes forward).
-        parseBuffer();
+    /* Parse any complete transmissions we have received */
+    uint16_t newline = bytes_contains_newline(buffer, bufferLen);
+    while(newline != bufferLen) {
+        parseBuffer(app);
+        newline = bytes_contains_newline(buffer, bufferLen);
     }
 }
 
@@ -147,5 +415,9 @@ void wendigo_free_uart_buffer() {
         bufferLen = 0;
         bufferCap = 0;
         buffer = NULL;
+    }
+    if(wendigo_popup_text != NULL) {
+        free(wendigo_popup_text);
+        wendigo_popup_text = NULL;
     }
 }

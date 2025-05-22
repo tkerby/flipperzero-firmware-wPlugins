@@ -1,19 +1,22 @@
 #include "../wendigo_app_i.h"
+#include <dolphin/dolphin.h>
 
 // NUM_MENU_ITEMS defined in wendigo_app_i.h - if you add an entry here, increment it!
 static const WendigoItem items[START_MENU_ITEMS] = {
     {"Setup", {""}, 1, OPEN_SETUP, BOTH_MODES},
     {"Scan", {"Start", "Stop", "Status"}, 3, OPEN_SCAN, TEXT_MODE},
     {"Devices", {""}, 1, LIST_DEVICES, BOTH_MODES},
-    {"Selected Devices", {""}, 1, LIST_DEVICES, BOTH_MODES},
+    {"Selected Devices", {""}, 1, LIST_SELECTED_DEVICES, BOTH_MODES},
     {"Track Selected", {""}, 1, TRACK_DEVICES, TEXT_MODE},
-    {"Help", {"About"}, 1, OPEN_HELP, TEXT_MODE},
+    {"Help", {"About", "ESP Version"}, 2, OPEN_HELP, TEXT_MODE},
 };
 
 #define SETUP_IDX       (0)
 #define SCAN_START_IDX  (0)
 #define SCAN_STOP_IDX   (1)
 #define SCAN_STATUS_IDX (2)
+#define ABOUT_IDX       (0)
+#define ESP_VER_IDX     (1)
 
 static uint8_t menu_items_num = 0;
 static uint8_t item_indexes[START_MENU_ITEMS] = {0};
@@ -35,6 +38,9 @@ static void wendigo_scene_start_var_list_enter_callback(void* context, uint32_t 
     app->is_custom_tx_string = false;
     app->selected_menu_index = index;
 
+    /* Reward Dolphin for running a command */
+    dolphin_deed(DolphinDeedGpioUartBridge);
+
     switch(item->action) {
     case OPEN_SETUP:
         view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventSetup);
@@ -55,6 +61,15 @@ static void wendigo_scene_start_var_list_enter_callback(void* context, uint32_t 
         }
         break;
     case LIST_DEVICES:
+        // Set state somewhere so it knows to display all devices
+        // Create a new scene for device display
+        // Send a new custom event to display devices
+        // Try to fit name, BDA and CoD on the var_list
+        // Allow selecting a device to obtain more information: remaining attributes, tag/untag, services, maybe some transmit options
+
+        // Thought: Merge these two case statements - initialise state variable (selected_only) to false, move LIST_SELECTED_DEVICES forward and change selected_only, then flow continues into LIST_DEVICES.
+        break;
+    case LIST_SELECTED_DEVICES:
         app->is_command = true;
 
         if(app->hex_mode) {
@@ -68,7 +83,19 @@ static void wendigo_scene_start_var_list_enter_callback(void* context, uint32_t 
         view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventStartConsole);
         return;
     case OPEN_HELP:
-        view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventStartHelp);
+        switch(selected_option_index) {
+        case ABOUT_IDX:
+            view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventStartHelp);
+            break;
+        case ESP_VER_IDX:
+            /* Ensure wendigo_scan.c receives the reply */
+            wendigo_uart_set_binary_cb(app->uart);
+            wendigo_esp_version(app);
+            break;
+        default:
+            // TODO: Panic
+            break;
+        }
         return;
     default:
         return;

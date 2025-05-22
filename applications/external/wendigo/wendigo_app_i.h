@@ -44,6 +44,7 @@ typedef enum {
     OPEN_SETUP,
     OPEN_SCAN,
     LIST_DEVICES,
+    LIST_SELECTED_DEVICES,
     TRACK_DEVICES,
     OPEN_MAC,
     OPEN_HELP
@@ -128,3 +129,9 @@ typedef enum {
     WendigoAppViewSetupChannel,
     WendigoAppViewPopup,
 } WendigoAppView;
+
+/* Public methods from wendigo_app.c */
+void wendigo_popup_callback(void* context);
+void wendigo_display_popup(WendigoApp* app, char* header, char* body);
+void wendigo_uart_set_binary_cb(Wendigo_Uart* uart);
+void wendigo_uart_set_console_cb(Wendigo_Uart* uart);
