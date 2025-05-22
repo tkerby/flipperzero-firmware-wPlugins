@@ -14,7 +14,7 @@
 bool beginning = true;
 
 char* build_hex_string(BitBuffer* rx_buffer) {
-    static char output[29 * 2 + 1]; // 2 chars per byte + null terminator
+    static char output[29 * 3 + 1]; // 2 chars per byte + null terminator
     uint8_t byte;
     char* p = output;
 
@@ -413,8 +413,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
             furi_string_reset(app->calypso_file_data);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
-            scene_manager_set_scene_state(
-                app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
             return;
         }
         if(ctx->page_id < 10) {
@@ -447,8 +445,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
                 furi_string_reset(app->calypso_file_data);
                 scene_manager_search_and_switch_to_previous_scene(
                     app->scene_manager, MetroflipSceneStart);
-                scene_manager_set_scene_state(
-                    app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
                 return;
             }
             ctx->page_id += 1;
@@ -457,8 +453,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
             furi_string_reset(app->calypso_file_data);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
-            scene_manager_set_scene_state(
-                app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
             return;
         }
 
@@ -2686,7 +2680,6 @@ static bool calypso_on_event(Metroflip* app, SceneManagerEvent event) {
     } else if(event.type == SceneManagerEventTypeBack) {
         furi_string_reset(app->calypso_file_data);
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
-        scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
         consumed = true;
     }
 

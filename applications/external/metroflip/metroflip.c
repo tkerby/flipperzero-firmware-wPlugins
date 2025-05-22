@@ -165,7 +165,6 @@ void metroflip_exit_widget_callback(GuiButtonType result, InputType type, void* 
 
     if(type == InputTypeShort) {
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
-        scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
     }
 }
 

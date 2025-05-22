@@ -104,8 +104,6 @@ void metroflip_scene_load_on_enter(void* context) {
                     app->data_loaded = true;
                     app->card_type = "suica";
                     app->is_desfire = false;
-                    uint8_t* file_data = read_calypso_data(format, "2010", "01");
-                    free(file_data);
                 }
             }
 
