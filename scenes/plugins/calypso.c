@@ -28,21 +28,27 @@ char* build_hex_string(BitBuffer* rx_buffer) {
     return output;
 }
 
-void prepare_file_data(Metroflip* app, const char* app_id, const char* file_id, BitBuffer* rx_buffer) {
+void prepare_file_data(
+    Metroflip* app,
+    const char* app_id,
+    const char* file_id,
+    BitBuffer* rx_buffer) {
     if(beginning) {
         furi_string_reset(app->calypso_file_data);
-        furi_string_cat_printf(app->calypso_file_data, "Version: 1\nDevice type: Calypso\nCard Type: calypso\n");
+        furi_string_cat_printf(
+            app->calypso_file_data, "Version: 1\nDevice type: Calypso\nCard Type: calypso\n");
         beginning = false;
     }
     char* hex_string = build_hex_string(rx_buffer);
-    furi_string_cat_printf(app->calypso_file_data, "AID %s FID %s: %s\n", app_id, file_id, hex_string);
+    furi_string_cat_printf(
+        app->calypso_file_data, "AID %s FID %s: %s\n", app_id, file_id, hex_string);
 }
 
 FlipperFormat* load_file(Metroflip* app) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_file_alloc(storage);
     FURI_LOG_I(TAG, "path: %s", app->delete_file_path);
-    if (!flipper_format_file_open_existing(ff, app->delete_file_path)) {
+    if(!flipper_format_file_open_existing(ff, app->delete_file_path)) {
         FURI_LOG_I(TAG, "error opening file");
     }
     return ff;
@@ -60,7 +66,7 @@ int select_new_app(
     Iso14443_4bPoller* iso14443_4b_poller,
     Metroflip* app,
     MetroflipPollerEventType* stage) {
-    if (!app->data_loaded) {
+    if(!app->data_loaded) {
         select_app[5] = new_app_directory;
         select_app[6] = new_app;
 
@@ -81,7 +87,8 @@ int select_new_app(
         if(error != Iso14443_4bErrorNone) {
             FURI_LOG_I(TAG, "Select File: iso14443_4b_poller_send_block error %d", error);
             *stage = MetroflipPollerEventTypeFail;
-            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerFail);
             return error;
         }
     }
@@ -97,7 +104,7 @@ int read_new_file(
     Iso14443_4bPoller* iso14443_4b_poller,
     Metroflip* app,
     MetroflipPollerEventType* stage) {
-    if (!app->data_loaded) {
+    if(!app->data_loaded) {
         FURI_LOG_I(TAG, "No data loaded");
         read_file[2] = new_file;
         bit_buffer_reset(tx_buffer);
@@ -115,7 +122,8 @@ int read_new_file(
         if(error != Iso14443_4bErrorNone) {
             FURI_LOG_I(TAG, "Read File: iso14443_4b_poller_send_block error %d", error);
             *stage = MetroflipPollerEventTypeFail;
-            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, MetroflipCustomEventPollerFail);
             return error;
         }
         prepare_file_data(app, app_id, FID, rx_buffer);
@@ -144,12 +152,13 @@ int check_response(
     MetroflipPollerEventType* stage,
     size_t* response_length) {
     *response_length = bit_buffer_get_size_bytes(rx_buffer);
-    if(!app->data_loaded){ // automatic success
+    if(!app->data_loaded) { // automatic success
         if(bit_buffer_get_byte(rx_buffer, *response_length - 2) != apdu_success[0] ||
-        bit_buffer_get_byte(rx_buffer, *response_length - 1) != apdu_success[1]) {
+           bit_buffer_get_byte(rx_buffer, *response_length - 1) != apdu_success[1]) {
             int error_code_1 = bit_buffer_get_byte(rx_buffer, *response_length - 2);
             int error_code_2 = bit_buffer_get_byte(rx_buffer, *response_length - 1);
-            FURI_LOG_E(TAG, "Select profile app/file failed: %02x%02x", error_code_1, error_code_2);
+            FURI_LOG_E(
+                TAG, "Select profile app/file failed: %02x%02x", error_code_1, error_code_2);
             if(error_code_1 == 0x6a && error_code_2 == 0x82) {
                 FURI_LOG_E(TAG, "Wrong parameter(s) P1-P2 - File not found");
             } else if(error_code_1 == 0x69 && error_code_2 == 0x82) {
@@ -404,8 +413,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
             furi_string_reset(app->calypso_file_data);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
-            scene_manager_set_scene_state(
-                app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
             return;
         }
         if(ctx->page_id < 10) {
@@ -438,8 +445,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
                 furi_string_reset(app->calypso_file_data);
                 scene_manager_search_and_switch_to_previous_scene(
                     app->scene_manager, MetroflipSceneStart);
-                scene_manager_set_scene_state(
-                    app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
                 return;
             }
             ctx->page_id += 1;
@@ -448,8 +453,6 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
             furi_string_reset(app->calypso_file_data);
             scene_manager_search_and_switch_to_previous_scene(
                 app->scene_manager, MetroflipSceneStart);
-            scene_manager_set_scene_state(
-                app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
             return;
         }
 
@@ -515,28 +518,25 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     break;
                 }
 
-
                 // Check the response after selecting app
                 if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                     break;
                 }
 
-
-
                 // Now send the read command for ICC
-                error = read_new_file("0002", "01", 0x01, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                error = read_new_file(
+                    "0002", "01", 0x01, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
 
                 if(error != 0) {
-                    view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                    view_dispatcher_send_custom_event(
+                        app->view_dispatcher, MetroflipCustomEventPollerFail);
                     break;
                 }
-
 
                 // Check the response after reading the file
-                if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                     break;
                 }
-
 
                 char icc_bit_representation[response_length * 8 + 1];
                 icc_bit_representation[0] = '\0';
@@ -551,7 +551,6 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                 int start = 128, end = 159;
                 card->card_number = bit_slice_to_dec(icc_bit_representation, start, end);
 
-
                 // Select app for ticketing
                 error = select_new_app(
                     0x20, 0x00, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
@@ -559,13 +558,12 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     FURI_LOG_E(TAG, "Failed to select app for ticketing");
                     break;
                 }
-                
+
                 // Check the response after selecting app
-                if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                     FURI_LOG_E(TAG, "Failed to check response after selecting app for ticketing");
                     break;
                 }
-                
 
                 // Select app for environment
                 error = select_new_app(
@@ -573,22 +571,22 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                 if(error != 0) {
                     break;
                 }
-                
 
                 // Check the response after selecting app
-                if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                     break;
                 }
 
                 // read file 1
-                error = read_new_file("2001", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                error = read_new_file(
+                    "2001", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
 
                 if(error != 0) {
-
-                    view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                    view_dispatcher_send_custom_event(
+                        app->view_dispatcher, MetroflipCustomEventPollerFail);
                     break;
                 }
-                
+
                 // Check the response after reading the file
                 if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                     break;
@@ -698,15 +696,16 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     }
 
                     // Now send the read command for contracts
-                    
+
                     for(size_t i = 1; i < 5; i++) {
-                        char FID_buf[3]; 
+                        char FID_buf[3];
                         snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                         const char* FID = FID_buf;
-                        error = read_new_file("2020", FID,
-                            i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2020", FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             FURI_LOG_E(TAG, "Failed to read contract %d", i);
                             break;
                         }
@@ -967,20 +966,21 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     }
 
                     // Check the response after selecting app
-                    if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                    if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                         break;
                     }
 
                     // read file 1
-                    error =
-                        read_new_file( "2069", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                    error = read_new_file(
+                        "2069", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                     if(error != 0) {
-                        view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                        view_dispatcher_send_custom_event(
+                            app->view_dispatcher, MetroflipCustomEventPollerFail);
                         break;
                     }
 
                     // Check the response after reading the file
-                    if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                    if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                         break;
                     }
 
@@ -1016,14 +1016,14 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     }
 
                     // Select app for events
-                    error = select_new_app( 
+                    error = select_new_app(
                         0x20, 0x10, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                     if(error != 0) {
                         break;
                     }
 
                     // Check the response after selecting app
-                    if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                    if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                         break;
                     }
 
@@ -1037,18 +1037,19 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     // furi_string_cat_printf(parsed_data, "\e#Events :\n");
                     // Now send the read command for events
                     for(size_t i = 1; i < 4; i++) {
-                        char FID_buf[3]; 
+                        char FID_buf[3];
                         snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                         const char* FID = FID_buf;
-                        error = read_new_file( "2010",
-                            FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2010", FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             break;
                         }
 
                         // Check the response after reading the file
-                        if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                        if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                             break;
                         }
 
@@ -1226,31 +1227,32 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     }
 
                     // Select app for special events
-                    error = select_new_app( 
+                    error = select_new_app(
                         0x20, 0x40, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                     if(error != 0) {
                         break;
                     }
 
                     // Check the response after selecting app
-                    if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                    if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                         break;
                     }
 
                     // Now send the read command for special events
                     for(size_t i = 1; i < 4; i++) {
-                        char FID_buf[3]; 
+                        char FID_buf[3];
                         snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                         const char* FID = FID_buf;
-                        error = read_new_file( "2040", FID,
-                            i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2040", FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             break;
                         }
 
                         // Check the response after reading the file
-                        if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                        if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                             break;
                         }
 
@@ -1487,7 +1489,7 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     free_calypso_structure(OpusEnvHolderStructure);
 
                     // Select app for contracts
-                    error = select_new_app( 
+                    error = select_new_app(
                         0x20, 0x20, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                     if(error != 0) {
                         FURI_LOG_E(TAG, "Failed to select app for contracts");
@@ -1495,7 +1497,7 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     }
 
                     // Check the response after selecting app
-                    if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                    if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                         FURI_LOG_E(
                             TAG, "Failed to check response after selecting app for contracts");
                         break;
@@ -1510,19 +1512,20 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
 
                     // Now send the read command for contracts
                     for(size_t i = 1; i < 5; i++) {
-                        char FID_buf[3]; 
+                        char FID_buf[3];
                         snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                         const char* FID = FID_buf;
-                        error = read_new_file( "2020", FID,
-                            i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2020", FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             FURI_LOG_E(TAG, "Failed to read contract %d", i);
                             break;
                         }
 
                         // Check the response after reading the file
-                        if(check_response( rx_buffer, app, &stage, &response_length) != 0) {
+                        if(check_response(rx_buffer, app, &stage, &response_length) != 0) {
                             FURI_LOG_E(
                                 TAG, "Failed to check response after reading contract %d", i);
                             break;
@@ -1694,7 +1697,7 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                     free_calypso_structure(OpusContractStructure);
 
                     // Select app for events
-                    error = select_new_app( 
+                    error = select_new_app(
                         0x20, 0x10, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                     if(error != 0) {
                         break;
@@ -1714,13 +1717,14 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
 
                     // Now send the read command for events
                     for(size_t i = 1; i < 4; i++) {
-                        char FID_buf[3]; 
+                        char FID_buf[3];
                         snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                         const char* FID = FID_buf;
-                        error = read_new_file( "2010", FID,
-                            i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2010", FID, i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             break;
                         }
 
@@ -1931,10 +1935,11 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
                             break;
                         }
 
-                        error = read_new_file("202A", "01",
-                            1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "202A", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             FURI_LOG_E(TAG, "Failed to read counter %d", 1);
                             break;
                         }
@@ -1971,13 +1976,21 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
 
                         // Now send the read command for contracts
                         for(size_t i = 1; i < 2; i++) {
-                            char FID_buf[3]; 
-                        snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
-                        const char* FID = FID_buf;
-                            error = read_new_file("2020", FID,
-                                i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                            char FID_buf[3];
+                            snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
+                            const char* FID = FID_buf;
+                            error = read_new_file(
+                                "2020",
+                                FID,
+                                i,
+                                tx_buffer,
+                                rx_buffer,
+                                iso14443_4b_poller,
+                                app,
+                                &stage);
                             if(error != 0) {
-                                view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                                view_dispatcher_send_custom_event(
+                                    app->view_dispatcher, MetroflipCustomEventPollerFail);
                                 FURI_LOG_E(TAG, "Failed to read contract %d", i);
                                 break;
                             }
@@ -2225,10 +2238,11 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
 
                         // Now send the read command for environment
 
-                        error = read_new_file("2001", "01",
-                            1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                        error = read_new_file(
+                            "2001", "01", 1, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
                         if(error != 0) {
-                            view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                            view_dispatcher_send_custom_event(
+                                app->view_dispatcher, MetroflipCustomEventPollerFail);
                             FURI_LOG_E(TAG, "Failed to read environment");
                             break;
                         }
@@ -2347,13 +2361,21 @@ static NfcCommand calypso_poller_callback(NfcGenericEvent event, void* context) 
 
                         // Now send the read command for events
                         for(size_t i = 1; i < 4; i++) {
-                            char FID_buf[3]; 
+                            char FID_buf[3];
                             snprintf(FID_buf, sizeof(FID_buf), "%02X", i);
                             const char* FID = FID_buf;
-                            error = read_new_file("2010", FID,
-                                i, tx_buffer, rx_buffer, iso14443_4b_poller, app, &stage);
+                            error = read_new_file(
+                                "2010",
+                                FID,
+                                i,
+                                tx_buffer,
+                                rx_buffer,
+                                iso14443_4b_poller,
+                                app,
+                                &stage);
                             if(error != 0) {
-                                view_dispatcher_send_custom_event(app->view_dispatcher, MetroflipCustomEventPollerFail);
+                                view_dispatcher_send_custom_event(
+                                    app->view_dispatcher, MetroflipCustomEventPollerFail);
                                 break;
                             }
 
@@ -2621,7 +2643,7 @@ static void calypso_on_enter(Metroflip* app) {
     Popup* popup = app->popup;
     popup_set_header(popup, "Parsing...", 68, 30, AlignLeft, AlignTop);
     popup_set_icon(popup, 0, 3, &I_RFIDDolphinReceive_97x61);
-    
+
     // Start worker
     nfc_scanner_alloc(app->nfc);
     app->poller = nfc_poller_alloc(app->nfc, NfcProtocolIso14443_4b);
@@ -2632,7 +2654,6 @@ static void calypso_on_enter(Metroflip* app) {
         view_dispatcher_switch_to_view(app->view_dispatcher, MetroflipViewPopup);
         metroflip_app_blink_start(app);
     }
-
 }
 
 static bool calypso_on_event(Metroflip* app, SceneManagerEvent event) {
@@ -2659,7 +2680,6 @@ static bool calypso_on_event(Metroflip* app, SceneManagerEvent event) {
     } else if(event.type == SceneManagerEventTypeBack) {
         furi_string_reset(app->calypso_file_data);
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
-        scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
         consumed = true;
     }
 

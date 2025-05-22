@@ -98,7 +98,7 @@ void metroflip_free(Metroflip* app) {
 
     //calypso data
     furi_string_free(app->calypso_file_data);
-    
+
     // key cache
     mf_classic_key_cache_free(app->mfc_key_cache);
 
@@ -164,7 +164,6 @@ void metroflip_exit_widget_callback(GuiButtonType result, InputType type, void* 
 
     if(type == InputTypeShort) {
         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MetroflipSceneStart);
-        scene_manager_set_scene_state(app->scene_manager, MetroflipSceneStart, MetroflipSceneAuto);
     }
 }
 
