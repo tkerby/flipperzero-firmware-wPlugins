@@ -104,15 +104,10 @@ void metroflip_scene_load_on_enter(void* context) {
                     app->data_loaded = true;
                     app->card_type = "suica";
                     app->is_desfire = false;
-                    uint8_t* file_data = read_calypso_data(format, "2010", "01");
-                    free(file_data);
                 }
             }
-            
-            strncpy(
-                app->file_path,
-                furi_string_get_cstr(file_path),
-                sizeof(app->file_path) - 1);
+
+            strncpy(app->file_path, furi_string_get_cstr(file_path), sizeof(app->file_path) - 1);
             app->file_path[sizeof(app->file_path) - 1] = '\0';
             strncpy(
                 app->delete_file_path,
@@ -121,7 +116,7 @@ void metroflip_scene_load_on_enter(void* context) {
             app->delete_file_path[sizeof(app->delete_file_path) - 1] = '\0';
 
             app->data_loaded = true;
-            
+
         } while(0);
         flipper_format_free(format);
     }

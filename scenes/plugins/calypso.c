@@ -14,7 +14,7 @@
 bool beginning = true;
 
 char* build_hex_string(BitBuffer* rx_buffer) {
-    static char output[29 * 2 + 1]; // 2 chars per byte + null terminator
+    static char output[29 * 3 + 1]; // 2 chars per byte + null terminator
     uint8_t byte;
     char* p = output;
 
