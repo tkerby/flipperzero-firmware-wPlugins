@@ -213,7 +213,7 @@ void flip_crypt_main_menu_scene_on_enter(void* context) {
     submenu_add_item(app->submenu, "Playfair Cipher", MenuIndexPlayfair, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Railfence Cipher", MenuIndexRailfence, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "Vigenere Cipher", MenuIndexVigenere, flip_crypt_menu_callback, app);
-    submenu_add_item(app->submenu, "BLAKE-2 Hash", MenuIndexBlake2, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "BLAKE-2s Hash", MenuIndexBlake2, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "MD5 Hash", MenuIndexMD5, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "SHA-1 Hash", MenuIndexSHA1, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "SHA-256 Hash", MenuIndexSHA256, flip_crypt_menu_callback, app);
@@ -422,8 +422,8 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_set_header(app->submenu, "Railfence Cipher");
             submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Rails: 3", 1, cipher_do_nothing_submenu_callback, app);
-            submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+            submenu_add_item(app->submenu, "Rails: 3", 2, cipher_do_nothing_submenu_callback, app);
+            submenu_add_item(app->submenu, "Learn", 3, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptVigenereSubmenuScene:
             submenu_set_header(app->submenu, "Vigenere Cipher");
@@ -671,7 +671,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                vigenere_cipher(app->vigenere_input, app->vigenere_keyword_input));
+                vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input));
             break;
         case FlipCryptBlake2OutputScene:
             Blake2sContext blake2_ctx;
@@ -774,7 +774,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                rail_fence_decrypt(app->railfence_input, 3));
+                rail_fence_decrypt(app->railfence_decrypt_input, 3));
             break;
         case FlipCryptVigenereDecryptOutputScene:
             widget_add_text_scroll_element(
@@ -783,7 +783,7 @@ void cipher_output_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                vigenere_cipher(app->vigenere_decrypt_input, app->vigenere_keyword_input));
+                vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input));
             break;
         default:
             furi_string_printf(message, "Unknown output scene.");
@@ -906,7 +906,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
         0,
         128,
         64,
-        "FlipCrypt\nv0.1\nEncrypt, decrypt, and hash text using a variety of classic and modern crypto tools.\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
+        "FlipCrypt\nv0.1\nEncrypt, decrypt, and hash text using a variety of classic and modern crypto tools.\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
@@ -1114,7 +1114,7 @@ static App* app_alloc() {
     app->atbash_input_size = 64;
     app->atbash_decrypt_input_size = 64;
     app->baconian_input_size = 64;
-    app->baconian_decrypt_input_size = 128;
+    app->baconian_decrypt_input_size = 157;
     app->playfair_input_size = 64;
     app->playfair_keyword_input_size = 26;
     app->playfair_decrypt_input_size = 64;
