@@ -120,7 +120,7 @@ char* playfair_decrypt(const char* ciphertext, const char* table) {
     if (len % 2 != 0) return "unable to decrypt -- encrypted text must have even character count"; // ciphertext must be even-length
 
     char* decrypted = (char*)malloc(len + 1);
-    if (!decrypted) return "memory allocation failed, please try again";
+    if (!decrypted) return "memory allocation failed, try again";
 
     for (size_t i = 0; i < len; i += 2) {
         int r1, c1, r2, c2;

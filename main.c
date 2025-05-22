@@ -432,7 +432,7 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptBlake2SubmenuScene:
-            submenu_set_header(app->submenu, "BLAKE-2 Hash");
+            submenu_set_header(app->submenu, "BLAKE-2s Hash");
             submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
             break;
