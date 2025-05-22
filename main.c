@@ -402,33 +402,33 @@ void cipher_submenu_scene_on_enter(void* context) {
     switch(current) {
         case FlipCryptAtbashSubmenuScene:
             submenu_set_header(app->submenu, "Atbash Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptBaconianSubmenuScene:
             submenu_set_header(app->submenu, "Baconian Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptPlayfairSubmenuScene:
             submenu_set_header(app->submenu, "Playfair Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptRailfenceSubmenuScene:
             submenu_set_header(app->submenu, "Railfence Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Rails: 3", 2, cipher_do_nothing_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 3, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptVigenereSubmenuScene:
             submenu_set_header(app->submenu, "Vigenere Cipher");
-            submenu_add_item(app->submenu, "Encrypt Text", 0, cipher_encrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Decrypt Text", 1, cipher_decrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+            submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptBlake2SubmenuScene:

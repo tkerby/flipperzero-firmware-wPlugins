@@ -60,7 +60,7 @@ char* playfair_encrypt(const char* plaintext, const char* table) {
     size_t len = strlen(plaintext);
     // Max encrypted length can be up to twice plaintext length (worst case)
     char* prepared = (char*)malloc(len * 2 + 1);
-    if (!prepared) return NULL;
+    if (!prepared) return "memory allocation failed";
 
     // Step 1: Prepare plaintext as digraphs
     size_t prep_index = 0;
@@ -87,7 +87,7 @@ char* playfair_encrypt(const char* plaintext, const char* table) {
     char* encrypted = (char*)malloc(prep_index + 1);
     if (!encrypted) {
         free(prepared);
-        return NULL;
+        return "memory allocation failed";
     }
 
     for (size_t i = 0; i < prep_index; i += 2) {
