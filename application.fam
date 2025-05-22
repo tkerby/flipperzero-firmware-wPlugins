@@ -7,7 +7,7 @@ App(
     fap_category="Tools",
     fap_version="0.1",
     fap_icon="icon.png",
-    fap_description="A simple app with some cryptography functions",
+    fap_description="Encrypt, decrypt, and hash text using a variety of classic and modern crypto tools.",
     fap_author="TAxelAnderson",
     fap_weburl="https://github.com/TAxelAnderson/FlipCrypt",
 )

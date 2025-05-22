@@ -16,7 +16,7 @@ const char* baconian_table[26] = {
 char* baconian_encrypt(const char* text) {
     size_t len = strlen(text);
     char* encoded = (char*)malloc(len * 5 + 1);
-    if (!encoded) return NULL;
+    if (!encoded) return "memory allocation failed, please try again";
 
     size_t pos = 0;
 
@@ -42,7 +42,7 @@ char* baconian_encrypt(const char* text) {
 char* baconian_decrypt(const char* encoded) {
     size_t len = strlen(encoded);
     char* decoded = (char*)malloc(len / 5 + 2);
-    if (!decoded) return NULL;
+    if (!decoded) return "memory allocation failed, please try again";
 
     size_t i = 0;
     size_t pos = 0;

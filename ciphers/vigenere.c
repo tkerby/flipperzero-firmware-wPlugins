@@ -11,7 +11,7 @@ char* vigenere_cipher(const char* text, const char* key) {
     int key_index = 0;
 
     char* ciphertext = malloc(len + 1);
-    if (!ciphertext) return NULL;
+    if (!ciphertext) return "memory allocation failed, try again";
 
     for (int i = 0; i < len; i++) {
         char c = text[i];

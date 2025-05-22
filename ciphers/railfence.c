@@ -5,7 +5,7 @@
 #include "railfence.h"
 
 char* rail_fence_encrypt(const char* text, int rails) {
-    if (rails <= 1 || text == NULL) return NULL;
+    if (rails <= 1 || text == NULL) return "improper input, try again";
 
     int len = strlen(text);
     char** rail = malloc(rails * sizeof(char*));
@@ -47,7 +47,7 @@ char* rail_fence_encrypt(const char* text, int rails) {
 }
 
 char* rail_fence_decrypt(const char* cipher, int rails) {
-    if (rails <= 1 || cipher == NULL) return NULL;
+    if (rails <= 1 || cipher == NULL) return "improper input, try again";
 
     int len = strlen(cipher);
     char* result = malloc(len + 1);

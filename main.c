@@ -906,7 +906,7 @@ void flip_crypt_about_scene_on_enter(void* context) {
         0,
         128,
         64,
-        "FlipCrypt\nv0.1\nReplace code and message\nwith your content!\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
+        "FlipCrypt\nv0.1\nEncrypt, decrypt, and hash text using a variety of classic and modern crypto tools.\n\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 

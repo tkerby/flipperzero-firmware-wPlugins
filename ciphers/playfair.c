@@ -8,7 +8,7 @@
 char* playfair_make_table(const char* keyword) {
     // Allocate 26 bytes for 25 letters + null terminator
     char* table_output = (char*)malloc(26);
-    if (!table_output) return NULL; // Allocation failed
+    if (!table_output) return "memory allocation failed";
 
     int used[26] = {0}; // Track used letters (a-z), index 0 = 'a'
     size_t table_index = 0;
@@ -120,7 +120,7 @@ char* playfair_decrypt(const char* ciphertext, const char* table) {
     if (len % 2 != 0) return "unable to decrypt -- encrypted text must have even character count"; // ciphertext must be even-length
 
     char* decrypted = (char*)malloc(len + 1);
-    if (!decrypted) return NULL;
+    if (!decrypted) return "memory allocation failed, please try again";
 
     for (size_t i = 0; i < len; i += 2) {
         int r1, c1, r2, c2;
