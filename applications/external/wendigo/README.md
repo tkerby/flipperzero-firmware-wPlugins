@@ -67,9 +67,7 @@ Wendigo is a Flipper Zero application to detect, monitor and track nearby wirele
 <a id="getting-started"></a>
 ## Getting Started
 
-Wendigo is in its early stages of development. The Flipper Zero application provides an initial outline of its expected functionality, but is not yet able to display devices found during scanning.
-
-**The Flipper Zero application does not yet display scan results and device information**.
+Wendigo is in its early stages of development. It can currently scan for and display (in list view) Bluetooth Classic and Low Energy devices, but still has some way to go before it provides useful functionality. You can refer to the *roadmap* at the bottom of this page to understand which features are currently available and which are under development.
 
 Once the Flipper and ESP32 applications have a more complete base, binaries will be made available under *Releases*. Alternatively, especially if you want the latest features or to contribute to the development, you can compile the application yourself, as described below.
 
@@ -218,9 +216,20 @@ Because Wendigo is still in early development the following changes are core to 
   * [X] Scan Start/Stop
   * [ ] Scanning status (popup?)
   * [X] ESP Version (popup)
-  * [ ] Display devices
+  * [X] Display devices
+    * [ ] Display device name instead of BDA when present
+    * [ ] Dynamically update device list on new/updated devices
+  * [ ] Display device details
+    * [ ] Update details when device updated
   * [ ] Device tagging
   * [ ] Focus Mode
+  * [ ] "Display Settings" menu
+    * [ ] Enable/Disable device types
+    * [ ] Sort results by
+      * [ ] Name
+      * [ ] LastSeen
+      * [ ] RSSI
+      * [ ] Device Type
 * [ ] Flipper settings
   * [ ] ESP32 integration
   * [ ] Ability to flash ESP32 firmware from Flipper?
@@ -229,10 +238,6 @@ Because Wendigo is still in early development the following changes are core to 
   * [X] **Focus** mode that restricts received data to devices of interest only
   * [X] **Tag** command to select devices
   * [X] Designed to be usable from console as well as from Flipper
-  * [ ] Sort results by
-    * [ ] Name
-    * [ ] LastSeen
-    * [ ] RSSI
 
 See the [open issues](https://github.com/chris-bc/wendigo/issues) for a full list of proposed features (and known issues).
 
