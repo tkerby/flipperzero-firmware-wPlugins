@@ -42,7 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Set API v0.86 to match OFW dev branch (By RogueMaster)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
-- Updated: [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac) [Fix link files buffer overread (By WillyJL)](https://github.com/rdefeo/quac/pull/17)
+- Updated: [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac) [Fix link files buffer overread (By WillyJL)](https://github.com/rdefeo/quac/pull/17)
 
 <a name="release">
 
@@ -625,7 +625,7 @@ $ ./fbt dolphin_ext
 - [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
-- [Quac! v0.8.0 (By rdefeo)](https://github.com/rdefeo/quac)
+- [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac)
 - [Radar Scanner v2.0 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/flipper-radar) `Req: RCWL-0516`
 - [Radiation Sensor v1.0 (By sionyx)](https://github.com/sionyx/flipper_radsens) `Req: RadSens`
 - [Radio Scanner v0.3 (By RocketGod)](https://github.com/RocketGod-Git/Flipper-Zero-Radio-Scanner)
