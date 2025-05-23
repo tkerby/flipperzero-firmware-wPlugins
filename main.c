@@ -878,7 +878,7 @@ void cipher_learn_scene_on_enter(void* context) {
                     0,
                     128,
                     64,
-                    "SHA-1 (Secure Hash Algorithm 1) is a cryptographic hash function that produces a 160 bit (20 byte) hash value. Once widely used in SSL certificates and digital signatures, SHA-1 has been deprecated due to demonstrated collision attacks, where two different inputs produce the same hash. As a result, it\'s no longer considered secure for cryptographic purposes and has largely been replaced by stronger alternatives.");
+                    "SHA-1 (Secure Hash Algorithm 1) is a cryptographic hash function that produces a 160-bit (20-byte) hash value. Once widely used in SSL certificates and digital signatures, SHA-1 has been deprecated due to demonstrated collision attacks, where two different inputs produce the same hash. As a result, it\'s no longer considered secure for cryptographic purposes and has largely been replaced by stronger alternatives.");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptSHA256LearnScene:
