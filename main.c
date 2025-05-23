@@ -422,7 +422,7 @@ void cipher_submenu_scene_on_enter(void* context) {
             submenu_set_header(app->submenu, "Railfence Cipher");
             submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
             submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
-            submenu_add_item(app->submenu, "Rails: 3", 2, cipher_do_nothing_submenu_callback, app);
+            submenu_add_item(app->submenu, "Rails: 3 (more coming soon)", 2, cipher_do_nothing_submenu_callback, app);
             submenu_add_item(app->submenu, "Learn", 3, cipher_learn_submenu_callback, app);
             break;
         case FlipCryptVigenereSubmenuScene:
