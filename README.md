@@ -1,14 +1,16 @@
-# Mitsubishi AC Remote
+# Hitachi AC Remote
 
-Mitsubishi Electric AC remote control for Flipper Zero.
+Hitachi AC remote control for Flipper Zero.
+
+Emulates the PC-LHxx series remote controller.
 
 ![Screenshot](img/screenshot.png)
 
 ## Building
 ```shell
 # Clone repository
-git clone https://github.com/achistyakov/flipperzero-mitsubishi-ac-remote.git
-cd mitsubishi_ac_remote
+git clone https://github.com/dogtopus/flipperzero-hitachi-ac-remote.git
+cd flipperzero-hitachi-ac-remote
 
 # Build the application
 ufbt build

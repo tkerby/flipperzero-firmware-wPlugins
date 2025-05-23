@@ -1,2 +1,5 @@
-# Mitsubishi AC Remote
-Mitsubishi Electric Air Conditioner remote control.
+# Hitachi AC Remote
+
+Hitachi Air Conditioner remote control.
+
+Emulates the PC-LHxx series remote controller.

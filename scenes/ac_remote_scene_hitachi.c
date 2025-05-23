@@ -1,5 +1,7 @@
 #include "../ac_remote_app_i.h"
 
+#include <inttypes.h>
+
 typedef enum {
     button_power,
     button_mode,
@@ -10,30 +12,67 @@ typedef enum {
     label_temperature,
 } button_id;
 
-const Icon* mode[4][2] = {
-    [HvacMitsubishiModeHeat] = {&I_heat_19x20, &I_heat_hover_19x20},
-    [HvacMitsubishiModeCold] = {&I_cold_19x20, &I_cold_hover_19x20},
-    [HvacMitsubishiModeDry] = {&I_dry_19x20, &I_dry_hover_19x20},
-    [HvacMitsubishiModeAuto] = {&I_auto_19x20, &I_auto_hover_19x20}};
-const Icon* fan[7][2] = {
-    [HvacMitsubishiFanSpeedAuto] = {&I_auto_19x20, &I_auto_hover_19x20},
-    [HvacMitsubishiFanSpeed1] = {&I_fan_speed_1_19x20, &I_fan_speed_1_hover_19x20},
-    [HvacMitsubishiFanSpeed2] = {&I_fan_speed_2_19x20, &I_fan_speed_2_hover_19x20},
-    [HvacMitsubishiFanSpeed3] = {&I_fan_speed_3_19x20, &I_fan_speed_3_hover_19x20},
-    [HvacMitsubishiFanSpeed4] = {&I_fan_speed_4_19x20, &I_fan_speed_4_hover_19x20},
-    [HvacMitsubishiFanSpeedSilent] = {&I_fan_silent_19x20, &I_fan_silent_hover_19x20}};
-const Icon* vane[7][2] = {
-    [HvacMitsubishiVaneAuto] = {&I_auto_19x20, &I_auto_hover_19x20},
-    [HvacMitsubishiVaneH1] = {&I_vane_h1_19x20, &I_vane_h1_hover_19x20},
-    [HvacMitsubishiVaneH2] = {&I_vane_h2_19x20, &I_vane_h2_hover_19x20},
-    [HvacMitsubishiVaneH3] = {&I_vane_h3_19x20, &I_vane_h3_hover_19x20},
-    [HvacMitsubishiVaneH4] = {&I_vane_h4_19x20, &I_vane_h4_hover_19x20},
-    [HvacMitsubishiVaneH5] = {&I_vane_h5_19x20, &I_vane_h5_hover_19x20},
-    [HvacMitsubishiVaneAutoMove] = {&I_vane_auto_move_19x20, &I_vane_auto_move_hover_19x20}};
+static const Icon* POWER_ICONS[POWER_STATE_MAX][2] = {
+    [PowerButtonOff] = {&I_on_19x20, &I_on_hover_19x20},
+    [PowerButtonOn] = {&I_off_19x20, &I_off_hover_19x20},
+};
+
+static const Icon* MODE_BUTTON_ICONS[MODE_BUTTON_STATE_MAX][2] = {
+    [ModeButtonHeating] = {&I_heat_19x20, &I_heat_hover_19x20},
+    [ModeButtonCooling] = {&I_cold_19x20, &I_cold_hover_19x20},
+    [ModeButtonDehumidifying] = {&I_dry_19x20, &I_dry_hover_19x20},
+    [ModeButtonFan] = {&I_fan_speed_4_19x20, &I_fan_speed_4_hover_19x20},
+};
+
+static const Icon* FAN_SPEED_BUTTON_ICONS[FAN_SPEED_BUTTON_STATE_MAX][2] = {
+    [FanSpeedButtonLow] = {&I_fan_speed_2_19x20, &I_fan_speed_2_hover_19x20},
+    [FanSpeedButtonMedium] = {&I_fan_speed_3_19x20, &I_fan_speed_3_hover_19x20},
+    [FanSpeedButtonHigh] = {&I_fan_speed_4_19x20, &I_fan_speed_4_hover_19x20},
+};
+
+static const Icon* VANE_BUTTON_ICONS[VANE_BUTTON_STATE_MAX][2] = {
+    [VaneButtonPos0] = {&I_vane_0_19x20, &I_vane_0_hover_19x20},
+    [VaneButtonPos1] = {&I_vane_1_19x20, &I_vane_1_hover_19x20},
+    [VaneButtonPos2] = {&I_vane_2_19x20, &I_vane_2_hover_19x20},
+    [VaneButtonPos3] = {&I_vane_3_19x20, &I_vane_3_hover_19x20},
+    [VaneButtonPos4] = {&I_vane_4_19x20, &I_vane_4_hover_19x20},
+    [VaneButtonPos5] = {&I_vane_5_19x20, &I_vane_5_hover_19x20},
+    [VaneButtonPos6] = {&I_vane_6_19x20, &I_vane_6_hover_19x20},
+    [VaneButtonAuto] = {&I_vane_auto_move_19x20, &I_vane_auto_move_hover_19x20},
+};
+
+static const HvacHitachiControl POWER_LUT[POWER_STATE_MAX] = {
+    [PowerButtonOff] = HvacHitachiControlPowerOff,
+    [PowerButtonOn] = HvacHitachiControlPowerOn,
+};
+
+static const HvacHitachiMode MODE_LUT[MODE_BUTTON_STATE_MAX] = {
+    [ModeButtonHeating] = HvacHitachiModeHeating,
+    [ModeButtonCooling] = HvacHitachiModeCooling,
+    [ModeButtonDehumidifying] = HvacHitachiModeDehumidifying,
+    [ModeButtonFan] = HvacHitachiModeFan,
+};
+
+static const HvacHitachiFanSpeed FAN_SPEED_LUT[FAN_SPEED_BUTTON_STATE_MAX] = {
+    [FanSpeedButtonLow] = HvacHitachiFanSpeedLow,
+    [FanSpeedButtonMedium] = HvacHitachiFanSpeedMedium,
+    [FanSpeedButtonHigh] = HvacHitachiFanSpeedHigh,
+};
+
+static const HvacHitachiVane VANE_LUT[VANE_BUTTON_STATE_MAX] = {
+    [VaneButtonPos0] = HvacHitachiVanePos0,
+    [VaneButtonPos1] = HvacHitachiVanePos1,
+    [VaneButtonPos2] = HvacHitachiVanePos2,
+    [VaneButtonPos3] = HvacHitachiVanePos3,
+    [VaneButtonPos4] = HvacHitachiVanePos4,
+    [VaneButtonPos5] = HvacHitachiVanePos5,
+    [VaneButtonPos6] = HvacHitachiVanePos6,
+    [VaneButtonAuto] = HvacHitachiVaneAuto,
+};
 
 char buffer[4] = {0};
 
-bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
+static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
     FuriString* header = furi_string_alloc();
@@ -44,14 +83,17 @@ bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
         if(!flipper_format_buffered_file_open_existing(ff, AC_REMOTE_APP_SETTINGS)) break;
         if(!flipper_format_read_header(ff, header, &version)) break;
         if(!furi_string_equal(header, "AC Remote") || (version != 1)) break;
+        if(!flipper_format_read_uint32(ff, "Power", &app_state->power, 1)) break;
         if(!flipper_format_read_uint32(ff, "Mode", &app_state->mode, 1)) break;
-        if(app_state->mode > HvacMitsubishiModeAuto) break;
+        if(app_state->mode >= MODE_BUTTON_STATE_MAX) break;
         if(!flipper_format_read_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
-        if(app_state->temperature > HVAC_MITSUBISHI_TEMPERATURE_MAX) break;
+        if(app_state->temperature > HVAC_HITACHI_TEMPERATURE_MAX ||
+           app_state->temperature < HVAC_HITACHI_TEMPERATURE_MIN)
+            break;
         if(!flipper_format_read_uint32(ff, "Fan", &app_state->fan, 1)) break;
-        if(app_state->fan > HvacMitsubishiFanSpeedSilent) break;
+        if(app_state->fan >= FAN_SPEED_BUTTON_STATE_MAX) break;
         if(!flipper_format_read_uint32(ff, "Vane", &app_state->vane, 1)) break;
-        if(app_state->vane > HvacMitsubishiVaneAutoMove) break;
+        if(app_state->vane > VANE_BUTTON_STATE_MAX) break;
         success = true;
     } while(false);
     furi_record_close(RECORD_STORAGE);
@@ -69,6 +111,7 @@ bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
         if(!flipper_format_file_open_always(ff, AC_REMOTE_APP_SETTINGS)) break;
         if(!flipper_format_write_header_cstr(ff, "AC Remote", 1)) break;
         if(!flipper_format_write_comment_cstr(ff, "")) break;
+        if(!flipper_format_write_uint32(ff, "Power", &app_state->power, 1)) break;
         if(!flipper_format_write_uint32(ff, "Mode", &app_state->mode, 1)) break;
         if(!flipper_format_write_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
         if(!flipper_format_write_uint32(ff, "Fan", &app_state->fan, 1)) break;
@@ -89,20 +132,15 @@ void ac_remote_scene_universal_common_item_callback(void* context, uint32_t inde
 void ac_remote_scene_mitsubishi_on_enter(void* context) {
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
-    ac_remote->hvac_mitsubishi_data = hvac_mitsubishi_init();
+    ac_remote->protocol = hvac_hitachi_init();
 
     if(!ac_remote_load_settings(&ac_remote->app_state)) {
-        ac_remote->app_state.mode = HvacMitsubishiModeAuto;
-        ac_remote->app_state.fan = HvacMitsubishiFanSpeedAuto;
-        ac_remote->app_state.vane = HvacMitsubishiVaneAuto;
+        ac_remote->app_state.power = PowerButtonOff;
+        ac_remote->app_state.mode = ModeButtonCooling;
+        ac_remote->app_state.fan = FanSpeedButtonLow;
+        ac_remote->app_state.vane = VaneButtonPos0;
         ac_remote->app_state.temperature = 23;
     }
-
-    hvac_mitsubishi_set_mode(ac_remote->hvac_mitsubishi_data, ac_remote->app_state.mode);
-    hvac_mitsubishi_set_fan_speed(ac_remote->hvac_mitsubishi_data, ac_remote->app_state.fan);
-    hvac_mitsubishi_set_vane(ac_remote->hvac_mitsubishi_data, ac_remote->app_state.vane);
-    hvac_mitsubishi_set_temperature(
-        ac_remote->hvac_mitsubishi_data, ac_remote->app_state.temperature);
 
     view_stack_add_view(ac_remote->view_stack, ac_remote_panel_get_view(ac_remote_panel));
     ac_remote_panel_reserve(ac_remote_panel, 2, 3);
@@ -114,8 +152,8 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         0,
         6,
         17,
-        &I_off_19x20,
-        &I_off_hover_19x20,
+        POWER_ICONS[ac_remote->app_state.power][0],
+        POWER_ICONS[ac_remote->app_state.power][1],
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_icon(ac_remote_panel, 9, 39, &I_off_text_14x5);
@@ -126,8 +164,8 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         0,
         39,
         17,
-        mode[ac_remote->app_state.mode][0],
-        mode[ac_remote->app_state.mode][1],
+        MODE_BUTTON_ICONS[ac_remote->app_state.mode][0],
+        MODE_BUTTON_ICONS[ac_remote->app_state.mode][1],
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_icon(ac_remote_panel, 39, 39, &I_mode_text_20x5);
@@ -161,8 +199,8 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         1,
         39,
         54,
-        fan[ac_remote->app_state.fan][0],
-        fan[ac_remote->app_state.fan][1],
+        FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][0],
+        FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][1],
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_icon(ac_remote_panel, 41, 76, &I_fan_text_14x5);
@@ -173,15 +211,15 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         2,
         39,
         91,
-        vane[ac_remote->app_state.vane][0],
-        vane[ac_remote->app_state.vane][1],
+        VANE_BUTTON_ICONS[ac_remote->app_state.vane][0],
+        VANE_BUTTON_ICONS[ac_remote->app_state.vane][1],
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_icon(ac_remote_panel, 38, 113, &I_vane_text_20x5);
 
     ac_remote_panel_add_label(ac_remote_panel, 0, 6, 11, FontPrimary, "AC remote");
 
-    snprintf(buffer, sizeof(buffer), "%ld", ac_remote->app_state.temperature);
+    snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
     ac_remote_panel_add_label(ac_remote_panel, label_temperature, 4, 86, FontKeyboard, buffer);
 
     view_set_orientation(view_stack_get_view(ac_remote->view_stack), ViewOrientationVertical);
@@ -201,75 +239,94 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
         if(event_type == AC_RemoteCustomEventTypeSendCommand) {
             NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
             notification_message(notifications, &sequence_blink_white_100);
-            hvac_mitsubishi_send(ac_remote->hvac_mitsubishi_data);
+            hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
-            ac_remote->app_state.power = HvacMitsubishiPowerOn;
+            hvac_hitachi_reset(ac_remote->protocol);
             switch(event_value) {
             case button_power:
-                ac_remote->app_state.power = HvacMitsubishiPowerOff;
+                ac_remote->app_state.power++;
+                if(ac_remote->app_state.power >= POWER_STATE_MAX) {
+                    ac_remote->app_state.power = PowerButtonOff;
+                }
+                hvac_hitachi_set_power(
+                    ac_remote->protocol,
+                    ac_remote->app_state.temperature,
+                    FAN_SPEED_LUT[ac_remote->app_state.fan],
+                    MODE_LUT[ac_remote->app_state.mode],
+                    VANE_LUT[ac_remote->app_state.vane],
+                    POWER_LUT[ac_remote->app_state.power]);
+                ac_remote_panel_item_set_icons(
+                    ac_remote_panel,
+                    button_power,
+                    POWER_ICONS[ac_remote->app_state.power][0],
+                    POWER_ICONS[ac_remote->app_state.power][1]);
                 break;
             case button_mode:
                 ac_remote->app_state.mode++;
-                if(ac_remote->app_state.mode > HvacMitsubishiModeAuto) {
-                    ac_remote->app_state.mode = HvacMitsubishiModeHeat;
+                if(ac_remote->app_state.mode >= MODE_BUTTON_STATE_MAX) {
+                    ac_remote->app_state.mode = ModeButtonHeating;
                 }
-                hvac_mitsubishi_set_mode(
-                    ac_remote->hvac_mitsubishi_data, ac_remote->app_state.mode);
+                hvac_hitachi_set_mode(
+                    ac_remote->protocol,
+                    ac_remote->app_state.temperature,
+                    FAN_SPEED_LUT[ac_remote->app_state.fan],
+                    MODE_LUT[ac_remote->app_state.mode],
+                    VANE_LUT[ac_remote->app_state.vane]);
                 ac_remote_panel_item_set_icons(
                     ac_remote_panel,
                     button_mode,
-                    mode[ac_remote->app_state.mode][0],
-                    mode[ac_remote->app_state.mode][1]);
+                    MODE_BUTTON_ICONS[ac_remote->app_state.mode][0],
+                    MODE_BUTTON_ICONS[ac_remote->app_state.mode][1]);
                 break;
             case button_fan:
                 ac_remote->app_state.fan++;
-                if(ac_remote->app_state.fan > HvacMitsubishiFanSpeedSilent) {
-                    ac_remote->app_state.fan = HvacMitsubishiFanSpeedAuto;
+                if(ac_remote->app_state.fan >= FAN_SPEED_BUTTON_STATE_MAX) {
+                    ac_remote->app_state.fan = FanSpeedButtonLow;
                 }
-                hvac_mitsubishi_set_fan_speed(
-                    ac_remote->hvac_mitsubishi_data, ac_remote->app_state.fan);
+                hvac_hitachi_set_fan_speed_mode(
+                    ac_remote->protocol,
+                    FAN_SPEED_LUT[ac_remote->app_state.fan],
+                    MODE_LUT[ac_remote->app_state.mode]);
                 ac_remote_panel_item_set_icons(
                     ac_remote_panel,
                     button_fan,
-                    fan[ac_remote->app_state.fan][0],
-                    fan[ac_remote->app_state.fan][1]);
+                    FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][0],
+                    FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][1]);
                 break;
             case button_vane:
                 ac_remote->app_state.vane++;
-                if(ac_remote->app_state.vane > HvacMitsubishiVaneAutoMove) {
-                    ac_remote->app_state.vane = HvacMitsubishiVaneAuto;
+                if(ac_remote->app_state.vane >= VANE_BUTTON_STATE_MAX) {
+                    ac_remote->app_state.vane = VaneButtonPos0;
                 }
-                hvac_mitsubishi_set_vane(
-                    ac_remote->hvac_mitsubishi_data, ac_remote->app_state.vane);
+                hvac_hitachi_set_vane(ac_remote->protocol, VANE_LUT[ac_remote->app_state.vane]);
                 ac_remote_panel_item_set_icons(
                     ac_remote_panel,
                     button_vane,
-                    vane[ac_remote->app_state.vane][0],
-                    vane[ac_remote->app_state.vane][1]);
+                    VANE_BUTTON_ICONS[ac_remote->app_state.vane][0],
+                    VANE_BUTTON_ICONS[ac_remote->app_state.vane][1]);
                 break;
             case button_temp_up:
-                if(ac_remote->app_state.temperature < 31) {
+                if(ac_remote->app_state.temperature < HVAC_HITACHI_TEMPERATURE_MAX) {
                     ac_remote->app_state.temperature++;
-                    hvac_mitsubishi_set_temperature(
-                        ac_remote->hvac_mitsubishi_data, ac_remote->app_state.temperature);
-                    snprintf(buffer, sizeof(buffer), "%ld", ac_remote->app_state.temperature);
-                    ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
                 }
+                hvac_hitachi_set_temperature(
+                    ac_remote->protocol, ac_remote->app_state.temperature, true);
+                snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
+                ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
                 break;
             case button_temp_down:
-                if(ac_remote->app_state.temperature > 16) {
+                if(ac_remote->app_state.temperature > HVAC_HITACHI_TEMPERATURE_MIN) {
                     ac_remote->app_state.temperature--;
-                    hvac_mitsubishi_set_temperature(
-                        ac_remote->hvac_mitsubishi_data, ac_remote->app_state.temperature);
-                    snprintf(buffer, sizeof(buffer), "%ld", ac_remote->app_state.temperature);
-                    ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
                 }
+                hvac_hitachi_set_temperature(
+                    ac_remote->protocol, ac_remote->app_state.temperature, false);
+                snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
+                ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
                 break;
             default:
                 break;
             }
-            hvac_mitsubishi_power(ac_remote->hvac_mitsubishi_data, ac_remote->app_state.power);
             uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
             view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
         }
@@ -282,7 +339,7 @@ void ac_remote_scene_mitsubishi_on_exit(void* context) {
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
     ac_remote_store_settings(&ac_remote->app_state);
-    hvac_mitsubishi_deinit(ac_remote->hvac_mitsubishi_data);
+    hvac_hitachi_deinit(ac_remote->protocol);
     view_stack_remove_view(ac_remote->view_stack, ac_remote_panel_get_view(ac_remote_panel));
     ac_remote_panel_reset(ac_remote_panel);
 }
