@@ -156,7 +156,7 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         POWER_ICONS[ac_remote->app_state.power][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 9, 39, &I_off_text_14x5);
+    ac_remote_panel_add_icon(ac_remote_panel, 5, 39, &I_power_text_21x5);
     ac_remote_panel_add_item(
         ac_remote_panel,
         button_mode,
