@@ -176,6 +176,7 @@ int check_response(
 void update_page_info(void* context, FuriString* parsed_data) {
     Metroflip* app = context;
     CalypsoContext* ctx = app->calypso_context;
+    FURI_LOG_I(TAG, "page id: %d", ctx->page_id);
     if(ctx->card->card_type != CALYPSO_CARD_NAVIGO && ctx->card->card_type != CALYPSO_CARD_OPUS &&
        ctx->card->card_type != CALYPSO_CARD_RAVKAV) {
         furi_string_cat_printf(
@@ -306,8 +307,13 @@ void update_widget_elements(void* context) {
             widget, GuiButtonTypeRight, "Exit", metroflip_next_button_widget_callback, context);
         return;
     } else {
-        widget_add_button_element(
-            widget, GuiButtonTypeCenter, "Save", calypso_save_button_widget_callback, app);
+        if(!app->data_loaded) {
+            widget_add_button_element(
+                widget, GuiButtonTypeCenter, "Save", calypso_save_button_widget_callback, app);
+        } else {
+            widget_add_button_element(
+                widget, GuiButtonTypeCenter, "Delete", metroflip_delete_widget_callback, app);
+        }
     }
     if(ctx->page_id < 10) {
         widget_add_button_element(
@@ -404,7 +410,12 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
     if(type == InputTypePress) {
         widget_reset(widget);
 
-        FURI_LOG_I(TAG, "Page ID: %d -> %d", ctx->page_id, ctx->page_id + 1);
+        FURI_LOG_I(
+            TAG,
+            "Page ID: %d -> %d",
+            ctx->page_id,
+            ctx->page_id +
+                1); // TODO: make this actually show which page is going to be next, not just +1
 
         if(ctx->card->card_type != CALYPSO_CARD_NAVIGO &&
            ctx->card->card_type != CALYPSO_CARD_OPUS &&
@@ -416,6 +427,7 @@ void metroflip_next_button_widget_callback(GuiButtonType result, InputType type,
             return;
         }
         if(ctx->page_id < 10) {
+            FURI_LOG_I(TAG, "event count: %d", ctx->card->events_count);
             if(ctx->page_id == 1 && ctx->card->contracts_count < 2) {
                 ctx->page_id += 1;
             }

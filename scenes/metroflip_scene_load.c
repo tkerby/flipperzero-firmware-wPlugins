@@ -102,7 +102,7 @@ void metroflip_scene_load_on_enter(void* context) {
                 if(furi_string_equal_str(card_type_str, "calypso")) {
                     FURI_LOG_I(TAG, "Detected: Calypso");
                     app->data_loaded = true;
-                    app->card_type = "suica";
+                    app->card_type = "calypso";
                     app->is_desfire = false;
                 }
             }
