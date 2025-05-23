@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
+#include "player.hpp"
 // Translated from https://github.com/xMasterX/all-the-plugins/tree/dev/base_pack/doom
 // All credits to @xMasterX @Svarich @hedger (original code by @p4nic4ttack)
 

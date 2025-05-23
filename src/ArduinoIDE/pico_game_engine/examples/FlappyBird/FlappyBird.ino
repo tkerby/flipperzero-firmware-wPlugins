@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "assets.h"
-#include "player.h"
+#include "assets.hpp"
+#include "player.hpp"
 // Translated from https://github.com/xMasterX/all-the-plugins/blob/dev/base_pack/flappy_bird
 // All credits to @DroomOne & @xMasterX
 /*

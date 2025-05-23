@@ -1,6 +1,6 @@
 #include <ArduinoJson.h>
-#include "player.h"
-#include "sprites.h"
+#include "player.hpp"
+#include "sprites.hpp"
 typedef struct
 {
     const char *name;

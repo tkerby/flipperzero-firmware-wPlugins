@@ -1,5 +1,5 @@
-#include "player.h"
-#include "assets.h"
+#include "player.hpp"
+#include "assets.hpp"
 
 Wall walls[32] = {
     WALL(true, 12, 0, 3),

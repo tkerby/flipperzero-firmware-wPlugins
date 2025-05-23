@@ -1,7 +1,7 @@
 #ifndef _level_h
 #define _level_h
 
-#include "constants.h"
+#include "constants.hpp"
 
 /*
   Based on E1M1 from Wolfenstein 3D

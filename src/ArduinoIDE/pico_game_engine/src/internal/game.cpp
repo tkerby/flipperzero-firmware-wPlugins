@@ -1,5 +1,5 @@
-#include "game.h"
-#include "entity.h"
+#include "game.hpp"
+#include "entity.hpp"
 
 namespace PicoGameEngine
 {

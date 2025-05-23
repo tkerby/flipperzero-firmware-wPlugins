@@ -1,7 +1,7 @@
-#include "icon.h"
+#include "icon.hpp"
 #include <ArduinoJson.h>
-#include "assets.h"
-#include "player.h"
+#include "assets.hpp"
+#include "player.hpp"
 
 typedef enum
 {

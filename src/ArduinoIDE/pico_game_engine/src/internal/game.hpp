@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Arduino.h"
-#include "level.h"
-#include "input.h"
-#include "vector.h"
-#include "draw.h"
+#include "level.hpp"
+#include "input.hpp"
+#include "vector.hpp"
+#include "draw.hpp"
 
 namespace PicoGameEngine
 {

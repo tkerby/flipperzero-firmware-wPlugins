@@ -1,7 +1,7 @@
 #pragma once
-#include "boards.h"
-#include "vector.h"
-#include "image.h"
+#include "boards.hpp"
+#include "vector.hpp"
+#include "image.hpp"
 
 // both imports (DVI/eSPI) cost about 30kB of flash combined
 

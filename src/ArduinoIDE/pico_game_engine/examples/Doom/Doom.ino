@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
+#include "player.hpp"
 // Note: Use the Doom_8bit for no screen flickering/tearing
 // Translated from https://github.com/xMasterX/all-the-plugins/tree/dev/base_pack/doom
 // All credits to @xMasterX @Svarich @hedger (original code by @p4nic4ttack)

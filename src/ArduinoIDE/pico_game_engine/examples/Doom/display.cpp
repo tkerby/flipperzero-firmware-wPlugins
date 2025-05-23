@@ -1,4 +1,4 @@
-#include "display.h"
+#include "display.hpp"
 
 void drawGun(
     int16_t x,

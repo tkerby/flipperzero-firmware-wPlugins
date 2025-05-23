@@ -1,6 +1,6 @@
 #pragma once
 #include "Arduino.h"
-#include "game.h"
+#include "game.hpp"
 namespace PicoGameEngine
 {
     // Represents a game engine.

@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
+#include "player.hpp"
 // Translated from https://github.com/xMasterX/all-the-plugins/blob/dev/apps_source_code/flipper_pong/flipper_pong.c
 // All credits to @nmrr @SimplyMinimal @xMasterX
 /*

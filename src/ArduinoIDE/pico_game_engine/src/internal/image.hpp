@@ -1,7 +1,7 @@
 #pragma once
 #include "Arduino.h"
-#include "boards.h"
-#include "vector.h"
+#include "boards.hpp"
+#include "vector.hpp"
 #include <LittleFS.h> // storage
 #include <map>
 #include <string>

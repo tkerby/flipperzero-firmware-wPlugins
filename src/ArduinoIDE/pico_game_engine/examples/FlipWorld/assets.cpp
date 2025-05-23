@@ -1,4 +1,4 @@
-#include "assets.h"
+#include "assets.hpp"
 
 const PROGMEM char shadow_woods_v4[2210] = R"json(
     {

@@ -1,5 +1,5 @@
-#include "player.h"
-#include "assets.h"
+#include "player.hpp"
+#include "assets.hpp"
 #include <stdint.h>
 
 #define SCREEN_W 320

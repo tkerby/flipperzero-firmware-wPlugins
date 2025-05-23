@@ -8,7 +8,7 @@
 
 #define UID_null 0
 
-// Entity types (legend applies to level.h)
+// Entity types (legend applies to level.hpp)
 #define E_FLOOR 0x0      // . (also null)
 #define E_WALL 0xF       // #
 #define E_PLAYER 0x1     // P

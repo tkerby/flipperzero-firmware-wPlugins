@@ -1,4 +1,4 @@
-#include "sprites.h"
+#include "sprites.hpp"
 
 /*
     Player sprites

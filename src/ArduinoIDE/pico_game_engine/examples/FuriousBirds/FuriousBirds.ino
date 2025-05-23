@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
+#include "player.hpp"
 // Translated from https://github.com/bmstr-ru/furious-birds/blob/main/furious_birds.c
 // All credits to @bmstr-ru (Dmitriy Ermashov)
 

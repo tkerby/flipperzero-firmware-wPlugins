@@ -1,5 +1,5 @@
-#include "player.h"
-#include "flipper.h"
+#include "player.hpp"
+#include "flipper.hpp"
 #include <stdint.h>
 
 #define FLIPPER_LCD_WIDTH 320

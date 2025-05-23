@@ -1,4 +1,4 @@
-#include "flipper.h"
+#include "flipper.hpp"
 
 void furi_hal_random_fill_buf(void *buffer, size_t len)
 {

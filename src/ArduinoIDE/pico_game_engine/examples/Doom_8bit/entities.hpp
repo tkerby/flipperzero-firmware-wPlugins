@@ -2,7 +2,7 @@
 #define _entities_h
 #include <stdint.h>
 #include <stdbool.h>
-#include "types.h"
+#include "types.hpp"
 #include "PicoGameEngine.h"
 
 #define create_enemy(x, y) create_entity(E_ENEMY, x, y, S_STAND, 50, Vector(BMP_IMP_WIDTH, BMP_IMP_HEIGHT))

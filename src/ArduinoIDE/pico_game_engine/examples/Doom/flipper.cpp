@@ -1,4 +1,4 @@
-#include "flipper.h"
+#include "flipper.hpp"
 #include <stdint.h>
 
 void canvas_draw_dot(Draw *canvas, int x, int y, uint16_t color)

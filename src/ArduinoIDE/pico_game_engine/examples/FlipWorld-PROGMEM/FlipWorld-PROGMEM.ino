@@ -1,8 +1,8 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
-#include "icon.h"
-#include "assets.h"
+#include "player.hpp"
+#include "icon.hpp"
+#include "assets.hpp"
 /*
     Board Manager: Raspberry Pi Pico
     Flash Size: 2MB (Sketch: 1984KB, FS: 64KB)

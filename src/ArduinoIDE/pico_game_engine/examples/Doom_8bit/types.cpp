@@ -1,4 +1,4 @@
-#include "types.h"
+#include "types.hpp"
 
 // extern "C"
 uint8_t vector_distance(Vector a, Vector b)

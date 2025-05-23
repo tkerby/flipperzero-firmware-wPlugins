@@ -1,4 +1,4 @@
-#include "player.h"
+#include "player.hpp"
 #include <stdint.h>
 
 #define SCREEN_SIZE_X 320

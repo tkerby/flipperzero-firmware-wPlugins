@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "player.h"
-#include "flipper.h"
+#include "player.hpp"
+#include "flipper.hpp"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>

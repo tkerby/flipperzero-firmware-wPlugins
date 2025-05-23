@@ -1,6 +1,6 @@
-#include "entity.h"
-#include "image.h"
-#include "game.h"
+#include "entity.hpp"
+#include "image.hpp"
+#include "game.hpp"
 
 namespace PicoGameEngine
 {

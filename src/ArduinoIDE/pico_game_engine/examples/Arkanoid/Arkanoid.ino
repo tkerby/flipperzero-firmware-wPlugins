@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "player.h"
+#include "player.hpp"
 // Translated from https://github.com/xMasterX/all-the-plugins/blob/dev/base_pack/arkanoid/arkanoid_game.c
 // All credits to @xMasterX @gotnull
 

@@ -1,15 +1,15 @@
-#include "player.h"
+#include "player.hpp"
 #include <Arduino.h>
-#include "flipper.h"
+#include "flipper.hpp"
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
-#include "level.h"
-#include "assets.h"
-#include "types.h"
-#include "entities.h"
-#include "display.h"
-#include "icon.h"
+#include "level.hpp"
+#include "assets.hpp"
+#include "types.hpp"
+#include "entities.hpp"
+#include "display.hpp"
+#include "icon.hpp"
 
 #ifdef SCREEN_WIDTH
 #undef SCREEN_WIDTH

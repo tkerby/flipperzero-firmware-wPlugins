@@ -1,6 +1,6 @@
-#include "player.h"
-#include "flipper.h"
-#include "assets.h"
+#include "player.hpp"
+#include "flipper.hpp"
+#include "assets.hpp"
 
 #define ANGLE_START 15
 

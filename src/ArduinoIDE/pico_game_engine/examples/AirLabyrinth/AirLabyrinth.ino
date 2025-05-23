@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "PicoGameEngine.h"
-#include "assets.h"
-#include "player.h"
+#include "assets.hpp"
+#include "player.hpp"
 // Translated from https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/apps/air_labyrinth
 // All credits to Derek Jamison
 /*
