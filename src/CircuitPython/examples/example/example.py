@@ -23,7 +23,6 @@ from pico_game_engine.engine import GameEngine
 from pico_game_engine.entity import Entity
 from pico_game_engine.level import Level
 from pico_game_engine.input import (
-    Input,
     BUTTON_UP,
     BUTTON_DOWN,
     BUTTON_RIGHT,
@@ -53,10 +52,6 @@ class PicoGameEngine:
 
         # set the engine to None
         self.engine = None
-
-    def add_input(self):
-        """Add input controls"""
-        self.game.input_add(Input(button=BUTTON_UART, uart=UART(), debounce=0.05))
 
     def add_level(self):
         """Add a new level"""
@@ -123,7 +118,6 @@ class PicoGameEngine:
         )
 
         # add controls, level, and player
-        self.add_input()
         self.add_level()
         self.add_player()
 
