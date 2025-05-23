@@ -40,10 +40,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
 - Updated: [MALVEKE PIN Test v2.2 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/MALVEKE-Flipper-Zero/tree/main/flipper_companion_apps/applications/external/malveke_pin_test) `Req: Malveke` (Version Only)
 - Set API v0.86 to match OFW dev branch (By RogueMaster)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac) [Fix link files buffer overread (By WillyJL)](https://github.com/rdefeo/quac/pull/17)
 - Added: [FlipCrypt v0.1 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
