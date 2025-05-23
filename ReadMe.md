@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac) [Fix link files buffer overread (By WillyJL)](https://github.com/rdefeo/quac/pull/17)
+- Added: [FlipCrypt v0.1 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 
 <a name="release">
 
@@ -481,6 +482,7 @@ $ ./fbt dolphin_ext
 - [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBIP Crypto Wallet v1.18 (By xtruan)](https://github.com/xtruan/FlipBIP)
+- [FlipCrypt v0.1 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - [Flipper Aid v1.0 (By spaghety)](https://github.com/spaghety/flipper-aid)
 - [Flipper Doctor v0.1 (By julandealb)](https://github.com/julandealb/flipperdoc)
 - [Flipper Tag v1.0 (By thejudge156)](https://github.com/thejudge156/flippertag)

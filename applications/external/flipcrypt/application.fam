@@ -4,10 +4,10 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flip_crypt_app",
     stack_size=4 * 1024,
-    fap_category="Tools",
-    fap_version="0.1",
     fap_icon="icon.png",
-    fap_description="Encrypt, decrypt, and hash text using a variety of classic and modern crypto tools.",
+    fap_category="Tools",
     fap_author="TAxelAnderson",
     fap_weburl="https://github.com/TAxelAnderson/FlipCrypt",
+    fap_version="0.1",
+    fap_description="Encrypt, decrypt, and hash text using a variety of classic and modern crypto tools.",
 )
