@@ -818,7 +818,7 @@ void cipher_learn_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "The Baconian cipher, developed by Francis Bacon in the early 17th century, is a steganographic cipher that encodes each letter of the alphabet into a series of five binary characters, typically using combinations of \'A\' and \'B\'. For example, the letter \'A\' is represented as \'AAAAA\', \'B\' as \'AAAAB\', and so on. This binary code can then be hidden within text, images, or formatting — making it a method of concealed rather than encrypted communication. The Baconian cipher is notable for being an early example of steganography and is often used in historical or educational contexts.");
+                "The Baconian cipher, developed by Francis Bacon in the early 17th century, is a steganographic cipher that encodes each letter of the alphabet into a series of five binary characters, typically using combinations of \'A\' and \'B\'. For example, the letter \'A\' is represented as \'AAAAA\', \'B\' as \'AAAAB\', and so on. This binary code can then be hidden within text, images, or formatting, making it a method of concealed rather than encrypted communication. The Baconian cipher is notable for being an early example of steganography and is often used in historical or educational contexts.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptPlayfairLearnScene:
@@ -828,7 +828,7 @@ void cipher_learn_scene_on_enter(void* context) {
                 0,
                 128,
                 64,
-                "The Playfair cipher is a manual symmetric encryption technique invented in 1854 by Charles Wheatstone but popularized by Lord Playfair. It encrypts pairs of letters (digraphs) instead of single letters, making it more secure than simple substitution ciphers. The cipher uses a 5x5 grid of letters constructed from a keyword, combining \'I\' and \'J\' to fit the alphabet into 25 cells. To encrypt, each pair of letters is located in the grid, and rules based on their positions — same row, same column, or rectangle — are applied to substitute them with new letters. The Playfair cipher was used historically for military communication due to its relative ease of use and stronger encryption for its time.");
+                "The Playfair cipher is a manual symmetric encryption technique invented in 1854 by Charles Wheatstone but popularized by Lord Playfair. It encrypts pairs of letters (digraphs) instead of single letters, making it more secure than simple substitution ciphers. The cipher uses a 5x5 grid of letters constructed from a keyword, combining \'I\' and \'J\' to fit the alphabet into 25 cells. To encrypt, each pair of letters is located in the grid, and various rules are applied based on their positions like same row, same column, or rectangle to substitute them with new letters. The Playfair cipher was used historically for military communication due to its relative ease of use and stronger encryption for its time.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptRailfenceLearnScene:
@@ -858,7 +858,7 @@ void cipher_learn_scene_on_enter(void* context) {
                     0,
                     128,
                     64,
-                    "BLAKE-2s is a high-performance cryptographic hash function designed as an improved alternative to MD5, SHA-1, and even SHA-2, offering strong security with faster hashing speeds. Developed by Jean-Philippe Aumasson and others, it builds on the cryptographic foundations of the BLAKE algorithm (a finalist in the SHA-3 competition) but is optimized for practical use. BLAKE2 comes in two main variants: BLAKE2b (optimized for 64-bit platforms) and BLAKE2s (for 8- to 32-bit platforms). It provides features like keyed hashing, salting, and personalization, making it suitable for applications like password hashing, digital signatures, and message authentication. BLAKE2 is widely adopted due to its balance of speed, simplicity, and security, and is used in software like Argon2 (a password hashing algorithm) and various blockchain projects.");
+                    "BLAKE-2s is a high performance cryptographic hash function designed as an improved alternative to MD5, SHA-1, and even SHA-2, offering strong security with faster hashing speeds. Developed by Jean-Philippe Aumasson and others, it builds on the cryptographic foundations of the BLAKE algorithm (a finalist in the SHA-3 competition) but is optimized for practical use. BLAKE2 comes in two main variants: BLAKE2b (optimized for 64-bit platforms) and BLAKE2s (for 8- to 32-bit platforms). It provides features like keyed hashing, salting, and personalization, making it suitable for applications like password hashing, digital signatures, and message authentication. BLAKE2 is widely adopted due to its balance of speed, simplicity, and security, and is used in software like Argon2 (a password hashing algorithm) and various blockchain projects.");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMD5LearnScene:
@@ -868,7 +868,7 @@ void cipher_learn_scene_on_enter(void* context) {
                     0,
                     128,
                     64,
-                    "MD5 (Message-Digest Algorithm 5) is a widely used cryptographic hash function that produces a 128-bit (16-byte) hash value, typically rendered as a 32-character hexadecimal number. Originally designed for digital signatures and file integrity verification, MD5 is now considered cryptographically broken due to known collision vulnerabilities. While still used in some non-security-critical contexts, it is not recommended for new cryptographic applications.");
+                    "MD5 (Message Digest Algorithm 5) is a widely used cryptographic hash function that produces a 128-bit (16 byte) hash value, typically rendered as a 32-character hexadecimal number. Originally designed for digital signatures and file integrity verification, MD5 is now considered cryptographically broken due to known collision vulnerabilities. While still used in some non-security-critical contexts, it is not recommended for new cryptographic applications.");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptSHA1LearnScene:
@@ -878,7 +878,7 @@ void cipher_learn_scene_on_enter(void* context) {
                     0,
                     128,
                     64,
-                    "SHA-1 (Secure Hash Algorithm 1) is a cryptographic hash function that produces a 160-bit (20-byte) hash value. Once widely used in SSL certificates and digital signatures, SHA-1 has been deprecated due to demonstrated collision attacks, where two different inputs produce the same hash. As a result, it\'s no longer considered secure for cryptographic purposes and has largely been replaced by stronger alternatives.");
+                    "SHA-1 (Secure Hash Algorithm 1) is a cryptographic hash function that produces a 160 bit (20 byte) hash value. Once widely used in SSL certificates and digital signatures, SHA-1 has been deprecated due to demonstrated collision attacks, where two different inputs produce the same hash. As a result, it\'s no longer considered secure for cryptographic purposes and has largely been replaced by stronger alternatives.");
                 view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptSHA256LearnScene:
