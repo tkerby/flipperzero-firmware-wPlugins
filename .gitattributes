@@ -5,3 +5,5 @@ src/ArduinoIDE/**/*.cpp linguist-language=cpp
 src/ArduinoIDE/**/*.h linguist-language=cpp
 src/ArduinoIDE/**/*.hpp linguist-language=cpp
 src/ArduinoIDE/**/*.ino linguist-language=cpp
+src/ArduinoIDE/pico_game_engine/examples/**/*.h linguist-language=cpp
+src/ArduinoIDE/pico_game_engine/examples/**/*.cpp linguist-language=cpp
