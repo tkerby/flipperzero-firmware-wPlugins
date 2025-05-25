@@ -8,6 +8,7 @@
 typedef enum {
     EventTypeInput,
     ClockEventTypeTick,
+    ClockEventTypeTickPause,
 } EventType;
 
 typedef struct {
@@ -35,11 +36,13 @@ typedef struct {
     FuriMutex* mutex;
     uint8_t status;
     uint8_t enableCW_mutex;
+    uint16_t clockTickValue;
+    uint16_t pauseValue;
+    uint8_t selectMenu;
 } mutexStruct;
 
 static void draw_callback(Canvas* canvas, void* ctx) {
     furi_assert(ctx);
-
     mutexStruct* mutexVal = ctx;
     mutexStruct mutexDraw;
     furi_mutex_acquire(mutexVal->mutex, FuriWaitForever);
@@ -47,24 +50,36 @@ static void draw_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(mutexVal->mutex);
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignCenter, "RFID Beacon");
 
-    char buffer[24];
+    if(mutexDraw.enableCW_mutex == 0)
+        canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignCenter, "RFID Beacon - OFF");
+    else
+        canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignCenter, "RFID Beacon - ON");
+
+    char buffer[32];
     uint8_t positionBuffer = 0;
-    buffer[positionBuffer++] = CW_char[mutexVal->status];
+
+    if(mutexDraw.selectMenu == 0) {
+        buffer[positionBuffer++] = '>';
+        buffer[positionBuffer++] = '>';
+        buffer[positionBuffer++] = ' ';
+        buffer[positionBuffer++] = ' ';
+    }
+
+    buffer[positionBuffer++] = CW_char[mutexDraw.status];
     buffer[positionBuffer++] = ' ';
     buffer[positionBuffer++] = ' ';
     buffer[positionBuffer++] = ' ';
     buffer[positionBuffer++] = ' ';
 
     uint8_t maskMorse = 0b10000000;
-    for(uint8_t i = 0; i < CW_size[mutexVal->status]; i++) {
+    for(uint8_t i = 0; i < CW_size[mutexDraw.status]; i++) {
         if(i != 0) {
             buffer[positionBuffer++] = ' ';
             maskMorse >>= 1;
         }
 
-        if((CW_value[mutexVal->status] & maskMorse) != 0) {
+        if((CW_value[mutexDraw.status] & maskMorse) != 0) {
             buffer[positionBuffer++] = '_';
         } else {
             buffer[positionBuffer++] = '.';
@@ -73,12 +88,26 @@ static void draw_callback(Canvas* canvas, void* ctx) {
 
     buffer[positionBuffer++] = '\0';
 
-    canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, buffer);
-
-    if(mutexVal->enableCW_mutex == 0)
-        canvas_draw_str_aligned(canvas, 64, 59, AlignCenter, AlignCenter, "OFF");
+    if(mutexDraw.selectMenu == 0)
+        canvas_draw_str_aligned(canvas, 0, 25, AlignLeft, AlignCenter, buffer);
     else
-        canvas_draw_str_aligned(canvas, 64, 59, AlignCenter, AlignCenter, "On the air");
+        canvas_draw_str_aligned(canvas, 16, 25, AlignLeft, AlignCenter, buffer);
+
+    if(mutexDraw.selectMenu == 1) {
+        snprintf(buffer, sizeof(buffer), ">>  Tick: %hu", mutexDraw.clockTickValue);
+        canvas_draw_str_aligned(canvas, 0, 37, AlignLeft, AlignCenter, buffer);
+    } else {
+        snprintf(buffer, sizeof(buffer), "Tick: %hu", mutexDraw.clockTickValue);
+        canvas_draw_str_aligned(canvas, 16, 37, AlignLeft, AlignCenter, buffer);
+    }
+
+    if(mutexDraw.selectMenu == 2) {
+        snprintf(buffer, sizeof(buffer), ">>  Pause: %hu", mutexDraw.pauseValue);
+        canvas_draw_str_aligned(canvas, 0, 49, AlignLeft, AlignCenter, buffer);
+    } else {
+        snprintf(buffer, sizeof(buffer), "Pause: %hu", mutexDraw.pauseValue);
+        canvas_draw_str_aligned(canvas, 16, 49, AlignLeft, AlignCenter, buffer);
+    }
 }
 
 static void input_callback(InputEvent* input_event, void* ctx) {
@@ -92,6 +121,13 @@ static void clock_tick(void* ctx) {
     furi_assert(ctx);
     FuriMessageQueue* queue = ctx;
     EventApp event = {.type = ClockEventTypeTick};
+    furi_message_queue_put(queue, &event, 0);
+}
+
+static void clock_tickPause(void* ctx) {
+    furi_assert(ctx);
+    FuriMessageQueue* queue = ctx;
+    EventApp event = {.type = ClockEventTypeTickPause};
     furi_message_queue_put(queue, &event, 0);
 }
 
@@ -119,6 +155,9 @@ int32_t flipper_rfidbeacon_app() {
     mutexStruct mutexVal;
     mutexVal.status = 0;
     mutexVal.enableCW_mutex = 0;
+    mutexVal.clockTickValue = 250;
+    mutexVal.pauseValue = 3000;
+    mutexVal.selectMenu = 0;
 
     mutexVal.mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     if(!mutexVal.mutex) {
@@ -135,14 +174,13 @@ int32_t flipper_rfidbeacon_app() {
 
     NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
     FuriTimer* timer = furi_timer_alloc(clock_tick, FuriTimerTypePeriodic, event_queue);
-    furi_timer_start(timer, 100);
+    FuriTimer* timerPause = furi_timer_alloc(clock_tickPause, FuriTimerTypePeriodic, event_queue);
 
     uint8_t enableCW = 0;
-    uint8_t letterState = 0;
+    uint16_t letterState = 0;
     uint8_t letterPosition = 0;
     uint8_t letterChosen = 0;
 
-    // 1 : pause, 2 : dot, 3 : dash
     uint8_t draw = 0;
 
     while(1) {
@@ -152,16 +190,19 @@ int32_t flipper_rfidbeacon_app() {
         if(event.type == EventTypeInput) {
             if(event.input.key == InputKeyBack && event.input.type == InputTypeLong) {
                 break;
-            } else if(event.input.key == InputKeyUp && event.input.type == InputTypeLong) {
+            } else if(event.input.key == InputKeyOk && event.input.type == InputTypeLong) {
                 furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
 
                 if(enableCW == 0) {
                     enableCW = 1;
                     letterPosition = 0;
                     draw = 0;
+                    furi_timer_start(timer, mutexVal.clockTickValue);
                 } else {
                     RFID_OFF(notification);
                     enableCW = 0;
+                    furi_timer_stop(timer);
+                    furi_timer_stop(timerPause);
                 }
 
                 mutexVal.enableCW_mutex = enableCW;
@@ -170,22 +211,105 @@ int32_t flipper_rfidbeacon_app() {
             } else if(event.input.key == InputKeyLeft && event.input.type == InputTypeShort) {
                 furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
 
-                if(mutexVal.status != 0)
-                    mutexVal.status--;
-                else
-                    mutexVal.status = 53;
+                if(mutexVal.selectMenu == 0) {
+                    if(mutexVal.status != 0)
+                        mutexVal.status--;
+                    else
+                        mutexVal.status = 53;
+                    screenRefresh = 1;
+                } else if(mutexVal.selectMenu == 1) {
+                    if(mutexVal.clockTickValue > 50) {
+                        mutexVal.clockTickValue -= 10;
+                        screenRefresh = 1;
+                    }
+                } else if(mutexVal.selectMenu == 2) {
+                    if(mutexVal.pauseValue > 500) {
+                        mutexVal.pauseValue -= 100;
+                        screenRefresh = 1;
+                    }
+                }
 
-                screenRefresh = 1;
+                furi_mutex_release(mutexVal.mutex);
+            } else if(event.input.key == InputKeyLeft && event.input.type == InputTypeLong) {
+                furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
+
+                if(mutexVal.selectMenu == 1) {
+                    if(mutexVal.clockTickValue >= 150) {
+                        mutexVal.clockTickValue -= 100;
+                        screenRefresh = 1;
+                    } else if(mutexVal.clockTickValue > 50) {
+                        mutexVal.clockTickValue = 50;
+                        screenRefresh = 1;
+                    }
+                } else if(mutexVal.selectMenu == 2) {
+                    if(mutexVal.pauseValue >= 1500) {
+                        mutexVal.pauseValue -= 1000;
+                        screenRefresh = 1;
+                    } else if(mutexVal.pauseValue > 500) {
+                        mutexVal.pauseValue = 500;
+                        screenRefresh = 1;
+                    }
+                }
+
                 furi_mutex_release(mutexVal.mutex);
             } else if(event.input.key == InputKeyRight && event.input.type == InputTypeShort) {
                 furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
+                if(mutexVal.selectMenu == 0) {
+                    if(mutexVal.status != 53)
+                        mutexVal.status++;
+                    else
+                        mutexVal.status = 0;
+                    screenRefresh = 1;
+                } else if(mutexVal.selectMenu == 1) {
+                    if(mutexVal.clockTickValue < 1000) {
+                        mutexVal.clockTickValue += 10;
+                        screenRefresh = 1;
+                    }
+                } else if(mutexVal.selectMenu == 2) {
+                    if(mutexVal.pauseValue < 10000) {
+                        mutexVal.pauseValue += 100;
+                        screenRefresh = 1;
+                    }
+                }
 
-                if(mutexVal.status != 53)
-                    mutexVal.status++;
-                else
-                    mutexVal.status = 0;
+                furi_mutex_release(mutexVal.mutex);
+            } else if(event.input.key == InputKeyRight && event.input.type == InputTypeLong) {
+                furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
+                if(mutexVal.selectMenu == 1) {
+                    if(mutexVal.clockTickValue <= 900) {
+                        mutexVal.clockTickValue += 100;
+                        screenRefresh = 1;
+                    } else if(mutexVal.clockTickValue < 1000) {
+                        mutexVal.clockTickValue = 1000;
+                        screenRefresh = 1;
+                    }
+                } else if(mutexVal.selectMenu == 2) {
+                    if(mutexVal.pauseValue <= 9000) {
+                        mutexVal.pauseValue += 1000;
+                        screenRefresh = 1;
+                    } else if(mutexVal.pauseValue < 10000) {
+                        mutexVal.pauseValue = 10000;
+                        screenRefresh = 1;
+                    }
+                }
 
-                screenRefresh = 1;
+                furi_mutex_release(mutexVal.mutex);
+            } else if(event.input.key == InputKeyUp && event.input.type == InputTypeShort) {
+                furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
+
+                if(mutexVal.selectMenu != 0) {
+                    mutexVal.selectMenu--;
+                    screenRefresh = 1;
+                }
+
+                furi_mutex_release(mutexVal.mutex);
+
+            } else if(event.input.key == InputKeyDown && event.input.type == InputTypeShort) {
+                furi_mutex_acquire(mutexVal.mutex, FuriWaitForever);
+                if(mutexVal.selectMenu != 2) {
+                    mutexVal.selectMenu++;
+                    screenRefresh = 1;
+                }
                 furi_mutex_release(mutexVal.mutex);
             }
         } else if(event.type == ClockEventTypeTick) {
@@ -198,30 +322,24 @@ int32_t flipper_rfidbeacon_app() {
                     }
 
                     if(letterPosition == CW_size[letterChosen]) {
-                        draw = 1;
+                        draw = 0;
                         letterPosition = 0;
+                        furi_timer_stop(timer);
+                        furi_timer_start(timerPause, mutexVal.pauseValue);
                     } else {
                         uint8_t mask = 0b10000000;
                         mask >>= letterPosition;
                         if((CW_value[letterChosen] & mask) != 0)
-                            draw = 3;
-                        else
                             draw = 2;
+                        else
+                            draw = 1;
                         letterState = 0;
                         letterPosition++;
                     }
                 }
 
-                // PAUSE
-                if(draw == 1) {
-                    letterState++;
-                    if(letterState == 30) {
-                        letterState = 0;
-                        draw = 0;
-                    }
-                }
                 // DOT
-                else if(draw == 2) {
+                if(draw == 1) {
                     if(letterState == 0) {
                         RFID_ON(notification);
                         letterState = 1;
@@ -232,7 +350,7 @@ int32_t flipper_rfidbeacon_app() {
                     }
                 }
                 // DASH
-                else if(draw == 3) {
+                else if(draw == 2) {
                     if(letterState == 0) {
                         RFID_ON(notification);
                         letterState = 1;
@@ -247,6 +365,11 @@ int32_t flipper_rfidbeacon_app() {
                     }
                 }
             }
+        } else if(event.type == ClockEventTypeTickPause) {
+            furi_timer_stop(timerPause);
+            furi_timer_start(timer, mutexVal.clockTickValue);
+            letterState = 0;
+            draw = 0;
         }
 
         if(screenRefresh == 1) view_port_update(view_port);
@@ -255,6 +378,7 @@ int32_t flipper_rfidbeacon_app() {
     RFID_OFF(notification);
 
     furi_timer_free(timer);
+    furi_timer_free(timerPause);
     furi_message_queue_free(event_queue);
     furi_record_close(RECORD_NOTIFICATION);
     gui_remove_view_port(gui, view_port);

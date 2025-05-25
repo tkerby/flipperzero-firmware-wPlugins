@@ -26,11 +26,11 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0523-1659-0.420.0-f4aa88e](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0523-1659-0.420.0-f4aa88e](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release&target=f7)
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-23 16:59 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-23 16:59 EST`
-- Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
+- Updated: [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 
 <a name="release">
 
@@ -47,6 +47,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Close qFlipper
 - Use Web Installer link for easy install
+- Select RM firmware from Update Channel dropdown
+- Click Install
 ### OR
 - Extract/unzip the downloaded RM*.TGZ/ZIP file from RELEASES to a folder on your computer (Use 7Zip or WinRAR)
 - Copy the entire folder to the update folder onto the SD card you are using in your FlipperZero
@@ -724,4 +726,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0525-1244-0.420.0-1fbb495.tgz&channel=RM0525-1244-0.420.0-1fbb495&version=0.420.0)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0525-1244-0.420.0-1fbb495.tgz&channel=RM0525-1244-0.420.0-1fbb495&version=0.420.0&target=f7)
