@@ -28,8 +28,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM0523-1659-0.420.0-f4aa88e](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release&target=f7)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-23 16:59 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-23 16:59 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-25 23:28 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-25 23:28 EST`
 - Updated: [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 
 <a name="release">
@@ -45,10 +45,11 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Install Instructions
 
-- Close qFlipper
-- Use Web Installer link for easy install
-- Select RM firmware from Update Channel dropdown
-- Click Install
+- Be sure you updated to latest official release before(if installing for the first time), and verify that microSD card is installed
+- Make sure qFlipper app is closed
+- Connect your device and select desired `Web Updater` build link, and press `Connect` button
+- Select RM firmware from `Update Channel` dropdown
+- Press `Reinstall` button
 ### OR
 - Extract/unzip the downloaded RM*.TGZ/ZIP file from RELEASES to a folder on your computer (Use 7Zip or WinRAR)
 - Copy the entire folder to the update folder onto the SD card you are using in your FlipperZero
