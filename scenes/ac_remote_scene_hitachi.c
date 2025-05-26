@@ -242,6 +242,7 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
             hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
+            bool power_state_changed = false;
             hvac_hitachi_reset(ac_remote->protocol);
             switch(event_value) {
             case button_power:
@@ -261,6 +262,7 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
                     button_power,
                     POWER_ICONS[ac_remote->app_state.power][0],
                     POWER_ICONS[ac_remote->app_state.power][1]);
+                power_state_changed = true;
                 break;
             case button_mode:
                 ac_remote->app_state.mode++;
@@ -327,9 +329,12 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
             default:
                 break;
             }
-            hvac_hitachi_build_samples(ac_remote->protocol);
-            uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
-            view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
+            if(power_state_changed || ac_remote->app_state.power == PowerButtonOn) {
+                hvac_hitachi_build_samples(ac_remote->protocol);
+                uint32_t event =
+                    ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
+            }
         }
         consumed = true;
     }
