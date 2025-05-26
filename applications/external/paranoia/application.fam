@@ -1,0 +1,15 @@
+App(
+    appid="paranoia", 
+    name="Paranoia", 
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="paranoia_app",
+    stack_size=2 * 1024,
+    fap_category="Tools",
+    fap_version="0.1",
+    fap_icon="paranoia.png",  
+    fap_description="Anti-Surveillance Field Tool that scans for hidden wireless cameras, RFID skimmers, and IR monitoring devices",
+    fap_author="C0d3-5t3w",
+    fap_weburl="https://github.com/C0d3-5t3w/flipper-paranoia",
+    fap_icon_assets="images",
+    requires=["gui", "notification", "furi_hal_subghz", "furi_hal_nfc", "furi_hal_infrared"],
+)
