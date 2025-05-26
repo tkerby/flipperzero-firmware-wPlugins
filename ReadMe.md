@@ -37,6 +37,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac) Changes (By xMasterX)
 - UL: [Sub-GHz: Rename and extend Alarms ignore option with Hollarm & GangQi (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/f9a6958eb6eb54f4c6557e839dbacf23dfdb84c1)
 - UL: [Display: Backlight option `Always ON` (By Dmitry422)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/f9a6958eb6eb54f4c6557e839dbacf23dfdb84c1)
+- Added: [Doc Viewer Lite v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/docviewlite)
+- Added: [Paranoia WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-paranoia)
+- Added: [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
 
 <a name="release">
 
@@ -434,6 +437,7 @@ $ ./fbt dolphin_ext
 - [Digimon F-Com v1.5 (By TylerWilley)](https://github.com/TylerWilley/flipper-f-com)
 - [Distance Sensor v1.2 (By privet971)](https://github.com/privet971/FlipperZeroApps/tree/main/usping) `Req: Parallax (3 wires) SKU 28015`
 - [Distance Sensor v1.1 (By Sanqui)](https://github.com/Sanqui/flipperzero-firmware/tree/hc_sr04) `Req: HC-SR04`
+- [Doc Viewer Lite v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/docviewlite)
 - [Dolphin Trainer v1.3 (By nymda)](https://github.com/nymda/FlipperAntidepressants)
 - [DSTIKE Deauther v1.1 (By SequoiaSan)](https://github.com/SequoiaSan/FlipperZero-Wifi-ESP8266-Deauther-Module/tree/FlipperZero-Module-v2/FlipperZeroModule/FlipperZero-ESP8266-Deauth-App) `Req: ESP8266`
 - [DTMF Dolphin v1.5 (By litui)](https://github.com/litui/dtmf_dolphin)
@@ -604,6 +608,7 @@ $ ./fbt dolphin_ext
 - [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 - [Ocarina v1.3 (By invalidna-me)](https://github.com/invalidna-me/flipperzero-ocarina) [Here are the LOTZ Songs](https://www.zeldadungeon.net/wiki/Ocarina_of_Time_Songs)
 - [Orgasmotron v1.1 (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
+- [Paranoia WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-paranoia)
 - [Password Generator v1.3 (By anakod)](https://github.com/anakod/flipper_passgen)
 - [Password Manager v1.2 (By Rrycbarm)](https://github.com/Rrycbarm/flipperZeroPasswordManager)
 - [Passy v1.3 (By bettse)](https://github.com/bettse/passy)
@@ -650,6 +655,7 @@ $ ./fbt dolphin_ext
 - [ServoTester (2) v0.2 (By mhasbini)](https://github.com/mhasbini/ServoTesterApp)
 - [ShapShup v1.2 (By derskythe)](https://github.com/derskythe/flipperzero-shapshup)
 - [SI4713 Tuner v0.1 (By rullinoiz)](https://github.com/rullinoiz/flipper-si4713) `Req: SI4713`
+- [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
 - [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793)
 - [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 - [Skeleton App v1.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app)

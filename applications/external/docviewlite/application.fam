@@ -1,15 +1,14 @@
 App(
-    appid="docviewlite",  # Must be unique
-    name="Doc Viewer Lite",  # Displayed in menus
+    appid="docviewlite",
+    name="Doc Viewer Lite",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="docviewlite_app",
     stack_size=2 * 1024,
+    fap_icon="docviewlite.png",
+    fap_icon_assets="images",
     fap_category="Tools",
-    # Optional values
-    fap_version="0.1",
-    fap_icon="docviewlite.png",  # 10x10 1-bit PNG
-    fap_description="A simple document viewer",
-    fap_author="FlipperDev",
+    fap_author="C0d3-5t3w",
     fap_weburl="https://github.com/C0d3-5t3w/docviewlite",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_version="0.1",
+    fap_description="A simple document viewer",
 )
