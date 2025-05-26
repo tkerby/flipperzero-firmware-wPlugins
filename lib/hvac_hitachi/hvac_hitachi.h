@@ -15,8 +15,8 @@
 #define HVAC_HITACHI_TEMPERATURE_MIN 17
 #define HVAC_HITACHI_TEMPERATURE_MAX 30
 
-#define HVAC_HITACHI_SIDE_MASK    (0x80u)
-#define HVAC_HITACHI_KEYCODE_MASK (0x7fu)
+#define HVAC_HITACHI_ADDRESS_MASK (0xf0u)
+#define HVAC_HITACHI_KEYCODE_MASK (0x0fu)
 
 typedef enum {
     HvacHitachiKeycodePower = 0x01,
@@ -29,11 +29,6 @@ typedef enum {
     HvacHitachiKeycodeVane,
     HvacHitachiKeycodeResetFilter,
 } HvacHitachiKeycode;
-
-typedef enum {
-    HvacHitachiSideA,
-    HvacHitachiSideB = 0x80,
-} HvacHitachiSide;
 
 typedef enum {
     HvacHitachiFanSpeedLow = 0x10,
@@ -95,7 +90,7 @@ typedef struct FURI_PACKED HvacHitachiMessageHeader_s {
 
 typedef struct FURI_PACKED HvacHitachiMessageHeader2_s {
     uint8_t sb89;
-    uint8_t keycode_side;
+    uint8_t keycode_address;
     uint8_t sb3f;
 } HvacHitachiMessageHeader2;
 
@@ -158,12 +153,12 @@ extern void hvac_hitachi_reset(HvacHitachiContext* const ctx);
 
 /**
  * @brief Mark the message as a message for AC units operating on the specified
- * side.
+ * address.
  *
  * @param ctx Context buffer.
- * @param side Side the targeted AC unit is operating on.
+ * @param address Address the targeted AC unit is operating on.
  */
-extern void hvac_hitachi_switch_side(HvacHitachiContext* const ctx, HvacHitachiSide side);
+extern void hvac_hitachi_switch_address(HvacHitachiContext* const ctx, uint8_t address);
 
 /**
  * @brief Build set temperature message.
@@ -263,6 +258,13 @@ extern void hvac_hitachi_reset_timer(HvacHitachiContext* const ctx);
  * @param ctx Context buffer.
  */
 extern void hvac_hitachi_reset_filter(HvacHitachiContext* const ctx);
+
+/**
+ * @brief Build message before sending.
+ * 
+ * @param ctx Context buffer.
+ */
+extern void hvac_hitachi_build_samples(HvacHitachiContext* const ctx);
 
 /**
  * @brief Send a built message.

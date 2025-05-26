@@ -238,7 +238,7 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
         ac_remote_custom_event_unpack(event.event, &event_type, &event_value);
         if(event_type == AC_RemoteCustomEventTypeSendCommand) {
             NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
-            notification_message(notifications, &sequence_blink_white_100);
+            notification_message(notifications, &sequence_blink_magenta_100);
             hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
@@ -327,6 +327,7 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
             default:
                 break;
             }
+            hvac_hitachi_build_samples(ac_remote->protocol);
             uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
             view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
         }

@@ -33,8 +33,8 @@ static inline void
 
 static void convert_to(HvacHitachiContext* const ctx, uint8_t size, HvacHitachiKeycode keycode) {
     ctx->msg.header.size = size;
-    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_KEYCODE_MASK;
-    ctx->msg.header2.keycode_side |= keycode;
+    ctx->msg.header2.keycode_address &= ~HVAC_HITACHI_KEYCODE_MASK;
+    ctx->msg.header2.keycode_address |= keycode;
 }
 
 static inline void convert_to_set1(HvacHitachiContext* const ctx, HvacHitachiKeycode keycode) {
@@ -93,15 +93,15 @@ void hvac_hitachi_reset(HvacHitachiContext* const ctx) {
     ctx->msg.header.type = 0x40;
     ctx->msg.header.sbff = 0xff;
     ctx->msg.header.size = 0;
-    ctx->msg.header2.keycode_side = 0;
+    ctx->msg.header2.keycode_address = 0;
     ctx->msg.header2.sb89 = 0x89;
     ctx->msg.header2.sb3f = 0x3f;
 }
 
-void hvac_hitachi_switch_side(HvacHitachiContext* const ctx, HvacHitachiSide side) {
+void hvac_hitachi_switch_address(HvacHitachiContext* const ctx, uint8_t address) {
     furi_check(ctx);
-    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_SIDE_MASK;
-    ctx->msg.header2.keycode_side |= side;
+    ctx->msg.header2.keycode_address &= ~HVAC_HITACHI_ADDRESS_MASK;
+    ctx->msg.header2.keycode_address |= address;
 }
 
 void hvac_hitachi_set_temperature(
@@ -185,8 +185,8 @@ void hvac_hitachi_reset_filter(HvacHitachiContext* const ctx) {
 void hvac_hitachi_build_samples(HvacHitachiContext* const ctx) {
     furi_check(ctx);
     ctx->num_samples = 0;
-    // Simple check on whether the message buffer was populated or not.
-    if(ctx->msg.header.size == 0 || ctx->msg.header2.keycode_side == 0) {
+    // Simple sanity check.
+    if(ctx->msg.header.size == 0 || ctx->msg.header2.keycode_address == 0) {
         return;
     }
     write_preamble(ctx);
@@ -203,9 +203,8 @@ void hvac_hitachi_build_samples(HvacHitachiContext* const ctx) {
 
 void hvac_hitachi_send(HvacHitachiContext* const ctx) {
     furi_check(ctx);
-    hvac_hitachi_build_samples(ctx);
     if(ctx->num_samples == 0) {
-        return;
+        hvac_hitachi_build_samples(ctx);
     }
     infrared_send_raw_ext(
         ctx->samples, ctx->num_samples, true, HVAC_HITACHI_FC, HVAC_HITACHI_DUTY);
