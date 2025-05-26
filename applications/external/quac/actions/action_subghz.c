@@ -3,6 +3,7 @@
 #include <flipper_format/flipper_format_i.h>
 
 #include "helpers/subghz_txrx.h"
+#include <lib/subghz/blocks/custom_btn.h>
 
 #include "action_i.h"
 #include "quac.h"
@@ -20,7 +21,7 @@ void action_subghz_need_save_callback(void* context) {
 
     Stream* ff_stream = flipper_format_get_raw_stream(ff);
     flipper_format_delete_key(ff, "Repeat");
-    flipper_format_delete_key(ff, "Manufacture");
+    //flipper_format_delete_key(ff, "Manufacture");
 
     do {
         if(!storage_simply_remove(
@@ -67,6 +68,8 @@ void action_subghz_tx(void* context, const FuriString* action_path, FuriString* 
     FuriString* preset_name = furi_string_alloc();
     FuriString* protocol_name = furi_string_alloc();
     bool is_raw = false;
+
+    subghz_custom_btns_reset();
 
     FuriString* temp_str;
     temp_str = furi_string_alloc();
@@ -183,13 +186,16 @@ void action_subghz_tx(void* context, const FuriString* action_path, FuriString* 
             txrx, action_subghz_raw_end_callback, furi_thread_get_current());
         furi_thread_flags_wait(0, FuriFlagWaitAll, FuriWaitForever);
     } else {
-        furi_delay_ms(app->settings.subghz_duration);
+        // TODO: Should this be based on a Setting?
+        furi_delay_ms(1500);
     }
 
     FURI_LOG_I(TAG, "SUBGHZ: Action complete.");
 
     // This will call need_save_callback, if necessary
     subghz_txrx_stop(txrx);
+
+    subghz_custom_btns_reset();
 
     subghz_txrx_free(txrx);
     furi_string_free(preset_name);

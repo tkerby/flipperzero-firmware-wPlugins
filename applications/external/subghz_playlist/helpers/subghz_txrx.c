@@ -4,6 +4,8 @@
 #include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
 #include <lib/subghz/devices/cc1101_int/cc1101_int_interconnect.h>
 
+#include <lib/subghz/protocols/raw.h>
+
 #define TAG "SubGhz"
 
 static void subghz_txrx_radio_device_power_on(SubGhzTxRx* instance) {

@@ -7,7 +7,7 @@
 - Removed SubGhz Repeat setting, no longer needed (was non-standard)
 - Added SubGhz Duration setting for non-RAW signals
 
-## 0.8
+## 0.8.0
 
 - Added Import Link Here, which creates Quac Link files
 - Scroll long action names
