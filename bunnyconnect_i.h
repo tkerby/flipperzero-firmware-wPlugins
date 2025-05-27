@@ -5,7 +5,13 @@
 #include "lib/bunnyconnect_keyboard.h"
 #include "lib/bunnyconnect_helpers.h"
 #include "lib/bunnyconnect_draw.h"
+#include "lib/bunnyconnect_power.h"
 
+#include <furi.h>
+#include <furi_hal.h>
+#include <furi_hal_serial.h>
+#include <furi_hal_usb_hid.h>
+#include <furi_hal_usb_cdc.h>
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
@@ -14,17 +20,16 @@
 #include <gui/modules/popup.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
-#include <furi_hal_usb_hid.h>
-#include <furi_hal_serial.h>
-#include <furi_hal_serial_control.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define TAG                  "BunnyConnect"
-#define TERMINAL_BUFFER_SIZE 1024
+#define TERMINAL_BUFFER_SIZE 2048
 #define INPUT_BUFFER_SIZE    256
+#define RX_BUFFER_SIZE       512
+#define TX_BUFFER_SIZE       512
 
 typedef enum {
     BunnyConnectViewMainMenu,
@@ -58,6 +63,8 @@ typedef struct {
     uint8_t data_bits;
     uint8_t stop_bits;
     uint8_t parity;
+    bool usb_power_enabled; // Enable USB power output
+    bool auto_enumerate; // Auto-enumerate as CDC device
 } BunnyConnectConfig;
 
 struct BunnyConnectApp {
@@ -73,7 +80,7 @@ struct BunnyConnectApp {
 
     NotificationApp* notifications;
 
-    // Serial communication
+    // Serial communication - using generic handle since control API may not be available
     FuriHalSerialHandle* serial_handle;
     BunnyConnectState state;
     BunnyConnectConfig config;
@@ -84,25 +91,28 @@ struct BunnyConnectApp {
 
     // Threading and synchronization
     FuriThread* worker_thread;
-    FuriMutex* rx_mutex;
-    FuriMutex* tx_mutex;
-    FuriMessageQueue* tx_queue;
-    FuriStreamBuffer* rx_stream;
-    FuriStreamBuffer* tx_stream;
+    FuriMutex* mutex;
+    FuriMessageQueue* event_queue;
 
     // App state
     bool is_running;
-    bool usb_power_enabled;
-    bool notification_pending;
+    bool usb_connected;
+
+    // USB CDC communication
+    bool usb_cdc_connected;
+    uint8_t usb_cdc_port; // CDC port number (0 for single CDC)
 
     FuriString* text_string;
     char input_buffer[INPUT_BUFFER_SIZE];
+    char rx_buffer[RX_BUFFER_SIZE];
+    char tx_buffer[TX_BUFFER_SIZE];
 };
 
 // Function declarations
 void bunnyconnect_show_error_popup(BunnyConnectApp* app, const char* message);
 bool bunnyconnect_custom_event_callback(void* context, uint32_t event);
 bool bunnyconnect_navigation_callback(void* context);
+int32_t bunnyconnect_worker_thread(void* context);
 
 #ifdef __cplusplus
 }

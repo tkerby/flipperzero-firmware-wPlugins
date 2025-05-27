@@ -17,7 +17,7 @@ uint16_t bunnyconnect_char_to_hid_key(char c);
 /**
  * @brief Find string length with maximum limit
  * 
- * Custom implementation of strnlen to avoid dependency on disabled function
+ * Custom implementation of strnlen to avoid dependency issues
  * 
  * @param str string to measure
  * @param maxlen maximum length to check
@@ -34,7 +34,7 @@ static inline size_t safe_strlen(const char* str, size_t maxlen) {
 }
 
 /**
- * @brief Safe string concatenation as replacement for strcat
+ * @brief Safe string concatenation using memcpy
  * 
  * @param dest destination string buffer
  * @param src source string to append
@@ -44,8 +44,7 @@ static inline size_t safe_strlen(const char* str, size_t maxlen) {
 static inline size_t string_cat_safe(char* dest, const char* src, size_t dest_size) {
     if(dest == NULL || src == NULL || dest_size == 0) return 0;
 
-    // Use our custom safe_strlen instead of strnlen
-    size_t dest_len = safe_strlen(dest, dest_size);
+    size_t dest_len = strlen(dest);
     if(dest_len >= dest_size - 1) return 0; // No space left
 
     size_t available = dest_size - dest_len - 1;
@@ -58,6 +57,30 @@ static inline size_t string_cat_safe(char* dest, const char* src, size_t dest_si
     }
 
     return to_copy;
+}
+
+/**
+ * @brief Safe string append with bounds checking
+ * 
+ * Replaces strcat with a safer alternative using memcpy
+ * 
+ * @param dest destination buffer  
+ * @param src source string
+ * @param dest_size size of destination buffer
+ * @return bool true if successful, false if buffer would overflow
+ */
+static inline bool safe_append_string(char* dest, const char* src, size_t dest_size) {
+    if(!dest || !src || dest_size == 0) return false;
+
+    size_t dest_len = strlen(dest);
+    size_t src_len = strlen(src);
+
+    if(dest_len + src_len + 1 > dest_size) {
+        return false; // Would overflow
+    }
+
+    memcpy(dest + dest_len, src, src_len + 1);
+    return true;
 }
 
 #ifdef __cplusplus

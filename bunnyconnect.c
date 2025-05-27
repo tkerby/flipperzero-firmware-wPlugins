@@ -1,14 +1,10 @@
 #include "bunnyconnect_i.h"
 #include <furi.h>
-#include <gui/gui.h>
-#include <gui/view_dispatcher.h>
-#include <gui/modules/submenu.h>
-#include <gui/modules/text_box.h>
-#include <gui/modules/popup.h>
-#include <notification/notification_messages.h>
-#include <furi_hal_usb_hid.h>
+#include <furi_hal.h>
 #include <furi_hal_serial.h>
-#include <furi_hal_serial_control.h>
+#include <furi_hal_usb_hid.h>
+#include <gui/view_dispatcher.h>
+#include <notification/notification_messages.h>
 
 typedef enum {
     BunnyConnectSubmenuIndexConnect,
@@ -54,6 +50,89 @@ static void bunnyconnect_keyboard_callback(void* context) {
     view_dispatcher_send_custom_event(app->view_dispatcher, BunnyConnectCustomEventKeyboardDone);
 }
 
+int32_t bunnyconnect_worker_thread(void* context) {
+    BunnyConnectApp* app = context;
+
+    while(app->is_running) {
+        if(app->state == BunnyConnectStateConnected && app->usb_cdc_connected) {
+            // Check for incoming USB CDC data using correct API
+            size_t bytes_received = furi_hal_cdc_receive(
+                app->usb_cdc_port, (uint8_t*)app->rx_buffer, RX_BUFFER_SIZE - 1);
+
+            if(bytes_received > 0) {
+                // Null terminate received data
+                app->rx_buffer[bytes_received] = '\0';
+
+                // Update terminal buffer
+                if(furi_mutex_acquire(app->mutex, 100) == FuriStatusOk) {
+                    size_t current_len = strlen(app->terminal_buffer);
+                    size_t available = TERMINAL_BUFFER_SIZE - current_len - 1;
+
+                    if(available > bytes_received) {
+                        strncat(app->terminal_buffer, app->rx_buffer, available);
+
+                        // Trigger UI update
+                        uint32_t event = BunnyConnectCustomEventRefreshScreen;
+                        furi_message_queue_put(app->event_queue, &event, 0);
+                    }
+                    furi_mutex_release(app->mutex);
+                }
+            }
+        }
+
+        furi_delay_ms(10);
+    }
+
+    return 0;
+}
+
+static bool bunnyconnect_serial_init(BunnyConnectApp* app) {
+    if(!app) return false;
+
+    // Initialize USB power and CDC
+    bunnyconnect_power_init();
+
+    // Enable USB power if configured
+    if(app->config.usb_power_enabled) {
+        if(!bunnyconnect_power_set_usb_enabled(true)) {
+            FURI_LOG_E(TAG, "Failed to enable USB power");
+            bunnyconnect_power_deinit();
+            return false;
+        }
+
+        // Wait for USB enumeration and device detection
+        furi_delay_ms(2000);
+
+        // Check if USB device is connected
+        if(!bunnyconnect_power_is_usb_connected()) {
+            FURI_LOG_W(TAG, "USB device not detected, but continuing anyway");
+        }
+    }
+
+    // Initialize CDC communication
+    app->usb_cdc_port = 0; // Use first CDC port
+    app->usb_cdc_connected = true;
+
+    FURI_LOG_I(
+        TAG,
+        "USB CDC connection established (baud: %lu, power: %s)",
+        app->config.baud_rate,
+        app->config.usb_power_enabled ? "ON" : "OFF");
+
+    return true;
+}
+
+static void bunnyconnect_serial_deinit(BunnyConnectApp* app) {
+    if(!app) return;
+
+    app->usb_cdc_connected = false;
+
+    // Turn off USB power
+    bunnyconnect_power_deinit();
+
+    FURI_LOG_I(TAG, "USB CDC connection and power disabled");
+}
+
 bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
     BunnyConnectApp* app = context;
     if(!app) return false;
@@ -61,7 +140,22 @@ bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
     switch(event) {
     case BunnyConnectCustomEventConnect:
         FURI_LOG_I(TAG, "Connect event");
-        app->state = BunnyConnectStateConnected;
+        if(bunnyconnect_serial_init(app)) {
+            app->state = BunnyConnectStateConnected;
+
+            // Start worker thread
+            app->worker_thread = furi_thread_alloc();
+            furi_thread_set_name(app->worker_thread, "BunnyWorker");
+            furi_thread_set_stack_size(app->worker_thread, 1024);
+            furi_thread_set_context(app->worker_thread, app);
+            furi_thread_set_callback(app->worker_thread, bunnyconnect_worker_thread);
+            furi_thread_start(app->worker_thread);
+
+            notification_message(app->notifications, &sequence_success);
+        } else {
+            bunnyconnect_show_error_popup(app, "Failed to connect");
+        }
+
         if(app->text_box) {
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewTerminal);
         }
@@ -70,32 +164,63 @@ bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
     case BunnyConnectCustomEventDisconnect:
         FURI_LOG_I(TAG, "Disconnect event");
         app->state = BunnyConnectStateDisconnected;
+
+        // Stop worker thread
+        if(app->worker_thread) {
+            app->is_running = false;
+            furi_thread_join(app->worker_thread);
+            furi_thread_free(app->worker_thread);
+            app->worker_thread = NULL;
+            app->is_running = true;
+        }
+
+        bunnyconnect_serial_deinit(app);
         return true;
 
     case BunnyConnectCustomEventKeyboardDone:
         FURI_LOG_I(TAG, "Keyboard done event");
         if(app->input_buffer[0] != '\0') {
-            // Send the text via HID
-            for(size_t i = 0; i < strlen(app->input_buffer); i++) {
-                uint16_t key = HID_ASCII_TO_KEY(app->input_buffer[i]);
-                if(key != HID_KEYBOARD_NONE) {
-                    furi_hal_hid_kb_press(key);
-                    furi_hal_hid_kb_release(key);
+            // Send the text via USB CDC if connected
+            if(app->usb_cdc_connected) {
+                size_t len = strlen(app->input_buffer);
+                furi_hal_cdc_send(app->usb_cdc_port, (uint8_t*)app->input_buffer, len);
+
+                // Add newline
+                uint8_t newline = '\n';
+                furi_hal_cdc_send(app->usb_cdc_port, &newline, 1);
+
+                // Also send via HID for computer input
+                for(size_t i = 0; i < len; i++) {
+                    uint16_t key = HID_ASCII_TO_KEY(app->input_buffer[i]);
+                    if(key != HID_KEYBOARD_NONE) {
+                        furi_hal_hid_kb_press(key);
+                        furi_delay_ms(10);
+                        furi_hal_hid_kb_release(key);
+                        furi_delay_ms(10);
+                    }
                 }
+                // Send enter key via HID
+                furi_hal_hid_kb_press(HID_KEYBOARD_RETURN);
+                furi_delay_ms(10);
+                furi_hal_hid_kb_release(HID_KEYBOARD_RETURN);
             }
+
             // Clear buffer
             memset(app->input_buffer, 0, INPUT_BUFFER_SIZE);
         }
-        if(app->text_box) {
-            view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewTerminal);
+
+        if(app->main_menu) {
+            view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
         }
         return true;
 
     case BunnyConnectCustomEventRefreshScreen:
-        FURI_LOG_D(TAG, "Refresh screen event");
         if(app->text_box && app->terminal_buffer) {
-            text_box_set_text(app->text_box, app->terminal_buffer);
-            text_box_set_focus(app->text_box, TextBoxFocusEnd);
+            if(furi_mutex_acquire(app->mutex, 100) == FuriStatusOk) {
+                text_box_set_text(app->text_box, app->terminal_buffer);
+                text_box_set_focus(app->text_box, TextBoxFocusEnd);
+                furi_mutex_release(app->mutex);
+            }
         }
         return true;
 
@@ -115,14 +240,16 @@ bool bunnyconnect_navigation_callback(void* context) {
 static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
     if(!app || !app->view_dispatcher) return false;
 
-    // Allocate terminal buffer
-    app->terminal_buffer = malloc(TERMINAL_BUFFER_SIZE);
-    if(!app->terminal_buffer) {
-        FURI_LOG_E(TAG, "Failed to allocate terminal buffer");
-        return false;
+    // Initialize with default USB settings
+    app->config.usb_power_enabled = true; // Enable USB power by default
+    app->config.auto_enumerate = true; // Auto-enumerate as CDC device
+
+    // Initialize terminal buffer with welcome message
+    const char* welcome_msg = "BunnyConnect Terminal\nReady for connection...\n";
+    size_t msg_len = strlen(welcome_msg);
+    if(msg_len < TERMINAL_BUFFER_SIZE) {
+        memcpy(app->terminal_buffer, welcome_msg, msg_len + 1);
     }
-    memset(app->terminal_buffer, 0, TERMINAL_BUFFER_SIZE);
-    strcpy(app->terminal_buffer, "BunnyConnect Terminal\nReady...\n");
 
     // Main menu
     app->main_menu = submenu_alloc();
@@ -180,6 +307,8 @@ static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
     }
     submenu_add_item(app->config_menu, "Baud Rate: 115200", 0, NULL, app);
     submenu_add_item(app->config_menu, "Flow Control: Off", 1, NULL, app);
+    submenu_add_item(app->config_menu, "USB Power: ON", 2, NULL, app);
+    submenu_add_item(app->config_menu, "Auto Enumerate: ON", 3, NULL, app);
     view_dispatcher_add_view(
         app->view_dispatcher, BunnyConnectViewConfig, submenu_get_view(app->config_menu));
 

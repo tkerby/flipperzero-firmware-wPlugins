@@ -1,6 +1,4 @@
 #include "../lib/bunnyconnect_keyboard.h"
-#include "../lib/bunnyconnect_keyboard_icons.h"
-#include "../lib/bunnyconnect_draw.h"
 #include <gui/elements.h>
 #include <gui/modules/widget.h>
 #include <furi.h>
@@ -321,22 +319,55 @@ static void bunnyconnect_keyboard_view_draw_callback(Canvas* canvas, void* _mode
         for(size_t column = 0; column < column_count; column++) {
             bool selected = !model->cursor_select && model->selected_row == row &&
                             model->selected_column == column;
-            const Icon* icon = NULL;
-            if(keys[column].text == ENTER_KEY) {
-                icon = selected ? &I_KeySaveSelected_24x11 : &I_KeySave_24x11;
-            } else if(keys[column].text == SWITCH_KEYBOARD_KEY) {
-                icon = selected ? &I_KeyKeyboardSelected_10x11 : &I_KeyKeyboard_10x11;
-            } else if(keys[column].text == BACKSPACE_KEY) {
-                icon = selected ? &I_KeyBackspaceSelected_16x9 : &I_KeyBackspace_16x9;
-            }
 
             canvas_set_color(canvas, ColorBlack);
-            if(icon != NULL) {
-                canvas_draw_icon(
+
+            // Draw simple text labels instead of icons temporarily
+            if(keys[column].text == ENTER_KEY) {
+                if(selected) {
+                    canvas_draw_box(
+                        canvas,
+                        keyboard_origin_x + keys[column].x - 1,
+                        keyboard_origin_y + keys[column].y - 8,
+                        25,
+                        10);
+                    canvas_set_color(canvas, ColorWhite);
+                }
+                canvas_draw_str(
                     canvas,
                     keyboard_origin_x + keys[column].x,
                     keyboard_origin_y + keys[column].y,
-                    icon);
+                    "OK");
+            } else if(keys[column].text == SWITCH_KEYBOARD_KEY) {
+                if(selected) {
+                    canvas_draw_box(
+                        canvas,
+                        keyboard_origin_x + keys[column].x - 1,
+                        keyboard_origin_y + keys[column].y - 8,
+                        11,
+                        10);
+                    canvas_set_color(canvas, ColorWhite);
+                }
+                canvas_draw_str(
+                    canvas,
+                    keyboard_origin_x + keys[column].x,
+                    keyboard_origin_y + keys[column].y,
+                    "AB");
+            } else if(keys[column].text == BACKSPACE_KEY) {
+                if(selected) {
+                    canvas_draw_box(
+                        canvas,
+                        keyboard_origin_x + keys[column].x - 1,
+                        keyboard_origin_y + keys[column].y - 8,
+                        17,
+                        10);
+                    canvas_set_color(canvas, ColorWhite);
+                }
+                canvas_draw_str(
+                    canvas,
+                    keyboard_origin_x + keys[column].x,
+                    keyboard_origin_y + keys[column].y,
+                    "<-");
             } else {
                 if(selected) {
                     canvas_draw_box(
@@ -370,9 +401,11 @@ static void bunnyconnect_keyboard_view_draw_callback(Canvas* canvas, void* _mode
         canvas_set_color(canvas, ColorWhite);
         canvas_draw_box(canvas, 8, 10, 110, 48);
         canvas_set_color(canvas, ColorBlack);
-        canvas_draw_icon(canvas, 10, 14, &I_Error_18x18);
+        // Remove icon and just draw error box
         canvas_draw_rframe(canvas, 8, 8, 112, 50, 3);
         canvas_draw_rframe(canvas, 9, 9, 110, 48, 2);
+        // Draw a simple "!" as error indicator
+        canvas_draw_str(canvas, 15, 25, "!");
         elements_multiline_text_aligned(
             canvas, 62, 20, AlignCenter, AlignCenter, furi_string_get_cstr(model->validator_text));
         canvas_set_font(canvas, FontKeyboard);
@@ -515,9 +548,11 @@ static void bunnyconnect_keyboard_handle_ok(
                 text_length = 0;
             }
             if(text_length < (model->text_buffer_size - 1)) {
-                if(shift != (text_length == 0)) {
+                // Apply shift/case logic
+                if(shift || (text_length == 0 && char_is_lowercase(selected))) {
                     selected = char_to_uppercase(selected);
                 }
+
                 if(model->clear_default_text) {
                     model->text_buffer[0] = selected;
                     if(model->text_buffer_size > 1) {
@@ -791,19 +826,24 @@ void bunnyconnect_keyboard_set_header_text(BunnyConnectKeyboard* keyboard, const
 
 void bunnyconnect_keyboard_send_key(BunnyConnectKeyboard* keyboard, uint16_t key) {
     UNUSED(keyboard);
-    furi_hal_hid_kb_press(key);
-    furi_hal_hid_kb_release(key);
+    if(furi_hal_hid_is_connected()) {
+        furi_hal_hid_kb_press(key);
+        furi_delay_ms(10);
+        furi_hal_hid_kb_release(key);
+    }
 }
 
 void bunnyconnect_keyboard_send_string(BunnyConnectKeyboard* keyboard, const char* string) {
     UNUSED(keyboard);
-    if(!string) return;
+    if(!string || !furi_hal_hid_is_connected()) return;
 
     for(size_t i = 0; i < strlen(string); i++) {
         uint16_t key = HID_ASCII_TO_KEY(string[i]);
         if(key != HID_KEYBOARD_NONE) {
             furi_hal_hid_kb_press(key);
+            furi_delay_ms(10);
             furi_hal_hid_kb_release(key);
+            furi_delay_ms(10);
         }
     }
 }
