@@ -26,8 +26,8 @@ TransitCardInfo cards[77] = {
     { 0x002000, "Presto (YYZ)", "Metrolinx", true},
     { 0x004048, "Mi Movilidad (GDL)", "SITEUR", true},
     { 0x004055, "AT HOP (AKL)", "AKL Transport", true},
-    { 0x004063, "Travel Pass (DOH)", "QA Rail", true}
-    { 0x004078, "nol (DXB)", "RTA", true}
+    { 0x004063, "Travel Pass (DOH)", "QA Rail", true},
+    { 0x004078, "nol (DXB)", "RTA", true},
     { 0x008057, "NORTIC", "NRPA", true},
     { 0x010000, "Breeze/Compass", "MARTA/TransLink", true},
     { 0x018057, "NORTIC", "NRPA", true},
