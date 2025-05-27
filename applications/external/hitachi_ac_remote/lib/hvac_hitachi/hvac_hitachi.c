@@ -1,5 +1,6 @@
 #include "hvac_hitachi.h"
-#include "core/check.h"
+
+#include <core/check.h>
 
 #define TAG "hvac_hitachi"
 
@@ -27,18 +28,26 @@ static uint8_t convert_temp(uint_fast8_t temperature) {
 
 static inline void
     set_timer(HvacHitachiContext* const ctx, uint_fast16_t off_timer, uint_fast16_t on_timer) {
-    ctx->msg.set_timer.timer_lo = (off_timer & 0xfff) | ((on_timer & 0xf) << 12);
-    ctx->msg.set_timer.timer_hi = (on_timer & 0xfff) >> 4;
+    ctx->msg.nm.set_timer.timer_lo = (off_timer & 0xfff) | ((on_timer & 0xf) << 12);
+    ctx->msg.nm.set_timer.timer_hi = (on_timer & 0xfff) >> 4;
 }
 
-static void convert_to(HvacHitachiContext* const ctx, uint8_t size, HvacHitachiKeycode keycode) {
+static void
+    convert_to_nm(HvacHitachiContext* const ctx, uint8_t size, HvacHitachiKeycode keycode) {
     ctx->msg.header.size = size;
-    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_KEYCODE_MASK;
-    ctx->msg.header2.keycode_side |= keycode;
+    ctx->msg.common.keycode_side &= ~HVAC_HITACHI_KEYCODE_MASK;
+    ctx->msg.common.keycode_side |= keycode;
+    ctx->msg.nm.sb3f = 0x3f;
+}
+
+static void convert_to_tm(HvacHitachiContext* const ctx) {
+    ctx->msg.header.size = HVAC_HITACHI_SIZE_TM;
+    ctx->msg.common.keycode_side &= ~HVAC_HITACHI_KEYCODE_MASK;
+    ctx->msg.common.keycode_side |= HvacHitachiKeycodeTest;
 }
 
 static inline void convert_to_set1(HvacHitachiContext* const ctx, HvacHitachiKeycode keycode) {
-    convert_to(ctx, HVAC_HITACHI_SIZE_SET1, keycode);
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_SET1, keycode);
 }
 
 static size_t calc_message_size(HvacHitachiContext* const ctx) {
@@ -93,15 +102,14 @@ void hvac_hitachi_reset(HvacHitachiContext* const ctx) {
     ctx->msg.header.type = 0x40;
     ctx->msg.header.sbff = 0xff;
     ctx->msg.header.size = 0;
-    ctx->msg.header2.keycode_side = 0;
-    ctx->msg.header2.sb89 = 0x89;
-    ctx->msg.header2.sb3f = 0x3f;
+    ctx->msg.common.keycode_side = 0;
+    ctx->msg.common.sb89 = 0x89;
 }
 
 void hvac_hitachi_switch_side(HvacHitachiContext* const ctx, HvacHitachiSide side) {
     furi_check(ctx);
-    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_SIDE_MASK;
-    ctx->msg.header2.keycode_side |= side;
+    ctx->msg.common.keycode_side &= ~HVAC_HITACHI_ADDRESS_MASK;
+    ctx->msg.common.keycode_side |= side;
 }
 
 void hvac_hitachi_set_temperature(
@@ -110,7 +118,7 @@ void hvac_hitachi_set_temperature(
     bool is_up) {
     furi_check(ctx);
     convert_to_set1(ctx, is_up ? HvacHitachiKeycodeTempUp : HvacHitachiKeycodeTempDown);
-    ctx->msg.set1.temperature = convert_temp(temperature);
+    ctx->msg.nm.set1.temperature = convert_temp(temperature);
 }
 
 void hvac_hitachi_set_fan_speed_mode(
@@ -119,13 +127,13 @@ void hvac_hitachi_set_fan_speed_mode(
     HvacHitachiMode mode) {
     furi_check(ctx);
     convert_to_set1(ctx, HvacHitachiKeycodeFanSpeed);
-    ctx->msg.set1.fan_speed_mode = fan_speed | mode;
+    ctx->msg.nm.set1.fan_speed_mode = fan_speed | mode;
 }
 
 void hvac_hitachi_set_vane(HvacHitachiContext* const ctx, HvacHitachiVane vane) {
     furi_check(ctx);
     convert_to_set1(ctx, HvacHitachiKeycodeVane);
-    ctx->msg.set1.vane = vane;
+    ctx->msg.nm.set1.vane = vane;
 }
 
 void hvac_hitachi_set_mode(
@@ -135,10 +143,10 @@ void hvac_hitachi_set_mode(
     HvacHitachiMode mode,
     HvacHitachiVane vane) {
     furi_check(ctx);
-    convert_to(ctx, HVAC_HITACHI_SIZE_MODE, HvacHitachiKeycodeMode);
-    ctx->msg.set_mode_power.temperature = convert_temp(temperature);
-    ctx->msg.set_mode_power.fan_speed_mode = fan_speed | mode;
-    ctx->msg.set_mode_power.vane = vane;
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_MODE, HvacHitachiKeycodeMode);
+    ctx->msg.nm.set_mode_power.temperature = convert_temp(temperature);
+    ctx->msg.nm.set_mode_power.fan_speed_mode = fan_speed | mode;
+    ctx->msg.nm.set_mode_power.vane = vane;
 }
 
 void hvac_hitachi_set_power(
@@ -149,11 +157,11 @@ void hvac_hitachi_set_power(
     HvacHitachiVane vane,
     HvacHitachiControl control) {
     furi_check(ctx);
-    convert_to(ctx, HVAC_HITACHI_SIZE_POWER, HvacHitachiKeycodePower);
-    ctx->msg.set_mode_power.temperature = convert_temp(temperature);
-    ctx->msg.set_mode_power.fan_speed_mode = fan_speed | mode;
-    ctx->msg.set_mode_power.vane = vane;
-    ctx->msg.set_mode_power.control = control;
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_POWER, HvacHitachiKeycodePower);
+    ctx->msg.nm.set_mode_power.temperature = convert_temp(temperature);
+    ctx->msg.nm.set_mode_power.fan_speed_mode = fan_speed | mode;
+    ctx->msg.nm.set_mode_power.vane = vane;
+    ctx->msg.nm.set_mode_power.control = control;
 }
 
 void hvac_hitachi_set_timer(
@@ -165,28 +173,39 @@ void hvac_hitachi_set_timer(
     HvacHitachiMode mode,
     HvacHitachiVane vane) {
     furi_check(ctx);
-    convert_to(ctx, HVAC_HITACHI_SIZE_TIMER, HvacHitachiKeycodeTimerSet);
-    ctx->msg.set_timer.temperature = convert_temp(temperature);
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_TIMER, HvacHitachiKeycodeTimerSet);
+    ctx->msg.nm.set_timer.temperature = convert_temp(temperature);
     set_timer(ctx, off_timer, on_timer);
-    ctx->msg.set_timer.fan_speed_mode = fan_speed | mode;
-    ctx->msg.set_timer.vane = vane;
+    ctx->msg.nm.set_timer.fan_speed_mode = fan_speed | mode;
+    ctx->msg.nm.set_timer.vane = vane;
 }
 
 void hvac_hitachi_reset_timer(HvacHitachiContext* const ctx) {
     furi_check(ctx);
-    convert_to(ctx, HVAC_HITACHI_SIZE_SET0, HvacHitachiKeycodeTimerReset);
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_SET0, HvacHitachiKeycodeTimerReset);
 }
 
 void hvac_hitachi_reset_filter(HvacHitachiContext* const ctx) {
     furi_check(ctx);
-    convert_to(ctx, HVAC_HITACHI_SIZE_KEYCODE_ONLY, HvacHitachiKeycodeResetFilter);
+    convert_to_nm(ctx, HVAC_HITACHI_SIZE_KEYCODE_ONLY, HvacHitachiKeycodeResetFilter);
+}
+
+void hvac_hitachi_test_mode(
+    HvacHitachiContext* const ctx,
+    uint_fast8_t temperature,
+    HvacHitachiMode mode,
+    uint_fast16_t off_timer) {
+    furi_check(ctx);
+    convert_to_tm(ctx);
+    ctx->msg.tm.temperature = convert_temp(temperature);
+    ctx->msg.tm.timer_mode = (mode << 12) | (off_timer & 0xfff);
 }
 
 void hvac_hitachi_build_samples(HvacHitachiContext* const ctx) {
     furi_check(ctx);
     ctx->num_samples = 0;
-    // Simple check on whether the message buffer was populated or not.
-    if(ctx->msg.header.size == 0 || ctx->msg.header2.keycode_side == 0) {
+    // Simple sanity check.
+    if(ctx->msg.header.size == 0 || ctx->msg.common.keycode_side == 0) {
         return;
     }
     write_preamble(ctx);
@@ -203,9 +222,8 @@ void hvac_hitachi_build_samples(HvacHitachiContext* const ctx) {
 
 void hvac_hitachi_send(HvacHitachiContext* const ctx) {
     furi_check(ctx);
-    hvac_hitachi_build_samples(ctx);
     if(ctx->num_samples == 0) {
-        return;
+        hvac_hitachi_build_samples(ctx);
     }
     infrared_send_raw_ext(
         ctx->samples, ctx->num_samples, true, HVAC_HITACHI_FC, HVAC_HITACHI_DUTY);

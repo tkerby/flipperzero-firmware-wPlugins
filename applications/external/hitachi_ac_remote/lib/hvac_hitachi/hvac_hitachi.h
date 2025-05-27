@@ -15,8 +15,8 @@
 #define HVAC_HITACHI_TEMPERATURE_MIN 17
 #define HVAC_HITACHI_TEMPERATURE_MAX 30
 
-#define HVAC_HITACHI_SIDE_MASK    (0x80u)
-#define HVAC_HITACHI_KEYCODE_MASK (0x7fu)
+#define HVAC_HITACHI_ADDRESS_MASK (0xf0u)
+#define HVAC_HITACHI_KEYCODE_MASK (0x0fu)
 
 typedef enum {
     HvacHitachiKeycodePower = 0x01,
@@ -24,6 +24,7 @@ typedef enum {
     HvacHitachiKeycodeFanSpeed,
     HvacHitachiKeycodeTempDown = 0x08,
     HvacHitachiKeycodeTempUp,
+    HvacHitachiKeycodeTest,
     HvacHitachiKeycodeTimerSet = 0x0b,
     HvacHitachiKeycodeTimerReset = 0x0d,
     HvacHitachiKeycodeVane,
@@ -46,6 +47,7 @@ typedef enum {
     HvacHitachiModeDehumidifying = 0x4,
     HvacHitachiModeCooling = 0x6,
     HvacHitachiModeHeating = 0x8,
+    HvacHitachiModeAuto = 0xb,
 } HvacHitachiMode;
 
 typedef enum {
@@ -93,30 +95,46 @@ typedef struct FURI_PACKED HvacHitachiMessageHeader_s {
     uint8_t size;
 } HvacHitachiMessageHeader;
 
-typedef struct FURI_PACKED HvacHitachiMessageHeader2_s {
+typedef struct FURI_PACKED HvacHitachiMessageCommon_s {
     uint8_t sb89;
     uint8_t keycode_side;
-    uint8_t sb3f;
-} HvacHitachiMessageHeader2;
+} HvacHitachiMessageCommon;
 
-typedef struct FURI_PACKED HvacHitachiMessage_s {
-    HvacHitachiMessageHeader header;
-    HvacHitachiMessageHeader2 header2;
+typedef struct FURI_PACKED HvacHitachiMessageNormal_s {
+    uint8_t sb3f;
     union {
         HvacHitachiPayloadSet1 set1;
         HvacHitachiPayloadModePower set_mode_power;
         HvacHitachiPayloadModeTimer set_timer;
     };
+} HvacHitachiMessageNormal;
+
+typedef struct FURI_PACKED HvacHitachiMessageTest_s {
+    uint8_t temperature;
+    uint16_t timer_mode;
+} HvacHitachiMessageTest;
+
+typedef struct FURI_PACKED HvacHitachiMessage_s {
+    HvacHitachiMessageHeader header;
+    HvacHitachiMessageCommon common;
+    union {
+        HvacHitachiMessageNormal nm;
+        HvacHitachiMessageTest tm;
+    };
 } HvacHitachiMessage;
-#define HVAC_HITACHI_SIZE_SET0 (0xe0 - 1 + sizeof(HvacHitachiMessageHeader2))
+
+#define HVAC_HITACHI_SIZE_NM_COMMON (sizeof(HvacHitachiMessageCommon) + sizeof(uint8_t))
+#define HVAC_HITACHI_SIZE_SET0      (0xe0 - 1 + HVAC_HITACHI_SIZE_NM_COMMON)
 #define HVAC_HITACHI_SIZE_SET1 \
-    (0xe0 - 1 + sizeof(HvacHitachiMessageHeader2) + sizeof(HvacHitachiPayloadSet1))
+    (0xe0 - 1 + HVAC_HITACHI_SIZE_NM_COMMON + sizeof(HvacHitachiPayloadSet1))
 #define HVAC_HITACHI_SIZE_POWER \
-    (0xe0 - 1 + sizeof(HvacHitachiMessageHeader2) + sizeof(HvacHitachiPayloadModePower))
+    (0xe0 - 1 + HVAC_HITACHI_SIZE_NM_COMMON + sizeof(HvacHitachiPayloadModePower))
 #define HVAC_HITACHI_SIZE_MODE (HVAC_HITACHI_SIZE_POWER - 1)
 #define HVAC_HITACHI_SIZE_TIMER \
-    (0xe0 - 1 + sizeof(HvacHitachiMessageHeader2) + sizeof(HvacHitachiPayloadModeTimer))
-#define HVAC_HITACHI_SIZE_KEYCODE_ONLY (HVAC_HITACHI_SIZE_SET0 - 1)
+    (0xe0 - 1 + HVAC_HITACHI_SIZE_NM_COMMON + sizeof(HvacHitachiPayloadModeTimer))
+#define HVAC_HITACHI_SIZE_KEYCODE_ONLY (0xe0 - 1 + sizeof(HvacHitachiMessageCommon))
+#define HVAC_HITACHI_SIZE_TM \
+    (0xe0 - 1 + sizeof(HvacHitachiMessageCommon) + sizeof(HvacHitachiMessageTest))
 
 typedef struct HvacHitachiContext_s {
     /**
@@ -263,6 +281,27 @@ extern void hvac_hitachi_reset_timer(HvacHitachiContext* const ctx);
  * @param ctx Context buffer.
  */
 extern void hvac_hitachi_reset_filter(HvacHitachiContext* const ctx);
+
+/**
+ * @brief Build enter test mode message.
+ * 
+ * @param ctx Context buffer.
+ * @param temperature Temperature in degree centigrade.
+ * @param mode Mode.
+ * @param off_timer Off timer in minutes. Set this to 120 to mimick the behavior of the original remote.
+ */
+extern void hvac_hitachi_test_mode(
+    HvacHitachiContext* const ctx,
+    uint_fast8_t temperature,
+    HvacHitachiMode mode,
+    uint_fast16_t off_timer);
+
+/**
+ * @brief Build message before sending.
+ * 
+ * @param ctx Context buffer.
+ */
+extern void hvac_hitachi_build_samples(HvacHitachiContext* const ctx);
 
 /**
  * @brief Send a built message.

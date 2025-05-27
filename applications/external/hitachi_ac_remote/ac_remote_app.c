@@ -46,7 +46,7 @@ AC_RemoteApp* ac_remote_app_alloc() {
 
     app->ac_remote_panel = ac_remote_panel_alloc();
 
-    scene_manager_next_scene(app->scene_manager, AC_RemoteSceneMitsubishi);
+    scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
     return app;
 }
 
