@@ -1,15 +1,15 @@
 # FlipCrypt
 
-**FlipCrypt** is a Flipper Zero app that provides a collection of classic cipher algorithms and cryptographic hash functions for encryption, decryption, and hashing.
+FlipCrypt is a Flipper Zero app that provides a collection of classic cipher algorithms and cryptographic hash functions for encryption, decryption, and hashing.
 
 ## Features
 
 ### Ciphers
-- **Atbash**
-- **Baconian**
-- **Playfair**
-- **Rail Fence**
-- **Vigenère**
+- Atbash
+- Baconian
+- Playfair
+- Rail Fence
+- Vigenère
 
 ### Hashing Algorithms
 - **BLAKE-2s**
