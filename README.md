@@ -12,10 +12,10 @@ FlipCrypt is a Flipper Zero app that provides a collection of classic cipher alg
 - Vigenère
 
 ### Hashing Algorithms
-- **BLAKE-2s**
-- **MD5**
-- **SHA-1**
-- **SHA-256**
+- BLAKE-2s
+- MD5
+- SHA-1
+- SHA-256
 
 ## Usage
 Navigate through the app's menu on your Flipper Zero to:
