@@ -15,6 +15,8 @@ void nfc_comparator_failed_to_load_nfc_card_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
 
+   nfc_comparator_led_worker_start(nfc_comparator->notification_app, NfcComparatorLedState_Error);
+
    widget_add_text_box_element(
       nfc_comparator->views.widget,
       0,
@@ -58,12 +60,10 @@ bool nfc_comparator_failed_to_load_nfc_card_scene_on_event(void* context, SceneM
       default:
          break;
       }
-   } else {
-      if(event.event == 0) {
-         scene_manager_search_and_switch_to_previous_scene(
-            nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
-         consumed = true;
-      }
+   } else if(event.type == SceneManagerEventTypeBack) {
+      scene_manager_search_and_switch_to_previous_scene(
+         nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+      consumed = true;
    }
    return consumed;
 }
@@ -72,4 +72,5 @@ void nfc_comparator_failed_to_load_nfc_card_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    widget_reset(nfc_comparator->views.widget);
+   nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
 }

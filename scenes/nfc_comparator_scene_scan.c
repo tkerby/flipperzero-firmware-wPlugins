@@ -41,6 +41,13 @@ bool nfc_comparator_scan_scene_on_event(void* context, SceneManagerEvent event) 
       case NfcComparatorReaderWorkerState_Scanning:
          popup_set_header(
             nfc_comparator->views.popup, "Scanning....", 64, 5, AlignCenter, AlignTop);
+         popup_set_text(
+            nfc_comparator->views.popup,
+            "Hold card next\nto Flipper's back",
+            64,
+            40,
+            AlignCenter,
+            AlignTop);
          break;
       case NfcComparatorReaderWorkerState_Polling:
          popup_set_header(
