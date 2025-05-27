@@ -34,8 +34,8 @@ static inline void
 
 static void convert_to(HvacHitachiContext* const ctx, uint8_t size, HvacHitachiKeycode keycode) {
     ctx->msg.header.size = size;
-    ctx->msg.header2.keycode_address &= ~HVAC_HITACHI_KEYCODE_MASK;
-    ctx->msg.header2.keycode_address |= keycode;
+    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_KEYCODE_MASK;
+    ctx->msg.header2.keycode_side |= keycode;
 }
 
 static inline void convert_to_set1(HvacHitachiContext* const ctx, HvacHitachiKeycode keycode) {
@@ -94,15 +94,15 @@ void hvac_hitachi_reset(HvacHitachiContext* const ctx) {
     ctx->msg.header.type = 0x40;
     ctx->msg.header.sbff = 0xff;
     ctx->msg.header.size = 0;
-    ctx->msg.header2.keycode_address = 0;
+    ctx->msg.header2.keycode_side = 0;
     ctx->msg.header2.sb89 = 0x89;
     ctx->msg.header2.sb3f = 0x3f;
 }
 
-void hvac_hitachi_switch_address(HvacHitachiContext* const ctx, uint8_t address) {
+void hvac_hitachi_switch_side(HvacHitachiContext* const ctx, HvacHitachiSide side) {
     furi_check(ctx);
-    ctx->msg.header2.keycode_address &= ~HVAC_HITACHI_ADDRESS_MASK;
-    ctx->msg.header2.keycode_address |= address;
+    ctx->msg.header2.keycode_side &= ~HVAC_HITACHI_ADDRESS_MASK;
+    ctx->msg.header2.keycode_side |= side;
 }
 
 void hvac_hitachi_set_temperature(
@@ -187,7 +187,7 @@ void hvac_hitachi_build_samples(HvacHitachiContext* const ctx) {
     furi_check(ctx);
     ctx->num_samples = 0;
     // Simple sanity check.
-    if(ctx->msg.header.size == 0 || ctx->msg.header2.keycode_address == 0) {
+    if(ctx->msg.header.size == 0 || ctx->msg.header2.keycode_side == 0) {
         return;
     }
     write_preamble(ctx);

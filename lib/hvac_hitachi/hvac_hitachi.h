@@ -31,6 +31,11 @@ typedef enum {
 } HvacHitachiKeycode;
 
 typedef enum {
+    HvacHitachiSideA,
+    HvacHitachiSideB = 0x80,
+} HvacHitachiSide;
+
+typedef enum {
     HvacHitachiFanSpeedLow = 0x10,
     HvacHitachiFanSpeedMedium = 0x20,
     HvacHitachiFanSpeedHigh = 0x40,
@@ -90,7 +95,7 @@ typedef struct FURI_PACKED HvacHitachiMessageHeader_s {
 
 typedef struct FURI_PACKED HvacHitachiMessageHeader2_s {
     uint8_t sb89;
-    uint8_t keycode_address;
+    uint8_t keycode_side;
     uint8_t sb3f;
 } HvacHitachiMessageHeader2;
 
@@ -153,12 +158,12 @@ extern void hvac_hitachi_reset(HvacHitachiContext* const ctx);
 
 /**
  * @brief Mark the message as a message for AC units operating on the specified
- * address.
+ * side.
  *
  * @param ctx Context buffer.
- * @param address Address the targeted AC unit is operating on.
+ * @param side Side the targeted AC unit is operating on.
  */
-extern void hvac_hitachi_switch_address(HvacHitachiContext* const ctx, uint8_t address);
+extern void hvac_hitachi_switch_side(HvacHitachiContext* const ctx, HvacHitachiSide side);
 
 /**
  * @brief Build set temperature message.
