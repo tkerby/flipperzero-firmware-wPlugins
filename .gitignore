@@ -5,6 +5,7 @@ dist
 .editorconfig
 .env
 .ufbt
-DS_Store
+.DS_Store
 ref.txt
-api_symbols.csv
+sdk.hpp
+exa
