@@ -306,7 +306,10 @@ static void bunnyconnect_keyboard_view_draw_callback(Canvas* canvas, void* _mode
         while(len && canvas_string_width(canvas, str) > needed_string_width) {
             str[len--] = '\0';
         }
-        strlcat(str, "...", model->text_buffer_size);
+        // Use safe string append instead of strlcat
+        if(len + 3 < model->text_buffer_size) {
+            memcpy(str + len, "...", 4); // Copy including null terminator
+        }
     }
 
     canvas_draw_str(canvas, start_pos, 22, str);

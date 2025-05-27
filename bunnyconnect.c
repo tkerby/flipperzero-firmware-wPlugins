@@ -65,16 +65,28 @@ int32_t bunnyconnect_worker_thread(void* context) {
 
                 // Update terminal buffer
                 if(furi_mutex_acquire(app->mutex, 100) == FuriStatusOk) {
-                    size_t current_len = strlen(app->terminal_buffer);
-                    size_t available = TERMINAL_BUFFER_SIZE - current_len - 1;
-
-                    if(available > bytes_received) {
-                        strncat(app->terminal_buffer, app->rx_buffer, available);
-
-                        // Trigger UI update
-                        uint32_t event = BunnyConnectCustomEventRefreshScreen;
-                        furi_message_queue_put(app->event_queue, &event, 0);
+                    // Use safe string append instead of strncat
+                    if(!safe_append_string(
+                           app->terminal_buffer, app->rx_buffer, TERMINAL_BUFFER_SIZE)) {
+                        // Buffer full, clear some space by shifting content
+                        size_t current_len = strlen(app->terminal_buffer);
+                        if(current_len > TERMINAL_BUFFER_SIZE / 2) {
+                            // Move second half to beginning
+                            size_t move_start = current_len / 2;
+                            memmove(
+                                app->terminal_buffer,
+                                app->terminal_buffer + move_start,
+                                current_len - move_start + 1);
+                            // Try append again
+                            safe_append_string(
+                                app->terminal_buffer, app->rx_buffer, TERMINAL_BUFFER_SIZE);
+                        }
                     }
+
+                    // Trigger UI update
+                    uint32_t event = BunnyConnectCustomEventRefreshScreen;
+                    furi_message_queue_put(app->event_queue, &event, 0);
+
                     furi_mutex_release(app->mutex);
                 }
             }
