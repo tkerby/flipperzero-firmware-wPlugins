@@ -129,7 +129,7 @@ void ac_remote_scene_universal_common_item_callback(void* context, uint32_t inde
     view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
 }
 
-void ac_remote_scene_mitsubishi_on_enter(void* context) {
+void ac_remote_scene_hitachi_on_enter(void* context) {
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
     ac_remote->protocol = hvac_hitachi_init();
@@ -169,14 +169,14 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_icon(ac_remote_panel, 39, 39, &I_mode_text_20x5);
-    ac_remote_panel_add_icon(ac_remote_panel, 0, 63, &I_frame_30x39);
+    ac_remote_panel_add_icon(ac_remote_panel, 0, 59, &I_frame_30x39);
     ac_remote_panel_add_item(
         ac_remote_panel,
         button_temp_up,
         0,
         1,
         3,
-        51,
+        47,
         &I_tempup_24x21,
         &I_tempup_hover_24x21,
         ac_remote_scene_universal_common_item_callback,
@@ -187,7 +187,7 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         0,
         2,
         3,
-        93,
+        89,
         &I_tempdown_24x21,
         &I_tempdown_hover_24x21,
         ac_remote_scene_universal_common_item_callback,
@@ -198,35 +198,35 @@ void ac_remote_scene_mitsubishi_on_enter(void* context) {
         1,
         1,
         39,
-        54,
+        50,
         FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][0],
         FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 41, 76, &I_fan_text_14x5);
+    ac_remote_panel_add_icon(ac_remote_panel, 41, 72, &I_fan_text_14x5);
     ac_remote_panel_add_item(
         ac_remote_panel,
         button_vane,
         1,
         2,
         39,
-        91,
+        83,
         VANE_BUTTON_ICONS[ac_remote->app_state.vane][0],
         VANE_BUTTON_ICONS[ac_remote->app_state.vane][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 38, 113, &I_vane_text_20x5);
+    ac_remote_panel_add_icon(ac_remote_panel, 38, 105, &I_vane_text_20x5);
 
     ac_remote_panel_add_label(ac_remote_panel, 0, 6, 11, FontPrimary, "AC remote");
 
     snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-    ac_remote_panel_add_label(ac_remote_panel, label_temperature, 4, 86, FontKeyboard, buffer);
+    ac_remote_panel_add_label(ac_remote_panel, label_temperature, 4, 82, FontKeyboard, buffer);
 
     view_set_orientation(view_stack_get_view(ac_remote->view_stack), ViewOrientationVertical);
     view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewStack);
 }
 
-bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event) {
+bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
     AC_RemoteApp* ac_remote = context;
     SceneManager* scene_manager = ac_remote->scene_manager;
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
@@ -341,7 +341,7 @@ bool ac_remote_scene_mitsubishi_on_event(void* context, SceneManagerEvent event)
     return consumed;
 }
 
-void ac_remote_scene_mitsubishi_on_exit(void* context) {
+void ac_remote_scene_hitachi_on_exit(void* context) {
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
     ac_remote_store_settings(&ac_remote->app_state);

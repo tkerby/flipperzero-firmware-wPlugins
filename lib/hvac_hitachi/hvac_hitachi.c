@@ -1,5 +1,6 @@
 #include "hvac_hitachi.h"
-#include "core/check.h"
+
+#include <core/check.h>
 
 #define TAG "hvac_hitachi"
 
