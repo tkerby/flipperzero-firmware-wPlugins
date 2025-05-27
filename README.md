@@ -4,14 +4,14 @@ FlipCrypt is a Flipper Zero app that provides a collection of classic cipher alg
 
 ## Features
 
-### Ciphers
+## Ciphers
 - Atbash
 - Baconian
 - Playfair
 - Rail Fence
 - Vigenère
 
-### Hashing Algorithms
+## Hashing Algorithms
 - BLAKE-2s
 - MD5
 - SHA-1
