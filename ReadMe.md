@@ -42,6 +42,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
+- Updated: [NFC Comparator v2.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 
 <a name="release">
 
@@ -587,7 +588,7 @@ $ ./fbt dolphin_ext
 - [Name Changer (By ESurge)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/pull/488)
 - [NFC/RFID Detector v1.4 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2795)
 - [NFC APDU Runner v0.3.5 (By SpenserCai)](https://github.com/SpenserCai/nfc_apdu_runner)
-- [NFC Comparator v1.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- [NFC Comparator v2.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - [NFC E-Ink Tags v1.0.4 (By RebornedBrain)](https://github.com/flipperdevices/flipperzero-good-faps/pull/245)
 - [NFC Keyboard v1.0 (By Patrick762)](https://github.com/Patrick762/flipper-nfc-keyboard)
 - [NFC Magic v1.15 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
