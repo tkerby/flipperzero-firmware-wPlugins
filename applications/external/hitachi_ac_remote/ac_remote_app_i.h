@@ -63,7 +63,6 @@ struct AC_RemoteApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
-    ViewStack* view_stack;
     ACRemotePanel* ac_remote_panel;
     ACRemoteAppSettings app_state;
     HvacHitachiContext* protocol;

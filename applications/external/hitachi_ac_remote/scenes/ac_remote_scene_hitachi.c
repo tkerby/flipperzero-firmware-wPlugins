@@ -142,7 +142,6 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         ac_remote->app_state.temperature = 23;
     }
 
-    view_stack_add_view(ac_remote->view_stack, ac_remote_panel_get_view(ac_remote_panel));
     ac_remote_panel_reserve(ac_remote_panel, 2, 3);
 
     ac_remote_panel_add_item(
@@ -222,7 +221,7 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
     snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
     ac_remote_panel_add_label(ac_remote_panel, label_temperature, 4, 82, FontKeyboard, buffer);
 
-    view_set_orientation(view_stack_get_view(ac_remote->view_stack), ViewOrientationVertical);
+    view_set_orientation(ac_remote_panel_get_view(ac_remote_panel), ViewOrientationVertical);
     view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewStack);
 }
 
@@ -346,6 +345,5 @@ void ac_remote_scene_hitachi_on_exit(void* context) {
     ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
     ac_remote_store_settings(&ac_remote->app_state);
     hvac_hitachi_deinit(ac_remote->protocol);
-    view_stack_remove_view(ac_remote->view_stack, ac_remote_panel_get_view(ac_remote_panel));
     ac_remote_panel_reset(ac_remote_panel);
 }
