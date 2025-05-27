@@ -1,3 +1,5 @@
 ADD_SCENE(nfc_comparator, main_menu, MainMenu)
 ADD_SCENE(nfc_comparator, select_nfc_card, SelectNfcCard)
-ADD_SCENE(nfc_comparator, comparator, Comparator)
+ADD_SCENE(nfc_comparator, scan, Scan)
+ADD_SCENE(nfc_comparator, results, Results)
+ADD_SCENE(nfc_comparator, failed_to_load_nfc_card, FailedToLoadNfcCard)
