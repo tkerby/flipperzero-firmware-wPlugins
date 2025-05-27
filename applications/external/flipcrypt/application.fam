@@ -1,5 +1,5 @@
 App(
-    appid="flipcrypt_app",
+    appid="flip_crypt",
     name="FlipCrypt",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="flip_crypt_app",
