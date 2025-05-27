@@ -26,8 +26,11 @@ AC_RemoteApp* ac_remote_app_alloc() {
 
     app->gui = furi_record_open(RECORD_GUI);
 
-    app->view_dispatcher = view_dispatcher_alloc();
     app->scene_manager = scene_manager_alloc(&ac_remote_scene_handlers, app);
+
+    app->ac_remote_panel = ac_remote_panel_alloc();
+
+    app->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
     view_dispatcher_set_custom_event_callback(
@@ -39,11 +42,10 @@ AC_RemoteApp* ac_remote_app_alloc() {
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    app->view_stack = view_stack_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher, AC_RemoteAppViewStack, view_stack_get_view(app->view_stack));
-
-    app->ac_remote_panel = ac_remote_panel_alloc();
+        app->view_dispatcher,
+        AC_RemoteAppViewStack,
+        ac_remote_panel_get_view(app->ac_remote_panel));
 
     scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
     return app;
@@ -57,7 +59,6 @@ void ac_remote_app_free(AC_RemoteApp* app) {
 
     // View dispatcher
     view_dispatcher_free(app->view_dispatcher);
-    view_stack_free(app->view_stack);
     ac_remote_panel_free(app->ac_remote_panel);
     scene_manager_free(app->scene_manager);
 
