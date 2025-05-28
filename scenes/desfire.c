@@ -72,7 +72,7 @@ TransitCardInfo cards[77] = {
     { 0x425311, "MRT SVC (BKK)", "BEM", true},
     { 0x5010F2, "Metrocard (CHC)", "ECan", true},
     { 0x5011F2, "Litacka Opencard", "Haguess", true},
-    { 0x6013F2, "HOLO", "INIT", true},
+    { 0x6013F2, "HOLO", "HNL County", true},
     { 0x7A007A, "TAP & GO (LAS)", "RTC", true},
     { 0x7D23A4, "Umo", "Cubic", true},
     { 0x805BC6, "Umo", "Cubic", true},
