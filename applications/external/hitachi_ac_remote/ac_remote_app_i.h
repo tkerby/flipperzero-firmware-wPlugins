@@ -63,11 +63,13 @@ struct AC_RemoteApp {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
     SceneManager* scene_manager;
-    ACRemotePanel* ac_remote_panel;
+    ACRemotePanel* panel_main;
+    ACRemotePanel* panel_sub;
     ACRemoteAppSettings app_state;
     HvacHitachiContext* protocol;
 };
 
 typedef enum {
-    AC_RemoteAppViewStack,
+    AC_RemoteAppViewMain,
+    AC_RemoteAppViewSub,
 } AC_RemoteAppView;
