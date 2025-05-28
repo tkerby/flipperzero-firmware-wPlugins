@@ -25,8 +25,29 @@ static bool bunnyconnect_app_custom_event_callback(void* context, uint32_t event
 
 static bool bunnyconnect_app_back_event_callback(void* context) {
     furi_assert(context);
-    UNUSED(context);
-    return false; // Allow exit
+    BunnyConnectApp* app = context;
+
+    // Use tracked current view instead of querying view dispatcher
+    switch(app->current_view) {
+    case BunnyConnectViewMainMenu:
+        // Allow exit from main menu
+        return false;
+
+    case BunnyConnectViewTerminal:
+    case BunnyConnectViewConfig:
+    case BunnyConnectViewCustomKeyboard:
+    case BunnyConnectViewPopup:
+        // Return to main menu from any submenu/view
+        app->current_view = BunnyConnectViewMainMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
+        return true; // Consume the back event
+
+    default:
+        // For any unknown view, return to main menu
+        app->current_view = BunnyConnectViewMainMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
+        return true;
+    }
 }
 
 BunnyConnectApp* bunnyconnect_app_alloc(void) {
@@ -47,6 +68,7 @@ BunnyConnectApp* bunnyconnect_app_alloc(void) {
     app->config.stop_bits = 1;
     app->config.parity = 0;
     app->state = BunnyConnectStateDisconnected;
+    app->current_view = BunnyConnectViewMainMenu;
     app->is_running = true;
 
     // Open records

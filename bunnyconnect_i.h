@@ -85,6 +85,9 @@ struct BunnyConnectApp {
     BunnyConnectState state;
     BunnyConnectConfig config;
 
+    // View tracking
+    BunnyConnectViewId current_view;
+
     // Terminal
     char* terminal_buffer;
     size_t terminal_buffer_position;

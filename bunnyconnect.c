@@ -24,16 +24,19 @@ static void bunnyconnect_submenu_callback(void* context, uint32_t index) {
         break;
     case BunnyConnectSubmenuIndexTerminal:
         if(app->text_box) {
+            app->current_view = BunnyConnectViewTerminal;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewTerminal);
         }
         break;
     case BunnyConnectSubmenuIndexKeyboard:
         if(app->custom_keyboard) {
+            app->current_view = BunnyConnectViewCustomKeyboard;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewCustomKeyboard);
         }
         break;
     case BunnyConnectSubmenuIndexConfig:
         if(app->config_menu) {
+            app->current_view = BunnyConnectViewConfig;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewConfig);
         }
         break;
@@ -169,6 +172,7 @@ bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
         }
 
         if(app->text_box) {
+            app->current_view = BunnyConnectViewTerminal;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewTerminal);
         }
         return true;
@@ -222,6 +226,7 @@ bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
         }
 
         if(app->main_menu) {
+            app->current_view = BunnyConnectViewMainMenu;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
         }
         return true;
@@ -243,10 +248,29 @@ bool bunnyconnect_custom_event_callback(void* context, uint32_t event) {
 
 bool bunnyconnect_navigation_callback(void* context) {
     BunnyConnectApp* app = context;
-    UNUSED(app);
+    if(!app || !app->view_dispatcher) return false;
 
-    // Allow back navigation to exit
-    return false;
+    // Use tracked current view instead of querying view dispatcher
+    switch(app->current_view) {
+    case BunnyConnectViewMainMenu:
+        // Allow exit from main menu
+        return false;
+
+    case BunnyConnectViewTerminal:
+    case BunnyConnectViewConfig:
+    case BunnyConnectViewCustomKeyboard:
+    case BunnyConnectViewPopup:
+        // Return to main menu from any submenu/view
+        app->current_view = BunnyConnectViewMainMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
+        return true; // Consume the back event
+
+    default:
+        // For any unknown view, return to main menu
+        app->current_view = BunnyConnectViewMainMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
+        return true;
+    }
 }
 
 static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
@@ -351,6 +375,9 @@ static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
     }
     view_dispatcher_add_view(
         app->view_dispatcher, BunnyConnectViewPopup, popup_get_view(app->popup));
+
+    view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
+    app->current_view = BunnyConnectViewMainMenu;
 
     FURI_LOG_I(TAG, "Views setup successfully");
     return true;

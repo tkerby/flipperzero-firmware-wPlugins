@@ -81,14 +81,14 @@ static const BunnyConnectKeyboardKey keyboard_keys_row_2[] = {
     {'j', 55, 20},
     {'k', 64, 20},
     {'l', 73, 20},
-    {BACKSPACE_KEY, 82, 12},
+    {BACKSPACE_KEY, 82, 22}, // Moved from 12 to 32 (down 20 pixels)
     {'4', 100, 20},
     {'5', 110, 20},
     {'6', 120, 20},
 };
 
 static const BunnyConnectKeyboardKey keyboard_keys_row_3[] = {
-    {SWITCH_KEYBOARD_KEY, 1, 23},
+    {SWITCH_KEYBOARD_KEY, 1, 33}, // Moved from 23 to 43 (down 20 pixels)
     {'z', 13, 32},
     {'x', 21, 32},
     {'c', 28, 32},
@@ -97,7 +97,7 @@ static const BunnyConnectKeyboardKey keyboard_keys_row_3[] = {
     {'n', 52, 32},
     {'m', 59, 32},
     {'_', 67, 32},
-    {ENTER_KEY, 74, 23},
+    {ENTER_KEY, 74, 33}, // Moved from 23 to 43 (down 20 pixels)
     {'7', 100, 32},
     {'8', 110, 32},
     {'9', 120, 32},
@@ -128,20 +128,20 @@ static const BunnyConnectKeyboardKey symbol_keyboard_keys_row_2[] = {
     {']', 52, 20},
     {'{', 62, 20},
     {'}', 72, 20},
-    {BACKSPACE_KEY, 82, 12},
+    {BACKSPACE_KEY, 82, 22}, // Moved from 12 to 32 (down 20 pixels)
     {'4', 100, 20},
     {'5', 110, 20},
     {'6', 120, 20},
 };
 
 static const BunnyConnectKeyboardKey symbol_keyboard_keys_row_3[] = {
-    {SWITCH_KEYBOARD_KEY, 1, 23},
+    {SWITCH_KEYBOARD_KEY, 1, 33}, // Moved from 23 to 43 (down 20 pixels)
     {'.', 15, 32},
     {',', 29, 32},
     {';', 41, 32},
     {'`', 53, 32},
     {'\'', 65, 32},
-    {ENTER_KEY, 74, 23},
+    {ENTER_KEY, 74, 33}, // Moved from 23 to 43 (down 20 pixels)
     {'7', 100, 32},
     {'8', 110, 32},
     {'9', 120, 32},
@@ -355,7 +355,7 @@ static void bunnyconnect_keyboard_view_draw_callback(Canvas* canvas, void* _mode
                     canvas,
                     keyboard_origin_x + keys[column].x,
                     keyboard_origin_y + keys[column].y,
-                    "AB");
+                    "!?");
             } else if(keys[column].text == BACKSPACE_KEY) {
                 if(selected) {
                     canvas_draw_box(
