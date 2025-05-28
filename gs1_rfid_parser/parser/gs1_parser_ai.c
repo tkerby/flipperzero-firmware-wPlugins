@@ -22,6 +22,8 @@ static int32_t parse_ai(GS1_AI* ai, const uint8_t* data_stream, uint32_t startin
             ai->ai_identifier = read_next_n_bits(data_stream, starting_bit, 16);
     }
     
+    FURI_LOG_D(LOG_TAG, "Parsing AI %X", ai->ai_identifier);
+    
     switch(ai->ai_identifier){
         // 18 digit fixed length numeric
         case 0x00: case 0x8006: case 0x8017: case 0x8018: case 0x8026:
@@ -504,7 +506,7 @@ static int32_t parse_ai(GS1_AI* ai, const uint8_t* data_stream, uint32_t startin
 ParsingResult parse_epc_ais(ParsedTagInformation* tag_info, const uint8_t* data_stream, uint32_t starting_bit, uint32_t data_bit_count) {
     FURI_LOG_T(LOG_TAG, __func__);
     
-    while(starting_bit < data_bit_count){
+    while(starting_bit + 8 < data_bit_count){
         int32_t ai_length = parse_ai(&(tag_info->ai_list[tag_info->ai_count]), data_stream, starting_bit, data_bit_count);
         
         if(ai_length < 0) {

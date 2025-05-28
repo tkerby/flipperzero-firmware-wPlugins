@@ -166,7 +166,7 @@ static ParsingResult parse_gtin_plus(const UhfEpcTagData* epc_data, ParsedTagInf
     FURI_LOG_I(LOG_TAG, "Serial: %s", tag_info->ai_list[1].ai_value);
     
     if(epc_data->epc_data[1] & 0x80){
-        return parse_epc_ais(tag_info, epc_data->epc_data, serial_offset + serial_bit_count, epc_data->epc_size);
+        return parse_epc_ais(tag_info, epc_data->epc_data, serial_offset + serial_bit_count, epc_data->epc_size * 8);
     }else{
         return PARSING_SUCCESS;
     }
