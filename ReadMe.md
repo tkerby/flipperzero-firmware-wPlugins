@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0526-0115-0.420.0-c75da31](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0528-1500-0.420.0-09a44e8](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-26 01:15 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-26 01:15 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-05-28 15:00 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-05-28 15:00 EST`
 - Updated: [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - UL: [NFC: Fix clipper date timestamp (By luu176)](https://github.com/DarkFlippers/unleashed-firmware/commit/ff8c3540eb531bbe6fe96d245557499942172618)
 - UL: [SubGHz: V2 Phoenix show counter value (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/350dea6535441a8dd52871eb5accb7ca508f90cb)
