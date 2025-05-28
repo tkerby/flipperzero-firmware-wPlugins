@@ -33,7 +33,7 @@ typedef struct {
     uint32_t cod;
     uint8_t* eir; // Consider inline - [ESP_BT_GAP_EIR_DATA_LEN]
     char* bdname; // Consider inline - [ESP_BT_GAP_MAX_BDNAME_LEN + 1]
-    uint8_t bda[6];
+    uint8_t bda[MAC_BYTES];
     ScanType scanType;
     bool tagged;
     struct timeval lastSeen;
@@ -46,7 +46,11 @@ typedef struct {
 typedef struct {
     wendigo_bt_device dev;
     char* cod_str;
+    VariableItem* view;
 } flipper_bt_device;
+
+/* Import from wendigo_scene_device_list.c */
+extern void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev);
 
 /* Device caches - Declared extern to get around header spaghetti */
 extern flipper_bt_device** bt_devices;
