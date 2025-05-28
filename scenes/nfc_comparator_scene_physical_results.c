@@ -1,6 +1,6 @@
 #include "../nfc_comparator.h"
 
-static void nfc_comparator_results_callback(GuiButtonType result, InputType type, void* context) {
+static void nfc_comparator_physical_results_callback(GuiButtonType result, InputType type, void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    if(type == InputTypeShort) {
@@ -8,9 +8,11 @@ static void nfc_comparator_results_callback(GuiButtonType result, InputType type
    }
 }
 
-void nfc_comparator_results_scene_on_enter(void* context) {
+void nfc_comparator_physical_results_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
+
+   nfc_comparator_led_worker_start(nfc_comparator->notification_app, NfcComparatorLedState_Complete);
 
    FuriString* temp_str = furi_string_alloc();
 
@@ -26,7 +28,7 @@ void nfc_comparator_results_scene_on_enter(void* context) {
       0,
       0,
       128,
-      50,
+      57,
       AlignCenter,
       AlignCenter,
       furi_string_get_cstr(temp_str),
@@ -35,13 +37,13 @@ void nfc_comparator_results_scene_on_enter(void* context) {
       nfc_comparator->views.widget,
       GuiButtonTypeLeft,
       "Again",
-      nfc_comparator_results_callback,
+      nfc_comparator_physical_results_callback,
       nfc_comparator);
    widget_add_button_element(
       nfc_comparator->views.widget,
       GuiButtonTypeRight,
       "Main Menu",
-      nfc_comparator_results_callback,
+      nfc_comparator_physical_results_callback,
       nfc_comparator);
 
    furi_string_free(temp_str);
@@ -49,7 +51,7 @@ void nfc_comparator_results_scene_on_enter(void* context) {
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Widget);
 }
 
-bool nfc_comparator_results_scene_on_event(void* context, SceneManagerEvent event) {
+bool nfc_comparator_physical_results_scene_on_event(void* context, SceneManagerEvent event) {
    NfcComparator* nfc_comparator = context;
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
@@ -74,8 +76,9 @@ bool nfc_comparator_results_scene_on_event(void* context, SceneManagerEvent even
    return consumed;
 }
 
-void nfc_comparator_results_scene_on_exit(void* context) {
+void nfc_comparator_physical_results_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    widget_reset(nfc_comparator->views.widget);
+   nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
 }

@@ -17,7 +17,6 @@ static NfcCommand
    nfc_comparator_reader_worker_poller_callback(NfcGenericEvent event, void* context) {
    furi_assert(context);
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
-   furi_assert(nfc_comparator_reader_worker);
    UNUSED(event);
    nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Comparing;
    return NfcCommandStop;
@@ -75,6 +74,8 @@ static int32_t nfc_comparator_reader_worker_task(void* context) {
 
          nfc_device_free(worker->scanned_nfc_card);
          worker->scanned_nfc_card = NULL;
+         nfc_device_free(worker->loaded_nfc_card);
+         worker->loaded_nfc_card = NULL;
 
          worker->state = NfcComparatorReaderWorkerState_Stopped;
          break;

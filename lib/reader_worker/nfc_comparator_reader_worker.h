@@ -23,6 +23,7 @@ typedef struct {
    bool uid; /**< Compare UID */
    bool uid_length; /**< Compare UID length */
    bool protocol; /**< Compare protocol */
+   bool nfc_data; /**< Compare NFC data */
 } NfcComparatorReaderWorkerCompareChecks;
 
 /** Holds all state for the NFC Comparator Reader Worker */

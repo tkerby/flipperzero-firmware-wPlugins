@@ -36,6 +36,7 @@ typedef enum {
 typedef struct {
    FileBrowser* view;
    FuriString* output;
+   FuriString* tmp_output;
 } NfcComparatorFileBrowserView;
 
 /** All views used by the NFC Comparator app */

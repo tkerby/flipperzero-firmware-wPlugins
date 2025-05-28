@@ -28,6 +28,7 @@ static NfcComparator* nfc_comparator_alloc() {
    nfc_comparator->views.submenu = submenu_alloc();
 
    nfc_comparator->views.file_browser.output = furi_string_alloc();
+   nfc_comparator->views.file_browser.tmp_output = furi_string_alloc();
    nfc_comparator->views.file_browser.view =
       file_browser_alloc(nfc_comparator->views.file_browser.output);
 
@@ -79,6 +80,7 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
    submenu_free(nfc_comparator->views.submenu);
    file_browser_free(nfc_comparator->views.file_browser.view);
    furi_string_free(nfc_comparator->views.file_browser.output);
+   furi_string_free(nfc_comparator->views.file_browser.tmp_output);
    popup_free(nfc_comparator->views.popup);
    widget_free(nfc_comparator->views.widget);
    furi_record_close(RECORD_NOTIFICATION);

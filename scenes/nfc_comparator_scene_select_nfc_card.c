@@ -1,6 +1,6 @@
 #include "../nfc_comparator.h"
 
-void nfc_comparator_select_nfc_card_menu_callback(void* context) {
+static void nfc_comparator_select_nfc_card_menu_callback(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    scene_manager_previous_scene(nfc_comparator->scene_manager);

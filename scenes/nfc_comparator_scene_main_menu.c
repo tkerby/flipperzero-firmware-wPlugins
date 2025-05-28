@@ -1,7 +1,8 @@
 #include "../nfc_comparator.h"
 
 typedef enum {
-   NfcComparatorMainMenu_StartComparator,
+   NfcComparatorMainMenu_PhysicalScan,
+   NfcComparatorMainMenu_DigitalScan,
    NfcComparatorMainMenu_SelectNfcCard
 } NfcComparatorMainMenuMenuSelection;
 
@@ -21,8 +22,17 @@ void nfc_comparator_main_menu_scene_on_enter(void* context) {
 
    submenu_add_lockable_item(
       nfc_comparator->views.submenu,
-      "Start Comparator",
-      NfcComparatorMainMenu_StartComparator,
+      "Start Physical Comparator",
+      NfcComparatorMainMenu_PhysicalScan,
+      nfc_comparator_main_menu_menu_callback,
+      nfc_comparator,
+      furi_string_empty(nfc_comparator->views.file_browser.output),
+      "No NFC\ncard selected");
+
+   submenu_add_lockable_item(
+      nfc_comparator->views.submenu,
+      "Start Digital Comparator",
+      NfcComparatorMainMenu_DigitalScan,
       nfc_comparator_main_menu_menu_callback,
       nfc_comparator,
       furi_string_empty(nfc_comparator->views.file_browser.output),
@@ -46,8 +56,12 @@ bool nfc_comparator_main_menu_scene_on_event(void* context, SceneManagerEvent ev
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
-      case NfcComparatorMainMenu_StartComparator:
-         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Scan);
+      case NfcComparatorMainMenu_PhysicalScan:
+         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_PhysicalScan);
+         consumed = true;
+         break;
+      case NfcComparatorMainMenu_DigitalScan:
+         scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_DigitalScan);
          consumed = true;
          break;
       case NfcComparatorMainMenu_SelectNfcCard:

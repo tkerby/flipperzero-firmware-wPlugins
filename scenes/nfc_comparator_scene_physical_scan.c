@@ -2,7 +2,7 @@
 
 static volatile bool force_quit = false;
 
-void nfc_comparator_scan_scene_on_enter(void* context) {
+void nfc_comparator_physical_scan_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    force_quit = false;
@@ -24,7 +24,7 @@ void nfc_comparator_scan_scene_on_enter(void* context) {
    }
 }
 
-bool nfc_comparator_scan_scene_on_event(void* context, SceneManagerEvent event) {
+bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEvent event) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    bool consumed = false;
@@ -70,10 +70,7 @@ bool nfc_comparator_scan_scene_on_event(void* context, SceneManagerEvent event) 
                &checks,
                sizeof(NfcComparatorReaderWorkerCompareChecks));
 
-            popup_set_header(
-               nfc_comparator->views.popup, "Compare Results", 64, 5, AlignCenter, AlignTop);
-
-            scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_Results);
+            scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_PhysicalResults);
          }
          consumed = true;
          break;
@@ -84,7 +81,7 @@ bool nfc_comparator_scan_scene_on_event(void* context, SceneManagerEvent event) 
    }
    return consumed;
 }
-void nfc_comparator_scan_scene_on_exit(void* context) {
+void nfc_comparator_physical_scan_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    popup_reset(nfc_comparator->views.popup);
