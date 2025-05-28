@@ -9,7 +9,22 @@ typedef enum {
     button_fan,
     button_temp_down,
     button_vane,
+    button_view_sub,
     label_temperature,
+
+    button_timer_on_h_inc,
+    button_timer_on_m_inc,
+    button_timer_off_h_inc,
+    button_timer_off_m_inc,
+    button_timer_on_h_dec,
+    button_timer_on_m_dec,
+    button_timer_off_h_dec,
+    button_timer_off_m_dec,
+    button_timer_set,
+    button_timer_reset,
+    button_reset_filter,
+    button_settings,
+    button_view_main,
 } button_id;
 
 static const Icon* POWER_ICONS[POWER_STATE_MAX][2] = {
@@ -68,6 +83,84 @@ static const HvacHitachiVane VANE_LUT[VANE_BUTTON_STATE_MAX] = {
     [VaneButtonPos5] = HvacHitachiVanePos5,
     [VaneButtonPos6] = HvacHitachiVanePos6,
     [VaneButtonAuto] = HvacHitachiVaneAuto,
+};
+
+#define BUTTON_TIMER_X (4)
+#define BUTTON_TIMER_Y (2)
+
+typedef struct {
+    const uint16_t x;
+    const uint16_t y;
+    const button_id button;
+    const Icon* icon;
+    const Icon* icon_hover;
+} TimerButtonLayout;
+
+static const TimerButtonLayout BUTTON_TIMER_LAYOUT[BUTTON_TIMER_Y][BUTTON_TIMER_X] = {
+    [0][0] =
+        {
+            .x = 2,
+            .y = 12,
+            .button = button_timer_on_h_inc,
+            .icon = &I_timer_inc_15x9,
+            .icon_hover = &I_timer_inc_hover_15x9,
+        },
+    [0][1] =
+        {
+            .x = 16,
+            .y = 12,
+            .button = button_timer_on_m_inc,
+            .icon = &I_timer_inc_15x9,
+            .icon_hover = &I_timer_inc_hover_15x9,
+        },
+    [0][2] =
+        {
+            .x = 33,
+            .y = 12,
+            .button = button_timer_off_h_inc,
+            .icon = &I_timer_inc_15x9,
+            .icon_hover = &I_timer_inc_hover_15x9,
+        },
+    [0][3] =
+        {
+            .x = 47,
+            .y = 12,
+            .button = button_timer_off_m_inc,
+            .icon = &I_timer_inc_15x9,
+            .icon_hover = &I_timer_inc_hover_15x9,
+        },
+    [1][0] =
+        {
+            .x = 2,
+            .y = 30,
+            .button = button_timer_on_h_dec,
+            .icon = &I_timer_dec_15x10,
+            .icon_hover = &I_timer_dec_hover_15x10,
+        },
+    [1][1] =
+        {
+            .x = 16,
+            .y = 30,
+            .button = button_timer_on_m_dec,
+            .icon = &I_timer_dec_15x10,
+            .icon_hover = &I_timer_dec_hover_15x10,
+        },
+    [1][2] =
+        {
+            .x = 33,
+            .y = 30,
+            .button = button_timer_off_h_dec,
+            .icon = &I_timer_dec_15x10,
+            .icon_hover = &I_timer_dec_hover_15x10,
+        },
+    [1][3] =
+        {
+            .x = 47,
+            .y = 30,
+            .button = button_timer_off_m_dec,
+            .icon = &I_timer_dec_15x10,
+            .icon_hover = &I_timer_dec_hover_15x10,
+        },
 };
 
 char buffer[4] = {0};
@@ -131,7 +224,8 @@ void ac_remote_scene_universal_common_item_callback(void* context, uint32_t inde
 
 void ac_remote_scene_hitachi_on_enter(void* context) {
     AC_RemoteApp* ac_remote = context;
-    ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
+    ACRemotePanel* panel_main = ac_remote->panel_main;
+    ACRemotePanel* panel_sub = ac_remote->panel_sub;
     ac_remote->protocol = hvac_hitachi_init();
 
     if(!ac_remote_load_settings(&ac_remote->app_state)) {
@@ -142,10 +236,10 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         ac_remote->app_state.temperature = 23;
     }
 
-    ac_remote_panel_reserve(ac_remote_panel, 2, 3);
+    ac_remote_panel_reserve(panel_main, 2, 4);
 
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_power,
         0,
         0,
@@ -155,9 +249,9 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         POWER_ICONS[ac_remote->app_state.power][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 5, 39, &I_power_text_21x5);
+    ac_remote_panel_add_icon(panel_main, 5, 39, &I_power_text_21x5);
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_mode,
         1,
         0,
@@ -167,10 +261,10 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         MODE_BUTTON_ICONS[ac_remote->app_state.mode][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 39, 39, &I_mode_text_20x5);
-    ac_remote_panel_add_icon(ac_remote_panel, 0, 59, &I_frame_30x39);
+    ac_remote_panel_add_icon(panel_main, 40, 39, &I_mode_text_17x5);
+    ac_remote_panel_add_icon(panel_main, 0, 59, &I_frame_30x39);
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_temp_up,
         0,
         1,
@@ -181,7 +275,7 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_temp_down,
         0,
         2,
@@ -192,7 +286,7 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         ac_remote_scene_universal_common_item_callback,
         context);
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_fan,
         1,
         1,
@@ -202,9 +296,9 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 41, 72, &I_fan_text_14x5);
+    ac_remote_panel_add_icon(panel_main, 43, 72, &I_fan_text_11x5);
     ac_remote_panel_add_item(
-        ac_remote_panel,
+        panel_main,
         button_vane,
         1,
         2,
@@ -214,21 +308,118 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         VANE_BUTTON_ICONS[ac_remote->app_state.vane][1],
         ac_remote_scene_universal_common_item_callback,
         context);
-    ac_remote_panel_add_icon(ac_remote_panel, 38, 105, &I_vane_text_20x5);
+    ac_remote_panel_add_icon(panel_main, 37, 105, &I_louver_text_23x5);
+    ac_remote_panel_add_item(
+        panel_main,
+        button_view_sub,
+        0,
+        3,
+        6,
+        116,
+        &I_timer_52x10,
+        &I_timer_hover_52x10,
+        ac_remote_scene_universal_common_item_callback,
+        context);
 
-    ac_remote_panel_add_label(ac_remote_panel, 0, 6, 11, FontPrimary, "AC remote");
+    ac_remote_panel_add_label(panel_main, 0, 6, 11, FontPrimary, "AC remote");
 
     snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-    ac_remote_panel_add_label(ac_remote_panel, label_temperature, 4, 82, FontKeyboard, buffer);
+    ac_remote_panel_add_label(panel_main, label_temperature, 4, 82, FontKeyboard, buffer);
 
-    view_set_orientation(ac_remote_panel_get_view(ac_remote_panel), ViewOrientationVertical);
-    view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewStack);
+    view_set_orientation(ac_remote_panel_get_view(panel_main), ViewOrientationVertical);
+
+    ac_remote_panel_reserve(panel_sub, 4, 5);
+
+    // Timer control
+    ac_remote_panel_add_icon(panel_sub, 0, 4, &I_timer_frame_64x73);
+    for(uint16_t yy = 0; yy < BUTTON_TIMER_Y; yy++) {
+        for(uint16_t xx = 0; xx < BUTTON_TIMER_X; xx++) {
+            const TimerButtonLayout* layout = &BUTTON_TIMER_LAYOUT[yy][xx];
+            ac_remote_panel_add_item(
+                panel_sub,
+                layout->button,
+                xx,
+                yy,
+                layout->x,
+                layout->y,
+                layout->icon,
+                layout->icon_hover,
+                ac_remote_scene_universal_common_item_callback,
+                context);
+        }
+    }
+    ac_remote_panel_add_item(
+        panel_sub,
+        button_timer_set,
+        0,
+        2,
+        7,
+        50,
+        &I_timer_set_19x20,
+        &I_timer_set_hover_19x20,
+        ac_remote_scene_universal_common_item_callback,
+        context);
+    ac_remote_panel_add_item(
+        panel_sub,
+        button_timer_reset,
+        1,
+        2,
+        38,
+        50,
+        &I_timer_reset_19x20,
+        &I_timer_reset_hover_19x20,
+        ac_remote_scene_universal_common_item_callback,
+        context);
+
+    // Misc buttons
+    ac_remote_panel_add_item(
+        panel_sub,
+        button_reset_filter,
+        0,
+        3,
+        7,
+        82,
+        &I_reset_filter_19x20,
+        &I_reset_filter_hover_19x20,
+        ac_remote_scene_universal_common_item_callback,
+        context);
+    ac_remote_panel_add_icon(panel_sub, 5, 105, &I_reset_filter_text_23x5);
+
+    ac_remote_panel_add_item(
+        panel_sub,
+        button_settings,
+        1,
+        3,
+        38,
+        82,
+        &I_settings_19x20,
+        &I_settings_hover_19x20,
+        ac_remote_scene_universal_common_item_callback,
+        context);
+    ac_remote_panel_add_icon(panel_sub, 36, 105, &I_settings_text_23x5);
+
+    // Back button
+    ac_remote_panel_add_item(
+        panel_sub,
+        button_view_main,
+        0,
+        4,
+        6,
+        116,
+        &I_back_52x10,
+        &I_back_hover_52x10,
+        ac_remote_scene_universal_common_item_callback,
+        context);
+
+    view_set_orientation(ac_remote_panel_get_view(panel_sub), ViewOrientationVertical);
+
+    view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewMain);
 }
 
 bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
     AC_RemoteApp* ac_remote = context;
     SceneManager* scene_manager = ac_remote->scene_manager;
-    ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
+    ACRemotePanel* panel_main = ac_remote->panel_main;
     UNUSED(scene_manager);
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
@@ -241,7 +432,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
-            bool power_state_changed = false;
+            bool power_state_changed = false, has_ir_code = true;
             hvac_hitachi_reset(ac_remote->protocol);
             switch(event_value) {
             case button_power:
@@ -257,7 +448,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                     VANE_LUT[ac_remote->app_state.vane],
                     POWER_LUT[ac_remote->app_state.power]);
                 ac_remote_panel_item_set_icons(
-                    ac_remote_panel,
+                    panel_main,
                     button_power,
                     POWER_ICONS[ac_remote->app_state.power][0],
                     POWER_ICONS[ac_remote->app_state.power][1]);
@@ -275,7 +466,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                     MODE_LUT[ac_remote->app_state.mode],
                     VANE_LUT[ac_remote->app_state.vane]);
                 ac_remote_panel_item_set_icons(
-                    ac_remote_panel,
+                    panel_main,
                     button_mode,
                     MODE_BUTTON_ICONS[ac_remote->app_state.mode][0],
                     MODE_BUTTON_ICONS[ac_remote->app_state.mode][1]);
@@ -290,7 +481,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                     FAN_SPEED_LUT[ac_remote->app_state.fan],
                     MODE_LUT[ac_remote->app_state.mode]);
                 ac_remote_panel_item_set_icons(
-                    ac_remote_panel,
+                    panel_main,
                     button_fan,
                     FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][0],
                     FAN_SPEED_BUTTON_ICONS[ac_remote->app_state.fan][1]);
@@ -302,7 +493,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 }
                 hvac_hitachi_set_vane(ac_remote->protocol, VANE_LUT[ac_remote->app_state.vane]);
                 ac_remote_panel_item_set_icons(
-                    ac_remote_panel,
+                    panel_main,
                     button_vane,
                     VANE_BUTTON_ICONS[ac_remote->app_state.vane][0],
                     VANE_BUTTON_ICONS[ac_remote->app_state.vane][1]);
@@ -314,7 +505,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 hvac_hitachi_set_temperature(
                     ac_remote->protocol, ac_remote->app_state.temperature, true);
                 snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-                ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
+                ac_remote_panel_label_set_string(panel_main, label_temperature, buffer);
                 break;
             case button_temp_down:
                 if(ac_remote->app_state.temperature > HVAC_HITACHI_TEMPERATURE_MIN) {
@@ -323,12 +514,25 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 hvac_hitachi_set_temperature(
                     ac_remote->protocol, ac_remote->app_state.temperature, false);
                 snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-                ac_remote_panel_label_set_string(ac_remote_panel, label_temperature, buffer);
+                ac_remote_panel_label_set_string(panel_main, label_temperature, buffer);
+                break;
+            case button_view_sub:
+                view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewSub);
+                has_ir_code = false;
+                break;
+            case button_view_main:
+                view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewMain);
+                has_ir_code = false;
+                break;
+            case button_reset_filter:
+                hvac_hitachi_reset_filter(ac_remote->protocol);
                 break;
             default:
+                has_ir_code = false;
                 break;
             }
-            if(power_state_changed || ac_remote->app_state.power == PowerButtonOn) {
+            if(has_ir_code &&
+               (power_state_changed || ac_remote->app_state.power == PowerButtonOn)) {
                 hvac_hitachi_build_samples(ac_remote->protocol);
                 uint32_t event =
                     ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
@@ -342,8 +546,10 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
 
 void ac_remote_scene_hitachi_on_exit(void* context) {
     AC_RemoteApp* ac_remote = context;
-    ACRemotePanel* ac_remote_panel = ac_remote->ac_remote_panel;
+    ACRemotePanel* panel_main = ac_remote->panel_main;
+    ACRemotePanel* panel_sub = ac_remote->panel_sub;
     ac_remote_store_settings(&ac_remote->app_state);
     hvac_hitachi_deinit(ac_remote->protocol);
-    ac_remote_panel_reset(ac_remote_panel);
+    ac_remote_panel_reset(panel_main);
+    ac_remote_panel_reset(panel_sub);
 }

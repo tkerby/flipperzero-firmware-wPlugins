@@ -40,11 +40,13 @@ AC_RemoteApp* ac_remote_app_alloc() {
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
-    app->ac_remote_panel = ac_remote_panel_alloc();
+    app->panel_main = ac_remote_panel_alloc();
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        AC_RemoteAppViewStack,
-        ac_remote_panel_get_view(app->ac_remote_panel));
+        app->view_dispatcher, AC_RemoteAppViewMain, ac_remote_panel_get_view(app->panel_main));
+
+    app->panel_sub = ac_remote_panel_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, AC_RemoteAppViewSub, ac_remote_panel_get_view(app->panel_sub));
 
     scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
     return app;
@@ -54,10 +56,12 @@ void ac_remote_app_free(AC_RemoteApp* app) {
     furi_assert(app);
 
     // Views
-    view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewStack);
+    view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSub);
+    view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewMain);
 
     // View dispatcher
-    ac_remote_panel_free(app->ac_remote_panel);
+    ac_remote_panel_free(app->panel_sub);
+    ac_remote_panel_free(app->panel_main);
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
 
