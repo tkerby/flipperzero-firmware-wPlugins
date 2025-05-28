@@ -153,6 +153,9 @@ void ac_remote_panel_reset(ACRemotePanel* ac_remote_panel) {
             for(size_t x = 0; x < model->reserve_x; ++x) {
                 for(size_t y = 0; y < model->reserve_y; ++y) {
                     ButtonItem** button_item = ac_remote_panel_get_item(model, x, y);
+                    if(*button_item == NULL) {
+                        continue;
+                    }
                     free(*button_item);
                     *button_item = NULL;
                 }
@@ -469,6 +472,9 @@ void ac_remote_panel_item_set_icons(
                 for(size_t y = 0; y < model->reserve_y; ++y) {
                     ButtonItem** button_item = ac_remote_panel_get_item(model, x, y);
                     ButtonItem* item = *button_item;
+                    if(item == NULL) {
+                        continue;
+                    }
                     if(item->index == index) {
                         item->icon.name = icon_name;
                         item->icon.name_selected = icon_name_selected;
