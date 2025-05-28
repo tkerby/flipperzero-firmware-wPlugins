@@ -43,6 +43,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
 - Updated: [NFC Comparator v2.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
+- Updated: [NFC Playlist v3.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 
 <a name="release">
 
@@ -593,7 +594,7 @@ $ ./fbt dolphin_ext
 - [NFC Keyboard v1.0 (By Patrick762)](https://github.com/Patrick762/flipper-nfc-keyboard)
 - [NFC Magic v1.15 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
 - [NFC Maker v2.0 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
-- [NFC Playlist v2.8 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
+- [NFC Playlist v3.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - [NFC Seader v3.3 (By bettse)](https://github.com/bettse/seader)
 - [NFC Sniffer v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/nfc_sniffer)
