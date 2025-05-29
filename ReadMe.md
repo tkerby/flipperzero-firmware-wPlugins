@@ -43,8 +43,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Playlist v3.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [GS1 Parser v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/gs1_rfid_parser) `Req: U107 or YRM100`
+- Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
 - Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
-- Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) Changes (By xMasterX)
+- Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
 
 <a name="release">
 
