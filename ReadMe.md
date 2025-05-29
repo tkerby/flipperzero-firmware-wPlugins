@@ -49,6 +49,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi (Marauder) v0.7.3 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
 - Updated: [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - Updated: [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
+- Updated: [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
 
 <a name="release">
 
@@ -461,7 +462,7 @@ $ ./fbt dolphin_ext
 - [ESP32 Gravity v0.6.0 (By chris-bc)](https://github.com/chris-bc/Flipper-Gravity) `Req: ESP32`
 - [ESP32 WIFI Mapping v0.2 (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map) `Req: ESP32` & [ESP32 FW](https://github.com/carvilsi/esp32-wifi-map)
 - [ESP32CAM Camera v1.0.0 (By Z4urce & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
-- [ESP32CAM Marauder v0.7.2 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
+- [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Morse Flasher v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Motion Detection v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
 - [ESP32CAM Nanny Cam v0.1 (By eried)](https://github.com/eried/flipperzero-mayhem) `Req: ESP32-CAM (Mayhem)`
