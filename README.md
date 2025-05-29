@@ -6,6 +6,8 @@ Create 10x10 images directly on the Flipper! The live preview allows you to see 
 
 ![screenshot_1](screenshots/iconedit_screenshot_1.png)
 
+> All in-app icons were created with IconEdit!
+
 ## Features
 
 * Pixel level editing
