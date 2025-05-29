@@ -22,4 +22,11 @@ Create 10x10 images directly on the Flipper! The live preview allows you to see 
 * Support for variable sized images (not just 10x10)
 * Improved UI
 
+## Copyright
+
+This project would not be possible without the efforts and source from the following projects:
+
+* [pngle](https://github.com/kikuchan/pngle)
+* [miniz](https://github.com/richgel999/miniz)
+
 <a href="https://www.buymeacoffee.com/rdefeo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
