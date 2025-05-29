@@ -34,7 +34,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - UL: [NFC: Fix clipper date timestamp (By luu176)](https://github.com/DarkFlippers/unleashed-firmware/commit/ff8c3540eb531bbe6fe96d245557499942172618)
 - UL: [SubGHz: V2 Phoenix show counter value (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/350dea6535441a8dd52871eb5accb7ca508f90cb)
 - Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Sub-GHz Playlist: Add support for custom modulation presets, remake with txrx library and support for dynamic signals, cleanup code (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/39d7c0e9379a1bc3bb0dca772de3efd148a61a9b)
-- Updated: [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac) Changes (By xMasterX)
 - UL: [Sub-GHz: Rename and extend Alarms ignore option with Hollarm & GangQi (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
 - UL: [Display: Backlight option `Always ON` (By Dmitry422)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
 - Added: [Doc Viewer Lite v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/docviewlite)
@@ -45,6 +44,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [GS1 Parser v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/gs1_rfid_parser) `Req: U107 or YRM100`
 - Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
+- Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac) Changes (By xMasterX)
 
 <a name="release">
 
@@ -635,7 +635,7 @@ $ ./fbt dolphin_ext
 - [Protocol Visualizer v1.3 (By antirez)](https://github.com/antirez/protoview)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
-- [Quac! v0.9.0 (By rdefeo)](https://github.com/rdefeo/quac)
+- [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
 - [Radar Scanner v2.0 (By MatthewKuKanich)](https://github.com/MatthewKuKanich/flipper-radar) `Req: RCWL-0516`
 - [Radiation Sensor v1.0 (By sionyx)](https://github.com/sionyx/flipper_radsens) `Req: RadSens`
 - [Radio Scanner v0.3 (By RocketGod)](https://github.com/RocketGod-Git/Flipper-Zero-Radio-Scanner)
