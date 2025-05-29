@@ -51,12 +51,25 @@ typedef enum {
     VANE_BUTTON_STATE_MAX,
 } VaneButtonState;
 
+typedef enum {
+    LabelStringTemp,
+    LabelStringTimerOnHour,
+    LabelStringTimerOnMinute,
+    LabelStringTimerOffHour,
+    LabelStringTimerOffMinute,
+    LABEL_STRING_POOL_SIZE,
+} LabelStringPoolIndex;
+
 typedef struct {
     uint32_t power;
     uint32_t mode;
     uint32_t temperature;
     uint32_t fan;
     uint32_t vane;
+    uint32_t timer_on_h;
+    uint32_t timer_on_m;
+    uint32_t timer_off_h;
+    uint32_t timer_off_m;
 } ACRemoteAppSettings;
 
 struct AC_RemoteApp {
@@ -66,6 +79,7 @@ struct AC_RemoteApp {
     ACRemotePanel* panel_main;
     ACRemotePanel* panel_sub;
     ACRemoteAppSettings app_state;
+    char label_string_pool[LABEL_STRING_POOL_SIZE][4];
     HvacHitachiContext* protocol;
 };
 
@@ -73,3 +87,5 @@ typedef enum {
     AC_RemoteAppViewMain,
     AC_RemoteAppViewSub,
 } AC_RemoteAppView;
+
+#define LABEL_STRING_SIZE sizeof(ac_remote->label_string_pool[0])

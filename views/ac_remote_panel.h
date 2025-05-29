@@ -70,6 +70,8 @@ void ac_remote_panel_label_set_string(
     int index,
     const char* label_str);
 
+void ac_remote_panel_update_view(ACRemotePanel* ac_remote_panel);
+
 #ifdef __cplusplus
 }
 #endif

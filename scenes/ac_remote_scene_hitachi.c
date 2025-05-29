@@ -16,6 +16,10 @@ typedef enum {
     button_timer_on_m_inc,
     button_timer_off_h_inc,
     button_timer_off_m_inc,
+    label_timer_on_h,
+    label_timer_on_m,
+    label_timer_off_h,
+    label_timer_off_m,
     button_timer_on_h_dec,
     button_timer_on_m_dec,
     button_timer_off_h_dec,
@@ -84,6 +88,12 @@ static const HvacHitachiVane VANE_LUT[VANE_BUTTON_STATE_MAX] = {
     [VaneButtonPos6] = HvacHitachiVanePos6,
     [VaneButtonAuto] = HvacHitachiVaneAuto,
 };
+
+// Exactly 4095 minutes
+#define TIMER_MAX_TIME_H (68u)
+#define TIMER_MAX_TIME_M (15u)
+
+#define TIMER_MAX_MIN (59u)
 
 #define BUTTON_TIMER_X (4)
 #define BUTTON_TIMER_Y (2)
@@ -163,8 +173,6 @@ static const TimerButtonLayout BUTTON_TIMER_LAYOUT[BUTTON_TIMER_Y][BUTTON_TIMER_
         },
 };
 
-char buffer[4] = {0};
-
 static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
@@ -173,6 +181,7 @@ static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
     uint32_t version = 0;
     bool success = false;
     do {
+        uint32_t tmp = 0;
         if(!flipper_format_buffered_file_open_existing(ff, AC_REMOTE_APP_SETTINGS)) break;
         if(!flipper_format_read_header(ff, header, &version)) break;
         if(!furi_string_equal(header, "AC Remote") || (version != 1)) break;
@@ -187,6 +196,22 @@ static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
         if(app_state->fan >= FAN_SPEED_BUTTON_STATE_MAX) break;
         if(!flipper_format_read_uint32(ff, "Vane", &app_state->vane, 1)) break;
         if(app_state->vane > VANE_BUTTON_STATE_MAX) break;
+        if(!flipper_format_read_uint32(ff, "TimerOn", &tmp, 1)) {
+            tmp = 0;
+        }
+        if(tmp > 0xfff) {
+            tmp = 0;
+        }
+        app_state->timer_on_h = tmp / 60;
+        app_state->timer_on_m = tmp % 60;
+        if(!flipper_format_read_uint32(ff, "TimerOff", &tmp, 1)) {
+            tmp = 0;
+        }
+        if(tmp > 0xfff) {
+            tmp = 0;
+        }
+        app_state->timer_off_h = tmp / 60;
+        app_state->timer_off_m = tmp % 60;
         success = true;
     } while(false);
     furi_record_close(RECORD_STORAGE);
@@ -201,6 +226,7 @@ bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
 
     bool success = false;
     do {
+        uint32_t tmp = 0;
         if(!flipper_format_file_open_always(ff, AC_REMOTE_APP_SETTINGS)) break;
         if(!flipper_format_write_header_cstr(ff, "AC Remote", 1)) break;
         if(!flipper_format_write_comment_cstr(ff, "")) break;
@@ -209,11 +235,57 @@ bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
         if(!flipper_format_write_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
         if(!flipper_format_write_uint32(ff, "Fan", &app_state->fan, 1)) break;
         if(!flipper_format_write_uint32(ff, "Vane", &app_state->vane, 1)) break;
+        tmp = app_state->timer_on_h * 60 + app_state->timer_on_m;
+        if(!flipper_format_write_uint32(ff, "TimerOn", &tmp, 1)) break;
+        tmp = app_state->timer_off_h * 60 + app_state->timer_off_m;
+        if(!flipper_format_write_uint32(ff, "TimerOff", &tmp, 1)) break;
         success = true;
     } while(false);
     furi_record_close(RECORD_STORAGE);
     flipper_format_free(ff);
     return success;
+}
+
+static uint32_t inc_hour(const uint32_t hour, const uint32_t minute) {
+    if(hour >= TIMER_MAX_TIME_H || (hour >= TIMER_MAX_TIME_H - 1 && minute > TIMER_MAX_TIME_M)) {
+        return 0;
+    }
+    return hour + 1;
+}
+
+static uint32_t dec_hour(const uint32_t hour, const uint32_t minute) {
+    if(hour > TIMER_MAX_TIME_H) {
+        return 0;
+    }
+    if(hour == 0) {
+        if(minute > TIMER_MAX_TIME_M) {
+            return TIMER_MAX_TIME_H - 1;
+        }
+        return TIMER_MAX_TIME_H;
+    }
+    return hour - 1;
+}
+
+static uint32_t inc_minute(const uint32_t hour, const uint32_t minute) {
+    if(minute >= TIMER_MAX_MIN) {
+        return 0;
+    } else if(hour >= TIMER_MAX_TIME_H && minute >= TIMER_MAX_TIME_M) {
+        return 0;
+    }
+    return minute + 1;
+}
+
+static uint32_t dec_minute(const uint32_t hour, const uint32_t minute) {
+    if(minute > TIMER_MAX_MIN) {
+        return 0;
+    }
+    if(minute == 0) {
+        if(hour >= TIMER_MAX_TIME_H) {
+            return TIMER_MAX_TIME_M;
+        }
+        return TIMER_MAX_MIN;
+    }
+    return minute - 1;
 }
 
 void ac_remote_scene_universal_common_item_callback(void* context, uint32_t index) {
@@ -234,6 +306,10 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
         ac_remote->app_state.fan = FanSpeedButtonLow;
         ac_remote->app_state.vane = VaneButtonPos0;
         ac_remote->app_state.temperature = 23;
+        ac_remote->app_state.timer_on_h = 0;
+        ac_remote->app_state.timer_on_m = 0;
+        ac_remote->app_state.timer_off_h = 0;
+        ac_remote->app_state.timer_off_m = 0;
     }
 
     ac_remote_panel_reserve(panel_main, 2, 4);
@@ -323,8 +399,18 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
 
     ac_remote_panel_add_label(panel_main, 0, 6, 11, FontPrimary, "AC remote");
 
-    snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-    ac_remote_panel_add_label(panel_main, label_temperature, 4, 82, FontKeyboard, buffer);
+    snprintf(
+        ac_remote->label_string_pool[LabelStringTemp],
+        LABEL_STRING_SIZE,
+        "%" PRIu32,
+        ac_remote->app_state.temperature);
+    ac_remote_panel_add_label(
+        panel_main,
+        label_temperature,
+        4,
+        82,
+        FontKeyboard,
+        ac_remote->label_string_pool[LabelStringTemp]);
 
     view_set_orientation(ac_remote_panel_get_view(panel_main), ViewOrientationVertical);
 
@@ -348,6 +434,59 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
                 context);
         }
     }
+
+    snprintf(
+        ac_remote->label_string_pool[LabelStringTimerOnHour],
+        LABEL_STRING_SIZE,
+        "%02" PRIu32,
+        ac_remote->app_state.timer_on_h);
+    ac_remote_panel_add_label(
+        panel_sub,
+        label_timer_on_h,
+        4,
+        29,
+        FontKeyboard,
+        ac_remote->label_string_pool[LabelStringTimerOnHour]);
+
+    snprintf(
+        ac_remote->label_string_pool[LabelStringTimerOnMinute],
+        LABEL_STRING_SIZE,
+        "%02" PRIu32,
+        ac_remote->app_state.timer_on_m);
+    ac_remote_panel_add_label(
+        panel_sub,
+        label_timer_on_m,
+        18,
+        29,
+        FontKeyboard,
+        ac_remote->label_string_pool[LabelStringTimerOnMinute]);
+
+    snprintf(
+        ac_remote->label_string_pool[LabelStringTimerOffHour],
+        LABEL_STRING_SIZE,
+        "%02" PRIu32,
+        ac_remote->app_state.timer_off_h);
+    ac_remote_panel_add_label(
+        panel_sub,
+        label_timer_off_h,
+        35,
+        29,
+        FontKeyboard,
+        ac_remote->label_string_pool[LabelStringTimerOffHour]);
+
+    snprintf(
+        ac_remote->label_string_pool[LabelStringTimerOffMinute],
+        LABEL_STRING_SIZE,
+        "%02" PRIu32,
+        ac_remote->app_state.timer_off_m);
+    ac_remote_panel_add_label(
+        panel_sub,
+        label_timer_off_m,
+        49,
+        29,
+        FontKeyboard,
+        ac_remote->label_string_pool[LabelStringTimerOffMinute]);
+
     ac_remote_panel_add_item(
         panel_sub,
         button_timer_set,
@@ -420,6 +559,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
     AC_RemoteApp* ac_remote = context;
     SceneManager* scene_manager = ac_remote->scene_manager;
     ACRemotePanel* panel_main = ac_remote->panel_main;
+    ACRemotePanel* panel_sub = ac_remote->panel_sub;
     UNUSED(scene_manager);
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
@@ -432,7 +572,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
-            bool power_state_changed = false, has_ir_code = true;
+            bool send_on_power_off = false, has_ir_code = true;
             hvac_hitachi_reset(ac_remote->protocol);
             switch(event_value) {
             case button_power:
@@ -452,7 +592,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                     button_power,
                     POWER_ICONS[ac_remote->app_state.power][0],
                     POWER_ICONS[ac_remote->app_state.power][1]);
-                power_state_changed = true;
+                send_on_power_off = true;
                 break;
             case button_mode:
                 ac_remote->app_state.mode++;
@@ -504,8 +644,12 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 }
                 hvac_hitachi_set_temperature(
                     ac_remote->protocol, ac_remote->app_state.temperature, true);
-                snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-                ac_remote_panel_label_set_string(panel_main, label_temperature, buffer);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTemp],
+                    LABEL_STRING_SIZE,
+                    "%" PRIu32,
+                    ac_remote->app_state.temperature);
+                ac_remote_panel_update_view(panel_main);
                 break;
             case button_temp_down:
                 if(ac_remote->app_state.temperature > HVAC_HITACHI_TEMPERATURE_MIN) {
@@ -513,8 +657,12 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 }
                 hvac_hitachi_set_temperature(
                     ac_remote->protocol, ac_remote->app_state.temperature, false);
-                snprintf(buffer, sizeof(buffer), "%" PRIu32, ac_remote->app_state.temperature);
-                ac_remote_panel_label_set_string(panel_main, label_temperature, buffer);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTemp],
+                    LABEL_STRING_SIZE,
+                    "%" PRIu32,
+                    ac_remote->app_state.temperature);
+                ac_remote_panel_update_view(panel_main);
                 break;
             case button_view_sub:
                 view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewSub);
@@ -524,15 +672,78 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewMain);
                 has_ir_code = false;
                 break;
+            case button_timer_on_h_inc:
+            case button_timer_on_h_dec:
+                ac_remote->app_state.timer_on_h =
+                    (event_value == button_timer_on_h_inc) ?
+                        inc_hour(
+                            ac_remote->app_state.timer_on_h, ac_remote->app_state.timer_on_m) :
+                        dec_hour(ac_remote->app_state.timer_on_h, ac_remote->app_state.timer_on_m);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTimerOnHour],
+                    LABEL_STRING_SIZE,
+                    "%02" PRIu32,
+                    ac_remote->app_state.timer_on_h);
+                ac_remote_panel_update_view(panel_sub);
+                has_ir_code = false;
+                break;
+            case button_timer_on_m_inc:
+            case button_timer_on_m_dec:
+                ac_remote->app_state.timer_on_m =
+                    (event_value == button_timer_on_m_inc) ?
+                        inc_minute(
+                            ac_remote->app_state.timer_on_h, ac_remote->app_state.timer_on_m) :
+                        dec_minute(
+                            ac_remote->app_state.timer_on_h, ac_remote->app_state.timer_on_m);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTimerOnMinute],
+                    LABEL_STRING_SIZE,
+                    "%02" PRIu32,
+                    ac_remote->app_state.timer_on_m);
+                ac_remote_panel_update_view(panel_sub);
+                has_ir_code = false;
+                break;
+            case button_timer_off_h_inc:
+            case button_timer_off_h_dec:
+                ac_remote->app_state.timer_off_h =
+                    (event_value == button_timer_off_h_inc) ?
+                        inc_hour(
+                            ac_remote->app_state.timer_off_h, ac_remote->app_state.timer_off_m) :
+                        dec_hour(
+                            ac_remote->app_state.timer_off_h, ac_remote->app_state.timer_off_m);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTimerOffHour],
+                    LABEL_STRING_SIZE,
+                    "%02" PRIu32,
+                    ac_remote->app_state.timer_off_h);
+                ac_remote_panel_update_view(panel_sub);
+                has_ir_code = false;
+                break;
+            case button_timer_off_m_inc:
+            case button_timer_off_m_dec:
+                ac_remote->app_state.timer_off_m =
+                    (event_value == button_timer_off_m_inc) ?
+                        inc_minute(
+                            ac_remote->app_state.timer_off_h, ac_remote->app_state.timer_off_m) :
+                        dec_minute(
+                            ac_remote->app_state.timer_off_h, ac_remote->app_state.timer_off_m);
+                snprintf(
+                    ac_remote->label_string_pool[LabelStringTimerOffMinute],
+                    LABEL_STRING_SIZE,
+                    "%02" PRIu32,
+                    ac_remote->app_state.timer_off_m);
+                ac_remote_panel_update_view(panel_sub);
+                has_ir_code = false;
+                break;
             case button_reset_filter:
                 hvac_hitachi_reset_filter(ac_remote->protocol);
+                send_on_power_off = true;
                 break;
             default:
                 has_ir_code = false;
                 break;
             }
-            if(has_ir_code &&
-               (power_state_changed || ac_remote->app_state.power == PowerButtonOn)) {
+            if(has_ir_code && (send_on_power_off || ac_remote->app_state.power == PowerButtonOn)) {
                 hvac_hitachi_build_samples(ac_remote->protocol);
                 uint32_t event =
                     ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
