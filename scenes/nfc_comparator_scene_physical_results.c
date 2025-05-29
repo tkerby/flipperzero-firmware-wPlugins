@@ -1,6 +1,7 @@
 #include "../nfc_comparator.h"
 
-static void nfc_comparator_physical_results_callback(GuiButtonType result, InputType type, void* context) {
+static void
+   nfc_comparator_physical_results_callback(GuiButtonType result, InputType type, void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    if(type == InputTypeShort) {
@@ -12,7 +13,8 @@ void nfc_comparator_physical_results_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
 
-   nfc_comparator_led_worker_start(nfc_comparator->notification_app, NfcComparatorLedState_Complete);
+   nfc_comparator_led_worker_start(
+      nfc_comparator->notification_app, NfcComparatorLedState_Complete);
 
    FuriString* temp_str = furi_string_alloc();
 
@@ -39,10 +41,16 @@ void nfc_comparator_physical_results_scene_on_enter(void* context) {
       "Again",
       nfc_comparator_physical_results_callback,
       nfc_comparator);
+   // widget_add_button_element(
+   //    nfc_comparator->views.widget,
+   //    GuiButtonTypeCenter,
+   //    "New",
+   //    nfc_comparator_physical_results_callback,
+   //    nfc_comparator);
    widget_add_button_element(
       nfc_comparator->views.widget,
       GuiButtonTypeRight,
-      "Main Menu",
+      "Exit",
       nfc_comparator_physical_results_callback,
       nfc_comparator);
 
@@ -56,13 +64,16 @@ bool nfc_comparator_physical_results_scene_on_event(void* context, SceneManagerE
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
+      case GuiButtonTypeLeft:
+         scene_manager_previous_scene(nfc_comparator->scene_manager);
+         consumed = true;
+         break;
+      case GuiButtonTypeCenter:
+         // No action for center button in this scene
+         break;
       case GuiButtonTypeRight:
          scene_manager_search_and_switch_to_previous_scene(
             nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
-         consumed = true;
-         break;
-      case GuiButtonTypeLeft:
-         scene_manager_previous_scene(nfc_comparator->scene_manager);
          consumed = true;
          break;
       default:

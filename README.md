@@ -21,3 +21,5 @@ As i know these firmwares are supported and working if you know any more please 
 >  - UID length
 >  - Protocol
 >  - NFC data
+## Features to be added:
+- Finder for both digital and physical NFC cards allowing you to find if you have already got a card similar stored

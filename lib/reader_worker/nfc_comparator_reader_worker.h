@@ -35,11 +35,12 @@ typedef struct {
    NfcDevice* loaded_nfc_card;
    NfcDevice* scanned_nfc_card;
    NfcPoller* nfc_poller;
-   NfcComparatorReaderWorkerCompareChecks compare_checks;
+   NfcComparatorReaderWorkerCompareChecks* compare_checks;
 } NfcComparatorReaderWorker;
 
 /** Allocates and initializes a new NFC Comparator Reader Worker */
-NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc();
+NfcComparatorReaderWorker*
+   nfc_comparator_reader_worker_alloc(NfcComparatorReaderWorkerCompareChecks* compare_checks);
 
 /** Frees the resources used by the worker */
 void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* worker);
@@ -59,9 +60,12 @@ bool nfc_comparator_reader_worker_set_loaded_nfc_card(
 NfcComparatorReaderWorkerState
    nfc_comparator_reader_worker_get_state(const NfcComparatorReaderWorker* worker);
 
-/** Gets the current compare checks */
-NfcComparatorReaderWorkerCompareChecks
-   nfc_comparator_reader_worker_get_compare_checks(const NfcComparatorReaderWorker* worker);
+/** Compares two NFC cards and updates the comparison checks */
+void nfc_comparator_reader_worker_compare_cards(
+   NfcComparatorReaderWorkerCompareChecks* compare_checks,
+   NfcDevice* card1,
+   NfcDevice* card2,
+   bool check_data);
 
 #ifdef __cplusplus
 }

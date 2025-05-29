@@ -10,7 +10,8 @@ void nfc_comparator_physical_scan_scene_on_enter(void* context) {
    popup_set_context(nfc_comparator->views.popup, nfc_comparator);
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Popup);
 
-   nfc_comparator->worker.nfc_comparator_reader_worker = nfc_comparator_reader_worker_alloc();
+   nfc_comparator->worker.nfc_comparator_reader_worker =
+      nfc_comparator_reader_worker_alloc(&nfc_comparator->worker.compare_checks);
 
    if(!nfc_comparator_reader_worker_set_loaded_nfc_card(
          nfc_comparator->worker.nfc_comparator_reader_worker,
@@ -61,16 +62,8 @@ bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEven
          if(!force_quit) {
             nfc_comparator_reader_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
 
-            NfcComparatorReaderWorkerCompareChecks checks =
-               nfc_comparator_reader_worker_get_compare_checks(
-                  nfc_comparator->worker.nfc_comparator_reader_worker);
-
-            memcpy(
-               &nfc_comparator->worker.compare_checks,
-               &checks,
-               sizeof(NfcComparatorReaderWorkerCompareChecks));
-
-            scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_PhysicalResults);
+            scene_manager_next_scene(
+               nfc_comparator->scene_manager, NfcComparatorScene_PhysicalResults);
          }
          consumed = true;
          break;
@@ -81,6 +74,7 @@ bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEven
    }
    return consumed;
 }
+
 void nfc_comparator_physical_scan_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;

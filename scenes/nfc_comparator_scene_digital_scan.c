@@ -25,27 +25,11 @@ static void nfc_comparator_digital_scan_menu_callback(void* context) {
       return;
    }
 
-   nfc_comparator->worker.compare_checks.protocol = nfc_device_get_protocol(nfc_card_1) == nfc_device_get_protocol(nfc_card_2);
-
-   // Get UIDs and lengths
-   size_t poller_uid_len = 0;
-   const uint8_t* poller_uid = nfc_device_get_uid(nfc_card_1, &poller_uid_len);
-
-   size_t loaded_uid_len = 0;
-   const uint8_t* loaded_uid = nfc_device_get_uid(nfc_card_2, &loaded_uid_len);
-
-   // Compare UID length
-   nfc_comparator->worker.compare_checks.uid_length = (poller_uid_len == loaded_uid_len);
-
-   // Compare UID bytes if lengths match
-   if(nfc_comparator->worker.compare_checks.uid_length && poller_uid && loaded_uid) {
-      nfc_comparator->worker.compare_checks.uid = (memcmp(poller_uid, loaded_uid, poller_uid_len) == 0);
-   } else {
-      nfc_comparator->worker.compare_checks.uid = false;
-   }
-
-   // compare NFC data
-   nfc_comparator->worker.compare_checks.nfc_data = nfc_device_is_equal(nfc_card_1, nfc_card_2);
+   nfc_comparator_reader_worker_compare_cards(
+      &nfc_comparator->worker.compare_checks,
+      nfc_card_1,
+      nfc_card_2,
+      true);
 
    nfc_device_free(nfc_card_1);
    nfc_device_free(nfc_card_2);
