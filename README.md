@@ -12,6 +12,14 @@ Create 10x10 images directly on the Flipper! The live preview allows you to see 
 * Create lines, circles, and rectangles
 * Open `.png` files
 * Save your icons as `.png`, `.xbm`, and even in a C source file format!
+  * Simpy copy the saved `.png` files from your SD card to your application's `images` folder to be included in your next build
 * Real time preview of your icon in actual size
+
+## Planned (or not) features
+
+* Multiple frames, for icon animations
+* Send to PC via USB - would directly send the .C source to your editor - no file transfer necessary!
+* Support for variable sized images (not just 10x10)
+* Improved UI
 
 <a href="https://www.buymeacoffee.com/rdefeo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
