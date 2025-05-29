@@ -502,3 +502,8 @@ void ac_remote_panel_label_set_string(
         },
         true);
 }
+
+void ac_remote_panel_update_view(ACRemotePanel* ac_remote_panel) {
+    view_get_model(ac_remote_panel->view);
+    view_commit_model(ac_remote_panel->view, true);
+}
