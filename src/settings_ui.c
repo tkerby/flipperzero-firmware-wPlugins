@@ -464,7 +464,7 @@ void settings_setup_gui(VariableItemList* list, SettingsUIContext* context) {
 bool settings_custom_event_callback(void* context, uint32_t event_id) {
     AppState* app_state = (AppState*)context;
     if(!app_state) return false;
-    
+
     // Skip processing events if the dispatcher is no longer running
     // This helps prevent crashes during shutdown
     if(!app_state->view_dispatcher) {

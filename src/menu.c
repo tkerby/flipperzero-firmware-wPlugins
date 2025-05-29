@@ -73,24 +73,22 @@ static const BeaconSpamDef beacon_spam_commands[] = {
     {"< Beacon Spam (Custom) >", "beaconspam"},
 };
 
-
 static size_t current_rgb_index = 0;
 
 static const BeaconSpamDef rgbmode_commands[] = {
     {"< LED: Rainbow >", "rgbmode rainbow\n"},
-    {"< LED: Police >",  "rgbmode police\n"},
-    {"< LED: Strobe >",  "rgbmode strobe\n"},
-    {"< LED: Off >",     "rgbmode off\n"},
-    {"< LED: Red >",     "rgbmode red\n"},
-    {"< LED: Green >",   "rgbmode green\n"},
-    {"< LED: Blue >",    "rgbmode blue\n"},
-    {"< LED: Yellow >",  "rgbmode yellow\n"},
-    {"< LED: Purple >",  "rgbmode purple\n"},
-    {"< LED: Cyan >",    "rgbmode cyan\n"},
-    {"< LED: Orange >",  "rgbmode orange\n"},
-    {"< LED: White >",   "rgbmode white\n"},
-    {"< LED: Pink >",    "rgbmode pink\n"}
-};
+    {"< LED: Police >", "rgbmode police\n"},
+    {"< LED: Strobe >", "rgbmode strobe\n"},
+    {"< LED: Off >", "rgbmode off\n"},
+    {"< LED: Red >", "rgbmode red\n"},
+    {"< LED: Green >", "rgbmode green\n"},
+    {"< LED: Blue >", "rgbmode blue\n"},
+    {"< LED: Yellow >", "rgbmode yellow\n"},
+    {"< LED: Purple >", "rgbmode purple\n"},
+    {"< LED: Cyan >", "rgbmode cyan\n"},
+    {"< LED: Orange >", "rgbmode orange\n"},
+    {"< LED: White >", "rgbmode white\n"},
+    {"< LED: Pink >", "rgbmode pink\n"}};
 
 static size_t current_sniff_index = 0;
 static size_t current_beacon_index = 0;
@@ -237,11 +235,11 @@ static const MenuCommand wifi_commands[] = {
         .confirm_text = NULL,
         .details_header = "Variable Beacon Spam",
         .details_text = "Use Left/Right to change:\n"
-                       "- List mode\n"
-                       "- Random names\n"
-                       "- Rickroll mode\n"
-                       "- Custom SSID\n"
-                       "Range: ~50-100m\n",
+                        "- List mode\n"
+                        "- Random names\n"
+                        "- Rickroll mode\n"
+                        "- Custom SSID\n"
+                        "Range: ~50-100m\n",
     },
     // Attack Operations
     {
@@ -896,18 +894,29 @@ static void text_input_result_callback(void* context) {
         text_input_reset(input_state->text_input);
         text_input_set_header_text(input_state->text_input, "PASSWORD");
         text_input_set_result_callback(
-            input_state->text_input, text_input_result_callback, input_state, input_state->input_buffer, 128, true);
+            input_state->text_input,
+            text_input_result_callback,
+            input_state,
+            input_state->input_buffer,
+            128,
+            true);
         view_dispatcher_switch_to_view(input_state->view_dispatcher, 6);
         return;
     }
     if(input_state->connect_input_stage == 2) {
         char buffer[256];
-        snprintf(buffer, sizeof(buffer), "connect \"%s\" \"%s\"\n", input_state->connect_ssid, input_state->input_buffer);
+        snprintf(
+            buffer,
+            sizeof(buffer),
+            "connect \"%s\" \"%s\"\n",
+            input_state->connect_ssid,
+            input_state->input_buffer);
         uart_send(input_state->uart_context, (uint8_t*)buffer, strlen(buffer));
         input_state->connect_input_stage = 0;
         input_state->connect_ssid[0] = '\0';
     } else {
-        send_uart_command_with_text(input_state->uart_command, input_state->input_buffer, input_state);
+        send_uart_command_with_text(
+            input_state->uart_command, input_state->input_buffer, input_state);
     }
     uart_receive_data(
         input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
@@ -999,14 +1008,19 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     // Handle variable beacon spam command
     if(state->current_view == 1 && state->current_index == 7) {
         const BeaconSpamDef* current_beacon = &beacon_spam_commands[current_beacon_index];
-        
+
         // If it's custom mode (last index), handle text input
         if(current_beacon_index == COUNT_OF(beacon_spam_commands) - 1) {
             state->uart_command = current_beacon->command;
             text_input_reset(state->text_input);
             text_input_set_header_text(state->text_input, "SSID Name");
             text_input_set_result_callback(
-                state->text_input, text_input_result_callback, state, state->input_buffer, 128, true);
+                state->text_input,
+                text_input_result_callback,
+                state,
+                state->input_buffer,
+                128,
+                true);
             view_dispatcher_switch_to_view(state->view_dispatcher, 6);
             return;
         }
@@ -1413,7 +1427,8 @@ static bool menu_input_handler(InputEvent* event, void* context) {
             // Handle beacon spam command cycling
             else if(state->current_view == 1 && current_index == 7) {
                 if(event->key == InputKeyRight) {
-                    current_beacon_index = (current_beacon_index + 1) % COUNT_OF(beacon_spam_commands);
+                    current_beacon_index =
+                        (current_beacon_index + 1) % COUNT_OF(beacon_spam_commands);
                 } else {
                     current_beacon_index = (current_beacon_index == 0) ?
                                                (size_t)(COUNT_OF(beacon_spam_commands) - 1) :
@@ -1429,10 +1444,11 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                     current_rgb_index = (current_rgb_index + 1) % COUNT_OF(rgbmode_commands);
                 } else {
                     current_rgb_index = (current_rgb_index == 0) ?
-                                          (COUNT_OF(rgbmode_commands) - 1) :
-                                          (current_rgb_index - 1);
+                                            (COUNT_OF(rgbmode_commands) - 1) :
+                                            (current_rgb_index - 1);
                 }
-                submenu_change_item_label(current_menu, current_index, rgbmode_commands[current_rgb_index].label);
+                submenu_change_item_label(
+                    current_menu, current_index, rgbmode_commands[current_rgb_index].label);
                 consumed = true;
             }
             break;
