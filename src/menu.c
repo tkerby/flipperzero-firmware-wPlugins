@@ -263,15 +263,13 @@ static const MenuCommand wifi_commands[] = {
     // Portal & Network Operations
     {
         .label = "Evil Portal",
-        .command = "startportal\n",
+        .command = "startportal",
         .capture_prefix = NULL,
         .file_ext = NULL,
         .folder = NULL,
-        .needs_input = false,
-        .input_text = NULL,
-        .needs_confirmation = true,
-        .confirm_header = "Evil Portal",
-        .confirm_text = "You need to configure\n settings in the WebUI\n for this command.\n\n",
+        .needs_input = true,
+        .input_text = "<filepath> <SSID> <PSK (leave blank for open)>",
+        .needs_confirmation = false,
         .details_header = "Evil Portal",
         .details_text = "Captive portal for\n"
                         "credential harvest.\n"
