@@ -1,8 +1,10 @@
 # Changelog
-    
+
 ## v1.2.6
+
 - Fix connect command syntax (#2 @tototo31)
-  
+- updated Evil Portal entry to require user input
+
 ## v1.2.5
 
 - Added new and missing commands to the menu
@@ -30,7 +32,6 @@
 - Added Variable Sniff command replacing individual commands
 - Added Variable Beacon Spam command replacing individual commands
 - Removed individual stop commands in favour of one for each section
-
 
 ## v1.1.9
 

@@ -49,8 +49,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi (Marauder) v0.7.3 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
 - Updated: [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
 - Updated: [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
-- Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP) (Version Only)
 - Updated: [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
+- Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release">
 
