@@ -6,6 +6,7 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/view_stack.h>
+#include <gui/modules/variable_item_list.h>
 #include <hvac_hitachi.h>
 #include <notification/notification_messages.h>
 #include <storage/storage.h>
@@ -60,17 +61,44 @@ typedef enum {
     LABEL_STRING_POOL_SIZE,
 } LabelStringPoolIndex;
 
+typedef enum {
+    TimerStateStopped,
+    TimerStatePaused,
+    TimerStateRunning,
+    TIMER_STATE_COUNT,
+} TimerState;
+
+typedef struct {
+    uint32_t on;
+    uint32_t off;
+} TimerOnOffState;
+
 typedef struct {
     uint32_t power;
     uint32_t mode;
     uint32_t temperature;
     uint32_t fan;
     uint32_t vane;
-    uint32_t timer_on_h;
-    uint32_t timer_on_m;
-    uint32_t timer_off_h;
-    uint32_t timer_off_m;
+    uint32_t timer_state;
+    TimerOnOffState timer_preset;
+    TimerOnOffState timer_pause;
+    uint32_t timer_on_expires_at;
+    uint32_t timer_off_expires_at;
 } ACRemoteAppSettings;
+
+typedef struct {
+    uint8_t hours;
+    uint8_t minutes;
+    uint16_t minutes_only;
+    char hours_display[4];
+    char minutes_display[4];
+} ACRemoteTimerState;
+
+typedef struct {
+    ACRemoteTimerState timer_on;
+    ACRemoteTimerState timer_off;
+    char temp_display[4];
+} ACRemoteTransientState;
 
 struct AC_RemoteApp {
     Gui* gui;
@@ -78,14 +106,16 @@ struct AC_RemoteApp {
     SceneManager* scene_manager;
     ACRemotePanel* panel_main;
     ACRemotePanel* panel_sub;
+    VariableItemList* vil_settings;
     ACRemoteAppSettings app_state;
-    char label_string_pool[LABEL_STRING_POOL_SIZE][4];
+    ACRemoteTransientState transient_state;
     HvacHitachiContext* protocol;
 };
 
 typedef enum {
     AC_RemoteAppViewMain,
     AC_RemoteAppViewSub,
+    AC_RemoteAppViewSettings,
 } AC_RemoteAppView;
 
 #define LABEL_STRING_SIZE sizeof(ac_remote->label_string_pool[0])
