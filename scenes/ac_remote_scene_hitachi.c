@@ -417,7 +417,7 @@ static void ac_remote_timer_tick(AC_RemoteApp* ac_remote, bool init) {
             TAG,
             "expiring timers:%s%s",
             timer_on_just_expired ? " on" : "",
-            timer_off_just_expired ? "off" : "");
+            timer_off_just_expired ? " off" : "");
         // power state should be corresponding to the timer that expires last by timestamp when
         // both are detected to expire simultaneously (offline tick)
         if(timer_on_just_expired && timer_off_just_expired) {
@@ -457,6 +457,8 @@ void ac_remote_scene_universal_common_item_callback(void* context, uint32_t inde
 }
 
 void ac_remote_scene_hitachi_on_enter(void* context) {
+    FURI_LOG_I(TAG, "Entering scene...");
+
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* panel_main = ac_remote->panel_main;
     ACRemotePanel* panel_sub = ac_remote->panel_sub;
@@ -962,6 +964,10 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 hvac_hitachi_reset_filter(ac_remote->protocol);
                 send_on_power_off = true;
                 break;
+            case button_settings:
+                scene_manager_next_scene(ac_remote->scene_manager, AC_RemoteSceneSettings);
+                has_ir_code = false;
+                break;
             default:
                 has_ir_code = false;
                 break;
@@ -979,6 +985,8 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
 }
 
 void ac_remote_scene_hitachi_on_exit(void* context) {
+    FURI_LOG_I(TAG, "Exiting scene...");
+
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* panel_main = ac_remote->panel_main;
     ACRemotePanel* panel_sub = ac_remote->panel_sub;

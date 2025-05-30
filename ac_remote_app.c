@@ -48,6 +48,11 @@ AC_RemoteApp* ac_remote_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, AC_RemoteAppViewSub, ac_remote_panel_get_view(app->panel_sub));
 
+    app->vil_settings = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        AC_RemoteAppViewSettings,
+        variable_item_list_get_view(app->vil_settings));
     scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
     return app;
 }
@@ -56,10 +61,12 @@ void ac_remote_app_free(AC_RemoteApp* app) {
     furi_assert(app);
 
     // Views
+    view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSettings);
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSub);
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewMain);
 
     // View dispatcher
+    variable_item_list_free(app->vil_settings);
     ac_remote_panel_free(app->panel_sub);
     ac_remote_panel_free(app->panel_main);
     view_dispatcher_free(app->view_dispatcher);
