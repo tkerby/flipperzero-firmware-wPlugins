@@ -48,9 +48,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ESP Flasher Bump ESP Marauder v1.6.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.6.0)
 - Updated: [WiFi (Marauder) v0.7.3 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
 - Updated: [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
-- Updated: [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - Updated: [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
-- Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP) (Version Only)
+- Updated: [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 
 <a name="release">
 
@@ -550,6 +550,7 @@ $ ./fbt dolphin_ext
 - [LED Blinker v1.0 (By Cupprum)](https://github.com/Cupprum/Blinker)
 - [LED Pulsator (By leedave)](https://github.com/leedave/Leeds-Flipper-Zero-Applications)
 - [LEGO Dimensions Toy Pad v0.4 (By SegerEnd)](https://github.com/SegerEnd/Flipper-Zero-LD-Toypad-Emulator)
+- [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - [LIDAR Emulator v0.1 (By regaly)](https://github.com/regaly/flipperzero-lidar_emulator)
 - [Lightmeter v1.3 (By oleksiikutuzov)](https://github.com/oleksiikutuzov/flipperzero-lightmeter) `Req: BH1750/MAX44009`
 - [Lishi HU66 v0.2 (By evillero)](https://github.com/evillero/lishi_hu66)
@@ -650,7 +651,6 @@ $ ./fbt dolphin_ext
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [Restaurant Pager Trigger v1.7 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
-- [RFID Beacon (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - [RFID Fuzzer v1.6 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RGB LED (By flyandi)](https://github.com/flyandi/flipper_zero_rgb_led)
 - [R.O.B. Control v1.0.1 (By riney)](https://github.com/riney/flip_rob)
