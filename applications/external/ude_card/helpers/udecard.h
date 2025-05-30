@@ -71,7 +71,7 @@ static const uint8_t UDECARD_CONSTANT_BLOCK2_CONTENTS[] = UDECARD_CONSTANT_BLOCK
 
 // key locations in flipper’s dictonary
 #define FLIPPER_MFCLASSIC_DICT_PATH       "nfc/assets/mf_classic_dict.nfc"
-#define FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS 2311
+#define FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS 2042
 #define UDECARD_KEY_SIZE                  6
 #define UDECARD_KEYA_0_INDEX              3
 #define UDECARD_KEYA_1_INDEX              206

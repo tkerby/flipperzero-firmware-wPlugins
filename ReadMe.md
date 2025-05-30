@@ -51,6 +51,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
 - Updated: [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
 
 <a name="release">
 
@@ -701,7 +702,7 @@ $ ./fbt dolphin_ext
 - [u-blox GPS v0.5 (By liamhays)](https://github.com/liamhays/ublox)
 - [UART Echo (By DrZlo13)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/831)
 - [UART Terminal v1.5 (By cool4uma)](https://github.com/cool4uma/UART_Terminal)
-- [UDECard v1.0.2 (By hahnworks](https://github.com/hahnworks/UDECard)
+- [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
 - [UHF RFID WIP v1.1 (By frux-c)](https://github.com/frux-c/uhf_rfid) `Req: M100 or QM100`
 - [uPython v1.7 (By ofabel)](https://github.com/ofabel/mp-flipper)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)

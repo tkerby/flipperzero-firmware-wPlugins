@@ -266,13 +266,33 @@ char* udecard_loading_error_string(UDECardLoadingResult loading_result) {
 }
 
 bool udecard_gather_keys(uint8_t sector_keys[][6]) {
-    if(!keys_dict_check_presence(EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH))) return false;
+    if(!keys_dict_check_presence(EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH))) {
+        FURI_LOG_E(
+            "UDECARD", "Keys dictionary not found at %s", EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH));
+        return false;
+    }
     KeysDict* keys_dict =
         keys_dict_alloc(EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH), KeysDictModeOpenExisting, 6);
-    if(!keys_dict) return false;
-    if(FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS != keys_dict_get_total_keys(keys_dict)) {
-        keys_dict_free(keys_dict);
+    if(!keys_dict) {
+        FURI_LOG_E(
+            "UDECARD",
+            "Failed to open keys dictionary at %s",
+            EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH));
         return false;
+    }
+    if(FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS != keys_dict_get_total_keys(keys_dict)) {
+        FURI_LOG_I(
+            "UDECARD",
+            "Keys dictionary at %s has wrong number of keys: %d, expected: %d",
+            EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH),
+            keys_dict_get_total_keys(keys_dict),
+            FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS);
+        // only throw an error if it is LESS
+        if(keys_dict_get_total_keys(keys_dict) < FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS) {
+            FURI_LOG_E("UDECARD", "Keys dictionary is too small!");
+            keys_dict_free(keys_dict);
+            return false;
+        }
     }
 
     int udecard_keys_indices[] = {
@@ -295,6 +315,19 @@ bool udecard_gather_keys(uint8_t sector_keys[][6]) {
             memcpy(gathered_keys[found], curkey, sizeof(curkey));
             found++;
         }
+    }
+
+    for(int i = 0; i < udecard_keys_total; i++) {
+        FURI_LOG_I(
+            "UDECARD",
+            "Key %d: %02X %02X %02X %02X %02X %02X",
+            i,
+            gathered_keys[i][0],
+            gathered_keys[i][1],
+            gathered_keys[i][2],
+            gathered_keys[i][3],
+            gathered_keys[i][4],
+            gathered_keys[i][5]);
     }
 
     memcpy(sector_keys[0], gathered_keys[0], sizeof(gathered_keys[0]));

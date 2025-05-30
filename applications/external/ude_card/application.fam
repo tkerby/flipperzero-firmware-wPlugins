@@ -21,6 +21,6 @@ App(
     fap_category="NFC",
     fap_author="Alexander Hahn / hahnworks",
     fap_weburl="https://github.com/hahnworks/UDECard",
-    fap_version="1.0.2",
+    fap_version="1.0.3",
     fap_description="Flipper application to analyse student ID cards from the University of Duisburg-Essen.",
 )
