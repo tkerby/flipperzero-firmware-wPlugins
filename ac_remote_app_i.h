@@ -60,17 +60,44 @@ typedef enum {
     LABEL_STRING_POOL_SIZE,
 } LabelStringPoolIndex;
 
+typedef enum {
+    TimerStateStopped,
+    TimerStatePaused,
+    TimerStateRunning,
+    TIMER_STATE_COUNT,
+} TimerState;
+
+typedef struct {
+    uint32_t on;
+    uint32_t off;
+} TimerOnOffState;
+
 typedef struct {
     uint32_t power;
     uint32_t mode;
     uint32_t temperature;
     uint32_t fan;
     uint32_t vane;
-    uint32_t timer_on_h;
-    uint32_t timer_on_m;
-    uint32_t timer_off_h;
-    uint32_t timer_off_m;
+    uint32_t timer_state;
+    TimerOnOffState timer_preset;
+    TimerOnOffState timer_pause;
+    uint32_t timer_on_expires_at;
+    uint32_t timer_off_expires_at;
 } ACRemoteAppSettings;
+
+typedef struct {
+    uint8_t hours;
+    uint8_t minutes;
+    uint16_t minutes_only;
+    char hours_display[4];
+    char minutes_display[4];
+} ACRemoteTimerState;
+
+typedef struct {
+    ACRemoteTimerState timer_on;
+    ACRemoteTimerState timer_off;
+    char temp_display[4];
+} ACRemoteTransientState;
 
 struct AC_RemoteApp {
     Gui* gui;
@@ -79,7 +106,7 @@ struct AC_RemoteApp {
     ACRemotePanel* panel_main;
     ACRemotePanel* panel_sub;
     ACRemoteAppSettings app_state;
-    char label_string_pool[LABEL_STRING_POOL_SIZE][4];
+    ACRemoteTransientState transient_state;
     HvacHitachiContext* protocol;
 };
 
