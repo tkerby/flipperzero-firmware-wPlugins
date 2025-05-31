@@ -11,6 +11,7 @@ typedef enum {
     BunnyConnectSubmenuIndexTerminal,
     BunnyConnectSubmenuIndexKeyboard,
     BunnyConnectSubmenuIndexConfig,
+    BunnyConnectSubmenuInfo,
     BunnyConnectSubmenuIndexExit,
 } BunnyConnectSubmenuIndex;
 
@@ -38,6 +39,12 @@ static void bunnyconnect_submenu_callback(void* context, uint32_t index) {
         if(app->config_menu) {
             app->current_view = BunnyConnectViewConfig;
             view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewConfig);
+        }
+        break;
+    case BunnyConnectSubmenuInfo:
+        if(app->info_widget) {
+            app->current_view = BunnyConnectViewInfo;
+            view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewInfo);
         }
         break;
     case BunnyConnectSubmenuIndexExit:
@@ -260,6 +267,7 @@ bool bunnyconnect_navigation_callback(void* context) {
     case BunnyConnectViewConfig:
     case BunnyConnectViewCustomKeyboard:
     case BunnyConnectViewPopup:
+    case BunnyConnectViewInfo:
         // Return to main menu from any submenu/view
         app->current_view = BunnyConnectViewMainMenu;
         view_dispatcher_switch_to_view(app->view_dispatcher, BunnyConnectViewMainMenu);
@@ -319,6 +327,8 @@ static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
         bunnyconnect_submenu_callback,
         app);
     submenu_add_item(
+        app->main_menu, "Info", BunnyConnectSubmenuInfo, bunnyconnect_submenu_callback, app);
+    submenu_add_item(
         app->main_menu, "Exit", BunnyConnectSubmenuIndexExit, bunnyconnect_submenu_callback, app);
 
     view_dispatcher_add_view(
@@ -347,6 +357,33 @@ static bool bunnyconnect_setup_views(BunnyConnectApp* app) {
     submenu_add_item(app->config_menu, "Auto Enumerate: ON", 3, NULL, app);
     view_dispatcher_add_view(
         app->view_dispatcher, BunnyConnectViewConfig, submenu_get_view(app->config_menu));
+
+    // Info widget
+    app->info_widget = widget_alloc();
+    if(!app->info_widget) {
+        FURI_LOG_E(TAG, "Failed to allocate info widget");
+        return false;
+    }
+    widget_add_text_scroll_element(
+        app->info_widget,
+        0,
+        0,
+        128,
+        64,
+        "BunnyConnect v1.0\n\n"
+        "USB CDC Terminal App\n"
+        "Made by C0d3-5t3w\n\n"
+        "Features:\n"
+        "- USB CDC Communication\n"
+        "- Terminal Interface\n"
+        "- Custom Keyboard\n"
+        "- USB Power Control\n\n"
+        "Use Connect to establish\n"
+        "USB CDC connection with\n"
+        "external devices.\n\n"
+        "Press Back to return.");
+    view_dispatcher_add_view(
+        app->view_dispatcher, BunnyConnectViewInfo, widget_get_view(app->info_widget));
 
     // Custom keyboard
     app->custom_keyboard = bunnyconnect_keyboard_alloc();
@@ -406,6 +443,21 @@ int32_t bunnyconnect_app_run(BunnyConnectApp* app) {
 
     FURI_LOG_I(TAG, "Running view dispatcher");
     view_dispatcher_run(app->view_dispatcher);
+
+    // Cleanup critical resources once the view dispatcher is stopped
+    FURI_LOG_I(TAG, "View dispatcher stopped, cleaning up critical app resources");
+
+    // Stop and free the worker thread
+    if(app->worker_thread) {
+        app->is_running = false; // Signal the thread to exit its loop
+        furi_thread_join(app->worker_thread); // Wait for the thread to finish
+        furi_thread_free(app->worker_thread); // Free the thread object
+        app->worker_thread = NULL;
+    }
+
+    // Deinitialize serial communication and related power management
+    // This should be safe to call even if a connection was not fully established
+    bunnyconnect_serial_deinit(app);
 
     FURI_LOG_I(TAG, "App finished");
     return 0;

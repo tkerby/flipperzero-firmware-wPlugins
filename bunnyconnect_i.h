@@ -18,6 +18,7 @@
 #include <gui/modules/text_box.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/popup.h>
+#include <gui/modules/widget.h>
 #include <notification/notification.h>
 #include <notification/notification_messages.h>
 
@@ -34,8 +35,9 @@ extern "C" {
 typedef enum {
     BunnyConnectViewMainMenu,
     BunnyConnectViewTerminal,
-    BunnyConnectViewConfig,
     BunnyConnectViewCustomKeyboard,
+    BunnyConnectViewConfig,
+    BunnyConnectViewInfo,
     BunnyConnectViewPopup,
 } BunnyConnectViewId;
 
@@ -77,6 +79,7 @@ struct BunnyConnectApp {
     TextBox* text_box;
     BunnyConnectKeyboard* custom_keyboard;
     Popup* popup;
+    Widget* info_widget;
 
     NotificationApp* notifications;
 
