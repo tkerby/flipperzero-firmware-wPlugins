@@ -26,6 +26,7 @@ typedef enum {
 } PowerButtonState;
 
 typedef enum {
+    ModeButtonAuto,
     ModeButtonHeating,
     ModeButtonCooling,
     ModeButtonDehumidifying,
@@ -68,6 +69,23 @@ typedef enum {
     TIMER_STATE_COUNT,
 } TimerState;
 
+typedef enum {
+    SettingsSideA,
+    SettingsSideB,
+    SETTINGS_SIDE_COUNT,
+} SettingsSide;
+
+typedef enum {
+    SettingsTimerStep1min,
+    SettingsTimerStep2min,
+    SettingsTimerStep3min,
+    SettingsTimerStep5min,
+    SettingsTimerStep10min,
+    SettingsTimerStep15min,
+    SettingsTimerStep30min,
+    SETTINGS_TIMER_STEP_COUNT,
+} SettingsTimerStep;
+
 typedef struct {
     uint32_t on;
     uint32_t off;
@@ -84,6 +102,9 @@ typedef struct {
     TimerOnOffState timer_pause;
     uint32_t timer_on_expires_at;
     uint32_t timer_off_expires_at;
+    uint32_t side;
+    uint32_t timer_step;
+    bool allow_auto;
 } ACRemoteAppSettings;
 
 typedef struct {

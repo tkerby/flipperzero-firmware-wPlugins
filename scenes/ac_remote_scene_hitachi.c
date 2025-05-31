@@ -39,6 +39,7 @@ static const Icon* POWER_ICONS[POWER_STATE_MAX][2] = {
 };
 
 static const Icon* MODE_BUTTON_ICONS[MODE_BUTTON_STATE_MAX][2] = {
+    [ModeButtonAuto] = {&I_auto_19x20, &I_auto_hover_19x20},
     [ModeButtonHeating] = {&I_heat_19x20, &I_heat_hover_19x20},
     [ModeButtonCooling] = {&I_cold_19x20, &I_cold_hover_19x20},
     [ModeButtonDehumidifying] = {&I_dry_19x20, &I_dry_hover_19x20},
@@ -66,7 +67,6 @@ static const Icon* TIMER_SET_BUTTON_ICONS[TIMER_STATE_COUNT][2] = {
     [TimerStateStopped] = {&I_timer_set_19x20, &I_timer_set_hover_19x20},
     [TimerStatePaused] = {&I_timer_resume_19x20, &I_timer_resume_hover_19x20},
     [TimerStateRunning] = {&I_timer_pause_19x20, &I_timer_pause_hover_19x20},
-
 };
 
 static const HvacHitachiControl POWER_LUT[POWER_STATE_MAX] = {
@@ -75,6 +75,7 @@ static const HvacHitachiControl POWER_LUT[POWER_STATE_MAX] = {
 };
 
 static const HvacHitachiMode MODE_LUT[MODE_BUTTON_STATE_MAX] = {
+    [ModeButtonAuto] = HvacHitachiModeAuto,
     [ModeButtonHeating] = HvacHitachiModeHeating,
     [ModeButtonCooling] = HvacHitachiModeCooling,
     [ModeButtonDehumidifying] = HvacHitachiModeDehumidifying,
@@ -96,6 +97,21 @@ static const HvacHitachiVane VANE_LUT[VANE_BUTTON_STATE_MAX] = {
     [VaneButtonPos5] = HvacHitachiVanePos5,
     [VaneButtonPos6] = HvacHitachiVanePos6,
     [VaneButtonAuto] = HvacHitachiVaneAuto,
+};
+
+static const HvacHitachiSide SIDE_LUT[SETTINGS_SIDE_COUNT] = {
+    [SettingsSideA] = HvacHitachiSideA,
+    [SettingsSideB] = HvacHitachiSideB,
+};
+
+static uint8_t TIMER_STEP_LUT[SETTINGS_TIMER_STEP_COUNT] = {
+    [SettingsTimerStep1min] = 1,
+    [SettingsTimerStep2min] = 2,
+    [SettingsTimerStep3min] = 3,
+    [SettingsTimerStep5min] = 5,
+    [SettingsTimerStep10min] = 10,
+    [SettingsTimerStep15min] = 15,
+    [SettingsTimerStep30min] = 30,
 };
 
 // Exactly 4095 minutes
@@ -182,86 +198,6 @@ static const TimerButtonLayout BUTTON_TIMER_LAYOUT[BUTTON_TIMER_Y][BUTTON_TIMER_
         },
 };
 
-static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
-    FuriString* header = furi_string_alloc();
-
-    uint32_t version = 0;
-    bool success = false;
-    do {
-        if(!flipper_format_buffered_file_open_existing(ff, AC_REMOTE_APP_SETTINGS)) break;
-        if(!flipper_format_read_header(ff, header, &version)) break;
-        if(!furi_string_equal(header, "AC Remote") || (version != 1)) break;
-        if(!flipper_format_read_uint32(ff, "Power", &app_state->power, 1)) break;
-        if(!flipper_format_read_uint32(ff, "Mode", &app_state->mode, 1)) break;
-        if(app_state->mode >= MODE_BUTTON_STATE_MAX) break;
-        if(!flipper_format_read_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
-        if(app_state->temperature > HVAC_HITACHI_TEMPERATURE_MAX ||
-           app_state->temperature < HVAC_HITACHI_TEMPERATURE_MIN)
-            break;
-        if(!flipper_format_read_uint32(ff, "Fan", &app_state->fan, 1)) break;
-        if(app_state->fan >= FAN_SPEED_BUTTON_STATE_MAX) break;
-        if(!flipper_format_read_uint32(ff, "Vane", &app_state->vane, 1)) break;
-        if(app_state->vane > VANE_BUTTON_STATE_MAX) break;
-        if(!flipper_format_read_uint32(ff, "TimerState", &app_state->timer_state, 1)) break;
-        if(app_state->timer_state >= TIMER_STATE_COUNT) break;
-        if(!flipper_format_read_uint32(ff, "TimerPresetOn", &app_state->timer_preset.on, 1)) break;
-        if(app_state->timer_preset.on > 0xfff) break;
-        if(!flipper_format_read_uint32(ff, "TimerPresetOff", &app_state->timer_preset.off, 1))
-            break;
-        if(app_state->timer_preset.off > 0xfff) break;
-        if(!flipper_format_read_uint32(ff, "TimerPauseOn", &app_state->timer_pause.on, 1)) break;
-        if(app_state->timer_pause.on > 0xfff) break;
-        if(!flipper_format_read_uint32(ff, "TimerPauseOff", &app_state->timer_pause.off, 1)) break;
-        if(app_state->timer_pause.off > 0xfff) break;
-        if(!flipper_format_read_uint32(ff, "TimerOnExpiresAt", &app_state->timer_on_expires_at, 1))
-            break;
-        if(!flipper_format_read_uint32(
-               ff, "TimerOffExpiresAt", &app_state->timer_off_expires_at, 1))
-            break;
-        success = true;
-    } while(false);
-    furi_record_close(RECORD_STORAGE);
-    furi_string_free(header);
-    flipper_format_free(ff);
-    return success;
-}
-
-bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    FlipperFormat* ff = flipper_format_file_alloc(storage);
-
-    bool success = false;
-    do {
-        if(!flipper_format_file_open_always(ff, AC_REMOTE_APP_SETTINGS)) break;
-        if(!flipper_format_write_header_cstr(ff, "AC Remote", 1)) break;
-        if(!flipper_format_write_comment_cstr(ff, "")) break;
-        if(!flipper_format_write_uint32(ff, "Power", &app_state->power, 1)) break;
-        if(!flipper_format_write_uint32(ff, "Mode", &app_state->mode, 1)) break;
-        if(!flipper_format_write_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
-        if(!flipper_format_write_uint32(ff, "Fan", &app_state->fan, 1)) break;
-        if(!flipper_format_write_uint32(ff, "Vane", &app_state->vane, 1)) break;
-        if(!flipper_format_write_uint32(ff, "TimerState", &app_state->timer_state, 1)) break;
-        if(!flipper_format_write_uint32(ff, "TimerPresetOn", &app_state->timer_preset.on, 1))
-            break;
-        if(!flipper_format_write_uint32(ff, "TimerPresetOff", &app_state->timer_preset.off, 1))
-            break;
-        if(!flipper_format_write_uint32(ff, "TimerPauseOn", &app_state->timer_pause.on, 1)) break;
-        if(!flipper_format_write_uint32(ff, "TimerPauseOff", &app_state->timer_pause.off, 1))
-            break;
-        if(!flipper_format_write_uint32(ff, "TimerOnExpiresAt", &app_state->timer_on_expires_at, 1))
-            break;
-        if(!flipper_format_write_uint32(
-               ff, "TimerOffExpiresAt", &app_state->timer_off_expires_at, 1))
-            break;
-        success = true;
-    } while(false);
-    furi_record_close(RECORD_STORAGE);
-    flipper_format_free(ff);
-    return success;
-}
-
 static inline void timer_set_minute_nocheck(ACRemoteTimerState* timer, uint16_t timer_minutes) {
     timer->minutes = timer_minutes % 60;
     timer->hours = timer_minutes / 60;
@@ -346,22 +282,22 @@ static void timer_dec_hour(ACRemoteTimerState* timer) {
     timer_update_from_minutes(timer, new_minutes_only);
 }
 
-static void timer_inc_minute(ACRemoteTimerState* timer) {
+static void timer_inc_minute(ACRemoteTimerState* timer, uint8_t unit) {
     uint16_t new_minutes_only = timer->minutes_only;
-    if(new_minutes_only + 1 > 0xfff) {
+    if(new_minutes_only + unit > 0xfff) {
         new_minutes_only = 0xfff;
     } else {
-        new_minutes_only++;
+        new_minutes_only += unit;
     }
     timer_update_from_minutes(timer, new_minutes_only);
 }
 
-static void timer_dec_minute(ACRemoteTimerState* timer) {
+static void timer_dec_minute(ACRemoteTimerState* timer, uint8_t unit) {
     uint16_t new_minutes_only = timer->minutes_only;
-    if(new_minutes_only < 1) {
+    if(new_minutes_only < unit) {
         new_minutes_only = 0;
     } else {
-        new_minutes_only--;
+        new_minutes_only -= unit;
     }
     timer_update_from_minutes(timer, new_minutes_only);
 }
@@ -463,15 +399,6 @@ void ac_remote_scene_hitachi_on_enter(void* context) {
     ACRemotePanel* panel_main = ac_remote->panel_main;
     ACRemotePanel* panel_sub = ac_remote->panel_sub;
     ac_remote->protocol = hvac_hitachi_init();
-
-    if(!ac_remote_load_settings(&ac_remote->app_state)) {
-        memset(&ac_remote->app_state, 0, sizeof(ac_remote->app_state));
-        ac_remote->app_state.power = PowerButtonOff;
-        ac_remote->app_state.mode = ModeButtonCooling;
-        ac_remote->app_state.fan = FanSpeedButtonLow;
-        ac_remote->app_state.vane = VaneButtonPos0;
-        ac_remote->app_state.temperature = 23;
-    }
 
     ac_remote_panel_reserve(panel_main, 2, 4);
 
@@ -754,7 +681,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             case button_mode:
                 app_state->mode++;
                 if(app_state->mode >= MODE_BUTTON_STATE_MAX) {
-                    app_state->mode = ModeButtonHeating;
+                    app_state->mode = app_state->allow_auto ? ModeButtonAuto : ModeButtonHeating;
                 }
                 hvac_hitachi_set_mode(
                     ac_remote->protocol,
@@ -848,7 +775,9 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             case button_timer_on_m_inc: {
                 TimerOnOffState* timer = ac_remote_timer_selector(ac_remote);
                 if(timer != NULL) {
-                    timer_inc_minute(&ac_remote->transient_state.timer_on);
+                    timer_inc_minute(
+                        &ac_remote->transient_state.timer_on,
+                        TIMER_STEP_LUT[ac_remote->app_state.timer_step]);
                     timer->on = ac_remote->transient_state.timer_on.minutes_only;
                     ac_remote_panel_update_view(panel_sub);
                 }
@@ -858,7 +787,9 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             case button_timer_on_m_dec: {
                 TimerOnOffState* timer = ac_remote_timer_selector(ac_remote);
                 if(timer != NULL) {
-                    timer_dec_minute(&ac_remote->transient_state.timer_on);
+                    timer_dec_minute(
+                        &ac_remote->transient_state.timer_on,
+                        TIMER_STEP_LUT[ac_remote->app_state.timer_step]);
                     timer->on = ac_remote->transient_state.timer_on.minutes_only;
                     ac_remote_panel_update_view(panel_sub);
                 }
@@ -888,7 +819,9 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             case button_timer_off_m_inc: {
                 TimerOnOffState* timer = ac_remote_timer_selector(ac_remote);
                 if(timer != NULL) {
-                    timer_inc_minute(&ac_remote->transient_state.timer_off);
+                    timer_inc_minute(
+                        &ac_remote->transient_state.timer_off,
+                        TIMER_STEP_LUT[ac_remote->app_state.timer_step]);
                     timer->off = ac_remote->transient_state.timer_off.minutes_only;
                     ac_remote_panel_update_view(panel_sub);
                 }
@@ -898,7 +831,9 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             case button_timer_off_m_dec: {
                 TimerOnOffState* timer = ac_remote_timer_selector(ac_remote);
                 if(timer != NULL) {
-                    timer_dec_minute(&ac_remote->transient_state.timer_off);
+                    timer_dec_minute(
+                        &ac_remote->transient_state.timer_off,
+                        TIMER_STEP_LUT[ac_remote->app_state.timer_step]);
                     timer->off = ac_remote->transient_state.timer_off.minutes_only;
                     ac_remote_panel_update_view(panel_sub);
                 }
@@ -973,6 +908,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 break;
             }
             if(has_ir_code && (send_on_power_off || app_state->power == PowerButtonOn)) {
+                hvac_hitachi_switch_side(ac_remote->protocol, SIDE_LUT[app_state->side]);
                 hvac_hitachi_build_samples(ac_remote->protocol);
                 uint32_t event =
                     ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
@@ -990,7 +926,6 @@ void ac_remote_scene_hitachi_on_exit(void* context) {
     AC_RemoteApp* ac_remote = context;
     ACRemotePanel* panel_main = ac_remote->panel_main;
     ACRemotePanel* panel_sub = ac_remote->panel_sub;
-    ac_remote_store_settings(&ac_remote->app_state);
     hvac_hitachi_deinit(ac_remote->protocol);
     ac_remote_panel_reset(panel_main);
     ac_remote_panel_reset(panel_sub);
