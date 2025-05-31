@@ -21,8 +21,12 @@ uint16_t bt_selected_devices_capacity = 0;
 uint8_t PREAMBLE_LEN = 8;
 uint8_t PREAMBLE_BT_BLE[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xAA, 0xAA, 0xAA, 0xAA};
 uint8_t PREAMBLE_WIFI[] = {0x99, 0x99, 0x99, 0x99, 0x11, 0x11, 0x11, 0x11};
+uint8_t PREAMBLE_STATUS[] = {0xEE, 0xEE, 0xEE, 0xEE, 0xBB, 0xBB, 0xBB, 0xBB};
 uint8_t PREAMBLE_VER[] = {'W', 'e', 'n', 'd', 'i', 'g', 'o', ' '};
 uint8_t PACKET_TERM[] = {0xAA, 0xAA, 0xAA, 0xAA, 0xFF, 0xFF, 0xFF, 0xFF};
+
+/* How much will we increase bt_devices[] by when additional space is needed? */
+#define INC_BT_DEVICE_CAPACITY_BY 10
 
 /** Search for the start-of-packet marker in the specified byte array
  *  This function is used during parsing to skip past any extraneous bytes
@@ -177,27 +181,125 @@ bool bt_device_exists(flipper_bt_device* dev) {
     return bt_device_index(dev) < bt_devices_count;
 }
 
-/* Adds the specified device to bt_devices[], extending the length of bt_devices[] if necessary.
-   DOES NOT check to ensure the device is not already present in bt_devices[].
-   Return true if the device was successfully added to bt_devices[].
-   NOTE: The provided flipper_bt_device object is retained in bt_devices[] - It MUST NOT be freed by the caller */
+/** Add the specified device to bt_devices[], extending the length of bt_devices[] if necessary.
+ * If the specified device has a BDA which is already present in bt_devices[] a new entry will
+ * not be made, instead the element with the same BDA will be updated based on the specified device.
+ * Returns true if the device was successfully added to (or updated in) bt_devices[].
+ * NOTE: The calling function may free the specified flipper_bt_device or any of its attributes
+ * when this function returns. To minimise the likelihood of memory leaks this function will allocate
+ * its own memory to hold the specified device and its attributes.
+ */
 bool wendigo_add_bt_device(WendigoApp* app, flipper_bt_device* dev) {
-    /* Increase capacity of bt_devices[] by an additional 10 if necessary */
+    uint16_t idx = bt_device_index(dev);
+    if(idx < bt_devices_count) {
+        /* A device with the provided BDA already exists - Update that instead */
+        return wendigo_update_bt_device(app, dev);
+    }
+    /* Adding to bt_devices - Increase capacity by an additional INC_BT_DEVICE_CAPACITY_BY if necessary */
     if(bt_devices == NULL || bt_devices_capacity == bt_devices_count) {
-        flipper_bt_device** new_devices =
-            realloc(bt_devices, sizeof(flipper_bt_device*) * (bt_devices_capacity + 10));
+        flipper_bt_device** new_devices = realloc(
+            bt_devices,
+            sizeof(flipper_bt_device*) * (bt_devices_capacity + INC_BT_DEVICE_CAPACITY_BY));
         if(new_devices == NULL) {
             /* Can't store the device */
             return false;
         }
         bt_devices = new_devices;
-        bt_devices_capacity += 10;
+        bt_devices_capacity += INC_BT_DEVICE_CAPACITY_BY;
     }
-    bt_devices[bt_devices_count++] = dev;
+    flipper_bt_device* new_device = malloc(sizeof(flipper_bt_device));
+    if(new_device == NULL) {
+        /* That's unfortunate */
+        return false;
+    }
+    new_device->dev.rssi = dev->dev.rssi;
+    new_device->dev.cod = dev->dev.cod;
+    new_device->dev.scanType = dev->dev.scanType;
+    /* Don't copy tagged status - A new device is not tagged. */
+    new_device->dev.tagged = false;
+    new_device->dev.lastSeen = dev->dev.lastSeen;
+    /* Copy BDA */
+    memcpy(new_device->dev.bda, dev->dev.bda, MAC_BYTES);
+    new_device->view = dev->view; /* Copy the view pointer if we have one */
+    if(dev->cod_str != NULL) {
+        new_device->cod_str = malloc(sizeof(char) * (strlen(dev->cod_str) + 1));
+        if(new_device->cod_str != NULL) {
+            /* No need to handle allocation failure - we simply don't copy cod_str */
+            strncpy(new_device->cod_str, dev->cod_str, strlen(dev->cod_str));
+        }
+    } else {
+        new_device->cod_str = NULL;
+    }
+    /* Device name */
+    new_device->dev.bdname_len = dev->dev.bdname_len;
+    if(dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
+        new_device->dev.bdname = malloc(sizeof(char) * (dev->dev.bdname_len + 1));
+        if(new_device->dev.bdname == NULL) {
+            /* Skip the device's bdname and hope we have memory for it next time it's seen */
+            new_device->dev.bdname_len = 0;
+        } else {
+            strncpy(new_device->dev.bdname, dev->dev.bdname, dev->dev.bdname_len);
+        }
+    } else {
+        new_device->dev.bdname = NULL;
+        new_device->dev.bdname_len = 0;
+    }
+    /* EIR */
+    new_device->dev.eir_len = dev->dev.eir_len;
+    if(dev->dev.eir_len > 0 && dev->dev.eir != NULL) {
+        new_device->dev.eir = malloc(sizeof(uint8_t) * dev->dev.eir_len);
+        if(new_device->dev.eir == NULL) {
+            /* Skip EIR from this packet */
+            new_device->dev.eir_len = 0;
+        } else {
+            memcpy(new_device->dev.eir, dev->dev.eir, dev->dev.eir_len);
+        }
+    } else {
+        new_device->dev.eir = NULL;
+        new_device->dev.eir_len = 0;
+    }
+    /* BT services */
+    new_device->dev.bt_services.num_services = dev->dev.bt_services.num_services;
+    if(dev->dev.bt_services.num_services > 0 && dev->dev.bt_services.service_uuids != NULL) {
+        new_device->dev.bt_services.service_uuids =
+            malloc(sizeof(void*) * dev->dev.bt_services.num_services);
+        if(new_device->dev.bt_services.service_uuids == NULL) {
+            new_device->dev.bt_services.num_services = 0;
+        } else {
+            memcpy(
+                new_device->dev.bt_services.service_uuids,
+                dev->dev.bt_services.service_uuids,
+                sizeof(void*) * dev->dev.bt_services.num_services);
+        }
+    } else {
+        new_device->dev.bt_services.service_uuids = NULL;
+        new_device->dev.bt_services.num_services = 0;
+    }
+    new_device->dev.bt_services.known_services_len = dev->dev.bt_services.known_services_len;
+    if(dev->dev.bt_services.known_services_len > 0 &&
+       dev->dev.bt_services.known_services != NULL) {
+        /* known_services is an array of pointers - this is where we stop controlling memory allocation 
+           so that bt_uuid's can be allocated a single time and reused. */
+        new_device->dev.bt_services.known_services =
+            malloc(sizeof(bt_uuid*) * dev->dev.bt_services.known_services_len);
+        if(new_device->dev.bt_services.known_services == NULL) {
+            new_device->dev.bt_services.known_services_len = 0;
+        } else {
+            memcpy(
+                new_device->dev.bt_services.known_services,
+                dev->dev.bt_services.known_services,
+                sizeof(bt_uuid*) * dev->dev.bt_services.known_services_len);
+        }
+    } else {
+        new_device->dev.bt_services.known_services = NULL;
+        new_device->dev.bt_services.known_services_len = 0;
+    }
+
+    bt_devices[bt_devices_count++] = new_device;
 
     /* If the device list scene is currently displayed, add the device to the UI */
     if(app->current_view == WendigoAppViewDeviceList) {
-        wendigo_scene_device_list_update(app, dev);
+        wendigo_scene_device_list_update(app, new_device);
     }
 
     return true;
@@ -206,60 +308,83 @@ bool wendigo_add_bt_device(WendigoApp* app, flipper_bt_device* dev) {
 /* Locates a device in bt_devices[] with the same BDA as `dev` and updates the object's fields to match `dev`.
    If the specified device does not exist in bt_devices[], or another error occurs, the function returns false,
    otherwise true is returned to indicate success. */
+
+/** Locate the device in bt_devices[] with the same BDA as `dev` and update the object based
+ * on the contents of `dev`. If a device with the specified BDA does not exist a new device will
+ * be added to bt_devices[].
+ * Returns true if the specified device has been updated (or a new device added) successfully.
+ * NOTE: The calling function may free `dev` or any of its members immediately upon this function
+ * returning. To minimise the likelihood of memory leaks, the device cache management functions
+ * manage the allocation and free'ing of all components of the device cache *except for* bt_uuid
+ * objects that form part of service descriptors.
+ */
 bool wendigo_update_bt_device(WendigoApp* app, flipper_bt_device* dev) {
     uint16_t idx = bt_device_index(dev);
     if(idx == bt_devices_count) {
         /* Device doesn't exist in bt_devices[] */
-        return false;
+        return wendigo_add_bt_device(app, dev);
     }
-    /* Update bt_devices[idx] */
-    if(dev->cod_str != NULL) {
-        if(bt_devices[idx]->cod_str != NULL) {
-            free(bt_devices[idx]->cod_str);
+
+    flipper_bt_device* target = bt_devices[idx];
+    /* Copy standard attributes */
+    target->dev.rssi = dev->dev.rssi;
+    target->dev.cod = dev->dev.cod;
+    target->dev.scanType = dev->dev.scanType;
+    target->dev.lastSeen = dev->dev.lastSeen;
+    /* cod_str present in update? */
+    if(dev->cod_str != NULL && strlen(dev->cod_str) > 0) {
+        char* new_cod = realloc(target->cod_str, sizeof(char) * (strlen(dev->cod_str) + 1));
+        if(new_cod != NULL) {
+            strncpy(new_cod, dev->cod_str, strlen(dev->cod_str));
+            target->cod_str = new_cod;
         }
-        bt_devices[idx]->cod_str = dev->cod_str;
     }
+    /* Is bdname in update? */
     if(dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
-        if(bt_devices[idx]->dev.bdname_len > 0 && bt_devices[idx]->dev.bdname != NULL) {
-            free(bt_devices[idx]->dev.bdname);
+        char* new_name = realloc(target->dev.bdname, sizeof(char) * (dev->dev.bdname_len + 1));
+        if(new_name != NULL) {
+            strncpy(new_name, dev->dev.bdname, dev->dev.bdname_len);
+            target->dev.bdname = new_name;
+            target->dev.bdname_len = dev->dev.bdname_len;
         }
-        bt_devices[idx]->dev.bdname_len = dev->dev.bdname_len;
-        bt_devices[idx]->dev.bdname = dev->dev.bdname;
     }
-    if(dev->dev.cod != 0) {
-        bt_devices[idx]->dev.cod = dev->dev.cod;
-    }
+    /* How about EIR? */
     if(dev->dev.eir_len > 0 && dev->dev.eir != NULL) {
-        if(bt_devices[idx]->dev.eir_len > 0 && bt_devices[idx]->dev.eir != NULL) {
-            free(bt_devices[idx]->dev.eir);
+        uint8_t* new_eir = realloc(target->dev.eir, sizeof(uint8_t) * dev->dev.eir_len);
+        if(new_eir != NULL) {
+            memcpy(new_eir, dev->dev.eir, sizeof(uint8_t) * dev->dev.eir_len);
+            target->dev.eir = new_eir;
+            target->dev.eir_len = dev->dev.eir_len;
         }
-        bt_devices[idx]->dev.eir_len = dev->dev.eir_len;
-        bt_devices[idx]->dev.eir = dev->dev.eir;
     }
-    bt_devices[idx]->dev.lastSeen = dev->dev.lastSeen;
-    bt_devices[idx]->dev.rssi = dev->dev.rssi;
-    bt_devices[idx]->dev.scanType = dev->dev.scanType;
-    bt_devices[idx]->dev.tagged = dev->dev.tagged;
-    /* Now update service descriptors */
-    if(dev->dev.bt_services.num_services > 0 &&
-       dev->dev.bt_services.num_services != bt_devices[idx]->dev.bt_services.num_services) {
-        if(bt_devices[idx]->dev.bt_services.num_services > 0 &&
-           bt_devices[idx]->dev.bt_services.service_uuids != NULL) {
-            free(bt_devices[idx]->dev.bt_services.service_uuids);
+    /* Number of services */
+    if(dev->dev.bt_services.num_services > 0 && dev->dev.bt_services.service_uuids != NULL) {
+        void* new_svcs = realloc(
+            target->dev.bt_services.service_uuids,
+            sizeof(void*) * dev->dev.bt_services.num_services);
+        if(new_svcs != NULL) {
+            memcpy(
+                new_svcs,
+                dev->dev.bt_services.service_uuids,
+                sizeof(void*) * dev->dev.bt_services.num_services);
+            target->dev.bt_services.service_uuids = new_svcs;
+            target->dev.bt_services.num_services = dev->dev.bt_services.num_services;
         }
-        bt_devices[idx]->dev.bt_services.num_services = dev->dev.bt_services.num_services;
-        bt_devices[idx]->dev.bt_services.service_uuids = dev->dev.bt_services.service_uuids;
     }
+    /* Known services */
     if(dev->dev.bt_services.known_services_len > 0 &&
-       dev->dev.bt_services.known_services_len !=
-           bt_devices[idx]->dev.bt_services.known_services_len) {
-        if(bt_devices[idx]->dev.bt_services.known_services_len > 0 &&
-           bt_devices[idx]->dev.bt_services.known_services != NULL) {
-            free(bt_devices[idx]->dev.bt_services.known_services);
+       dev->dev.bt_services.known_services != NULL) {
+        bt_uuid** new_known_svcs = realloc(
+            target->dev.bt_services.known_services,
+            sizeof(bt_uuid*) * dev->dev.bt_services.known_services_len);
+        if(new_known_svcs != NULL) {
+            memcpy(
+                new_known_svcs,
+                dev->dev.bt_services.known_services,
+                sizeof(bt_uuid*) * dev->dev.bt_services.known_services_len);
+            target->dev.bt_services.known_services = new_known_svcs;
+            target->dev.bt_services.known_services_len = dev->dev.bt_services.known_services_len;
         }
-        bt_devices[idx]->dev.bt_services.known_services_len =
-            dev->dev.bt_services.known_services_len;
-        bt_devices[idx]->dev.bt_services.known_services = dev->dev.bt_services.known_services;
     }
 
     /* Update the device list if it's currently displayed */
@@ -272,8 +397,34 @@ bool wendigo_update_bt_device(WendigoApp* app, flipper_bt_device* dev) {
     return true;
 }
 
+/** Free all memory allocated to the specified device.
+ * After free'ing its members this function will also free `dev` itself.
+ * dev->view will not be touched by this function because it's a scary UI-layer thing.
+ */
+void wendigo_free_bt_device(flipper_bt_device* dev) {
+    if(dev == NULL) {
+        return;
+    }
+    if(dev->cod_str != NULL) {
+        free(dev->cod_str);
+    }
+    if(dev->dev.bdname != NULL) {
+        free(dev->dev.bdname);
+    }
+    if(dev->dev.eir != NULL) {
+        free(dev->dev.eir);
+    }
+    if(dev->dev.bt_services.service_uuids != NULL) {
+        free(dev->dev.bt_services.service_uuids);
+    }
+    if(dev->dev.bt_services.known_services != NULL) {
+        // TODO: After implementing BT services, ensure that the bt_uuid's are free'd somewhere
+        free(dev->dev.bt_services.known_services);
+    }
+    free(dev);
+}
+
 void wendigo_free_bt_devices() {
-    flipper_bt_device* dev;
     /* Start by freeing bt_selected_devices[] */
     if(bt_selected_devices_capacity > 0 && bt_selected_devices != NULL) {
         free(bt_selected_devices);
@@ -284,35 +435,7 @@ void wendigo_free_bt_devices() {
     /* For bt_devices[] we also want to free device attributes and the device itself */
     if(bt_devices_capacity > 0 && bt_devices != NULL) {
         for(int i = 0; i < bt_devices_count; ++i) {
-            dev = bt_devices[i];
-            if(dev->cod_str != NULL) {
-                free(dev->cod_str);
-            }
-            if(dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
-                free(dev->dev.bdname);
-                dev->dev.bdname = NULL;
-                dev->dev.bdname_len = 0;
-            }
-            if(dev->dev.eir_len > 0 && dev->dev.eir != NULL) {
-                free(dev->dev.eir);
-                dev->dev.eir = NULL;
-                dev->dev.eir_len = 0;
-            }
-            if(dev->dev.bt_services.known_services_len > 0 &&
-               dev->dev.bt_services.known_services != NULL) {
-                // TODO: This is a ** - Loop through it's contents when services are implemented
-                free(dev->dev.bt_services.known_services);
-                dev->dev.bt_services.known_services = NULL;
-                dev->dev.bt_services.known_services_len = 0;
-            }
-            if(dev->dev.bt_services.num_services > 0 &&
-               dev->dev.bt_services.service_uuids != NULL) {
-                free(dev->dev.bt_services.service_uuids);
-                dev->dev.bt_services.service_uuids = NULL;
-                dev->dev.bt_services.num_services = 0;
-            }
-            dev = NULL;
-            free(bt_devices[i]);
+            wendigo_free_bt_device(bt_devices[i]);
         }
         free(bt_devices);
         bt_devices = NULL;
@@ -402,21 +525,14 @@ uint16_t parseBufferBluetooth(WendigoApp* app) {
             app, "BT Packet Error", "Packet terminator not found where expected");
     }
 
-    /*
-        // TODO Remove this debugging stuff
-        if (dev->dev.bdname_len > 0 && dev->dev.bdname != NULL) {
-            // Found \"%s\"
-            char *nameStr = malloc(sizeof(char) * (9 + strlen(dev->dev.bdname)));
-            snprintf(nameStr, 9 + strlen(dev->dev.bdname), "Found \"%s\"", dev->dev.bdname);
-            wendigo_display_popup(app, "parseBluetooth()", nameStr);
-        }
-*/
-    /* Does this device already exist in bt_devices[]? */
-    if(bt_device_exists(dev)) {
-        wendigo_update_bt_device(app, dev);
-    } else {
-        wendigo_add_bt_device(app, dev);
-    }
+    /* Add or update the device in bt_devices[] - No longer need to check
+       whether we're adding or updating, the add/update functions will call
+       each other if required. */
+    wendigo_add_bt_device(app, dev);
+    /* Clean up memory */
+    wendigo_free_bt_device(dev);
+
+    /* We've consumed `index` bytes as well as the packet terminator */
     return index + PREAMBLE_LEN - 1;
 }
 

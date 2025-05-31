@@ -189,7 +189,6 @@ Because Wendigo is still in early development the following changes are core to 
 * [ ] Develop a Flipper-based logging mechanism and support for multiple streams of data
   * [ ] Logs which go directly to a buffer or file;
   * [ ] Device info which goes directly to display
-* [ ] Consider creating a Wireshark plugin to monitor the protocol
 * [X] Obtain BLE device information
 * [X] Deliver BLE results to ESP32 dispatcher
 * [X] Obtain BT Classic device information
@@ -209,12 +208,25 @@ Because Wendigo is still in early development the following changes are core to 
   * [ ] Bluetooth services
   * [ ] WiFi
 * [ ] Create Flipper UI
+  * [ ] Improve FZ memory management
+    * [ ] Currently memory is exhausted after approx. 6-7 minutes continuous scanning
+    * [X] Search, search, search for memory leaks
+      * [ ] OK, OK, this will never be done but I need to do *something* to celebrate finding that sneaky use-after-free race condition!
+    * [ ] Hopefully find a FreeRTOS hook or config so I can provide a function when low on memory
+    * [ ] Currently FZ reboots, displaying "Flipper restarted: Out of memory" after boot
+    * [ ] Instead, prune device cache when low on memory
+      * [ ] Configurable techniques as with Gravity - prune based on RSSI, time since last seen, or tagged status
+      * [ ] Allow different techniques for different radios
+    * [ ] If FreeRTOS or FZ hook can't be found, estimate an upper bound for device cache through trial & error
   * [X] Settings
     * [ ] Retrieve and change MACs
     * [X] Enable/Disable radios
     * [ ] Enable/Disable channels
   * [X] Scan Start/Stop
-  * [ ] Scanning status (popup?)
+  * [ ] Scanning status
+    * [ ] Supported radios
+    * [ ] Status of radios
+    * [ ] Devices found
   * [X] ESP Version (popup)
   * [X] Display devices
     * [X] Display device name instead of BDA when present
@@ -222,6 +234,7 @@ Because Wendigo is still in early development the following changes are core to 
     * [ ] Show RSSI in device list (options menu)
   * [ ] Display device details
     * [ ] Update details when device updated
+    * [ ] Use canvas view so properties can be layed out to (hopefully) make everything visible without scrolling
   * [ ] Device tagging
   * [ ] Focus Mode
   * [ ] "Display Settings" menu
