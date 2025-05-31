@@ -15,53 +15,48 @@
 #include "overru.xbm"
 #include "font_rus.h"
 
-// Определение текстов для уровней сложности
 typedef struct {
     const char* eng;
     const char* rus;
 } LocalizedText;
 
-// UTF-8 коды для русских слов:
-// ЛЕГКО:     0xD0 0x9B 0xD0 0x95 0xD0 0x93 0xD0 0x9A 0xD0 0x9E
-// НОРМАЛЬНО: 0xD0 0x9D 0xD0 0x9E 0xD0 0xA0 0xD0 0x9C 0xD0 0x90 0xD0 0x9B 0xD0 0x9D 0xD0 0x9E
-// СЛОЖНО:    0xD0 0xA1 0xD0 0x9B 0xD0 0x9E 0xD0 0x96 0xD0 0x9D 0xD0 0x9E
 
 static const char RUS_EASY[] = {
-    0xD0, 0x9B,  // Л
-    0xD0, 0x95,  // Е
-    0xD0, 0x93,  // Г
-    0xD0, 0x9A,  // К
-    0xD0, 0x9E,  // О
+    0xD0, 0x9B,
+    0xD0, 0x95,
+    0xD0, 0x93,
+    0xD0, 0x9A,
+    0xD0, 0x9E,
     0
 };
 
 static const char RUS_MEDIUM[] = {
-    0xD0, 0x9D,  // Н
-    0xD0, 0x9E,  // О
-    0xD0, 0xA0,  // Р
-    0xD0, 0x9C,  // М
-    0xD0, 0x90,  // А
-    0xD0, 0x9B,  // Л
-    0xD0, 0xAC,  // Ь
-    0xD0, 0x9D,  // Н
-    0xD0, 0x9E,  // О
+    0xD0, 0x9D,
+    0xD0, 0x9E,
+    0xD0, 0xA0,
+    0xD0, 0x9C,
+    0xD0, 0x90,
+    0xD0, 0x9B,
+    0xD0, 0xAC,
+    0xD0, 0x9D,
+    0xD0, 0x9E,
     0
 };
 
 static const char RUS_HARD[] = {
-    0xD0, 0xA1,  // С
-    0xD0, 0x9B,  // Л
-    0xD0, 0x9E,  // О
-    0xD0, 0x96,  // Ж
-    0xD0, 0x9D,  // Н
-    0xD0, 0x9E,  // О
+    0xD0, 0xA1,
+    0xD0, 0x9B,
+    0xD0, 0x9E,
+    0xD0, 0x96,
+    0xD0, 0x9D,
+    0xD0, 0x9E,
     0
 };
 
 static const LocalizedText DIFFICULTY_TEXTS[] = {
-    {.eng = "Easy", .rus = RUS_EASY},     // Легко
-    {.eng = "Medium", .rus = RUS_MEDIUM}, // Средний
-    {.eng = "Hard", .rus = RUS_HARD}      // Сложно
+    {.eng = "Easy", .rus = RUS_EASY},
+    {.eng = "Medium", .rus = RUS_MEDIUM},
+    {.eng = "Hard", .rus = RUS_HARD}
 };
 
 #define SCREEN_WIDTH 128
@@ -79,23 +74,21 @@ static const LocalizedText DIFFICULTY_TEXTS[] = {
 #define START_DELAY_MS 2000
 #define LANGUAGE_PATH "/ext/wave_game/language.txt"
 
-// Определения для бонусов
 #define BONUS_WIDTH 12
 #define BONUS_HEIGHT 12
-#define ARROW_WIDTH 10   // Increased from 8
-#define ARROW_HEIGHT 10  // Increased from 8
+#define ARROW_WIDTH 10
+#define ARROW_HEIGHT 10
 #define BONUS_HITBOX_PADDING 2
-#define SCORE_MULTIPLIER_DURATION 2000  // Длительность бонуса множителя очков (2 секунды)
+#define SCORE_MULTIPLIER_DURATION 2000
 #define TUNNEL_EXPANDER_DURATION 3000
 #define TUNNEL_EXPAND_FACTOR 1.2f
 #define BONUS_SPAWN_CHANCE 50
 #define MAX_ACTIVE_BONUSES 10
-#define BONUS_SPAWN_SCORE_THRESHOLD 300  // Бонусы начнут появляться после 300 очков
+#define BONUS_SPAWN_SCORE_THRESHOLD 300
 #define BONUS_BLINK_DISTANCE 20
 #define BONUS_BLINK_SPEED 100
 #define BONUS_REMOVAL_OFFSET 5
 
-// Прототипы функций
 void draw_pause_icon(Canvas* canvas, int x, int y);
 void draw_big_arrow_right(Canvas* canvas, int x, int y);
 
@@ -118,11 +111,11 @@ typedef struct {
 typedef struct {
     uint32_t start_time;
     uint32_t duration;
-    uint32_t pause_time;      // Время, когда бонус был поставлен на паузу
-    uint32_t total_pause_time; // Общее время на паузе
+    uint32_t pause_time;
+    uint32_t total_pause_time;
     bool active;
     bool visible;
-    uint8_t power;  // Степень двойки для множителя (1 = x2, 2 = x4, 3 = x8, etc.)
+    uint8_t power;
 } BonusEffect;
 
 typedef struct {
@@ -211,20 +204,17 @@ typedef struct {
     uint32_t last_bonus_spawn;
     bool bonus_blink_state;
     uint32_t bonus_blink_time;
-    // Добавляем переменные для анимации паузы
     bool pause_animation_active;
     uint32_t pause_animation_start;
     bool pause_blink_state;
     uint32_t pause_blink_time;
     int pause_countdown;
-    // Добавляем новые переменные для отслеживания нажатий
-    uint32_t last_click_time;     // Время последнего нажатия
-    uint32_t click_interval;      // Интервал между нажатиями
-    float click_multiplier;       // Множитель очков от частоты нажатий
-    uint32_t last_click_reset;    // Время последнего сброса множителя
+    uint32_t last_click_time;
+    uint32_t click_interval;
+    float click_multiplier;
+    uint32_t last_click_reset;
 } GameState;
 
-// Прототипы функций
 void spawn_bonus(GameState* g, float x);
 void update_bonuses(GameState* g);
 void draw_bonuses(Canvas* canvas, GameState* g);
@@ -319,7 +309,6 @@ void game_reset(GameState* g) {
     g->warmup_active = false;
     g->warmup_start = 0;
 
-    // Инициализация бонусов
     for(int i = 0; i < MAX_ACTIVE_BONUSES; i++) {
         g->bonuses[i].active = false;
     }
@@ -345,9 +334,8 @@ void game_reset(GameState* g) {
     g->last_click_reset = 0;
 }
 
-// Функция для загрузки сохраненного языка
 GameLanguage load_language() {
-    GameLanguage lang = LanguageRus; // По умолчанию русский
+    GameLanguage lang = LanguageRus;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);
     
@@ -367,7 +355,6 @@ GameLanguage load_language() {
     return lang;
 }
 
-// Функция для сохранения выбранного языка
 void save_language(GameLanguage lang) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     ensure_directory_exists(storage);
@@ -399,7 +386,6 @@ void game_init(GameState* g) {
     g->click_multiplier = 1.0f;
     g->last_click_reset = 0;
     
-    // Загружаем рекорды и язык при старте
     Storage* storage = furi_record_open(RECORD_STORAGE);
     ensure_directory_exists(storage);
     furi_record_close(RECORD_STORAGE);
@@ -418,7 +404,6 @@ void generate_next_column(GameState* g) {
     cur += g->dir;
     g->level[g->write_index] = cur;
     
-    // Генерация бонусов
     uint32_t now = furi_get_tick();
     if(now - g->last_bonus_spawn > 1000 && rand() % BONUS_SPAWN_CHANCE == 0) {
         spawn_bonus(g, SCREEN_WIDTH);
@@ -438,7 +423,6 @@ void draw_tunnel(Canvas* c, GameState* g) {
 }
 
 void check_collision(GameState* g) {
-    // Проверка столкновения с границами экрана
     if(g->player.y < 0 || g->player.y + PLAYER_HEIGHT > SCREEN_HEIGHT) {
         g->game_over = true;
         if((int)g->score > g->highscores[g->selected_difficulty]) {
@@ -455,7 +439,6 @@ void check_collision(GameState* g) {
         uint8_t gs = g->level[idx];
         int ge = gs + (int)g->gap;
         
-        // Проверка столкновения с учетом реального размера gap
         if(g->player.y < gs || g->player.y + PLAYER_HEIGHT > ge) {
             g->game_over = true;
             if((int)g->score > g->highscores[g->selected_difficulty]) {
@@ -512,72 +495,53 @@ void draw_player(Canvas* c, GameState* g) {
 }
 
 void draw_arrow(Canvas* canvas, int x, int y) {
-    // Смещаем стрелку на 1 пиксель вверх для центрирования
     y -= 1;
     
-    // Рисуем горизонтальную линию
     canvas_draw_line(canvas, x, y, x + 4, y);
     canvas_draw_line(canvas, x, y + 1, x + 4, y + 1);
     
-    // Рисуем наконечник стрелки (развёрнутый вправо)
     canvas_draw_line(canvas, x + 4, y - 2, x + 8, y + 1);
     canvas_draw_line(canvas, x + 4, y + 3, x + 8, y);
     canvas_draw_line(canvas, x + 4, y - 1, x + 7, y + 1);
     canvas_draw_line(canvas, x + 4, y + 2, x + 7, y);
 }
 
-// Добавим функцию для отрисовки вертикальной стрелки
 void draw_vertical_arrow(Canvas* canvas, int x, int y) {
-    // Рисуем вертикальную линию
     canvas_draw_line(canvas, x, y, x, y + 4);
     canvas_draw_line(canvas, x + 1, y, x + 1, y + 4);
     
-    // Рисуем наконечник стрелки (направлен вниз)
     canvas_draw_line(canvas, x - 2, y + 4, x + 1, y + 8);
     canvas_draw_line(canvas, x + 3, y + 4, x, y + 8);
     canvas_draw_line(canvas, x - 1, y + 4, x + 1, y + 7);
     canvas_draw_line(canvas, x + 2, y + 4, x, y + 7);
 }
 
-// Функция для отрисовки текста с учетом языка
 void draw_localized_text(Canvas* canvas, int x, int y, Align horizontal, Align vertical, const LocalizedText* text, GameLanguage lang) {
     const char* display_text = (lang == LanguageEng) ? text->eng : text->rus;
-    // Всегда используем кастомный шрифт для обоих языков
     draw_russian_text(canvas, x, y, horizontal, vertical, display_text);
 }
 
-// Функция для отрисовки иконки x2
 void draw_multiplier_bonus(Canvas* canvas, int x, int y) {
-    // Устанавливаем жирный шрифт
     canvas_set_font(canvas, FontPrimary);
     
-    // Рисуем x2 в центре бонуса
     canvas_draw_str(canvas, 
-        x + BONUS_WIDTH/2 - 4,  // Центрируем по горизонтали с небольшой коррекцией
-        y + BONUS_HEIGHT/2 + 4, // Центрируем по вертикали с коррекцией для базовой линии
+        x + BONUS_WIDTH/2 - 4,
+        y + BONUS_HEIGHT/2 + 4,
         "x2");
         
-    // Возвращаем обычный шрифт
     canvas_set_font(canvas, FontSecondary);
 }
 
-// Специальная версия иконки для статуса расширения (без верхнего ряда)
 void draw_expander_status_icon(Canvas* canvas, int x, int y, int size) {
-    // Центрируем стрелку в заданной области
     int center_x = x + size/2;
     int start_y = y + (size - ARROW_HEIGHT)/2;
     
-    // Рисуем стержень стрелки (4 пикселя, начиная на 1 пиксель ниже)
     canvas_draw_line(canvas, center_x - 1, start_y + 1, center_x - 1, start_y + 5);
     canvas_draw_line(canvas, center_x, start_y + 1, center_x, start_y + 5);
     canvas_draw_line(canvas, center_x + 1, start_y + 1, center_x + 1, start_y + 5);
     
-    // Рисуем наконечник стрелки (7x5 пикселей)
-    // Верхняя часть наконечника
     canvas_draw_line(canvas, center_x - 3, start_y + 5, center_x + 3, start_y + 5);
-    // Средняя часть
     canvas_draw_line(canvas, center_x - 2, start_y + 6, center_x + 2, start_y + 6);
-    // Нижняя часть
     canvas_draw_line(canvas, center_x - 1, start_y + 7, center_x + 1, start_y + 7);
     canvas_draw_dot(canvas, center_x, start_y + 8);
 }
@@ -586,11 +550,10 @@ void draw_expander_status(Canvas* canvas, GameState* g) {
     if(!g->bonus_effects.tunnel_expander.active) return;
 
     const int base_x = 0;
-    const int base_y = SCREEN_HEIGHT;  // Максимально вниз
+    const int base_y = SCREEN_HEIGHT;
     const int icon_size = 10;
     const int padding = 2;
     
-    // Вычисляем оставшееся время
     uint32_t now = furi_get_tick();
     uint32_t elapsed;
     
@@ -610,7 +573,6 @@ void draw_expander_status(Canvas* canvas, GameState* g) {
     snprintf(time_text, sizeof(time_text), "%d", (int)remaining + 1);
     int text_width = canvas_string_width(canvas, time_text);
     
-    // Рисуем подложку
     int box_width = icon_size + text_width + padding * 2;
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_box(canvas, 
@@ -620,11 +582,9 @@ void draw_expander_status(Canvas* canvas, GameState* g) {
         icon_size
     );
     
-    // Рисуем белым цветом иконку и текст
     canvas_set_color(canvas, ColorWhite);
     draw_expander_status_icon(canvas, base_x, base_y - icon_size, icon_size);
     
-    // Центрируем текст в оставшемся пространстве справа от иконки
     int text_x = base_x + icon_size + padding;
     
     canvas_draw_str(canvas, 
@@ -636,7 +596,6 @@ void draw_expander_status(Canvas* canvas, GameState* g) {
 }
 
 void spawn_bonus(GameState* g, float x) {
-    // Проверяем, достигнут ли порог очков для появления бонусов
     if(g->score < BONUS_SPAWN_SCORE_THRESHOLD) {
         return;
     }
@@ -660,13 +619,11 @@ void spawn_bonus(GameState* g, float x) {
 void update_bonuses(GameState* g) {
     uint32_t now = furi_get_tick();
     
-    // Обновляем состояние мигания
     if(now - g->bonus_blink_time >= 200) {
         g->bonus_blink_state = !g->bonus_blink_state;
         g->bonus_blink_time = now;
     }
 
-    // Если игра на паузе, обновляем только время паузы
     if(g->paused) {
         if(g->bonus_effects.tunnel_expander.active && g->bonus_effects.tunnel_expander.pause_time > 0) {
             g->bonus_effects.tunnel_expander.total_pause_time = 
@@ -675,21 +632,17 @@ void update_bonuses(GameState* g) {
         return;
     }
 
-    // Обновляем эффект множителя очков
     if(g->bonus_effects.score_multiplier.active) {
         uint32_t elapsed = now - g->bonus_effects.score_multiplier.start_time;
         if(elapsed >= g->bonus_effects.score_multiplier.duration) {
-            // Reset all multiplier states when expired
             g->bonus_effects.score_multiplier.active = false;
             g->bonus_effects.score_multiplier.power = 0;
             g->bonus_effects.score_multiplier.visible = true;
         } else if(elapsed >= g->bonus_effects.score_multiplier.duration - 500) {
-            // Мигание в последние 500мс
             g->bonus_effects.score_multiplier.visible = g->bonus_blink_state;
         }
     }
 
-    // Обновляем эффект расширения тоннеля
     if(g->bonus_effects.tunnel_expander.active) {
         uint32_t elapsed;
         
@@ -703,23 +656,18 @@ void update_bonuses(GameState* g) {
         }
         
         if(elapsed >= g->bonus_effects.tunnel_expander.duration) {
-            // Время истекло, плавно возвращаем исходный размер
             g->bonus_effects.tunnel_expander.active = false;
             g->target_gap = g->bonus_effects.original_gap;
         } else if(elapsed >= g->bonus_effects.tunnel_expander.duration - 1000) {
-            // Последняя секунда - плавное сужение
             float progress = (g->bonus_effects.tunnel_expander.duration - elapsed) / 1000.0f;
             g->target_gap = g->bonus_effects.original_gap + 
                 (g->bonus_effects.target_gap - g->bonus_effects.original_gap) * progress;
         } else {
-            // Поддерживаем расширенный размер в течение действия бонуса
             g->target_gap = g->bonus_effects.target_gap;
         }
         
-        // Плавно изменяем gap
         g->gap = g->gap * 0.95f + g->target_gap * 0.05f;
         
-        // Проверяем и корректируем позицию игрока только если он близок к стенкам
         int px = (int)g->player.x;
         if(px >= 0 && px < LEVEL_WIDTH) {
             int idx = (g->write_index + px) % LEVEL_WIDTH;
@@ -734,7 +682,6 @@ void update_bonuses(GameState* g) {
         }
     }
 
-    // Перемещаем и проверяем столкновения с бонусами
     for(int i = 0; i < MAX_ACTIVE_BONUSES; i++) {
         if(g->bonuses[i].active) {
             g->bonuses[i].x -= g->speed_multiplier;
@@ -769,15 +716,12 @@ void update_bonuses(GameState* g) {
                 uint32_t current_time = furi_get_tick();
                 
                 if(g->bonuses[i].type == BonusTypeScoreMultiplier) {
-                    // First activation or reactivation after expiration
                     if(!g->bonus_effects.score_multiplier.active) {
-                        g->bonus_effects.score_multiplier.power = 1; // Start with x2
+                        g->bonus_effects.score_multiplier.power = 1;
                     } else {
-                        // Subsequent activations - increase multiplier
                         g->bonus_effects.score_multiplier.power++;
                     }
                     
-                    // Reset timer and set active state
                     g->bonus_effects.score_multiplier.active = true;
                     g->bonus_effects.score_multiplier.start_time = current_time;
                     g->bonus_effects.score_multiplier.duration = SCORE_MULTIPLIER_DURATION;
@@ -785,7 +729,6 @@ void update_bonuses(GameState* g) {
                     g->bonuses[i].active = false;
                 } else if(g->bonuses[i].type == BonusTypeTunnelExpander) {
                     if(!g->bonus_effects.tunnel_expander.active) {
-                        // Первая активация бонуса
                         int idx = (g->write_index + (int)g->player.x) % LEVEL_WIDTH;
                         uint8_t gs = g->level[idx];
                         float current_center = gs + g->gap/2;
@@ -804,7 +747,6 @@ void update_bonuses(GameState* g) {
                         float new_center = gs + g->gap/2;
                         g->player.y = new_center + relative_pos * (g->gap/2) - PLAYER_HEIGHT/2;
                     } else {
-                        // Просто добавляем 3 секунды к текущей длительности
                         g->bonus_effects.tunnel_expander.duration += TUNNEL_EXPANDER_DURATION;
                     }
                     g->bonuses[i].active = false;
@@ -815,7 +757,6 @@ void update_bonuses(GameState* g) {
 }
 
 void draw_bonuses(Canvas* canvas, GameState* g) {
-    // Отрисовка активных бонусов
     for(int i = 0; i < MAX_ACTIVE_BONUSES; i++) {
         if(g->bonuses[i].active && (!g->bonuses[i].should_blink || g->bonuses[i].visible)) {
             if(g->bonuses[i].type == BonusTypeScoreMultiplier) {
@@ -826,39 +767,31 @@ void draw_bonuses(Canvas* canvas, GameState* g) {
         }
     }
 
-    // Отрисовка множителя очков и счета в левом верхнем углу
     char score_text[16];
     snprintf(score_text, sizeof(score_text), "%d", (int)g->score);
     int score_width = measure_text_width(score_text);
     
-    // Рисуем черную подложку для счета
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_box(canvas, 0, 0, score_width + 3, 9);
     
-    // Рисуем белый текст счета
     canvas_set_color(canvas, ColorWhite);
     draw_russian_text(canvas, 0, 5, AlignLeft, AlignCenter, score_text);
     
-    // Если есть активный множитель, рисуем его отдельным прямоугольником
     if(g->bonus_effects.score_multiplier.active && g->bonus_effects.score_multiplier.power > 0 && g->bonus_effects.score_multiplier.visible) {
         char multiplier_text[8];
         int multiplier = 1 << g->bonus_effects.score_multiplier.power;
         snprintf(multiplier_text, sizeof(multiplier_text), "x%d", multiplier);
         int multiplier_width = measure_text_width(multiplier_text);
         
-        // Рисуем подложку для множителя (на расстоянии 5 пикселей от счета)
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_box(canvas, score_width + 3, 0, multiplier_width + 2, 9);
         
-        // Рисуем текст множителя
         canvas_set_color(canvas, ColorWhite);
         draw_russian_text(canvas, score_width + 3, 5, AlignLeft, AlignCenter, multiplier_text);
     }
     
-    // Возвращаем черный цвет для последующей отрисовки
     canvas_set_color(canvas, ColorBlack);
 
-    // Отрисовка статуса расширения тоннеля
     draw_expander_status(canvas, g);
 }
 
@@ -869,25 +802,20 @@ void game_update(GameState* g) {
 
     uint32_t now = furi_get_tick();
 
-    // Обработка анимации паузы
     if(g->pause_animation_active) {
-        // Определяем время анимации
         uint32_t animation_elapsed = now - g->pause_animation_start;
         
-        // Обновляем состояние мигания раз в секунду
         if(animation_elapsed % 1000 < 500) {
             g->pause_blink_state = true;
         } else {
             g->pause_blink_state = false;
         }
         
-        // Завершение анимации после 3 секунд
         if(animation_elapsed >= 3000) {
             g->pause_animation_active = false;
             g->paused = false;
             g->pause_blink_state = true;
             
-            // При снятии с паузы обновляем общее время паузы для бонусов
             if(g->bonus_effects.tunnel_expander.active && g->bonus_effects.tunnel_expander.pause_time > 0) {
                 g->bonus_effects.tunnel_expander.total_pause_time += 
                     now - g->bonus_effects.tunnel_expander.pause_time;
@@ -911,7 +839,7 @@ void game_update(GameState* g) {
             g->warmup_active = true;
             g->warmup_start = now;
         }
-        return;  // Выходим, пока идет отсчет
+        return;
     }
     
     if(g->warmup_active) {
@@ -962,19 +890,15 @@ void game_update(GameState* g) {
         generation_progress -= 1.0f;
     }
 
-    // Фиксированное базовое начисление очков
-    float base_increment = 0.1f; // Фиксированное значение, не зависит от скорости
+    float base_increment = 0.1f;
     
-    // Проверяем, не истек ли множитель кликов
     uint32_t current_time = furi_get_tick();
-    if(current_time - g->last_click_reset > 800) { // Уменьшаем время до сброса
-        g->click_multiplier = 1.0f; // Мгновенный сброс до базового значения
+    if(current_time - g->last_click_reset > 800) {
+        g->click_multiplier = 1.0f;
     }
     
-    // Применяем множитель от частоты кликов
     float score_increment = base_increment * g->click_multiplier;
     
-    // Применяем множитель очков от бонусов, если активен
     if(g->bonus_effects.score_multiplier.active) {
         score_increment *= (1 << g->bonus_effects.score_multiplier.power);
     }
@@ -994,33 +918,27 @@ void game_render(Canvas* c, void* ctx) {
     uint32_t now = furi_get_tick();
 
     if(g->screen_state == GameStateMainMenu) {
-        // Отрисовка фонового изображения
         canvas_draw_xbm(c, 0, 5, logo_width, logo_height, logo_bits);
         
-        // Обновление состояния мигания стрелки
         uint32_t current_time = furi_get_tick();
         if(current_time - g->arrow_blink_time >= 300) {
             g->arrow_blink_time = current_time;
             g->arrow_visible = !g->arrow_visible;
         }
 
-        // Обновление состояния показа счета только если не в режиме выбора языка
         if(!g->language_selection && current_time - g->menu_text_switch_time >= 2000) {
             g->menu_text_switch_time = current_time;
             g->show_scores = !g->show_scores;
         }
         
-        // Отрисовка пунктов меню
         for(int i = 0; i < DifficultyCount; i++) {
             int menu_y = 35 + i * 11;
             
             if(i == g->menu_selected_item) {
                 if(g->language_selection) {
-                    // В режиме выбора языка показываем только текст
                     draw_localized_text(c, SCREEN_WIDTH/2, menu_y, AlignCenter, AlignCenter, 
                         &DIFFICULTY_TEXTS[i], g->current_language);
                 } else {
-                    // В обычном режиме показываем текст/счет и стрелку
                     if(g->show_scores) {
                         char score_text[32];
                         snprintf(score_text, sizeof(score_text), "%d", g->highscores[i]);
@@ -1045,17 +963,14 @@ void game_render(Canvas* c, void* ctx) {
                     }
                 }
             } else {
-                // Для неактивных пунктов всегда показываем текст
                 draw_localized_text(c, SCREEN_WIDTH/2, menu_y, AlignCenter, AlignCenter, 
                     &DIFFICULTY_TEXTS[i], g->current_language);
             }
         }
         
-        // Отрисовка переключателя языков
         draw_small_text(c, SCREEN_WIDTH - 30, SCREEN_HEIGHT - 2, AlignLeft, AlignBottom, "ru");
         draw_small_text(c, SCREEN_WIDTH - 15, SCREEN_HEIGHT - 2, AlignLeft, AlignBottom, "en");
         
-        // Отрисовка стрелки выбора языка
         if(g->language_selection && g->arrow_visible) {
             int arrow_x = g->current_language == LanguageRus ? SCREEN_WIDTH - 25 : SCREEN_WIDTH - 10;
             draw_vertical_arrow(c, arrow_x, SCREEN_HEIGHT - 20);
@@ -1064,7 +979,6 @@ void game_render(Canvas* c, void* ctx) {
         if(g->start_delay_active) {
             uint32_t elapsed = now - g->countdown_start;
             
-            // Отображаем отладочную информацию
             char debug_buf[128];
             snprintf(debug_buf, sizeof(debug_buf), 
                 "Time: %lu/%d\nPhase: %d", 
@@ -1074,15 +988,12 @@ void game_render(Canvas* c, void* ctx) {
             canvas_set_font(c, FontSecondary);
             canvas_draw_str(c, 2, 8, debug_buf);
 
-            // Обновляем и отображаем обратный отсчет
             if(elapsed >= START_DELAY_MS) {
                 g->start_delay_active = false;
                 g->warmup_active = true;
                 g->warmup_start = now;
             } else {
-                // Определяем и отображаем текущую картинку (примерно по 667мс на цифру)
                 if(elapsed < 667) {
-                    // Показываем 3
                     if(g->current_language == LanguageRus) {
                         canvas_draw_xbm(c, 
                             (SCREEN_WIDTH - ready3ru_width) / 2,
@@ -1095,7 +1006,6 @@ void game_render(Canvas* c, void* ctx) {
                             ready_3_width, ready_3_height, ready_3_bits);
                     }
                 } else if(elapsed < 1334) {
-                    // Показываем 2
                     if(g->current_language == LanguageRus) {
                         canvas_draw_xbm(c, 
                             (SCREEN_WIDTH - ready2ru_width) / 2,
@@ -1108,7 +1018,6 @@ void game_render(Canvas* c, void* ctx) {
                             ready_2_width, ready_2_height, ready_2_bits);
                     }
                 } else {
-                    // Показываем 1
                     if(g->current_language == LanguageRus) {
                         canvas_draw_xbm(c, 
                             (SCREEN_WIDTH - ready1ru_width) / 2,
@@ -1125,7 +1034,6 @@ void game_render(Canvas* c, void* ctx) {
         } else {
             draw_tunnel(c, g);
             
-            // Отрисовываем след и игрока только если не идет анимация паузы или во время мигания
             if(!g->pause_animation_active || g->pause_blink_state) {
                 for(int i = 0; i < TRAIL_LENGTH; i++) {
                     if(g->trail[i].active) {
@@ -1135,11 +1043,10 @@ void game_render(Canvas* c, void* ctx) {
                 draw_player(c, g);
             }
             
-            // Если игра на паузе, рисуем значок паузы или стрелку
             if(g->paused) {
                 if(g->pause_animation_active) {
                     uint32_t animation_elapsed = now - g->pause_animation_start;
-                    if(animation_elapsed >= 2000) { // На последней секунде
+                    if(animation_elapsed >= 2000) {
                         if(g->pause_blink_state) {
                             draw_big_arrow_right(c, (SCREEN_WIDTH - 16) / 2, SCREEN_HEIGHT / 2);
                         }
@@ -1156,19 +1063,16 @@ void game_render(Canvas* c, void* ctx) {
             draw_bonuses(c, g);
         }
     } else if(g->screen_state == GameStateGameOver) {
-        // Отрисовка фонового изображения Game Over
         if(g->current_language == LanguageRus) {
             canvas_draw_xbm(c, 0, 5, overru_width, overru_height, overru_bits);
         } else {
             canvas_draw_xbm(c, 0, 5, over_width, over_height, over_bits);
         }
 
-        // Отрисовка текущего результата после "Score:"
         char score_buf[32];
         snprintf(score_buf, sizeof(score_buf), "%d", (int)g->score);
         draw_russian_text(c, 68, 34, AlignLeft, AlignCenter, score_buf);
 
-        // Отрисовка лучшего результата после "Best:"
         char hs_buf[32];
         snprintf(hs_buf, sizeof(hs_buf), "%d", g->highscores[g->selected_difficulty]);
         draw_russian_text(c, 55, 50, AlignLeft, AlignCenter, hs_buf);
@@ -1218,25 +1122,23 @@ void input_callback(InputEvent* ev, void* ctx) {
                     g->menu_text_switch_time = furi_get_tick();
                     g->show_scores = true;
                 } else {
-                    // Выход из режима выбора языка при нажатии Down
                     g->language_selection = false;
                 }
                 break;
             case InputKeyLeft:
                 if(g->language_selection) {
                     g->current_language = LanguageRus;
-                    save_language(g->current_language);  // Сохраняем выбор
+                    save_language(g->current_language);
                 }
                 break;
             case InputKeyRight:
                 if(g->language_selection) {
                     g->current_language = LanguageEng;
-                    save_language(g->current_language);  // Сохраняем выбор
+                    save_language(g->current_language);
                 }
                 break;
             case InputKeyOk:
                 if(g->language_selection) {
-                    // Выход из режима выбора языка при нажатии Ok
                     g->language_selection = false;
                 } else {
                     g->selected_difficulty = (GameDifficulty)g->menu_selected_item;
@@ -1255,7 +1157,6 @@ void input_callback(InputEvent* ev, void* ctx) {
                 break;
             }
         } else if(ev->type == InputTypeLong) {
-            // Добавляем активацию выбора языка по долгому нажатию Up
             if(ev->key == InputKeyUp) {
                 g->language_selection = true;
             }
@@ -1267,14 +1168,11 @@ void input_callback(InputEvent* ev, void* ctx) {
             if(ev->key == InputKeyBack && ev->type == InputTypePress) {
                 if(!g->start_delay_active) {
                     if(!g->paused) {
-                        // Ставим на паузу
                         g->paused = true;
-                        // Сохраняем время постановки на паузу для бонусов
                         if(g->bonus_effects.tunnel_expander.active) {
                             g->bonus_effects.tunnel_expander.pause_time = furi_get_tick();
                         }
                     } else if(!g->pause_animation_active) {
-                        // Начинаем анимацию снятия с паузы
                         g->pause_animation_active = true;
                         g->pause_animation_start = furi_get_tick();
                         g->pause_blink_time = furi_get_tick();
@@ -1286,15 +1184,12 @@ void input_callback(InputEvent* ev, void* ctx) {
                 switch(ev->type) {
                     case InputTypePress: {
                         g->player.button_pressed = true;
-                        // Обновляем множитель очков при нажатии
                         uint32_t current_time = furi_get_tick();
                         
-                        // Рассчитываем интервал между нажатиями
                         if(g->last_click_time > 0) {
                             uint32_t interval = current_time - g->last_click_time;
                             
-                            // Обновляем множитель на основе интервала
-                            if(interval < 300) {          // Быстрее 3.33 раз в секунду
+                            if(interval < 300) {
                                 g->click_multiplier = 10.0f;
                             } else {
                                 g->click_multiplier = 1.0f;
@@ -1357,12 +1252,11 @@ int32_t wave_app(void* p) {
     g->pause_blink_time = 0;
     g->pause_countdown = 3;
     
-    // Загружаем рекорды и язык при старте
     Storage* storage = furi_record_open(RECORD_STORAGE);
     ensure_directory_exists(storage);
     furi_record_close(RECORD_STORAGE);
     load_all_highscores(g);
-    g->current_language = load_language();  // Загружаем сохраненный язык
+    g->current_language = load_language();
     
     game_reset(g);
 
@@ -1373,7 +1267,7 @@ int32_t wave_app(void* p) {
     gui_add_view_port(gui, vp, GuiLayerFullscreen);
 
     uint32_t last_tick = furi_get_tick();
-    const uint32_t frame_time = 16; // ~60 FPS
+    const uint32_t frame_time = 16;
 
     while(!g->exit_requested) {
         uint32_t current_tick = furi_get_tick();
@@ -1397,25 +1291,19 @@ int32_t wave_app(void* p) {
     return 0;
 }
 
-// Добавляем функцию отрисовки значка паузы
 void draw_pause_icon(Canvas* canvas, int x, int y) {
-    // Рисуем две вертикальные полоски
     canvas_draw_box(canvas, x, y, 3, 12);
     canvas_draw_box(canvas, x + 7, y, 3, 12);
 }
 
-// Добавляем функцию отрисовки большой стрелки вправо
 void draw_big_arrow_right(Canvas* canvas, int x, int y) {
-    // Размеры стрелки
-    const int body_width = 12;    // Немного уменьшаем ширину тела
-    const int body_height = 6;    // Уменьшаем высоту тела
-    const int head_height = 12;   // Уменьшаем высоту наконечника
-    const int head_width = 8;     // Уменьшаем ширину наконечника
+    const int body_width = 12;
+    const int body_height = 6;
+    const int head_height = 12;
+    const int head_width = 8;
     
-    // Центрируем стрелку по Y
     int center_y = y;
     
-    // Рисуем тело стрелки (прямоугольник)
     canvas_draw_box(canvas, 
         x, 
         center_y - body_height/2,
@@ -1423,14 +1311,10 @@ void draw_big_arrow_right(Canvas* canvas, int x, int y) {
         body_height
     );
     
-    // Рисуем наконечник стрелки (треугольник)
-    // Начальные координаты наконечника
-    int head_start_x = x + body_width - 1;  // Небольшое перекрытие с телом
+    int head_start_x = x + body_width - 1;
     int head_start_y = center_y - head_height/2;
     
-    // Заполняем наконечник построчно
     for(int i = 0; i < head_height; i++) {
-        // Вычисляем длину линии для текущей строки
         float progress = (float)i / (head_height - 1);
         float line_length = head_width * (1.0f - fabsf(2.0f * progress - 1.0f));
         
