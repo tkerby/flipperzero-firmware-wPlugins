@@ -12,7 +12,7 @@ App(
         ),
         Lib(
             name="led_worker",
-        )
+        ),
     ],
     fap_icon="icons/playlist_10px.png",
     fap_icon_assets="icons",
