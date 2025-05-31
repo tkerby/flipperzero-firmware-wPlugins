@@ -51,8 +51,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
 - Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
-- Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
 - [ESP Flasher Bump ESP Marauder v1.6.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.6.1)
+- Updated: [Hitachi AC Remote v1.0 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
+- Updated: [Wave v0.2 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
 
 <a name="release">
 
@@ -385,7 +386,7 @@ $ ./fbt dolphin_ext
 - [Video Game Module Tool v1.3 (By gsurkov)](https://github.com/flipperdevices/flipperzero-good-faps/pull/127) `Req: Video Game Module By Flipper Devices`
 - [Video Poker v1.2 (By PixlEmly)](https://github.com/PixlEmly/flipperzero-firmware-testing/blob/420/applications/VideoPoker/poker.c)
 - [VL6180X Pong v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/vl6180x_pong) `Req: Adafruit VL6180X`
-- [Wave v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
+- [Wave v0.2 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
 - [Yappy Invaders (By dagnazty)](https://github.com/dagnazty/Yappy_Invaders)
 - [Yatzee v1.2 (By emfleak)](https://github.com/emfleak/flipperzero-yatzee)
 - [Zero v1.4 (By Racso)](https://github.com/Racso/fzero-apps)
