@@ -21,6 +21,95 @@ static void ac_remote_app_tick_event_callback(void* context) {
     scene_manager_handle_tick_event(app->scene_manager);
 }
 
+static bool ac_remote_load_settings(ACRemoteAppSettings* app_state) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
+    FuriString* header = furi_string_alloc();
+
+    uint32_t version = 0;
+    bool success = false;
+    do {
+        if(!flipper_format_buffered_file_open_existing(ff, AC_REMOTE_APP_SETTINGS)) break;
+        if(!flipper_format_read_header(ff, header, &version)) break;
+        if(!furi_string_equal(header, "AC Remote") || (version != 1)) break;
+        if(!flipper_format_read_uint32(ff, "Power", &app_state->power, 1)) break;
+        if(!flipper_format_read_uint32(ff, "Mode", &app_state->mode, 1)) break;
+        if(app_state->mode >= MODE_BUTTON_STATE_MAX) break;
+        if(!flipper_format_read_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
+        if(app_state->temperature > HVAC_HITACHI_TEMPERATURE_MAX ||
+           app_state->temperature < HVAC_HITACHI_TEMPERATURE_MIN)
+            break;
+        if(!flipper_format_read_uint32(ff, "Fan", &app_state->fan, 1)) break;
+        if(app_state->fan >= FAN_SPEED_BUTTON_STATE_MAX) break;
+        if(!flipper_format_read_uint32(ff, "Vane", &app_state->vane, 1)) break;
+        if(app_state->vane > VANE_BUTTON_STATE_MAX) break;
+        if(!flipper_format_read_uint32(ff, "TimerState", &app_state->timer_state, 1)) break;
+        if(app_state->timer_state >= TIMER_STATE_COUNT) break;
+        if(!flipper_format_read_uint32(ff, "TimerPresetOn", &app_state->timer_preset.on, 1)) break;
+        if(app_state->timer_preset.on > 0xfff) break;
+        if(!flipper_format_read_uint32(ff, "TimerPresetOff", &app_state->timer_preset.off, 1))
+            break;
+        if(app_state->timer_preset.off > 0xfff) break;
+        if(!flipper_format_read_uint32(ff, "TimerPauseOn", &app_state->timer_pause.on, 1)) break;
+        if(app_state->timer_pause.on > 0xfff) break;
+        if(!flipper_format_read_uint32(ff, "TimerPauseOff", &app_state->timer_pause.off, 1)) break;
+        if(app_state->timer_pause.off > 0xfff) break;
+        if(!flipper_format_read_uint32(ff, "TimerOnExpiresAt", &app_state->timer_on_expires_at, 1))
+            break;
+        if(!flipper_format_read_uint32(
+               ff, "TimerOffExpiresAt", &app_state->timer_off_expires_at, 1))
+            break;
+        if(!flipper_format_read_uint32(ff, "Side", &app_state->side, 1)) break;
+        if(app_state->side > SETTINGS_SIDE_COUNT) break;
+        if(!flipper_format_read_uint32(ff, "TimerStep", &app_state->timer_step, 1)) break;
+        if(app_state->side > SETTINGS_TIMER_STEP_COUNT) break;
+        if(!flipper_format_read_bool(ff, "AllowAuto", &app_state->allow_auto, 1)) break;
+        success = true;
+    } while(false);
+    furi_record_close(RECORD_STORAGE);
+    furi_string_free(header);
+    flipper_format_free(ff);
+    return success;
+}
+
+static bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* ff = flipper_format_file_alloc(storage);
+
+    bool success = false;
+    do {
+        if(!flipper_format_file_open_always(ff, AC_REMOTE_APP_SETTINGS)) break;
+        if(!flipper_format_write_header_cstr(ff, "AC Remote", 1)) break;
+        if(!flipper_format_write_comment_cstr(ff, "")) break;
+        if(!flipper_format_write_uint32(ff, "Power", &app_state->power, 1)) break;
+        if(!flipper_format_write_uint32(ff, "Mode", &app_state->mode, 1)) break;
+        if(!flipper_format_write_uint32(ff, "Temperature", &app_state->temperature, 1)) break;
+        if(!flipper_format_write_uint32(ff, "Fan", &app_state->fan, 1)) break;
+        if(!flipper_format_write_uint32(ff, "Vane", &app_state->vane, 1)) break;
+        if(!flipper_format_write_uint32(ff, "TimerState", &app_state->timer_state, 1)) break;
+        if(!flipper_format_write_uint32(ff, "TimerPresetOn", &app_state->timer_preset.on, 1))
+            break;
+        if(!flipper_format_write_uint32(ff, "TimerPresetOff", &app_state->timer_preset.off, 1))
+            break;
+        if(!flipper_format_write_uint32(ff, "TimerPauseOn", &app_state->timer_pause.on, 1)) break;
+        if(!flipper_format_write_uint32(ff, "TimerPauseOff", &app_state->timer_pause.off, 1))
+            break;
+        if(!flipper_format_write_uint32(ff, "TimerOnExpiresAt", &app_state->timer_on_expires_at, 1))
+            break;
+        if(!flipper_format_write_uint32(
+               ff, "TimerOffExpiresAt", &app_state->timer_off_expires_at, 1))
+            break;
+        if(!flipper_format_write_comment_cstr(ff, "")) break;
+        if(!flipper_format_write_uint32(ff, "Side", &app_state->side, 1)) break;
+        if(!flipper_format_write_uint32(ff, "TimerStep", &app_state->timer_step, 1)) break;
+        if(!flipper_format_write_bool(ff, "AllowAuto", &app_state->allow_auto, 1)) break;
+        success = true;
+    } while(false);
+    furi_record_close(RECORD_STORAGE);
+    flipper_format_free(ff);
+    return success;
+}
+
 AC_RemoteApp* ac_remote_app_alloc() {
     AC_RemoteApp* app = malloc(sizeof(AC_RemoteApp));
 
@@ -54,12 +143,25 @@ AC_RemoteApp* ac_remote_app_alloc() {
         app->view_dispatcher,
         AC_RemoteAppViewSettings,
         variable_item_list_get_view(app->vil_settings));
+
+    if(!ac_remote_load_settings(&app->app_state)) {
+        memset(&app->app_state, 0, sizeof(app->app_state));
+        app->app_state.power = PowerButtonOff;
+        app->app_state.mode = ModeButtonCooling;
+        app->app_state.fan = FanSpeedButtonLow;
+        app->app_state.vane = VaneButtonPos0;
+        app->app_state.temperature = 23;
+        app->app_state.timer_step = SettingsTimerStep30min;
+    }
+
     scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
     return app;
 }
 
 void ac_remote_app_free(AC_RemoteApp* app) {
     furi_assert(app);
+
+    ac_remote_store_settings(&app->app_state);
 
     // Views
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSettings);
