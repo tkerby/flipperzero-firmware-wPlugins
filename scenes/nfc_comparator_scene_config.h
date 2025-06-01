@@ -1,5 +1,6 @@
 ADD_SCENE(nfc_comparator, main_menu, MainMenu)
 ADD_SCENE(nfc_comparator, compare_menu, CompareMenu)
+ADD_SCENE(nfc_comparator, finder_menu, FinderMenu)
 ADD_SCENE(nfc_comparator, select_nfc_card, SelectNfcCard)
 ADD_SCENE(nfc_comparator, physical_compare_scan, PhysicalCompareScan)
 ADD_SCENE(nfc_comparator, physical_compare_results, PhysicalCompareResults)

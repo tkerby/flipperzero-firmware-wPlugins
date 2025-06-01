@@ -70,7 +70,7 @@ bool nfc_comparator_physical_finder_results_scene_on_event(void* context, SceneM
          break;
       case GuiButtonTypeRight:
          scene_manager_search_and_switch_to_previous_scene(
-            nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+            nfc_comparator->scene_manager, NfcComparatorScene_FinderMenu);
          consumed = true;
          break;
       default:
@@ -78,7 +78,7 @@ bool nfc_comparator_physical_finder_results_scene_on_event(void* context, SceneM
       }
    } else if(event.type == SceneManagerEventTypeBack) {
       scene_manager_search_and_switch_to_previous_scene(
-         nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+         nfc_comparator->scene_manager, NfcComparatorScene_FinderMenu);
       consumed = true;
    }
    return consumed;

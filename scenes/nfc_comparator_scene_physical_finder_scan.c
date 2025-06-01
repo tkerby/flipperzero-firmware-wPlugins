@@ -29,7 +29,7 @@ bool nfc_comparator_physical_finder_scan_scene_on_event(void* context, SceneMana
       force_quit = true;
       nfc_comparator_finder_worker_stop(nfc_comparator->worker.nfc_comparator_finder_worker);
       scene_manager_search_and_switch_to_previous_scene(
-         nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+         nfc_comparator->scene_manager, NfcComparatorScene_FinderMenu);
       consumed = true;
    } else if(event.type == SceneManagerEventTypeTick) {
       switch(nfc_comparator_finder_worker_get_state(
