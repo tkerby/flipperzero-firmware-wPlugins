@@ -37,6 +37,7 @@ uint16_t start_of_packet(uint8_t* bytes, uint16_t size) {
     uint16_t result = 0;
     for(; result + PREAMBLE_LEN <= size && memcmp(bytes + result, PREAMBLE_BT_BLE, PREAMBLE_LEN) &&
           memcmp(bytes + result, PREAMBLE_WIFI, PREAMBLE_LEN) &&
+          memcmp(bytes + result, PREAMBLE_STATUS, PREAMBLE_LEN) &&
           memcmp(bytes + result, PREAMBLE_VER, PREAMBLE_LEN);
         ++result) {
     }
@@ -89,6 +90,12 @@ uint16_t bytes_contains_newline(uint8_t* theBytes, uint16_t size) {
    This function requires `theString` to be null terminated. */
 uint16_t string_contains_newline(char* theString) {
     return bytes_contains_newline((uint8_t*)theString, strlen(theString));
+}
+
+/* Send the status command to ESP32 */
+void wendigo_esp_status(WendigoApp* app) {
+    char cmd[] = "s\n";
+    wendigo_uart_tx(app->uart, (uint8_t*)cmd, strlen(cmd) + 1);
 }
 
 /* Send the version command to ESP32 */
@@ -572,6 +579,71 @@ uint16_t parseBufferVersion(WendigoApp* app) {
     return endSeq + PREAMBLE_LEN;
 }
 
+/** Parse a status packet and display in the status view.
+ * Returns the number of bytes consumed by the function, including the end-of-packet
+ * bytes. DOES NOT remove these bytes, that is handled by the calling function.
+ * This function requires that Wendigo_AppViewStatus be the currently-displayed view.
+ */
+uint16_t parseBufferStatus(WendigoApp* app) {
+    /* Ignore the packet if the status scene isn't displayed */
+    if(app->current_view != WendigoAppViewStatus) {
+        return end_of_packet(buffer, bufferLen);
+    }
+    wendigo_scene_status_begin_layout(app);
+
+    uint8_t attribute_count;
+    uint8_t attribute_name_len;
+    uint8_t attribute_value_len;
+    char* attribute_name = NULL;
+    char* attribute_value = NULL;
+    uint16_t offset = PREAMBLE_LEN;
+    memcpy(&attribute_count, buffer + offset, sizeof(uint8_t));
+    offset += sizeof(uint8_t);
+    for(uint8_t i = 0; i < attribute_count; ++i) {
+        /* Parse attribute name length */
+        memcpy(&attribute_name_len, buffer + offset, sizeof(uint8_t));
+        if(attribute_name_len == 0) {
+            // TODO: Panic
+            return end_of_packet(buffer, bufferLen);
+        }
+        offset += sizeof(uint8_t);
+        /* Name */
+        attribute_name = malloc(sizeof(char) * (attribute_name_len + 1));
+        if(attribute_name == NULL) {
+            // TODO: panic
+            return end_of_packet(buffer, bufferLen);
+        }
+        memcpy(attribute_name, buffer + offset, attribute_name_len);
+        attribute_name[attribute_name_len] = '\0';
+        offset += attribute_name_len;
+        /* Attribute value length */
+        memcpy(&attribute_value_len, buffer + offset, sizeof(uint8_t));
+        offset += sizeof(uint8_t);
+        /* It's valid for this to have a length of 0 - attribute_value will be "" */
+        attribute_value = malloc(sizeof(char) * (attribute_value_len + 1));
+        if(attribute_value == NULL) {
+            // TODO: Panic
+            free(attribute_name);
+            return end_of_packet(buffer, bufferLen);
+        }
+        memcpy(attribute_value, buffer + offset, attribute_value_len);
+        attribute_value[attribute_value_len] = '\0';
+        offset += attribute_value_len;
+        /* Add the attribute to the var_item_list */
+        wendigo_scene_status_add_attribute(app, attribute_name, attribute_value);
+        free(attribute_name);
+        free(attribute_value);
+    }
+    wendigo_scene_status_finish_layout(app);
+
+    /* buffer + offset should now point to the end of packet sequence */
+    if(memcmp(PACKET_TERM, buffer + offset, PREAMBLE_LEN)) {
+        // TODO: Panic
+        return end_of_packet(buffer, bufferLen);
+    }
+    return offset + PREAMBLE_LEN;
+}
+
 /** When the end of a packet is reached this function is called to parse the
  *  buffer and take the appropriate action. We expect to see one of the following:
  *   * Begin with 0xFF,0xFF,0xFF,0xFF,0xAA,0xAA,0xAA,0xAA: Bluetooth packet
@@ -593,6 +665,8 @@ void parseBuffer(WendigoApp* app) {
         consumedBytes = parseBufferBluetooth(app);
     } else if(bufferLen >= PREAMBLE_LEN && !memcmp(PREAMBLE_WIFI, buffer, PREAMBLE_LEN)) {
         consumedBytes = parseBufferWifi(app);
+    } else if(bufferLen >= PREAMBLE_LEN && !memcmp(PREAMBLE_STATUS, buffer, PREAMBLE_LEN)) {
+        consumedBytes = parseBufferStatus(app);
     } else if(bufferLen >= PREAMBLE_LEN && !memcmp(PREAMBLE_VER, buffer, PREAMBLE_LEN)) {
         consumedBytes = parseBufferVersion(app);
     } else {

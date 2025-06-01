@@ -49,8 +49,11 @@ typedef struct {
     VariableItem* view;
 } flipper_bt_device;
 
-/* Import from wendigo_scene_device_list.c */
+/* Function imports from scenes */
 extern void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev);
+extern void wendigo_scene_status_add_attribute(WendigoApp* app, char* name, char* value);
+extern void wendigo_scene_status_finish_layout(WendigoApp* app);
+extern void wendigo_scene_status_begin_layout(WendigoApp* app);
 
 /* Device caches - Declared extern to get around header spaghetti */
 extern flipper_bt_device** bt_devices;
@@ -65,6 +68,7 @@ void wendigo_set_scanning_active(WendigoApp* app, bool starting);
 void wendigo_scan_handle_rx_data_cb(uint8_t* buf, size_t len, void* context);
 void wendigo_free_uart_buffer();
 void wendigo_esp_version(WendigoApp* app);
+void wendigo_esp_status(WendigoApp* app);
 void wendigo_free_bt_devices();
 bool wendigo_set_bt_device_selected(flipper_bt_device* device, bool selected);
 uint16_t

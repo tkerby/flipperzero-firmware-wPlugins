@@ -1,3 +1,5 @@
+#include <furi_hal_rtc.h>
+
 #include "../wendigo_app_i.h"
 #include "../wendigo_scan.h"
 
@@ -6,6 +8,16 @@ extern void wendigo_scene_device_detail_set_device(flipper_bt_device* d);
 
 /* This scene is used to both display all devices and display selected devices */
 bool display_selected_only = false;
+
+/* Enum to index the options menu for devices */
+enum wendigo_device_list_options {
+    WendigoOptionRSSI = 0,
+    WendigoOptionTagUntag,
+    WendigoOptionScanType,
+    WendigoOptionCod,
+    WendigoOptionLastSeen,
+    WendigoOptionsCount
+};
 
 static void wendigo_scene_device_list_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
@@ -18,25 +30,72 @@ static void wendigo_scene_device_list_var_list_enter_callback(void* context, uin
 
     app->device_list_selected_menu_index = index;
 
-    /* Display details for `item` */
-    wendigo_scene_device_detail_set_device(item);
-    view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventListDevices);
+    /* If the tag/untag menu item is selected perform that action, otherwise display details for `item` */
+    if(item->view != NULL &&
+       variable_item_get_current_value_index(item->view) == WendigoOptionTagUntag) {
+        wendigo_set_bt_device_selected(item, !item->dev.tagged);
+        variable_item_set_current_value_text(item->view, (item->dev.tagged) ? "Untag" : "Tag");
+    } else {
+        /* Display details for `item` */
+        wendigo_scene_device_detail_set_device(item);
+        view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventListDevices);
+    }
 }
 
-// TODO: Consider removing this entirely
 static void wendigo_scene_device_list_var_list_change_callback(VariableItem* item) {
     furi_assert(item);
 
     WendigoApp* app = variable_item_get_context(item);
     furi_assert(app);
 
-    const flipper_bt_device* menu_item = bt_devices[app->device_list_selected_menu_index];
-    UNUSED(menu_item);
+    flipper_bt_device* menu_item = (display_selected_only) ?
+                                       bt_selected_devices[app->device_list_selected_menu_index] :
+                                       bt_devices[app->device_list_selected_menu_index];
     uint8_t item_index = variable_item_get_current_value_index(item);
-    furi_assert(item_index < bt_devices_count);
+    furi_assert(
+        item_index < ((display_selected_only) ? bt_selected_devices_count : bt_devices_count));
     // TODO: The following will be useful for managing tag options (on/off)
     // variable_item_set_current_value_text(item, menu_item->options_menu[item_index]);
     // app->setup_selected_option_index[app->setup_selected_menu_index] = item_index;
+
+    /* Update the current option label */
+    char tempStr[16];
+    switch(item_index) {
+    case WendigoOptionRSSI:
+        snprintf(tempStr, sizeof(tempStr), "%ld dB", menu_item->dev.rssi);
+        variable_item_set_current_value_text(item, tempStr);
+        break;
+    case WendigoOptionTagUntag:
+        variable_item_set_current_value_text(item, (menu_item->dev.tagged) ? "Untag" : "Tag");
+        break;
+    case WendigoOptionScanType:
+        variable_item_set_current_value_text(
+            item,
+            (menu_item->dev.scanType == SCAN_HCI)  ? "BT Classic" :
+            (menu_item->dev.scanType == SCAN_BLE)  ? "BLE" :
+            (menu_item->dev.scanType == SCAN_WIFI) ? "WiFi" :
+                                                     "Unknown");
+        break;
+    case WendigoOptionCod:
+        variable_item_set_current_value_text(item, menu_item->cod_str);
+        break;
+    case WendigoOptionLastSeen:
+        /* Create an elapsed time string */
+        uint32_t nowTime = furi_hal_rtc_get_timestamp();
+        double elapsed = nowTime - menu_item->dev.lastSeen.tv_sec;
+        if(elapsed < 60) {
+            snprintf(tempStr, sizeof(tempStr), "%fs", elapsed);
+        } else {
+            uint8_t minutes = elapsed / 60;
+            uint8_t seconds = elapsed - (minutes * 60);
+            snprintf(tempStr, sizeof(tempStr), "%d:%02d", minutes, seconds);
+        }
+        variable_item_set_current_value_text(item, tempStr);
+        break;
+    default:
+        // TODO: Panic
+        break;
+    }
 }
 
 void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
@@ -52,20 +111,43 @@ void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
         name = malloc(sizeof(char) * (dev->dev.bdname_len + 1));
         strncpy(name, dev->dev.bdname, dev->dev.bdname_len);
     }
+    char tempStr[10];
     if(dev->view == NULL) {
         /* Add a new item */
         dev->view = variable_item_list_add(
             app->devices_var_item_list,
             name,
-            1,
+            WendigoOptionsCount,
             wendigo_scene_device_list_var_list_change_callback,
             app);
+        variable_item_set_current_value_index(dev->view, WendigoOptionRSSI);
+        snprintf(tempStr, sizeof(tempStr), "%ld dB", dev->dev.rssi);
+        variable_item_set_current_value_text(dev->view, tempStr);
     } else {
         /* Update dev->view */
         variable_item_set_item_label(dev->view, name);
+        /* If RSSI or lastSeen is displayed, update their values */
+        if(variable_item_get_current_value_index(dev->view) == WendigoOptionRSSI) {
+            snprintf(tempStr, sizeof(tempStr), "%ld dB", dev->dev.rssi);
+            variable_item_set_current_value_text(dev->view, tempStr);
+        } else if(variable_item_get_current_value_index(dev->view) == WendigoOptionLastSeen) {
+            uint32_t nowTime = furi_hal_rtc_get_timestamp();
+            double elapsed = nowTime - dev->dev.lastSeen.tv_sec;
+            if(elapsed < 60) {
+                snprintf(tempStr, sizeof(tempStr), "%fs", elapsed);
+            } else {
+                uint8_t minutes = elapsed / 60;
+                uint8_t seconds = elapsed - (minutes * 60);
+                snprintf(tempStr, sizeof(tempStr), "%d:%02d", minutes, seconds);
+            }
+            variable_item_set_current_value_text(dev->view, tempStr);
+        }
     }
-    // TODO: If this thing crashes it's probably because of this (I can't find the def of furi_string_set to check)
     free(name);
+
+    // TODO: Add/Update the options menu: display RSSI where adding, check the
+    //       selected option index where updating to determine whether anything else needs to be updated
+    variable_item_set_current_value_index(dev->view, WendigoOptionRSSI);
 }
 
 /* Initialise the device list
@@ -103,10 +185,19 @@ void wendigo_scene_device_list_on_enter(void* context) {
             bytes_to_string(devices[i]->dev.bda, MAC_BYTES, item_str);
         }
         devices[i]->view = variable_item_list_add(
-            var_item_list, item_str, 1, wendigo_scene_device_list_var_list_change_callback, app);
+            var_item_list,
+            item_str,
+            WendigoOptionsCount,
+            wendigo_scene_device_list_var_list_change_callback,
+            app);
         if(devices[i]->dev.bdname_len == 0 || devices[i]->dev.bdname == NULL) {
             free(item_str);
         }
+        /* Default to displaying RSSI in options menu */
+        char tempStr[10];
+        snprintf(tempStr, sizeof(tempStr), "%ld dB", devices[i]->dev.rssi);
+        variable_item_set_current_value_index(devices[i]->view, WendigoOptionRSSI);
+        variable_item_set_current_value_text(devices[i]->view, tempStr);
     }
     // TODO: Display WiFi devices
 
