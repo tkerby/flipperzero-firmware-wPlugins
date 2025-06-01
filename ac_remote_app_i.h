@@ -6,6 +6,7 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <gui/view_stack.h>
+#include <gui/modules/dialog_ex.h>
 #include <gui/modules/variable_item_list.h>
 #include <hvac_hitachi.h>
 #include <notification/notification_messages.h>
@@ -128,6 +129,7 @@ struct AC_RemoteApp {
     ACRemotePanel* panel_main;
     ACRemotePanel* panel_sub;
     VariableItemList* vil_settings;
+    DialogEx* dex_reset_confirm;
     ACRemoteAppSettings app_state;
     ACRemoteTransientState transient_state;
     HvacHitachiContext* protocol;
@@ -137,6 +139,9 @@ typedef enum {
     AC_RemoteAppViewMain,
     AC_RemoteAppViewSub,
     AC_RemoteAppViewSettings,
+    AC_RemoteAppViewResetConfirm,
 } AC_RemoteAppView;
+
+void ac_remote_reset_settings(AC_RemoteApp* const app);
 
 #define LABEL_STRING_SIZE sizeof(ac_remote->label_string_pool[0])

@@ -207,7 +207,7 @@ static inline void timer_set_minute_nocheck(ACRemoteTimerState* timer, uint16_t 
 }
 
 static bool timer_update_from_minutes(ACRemoteTimerState* timer, uint16_t timer_minutes) {
-    furi_check(timer);
+    furi_assert(timer);
     if(timer_minutes > 0xfff) {
         timer_minutes = 0xfff;
     }
@@ -219,7 +219,7 @@ static bool timer_update_from_minutes(ACRemoteTimerState* timer, uint16_t timer_
 }
 
 static void timer_set_from_minutes(ACRemoteTimerState* timer, uint16_t timer_minutes) {
-    furi_check(timer);
+    furi_assert(timer);
     if(timer_minutes > 0xfff) {
         timer_minutes = 0xfff;
     }
@@ -303,7 +303,7 @@ static void timer_dec_minute(ACRemoteTimerState* timer, uint8_t unit) {
 }
 
 static TimerOnOffState* ac_remote_timer_selector(AC_RemoteApp* app) {
-    furi_check(app);
+    furi_assert(app);
     switch(app->app_state.timer_state) {
     case TimerStateStopped:
         return &app->app_state.timer_preset;
@@ -644,7 +644,6 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
         if(ac_remote->app_state.timer_state == TimerStateRunning) {
             ac_remote_timer_tick(ac_remote, false);
         }
-
     } else if(event.type == SceneManagerEventTypeCustom) {
         uint16_t event_type;
         int16_t event_value;
@@ -654,6 +653,8 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             notification_message(notifications, &sequence_blink_magenta_100);
             hvac_hitachi_send(ac_remote->protocol);
             notification_message(notifications, &sequence_blink_stop);
+        } else if(event_type == AC_RemoteCustomEventTypeCallSettings) {
+            scene_manager_next_scene(ac_remote->scene_manager, AC_RemoteSceneSettings);
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
             ACRemoteAppSettings* app_state = &ac_remote->app_state;
             bool send_on_power_off = false, has_ir_code = true;
@@ -899,10 +900,13 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 hvac_hitachi_reset_filter(ac_remote->protocol);
                 send_on_power_off = true;
                 break;
-            case button_settings:
-                scene_manager_next_scene(ac_remote->scene_manager, AC_RemoteSceneSettings);
+            case button_settings: {
+                uint32_t event =
+                    ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallSettings, 0);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
                 has_ir_code = false;
                 break;
+            }
             default:
                 has_ir_code = false;
                 break;
