@@ -42,12 +42,6 @@ void nfc_comparator_digital_results_scene_on_enter(void* context) {
       "Again",
       nfc_comparator_digital_results_callback,
       nfc_comparator);
-   // widget_add_button_element(
-   //    nfc_comparator->views.widget,
-   //    GuiButtonTypeCenter,
-   //    "New",
-   //    nfc_comparator_digital_results_callback,
-   //    nfc_comparator);
    widget_add_button_element(
       nfc_comparator->views.widget,
       GuiButtonTypeRight,
@@ -68,9 +62,6 @@ bool nfc_comparator_digital_results_scene_on_event(void* context, SceneManagerEv
          scene_manager_search_and_switch_to_previous_scene(
             nfc_comparator->scene_manager, NfcComparatorScene_DigitalScan);
          consumed = true;
-         break;
-      case GuiButtonTypeCenter:
-         // No action for center button in this scene
          break;
       case GuiButtonTypeRight:
          scene_manager_search_and_switch_to_previous_scene(
