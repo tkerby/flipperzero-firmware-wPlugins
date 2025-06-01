@@ -110,6 +110,18 @@ static bool ac_remote_store_settings(ACRemoteAppSettings* app_state) {
     return success;
 }
 
+void ac_remote_reset_settings(AC_RemoteApp* const app) {
+    furi_assert(app);
+
+    memset(&app->app_state, 0, sizeof(app->app_state));
+    app->app_state.power = PowerButtonOff;
+    app->app_state.mode = ModeButtonCooling;
+    app->app_state.fan = FanSpeedButtonLow;
+    app->app_state.vane = VaneButtonPos0;
+    app->app_state.temperature = 23;
+    app->app_state.timer_step = SettingsTimerStep30min;
+}
+
 AC_RemoteApp* ac_remote_app_alloc() {
     AC_RemoteApp* app = malloc(sizeof(AC_RemoteApp));
 
@@ -144,14 +156,14 @@ AC_RemoteApp* ac_remote_app_alloc() {
         AC_RemoteAppViewSettings,
         variable_item_list_get_view(app->vil_settings));
 
+    app->dex_reset_confirm = dialog_ex_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        AC_RemoteAppViewResetConfirm,
+        dialog_ex_get_view(app->dex_reset_confirm));
+
     if(!ac_remote_load_settings(&app->app_state)) {
-        memset(&app->app_state, 0, sizeof(app->app_state));
-        app->app_state.power = PowerButtonOff;
-        app->app_state.mode = ModeButtonCooling;
-        app->app_state.fan = FanSpeedButtonLow;
-        app->app_state.vane = VaneButtonPos0;
-        app->app_state.temperature = 23;
-        app->app_state.timer_step = SettingsTimerStep30min;
+        ac_remote_reset_settings(app);
     }
 
     scene_manager_next_scene(app->scene_manager, AC_RemoteSceneHitachi);
@@ -164,11 +176,13 @@ void ac_remote_app_free(AC_RemoteApp* app) {
     ac_remote_store_settings(&app->app_state);
 
     // Views
+    view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewResetConfirm);
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSettings);
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewSub);
     view_dispatcher_remove_view(app->view_dispatcher, AC_RemoteAppViewMain);
 
     // View dispatcher
+    dialog_ex_free(app->dex_reset_confirm);
     variable_item_list_free(app->vil_settings);
     ac_remote_panel_free(app->panel_sub);
     ac_remote_panel_free(app->panel_main);

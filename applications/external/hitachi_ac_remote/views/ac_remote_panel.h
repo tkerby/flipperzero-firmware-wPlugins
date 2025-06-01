@@ -17,7 +17,7 @@ typedef struct ACRemotePanel ACRemotePanel;
 typedef struct ButtonItem ButtonItem;
 
 /** Callback type to call for handling selecting ac_remote_panel items */
-typedef void (*ButtonItemCallback)(void* context, uint32_t index);
+typedef void (*ButtonItemCallback)(void* context, InputType event_type, uint32_t index);
 
 ACRemotePanel* ac_remote_panel_alloc(void);
 
