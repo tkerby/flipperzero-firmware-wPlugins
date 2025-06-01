@@ -12,14 +12,15 @@ As i know these firmwares are supported and working if you know any more please 
 - <a href="https://github.com/RogueMaster/flipperzero-firmware-wPlugins" target="_blank">RogueMaster</a>
 - <a href="https://github.com/DarkFlippers/unleashed-firmware" target="_blank">Unleashed</a>
 ## Features:
-- Compare digital NFC card against physical checking:
->  - UID
->  - UID length
->  - Protocol
-- Compare digital NFC card against digital NFC card checking:
->  - UID
->  - UID length
->  - Protocol
->  - NFC data
-## Features to be added:
-- Finder for both digital and physical NFC cards allowing you to find if you have already got a card similar stored
+- Compare Menu:
+  - Compare a digital NFC card against a physical card checking for:
+  >  - UID
+  >  - UID length
+  >  - Protocol
+  - Compare a digital NFC card against a digital NFC card checking for:
+  >  - UID
+  >  - UID length
+  >  - Protocol
+  >  - NFC data
+- Physical NFC card finder:
+  > - This features searches your saved NFC cards searching for a match for the physical card you are scanning then displaying the path to the saved NFC card that it finds

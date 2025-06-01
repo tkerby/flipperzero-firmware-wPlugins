@@ -2,7 +2,7 @@
 
 static volatile bool force_quit = false;
 
-void nfc_comparator_physical_scan_scene_on_enter(void* context) {
+void nfc_comparator_physical_compare_scan_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    force_quit = false;
@@ -25,7 +25,7 @@ void nfc_comparator_physical_scan_scene_on_enter(void* context) {
    }
 }
 
-bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEvent event) {
+bool nfc_comparator_physical_compare_scan_scene_on_event(void* context, SceneManagerEvent event) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    bool consumed = false;
@@ -34,7 +34,7 @@ bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEven
       force_quit = true;
       nfc_comparator_reader_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
       scene_manager_search_and_switch_to_previous_scene(
-         nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+         nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
       consumed = true;
    } else if(event.type == SceneManagerEventTypeTick) {
       switch(nfc_comparator_reader_worker_get_state(
@@ -63,7 +63,7 @@ bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEven
             nfc_comparator_reader_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
 
             scene_manager_next_scene(
-               nfc_comparator->scene_manager, NfcComparatorScene_PhysicalResults);
+               nfc_comparator->scene_manager, NfcComparatorScene_PhysicalCompareResults);
          }
          consumed = true;
          break;
@@ -75,7 +75,7 @@ bool nfc_comparator_physical_scan_scene_on_event(void* context, SceneManagerEven
    return consumed;
 }
 
-void nfc_comparator_physical_scan_scene_on_exit(void* context) {
+void nfc_comparator_physical_compare_scan_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    popup_reset(nfc_comparator->views.popup);

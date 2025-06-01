@@ -38,6 +38,8 @@ static NfcComparator* nfc_comparator_alloc() {
 
    nfc_comparator->notification_app = furi_record_open(RECORD_NOTIFICATION);
 
+   nfc_comparator->worker.finder_compare_checks.nfc_card_path = furi_string_alloc();
+
    view_dispatcher_set_event_callback_context(nfc_comparator->view_dispatcher, nfc_comparator);
    view_dispatcher_set_custom_event_callback(
       nfc_comparator->view_dispatcher, nfc_comparator_custom_callback);
@@ -81,6 +83,7 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
    file_browser_free(nfc_comparator->views.file_browser.view);
    furi_string_free(nfc_comparator->views.file_browser.output);
    furi_string_free(nfc_comparator->views.file_browser.tmp_output);
+   furi_string_free(nfc_comparator->worker.finder_compare_checks.nfc_card_path);
    popup_free(nfc_comparator->views.popup);
    widget_free(nfc_comparator->views.widget);
    furi_record_close(RECORD_NOTIFICATION);

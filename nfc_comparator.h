@@ -19,6 +19,7 @@
 #include "nfc_comparator_icons.h"
 #include "scenes/nfc_comparator_scene.h"
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
+#include "lib/finder_worker/nfc_comparator_finder_worker.h"
 #include "lib/led_worker/nfc_comparator_led_worker.h"
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
@@ -51,6 +52,8 @@ typedef struct {
 typedef struct {
    NfcComparatorReaderWorker* nfc_comparator_reader_worker;
    NfcComparatorReaderWorkerCompareChecks compare_checks;
+   NfcComparatorFinderWorker* nfc_comparator_finder_worker;
+   NfcComparatorFinderWorkerCompareChecks finder_compare_checks;
 } NfcComparatorWorker;
 
 /** Main app struct holding all state */
