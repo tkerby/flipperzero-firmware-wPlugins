@@ -647,6 +647,7 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
     } else if(event.type == SceneManagerEventTypeCustom) {
         uint16_t event_type;
         int16_t event_value;
+        uint32_t next_event;
         ac_remote_custom_event_unpack(event.event, &event_type, &event_value);
         if(event_type == AC_RemoteCustomEventTypeSendCommand) {
             NotificationApp* notifications = furi_record_open(RECORD_NOTIFICATION);
@@ -655,6 +656,10 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             notification_message(notifications, &sequence_blink_stop);
         } else if(event_type == AC_RemoteCustomEventTypeCallSettings) {
             scene_manager_next_scene(ac_remote->scene_manager, AC_RemoteSceneSettings);
+        } else if(event_type == AC_RemoteCustomEventTypeSwitchPanel) {
+            if(event_value == AC_RemoteAppViewMain || event_value == AC_RemoteAppViewSub) {
+                view_dispatcher_switch_to_view(ac_remote->view_dispatcher, event_value);
+            }
         } else if(event_type == AC_RemoteCustomEventTypeButtonSelected) {
             ACRemoteAppSettings* app_state = &ac_remote->app_state;
             bool send_on_power_off = false, has_ir_code = true;
@@ -746,11 +751,15 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 ac_remote_panel_update_view(panel_main);
                 break;
             case button_view_sub:
-                view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewSub);
+                next_event = ac_remote_custom_event_pack(
+                    AC_RemoteCustomEventTypeSwitchPanel, AC_RemoteAppViewSub);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, next_event);
                 has_ir_code = false;
                 break;
             case button_view_main:
-                view_dispatcher_switch_to_view(ac_remote->view_dispatcher, AC_RemoteAppViewMain);
+                next_event = ac_remote_custom_event_pack(
+                    AC_RemoteCustomEventTypeSwitchPanel, AC_RemoteAppViewMain);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, next_event);
                 has_ir_code = false;
                 break;
             case button_timer_on_h_inc: {
@@ -843,11 +852,10 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             }
             case button_timer_set:
                 switch(app_state->timer_state) {
-                case TimerStateRunning: {
+                case TimerStateRunning:
                     app_state->timer_state = TimerStatePaused;
                     hvac_hitachi_reset_timer(ac_remote->protocol);
                     break;
-                }
                 case TimerStateStopped:
                     app_state->timer_pause = app_state->timer_preset;
                     // Intentional fallthrough
@@ -900,13 +908,11 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
                 hvac_hitachi_reset_filter(ac_remote->protocol);
                 send_on_power_off = true;
                 break;
-            case button_settings: {
-                uint32_t event =
-                    ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallSettings, 0);
-                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
+            case button_settings:
+                next_event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallSettings, 0);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, next_event);
                 has_ir_code = false;
                 break;
-            }
             default:
                 has_ir_code = false;
                 break;
@@ -914,9 +920,8 @@ bool ac_remote_scene_hitachi_on_event(void* context, SceneManagerEvent event) {
             if(has_ir_code && (send_on_power_off || app_state->power == PowerButtonOn)) {
                 hvac_hitachi_switch_side(ac_remote->protocol, SIDE_LUT[app_state->side]);
                 hvac_hitachi_build_samples(ac_remote->protocol);
-                uint32_t event =
-                    ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
-                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, event);
+                next_event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeSendCommand, 0);
+                view_dispatcher_send_custom_event(ac_remote->view_dispatcher, next_event);
             }
         }
         consumed = true;

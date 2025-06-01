@@ -60,7 +60,7 @@ static void vil_settings_on_enter(void* context, uint32_t index) {
 
     AC_RemoteApp* app = context;
     if(index == SettingsIndexReset) {
-        uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallResetDialog, 0);
+        uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallResetDialog, 1);
         view_dispatcher_send_custom_event(app->view_dispatcher, event);
     }
 }
@@ -101,7 +101,9 @@ bool ac_remote_scene_settings_on_event(void* context, SceneManagerEvent event) {
         int16_t event_value;
         ac_remote_custom_event_unpack(event.event, &event_type, &event_value);
         if(event_type == AC_RemoteCustomEventTypeCallResetDialog) {
-            scene_manager_next_scene(app->scene_manager, AC_RemoteSceneResetConfirm);
+            if(event_value == 1) {
+                scene_manager_next_scene(app->scene_manager, AC_RemoteSceneResetConfirm);
+            }
             consumed = true;
         }
     }

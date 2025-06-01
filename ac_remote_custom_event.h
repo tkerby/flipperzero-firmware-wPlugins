@@ -6,8 +6,8 @@
 enum AC_RemoteCustomEventType {
     AC_RemoteCustomEventTypeButtonSelected,
     AC_RemoteCustomEventTypeSendCommand,
+    AC_RemoteCustomEventTypeSwitchPanel,
     AC_RemoteCustomEventTypeResetSettings,
-    AC_RemoteCustomEventTypeResetSettingsBack,
     AC_RemoteCustomEventTypeCallSettings,
     AC_RemoteCustomEventTypeCallResetDialog,
 };

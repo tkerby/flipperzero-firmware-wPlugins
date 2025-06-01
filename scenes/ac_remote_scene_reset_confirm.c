@@ -13,7 +13,7 @@ static void dex_reset_confirm_on_result(DialogExResult result, void* context) {
     }
     case DialogExResultLeft:
     case DialogExReleaseLeft: {
-        uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeResetSettingsBack, 0);
+        uint32_t event = ac_remote_custom_event_pack(AC_RemoteCustomEventTypeCallResetDialog, 0);
         view_dispatcher_send_custom_event(app->view_dispatcher, event);
         break;
     }
@@ -57,8 +57,10 @@ bool ac_remote_scene_reset_confirm_on_event(void* context, SceneManagerEvent eve
             scene_manager_search_and_switch_to_another_scene(
                 app->scene_manager, AC_RemoteSceneHitachi);
             consumed = true;
-        } else if(event_type == AC_RemoteCustomEventTypeResetSettingsBack) {
-            scene_manager_previous_scene(app->scene_manager);
+        } else if(event_type == AC_RemoteCustomEventTypeCallResetDialog) {
+            if(event_value == 0) {
+                scene_manager_previous_scene(app->scene_manager);
+            }
             consumed = true;
         }
     }
