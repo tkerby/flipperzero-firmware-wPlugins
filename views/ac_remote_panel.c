@@ -64,7 +64,7 @@ static void ac_remote_panel_process_up(ACRemotePanel* ac_remote_panel);
 static void ac_remote_panel_process_down(ACRemotePanel* ac_remote_panel);
 static void ac_remote_panel_process_left(ACRemotePanel* ac_remote_panel);
 static void ac_remote_panel_process_right(ACRemotePanel* ac_remote_panel);
-static void ac_remote_panel_process_ok(ACRemotePanel* ac_remote_panel);
+static void ac_remote_panel_process_ok(ACRemotePanel* ac_remote_panel, InputType event_type);
 static void ac_remote_panel_view_draw_callback(Canvas* canvas, void* _model);
 static bool ac_remote_panel_view_input_callback(InputEvent* event, void* context);
 
@@ -362,7 +362,7 @@ static void ac_remote_panel_process_right(ACRemotePanel* ac_remote_panel) {
         true);
 }
 
-void ac_remote_panel_process_ok(ACRemotePanel* ac_remote_panel) {
+void ac_remote_panel_process_ok(ACRemotePanel* ac_remote_panel, InputType event_type) {
     ButtonItem* button_item = NULL;
 
     with_view_model(
@@ -375,7 +375,7 @@ void ac_remote_panel_process_ok(ACRemotePanel* ac_remote_panel) {
         true);
 
     if(button_item && button_item->callback) {
-        button_item->callback(button_item->callback_context, button_item->index);
+        button_item->callback(button_item->callback_context, event_type, button_item->index);
     }
 }
 
@@ -384,7 +384,7 @@ static bool ac_remote_panel_view_input_callback(InputEvent* event, void* context
     furi_assert(ac_remote_panel);
     bool consumed = false;
 
-    if(event->type == InputTypeShort) {
+    if(event->type == InputTypeShort || event->type == InputTypeLong) {
         switch(event->key) {
         case InputKeyUp:
             consumed = true;
@@ -404,7 +404,7 @@ static bool ac_remote_panel_view_input_callback(InputEvent* event, void* context
             break;
         case InputKeyOk:
             consumed = true;
-            ac_remote_panel_process_ok(ac_remote_panel);
+            ac_remote_panel_process_ok(ac_remote_panel, event->type);
             break;
         default:
             break;
