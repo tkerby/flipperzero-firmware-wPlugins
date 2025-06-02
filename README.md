@@ -34,8 +34,8 @@
 
 # Build from Source
 - Clone this repo
-	git clone https://github.com/HermeticCode/flipper-showdown.git
-	cd flipper-pokemon-showdown
+	git clone https://github.com/HermeticCode/showdown-current.git
+	cd application_user/showdown
 - ./fbt fap_showdown
 - your compiled .fap should be in 'firmware root'/build/f7-firmware-C/.extapps/
 * I need to enable view hidden files to find .extapps folder 
