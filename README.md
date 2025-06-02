@@ -22,5 +22,8 @@ As i know these firmwares are supported and working if you know any more please 
   >  - UID length
   >  - Protocol
   >  - NFC data
-- Physical NFC card finder:
-  > - This features searches your saved NFC cards searching for a match for the physical card you are scanning then displaying the path to the saved NFC card that it finds
+- Finder Menu:
+  - Physical NFC card finder:
+  > This features searches your saved NFC cards searching for a match for the physical card you are scanning then displaying the path to the saved NFC card that it finds
+  - Digital NFC card finder:
+  > This features searches your saved NFC cards searching for a match for the digital NFC card you have chosen ignoring the one you have chosen to compare against then displaying the path to the saved NFC card that it finds

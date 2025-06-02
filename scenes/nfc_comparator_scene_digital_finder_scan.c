@@ -4,6 +4,8 @@ static void nfc_comparator_digital_finder_scan_menu_callback(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
 
+   view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Loading);
+
    NfcDevice* nfc_card_1 = nfc_device_alloc();
    if(!nfc_device_load(
          nfc_card_1, furi_string_get_cstr(nfc_comparator->views.file_browser.output))) {
@@ -56,7 +58,8 @@ static void nfc_comparator_digital_finder_scan_menu_callback(void* context) {
    nfc_device_free(nfc_card_1);
    nfc_device_free(nfc_card_2);
 
-   furi_string_swap(nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
+   furi_string_swap(
+      nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
    furi_string_reset(nfc_comparator->views.file_browser.tmp_output);
 
    scene_manager_next_scene(
@@ -101,6 +104,11 @@ bool nfc_comparator_digital_finder_scan_scene_on_event(void* context, SceneManag
 void nfc_comparator_digital_finder_scan_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
+   if(furi_string_empty(nfc_comparator->views.file_browser.output)) {
+      furi_string_swap(
+         nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
+      furi_string_reset(nfc_comparator->views.file_browser.tmp_output);
+   }
    file_browser_stop(nfc_comparator->views.file_browser.view);
    nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
 }

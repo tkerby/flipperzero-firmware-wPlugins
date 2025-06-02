@@ -34,6 +34,7 @@ typedef enum {
    NfcComparatorView_FileBrowser,
    NfcComparatorView_Popup,
    NfcComparatorView_Widget,
+   NfcComparatorView_Loading,
    NfcComparatorView_Count
 } NfcComparatorViews;
 
@@ -50,6 +51,7 @@ typedef struct {
    NfcComparatorFileBrowserView file_browser;
    Popup* popup;
    Widget* widget;
+   Loading* loading;
 } NfcComparatorView;
 
 /** Worker struct for NFC comparison logic */
