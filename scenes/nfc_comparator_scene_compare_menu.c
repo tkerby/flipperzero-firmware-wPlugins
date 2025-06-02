@@ -1,8 +1,8 @@
 #include "../nfc_comparator.h"
 
 typedef enum {
-   NfcComparatorMainMenu_PhysicalCompareScan,
-   NfcComparatorMainMenu_DigitalCompareScan,
+   NfcComparatorMainMenu_Physical,
+   NfcComparatorMainMenu_Digital,
    NfcComparatorMainMenu_SelectNfcCard
 } NfcComparatorMainMenuMenuSelection;
 
@@ -16,14 +16,12 @@ void nfc_comparator_compare_menu_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
 
-   FuriString* header = furi_string_alloc_printf("NFC Comparator v%s", FAP_VERSION);
-   submenu_set_header(nfc_comparator->views.submenu, furi_string_get_cstr(header));
-   furi_string_free(header);
+   submenu_set_header(nfc_comparator->views.submenu, "Compare Menu");
 
    submenu_add_lockable_item(
       nfc_comparator->views.submenu,
-      "Start Physical Comparator",
-      NfcComparatorMainMenu_PhysicalCompareScan,
+      "Start Physical",
+      NfcComparatorMainMenu_Physical,
       nfc_comparator_compare_menu_menu_callback,
       nfc_comparator,
       furi_string_empty(nfc_comparator->views.file_browser.output),
@@ -31,8 +29,8 @@ void nfc_comparator_compare_menu_scene_on_enter(void* context) {
 
    submenu_add_lockable_item(
       nfc_comparator->views.submenu,
-      "Start Digital Comparator",
-      NfcComparatorMainMenu_DigitalCompareScan,
+      "Start Digital",
+      NfcComparatorMainMenu_Digital,
       nfc_comparator_compare_menu_menu_callback,
       nfc_comparator,
       furi_string_empty(nfc_comparator->views.file_browser.output),
@@ -54,11 +52,11 @@ bool nfc_comparator_compare_menu_scene_on_event(void* context, SceneManagerEvent
    bool consumed = false;
    if(event.type == SceneManagerEventTypeCustom) {
       switch(event.event) {
-      case NfcComparatorMainMenu_PhysicalCompareScan:
+      case NfcComparatorMainMenu_Physical:
          scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_PhysicalCompareScan);
          consumed = true;
          break;
-      case NfcComparatorMainMenu_DigitalCompareScan:
+      case NfcComparatorMainMenu_Digital:
          scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_DigitalCompareScan);
          consumed = true;
          break;

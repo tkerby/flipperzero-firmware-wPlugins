@@ -19,7 +19,7 @@ void nfc_comparator_physical_compare_scan_scene_on_enter(void* context) {
       scene_manager_next_scene(
          nfc_comparator->scene_manager, NfcComparatorScene_FailedToLoadNfcCard);
    } else {
-      nfc_comparator_reader_start(nfc_comparator->worker.nfc_comparator_reader_worker);
+      nfc_comparator_reader_worker_start(nfc_comparator->worker.nfc_comparator_reader_worker);
       nfc_comparator_led_worker_start(
          nfc_comparator->notification_app, NfcComparatorLedState_Running);
    }
@@ -32,7 +32,7 @@ bool nfc_comparator_physical_compare_scan_scene_on_event(void* context, SceneMan
 
    if(event.type == SceneManagerEventTypeBack) {
       force_quit = true;
-      nfc_comparator_reader_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
+      nfc_comparator_reader_worker_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
       scene_manager_search_and_switch_to_previous_scene(
          nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
       consumed = true;
@@ -60,7 +60,7 @@ bool nfc_comparator_physical_compare_scan_scene_on_event(void* context, SceneMan
          break;
       case NfcComparatorReaderWorkerState_Stopped:
          if(!force_quit) {
-            nfc_comparator_reader_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
+            nfc_comparator_reader_worker_stop(nfc_comparator->worker.nfc_comparator_reader_worker);
 
             scene_manager_next_scene(
                nfc_comparator->scene_manager, NfcComparatorScene_PhysicalCompareResults);

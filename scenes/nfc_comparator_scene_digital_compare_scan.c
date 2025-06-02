@@ -76,6 +76,11 @@ bool nfc_comparator_digital_compare_scan_scene_on_event(void* context, SceneMana
 void nfc_comparator_digital_compare_scan_scene_on_exit(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
+
+   if (furi_string_empty(nfc_comparator->views.file_browser.output)) {
+      furi_string_swap(nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
+   }
+   
    file_browser_stop(nfc_comparator->views.file_browser.view);
    nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
 }

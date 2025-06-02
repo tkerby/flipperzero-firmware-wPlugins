@@ -78,10 +78,6 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
 
             dir_walk_close(worker->dir_walk);
             furi_string_free(ext);
-            nfc_device_free(worker->scanned_nfc_card);
-            worker->scanned_nfc_card = NULL;
-            nfc_device_free(worker->loaded_nfc_card);
-            worker->loaded_nfc_card = NULL;
 
             worker->state = NfcComparatorFinderWorkerState_Stopped;
             break;
@@ -199,5 +195,7 @@ void nfc_comparator_finder_worker_compare_cards(
    // compare NFC data
    if(check_data) {
       compare_checks->nfc_data = nfc_device_is_equal(card1, card2);
+   } else {
+      compare_checks->nfc_data = false;
    }
 }

@@ -11,10 +11,14 @@
 #include <gui/modules/file_browser.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/widget.h>
+#include <gui/modules/loading.h>
 #include <notification/notification_messages.h>
 #include <nfc_device.h>
 #include <nfc_listener.h>
 #include <nfc_scanner.h>
+#include <storage/storage.h>
+#include <dir_walk.h>
+#include <path.h>
 
 #include "nfc_comparator_icons.h"
 #include "scenes/nfc_comparator_scene.h"

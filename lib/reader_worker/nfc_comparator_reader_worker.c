@@ -115,7 +115,7 @@ void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* worker) {
    free(worker);
 }
 
-void nfc_comparator_reader_stop(NfcComparatorReaderWorker* worker) {
+void nfc_comparator_reader_worker_stop(NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
    if(worker->state != NfcComparatorReaderWorkerState_Stopped) {
       worker->state = NfcComparatorReaderWorkerState_Stopped;
@@ -123,7 +123,7 @@ void nfc_comparator_reader_stop(NfcComparatorReaderWorker* worker) {
    }
 }
 
-void nfc_comparator_reader_start(NfcComparatorReaderWorker* worker) {
+void nfc_comparator_reader_worker_start(NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
    if(worker->state == NfcComparatorReaderWorkerState_Stopped) {
       worker->state = NfcComparatorReaderWorkerState_Scanning;
@@ -182,5 +182,7 @@ void nfc_comparator_reader_worker_compare_cards(
    // compare NFC data
    if(check_data) {
       compare_checks->nfc_data = nfc_device_is_equal(card1, card2);
+   } else {
+      compare_checks->nfc_data = false;
    }
 }
