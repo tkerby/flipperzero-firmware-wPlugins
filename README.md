@@ -1,4 +1,4 @@
-### Pokemon Showdown for the Flipper Zero
+### Flipper Showdown for the Flipper Zero
 
 ## Features
 - Complete Gen 1 Roster
@@ -66,6 +66,7 @@
 - Notifications when hit
 - Animations
 - overall improvement and game immersion
+- Multiplayer battles using native capabilities such as IR, SubGhz, NFC, etc.
 
 # Known Issues
 - Currently researching how to get pokemon name to display when in battle
