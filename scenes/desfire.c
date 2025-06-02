@@ -52,7 +52,7 @@ TransitCardInfo cards[77] = {
     { 0x227508, "Umo", "Cubic", true},
     { 0x3010F2, "ORCA (SEA)", "ORCA", true},
     { 0x314553, "Opal (SYD)", "TfNSW", false},
-    { 0x315441, "ATH.ENA (ATH)", "OASA", false},
+    { 0x315441, "ATH.ENA (ATH)", "OASA", true},
     { 0x31594F, "Oyster (LHR)", "TfL", true},
     { 0x422201, "Istanbulkart (IST)", "BELBIM", true},
     { 0x422202, "Istanbulkart (IST)", "BELBIM", true},
