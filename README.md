@@ -34,7 +34,7 @@
 
 # Build from Source
 - Clone this repo
-	git clone https://github.com/yourusername/flipper-pokemon-showdown.git
+	git clone https://github.com/HermeticCode/flipper-showdown.git
 	cd flipper-pokemon-showdown
 - ./fbt fap_showdown
 - your compiled .fap should be in 'firmware root'/build/f7-firmware-C/.extapps/
