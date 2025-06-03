@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0525-1244-0.420.0-1fbb495.tgz&channel=RM0525-1244-0.420.0-1fbb495&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0602-2359-0.420.0-55167b4.tgz&channel=RM0602-2359-0.420.0-55167b4&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,36 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-02 23:30 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-02 23:30 EST`
-- UL: [NFC: Fix clipper date timestamp (By luu176)](https://github.com/DarkFlippers/unleashed-firmware/commit/ff8c3540eb531bbe6fe96d245557499942172618)
-- UL: [SubGHz: V2 Phoenix show counter value (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/350dea6535441a8dd52871eb5accb7ca508f90cb)
-- Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Sub-GHz Playlist: Add support for custom modulation presets, remake with txrx library and support for dynamic signals, cleanup code (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/39d7c0e9379a1bc3bb0dca772de3efd148a61a9b)
-- UL: [Sub-GHz: Rename and extend Alarms ignore option with Hollarm & GangQi (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
-- UL: [Display: Backlight option `Always ON` (By Dmitry422)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/9effc03c355630b004afc52db976229a024d90d5)
-- Added: [Doc Viewer Lite v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/docviewlite)
-- Added: [Paranoia WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-paranoia)
-- Added: [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
-- Updated: [NFC Comparator v2.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [NFC Playlist v3.0 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [GS1 Parser v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/gs1_rfid_parser) `Req: U107 or YRM100`
-- Updated: [Quac! v0.9.1 (By rdefeo)](https://github.com/rdefeo/quac)
-- Updated: [PicoPass (iClass) v1.19 (By Bettse)](https://gitlab.com/bettse/picopass)
-- [ESP Flasher Bump ESP Marauder v1.6.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.6.0)
-- Updated: [WiFi (Marauder) v0.7.3 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
-- Updated: [NFC Relay v0.2 (By leommxj)](https://github.com/leommxj/nfc_relay)
-- Updated: [ESP32CAM Marauder v0.7.3 (By 0xchocolate & eried)](https://github.com/eried/flipperzero-mayhem) [Add new commands for Marauder v1.6.0 (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder/pull/68)
-- Updated: [Letter Beacon v1.0 (By nmrr)](https://github.com/nmrr/flipperzero-rfidbeacon)
-- Updated: [Ghost ESP v1.2.6 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
-- Updated: [UDECard v1.0.3 (By hahnworks](https://github.com/hahnworks/UDECard)
-- [ESP Flasher Bump ESP Marauder v1.6.1 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.6.1)
-- Updated: [Wave v0.2 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Wave-game-for-Flipper-Zero)
-- Updated: [Hitachi AC Remote v1.1 (By dogtopus)](https://github.com/dogtopus/flipperzero-hitachi-ac-remote)
-- [ESP Flasher Bump ESP Marauder v1.6.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.6.2)
-- Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
-- Added: [Segment Clock v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)
-- Added: [SD Info v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/SD-Info-For-Flipper-Zero)
-- [RFID: Add DEZ10 representation to EM410X (By realcatgirly)](https://github.com/Next-Flip/Momentum-Firmware/pull/418)
-- Added: [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator) With Tweaks (By WillyJL)
 
 <a name="release">
 
@@ -763,4 +733,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0525-1244-0.420.0-1fbb495.tgz&channel=RM0525-1244-0.420.0-1fbb495&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0602-2359-0.420.0-55167b4.tgz&channel=RM0602-2359-0.420.0-55167b4&version=0.420.0&target=f7)
