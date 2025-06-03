@@ -58,6 +58,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Added: [Segment Clock v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)
 - Added: [SD Info v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/SD-Info-For-Flipper-Zero)
+- [RFID: Add DEZ10 representation to EM410X (By realcatgirly)](https://github.com/Next-Flip/Momentum-Firmware/pull/418)
 
 <a name="release">
 
