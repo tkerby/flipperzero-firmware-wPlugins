@@ -5,7 +5,7 @@ App(
     entry_point="subghz_playlist_creator_app",
     stack_size=2 * 1024,
     fap_icon="subghz_playlist_creator.png",
-    #  fap_icon_assets="images",  
+    #  fap_icon_assets="images",
     fap_category="Sub-GHz",
     fap_author="coolerUA",
     fap_weburl="https://github.com/coolerUA/Sub-Ghz-Playlist-Creator",

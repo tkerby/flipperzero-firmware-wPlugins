@@ -11,14 +11,20 @@
 #include <gui/modules/file_browser.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/widget.h>
+#include <gui/modules/loading.h>
+#include <gui/modules/variable_item_list.h>
 #include <notification/notification_messages.h>
 #include <nfc_device.h>
 #include <nfc_listener.h>
 #include <nfc_scanner.h>
+#include <storage/storage.h>
+#include <dir_walk.h>
+#include <path.h>
 
 #include "nfc_comparator_icons.h"
 #include "scenes/nfc_comparator_scene.h"
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
+#include "lib/finder_worker/nfc_comparator_finder_worker.h"
 #include "lib/led_worker/nfc_comparator_led_worker.h"
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
@@ -29,6 +35,8 @@ typedef enum {
     NfcComparatorView_FileBrowser,
     NfcComparatorView_Popup,
     NfcComparatorView_Widget,
+    NfcComparatorView_Loading,
+    NfcComparatorView_VariableItemList,
     NfcComparatorView_Count
 } NfcComparatorViews;
 
@@ -36,6 +44,7 @@ typedef enum {
 typedef struct {
     FileBrowser* view;
     FuriString* output;
+    FuriString* tmp_output;
 } NfcComparatorFileBrowserView;
 
 /** All views used by the NFC Comparator app */
@@ -44,13 +53,22 @@ typedef struct {
     NfcComparatorFileBrowserView file_browser;
     Popup* popup;
     Widget* widget;
+    Loading* loading;
+    VariableItemList* variable_item_list;
 } NfcComparatorView;
 
-/** Worker struct for NFC comparison logic */
+/** Finder worker struct holding all finder worker instances */
 typedef struct {
-    NfcComparatorReaderWorker* nfc_comparator_reader_worker;
+    NfcComparatorFinderWorker* worker;
+    NfcComparatorFinderWorkerCompareChecks compare_checks;
+    NfcComparatorFinderWorkerSettings settings;
+} NfcComparatorFinder;
+
+/** Reader worker struct holding all reader worker instances */
+typedef struct {
+    NfcComparatorReaderWorker* worker;
     NfcComparatorReaderWorkerCompareChecks compare_checks;
-} NfcComparatorWorker;
+} NfcComparatorReader;
 
 /** Main app struct holding all state */
 typedef struct {
@@ -58,7 +76,8 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     NotificationApp* notification_app;
     NfcComparatorView views;
-    NfcComparatorWorker worker;
+    NfcComparatorFinder finder;
+    NfcComparatorReader reader;
 } NfcComparator;
 
 // #endif // NFC_COMPARATOR_H

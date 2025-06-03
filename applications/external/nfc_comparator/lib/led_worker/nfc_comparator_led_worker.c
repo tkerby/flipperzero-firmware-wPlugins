@@ -25,8 +25,6 @@ static const NotificationSequence blink_sequence_complete = {
 static NotificationMessage blink_message_error = {
    .type = NotificationMessageTypeLedBlinkStart,
    .data.led_blink.color = LightRed,
-   .data.led_blink.on_time = 20,
-   .data.led_blink.period = 100,
 };
 static const NotificationSequence blink_sequence_error = {
    &blink_message_error,

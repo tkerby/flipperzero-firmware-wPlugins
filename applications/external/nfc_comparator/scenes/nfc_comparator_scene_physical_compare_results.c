@@ -1,6 +1,6 @@
 #include "../nfc_comparator.h"
 
-static void nfc_comparator_failed_to_load_nfc_card_callback(
+static void nfc_comparator_physical_compare_results_callback(
     GuiButtonType result,
     InputType type,
     void* context) {
@@ -11,50 +11,62 @@ static void nfc_comparator_failed_to_load_nfc_card_callback(
     }
 }
 
-void nfc_comparator_failed_to_load_nfc_card_scene_on_enter(void* context) {
+void nfc_comparator_physical_compare_results_scene_on_enter(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
 
-    nfc_comparator_led_worker_start(nfc_comparator->notification_app, NfcComparatorLedState_Error);
+    nfc_comparator_led_worker_start(
+        nfc_comparator->notification_app, NfcComparatorLedState_Complete);
+
+    FuriString* temp_str = furi_string_alloc();
+
+    furi_string_printf(
+        temp_str,
+        "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s",
+        nfc_comparator->reader.compare_checks.uid ? "Match" : "Mismatch",
+        nfc_comparator->reader.compare_checks.uid_length ? "Match" : "Mismatch",
+        nfc_comparator->reader.compare_checks.protocol ? "Match" : "Mismatch");
 
     widget_add_text_box_element(
         nfc_comparator->views.widget,
         0,
         0,
         128,
-        50,
+        57,
         AlignCenter,
         AlignCenter,
-        "\e#Failed to load\nselected card\e#",
+        furi_string_get_cstr(temp_str),
         false);
     widget_add_button_element(
         nfc_comparator->views.widget,
         GuiButtonTypeLeft,
-        "Try Again",
-        nfc_comparator_failed_to_load_nfc_card_callback,
+        "Again",
+        nfc_comparator_physical_compare_results_callback,
         nfc_comparator);
     widget_add_button_element(
         nfc_comparator->views.widget,
         GuiButtonTypeRight,
-        "Main Menu",
-        nfc_comparator_failed_to_load_nfc_card_callback,
+        "Exit",
+        nfc_comparator_physical_compare_results_callback,
         nfc_comparator);
+
+    furi_string_free(temp_str);
 
     view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Widget);
 }
 
-bool nfc_comparator_failed_to_load_nfc_card_scene_on_event(void* context, SceneManagerEvent event) {
+bool nfc_comparator_physical_compare_results_scene_on_event(void* context, SceneManagerEvent event) {
     NfcComparator* nfc_comparator = context;
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case GuiButtonTypeRight:
-            scene_manager_search_and_switch_to_previous_scene(
-                nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
-            consumed = true;
-            break;
         case GuiButtonTypeLeft:
             scene_manager_previous_scene(nfc_comparator->scene_manager);
+            consumed = true;
+            break;
+        case GuiButtonTypeRight:
+            scene_manager_search_and_switch_to_previous_scene(
+                nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
             consumed = true;
             break;
         default:
@@ -62,13 +74,13 @@ bool nfc_comparator_failed_to_load_nfc_card_scene_on_event(void* context, SceneM
         }
     } else if(event.type == SceneManagerEventTypeBack) {
         scene_manager_search_and_switch_to_previous_scene(
-            nfc_comparator->scene_manager, NfcComparatorScene_MainMenu);
+            nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
         consumed = true;
     }
     return consumed;
 }
 
-void nfc_comparator_failed_to_load_nfc_card_scene_on_exit(void* context) {
+void nfc_comparator_physical_compare_results_scene_on_exit(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
     widget_reset(nfc_comparator->views.widget);
