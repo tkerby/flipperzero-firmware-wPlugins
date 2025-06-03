@@ -28,6 +28,7 @@ static NfcComparator* nfc_comparator_alloc() {
    nfc_comparator->views.submenu = submenu_alloc();
 
    nfc_comparator->views.file_browser.output = furi_string_alloc();
+   nfc_comparator->views.file_browser.tmp_output = furi_string_alloc();
    nfc_comparator->views.file_browser.view =
       file_browser_alloc(nfc_comparator->views.file_browser.output);
 
@@ -35,7 +36,14 @@ static NfcComparator* nfc_comparator_alloc() {
 
    nfc_comparator->views.widget = widget_alloc();
 
+   nfc_comparator->views.loading = loading_alloc();
+
+   nfc_comparator->views.variable_item_list = variable_item_list_alloc();
+
    nfc_comparator->notification_app = furi_record_open(RECORD_NOTIFICATION);
+
+   nfc_comparator->finder.compare_checks.nfc_card_path = furi_string_alloc();
+   nfc_comparator->finder.settings.recursive = true;
 
    view_dispatcher_set_event_callback_context(nfc_comparator->view_dispatcher, nfc_comparator);
    view_dispatcher_set_custom_event_callback(
@@ -61,6 +69,14 @@ static NfcComparator* nfc_comparator_alloc() {
       nfc_comparator->view_dispatcher,
       NfcComparatorView_Widget,
       widget_get_view(nfc_comparator->views.widget));
+   view_dispatcher_add_view(
+      nfc_comparator->view_dispatcher,
+      NfcComparatorView_Loading,
+      loading_get_view(nfc_comparator->views.loading));
+   view_dispatcher_add_view(
+      nfc_comparator->view_dispatcher,
+      NfcComparatorView_VariableItemList,
+      variable_item_list_get_view(nfc_comparator->views.variable_item_list));
 
    return nfc_comparator;
 }
@@ -72,6 +88,9 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
    view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_FileBrowser);
    view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_Popup);
    view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_Widget);
+   view_dispatcher_remove_view(nfc_comparator->view_dispatcher, NfcComparatorView_Loading);
+   view_dispatcher_remove_view(
+      nfc_comparator->view_dispatcher, NfcComparatorView_VariableItemList);
 
    scene_manager_free(nfc_comparator->scene_manager);
    view_dispatcher_free(nfc_comparator->view_dispatcher);
@@ -79,8 +98,12 @@ static void nfc_comparator_free(NfcComparator* nfc_comparator) {
    submenu_free(nfc_comparator->views.submenu);
    file_browser_free(nfc_comparator->views.file_browser.view);
    furi_string_free(nfc_comparator->views.file_browser.output);
+   furi_string_free(nfc_comparator->views.file_browser.tmp_output);
+   furi_string_free(nfc_comparator->finder.compare_checks.nfc_card_path);
    popup_free(nfc_comparator->views.popup);
    widget_free(nfc_comparator->views.widget);
+   loading_free(nfc_comparator->views.loading);
+   variable_item_list_free(nfc_comparator->views.variable_item_list);
    furi_record_close(RECORD_NOTIFICATION);
 
    free(nfc_comparator);

@@ -17,7 +17,6 @@ static NfcCommand
    nfc_comparator_reader_worker_poller_callback(NfcGenericEvent event, void* context) {
    furi_assert(context);
    NfcComparatorReaderWorker* nfc_comparator_reader_worker = context;
-   furi_assert(nfc_comparator_reader_worker);
    UNUSED(event);
    nfc_comparator_reader_worker->state = NfcComparatorReaderWorkerState_Comparing;
    return NfcCommandStop;
@@ -53,28 +52,13 @@ static int32_t nfc_comparator_reader_worker_task(void* context) {
          break;
       }
       case NfcComparatorReaderWorkerState_Comparing: {
-         worker->compare_checks.protocol = nfc_device_get_protocol(worker->scanned_nfc_card) ==
-                                           nfc_device_get_protocol(worker->loaded_nfc_card);
-
-         // Get UIDs and lengths
-         size_t poller_uid_len = 0;
-         const uint8_t* poller_uid = nfc_device_get_uid(worker->scanned_nfc_card, &poller_uid_len);
-
-         size_t loaded_uid_len = 0;
-         const uint8_t* loaded_uid = nfc_device_get_uid(worker->loaded_nfc_card, &loaded_uid_len);
-
-         // Compare UID length
-         worker->compare_checks.uid_length = (poller_uid_len == loaded_uid_len);
-
-         // Compare UID bytes if lengths match
-         if(worker->compare_checks.uid_length && poller_uid && loaded_uid) {
-            worker->compare_checks.uid = (memcmp(poller_uid, loaded_uid, poller_uid_len) == 0);
-         } else {
-            worker->compare_checks.uid = false;
-         }
+         nfc_comparator_reader_worker_compare_cards(
+            worker->compare_checks, worker->scanned_nfc_card, worker->loaded_nfc_card, false);
 
          nfc_device_free(worker->scanned_nfc_card);
          worker->scanned_nfc_card = NULL;
+         nfc_device_free(worker->loaded_nfc_card);
+         worker->loaded_nfc_card = NULL;
 
          worker->state = NfcComparatorReaderWorkerState_Stopped;
          break;
@@ -86,7 +70,8 @@ static int32_t nfc_comparator_reader_worker_task(void* context) {
    return 0;
 }
 
-NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc() {
+NfcComparatorReaderWorker*
+   nfc_comparator_reader_worker_alloc(NfcComparatorReaderWorkerCompareChecks* compare_checks) {
    NfcComparatorReaderWorker* worker = calloc(1, sizeof(NfcComparatorReaderWorker));
    if(!worker) return NULL;
    worker->nfc = nfc_alloc();
@@ -94,6 +79,8 @@ NfcComparatorReaderWorker* nfc_comparator_reader_worker_alloc() {
       free(worker);
       return NULL;
    }
+
+   worker->compare_checks = compare_checks;
 
    worker->thread = furi_thread_alloc();
    furi_thread_set_name(worker->thread, "NfcComparatorReaderWorker");
@@ -128,7 +115,7 @@ void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* worker) {
    free(worker);
 }
 
-void nfc_comparator_reader_stop(NfcComparatorReaderWorker* worker) {
+void nfc_comparator_reader_worker_stop(NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
    if(worker->state != NfcComparatorReaderWorkerState_Stopped) {
       worker->state = NfcComparatorReaderWorkerState_Stopped;
@@ -136,7 +123,7 @@ void nfc_comparator_reader_stop(NfcComparatorReaderWorker* worker) {
    }
 }
 
-void nfc_comparator_reader_start(NfcComparatorReaderWorker* worker) {
+void nfc_comparator_reader_worker_start(NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
    if(worker->state == NfcComparatorReaderWorkerState_Stopped) {
       worker->state = NfcComparatorReaderWorkerState_Scanning;
@@ -163,8 +150,39 @@ NfcComparatorReaderWorkerState
    return worker->state;
 }
 
-NfcComparatorReaderWorkerCompareChecks
-   nfc_comparator_reader_worker_get_compare_checks(const NfcComparatorReaderWorker* worker) {
-   furi_assert(worker);
-   return worker->compare_checks;
+void nfc_comparator_reader_worker_compare_cards(
+   NfcComparatorReaderWorkerCompareChecks* compare_checks,
+   NfcDevice* card1,
+   NfcDevice* card2,
+   bool check_data) {
+   furi_assert(compare_checks);
+   furi_assert(card1);
+   furi_assert(card2);
+
+   // Compare protocols
+   compare_checks->protocol = nfc_device_get_protocol(card1) == nfc_device_get_protocol(card2);
+
+   // Get UIDs and lengths
+   size_t uid_len1 = 0;
+   const uint8_t* uid1 = nfc_device_get_uid(card1, &uid_len1);
+
+   size_t uid_len2 = 0;
+   const uint8_t* uid2 = nfc_device_get_uid(card2, &uid_len2);
+
+   // Compare UID length
+   compare_checks->uid_length = (uid_len1 == uid_len2);
+
+   // Compare UID bytes if lengths match
+   if(compare_checks->uid_length && uid1 && uid2) {
+      compare_checks->uid = (memcmp(uid1, uid2, uid_len1) == 0);
+   } else {
+      compare_checks->uid = false;
+   }
+
+   // compare NFC data
+   if(check_data) {
+      compare_checks->nfc_data = nfc_device_is_equal(card1, card2);
+   } else {
+      compare_checks->nfc_data = false;
+   }
 }
