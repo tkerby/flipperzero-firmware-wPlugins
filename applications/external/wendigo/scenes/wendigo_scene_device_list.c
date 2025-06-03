@@ -1,5 +1,3 @@
-#include <furi_hal_rtc.h>
-
 #include "../wendigo_app_i.h"
 #include "../wendigo_scan.h"
 
@@ -18,6 +16,26 @@ enum wendigo_device_list_options {
     WendigoOptionLastSeen,
     WendigoOptionsCount
 };
+
+/** Calculate the elapsed time since the specified device was last seen.
+ * Returns the elapsed time as a uint32 and, if elapsedStr is not NULL,
+ * in a string representation there. elapsedStr must be an initialised
+ * char[] of at least 7 bytes.
+ */
+double elapsedTime(flipper_bt_device* dev, char* elapsedStr, int strlen) {
+    uint32_t nowTime = furi_hal_rtc_get_timestamp();
+    double elapsed = nowTime - dev->dev.lastSeen;
+    if(elapsedStr != NULL) {
+        if(elapsed < 60) {
+            snprintf(elapsedStr, strlen, "%fs", elapsed);
+        } else {
+            uint8_t minutes = elapsed / 60;
+            uint8_t seconds = elapsed - (minutes * 60);
+            snprintf(elapsedStr, strlen, "%2d:%02d", minutes, seconds);
+        }
+    }
+    return elapsed;
+}
 
 static void wendigo_scene_device_list_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
@@ -80,16 +98,7 @@ static void wendigo_scene_device_list_var_list_change_callback(VariableItem* ite
         variable_item_set_current_value_text(item, menu_item->cod_str);
         break;
     case WendigoOptionLastSeen:
-        /* Create an elapsed time string */
-        uint32_t nowTime = furi_hal_rtc_get_timestamp();
-        double elapsed = nowTime - menu_item->dev.lastSeen.tv_sec;
-        if(elapsed < 60) {
-            snprintf(tempStr, sizeof(tempStr), "%fs", elapsed);
-        } else {
-            uint8_t minutes = elapsed / 60;
-            uint8_t seconds = elapsed - (minutes * 60);
-            snprintf(tempStr, sizeof(tempStr), "%d:%02d", minutes, seconds);
-        }
+        elapsedTime(menu_item, tempStr, sizeof(tempStr));
         variable_item_set_current_value_text(item, tempStr);
         break;
     default:
@@ -112,8 +121,8 @@ void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
         strncpy(name, dev->dev.bdname, dev->dev.bdname_len);
     }
     char tempStr[10];
-    if(dev->view == NULL) {
-        /* Add a new item */
+    if(dev->view == NULL && !display_selected_only) {
+        /* Add a new item if we're not displaying tagged items only */
         dev->view = variable_item_list_add(
             app->devices_var_item_list,
             name,
@@ -131,15 +140,7 @@ void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
             snprintf(tempStr, sizeof(tempStr), "%ld dB", dev->dev.rssi);
             variable_item_set_current_value_text(dev->view, tempStr);
         } else if(variable_item_get_current_value_index(dev->view) == WendigoOptionLastSeen) {
-            uint32_t nowTime = furi_hal_rtc_get_timestamp();
-            double elapsed = nowTime - dev->dev.lastSeen.tv_sec;
-            if(elapsed < 60) {
-                snprintf(tempStr, sizeof(tempStr), "%fs", elapsed);
-            } else {
-                uint8_t minutes = elapsed / 60;
-                uint8_t seconds = elapsed - (minutes * 60);
-                snprintf(tempStr, sizeof(tempStr), "%d:%02d", minutes, seconds);
-            }
+            elapsedTime(dev, tempStr, sizeof(tempStr));
             variable_item_set_current_value_text(dev->view, tempStr);
         }
     }
@@ -227,6 +228,20 @@ bool wendigo_scene_device_list_on_event(void* context, SceneManagerEvent event) 
         app->device_list_selected_menu_index =
             variable_item_list_get_selected_item_index(app->devices_var_item_list);
         consumed = true;
+
+        /* Update displayed value for any device where lastSeen is currently selected */
+        flipper_bt_device** devices = (display_selected_only) ? bt_selected_devices : bt_devices;
+        char elapsedStr[7];
+        for(int i = 0; i < (display_selected_only) ? bt_selected_devices_count : bt_devices_count;
+            ++i) {
+            /* Update lastSeen */
+            devices[i]->dev.lastSeen = furi_hal_rtc_get_timestamp();
+            /* Update option text if lastSeen is selected for this device */
+            if(variable_item_get_current_value_index(devices[i]->view) == WendigoOptionLastSeen) {
+                elapsedTime(devices[i], elapsedStr, sizeof(elapsedStr));
+                variable_item_set_current_value_text(devices[i]->view, elapsedStr);
+            }
+        }
     }
     return consumed;
 }
