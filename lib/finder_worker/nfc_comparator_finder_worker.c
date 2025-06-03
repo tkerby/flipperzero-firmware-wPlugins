@@ -55,7 +55,7 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
          if(dir_walk_open(worker->dir_walk, "/ext/nfc")) {
             FuriString* ext = furi_string_alloc();
 
-            dir_walk_set_recursive(worker->dir_walk, true);
+            dir_walk_set_recursive(worker->dir_walk, worker->settings->recursive);
 
             while(dir_walk_read(worker->dir_walk, worker->compare_checks->nfc_card_path, NULL) ==
                   DirWalkOK) {
@@ -93,8 +93,9 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
    return 0;
 }
 
-NfcComparatorFinderWorker*
-   nfc_comparator_finder_worker_alloc(NfcComparatorFinderWorkerCompareChecks* compare_checks) {
+NfcComparatorFinderWorker* nfc_comparator_finder_worker_alloc(
+   NfcComparatorFinderWorkerCompareChecks* compare_checks,
+   NfcComparatorFinderWorkerSettings* settings) {
    NfcComparatorFinderWorker* worker = calloc(1, sizeof(NfcComparatorFinderWorker));
    if(!worker) return NULL;
    worker->nfc = nfc_alloc();
@@ -104,6 +105,7 @@ NfcComparatorFinderWorker*
    }
 
    worker->compare_checks = compare_checks;
+   worker->settings = settings;
 
    worker->thread = furi_thread_alloc();
    furi_thread_set_name(worker->thread, "NfcComparatorFinderWorker");

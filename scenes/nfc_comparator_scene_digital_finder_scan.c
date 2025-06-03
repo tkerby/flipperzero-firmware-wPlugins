@@ -21,7 +21,7 @@ static void nfc_comparator_digital_finder_scan_menu_callback(void* context) {
    if(dir_walk_open(dir_walk, "/ext/nfc")) {
       FuriString* ext = furi_string_alloc();
 
-      dir_walk_set_recursive(dir_walk, true);
+      dir_walk_set_recursive(dir_walk, nfc_comparator->finder.settings.recursive);
 
       while(dir_walk_read(dir_walk, nfc_comparator->finder.compare_checks.nfc_card_path, NULL) ==
             DirWalkOK) {

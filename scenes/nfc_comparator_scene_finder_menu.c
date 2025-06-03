@@ -3,7 +3,7 @@
 typedef enum {
    NfcComparatorMainMenu_Physical,
    NfcComparatorMainMenu_Digital,
-   NfcComparatorMainMenu_SelectNfcCard
+   NfcComparatorMainMenu_Settings
 } NfcComparatorMainMenuMenuSelection;
 
 static void nfc_comparator_finder_menu_menu_callback(void* context, uint32_t index) {
@@ -30,6 +30,12 @@ void nfc_comparator_finder_menu_scene_on_enter(void* context) {
       NfcComparatorMainMenu_Digital,
       nfc_comparator_finder_menu_menu_callback,
       nfc_comparator);
+   submenu_add_item(
+      nfc_comparator->views.submenu,
+      "Settings",
+      NfcComparatorMainMenu_Settings,
+      nfc_comparator_finder_menu_menu_callback,
+      nfc_comparator);
 
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Submenu);
 }
@@ -48,6 +54,11 @@ bool nfc_comparator_finder_menu_scene_on_event(void* context, SceneManagerEvent 
       case NfcComparatorMainMenu_Digital:
          scene_manager_next_scene(
             nfc_comparator->scene_manager, NfcComparatorScene_DigitalFinderScan);
+         consumed = true;
+         break;
+      case NfcComparatorMainMenu_Settings:
+         scene_manager_next_scene(
+            nfc_comparator->scene_manager, NfcComparatorScene_FinderSettings);
          consumed = true;
          break;
       default:

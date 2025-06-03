@@ -30,6 +30,11 @@ typedef struct {
    bool nfc_data; /**< Compare NFC data */
 } NfcComparatorFinderWorkerCompareChecks;
 
+/** Holds settings for the NFC Comparator Finder Worker */
+typedef struct {
+   bool recursive; /**< Whether to search recursively */
+} NfcComparatorFinderWorkerSettings;
+
 /** Holds all state for the NFC Comparator Reader Worker */
 typedef struct {
    Nfc* nfc;
@@ -41,10 +46,12 @@ typedef struct {
    NfcPoller* nfc_poller;
    DirWalk* dir_walk;
    NfcComparatorFinderWorkerCompareChecks* compare_checks;
+   NfcComparatorFinderWorkerSettings* settings;
 } NfcComparatorFinderWorker;
 
-NfcComparatorFinderWorker*
-   nfc_comparator_finder_worker_alloc(NfcComparatorFinderWorkerCompareChecks* compare_checks);
+NfcComparatorFinderWorker* nfc_comparator_finder_worker_alloc(
+   NfcComparatorFinderWorkerCompareChecks* compare_checks,
+   NfcComparatorFinderWorkerSettings* settings);
 
 void nfc_comparator_finder_worker_free(NfcComparatorFinderWorker* worker);
 

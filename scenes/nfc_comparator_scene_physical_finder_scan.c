@@ -12,8 +12,8 @@ void nfc_comparator_physical_finder_scan_scene_on_enter(void* context) {
 
    nfc_comparator->finder.compare_checks.nfc_card_path = furi_string_alloc();
 
-   nfc_comparator->finder.worker =
-      nfc_comparator_finder_worker_alloc(&nfc_comparator->finder.compare_checks);
+   nfc_comparator->finder.worker = nfc_comparator_finder_worker_alloc(
+      &nfc_comparator->finder.compare_checks, &nfc_comparator->finder.settings);
 
    nfc_comparator_finder_worker_start(nfc_comparator->finder.worker);
    nfc_comparator_led_worker_start(

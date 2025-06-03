@@ -12,6 +12,7 @@
 #include <gui/modules/popup.h>
 #include <gui/modules/widget.h>
 #include <gui/modules/loading.h>
+#include <gui/modules/variable_item_list.h>
 #include <notification/notification_messages.h>
 #include <nfc_device.h>
 #include <nfc_listener.h>
@@ -35,6 +36,7 @@ typedef enum {
    NfcComparatorView_Popup,
    NfcComparatorView_Widget,
    NfcComparatorView_Loading,
+   NfcComparatorView_VariableItemList,
    NfcComparatorView_Count
 } NfcComparatorViews;
 
@@ -52,12 +54,14 @@ typedef struct {
    Popup* popup;
    Widget* widget;
    Loading* loading;
+   VariableItemList* variable_item_list;
 } NfcComparatorView;
 
 /** Finder worker struct holding all finder worker instances */
 typedef struct {
    NfcComparatorFinderWorker* worker;
    NfcComparatorFinderWorkerCompareChecks compare_checks;
+   NfcComparatorFinderWorkerSettings settings;
 } NfcComparatorFinder;
 
 /** Reader worker struct holding all reader worker instances */
