@@ -26,7 +26,7 @@ static void nfc_comparator_digital_compare_scan_menu_callback(void* context) {
    }
 
    nfc_comparator_reader_worker_compare_cards(
-      &nfc_comparator->worker.compare_checks, nfc_card_1, nfc_card_2, true);
+      &nfc_comparator->reader.compare_checks, nfc_card_1, nfc_card_2, true);
 
    nfc_device_free(nfc_card_1);
    nfc_device_free(nfc_card_2);

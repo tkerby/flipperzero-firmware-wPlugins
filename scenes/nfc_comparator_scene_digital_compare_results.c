@@ -1,7 +1,9 @@
 #include "../nfc_comparator.h"
 
-static void
-   nfc_comparator_digital_compare_results_callback(GuiButtonType result, InputType type, void* context) {
+static void nfc_comparator_digital_compare_results_callback(
+   GuiButtonType result,
+   InputType type,
+   void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
    if(type == InputTypeShort) {
@@ -21,10 +23,10 @@ void nfc_comparator_digital_compare_results_scene_on_enter(void* context) {
    furi_string_printf(
       temp_str,
       "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s\n\e#NFC Data:\e# %s",
-      nfc_comparator->worker.compare_checks.uid ? "Match" : "Mismatch",
-      nfc_comparator->worker.compare_checks.uid_length ? "Match" : "Mismatch",
-      nfc_comparator->worker.compare_checks.protocol ? "Match" : "Mismatch",
-      nfc_comparator->worker.compare_checks.nfc_data ? "Match" : "Mismatch");
+      nfc_comparator->reader.compare_checks.uid ? "Match" : "Mismatch",
+      nfc_comparator->reader.compare_checks.uid_length ? "Match" : "Mismatch",
+      nfc_comparator->reader.compare_checks.protocol ? "Match" : "Mismatch",
+      nfc_comparator->reader.compare_checks.nfc_data ? "Match" : "Mismatch");
 
    widget_add_text_box_element(
       nfc_comparator->views.widget,

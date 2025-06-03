@@ -21,29 +21,29 @@ static void nfc_comparator_digital_finder_scan_menu_callback(void* context) {
    if(dir_walk_open(dir_walk, "/ext/nfc")) {
       FuriString* ext = furi_string_alloc();
 
-      while(dir_walk_read(
-               dir_walk, nfc_comparator->worker.finder_compare_checks.nfc_card_path, NULL) ==
+      dir_walk_set_recursive(dir_walk, true);
+
+      while(dir_walk_read(dir_walk, nfc_comparator->finder.compare_checks.nfc_card_path, NULL) ==
             DirWalkOK) {
          if(furi_string_cmpi(
-               nfc_comparator->worker.finder_compare_checks.nfc_card_path,
+               nfc_comparator->finder.compare_checks.nfc_card_path,
                nfc_comparator->views.file_browser.output) == 0) {
             continue;
          }
 
-         path_extract_ext_str(nfc_comparator->worker.finder_compare_checks.nfc_card_path, ext);
+         path_extract_ext_str(nfc_comparator->finder.compare_checks.nfc_card_path, ext);
 
          if(furi_string_cmpi_str(ext, ".nfc") == 0) {
             if(nfc_device_load(
                   nfc_card_2,
-                  furi_string_get_cstr(
-                     nfc_comparator->worker.finder_compare_checks.nfc_card_path))) {
+                  furi_string_get_cstr(nfc_comparator->finder.compare_checks.nfc_card_path))) {
                nfc_comparator_finder_worker_compare_cards(
-                  &nfc_comparator->worker.finder_compare_checks, nfc_card_1, nfc_card_2, true);
+                  &nfc_comparator->finder.compare_checks, nfc_card_1, nfc_card_2, true);
 
-               if(nfc_comparator->worker.finder_compare_checks.uid &&
-                  nfc_comparator->worker.finder_compare_checks.uid_length &&
-                  nfc_comparator->worker.finder_compare_checks.protocol &&
-                  nfc_comparator->worker.finder_compare_checks.nfc_data) {
+               if(nfc_comparator->finder.compare_checks.uid &&
+                  nfc_comparator->finder.compare_checks.uid_length &&
+                  nfc_comparator->finder.compare_checks.protocol &&
+                  nfc_comparator->finder.compare_checks.nfc_data) {
                   break;
                }
             }

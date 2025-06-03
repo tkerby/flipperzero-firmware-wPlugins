@@ -20,14 +20,14 @@ void nfc_comparator_digital_finder_results_scene_on_enter(void* context) {
 
    FuriString* temp_str = furi_string_alloc();
 
-   if(nfc_comparator->worker.finder_compare_checks.uid &&
-      nfc_comparator->worker.finder_compare_checks.uid_length &&
-      nfc_comparator->worker.finder_compare_checks.protocol &&
-      nfc_comparator->worker.finder_compare_checks.nfc_data) {
+   if(nfc_comparator->finder.compare_checks.uid &&
+      nfc_comparator->finder.compare_checks.uid_length &&
+      nfc_comparator->finder.compare_checks.protocol &&
+      nfc_comparator->finder.compare_checks.nfc_data) {
       furi_string_printf(
          temp_str,
          "\e#NFC card found!\e#\n %s",
-         furi_string_get_cstr(nfc_comparator->worker.finder_compare_checks.nfc_card_path));
+         furi_string_get_cstr(nfc_comparator->finder.compare_checks.nfc_card_path));
    } else {
       furi_string_printf(temp_str, "\e#NFC card not found!\e#");
    }

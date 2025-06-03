@@ -54,13 +54,17 @@ typedef struct {
    Loading* loading;
 } NfcComparatorView;
 
-/** Worker struct for NFC comparison logic */
+/** Finder worker struct holding all finder worker instances */
 typedef struct {
-   NfcComparatorReaderWorker* nfc_comparator_reader_worker;
+   NfcComparatorFinderWorker* worker;
+   NfcComparatorFinderWorkerCompareChecks compare_checks;
+} NfcComparatorFinder;
+
+/** Reader worker struct holding all reader worker instances */
+typedef struct {
+   NfcComparatorReaderWorker* worker;
    NfcComparatorReaderWorkerCompareChecks compare_checks;
-   NfcComparatorFinderWorker* nfc_comparator_finder_worker;
-   NfcComparatorFinderWorkerCompareChecks finder_compare_checks;
-} NfcComparatorWorker;
+} NfcComparatorReader;
 
 /** Main app struct holding all state */
 typedef struct {
@@ -68,7 +72,8 @@ typedef struct {
    ViewDispatcher* view_dispatcher;
    NotificationApp* notification_app;
    NfcComparatorView views;
-   NfcComparatorWorker worker;
+   NfcComparatorFinder finder;
+   NfcComparatorReader reader;
 } NfcComparator;
 
 // #endif // NFC_COMPARATOR_H

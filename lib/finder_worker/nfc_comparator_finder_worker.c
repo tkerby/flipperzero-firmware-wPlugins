@@ -54,6 +54,9 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
       case NfcComparatorFinderWorkerState_Finding: {
          if(dir_walk_open(worker->dir_walk, "/ext/nfc")) {
             FuriString* ext = furi_string_alloc();
+
+            dir_walk_set_recursive(worker->dir_walk, true);
+
             while(dir_walk_read(worker->dir_walk, worker->compare_checks->nfc_card_path, NULL) ==
                   DirWalkOK) {
                path_extract_ext_str(worker->compare_checks->nfc_card_path, ext);
