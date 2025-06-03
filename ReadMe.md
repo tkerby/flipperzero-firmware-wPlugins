@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0601-1940-0.420.0-982c173](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0602-2330-0.420.0-79940a9](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-01 19:40 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-01 19:40 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-02 23:30 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-02 23:30 EST`
 - UL: [NFC: Fix clipper date timestamp (By luu176)](https://github.com/DarkFlippers/unleashed-firmware/commit/ff8c3540eb531bbe6fe96d245557499942172618)
 - UL: [SubGHz: V2 Phoenix show counter value (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/350dea6535441a8dd52871eb5accb7ca508f90cb)
 - Updated: [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist) [Sub-GHz Playlist: Add support for custom modulation presets, remake with txrx library and support for dynamic signals, cleanup code (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/39d7c0e9379a1bc3bb0dca772de3efd148a61a9b)
