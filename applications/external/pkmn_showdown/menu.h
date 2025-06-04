@@ -7,8 +7,8 @@ typedef struct Menu Menu;
 
 typedef enum {
     MENU_BATTLE_1V1,
-    MENU_BATTLE_2V2,  // For future
-    MENU_OPTIONS,     // For future
+    MENU_BATTLE_2V2, // For future
+    MENU_OPTIONS, // For future
     MENU_QUIT,
     MENU_ITEM_COUNT
 } MenuItem;

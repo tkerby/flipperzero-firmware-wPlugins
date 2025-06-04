@@ -3,6 +3,22 @@
 #include <stdlib.h>
 #include <furi.h>
 #include <string.h>
+#include "showdown_icons.h"
+
+static const Icon* const pkmn_sprites[152] = {
+    &I_000, &I_001, &I_002, &I_003, &I_004, &I_005, &I_006, &I_007, &I_008, &I_009, &I_010, &I_011,
+    &I_012, &I_013, &I_014, &I_015, &I_016, &I_017, &I_018, &I_019, &I_020, &I_021, &I_022, &I_023,
+    &I_024, &I_025, &I_026, &I_027, &I_028, &I_029, &I_030, &I_031, &I_032, &I_033, &I_034, &I_035,
+    &I_036, &I_037, &I_038, &I_039, &I_040, &I_041, &I_042, &I_043, &I_044, &I_045, &I_046, &I_047,
+    &I_048, &I_049, &I_050, &I_051, &I_052, &I_053, &I_054, &I_055, &I_056, &I_057, &I_058, &I_059,
+    &I_060, &I_061, &I_062, &I_063, &I_064, &I_065, &I_066, &I_067, &I_068, &I_069, &I_070, &I_071,
+    &I_072, &I_073, &I_074, &I_075, &I_076, &I_077, &I_078, &I_079, &I_080, &I_081, &I_082, &I_083,
+    &I_084, &I_085, &I_086, &I_087, &I_088, &I_089, &I_090, &I_091, &I_092, &I_093, &I_094, &I_095,
+    &I_096, &I_097, &I_098, &I_099, &I_100, &I_101, &I_102, &I_103, &I_104, &I_105, &I_106, &I_107,
+    &I_108, &I_109, &I_110, &I_111, &I_112, &I_113, &I_114, &I_115, &I_116, &I_117, &I_118, &I_119,
+    &I_120, &I_121, &I_122, &I_123, &I_124, &I_125, &I_126, &I_127, &I_128, &I_129, &I_130, &I_131,
+    &I_132, &I_133, &I_134, &I_135, &I_136, &I_137, &I_138, &I_139, &I_140, &I_141, &I_142, &I_143,
+    &I_144, &I_145, &I_146, &I_147, &I_148, &I_149, &I_150, &I_151};
 
 // Private battle structure
 struct Battle {
@@ -25,8 +41,10 @@ Battle* battle_create_with_selection(int player_index, int enemy_index) {
     const PokemonSpecies* species_list = pokemon_get_species_list();
 
     // Create the selected Pokemon
-    battle->player_pokemon = pokemon_create_from_species(&species_list[player_index], 50);
-    battle->enemy_pokemon = pokemon_create_from_species(&species_list[enemy_index], 50);
+    battle->player_pokemon =
+        pokemon_create_from_species(&species_list[player_index], 50, player_index);
+    battle->enemy_pokemon =
+        pokemon_create_from_species(&species_list[enemy_index], 50, enemy_index);
 
     // Initialize battle state
     battle->menu_cursor = 0;
@@ -73,14 +91,16 @@ static void battle_update(Battle* battle) {
                         snprintf(
                             battle->message,
                             64,
-                            "(battle->player_pokemon->name fainted! You lose!");
+                            "%s fainted! You lose!",
+                            battle->player_pokemon->name);
                         battle->battle_over = true;
                     } else {
                         battle->player_pokemon->current_hp -= damage;
                         snprintf(
                             battle->message,
                             64,
-                            "(battle->enemy_pokemon->name used %s! -%d HP",
+                            "%s used %s! -%d HP",
+                            battle->enemy_pokemon->name,
                             enemy_moves[move_choice],
                             damage);
                     }
@@ -89,12 +109,12 @@ static void battle_update(Battle* battle) {
                     battle->player_turn = true;
                 } else if(battle->enemy_pokemon->current_hp == 0) {
                     snprintf(
-                        battle->message, 64, "(battle->enemy_pokemon->name fainted! You win!");
+                        battle->message, 64, "%s fainted! You win!", battle->enemy_pokemon->name);
                     battle->battle_over = true;
                     battle->message_timer = furi_get_tick();
                 } else {
                     // Back to player's turn
-                    strcpy(battle->message, "What will (battle->player_pokemon->name do?");
+                    snprintf(battle->message, 64, "What will %s do?", battle->player_pokemon->name);
                 }
             }
         }
@@ -107,6 +127,10 @@ void battle_draw(Battle* battle, Canvas* canvas) {
 
     // Always update battle state
     battle_update(battle);
+
+    // DRAW MONSTERS
+    canvas_draw_icon(canvas, 2, 20, pkmn_sprites[battle->enemy_pokemon->pokedexId]);
+    canvas_draw_icon(canvas, 74, -22, pkmn_sprites[battle->player_pokemon->pokedexId]);
 
     // Draw enemy Pokemon info (top of screen)
     canvas_draw_str(canvas, 2, 8, battle->enemy_pokemon->name);
@@ -213,11 +237,12 @@ void battle_handle_input(Battle* battle, InputKey key) {
             snprintf(
                 battle->message,
                 64,
-                "(battle->player_pokemon->name used %s! -%d HP",
+                "%s used %s! -%d HP",
+                battle->player_pokemon->name,
                 move_names[battle->menu_cursor],
                 damage);
         } else {
-            snprintf(battle->message, 64, "(battle->player_pokemon->name used Growl!");
+            snprintf(battle->message, 64, "%s used %s!", battle->player_pokemon->name, move_names[battle->menu_cursor]);
         }
 
         battle->message_timer = furi_get_tick();

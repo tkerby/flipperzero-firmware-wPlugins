@@ -169,7 +169,7 @@ int pokemon_get_species_count(void) {
     return sizeof(pokemon_roster) / sizeof(pokemon_roster[0]);
 }
 
-Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t level) {
+Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t level, int pokedexId) {
     Pokemon* p = malloc(sizeof(Pokemon));
     if(!p) return NULL;
 
@@ -178,6 +178,7 @@ Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t leve
 
     p->type = species->type;
     p->level = level;
+    p->pokedexId = (uint8_t)pokedexId;
 
     // Calculate stats based on base stats and level
     p->max_hp = species->base_hp + (level * 2);
@@ -241,6 +242,7 @@ Pokemon* pokemon_create(const char* name, PokemonType type, uint8_t level) {
     // Set all stats
     p->type = type;
     p->level = level;
+    p->pokedexId = 0;
     p->max_hp = base_stats[type][0] + (level * 2);
     p->current_hp = p->max_hp;
     p->attack = base_stats[type][1] + level;
