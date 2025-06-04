@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <furi.h>
 #include <string.h>
-#include "showdown_icons.h"
+#include "pocket_battle_icons.h"
 
 static const Icon* const pkmn_sprites[152] = {
     &I_000, &I_001, &I_002, &I_003, &I_004, &I_005, &I_006, &I_007, &I_008, &I_009, &I_010, &I_011,

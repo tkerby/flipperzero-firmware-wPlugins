@@ -25,7 +25,7 @@ typedef struct {
 } ShowdownApp;
 
 // This function is called by Flipper to draw the screen
-static void showdown_draw_callback(Canvas* canvas, void* ctx) {
+static void pocket_battle_draw_callback(Canvas* canvas, void* ctx) {
     ShowdownApp* app = (ShowdownApp*)ctx;
 
     switch(app->state) {
@@ -44,13 +44,13 @@ static void showdown_draw_callback(Canvas* canvas, void* ctx) {
 }
 
 // This function is called by Flipper when buttons are pressed
-static void showdown_input_callback(InputEvent* input_event, void* ctx) {
+static void pocket_battle_input_callback(InputEvent* input_event, void* ctx) {
     ShowdownApp* app = (ShowdownApp*)ctx;
     furi_message_queue_put(app->event_queue, input_event, FuriWaitForever);
 }
 
 // Main entry point - THIS IS WHERE THE APP STARTS
-int32_t showdown_main(void* p) {
+int32_t pocket_battle_main(void* p) {
     UNUSED(p);
 
     // Create our app
@@ -68,8 +68,8 @@ int32_t showdown_main(void* p) {
     app->battle = NULL; // No battle yet
 
     // Tell Flipper to use our draw and input functions
-    view_port_draw_callback_set(app->view_port, showdown_draw_callback, app);
-    view_port_input_callback_set(app->view_port, showdown_input_callback, app);
+    view_port_draw_callback_set(app->view_port, pocket_battle_draw_callback, app);
+    view_port_input_callback_set(app->view_port, pocket_battle_input_callback, app);
 
     // Add to screen
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);

@@ -69,6 +69,7 @@ GamesMenuList Version 0
 /ext/apps/Games/paper_plane.fap
 /ext/apps/Games/pinball0.fap
 /ext/apps/Games/platformer_game.fap
+/ext/apps/Games/pocket_battle.fap
 /ext/apps/Games/pong.fap
 /ext/apps/Games/quadrastic.fap
 /ext/apps/Games/questions.fap
