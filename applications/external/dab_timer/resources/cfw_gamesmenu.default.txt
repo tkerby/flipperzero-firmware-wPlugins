@@ -24,6 +24,7 @@ GamesMenuList Version 0
 /ext/apps/Games/crossy_road.fap
 /ext/apps/Games/deadzone.fap
 /ext/apps/Games/dice_rm.fap
+/ext/apps/Games/digital_kaleidoscope.fap
 /ext/apps/Games/dnd_dice_app.fap
 /ext/apps/Games/doom.fap
 /ext/apps/Games/drifter.fap

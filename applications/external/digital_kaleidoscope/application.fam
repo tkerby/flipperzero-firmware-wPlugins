@@ -1,17 +1,14 @@
-# For details & more options, see documentation/AppManifests.md in firmware repo
-
 App(
-    appid="digital_kaleidoscope",  # Must be unique
-    name="Digital Kaleidoscope",  # Displayed in menus
+    appid="digital_kaleidoscope",
+    name="Digital Kaleidoscope",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="digital_kaleidoscope_app",
     stack_size=2 * 1024,
+    fap_icon="digital_kaleidoscope.png",
+    fap_icon_assets="images",
     fap_category="Games",
-    # Optional values
-    fap_version="0.1.0",
-    fap_icon="digital_kaleidoscope.png",  # 10x10 1-bit PNG
-    fap_description="A Digital Kaleidoscope Visualiser",
     fap_author="J. Randall jr3d.co.uk",
-    # fap_weburl="https://github.com/user/digital_kaleidoscope",
-    fap_icon_assets="images",  # Image assets to compile for this application
+    fap_weburl="https://github.com/JamesR555/digital_kaleidoscope",
+    fap_version="0.1",
+    fap_description="A Digital Kaleidoscope Visualiser",
 )

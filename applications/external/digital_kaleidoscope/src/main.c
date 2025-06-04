@@ -2,7 +2,7 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <stdlib.h>
-#include <math.h>    // for sqrtf, sinf
+#include <math.h> // for sqrtf, sinf
 
 // Screen dimensions
 #define W 128
@@ -36,7 +36,7 @@ static uint8_t clamp_u8(uint8_t v, uint8_t lo, uint8_t hi) {
 //--------------------------------------------------------------------------------
 static void render_style0(Canvas* canvas) {
     canvas_clear(canvas);
-    for(uint8_t x = 0; x < W/2; x++) {
+    for(uint8_t x = 0; x < W / 2; x++) {
         for(uint8_t y = 0; y < H; y++) {
             if((rand() % 100) < dot_threshold) {
                 canvas_draw_dot(canvas, x, y);
@@ -51,8 +51,8 @@ static void render_style0(Canvas* canvas) {
 //--------------------------------------------------------------------------------
 static void render_style1(Canvas* canvas) {
     canvas_clear(canvas);
-    int cx = W/2;
-    int cy = H/2;
+    int cx = W / 2;
+    int cy = H / 2;
     uint8_t step = clamp_u8(dot_threshold / 10 + 2, 2, 10);
     int offset = frame % step;
     for(int r = offset; r < cy; r += step) {
@@ -72,21 +72,21 @@ static void render_style1(Canvas* canvas) {
 //--------------------------------------------------------------------------------
 static void render_style2(Canvas* canvas) {
     canvas_clear(canvas);
-    int cx = W/2;
-    int cy = H/2;
+    int cx = W / 2;
+    int cy = H / 2;
     uint8_t spokes = clamp_u8(dot_threshold / 10 + 2, 2, 16);
     float base_angle = (frame * 0.05f);
     float angle_step = 3.14159f / spokes;
     for(uint8_t s = 0; s < spokes; s++) {
         float angle = base_angle + (s * angle_step);
-        for(int len = 0; len < (W/2); len++) {
+        for(int len = 0; len < (W / 2); len++) {
             int x_off = (int)(cosf(angle) * len);
             int y_off = (int)(sinf(angle) * len);
             canvas_draw_dot(canvas, cx + x_off, cy + y_off);
             canvas_draw_dot(canvas, cx - x_off, cy + y_off);
         }
         float perp = angle + 3.14159f / 2.0f;
-        for(int len = 0; len < (H/2); len++) {
+        for(int len = 0; len < (H / 2); len++) {
             int x_off = (int)(cosf(perp) * len);
             int y_off = (int)(sinf(perp) * len);
             canvas_draw_dot(canvas, cx + x_off, cy + y_off);
@@ -100,8 +100,8 @@ static void render_style2(Canvas* canvas) {
 //--------------------------------------------------------------------------------
 static void render_style3(Canvas* canvas) {
     canvas_clear(canvas);
-    int cx = W/2;
-    int cy = H/2;
+    int cx = W / 2;
+    int cy = H / 2;
     int maxDist = cx + cy;
     srand(furi_get_tick() ^ frame);
     for(int x = 0; x < W; x++) {
@@ -124,11 +124,21 @@ static void render_style3(Canvas* canvas) {
 static void render_pattern(Canvas* canvas) {
     frame++;
     switch(style) {
-        case 0: render_style2(canvas); break; // now “Vis 1” uses old-style2
-        case 1: render_style1(canvas); break; // “Vis 2” unchanged
-        case 2: render_style3(canvas); break; // now “Vis 3” uses old-style3
-        case 3: render_style0(canvas); break; // now “Vis 4” uses old-style0
-        default: render_style0(canvas); break;
+    case 0:
+        render_style2(canvas);
+        break; // now “Vis 1” uses old-style2
+    case 1:
+        render_style1(canvas);
+        break; // “Vis 2” unchanged
+    case 2:
+        render_style3(canvas);
+        break; // now “Vis 3” uses old-style3
+    case 3:
+        render_style0(canvas);
+        break; // now “Vis 4” uses old-style0
+    default:
+        render_style0(canvas);
+        break;
     }
 }
 
@@ -143,25 +153,25 @@ static void input_callback(InputEvent* event, void* ctx) {
     ViewPort* vp = ctx;
     if(event->type == InputTypeShort) {
         switch(event->key) {
-            case InputKeyBack:
-                app_running = false;
-                break;
-            case InputKeyLeft:
-                // Cycle styles 0→3, 1→0, 2→1, 3→2
-                style = (style == 0) ? 3 : (style - 1);
-                break;
-            case InputKeyRight:
-                // Cycle styles 0→1, 1→2, 2→3, 3→0
-                style = (style == 3) ? 0 : (style + 1);
-                break;
-            case InputKeyUp:
-                dot_threshold = clamp_u8(dot_threshold + 10, 0, 100);
-                break;
-            case InputKeyDown:
-                dot_threshold = (dot_threshold < 10) ? 0 : (dot_threshold - 10);
-                break;
-            default:
-                break;
+        case InputKeyBack:
+            app_running = false;
+            break;
+        case InputKeyLeft:
+            // Cycle styles 0→3, 1→0, 2→1, 3→2
+            style = (style == 0) ? 3 : (style - 1);
+            break;
+        case InputKeyRight:
+            // Cycle styles 0→1, 1→2, 2→3, 3→0
+            style = (style == 3) ? 0 : (style + 1);
+            break;
+        case InputKeyUp:
+            dot_threshold = clamp_u8(dot_threshold + 10, 0, 100);
+            break;
+        case InputKeyDown:
+            dot_threshold = (dot_threshold < 10) ? 0 : (dot_threshold - 10);
+            break;
+        default:
+            break;
         }
         // Force an immediate redraw when the user changes style or density
         view_port_update(vp);
@@ -194,4 +204,3 @@ int32_t digital_kaleidoscope_app(void* p) {
     furi_record_close(RECORD_GUI);
     return 0;
 }
-	

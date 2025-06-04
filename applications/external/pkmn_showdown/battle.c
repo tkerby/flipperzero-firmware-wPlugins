@@ -114,7 +114,8 @@ static void battle_update(Battle* battle) {
                     battle->message_timer = furi_get_tick();
                 } else {
                     // Back to player's turn
-                    snprintf(battle->message, 64, "What will %s do?", battle->player_pokemon->name);
+                    snprintf(
+                        battle->message, 64, "What will %s do?", battle->player_pokemon->name);
                 }
             }
         }
@@ -242,7 +243,12 @@ void battle_handle_input(Battle* battle, InputKey key) {
                 move_names[battle->menu_cursor],
                 damage);
         } else {
-            snprintf(battle->message, 64, "%s used %s!", battle->player_pokemon->name, move_names[battle->menu_cursor]);
+            snprintf(
+                battle->message,
+                64,
+                "%s used %s!",
+                battle->player_pokemon->name,
+                move_names[battle->menu_cursor]);
         }
 
         battle->message_timer = furi_get_tick();
