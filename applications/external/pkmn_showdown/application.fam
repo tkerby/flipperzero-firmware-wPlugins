@@ -1,0 +1,10 @@
+App(
+    appid="showdown",  # Unique ID
+    name="Showdown",  # Display name
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="showdown_main",  # Function to call
+    stack_size=2 * 1024,  # 2KB stack
+    fap_category="Games",
+    fap_version="0.1",
+    fap_description="Pokemon Stadium Battle Game",
+)
