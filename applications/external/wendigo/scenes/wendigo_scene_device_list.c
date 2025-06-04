@@ -17,6 +17,33 @@ enum wendigo_device_list_options {
     WendigoOptionsCount
 };
 
+/** A more flexible version of elapsedTime() that lets us avoid running furi_hal_rtc_get_timestamp().
+ * This version is suitable for running at high frequency - In tick events etc.
+ * Returns elapsed seconds and, if elapstedStr is an initialised char[] and strlen > 0, places
+ * a text representation of the elapsed time in elapsedStr.
+ * Returns zero and the empty string on failure.
+ */
+double _elapsedTime(uint32_t* from, uint32_t* to, char* elapsedStr, uint8_t strlen) {
+    /* Validate everything before we touch it */
+    if(from == NULL || to == NULL) {
+        if(elapsedStr != NULL && strlen > 0) {
+            elapsedStr[0] = '\0';
+        }
+        return 0;
+    }
+    uint16_t elapsed = (uint16_t)(to - from);
+    if(elapsedStr != NULL && strlen > 0) {
+        if(elapsed < 60) {
+            snprintf(elapsedStr, strlen, "%ds", elapsed);
+        } else {
+            uint8_t minutes = elapsed / 60;
+            uint8_t seconds = elapsed - (minutes * 60);
+            snprintf(elapsedStr, strlen, "%2d:%02d", minutes, seconds);
+        }
+    }
+    return elapsed;
+}
+
 /** Calculate the elapsed time since the specified device was last seen.
  * Returns the elapsed time as a uint32 and, if elapsedStr is not NULL,
  * in a string representation there. elapsedStr must be an initialised
@@ -26,23 +53,13 @@ enum wendigo_device_list_options {
 double elapsedTime(flipper_bt_device* dev, char* elapsedStr, uint8_t strlen) {
     if(dev == NULL) {
         /* Return sensible values on failure */
-        if(strlen >= 1 && elapsedStr != NULL) {
+        if(strlen > 0 && elapsedStr != NULL) {
             elapsedStr[0] = '\0';
         }
         return 0;
     }
     uint32_t nowTime = furi_hal_rtc_get_timestamp();
-    double elapsed = nowTime - dev->dev.lastSeen.tv_sec;
-    if(elapsedStr != NULL) {
-        if(elapsed < 60) {
-            snprintf(elapsedStr, strlen, "%fs", elapsed);
-        } else {
-            uint8_t minutes = elapsed / 60;
-            uint8_t seconds = elapsed - (minutes * 60);
-            snprintf(elapsedStr, strlen, "%2d:%02d", minutes, seconds);
-        }
-    }
-    return elapsed;
+    return _elapsedTime((uint32_t*)&(dev->dev.lastSeen.tv_sec), &nowTime, elapsedStr, strlen);
 }
 
 static void wendigo_scene_device_list_var_list_enter_callback(void* context, uint32_t index) {
@@ -64,7 +81,7 @@ static void wendigo_scene_device_list_var_list_enter_callback(void* context, uin
     } else {
         /* Display details for `item` */
         wendigo_scene_device_detail_set_device(item);
-        view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventListDevices);
+        // TODO Fix detail scene view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventListDevices);
     }
 }
 
@@ -137,6 +154,7 @@ void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
             WendigoOptionsCount,
             wendigo_scene_device_list_var_list_change_callback,
             app);
+        /* Display RSSI in options menu */
         variable_item_set_current_value_index(dev->view, WendigoOptionRSSI);
         snprintf(tempStr, sizeof(tempStr), "%ld dB", dev->dev.rssi);
         variable_item_set_current_value_text(dev->view, tempStr);
@@ -153,10 +171,6 @@ void wendigo_scene_device_list_update(WendigoApp* app, flipper_bt_device* dev) {
         }
     } /* Ignore new devices if display_selected_only is true */
     free(name);
-
-    // TODO: Add/Update the options menu: display RSSI where adding, check the
-    //       selected option index where updating to determine whether anything else needs to be updated
-    variable_item_set_current_value_index(dev->view, WendigoOptionRSSI);
 }
 
 /* Initialise the device list
@@ -238,21 +252,23 @@ bool wendigo_scene_device_list_on_event(void* context, SceneManagerEvent event) 
         consumed = true;
 
         /* Update displayed value for any device where lastSeen is currently selected */
-        // flipper_bt_device **devices = (display_selected_only) ? bt_selected_devices : bt_devices;
-        // char elapsedStr[7];
-        // for (int i = 0; i < (display_selected_only) ? bt_selected_devices_count : bt_devices_count; ++i) {
-        //     /* I can probably remove this but I'd rather be certain than have to find this as a bug later */
-        //     if (devices != NULL && devices[i] != NULL) {
-        //         /* Update lastSeen */
-        //         devices[i]->dev.lastSeen.tv_sec = furi_hal_rtc_get_timestamp();
-        //         /* Update option text if lastSeen is selected for this device */
-        //         if (devices[i]->view != NULL &&
-        //                 variable_item_get_current_value_index(devices[i]->view) == WendigoOptionLastSeen) {
-        //             elapsedTime(devices[i], elapsedStr, sizeof(elapsedStr));
-        //             variable_item_set_current_value_text(devices[i]->view, elapsedStr);
-        //         }
-        //     } /* Maybe the next device won't be empty */
-        // }
+        flipper_bt_device** devices = (display_selected_only) ? bt_selected_devices : bt_devices;
+        uint16_t devices_count = (display_selected_only) ? bt_selected_devices_count :
+                                                           bt_devices_count;
+        char elapsedStr[7];
+        uint32_t now = furi_hal_rtc_get_timestamp();
+        for(int i = 0; i < devices_count; ++i) {
+            if(devices != NULL && devices[i] != NULL && devices[i]->view != NULL &&
+               variable_item_get_current_value_index(devices[i]->view) == WendigoOptionLastSeen) {
+                /* Update option text if lastSeen is selected for this device */
+                _elapsedTime(
+                    (uint32_t*)&(devices[i]->dev.lastSeen.tv_sec),
+                    &now,
+                    elapsedStr,
+                    sizeof(elapsedStr));
+                variable_item_set_current_value_text(devices[i]->view, elapsedStr);
+            }
+        }
     }
     return consumed;
 }

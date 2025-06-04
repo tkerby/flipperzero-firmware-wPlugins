@@ -152,6 +152,8 @@ void wendigo_set_scanning_active(WendigoApp* app, bool starting) {
     uint8_t arg;
     const uint8_t CMD_LEN = 5; // e.g. "b 1\n\0"
     char cmdString[CMD_LEN];
+    /* This flag will cause incomplete packets to be ignored */
+    app->is_scanning = starting;
     for(int i = 0; i < IF_COUNT; ++i) {
         /* Set command */
         cmd = (i == IF_BLE) ? 'b' : (i == IF_BT_CLASSIC) ? 'h' : 'w';
@@ -160,7 +162,6 @@ void wendigo_set_scanning_active(WendigoApp* app, bool starting) {
         snprintf(cmdString, CMD_LEN, "%c %d\n", cmd, arg);
         wendigo_uart_tx(app->uart, (uint8_t*)cmdString, CMD_LEN);
     }
-    app->is_scanning = starting;
 }
 
 /* Returns the index into `array` of the device with BDA matching dev->dev.bda.
@@ -224,8 +225,9 @@ bool wendigo_add_bt_device(WendigoApp* app, flipper_bt_device* dev) {
     new_device->dev.scanType = dev->dev.scanType;
     /* Don't copy tagged status - A new device is not tagged. */
     new_device->dev.tagged = false;
-    /* ESP32 doesn't know the real time/date so overwrite the lastSeen value */
-    new_device->dev.lastSeen.tv_sec = furi_hal_rtc_get_timestamp();
+    /* ESP32 doesn't know the real time/date so overwrite the lastSeen value
+       Casting directly to time_t is actually a long long int, so that works OK */
+    new_device->dev.lastSeen.tv_sec = (time_t)furi_hal_rtc_get_timestamp();
     /* Copy BDA */
     memcpy(new_device->dev.bda, dev->dev.bda, MAC_BYTES);
     new_device->view = dev->view; /* Copy the view pointer if we have one */
@@ -338,8 +340,8 @@ bool wendigo_update_bt_device(WendigoApp* app, flipper_bt_device* dev) {
     target->dev.rssi = dev->dev.rssi;
     target->dev.cod = dev->dev.cod;
     target->dev.scanType = dev->dev.scanType;
-    /* Replace lastSeen */
-    target->dev.lastSeen.tv_sec = furi_hal_rtc_get_timestamp();
+    /* Replace lastSeen - cast to long long int (aka time_t) */
+    target->dev.lastSeen.tv_sec = (time_t)furi_hal_rtc_get_timestamp();
     /* cod_str present in update? */
     if(dev->cod_str != NULL && strlen(dev->cod_str) > 0) {
         char* new_cod = realloc(target->cod_str, sizeof(char) * (strlen(dev->cod_str) + 1));
@@ -465,8 +467,12 @@ uint16_t parseBufferBluetooth(WendigoApp* app) {
     /* Sanity check - we should have at least 55 bytes including header and footer */
     uint16_t packetLen = end_of_packet(buffer, bufferLen);
     if(packetLen < (WENDIGO_OFFSET_BT_COD_LEN + PREAMBLE_LEN)) {
-        // TODO: I'm not sure what to do in this case
-        wendigo_display_popup(app, "Packet Error", "Bluetooth packet is shorter than expected");
+        /* If scanning has been stopped quietly drop this packet */
+        if(app->is_scanning) {
+            // TODO: I'm not sure what to do in this case
+            wendigo_display_popup(
+                app, "Packet Error", "Bluetooth packet is shorter than expected");
+        }
         // Skip this packet?
         return packetLen;
     }
@@ -527,8 +533,9 @@ uint16_t parseBufferBluetooth(WendigoApp* app) {
     }
     // TODO: Services to go here
 
-    /* Hopefully `index` now points to the packet terminator */
-    if(memcmp(PACKET_TERM, buffer + index, PREAMBLE_LEN)) {
+    /* Hopefully `index` now points to the packet terminator (unless scanning has stopped,
+       then all bets are off) */
+    if(app->is_scanning && memcmp(PACKET_TERM, buffer + index, PREAMBLE_LEN)) {
         // TODO: Panic & recover
         wendigo_display_popup(
             app, "BT Packet Error", "Packet terminator not found where expected");

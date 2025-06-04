@@ -33,6 +33,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Comparator v2.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Added: [Pocket Battle v0.1 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - Added: [Digital Kaleidoscope v0.1 (By JamesR555)](https://github.com/JamesR555/digital_kaleidoscope)
+- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 
 <a name="release">
