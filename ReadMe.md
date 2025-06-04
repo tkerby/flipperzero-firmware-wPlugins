@@ -26,10 +26,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest">
 
-## Latest Updates - [PATREON: Latest Release RM0602-2330-0.420.0-79940a9](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM0604-0110-0.420.0-c94cd75](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-02 23:30 EST`
-- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-02 23:30 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-04 01:10 EST`
+- Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-04 01:10 EST`
 - Updated: [NFC Comparator v2.2 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Added: [Pocket Battle v0.1 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
