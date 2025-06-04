@@ -16,7 +16,7 @@ typedef struct {
     bool locked;
 } TransitCardInfo;
 
-TransitCardInfo cards[77] = {
+TransitCardInfo cards[81] = {
     {0x000001, "TTP (MAD)", "CRTM", true},
     {0x0011F2, "myki (MEL)", "DTP", false},
     {0x002000, "Presto (YYZ)", "Metrolinx", true},
@@ -25,7 +25,10 @@ TransitCardInfo cards[77] = {
     {0x004063, "Travel Pass (DOH)", "QA Rail", true},
     {0x004078, "nol (DXB)", "RTA", true},
     {0x008057, "NORTIC", "NRPA", true},
-    {0x010000, "Breeze/Compass", "MARTA/TransLink", true},
+    {0x010000, "Breeze/Compass/FREEDOM", "MARTA/TransLink/PATCO", true},
+    {0x012340, "motion (ECN)", "MoTCW", true},
+    {0x012350, "motion (ECN)", "MoTCW", true},
+    {0x012360, "motion (ECN)", "MoTCW", true},
     {0x018057, "NORTIC", "NRPA", true},
     {0x0112F2, "Tap-N-Go/peggo", "GBMT/YWG Transit", true},
     {0x014D44, "DMTC (DEL)", "DMRCL", true},
@@ -45,6 +48,7 @@ TransitCardInfo cards[77] = {
     {0x227508, "Umo", "Cubic", true},
     {0x3010F2, "ORCA (SEA)", "ORCA", true},
     {0x314553, "Opal (SYD)", "TfNSW", false},
+    {0x315441, "ATH.ENA (ATH)", "OASA", true},
     {0x31594F, "Oyster (LHR)", "TfL", true},
     {0x422201, "Istanbulkart (IST)", "BELBIM", true},
     {0x422202, "Istanbulkart (IST)", "BELBIM", true},
@@ -68,7 +72,7 @@ TransitCardInfo cards[77] = {
     {0x425311, "MRT SVC (BKK)", "BEM", true},
     {0x5010F2, "Metrocard (CHC)", "ECan", true},
     {0x5011F2, "Litacka Opencard", "Haguess", true},
-    {0x6013F2, "HOLO", "INIT", true},
+    {0x6013F2, "HOLO", "HNL County", true},
     {0x7A007A, "TAP & GO (LAS)", "RTC", true},
     {0x7D23A4, "Umo", "Cubic", true},
     {0x805BC6, "Umo", "Cubic", true},
