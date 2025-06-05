@@ -9,6 +9,8 @@
 #include <dir_walk.h>
 #include <path.h>
 
+#include "../compare_checks/nfc_comparator_compare_checks.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,15 +22,6 @@ typedef enum {
    NfcComparatorFinderWorkerState_Finding,
    NfcComparatorFinderWorkerState_Stopped
 } NfcComparatorFinderWorkerState;
-
-/** Comparison checks for NFC cards */
-typedef struct {
-   FuriString* nfc_card_path; /**< Path to the NFC file */
-   bool uid; /**< Compare UID */
-   bool uid_length; /**< Compare UID length */
-   bool protocol; /**< Compare protocol */
-   bool nfc_data; /**< Compare NFC data */
-} NfcComparatorFinderWorkerCompareChecks;
 
 /** Holds settings for the NFC Comparator Finder Worker */
 typedef struct {
@@ -45,12 +38,12 @@ typedef struct {
    NfcDevice* scanned_nfc_card;
    NfcPoller* nfc_poller;
    DirWalk* dir_walk;
-   NfcComparatorFinderWorkerCompareChecks* compare_checks;
+   NfcComparatorCompareChecks* compare_checks;
    NfcComparatorFinderWorkerSettings* settings;
 } NfcComparatorFinderWorker;
 
 NfcComparatorFinderWorker* nfc_comparator_finder_worker_alloc(
-   NfcComparatorFinderWorkerCompareChecks* compare_checks,
+   NfcComparatorCompareChecks* compare_checks,
    NfcComparatorFinderWorkerSettings* settings);
 
 void nfc_comparator_finder_worker_free(NfcComparatorFinderWorker* worker);
@@ -63,10 +56,11 @@ NfcComparatorFinderWorkerState
    nfc_comparator_finder_worker_get_state(const NfcComparatorFinderWorker* worker);
 
 void nfc_comparator_finder_worker_compare_cards(
-   NfcComparatorFinderWorkerCompareChecks* compare_checks,
-   NfcDevice* card1,
-   NfcDevice* card2,
-   bool check_data);
+   NfcComparatorCompareChecks* compare_checks,
+   NfcDevice* nfc_card_1,
+   bool check_data,
+   NfcComparatorFinderWorkerSettings* settings,
+   FuriString* nfc_card_path);
 
 #ifdef __cplusplus
 }

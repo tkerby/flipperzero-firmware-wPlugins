@@ -52,7 +52,7 @@ static int32_t nfc_comparator_reader_worker_task(void* context) {
          break;
       }
       case NfcComparatorReaderWorkerState_Comparing: {
-         nfc_comparator_reader_worker_compare_cards(
+         nfc_comparator_compare_checks_compare_cards(
             worker->compare_checks, worker->scanned_nfc_card, worker->loaded_nfc_card, false);
 
          nfc_device_free(worker->scanned_nfc_card);
@@ -71,7 +71,7 @@ static int32_t nfc_comparator_reader_worker_task(void* context) {
 }
 
 NfcComparatorReaderWorker*
-   nfc_comparator_reader_worker_alloc(NfcComparatorReaderWorkerCompareChecks* compare_checks) {
+   nfc_comparator_reader_worker_alloc(NfcComparatorCompareChecks* compare_checks) {
    NfcComparatorReaderWorker* worker = calloc(1, sizeof(NfcComparatorReaderWorker));
    if(!worker) return NULL;
    worker->nfc = nfc_alloc();
@@ -148,41 +148,4 @@ NfcComparatorReaderWorkerState
    nfc_comparator_reader_worker_get_state(const NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
    return worker->state;
-}
-
-void nfc_comparator_reader_worker_compare_cards(
-   NfcComparatorReaderWorkerCompareChecks* compare_checks,
-   NfcDevice* card1,
-   NfcDevice* card2,
-   bool check_data) {
-   furi_assert(compare_checks);
-   furi_assert(card1);
-   furi_assert(card2);
-
-   // Compare protocols
-   compare_checks->protocol = nfc_device_get_protocol(card1) == nfc_device_get_protocol(card2);
-
-   // Get UIDs and lengths
-   size_t uid_len1 = 0;
-   const uint8_t* uid1 = nfc_device_get_uid(card1, &uid_len1);
-
-   size_t uid_len2 = 0;
-   const uint8_t* uid2 = nfc_device_get_uid(card2, &uid_len2);
-
-   // Compare UID length
-   compare_checks->uid_length = (uid_len1 == uid_len2);
-
-   // Compare UID bytes if lengths match
-   if(compare_checks->uid_length && uid1 && uid2) {
-      compare_checks->uid = (memcmp(uid1, uid2, uid_len1) == 0);
-   } else {
-      compare_checks->uid = false;
-   }
-
-   // compare NFC data
-   if(check_data) {
-      compare_checks->nfc_data = nfc_device_is_equal(card1, card2);
-   } else {
-      compare_checks->nfc_data = false;
-   }
 }
