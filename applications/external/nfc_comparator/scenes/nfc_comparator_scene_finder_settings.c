@@ -20,9 +20,9 @@ static void nfc_comparator_finder_settings_options_change_callback(VariableItem*
 
     switch(current_option) {
     case NfcComparatorSceneFinderSettingsMenuSelection_Recursive:
-        nfc_comparator->finder.settings.recursive = option_value_index;
+        nfc_comparator->workers.finder_settings.recursive = option_value_index;
         variable_item_set_current_value_text(
-            item, nfc_comparator->finder.settings.recursive ? "ON" : "OFF");
+            item, nfc_comparator->workers.finder_settings.recursive ? "ON" : "OFF");
         break;
     default:
         break;
@@ -33,18 +33,20 @@ void nfc_comparator_finder_settings_scene_on_enter(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
 
+    variable_item_list_reset(nfc_comparator->views.variable_item_list);
+
     variable_item_list_set_header(nfc_comparator->views.variable_item_list, "Finder Settings");
 
-    VariableItem* emulation_led_indicator_setting = variable_item_list_add(
+    VariableItem* recursive_setting_item = variable_item_list_add(
         nfc_comparator->views.variable_item_list,
         "Recursive Search",
         2,
         nfc_comparator_finder_settings_options_change_callback,
         nfc_comparator);
     variable_item_set_current_value_index(
-        emulation_led_indicator_setting, nfc_comparator->finder.settings.recursive);
+        recursive_setting_item, nfc_comparator->workers.finder_settings.recursive);
     variable_item_set_current_value_text(
-        emulation_led_indicator_setting, nfc_comparator->finder.settings.recursive ? "ON" : "OFF");
+        recursive_setting_item, nfc_comparator->workers.finder_settings.recursive ? "ON" : "OFF");
 
     variable_item_list_set_enter_callback(
         nfc_comparator->views.variable_item_list,

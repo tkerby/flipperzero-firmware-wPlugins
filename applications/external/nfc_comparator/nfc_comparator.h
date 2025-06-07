@@ -25,6 +25,7 @@
 #include "scenes/nfc_comparator_scene.h"
 #include "lib/reader_worker/nfc_comparator_reader_worker.h"
 #include "lib/finder_worker/nfc_comparator_finder_worker.h"
+#include "lib/compare_checks/nfc_comparator_compare_checks.h"
 #include "lib/led_worker/nfc_comparator_led_worker.h"
 
 #define NFC_ITEM_LOCATION "/ext/nfc/"
@@ -57,18 +58,13 @@ typedef struct {
     VariableItemList* variable_item_list;
 } NfcComparatorView;
 
-/** Finder worker struct holding all finder worker instances */
+/** All worker instances used by the NFC Comparator app */
 typedef struct {
-    NfcComparatorFinderWorker* worker;
-    NfcComparatorFinderWorkerCompareChecks compare_checks;
-    NfcComparatorFinderWorkerSettings settings;
-} NfcComparatorFinder;
-
-/** Reader worker struct holding all reader worker instances */
-typedef struct {
-    NfcComparatorReaderWorker* worker;
-    NfcComparatorReaderWorkerCompareChecks compare_checks;
-} NfcComparatorReader;
+    NfcComparatorFinderWorker* finder_worker;
+    NfcComparatorFinderWorkerSettings finder_settings;
+    NfcComparatorReaderWorker* reader_worker;
+    NfcComparatorCompareChecks* compare_checks;
+} NfcComparatorWorkers;
 
 /** Main app struct holding all state */
 typedef struct {
@@ -76,8 +72,7 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     NotificationApp* notification_app;
     NfcComparatorView views;
-    NfcComparatorFinder finder;
-    NfcComparatorReader reader;
+    NfcComparatorWorkers workers;
 } NfcComparator;
 
 // #endif // NFC_COMPARATOR_H

@@ -52,39 +52,10 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
          break;
       }
       case NfcComparatorFinderWorkerState_Finding: {
-         if(dir_walk_open(worker->dir_walk, "/ext/nfc")) {
-            FuriString* ext = furi_string_alloc();
-
-            dir_walk_set_recursive(worker->dir_walk, worker->settings->recursive);
-
-            while(dir_walk_read(worker->dir_walk, worker->compare_checks->nfc_card_path, NULL) ==
-                  DirWalkOK) {
-               path_extract_ext_str(worker->compare_checks->nfc_card_path, ext);
-
-               if(furi_string_cmpi_str(ext, ".nfc") == 0) {
-                  if(nfc_device_load(
-                        worker->loaded_nfc_card,
-                        furi_string_get_cstr(worker->compare_checks->nfc_card_path))) {
-                     nfc_comparator_finder_worker_compare_cards(
-                        worker->compare_checks,
-                        worker->scanned_nfc_card,
-                        worker->loaded_nfc_card,
-                        false);
-
-                     if(worker->compare_checks->uid && worker->compare_checks->uid_length &&
-                        worker->compare_checks->protocol) {
-                        break;
-                     }
-                  }
-               }
-            }
-
-            dir_walk_close(worker->dir_walk);
-            furi_string_free(ext);
-
-            worker->state = NfcComparatorFinderWorkerState_Stopped;
-            break;
-         }
+         nfc_comparator_finder_worker_compare_cards(
+            worker->compare_checks, worker->scanned_nfc_card, false, worker->settings, NULL);
+         worker->state = NfcComparatorFinderWorkerState_Stopped;
+         break;
       }
       default:
          break;
@@ -94,7 +65,7 @@ static int32_t nfc_comparator_finder_worker_task(void* context) {
 }
 
 NfcComparatorFinderWorker* nfc_comparator_finder_worker_alloc(
-   NfcComparatorFinderWorkerCompareChecks* compare_checks,
+   NfcComparatorCompareChecks* compare_checks,
    NfcComparatorFinderWorkerSettings* settings) {
    NfcComparatorFinderWorker* worker = calloc(1, sizeof(NfcComparatorFinderWorker));
    if(!worker) return NULL;
@@ -162,45 +133,50 @@ void nfc_comparator_finder_worker_start(NfcComparatorFinderWorker* worker) {
    }
 }
 
-NfcComparatorFinderWorkerState
-   nfc_comparator_finder_worker_get_state(const NfcComparatorFinderWorker* worker) {
+NfcComparatorFinderWorkerState*
+   nfc_comparator_finder_worker_get_state(NfcComparatorFinderWorker* worker) {
    furi_assert(worker);
-   return worker->state;
+   return &worker->state;
 }
 
 void nfc_comparator_finder_worker_compare_cards(
-   NfcComparatorFinderWorkerCompareChecks* compare_checks,
-   NfcDevice* card1,
-   NfcDevice* card2,
-   bool check_data) {
-   furi_assert(compare_checks);
-   furi_assert(card1);
-   furi_assert(card2);
+   NfcComparatorCompareChecks* compare_checks,
+   NfcDevice* nfc_card_1,
+   bool check_data,
+   NfcComparatorFinderWorkerSettings* settings,
+   FuriString* nfc_card_path) {
+   furi_assert(nfc_card_1);
+   DirWalk* dir_walk = dir_walk_alloc(furi_record_open(RECORD_STORAGE));
+   NfcDevice* nfc_card_2 = nfc_device_alloc();
 
-   // Compare protocols
-   compare_checks->protocol = nfc_device_get_protocol(card1) == nfc_device_get_protocol(card2);
+   if(dir_walk_open(dir_walk, "/ext/nfc")) {
+      FuriString* ext = furi_string_alloc();
 
-   // Get UIDs and lengths
-   size_t uid_len1 = 0;
-   const uint8_t* uid1 = nfc_device_get_uid(card1, &uid_len1);
+      dir_walk_set_recursive(dir_walk, settings->recursive);
 
-   size_t uid_len2 = 0;
-   const uint8_t* uid2 = nfc_device_get_uid(card2, &uid_len2);
+      while(dir_walk_read(dir_walk, compare_checks->nfc_card_path, NULL) == DirWalkOK) {
+         if(nfc_card_path != NULL) {
+            if(furi_string_cmpi(compare_checks->nfc_card_path, nfc_card_path) == 0) {
+               continue;
+            }
+         }
 
-   // Compare UID length
-   compare_checks->uid_length = (uid_len1 == uid_len2);
+         path_extract_ext_str(compare_checks->nfc_card_path, ext);
 
-   // Compare UID bytes if lengths match
-   if(compare_checks->uid_length && uid1 && uid2) {
-      compare_checks->uid = (memcmp(uid1, uid2, uid_len1) == 0);
-   } else {
-      compare_checks->uid = false;
+         if(furi_string_cmpi_str(ext, ".nfc") == 0) {
+            if(nfc_device_load(nfc_card_2, furi_string_get_cstr(compare_checks->nfc_card_path))) {
+               nfc_comparator_compare_checks_compare_cards(
+                  compare_checks, nfc_card_1, nfc_card_2, check_data);
+
+               if(compare_checks->uid && compare_checks->uid_length && compare_checks->protocol) {
+                  break;
+               }
+            }
+         }
+      }
+      dir_walk_close(dir_walk);
+      furi_string_free(ext);
+      dir_walk_free(dir_walk);
    }
-
-   // compare NFC data
-   if(check_data) {
-      compare_checks->nfc_data = nfc_device_is_equal(card1, card2);
-   } else {
-      compare_checks->nfc_data = false;
-   }
+   nfc_device_free(nfc_card_2);
 }

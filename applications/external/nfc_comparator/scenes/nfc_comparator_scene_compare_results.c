@@ -1,9 +1,8 @@
+
 #include "../nfc_comparator.h"
 
-static void nfc_comparator_digital_compare_results_callback(
-    GuiButtonType result,
-    InputType type,
-    void* context) {
+static void
+    nfc_comparator_compare_results_callback(GuiButtonType result, InputType type, void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
     if(type == InputTypeShort) {
@@ -11,7 +10,11 @@ static void nfc_comparator_digital_compare_results_callback(
     }
 }
 
-void nfc_comparator_digital_compare_results_scene_on_enter(void* context) {
+static const char* match_str(bool match) {
+    return match ? "Match" : "Mismatch";
+}
+
+void nfc_comparator_compare_results_scene_on_enter(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
 
@@ -20,13 +23,28 @@ void nfc_comparator_digital_compare_results_scene_on_enter(void* context) {
 
     FuriString* temp_str = furi_string_alloc();
 
-    furi_string_printf(
-        temp_str,
-        "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s\n\e#NFC Data:\e# %s",
-        nfc_comparator->reader.compare_checks.uid ? "Match" : "Mismatch",
-        nfc_comparator->reader.compare_checks.uid_length ? "Match" : "Mismatch",
-        nfc_comparator->reader.compare_checks.protocol ? "Match" : "Mismatch",
-        nfc_comparator->reader.compare_checks.nfc_data ? "Match" : "Mismatch");
+    switch(nfc_comparator->workers.compare_checks->type) {
+    case NfcCompareChecksType_Physical:
+        furi_string_printf(
+            temp_str,
+            "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s",
+            match_str(nfc_comparator->workers.compare_checks->uid),
+            match_str(nfc_comparator->workers.compare_checks->uid_length),
+            match_str(nfc_comparator->workers.compare_checks->protocol));
+        break;
+    case NfcCompareChecksType_Digital:
+        furi_string_printf(
+            temp_str,
+            "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s\n\e#NFC Data:\e# %s",
+            match_str(nfc_comparator->workers.compare_checks->uid),
+            match_str(nfc_comparator->workers.compare_checks->uid_length),
+            match_str(nfc_comparator->workers.compare_checks->protocol),
+            match_str(nfc_comparator->workers.compare_checks->nfc_data));
+        break;
+    default:
+        furi_string_printf(temp_str, "Unknown comparison type.");
+        break;
+    }
 
     widget_add_text_box_element(
         nfc_comparator->views.widget,
@@ -42,20 +60,21 @@ void nfc_comparator_digital_compare_results_scene_on_enter(void* context) {
         nfc_comparator->views.widget,
         GuiButtonTypeLeft,
         "Again",
-        nfc_comparator_digital_compare_results_callback,
+        nfc_comparator_compare_results_callback,
         nfc_comparator);
     widget_add_button_element(
         nfc_comparator->views.widget,
         GuiButtonTypeRight,
         "Exit",
-        nfc_comparator_digital_compare_results_callback,
+        nfc_comparator_compare_results_callback,
         nfc_comparator);
+
     furi_string_free(temp_str);
 
     view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Widget);
 }
 
-bool nfc_comparator_digital_compare_results_scene_on_event(void* context, SceneManagerEvent event) {
+bool nfc_comparator_compare_results_scene_on_event(void* context, SceneManagerEvent event) {
     NfcComparator* nfc_comparator = context;
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
@@ -81,9 +100,10 @@ bool nfc_comparator_digital_compare_results_scene_on_event(void* context, SceneM
     return consumed;
 }
 
-void nfc_comparator_digital_compare_results_scene_on_exit(void* context) {
+void nfc_comparator_compare_results_scene_on_exit(void* context) {
     furi_assert(context);
     NfcComparator* nfc_comparator = context;
     widget_reset(nfc_comparator->views.widget);
     nfc_comparator_led_worker_stop(nfc_comparator->notification_app);
+    nfc_comparator_compare_checks_reset(nfc_comparator->workers.compare_checks);
 }
