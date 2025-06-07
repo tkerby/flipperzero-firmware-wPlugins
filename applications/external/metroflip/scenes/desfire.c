@@ -25,7 +25,7 @@ TransitCardInfo cards[81] = {
     {0x004063, "Travel Pass (DOH)", "QA Rail", true},
     {0x004078, "nol (DXB)", "RTA", true},
     {0x008057, "NORTIC", "NRPA", true},
-    {0x010000, "Breeze/Compass/FREEDOM", "MARTA/TransLink/PATCO", true},
+    {0x010000, "Breeze/Compass/FREEDOM/Miami Card", "MARTA/TransLink/PATCO", true},
     {0x012340, "motion (ECN)", "MoTCW", true},
     {0x012350, "motion (ECN)", "MoTCW", true},
     {0x012360, "motion (ECN)", "MoTCW", true},
