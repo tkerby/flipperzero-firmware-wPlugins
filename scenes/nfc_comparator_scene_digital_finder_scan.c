@@ -15,55 +15,23 @@ static void nfc_comparator_digital_finder_scan_menu_callback(void* context) {
       return;
    }
 
-   NfcDevice* nfc_card_2 = nfc_device_alloc();
-   DirWalk* dir_walk = dir_walk_alloc(furi_record_open(RECORD_STORAGE));
+   nfc_comparator_finder_worker_compare_cards(
+      nfc_comparator->workers.compare_checks,
+      nfc_card_1,
+      true,
+      &nfc_comparator->workers.finder_settings,
+      nfc_comparator->views.file_browser.output);
 
-   if(dir_walk_open(dir_walk, "/ext/nfc")) {
-      FuriString* ext = furi_string_alloc();
-
-      dir_walk_set_recursive(dir_walk, nfc_comparator->finder.settings.recursive);
-
-      while(dir_walk_read(dir_walk, nfc_comparator->finder.compare_checks.nfc_card_path, NULL) ==
-            DirWalkOK) {
-         if(furi_string_cmpi(
-               nfc_comparator->finder.compare_checks.nfc_card_path,
-               nfc_comparator->views.file_browser.output) == 0) {
-            continue;
-         }
-
-         path_extract_ext_str(nfc_comparator->finder.compare_checks.nfc_card_path, ext);
-
-         if(furi_string_cmpi_str(ext, ".nfc") == 0) {
-            if(nfc_device_load(
-                  nfc_card_2,
-                  furi_string_get_cstr(nfc_comparator->finder.compare_checks.nfc_card_path))) {
-               nfc_comparator_finder_worker_compare_cards(
-                  &nfc_comparator->finder.compare_checks, nfc_card_1, nfc_card_2, true);
-
-               if(nfc_comparator->finder.compare_checks.uid &&
-                  nfc_comparator->finder.compare_checks.uid_length &&
-                  nfc_comparator->finder.compare_checks.protocol &&
-                  nfc_comparator->finder.compare_checks.nfc_data) {
-                  break;
-               }
-            }
-         }
-      }
-
-      dir_walk_close(dir_walk);
-      furi_string_free(ext);
-   }
-
-   dir_walk_free(dir_walk);
    nfc_device_free(nfc_card_1);
-   nfc_device_free(nfc_card_2);
 
    furi_string_swap(
       nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
    furi_string_reset(nfc_comparator->views.file_browser.tmp_output);
 
-   scene_manager_next_scene(
-      nfc_comparator->scene_manager, NfcComparatorScene_DigitalFinderResults);
+   nfc_comparator_compare_checks_set_type(
+      nfc_comparator->workers.compare_checks, NfcCompareChecksType_Digital);
+
+   scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_FinderResults);
 }
 
 void nfc_comparator_digital_finder_scan_scene_on_enter(void* context) {
@@ -108,6 +76,10 @@ void nfc_comparator_digital_finder_scan_scene_on_exit(void* context) {
       furi_string_swap(
          nfc_comparator->views.file_browser.output, nfc_comparator->views.file_browser.tmp_output);
       furi_string_reset(nfc_comparator->views.file_browser.tmp_output);
+   }
+   if(nfc_comparator_compare_checks_get_type(nfc_comparator->workers.compare_checks) ==
+      NfcCompareChecksType_Undefined) {
+      nfc_comparator_compare_checks_reset(nfc_comparator->workers.compare_checks);
    }
    file_browser_stop(nfc_comparator->views.file_browser.view);
    nfc_comparator_led_worker_stop(nfc_comparator->notification_app);

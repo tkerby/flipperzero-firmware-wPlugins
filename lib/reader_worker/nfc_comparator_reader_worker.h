@@ -6,6 +6,8 @@
 #include <nfc/nfc_poller.h>
 #include <nfc/nfc_scanner.h>
 
+#include "../compare_checks/nfc_comparator_compare_checks.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,14 +20,6 @@ typedef enum {
    NfcComparatorReaderWorkerState_Stopped
 } NfcComparatorReaderWorkerState;
 
-/** Comparison checks for NFC cards */
-typedef struct {
-   bool uid; /**< Compare UID */
-   bool uid_length; /**< Compare UID length */
-   bool protocol; /**< Compare protocol */
-   bool nfc_data; /**< Compare NFC data */
-} NfcComparatorReaderWorkerCompareChecks;
-
 /** Holds all state for the NFC Comparator Reader Worker */
 typedef struct {
    Nfc* nfc;
@@ -35,12 +29,12 @@ typedef struct {
    NfcDevice* loaded_nfc_card;
    NfcDevice* scanned_nfc_card;
    NfcPoller* nfc_poller;
-   NfcComparatorReaderWorkerCompareChecks* compare_checks;
+   NfcComparatorCompareChecks* compare_checks;
 } NfcComparatorReaderWorker;
 
 /** Allocates and initializes a new NFC Comparator Reader Worker */
 NfcComparatorReaderWorker*
-   nfc_comparator_reader_worker_alloc(NfcComparatorReaderWorkerCompareChecks* compare_checks);
+   nfc_comparator_reader_worker_alloc(NfcComparatorCompareChecks* compare_checks);
 
 /** Frees the resources used by the worker */
 void nfc_comparator_reader_worker_free(NfcComparatorReaderWorker* worker);
@@ -57,15 +51,8 @@ bool nfc_comparator_reader_worker_set_loaded_nfc_card(
    const char* path_to_nfc_card);
 
 /** Gets the current state of the worker */
-NfcComparatorReaderWorkerState
-   nfc_comparator_reader_worker_get_state(const NfcComparatorReaderWorker* worker);
-
-/** Compares two NFC cards and updates the comparison checks */
-void nfc_comparator_reader_worker_compare_cards(
-   NfcComparatorReaderWorkerCompareChecks* compare_checks,
-   NfcDevice* card1,
-   NfcDevice* card2,
-   bool check_data);
+NfcComparatorReaderWorkerState*
+   nfc_comparator_reader_worker_get_state(NfcComparatorReaderWorker* worker);
 
 #ifdef __cplusplus
 }
