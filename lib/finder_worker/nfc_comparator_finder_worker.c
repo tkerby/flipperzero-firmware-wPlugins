@@ -133,10 +133,10 @@ void nfc_comparator_finder_worker_start(NfcComparatorFinderWorker* worker) {
    }
 }
 
-NfcComparatorFinderWorkerState
-   nfc_comparator_finder_worker_get_state(const NfcComparatorFinderWorker* worker) {
+NfcComparatorFinderWorkerState*
+   nfc_comparator_finder_worker_get_state(NfcComparatorFinderWorker* worker) {
    furi_assert(worker);
-   return worker->state;
+   return &worker->state;
 }
 
 void nfc_comparator_finder_worker_compare_cards(
@@ -174,11 +174,9 @@ void nfc_comparator_finder_worker_compare_cards(
             }
          }
       }
-
       dir_walk_close(dir_walk);
       furi_string_free(ext);
-      nfc_device_free(nfc_card_2);
-
       dir_walk_free(dir_walk);
    }
+   nfc_device_free(nfc_card_2);
 }

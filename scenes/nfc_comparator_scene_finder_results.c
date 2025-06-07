@@ -18,34 +18,30 @@ void nfc_comparator_finder_results_scene_on_enter(void* context) {
 
    FuriString* temp_str = furi_string_alloc();
 
+   bool match = false;
    switch(nfc_comparator->workers.compare_checks->type) {
    case NfcCompareChecksType_Digital:
-      if(nfc_comparator->workers.compare_checks->uid &&
-         nfc_comparator->workers.compare_checks->uid_length &&
-         nfc_comparator->workers.compare_checks->protocol &&
-         nfc_comparator->workers.compare_checks->nfc_data) {
-         furi_string_printf(
-            temp_str,
-            "\e#Match found!\e#\n %s",
-            furi_string_get_cstr(nfc_comparator->workers.compare_checks->nfc_card_path));
-      } else {
-         furi_string_printf(temp_str, "\e#No match found!\e#");
-      }
+      match = nfc_comparator->workers.compare_checks->uid &&
+              nfc_comparator->workers.compare_checks->uid_length &&
+              nfc_comparator->workers.compare_checks->protocol &&
+              nfc_comparator->workers.compare_checks->nfc_data;
       break;
    case NfcCompareChecksType_Physical:
-      if(nfc_comparator->workers.compare_checks->uid &&
-         nfc_comparator->workers.compare_checks->uid_length &&
-         nfc_comparator->workers.compare_checks->protocol) {
-         furi_string_printf(
-            temp_str,
-            "\e#Match found!\e#\n %s",
-            furi_string_get_cstr(nfc_comparator->workers.compare_checks->nfc_card_path));
-      } else {
-         furi_string_printf(temp_str, "\e#No match found!\e#");
-      }
+      match = nfc_comparator->workers.compare_checks->uid &&
+              nfc_comparator->workers.compare_checks->uid_length &&
+              nfc_comparator->workers.compare_checks->protocol;
       break;
    default:
-      break;
+      furi_string_printf(temp_str, "Unknown comparison type.");
+      return;
+   }
+   if(match) {
+      furi_string_printf(
+         temp_str,
+         "\e#Match found!\e#\n %s",
+         furi_string_get_cstr(nfc_comparator->workers.compare_checks->nfc_card_path));
+   } else {
+      furi_string_printf(temp_str, "\e#No match found!\e#");
    }
 
    widget_add_text_box_element(

@@ -141,11 +141,16 @@ bool nfc_comparator_reader_worker_set_loaded_nfc_card(
    }
    worker->loaded_nfc_card = nfc_device_alloc();
    if(!worker->loaded_nfc_card) return false;
-   return nfc_device_load(worker->loaded_nfc_card, path_to_nfc_card);
+   if(!nfc_device_load(worker->loaded_nfc_card, path_to_nfc_card)) {
+      nfc_device_free(worker->loaded_nfc_card);
+      worker->loaded_nfc_card = NULL;
+      return false;
+   }
+   return true;
 }
 
-NfcComparatorReaderWorkerState
-   nfc_comparator_reader_worker_get_state(const NfcComparatorReaderWorker* worker) {
+NfcComparatorReaderWorkerState*
+   nfc_comparator_reader_worker_get_state(NfcComparatorReaderWorker* worker) {
    furi_assert(worker);
-   return worker->state;
+   return &worker->state;
 }

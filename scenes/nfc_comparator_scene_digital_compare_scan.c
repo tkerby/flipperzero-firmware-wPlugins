@@ -19,6 +19,7 @@ static void nfc_comparator_digital_compare_scan_menu_callback(void* context) {
    NfcDevice* nfc_card_2 = nfc_device_alloc();
    if(!nfc_device_load(
          nfc_card_2, furi_string_get_cstr(nfc_comparator->views.file_browser.tmp_output))) {
+      nfc_device_free(nfc_card_1);
       nfc_device_free(nfc_card_2);
       scene_manager_next_scene(
          nfc_comparator->scene_manager, NfcComparatorScene_FailedToLoadNfcCard);
@@ -36,8 +37,7 @@ static void nfc_comparator_digital_compare_scan_menu_callback(void* context) {
    nfc_comparator_compare_checks_set_type(
       nfc_comparator->workers.compare_checks, NfcCompareChecksType_Digital);
 
-   scene_manager_next_scene(
-      nfc_comparator->scene_manager, NfcComparatorScene_CompareResults);
+   scene_manager_next_scene(nfc_comparator->scene_manager, NfcComparatorScene_CompareResults);
 }
 
 void nfc_comparator_digital_compare_scan_scene_on_enter(void* context) {

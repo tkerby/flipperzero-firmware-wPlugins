@@ -10,6 +10,10 @@ static void
    }
 }
 
+static const char* match_str(bool match) {
+   return match ? "Match" : "Mismatch";
+}
+
 void nfc_comparator_compare_results_scene_on_enter(void* context) {
    furi_assert(context);
    NfcComparator* nfc_comparator = context;
@@ -24,20 +28,21 @@ void nfc_comparator_compare_results_scene_on_enter(void* context) {
       furi_string_printf(
          temp_str,
          "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s",
-         nfc_comparator->workers.compare_checks->uid ? "Match" : "Mismatch",
-         nfc_comparator->workers.compare_checks->uid_length ? "Match" : "Mismatch",
-         nfc_comparator->workers.compare_checks->protocol ? "Match" : "Mismatch");
+         match_str(nfc_comparator->workers.compare_checks->uid),
+         match_str(nfc_comparator->workers.compare_checks->uid_length),
+         match_str(nfc_comparator->workers.compare_checks->protocol));
       break;
    case NfcCompareChecksType_Digital:
       furi_string_printf(
          temp_str,
          "\e#UID:\e# %s\n\e#UID length:\e# %s\n\e#Protocol:\e# %s\n\e#NFC Data:\e# %s",
-         nfc_comparator->workers.compare_checks->uid ? "Match" : "Mismatch",
-         nfc_comparator->workers.compare_checks->uid_length ? "Match" : "Mismatch",
-         nfc_comparator->workers.compare_checks->protocol ? "Match" : "Mismatch",
-         nfc_comparator->workers.compare_checks->nfc_data ? "Match" : "Mismatch");
+         match_str(nfc_comparator->workers.compare_checks->uid),
+         match_str(nfc_comparator->workers.compare_checks->uid_length),
+         match_str(nfc_comparator->workers.compare_checks->protocol),
+         match_str(nfc_comparator->workers.compare_checks->nfc_data));
       break;
    default:
+      furi_string_printf(temp_str, "Unknown comparison type.");
       break;
    }
 
@@ -63,6 +68,7 @@ void nfc_comparator_compare_results_scene_on_enter(void* context) {
       "Exit",
       nfc_comparator_compare_results_callback,
       nfc_comparator);
+
    furi_string_free(temp_str);
 
    view_dispatcher_switch_to_view(nfc_comparator->view_dispatcher, NfcComparatorView_Widget);

@@ -37,7 +37,7 @@ bool nfc_comparator_physical_compare_scan_scene_on_event(void* context, SceneMan
          nfc_comparator->scene_manager, NfcComparatorScene_CompareMenu);
       consumed = true;
    } else if(event.type == SceneManagerEventTypeTick) {
-      switch(nfc_comparator_reader_worker_get_state(nfc_comparator->workers.reader_worker)) {
+      switch(*nfc_comparator_reader_worker_get_state(nfc_comparator->workers.reader_worker)) {
       case NfcComparatorReaderWorkerState_Scanning:
          popup_set_header(
             nfc_comparator->views.popup, "Scanning....", 64, 5, AlignCenter, AlignTop);

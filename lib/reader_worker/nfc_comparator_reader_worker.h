@@ -51,8 +51,8 @@ bool nfc_comparator_reader_worker_set_loaded_nfc_card(
    const char* path_to_nfc_card);
 
 /** Gets the current state of the worker */
-NfcComparatorReaderWorkerState
-   nfc_comparator_reader_worker_get_state(const NfcComparatorReaderWorker* worker);
+NfcComparatorReaderWorkerState*
+   nfc_comparator_reader_worker_get_state(NfcComparatorReaderWorker* worker);
 
 #ifdef __cplusplus
 }
