@@ -45,6 +45,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - Added: [Quadratic Solver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-quadratic-solver)
 - Added: [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
+- Infrared: [`Decode only` mode to ignore RAW signals, make buttons in learn scene more intuitive (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/326c3a13de9cf4d8731ffcc354f23073d61d5678)
 
 <a name="release">
 
