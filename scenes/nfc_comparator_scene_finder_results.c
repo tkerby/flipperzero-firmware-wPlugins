@@ -33,7 +33,7 @@ void nfc_comparator_finder_results_scene_on_enter(void* context) {
       break;
    default:
       furi_string_printf(temp_str, "Unknown comparison type.");
-      return;
+      break;
    }
    if(match) {
       furi_string_printf(
