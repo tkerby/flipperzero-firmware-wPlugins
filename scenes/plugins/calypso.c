@@ -14,7 +14,7 @@
 bool beginning = true;
 
 char* build_hex_string(BitBuffer* rx_buffer) {
-    static char output[29 * 3 + 1]; // 2 chars per byte + null terminator
+    static char output[29 * 3 + 1]; // 3 chars per byte + null terminator
     uint8_t byte;
     char* p = output;
 
@@ -2699,7 +2699,7 @@ static bool calypso_on_event(Metroflip* app, SceneManagerEvent event) {
 }
 
 static void calypso_on_exit(Metroflip* app) {
-    if(app->poller && !app->data_loaded) {
+    if(app->poller) {
         nfc_poller_stop(app->poller);
         nfc_poller_free(app->poller);
     }
