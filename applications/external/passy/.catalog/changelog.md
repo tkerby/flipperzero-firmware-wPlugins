@@ -1,3 +1,6 @@
+## 1.4
+ - uppercase all letters in passport number
+ - More countries support confirmed
 ## 1.3
  - Show both issuing state and nationality (Thanks @portasynthinca3)
  - Handle Passport numbers < 9 char
