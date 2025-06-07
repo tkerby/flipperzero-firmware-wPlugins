@@ -27,3 +27,5 @@ As i know these firmwares are supported and working if you know any more please 
   > This features searches your saved NFC cards searching for a match for the physical card you are scanning then displaying the path to the saved NFC card that it finds
   - Digital NFC card finder:
   > This features searches your saved NFC cards searching for a match for the digital NFC card you have chosen ignoring the one you have chosen to compare against then displaying the path to the saved NFC card that it finds
+  - Settings:
+  > Recursive search (enabled by default) this will search all subfolders in the NFC folder for matches
