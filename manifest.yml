@@ -2,7 +2,7 @@ sourcecode:
   type: git
   location:
     origin: https://github.com/JamesR555/digital_kaleidoscope
-    commit_sha: 1fcd177d90b3cc91363e95c617c13ce32683c412
+    commit_sha: 9e8a18e1f44855fe56674463fb22380024dc97be
 short_description: Digital Kaleidoscope turns your Flipper Zero into a pocket-sized animated visualizer. Choose from four distinct kaleidoscope styles and adjust the pattern density on the fly.
 description: |
   Digital Kaleidoscope is a lightweight app for Flipper Zero that transforms the device’s screen into a dynamic, ever-changing kaleidoscope. You get four unique visual styles, each with its own characteristics:
