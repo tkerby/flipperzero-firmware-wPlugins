@@ -248,6 +248,40 @@ static bool update_is_update_time(DateTime *time_current)
     return time_diff;
 }
 
+static bool update_fetch_github_manifest(FlipperHTTP *fhttp, const char *app_folder, const char *fap_id)
+{
+    if (!fhttp)
+    {
+        FURI_LOG_E(TAG, "fhttp is NULL");
+        return false;
+    }
+    if (!fap_id)
+    {
+        FURI_LOG_E(TAG, "fap_id is NULL");
+        return false;
+    }
+    // make sure folder is created
+    char directory_path[256];
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
+
+    // Create the directory
+    Storage *storage = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
+    storage_common_mkdir(storage, directory_path);
+    snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s_last_update_request.txt", APP_ID, fap_id);
+    storage_simply_remove_recursive(storage, directory_path); // ensure the file is empty
+    furi_record_close(RECORD_STORAGE);
+
+    fhttp->save_received_data = false;
+    fhttp->is_bytes_request = true;
+
+    snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/%s_last_update_request.txt", APP_ID, fap_id);
+    char url[256];
+    snprintf(url, sizeof(url), "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/main/applications/%s/%s/manifest.yml", app_folder, fap_id);
+    return flipper_http_request(fhttp, BYTES, url, "{\"Content-Type\":\"application/json\"}", NULL);
+}
+
 // Sends a request to fetch the last updated date of the app.
 static bool update_last_app_update(FlipperHTTP *fhttp, bool flipper_server)
 {
@@ -259,25 +293,7 @@ static bool update_last_app_update(FlipperHTTP *fhttp, bool flipper_server)
     char url[256];
     if (flipper_server)
     {
-        // make sure folder is created
-        char directory_path[256];
-        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s", APP_ID);
-
-        // Create the directory
-        Storage *storage = furi_record_open(RECORD_STORAGE);
-        storage_common_mkdir(storage, directory_path);
-        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data", APP_ID);
-        storage_common_mkdir(storage, directory_path);
-        snprintf(directory_path, sizeof(directory_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/last_update_request.txt", APP_ID);
-        storage_simply_remove_recursive(storage, directory_path); // ensure the file is empty
-        furi_record_close(RECORD_STORAGE);
-
-        fhttp->save_received_data = false;
-        fhttp->is_bytes_request = true;
-
-        snprintf(fhttp->file_path, sizeof(fhttp->file_path), STORAGE_EXT_PATH_PREFIX "/apps_data/%s/data/last_update_request.txt", APP_ID);
-        snprintf(url, sizeof(url), "https://raw.githubusercontent.com/flipperdevices/flipper-application-catalog/main/applications/%s/%s/manifest.yml", APP_FOLDER, FAP_ID);
-        return flipper_http_request(fhttp, BYTES, url, "{\"Content-Type\":\"application/json\"}", NULL);
+        return update_fetch_github_manifest(fhttp, APP_FOLDER, FAP_ID);
     }
     else
     {
@@ -545,7 +561,7 @@ bool update_is_ready(FlipperHTTP *fhttp, bool use_flipper_api)
         return false; // No update necessary.
     }
 }
-
+#define MAX_APP_FETCH 100
 static bool update_app_list_category(Storage *storage, File *file, const char *category, bool save_file_extension)
 {
     if (!storage || !file || !category)
@@ -565,8 +581,14 @@ static bool update_app_list_category(Storage *storage, File *file, const char *c
     FuriString *json_app_list = furi_string_alloc();
     furi_string_cat_str(json_app_list, "{\"apps\":[");
     bool while_flag = true;
+    int count = 0;
     while (while_flag)
     {
+        if (count >= MAX_APP_FETCH)
+        {
+            FURI_LOG_E(TAG, "Maximum app fetch limit reached.");
+            break;
+        }
         if (!storage_dir_read(file, &fileinfo, name, sizeof(name)))
         {
             FURI_LOG_E(TAG, "Failed to get the next item in the directory.");
@@ -600,6 +622,7 @@ static bool update_app_list_category(Storage *storage, File *file, const char *c
         }
         furi_string_push_back(json_app_list, '"');
         furi_string_push_back(json_app_list, ',');
+        count++;
     };
     if (furi_string_size(json_app_list) > 1)
     {
@@ -641,6 +664,39 @@ static bool update_app_list()
     furi_record_close(RECORD_STORAGE);
     return true;
 }
+
+bool update_fetch_all_manifests(FlipperHTTP *fhtp)
+{
+    // apps_GPIO, apps_Bluetooth, etc
+    // categories array from apps/flip_store_apps.h
+    char json_path[32];
+    char json_data[256];
+    for (int i = 0; i < 11; i++)
+    {
+        snprintf(json_path, sizeof(json_path), "apps_%s", categories[i]);
+        if (load_char(json_path, json_data, sizeof(json_data)))
+        {
+            for (size_t j = 0; j < MAX_APP_FETCH; j++)
+            {
+                char *app_name = get_json_array_value("apps", j, json_data);
+                if (!app_name)
+                {
+                    FURI_LOG_E(TAG, "Failed to get app name from JSON");
+                    break;
+                }
+                update_fetch_github_manifest(fhtp, categories[i], app_name);
+                free(app_name);
+            }
+        }
+        else
+        {
+            FURI_LOG_E(TAG, "Failed to load app list for category: %s", categories[i]);
+            return false;
+        }
+    }
+    return true;
+}
+
 void update_all_apps(FlipperHTTP *fhttp)
 {
     if (!fhttp)
@@ -688,6 +744,13 @@ void update_all_apps(FlipperHTTP *fhttp)
     if (!update_app_list())
     {
         FURI_LOG_E(TAG, "Failed to update app list");
+        return;
+    }
+
+    //--- 4: Loop through each app and download information from the github manifest
+    if (!update_fetch_all_manifests(fhttp))
+    {
+        FURI_LOG_E(TAG, "Failed to fetch all manifests");
         return;
     }
 }
