@@ -4,7 +4,7 @@ CO2 Logger app for Flipper Zero using MH-Z19 sensor. Uses UART protocol to recei
 
 ## Credits
 
-This project is based on the original [MH-Z19 UART app](https://github.com/skotopes/flipperzero_mhz19_uart) by [Aku](https://github.com/skotopes). Enhanced with CSV logging functionality for data collection and analysis.
+This project is based on the original [MH-Z19 UART app](https://github.com/skotopes/flipperzero_co2_logger_uart) by [Aku](https://github.com/skotopes). Enhanced with CSV logging functionality for data collection and analysis.
 
 # Pinout
 

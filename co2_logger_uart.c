@@ -11,7 +11,7 @@
 #include <datetime/datetime.h>
 #include <string.h>
 
-#include "mhz19.h"
+#include "co2_logger.h"
 
 #define CSV_FILE_PATH "/ext/apps_data/co2_logger/co2_log.csv"
 #define LOG_INTERVAL_MS 30000 // 30 seconds
@@ -21,7 +21,7 @@ typedef struct {
     NotificationApp* notification;
     ViewPort* view_port;
     FuriMessageQueue* event_queue;
-    Mhz19* mhz19;
+    co2_logger* co2_logger;
     Storage* storage;
     File* csv_file;
 
@@ -30,9 +30,9 @@ typedef struct {
     uint32_t counter;
     bool is_connected;
     uint32_t last_log_time;
-} Mhz19Uart;
+} co2_loggerUart;
 
-static bool mhz19_uart_create_csv_file(Mhz19Uart* state) {
+static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
     // Create directory if it doesn't exist
     storage_simply_mkdir(state->storage, "/ext/apps_data");
     storage_simply_mkdir(state->storage, "/ext/apps_data/co2_logger");
@@ -57,7 +57,7 @@ static bool mhz19_uart_create_csv_file(Mhz19Uart* state) {
     return success;
 }
 
-static void mhz19_uart_log_reading(Mhz19Uart* state) {
+static void co2_logger_uart_log_reading(co2_loggerUart* state) {
     if(!state->csv_file) return;
     
     DateTime datetime;
@@ -75,8 +75,8 @@ static void mhz19_uart_log_reading(Mhz19Uart* state) {
     storage_file_sync(state->csv_file);
 }
 
-static void mhz19_uart_render_callback(Canvas* canvas, void* ctx) {
-    Mhz19Uart* state = ctx;
+static void co2_logger_uart_render_callback(Canvas* canvas, void* ctx) {
+    co2_loggerUart* state = ctx;
     char buffer[64];
 
     furi_mutex_acquire(state->mutex, FuriWaitForever);
@@ -103,7 +103,7 @@ static void mhz19_uart_render_callback(Canvas* canvas, void* ctx) {
     furi_mutex_release(state->mutex);
 }
 
-static void mhz19_uart_input_callback(InputEvent* input_event, void* ctx) {
+static void co2_logger_uart_input_callback(InputEvent* input_event, void* ctx) {
     FuriMessageQueue* event_queue = ctx;
     if(input_event->type == InputTypeShort) {
         furi_message_queue_put(event_queue, input_event, FuriWaitForever);
@@ -113,25 +113,25 @@ static void mhz19_uart_input_callback(InputEvent* input_event, void* ctx) {
 int32_t co2_logger_app(void* p) {
     UNUSED(p);
 
-    Mhz19Uart state = {0};
+    co2_loggerUart state = {0};
     state.gui = furi_record_open(RECORD_GUI);
     state.notification = furi_record_open(RECORD_NOTIFICATION);
     state.storage = furi_record_open(RECORD_STORAGE);
     state.view_port = view_port_alloc();
     state.event_queue = furi_message_queue_alloc(32, sizeof(InputEvent));
-    state.mhz19 = mhz19_alloc();
+    state.co2_logger = co2_logger_alloc();
     state.mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     state.last_log_time = 0;
 
     // Create CSV file for logging
-    if(!mhz19_uart_create_csv_file(&state)) {
+    if(!co2_logger_uart_create_csv_file(&state)) {
         // Handle error - for now just continue without logging
     }
 
-    view_port_draw_callback_set(state.view_port, mhz19_uart_render_callback, &state);
-    view_port_input_callback_set(state.view_port, mhz19_uart_input_callback, state.event_queue);
+    view_port_draw_callback_set(state.view_port, co2_logger_uart_render_callback, &state);
+    view_port_input_callback_set(state.view_port, co2_logger_uart_input_callback, state.event_queue);
     gui_add_view_port(state.gui, state.view_port, GuiLayerFullscreen);
-    mhz19_open(state.mhz19);
+    co2_logger_open(state.co2_logger);
     notification_message(state.notification, &sequence_display_backlight_enforce_on);
 
     InputEvent event;
@@ -142,7 +142,7 @@ int32_t co2_logger_app(void* p) {
         furi_mutex_acquire(state.mutex, FuriWaitForever);
 
         if(do_refresh) {
-            state.is_connected = mhz19_read_gas_concentration(state.mhz19, &state.co2_ppm);
+            state.is_connected = co2_logger_read_gas_concentration(state.co2_logger, &state.co2_ppm);
             if(state.is_connected) {
                 state.counter++;
             } else {
@@ -151,7 +151,7 @@ int32_t co2_logger_app(void* p) {
             
             // Log to CSV every 30 seconds
             if(current_time - state.last_log_time >= LOG_INTERVAL_MS) {
-                mhz19_uart_log_reading(&state);
+                co2_logger_uart_log_reading(&state);
                 state.last_log_time = current_time;
             }
         } else if(event.key == InputKeyBack) {
@@ -164,7 +164,7 @@ int32_t co2_logger_app(void* p) {
     } while(true);
 
     notification_message(state.notification, &sequence_display_backlight_enforce_auto);
-    mhz19_close(state.mhz19);
+    co2_logger_close(state.co2_logger);
     gui_remove_view_port(state.gui, state.view_port);
 
     // Clean up CSV file
@@ -174,7 +174,7 @@ int32_t co2_logger_app(void* p) {
     }
 
     furi_mutex_free(state.mutex);
-    mhz19_free(state.mhz19);
+    co2_logger_free(state.co2_logger);
     furi_message_queue_free(state.event_queue);
     view_port_free(state.view_port);
     state.notification = NULL;
