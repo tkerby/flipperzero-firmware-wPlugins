@@ -1,5 +1,6 @@
 #include <callback/flip_store_callback.h>
 #include <github/flip_store_github.h>
+#include <update/update.h>
 
 // Below added by Derek Jamison
 // FURI_LOG_DEV will log only during app development. Be sure that Settings/System/Log Device is "LPUART"; so we dont use serial port.

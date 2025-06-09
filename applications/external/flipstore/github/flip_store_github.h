@@ -3,7 +3,7 @@
 
 /*
 I did try downloading a zip file from Github but a few issues
-- unsure how to unzip the file
+- unsure how to unzip the file (maybe https://developer.flipper.net/flipperzero/doxygen/compress_8h.html)
 - either Github redirected us to a loading page, or their was no response on if using an IoT device
 - any contributions to this would be appreciated
 */
