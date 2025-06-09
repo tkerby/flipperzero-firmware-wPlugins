@@ -24,8 +24,9 @@
 #define FIRMWARE_LINKS 3
 
 // 1 for FlipperHTTP, 6 for VGM-Library screensavers, 13 for VGM-Library games
-#define VGM_FIRMWARE_COUNT 20
-#define VGM_FIRMWARE_LINKS 20
+// +1 for Picoware :D
+#define VGM_FIRMWARE_COUNT 21
+#define VGM_FIRMWARE_LINKS 21
 
 #define MAX_GITHUB_FILES 30
 
