@@ -1,5 +1,7 @@
 #include <flip_downloader.h>
 #include <alloc/flip_store_alloc.h>
+#include <update/update.h>
+#include <flip_storage/flip_store_storage.h>
 
 // Entry point for the Hello World application
 int32_t main_flip_downloader(void *p)
@@ -38,12 +40,20 @@ int32_t main_flip_downloader(void *p)
         furi_delay_ms(100);
     }
 
-    flipper_http_free(fhttp);
-
     if (counter == 0)
     {
         easy_flipper_dialog("FlipperHTTP Error", "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
     }
+
+    save_char("app_version", VERSION);
+
+    // for now use the catalog API until I implement caching on the server
+    if (update_is_ready(fhttp, true))
+    {
+        easy_flipper_dialog("Update Status", "Complete.\nRestart your Flipper Zero.");
+    }
+
+    flipper_http_free(fhttp);
 
     // Run the view dispatcher
     view_dispatcher_run(app->view_dispatcher);

@@ -29,7 +29,7 @@ Firmware *firmware_alloc()
     snprintf(fw[2].name, sizeof(fw[2].name), "%s", "Marauder");
     snprintf(fw[2].links[0], sizeof(fw[2].links[0]), "%s", "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/STATIC/M/FLIPDEV/esp32_marauder.ino.bootloader.bin");
     snprintf(fw[2].links[1], sizeof(fw[2].links[1]), "%s", "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/STATIC/M/FLIPDEV/esp32_marauder.ino.partitions.bin");
-    snprintf(fw[2].links[2], sizeof(fw[2].links[2]), "%s", "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_4_1_20250406_flipper.bin");
+    snprintf(fw[2].links[2], sizeof(fw[2].links[2]), "%s", "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_6_2_20250531_flipper.bin");
 
     return fw;
 }
@@ -45,88 +45,94 @@ VGMFirmware *vgm_firmware_alloc()
 
     // FlipperHTTP
     snprintf(fw[0].name, sizeof(fw[0].name), "%s", "FlipperHTTP");
-    snprintf(fw[0].link, sizeof(fw[0].link), "%s", "https://raw.githubusercontent.com/jblanked/FlipperHTTP/main/Video%20Game%20Module/MicroPython/flipper_http_vgm_micro_python.uf2");
+    // https://github.com/jblanked/FlipperHTTP/blob/main/Video%20Game%20Module/C%2B%2B/flipper_http_vgm_c%2B%2B.uf2
+    snprintf(fw[0].link, sizeof(fw[0].link), "%s", "https://raw.githubusercontent.com/jblanked/FlipperHTTP/main/Video%20Game%20Module/C%2B%2B/flipper_http_vgm_c%2B%2B.uf2");
+
+    // Picoware
+    snprintf(fw[1].name, sizeof(fw[1].name), "%s", "Picoware");
+    // https://github.com/jblanked/Picoware/blob/main/builds/Picoware-VGM.uf2
+    snprintf(fw[1].link, sizeof(fw[1].link), "%s", "https://raw.githubusercontent.com/jblanked/Picoware/main/builds/Picoware-VGM.uf2");
 
     /* VGM Library specs
-    Screensavers: https://github.com/jblanked/VGM-Library/tree/main/Screensavers
-        - aquarium.uf2
-        - boing_ball.uf2
-        - bouncing_balls.uf2
-        - dvi_logo_bounce.uf2
-        - flying_toasters.uf2
-        - trippy_tvhost.uf2
-    Games: https://github.com/jblanked/VGM-Library/tree/main/engine/Arduino
-        - AirLabyrinth-VGM-Engine.uf2
-        - Arkanoid-VGM-Engine.uf2
-        - Doom-VGM-Engine.uf2
-        - Doom_8bit-VGM-Engine.uf2
-        - FlappyBird-VGM-Engine.uf2
-        - FlightAssault-VGM-Engine.uf2
-        - FlipWorld-VGM-Engine.uf2
-        - FuriousBirds-VGM-Engine.uf2
-        - Hawaii-VGM-Engine.uf2
-        - Pong-VGM-Engine.uf2
-        - T-Rex-Runner-VGM-Engine.uf2
-        - Tetris-VGM-Engine.uf2
-        - example_8bit-VGM-Engine.uf2
+    Screensavers: https://github.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule
+        - aquarium-VGM.uf2
+        - boing_ball-VGM.uf2
+        - bouncing_balls-VGM.uf2
+        - dvi_logo_bounce-VGM.uf2
+        - flying_toasters-VGM.uf2
+        - trippy_tvhost-VGM.uf2
+    Games: https://github.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule
+        - AirLabyrinth-VGM.uf2
+        - Arkanoid-VGM.uf2
+        - Doom-VGM.uf2
+        - Doom_8bit-VGM.uf2
+        - FlappyBird-VGM.uf2
+        - FlightAssault-VGM.uf2
+        - FlipWorld-VGM.uf2
+        - FuriousBirds-VGM.uf2
+        - Hawaii-VGM.uf2
+        - Pong-VGM.uf2
+        - T-Rex-Runner-VGM.uf2
+        - Tetris-VGM.uf2
+        - example_8bit-VGM.uf2
     */
     // VGM Library
-    snprintf(fw[1].name, sizeof(fw[1].name), "%s", "Aquarium - Screensaver");
-    snprintf(fw[1].link, sizeof(fw[1].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/aquarium.uf2");
+    snprintf(fw[2].name, sizeof(fw[2].name), "%s", "Aquarium - Screensaver");
+    snprintf(fw[2].link, sizeof(fw[2].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/aquarium-VGM.uf2");
     //
-    snprintf(fw[2].name, sizeof(fw[2].name), "%s", "Boing Ball - Screensaver");
-    snprintf(fw[2].link, sizeof(fw[2].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/boing_ball.uf2");
+    snprintf(fw[3].name, sizeof(fw[3].name), "%s", "Boing Ball - Screensaver");
+    snprintf(fw[3].link, sizeof(fw[3].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/boing_ball-VGM.uf2");
     //
-    snprintf(fw[3].name, sizeof(fw[3].name), "%s", "Bouncing Balls - Screensaver");
-    snprintf(fw[3].link, sizeof(fw[3].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/bouncing_balls.uf2");
+    snprintf(fw[4].name, sizeof(fw[4].name), "%s", "Bouncing Balls - Screensaver");
+    snprintf(fw[4].link, sizeof(fw[4].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/bouncing_balls-VGM.uf2");
     //
-    snprintf(fw[4].name, sizeof(fw[4].name), "%s", "DVI Logo Bounce - Screensaver");
-    snprintf(fw[4].link, sizeof(fw[4].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/dvi_logo_bounce.uf2");
+    snprintf(fw[5].name, sizeof(fw[5].name), "%s", "DVI Logo Bounce - Screensaver");
+    snprintf(fw[5].link, sizeof(fw[5].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/dvi_logo_bounce-VGM.uf2");
     //
-    snprintf(fw[5].name, sizeof(fw[5].name), "%s", "Flying Toasters - Screensaver");
-    snprintf(fw[5].link, sizeof(fw[5].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/flying_toasters.uf2");
+    snprintf(fw[6].name, sizeof(fw[6].name), "%s", "Flying Toasters - Screensaver");
+    snprintf(fw[6].link, sizeof(fw[6].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/flying_toasters-VGM.uf2");
     //
-    snprintf(fw[6].name, sizeof(fw[6].name), "%s", "Trippy TV Host - Screensaver");
-    snprintf(fw[6].link, sizeof(fw[6].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/Screensavers/trippy_tvhost.uf2");
+    snprintf(fw[7].name, sizeof(fw[7].name), "%s", "Trippy TV Host - Screensaver");
+    snprintf(fw[7].link, sizeof(fw[7].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Screensavers/VideoGameModule/trippy_tvhost-VGM.uf2");
     //
-    snprintf(fw[7].name, sizeof(fw[7].name), "%s", "Air Labyrinth - Game");
-    snprintf(fw[7].link, sizeof(fw[7].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/AirLabyrinth-VGM-Engine.uf2");
+    snprintf(fw[8].name, sizeof(fw[8].name), "%s", "Air Labyrinth - Game");
+    snprintf(fw[8].link, sizeof(fw[8].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/AirLabyrinth-VGM.uf2");
     //
-    snprintf(fw[8].name, sizeof(fw[8].name), "%s", "Arkanoid - Game");
-    snprintf(fw[8].link, sizeof(fw[8].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Arkanoid-VGM-Engine.uf2");
+    snprintf(fw[9].name, sizeof(fw[9].name), "%s", "Arkanoid - Game");
+    snprintf(fw[9].link, sizeof(fw[9].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Arkanoid-VGM.uf2");
     //
-    snprintf(fw[9].name, sizeof(fw[9].name), "%s", "Doom - Game");
-    snprintf(fw[9].link, sizeof(fw[9].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Doom-VGM-Engine.uf2");
+    snprintf(fw[10].name, sizeof(fw[10].name), "%s", "Doom - Game");
+    snprintf(fw[10].link, sizeof(fw[10].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Doom-VGM.uf2");
     //
-    snprintf(fw[10].name, sizeof(fw[10].name), "%s", "Doom 8bit - Game");
-    snprintf(fw[10].link, sizeof(fw[10].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Doom_8bit-VGM-Engine.uf2");
+    snprintf(fw[11].name, sizeof(fw[11].name), "%s", "Doom 8bit - Game");
+    snprintf(fw[11].link, sizeof(fw[11].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Doom_8bit-VGM.uf2");
     //
-    snprintf(fw[11].name, sizeof(fw[11].name), "%s", "Flappy Bird - Game");
-    snprintf(fw[11].link, sizeof(fw[11].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/FlappyBird-VGM-Engine.uf2");
+    snprintf(fw[12].name, sizeof(fw[12].name), "%s", "Flappy Bird - Game");
+    snprintf(fw[12].link, sizeof(fw[12].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/FlappyBird-VGM.uf2");
     //
-    snprintf(fw[12].name, sizeof(fw[12].name), "%s", "Flight Assault - Game");
-    snprintf(fw[12].link, sizeof(fw[12].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/FlightAssault-VGM-Engine.uf2");
+    snprintf(fw[13].name, sizeof(fw[13].name), "%s", "Flight Assault - Game");
+    snprintf(fw[13].link, sizeof(fw[13].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/FlightAssault-VGM.uf2");
     //
-    snprintf(fw[13].name, sizeof(fw[13].name), "%s", "Flip World - Game");
-    snprintf(fw[13].link, sizeof(fw[13].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/FlipWorld-VGM-Engine.uf2");
+    snprintf(fw[14].name, sizeof(fw[14].name), "%s", "Flip World - Game");
+    snprintf(fw[14].link, sizeof(fw[14].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/FlipWorld-VGM.uf2");
     //
-    snprintf(fw[14].name, sizeof(fw[14].name), "%s", "Furious Birds - Game");
-    snprintf(fw[14].link, sizeof(fw[14].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/FuriousBirds-VGM-Engine.uf2");
+    snprintf(fw[15].name, sizeof(fw[15].name), "%s", "Furious Birds - Game");
+    snprintf(fw[15].link, sizeof(fw[15].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/FuriousBirds-VGM.uf2");
     //
-    snprintf(fw[15].name, sizeof(fw[15].name), "%s", "Hawaii - Game");
-    snprintf(fw[15].link, sizeof(fw[15].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Hawaii-VGM-Engine.uf2");
+    snprintf(fw[16].name, sizeof(fw[16].name), "%s", "Hawaii - Game");
+    snprintf(fw[16].link, sizeof(fw[16].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Hawaii-VGM.uf2");
     //
-    snprintf(fw[16].name, sizeof(fw[16].name), "%s", "Pong - Game");
-    snprintf(fw[16].link, sizeof(fw[16].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Pong-VGM-Engine.uf2");
+    snprintf(fw[17].name, sizeof(fw[17].name), "%s", "Pong - Game");
+    snprintf(fw[17].link, sizeof(fw[17].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Pong-VGM.uf2");
     //
-    snprintf(fw[17].name, sizeof(fw[17].name), "%s", "T-Rex Runner - Game");
-    snprintf(fw[17].link, sizeof(fw[17].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/T-Rex-Runner-VGM-Engine.uf2");
+    snprintf(fw[18].name, sizeof(fw[18].name), "%s", "T-Rex Runner - Game");
+    snprintf(fw[18].link, sizeof(fw[18].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/T-Rex-Runner-VGM.uf2");
     //
-    snprintf(fw[18].name, sizeof(fw[18].name), "%s", "Tetris - Game");
-    snprintf(fw[18].link, sizeof(fw[18].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/Tetris-VGM-Engine.uf2");
+    snprintf(fw[19].name, sizeof(fw[19].name), "%s", "Tetris - Game");
+    snprintf(fw[19].link, sizeof(fw[19].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/Tetris-VGM.uf2");
     //
-    snprintf(fw[19].name, sizeof(fw[19].name), "%s", "Example 8bit - Game");
-    snprintf(fw[19].link, sizeof(fw[19].link), "%s", "https://raw.githubusercontent.com/jblanked/VGM-Library/main/engine/Arduino/example_8bit-VGM-Engine.uf2");
+    snprintf(fw[20].name, sizeof(fw[20].name), "%s", "Example 8bit - Game");
+    snprintf(fw[20].link, sizeof(fw[20].link), "%s", "https://raw.githubusercontent.com/jblanked/pico-game-engine/main/builds/Games/VideoGameModule/example_8bit-VGM.uf2");
 
     return fw;
 }
