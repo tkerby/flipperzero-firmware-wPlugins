@@ -181,7 +181,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 ## Roadmap
 Wendigo is currently a capable Bluetooth Classic and Low Energy scanner. Some further refinement is required to existing functionality, after which Wendigo will be extended to include WiFi scanning, Bluetooth service discovery, and additional features.
 
-* [ ] BUG: Device list: lastSeen displays seconds with 5 decimal places!
+* [ ] BUG: Device list: lastSeen displays seconds with 5 decimal places! Converting variables to ints displays nonsense.
 * [X] Combined Bluetooth packet for BT Classic and LE devices
 * [X] Combined Bluetooth data model for Flipper
 * [X] BT Classic and LE device transmission from ESP32 to Flipper
@@ -232,6 +232,8 @@ Wendigo is currently a capable Bluetooth Classic and Low Energy scanner. Some fu
 * [ ] Other Features
   * [ ] Focus Mode
   * [ ] Use FZ LED to indicate events
+  * [ ] variable_item_list (Flipper API) uses uint8_t to get/set selected item index, meaning the device list is limited to 255 devices.
+    * [ ] Add some fanciness to allow display of a larger number of devices.
   * [ ] Ability to flash ESP32 firmware from Flipper?
 * [ ] Flipper Zero logging
   * [ ] Develop a Flipper-based logging mechanism and support for multiple streams of data from ESP32

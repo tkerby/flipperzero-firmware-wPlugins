@@ -1,6 +1,5 @@
 #include "../wendigo_app_i.h"
 
-// SETUP_MENU_ITEMS defined in wendigo_app_i.h - if you add an entry here, increment it!
 static const WendigoItem items[SETUP_MENU_ITEMS] = {
     {"BLE", {"On", "Off", "MAC"}, 3, LIST_DEVICES, OFF},
     {"BT Classic", {"On", "Off", "MAC"}, 3, LIST_DEVICES, OFF},
@@ -32,9 +31,9 @@ static void wendigo_scene_setup_var_list_enter_callback(void* context, uint32_t 
         break;
     default:
         /* Note: Additional check required here if additional menu items are added with 3 or more options.
-           At the moment we can assume that if selected option is RADIO_MAC we're displaying a MAC,
-           that may not always be the case
-        */
+               At the moment we can assume that if selected option is RADIO_MAC we're displaying a MAC,
+               that may not always be the case
+            */
         if(selected_option_index == RADIO_MAC) {
             // Configure byte_input's value based on item->item_string
             if(!strncmp(item->item_string, "BLE", 3)) {
@@ -106,17 +105,16 @@ static void wendigo_scene_setup_var_list_change_callback(VariableItem* item) {
 
 void wendigo_scene_setup_on_enter(void* context) {
     WendigoApp* app = context;
-    VariableItemList* var_item_list = app->var_item_list;
-    app->current_view = WendigoAppViewVarItemList;
+    app->current_view = WendigoAppViewSetup;
 
     variable_item_list_set_enter_callback(
-        var_item_list, wendigo_scene_setup_var_list_enter_callback, app);
+        app->var_item_list, wendigo_scene_setup_var_list_enter_callback, app);
 
-    variable_item_list_reset(var_item_list);
+    variable_item_list_reset(app->var_item_list);
     VariableItem* item;
     for(int i = 0; i < SETUP_MENU_ITEMS; ++i) {
         item = variable_item_list_add(
-            var_item_list,
+            app->var_item_list,
             items[i].item_string,
             items[i].num_options_menu,
             wendigo_scene_setup_var_list_change_callback,
@@ -142,8 +140,7 @@ void wendigo_scene_setup_on_enter(void* context) {
     }
 
     variable_item_list_set_selected_item(
-        var_item_list, scene_manager_get_scene_state(app->scene_manager, WendigoSceneSetup));
-
+        app->var_item_list, scene_manager_get_scene_state(app->scene_manager, WendigoSceneSetup));
     view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewVarItemList);
 }
 
@@ -168,7 +165,6 @@ bool wendigo_scene_setup_on_event(void* context, SceneManagerEvent event) {
             variable_item_list_get_selected_item_index(app->var_item_list);
         consumed = true;
     }
-
     return consumed;
 }
 

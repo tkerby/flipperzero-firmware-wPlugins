@@ -28,7 +28,7 @@ static uint8_t item_indexes[START_MENU_ITEMS] = {0};
    Defined and used in wendigo_scene_device_list.c */
 extern bool display_selected_only;
 
-/* Callback invoked when the action button is pressed on a menu item */
+/* Callback invoked when a menu item is selected */
 static void wendigo_scene_start_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
     WendigoApp* app = context;
@@ -78,8 +78,6 @@ static void wendigo_scene_start_var_list_enter_callback(void* context, uint32_t 
         }
         break;
     case LIST_DEVICES:
-        // Try to fit name, BDA and CoD on the var_list
-        // Allow selecting a device to obtain more information: remaining attributes, tag/untag, services, maybe some transmit options
         display_selected_only = false;
         view_dispatcher_send_custom_event(app->view_dispatcher, Wendigo_EventListDevices);
         return;
@@ -129,7 +127,6 @@ static void wendigo_scene_start_var_list_change_callback(VariableItem* item) {
 /* Callback invoked when the view is launched */
 void wendigo_scene_start_on_enter(void* context) {
     WendigoApp* app = context;
-    VariableItemList* var_item_list = app->var_item_list;
     app->current_view = WendigoAppViewVarItemList;
 
     for(int i = 0; i < START_MENU_ITEMS; ++i) {
@@ -137,11 +134,11 @@ void wendigo_scene_start_on_enter(void* context) {
     }
 
     variable_item_list_set_enter_callback(
-        var_item_list, wendigo_scene_start_var_list_enter_callback, app);
+        app->var_item_list, wendigo_scene_start_var_list_enter_callback, app);
 
     VariableItem* item;
     menu_items_num = 0;
-    for(int i = 0; i < START_MENU_ITEMS; ++i) {
+    for(uint8_t i = 0; i < START_MENU_ITEMS; ++i) {
         bool enabled = false;
         if(app->hex_mode && (items[i].mode_mask & HEX_MODE)) {
             enabled = true;
@@ -152,7 +149,7 @@ void wendigo_scene_start_on_enter(void* context) {
 
         if(enabled) {
             item = variable_item_list_add(
-                var_item_list,
+                app->var_item_list,
                 items[i].item_string,
                 items[i].num_options_menu,
                 wendigo_scene_start_var_list_change_callback,
@@ -170,7 +167,7 @@ void wendigo_scene_start_on_enter(void* context) {
     }
 
     variable_item_list_set_selected_item(
-        var_item_list, scene_manager_get_scene_state(app->scene_manager, WendigoSceneStart));
+        app->var_item_list, scene_manager_get_scene_state(app->scene_manager, WendigoSceneStart));
 
     view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewVarItemList);
 }
