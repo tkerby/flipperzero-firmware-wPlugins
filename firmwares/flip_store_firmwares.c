@@ -29,7 +29,7 @@ Firmware *firmware_alloc()
     snprintf(fw[2].name, sizeof(fw[2].name), "%s", "Marauder");
     snprintf(fw[2].links[0], sizeof(fw[2].links[0]), "%s", "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/STATIC/M/FLIPDEV/esp32_marauder.ino.bootloader.bin");
     snprintf(fw[2].links[1], sizeof(fw[2].links[1]), "%s", "https://raw.githubusercontent.com/FZEEFlasher/fzeeflasher.github.io/main/resources/STATIC/M/FLIPDEV/esp32_marauder.ino.partitions.bin");
-    snprintf(fw[2].links[2], sizeof(fw[2].links[2]), "%s", "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_4_1_20250406_flipper.bin");
+    snprintf(fw[2].links[2], sizeof(fw[2].links[2]), "%s", "https://raw.githubusercontent.com/jblanked/fzeeflasher.github.io/main/resources/CURRENT/esp32_marauder_v1_6_2_20250531_flipper.bin");
 
     return fw;
 }
