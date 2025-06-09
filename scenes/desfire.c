@@ -25,11 +25,11 @@ TransitCardInfo cards[81] = {
     { 0x0011F2, "myki (MEL)", "DTP", false},
     { 0x002000, "Presto (YYZ)", "Metrolinx", true},
     { 0x004048, "Mi Movilidad (GDL)", "SITEUR", true},
-    { 0x004055, "AT HOP (AKL)", "AKL Transport", true},
-    { 0x004063, "Travel Pass (DOH)", "QA Rail", true},
+    { 0x004055, "AT HOP (AKL)", "Auckland Transport", true},
+    { 0x004063, "Travel Pass (DOH)", "Qatar Rail", true},
     { 0x004078, "nol (DXB)", "RTA", true},
     { 0x008057, "NORTIC", "NRPA", true},
-    { 0x010000, "Breeze/Compass/FREEDOM/Miami Card", "MARTA/TransLink/PATCO", true},
+    { 0x010000, "Breeze/Compass/EASY/FREEDOM", "MARTA/TransLink/PATCO", true},
     { 0x012340, "motion (ECN)", "MoTCW", true},
     { 0x012350, "motion (ECN)", "MoTCW", true},
     { 0x012360, "motion (ECN)", "MoTCW", true},
@@ -113,9 +113,9 @@ const char* desfire_type(const MfDesfireData* data) {
         for(uint32_t j = 0; j < card_app_id_count; ++j) {  // Inner loop for app_ids
             const MfDesfireApplicationId app_id = *(const MfDesfireApplicationId*)simple_array_cget(data->application_ids, j);
             if(app_id_matches(cards[i].aid, &app_id)) {
-                FURI_LOG_I("Metroflip:DesfireManager", "matches with %s!", cards[i].company);
+                FURI_LOG_I("Metroflip:DesfireManager", "matches with %s!", cards[i].card_name);
                 if(cards[i].locked) {
-                    return cards[i].company;
+                    return cards[i].card_name;
                 }
                 return cards[i].card_name;
             } 
