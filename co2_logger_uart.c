@@ -33,27 +33,44 @@ typedef struct {
 } co2_loggerUart;
 
 static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
+    FURI_LOG_I("CSV", "Creating CSV file...");
+    
     // Create directory if it doesn't exist
     storage_simply_mkdir(state->storage, "/ext/apps_data");
     storage_simply_mkdir(state->storage, "/ext/apps_data/co2_logger");
     
     // Open or create CSV file
     state->csv_file = storage_file_alloc(state->storage);
+    if(!state->csv_file) {
+        FURI_LOG_E("CSV", "Failed to allocate file");
+        return false;
+    }
+    
     bool file_exists = storage_file_open(state->csv_file, CSV_FILE_PATH, FSAM_READ, FSOM_OPEN_EXISTING);
     
     if(file_exists) {
         storage_file_close(state->csv_file);
+        FURI_LOG_I("CSV", "File exists, reopening for append");
     }
     
     // Open file for append (create if doesn't exist)
     bool success = storage_file_open(state->csv_file, CSV_FILE_PATH, FSAM_WRITE, FSOM_OPEN_APPEND);
     
+    if(!success) {
+        FURI_LOG_E("CSV", "Failed to open CSV file for writing");
+        storage_file_free(state->csv_file);
+        state->csv_file = NULL;
+        return false;
+    }
+    
     if(success && !file_exists) {
         // Write CSV header if file is new
         const char* header = "Timestamp,CO2_PPM,Status\n";
         storage_file_write(state->csv_file, header, strlen(header));
+        FURI_LOG_I("CSV", "Created new CSV file with header");
     }
     
+    FURI_LOG_I("CSV", "CSV file ready");
     return success;
 }
 
@@ -112,27 +129,38 @@ static void co2_logger_uart_input_callback(InputEvent* input_event, void* ctx) {
 
 int32_t co2_logger_app(void* p) {
     UNUSED(p);
+    
+    FURI_LOG_I("App", "Starting CO2 Logger app");
 
     co2_loggerUart state = {0};
+    FURI_LOG_I("App", "Opening records...");
     state.gui = furi_record_open(RECORD_GUI);
     state.notification = furi_record_open(RECORD_NOTIFICATION);
     state.storage = furi_record_open(RECORD_STORAGE);
+    
+    FURI_LOG_I("App", "Allocating resources...");
     state.view_port = view_port_alloc();
     state.event_queue = furi_message_queue_alloc(32, sizeof(InputEvent));
     state.co2_logger = co2_logger_alloc();
     state.mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     state.last_log_time = 0;
 
+    FURI_LOG_I("App", "Setting up CSV logging...");
     // Create CSV file for logging
     if(!co2_logger_uart_create_csv_file(&state)) {
-        // Handle error - for now just continue without logging
+        FURI_LOG_W("App", "CSV logging disabled - continuing without file logging");
     }
 
+    FURI_LOG_I("App", "Setting up GUI...");
     view_port_draw_callback_set(state.view_port, co2_logger_uart_render_callback, &state);
     view_port_input_callback_set(state.view_port, co2_logger_uart_input_callback, state.event_queue);
     gui_add_view_port(state.gui, state.view_port, GuiLayerFullscreen);
+    
+    FURI_LOG_I("App", "Opening CO2 logger...");
     co2_logger_open(state.co2_logger);
     notification_message(state.notification, &sequence_display_backlight_enforce_on);
+    
+    FURI_LOG_I("App", "Entering main loop...");
 
     InputEvent event;
     do {

@@ -71,6 +71,8 @@ bool co2_logger_read_gas_concentration(co2_logger* instance, uint32_t* value) {
     uint8_t buffer[co2_logger_UART_EXCHANGE_SIZE] = {0};
     furi_stream_buffer_reset(instance->stream);
 
+    FURI_LOG_D("UART", "Sending request for gas concentration");
+    
     // Send Request
     buffer[0] = 0xff;
     buffer[1] = 0x01;
@@ -78,22 +80,25 @@ bool co2_logger_read_gas_concentration(co2_logger* instance, uint32_t* value) {
     buffer[8] = co2_logger_checksum(buffer);
     furi_hal_serial_tx(instance->serial, (uint8_t*)buffer, sizeof(buffer));
 
+    FURI_LOG_D("UART", "Waiting for response...");
+    
     // Get response
     bool ret = false;
     do {
         size_t read_size =
             furi_stream_buffer_receive(instance->stream, buffer, sizeof(buffer), 50);
         if(read_size != co2_logger_UART_EXCHANGE_SIZE) {
-            FURI_LOG_E("Worker", "RX failed %zu", read_size);
+            FURI_LOG_D("UART", "RX failed %zu (expected %d)", read_size, co2_logger_UART_EXCHANGE_SIZE);
             break;
         }
 
         if(buffer[8] != co2_logger_checksum(buffer)) {
-            FURI_LOG_E("Worker", "Incorrect checksum %x!=%x", buffer[8], co2_logger_checksum(buffer));
+            FURI_LOG_E("UART", "Incorrect checksum %x!=%x", buffer[8], co2_logger_checksum(buffer));
             break;
         }
 
         *value = (uint32_t)buffer[2] * 256 + buffer[3];
+        FURI_LOG_D("UART", "Successfully read CO2: %lu ppm", *value);
 
         ret = true;
     } while(false);
