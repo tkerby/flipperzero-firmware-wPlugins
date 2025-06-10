@@ -16,7 +16,7 @@ void metroflip_scene_unknown_on_enter(void* context) {
     FURI_LOG_I(TAG, "ct 2 %s", app->card_type);
     furi_string_printf(str, "\e#%s \n\n", app->card_type);
     furi_string_cat_printf(
-        str, "This card currently \nunsupported/fully locked");
+        str, "This card is currently \nunsupported / fully locked");
 
     widget_add_text_scroll_element(widget, 0, 0, 128, 64, furi_string_get_cstr(str));
 
