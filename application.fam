@@ -9,6 +9,6 @@ App(
     fap_icon_assets="assets",
     fap_author="JBlanked",
     fap_weburl="https://github.com/jblanked/FlipWiFi",
-    fap_version="1.6",
+    fap_version="1.6.1",
     fap_description="FlipperHTTP companion app.",
 )

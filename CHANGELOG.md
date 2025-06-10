@@ -1,3 +1,5 @@
+## v1.6.1
+- Bumped version for catalog fix.
 ## v1.6
 - Added Deauthentication mode.
 
