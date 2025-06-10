@@ -15,8 +15,8 @@ App(
             name="led_worker",
         ),
         Lib(
-            name="compare_checks"
-        )
+            name="compare_checks",
+        ),
     ],
     fap_icon="assets/Comparator_10px.png",
     fap_icon_assets="assets",

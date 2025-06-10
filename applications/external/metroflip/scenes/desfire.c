@@ -21,16 +21,16 @@ TransitCardInfo cards[81] = {
     {0x0011F2, "myki (MEL)", "DTP", false},
     {0x002000, "Presto (YYZ)", "Metrolinx", true},
     {0x004048, "Mi Movilidad (GDL)", "SITEUR", true},
-    {0x004055, "AT HOP (AKL)", "AKL Transport", true},
-    {0x004063, "Travel Pass (DOH)", "QA Rail", true},
+    {0x004055, "AT HOP (AKL)", "Auckland Transport", true},
+    {0x004063, "Travel Pass (DOH)", "Qatar Rail", true},
     {0x004078, "nol (DXB)", "RTA", true},
     {0x008057, "NORTIC", "NRPA", true},
-    {0x010000, "Breeze/Compass/FREEDOM/Miami Card", "MARTA/TransLink/PATCO", true},
+    {0x010000, "Breeze / Compass / EASY / FREEDOM", "MARTA / TransLink / MIA County / PATCO", true},
     {0x012340, "motion (ECN)", "MoTCW", true},
     {0x012350, "motion (ECN)", "MoTCW", true},
     {0x012360, "motion (ECN)", "MoTCW", true},
     {0x018057, "NORTIC", "NRPA", true},
-    {0x0112F2, "Tap-N-Go/peggo", "GBMT/YWG Transit", true},
+    {0x0112F2, "Tap-N-Go / peggo", "GBMT / YWG Transit", true},
     {0x014D44, "DMTC (DEL)", "DMRCL", true},
     {0x0212F2, "Tap-N-Go (GRB)", "GBM Transit", true},
     {0x024D44, "DMTC (DEL)", "DMRCL", true},
@@ -47,7 +47,7 @@ TransitCardInfo cards[81] = {
     {0x1602A0, "ITSO (UK)", "ITSO", false},
     {0x227508, "Umo", "Cubic", true},
     {0x3010F2, "ORCA (SEA)", "ORCA", true},
-    {0x314553, "Opal (SYD)", "TfNSW", false},
+    {0x314553, "Opal (SYD)", "Transport for NSW", false},
     {0x315441, "ATH.ENA (ATH)", "OASA", true},
     {0x31594F, "Oyster (LHR)", "TfL", true},
     {0x422201, "Istanbulkart (IST)", "BELBIM", true},
@@ -72,7 +72,7 @@ TransitCardInfo cards[81] = {
     {0x425311, "MRT SVC (BKK)", "BEM", true},
     {0x5010F2, "Metrocard (CHC)", "ECan", true},
     {0x5011F2, "Litacka Opencard", "Haguess", true},
-    {0x6013F2, "HOLO", "HNL County", true},
+    {0x6013F2, "HOLO", "Honolulu County", true},
     {0x7A007A, "TAP & GO (LAS)", "RTC", true},
     {0x7D23A4, "Umo", "Cubic", true},
     {0x805BC6, "Umo", "Cubic", true},
@@ -84,9 +84,9 @@ TransitCardInfo cards[81] = {
     {0xA012F2, "Go CT", "CTtransit", true},
     {0xA013F2, "Wave (PVD)", "RIPTA", true},
     {0xAF1122, "Leap (DUB)", "TFI", true},
-    {0xB006F2, "metroCARD (ADL)", "ADL Metro", true},
+    {0xB006F2, "metroCARD (ADL)", "Adelaide Metro", true},
     {0xB52C99, "Umo", "Cubic", true},
-    {0xCA3490, "Sofia City Card (SOF)", "UMC", true},
+    {0xCA3490, "City Card (SOF)", "UMC", true},
     {0xCC00CC, "Smartcard (CMH)", "COTA", true},
     {0xD000D0, "Tapp Pay (DAY)", "RTA", true},
     {0xDD00DD, "MyRide (DEN)", "RTD", true},
@@ -110,9 +110,9 @@ const char* desfire_type(const MfDesfireData* data) {
             const MfDesfireApplicationId app_id =
                 *(const MfDesfireApplicationId*)simple_array_cget(data->application_ids, j);
             if(app_id_matches(cards[i].aid, &app_id)) {
-                FURI_LOG_I("Metroflip:DesfireManager", "matches with %s!", cards[i].company);
+                FURI_LOG_I("Metroflip:DesfireManager", "matches with %s!", cards[i].card_name);
                 if(cards[i].locked) {
-                    return cards[i].company;
+                    return cards[i].card_name;
                 }
                 return cards[i].card_name;
             }

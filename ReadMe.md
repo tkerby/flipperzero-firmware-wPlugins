@@ -34,10 +34,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Digital Kaleidoscope v0.1 (By JamesR555)](https://github.com/JamesR555/digital_kaleidoscope)
 - Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
 - Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy) (Version Only)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 - Updated: [FlipDownloader v1.1 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32`
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [FlipWifi v1.6.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` (Version Only)
+- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
 
 <a name="release">
 
