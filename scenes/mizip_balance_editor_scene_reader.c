@@ -76,6 +76,7 @@ void mizip_balance_editor_scene_reader_on_enter(void* context) {
 
     app->poller = nfc_poller_alloc(app->nfc, NfcProtocolMfClassic);
     nfc_poller_start(app->poller, mizip_balance_editor_scene_reader_poller_callback, context);
+    notification_message(app->notifications, &sequence_blink_start_cyan);
     view_dispatcher_switch_to_view(app->view_dispatcher, MiZipBalanceEditorViewIdReader);
 }
 
@@ -116,5 +117,6 @@ bool mizip_balance_editor_scene_reader_on_event(void* context, SceneManagerEvent
 void mizip_balance_editor_scene_reader_on_exit(void* context) {
     furi_assert(context);
     MiZipBalanceEditorApp* app = context;
+    notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }

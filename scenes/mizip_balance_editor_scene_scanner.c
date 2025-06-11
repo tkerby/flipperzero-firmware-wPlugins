@@ -62,6 +62,7 @@ void mizip_balance_editor_scene_scanner_on_enter(void* context) {
     app->scanner = nfc_scanner_alloc(app->nfc);
     nfc_scanner_start(app->scanner, mizip_balance_editor_scene_scanner_scan_callback, app);
     app->is_scan_active = true;
+    notification_message(app->notifications, &sequence_blink_start_cyan);
     FURI_LOG_I("MiZipBalanceEditor", "Enter scanner scene");
 }
 
@@ -107,5 +108,6 @@ void mizip_balance_editor_scene_scanner_on_exit(void* context) {
         nfc_scanner_stop(app->scanner);
         nfc_scanner_free(app->scanner);
     }
+    notification_message(app->notifications, &sequence_blink_stop);
     popup_reset(app->popup);
 }
