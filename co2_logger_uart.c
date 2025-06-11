@@ -36,24 +36,30 @@ static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
     FURI_LOG_I("CSV", "Creating CSV file...");
     
     // Create directory if it doesn't exist
+    FURI_LOG_D("CSV", "Creating directories...");
     storage_simply_mkdir(state->storage, "/ext/apps_data");
     storage_simply_mkdir(state->storage, "/ext/apps_data/co2_logger");
     
     // Open or create CSV file
+    FURI_LOG_D("CSV", "Allocating file handle...");
     state->csv_file = storage_file_alloc(state->storage);
     if(!state->csv_file) {
         FURI_LOG_E("CSV", "Failed to allocate file");
         return false;
     }
     
+    FURI_LOG_D("CSV", "Checking if file exists...");
     bool file_exists = storage_file_open(state->csv_file, CSV_FILE_PATH, FSAM_READ, FSOM_OPEN_EXISTING);
     
     if(file_exists) {
         storage_file_close(state->csv_file);
         FURI_LOG_I("CSV", "File exists, reopening for append");
+    } else {
+        FURI_LOG_I("CSV", "File does not exist, will create new file");
     }
     
     // Open file for append (create if doesn't exist)
+    FURI_LOG_D("CSV", "Opening file for writing...");
     bool success = storage_file_open(state->csv_file, CSV_FILE_PATH, FSAM_WRITE, FSOM_OPEN_APPEND);
     
     if(!success) {
@@ -66,8 +72,8 @@ static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
     if(success && !file_exists) {
         // Write CSV header if file is new
         const char* header = "Timestamp,CO2_PPM,Status\n";
-        storage_file_write(state->csv_file, header, strlen(header));
-        FURI_LOG_I("CSV", "Created new CSV file with header");
+        size_t bytes_written = storage_file_write(state->csv_file, header, strlen(header));
+        FURI_LOG_I("CSV", "Created new CSV file with header (%zu bytes written)", bytes_written);
     }
     
     FURI_LOG_I("CSV", "CSV file ready");
@@ -75,8 +81,12 @@ static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
 }
 
 static void co2_logger_uart_log_reading(co2_loggerUart* state) {
-    if(!state->csv_file) return;
+    if(!state->csv_file) {
+        FURI_LOG_W("CSV", "CSV file not available for logging");
+        return;
+    }
     
+    FURI_LOG_D("CSV", "Getting current timestamp...");
     DateTime datetime;
     furi_hal_rtc_get_datetime(&datetime);
     
@@ -88,8 +98,12 @@ static void co2_logger_uart_log_reading(co2_loggerUart* state) {
              state->co2_ppm,
              state->is_connected ? "Connected" : "Disconnected");
     
-    storage_file_write(state->csv_file, log_entry, strlen(log_entry));
+    FURI_LOG_D("CSV", "Writing log entry: %s", log_entry);
+    size_t bytes_written = storage_file_write(state->csv_file, log_entry, strlen(log_entry));
+    FURI_LOG_D("CSV", "Wrote %zu bytes to CSV", bytes_written);
+    
     storage_file_sync(state->csv_file);
+    FURI_LOG_D("CSV", "File sync completed");
 }
 
 static void co2_logger_uart_render_callback(Canvas* canvas, void* ctx) {
@@ -130,7 +144,7 @@ static void co2_logger_uart_input_callback(InputEvent* input_event, void* ctx) {
 int32_t co2_logger_app(void* p) {
     UNUSED(p);
     
-    FURI_LOG_I("App", "Starting CO2 Logger app");
+    FURI_LOG_I("App", "Starting CO2 Logger app - Debug Mode");
 
     co2_loggerUart state = {0};
     FURI_LOG_I("App", "Opening records...");
@@ -170,19 +184,25 @@ int32_t co2_logger_app(void* p) {
         furi_mutex_acquire(state.mutex, FuriWaitForever);
 
         if(do_refresh) {
+            FURI_LOG_D("App", "Attempting to read CO2 concentration...");
             state.is_connected = co2_logger_read_gas_concentration(state.co2_logger, &state.co2_ppm);
             if(state.is_connected) {
                 state.counter++;
+                FURI_LOG_D("App", "CO2 reading successful: %lu ppm", state.co2_ppm);
             } else {
                 state.counter = 0;
+                FURI_LOG_W("App", "CO2 reading failed - sensor disconnected?");
             }
             
             // Log to CSV every 30 seconds
             if(current_time - state.last_log_time >= LOG_INTERVAL_MS) {
+                FURI_LOG_D("App", "Logging to CSV file...");
                 co2_logger_uart_log_reading(&state);
                 state.last_log_time = current_time;
+                FURI_LOG_D("App", "CSV log entry completed");
             }
         } else if(event.key == InputKeyBack) {
+            FURI_LOG_I("App", "Back button pressed - exiting app");
             furi_mutex_release(state.mutex);
             break;
         }
@@ -191,6 +211,7 @@ int32_t co2_logger_app(void* p) {
         view_port_update(state.view_port);
     } while(true);
 
+    FURI_LOG_I("App", "Cleaning up and exiting...");
     notification_message(state.notification, &sequence_display_backlight_enforce_auto);
     co2_logger_close(state.co2_logger);
     gui_remove_view_port(state.gui, state.view_port);
