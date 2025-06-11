@@ -5,35 +5,31 @@ on:
     branches: [main]
 
 jobs:
-  ufbt-build-action:
+  ufbt-build:
     runs-on: ubuntu-latest
-    name: "ufbt: Build for dev channel"
-
     strategy:
       matrix:
         include:
-          # - name: OFW dev
-          #   sdk-channel: dev
-          # - name: Unleashed dev
-          #   sdk-index-url: https://up.unleashedflip.com/directory.json
-          #   sdk-channel: dev
-          - name: Momentum dev
-            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
+          - name: dev channel
             sdk-channel: dev
+          - name: release channel
+            sdk-channel: release
 
+    name: 'ufbt: Build for ${{ matrix.name }}'
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          sparse-checkout: Sub-Ghz-Playlist-Creator
-
-      - name: 'ufbt: Build for ${{ matrix.name }}'
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1.2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build with ufbt
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
         id: build-app
         with:
-          # Set to 'release' to build for latest published release version
           sdk-channel: ${{ matrix.sdk-channel }}
-          sdk-index-url: ${{ matrix.sdk-index-url }}
+      - name: Upload app artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          # See ufbt action docs for other output variables
+          name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
+          path: ${{ steps.build-app.outputs.fap-artifacts }}
 
       - name: Get commit message
         run: echo "COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.after }})" >> $GITHUB_ENV
