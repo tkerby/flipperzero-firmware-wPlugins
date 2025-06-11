@@ -39,7 +39,7 @@ jobs:
         run: echo "COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.after }})" >> $GITHUB_ENV
           
       - name: Upload app artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: ${{ steps.build-app.outputs.fap-artifacts }}
