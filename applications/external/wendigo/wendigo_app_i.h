@@ -15,10 +15,14 @@
 #include <gui/modules/byte_input.h>
 #include <gui/modules/popup.h>
 #include <furi_hal_rtc.h>
+#include <sys/time.h>
 
 #include "wendigo_hex_input.h"
 
-#define IS_FLIPPER_APP           (1)
+#define IS_FLIPPER_APP (1)
+
+#include "wendigo_common_defs.h"
+
 /* How frequently should Flipper poll ESP32 when scanning to restart
    scanning in the event the device restarts (seconds)? */
 #define ESP32_POLL_INTERVAL      (3)
@@ -40,8 +44,13 @@
 #define WENDIGO_TEXT_BOX_STORE_SIZE   (4096)
 #define WENDIGO_TEXT_INPUT_STORE_SIZE (512)
 
-#define MAC_BYTES  (6)
-#define MAC_STRLEN (17)
+typedef enum DeviceMask {
+    DEVICE_BT_CLASSIC = 1,
+    DEVICE_BT_LE = 2,
+    DEVICE_WIFI_AP = 4,
+    DEVICE_WIFI_STA = 8,
+    DEVICE_ALL = 15
+} DeviceMask;
 
 // Command action type
 typedef enum {

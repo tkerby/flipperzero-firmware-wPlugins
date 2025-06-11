@@ -9,15 +9,92 @@ static void wendigo_scene_device_list_var_list_change_callback(VariableItem* ite
 /* This scene is used to both display all devices and display selected devices */
 bool display_selected_only = false;
 
+/* Devices currently being displayed */
+wendigo_device** current_devices = NULL;
+uint16_t current_devices_count = 0;
+
 /* Enum to index the options menu for devices */
-enum wendigo_device_list_options {
-    WendigoOptionRSSI = 0,
-    WendigoOptionTagUntag,
-    WendigoOptionScanType,
-    WendigoOptionCod,
-    WendigoOptionLastSeen,
-    WendigoOptionsCount
+enum wendigo_device_list_bt_options {
+    WendigoOptionBTRSSI = 0,
+    WendigoOptionBTTagUntag,
+    WendigoOptionBTScanType,
+    WendigoOptionBTCod,
+    WendigoOptionBTLastSeen,
+    WendigoOptionsBTCount
 };
+
+enum wendigo_device_list_ap_options {
+    WendigoOptionAPRSSI = 0,
+    WendigoOptionAPTagUntag,
+    WendigoOptionAPScanType,
+    WendigoOptionAPAuthMode,
+    WendigoOptionAPChannel,
+    WendigoOptionAPLastSeen,
+    WendigoOptionsAPCount
+};
+
+enum wendigo_device_list_sta_options {
+    WendigoOptionSTARSSI = 0,
+    WendigoOptionSTATagUntag,
+    WendigoOptionSTAScanType,
+    WendigoOptionSTAAP,
+    WendigoOptionSTAChannel,
+    WendigoOptionSTALastSeen,
+    WendigoOptionsSTACount
+};
+
+/** Restrict displayed devices based on the specified filters
+ * deviceMask: A bitmask of DeviceMask values. e.g. DEVICE_WIFI_AP | DEVICE_WIFI_STA to display all WiFi devices.
+ *             0 to display all device types.
+ * tagged: true if only tagged devices are to be displayed
+ */
+uint16_t wendigo_set_devices(uint8_t deviceMask, bool tagged) {
+    if(deviceMask == 0) {
+        deviceMask = DEVICE_ALL;
+    }
+    /* To ensure we only malloc the required memory, run an initial pass to count the number of devices */
+    uint16_t deviceCount = 0;
+    for(uint16_t idx = 0; idx < devices_count; ++idx) {
+        if((devices[idx]->scanType == SCAN_HCI &&
+            ((deviceMask & DEVICE_BT_CLASSIC) == DEVICE_BT_CLASSIC) &&
+            (!tagged || (tagged && devices[idx]->tagged))) ||
+           (devices[idx]->scanType == SCAN_BLE && ((deviceMask & DEVICE_BT_LE) == DEVICE_BT_LE) &&
+            (!tagged || (tagged && devices[idx]->tagged))) ||
+           (devices[idx]->scanType == SCAN_WIFI_AP &&
+            ((deviceMask & DEVICE_WIFI_AP) == DEVICE_WIFI_AP) &&
+            (!tagged || (tagged && devices[idx]->tagged))) ||
+           (devices[idx]->scanType == SCAN_WIFI_STA &&
+            ((deviceMask & DEVICE_WIFI_STA) == DEVICE_WIFI_STA) &&
+            (!tagged || (tagged && devices[idx]->tagged)))) {
+            ++deviceCount;
+        }
+    }
+    wendigo_device** new_devices = realloc(current_devices, sizeof(wendigo_device*) * deviceCount);
+    if(new_devices == NULL) {
+        return false;
+    }
+    current_devices = new_devices;
+    current_devices_count = deviceCount;
+    /* Populate current_devices[] */
+    uint16_t current_index = 0;
+    for(uint16_t i = 0; i < devices_count; ++i) {
+        if((devices[i]->scanType == SCAN_HCI &&
+            ((deviceMask & DEVICE_BT_CLASSIC) == DEVICE_BT_CLASSIC) &&
+            (!tagged || (tagged && devices[i]->tagged))) ||
+           (devices[i]->scanType == SCAN_BLE && ((deviceMask & DEVICE_BT_LE) == DEVICE_BT_LE) &&
+            (!tagged || (tagged && devices[i]->tagged))) ||
+           (devices[i]->scanType == SCAN_WIFI_AP &&
+            ((deviceMask & DEVICE_WIFI_AP) == DEVICE_WIFI_AP) &&
+            (!tagged || (tagged && devices[i]->tagged))) ||
+           (devices[i]->scanType == SCAN_WIFI_STA &&
+            ((deviceMask & DEVICE_WIFI_STA) == DEVICE_WIFI_STA) &&
+            (!tagged || (tagged && devices[i]->tagged)))) {
+            current_devices[current_index++] = devices[i];
+        }
+    }
+    furi_assert(current_index == deviceCount);
+    return deviceCount;
+}
 
 /** A more flexible version of elapsedTime() that lets us avoid running furi_hal_rtc_get_timestamp().
  * This version is suitable for running at high frequency - In tick events etc.
@@ -117,24 +194,24 @@ void wendigo_scene_device_list_update(WendigoApp* app, wendigo_device* dev) {
         dev->view = variable_item_list_add(
             app->devices_var_item_list,
             name,
-            WendigoOptionsCount,
+            WendigoOptionsBTCount,
             wendigo_scene_device_list_var_list_change_callback,
             app);
         /* Display RSSI in options menu */
-        variable_item_set_current_value_index(dev->view, WendigoOptionRSSI);
+        variable_item_set_current_value_index(dev->view, WendigoOptionBTRSSI);
         snprintf(tempStr, sizeof(tempStr), "%d dB", dev->rssi);
         variable_item_set_current_value_text(dev->view, tempStr);
     } else if(dev->view != NULL) {
         /* Update dev->view */
         variable_item_set_item_label(dev->view, name);
         /* If RSSI or lastSeen is displayed, update their values */
-        if(variable_item_get_current_value_index(dev->view) == WendigoOptionRSSI) {
+        if(variable_item_get_current_value_index(dev->view) == WendigoOptionBTRSSI) {
             snprintf(tempStr, sizeof(tempStr), "%d dB", dev->rssi);
             variable_item_set_current_value_text(dev->view, tempStr);
-        } else if(variable_item_get_current_value_index(dev->view) == WendigoOptionLastSeen) {
+        } else if(variable_item_get_current_value_index(dev->view) == WendigoOptionBTLastSeen) {
             elapsedTime(dev, tempStr, sizeof(tempStr));
             variable_item_set_current_value_text(dev->view, tempStr);
-        }
+        } // TODO: Support multiple device types, update AP/channel for STA if changed, update SSID/channel for AP if changed
     } /* Ignore new devices if display_selected_only is true */
     /* Free `name` if we malloc'd it */
     if(((dev->scanType == SCAN_HCI || dev->scanType == SCAN_BLE) &&
@@ -183,7 +260,7 @@ void wendigo_scene_device_list_redraw(WendigoApp* app) {
         my_devices[i]->view = variable_item_list_add(
             app->devices_var_item_list,
             item_str,
-            WendigoOptionsCount,
+            WendigoOptionsBTCount,
             wendigo_scene_device_list_var_list_change_callback,
             app);
         /* free item_str if we malloc'd it */
@@ -198,7 +275,7 @@ void wendigo_scene_device_list_redraw(WendigoApp* app) {
         /* Default to displaying RSSI in options menu */
         char tempStr[10];
         snprintf(tempStr, sizeof(tempStr), "%d dB", my_devices[i]->rssi);
-        variable_item_set_current_value_index(my_devices[i]->view, WendigoOptionRSSI);
+        variable_item_set_current_value_index(my_devices[i]->view, WendigoOptionBTRSSI);
         variable_item_set_current_value_text(my_devices[i]->view, tempStr);
     }
     // TODO: Display WiFi devices
@@ -219,7 +296,7 @@ static void wendigo_scene_device_list_var_list_enter_callback(void* context, uin
 
     /* If the tag/untag menu item is selected perform that action, otherwise display details for `item` */
     if(item->view != NULL &&
-       variable_item_get_current_value_index(item->view) == WendigoOptionTagUntag) {
+       variable_item_get_current_value_index(item->view) == WendigoOptionBTTagUntag) {
         wendigo_set_device_selected(item, !item->tagged);
         variable_item_set_current_value_text(item->view, (item->tagged) ? "Untag" : "Tag");
         /* If the device is now untagged and we're viewing tagged devices only, remove the device from view */
@@ -244,18 +321,18 @@ static void wendigo_scene_device_list_var_list_change_callback(VariableItem* ite
 
     if(menu_item != NULL) {
         uint8_t option_index = variable_item_get_current_value_index(item);
-        furi_assert(option_index < WendigoOptionsCount);
+        furi_assert(option_index < WendigoOptionsBTCount);
         /* Update the current option label */
         char tempStr[16];
         switch(option_index) {
-        case WendigoOptionRSSI:
+        case WendigoOptionBTRSSI:
             snprintf(tempStr, sizeof(tempStr), "%d dB", menu_item->rssi);
             variable_item_set_current_value_text(item, tempStr);
             break;
-        case WendigoOptionTagUntag:
+        case WendigoOptionBTTagUntag:
             variable_item_set_current_value_text(item, (menu_item->tagged) ? "Untag" : "Tag");
             break;
-        case WendigoOptionScanType:
+        case WendigoOptionBTScanType:
             variable_item_set_current_value_text(
                 item,
                 (menu_item->scanType == SCAN_HCI)      ? "BT Classic" :
@@ -264,13 +341,13 @@ static void wendigo_scene_device_list_var_list_change_callback(VariableItem* ite
                 (menu_item->scanType == SCAN_WIFI_STA) ? "WiFi STA" :
                                                          "Unknown");
             break;
-        case WendigoOptionCod:
+        case WendigoOptionBTCod:
             if(menu_item->scanType == SCAN_HCI || menu_item->scanType == SCAN_BLE) {
                 variable_item_set_current_value_text(item, menu_item->radio.bluetooth.cod_str);
             }
             // TODO: Other menu item(s) for WiFi devices
             break;
-        case WendigoOptionLastSeen:
+        case WendigoOptionBTLastSeen:
             elapsedTime(menu_item, tempStr, sizeof(tempStr));
             variable_item_set_current_value_text(item, tempStr);
             break;
@@ -336,7 +413,7 @@ bool wendigo_scene_device_list_on_event(void* context, SceneManagerEvent event) 
         for(uint16_t i = 0; i < my_devices_count; ++i) {
             if(my_devices != NULL && my_devices[i] != NULL && my_devices[i]->view != NULL &&
                variable_item_get_current_value_index(my_devices[i]->view) ==
-                   WendigoOptionLastSeen) {
+                   WendigoOptionBTLastSeen) {
                 /* Update option text if lastSeen is selected for this device */
                 _elapsedTime(
                     (uint32_t*)&(my_devices[i]->lastSeen.tv_sec),
@@ -355,5 +432,8 @@ void wendigo_scene_device_list_on_exit(void* context) {
     variable_item_list_reset(app->devices_var_item_list);
     for(uint16_t i = 0; i < devices_count; ++i) {
         devices[i]->view = NULL;
+    }
+    if(current_devices != NULL) {
+        free(current_devices);
     }
 }
