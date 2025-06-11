@@ -55,10 +55,14 @@ co2_logger* co2_logger_alloc() {
     FURI_LOG_D("CO2", "Acquiring serial control");
     instance->serial = furi_hal_serial_control_acquire(FuriHalSerialIdLpuart);
     if (!instance->serial) {
-        FURI_LOG_E("CO2", "Failed to acquire serial control");
-        furi_stream_buffer_free(instance->stream);
-        free(instance);
-        return NULL;
+        FURI_LOG_W("CO2", "Failed to acquire LPUART, trying USART1");
+        instance->serial = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
+        if (!instance->serial) {
+            FURI_LOG_E("CO2", "Failed to acquire any serial control");
+            furi_stream_buffer_free(instance->stream);
+            free(instance);
+            return NULL;
+        }
     }
     
     FURI_LOG_I("CO2", "CO2 logger instance allocated successfully");
