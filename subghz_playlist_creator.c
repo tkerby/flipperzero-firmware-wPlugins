@@ -1,10 +1,10 @@
 #include "subghz_playlist_creator.h"
-#include "scenes/scene_menu.h"
-#include "scenes/scene_popup.h"
-#include "scenes/scene_text_input.h"
-#include "scenes/scene_dialog.h"
-#include "scenes/scene_file_browser.h"
-#include "scenes/scene_playlist_edit.h"
+#include "./scenes/scene_menu.h"
+#include "./scenes/scene_popup.h"
+#include "./scenes/scene_text_input.h"
+#include "./scenes/scene_dialog.h"
+#include "./scenes/scene_file_browser.h"
+#include "./scenes/scene_playlist_edit.h"
 #include <furi_hal.h>
 #include <input/input.h>
 #include <gui/view.h>
