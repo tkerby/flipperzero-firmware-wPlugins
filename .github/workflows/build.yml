@@ -1,41 +1,54 @@
-name: "FAP: Build for multiple SDK sources"
-# This will build your app for dev and release channels on GitHub. 
-# It will also build your app every day to make sure it's up to date with the latest SDK changes.
-# See https://github.com/marketplace/actions/build-flipper-application-package-fap for more information
+name: Build
 
 on:
   push:
-    ## put your main branch name under "branches"
-    branches: 
-     - main 
-  pull_request:
-  schedule: 
-    # do a build every day
-    - cron: "1 1 * * *"
+    branches: [main]
 
 jobs:
-  ufbt-build:
+  ufbt-build-action:
     runs-on: ubuntu-latest
+    name: "ufbt: Build for dev channel"
+
     strategy:
       matrix:
         include:
-          - name: dev channel
+          - name: OFW dev
             sdk-channel: dev
-          - name: release channel
-            sdk-channel: release
-          # You can add unofficial channels here. See ufbt action docs for more info.
-    name: 'ufbt: Build for ${{ matrix.name }}'
+          - name: Unleashed dev
+            sdk-index-url: https://up.unleashedflip.com/directory.json
+            sdk-channel: dev
+          - name: Momentum dev
+            sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
+            sdk-channel: dev
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build with ufbt
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: Sub-Ghz-Playlist-Creator
+
+      - name: 'ufbt: Build for ${{ matrix.name }}'
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.2
         id: build-app
         with:
+          # Set to 'release' to build for latest published release version
           sdk-channel: ${{ matrix.sdk-channel }}
+          sdk-index-url: ${{ matrix.sdk-index-url }}
+
+      - name: Get commit message
+        run: echo "COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.event.after }})" >> $GITHUB_ENV
+          
       - name: Upload app artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          # See ufbt action docs for other output variables
-          name: ${{ github.event.repository.name }}-${{ steps.build-app.outputs.suffix }}
+          name: ${{ matrix.name }}
           path: ${{ steps.build-app.outputs.fap-artifacts }}
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+            draft: true
+            name: ${{ env.COMMIT_MESSAGE }}
+            token: ${{ secrets.GITHUB_TOKEN }}
+            files: ${{ steps.build-app.outputs.fap-artifacts }}
+            generate_release_notes: true
