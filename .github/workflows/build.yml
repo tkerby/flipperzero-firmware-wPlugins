@@ -12,11 +12,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: OFW dev
-            sdk-channel: dev
-          - name: Unleashed dev
-            sdk-index-url: https://up.unleashedflip.com/directory.json
-            sdk-channel: dev
+          # - name: OFW dev
+          #   sdk-channel: dev
+          # - name: Unleashed dev
+          #   sdk-index-url: https://up.unleashedflip.com/directory.json
+          #   sdk-channel: dev
           - name: Momentum dev
             sdk-index-url: https://up.momentum-fw.dev/firmware/directory.json
             sdk-channel: dev
