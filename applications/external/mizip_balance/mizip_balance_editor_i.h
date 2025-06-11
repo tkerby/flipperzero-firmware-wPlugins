@@ -14,6 +14,7 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 #include <dolphin/dolphin.h>
+#include <notification/notification_messages.h>
 
 #include <nfc/nfc.h>
 #include <nfc/nfc_device.h>
@@ -80,6 +81,7 @@ struct MiZipBalanceEditorApp {
     Gui* gui;
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;
+    NotificationApp* notifications;
 
     //Scenes
     Submenu* submenu;

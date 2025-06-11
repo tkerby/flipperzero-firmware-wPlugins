@@ -56,6 +56,7 @@ bool mizip_balance_editor_write_new_balance(void* context) {
 static MiZipBalanceEditorApp* mizip_balance_editor_app_alloc() {
     MiZipBalanceEditorApp* app = malloc(sizeof(MiZipBalanceEditorApp));
     app->gui = furi_record_open(RECORD_GUI);
+    app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
     app->storage = furi_record_open(RECORD_STORAGE);
 
@@ -149,6 +150,9 @@ static void mizip_balance_editor_app_free(MiZipBalanceEditorApp* app) {
 
     furi_record_close(RECORD_GUI);
     app->gui = NULL;
+
+    furi_record_close(RECORD_NOTIFICATION);
+    app->notifications = NULL;
 
     furi_record_close(RECORD_STORAGE);
     app->storage = NULL;
