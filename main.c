@@ -2366,7 +2366,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptCaesarLearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also easy to break, making it unsuitable for modern encryption.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also very easy to brute-force.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptPlayfairLearnScene:
@@ -2382,7 +2382,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptRC4LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for most modern applications.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is considered insecure for modern applications.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptScytaleLearnScene:
@@ -2398,7 +2398,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptFNV1ALearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. Its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. However, its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMD5LearnScene:
@@ -2406,7 +2406,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMurmur3LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist attacks like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist things like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptSipLearnScene:
@@ -2438,7 +2438,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase32LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure—it's simply a reversible way to encode data.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure-it's simply a reversible way to encode data.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase58LearnScene:
@@ -2446,7 +2446,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase64LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption—it offers no confidentiality and is fully reversible.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption-it offers no confidentiality and is fully reversible.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         default:
