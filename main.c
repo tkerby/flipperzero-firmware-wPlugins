@@ -1291,12 +1291,6 @@ void flip_crypt_text_input_callback(void* context) {
         case FlipCryptAESInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptAESOutputScene);
             break;
-        case FlipCryptAESDecryptKeyInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptInputScene);
-            break;
-        case FlipCryptAESDecryptInputScene:
-            scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptOutputScene);
-            break;
         case FlipCryptAffineInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptAffineOutputScene);
             break;
@@ -1403,6 +1397,7 @@ void flip_crypt_text_input_callback(void* context) {
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5OutputScene);
             break;
         case FlipCryptMurmur3InputScene:
+            notify();
             scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3OutputScene);
             break;
         case FlipCryptSipInputScene:
@@ -1476,7 +1471,7 @@ void cipher_input_scene_on_enter(void* context) {
         case FlipCryptAESDecryptKeyInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter key (sixteen chars)");
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_key_input, app->aes_key_input_size, true);
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_decrypt_input, app->aes_decrypt_input_size, true);
             break;
         case FlipCryptAESDecryptInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_decrypt_input, app->aes_decrypt_input_size, true);
@@ -1680,13 +1675,9 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     static const char sha_hex_chars[] = "0123456789abcdef";
+    notify();
     switch(current) {
         case FlipCryptAESOutputScene:
-            if (strcmp(app->last_output_scene, "AES") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             char aes_input[128], aes_key_str[17], aes_hex_output[33];
             uint8_t block[16], key[16], encrypted[16];
             strncpy(aes_input, app->aes_input, sizeof(aes_input) - 1);
@@ -1707,11 +1698,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptAESDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "AESDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             char aes_decrypt_input_hex[33], aes_decrypt_key_str[17], aes_decrypt_output_text[17];
             uint8_t aes_encrypted[16], aes_decrypt_key[16], aes_decrypted[16];
             aes_decrypt_input_hex[strcspn(app->aes_decrypt_input, "\n")] = 0;
@@ -1731,11 +1717,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptAffineOutputScene:
-            if (strcmp(app->last_output_scene, "Affine") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input), 64, 18, AlignCenter, AlignCenter);
             save_affine_result(encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input));
             app->last_output_scene = "Affine";
@@ -1744,11 +1725,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptAffineDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "AffineDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, decode_affine(app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input), 64, 18, AlignCenter, AlignCenter);
             save_affine_decrypt_result(decode_affine(app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input));
             app->last_output_scene = "AffineDecrypt";
@@ -1757,11 +1733,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptAtbashOutputScene:
-            if (strcmp(app->last_output_scene, "Atbash") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, atbash_encrypt_or_decrypt(app->atbash_input), 64, 18, AlignCenter, AlignCenter);
             save_atbash_result(atbash_encrypt_or_decrypt(app->atbash_input));
             app->last_output_scene = "Atbash";
@@ -1770,11 +1741,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptAtbashDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "AtbashDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, atbash_encrypt_or_decrypt(app->atbash_decrypt_input), 64, 18, AlignCenter, AlignCenter);
             save_atbash_decrypt_result(atbash_encrypt_or_decrypt(app->atbash_decrypt_input));
             app->last_output_scene = "AtbashDecrypt";
@@ -1783,11 +1749,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBaconianOutputScene:
-            if (strcmp(app->last_output_scene, "Baconian") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, baconian_encrypt(app->baconian_input), 64, 18, AlignCenter, AlignCenter);
             save_baconian_result(baconian_encrypt(app->baconian_input));
             app->last_output_scene = "Baconian";
@@ -1796,11 +1757,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBaconianDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "BaconianDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, baconian_decrypt(app->baconian_decrypt_input), 64, 18, AlignCenter, AlignCenter);
             save_baconian_decrypt_result(baconian_decrypt(app->baconian_decrypt_input));
             app->last_output_scene = "BaconianDecrypt";
@@ -1809,11 +1765,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBeaufortOutputScene:
-            if (strcmp(app->last_output_scene, "Beaufort") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, beaufort_cipher_enrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input), 64, 18, AlignCenter, AlignCenter);
             save_beaufort_result(beaufort_cipher_enrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input));
             app->last_output_scene = "Beaufort";
@@ -1822,11 +1773,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBeaufortDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "BeaufortDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, beaufort_cipher_enrypt_and_decrypt(app->beaufort_decrypt_input, app->beaufort_key_input), 64, 18, AlignCenter, AlignCenter);
             save_beaufort_decrypt_result(beaufort_cipher_enrypt_and_decrypt(app->beaufort_decrypt_input, app->beaufort_key_input));
             app->last_output_scene = "BeaufortDecrypt";
@@ -1835,11 +1781,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptCaesarOutputScene:
-            if (strcmp(app->last_output_scene, "Caesar") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, encode_caesar(app->caesar_input, app->caesar_key_input), 64, 18, AlignCenter, AlignCenter);
             save_caesar_result(encode_caesar(app->caesar_input, app->caesar_key_input));
             app->last_output_scene = "Caesar";
@@ -1848,11 +1789,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptCaesarDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "CaesarDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, decode_caesar(app->caesar_decrypt_input, app->caesar_key_input), 64, 18, AlignCenter, AlignCenter);
             save_caesar_decrypt_result(decode_caesar(app->caesar_decrypt_input, app->caesar_key_input));
             app->last_output_scene = "CaesarDecrypt";
@@ -1861,11 +1797,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPlayfairOutputScene:
-            if (strcmp(app->last_output_scene, "Playfair") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, playfair_encrypt(app->playfair_input, playfair_make_table(app->playfair_keyword_input)), 64, 18, AlignCenter, AlignCenter);
             save_playfair_result(playfair_encrypt(app->playfair_input, playfair_make_table(app->playfair_keyword_input)));
             app->last_output_scene = "Playfair";
@@ -1874,11 +1805,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPlayfairDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "PlayfairDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, playfair_decrypt(app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)), 64, 18, AlignCenter, AlignCenter);
             save_playfair_decrypt_result(playfair_decrypt(app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)));
             app->last_output_scene = "PlayfairDecrypt";
@@ -1887,11 +1813,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPolybiusOutputScene:
-            if (strcmp(app->last_output_scene, "Polybius") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, encrypt_polybius(app->polybius_input), 64, 18, AlignCenter, AlignCenter);
             save_polybius_result(encrypt_polybius(app->polybius_input));
             app->last_output_scene = "Polybius";
@@ -1900,11 +1821,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptPolybiusDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, decrypt_polybius(app->polybius_decrypt_input), 64, 18, AlignCenter, AlignCenter);
             save_polybius_decrypt_result(decrypt_polybius(app->polybius_decrypt_input));
             app->last_output_scene = "PolybiusDecrypt";
@@ -1913,11 +1829,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptRailfenceOutputScene:
-            if (strcmp(app->last_output_scene, "Railfence") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, rail_fence_encrypt(app->railfence_input, app->railfence_key_input), 64, 18, AlignCenter, AlignCenter);
             save_railfence_result(rail_fence_encrypt(app->railfence_input, app->railfence_key_input));
             app->last_output_scene = "Railfence";
@@ -1926,11 +1837,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptRailfenceDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input), 64, 18, AlignCenter, AlignCenter);
             save_railfence_decrypt_result(rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input));
             app->last_output_scene = "RailfenceDecrypt";
@@ -1939,11 +1845,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptRC4OutputScene:
-            if (strcmp(app->last_output_scene, "RC4") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             size_t rc4_input_len = strlen(app->rc4_input);
             unsigned char* rc4_encrypted = rc4_encrypt_and_decrypt(app->rc4_keyword_input, (const unsigned char*)app->rc4_input, rc4_input_len);
             if (!rc4_encrypted) {
@@ -1961,11 +1862,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             free(rc4_encrypted);
             break;
         case FlipCryptRC4DecryptOutputScene:
-            if (strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             size_t rc4_encrypted_len;
             unsigned char* rc4_encrypted_bytes = rc4_hex_to_bytes(app->rc4_decrypt_input, &rc4_encrypted_len);
             if (!rc4_encrypted_bytes) {
@@ -1994,11 +1890,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             free(rc4_decrypted);
             break;
         case FlipCryptScytaleOutputScene:
-            if (strcmp(app->last_output_scene, "Scytale") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, scytale_encrypt(app->scytale_input, app->scytale_keyword_input), 64, 18, AlignCenter, AlignCenter);
             save_scytale_result(scytale_encrypt(app->scytale_input, app->scytale_keyword_input));
             app->last_output_scene = "Scytale";
@@ -2007,11 +1898,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptScytaleDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input), 64, 18, AlignCenter, AlignCenter);
             save_scytale_decrypt_result(scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input));
             app->last_output_scene = "ScytaleDecrypt";
@@ -2020,11 +1906,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptVigenereOutputScene:
-            if (strcmp(app->last_output_scene, "Vigenere") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input), 64, 18, AlignCenter, AlignCenter);
             save_vigenere_result(vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input));
             app->last_output_scene = "Vigenere";
@@ -2033,11 +1914,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptVigenereDecryptOutputScene:
-            if (strcmp(app->last_output_scene, "VigenereDecrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input), 64, 18, AlignCenter, AlignCenter);
             save_vigenere_decrypt_result(vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input));
             app->last_output_scene = "VigenereDecrypt";
@@ -2046,11 +1922,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBlake2OutputScene:
-            if (strcmp(app->last_output_scene, "Blake2") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             Blake2sContext blake2_ctx;
             uint8_t blake2_hash[BLAKE2S_OUTLEN];
             char blake2_hex_output[BLAKE2S_OUTLEN * 2 + 1] = {0};
@@ -2066,11 +1937,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptFNV1AOutputScene:
-            if (strcmp(app->last_output_scene, "FNV1A") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             char finv1a_hash_str[11];
             Fnv32_t fnv1a_hash = fnv_32a_str(app->fnv1a_input, FNV1_32A_INIT);
             snprintf(finv1a_hash_str, sizeof(finv1a_hash_str), "0x%08lx", fnv1a_hash);
@@ -2082,11 +1948,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptMD5OutputScene:
-            if (strcmp(app->last_output_scene, "MD5") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             uint8_t md5_hash[16];
             char md5_hex_output[33] = {0};
             MD5Context md5_ctx;
@@ -2102,11 +1963,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptMurmur3OutputScene:
-            if (strcmp(app->last_output_scene, "Murmur3") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0), 64, 18, AlignCenter, AlignCenter);
             save_murmur3_result(MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0));
             app->last_output_scene = "Murmur3";
@@ -2115,11 +1971,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptSipOutputScene:
-            if (strcmp(app->last_output_scene, "Sip") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             uint8_t siphash_output[8];
             siphash(app->sip_input, strlen(app->sip_input), app->sip_keyword_input, siphash_output, 8);
             char siphash_str[17];
@@ -2135,11 +1986,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptSHA1OutputScene:
-            if (strcmp(app->last_output_scene, "SHA1") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             Sha1Context sha1_ctx;
             uint8_t sha1_hash[20];
             char sha1_hex_output[41] = {0};
@@ -2154,12 +2000,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
-        case FlipCryptSHA224OutputScene:
-            if (strcmp(app->last_output_scene, "SHA224") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
+        case FlipCryptSHA224OutputScene: 
             uint8_t sha224_hash[28];
             char sha224_hex_output[57] = {0};
             sha224((const uint8_t *)app->sha224_input, (uint64)strlen(app->sha224_input), sha224_hash);
@@ -2175,12 +2016,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
-        case FlipCryptSHA256OutputScene:
-            if (strcmp(app->last_output_scene, "SHA256") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
+        case FlipCryptSHA256OutputScene: 
             uint8_t sha256_hash[32];
             char sha256_hex_output[65] = {0};
             sha256((const uint8_t *)app->sha256_input, (uint64)strlen(app->sha256_input), sha256_hash);
@@ -2196,12 +2032,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
-        case FlipCryptSHA384OutputScene:
-            if (strcmp(app->last_output_scene, "SHA384") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
+        case FlipCryptSHA384OutputScene: 
             uint8_t sha384_hash[48];
             char sha384_hex_output[97] = {0};
             sha384((const uint8_t *)app->sha384_input, (uint64)strlen(app->sha384_input), sha384_hash);
@@ -2218,11 +2049,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptSHA512OutputScene:
-            if (strcmp(app->last_output_scene, "SHA512") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             uint8_t sha512_hash[64];
             char sha512_hex_output[129] = {0};
             sha512((const uint8_t *)app->sha512_input, (uint64)strlen(app->sha512_input), sha512_hash);
@@ -2238,11 +2064,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             break;
         case FlipCryptXXOutputScene:
-            if (strcmp(app->last_output_scene, "XX") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             uint64_t xxhash = XXH64(app->xx_input, strlen(app->xx_input), 0);
             char xxhash_str[17];
             snprintf(xxhash_str, sizeof(xxhash_str), "%016llX", xxhash);
@@ -2254,11 +2075,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase32OutputScene:
-            if (strcmp(app->last_output_scene, "Base32") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)), 64, 18, AlignCenter, AlignCenter);
             save_base32_result(base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)));
             app->last_output_scene = "Base32";
@@ -2267,11 +2083,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase32DecryptOutputScene:
-            if (strcmp(app->last_output_scene, "Base32Decrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             size_t base32_decoded_len;
             dialog_ex_set_text(app->dialog_ex, (const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len), 64, 18, AlignCenter, AlignCenter);
             save_base32_decrypt_result((const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len));
@@ -2281,11 +2092,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase58OutputScene:
-            if (strcmp(app->last_output_scene, "Base58") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, base58_encode(app->base58_input), 64, 18, AlignCenter, AlignCenter);
             save_base58_result(base58_encode(app->base58_input));
             app->last_output_scene = "Base58";
@@ -2294,11 +2100,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase58DecryptOutputScene:
-            if (strcmp(app->last_output_scene, "Base58Decrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, base58_decode(app->base58_decrypt_input), 64, 18, AlignCenter, AlignCenter);
             save_base58_decrypt_result(base58_decode(app->base58_decrypt_input));
             app->last_output_scene = "Base58Decrypt";
@@ -2307,11 +2108,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase64OutputScene:
-            if (strcmp(app->last_output_scene, "Base64") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             dialog_ex_set_text(app->dialog_ex, base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)), 64, 18, AlignCenter, AlignCenter);
             save_base64_result(base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)));
             app->last_output_scene = "Base64";
@@ -2320,11 +2116,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptBase64DecryptOutputScene:
-            if (strcmp(app->last_output_scene, "Base64Decrypt") == 0) {
-                // do nothing
-            } else {
-                notify();
-            }
             size_t base64_decoded_len;
             dialog_ex_set_text(app->dialog_ex, (const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len), 64, 18, AlignCenter, AlignCenter);
             save_base64_decrypt_result((const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len));
@@ -2366,7 +2157,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptCaesarLearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also very easy to brute-force.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also easy to break, making it unsuitable for modern encryption.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptPlayfairLearnScene:
@@ -2382,7 +2173,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptRC4LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is considered insecure for modern applications.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for most modern applications.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptScytaleLearnScene:
@@ -2398,7 +2189,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptFNV1ALearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. However, its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. Its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMD5LearnScene:
@@ -2406,7 +2197,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptMurmur3LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist things like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist attacks like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptSipLearnScene:
@@ -2438,7 +2229,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase32LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure-it's simply a reversible way to encode data.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure—it's simply a reversible way to encode data.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase58LearnScene:
@@ -2446,7 +2237,7 @@ void cipher_learn_scene_on_enter(void* context) {
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         case FlipCryptBase64LearnScene:
-            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption-it offers no confidentiality and is fully reversible.");
+            widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption—it offers no confidentiality and is fully reversible.");
             view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
             break;
         default:
@@ -2729,9 +2520,6 @@ void flip_crypt_qr_scene_on_exit(void* context) {
 void flip_crypt_save_scene_on_enter(void* context) {
     App* app = context;
     widget_reset(app->widget);
-    widget_reset(app->widget);
-    widget_add_icon_element(app->widget, 36, 6, &I_DolphinSaved_92x58);
-    widget_add_string_element(app->widget, 29, 10, AlignCenter, AlignTop, FontPrimary, "Saved!");
     if (strcmp(app->last_output_scene, "AES") == 0) {
         save_result(load_aes(), app->save_name_input);
     } else if (strcmp(app->last_output_scene, "AESDecrypt") == 0) {
@@ -2817,10 +2605,10 @@ void flip_crypt_save_scene_on_enter(void* context) {
     } else {
         save_result("ERROR", app->save_name_input);
     }
-    // widget_add_string_element(app->widget, 64, 22, AlignCenter, AlignCenter, FontPrimary, "Saved!");
+    widget_add_string_element(app->widget, 64, 22, AlignCenter, AlignCenter, FontPrimary, "Saved!");
     // char file_path_name[128];
     // snprintf(file_path_name, sizeof(file_path_name), "/ext/flip_crypt_saved/%s.txt", app->save_name_input);
-    // widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, "/ext/flip_crypt_saved/");
+    widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, "/ext/flip_crypt_saved/");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
