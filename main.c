@@ -2052,6 +2052,7 @@ void dialog_cipher_output_scene_on_enter(void* context) {
             app->last_output_scene = "SHA512";
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+            dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
         case FlipCryptXXOutputScene:
             uint64_t xxhash = XXH64(app->xx_input, strlen(app->xx_input), 0);
@@ -2466,6 +2467,8 @@ void flip_crypt_qr_scene_on_enter(void* context) {
         qrcodegen_encodeText(load_sha256(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "SHA384") == 0) {
         qrcodegen_encodeText(load_sha384(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
+    } else if (strcmp(app->last_output_scene, "SHA512") == 0) {
+        isTooLong = true;
     } else if (strcmp(app->last_output_scene, "XX") == 0) {
         qrcodegen_encodeText(load_xx(), app->qr_buffer, app->qrcode, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN, 5, qrcodegen_Mask_AUTO, true);
     } else if (strcmp(app->last_output_scene, "Base32") == 0) {
