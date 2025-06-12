@@ -459,14 +459,6 @@ typedef struct {
     uint8_t* qrcode;
 } QrCodeModel;
 
-void notify() {
-    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_set_vibro_on);
-    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_set_green_255);
-    furi_delay_ms(100);            
-    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_reset_vibro);
-    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_reset_green);
-}
-
 // Main menu functionality
 void flip_crypt_menu_callback(void* context, uint32_t index) {
     App* app = context;
@@ -1397,7 +1389,6 @@ void flip_crypt_text_input_callback(void* context) {
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5OutputScene);
             break;
         case FlipCryptMurmur3InputScene:
-            notify();
             scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3OutputScene);
             break;
         case FlipCryptSipInputScene:
@@ -1675,7 +1666,6 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     static const char sha_hex_chars[] = "0123456789abcdef";
-    notify();
     switch(current) {
         case FlipCryptAESOutputScene:
             char aes_input[128], aes_key_str[17], aes_hex_output[33];
