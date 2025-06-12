@@ -7,7 +7,7 @@
 
 char* atbash_encrypt_or_decrypt(const char* input) {
     size_t len = strlen(input);
-    char* output = (char*)malloc(len + 1); // +1 for null terminator
+    char* output = (char*)malloc(len + 1);
     if (!output) return "memory allocation failed, try again";
 
     for (size_t i = 0; i < len; i++) {

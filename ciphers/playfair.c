@@ -6,7 +6,6 @@
 #include "playfair.h"
 
 char* playfair_make_table(const char* keyword) {
-    // Allocate 26 bytes for 25 letters + null terminator
     char* table_output = (char*)malloc(26);
     if (!table_output) return "memory allocation failed";
 
@@ -37,7 +36,7 @@ char* playfair_make_table(const char* keyword) {
         }
     }
 
-    table_output[table_index] = '\0'; // Null terminate for convenience
+    table_output[table_index] = '\0';
 
     return table_output;
 }
