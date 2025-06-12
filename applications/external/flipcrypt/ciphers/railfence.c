@@ -59,7 +59,7 @@ char* rail_fence_decrypt(const char* cipher, int rails) {
         fence[i] = calloc(len, sizeof(char));
     }
 
-    // Step 1: Mark the zigzag pattern with '*'
+    // Mark the zigzag pattern with '*'
     int row = 0, direction = 1;
     for(int i = 0; i < len; i++) {
         fence[row][i] = '*';
@@ -71,7 +71,7 @@ char* rail_fence_decrypt(const char* cipher, int rails) {
             direction = 1;
     }
 
-    // Step 2: Fill in the pattern with ciphertext
+    // Fill in the pattern with ciphertext
     int idx = 0;
     for(int r = 0; r < rails; r++) {
         for(int c = 0; c < len; c++) {
@@ -81,7 +81,7 @@ char* rail_fence_decrypt(const char* cipher, int rails) {
         }
     }
 
-    // Step 3: Read the zigzag pattern to build the plaintext
+    // Read the zigzag pattern to build the plaintext
     row = 0;
     direction = 1;
     for(int i = 0; i < len; i++) {

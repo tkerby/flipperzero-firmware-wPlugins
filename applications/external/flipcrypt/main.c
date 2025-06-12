@@ -1,31 +1,92 @@
 #include <ctype.h>
 #include <furi.h>
+#include <furi/core/timer.h>
+#include <furi/core/log.h>
 #include <gui/gui.h>
-#include <gui/view_dispatcher.h>
-#include <gui/scene_manager.h>
-#include <gui/modules/widget.h>
+#include <gui/view.h>
+#include <gui/canvas.h>
+#include <gui/elements.h>
+#include <gui/modules/dialog_ex.h>
+#include <gui/modules/number_input.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_input.h>
-#include <lib/toolbox/value_index.h>
+#include <gui/modules/widget.h>
+#include <gui/scene_manager.h>
+#include <gui/view_dispatcher.h>
+#include <input/input.h>
+#include <notification/notification_messages.h>
+#include <lib/nfc/nfc.h>
+#include <nfc/nfc_poller.h>
+#include <nfc/nfc_listener.h>
+#include <nfc/nfc_device.h>
+#include <nfc/protocols/mf_ultralight/mf_ultralight.h>
+#include <nfc/protocols/mf_ultralight/mf_ultralight_poller.h>
+#include <nfc/protocols/mf_ultralight/mf_ultralight_listener.h>
+#include <nfc/helpers/nfc_data_generator.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "flip_crypt_icons.h"
+
+#include "ciphers/aes128.h"
+#include "ciphers/affine.h"
 #include "ciphers/atbash.h"
 #include "ciphers/baconian.h"
+#include "ciphers/beaufort.h"
+#include "ciphers/caesar.h"
 #include "ciphers/playfair.h"
+#include "ciphers/polybius.h"
 #include "ciphers/railfence.h"
+#include "ciphers/rc4.h"
+#include "ciphers/scytale.h"
 #include "ciphers/vigenere.h"
 
 #include "hashes/blake2.h"
+#include "hashes/fnv.h"
 #include "hashes/md5.h"
+#include "hashes/murmur3.h"
 #include "hashes/sha1.h"
-#include "hashes/sha256.h"
+#include "hashes/sha2.h"
+#include "hashes/siphash.h"
+#include "hashes/xxhash.h"
+
+#include "encoders/base32.h"
+#include "encoders/base58.h"
+#include "encoders/base64.h"
+
+#include "qrcode/qrcodegen.h"
+#include "storage.h"
 
 // Scene declarations
 typedef enum {
     // Main menu
     FlipCryptMainMenuScene,
+    // Main Menu Submenus
+    FlipCryptCipherSubmenuScene,
+    FlipCryptHashSubmenuScene,
+    FlipCryptOtherSubmenuScene,
+    FlipCryptAboutScene,
+    // AES scenes
+    FlipCryptAESSubmenuScene,
+    FlipCryptAESInputScene,
+    FlipCryptAESKeyInputScene,
+    FlipCryptAESDecryptKeyInputScene,
+    FlipCryptAESOutputScene,
+    FlipCryptAESDecryptInputScene,
+    FlipCryptAESDecryptOutputScene,
+    FlipCryptAESLearnScene,
+    // Affine scenes
+    FlipCryptAffineSubmenuScene,
+    FlipCryptAffineInputScene,
+    FlipCryptAffineKeyAInputScene,
+    FlipCryptAffineDecryptKeyAInputScene,
+    FlipCryptAffineKeyBInputScene,
+    FlipCryptAffineDecryptKeyBInputScene,
+    FlipCryptAffineOutputScene,
+    FlipCryptAffineDecryptInputScene,
+    FlipCryptAffineDecryptOutputScene,
+    FlipCryptAffineLearnScene,
     // Atbash scenes
     FlipCryptAtbashSubmenuScene,
     FlipCryptAtbashInputScene,
@@ -40,6 +101,24 @@ typedef enum {
     FlipCryptBaconianDecryptInputScene,
     FlipCryptBaconianDecryptOutputScene,
     FlipCryptBaconianLearnScene,
+    // Beaufort scenes
+    FlipCryptBeaufortSubmenuScene,
+    FlipCryptBeaufortInputScene,
+    FlipCryptBeaufortKeyInputScene,
+    FlipCryptBeaufortDecryptKeyInputScene,
+    FlipCryptBeaufortOutputScene,
+    FlipCryptBeaufortDecryptInputScene,
+    FlipCryptBeaufortDecryptOutputScene,
+    FlipCryptBeaufortLearnScene,
+    // Caesar scenes
+    FlipCryptCaesarSubmenuScene,
+    FlipCryptCaesarInputScene,
+    FlipCryptCaesarKeyInputScene,
+    FlipCryptCaesarDecryptKeyInputScene,
+    FlipCryptCaesarOutputScene,
+    FlipCryptCaesarDecryptInputScene,
+    FlipCryptCaesarDecryptOutputScene,
+    FlipCryptCaesarLearnScene,
     // Playfair scenes
     FlipCryptPlayfairSubmenuScene,
     FlipCryptPlayfairInputScene,
@@ -49,13 +128,40 @@ typedef enum {
     FlipCryptPlayfairDecryptInputScene,
     FlipCryptPlayfairDecryptOutputScene,
     FlipCryptPlayfairLearnScene,
+    // Polybius square scenes
+    FlipCryptPolybiusSubmenuScene,
+    FlipCryptPolybiusInputScene,
+    FlipCryptPolybiusOutputScene,
+    FlipCryptPolybiusDecryptInputScene,
+    FlipCryptPolybiusDecryptOutputScene,
+    FlipCryptPolybiusLearnScene,
     // Railfence scenes
     FlipCryptRailfenceSubmenuScene,
     FlipCryptRailfenceInputScene,
+    FlipCryptRailfenceKeyInputScene,
+    FlipCryptRailfenceDecryptKeyInputScene,
     FlipCryptRailfenceOutputScene,
     FlipCryptRailfenceDecryptInputScene,
     FlipCryptRailfenceDecryptOutputScene,
     FlipCryptRailfenceLearnScene,
+    // RC4 Cipher
+    FlipCryptRC4SubmenuScene,
+    FlipCryptRC4InputScene,
+    FlipCryptRC4KeywordInputScene,
+    FlipCryptRC4DecryptKeywordInputScene,
+    FlipCryptRC4OutputScene,
+    FlipCryptRC4DecryptInputScene,
+    FlipCryptRC4DecryptOutputScene,
+    FlipCryptRC4LearnScene,
+    // Scytale Cipher
+    FlipCryptScytaleSubmenuScene,
+    FlipCryptScytaleInputScene,
+    FlipCryptScytaleKeywordInputScene,
+    FlipCryptScytaleDecryptKeywordInputScene,
+    FlipCryptScytaleOutputScene,
+    FlipCryptScytaleDecryptInputScene,
+    FlipCryptScytaleDecryptOutputScene,
+    FlipCryptScytaleLearnScene,
     // Vigenere Cipher
     FlipCryptVigenereSubmenuScene,
     FlipCryptVigenereInputScene,
@@ -70,23 +176,83 @@ typedef enum {
     FlipCryptBlake2InputScene,
     FlipCryptBlake2OutputScene,
     FlipCryptBlake2LearnScene,
+    // FNV-1A Hash
+    FlipCryptFNV1ASubmenuScene,
+    FlipCryptFNV1AInputScene,
+    FlipCryptFNV1AOutputScene,
+    FlipCryptFNV1ALearnScene,
     // MD5 Hash
     FlipCryptMD5SubmenuScene,
     FlipCryptMD5InputScene,
     FlipCryptMD5OutputScene,
     FlipCryptMD5LearnScene,
+    // Murmur3 Hash
+    FlipCryptMurmur3SubmenuScene,
+    FlipCryptMurmur3InputScene,
+    FlipCryptMurmur3OutputScene,
+    FlipCryptMurmur3LearnScene,
+    // SipHash
+    FlipCryptSipSubmenuScene,
+    FlipCryptSipInputScene,
+    FlipCryptSipKeywordInputScene,
+    FlipCryptSipOutputScene,
+    FlipCryptSipLearnScene,
     // SHA1 Hash
     FlipCryptSHA1SubmenuScene,
     FlipCryptSHA1InputScene,
     FlipCryptSHA1OutputScene,
     FlipCryptSHA1LearnScene,
+    // SHA224 Hash
+    FlipCryptSHA224SubmenuScene,
+    FlipCryptSHA224InputScene,
+    FlipCryptSHA224OutputScene,
+    FlipCryptSHA224LearnScene,
     // SHA256 Hash
     FlipCryptSHA256SubmenuScene,
     FlipCryptSHA256InputScene,
     FlipCryptSHA256OutputScene,
     FlipCryptSHA256LearnScene,
-    // Other
-    FlipCryptAboutScene,
+    // SHA384 Hash
+    FlipCryptSHA384SubmenuScene,
+    FlipCryptSHA384InputScene,
+    FlipCryptSHA384OutputScene,
+    FlipCryptSHA384LearnScene,
+    // SHA512 Hash
+    FlipCryptSHA512SubmenuScene,
+    FlipCryptSHA512InputScene,
+    FlipCryptSHA512OutputScene,
+    FlipCryptSHA512LearnScene,
+    // XX Hash
+    FlipCryptXXSubmenuScene,
+    FlipCryptXXInputScene,
+    FlipCryptXXOutputScene,
+    FlipCryptXXLearnScene,
+    // Base32 scenes
+    FlipCryptBase32SubmenuScene,
+    FlipCryptBase32InputScene,
+    FlipCryptBase32OutputScene,
+    FlipCryptBase32DecryptInputScene,
+    FlipCryptBase32DecryptOutputScene,
+    FlipCryptBase32LearnScene,
+    // Base58 scenes
+    FlipCryptBase58SubmenuScene,
+    FlipCryptBase58InputScene,
+    FlipCryptBase58OutputScene,
+    FlipCryptBase58DecryptInputScene,
+    FlipCryptBase58DecryptOutputScene,
+    FlipCryptBase58LearnScene,
+    // Base64 scenes
+    FlipCryptBase64SubmenuScene,
+    FlipCryptBase64InputScene,
+    FlipCryptBase64OutputScene,
+    FlipCryptBase64DecryptInputScene,
+    FlipCryptBase64DecryptOutputScene,
+    FlipCryptBase64LearnScene,
+    // Extra actions scenes
+    FlipCryptNFCScene,
+    FlipCryptSaveScene,
+    FlipCryptSaveTextInputScene,
+    FlipCryptQRScene,
     FlipCryptSceneCount,
 } FlipCryptScene;
 
@@ -95,6 +261,9 @@ typedef enum {
     FlipCryptSubmenuView,
     FlipCryptWidgetView,
     FlipCryptTextInputView,
+    FlipCryptNumberInputView,
+    FlipCryptDialogExView,
+    FlipCryptCanvasView,
 } FlipCryptView;
 
 // View and variable inits
@@ -104,83 +273,248 @@ typedef struct App {
     Submenu* submenu;
     Widget* widget;
     TextInput* text_input;
+    NumberInput* number_input;
+    DialogEx* dialog_ex;
+    Nfc* nfc;
+    NfcListener* listener;
+    NfcDevice* nfc_device;
+    char* save_name_input;
+    char* last_output_scene;
+    char* aes_input;
+    char* aes_key_input;
+    char* aes_decrypt_input;
+    char* affine_input;
+    int32_t affine_keya_input;
+    int32_t affine_keyb_input;
+    char* affine_decrypt_input;
     char* atbash_input;
     char* atbash_decrypt_input;
     char* baconian_input;
     char* baconian_decrypt_input;
+    char* beaufort_input;
+    char* beaufort_key_input;
+    char* beaufort_decrypt_input;
+    char* caesar_input;
+    int32_t caesar_key_input;
+    char* caesar_decrypt_input;
     char* playfair_input;
     char* playfair_keyword_input;
     char* playfair_decrypt_input;
+    char* polybius_input;
+    char* polybius_decrypt_input;
     char* railfence_input;
+    int32_t railfence_key_input;
     char* railfence_decrypt_input;
+    char* rc4_input;
+    char* rc4_keyword_input;
+    char* rc4_decrypt_input;
+    char* scytale_input;
+    int32_t scytale_keyword_input;
+    char* scytale_decrypt_input;
     char* vigenere_input;
     char* vigenere_keyword_input;
     char* vigenere_decrypt_input;
     char* blake2_input;
+    char* fnv1a_input;
     char* md5_input;
+    char* murmur3_input;
+    char* sip_input;
+    char* sip_keyword_input;
     char* sha1_input;
+    char* sha224_input;
     char* sha256_input;
+    char* sha384_input;
+    char* sha512_input;
+    char* xx_input;
+    char* base32_input;
+    char* base32_decrypt_input;
+    char* base58_input;
+    char* base58_decrypt_input;
+    char* base64_input;
+    char* base64_decrypt_input;
+    uint8_t save_name_input_size;
+    uint8_t last_output_scene_size;
+    uint8_t aes_input_size;
+    uint8_t aes_key_input_size;
+    uint8_t aes_decrypt_input_size;
+    uint8_t affine_input_size;
+    uint8_t affine_decrypt_input_size;
     uint8_t atbash_input_size;
+    uint8_t atbash_decrypt_input_size;
     uint8_t baconian_input_size;
+    uint8_t baconian_decrypt_input_size;
+    uint8_t beaufort_input_size;
+    uint8_t beaufort_key_input_size;
+    uint8_t beaufort_decrypt_input_size;
+    uint8_t caesar_input_size;
+    uint8_t caesar_decrypt_input_size;
     uint8_t playfair_input_size;
     uint8_t playfair_keyword_input_size;
+    uint8_t playfair_decrypt_input_size;
+    uint8_t polybius_input_size;
+    uint8_t polybius_decrypt_input_size;
     uint8_t railfence_input_size;
+    uint8_t railfence_decrypt_input_size;
+    uint8_t rc4_input_size;
+    uint8_t rc4_keyword_input_size;
+    uint8_t rc4_decrypt_input_size;
+    uint8_t scytale_input_size;
+    uint8_t scytale_decrypt_input_size;
     uint8_t vigenere_input_size;
     uint8_t vigenere_keyword_input_size;
-    uint8_t blake2_input_size;
-    uint8_t md5_input_size;
-    uint8_t sha1_input_size;
-    uint8_t sha256_input_size;
-    uint8_t atbash_decrypt_input_size;
-    uint8_t baconian_decrypt_input_size;
-    uint8_t playfair_decrypt_input_size;
-    uint8_t railfence_decrypt_input_size;
     uint8_t vigenere_decrypt_input_size;
+    uint8_t blake2_input_size;
+    uint8_t fnv1a_input_size;
+    uint8_t md5_input_size;
+    uint8_t murmur3_input_size;
+    uint8_t sip_input_size;
+    uint8_t sip_keyword_input_size;
+    uint8_t sha1_input_size;
+    uint8_t sha224_input_size;
+    uint8_t sha256_input_size;
+    uint8_t sha384_input_size;
+    uint8_t sha512_input_size;
+    uint8_t xx_input_size;
+    uint8_t base32_input_size;
+    uint8_t base32_decrypt_input_size;
+    uint8_t base58_input_size;
+    uint8_t base58_decrypt_input_size;
+    uint8_t base64_input_size;
+    uint8_t base64_decrypt_input_size;
+    uint8_t* qr_buffer;
+    uint8_t* qrcode;
 } App;
 
-// Main Menu items Index
+// Menu item indicies
 typedef enum {
+    MainMenuIndexCiphers,
+    MainMenuIndexHashes,
+    MainMenuIndexOther,
+    MainMenuIndexAbout,
+    MenuIndexAES,
+    MenuIndexAffine,
     MenuIndexAtbash,
     MenuIndexBaconian,
+    MenuIndexBeaufort,
+    MenuIndexCaesar,
     MenuIndexPlayfair,
+    MenuIndexPolybius,
     MenuIndexRailfence,
+    MenuIndexRC4,
+    MenuIndexScytale,
     MenuIndexVigenere,
     MenuIndexBlake2,
+    MenuIndexFNV1A,
     MenuIndexMD5,
+    MenuIndexMurmur3,
     MenuIndexSHA1,
+    MenuIndexSHA224,
     MenuIndexSHA256,
-    MenuIndexAbout,
-} CipherMenuIndex;
+    MenuIndexSHA384,
+    MenuIndexSHA512,
+    MenuIndexSip,
+    MenuIndexXX,
+    MenuIndexBase32,
+    MenuIndexBase58,
+    MenuIndexBase64,
+} FlipCryptMenuIndices;
 
-// Main Menu items Events
+// Menu item events
 typedef enum {
+    EventCiphers,
+    EventHashes,
+    EventOther,
+    EventAbout,
+    EventAES,
+    EventAffine,
     EventAtbash,
     EventBaconian,
+    EventBeaufort,
+    EventCaesar,
     EventPlayfair,
+    EventPolybius,
     EventRailfence,
+    EventRC4,
+    EventScytale,
     EventVigenere,
     EventBlake2,
+    EventFNV1A,
     EventMD5,
+    EventMurmur3,
     EventSHA1,
+    EventSHA224,
     EventSHA256,
-    EventAbout,
-} CipherCustomEvent;
+    EventSHA384,
+    EventSHA512,
+    EventSip,
+    EventXX,
+    EventBase32,
+    EventBase58,
+    EventBase64,
+} FlipCryptMenuCustomEvents;
+
+// QR Code vars
+typedef struct {
+    uint8_t* qr_buffer;
+    uint8_t* qrcode;
+} QrCodeModel;
+
+void notify() {
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_set_vibro_on);
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_set_green_255);
+    furi_delay_ms(100);
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_reset_vibro);
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_reset_green);
+}
 
 // Main menu functionality
 void flip_crypt_menu_callback(void* context, uint32_t index) {
     App* app = context;
     switch(index) {
+    case MainMenuIndexCiphers:
+        scene_manager_handle_custom_event(app->scene_manager, EventCiphers);
+        break;
+    case MainMenuIndexHashes:
+        scene_manager_handle_custom_event(app->scene_manager, EventHashes);
+        break;
+    case MainMenuIndexOther:
+        scene_manager_handle_custom_event(app->scene_manager, EventOther);
+        break;
+    case MainMenuIndexAbout:
+        scene_manager_handle_custom_event(app->scene_manager, EventAbout);
+        break;
+    case MenuIndexAES:
+        scene_manager_handle_custom_event(app->scene_manager, EventAES);
+        break;
+    case MenuIndexAffine:
+        scene_manager_handle_custom_event(app->scene_manager, EventAffine);
+        break;
     case MenuIndexAtbash:
         scene_manager_handle_custom_event(app->scene_manager, EventAtbash);
         break;
     case MenuIndexBaconian:
         scene_manager_handle_custom_event(app->scene_manager, EventBaconian);
         break;
+    case MenuIndexBeaufort:
+        scene_manager_handle_custom_event(app->scene_manager, EventBeaufort);
+        break;
+    case MenuIndexCaesar:
+        scene_manager_handle_custom_event(app->scene_manager, EventCaesar);
+        break;
     case MenuIndexPlayfair:
         scene_manager_handle_custom_event(app->scene_manager, EventPlayfair);
         break;
+    case MenuIndexPolybius:
+        scene_manager_handle_custom_event(app->scene_manager, EventPolybius);
+        break;
     case MenuIndexRailfence:
         scene_manager_handle_custom_event(app->scene_manager, EventRailfence);
+        break;
+    case MenuIndexRC4:
+        scene_manager_handle_custom_event(app->scene_manager, EventRC4);
+        break;
+    case MenuIndexScytale:
+        scene_manager_handle_custom_event(app->scene_manager, EventScytale);
         break;
     case MenuIndexVigenere:
         scene_manager_handle_custom_event(app->scene_manager, EventVigenere);
@@ -188,17 +522,44 @@ void flip_crypt_menu_callback(void* context, uint32_t index) {
     case MenuIndexBlake2:
         scene_manager_handle_custom_event(app->scene_manager, EventBlake2);
         break;
+    case MenuIndexFNV1A:
+        scene_manager_handle_custom_event(app->scene_manager, EventFNV1A);
+        break;
     case MenuIndexMD5:
         scene_manager_handle_custom_event(app->scene_manager, EventMD5);
+        break;
+    case MenuIndexMurmur3:
+        scene_manager_handle_custom_event(app->scene_manager, EventMurmur3);
+        break;
+    case MenuIndexSip:
+        scene_manager_handle_custom_event(app->scene_manager, EventSip);
         break;
     case MenuIndexSHA1:
         scene_manager_handle_custom_event(app->scene_manager, EventSHA1);
         break;
+    case MenuIndexSHA224:
+        scene_manager_handle_custom_event(app->scene_manager, EventSHA224);
+        break;
     case MenuIndexSHA256:
         scene_manager_handle_custom_event(app->scene_manager, EventSHA256);
         break;
-    case MenuIndexAbout:
-        scene_manager_handle_custom_event(app->scene_manager, EventAbout);
+    case MenuIndexSHA384:
+        scene_manager_handle_custom_event(app->scene_manager, EventSHA384);
+        break;
+    case MenuIndexSHA512:
+        scene_manager_handle_custom_event(app->scene_manager, EventSHA512);
+        break;
+    case MenuIndexXX:
+        scene_manager_handle_custom_event(app->scene_manager, EventXX);
+        break;
+    case MenuIndexBase32:
+        scene_manager_handle_custom_event(app->scene_manager, EventBase32);
+        break;
+    case MenuIndexBase58:
+        scene_manager_handle_custom_event(app->scene_manager, EventBase58);
+        break;
+    case MenuIndexBase64:
+        scene_manager_handle_custom_event(app->scene_manager, EventBase64);
         break;
     }
 }
@@ -208,22 +569,71 @@ void flip_crypt_main_menu_scene_on_enter(void* context) {
     App* app = context;
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "FlipCrypt");
+    submenu_add_item(app->submenu, "Ciphers", MainMenuIndexCiphers, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "Hashes", MainMenuIndexHashes, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "Other", MainMenuIndexOther, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "About", MainMenuIndexAbout, flip_crypt_menu_callback, app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
+}
+
+void flip_crypt_cipher_submenu_scene_on_enter(void* context) {
+    App* app = context;
+    submenu_reset(app->submenu);
+    submenu_set_header(app->submenu, "Ciphers");
+    submenu_add_item(app->submenu, "AES-128 Cipher", MenuIndexAES, flip_crypt_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Affine Cipher", MenuIndexAffine, flip_crypt_menu_callback, app);
     submenu_add_item(
         app->submenu, "Atbash Cipher", MenuIndexAtbash, flip_crypt_menu_callback, app);
     submenu_add_item(
         app->submenu, "Baconian Cipher", MenuIndexBaconian, flip_crypt_menu_callback, app);
     submenu_add_item(
+        app->submenu, "Beaufort Cipher", MenuIndexBeaufort, flip_crypt_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Caesar Cipher", MenuIndexCaesar, flip_crypt_menu_callback, app);
+    submenu_add_item(
         app->submenu, "Playfair Cipher", MenuIndexPlayfair, flip_crypt_menu_callback, app);
     submenu_add_item(
+        app->submenu, "Polybius Square", MenuIndexPolybius, flip_crypt_menu_callback, app);
+    submenu_add_item(
         app->submenu, "Railfence Cipher", MenuIndexRailfence, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "RC4 Cipher", MenuIndexRC4, flip_crypt_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Scytale Cipher", MenuIndexScytale, flip_crypt_menu_callback, app);
     submenu_add_item(
         app->submenu, "Vigenere Cipher", MenuIndexVigenere, flip_crypt_menu_callback, app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
+}
+
+void flip_crypt_hash_submenu_scene_on_enter(void* context) {
+    App* app = context;
+    submenu_reset(app->submenu);
+    submenu_set_header(app->submenu, "Hashes");
     submenu_add_item(
         app->submenu, "BLAKE-2s Hash", MenuIndexBlake2, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "FNV-1A Hash", MenuIndexFNV1A, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "MD5 Hash", MenuIndexMD5, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "MurmurHash3", MenuIndexMurmur3, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "SHA-1 Hash", MenuIndexSHA1, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "SHA-224 Hash", MenuIndexSHA224, flip_crypt_menu_callback, app);
     submenu_add_item(app->submenu, "SHA-256 Hash", MenuIndexSHA256, flip_crypt_menu_callback, app);
-    submenu_add_item(app->submenu, "About", MenuIndexAbout, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "SHA-384 Hash", MenuIndexSHA384, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "SHA-512 Hash", MenuIndexSHA512, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "SipHash", MenuIndexSip, flip_crypt_menu_callback, app);
+    submenu_add_item(app->submenu, "XXHash64", MenuIndexXX, flip_crypt_menu_callback, app);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
+}
+
+void flip_crypt_other_submenu_scene_on_enter(void* context) {
+    App* app = context;
+    submenu_reset(app->submenu);
+    submenu_set_header(app->submenu, "Other");
+    submenu_add_item(
+        app->submenu, "Base32 Encoding", MenuIndexBase32, flip_crypt_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Base58 Encoding", MenuIndexBase58, flip_crypt_menu_callback, app);
+    submenu_add_item(
+        app->submenu, "Base64 Encoding", MenuIndexBase64, flip_crypt_menu_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
 }
 
@@ -233,6 +643,30 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
     bool consumed = false;
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
+        case EventCiphers:
+            scene_manager_next_scene(app->scene_manager, FlipCryptCipherSubmenuScene);
+            consumed = true;
+            break;
+        case EventHashes:
+            scene_manager_next_scene(app->scene_manager, FlipCryptHashSubmenuScene);
+            consumed = true;
+            break;
+        case EventOther:
+            scene_manager_next_scene(app->scene_manager, FlipCryptOtherSubmenuScene);
+            consumed = true;
+            break;
+        case EventAbout:
+            scene_manager_next_scene(app->scene_manager, FlipCryptAboutScene);
+            consumed = true;
+            break;
+        case EventAES:
+            scene_manager_next_scene(app->scene_manager, FlipCryptAESSubmenuScene);
+            consumed = true;
+            break;
+        case EventAffine:
+            scene_manager_next_scene(app->scene_manager, FlipCryptAffineSubmenuScene);
+            consumed = true;
+            break;
         case EventAtbash:
             scene_manager_next_scene(app->scene_manager, FlipCryptAtbashSubmenuScene);
             consumed = true;
@@ -241,12 +675,32 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
             scene_manager_next_scene(app->scene_manager, FlipCryptBaconianSubmenuScene);
             consumed = true;
             break;
+        case EventBeaufort:
+            scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortSubmenuScene);
+            consumed = true;
+            break;
+        case EventCaesar:
+            scene_manager_next_scene(app->scene_manager, FlipCryptCaesarSubmenuScene);
+            consumed = true;
+            break;
         case EventPlayfair:
             scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairSubmenuScene);
             consumed = true;
             break;
+        case EventPolybius:
+            scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusSubmenuScene);
+            consumed = true;
+            break;
         case EventRailfence:
             scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceSubmenuScene);
+            consumed = true;
+            break;
+        case EventRC4:
+            scene_manager_next_scene(app->scene_manager, FlipCryptRC4SubmenuScene);
+            consumed = true;
+            break;
+        case EventScytale:
+            scene_manager_next_scene(app->scene_manager, FlipCryptScytaleSubmenuScene);
             consumed = true;
             break;
         case EventVigenere:
@@ -257,20 +711,56 @@ bool flip_crypt_main_menu_scene_on_event(void* context, SceneManagerEvent event)
             scene_manager_next_scene(app->scene_manager, FlipCryptBlake2SubmenuScene);
             consumed = true;
             break;
+        case EventFNV1A:
+            scene_manager_next_scene(app->scene_manager, FlipCryptFNV1ASubmenuScene);
+            consumed = true;
+            break;
         case EventMD5:
             scene_manager_next_scene(app->scene_manager, FlipCryptMD5SubmenuScene);
+            consumed = true;
+            break;
+        case EventMurmur3:
+            scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3SubmenuScene);
+            consumed = true;
+            break;
+        case EventSip:
+            scene_manager_next_scene(app->scene_manager, FlipCryptSipSubmenuScene);
             consumed = true;
             break;
         case EventSHA1:
             scene_manager_next_scene(app->scene_manager, FlipCryptSHA1SubmenuScene);
             consumed = true;
             break;
+        case EventSHA224:
+            scene_manager_next_scene(app->scene_manager, FlipCryptSHA224SubmenuScene);
+            consumed = true;
+            break;
         case EventSHA256:
             scene_manager_next_scene(app->scene_manager, FlipCryptSHA256SubmenuScene);
             consumed = true;
             break;
-        case EventAbout:
-            scene_manager_next_scene(app->scene_manager, FlipCryptAboutScene);
+        case EventSHA384:
+            scene_manager_next_scene(app->scene_manager, FlipCryptSHA384SubmenuScene);
+            consumed = true;
+            break;
+        case EventSHA512:
+            scene_manager_next_scene(app->scene_manager, FlipCryptSHA512SubmenuScene);
+            consumed = true;
+            break;
+        case EventXX:
+            scene_manager_next_scene(app->scene_manager, FlipCryptXXSubmenuScene);
+            consumed = true;
+            break;
+        case EventBase32:
+            scene_manager_next_scene(app->scene_manager, FlipCryptBase32SubmenuScene);
+            consumed = true;
+            break;
+        case EventBase58:
+            scene_manager_next_scene(app->scene_manager, FlipCryptBase58SubmenuScene);
+            consumed = true;
+            break;
+        case EventBase64:
+            scene_manager_next_scene(app->scene_manager, FlipCryptBase64SubmenuScene);
             consumed = true;
             break;
         }
@@ -290,17 +780,38 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAESSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESKeyInputScene);
+        break;
+    case FlipCryptAffineSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineKeyAInputScene);
+        break;
     case FlipCryptAtbashSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAtbashInputScene);
         break;
     case FlipCryptBaconianSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBaconianInputScene);
         break;
+    case FlipCryptBeaufortSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortKeyInputScene);
+        break;
+    case FlipCryptCaesarSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarKeyInputScene);
+        break;
     case FlipCryptPlayfairSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairKeywordInputScene);
         break;
+    case FlipCryptPolybiusSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusInputScene);
+        break;
     case FlipCryptRailfenceSubmenuScene:
-        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceInputScene);
+        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceKeyInputScene);
+        break;
+    case FlipCryptRC4SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4KeywordInputScene);
+        break;
+    case FlipCryptScytaleSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleKeywordInputScene);
         break;
     case FlipCryptVigenereSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptVigenereKeywordInputScene);
@@ -308,14 +819,44 @@ void cipher_encrypt_submenu_callback(void* context, uint32_t index) {
     case FlipCryptBlake2SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBlake2InputScene);
         break;
+    case FlipCryptFNV1ASubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptFNV1AInputScene);
+        break;
     case FlipCryptMD5SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptMD5InputScene);
+        break;
+    case FlipCryptMurmur3SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3InputScene);
+        break;
+    case FlipCryptSipSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSipKeywordInputScene);
         break;
     case FlipCryptSHA1SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA1InputScene);
         break;
+    case FlipCryptSHA224SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA224InputScene);
+        break;
     case FlipCryptSHA256SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA256InputScene);
+        break;
+    case FlipCryptSHA384SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA384InputScene);
+        break;
+    case FlipCryptSHA512SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA512InputScene);
+        break;
+    case FlipCryptXXSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptXXInputScene);
+        break;
+    case FlipCryptBase32SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase32InputScene);
+        break;
+    case FlipCryptBase58SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase58InputScene);
+        break;
+    case FlipCryptBase64SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase64InputScene);
         break;
     default:
         break;
@@ -329,22 +870,52 @@ void cipher_decrypt_submenu_callback(void* context, uint32_t index) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAESSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptKeyInputScene);
+        break;
+    case FlipCryptAffineSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineDecryptKeyAInputScene);
+        break;
     case FlipCryptAtbashSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAtbashDecryptInputScene);
         break;
     case FlipCryptBaconianSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBaconianDecryptInputScene);
         break;
+    case FlipCryptBeaufortSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortDecryptKeyInputScene);
+        break;
+    case FlipCryptCaesarSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarDecryptKeyInputScene);
+        break;
     case FlipCryptPlayfairSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairDecryptKeywordInputScene);
         break;
+    case FlipCryptPolybiusSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusDecryptInputScene);
+        break;
     case FlipCryptRailfenceSubmenuScene:
-        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptInputScene);
+        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptKeyInputScene);
+        break;
+    case FlipCryptRC4SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4DecryptKeywordInputScene);
+        break;
+    case FlipCryptScytaleSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleDecryptKeywordInputScene);
         break;
     case FlipCryptVigenereSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptVigenereDecryptKeywordInputScene);
         break;
     // Can't decrypt hashes so they are absent
+    case FlipCryptBase32SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase32DecryptInputScene);
+        break;
+    case FlipCryptBase58SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase58DecryptInputScene);
+        break;
+    case FlipCryptBase64SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase64DecryptInputScene);
+        break;
     default:
         break;
     }
@@ -357,17 +928,38 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAESSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESLearnScene);
+        break;
+    case FlipCryptAffineSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineLearnScene);
+        break;
     case FlipCryptAtbashSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAtbashLearnScene);
         break;
     case FlipCryptBaconianSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBaconianLearnScene);
         break;
+    case FlipCryptBeaufortSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortLearnScene);
+        break;
+    case FlipCryptCaesarSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarLearnScene);
+        break;
     case FlipCryptPlayfairSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairLearnScene);
         break;
+    case FlipCryptPolybiusSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusLearnScene);
+        break;
     case FlipCryptRailfenceSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceLearnScene);
+        break;
+    case FlipCryptRC4SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4LearnScene);
+        break;
+    case FlipCryptScytaleSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleLearnScene);
         break;
     case FlipCryptVigenereSubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptVigenereLearnScene);
@@ -375,29 +967,217 @@ void cipher_learn_submenu_callback(void* context, uint32_t index) {
     case FlipCryptBlake2SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBlake2LearnScene);
         break;
+    case FlipCryptFNV1ASubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptFNV1ALearnScene);
+        break;
     case FlipCryptMD5SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptMD5LearnScene);
+        break;
+    case FlipCryptMurmur3SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3LearnScene);
+        break;
+    case FlipCryptSipSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSipLearnScene);
         break;
     case FlipCryptSHA1SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA1LearnScene);
         break;
+    case FlipCryptSHA224SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA224LearnScene);
+        break;
     case FlipCryptSHA256SubmenuScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA256LearnScene);
+        break;
+    case FlipCryptSHA384SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA384LearnScene);
+        break;
+    case FlipCryptSHA512SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA512LearnScene);
+        break;
+    case FlipCryptXXSubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptXXLearnScene);
+        break;
+    case FlipCryptBase32SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase32LearnScene);
+        break;
+    case FlipCryptBase58SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase58LearnScene);
+        break;
+    case FlipCryptBase64SubmenuScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase64LearnScene);
         break;
     default:
         break;
     }
 }
 
-void cipher_do_nothing_submenu_callback(void* context, uint32_t index) {
-    UNUSED(index);
-    UNUSED(context);
+// Number input stuff
+void number_input_scene_callback(void* context, int32_t number) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAffineKeyAInputScene:
+        app->affine_keya_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineKeyBInputScene);
+        break;
+    case FlipCryptAffineKeyBInputScene:
+        app->affine_keyb_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineInputScene);
+        break;
+    case FlipCryptAffineDecryptKeyAInputScene:
+        app->affine_keya_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineDecryptKeyBInputScene);
+        break;
+    case FlipCryptAffineDecryptKeyBInputScene:
+        app->affine_keyb_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineDecryptInputScene);
+        break;
+    case FlipCryptCaesarKeyInputScene:
+        app->caesar_key_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarInputScene);
+        break;
+    case FlipCryptCaesarDecryptKeyInputScene:
+        app->caesar_key_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarDecryptInputScene);
+        break;
+    case FlipCryptRailfenceKeyInputScene:
+        app->railfence_key_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceInputScene);
+        break;
+    case FlipCryptRailfenceDecryptKeyInputScene:
+        app->railfence_key_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptInputScene);
+        break;
+    case FlipCryptScytaleKeywordInputScene:
+        app->scytale_keyword_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleInputScene);
+        break;
+    case FlipCryptScytaleDecryptKeywordInputScene:
+        app->scytale_keyword_input = number;
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleDecryptInputScene);
+        break;
     default:
         break;
     }
+}
+
+void number_input_scene_on_enter(void* context) {
+    furi_assert(context);
+    App* app = context;
+    NumberInput* number_input = app->number_input;
+    FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
+    switch(current) {
+    case FlipCryptAffineKeyAInputScene:
+        char affine_encrypt_keya_input_str[30];
+        snprintf(
+            affine_encrypt_keya_input_str,
+            sizeof(affine_encrypt_keya_input_str),
+            "Odd # between 1-25, not 13");
+        number_input_set_header_text(number_input, affine_encrypt_keya_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->affine_keya_input, 1, 25);
+        break;
+    case FlipCryptAffineKeyBInputScene:
+        char affine_encrypt_keyb_input_str[30];
+        snprintf(
+            affine_encrypt_keyb_input_str,
+            sizeof(affine_encrypt_keyb_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            30);
+        number_input_set_header_text(number_input, affine_encrypt_keyb_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->affine_keyb_input, 1, 30);
+        break;
+    case FlipCryptAffineDecryptKeyAInputScene:
+        char affine_decrypt_keya_input_str[30];
+        snprintf(
+            affine_decrypt_keya_input_str,
+            sizeof(affine_decrypt_keya_input_str),
+            "Odd # between 1-25, not 13");
+        number_input_set_header_text(number_input, affine_decrypt_keya_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->affine_keya_input, 1, 25);
+        break;
+    case FlipCryptAffineDecryptKeyBInputScene:
+        char affine_decrypt_keyb_input_str[30];
+        snprintf(
+            affine_decrypt_keyb_input_str,
+            sizeof(affine_decrypt_keyb_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            30);
+        number_input_set_header_text(number_input, affine_decrypt_keyb_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->affine_keyb_input, 1, 30);
+        break;
+    case FlipCryptCaesarKeyInputScene:
+        char caesar_key_input_str[30];
+        snprintf(caesar_key_input_str, sizeof(caesar_key_input_str), "Enter Key (%d - %d)", 1, 26);
+        number_input_set_header_text(number_input, caesar_key_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->caesar_key_input, 1, 26);
+        break;
+    case FlipCryptCaesarDecryptKeyInputScene:
+        char caesar_decrypt_key_input_str[30];
+        snprintf(
+            caesar_decrypt_key_input_str,
+            sizeof(caesar_decrypt_key_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            26);
+        number_input_set_header_text(number_input, caesar_decrypt_key_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->caesar_key_input, 1, 26);
+        break;
+    case FlipCryptRailfenceKeyInputScene:
+        char railfence_key_input_str[30];
+        snprintf(
+            railfence_key_input_str, sizeof(railfence_key_input_str), "Enter Key (%d - %d)", 1, 8);
+        number_input_set_header_text(number_input, railfence_key_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->railfence_key_input, 1, 8);
+        break;
+    case FlipCryptRailfenceDecryptKeyInputScene:
+        char railfence_decrypt_key_input_str[30];
+        snprintf(
+            railfence_decrypt_key_input_str,
+            sizeof(railfence_decrypt_key_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            26);
+        number_input_set_header_text(number_input, railfence_decrypt_key_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->railfence_key_input, 1, 26);
+        break;
+    case FlipCryptScytaleKeywordInputScene:
+        char scytale_keyword_input_str[30];
+        snprintf(
+            scytale_keyword_input_str,
+            sizeof(scytale_keyword_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            9);
+        number_input_set_header_text(number_input, scytale_keyword_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->scytale_keyword_input, 1, 9);
+        break;
+    case FlipCryptScytaleDecryptKeywordInputScene:
+        char scytale_decrypt_keyword_input_str[30];
+        snprintf(
+            scytale_decrypt_keyword_input_str,
+            sizeof(scytale_decrypt_keyword_input_str),
+            "Enter Key (%d - %d)",
+            1,
+            9);
+        number_input_set_header_text(number_input, scytale_decrypt_keyword_input_str);
+        number_input_set_result_callback(
+            number_input, number_input_scene_callback, context, app->scytale_keyword_input, 1, 9);
+        break;
+    default:
+        break;
+    }
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptNumberInputView);
 }
 
 // Cipher / Hash submenu initialization
@@ -406,6 +1186,18 @@ void cipher_submenu_scene_on_enter(void* context) {
     submenu_reset(app->submenu);
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAESSubmenuScene:
+        submenu_set_header(app->submenu, "AES-128 Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptAffineSubmenuScene:
+        submenu_set_header(app->submenu, "Affine Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
     case FlipCryptAtbashSubmenuScene:
         submenu_set_header(app->submenu, "Atbash Cipher");
         submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
@@ -418,8 +1210,26 @@ void cipher_submenu_scene_on_enter(void* context) {
         submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
         break;
+    case FlipCryptBeaufortSubmenuScene:
+        submenu_set_header(app->submenu, "Beaufort Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptCaesarSubmenuScene:
+        submenu_set_header(app->submenu, "Caesar Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
     case FlipCryptPlayfairSubmenuScene:
         submenu_set_header(app->submenu, "Playfair Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptPolybiusSubmenuScene:
+        submenu_set_header(app->submenu, "Polybius Square");
         submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
@@ -428,13 +1238,19 @@ void cipher_submenu_scene_on_enter(void* context) {
         submenu_set_header(app->submenu, "Railfence Cipher");
         submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
-        submenu_add_item(
-            app->submenu,
-            "Rails: 3 (more coming soon)",
-            2,
-            cipher_do_nothing_submenu_callback,
-            app);
         submenu_add_item(app->submenu, "Learn", 3, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptRC4SubmenuScene:
+        submenu_set_header(app->submenu, "RC4 Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptScytaleSubmenuScene:
+        submenu_set_header(app->submenu, "Scytale Cipher");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
         break;
     case FlipCryptVigenereSubmenuScene:
         submenu_set_header(app->submenu, "Vigenere Cipher");
@@ -447,25 +1263,76 @@ void cipher_submenu_scene_on_enter(void* context) {
         submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
         break;
+    case FlipCryptFNV1ASubmenuScene:
+        submenu_set_header(app->submenu, "FNV-1A Hash");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
     case FlipCryptMD5SubmenuScene:
         submenu_set_header(app->submenu, "MD5 Hash");
         submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
         break;
+    case FlipCryptMurmur3SubmenuScene:
+        submenu_set_header(app->submenu, "MurmurHash3");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptSipSubmenuScene:
+        submenu_set_header(app->submenu, "SipHash");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
     case FlipCryptSHA1SubmenuScene:
-        submenu_set_header(app->submenu, "SHA1 Hash");
+        submenu_set_header(app->submenu, "SHA-1 Hash");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptSHA224SubmenuScene:
+        submenu_set_header(app->submenu, "SHA-224 Hash");
         submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
         break;
     case FlipCryptSHA256SubmenuScene:
-        submenu_set_header(app->submenu, "SHA256 Hash");
+        submenu_set_header(app->submenu, "SHA-256 Hash");
         submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
         break;
-    default:
-        submenu_set_header(app->submenu, "Unknown");
+    case FlipCryptSHA384SubmenuScene:
+        submenu_set_header(app->submenu, "SHA-384 Hash");
         submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
         submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptSHA512SubmenuScene:
+        submenu_set_header(app->submenu, "SHA-512 Hash");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptXXSubmenuScene:
+        submenu_set_header(app->submenu, "XXHash64");
+        submenu_add_item(app->submenu, "Hash Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 1, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptBase32SubmenuScene:
+        submenu_set_header(app->submenu, "Base32 Encoding");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptBase58SubmenuScene:
+        submenu_set_header(app->submenu, "Base58 Encoding");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    case FlipCryptBase64SubmenuScene:
+        submenu_set_header(app->submenu, "Base64 Encoding");
+        submenu_add_item(app->submenu, "Encode Text", 0, cipher_encrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Decode Text", 1, cipher_decrypt_submenu_callback, app);
+        submenu_add_item(app->submenu, "Learn", 2, cipher_learn_submenu_callback, app);
+        break;
+    default:
+        submenu_set_header(app->submenu, "Error!");
         break;
     }
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptSubmenuView);
@@ -476,6 +1343,21 @@ void flip_crypt_text_input_callback(void* context) {
     App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptSaveTextInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSaveScene);
+        break;
+    case FlipCryptAESKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESInputScene);
+        break;
+    case FlipCryptAESInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESOutputScene);
+        break;
+    case FlipCryptAffineInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineOutputScene);
+        break;
+    case FlipCryptAffineDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAffineDecryptOutputScene);
+        break;
     case FlipCryptAtbashInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAtbashOutputScene);
         break;
@@ -487,6 +1369,30 @@ void flip_crypt_text_input_callback(void* context) {
         break;
     case FlipCryptBaconianDecryptInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBaconianDecryptOutputScene);
+        break;
+    case FlipCryptBeaufortKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortInputScene);
+        break;
+    case FlipCryptBeaufortInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortOutputScene);
+        break;
+    case FlipCryptBeaufortDecryptKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortDecryptInputScene);
+        break;
+    case FlipCryptBeaufortDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBeaufortDecryptOutputScene);
+        break;
+    case FlipCryptCaesarKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarInputScene);
+        break;
+    case FlipCryptCaesarInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarOutputScene);
+        break;
+    case FlipCryptCaesarDecryptKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarDecryptInputScene);
+        break;
+    case FlipCryptCaesarDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptCaesarDecryptOutputScene);
         break;
     case FlipCryptPlayfairKeywordInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairInputScene);
@@ -500,11 +1406,35 @@ void flip_crypt_text_input_callback(void* context) {
     case FlipCryptPlayfairDecryptInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptPlayfairDecryptOutputScene);
         break;
+    case FlipCryptPolybiusInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusOutputScene);
+        break;
+    case FlipCryptPolybiusDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptPolybiusDecryptOutputScene);
+        break;
     case FlipCryptRailfenceInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceOutputScene);
         break;
     case FlipCryptRailfenceDecryptInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptRailfenceDecryptOutputScene);
+        break;
+    case FlipCryptRC4InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4OutputScene);
+        break;
+    case FlipCryptRC4KeywordInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4InputScene);
+        break;
+    case FlipCryptRC4DecryptKeywordInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4DecryptInputScene);
+        break;
+    case FlipCryptRC4DecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptRC4DecryptOutputScene);
+        break;
+    case FlipCryptScytaleInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleOutputScene);
+        break;
+    case FlipCryptScytaleDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptScytaleDecryptOutputScene);
         break;
     case FlipCryptVigenereInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptVigenereOutputScene);
@@ -521,14 +1451,57 @@ void flip_crypt_text_input_callback(void* context) {
     case FlipCryptBlake2InputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptBlake2OutputScene);
         break;
+    case FlipCryptFNV1AInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptFNV1AOutputScene);
+        break;
     case FlipCryptMD5InputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptMD5OutputScene);
+        break;
+    case FlipCryptMurmur3InputScene:
+        notify();
+        scene_manager_next_scene(app->scene_manager, FlipCryptMurmur3OutputScene);
+        break;
+    case FlipCryptSipInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSipOutputScene);
+        break;
+    case FlipCryptSipKeywordInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSipInputScene);
         break;
     case FlipCryptSHA1InputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA1OutputScene);
         break;
+    case FlipCryptSHA224InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA224OutputScene);
+        break;
     case FlipCryptSHA256InputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptSHA256OutputScene);
+        break;
+    case FlipCryptSHA384InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA384OutputScene);
+        break;
+    case FlipCryptSHA512InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSHA512OutputScene);
+        break;
+    case FlipCryptXXInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptXXOutputScene);
+        break;
+    case FlipCryptBase32InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase32OutputScene);
+        break;
+    case FlipCryptBase32DecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase32DecryptOutputScene);
+        break;
+    case FlipCryptBase58InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase58OutputScene);
+        break;
+    case FlipCryptBase58DecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase58DecryptOutputScene);
+        break;
+    case FlipCryptBase64InputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase64OutputScene);
+        break;
+    case FlipCryptBase64DecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptBase64DecryptOutputScene);
         break;
     default:
         break;
@@ -543,6 +1516,75 @@ void cipher_input_scene_on_enter(void* context) {
 
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptSaveTextInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter file name");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->save_name_input,
+            app->save_name_input_size,
+            true);
+        break;
+    case FlipCryptAESInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->aes_input,
+            app->aes_input_size,
+            true);
+        break;
+    case FlipCryptAESKeyInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key (sixteen chars)");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->aes_key_input,
+            app->aes_key_input_size,
+            true);
+        break;
+    case FlipCryptAESDecryptKeyInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key (sixteen chars)");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->aes_decrypt_input,
+            app->aes_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptAESDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->aes_decrypt_input,
+            app->aes_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptAffineInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->affine_input,
+            app->affine_input_size,
+            true);
+        break;
+    case FlipCryptAffineDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->affine_decrypt_input,
+            app->affine_decrypt_input_size,
+            true);
+        break;
     case FlipCryptAtbashInputScene:
         text_input_set_result_callback(
             app->text_input,
@@ -579,6 +1621,64 @@ void cipher_input_scene_on_enter(void* context) {
             app->baconian_decrypt_input_size,
             true);
         break;
+    case FlipCryptBeaufortInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->beaufort_input,
+            app->beaufort_input_size,
+            true);
+        break;
+    case FlipCryptBeaufortKeyInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->beaufort_key_input,
+            app->beaufort_key_input_size,
+            true);
+        break;
+    case FlipCryptBeaufortDecryptKeyInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->beaufort_key_input,
+            app->beaufort_key_input_size,
+            true);
+        break;
+    case FlipCryptBeaufortDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->beaufort_decrypt_input,
+            app->beaufort_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptCaesarInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->caesar_input,
+            app->caesar_input_size,
+            true);
+        break;
+    case FlipCryptCaesarDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->caesar_decrypt_input,
+            app->caesar_decrypt_input_size,
+            true);
+        break;
     case FlipCryptPlayfairInputScene:
         text_input_set_result_callback(
             app->text_input,
@@ -590,8 +1690,7 @@ void cipher_input_scene_on_enter(void* context) {
         break;
     case FlipCryptPlayfairKeywordInputScene:
         text_input_reset(app->text_input);
-        text_input_set_header_text(app->text_input, "Enter Key");
-
+        text_input_set_header_text(app->text_input, "Enter key");
         text_input_set_result_callback(
             app->text_input,
             flip_crypt_text_input_callback,
@@ -602,8 +1701,7 @@ void cipher_input_scene_on_enter(void* context) {
         break;
     case FlipCryptPlayfairDecryptKeywordInputScene:
         text_input_reset(app->text_input);
-        text_input_set_header_text(app->text_input, "Enter Key");
-
+        text_input_set_header_text(app->text_input, "Enter key");
         text_input_set_result_callback(
             app->text_input,
             flip_crypt_text_input_callback,
@@ -619,6 +1717,24 @@ void cipher_input_scene_on_enter(void* context) {
             app,
             app->playfair_decrypt_input,
             app->playfair_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptPolybiusInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->polybius_input,
+            app->polybius_input_size,
+            true);
+        break;
+    case FlipCryptPolybiusDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->polybius_decrypt_input,
+            app->polybius_decrypt_input_size,
             true);
         break;
     case FlipCryptRailfenceInputScene:
@@ -639,9 +1755,67 @@ void cipher_input_scene_on_enter(void* context) {
             app->railfence_decrypt_input_size,
             true);
         break;
+    case FlipCryptRC4KeywordInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->rc4_keyword_input,
+            app->rc4_keyword_input_size,
+            true);
+        break;
+    case FlipCryptRC4DecryptKeywordInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter key");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->rc4_keyword_input,
+            app->rc4_keyword_input_size,
+            true);
+        break;
+    case FlipCryptRC4InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->rc4_input,
+            app->rc4_input_size,
+            true);
+        break;
+    case FlipCryptRC4DecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->rc4_decrypt_input,
+            app->rc4_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptScytaleInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->scytale_input,
+            app->scytale_input_size,
+            true);
+        break;
+    case FlipCryptScytaleDecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->scytale_decrypt_input,
+            app->scytale_decrypt_input_size,
+            true);
+        break;
     case FlipCryptVigenereKeywordInputScene:
         text_input_reset(app->text_input);
-        text_input_set_header_text(app->text_input, "Enter Key");
+        text_input_set_header_text(app->text_input, "Enter key");
         text_input_set_result_callback(
             app->text_input,
             flip_crypt_text_input_callback,
@@ -652,7 +1826,7 @@ void cipher_input_scene_on_enter(void* context) {
         break;
     case FlipCryptVigenereDecryptKeywordInputScene:
         text_input_reset(app->text_input);
-        text_input_set_header_text(app->text_input, "Enter Key");
+        text_input_set_header_text(app->text_input, "Enter key");
         text_input_set_result_callback(
             app->text_input,
             flip_crypt_text_input_callback,
@@ -688,6 +1862,15 @@ void cipher_input_scene_on_enter(void* context) {
             app->blake2_input_size,
             true);
         break;
+    case FlipCryptFNV1AInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->fnv1a_input,
+            app->fnv1a_input_size,
+            true);
+        break;
     case FlipCryptMD5InputScene:
         text_input_set_result_callback(
             app->text_input,
@@ -695,6 +1878,35 @@ void cipher_input_scene_on_enter(void* context) {
             app,
             app->md5_input,
             app->md5_input_size,
+            true);
+        break;
+    case FlipCryptMurmur3InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->murmur3_input,
+            app->murmur3_input_size,
+            true);
+        break;
+    case FlipCryptSipKeywordInputScene:
+        text_input_reset(app->text_input);
+        text_input_set_header_text(app->text_input, "Enter 16 char keyword");
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->sip_keyword_input,
+            app->sip_keyword_input_size,
+            true);
+        break;
+    case FlipCryptSipInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->sip_input,
+            app->sip_input_size,
             true);
         break;
     case FlipCryptSHA1InputScene:
@@ -706,6 +1918,15 @@ void cipher_input_scene_on_enter(void* context) {
             app->sha1_input_size,
             true);
         break;
+    case FlipCryptSHA224InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->sha224_input,
+            app->sha224_input_size,
+            true);
+        break;
     case FlipCryptSHA256InputScene:
         text_input_set_result_callback(
             app->text_input,
@@ -715,50 +1936,511 @@ void cipher_input_scene_on_enter(void* context) {
             app->sha256_input_size,
             true);
         break;
+    case FlipCryptSHA384InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->sha384_input,
+            app->sha384_input_size,
+            true);
+        break;
+    case FlipCryptSHA512InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->sha512_input,
+            app->sha512_input_size,
+            true);
+        break;
+    case FlipCryptXXInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->xx_input,
+            app->xx_input_size,
+            true);
+        break;
+    case FlipCryptBase32InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base32_input,
+            app->base32_input_size,
+            true);
+        break;
+    case FlipCryptBase32DecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base32_decrypt_input,
+            app->base32_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptBase58InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base58_input,
+            app->base58_input_size,
+            true);
+        break;
+    case FlipCryptBase58DecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base58_decrypt_input,
+            app->base58_decrypt_input_size,
+            true);
+        break;
+    case FlipCryptBase64InputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base64_input,
+            app->base64_input_size,
+            true);
+        break;
+    case FlipCryptBase64DecryptInputScene:
+        text_input_set_result_callback(
+            app->text_input,
+            flip_crypt_text_input_callback,
+            app,
+            app->base64_decrypt_input,
+            app->base64_decrypt_input_size,
+            true);
+        break;
     default:
         break;
     }
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptTextInputView);
 }
 
-// Output screen views
-void cipher_output_scene_on_enter(void* context) {
+// Output dialog
+static void dialog_ex_callback(DialogExResult result, void* context) {
     App* app = context;
-    widget_reset(app->widget);
-    FuriString* message = furi_string_alloc();
 
+    switch(result) {
+    case DialogExResultLeft:
+    case DialogExPressLeft:
+        scene_manager_next_scene(app->scene_manager, FlipCryptNFCScene);
+        break;
+
+    case DialogExResultRight:
+    case DialogExPressRight:
+        scene_manager_next_scene(app->scene_manager, FlipCryptQRScene);
+        break;
+
+    case DialogExResultCenter:
+    case DialogExPressCenter:
+        scene_manager_next_scene(app->scene_manager, FlipCryptSaveTextInputScene);
+        break;
+
+    case DialogExReleaseLeft:
+    case DialogExReleaseRight:
+    case DialogExReleaseCenter:
+        break;
+    }
+}
+
+void dialog_cipher_output_scene_on_enter(void* context) {
+    App* app = context;
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
+    static const char sha_hex_chars[] = "0123456789abcdef";
+    notify();
     switch(current) {
+    case FlipCryptAESOutputScene:
+        char aes_input[128], aes_key_str[17], aes_hex_output[33];
+        uint8_t block[16], key[16], encrypted[16];
+        strncpy(aes_input, app->aes_input, sizeof(aes_input) - 1);
+        aes_input[sizeof(aes_input) - 1] = '\0';
+        aes_input[strcspn(aes_input, "\n")] = 0;
+        strncpy(aes_key_str, app->aes_key_input, sizeof(aes_key_str) - 1);
+        aes_key_str[sizeof(aes_key_str) - 1] = '\0';
+        aes_key_str[strcspn(aes_key_str, "\n")] = 0;
+        pad_input(aes_input, block);
+        memcpy(key, aes_key_str, 16);
+        AES_encrypt_block(block, key, encrypted);
+        to_hex_string(encrypted, 16, aes_hex_output);
+        dialog_ex_set_text(app->dialog_ex, aes_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_aes_result(aes_hex_output);
+        app->last_output_scene = "AES";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptAESDecryptOutputScene:
+        char aes_decrypt_input_hex[33], aes_decrypt_key_str[17], aes_decrypt_output_text[17];
+        uint8_t aes_encrypted[16], aes_decrypt_key[16], aes_decrypted[16];
+        aes_decrypt_input_hex[strcspn(app->aes_decrypt_input, "\n")] = 0;
+        aes_decrypt_key_str[strcspn(app->aes_key_input, "\n")] = 0;
+        for(size_t i = 0; i < 16; i++) {
+            sscanf(&aes_decrypt_input_hex[i * 2], "%2hhx", &aes_encrypted[i]);
+        }
+        memcpy(aes_decrypt_key, aes_decrypt_key_str, 16);
+        AES_decrypt_block(aes_encrypted, aes_decrypt_key, aes_decrypted);
+        memcpy(aes_decrypt_output_text, aes_decrypted, 16);
+        aes_decrypt_output_text[16] = '\0';
+        dialog_ex_set_text(
+            app->dialog_ex, aes_decrypt_output_text, 64, 18, AlignCenter, AlignCenter);
+        save_aes_decrypt_result(aes_decrypt_output_text);
+        app->last_output_scene = "AESDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptAffineOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_affine_result(
+            encode_affine(app->affine_input, app->affine_keya_input, app->affine_keyb_input));
+        app->last_output_scene = "Affine";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptAffineDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            decode_affine(
+                app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_affine_decrypt_result(decode_affine(
+            app->affine_decrypt_input, app->affine_keya_input, app->affine_keyb_input));
+        app->last_output_scene = "AffineDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
     case FlipCryptAtbashOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, atbash_encrypt_or_decrypt(app->atbash_input));
+        dialog_ex_set_text(
+            app->dialog_ex,
+            atbash_encrypt_or_decrypt(app->atbash_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_atbash_result(atbash_encrypt_or_decrypt(app->atbash_input));
+        app->last_output_scene = "Atbash";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptAtbashDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            atbash_encrypt_or_decrypt(app->atbash_decrypt_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_atbash_decrypt_result(atbash_encrypt_or_decrypt(app->atbash_decrypt_input));
+        app->last_output_scene = "AtbashDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptBaconianOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, baconian_encrypt(app->baconian_input));
+        dialog_ex_set_text(
+            app->dialog_ex,
+            baconian_encrypt(app->baconian_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_baconian_result(baconian_encrypt(app->baconian_input));
+        app->last_output_scene = "Baconian";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBaconianDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            baconian_decrypt(app->baconian_decrypt_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_baconian_decrypt_result(baconian_decrypt(app->baconian_decrypt_input));
+        app->last_output_scene = "BaconianDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBeaufortOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            beaufort_cipher_enrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_beaufort_result(
+            beaufort_cipher_enrypt_and_decrypt(app->beaufort_input, app->beaufort_key_input));
+        app->last_output_scene = "Beaufort";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBeaufortDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            beaufort_cipher_enrypt_and_decrypt(
+                app->beaufort_decrypt_input, app->beaufort_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_beaufort_decrypt_result(beaufort_cipher_enrypt_and_decrypt(
+            app->beaufort_decrypt_input, app->beaufort_key_input));
+        app->last_output_scene = "BeaufortDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptCaesarOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            encode_caesar(app->caesar_input, app->caesar_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_caesar_result(encode_caesar(app->caesar_input, app->caesar_key_input));
+        app->last_output_scene = "Caesar";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptCaesarDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            decode_caesar(app->caesar_decrypt_input, app->caesar_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_caesar_decrypt_result(
+            decode_caesar(app->caesar_decrypt_input, app->caesar_key_input));
+        app->last_output_scene = "CaesarDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptPlayfairOutputScene:
-        widget_add_text_scroll_element(
-            app->widget,
-            0,
-            0,
-            128,
+        dialog_ex_set_text(
+            app->dialog_ex,
+            playfair_encrypt(app->playfair_input, playfair_make_table(app->playfair_keyword_input)),
             64,
-            playfair_encrypt(
-                app->playfair_input, playfair_make_table(app->playfair_keyword_input)));
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_playfair_result(playfair_encrypt(
+            app->playfair_input, playfair_make_table(app->playfair_keyword_input)));
+        app->last_output_scene = "Playfair";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptPlayfairDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            playfair_decrypt(
+                app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_playfair_decrypt_result(playfair_decrypt(
+            app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)));
+        app->last_output_scene = "PlayfairDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptPolybiusOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            encrypt_polybius(app->polybius_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_polybius_result(encrypt_polybius(app->polybius_input));
+        app->last_output_scene = "Polybius";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptPolybiusDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            decrypt_polybius(app->polybius_decrypt_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_polybius_decrypt_result(decrypt_polybius(app->polybius_decrypt_input));
+        app->last_output_scene = "PolybiusDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptRailfenceOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, rail_fence_encrypt(app->railfence_input, 3));
+        dialog_ex_set_text(
+            app->dialog_ex,
+            rail_fence_encrypt(app->railfence_input, app->railfence_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_railfence_result(rail_fence_encrypt(app->railfence_input, app->railfence_key_input));
+        app->last_output_scene = "Railfence";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptRailfenceDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_railfence_decrypt_result(
+            rail_fence_decrypt(app->railfence_decrypt_input, app->railfence_key_input));
+        app->last_output_scene = "RailfenceDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptRC4OutputScene:
+        size_t rc4_input_len = strlen(app->rc4_input);
+        unsigned char* rc4_encrypted = rc4_encrypt_and_decrypt(
+            app->rc4_keyword_input, (const unsigned char*)app->rc4_input, rc4_input_len);
+        if(!rc4_encrypted) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Encryption failed", 64, 18, AlignCenter, AlignCenter);
+            break;
+        }
+        char* rc4_encrypt_hex_output = rc4_to_hex((const char*)rc4_encrypted, rc4_input_len);
+        dialog_ex_set_text(
+            app->dialog_ex, rc4_encrypt_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_rc4_result(rc4_encrypt_hex_output);
+        app->last_output_scene = "RC4";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        free(rc4_encrypt_hex_output);
+        free(rc4_encrypted);
+        break;
+    case FlipCryptRC4DecryptOutputScene:
+        size_t rc4_encrypted_len;
+        unsigned char* rc4_encrypted_bytes =
+            rc4_hex_to_bytes(app->rc4_decrypt_input, &rc4_encrypted_len);
+        if(!rc4_encrypted_bytes) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Invalid hex input", 64, 18, AlignCenter, AlignCenter);
+            break;
+        }
+        unsigned char* rc4_decrypted = rc4_encrypt_and_decrypt(
+            app->rc4_keyword_input, rc4_encrypted_bytes, rc4_encrypted_len);
+        if(!rc4_decrypted) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Decryption failed", 64, 18, AlignCenter, AlignCenter);
+            free(rc4_encrypted_bytes);
+            break;
+        }
+        char* rc4_decrypted_str = malloc(rc4_encrypted_len + 1);
+        if(rc4_decrypted_str) {
+            memcpy(rc4_decrypted_str, rc4_decrypted, rc4_encrypted_len);
+            rc4_decrypted_str[rc4_encrypted_len] = '\0';
+            dialog_ex_set_text(
+                app->dialog_ex, rc4_decrypted_str, 64, 18, AlignCenter, AlignCenter);
+            free(rc4_decrypted_str);
+        }
+        save_rc4_decrypt_result(rc4_decrypted_str);
+        app->last_output_scene = "RC4Decrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        free(rc4_encrypted_bytes);
+        free(rc4_decrypted);
+        break;
+    case FlipCryptScytaleOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            scytale_encrypt(app->scytale_input, app->scytale_keyword_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_scytale_result(scytale_encrypt(app->scytale_input, app->scytale_keyword_input));
+        app->last_output_scene = "Scytale";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptScytaleDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_scytale_decrypt_result(
+            scytale_decrypt(app->scytale_decrypt_input, app->scytale_keyword_input));
+        app->last_output_scene = "ScytaleDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptVigenereOutputScene:
-        widget_add_text_scroll_element(
-            app->widget,
-            0,
-            0,
-            128,
+        dialog_ex_set_text(
+            app->dialog_ex,
+            vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input),
             64,
-            vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input));
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_vigenere_result(vigenere_encrypt(app->vigenere_input, app->vigenere_keyword_input));
+        app->last_output_scene = "Vigenere";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptVigenereDecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_vigenere_decrypt_result(
+            vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input));
+        app->last_output_scene = "VigenereDecrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptBlake2OutputScene:
         Blake2sContext blake2_ctx;
@@ -768,7 +2450,23 @@ void cipher_output_scene_on_enter(void* context) {
         blake2s_update(&blake2_ctx, (const uint8_t*)app->blake2_input, strlen(app->blake2_input));
         blake2s_finalize(&blake2_ctx, blake2_hash);
         blake2s_to_hex(blake2_hash, blake2_hex_output);
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, blake2_hex_output);
+        dialog_ex_set_text(app->dialog_ex, blake2_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_blake2_result(blake2_hex_output);
+        app->last_output_scene = "Blake2";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptFNV1AOutputScene:
+        char finv1a_hash_str[11];
+        Fnv32_t fnv1a_hash = fnv_32a_str(app->fnv1a_input, FNV1_32A_INIT);
+        snprintf(finv1a_hash_str, sizeof(finv1a_hash_str), "0x%08lx", fnv1a_hash);
+        dialog_ex_set_text(app->dialog_ex, finv1a_hash_str, 64, 18, AlignCenter, AlignCenter);
+        save_fnv1a_result(finv1a_hash_str);
+        app->last_output_scene = "FNV1A";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptMD5OutputScene:
         uint8_t md5_hash[16];
@@ -778,7 +2476,41 @@ void cipher_output_scene_on_enter(void* context) {
         md5_update(&md5_ctx, (const uint8_t*)app->md5_input, strlen(app->md5_input));
         md5_finalize(&md5_ctx, md5_hash);
         md5_to_hex(md5_hash, md5_hex_output);
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, md5_hex_output);
+        dialog_ex_set_text(app->dialog_ex, md5_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_md5_result(md5_hex_output);
+        app->last_output_scene = "MD5";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptMurmur3OutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_murmur3_result(MurmurHash3_x86_32(app->murmur3_input, strlen(app->murmur3_input), 0));
+        app->last_output_scene = "Murmur3";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptSipOutputScene:
+        uint8_t siphash_output[8];
+        siphash(app->sip_input, strlen(app->sip_input), app->sip_keyword_input, siphash_output, 8);
+        char siphash_str[17];
+        for(int i = 0; i < 8; ++i) {
+            snprintf(&siphash_str[i * 2], 3, "%02x", siphash_output[i]);
+        }
+        siphash_str[16] = '\0';
+        dialog_ex_set_text(app->dialog_ex, siphash_str, 64, 18, AlignCenter, AlignCenter);
+        save_sip_result(siphash_str);
+        app->last_output_scene = "Sip";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptSHA1OutputScene:
         Sha1Context sha1_ctx;
@@ -788,61 +2520,176 @@ void cipher_output_scene_on_enter(void* context) {
         sha1_update(&sha1_ctx, (const uint8_t*)app->sha1_input, strlen(app->sha1_input));
         sha1_finalize(&sha1_ctx, sha1_hash);
         sha1_to_hex(sha1_hash, sha1_hex_output);
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, sha1_hex_output);
+        dialog_ex_set_text(app->dialog_ex, sha1_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_sha1_result(sha1_hex_output);
+        app->last_output_scene = "SHA1";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptSHA224OutputScene:
+        uint8_t sha224_hash[28];
+        char sha224_hex_output[57] = {0};
+        sha224((const uint8_t*)app->sha224_input, (uint64)strlen(app->sha224_input), sha224_hash);
+        for(int i = 0; i < 28; i++) {
+            sha224_hex_output[i * 2] = sha_hex_chars[(sha224_hash[i] >> 4) & 0xF];
+            sha224_hex_output[i * 2 + 1] = sha_hex_chars[sha224_hash[i] & 0xF];
+        }
+        sha224_hex_output[56] = '\0';
+        dialog_ex_set_text(app->dialog_ex, sha224_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_sha224_result(sha224_hex_output);
+        app->last_output_scene = "SHA224";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     case FlipCryptSHA256OutputScene:
-        Sha256Context sha256_ctx;
         uint8_t sha256_hash[32];
         char sha256_hex_output[65] = {0};
-
-        sha256_init(&sha256_ctx);
-        sha256_update(&sha256_ctx, (const uint8_t*)app->sha256_input, strlen(app->sha256_input));
-        sha256_finalize(&sha256_ctx, sha256_hash);
-
-        sha256_to_hex(sha256_hash, sha256_hex_output);
-
-        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, sha256_hex_output);
+        sha256((const uint8_t*)app->sha256_input, (uint64)strlen(app->sha256_input), sha256_hash);
+        for(int i = 0; i < 32; i++) {
+            sha256_hex_output[i * 2] = sha_hex_chars[(sha256_hash[i] >> 4) & 0xF];
+            sha256_hex_output[i * 2 + 1] = sha_hex_chars[sha256_hash[i] & 0xF];
+        }
+        sha256_hex_output[64] = '\0';
+        dialog_ex_set_text(app->dialog_ex, sha256_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_sha256_result(sha256_hex_output);
+        app->last_output_scene = "SHA256";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
-    case FlipCryptAtbashDecryptOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, atbash_encrypt_or_decrypt(app->atbash_decrypt_input));
+    case FlipCryptSHA384OutputScene:
+        uint8_t sha384_hash[48];
+        char sha384_hex_output[97] = {0};
+        sha384((const uint8_t*)app->sha384_input, (uint64)strlen(app->sha384_input), sha384_hash);
+        for(int i = 0; i < 48; i++) {
+            sha384_hex_output[i * 2] = sha_hex_chars[(sha384_hash[i] >> 4) & 0xF];
+            sha384_hex_output[i * 2 + 1] = sha_hex_chars[sha384_hash[i] & 0xF];
+        }
+        sha384_hex_output[96] = '\0';
+        dialog_ex_set_text(app->dialog_ex, sha384_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_sha384_result(sha384_hex_output);
+        app->last_output_scene = "SHA384";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
-    case FlipCryptBaconianDecryptOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, baconian_decrypt(app->baconian_decrypt_input));
+    case FlipCryptSHA512OutputScene:
+        uint8_t sha512_hash[64];
+        char sha512_hex_output[129] = {0};
+        sha512((const uint8_t*)app->sha512_input, (uint64)strlen(app->sha512_input), sha512_hash);
+        for(int i = 0; i < 64; i++) {
+            sha512_hex_output[i * 2] = sha_hex_chars[(sha512_hash[i] >> 4) & 0xF];
+            sha512_hex_output[i * 2 + 1] = sha_hex_chars[sha512_hash[i] & 0xF];
+        }
+        sha512_hex_output[128] = '\0';
+        dialog_ex_set_text(app->dialog_ex, sha512_hex_output, 64, 18, AlignCenter, AlignCenter);
+        save_sha512_result(sha512_hex_output);
+        app->last_output_scene = "SHA512";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
         break;
-    case FlipCryptPlayfairDecryptOutputScene:
-        widget_add_text_scroll_element(
-            app->widget,
-            0,
-            0,
-            128,
+    case FlipCryptXXOutputScene:
+        uint64_t xxhash = XXH64(app->xx_input, strlen(app->xx_input), 0);
+        char xxhash_str[17];
+        snprintf(xxhash_str, sizeof(xxhash_str), "%016llX", xxhash);
+        dialog_ex_set_text(app->dialog_ex, xxhash_str, 64, 18, AlignCenter, AlignCenter);
+        save_xx_result(xxhash_str);
+        app->last_output_scene = "XX";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBase32OutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)),
             64,
-            playfair_decrypt(
-                app->playfair_decrypt_input, playfair_make_table(app->playfair_keyword_input)));
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_base32_result(
+            base32_encode((const uint8_t*)app->base32_input, strlen(app->base32_input)));
+        app->last_output_scene = "Base32";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
-    case FlipCryptRailfenceDecryptOutputScene:
-        widget_add_text_scroll_element(
-            app->widget, 0, 0, 128, 64, rail_fence_decrypt(app->railfence_decrypt_input, 3));
-        break;
-    case FlipCryptVigenereDecryptOutputScene:
-        widget_add_text_scroll_element(
-            app->widget,
-            0,
-            0,
-            128,
+    case FlipCryptBase32DecryptOutputScene:
+        size_t base32_decoded_len;
+        dialog_ex_set_text(
+            app->dialog_ex,
+            (const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len),
             64,
-            vigenere_decrypt(app->vigenere_decrypt_input, app->vigenere_keyword_input));
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_base32_decrypt_result(
+            (const char*)base32_decode(app->base32_decrypt_input, &base32_decoded_len));
+        app->last_output_scene = "Base32Decrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBase58OutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex, base58_encode(app->base58_input), 64, 18, AlignCenter, AlignCenter);
+        save_base58_result(base58_encode(app->base58_input));
+        app->last_output_scene = "Base58";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBase58DecryptOutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            base58_decode(app->base58_decrypt_input),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_base58_decrypt_result(base58_decode(app->base58_decrypt_input));
+        app->last_output_scene = "Base58Decrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBase64OutputScene:
+        dialog_ex_set_text(
+            app->dialog_ex,
+            base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_base64_result(
+            base64_encode((const unsigned char*)app->base64_input, strlen(app->base64_input)));
+        app->last_output_scene = "Base64";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
+        break;
+    case FlipCryptBase64DecryptOutputScene:
+        size_t base64_decoded_len;
+        dialog_ex_set_text(
+            app->dialog_ex,
+            (const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len),
+            64,
+            18,
+            AlignCenter,
+            AlignCenter);
+        save_base64_decrypt_result(
+            (const char*)base64_decode(app->base64_decrypt_input, &base64_decoded_len));
+        app->last_output_scene = "Base64Decrypt";
+        dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
+        dialog_ex_set_center_button_text(app->dialog_ex, "Save");
+        dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
     default:
-        furi_string_printf(message, "Unknown output scene.");
         break;
     }
-
-    widget_add_string_multiline_element(
-        app->widget, 5, 15, AlignLeft, AlignCenter, FontPrimary, furi_string_get_cstr(message));
-    furi_string_free(message);
-    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptDialogExView);
 }
 
 // Learn screen views
@@ -851,6 +2698,26 @@ void cipher_learn_scene_on_enter(void* context) {
     widget_reset(app->widget);
     FlipCryptScene current = scene_manager_get_current_scene(app->scene_manager);
     switch(current) {
+    case FlipCryptAESLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "AES-128 (Advanced Encryption Standard with a 128-bit key) is a symmetric block cipher widely used for secure data encryption. It encrypts data in fixed blocks of 128 bits using a 128-bit key and operates through 10 rounds of transformations, including substitution, permutation, mixing, and key addition. AES-128 is known for its strong security and efficiency, making it a standard for protecting sensitive data in everything from government communications to online banking. Unlike classical ciphers, AES relies on complex mathematical operations and is resistant to all known practical cryptographic attacks when implemented properly.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptAffineLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "The Affine cipher is a type of monoalphabetic substitution cipher that uses a mathematical formula to encrypt each letter: E(x) = (a x x + b) mod 26, where x is the position of the plaintext letter in the alphabet (A = 0, B = 1, etc.), and a and b are keys. The value of a must be coprime with 26 to ensure that each letter maps uniquely. Decryption uses the inverse of a with the formula D(x) = a^-1 x (x - b) mod 26. The Affine cipher combines multiplicative and additive shifts, making it slightly more secure than a Caesar cipher, but still vulnerable to frequency analysis.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptAtbashLearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -871,6 +2738,26 @@ void cipher_learn_scene_on_enter(void* context) {
             "The Baconian cipher, developed by Francis Bacon in the early 17th century, is a steganographic cipher that encodes each letter of the alphabet into a series of five binary characters, typically using combinations of \'A\' and \'B\'. For example, the letter \'A\' is represented as \'AAAAA\', \'B\' as \'AAAAB\', and so on. This binary code can then be hidden within text, images, or formatting, making it a method of concealed rather than encrypted communication. The Baconian cipher is notable for being an early example of steganography and is often used in historical or educational contexts.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptBeaufortLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "The Beaufort cipher is a polyalphabetic substitution cipher that is similar to the Vigenère cipher but uses a slightly different encryption algorithm. Instead of adding the key to the plaintext, it subtracts the plaintext letter from the key letter using a tabula recta. This means the same process is used for both encryption and decryption, which is a unique feature. The cipher was named after Sir Francis Beaufort and was historically used in applications like encrypting naval signals. While more secure than simple ciphers like Caesar, it is still vulnerable to modern cryptanalysis.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptCaesarLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also easy to break, making it unsuitable for modern encryption.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptPlayfairLearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -881,6 +2768,16 @@ void cipher_learn_scene_on_enter(void* context) {
             "The Playfair cipher is a manual symmetric encryption technique invented in 1854 by Charles Wheatstone but popularized by Lord Playfair. It encrypts pairs of letters (digraphs) instead of single letters, making it more secure than simple substitution ciphers. The cipher uses a 5x5 grid of letters constructed from a keyword, combining \'I\' and \'J\' to fit the alphabet into 25 cells. To encrypt, each pair of letters is located in the grid, and various rules are applied based on their positions like same row, same column, or rectangle to substitute them with new letters. The Playfair cipher was used historically for military communication due to its relative ease of use and stronger encryption for its time.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptPolybiusLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "The Polybius square is a classical cipher that uses a 5x5 grid filled with letters of the alphabet to convert plaintext into pairs of numbers. Each letter is identified by its row and column numbers in the grid. For example, 'A' might be encoded as '11', 'B' as '12', and so on. Since the Latin alphabet has 26 letters, 'I' and 'J' are typically combined to fit into the 25-cell grid. The Polybius square is easy to implement and was historically used for signaling and cryptography in wartime. While simple and easy to decode, it offers minimal security by modern standards.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptRailfenceLearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -889,6 +2786,26 @@ void cipher_learn_scene_on_enter(void* context) {
             128,
             64,
             "The Rail Fence cipher is a form of transposition cipher that rearranges the letters of the plaintext in a zigzag pattern across multiple \'rails\' (or rows), and then reads them off row by row to create the ciphertext. For example, using 3 rails, the message \'HELLO WORLD\' would be written in a zigzag across three lines and then read horizontally to produce the encrypted message. It\'s a simple method that relies on obscuring the letter order rather than substituting characters, and it\'s relatively easy to decrypt with enough trial and error.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptRC4LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for most modern applications.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptScytaleLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "The Scytale cipher is an ancient transposition cipher used by the Spartans. It involves wrapping a strip of parchment around a rod (scytale) of a fixed diameter and writing the message along the rod's surface. When unwrapped, the text appears scrambled unless it is rewrapped around a rod of the same size. The security relies on the secrecy of the rod's diameter. Although simple and easy to use, the Scytale cipher offers very limited security by modern standards and is mostly of historical interest.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptVigenereLearnScene:
@@ -911,6 +2828,16 @@ void cipher_learn_scene_on_enter(void* context) {
             "BLAKE-2s is a high performance cryptographic hash function designed as an improved alternative to MD5, SHA-1, and even SHA-2, offering strong security with faster hashing speeds. Developed by Jean-Philippe Aumasson and others, it builds on the cryptographic foundations of the BLAKE algorithm (a finalist in the SHA-3 competition) but is optimized for practical use. BLAKE2 comes in two main variants: BLAKE2b (optimized for 64-bit platforms) and BLAKE2s (for 8- to 32-bit platforms). It provides features like keyed hashing, salting, and personalization, making it suitable for applications like password hashing, digital signatures, and message authentication. BLAKE2 is widely adopted due to its balance of speed, simplicity, and security, and is used in software like Argon2 (a password hashing algorithm) and various blockchain projects.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptFNV1ALearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "FNV-1a (Fowler-Noll-Vo hash, variant 1a) is a simple, fast, and widely used non-cryptographic hash function designed for use in hash tables and data indexing. It works by starting with a fixed offset basis, then for each byte of input, it XORs the byte with the hash and multiplies the result by a prime number (commonly 16777619 for 32-bit or 1099511628211 for 64-bit). FNV-1a is known for its good distribution and performance on small inputs, but it's not cryptographically secure and should not be used for security-sensitive applications. Its simplicity and efficiency make it a favorite in performance-critical systems and embedded environments.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptMD5LearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -919,6 +2846,26 @@ void cipher_learn_scene_on_enter(void* context) {
             128,
             64,
             "MD5 (Message Digest Algorithm 5) is a widely used cryptographic hash function that produces a 128-bit (16 byte) hash value, typically rendered as a 32-character hexadecimal number. Originally designed for digital signatures and file integrity verification, MD5 is now considered cryptographically broken due to known collision vulnerabilities. While still used in some non-security-critical contexts, it is not recommended for new cryptographic applications.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptMurmur3LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist attacks like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptSipLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "SipHash is a fast, cryptographically secure hash function designed specifically to protect hash tables from DoS attacks caused by hash collisions. Developed by Jean-Philippe Aumasson and Daniel J. Bernstein, SipHash uses a secret key to produce a 64-bit (or 128-bit) hash, making it resistant to hash-flooding attacks where an attacker intentionally causes many collisions. While not as fast as non-cryptographic hashes like MurmurHash, it strikes a balance between speed and security, making it ideal for situations where untrusted input needs to be safely hashed, such as in web servers and language runtimes.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptSHA1LearnScene:
@@ -931,6 +2878,16 @@ void cipher_learn_scene_on_enter(void* context) {
             "SHA-1 (Secure Hash Algorithm 1) is a cryptographic hash function that produces a 160-bit (20-byte) hash value. Once widely used in SSL certificates and digital signatures, SHA-1 has been deprecated due to demonstrated collision attacks, where two different inputs produce the same hash. As a result, it\'s no longer considered secure for cryptographic purposes and has largely been replaced by stronger alternatives.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptSHA224LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "SHA-224 is a cryptographic hash function from the SHA-2 family that produces a 224-bit (28-byte) hash value. It is essentially a truncated version of SHA-256, using the same algorithm but outputting a shorter digest. SHA-224 is used when a smaller hash size is preferred while maintaining strong security, commonly in digital signatures and certificate generation.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     case FlipCryptSHA256LearnScene:
         widget_add_text_scroll_element(
             app->widget,
@@ -941,9 +2898,769 @@ void cipher_learn_scene_on_enter(void* context) {
             "SHA-256 is part of the SHA-2 family of cryptographic hash functions and generates a 256-bit (32-byte) hash value. It is currently considered secure and is widely used in blockchain, password hashing, digital signatures, and data integrity verification. SHA-256 offers strong resistance against collision and preimage attacks, making it a trusted standard in modern cryptography.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
+    case FlipCryptSHA384LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "SHA-384 is a variant of the SHA-2 hash family that generates a 384-bit (48-byte) hash. It is a truncated version of SHA-512, optimized for 64-bit processors. SHA-384 provides a higher security margin than SHA-256 and SHA-224 due to its longer output and 64-bit internal operations, making it suitable for applications requiring robust collision resistance, such as secure communication protocols and cryptographic signatures.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptSHA512LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "SHA-512 (Secure Hash Algorithm 512) is a member of the SHA-2 family of cryptographic hash functions, developed by the NSA and standardized by NIST. It produces a 512-bit (64-byte) hash from any input, making it very resistant to collision and preimage attacks. SHA-512 operates on 1024-bit blocks and performs 80 rounds of complex mathematical operations involving bitwise logic, modular addition, and message expansion. It's widely used in digital signatures, certificates, and data integrity checks where strong cryptographic security is required. Although slower on 32-bit systems due to its large word size, SHA-512 is very efficient on 64-bit processors and remains a trusted standard in secure applications.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptXXLearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "XXHash is a non-cryptographic hash function designed for high-performance hashing. Developed by Yann Collet, XXHash focuses on speed and efficiency, outperforming many traditional hash functions while maintaining a low collision rate. It comes in several versions, including XXH32, XXH64, and the newer XXH3, which offers improved performance and adaptability to modern CPUs. While XXHash is not suitable for cryptographic purposes due to its lack of security guarantees, it is widely used in performance-critical applications like databases, file systems, and compression tools.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptBase32LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure—it's simply a reversible way to encode data.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptBase58LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "Base-58 is a binary-to-text encoding scheme used to represent large numbers or binary data in a more human-friendly format. It's most commonly used in cryptocurrencies like Bitcoin to encode addresses. Unlike Base-64, Base-58 removes easily confused characters such as zero, capital o, capital i, and lowercase L, to reduce human error when copying or typing. This makes Base-58 more suitable for user-facing strings while still being compact and efficient for encoding data.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
+    case FlipCryptBase64LearnScene:
+        widget_add_text_scroll_element(
+            app->widget,
+            0,
+            0,
+            128,
+            64,
+            "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption—it offers no confidentiality and is fully reversible.");
+        view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+        break;
     default:
         break;
     }
+}
+
+// NFC functionality on output screen
+void create_nfc_tag(App* app, const char* message) {
+    app->nfc_device = nfc_device_alloc();
+    nfc_data_generator_fill_data(NfcDataGeneratorTypeNTAG215, app->nfc_device);
+    const MfUltralightData* data_original =
+        nfc_device_get_data(app->nfc_device, NfcProtocolMfUltralight);
+    MfUltralightData* data = malloc(sizeof(MfUltralightData));
+    Iso14443_3aData* isodata = malloc(sizeof(Iso14443_3aData));
+    memcpy(isodata, data_original->iso14443_3a_data, sizeof(Iso14443_3aData));
+    memcpy(data, data_original, sizeof(MfUltralightData));
+    data->iso14443_3a_data = isodata;
+    // Setup TLV Header
+    data->page[4].data[0] = 0x03; // TLV: NDEF Message
+    const char* lang = "en";
+    uint8_t lang_len = strlen(lang);
+    size_t msg_len = strlen(message);
+    uint8_t status_byte = lang_len & 0x3F; // UTF-8, no UTF-16 flag
+    // Total NDEF payload = status + lang + message
+    size_t payload_len = 1 + lang_len + msg_len;
+    // NDEF Header
+    data->page[4].data[1] = payload_len + 3; // length of NDEF record (excluding TLV)
+    data->page[4].data[2] = 0xD1; // MB, ME, SR, TNF=1
+    data->page[4].data[3] = 0x01; // Type Length = 1
+    data->page[5].data[0] = payload_len; // Payload Length
+    data->page[5].data[1] = 'T'; // Type = text
+    data->page[5].data[2] = status_byte; // Status byte
+    // Begin writing at data[5].data[3]
+    size_t page_index = 5;
+    size_t data_index = 3;
+    // Write language code
+    for(size_t i = 0; i < lang_len; ++i) {
+        data->page[page_index].data[data_index++] = lang[i];
+        if(data_index > 3) {
+            data_index = 0;
+            ++page_index;
+        }
+    }
+    // Write actual message
+    for(size_t i = 0; i < msg_len; ++i) {
+        data->page[page_index].data[data_index++] = message[i];
+        if(data_index > 3) {
+            data_index = 0;
+            ++page_index;
+        }
+    }
+    // Terminator
+    data->page[page_index].data[data_index++] = 0xFE;
+    // Finalize and store
+    nfc_device_set_data(app->nfc_device, NfcProtocolMfUltralight, data);
+    free(data);
+    free(isodata);
+}
+
+void flip_crypt_nfc_scene_on_enter(void* context) {
+    App* app = context;
+    widget_reset(app->widget);
+    widget_add_icon_element(app->widget, 0, 3, &I_NFC_dolphin_emulation_51x64);
+    widget_add_string_element(
+        app->widget, 90, 25, AlignCenter, AlignTop, FontPrimary, "Emulating...");
+    if(strcmp(app->last_output_scene, "AES") == 0) {
+        create_nfc_tag(context, load_aes());
+    } else if(strcmp(app->last_output_scene, "AESDecrypt") == 0) {
+        create_nfc_tag(context, load_aes_decrypt());
+    } else if(strcmp(app->last_output_scene, "Atbash") == 0) {
+        create_nfc_tag(context, load_atbash());
+    } else if(strcmp(app->last_output_scene, "AtbashDecrypt") == 0) {
+        create_nfc_tag(context, load_atbash_decrypt());
+    } else if(strcmp(app->last_output_scene, "Affine") == 0) {
+        create_nfc_tag(context, load_affine());
+    } else if(strcmp(app->last_output_scene, "AffineDecrypt") == 0) {
+        create_nfc_tag(context, load_affine_decrypt());
+    } else if(strcmp(app->last_output_scene, "Baconian") == 0) {
+        create_nfc_tag(context, load_baconian());
+    } else if(strcmp(app->last_output_scene, "BaconianDecrypt") == 0) {
+        create_nfc_tag(context, load_baconian_decrypt());
+    } else if(strcmp(app->last_output_scene, "Beaufort") == 0) {
+        create_nfc_tag(context, load_beaufort());
+    } else if(strcmp(app->last_output_scene, "BeaufortDecrypt") == 0) {
+        create_nfc_tag(context, load_beaufort_decrypt());
+    } else if(strcmp(app->last_output_scene, "Caesar") == 0) {
+        create_nfc_tag(context, load_caesar());
+    } else if(strcmp(app->last_output_scene, "CaesarDecrypt") == 0) {
+        create_nfc_tag(context, load_caesar_decrypt());
+    } else if(strcmp(app->last_output_scene, "Playfair") == 0) {
+        create_nfc_tag(context, load_playfair());
+    } else if(strcmp(app->last_output_scene, "PlayfairDecrypt") == 0) {
+        create_nfc_tag(context, load_playfair_decrypt());
+    } else if(strcmp(app->last_output_scene, "Polybius") == 0) {
+        create_nfc_tag(context, load_polybius());
+    } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
+        create_nfc_tag(context, load_polybius_decrypt());
+    } else if(strcmp(app->last_output_scene, "Railfence") == 0) {
+        create_nfc_tag(context, load_railfence());
+    } else if(strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
+        create_nfc_tag(context, load_railfence_decrypt());
+    } else if(strcmp(app->last_output_scene, "RC4") == 0) {
+        create_nfc_tag(context, load_rc4());
+    } else if(strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
+        create_nfc_tag(context, load_rc4_decrypt());
+    } else if(strcmp(app->last_output_scene, "Scytale") == 0) {
+        create_nfc_tag(context, load_scytale());
+    } else if(strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
+        create_nfc_tag(context, load_scytale_decrypt());
+    } else if(strcmp(app->last_output_scene, "Vigenere") == 0) {
+        create_nfc_tag(context, load_vigenere());
+    } else if(strcmp(app->last_output_scene, "VigenereDecrypt") == 0) {
+        create_nfc_tag(context, load_vigenere_decrypt());
+    } else if(strcmp(app->last_output_scene, "Blake2") == 0) {
+        create_nfc_tag(context, load_blake2());
+    } else if(strcmp(app->last_output_scene, "FNV1A") == 0) {
+        create_nfc_tag(context, load_fnv1a());
+    } else if(strcmp(app->last_output_scene, "MD5") == 0) {
+        create_nfc_tag(context, load_md5());
+    } else if(strcmp(app->last_output_scene, "Murmur3") == 0) {
+        create_nfc_tag(context, load_murmur3());
+    } else if(strcmp(app->last_output_scene, "Sip") == 0) {
+        create_nfc_tag(context, load_sip());
+    } else if(strcmp(app->last_output_scene, "SHA1") == 0) {
+        create_nfc_tag(context, load_sha1());
+    } else if(strcmp(app->last_output_scene, "SHA224") == 0) {
+        create_nfc_tag(context, load_sha224());
+    } else if(strcmp(app->last_output_scene, "SHA256") == 0) {
+        create_nfc_tag(context, load_sha256());
+    } else if(strcmp(app->last_output_scene, "SHA384") == 0) {
+        create_nfc_tag(context, load_sha384());
+    } else if(strcmp(app->last_output_scene, "SHA512") == 0) {
+        create_nfc_tag(context, load_sha512());
+    } else if(strcmp(app->last_output_scene, "XX") == 0) {
+        create_nfc_tag(context, load_xx());
+    } else if(strcmp(app->last_output_scene, "Base32") == 0) {
+        create_nfc_tag(context, load_base32());
+    } else if(strcmp(app->last_output_scene, "Base32Decrypt") == 0) {
+        create_nfc_tag(context, load_base32_decrypt());
+    } else if(strcmp(app->last_output_scene, "Base58") == 0) {
+        create_nfc_tag(context, load_base58());
+    } else if(strcmp(app->last_output_scene, "Base58Decrypt") == 0) {
+        create_nfc_tag(context, load_base58_decrypt());
+    } else if(strcmp(app->last_output_scene, "Base64") == 0) {
+        create_nfc_tag(context, load_base64());
+    } else if(strcmp(app->last_output_scene, "Base64Decrypt") == 0) {
+        create_nfc_tag(context, load_base64_decrypt());
+    } else {
+        create_nfc_tag(context, "ERROR");
+    }
+    const MfUltralightData* data = nfc_device_get_data(app->nfc_device, NfcProtocolMfUltralight);
+    app->listener = nfc_listener_alloc(app->nfc, NfcProtocolMfUltralight, data);
+    nfc_listener_start(app->listener, NULL, NULL);
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_blink_start_magenta);
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+}
+
+void flip_crypt_nfc_scene_on_exit(void* context) {
+    App* app = context;
+    if(app->listener) {
+        nfc_listener_stop(app->listener);
+        nfc_listener_free(app->listener);
+        app->listener = NULL;
+    }
+    widget_reset(app->widget);
+    notification_message(furi_record_open(RECORD_NOTIFICATION), &sequence_blink_stop);
+}
+
+// QR Code functionality on output screen
+void flip_crypt_qr_scene_on_enter(void* context) {
+    App* app = context;
+    bool isTooLong = false;
+    widget_reset(app->widget);
+    if(strcmp(app->last_output_scene, "AES") == 0) {
+        qrcodegen_encodeText(
+            load_aes(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "AESDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_aes_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Atbash") == 0) {
+        qrcodegen_encodeText(
+            load_atbash(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "AtbashDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_atbash_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Affine") == 0) {
+        qrcodegen_encodeText(
+            load_affine(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "AffineDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_affine_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Baconian") == 0) {
+        qrcodegen_encodeText(
+            load_baconian(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "BaconianDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_baconian_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Beaufort") == 0) {
+        qrcodegen_encodeText(
+            load_beaufort(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "BeaufortDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_beaufort_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Caesar") == 0) {
+        qrcodegen_encodeText(
+            load_caesar(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "CaesarDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_caesar_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Playfair") == 0) {
+        qrcodegen_encodeText(
+            load_playfair(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "PlayfairDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_playfair_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Polybius") == 0) {
+        qrcodegen_encodeText(
+            load_polybius(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_polybius_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Railfence") == 0) {
+        qrcodegen_encodeText(
+            load_railfence(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_railfence_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "RC4") == 0) {
+        qrcodegen_encodeText(
+            load_rc4(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
+        qrcodegen_encodeText(
+            load_rc4_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Scytale") == 0) {
+        qrcodegen_encodeText(
+            load_scytale(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_scytale_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Vigenere") == 0) {
+        qrcodegen_encodeText(
+            load_vigenere(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "VigenereDecrypt") == 0) {
+        qrcodegen_encodeText(
+            load_vigenere_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Blake2") == 0) {
+        qrcodegen_encodeText(
+            load_blake2(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "FNV1A") == 0) {
+        qrcodegen_encodeText(
+            load_fnv1a(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "MD5") == 0) {
+        qrcodegen_encodeText(
+            load_md5(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Murmur3") == 0) {
+        qrcodegen_encodeText(
+            load_murmur3(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Sip") == 0) {
+        qrcodegen_encodeText(
+            load_sip(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "SHA1") == 0) {
+        qrcodegen_encodeText(
+            load_sha1(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "SHA224") == 0) {
+        qrcodegen_encodeText(
+            load_sha224(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "SHA256") == 0) {
+        qrcodegen_encodeText(
+            load_sha256(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "SHA384") == 0) {
+        qrcodegen_encodeText(
+            load_sha384(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "XX") == 0) {
+        qrcodegen_encodeText(
+            load_xx(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base32") == 0) {
+        qrcodegen_encodeText(
+            load_base32(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base32Decrypt") == 0) {
+        qrcodegen_encodeText(
+            load_base32_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base58") == 0) {
+        qrcodegen_encodeText(
+            load_base58(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base58Decrypt") == 0) {
+        qrcodegen_encodeText(
+            load_base58_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base64") == 0) {
+        qrcodegen_encodeText(
+            load_base64(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else if(strcmp(app->last_output_scene, "Base64Decrypt") == 0) {
+        qrcodegen_encodeText(
+            load_base64_decrypt(),
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    } else {
+        qrcodegen_encodeText(
+            "ERROR",
+            app->qr_buffer,
+            app->qrcode,
+            qrcodegen_Ecc_LOW,
+            qrcodegen_VERSION_MIN,
+            5,
+            qrcodegen_Mask_AUTO,
+            true);
+    }
+    if(!isTooLong) {
+        int size = qrcodegen_getSize(app->qrcode);
+        const int scale = 1;
+        const int offset_x = 64 - (size * scale) / 2;
+        const int offset_y = 32 - (size * scale) / 2;
+        for(int y = 0; y < size; y++) {
+            for(int x = 0; x < size; x++) {
+                if(qrcodegen_getModule(app->qrcode, x, y)) {
+                    // widget_add_rect_element(app->widget, offset_x + x * scale, offset_y + y * scale, scale, scale, 0, true);
+                    widget_add_frame_element(
+                        app->widget, offset_x + x, offset_y + y, scale, scale, 0);
+                }
+            }
+        }
+    } else {
+        widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, "Output too long");
+    }
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
+}
+
+void flip_crypt_qr_scene_on_exit(void* context) {
+    App* app = context;
+    widget_reset(app->widget);
+}
+
+void flip_crypt_save_scene_on_enter(void* context) {
+    App* app = context;
+    widget_reset(app->widget);
+    if(strcmp(app->last_output_scene, "AES") == 0) {
+        save_result(load_aes(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "AESDecrypt") == 0) {
+        save_result(load_aes_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Atbash") == 0) {
+        save_result(load_atbash(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "AtbashDecrypt") == 0) {
+        save_result(load_atbash_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Affine") == 0) {
+        save_result(load_affine(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "AffineDecrypt") == 0) {
+        save_result(load_affine_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Baconian") == 0) {
+        save_result(load_baconian(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "BaconianDecrypt") == 0) {
+        save_result(load_baconian_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Beaufort") == 0) {
+        save_result(load_beaufort(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "BeaufortDecrypt") == 0) {
+        save_result(load_beaufort_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Caesar") == 0) {
+        save_result(load_caesar(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "CaesarDecrypt") == 0) {
+        save_result(load_caesar_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Playfair") == 0) {
+        save_result(load_playfair(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "PlayfairDecrypt") == 0) {
+        save_result(load_playfair_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Polybius") == 0) {
+        save_result(load_polybius(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "PolybiusDecrypt") == 0) {
+        save_result(load_polybius_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Railfence") == 0) {
+        save_result(load_railfence(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "RailfenceDecrypt") == 0) {
+        save_result(load_railfence_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "RC4") == 0) {
+        save_result(load_rc4(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "RC4Decrypt") == 0) {
+        save_result(load_rc4_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Scytale") == 0) {
+        save_result(load_scytale(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "ScytaleDecrypt") == 0) {
+        save_result(load_scytale_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Vigenere") == 0) {
+        save_result(load_vigenere(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "VigenereDecrypt") == 0) {
+        save_result(load_vigenere_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Blake2") == 0) {
+        save_result(load_blake2(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "FNV1A") == 0) {
+        save_result(load_fnv1a(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "MD5") == 0) {
+        save_result(load_md5(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Murmur3") == 0) {
+        save_result(load_murmur3(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Sip") == 0) {
+        save_result(load_sip(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "SHA1") == 0) {
+        save_result(load_sha1(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "SHA224") == 0) {
+        save_result(load_sha224(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "SHA256") == 0) {
+        save_result(load_sha256(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "SHA384") == 0) {
+        save_result(load_sha384(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "SHA512") == 0) {
+        save_result(load_sha512(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "XX") == 0) {
+        save_result(load_xx(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base32") == 0) {
+        save_result(load_base32(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base32Decrypt") == 0) {
+        save_result(load_base32_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base58") == 0) {
+        save_result(load_base58(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base58Decrypt") == 0) {
+        save_result(load_base58_decrypt(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base64") == 0) {
+        save_result(load_base64(), app->save_name_input);
+    } else if(strcmp(app->last_output_scene, "Base64Decrypt") == 0) {
+        save_result(load_base64_decrypt(), app->save_name_input);
+    } else {
+        save_result("ERROR", app->save_name_input);
+    }
+    widget_add_string_element(
+        app->widget, 64, 22, AlignCenter, AlignCenter, FontPrimary, "Saved!");
+    // char file_path_name[128];
+    // snprintf(file_path_name, sizeof(file_path_name), "/ext/flip_crypt_saved/%s.txt", app->save_name_input);
+    widget_add_string_element(
+        app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, "/ext/flip_crypt_saved/");
+    view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
 // About screen from main menu option
@@ -956,11 +3673,19 @@ void flip_crypt_about_scene_on_enter(void* context) {
         0,
         128,
         64,
-        "FlipCrypt\nv0.1\nEncrypt, decrypt, and hash text using a variety of classic and modern crypto tools.\nAuthor: @taxelanderson\nSource Code: https://github.com/TAxelAnderson/FlipCrypt");
+        "FlipCrypt\n"
+        "v0.2\n"
+        "Explore and learn about various cryptograpic and text encoding methods.\n\n"
+        "Usage:\n"
+        "Select the method you want to use for encoding / decoding text and fill in the necessary inputs.\n"
+        "On the output screen, there are up to three options for actions you can do with the output - Save, NFC, and QR. The save button saves the output to a text file in the folder located at /ext/flip_crypt_saved/. The NFC button emulates the output using NTAG215. The QR button generates and displays a QR code of your output. Not all three options will be available on every output screen due to memory limitations - for instance the flipper just can't handle the QR code for a SHA-512 output.\n\n"
+        "Feel free to leave any issues / PRs on the repo with new feature ideas!\n\n"
+        "Author: @TAxelAnderson\n"
+        "Source Code: https://github.com/TAxelAnderson/FlipCrypt");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
-// Event handlers
+// Generic event handlers
 bool flip_crypt_generic_event_handler(void* context, SceneManagerEvent event) {
     UNUSED(context);
     UNUSED(event);
@@ -972,62 +3697,196 @@ void flip_crypt_generic_on_exit(void* context) {
 }
 
 void (*const flip_crypt_scene_on_enter_handlers[])(void*) = {
-    flip_crypt_main_menu_scene_on_enter,
+    flip_crypt_main_menu_scene_on_enter, // Main menu
+    flip_crypt_cipher_submenu_scene_on_enter, // Cipher submenu
+    flip_crypt_hash_submenu_scene_on_enter, // Hash submenu
+    flip_crypt_other_submenu_scene_on_enter, // Other submenu
+    flip_crypt_about_scene_on_enter, // About scene
+    cipher_submenu_scene_on_enter, // AES128Submenu
+    cipher_input_scene_on_enter, // AES128Input
+    cipher_input_scene_on_enter, // AES128KeyInput
+    cipher_input_scene_on_enter, // AES128DecryptKeyInput
+    dialog_cipher_output_scene_on_enter, // AES128Output
+    cipher_input_scene_on_enter, // AES128DecryptInput
+    dialog_cipher_output_scene_on_enter, // AES128DecryptOutput
+    cipher_learn_scene_on_enter, // AES128Learn
+    cipher_submenu_scene_on_enter, // AffineSubmenu
+    cipher_input_scene_on_enter, // AffineInput
+    number_input_scene_on_enter, // AffineKeyAInput
+    number_input_scene_on_enter, // AffineDecryptKeyAInput
+    number_input_scene_on_enter, // AffineKeyBInput
+    number_input_scene_on_enter, // AffineDecryptKeyBInput
+    dialog_cipher_output_scene_on_enter, // AffineOutput
+    cipher_input_scene_on_enter, // AffineDecryptInput
+    dialog_cipher_output_scene_on_enter, // AffineDecryptOutput
+    cipher_learn_scene_on_enter, // AffineLearn
     cipher_submenu_scene_on_enter, // AtbashSubmenu
     cipher_input_scene_on_enter, // AtbashInput
-    cipher_output_scene_on_enter, // AtbashOutput
+    dialog_cipher_output_scene_on_enter, // AtbashOutput
     cipher_input_scene_on_enter, // AtbashDecryptInput
-    cipher_output_scene_on_enter, // AtbashDecryptOutput
+    dialog_cipher_output_scene_on_enter, // AtbashDecryptOutput
     cipher_learn_scene_on_enter, // AtbashLearn
     cipher_submenu_scene_on_enter, // BaconianSubmenu
     cipher_input_scene_on_enter, // BaconianInput
-    cipher_output_scene_on_enter, // BaconianOutput
+    dialog_cipher_output_scene_on_enter, // BaconianOutput
     cipher_input_scene_on_enter, // BaconianDecryptInput
-    cipher_output_scene_on_enter, // BaconianDecryptOutput
+    dialog_cipher_output_scene_on_enter, // BaconianDecryptOutput
     cipher_learn_scene_on_enter, // BaconianLearn
+    cipher_submenu_scene_on_enter, // BeaufortSubmenu
+    cipher_input_scene_on_enter, // BeaufortInput
+    cipher_input_scene_on_enter, // BeaufortKeyInput
+    cipher_input_scene_on_enter, // BeaufortDecryptKeyInput
+    dialog_cipher_output_scene_on_enter, // BeaufortOutput
+    cipher_input_scene_on_enter, // BeaufortDecryptInput
+    dialog_cipher_output_scene_on_enter, // BeaufortDecryptOutput
+    cipher_learn_scene_on_enter, // BeaufortLearn
+    cipher_submenu_scene_on_enter, // CaesarSubmenu
+    cipher_input_scene_on_enter, // CaesarInput
+    number_input_scene_on_enter, // CaesarKeyInput
+    number_input_scene_on_enter, // CaesarDecryptKeyInput
+    dialog_cipher_output_scene_on_enter, // CaesarOutput
+    cipher_input_scene_on_enter, // CaesarDecryptInput
+    dialog_cipher_output_scene_on_enter, // CaesarDecryptOutput
+    cipher_learn_scene_on_enter, // CaesarLearn
     cipher_submenu_scene_on_enter, // PlayfairSubmenu
     cipher_input_scene_on_enter, // PlayfairInput
     cipher_input_scene_on_enter, // PlayfairKeywordInput
     cipher_input_scene_on_enter, // PlayfairDecryptKeywordInput
-    cipher_output_scene_on_enter, // PlayfairOutput
+    dialog_cipher_output_scene_on_enter, // PlayfairOutput
     cipher_input_scene_on_enter, // PlayfairDecryptInput
-    cipher_output_scene_on_enter, // PlayfairDecryptOutput
+    dialog_cipher_output_scene_on_enter, // PlayfairDecryptOutput
     cipher_learn_scene_on_enter, // PlayfairLearn
+    cipher_submenu_scene_on_enter, // PolybiusSubmenu
+    cipher_input_scene_on_enter, // PolybiusInput
+    dialog_cipher_output_scene_on_enter, // PolybiusOutput
+    cipher_input_scene_on_enter, // PolybiusDecryptInput
+    dialog_cipher_output_scene_on_enter, // PolybiusDecryptOutput
+    cipher_learn_scene_on_enter, // PolybiusLearn
     cipher_submenu_scene_on_enter, // RailfenceSubmenu
     cipher_input_scene_on_enter, // RailfenceInput
-    cipher_output_scene_on_enter, // RailfenceOutput
+    number_input_scene_on_enter, // RailfenceKeyInput
+    number_input_scene_on_enter, // RailfenceDecryptKeyInput
+    dialog_cipher_output_scene_on_enter, // RailfenceOutput
     cipher_input_scene_on_enter, // RailfenceDecryptInput
-    cipher_output_scene_on_enter, // RailfenceDecryptOutput
+    dialog_cipher_output_scene_on_enter, // RailfenceDecryptOutput
     cipher_learn_scene_on_enter, // RailfenceLearn
+    cipher_submenu_scene_on_enter, // RC4Submenu
+    cipher_input_scene_on_enter, // RC4Input
+    cipher_input_scene_on_enter, // RC4KeywordInput
+    cipher_input_scene_on_enter, // RC4DecryptKeywordInput
+    dialog_cipher_output_scene_on_enter, // RC4Output
+    cipher_input_scene_on_enter, // RC4DecryptInput
+    dialog_cipher_output_scene_on_enter, // RC4DecryptOutput
+    cipher_learn_scene_on_enter, // RC4Learn
+    cipher_submenu_scene_on_enter, // ScytaleSubmenu
+    cipher_input_scene_on_enter, // ScytaleInput
+    number_input_scene_on_enter, // ScytaleKeywordInput
+    number_input_scene_on_enter, // ScytaleDecryptKeywordInput
+    dialog_cipher_output_scene_on_enter, // ScytaleOutput
+    cipher_input_scene_on_enter, // ScytaleDecryptInput
+    dialog_cipher_output_scene_on_enter, // ScytaleDecryptOutput
+    cipher_learn_scene_on_enter, // ScytaleLearn
     cipher_submenu_scene_on_enter, // VigenereSubmenu
     cipher_input_scene_on_enter, // VigenereInput
     cipher_input_scene_on_enter, // VigenereKeywordInput
     cipher_input_scene_on_enter, // VigenereDecryptKeywordInput
-    cipher_output_scene_on_enter, // VigenereOutput
+    dialog_cipher_output_scene_on_enter, // VigenereOutput
     cipher_input_scene_on_enter, // VigenereDecryptInput
-    cipher_output_scene_on_enter, // VigenereDecryptOutput
+    dialog_cipher_output_scene_on_enter, // VigenereDecryptOutput
     cipher_learn_scene_on_enter, // VigenereLearn
     cipher_submenu_scene_on_enter, // Blake2Submenu
     cipher_input_scene_on_enter, // Blake2Input
-    cipher_output_scene_on_enter, // Blake2Output
+    dialog_cipher_output_scene_on_enter, // Blake2Output
     cipher_learn_scene_on_enter, // Blake2Learn
+    cipher_submenu_scene_on_enter, // FNV1ASubmenu
+    cipher_input_scene_on_enter, // FNV1AInput
+    dialog_cipher_output_scene_on_enter, // FNV1AOutput
+    cipher_learn_scene_on_enter, // FNV1ALearn
     cipher_submenu_scene_on_enter, // MD5Submenu
     cipher_input_scene_on_enter, // MD5Input
-    cipher_output_scene_on_enter, // MD5Output
+    dialog_cipher_output_scene_on_enter, // MD5Output
     cipher_learn_scene_on_enter, // MD5Learn
+    cipher_submenu_scene_on_enter, // Murmur3Submenu
+    cipher_input_scene_on_enter, // Murmur3Input
+    dialog_cipher_output_scene_on_enter, // Murmur3Output
+    cipher_learn_scene_on_enter, // Murmur3Learn
+    cipher_submenu_scene_on_enter, // SipSubmenu
+    cipher_input_scene_on_enter, // SipInput
+    cipher_input_scene_on_enter, // SipKeywordInput
+    dialog_cipher_output_scene_on_enter, // SipOutput
+    cipher_learn_scene_on_enter, // SipLearn
     cipher_submenu_scene_on_enter, // SHA1Submenu
     cipher_input_scene_on_enter, // SHA1Input
-    cipher_output_scene_on_enter, // SHA1Output
+    dialog_cipher_output_scene_on_enter, // SHA1Output
     cipher_learn_scene_on_enter, // SHA1Learn
+    cipher_submenu_scene_on_enter, // SHA224Submenu
+    cipher_input_scene_on_enter, // SHA224Input
+    dialog_cipher_output_scene_on_enter, // SHA224Output
+    cipher_learn_scene_on_enter, // SHA224Learn
     cipher_submenu_scene_on_enter, // SHA256Submenu
     cipher_input_scene_on_enter, // SHA256Input
-    cipher_output_scene_on_enter, // SHA256Output
+    dialog_cipher_output_scene_on_enter, // SHA256Output
     cipher_learn_scene_on_enter, // SHA256Learn
-    flip_crypt_about_scene_on_enter,
+    cipher_submenu_scene_on_enter, // SHA384Submenu
+    cipher_input_scene_on_enter, // SHA384Input
+    dialog_cipher_output_scene_on_enter, // SHA384Output
+    cipher_learn_scene_on_enter, // SHA384Learn
+    cipher_submenu_scene_on_enter, // SHA512Submenu
+    cipher_input_scene_on_enter, // SHA512Input
+    dialog_cipher_output_scene_on_enter, // SHA512Output
+    cipher_learn_scene_on_enter, // SHA512Learn
+    cipher_submenu_scene_on_enter, // XXSubmenu
+    cipher_input_scene_on_enter, // XXInput
+    dialog_cipher_output_scene_on_enter, // XXOutput
+    cipher_learn_scene_on_enter, // XXLearn
+    cipher_submenu_scene_on_enter, // Base32Submenu
+    cipher_input_scene_on_enter, // Base32Input
+    dialog_cipher_output_scene_on_enter, // Base32Output
+    cipher_input_scene_on_enter, // Base32DecryptInput
+    dialog_cipher_output_scene_on_enter, // Base32DecryptOutput
+    cipher_learn_scene_on_enter, // Base32Learn
+    cipher_submenu_scene_on_enter, // Base58Submenu
+    cipher_input_scene_on_enter, // Base58Input
+    dialog_cipher_output_scene_on_enter, // Base58Output
+    cipher_input_scene_on_enter, // Base58DecryptInput
+    dialog_cipher_output_scene_on_enter, // Base58DecryptOutput
+    cipher_learn_scene_on_enter, // Base58Learn
+    cipher_submenu_scene_on_enter, // Base64Submenu
+    cipher_input_scene_on_enter, // Base64Input
+    dialog_cipher_output_scene_on_enter, // Base64Output
+    cipher_input_scene_on_enter, // Base64DecryptInput
+    dialog_cipher_output_scene_on_enter, // Base64DecryptOutput
+    cipher_learn_scene_on_enter, // Base64Learn
+    flip_crypt_nfc_scene_on_enter, // NFC
+    flip_crypt_save_scene_on_enter, // Save
+    cipher_input_scene_on_enter, // Save Text input for file name
+    flip_crypt_qr_scene_on_enter, // QR Code
 };
 
 bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
-    flip_crypt_main_menu_scene_on_event,
+    flip_crypt_main_menu_scene_on_event, // Main menu
+    flip_crypt_main_menu_scene_on_event, // Cipher submenu
+    flip_crypt_main_menu_scene_on_event, // Hash submenu
+    flip_crypt_main_menu_scene_on_event, // Other submenu
+    flip_crypt_generic_event_handler, // About
+    flip_crypt_generic_event_handler, // AES128Submenu
+    flip_crypt_generic_event_handler, // AES128Input
+    flip_crypt_generic_event_handler, // AES128KeyInput
+    flip_crypt_generic_event_handler, // AES128DecryptKeyInput
+    flip_crypt_generic_event_handler, // AES128Output
+    flip_crypt_generic_event_handler, // AES128DecryptInput
+    flip_crypt_generic_event_handler, // AES128DecryptOutput
+    flip_crypt_generic_event_handler, // AES128Learn
+    flip_crypt_generic_event_handler, // AffineSubmenu
+    flip_crypt_generic_event_handler, // AffineInput
+    flip_crypt_generic_event_handler, // AffineKeyAInput
+    flip_crypt_generic_event_handler, // AffineDecryptKeyAInput
+    flip_crypt_generic_event_handler, // AffineKeyBInput
+    flip_crypt_generic_event_handler, // AffineDecryptKeyBInput
+    flip_crypt_generic_event_handler, // AffineOutput
+    flip_crypt_generic_event_handler, // AffineDecryptInput
+    flip_crypt_generic_event_handler, // AffineDecryptOutput
+    flip_crypt_generic_event_handler, // AffineLearn
     flip_crypt_generic_event_handler, // AtbashSubmenu
     flip_crypt_generic_event_handler, // AtbashInput
     flip_crypt_generic_event_handler, // AtbashOutput
@@ -1040,6 +3899,22 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // BaconianDecryptInput
     flip_crypt_generic_event_handler, // BaconianDecryptOutput
     flip_crypt_generic_event_handler, // BaconianLearn
+    flip_crypt_generic_event_handler, // BeaufortSubmenu
+    flip_crypt_generic_event_handler, // BeaufortInput
+    flip_crypt_generic_event_handler, // BeaufortKeyInput
+    flip_crypt_generic_event_handler, // BeaufortDecryptKeyInput
+    flip_crypt_generic_event_handler, // BeaufortOutput
+    flip_crypt_generic_event_handler, // BeaufortDecryptInput
+    flip_crypt_generic_event_handler, // BeaufortDecryptOutput
+    flip_crypt_generic_event_handler, // BeaufortLearn
+    flip_crypt_generic_event_handler, // CaesarSubmenu
+    flip_crypt_generic_event_handler, // CaesarInput
+    flip_crypt_generic_event_handler, // CaesarKeyInput
+    flip_crypt_generic_event_handler, // CaesarDecryptKeyInput
+    flip_crypt_generic_event_handler, // CaesarOutput
+    flip_crypt_generic_event_handler, // CaesarDecryptInput
+    flip_crypt_generic_event_handler, // CaesarDecryptOutput
+    flip_crypt_generic_event_handler, // CaesarLearn
     flip_crypt_generic_event_handler, // PlayfairSubmenu
     flip_crypt_generic_event_handler, // PlayfairInput
     flip_crypt_generic_event_handler, // PlayfairKeywordInput
@@ -1048,12 +3923,36 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // PlayfairDecryptInput
     flip_crypt_generic_event_handler, // PlayfairDecryptOutput
     flip_crypt_generic_event_handler, // PlayfairLearn
+    flip_crypt_generic_event_handler, // PolybiusSubmenu
+    flip_crypt_generic_event_handler, // PolybiusInput
+    flip_crypt_generic_event_handler, // PolybiusOutput
+    flip_crypt_generic_event_handler, // PolybiusDecryptInput
+    flip_crypt_generic_event_handler, // PolybiusDecryptOutput
+    flip_crypt_generic_event_handler, // PolybiusLearn
     flip_crypt_generic_event_handler, // RailfenceSubmenu
     flip_crypt_generic_event_handler, // RailfenceInput
+    flip_crypt_generic_event_handler, // RailfenceKeyInput
+    flip_crypt_generic_event_handler, // RailfenceDecryptKeyInput
     flip_crypt_generic_event_handler, // RailfenceOutput
     flip_crypt_generic_event_handler, // RailfenceDecryptInput
     flip_crypt_generic_event_handler, // RailfenceDecryptOutput
     flip_crypt_generic_event_handler, // RailfenceLearn
+    flip_crypt_generic_event_handler, // RC4Submenu
+    flip_crypt_generic_event_handler, // RC4Input
+    flip_crypt_generic_event_handler, // RC4KeywordInput
+    flip_crypt_generic_event_handler, // RC4DecryptKeywordInput
+    flip_crypt_generic_event_handler, // RC4Output
+    flip_crypt_generic_event_handler, // RC4DecryptInput
+    flip_crypt_generic_event_handler, // RC4DecryptOutput
+    flip_crypt_generic_event_handler, // RC4Learn
+    flip_crypt_generic_event_handler, // ScytaleSubmenu
+    flip_crypt_generic_event_handler, // ScytaleInput
+    flip_crypt_generic_event_handler, // ScytaleKeywordInput
+    flip_crypt_generic_event_handler, // ScytaleDecryptKeywordInput
+    flip_crypt_generic_event_handler, // ScytaleOutput
+    flip_crypt_generic_event_handler, // ScytaleDecryptInput
+    flip_crypt_generic_event_handler, // ScytaleDecryptOutput
+    flip_crypt_generic_event_handler, // ScytaleLearn
     flip_crypt_generic_event_handler, // VigenereSubmenu
     flip_crypt_generic_event_handler, // VigenereInput
     flip_crypt_generic_event_handler, // VigenereKeywordInput
@@ -1066,23 +3965,95 @@ bool (*const flip_crypt_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     flip_crypt_generic_event_handler, // Blake2Input
     flip_crypt_generic_event_handler, // Blake2Output
     flip_crypt_generic_event_handler, // Blake2Learn
+    flip_crypt_generic_event_handler, // FNV1ASubmenu
+    flip_crypt_generic_event_handler, // FNV1AInput
+    flip_crypt_generic_event_handler, // FNV1AOutput
+    flip_crypt_generic_event_handler, // FNV1ALearn
     flip_crypt_generic_event_handler, // MD5Submenu
     flip_crypt_generic_event_handler, // MD5Input
     flip_crypt_generic_event_handler, // MD5Output
     flip_crypt_generic_event_handler, // MD5Learn
+    flip_crypt_generic_event_handler, // Murmur3Submenu
+    flip_crypt_generic_event_handler, // Murmur3Input
+    flip_crypt_generic_event_handler, // Murmur3Output
+    flip_crypt_generic_event_handler, // Murmur3Learn
+    flip_crypt_generic_event_handler, // SipSubmenu
+    flip_crypt_generic_event_handler, // SipInput
+    flip_crypt_generic_event_handler, // SipKeywordInput
+    flip_crypt_generic_event_handler, // SipOutput
+    flip_crypt_generic_event_handler, // SipLearn
     flip_crypt_generic_event_handler, // SHA1Submenu
     flip_crypt_generic_event_handler, // SHA1Input
     flip_crypt_generic_event_handler, // SHA1Output
     flip_crypt_generic_event_handler, // SHA1Learn
+    flip_crypt_generic_event_handler, // SHA224Submenu
+    flip_crypt_generic_event_handler, // SHA224Input
+    flip_crypt_generic_event_handler, // SHA224Output
+    flip_crypt_generic_event_handler, // SHA224Learn
     flip_crypt_generic_event_handler, // SHA256Submenu
     flip_crypt_generic_event_handler, // SHA256Input
     flip_crypt_generic_event_handler, // SHA256Output
     flip_crypt_generic_event_handler, // SHA256Learn
-    flip_crypt_generic_event_handler, // About
+    flip_crypt_generic_event_handler, // SHA384Submenu
+    flip_crypt_generic_event_handler, // SHA384Input
+    flip_crypt_generic_event_handler, // SHA384Output
+    flip_crypt_generic_event_handler, // SHA384Learn
+    flip_crypt_generic_event_handler, // SHA512Submenu
+    flip_crypt_generic_event_handler, // SHA512Input
+    flip_crypt_generic_event_handler, // SHA512Output
+    flip_crypt_generic_event_handler, // SHA512Learn
+    flip_crypt_generic_event_handler, // XXSubmenu
+    flip_crypt_generic_event_handler, // XXInput
+    flip_crypt_generic_event_handler, // XXOutput
+    flip_crypt_generic_event_handler, // XXLearn
+    flip_crypt_generic_event_handler, // Base32Submenu
+    flip_crypt_generic_event_handler, // Base32Input
+    flip_crypt_generic_event_handler, // Base32Output
+    flip_crypt_generic_event_handler, // Base32DecryptInput
+    flip_crypt_generic_event_handler, // Base32DecryptOutput
+    flip_crypt_generic_event_handler, // Base32Learn
+    flip_crypt_generic_event_handler, // Base58Submenu
+    flip_crypt_generic_event_handler, // Base58Input
+    flip_crypt_generic_event_handler, // Base58Output
+    flip_crypt_generic_event_handler, // Base58DecryptInput
+    flip_crypt_generic_event_handler, // Base58DecryptOutput
+    flip_crypt_generic_event_handler, // Base58Learn
+    flip_crypt_generic_event_handler, // Base64Submenu
+    flip_crypt_generic_event_handler, // Base64Input
+    flip_crypt_generic_event_handler, // Base64Output
+    flip_crypt_generic_event_handler, // Base64DecryptInput
+    flip_crypt_generic_event_handler, // Base64DecryptOutput
+    flip_crypt_generic_event_handler, // Base64Learn
+    flip_crypt_generic_event_handler, // NFC
+    flip_crypt_generic_event_handler, // Save
+    flip_crypt_generic_event_handler, // Save input
+    flip_crypt_generic_event_handler, // QR
 };
 
 void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
-    flip_crypt_main_menu_scene_on_exit,
+    flip_crypt_main_menu_scene_on_exit, // Main menu
+    flip_crypt_main_menu_scene_on_exit, // Cipher submenu
+    flip_crypt_main_menu_scene_on_exit, // Hash submenu
+    flip_crypt_main_menu_scene_on_exit, // Other submenu
+    flip_crypt_generic_on_exit, // About
+    flip_crypt_generic_on_exit, // AES128Submenu
+    flip_crypt_generic_on_exit, // AES128Input
+    flip_crypt_generic_on_exit, // AES128KeyInput
+    flip_crypt_generic_on_exit, // AES128DecryptKeyInput
+    flip_crypt_generic_on_exit, // AES128Output
+    flip_crypt_generic_on_exit, // AES128DecryptInput
+    flip_crypt_generic_on_exit, // AES128DecryptOutput
+    flip_crypt_generic_on_exit, // AES128Learn
+    flip_crypt_generic_on_exit, // AffineSubmenu
+    flip_crypt_generic_on_exit, // AffineInput
+    flip_crypt_generic_on_exit, // AffineKeyAInput
+    flip_crypt_generic_on_exit, // AffineDecryptKeyAInput
+    flip_crypt_generic_on_exit, // AffineKeyBInput
+    flip_crypt_generic_on_exit, // AffineDecryptKeyBInput
+    flip_crypt_generic_on_exit, // AffineOutput
+    flip_crypt_generic_on_exit, // AffineDecryptInput
+    flip_crypt_generic_on_exit, // AffineDecryptOutput
+    flip_crypt_generic_on_exit, // AffineLearn
     flip_crypt_generic_on_exit, // AtbashSubmenu
     flip_crypt_generic_on_exit, // AtbashInput
     flip_crypt_generic_on_exit, // AtbashOutput
@@ -1095,6 +4066,22 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // BaconianDecryptInput
     flip_crypt_generic_on_exit, // BaconianDecryptOutput
     flip_crypt_generic_on_exit, // BaconianLearn
+    flip_crypt_generic_on_exit, // BeaufortSubmenu
+    flip_crypt_generic_on_exit, // BeaufortInput
+    flip_crypt_generic_on_exit, // BeaufortKeyInput
+    flip_crypt_generic_on_exit, // BeaufortDecryptKeyInput
+    flip_crypt_generic_on_exit, // BeaufortOutput
+    flip_crypt_generic_on_exit, // BeaufortDecryptInput
+    flip_crypt_generic_on_exit, // BeaufortDecryptOutput
+    flip_crypt_generic_on_exit, // BeaufortLearn
+    flip_crypt_generic_on_exit, // CaesarSubmenu
+    flip_crypt_generic_on_exit, // CaesarInput
+    flip_crypt_generic_on_exit, // CaesarKeyInput
+    flip_crypt_generic_on_exit, // CaesarDecryptKeyInput
+    flip_crypt_generic_on_exit, // CaesarOutput
+    flip_crypt_generic_on_exit, // CaesarDecryptInput
+    flip_crypt_generic_on_exit, // CaesarDecryptOutput
+    flip_crypt_generic_on_exit, // CaesarLearn
     flip_crypt_generic_on_exit, // PlayfairSubmenu
     flip_crypt_generic_on_exit, // PlayfairInput
     flip_crypt_generic_on_exit, // PlayfairKeywordInput
@@ -1103,12 +4090,36 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // PlayfairDecryptInput
     flip_crypt_generic_on_exit, // PlayfairDecryptOutput
     flip_crypt_generic_on_exit, // PlayfairLearn
+    flip_crypt_generic_on_exit, // PolybiusSubmenu
+    flip_crypt_generic_on_exit, // PolybiusInput
+    flip_crypt_generic_on_exit, // PolybiusOutput
+    flip_crypt_generic_on_exit, // PolybiusDecryptInput
+    flip_crypt_generic_on_exit, // PolybiusDecryptOutput
+    flip_crypt_generic_on_exit, // PolybiusLearn
     flip_crypt_generic_on_exit, // RailfenceSubmenu
     flip_crypt_generic_on_exit, // RailfenceInput
+    flip_crypt_generic_on_exit, // RailfenceKeyInput
+    flip_crypt_generic_on_exit, // RailfenceDecryptKeyInput
     flip_crypt_generic_on_exit, // RailfenceOutput
     flip_crypt_generic_on_exit, // RailfenceDecryptInput
     flip_crypt_generic_on_exit, // RailfenceDecryptOutput
     flip_crypt_generic_on_exit, // RailfenceLearn
+    flip_crypt_generic_on_exit, // RC4Submenu
+    flip_crypt_generic_on_exit, // RC4Input
+    flip_crypt_generic_on_exit, // RC4KeywordInput
+    flip_crypt_generic_on_exit, // RC4DecryptKeywordInput
+    flip_crypt_generic_on_exit, // RC4Output
+    flip_crypt_generic_on_exit, // RC4DecryptInput
+    flip_crypt_generic_on_exit, // RC4DecryptOutput
+    flip_crypt_generic_on_exit, // RC4Learn
+    flip_crypt_generic_on_exit, // ScytaleSubmenu
+    flip_crypt_generic_on_exit, // ScytaleInput
+    flip_crypt_generic_on_exit, // ScytaleKeywordInput
+    flip_crypt_generic_on_exit, // ScytaleDecryptKeywordInput
+    flip_crypt_generic_on_exit, // ScytaleOutput
+    flip_crypt_generic_on_exit, // ScytaleDecryptInput
+    flip_crypt_generic_on_exit, // ScytaleDecryptOutput
+    flip_crypt_generic_on_exit, // ScytaleLearn
     flip_crypt_generic_on_exit, // VigenereSubmenu
     flip_crypt_generic_on_exit, // VigenereInput
     flip_crypt_generic_on_exit, // VigenereKeywordInput
@@ -1121,19 +4132,69 @@ void (*const flip_crypt_scene_on_exit_handlers[])(void*) = {
     flip_crypt_generic_on_exit, // Blake2Input
     flip_crypt_generic_on_exit, // Blake2Output
     flip_crypt_generic_on_exit, // Blake2Learn
+    flip_crypt_generic_on_exit, // FNV1ASubmenu
+    flip_crypt_generic_on_exit, // FNV1AInput
+    flip_crypt_generic_on_exit, // FNV1AOutput
+    flip_crypt_generic_on_exit, // FNV1ALearn
     flip_crypt_generic_on_exit, // MD5Submenu
     flip_crypt_generic_on_exit, // MD5Input
     flip_crypt_generic_on_exit, // MD5Output
     flip_crypt_generic_on_exit, // MD5Learn
+    flip_crypt_generic_on_exit, // Murmur3Submenu
+    flip_crypt_generic_on_exit, // Murmur3Input
+    flip_crypt_generic_on_exit, // Murmur3Output
+    flip_crypt_generic_on_exit, // Murmur3Learn
+    flip_crypt_generic_on_exit, // SipSubmenu
+    flip_crypt_generic_on_exit, // SipInput
+    flip_crypt_generic_on_exit, // SipKeywordInput
+    flip_crypt_generic_on_exit, // SipOutput
+    flip_crypt_generic_on_exit, // SipLearn
     flip_crypt_generic_on_exit, // SHA1Submenu
     flip_crypt_generic_on_exit, // SHA1Input
     flip_crypt_generic_on_exit, // SHA1Output
     flip_crypt_generic_on_exit, // SHA1Learn
+    flip_crypt_generic_on_exit, // SHA224Submenu
+    flip_crypt_generic_on_exit, // SHA224Input
+    flip_crypt_generic_on_exit, // SHA224Output
+    flip_crypt_generic_on_exit, // SHA224Learn
     flip_crypt_generic_on_exit, // SHA256Submenu
     flip_crypt_generic_on_exit, // SHA256Input
     flip_crypt_generic_on_exit, // SHA256Output
     flip_crypt_generic_on_exit, // SHA256Learn
-    flip_crypt_generic_on_exit, // About
+    flip_crypt_generic_on_exit, // SHA384Submenu
+    flip_crypt_generic_on_exit, // SHA384Input
+    flip_crypt_generic_on_exit, // SHA384Output
+    flip_crypt_generic_on_exit, // SHA384Learn
+    flip_crypt_generic_on_exit, // SHA512Submenu
+    flip_crypt_generic_on_exit, // SHA512Input
+    flip_crypt_generic_on_exit, // SHA512Output
+    flip_crypt_generic_on_exit, // SHA512Learn
+    flip_crypt_generic_on_exit, // XXSubmenu
+    flip_crypt_generic_on_exit, // XXInput
+    flip_crypt_generic_on_exit, // XXOutput
+    flip_crypt_generic_on_exit, // XXLearn
+    flip_crypt_generic_on_exit, // Base32Submenu
+    flip_crypt_generic_on_exit, // Base32Input
+    flip_crypt_generic_on_exit, // Base32Output
+    flip_crypt_generic_on_exit, // Base32DecryptInput
+    flip_crypt_generic_on_exit, // Base32DecryptOutput
+    flip_crypt_generic_on_exit, // Base32Learn
+    flip_crypt_generic_on_exit, // Base58Submenu
+    flip_crypt_generic_on_exit, // Base58Input
+    flip_crypt_generic_on_exit, // Base58Output
+    flip_crypt_generic_on_exit, // Base58DecryptInput
+    flip_crypt_generic_on_exit, // Base58DecryptOutput
+    flip_crypt_generic_on_exit, // Base58Learn
+    flip_crypt_generic_on_exit, // Base64Submenu
+    flip_crypt_generic_on_exit, // Base64Input
+    flip_crypt_generic_on_exit, // Base64Output
+    flip_crypt_generic_on_exit, // Base64DecryptInput
+    flip_crypt_generic_on_exit, // Base64DecryptOutput
+    flip_crypt_generic_on_exit, // Base64Learn
+    flip_crypt_nfc_scene_on_exit, // NFC
+    flip_crypt_generic_on_exit, // Save
+    flip_crypt_generic_on_exit, // Save input
+    flip_crypt_qr_scene_on_exit, // QR
 };
 
 static const SceneManagerHandlers flip_crypt_scene_manager_handlers = {
@@ -1161,38 +4222,109 @@ static App* app_alloc() {
     // App
     App* app = malloc(sizeof(App));
     // Vars
+    app->last_output_scene_size = 64;
+    app->save_name_input_size = 64;
+    app->aes_input_size = 64;
+    app->aes_key_input_size = 17;
+    app->aes_decrypt_input_size = 64;
+    app->affine_input_size = 64;
+    app->affine_decrypt_input_size = 64;
     app->atbash_input_size = 64;
     app->atbash_decrypt_input_size = 64;
     app->baconian_input_size = 64;
     app->baconian_decrypt_input_size = 157;
+    app->beaufort_input_size = 64;
+    app->beaufort_key_input_size = 64;
+    app->beaufort_decrypt_input_size = 64;
+    app->caesar_input_size = 64;
+    app->caesar_decrypt_input_size = 64;
     app->playfair_input_size = 64;
     app->playfair_keyword_input_size = 26;
     app->playfair_decrypt_input_size = 64;
+    app->polybius_input_size = 64;
+    app->polybius_decrypt_input_size = 64;
     app->railfence_input_size = 64;
     app->railfence_decrypt_input_size = 64;
+    app->rc4_input_size = 64;
+    app->rc4_keyword_input_size = 64;
+    app->rc4_decrypt_input_size = 64;
+    app->scytale_input_size = 64;
+    app->scytale_decrypt_input_size = 64;
     app->vigenere_input_size = 64;
     app->vigenere_keyword_input_size = 64;
     app->vigenere_decrypt_input_size = 64;
     app->blake2_input_size = 64;
+    app->fnv1a_input_size = 64;
     app->md5_input_size = 64;
+    app->murmur3_input_size = 64;
+    app->sip_input_size = 64;
+    app->sip_keyword_input_size = 17;
     app->sha1_input_size = 64;
+    app->sha224_input_size = 64;
     app->sha256_input_size = 64;
+    app->sha384_input_size = 64;
+    app->sha512_input_size = 64;
+    app->xx_input_size = 64;
+    app->base32_input_size = 64;
+    app->base32_decrypt_input_size = 64;
+    app->base58_input_size = 64;
+    app->base58_decrypt_input_size = 64;
+    app->base64_input_size = 64;
+    app->base64_decrypt_input_size = 64;
+    app->save_name_input = malloc(app->save_name_input_size);
+    app->last_output_scene = malloc(app->last_output_scene_size);
+    app->aes_input = malloc(app->aes_input_size);
+    app->aes_key_input = malloc(app->aes_key_input_size);
+    app->aes_decrypt_input = malloc(app->aes_decrypt_input_size);
+    app->affine_input = malloc(app->affine_input_size);
+    app->affine_keya_input = 1;
+    app->affine_keyb_input = 1;
+    app->affine_decrypt_input = malloc(app->affine_decrypt_input_size);
     app->atbash_input = malloc(app->atbash_input_size);
     app->atbash_decrypt_input = malloc(app->atbash_decrypt_input_size);
     app->baconian_input = malloc(app->baconian_input_size);
     app->baconian_decrypt_input = malloc(app->baconian_decrypt_input_size);
+    app->beaufort_input = malloc(app->beaufort_input_size);
+    app->beaufort_key_input = malloc(app->beaufort_key_input_size);
+    app->beaufort_decrypt_input = malloc(app->beaufort_decrypt_input_size);
+    app->caesar_input = malloc(app->caesar_input_size);
+    app->caesar_key_input = 0;
+    app->caesar_decrypt_input = malloc(app->caesar_decrypt_input_size);
     app->playfair_input = malloc(app->playfair_input_size);
     app->playfair_keyword_input = malloc(app->playfair_keyword_input_size);
     app->playfair_decrypt_input = malloc(app->playfair_decrypt_input_size);
+    app->polybius_input = malloc(app->polybius_input_size);
+    app->polybius_decrypt_input = malloc(app->polybius_decrypt_input_size);
     app->railfence_input = malloc(app->railfence_input_size);
+    app->railfence_key_input = 1;
     app->railfence_decrypt_input = malloc(app->railfence_decrypt_input_size);
+    app->rc4_input = malloc(app->rc4_input_size);
+    app->rc4_keyword_input = malloc(app->rc4_keyword_input_size);
+    app->rc4_decrypt_input = malloc(app->rc4_decrypt_input_size);
+    app->scytale_input = malloc(app->scytale_input_size);
+    app->scytale_keyword_input = 0;
+    app->scytale_decrypt_input = malloc(app->scytale_decrypt_input_size);
     app->vigenere_input = malloc(app->vigenere_input_size);
     app->vigenere_keyword_input = malloc(app->vigenere_keyword_input_size);
     app->vigenere_decrypt_input = malloc(app->vigenere_decrypt_input_size);
     app->blake2_input = malloc(app->blake2_input_size);
+    app->fnv1a_input = malloc(app->fnv1a_input_size);
     app->md5_input = malloc(app->md5_input_size);
+    app->murmur3_input = malloc(app->murmur3_input_size);
+    app->sip_input = malloc(app->sip_input_size);
+    app->sip_keyword_input = malloc(app->sip_keyword_input_size);
     app->sha1_input = malloc(app->sha1_input_size);
+    app->sha224_input = malloc(app->sha224_input_size);
     app->sha256_input = malloc(app->sha256_input_size);
+    app->sha384_input = malloc(app->sha384_input_size);
+    app->sha512_input = malloc(app->sha512_input_size);
+    app->xx_input = malloc(app->xx_input_size);
+    app->base32_input = malloc(app->base32_input_size);
+    app->base32_decrypt_input = malloc(app->base32_decrypt_input_size);
+    app->base58_input = malloc(app->base58_input_size);
+    app->base58_decrypt_input = malloc(app->base58_decrypt_input_size);
+    app->base64_input = malloc(app->base64_input_size);
+    app->base64_decrypt_input = malloc(app->base64_decrypt_input_size);
     // Other
     app->scene_manager = scene_manager_alloc(&flip_crypt_scene_manager_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
@@ -1210,6 +4342,18 @@ static App* app_alloc() {
     app->text_input = text_input_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, FlipCryptTextInputView, text_input_get_view(app->text_input));
+    app->number_input = number_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, FlipCryptNumberInputView, number_input_get_view(app->number_input));
+    app->dialog_ex = dialog_ex_alloc();
+    dialog_ex_set_context(app->dialog_ex, app);
+    dialog_ex_set_result_callback(app->dialog_ex, dialog_ex_callback);
+    view_dispatcher_add_view(
+        app->view_dispatcher, FlipCryptDialogExView, dialog_ex_get_view(app->dialog_ex));
+    app->nfc = nfc_alloc();
+    app->nfc_device = nfc_device_alloc();
+    app->qr_buffer = malloc(qrcodegen_BUFFER_LEN_MAX);
+    app->qrcode = malloc(qrcodegen_BUFFER_LEN_MAX);
     return app;
 }
 
@@ -1219,27 +4363,68 @@ static void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, FlipCryptSubmenuView);
     view_dispatcher_remove_view(app->view_dispatcher, FlipCryptWidgetView);
     view_dispatcher_remove_view(app->view_dispatcher, FlipCryptTextInputView);
+    view_dispatcher_remove_view(app->view_dispatcher, FlipCryptDialogExView);
+    view_dispatcher_remove_view(app->view_dispatcher, FlipCryptNumberInputView);
+    dialog_ex_free(app->dialog_ex);
+    number_input_free(app->number_input);
     scene_manager_free(app->scene_manager);
     view_dispatcher_free(app->view_dispatcher);
     submenu_free(app->submenu);
     widget_free(app->widget);
     text_input_free(app->text_input);
+    furi_record_close(RECORD_NOTIFICATION);
+    nfc_free(app->nfc);
+    nfc_device_free(app->nfc_device);
+    free(app->qr_buffer);
+    free(app->qrcode);
+    free(app->last_output_scene);
+    free(app->aes_input);
+    free(app->aes_key_input);
+    free(app->aes_decrypt_input);
+    free(app->affine_input);
+    free(app->affine_decrypt_input);
     free(app->atbash_input);
     free(app->atbash_decrypt_input);
     free(app->baconian_input);
     free(app->baconian_decrypt_input);
+    free(app->beaufort_input);
+    free(app->beaufort_key_input);
+    free(app->beaufort_decrypt_input);
+    free(app->caesar_input);
+    free(app->caesar_decrypt_input);
     free(app->playfair_input);
     free(app->playfair_keyword_input);
     free(app->playfair_decrypt_input);
+    free(app->polybius_input);
+    free(app->polybius_decrypt_input);
     free(app->railfence_input);
     free(app->railfence_decrypt_input);
+    free(app->rc4_input);
+    free(app->rc4_keyword_input);
+    free(app->rc4_decrypt_input);
+    free(app->scytale_input);
+    free(app->scytale_decrypt_input);
     free(app->vigenere_input);
     free(app->vigenere_keyword_input);
     free(app->vigenere_decrypt_input);
     free(app->blake2_input);
+    free(app->fnv1a_input);
     free(app->md5_input);
+    free(app->murmur3_input);
+    free(app->sip_input);
+    free(app->sip_keyword_input);
     free(app->sha1_input);
+    free(app->sha224_input);
     free(app->sha256_input);
+    free(app->sha384_input);
+    free(app->sha512_input);
+    free(app->xx_input);
+    free(app->base32_input);
+    free(app->base32_decrypt_input);
+    free(app->base58_input);
+    free(app->base58_decrypt_input);
+    free(app->base64_input);
+    free(app->base64_decrypt_input);
     free(app);
 }
 
