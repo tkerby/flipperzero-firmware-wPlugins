@@ -5,6 +5,8 @@
 #include <lib/subghz/devices/devices.h>
 #include <types.h>
 
+#include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
+
 #define TAG "Sub-GHzSchedulerApp"
 
 static bool scheduler_app_custom_event_callback(void* context, uint32_t event) {
@@ -61,6 +63,20 @@ SchedulerApp* scheduler_app_alloc(void) {
         scheduler_run_view_get_view(app->run_view));
 
     app->scheduler = scheduler_alloc();
+    //Scheduler* scheduler = app->scheduler;
+
+    // Test for external device
+    subghz_devices_init();
+    const SubGhzDevice* device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_EXT_NAME);
+    app->ext_radio_present = subghz_devices_is_connect(device);
+    subghz_devices_deinit();
+    if(app->ext_radio_present) {
+        FURI_LOG_I(TAG, "External radio detected.");
+        scheduler_set_radio(app->scheduler, 1);
+    } else {
+        FURI_LOG_I(TAG, "External radio not detected. Using internal only.");
+        scheduler_set_radio(app->scheduler, 0);
+    }
 
     scene_manager_next_scene(app->scene_manager, SchedulerSceneStart);
 

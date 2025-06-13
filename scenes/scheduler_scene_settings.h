@@ -88,3 +88,9 @@ static const char* const tx_repeats_text[REPEATS_COUNT] = {
     "x5",
     "x6",
 };
+
+#define RADIO_DEVICE_COUNT 2
+static const char* const radio_device_text[RADIO_DEVICE_COUNT] = {
+    "Internal",
+    "External",
+};

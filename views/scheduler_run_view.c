@@ -35,6 +35,7 @@ struct SchedulerUIRunState {
     FuriString* file_type;
     FuriString* file_name;
     FuriString* tx_countdown;
+    FuriString* radio;
     uint8_t tick_counter;
     uint8_t list_count;
 };
@@ -103,6 +104,17 @@ static void scheduler_run_view_draw_callback(Canvas* canvas, void* context) {
         AlignCenter,
         furi_string_get_cstr(state->tx_repeats));
 
+    /* ============= RADIO ============= */
+    canvas_draw_frame(canvas, 95, GUI_TABLE_ROW_B, 33, GUI_TEXTBOX_HEIGHT);
+    canvas_draw_icon(canvas, GUI_MARGIN + 94, (GUI_TEXT_GAP * 3) - 5, &I_sub2_10px);
+    canvas_draw_str_aligned(
+        canvas,
+        GUI_MARGIN + 106,
+        (GUI_TEXT_GAP * 3) + 1,
+        AlignLeft,
+        AlignCenter,
+        furi_string_get_cstr(state->radio));
+
     /* ============= FILE NAME ============= */
     uint8_t file_name_width_px = get_text_width_px(canvas, state->file_name);
     int8_t offset = 1;
@@ -155,6 +167,7 @@ static void scheduler_ui_run_state_alloc(SchedulerApp* app) {
         furi_string_alloc_set(file_type_text[scheduler_get_file_type(app->scheduler)]);
     state->file_name = furi_string_alloc_set(scheduler_get_file_name(app->scheduler));
     state->tx_countdown = furi_string_alloc();
+    state->radio = furi_string_alloc_set(scheduler_get_radio(app->scheduler) ? "Ext" : "Int");
     state->list_count = scheduler_get_list_count(app->scheduler);
     state->app = app;
 }
@@ -167,6 +180,7 @@ static void scheduler_ui_run_state_free() {
     furi_string_free(state->file_type);
     furi_string_free(state->file_name);
     furi_string_free(state->tx_countdown);
+    furi_string_free(state->radio);
     free(state);
 }
 
