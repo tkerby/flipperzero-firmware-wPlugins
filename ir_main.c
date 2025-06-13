@@ -9,8 +9,8 @@
 #include <gui/modules/widget.h>
 #include <gui/modules/file_browser.h>
 #include <gui/modules/variable_item_list.h>
-#include <notification/notification.h>
-#include <notification/notification_messages.h>
+//#include <notification/notification.h>
+//#include <notification/notification_messages.h>
 #include <dialogs/dialogs.h>
 #include <ir_transfer_icons.h>
 #include <stdlib.h>
@@ -992,7 +992,7 @@ static App* app_alloc() {
     view_dispatcher_add_view(app->view_dispatcher, SendView, app->send_view);
 
 
-    app->notifications = furi_record_open(RECORD_NOTIFICATION);
+    //app->notifications = furi_record_open(RECORD_NOTIFICATION);
 
 	view_dispatcher_switch_to_view(app->view_dispatcher, LandingView);
 
@@ -1001,10 +1001,10 @@ static App* app_alloc() {
 
 
 static void app_free(App* app) {
-#ifdef BACKLIGHT_ON
-    notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
-#endif
-    furi_record_close(RECORD_NOTIFICATION);
+//#ifdef BACKLIGHT_ON
+//    notification_message(app->notifications, &sequence_display_backlight_enforce_auto);
+//#endif
+//    furi_record_close(RECORD_NOTIFICATION);
 
 	furi_string_free(app->send_path);
 	SendingModel* sending_model = view_get_model(app->send_view);
