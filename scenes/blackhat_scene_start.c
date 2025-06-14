@@ -61,6 +61,8 @@ static void blackhat_scene_start_var_list_change_callback(VariableItem* item)
     BlackhatApp* app = variable_item_get_context(item);
     furi_assert(app);
 
+    app->selected_menu_index = variable_item_list_get_selected_item_index(app->var_item_list);
+
     const BlackhatItem* menu_item = &items[app->selected_menu_index];
 
     uint8_t item_index = variable_item_get_current_value_index(item);
