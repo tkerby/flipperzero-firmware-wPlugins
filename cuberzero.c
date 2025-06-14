@@ -13,13 +13,13 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 	furi_message_queue_put(instance->queue, event, 0);
 }
 
-static void callbackRender(const Canvas* const event, const PCUBERZERO context) {
+static void callbackRender(const Canvas* const event, const PCUBERZERO instance) {
 	UNUSED(event);
-	UNUSED(context);
+	UNUSED(instance);
 }
 
-int32_t cuberzeroMain(const void* const pointer) {
-	UNUSED(pointer);
+int32_t cuberzeroMain(const void* const args) {
+	UNUSED(args);
 	CUBERZERO_LOG("Initializing");
 	PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 	instance->queue = furi_message_queue_alloc(8, sizeof(InputEvent));
