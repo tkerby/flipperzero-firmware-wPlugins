@@ -83,20 +83,25 @@ static void lightning_draw(Canvas* canvas, LightningApp* app) {
             break;
         }
     // Hi, Muffin here. I'm worse at math than I am at programming; So if you want to validate these calculations, feel fucking free!
-        case LightningAppState_Counting: {
-    // Get the current system tick (milliseconds since boot)
+    case LightningAppState_Counting: {
+    // Get current tick
     uint32_t now = furi_get_tick();
 
-    // Calculate time difference in seconds between flash and now
+    // Time difference in seconds
     float time_diff = (now - app->start_time) / 1000.0f;
 
-    // Calculate speed of sound in air at given temperature (in m/s)
-    // Formula: v = 331.3 + 0.606 × T(°C)
-    float speed = 331.3f + 0.606f * app->temperature_C;
+    // Speeds
+    const float speed_sound = 331.3f + 0.606f * app->temperature_C; // in m/s
+    const float speed_light = 299792458.0f; // in m/s
 
-    // Compute the estimated distance in kilometers
-    // distance = time × speed, converted from meters to kilometers
-    float distance = (time_diff * speed) / 1000.0f;
+    // Calculate corrected distance (in meters) using:
+    // d = t / (1/s - 1/c)
+    float inverse_sound = 1.0f / speed_sound;
+    float inverse_light = 1.0f / speed_light;
+    float distance_m = time_diff / (inverse_sound - inverse_light);
+
+    // Convert to kilometers
+    float distance_km = distance_m / 1000.0f;
 
     // Draw the "Counting..." label
     char buf[32];
