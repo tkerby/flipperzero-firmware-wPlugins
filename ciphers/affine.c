@@ -28,6 +28,9 @@ int mod_inverse(int a, int m) {
 }
 
 char* encode_affine(const char* text, uint8_t a, uint8_t b) {
+    if (a % 2 == 0) return "First key must be odd";
+    if (a == 13) return "First key cannot be 13";
+    
     size_t len = strlen(text);
     char* result = malloc(len + 1);
     if (!result) return "memory allocation failed, try again";

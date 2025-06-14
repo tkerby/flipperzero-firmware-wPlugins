@@ -1053,7 +1053,7 @@ void number_input_scene_on_enter(void* context) {
             break;
         case FlipCryptAffineKeyBInputScene:
             char affine_encrypt_keyb_input_str[30];
-            snprintf(affine_encrypt_keyb_input_str, sizeof(affine_encrypt_keyb_input_str), "Enter Key (%d - %d)", 1, 30);
+            snprintf(affine_encrypt_keyb_input_str, sizeof(affine_encrypt_keyb_input_str), "Enter key (%d - %d)", 1, 30);
             number_input_set_header_text(number_input, affine_encrypt_keyb_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->affine_keyb_input, 1, 30);
             break;
@@ -1065,43 +1065,43 @@ void number_input_scene_on_enter(void* context) {
             break;
         case FlipCryptAffineDecryptKeyBInputScene:
             char affine_decrypt_keyb_input_str[30];
-            snprintf(affine_decrypt_keyb_input_str, sizeof(affine_decrypt_keyb_input_str), "Enter Key (%d - %d)", 1, 30);
+            snprintf(affine_decrypt_keyb_input_str, sizeof(affine_decrypt_keyb_input_str), "Enter key (%d - %d)", 1, 30);
             number_input_set_header_text(number_input, affine_decrypt_keyb_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->affine_keyb_input, 1, 30);
             break;
         case FlipCryptCaesarKeyInputScene:
             char caesar_key_input_str[30];
-            snprintf(caesar_key_input_str, sizeof(caesar_key_input_str), "Enter Key (%d - %d)", 1, 26);
+            snprintf(caesar_key_input_str, sizeof(caesar_key_input_str), "Enter key (%d - %d)", 1, 26);
             number_input_set_header_text(number_input, caesar_key_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->caesar_key_input, 1, 26);
             break;
         case FlipCryptCaesarDecryptKeyInputScene:
             char caesar_decrypt_key_input_str[30];
-            snprintf(caesar_decrypt_key_input_str, sizeof(caesar_decrypt_key_input_str), "Enter Key (%d - %d)", 1, 26);
+            snprintf(caesar_decrypt_key_input_str, sizeof(caesar_decrypt_key_input_str), "Enter key (%d - %d)", 1, 26);
             number_input_set_header_text(number_input, caesar_decrypt_key_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->caesar_key_input, 1, 26);
             break;
         case FlipCryptRailfenceKeyInputScene:
             char railfence_key_input_str[30];
-            snprintf(railfence_key_input_str, sizeof(railfence_key_input_str), "Enter Key (%d - %d)", 1, 8);
+            snprintf(railfence_key_input_str, sizeof(railfence_key_input_str), "Enter key (%d - %d)", 1, 8);
             number_input_set_header_text(number_input, railfence_key_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->railfence_key_input, 1, 8);
             break;
         case FlipCryptRailfenceDecryptKeyInputScene:
             char railfence_decrypt_key_input_str[30];
-            snprintf(railfence_decrypt_key_input_str, sizeof(railfence_decrypt_key_input_str), "Enter Key (%d - %d)", 1, 26);
+            snprintf(railfence_decrypt_key_input_str, sizeof(railfence_decrypt_key_input_str), "Enter key (%d - %d)", 1, 26);
             number_input_set_header_text(number_input, railfence_decrypt_key_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->railfence_key_input, 1, 26);
             break;
         case FlipCryptScytaleKeywordInputScene:
             char scytale_keyword_input_str[30];
-            snprintf(scytale_keyword_input_str, sizeof(scytale_keyword_input_str), "Enter Key (%d - %d)", 1, 9);
+            snprintf(scytale_keyword_input_str, sizeof(scytale_keyword_input_str), "Enter key (%d - %d)", 1, 9);
             number_input_set_header_text(number_input, scytale_keyword_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->scytale_keyword_input, 1, 9);
             break;
         case FlipCryptScytaleDecryptKeywordInputScene:
             char scytale_decrypt_keyword_input_str[30];
-            snprintf(scytale_decrypt_keyword_input_str, sizeof(scytale_decrypt_keyword_input_str), "Enter Key (%d - %d)", 1, 9);
+            snprintf(scytale_decrypt_keyword_input_str, sizeof(scytale_decrypt_keyword_input_str), "Enter key (%d - %d)", 1, 9);
             number_input_set_header_text(number_input, scytale_decrypt_keyword_input_str);
             number_input_set_result_callback(number_input, number_input_scene_callback, context, app->scytale_keyword_input, 1, 9);
             break;
@@ -2604,10 +2604,8 @@ void flip_crypt_save_scene_on_enter(void* context) {
     } else {
         save_result("ERROR", app->save_name_input);
     }
-    widget_add_string_element(app->widget, 64, 22, AlignCenter, AlignCenter, FontPrimary, "Saved!");
-    // char file_path_name[128];
-    // snprintf(file_path_name, sizeof(file_path_name), "/ext/flip_crypt_saved/%s.txt", app->save_name_input);
-    widget_add_string_element(app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, "/ext/flip_crypt_saved/");
+    widget_add_icon_element(app->widget, 36, 6, &I_DolphinSaved_92x58);
+    widget_add_string_element(app->widget, 25, 15, AlignCenter, AlignCenter, FontPrimary, "Saved!");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 
