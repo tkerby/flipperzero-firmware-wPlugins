@@ -1,55 +1,29 @@
 #include "cuberzero.h"
-#include <input/input.h>
-#include <furi_hal_light.h>
 
-#define LIGHT(red, green, blue)                \
-	do {                                       \
-		furi_hal_light_set(LightRed, red);     \
-		furi_hal_light_set(LightGreen, green); \
-		furi_hal_light_set(LightBlue, blue);   \
-	} while(0)
-
-static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
-	furi_message_queue_put(instance->queue, event, 0);
-}
-
-static void callbackRender(const Canvas* const event, const PCUBERZERO instance) {
-	UNUSED(event);
-	UNUSED(instance);
-}
-
-int32_t cuberzeroMain(const void* const args) {
-	UNUSED(args);
+int32_t cuberzeroMain(const void* const pointer) {
+	UNUSED(pointer);
 	CUBERZERO_LOG("Initializing");
-	PCUBERZERO instance = malloc(sizeof(CUBERZERO));
-	instance->queue = furi_message_queue_alloc(8, sizeof(InputEvent));
-	instance->viewport = view_port_alloc();
-	instance->interface = furi_record_open(RECORD_GUI);
-	view_port_input_callback_set(instance->viewport, (ViewPortInputCallback) callbackInput, instance);
-	view_port_draw_callback_set(instance->viewport, (ViewPortDrawCallback) callbackRender, instance);
-	gui_add_view_port(instance->interface, instance->viewport, GuiLayerFullscreen);
-
-	InputEvent event;
-
-	while(furi_message_queue_get(instance->queue, &event, FuriWaitForever) == FuriStatusOk) {
-		if(event.key == InputKeyOk) {
-			if(event.type == InputTypePress) {
-				LIGHT(255, 0, 0);
-			} else if(event.type == InputTypeRelease) {
-				LIGHT(0, 255, 0);
-			}
-		}
-
-		if(event.key == InputKeyBack) {
-			LIGHT(0, 0, 0);
-			break;
-		}
-	}
-
-	gui_remove_view_port(instance->interface, instance->viewport);
+	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
+	furi_check(instance, "malloc() failed");
+	const SceneManagerHandlers handlers = {NULL, NULL, NULL, 0};
+	instance->dispatcher = view_dispatcher_alloc();
+	furi_check(instance->dispatcher, "view_dispatcher_alloc() failed");
+	instance->manager = scene_manager_alloc(&handlers, instance);
+	furi_check(instance->manager, "scene_manager_alloc() failed");
+	// ------------
+	view_dispatcher_set_event_callback_context(instance->dispatcher, instance);
+	//view_dispatcher_set_custom_event_callback(instance->dispatcher, NULL);
+	//view_dispatcher_set_navigation_event_callback(instance->dispatcher, NULL);
+	view_dispatcher_add_view(instance->dispatcher, 0, NULL);
+	Gui* interface = furi_record_open(RECORD_GUI);
+	furi_check(interface, "furi_record_open(RECORD_GUI) failed");
+	view_dispatcher_attach_to_gui(instance->dispatcher, interface, ViewDispatcherTypeFullscreen);
+	scene_manager_next_scene(instance->manager, 0);
+	view_dispatcher_run(instance->dispatcher);
+	// ------------
 	furi_record_close(RECORD_GUI);
-	view_port_free(instance->viewport);
-	furi_message_queue_free(instance->queue);
+	view_dispatcher_free(instance->dispatcher);
+	scene_manager_free(instance->manager);
 	free(instance);
 	CUBERZERO_LOG("Exiting");
 	return 0;

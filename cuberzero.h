@@ -1,10 +1,10 @@
 #include <furi.h>
-#include <gui/gui.h>
+#include <applications/services/gui/scene_manager.h>
+#include <applications/services/gui/view_dispatcher.h>
 
 #define CUBERZERO_LOG(message) FURI_LOG_I("CuberZero", message)
 
 typedef struct {
-	FuriMessageQueue* queue;
-	ViewPort* viewport;
-	Gui* interface;
+	SceneManager* manager;
+	ViewDispatcher* dispatcher;
 } CUBERZERO, *PCUBERZERO;
