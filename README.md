@@ -11,7 +11,7 @@ Demo:
 https://bsky.app/profile/hookgab.bsky.social/post/3lcgnsx7wfk2x
 
 Example of the spectrum at 2.440 Ghz:
-![image](img/spectrum.png)
+![image](img/spectrum .png)
 
 # FAQ
 It's crashing, what do I do?
