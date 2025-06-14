@@ -40,6 +40,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
 - Updated: [MiZip Balance Editor v0.1 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board`
+- Updated: [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 
 <a name="release">
 
