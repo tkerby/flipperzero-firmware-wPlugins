@@ -60,6 +60,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 	view_dispatcher_attach_to_gui(instance->dispatcher, interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
+	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_SCENE_HOME);
 	SceneHomeFree(instance);
 closeInterface:
 	furi_record_close(RECORD_GUI);

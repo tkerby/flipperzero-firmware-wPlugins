@@ -17,7 +17,7 @@ typedef enum {
 	CUBERZERO_SCENE_COUNT
 } CUBERZEROSCENE;
 
-void SceneHomeInitialize(const PCUBERZERO instance, char* const* const message);
+void SceneHomeInitialize(const PCUBERZERO instance, char** const message);
 void SceneHomeOnEnter(const PCUBERZERO instance);
 bool SceneHomeOnEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneHomeOnExit(const PCUBERZERO instance);
