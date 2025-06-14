@@ -50,6 +50,10 @@ extern "C" {
 #define TX_DS    0x20
 #define MAX_RT   0x10
 
+#define NRF24_CONT_WAVE (1 << 7)
+#define NRF24_PLL_LOCK (1 << 4)
+#define NRF24_EN_CRC (1 << 3)
+
 #define nrf24_TIMEOUT 500
 #define nrf24_CE_PIN &gpio_ext_pb2
 // FuriHalSpiBusHandle* nrf24_HANDLE = (FuriHalSpiBusHandle*) &furi_hal_spi_bus_handle_external;
@@ -119,6 +123,13 @@ uint8_t nrf24_set_idle(FuriHalSpiBusHandle* handle);
  * @return     device status
  */
 uint8_t nrf24_set_rx_mode(FuriHalSpiBusHandle* handle);
+
+
+
+void nrf24_startConstCarrier(FuriHalSpiBusHandle* handle, uint8_t level, uint8_t channel);
+void nrf24_stopConstCarrier(FuriHalSpiBusHandle* handle);
+
+
 
 /** Sets the radio to TX mode
  *

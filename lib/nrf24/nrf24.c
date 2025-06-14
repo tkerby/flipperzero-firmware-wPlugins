@@ -133,6 +133,51 @@ uint8_t nrf24_set_rate(FuriHalSpiBusHandle* handle, uint32_t rate) {
     return status;
 }
 
+void nrf24_startConstCarrier(FuriHalSpiBusHandle* handle, uint8_t level, uint8_t channel) {
+    nrf24_set_idle(handle);
+
+    nrf24_write_reg(handle, REG_RF_CH, channel);
+
+    uint8_t setup;
+    nrf24_read_reg(handle, REG_RF_SETUP, &setup, 1);
+    setup = (setup & 0xF8) | ((level & 0x3) << 1);
+    nrf24_write_reg(handle, REG_RF_SETUP, setup);
+
+    setup |= NRF24_CONT_WAVE | NRF24_PLL_LOCK;
+    nrf24_write_reg(handle, REG_RF_SETUP, setup);
+
+    nrf24_write_reg(handle, REG_EN_AA, 0x00);
+
+    uint8_t config;
+    nrf24_read_reg(handle, REG_CONFIG, &config, 1);
+    config &= ~NRF24_EN_CRC;
+    nrf24_write_reg(handle, REG_CONFIG, config);
+
+    uint8_t dummy_payload[32];
+    memset(dummy_payload, 0xFF, sizeof(dummy_payload));
+    
+    uint8_t tx[33];
+    tx[0] = W_TX_PAYLOAD;
+    memcpy(&tx[1], dummy_payload, 32);
+    nrf24_spi_trx(handle, tx, NULL, 33, nrf24_TIMEOUT);
+
+    nrf24_set_tx_mode(handle);
+}
+
+void nrf24_stopConstCarrier(FuriHalSpiBusHandle* handle) {
+    nrf24_set_idle(handle);
+
+    uint8_t setup;
+    nrf24_read_reg(handle, REG_RF_SETUP, &setup, 1);
+    setup &= ~(NRF24_CONT_WAVE | NRF24_PLL_LOCK);
+    nrf24_write_reg(handle, REG_RF_SETUP, setup);
+
+    uint8_t config;
+    nrf24_read_reg(handle, REG_CONFIG, &config, 1);
+    config |= NRF24_EN_CRC;
+    nrf24_write_reg(handle, REG_CONFIG, config);
+}
+
 uint8_t nrf24_get_chan(FuriHalSpiBusHandle* handle) {
     uint8_t channel = 0;
     nrf24_read_reg(handle, REG_RF_CH, &channel, 1);
