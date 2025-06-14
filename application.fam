@@ -1,0 +1,11 @@
+App(
+    appid="lightning_distance",
+    name="Lightning Distance",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="lightning_distance_app",
+    requires=["gui"],
+    stack_size=1 * 1024,
+    fap_icon="lightning_distance_10px.png",
+    fap_category="Tools",
+    fap_icon_assets="images",
+)
