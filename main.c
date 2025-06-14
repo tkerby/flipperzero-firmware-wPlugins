@@ -1283,6 +1283,12 @@ void flip_crypt_text_input_callback(void* context) {
         case FlipCryptAESInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptAESOutputScene);
             break;
+        case FlipCryptAESDecryptKeyInputScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptInputScene);
+            break;
+        case FlipCryptAESDecryptInputScene:
+            scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptOutputScene);
+            break;
         case FlipCryptAffineInputScene:
             scene_manager_next_scene(app->scene_manager, FlipCryptAffineOutputScene);
             break;
@@ -1462,7 +1468,7 @@ void cipher_input_scene_on_enter(void* context) {
         case FlipCryptAESDecryptKeyInputScene:
             text_input_reset(app->text_input);
             text_input_set_header_text(app->text_input, "Enter key (sixteen chars)");
-            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_decrypt_input, app->aes_decrypt_input_size, true);
+            text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_key_input, app->aes_key_input_size, true);
             break;
         case FlipCryptAESDecryptInputScene:
             text_input_set_result_callback(app->text_input, flip_crypt_text_input_callback, app, app->aes_decrypt_input, app->aes_decrypt_input_size, true);
