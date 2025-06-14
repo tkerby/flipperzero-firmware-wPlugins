@@ -109,7 +109,7 @@ static void lightning_draw(Canvas* canvas, LightningApp* app) {
     canvas_draw_str_aligned(canvas, 64, 20, AlignCenter, AlignCenter, buf);
 
     // Display the live-updated distance in km
-    snprintf(buf, sizeof(buf), "%.2f km", (double)distance);
+    snprintf(buf, sizeof(buf), "%.2f km", (double)distance_km);
     canvas_draw_str_aligned(canvas, 64, 35, AlignCenter, AlignCenter, buf);
 
     // Show instructions to press OK when thunder is heard
