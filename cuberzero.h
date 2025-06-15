@@ -8,6 +8,20 @@
 
 typedef struct {
 	uint8_t cube;
+
+	struct {
+		uint8_t brightness;
+		uint8_t red;
+		uint8_t green;
+		uint8_t blue;
+	} lightTouch;
+
+	struct {
+		uint8_t brightness;
+		uint8_t red;
+		uint8_t green;
+		uint8_t blue;
+	} lightReady;
 } CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
 
 typedef struct {
