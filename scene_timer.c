@@ -2,7 +2,10 @@
 
 static void callbackDraw(Canvas* const canvas, const void* const model) {
 	UNUSED(model);
-	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "Hello, world!");
+	FuriString* string = furi_string_alloc();
+	furi_string_printf(string, "%lu", furi_get_tick());
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(string));
+	furi_string_free(string);
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
