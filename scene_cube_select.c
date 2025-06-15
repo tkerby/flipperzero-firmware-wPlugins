@@ -14,11 +14,12 @@ void SceneCubeSelectEnter(const PCUBERZERO instance) {
 		submenu_add_item(instance->view.submenu, WCAEvents[i], i, (SubmenuItemCallback) callbackItem, instance);
 	}
 
+	submenu_set_selected_item(instance->view.submenu, instance->settings.cube);
 	view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
 }
 
 bool SceneCubeSelectEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-	if(event.type != SceneManagerEventTypeCustom || event.event >= CUBERZERO_SCENE_COUNT) {
+	if(event.type != SceneManagerEventTypeCustom || event.event >= CUBERZERO_CUBE_COUNT) {
 		return false;
 	}
 
