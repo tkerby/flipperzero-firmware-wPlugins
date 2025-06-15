@@ -29,7 +29,7 @@
 
 #include "flip_crypt_icons.h"
 
-#include "ciphers/aes128.h"
+#include "ciphers/aes.h"
 #include "ciphers/affine.h"
 #include "ciphers/atbash.h"
 #include "ciphers/baconian.h"
@@ -1674,39 +1674,70 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     static const char sha_hex_chars[] = "0123456789abcdef";
     switch(current) {
         case FlipCryptAESOutputScene:
-            char aes_input[128], aes_key_str[17], aes_hex_output[33];
-            uint8_t block[16], key[16], encrypted[16];
-            strncpy(aes_input, app->aes_input, sizeof(aes_input) - 1);
-            aes_input[sizeof(aes_input) - 1] = '\0';
-            aes_input[strcspn(aes_input, "\n")] = 0;
-            strncpy(aes_key_str, app->aes_key_input, sizeof(aes_key_str) - 1);
-            aes_key_str[sizeof(aes_key_str) - 1] = '\0';
-            aes_key_str[strcspn(aes_key_str, "\n")] = 0;
-            pad_input(aes_input, block);
-            memcpy(key, aes_key_str, 16);
-            AES_encrypt_block(block, key, encrypted);
-            to_hex_string(encrypted, 16, aes_hex_output);
-            dialog_ex_set_text(app->dialog_ex, aes_hex_output, 64, 18, AlignCenter, AlignCenter);
-            save_aes_result(aes_hex_output);
+            if(strlen(app->aes_key_input) != 16) {
+                dialog_ex_set_text(app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
+                break;
+            }
+
+            size_t aes_encrypt_len = strlen(app->aes_input);
+            if(aes_encrypt_len > 128) aes_encrypt_len = 128;
+
+            uint8_t key[16];
+            memcpy(key, app->aes_key_input, 16);
+            uint8_t iv[16] = {0};
+
+            uint8_t aes_encrypt_encrypted[128];
+            memcpy(aes_encrypt_encrypted, app->aes_input, aes_encrypt_len);
+
+            struct AES_ctx aes_ctx;
+            AES_init_ctx_iv(&aes_ctx, key, iv);
+            AES_CTR_xcrypt_buffer(&aes_ctx, aes_encrypt_encrypted, aes_encrypt_len);
+
+            char aes_output_text[2 * 128 + 1];
+            aes_bytes_to_hex(aes_encrypt_encrypted, aes_encrypt_len, aes_output_text);
+
+            dialog_ex_set_text(app->dialog_ex, aes_output_text, 64, 18, AlignCenter, AlignCenter);
+            save_aes_result(aes_output_text);
             app->last_output_scene = "AES";
+
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
             dialog_ex_set_right_button_text(app->dialog_ex, "QR");
             break;
+
         case FlipCryptAESDecryptOutputScene:
-            char aes_decrypt_input_hex[33], aes_decrypt_key_str[17], aes_decrypt_output_text[17];
-            uint8_t aes_encrypted[16], aes_decrypt_key[16], aes_decrypted[16];
-            aes_decrypt_input_hex[strcspn(app->aes_decrypt_input, "\n")] = 0;
-            aes_decrypt_key_str[strcspn(app->aes_key_input, "\n")] = 0;
-            for(size_t i = 0; i < 16; i++) {
-                sscanf(&aes_decrypt_input_hex[i * 2], "%2hhx", &aes_encrypted[i]);
+            if(strlen(app->aes_key_input) != 16) {
+                dialog_ex_set_text(app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
+                break;
             }
-            memcpy(aes_decrypt_key, aes_decrypt_key_str, 16);
-            AES_decrypt_block(aes_encrypted, aes_decrypt_key, aes_decrypted);
-            memcpy(aes_decrypt_output_text, aes_decrypted, 16);
-            aes_decrypt_output_text[16] = '\0';
+
+            size_t aes_decrypt_input_len = strlen(app->aes_decrypt_input);
+            if(aes_decrypt_input_len > 256) aes_decrypt_input_len = 256;
+            if(aes_decrypt_input_len % 2 != 0) {
+                dialog_ex_set_text(app->dialog_ex, "Invalid hex length", 64, 18, AlignCenter, AlignCenter);
+                break;
+            }
+
+            size_t aes_decrypt_len = aes_decrypt_input_len / 2;
+
+            uint8_t aes_decrypt_key[16];
+            memcpy(aes_decrypt_key, app->aes_key_input, 16);
+            uint8_t aes_iv[16] = {0};
+
+            uint8_t aes_decrypt_encrypted[128];
+            aes_hex_to_bytes(app->aes_decrypt_input, aes_decrypt_encrypted, aes_decrypt_input_len);
+
+            struct AES_ctx aes_decrypt_ctx;
+            AES_init_ctx_iv(&aes_decrypt_ctx, aes_decrypt_key, aes_iv);
+            AES_CTR_xcrypt_buffer(&aes_decrypt_ctx, aes_decrypt_encrypted, aes_decrypt_len);
+
+            // Assume plaintext is printable string
+            char aes_decrypt_output_text[129];
+            memcpy(aes_decrypt_output_text, aes_decrypt_encrypted, aes_decrypt_len);
+            aes_decrypt_output_text[aes_decrypt_len] = '\0';
+
             dialog_ex_set_text(app->dialog_ex, aes_decrypt_output_text, 64, 18, AlignCenter, AlignCenter);
-            save_aes_decrypt_result(aes_decrypt_output_text);
+            save_aes_result(aes_decrypt_output_text);
             app->last_output_scene = "AESDecrypt";
             dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
             dialog_ex_set_center_button_text(app->dialog_ex, "Save");
