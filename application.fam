@@ -1,0 +1,17 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="coinflip",  # Must be unique
+    name="Coinflip",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="coinflip_main",
+    stack_size=2 * 1024,
+    fap_category="Games",
+    # Optional values
+    # fap_version="0.1",
+    fap_icon="coinflip_1_10px.png",
+    # fap_description="A simple app",
+    # fap_author="J. Doe",
+    # fap_weburl="https://github.com/user/test_app",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
