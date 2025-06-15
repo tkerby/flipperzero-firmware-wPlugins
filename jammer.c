@@ -183,6 +183,7 @@ static int32_t mj_worker_thread(void* ctx) {
 
 int32_t jammer_app(void* p) {
     UNUSED(p);
+    if(!furi_hal_power_is_otg_enabled()) furi_hal_power_enable_otg();
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(PluginEvent));
     dolphin_deed(DolphinDeedPluginStart);
     PluginState* plugin_state = malloc(sizeof(PluginState));
@@ -346,6 +347,7 @@ int32_t jammer_app(void* p) {
     furi_thread_free(plugin_state->jam_thread);
     FURI_LOG_D(TAG, "nrf24 deinit...");
     nrf24_deinit();
+    furi_hal_power_disable_otg();
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
     furi_record_close(RECORD_GUI);
