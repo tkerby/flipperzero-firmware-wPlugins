@@ -26,4 +26,5 @@ bool SceneSettingsEvent(const PCUBERZERO instance, const SceneManagerEvent event
 
 void SceneSettingsExit(const PCUBERZERO instance) {
 	variable_item_list_reset(instance->view.variableList);
+	SettingsSave(&instance->settings);
 }

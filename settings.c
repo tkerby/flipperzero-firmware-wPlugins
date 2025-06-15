@@ -41,5 +41,27 @@ loadDefault:
 	settings->cube = SETTINGS_CUBE_DEFAULT;
 }
 
-void SettingsSave() {
+void SettingsSave(const PCUBERZEROSETTINGS settings) {
+	Storage* const storage = furi_record_open(RECORD_STORAGE);
+
+	if(!storage) {
+		return;
+	}
+
+	File* const file = storage_file_alloc(storage);
+
+	if(!file) {
+		goto closeStorage;
+	}
+
+	if(!storage_file_open(file, SettingsFile, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+		goto freeFile;
+	}
+
+	storage_file_write(file, settings, sizeof(CUBERZEROSETTINGS));
+freeFile:
+	storage_file_close(file);
+	storage_file_free(file);
+closeStorage:
+	furi_record_close(RECORD_STORAGE);
 }

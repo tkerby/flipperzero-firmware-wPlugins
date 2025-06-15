@@ -61,7 +61,7 @@ typedef enum {
 } CUBERZEROCUBE;
 
 void SettingsLoad(const PCUBERZEROSETTINGS settings);
-void SettingsSave();
+void SettingsSave(const PCUBERZEROSETTINGS settings);
 
 void SceneAboutEnter(const PCUBERZERO instance);
 bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
