@@ -7,8 +7,13 @@
 #define CUBERZERO_TAG "CuberZero"
 
 typedef struct {
+	uint8_t cube;
+} CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
+
+typedef struct {
 	ViewDispatcher* dispatcher;
 	SceneManager* manager;
+	CUBERZEROSETTINGS settings;
 	struct {
 		Submenu* submenu;
 		VariableItemList* variableList;
@@ -19,10 +24,6 @@ typedef struct {
 			uint32_t selectedItem;
 		} home;
 	} scene;
-
-	struct {
-		uint8_t cube;
-	} settings;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
@@ -58,10 +59,6 @@ typedef enum {
 	WCA_3X3_MULTIBLIND,
 	CUBERZERO_CUBE_COUNT
 } CUBERZEROCUBE;
-
-typedef struct {
-	uint8_t cube;
-} CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
 
 void SettingsLoad(const PCUBERZEROSETTINGS settings);
 void SettingsSave();

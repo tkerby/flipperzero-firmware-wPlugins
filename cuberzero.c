@@ -10,9 +10,6 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
-	CUBERZEROSETTINGS settings;
-	SettingsLoad(&settings);
-	return 0;
 	char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
@@ -22,6 +19,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 	}
 
 	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
+	SettingsLoad(&instance->settings);
 	Gui* const interface = furi_record_open(RECORD_GUI);
 
 	if(!interface) {

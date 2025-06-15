@@ -6,15 +6,14 @@
 static const char* const SettingsFile = APP_DATA_PATH("cuberzero_settings.cbzs");
 
 void SettingsLoad(const PCUBERZEROSETTINGS settings) {
-	UNUSED(settings);
-	Storage* storage = furi_record_open(RECORD_STORAGE);
+	Storage* const storage = furi_record_open(RECORD_STORAGE);
 	bool loaded = false;
 
 	if(!storage) {
 		goto loadDefault;
 	}
 
-	File* file = storage_file_alloc(storage);
+	File* const file = storage_file_alloc(storage);
 
 	if(!file) {
 		goto closeStorage;
