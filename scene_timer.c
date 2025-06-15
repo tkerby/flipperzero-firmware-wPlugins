@@ -3,7 +3,10 @@
 static void callbackDraw(Canvas* const canvas, const void* const model) {
 	UNUSED(model);
 	FuriString* string = furi_string_alloc();
-	furi_string_printf(string, "%lu", furi_get_tick());
+	uint32_t tick = furi_get_tick();
+	uint32_t seconds = tick / 1000;
+	furi_string_printf(string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
+	canvas_set_font(canvas, FontBigNumbers);
 	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(string));
 	furi_string_free(string);
 }
