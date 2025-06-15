@@ -10,6 +10,7 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
+	FURI_LOG_I(CUBERZERO_TAG, "Initializing");
 	char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
@@ -18,8 +19,9 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto functionExit;
 	}
 
-	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
+	memset(instance, 0, sizeof(CUBERZERO));
 	CuberZeroSettingsLoad(&instance->settings, true);
+	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
 	Gui* const interface = furi_record_open(RECORD_GUI);
 
 	if(!interface) {
@@ -72,14 +74,16 @@ freeSubmenu:
 closeInterface:
 	furi_record_close(RECORD_GUI);
 freeInstance:
+	CuberZeroSettingsSave(&instance->settings);
 	free(instance);
 functionExit:
-	if(messageError) {
-		FURI_LOG_E(CUBERZERO_TAG, "Exiting with errors");
-		__furi_crash(messageError);
-		return 1;
+	FURI_LOG_I(CUBERZERO_TAG, "Exiting");
+
+	if(!messageError) {
+		return 0;
 	}
 
-	FURI_LOG_I(CUBERZERO_TAG, "Exiting");
-	return 0;
+	FURI_LOG_E(CUBERZERO_TAG, "Error: %s", messageError);
+	__furi_crash(messageError);
+	return 1;
 }
