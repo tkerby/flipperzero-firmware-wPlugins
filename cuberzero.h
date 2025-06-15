@@ -19,6 +19,10 @@ typedef struct {
 			uint32_t selectedItem;
 		} home;
 	} scene;
+
+	struct {
+		uint8_t cube;
+	} settings;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
@@ -33,6 +37,26 @@ typedef enum {
 	CUBERZERO_SCENE_TIMER,
 	CUBERZERO_SCENE_COUNT
 } CUBERZEROSCENE;
+
+typedef enum {
+	WCA_3X3,
+	WCA_2X2,
+	WCA_4X4,
+	WCA_5X5,
+	WCA_6X6,
+	WCA_7X7,
+	WCA_3X3_BLINDFOLDED,
+	WCA_3X3_FEWEST_MOVES,
+	WCA_3X3_ONE_HANDED,
+	WCA_CLOCK,
+	WCA_MEGAMINX,
+	WCA_PYRAMINX,
+	WCA_SKEWB,
+	WCA_SQUARE1,
+	WCA_4X4_BLINDFOLDED,
+	WCA_5X5_BLINDFOLDED,
+	WCA_3X3_MULTIBLIND
+} CUBERZEROCUBE;
 
 void SceneAboutEnter(const PCUBERZERO instance);
 bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
