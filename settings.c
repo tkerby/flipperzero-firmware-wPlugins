@@ -5,7 +5,7 @@
 
 static const char* const SettingsFile = APP_DATA_PATH("cuberzero_settings.cbzs");
 
-void SettingsLoad(const PCUBERZEROSETTINGS settings) {
+void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings, const bool loadDefaultOnError) {
 	Storage* const storage = furi_record_open(RECORD_STORAGE);
 	bool loaded = false;
 
@@ -34,14 +34,14 @@ freeFile:
 closeStorage:
 	furi_record_close(RECORD_STORAGE);
 loadDefault:
-	if(loaded) {
+	if(loaded || !loadDefaultOnError) {
 		return;
 	}
 
 	settings->cube = SETTINGS_CUBE_DEFAULT;
 }
 
-void SettingsSave(const PCUBERZEROSETTINGS settings) {
+void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings) {
 	Storage* const storage = furi_record_open(RECORD_STORAGE);
 
 	if(!storage) {

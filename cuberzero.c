@@ -19,7 +19,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 	}
 
 	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
-	SettingsLoad(&instance->settings);
+	CuberZeroSettingsLoad(&instance->settings, true);
 	Gui* const interface = furi_record_open(RECORD_GUI);
 
 	if(!interface) {

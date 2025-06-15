@@ -60,8 +60,8 @@ typedef enum {
 	CUBERZERO_CUBE_COUNT
 } CUBERZEROCUBE;
 
-void SettingsLoad(const PCUBERZEROSETTINGS settings);
-void SettingsSave(const PCUBERZEROSETTINGS settings);
+void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings, const bool loadDefaultOnError);
+void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings);
 
 void SceneAboutEnter(const PCUBERZERO instance);
 bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
