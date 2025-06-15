@@ -41,9 +41,14 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto freeSubmenu;
 	}
 
+	if(!(instance->view.view = view_alloc())) {
+		messageError = "view_alloc() failed";
+		goto freeVariableList;
+	}
+
 	if(!(instance->dispatcher = view_dispatcher_alloc())) {
 		messageError = "view_dispatcher_alloc() failed";
-		goto freeVariableList;
+		goto freeView;
 	}
 
 	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
@@ -61,15 +66,19 @@ int32_t cuberzeroMain(const void* const pointer) {
 	view_dispatcher_set_navigation_event_callback(instance->dispatcher, (ViewDispatcherNavigationEventCallback) callbackNavigationEvent);
 	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU, submenu_get_view(instance->view.submenu));
 	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST, variable_item_list_get_view(instance->view.variableList));
+	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_VIEW, instance->view.view);
 	view_dispatcher_attach_to_gui(instance->dispatcher, interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	messageError = NULL;
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
+	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VIEW);
 	scene_manager_free(instance->manager);
 freeDispatcher:
 	view_dispatcher_free(instance->dispatcher);
+freeView:
+	view_free(instance->view.view);
 freeVariableList:
 	variable_item_list_free(instance->view.variableList);
 freeSubmenu:

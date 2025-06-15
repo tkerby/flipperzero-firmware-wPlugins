@@ -15,6 +15,7 @@ typedef struct {
 	struct {
 		Submenu* submenu;
 		VariableItemList* variableList;
+		View* view;
 	} view;
 
 	struct {
@@ -26,7 +27,8 @@ typedef struct {
 
 typedef enum {
 	CUBERZERO_VIEW_SUBMENU,
-	CUBERZERO_VIEW_VARIABLE_ITEM_LIST
+	CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
+	CUBERZERO_VIEW_VIEW
 } CUBERZEROVIEW;
 
 typedef enum {
