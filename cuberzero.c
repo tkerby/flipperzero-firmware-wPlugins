@@ -1,5 +1,7 @@
 #include "cuberzero.h"
 
+#define CUBERZERO_TAG "CuberZero"
+
 static bool callbackCustomEvent(const PCUBERZERO instance, const uint32_t event) {
 	return scene_manager_handle_custom_event(instance->manager, event);
 }

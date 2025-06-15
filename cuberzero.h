@@ -4,8 +4,6 @@
 #include <gui/modules/submenu.h>
 #include <gui/modules/variable_item_list.h>
 
-#define CUBERZERO_TAG "CuberZero"
-
 typedef struct {
 	uint8_t cube;
 } CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
