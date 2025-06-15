@@ -18,7 +18,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto functionExit;
 	}
 
-	memset(instance, 0, sizeof(CUBERZERO));
+	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
 	Gui* const interface = furi_record_open(RECORD_GUI);
 
 	if(!interface) {
@@ -31,9 +31,14 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto closeInterface;
 	}
 
+	if(!(instance->view.variableList = variable_item_list_alloc())) {
+		messageError = "variable_item_list_alloc() failed";
+		goto freeSubmenu;
+	}
+
 	if(!(instance->dispatcher = view_dispatcher_alloc())) {
 		messageError = "view_dispatcher_alloc() failed";
-		goto freeSubmenu;
+		goto freeVariableList;
 	}
 
 	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
@@ -50,13 +55,17 @@ int32_t cuberzeroMain(const void* const pointer) {
 	view_dispatcher_set_custom_event_callback(instance->dispatcher, (ViewDispatcherCustomEventCallback) callbackCustomEvent);
 	view_dispatcher_set_navigation_event_callback(instance->dispatcher, (ViewDispatcherNavigationEventCallback) callbackNavigationEvent);
 	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU, submenu_get_view(instance->view.submenu));
+	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST, variable_item_list_get_view(instance->view.variableList));
 	view_dispatcher_attach_to_gui(instance->dispatcher, interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
+	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
 	scene_manager_free(instance->manager);
 freeDispatcher:
 	view_dispatcher_free(instance->dispatcher);
+freeVariableList:
+	variable_item_list_free(instance->view.variableList);
 freeSubmenu:
 	submenu_free(instance->view.submenu);
 closeInterface:

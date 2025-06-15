@@ -2,6 +2,7 @@
 #include <applications/services/gui/view_dispatcher.h>
 #include <applications/services/gui/scene_manager.h>
 #include <gui/modules/submenu.h>
+#include <gui/modules/variable_item_list.h>
 
 #define CUBERZERO_TAG "CuberZero"
 
@@ -10,6 +11,7 @@ typedef struct {
 	SceneManager* manager;
 	struct {
 		Submenu* submenu;
+		VariableItemList* variableList;
 	} view;
 
 	struct {
@@ -20,7 +22,8 @@ typedef struct {
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
-	CUBERZERO_VIEW_SUBMENU
+	CUBERZERO_VIEW_SUBMENU,
+	CUBERZERO_VIEW_VARIABLE_ITEM_LIST
 } CUBERZEROVIEW;
 
 typedef enum {
