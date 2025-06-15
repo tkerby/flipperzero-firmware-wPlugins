@@ -29,7 +29,7 @@
 
 #include "flip_crypt_icons.h"
 
-#include "ciphers/aes128.h"
+#include "ciphers/aes.h"
 #include "ciphers/affine.h"
 #include "ciphers/atbash.h"
 #include "ciphers/baconian.h"
@@ -1074,7 +1074,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             affine_encrypt_keyb_input_str,
             sizeof(affine_encrypt_keyb_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             30);
         number_input_set_header_text(number_input, affine_encrypt_keyb_input_str);
@@ -1096,7 +1096,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             affine_decrypt_keyb_input_str,
             sizeof(affine_decrypt_keyb_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             30);
         number_input_set_header_text(number_input, affine_decrypt_keyb_input_str);
@@ -1105,7 +1105,7 @@ void number_input_scene_on_enter(void* context) {
         break;
     case FlipCryptCaesarKeyInputScene:
         char caesar_key_input_str[30];
-        snprintf(caesar_key_input_str, sizeof(caesar_key_input_str), "Enter Key (%d - %d)", 1, 26);
+        snprintf(caesar_key_input_str, sizeof(caesar_key_input_str), "Enter key (%d - %d)", 1, 26);
         number_input_set_header_text(number_input, caesar_key_input_str);
         number_input_set_result_callback(
             number_input, number_input_scene_callback, context, app->caesar_key_input, 1, 26);
@@ -1115,7 +1115,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             caesar_decrypt_key_input_str,
             sizeof(caesar_decrypt_key_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             26);
         number_input_set_header_text(number_input, caesar_decrypt_key_input_str);
@@ -1125,7 +1125,7 @@ void number_input_scene_on_enter(void* context) {
     case FlipCryptRailfenceKeyInputScene:
         char railfence_key_input_str[30];
         snprintf(
-            railfence_key_input_str, sizeof(railfence_key_input_str), "Enter Key (%d - %d)", 1, 8);
+            railfence_key_input_str, sizeof(railfence_key_input_str), "Enter key (%d - %d)", 1, 8);
         number_input_set_header_text(number_input, railfence_key_input_str);
         number_input_set_result_callback(
             number_input, number_input_scene_callback, context, app->railfence_key_input, 1, 8);
@@ -1135,7 +1135,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             railfence_decrypt_key_input_str,
             sizeof(railfence_decrypt_key_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             26);
         number_input_set_header_text(number_input, railfence_decrypt_key_input_str);
@@ -1147,7 +1147,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             scytale_keyword_input_str,
             sizeof(scytale_keyword_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             9);
         number_input_set_header_text(number_input, scytale_keyword_input_str);
@@ -1159,7 +1159,7 @@ void number_input_scene_on_enter(void* context) {
         snprintf(
             scytale_decrypt_keyword_input_str,
             sizeof(scytale_decrypt_keyword_input_str),
-            "Enter Key (%d - %d)",
+            "Enter key (%d - %d)",
             1,
             9);
         number_input_set_header_text(number_input, scytale_decrypt_keyword_input_str);
@@ -1343,6 +1343,12 @@ void flip_crypt_text_input_callback(void* context) {
         break;
     case FlipCryptAESInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAESOutputScene);
+        break;
+    case FlipCryptAESDecryptKeyInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptInputScene);
+        break;
+    case FlipCryptAESDecryptInputScene:
+        scene_manager_next_scene(app->scene_manager, FlipCryptAESDecryptOutputScene);
         break;
     case FlipCryptAffineInputScene:
         scene_manager_next_scene(app->scene_manager, FlipCryptAffineOutputScene);
@@ -1545,8 +1551,8 @@ void cipher_input_scene_on_enter(void* context) {
             app->text_input,
             flip_crypt_text_input_callback,
             app,
-            app->aes_decrypt_input,
-            app->aes_decrypt_input_size,
+            app->aes_key_input,
+            app->aes_key_input_size,
             true);
         break;
     case FlipCryptAESDecryptInputScene:
@@ -2047,40 +2053,74 @@ void dialog_cipher_output_scene_on_enter(void* context) {
     static const char sha_hex_chars[] = "0123456789abcdef";
     switch(current) {
     case FlipCryptAESOutputScene:
-        char aes_input[128], aes_key_str[17], aes_hex_output[33];
-        uint8_t block[16], key[16], encrypted[16];
-        strncpy(aes_input, app->aes_input, sizeof(aes_input) - 1);
-        aes_input[sizeof(aes_input) - 1] = '\0';
-        aes_input[strcspn(aes_input, "\n")] = 0;
-        strncpy(aes_key_str, app->aes_key_input, sizeof(aes_key_str) - 1);
-        aes_key_str[sizeof(aes_key_str) - 1] = '\0';
-        aes_key_str[strcspn(aes_key_str, "\n")] = 0;
-        pad_input(aes_input, block);
-        memcpy(key, aes_key_str, 16);
-        AES_encrypt_block(block, key, encrypted);
-        to_hex_string(encrypted, 16, aes_hex_output);
-        dialog_ex_set_text(app->dialog_ex, aes_hex_output, 64, 18, AlignCenter, AlignCenter);
-        save_aes_result(aes_hex_output);
+        if(strlen(app->aes_key_input) != 16) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
+            break;
+        }
+
+        size_t aes_encrypt_len = strlen(app->aes_input);
+        if(aes_encrypt_len > 128) aes_encrypt_len = 128;
+
+        uint8_t key[16];
+        memcpy(key, app->aes_key_input, 16);
+        uint8_t iv[16] = {0};
+
+        uint8_t aes_encrypt_encrypted[128];
+        memcpy(aes_encrypt_encrypted, app->aes_input, aes_encrypt_len);
+
+        struct AES_ctx aes_ctx;
+        AES_init_ctx_iv(&aes_ctx, key, iv);
+        AES_CTR_xcrypt_buffer(&aes_ctx, aes_encrypt_encrypted, aes_encrypt_len);
+
+        char aes_output_text[2 * 128 + 1];
+        aes_bytes_to_hex(aes_encrypt_encrypted, aes_encrypt_len, aes_output_text);
+
+        dialog_ex_set_text(app->dialog_ex, aes_output_text, 64, 18, AlignCenter, AlignCenter);
+        save_aes_result(aes_output_text);
         app->last_output_scene = "AES";
+
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
         dialog_ex_set_right_button_text(app->dialog_ex, "QR");
         break;
+
     case FlipCryptAESDecryptOutputScene:
-        char aes_decrypt_input_hex[33], aes_decrypt_key_str[17], aes_decrypt_output_text[17];
-        uint8_t aes_encrypted[16], aes_decrypt_key[16], aes_decrypted[16];
-        aes_decrypt_input_hex[strcspn(app->aes_decrypt_input, "\n")] = 0;
-        aes_decrypt_key_str[strcspn(app->aes_key_input, "\n")] = 0;
-        for(size_t i = 0; i < 16; i++) {
-            sscanf(&aes_decrypt_input_hex[i * 2], "%2hhx", &aes_encrypted[i]);
+        if(strlen(app->aes_key_input) != 16) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Key must be 16 bytes", 64, 18, AlignCenter, AlignCenter);
+            break;
         }
-        memcpy(aes_decrypt_key, aes_decrypt_key_str, 16);
-        AES_decrypt_block(aes_encrypted, aes_decrypt_key, aes_decrypted);
-        memcpy(aes_decrypt_output_text, aes_decrypted, 16);
-        aes_decrypt_output_text[16] = '\0';
+
+        size_t aes_decrypt_input_len = strlen(app->aes_decrypt_input);
+        if(aes_decrypt_input_len > 256) aes_decrypt_input_len = 256;
+        if(aes_decrypt_input_len % 2 != 0) {
+            dialog_ex_set_text(
+                app->dialog_ex, "Invalid hex length", 64, 18, AlignCenter, AlignCenter);
+            break;
+        }
+
+        size_t aes_decrypt_len = aes_decrypt_input_len / 2;
+
+        uint8_t aes_decrypt_key[16];
+        memcpy(aes_decrypt_key, app->aes_key_input, 16);
+        uint8_t aes_iv[16] = {0};
+
+        uint8_t aes_decrypt_encrypted[128];
+        aes_hex_to_bytes(app->aes_decrypt_input, aes_decrypt_encrypted, aes_decrypt_input_len);
+
+        struct AES_ctx aes_decrypt_ctx;
+        AES_init_ctx_iv(&aes_decrypt_ctx, aes_decrypt_key, aes_iv);
+        AES_CTR_xcrypt_buffer(&aes_decrypt_ctx, aes_decrypt_encrypted, aes_decrypt_len);
+
+        // Assume plaintext is printable string
+        char aes_decrypt_output_text[129];
+        memcpy(aes_decrypt_output_text, aes_decrypt_encrypted, aes_decrypt_len);
+        aes_decrypt_output_text[aes_decrypt_len] = '\0';
+
         dialog_ex_set_text(
             app->dialog_ex, aes_decrypt_output_text, 64, 18, AlignCenter, AlignCenter);
-        save_aes_decrypt_result(aes_decrypt_output_text);
+        save_aes_result(aes_decrypt_output_text);
         app->last_output_scene = "AESDecrypt";
         dialog_ex_set_left_button_text(app->dialog_ex, "NFC");
         dialog_ex_set_center_button_text(app->dialog_ex, "Save");
@@ -2696,7 +2736,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "AES-128 (Advanced Encryption Standard with a 128-bit key) is a symmetric block cipher widely used for secure data encryption. It encrypts data in fixed blocks of 128 bits using a 128-bit key and operates through 10 rounds of transformations, including substitution, permutation, mixing, and key addition. AES-128 is known for its strong security and efficiency, making it a standard for protecting sensitive data in everything from government communications to online banking. Unlike classical ciphers, AES relies on complex mathematical operations and is resistant to all known practical cryptographic attacks when implemented properly.");
+            "AES-128 (Advanced Encryption Standard with a 128-bit key) is a symmetric block cipher widely used for data encryption. It encrypts data in fixed blocks of 128 bits using a 128-bit key and operates through 10 rounds of transformations, including substitution, permutation, mixing, and key addition. AES-128 is known for its strong security and efficiency, and is a standard for protecting sensitive data in everything from government communications to online banking. Unlike classical ciphers, AES relies on complex mathematical operations and is resistant to all known practical cryptographic attacks when implemented properly.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptAffineLearnScene:
@@ -2716,7 +2756,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "The Atbash cipher is a classical substitution cipher originally used for the Hebrew alphabet. It works by reversing the alphabet so that the first letter becomes the last, the second becomes the second-to-last, and so on. For example, in the Latin alphabet, \'A\' becomes \'Z\', \'B\' becomes \'Y\', and \'C\' becomes \'X\'. It is a simple and symmetric cipher, meaning that the same algorithm is used for both encryption and decryption. Though not secure by modern standards, the Atbash cipher is often studied for its historical significance and simplicity.");
+            "The Atbash cipher is a classical substitution cipher originally used for the Hebrew alphabet. It works by reversing the alphabet so that the first letter becomes the last, the second becomes the second-to-last, and so on. For example, in the Latin alphabet, \'A\' becomes \'Z\', \'B\' becomes \'Y\', and \'C\' becomes \'X\'. It is a simple and symmetric cipher, meaning that the same algorithm is used for both encryption and decryption. Though not secure by modern standards, the Atbash cipher is often studied for its historical significance.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptBaconianLearnScene:
@@ -2736,7 +2776,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "The Beaufort cipher is a polyalphabetic substitution cipher that is similar to the Vigenère cipher but uses a slightly different encryption algorithm. Instead of adding the key to the plaintext, it subtracts the plaintext letter from the key letter using a tabula recta. This means the same process is used for both encryption and decryption, which is a unique feature. The cipher was named after Sir Francis Beaufort and was historically used in applications like encrypting naval signals. While more secure than simple ciphers like Caesar, it is still vulnerable to modern cryptanalysis.");
+            "The Beaufort cipher is a polyalphabetic substitution cipher that is similar to the Vigenere cipher but uses a slightly different encryption algorithm. Instead of adding the key to the plaintext, it subtracts the plaintext letter from the key letter using a tabula recta, meaning that the same process is used for both encryption and decryption. The cipher was named after Sir Francis Beaufort and was historically used in applications like encrypting naval signals. While more secure than simple ciphers like Caesar, it is still vulnerable to modern cryptanalysis techniques.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptCaesarLearnScene:
@@ -2746,7 +2786,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also easy to break, making it unsuitable for modern encryption.");
+            "The Caesar cipher is a simple and well-known substitution cipher named after Julius Caesar, who reportedly used it to protect military messages. It works by shifting each letter in the plaintext a fixed number of positions down the alphabet. For example, with a shift of 3, \'A\' becomes \'D\', \'B\' becomes \'E\', and so on. After \'Z\', the cipher wraps around to the beginning of the alphabet. While easy to understand and implement, the Caesar cipher is also extremely easy to break.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptPlayfairLearnScene:
@@ -2766,7 +2806,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "The Polybius square is a classical cipher that uses a 5x5 grid filled with letters of the alphabet to convert plaintext into pairs of numbers. Each letter is identified by its row and column numbers in the grid. For example, 'A' might be encoded as '11', 'B' as '12', and so on. Since the Latin alphabet has 26 letters, 'I' and 'J' are typically combined to fit into the 25-cell grid. The Polybius square is easy to implement and was historically used for signaling and cryptography in wartime. While simple and easy to decode, it offers minimal security by modern standards.");
+            "The Polybius square is a classical cipher that uses a 5x5 grid filled with letters of the alphabet to convert plaintext into pairs of numbers. Each letter is identified by its row and column numbers in the grid. For example, 'A' might be encoded as '11', 'B' as '12', and so on. Since the Latin alphabet has 26 letters, 'I' and 'J' are typically combined to fit into the 25-cell grid. The Polybius square is easy to implement and was historically used for signaling and cryptography in wartime. It is simple and easy to decode, and therefore offers minimal security by modern standards.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptRailfenceLearnScene:
@@ -2786,7 +2826,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for most modern applications.");
+            "RC4 is a stream cipher designed by Ron Rivest in 1987 and widely used for its speed and simplicity. It generates a pseudorandom keystream that is XORed with the plaintext to produce ciphertext. RC4\'s internal state consists of a 256-byte array and a pair of index pointers, updated in a key-dependent manner. While once popular in protocols like SSL and WEP, RC4 has been found to have significant vulnerabilities, especially related to key scheduling, and is now considered insecure for modern uses.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptScytaleLearnScene:
@@ -2796,7 +2836,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "The Scytale cipher is an ancient transposition cipher used by the Spartans. It involves wrapping a strip of parchment around a rod (scytale) of a fixed diameter and writing the message along the rod's surface. When unwrapped, the text appears scrambled unless it is rewrapped around a rod of the same size. The security relies on the secrecy of the rod's diameter. Although simple and easy to use, the Scytale cipher offers very limited security by modern standards and is mostly of historical interest.");
+            "The Scytale cipher is an ancient transposition cipher used by the Spartans. It involves wrapping a strip of parchment around a rod (scytale) of a fixed diameter and writing the message along the rod's surface. When unwrapped, the text appears scrambled unless it is rewrapped around a rod of the same size. The security relies on the secrecy of the rod's diameter. Although simple and easy to use, the Scytale cipher offers almost no security by modern standards and just of historical interest.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptVigenereLearnScene:
@@ -2846,7 +2886,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist attacks like collision or preimage attacks. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools.");
+            "MurmurHash3 is a non-cryptographic hash function designed for fast hashing performance, primarily used in hash-based data structures like hash tables and bloom filters. It was developed by Austin Appleby and is the third and final version of the MurmurHash family. MurmurHash3 offers excellent distribution and low collision rates for general-purpose use, with versions optimized for both 32-bit and 128-bit outputs. Its speed and simplicity make it a popular choice in software like databases, compilers, and networking tools. However, it is not suitable for cryptographic purposes because it lacks the security properties needed to resist things like collision or preimage attacks.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptSipLearnScene:
@@ -2876,7 +2916,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "SHA-224 is a cryptographic hash function from the SHA-2 family that produces a 224-bit (28-byte) hash value. It is essentially a truncated version of SHA-256, using the same algorithm but outputting a shorter digest. SHA-224 is used when a smaller hash size is preferred while maintaining strong security, commonly in digital signatures and certificate generation.");
+            "SHA-224 is a cryptographic hash function from the SHA-2 family that produces a 224-bit (28-byte) hash value. It is a truncated version of SHA-256, using the same algorithm but outputting a shorter digest. SHA-224 is used when a smaller hash size is preferred while maintaining strong security, commonly in digital signatures and certificate generation.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptSHA256LearnScene:
@@ -2886,7 +2926,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "SHA-256 is part of the SHA-2 family of cryptographic hash functions and generates a 256-bit (32-byte) hash value. It is currently considered secure and is widely used in blockchain, password hashing, digital signatures, and data integrity verification. SHA-256 offers strong resistance against collision and preimage attacks, making it a trusted standard in modern cryptography.");
+            "SHA-256 is part of the SHA-2 family of cryptographic hash functions and generates a 256-bit (32-byte) hash value. It is currently considered secure and is widely used in blockchain, password hashing, digital signatures, and data integrity verification. SHA-256 offers strong resistance against collision and preimage attacks, making it a trusted standard today.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptSHA384LearnScene:
@@ -2926,7 +2966,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure—it's simply a reversible way to encode data.");
+            "Base32 is an encoding scheme that converts binary data into a set of 32 ASCII characters, using the characters A-Z and 2-7. It is commonly used for representing binary data in a human-readable and URL-safe format, especially when Base64 is not ideal due to case sensitivity or special characters. Each Base32 character represents 5 bits of data, making it slightly less space-efficient than Base64 but easier to handle in contexts like QR codes, file names, or secret keys (e.g., in two-factor authentication). Unlike encryption or hashing, Base32 is not secure-it's simply a reversible way to encode data.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     case FlipCryptBase58LearnScene:
@@ -2946,7 +2986,7 @@ void cipher_learn_scene_on_enter(void* context) {
             0,
             128,
             64,
-            "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base32, Base64 is not encryption—it offers no confidentiality and is fully reversible.");
+            "Base64 is a binary-to-text encoding scheme that represents binary data using 64 ASCII characters: A-Z, a-z, 0-9, +, and /. It works by dividing the input into 6-bit chunks and mapping each chunk to a character from the Base64 alphabet, often adding = as padding at the end to align the output. Base64 is commonly used to encode data for transmission over media that are designed to handle text, such as embedding images in HTML or safely transmitting binary data in email or JSON. Like Base-32 and Base-58, Base-64 is not secure as it is fully reversible.");
         view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
         break;
     default:
@@ -3543,8 +3583,8 @@ void flip_crypt_qr_scene_on_enter(void* context) {
             for(int x = 0; x < size; x++) {
                 if(qrcodegen_getModule(app->qrcode, x, y)) {
                     // widget_add_rect_element(app->widget, offset_x + x * scale, offset_y + y * scale, scale, scale, 0, true);
-                    widget_add_frame_element(
-                        app->widget, offset_x + x, offset_y + y, scale, scale, 0);
+                    widget_add_rect_element(
+                        app->widget, offset_x + x, offset_y + y, scale, scale, 0, true);
                 }
             }
         }
@@ -3647,12 +3687,9 @@ void flip_crypt_save_scene_on_enter(void* context) {
     } else {
         save_result("ERROR", app->save_name_input);
     }
+    widget_add_icon_element(app->widget, 36, 6, &I_DolphinSaved_92x58);
     widget_add_string_element(
-        app->widget, 64, 22, AlignCenter, AlignCenter, FontPrimary, "Saved!");
-    // char file_path_name[128];
-    // snprintf(file_path_name, sizeof(file_path_name), "/ext/flip_crypt_saved/%s.txt", app->save_name_input);
-    widget_add_string_element(
-        app->widget, 64, 42, AlignCenter, AlignCenter, FontSecondary, "/ext/flip_crypt_saved/");
+        app->widget, 25, 15, AlignCenter, AlignCenter, FontPrimary, "Saved!");
     view_dispatcher_switch_to_view(app->view_dispatcher, FlipCryptWidgetView);
 }
 

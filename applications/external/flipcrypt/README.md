@@ -57,6 +57,7 @@ Any licenses for the hash function implementations I included is at the top of t
 - Auto-detect cipher decoding
 - Add hash bruteforcing
 - Add Polybius square key support
+- Option to upload .txt file as input instead of always typing.
 
 ## 
 Feel free to leave a Github issue / PR with a feature you'd like to see.
