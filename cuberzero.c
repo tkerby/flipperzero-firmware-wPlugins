@@ -46,9 +46,9 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto freeVariableList;
 	}
 
-	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
-	const AppSceneOnEventCallback onEvent[] = {(AppSceneOnEventCallback) SceneAboutEvent, (AppSceneOnEventCallback) SceneHomeEvent, (AppSceneOnEventCallback) SceneSettingsEvent, (AppSceneOnEventCallback) SceneTimerEvent};
-	const AppSceneOnExitCallback onExit[] = {(AppSceneOnExitCallback) SceneAboutExit, (AppSceneOnExitCallback) SceneHomeExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
+	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
+	const AppSceneOnEventCallback onEvent[] = {(AppSceneOnEventCallback) SceneAboutEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, (AppSceneOnEventCallback) SceneSettingsEvent, (AppSceneOnEventCallback) SceneTimerEvent};
+	const AppSceneOnExitCallback onExit[] = {(AppSceneOnExitCallback) SceneAboutExit, (AppSceneOnExitCallback) SceneCubeSelectExit, (AppSceneOnExitCallback) SceneHomeExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
 	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, CUBERZERO_SCENE_COUNT};
 
 	if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
