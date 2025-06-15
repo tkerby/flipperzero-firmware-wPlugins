@@ -13,7 +13,7 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
 	FURI_LOG_I(CUBERZERO_TAG, "Initializing");
-	char* messageError = NULL;
+	const char* messageError;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
 	if(!instance) {
@@ -64,6 +64,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 	view_dispatcher_attach_to_gui(instance->dispatcher, interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
+	messageError = NULL;
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
 	scene_manager_free(instance->manager);

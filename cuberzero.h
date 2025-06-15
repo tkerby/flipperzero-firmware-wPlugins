@@ -60,7 +60,6 @@ typedef enum {
 
 void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings, const bool loadDefaultOnError);
 void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings);
-
 void SceneAboutEnter(const PCUBERZERO instance);
 bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneAboutExit(const PCUBERZERO instance);
