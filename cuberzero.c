@@ -18,6 +18,7 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto functionExit;
 	}
 
+	memset(instance, 0, sizeof(CUBERZERO));
 	Gui* const interface = furi_record_open(RECORD_GUI);
 
 	if(!interface) {

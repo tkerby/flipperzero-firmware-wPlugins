@@ -11,6 +11,12 @@ typedef struct {
 	struct {
 		Submenu* submenu;
 	} view;
+
+	struct {
+		struct {
+			uint32_t selectedItem;
+		} home;
+	} scene;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
