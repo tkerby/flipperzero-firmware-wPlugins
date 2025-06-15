@@ -59,7 +59,11 @@ typedef enum {
 	CUBERZERO_CUBE_COUNT
 } CUBERZEROCUBE;
 
-void SettingsLoad();
+typedef struct {
+	uint8_t cube;
+} CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
+
+void SettingsLoad(const PCUBERZEROSETTINGS settings);
 void SettingsSave();
 
 void SceneAboutEnter(const PCUBERZERO instance);

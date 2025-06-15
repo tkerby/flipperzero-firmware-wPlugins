@@ -10,7 +10,8 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
-	SettingsLoad();
+	CUBERZEROSETTINGS settings;
+	SettingsLoad(&settings);
 	return 0;
 	char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
