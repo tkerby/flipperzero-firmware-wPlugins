@@ -219,8 +219,8 @@ static int32_t mj_worker_thread(void* ctx) {
         for(int ch = 0; ch < limit && !plugin_state->close_thread_please; ch++) {
             current_channel = hopping_channels[ch];
             if(plugin_state->jam_type == 3) {
-                for(int wifi_ch = hopping_channels_3[plugin_state->wifi_channel];
-                    wifi_ch < hopping_channels_3[plugin_state->wifi_channel + 6] &&
+                for(int wifi_ch = (plugin_state->wifi_channel * 5) + 1;
+                    wifi_ch < (plugin_state->wifi_channel * 5) + 23 &&
                     !plugin_state->close_thread_please;
                     wifi_ch++) {
                     nrf24_write_reg(nrf24_HANDLE, REG_RF_CH, wifi_ch);
