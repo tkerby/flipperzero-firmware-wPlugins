@@ -50,7 +50,7 @@ v0.2 and later is licensed under the GNU General Public License.
 
 v0.1 can still be accessed through the Releases page.
 
-Any licenses for the hash function implementations I included is at the top of their respective code files.
+Any licenses for the cipher / hash function implementations I included is at the top of their respective code files.
 
 ## Roadmap
 - Add chain encoding / hashing
