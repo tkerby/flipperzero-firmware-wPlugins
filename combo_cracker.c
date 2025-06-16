@@ -324,7 +324,6 @@ static bool combo_view_cracker_input_callback(InputEvent* event, void* context) 
                     if(model->selected == 2 && model->resistance > 0) model->resistance -= 0.5f;
                 },
                 redraw);
-                furi_delay_ms(100);
             break;
         case InputKeyRight:
             with_view_model(
