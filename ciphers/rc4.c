@@ -10,7 +10,7 @@ unsigned char* rc4_encrypt_and_decrypt(const char* key, const unsigned char* inp
     size_t keylen = strlen(key);
 
     unsigned char* output = malloc(inputlen);
-    if (!output) return NULL;
+    if (!output) return "memory allocation failed, try again";
 
     // KSA
     for(i = 0; i < 256; i++) {
@@ -40,7 +40,7 @@ unsigned char* rc4_encrypt_and_decrypt(const char* key, const unsigned char* inp
 
 char* rc4_to_hex(const char* data, size_t len) {
     char* hex = malloc(len * 2 + 1);
-    if(!hex) return NULL;
+    if(!hex) return "memory allocation failed, try again";
     for(size_t i = 0; i < len; i++) {
         snprintf(hex + i * 2, 3, "%02X", (unsigned char)data[i]);
     }
@@ -50,17 +50,17 @@ char* rc4_to_hex(const char* data, size_t len) {
 
 unsigned char* rc4_hex_to_bytes(const char* hex, size_t* out_len) {
     size_t hex_len = strlen(hex);
-    if(hex_len % 2 != 0) return NULL;
+    if(hex_len % 2 != 0) return "memory allocation failed, try again";
 
     *out_len = hex_len / 2;
     unsigned char* bytes = malloc(*out_len);
-    if(!bytes) return NULL;
+    if(!bytes) return "memory allocation failed, try again";
 
     for(size_t i = 0; i < *out_len; i++) {
         unsigned int byte;
         if(sscanf(hex + 2 * i, "%2X", &byte) != 1) {
             free(bytes);
-            return NULL;
+            return "hex to bytes failed, try again";
         }
         bytes[i] = (unsigned char)byte;
     }
