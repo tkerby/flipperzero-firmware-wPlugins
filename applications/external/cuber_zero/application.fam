@@ -1,0 +1,11 @@
+App(appid="cuberzero",
+	apptype=FlipperAppType.EXTERNAL,
+	name="Cuber Zero",
+	entry_point="cuberzeroMain",
+	stack_size=2048,
+	fap_version="0.1",
+	fap_icon="cuberzero.png",
+	fap_category="Tools",
+	fap_description="Cuber's best friend",
+	fap_author="KHOPAN",
+	fap_weburl="https://github.com/KHOPAN/Cuber-Zero")
