@@ -5,60 +5,60 @@
 #include <gui/modules/variable_item_list.h>
 
 typedef struct {
-	uint8_t cube;
+    uint8_t cube;
 } CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
 
 typedef struct {
-	ViewDispatcher* dispatcher;
-	SceneManager* manager;
-	CUBERZEROSETTINGS settings;
-	struct {
-		Submenu* submenu;
-		VariableItemList* variableList;
-		View* view;
-	} view;
+    ViewDispatcher* dispatcher;
+    SceneManager* manager;
+    CUBERZEROSETTINGS settings;
+    struct {
+        Submenu* submenu;
+        VariableItemList* variableList;
+        View* view;
+    } view;
 
-	struct {
-		struct {
-			uint32_t selectedItem;
-		} home;
-	} scene;
+    struct {
+        struct {
+            uint32_t selectedItem;
+        } home;
+    } scene;
 } CUBERZERO, *PCUBERZERO;
 
 typedef enum {
-	CUBERZERO_VIEW_SUBMENU,
-	CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
-	CUBERZERO_VIEW_VIEW
+    CUBERZERO_VIEW_SUBMENU,
+    CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
+    CUBERZERO_VIEW_VIEW
 } CUBERZEROVIEW;
 
 typedef enum {
-	CUBERZERO_SCENE_ABOUT,
-	CUBERZERO_SCENE_CUBE_SELECT,
-	CUBERZERO_SCENE_HOME,
-	CUBERZERO_SCENE_SETTINGS,
-	CUBERZERO_SCENE_TIMER,
-	CUBERZERO_SCENE_COUNT
+    CUBERZERO_SCENE_ABOUT,
+    CUBERZERO_SCENE_CUBE_SELECT,
+    CUBERZERO_SCENE_HOME,
+    CUBERZERO_SCENE_SETTINGS,
+    CUBERZERO_SCENE_TIMER,
+    CUBERZERO_SCENE_COUNT
 } CUBERZEROSCENE;
 
 typedef enum {
-	WCA_3X3,
-	WCA_2X2,
-	WCA_4X4,
-	WCA_5X5,
-	WCA_6X6,
-	WCA_7X7,
-	WCA_3X3_BLINDFOLDED,
-	WCA_3X3_FEWEST_MOVES,
-	WCA_3X3_ONE_HANDED,
-	WCA_CLOCK,
-	WCA_MEGAMINX,
-	WCA_PYRAMINX,
-	WCA_SKEWB,
-	WCA_SQUARE1,
-	WCA_4X4_BLINDFOLDED,
-	WCA_5X5_BLINDFOLDED,
-	WCA_3X3_MULTIBLIND,
-	CUBERZERO_CUBE_COUNT
+    WCA_3X3,
+    WCA_2X2,
+    WCA_4X4,
+    WCA_5X5,
+    WCA_6X6,
+    WCA_7X7,
+    WCA_3X3_BLINDFOLDED,
+    WCA_3X3_FEWEST_MOVES,
+    WCA_3X3_ONE_HANDED,
+    WCA_CLOCK,
+    WCA_MEGAMINX,
+    WCA_PYRAMINX,
+    WCA_SKEWB,
+    WCA_SQUARE1,
+    WCA_4X4_BLINDFOLDED,
+    WCA_5X5_BLINDFOLDED,
+    WCA_3X3_MULTIBLIND,
+    CUBERZERO_CUBE_COUNT
 } CUBERZEROCUBE;
 
 void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings, const bool loadDefaultOnError);

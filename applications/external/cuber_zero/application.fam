@@ -1,11 +1,13 @@
-App(appid="cuberzero",
+App(
+    appid="rubiks_timer",
+    name="Rubiks Cube Timer",  #  FORMERLY CUBER ZERO
 	apptype=FlipperAppType.EXTERNAL,
-	name="Cuber Zero",
 	entry_point="cuberzeroMain",
-	stack_size=2048,
-	fap_version="0.1",
+	stack_size=1 * 2048,
 	fap_icon="cuberzero.png",
 	fap_category="Tools",
-	fap_description="Cuber's best friend",
 	fap_author="KHOPAN",
-	fap_weburl="https://github.com/KHOPAN/Cuber-Zero")
+	fap_weburl="https://github.com/KHOPAN/Cuber-Zero",
+	fap_version="0.1",
+	fap_description="Cuber's best friend",
+)
