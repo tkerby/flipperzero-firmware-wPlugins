@@ -12,8 +12,8 @@ char* base58_encode(const char* input) {
     const uint8_t* bytes = (const uint8_t*)input;
 
     size_t result_size = len * 2;
-    char* result = calloc(result_size + 1, 1);  // +1 for null terminator
-    if (!result) return NULL;
+    char* result = calloc(result_size + 1, 1);
+    if (!result) return "memory allocation failed, try again";
 
     uint8_t* temp = calloc(len * 2, 1);
     if (!temp) {
@@ -68,7 +68,7 @@ int base58_char_value(char c) {
 char* base58_decode(const char* input) {
     size_t len = strlen(input);
     uint8_t* temp = calloc(len, 1);
-    if (!temp) return NULL;
+    if (!temp) return "memory allocation failed, try again";
 
     size_t i, j, zcount = 0, high = 0;
 
@@ -80,7 +80,7 @@ char* base58_decode(const char* input) {
         int carry = base58_char_value(input[i]);
         if (carry < 0) {
             free(temp);
-            return NULL;
+            return "memory allocation failed, try again";
         }
 
         for (j = 0; j < high; j++) {
@@ -99,7 +99,7 @@ char* base58_decode(const char* input) {
     char* result = calloc(total_len + 1, 1);
     if (!result) {
         free(temp);
-        return NULL;
+        return "memory allocation failed, try again";
     }
 
     for (i = 0; i < zcount; i++) {
