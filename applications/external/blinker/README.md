@@ -2,6 +2,8 @@
 
 A Flipper Zero application that blinks LEDs with a decreasing frequency over time. Unlike traditional Pomodoro timers, it provides visual feedback through LED blinks that gradually slow down.
 
+This application can be downloaded from [Flipper Lab](https://lab.flipper.net/apps/blinker).
+
 This project was inspired by a discussion in this [Hacker News thread](https://news.ycombinator.com/item?id=38274782).
 
 ## Main Screen
