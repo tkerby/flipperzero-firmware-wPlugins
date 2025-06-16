@@ -33,6 +33,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
 - Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - Updated: [DeadZone v0.2 (By retrooper)](https://github.com/retrooper/deadzone)
+- Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
+- Updated: [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 
 <a name="release">
 
