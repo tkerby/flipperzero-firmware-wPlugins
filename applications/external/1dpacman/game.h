@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/engine.h"
-#include "1d_pacman_icons.h"
 
 /* Global game defines go here */
 
