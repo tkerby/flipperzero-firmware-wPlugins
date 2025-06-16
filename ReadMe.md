@@ -3,7 +3,7 @@
 &nbsp;<a href='https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release' target='_blank'><img src='https://lh3.googleusercontent.com/d/1iYQlRQXM7nA4IAdcPwvcKRSTCMoi8tug' alt='Latest PATREON Release' title='Latest PATREON Release'></a>
 &nbsp;<a href='https://github.com/RogueMaster/awesome-flipperzero-withModules' target='_blank'><img src='https://lh3.googleusercontent.com/d/1gjui0-UZNerG13PUblXjmr1YaSAjIf2k' alt='More Research / Assets' title='More Research / Assets'></a></h1>
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0602-2359-0.420.0-55167b4.tgz&channel=RM0602-2359-0.420.0-55167b4&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0616-0053-0.420.0-efb2b08.tgz&channel=RM0616-0053-0.420.0-efb2b08&version=0.420.0&target=f7)
 
 ## Thank you so much to our RM Pro/SUPER Patreon supporters! Because of people like you, we are able to offer the best and most up-to-date Flipper Zero Firmware!
 
@@ -30,25 +30,6 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-16 00:06 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-16 00:06 EST`
-- Added: [Pocket Battle v0.1 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
-- Added: [Digital Kaleidoscope v0.1 (By JamesR555)](https://github.com/JamesR555/digital_kaleidoscope)
-- Updated: [NFC Comparator v2.3 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
-- Updated: [Passy v1.4 (By bettse)](https://github.com/bettse/passy) (Version Only)
-- Updated: [FlipDownloader v1.1 (By jblanked)](https://github.com/jblanked/FlipStore) `Req: ESP32`
-- Updated: [FlipWifi v1.6.1 (By jblanked)](https://github.com/jblanked/FlipWiFi) `Req: ESP32` (Version Only)
-- Updated: [Metroflip v0.7 (By luu176)](https://github.com/luu176/Metroflip)
-- Updated: [Wendigo Bluetooth Tracker WIP v0.1 (By chris-bc)](https://github.com/chris-bc/wendigo) `WIP Req: ESP32`
-- Updated: [MiZip Balance Editor v0.1 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
-- Updated: [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
-- Added: [Quadratic Solver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-quadratic-solver)
-- Added: [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
-- Infrared: [`Decode only` mode to ignore RAW signals, make buttons in learn scene more intuitive (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/326c3a13de9cf4d8731ffcc354f23073d61d5678)
-- Added: [Free Roam v0.1 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
-- Updated: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
-- Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board`
-- Added: [Rubiks Cube Timer v0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
-- Updated: [Guess The Number v1.3 (By kWAYTV)](https://github.com/kWAYTV/guess-the-number-fz)
 
 <a name="release">
 
@@ -758,4 +739,4 @@ $ ./fbt dolphin_ext
 - Have a new app? Submit GitHub link to me on Discord for a special reward (if I add it to RM Firmware).
 - `Bluetooth Audio` APP to allow flipper to pair to external speaker or headphones for wav/mp3 playback ($200 USD in ETH or BTC) (Don't think this is possible)
 
-# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0602-2359-0.420.0-55167b4.tgz&channel=RM0602-2359-0.420.0-55167b4&version=0.420.0&target=f7)
+# Install GitHub Version With [WEB INSTALLER](https://lab.flipper.net/?url=https%3A%2F%2Frogue-master.net%2F%3Ffile%3DRM0616-0053-0.420.0-efb2b08.tgz&channel=RM0616-0053-0.420.0-efb2b08&version=0.420.0&target=f7)
