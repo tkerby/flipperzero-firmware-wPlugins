@@ -1,6 +1,6 @@
 # FlipCrypt
 
-FlipCrypt is a Flipper Zero app that provides a collection of classic cipher algorithms, cryptographic hash functions, and some text encoding methods to explore and learn about. You can emulate the result using NFC, generate a QR code, or save it to a .txt file on the Flipper.
+FlipCrypt is a Flipper Zero app that provides a collection of classic cipher algorithms, cryptographic hash functions, and some text encoding methods to explore and learn about. You can emulate the result using NFC, generate a QR code, or save it to a `.txt` file on the Flipper.
 
 ## Ciphers
 - AES-128
