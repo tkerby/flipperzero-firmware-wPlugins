@@ -31,6 +31,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2025-06-16 00:06 EST`
 - Last Synced/Checked Unleashed, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2025-06-16 00:06 EST`
 - Updated: [1D Pacman v0.1 (By easiwork)](https://github.com/easiwork/1dpacman)
+- Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
+- Updated: [DeadZone v0.2 (By retrooper)](https://github.com/retrooper/deadzone)
 
 <a name="release">
 
