@@ -1,6 +1,6 @@
 # FlipCrypt
 
-FlipCrypt is a Flipper Zero app that provides a collection of classic cipher algorithms, cryptographic hash functions, and some text encoding methods to explore and learn about. You can emulate the result using NFC, generate a QR code, or save it to a .txt file on the Flipper.
+FlipCrypt is a Flipper Zero app that provides a collection of classic cipher algorithms, cryptographic hash functions, and some text encoding methods to explore and learn about. You can emulate the result using NFC, generate a QR code, or save it to a `.txt` file on the Flipper.
 
 ## Ciphers
 - AES-128
@@ -40,7 +40,7 @@ Navigate through the app's menu on your Flipper Zero to:
 - Select a hashing algorithm to generate a hash from input data.
 - Select an encoding method to encode / decode inputs.
 
-Once on the output screen, you can choose to save the output to a file, emulate it using NFC (NTAG215) or generate and display a QR code of the data (if the output is not too long). Not all three options will be available on every output screen due to memory limitations.
+Once on the output screen, you can choose to save the output to a file located at `ext/flip_crypt_saved/`, emulate it using NFC (NTAG215) or generate and display a QR code of the data (if the output is not too long). Not all three options will be available on every output screen due to memory limitations.
 
 Warning - Being connected to qFlipper does make a decent amount of QR generations run out of memory and crash that work when standalone.
 
@@ -50,7 +50,7 @@ v0.2 and later is licensed under the GNU General Public License.
 
 v0.1 can still be accessed through the Releases page.
 
-Any licenses for the hash function implementations I included is at the top of their respective code files.
+Any licenses for the cipher / hash function implementations I included is at the top of their respective code files.
 
 ## Roadmap
 - Add chain encoding / hashing
