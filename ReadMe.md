@@ -41,12 +41,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [MiZip Balance Editor v0.1 (By teohumeau)](https://github.com/teohumeau/MiZipBalanceEditor)
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board`
 - Updated: [Sub-GHz Scheduler v2.2 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
-- Updated: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 - Updated: [FlipCrypt v0.2 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - Added: [Quadratic Solver v0.1 (By paul-sopin)](https://github.com/paul-sopin/flipper-quadratic-solver)
 - Added: [Lightning Distance v0.1 (By HyperMuffin12)](https://github.com/HyperMuffin12/Flipper-Lightning-Distance)
 - Infrared: [`Decode only` mode to ignore RAW signals, make buttons in learn scene more intuitive (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/326c3a13de9cf4d8731ffcc354f23073d61d5678)
 - Added: [Free Roam v0.1 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
+- Updated: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 
 <a name="release">
 
