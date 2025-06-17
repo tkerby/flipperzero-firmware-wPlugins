@@ -1,4 +1,5 @@
 #include "cuberzero.h"
+#include <furi_hal_light.h>
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -23,6 +24,7 @@ struct ViewDispatcher {
 static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
 	UNUSED(event);
 	UNUSED(instance);
+	furi_hal_light_set(LightBlue, 255);
 }
 
 static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
@@ -39,22 +41,26 @@ static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
 void SceneTimerEnter(const PCUBERZERO instance) {
 	//view_set_draw_callback(instance->view.view, (ViewDrawCallback) callbackDraw);
 	//view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VIEW);
+	view_dispatcher_stop(instance->dispatcher);
 	gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
 
-	view_port_input_callback_set(instance->viewport, (ViewPortInputCallback) callbackInput, instance);
+	FuriMessageQueue* queue = furi_message_queue_alloc(8, sizeof(InputEvent));
+	view_port_input_callback_set(instance->viewport, (ViewPortInputCallback) callbackInput, queue);
 	view_port_draw_callback_set(instance->viewport, (ViewPortDrawCallback) callbackRender, instance);
 
 	gui_add_view_port(instance->interface, instance->viewport, GuiLayerFullscreen);
 	InputEvent event;
 
-	while(furi_message_queue_get(instance->dispatcher->queueInput, &event, FuriWaitForever) == FuriStatusOk) {
+	while(furi_message_queue_get(queue, &event, FuriWaitForever) == FuriStatusOk) {
 		if(event.key == InputKeyBack) {
 			break;
 		}
 	}
 
+	furi_message_queue_free(queue);
 	gui_remove_view_port(instance->interface, instance->viewport);
 	gui_add_view_port(instance->interface, instance->dispatcher->viewport, GuiLayerFullscreen);
+	view_dispatcher_run(instance->dispatcher);
 }
 
 bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
