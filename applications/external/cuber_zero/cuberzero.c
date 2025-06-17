@@ -46,9 +46,14 @@ int32_t cuberzeroMain(const void* const pointer) {
         goto freeSubmenu;
     }
 
+    if(!(instance->viewport = view_port_alloc())) {
+        messageError = "view_port_alloc() failed";
+        goto freeVariableList;
+    }
+
     if(!(instance->dispatcher = view_dispatcher_alloc())) {
         messageError = "view_dispatcher_alloc() failed";
-        goto freeVariableList;
+        goto freeViewport;
     }
     view_dispatcher_enable_queue(instance->dispatcher);
 
@@ -97,6 +102,8 @@ int32_t cuberzeroMain(const void* const pointer) {
     scene_manager_free(instance->manager);
 freeDispatcher:
     view_dispatcher_free(instance->dispatcher);
+freeViewport:
+    view_port_free(instance->viewport);
 freeVariableList:
     variable_item_list_free(instance->view.variableList);
 freeSubmenu:
