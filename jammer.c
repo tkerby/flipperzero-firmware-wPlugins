@@ -203,12 +203,12 @@ static int32_t mj_worker_thread(void* ctx) {
         memcpy(&tx[1], ping_packet, size);
 
 #define nrf24_TIMEOUT 500
-        nrf24_spi_trx(nrf24_HANDLE, tx, 0, size + 1, nrf24_TIMEOUT);
-        nrf24_set_tx_mode(nrf24_HANDLE);
     }
 
     NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
     notification_message(notification, &sequence_blink_red_100);
+    
+    nrf24_set_tx_mode(nrf24_HANDLE);
 
     if(plugin_state->jam_type != 3) nrf24_startConstCarrier(nrf24_HANDLE, 3, hopping_channels[0]);
 
@@ -274,8 +274,7 @@ int32_t jammer_app(void* p) {
     nrf24_init();
     FURI_LOG_D(TAG, "nrf24 init done!");
     PluginEvent event;
-    for(int i = 0; i < 128; i++)
-        hopping_channels_2[i] = i * 2;
+    for(int i = 0; i < 128; i++) hopping_channels_2[i] = i * 2;
     hopping_channels = hopping_channels_0;
     plugin_state->is_nrf24_connected = true;
     if(!nrf24_check_connected(nrf24_HANDLE)) {
