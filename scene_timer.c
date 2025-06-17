@@ -1,5 +1,4 @@
 #include "cuberzero.h"
-#include <furi_hal_light.h>
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -22,9 +21,7 @@ struct ViewDispatcher {
 }*/
 
 static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
-	UNUSED(event);
-	UNUSED(instance);
-	furi_hal_light_set(LightBlue, 255);
+	furi_message_queue_put((FuriMessageQueue*) instance, event, 0);
 }
 
 static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
@@ -60,6 +57,7 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	furi_message_queue_free(queue);
 	gui_remove_view_port(instance->interface, instance->viewport);
 	gui_add_view_port(instance->interface, instance->dispatcher->viewport, GuiLayerFullscreen);
+	scene_manager_handle_back_event(instance->manager);
 	view_dispatcher_run(instance->dispatcher);
 }
 
