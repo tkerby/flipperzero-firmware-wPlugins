@@ -9,7 +9,7 @@ struct ViewDispatcher {
 	ViewPort* view_port;
 };
 
-static void callbackDraw(Canvas* const canvas, const void* const model) {
+/*static void callbackDraw(Canvas* const canvas, const void* const model) {
 	UNUSED(model);
 	FuriString* string = furi_string_alloc();
 	uint32_t tick = furi_get_tick();
@@ -18,14 +18,17 @@ static void callbackDraw(Canvas* const canvas, const void* const model) {
 	canvas_set_font(canvas, FontBigNumbers);
 	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(string));
 	furi_string_free(string);
-}
+}*/
 
 void SceneTimerEnter(const PCUBERZERO instance) {
-	UNUSED(instance);
-	callbackDraw(NULL, NULL);
 	//view_set_draw_callback(instance->view.view, (ViewDrawCallback) callbackDraw);
 	//view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VIEW);
-	//gui_remove_view_port(instance->dispatcher->gui, instance->dispatcher->view_port);
+	gui_remove_view_port(instance->interface, instance->dispatcher->view_port);
+	ViewPort* viewport = view_port_alloc();
+	gui_add_view_port(instance->interface, viewport, GuiLayerFullscreen);
+	gui_remove_view_port(instance->interface, viewport);
+	view_port_free(viewport);
+	gui_add_view_port(instance->interface, instance->dispatcher->view_port, GuiLayerFullscreen);
 }
 
 bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
