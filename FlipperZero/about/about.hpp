@@ -1,13 +1,5 @@
 #pragma once
-
-#include <gui/gui.h>
-#include <gui/view_dispatcher.h>
-#include <gui/modules/widget.h>
-#include <furi.h>
-#include <memory>
 #include "easy_flipper/easy_flipper.h"
-
-class FreeRoamApp;
 
 class FreeRoamAbout
 {
@@ -15,6 +7,9 @@ private:
     Widget *widget = nullptr;
     ViewDispatcher **viewDispatcherRef = nullptr;
     void *appContext = nullptr;
+
+    static constexpr const uint32_t FreeRoamViewSubmenu = 1; // View ID for submenu
+    static constexpr const uint32_t FreeRoamViewAbout = 2;   // View ID for about
 
     // Static callback wrappers
     static uint32_t callbackToSubmenu(void *context);
