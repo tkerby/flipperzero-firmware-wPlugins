@@ -22,22 +22,38 @@ struct ViewDispatcher {
 	furi_string_free(string);
 }*/
 
-static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
-	if(event->key == InputKeyOk) {
-		if(event->type == InputTypePress) {
-			furi_hal_light_set(LightRed, 255);
-			furi_hal_light_set(LightGreen, 0);
-			furi_hal_light_set(LightBlue, 0);
-		} else if(event->type == InputTypeRelease) {
-			furi_hal_light_set(LightRed, 0);
-			furi_hal_light_set(LightGreen, 0);
-			furi_hal_light_set(LightBlue, 0);
-		}
+static uint32_t pressed;
+static FuriTimer* timer;
 
+static void callbackTimer(void* const instance) {
+	UNUSED(instance);
+	furi_hal_light_set(LightRed, 0);
+	furi_hal_light_set(LightGreen, 255);
+	furi_hal_light_set(LightBlue, 0);
+}
+
+static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
+	if(event->key != InputKeyOk) {
+		furi_message_queue_put((FuriMessageQueue*) instance, event, 0);
 		return;
 	}
 
-	furi_message_queue_put((FuriMessageQueue*) instance, event, 0);
+	if(event->type != InputTypePress && event->type != InputTypeRelease) {
+		return;
+	}
+
+	if(event->type == InputTypePress) {
+		pressed = furi_get_tick();
+		furi_timer_start(timer, 500);
+		furi_hal_light_set(LightRed, 255);
+		furi_hal_light_set(LightGreen, 0);
+		furi_hal_light_set(LightBlue, 0);
+	} else {
+		furi_timer_stop(timer);
+		furi_hal_light_set(LightRed, 0);
+		furi_hal_light_set(LightGreen, 0);
+		furi_hal_light_set(LightBlue, 0);
+	}
 }
 
 static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
@@ -56,6 +72,7 @@ static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
 void SceneTimerEnter(const PCUBERZERO instance) {
 	//view_set_draw_callback(instance->view.view, (ViewDrawCallback) callbackDraw);
 	//view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VIEW);
+	timer = furi_timer_alloc(callbackTimer, FuriTimerTypeOnce, NULL);
 	view_dispatcher_stop(instance->dispatcher);
 	gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
 
@@ -77,6 +94,7 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	gui_add_view_port(instance->interface, instance->dispatcher->viewport, GuiLayerFullscreen);
 	scene_manager_handle_back_event(instance->manager);
 	view_dispatcher_run(instance->dispatcher);
+	furi_timer_free(timer);
 }
 
 bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
