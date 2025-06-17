@@ -5,6 +5,20 @@ uint32_t FreeRoamApp::callback_to_submenu(void *context)
     FreeRoamApp *app = (FreeRoamApp *)context;
     if (app)
     {
+        // Stop and cleanup timer first
+        if (app->timer)
+        {
+            furi_timer_stop(app->timer);
+        }
+
+        // Clean up viewport if it exists
+        if (app->gui && app->viewPort)
+        {
+            gui_remove_view_port(app->gui, app->viewPort);
+            view_port_free(app->viewPort);
+            app->viewPort = nullptr;
+        }
+
         // quick reset game when returning to submenu
         if (app->game)
         {
@@ -23,6 +37,7 @@ uint32_t FreeRoamApp::callback_to_submenu(void *context)
             app->about.reset();
         }
     }
+
     return FreeRoamViewSubmenu;
 }
 
@@ -63,6 +78,64 @@ void FreeRoamApp::createAppDataPath()
     furi_record_close(RECORD_STORAGE);
 }
 
+void FreeRoamApp::viewPortDraw(Canvas *canvas, void *context)
+{
+    FreeRoamApp *app = static_cast<FreeRoamApp *>(context);
+    furi_check(app);
+    auto game = app->game.get();
+    if (game)
+    {
+        if (game->isActive())
+        {
+            game->updateDraw(canvas);
+        }
+    }
+}
+void FreeRoamApp::viewPortInput(InputEvent *event, void *context)
+{
+    FreeRoamApp *app = static_cast<FreeRoamApp *>(context);
+    furi_check(app);
+    auto game = app->game.get();
+    if (game && game->isActive())
+    {
+        game->updateInput(event);
+    }
+}
+
+void FreeRoamApp::timerCallback(void *context)
+{
+    FreeRoamApp *app = static_cast<FreeRoamApp *>(context);
+    furi_check(app);
+    auto game = app->game.get();
+    if (game)
+    {
+        if (game->isActive())
+        {
+            // Game is active, update the viewport
+            if (app->viewPort)
+            {
+                view_port_update(app->viewPort);
+            }
+        }
+        else
+        {
+            // Stop the timer first
+            if (app->timer)
+            {
+                furi_timer_stop(app->timer);
+            }
+
+            // Remove viewport
+            if (app->gui && app->viewPort)
+            {
+                gui_remove_view_port(app->gui, app->viewPort);
+                view_port_free(app->viewPort);
+                app->viewPort = nullptr;
+            }
+        }
+    }
+}
+
 void FreeRoamApp::callbackSubmenuChoices(uint32_t index)
 {
     switch (index)
@@ -75,7 +148,21 @@ void FreeRoamApp::callbackSubmenuChoices(uint32_t index)
             game.reset();
             return;
         }
-        view_dispatcher_switch_to_view(viewDispatcher, FreeRoamViewMain);
+
+        viewPort = view_port_alloc();
+        view_port_draw_callback_set(viewPort, viewPortDraw, this);
+        view_port_input_callback_set(viewPort, viewPortInput, this);
+        gui_add_view_port(gui, viewPort, GuiLayerFullscreen);
+
+        // Start the timer for game updates
+        if (!timer)
+        {
+            timer = furi_timer_alloc(timerCallback, FuriTimerTypePeriodic, this);
+        }
+        if (timer)
+        {
+            furi_timer_start(timer, 100); // Update every 100ms
+        }
         break;
     case FreeRoamSubmenuAbout:
         about = std::make_unique<FreeRoamAbout>();
@@ -157,7 +244,19 @@ bool FreeRoamApp::load_char(const char *path_name, char *value, size_t value_siz
         return false;
     }
     size_t read_count = storage_file_read(file, value, value_size);
-    value[read_count - 1] = '\0';
+    // ensure we don't go out of bounds
+    if (read_count > 0 && read_count < value_size)
+    {
+        value[read_count - 1] = '\0';
+    }
+    else if (read_count >= value_size && value_size > 0)
+    {
+        value[value_size - 1] = '\0';
+    }
+    else
+    {
+        value[0] = '\0';
+    }
     storage_file_close(file);
     storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
@@ -283,6 +382,22 @@ FreeRoamApp::FreeRoamApp()
 
 FreeRoamApp::~FreeRoamApp()
 {
+    // Stop and free timer first
+    if (timer)
+    {
+        furi_timer_stop(timer);
+        furi_timer_free(timer);
+        timer = nullptr;
+    }
+
+    // Clean up viewport if it exists
+    if (gui && viewPort)
+    {
+        gui_remove_view_port(gui, viewPort);
+        view_port_free(viewPort);
+        viewPort = nullptr;
+    }
+
     // Clean up game
     if (game)
     {

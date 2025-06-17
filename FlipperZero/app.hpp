@@ -38,13 +38,8 @@ typedef enum
 class FreeRoamApp
 {
 private:
-    ViewDispatcher *viewDispatcher = nullptr;
     Submenu *submenu = nullptr;
     FlipperHTTP *flipperHttp = nullptr;
-    Gui *gui = nullptr;
-
-    // Game class instance
-    std::unique_ptr<FreeRoamGame> game;
 
     // Settings class instance
     std::unique_ptr<FreeRoamSettings> settings;
@@ -52,11 +47,15 @@ private:
     // About class instance
     std::unique_ptr<FreeRoamAbout> about;
 
+    // Timer for game updates
+    FuriTimer *timer = nullptr;
+
     // Static callback functions
     static uint32_t callback_to_submenu(void *context);
     static uint32_t callback_exit_app(void *context);
     static void submenu_choices_callback(void *context, uint32_t index);
     static void settings_item_selected_callback(void *context, uint32_t index);
+    static void timerCallback(void *context);
 
     // Member functions
     void callbackSubmenuChoices(uint32_t index);
@@ -67,6 +66,10 @@ private:
 public:
     bool load_char(const char *path_name, char *value, size_t value_size); // load a string from storage
     bool save_char(const char *path_name, const char *value);              // save a string to storage
+    ViewDispatcher *viewDispatcher = nullptr;
+    Gui *gui = nullptr;
+    ViewPort *viewPort = nullptr;
+    std::unique_ptr<FreeRoamGame> game;
     //
     bool isVibrationEnabled();              // check if vibration is enabled
     bool isBoardConnected();                // check if the board is connected
@@ -107,4 +110,7 @@ public:
     ~FreeRoamApp();
 
     void run();
+
+    static void viewPortDraw(Canvas *canvas, void *context);
+    static void viewPortInput(InputEvent *event, void *context);
 };
