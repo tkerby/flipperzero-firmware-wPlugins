@@ -41,7 +41,7 @@ typedef enum {
     BasicScenesGreetingInputSceneSaveEvent,
 } BasicScenesGreetingInputEvent;
 
-void send_name_ir(App* app) {
+void send_message_ir(App* app) {
     for(uint8_t i = 0; i < strlen(app->user_name); i++) {
         uint8_t c = app->user_name[i];
 
@@ -110,7 +110,7 @@ void basic_scenes_greeting_message_scene_on_enter(void* context) {
     furi_string_printf(message, "Message sent: \n%s", app->user_name);
     widget_add_string_multiline_element(
         app->widget, 5, 15, AlignLeft, AlignCenter, FontPrimary, furi_string_get_cstr(message));
-        send_name_ir(app);
+        send_message_ir(app);
     furi_string_free(message);
     view_dispatcher_switch_to_view(app->view_dispatcher, BasicScenesWidgetView);
 }
