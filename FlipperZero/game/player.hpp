@@ -29,8 +29,10 @@ public:
     char player_name[64] = {0}; // Writable buffer for player name
 
 private:
-    void debounceInput(Game *game); // debounce input to prevent multiple actions from a single press
-    void switchLevels(Game *game);  // switch levels
+    void debounceInput(Game *game);                      // debounce input to prevent multiple actions from a single press
+    void switchLevels(Game *game);                       // switch levels
+    bool isPositionSafe(Vector pos);                     // check if a position is safe (not in a wall)
+    Vector findSafeSpawnPosition(const char *levelName); // find a safe spawn position for a level
     std::unique_ptr<DynamicMap> currentDynamicMap = nullptr;
     bool hasBeenPositioned = false;                            // Track if player has been positioned to prevent repeated resets
     MenuIndex currentMenuIndex = MenuIndexProfile;             // current menu index (must be in the GameViewSystemMenu)
@@ -41,4 +43,7 @@ private:
     GameState gameState = GameStatePlaying;                    // current game state
     bool shouldDebounce = false;                               // whether to debounce input
     bool inputHeld = false;                                    // whether input is held
+    bool justSwitchedLevels = false;                           // whether the player just switched levels
+    uint8_t levelSwitchCounter = 0;                            // counter for level switch delay
+    bool justStarted = true;                                   // whether the player just started the game
 };
