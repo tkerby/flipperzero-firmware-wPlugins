@@ -4,18 +4,20 @@
 #include <gui/modules/submenu.h>
 #include <gui/modules/variable_item_list.h>
 
+#define CUBERZERO_TAG "CuberZero"
+
 typedef struct {
     uint8_t cube;
 } CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
 
 typedef struct {
+    Gui* interface;
     ViewDispatcher* dispatcher;
     SceneManager* manager;
     CUBERZEROSETTINGS settings;
     struct {
         Submenu* submenu;
         VariableItemList* variableList;
-        View* view;
     } view;
 
     struct {
@@ -27,8 +29,7 @@ typedef struct {
 
 typedef enum {
     CUBERZERO_VIEW_SUBMENU,
-    CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
-    CUBERZERO_VIEW_VIEW
+    CUBERZERO_VIEW_VARIABLE_ITEM_LIST
 } CUBERZEROVIEW;
 
 typedef enum {
@@ -61,7 +62,7 @@ typedef enum {
     CUBERZERO_CUBE_COUNT
 } CUBERZEROCUBE;
 
-void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings, const bool loadDefaultOnError);
+void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings);
 void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings);
 void SceneAboutEnter(const PCUBERZERO instance);
 bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);

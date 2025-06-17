@@ -23,7 +23,12 @@ struct ViewDispatcher {
 void SceneTimerEnter(const PCUBERZERO instance) {
     //view_set_draw_callback(instance->view.view, (ViewDrawCallback) callbackDraw);
     //view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VIEW);
-    gui_remove_view_port(instance->dispatcher->gui, instance->dispatcher->view_port);
+    gui_remove_view_port(instance->interface, instance->dispatcher->view_port);
+    ViewPort* viewport = view_port_alloc();
+    gui_add_view_port(instance->interface, viewport, GuiLayerFullscreen);
+    gui_remove_view_port(instance->interface, viewport);
+    view_port_free(viewport);
+    gui_add_view_port(instance->interface, instance->dispatcher->view_port, GuiLayerFullscreen);
 }
 
 bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
