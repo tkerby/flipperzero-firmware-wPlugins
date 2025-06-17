@@ -23,7 +23,6 @@
 - You can't run the CLI and send a httpRequest at the same time, otherwise it freezes.
 - Occasional "MPU fault, possibly stack overflow" error after clicking "Welcome" in the welcome view.
 - Occasional "MPU fault, possibly stack overflow" error after clicking "Local" in the lobby menu view.
-- Occasional freeze when clicking "Leave Game" in the system info menu settings tab.
 - (Developer note) I couldn't load the user info immediately after login, so I had to do it after they hit "Local" or "Online" in the lobby menu. I would get a stack overflow error otherwise as soon as the login was successful.
 
 You will have to restart your device if you encounter any of these bugs.
