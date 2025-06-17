@@ -7,5 +7,8 @@ App(
     fap_icon="app.png",
     fap_category="GPIO",
     fap_icon_assets="assets",
-    fap_description="3D Open World Multiplayer Game",
+    fap_description="3D Open World Multiplayer Game", 
+    fap_author="JBlanked",
+    fap_weburl="https://github.com/jblanked/Free-Roam",
+    fap_version="0.2",
 )
