@@ -1,4 +1,6 @@
 #include "cuberzero.h"
+#include <gui/elements.h>
+#include <furi_hal_light.h>
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -21,6 +23,20 @@ struct ViewDispatcher {
 }*/
 
 static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
+	if(event->key == InputKeyOk) {
+		if(event->type == InputTypePress) {
+			furi_hal_light_set(LightRed, 255);
+			furi_hal_light_set(LightGreen, 0);
+			furi_hal_light_set(LightBlue, 0);
+		} else if(event->type == InputTypeRelease) {
+			furi_hal_light_set(LightRed, 0);
+			furi_hal_light_set(LightGreen, 0);
+			furi_hal_light_set(LightBlue, 0);
+		}
+
+		return;
+	}
+
 	furi_message_queue_put((FuriMessageQueue*) instance, event, 0);
 }
 
@@ -33,6 +49,8 @@ static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
 	canvas_set_font(canvas, FontBigNumbers);
 	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(string));
 	furi_string_free(string);
+	canvas_set_font(canvas, FontSecondary);
+	elements_button_left(canvas, "Exit");
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
