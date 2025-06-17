@@ -12,13 +12,15 @@ typedef struct {
 
 typedef struct {
 	Gui* interface;
-	ViewDispatcher* dispatcher;
-	SceneManager* manager;
-	CUBERZEROSETTINGS settings;
 	struct {
 		Submenu* submenu;
 		VariableItemList* variableList;
 	} view;
+
+	ViewPort* viewport;
+	ViewDispatcher* dispatcher;
+	SceneManager* manager;
+	CUBERZEROSETTINGS settings;
 
 	struct {
 		struct {
