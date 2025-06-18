@@ -1,5 +1,15 @@
 #include "cuberzero.h"
 
+static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
+    UNUSED(context);
+    UNUSED(event);
+    return false;
+}
+
+static void callbackEmptyExit(void* const context) {
+    UNUSED(context);
+}
+
 static bool callbackCustomEvent(const PCUBERZERO instance, const uint32_t event) {
     if(!instance) {
         return false;
@@ -46,9 +56,14 @@ int32_t cuberzeroMain(const void* const pointer) {
         goto freeSubmenu;
     }
 
+    if(!(instance->view.widget = widget_alloc())) {
+        messageError = "widget_alloc() failed";
+        goto freeVariableList;
+    }
+
     if(!(instance->viewport = view_port_alloc())) {
         messageError = "view_port_alloc() failed";
-        goto freeVariableList;
+        goto freeWidget;
     }
 
     if(!(instance->dispatcher = view_dispatcher_alloc())) {
@@ -64,18 +79,18 @@ int32_t cuberzeroMain(const void* const pointer) {
         (AppSceneOnEnterCallback)SceneSettingsEnter,
         (AppSceneOnEnterCallback)SceneTimerEnter};
     const AppSceneOnEventCallback onEvent[] = {
-        (AppSceneOnEventCallback)SceneAboutEvent,
+        callbackEmptyEvent,
         (AppSceneOnEventCallback)SceneCubeSelectEvent,
         (AppSceneOnEventCallback)SceneHomeEvent,
-        (AppSceneOnEventCallback)SceneSettingsEvent,
+        callbackEmptyEvent,
         (AppSceneOnEventCallback)SceneTimerEvent};
     const AppSceneOnExitCallback onExit[] = {
-        (AppSceneOnExitCallback)SceneAboutExit,
-        (AppSceneOnExitCallback)SceneCubeSelectExit,
-        (AppSceneOnExitCallback)SceneHomeExit,
+        callbackEmptyExit,
+        callbackEmptyExit,
+        callbackEmptyExit,
         (AppSceneOnExitCallback)SceneSettingsExit,
         (AppSceneOnExitCallback)SceneTimerExit};
-    const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, CUBERZERO_SCENE_COUNT};
+    const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
     if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
         messageError = "scene_manager_alloc() failed";
@@ -93,17 +108,22 @@ int32_t cuberzeroMain(const void* const pointer) {
         instance->dispatcher,
         CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
         variable_item_list_get_view(instance->view.variableList));
+    view_dispatcher_add_view(
+        instance->dispatcher, CUBERZERO_VIEW_WIDGET, widget_get_view(instance->view.widget));
     view_dispatcher_attach_to_gui(
         instance->dispatcher, instance->interface, ViewDispatcherTypeFullscreen);
     scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
     view_dispatcher_run(instance->dispatcher);
     view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
     view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
+    view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_WIDGET);
     scene_manager_free(instance->manager);
 freeDispatcher:
     view_dispatcher_free(instance->dispatcher);
 freeViewport:
     view_port_free(instance->viewport);
+freeWidget:
+    widget_free(instance->view.widget);
 freeVariableList:
     variable_item_list_free(instance->view.variableList);
 freeSubmenu:

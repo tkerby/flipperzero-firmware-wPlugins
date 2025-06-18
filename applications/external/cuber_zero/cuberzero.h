@@ -1,47 +1,39 @@
 #include <furi.h>
-#include <applications/services/gui/view_dispatcher.h>
-#include <applications/services/gui/scene_manager.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/widget.h>
+#include <applications/services/gui/view_dispatcher.h>
+#include <applications/services/gui/scene_manager.h>
 
-#define CUBERZERO_TAG "CuberZero"
+#ifndef __CUBERZERO_H__
+#define __CUBERZERO_H__
+
+#define CUBERZERO_TAG     "CuberZero"
+#define CUBERZERO_VERSION FAP_VERSION
 
 typedef struct {
     uint8_t cube;
 } CUBERZEROSETTINGS, *PCUBERZEROSETTINGS;
 
 typedef struct {
+    CUBERZEROSETTINGS settings;
+    struct {
+        struct {
+            uint8_t selectedItem;
+        } home;
+    } scene;
+
     Gui* interface;
     struct {
         Submenu* submenu;
         VariableItemList* variableList;
+        Widget* widget;
     } view;
 
     ViewPort* viewport;
     ViewDispatcher* dispatcher;
     SceneManager* manager;
-    CUBERZEROSETTINGS settings;
-
-    struct {
-        struct {
-            uint32_t selectedItem;
-        } home;
-    } scene;
 } CUBERZERO, *PCUBERZERO;
-
-typedef enum {
-    CUBERZERO_VIEW_SUBMENU,
-    CUBERZERO_VIEW_VARIABLE_ITEM_LIST
-} CUBERZEROVIEW;
-
-typedef enum {
-    CUBERZERO_SCENE_ABOUT,
-    CUBERZERO_SCENE_CUBE_SELECT,
-    CUBERZERO_SCENE_HOME,
-    CUBERZERO_SCENE_SETTINGS,
-    CUBERZERO_SCENE_TIMER,
-    CUBERZERO_SCENE_COUNT
-} CUBERZEROSCENE;
 
 typedef enum {
     WCA_3X3,
@@ -61,23 +53,40 @@ typedef enum {
     WCA_4X4_BLINDFOLDED,
     WCA_5X5_BLINDFOLDED,
     WCA_3X3_MULTIBLIND,
-    CUBERZERO_CUBE_COUNT
+    COUNT_CUBERZEROCUBE
 } CUBERZEROCUBE;
 
+typedef enum {
+    CUBERZERO_SCENE_ABOUT,
+    CUBERZERO_SCENE_CUBE_SELECT,
+    CUBERZERO_SCENE_HOME,
+    CUBERZERO_SCENE_SETTINGS,
+    CUBERZERO_SCENE_TIMER,
+    COUNT_CUBERZEROSCENE
+} CUBERZEROSCENE;
+
+typedef enum {
+    CUBERZERO_VIEW_SUBMENU,
+    CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
+    CUBERZERO_VIEW_WIDGET
+} CUBERZEROVIEW;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings);
 void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings);
 void SceneAboutEnter(const PCUBERZERO instance);
-bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneAboutExit(const PCUBERZERO instance);
 void SceneCubeSelectEnter(const PCUBERZERO instance);
 bool SceneCubeSelectEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneCubeSelectExit(const PCUBERZERO instance);
 void SceneHomeEnter(const PCUBERZERO instance);
 bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneHomeExit(const PCUBERZERO instance);
 void SceneSettingsEnter(const PCUBERZERO instance);
-bool SceneSettingsEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneSettingsExit(const PCUBERZERO instance);
 void SceneTimerEnter(const PCUBERZERO instance);
 bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneTimerExit(const PCUBERZERO instance);
+#ifdef __cplusplus
+}
+#endif
+#endif

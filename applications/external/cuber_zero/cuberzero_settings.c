@@ -25,7 +25,7 @@ void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings) {
         goto freeFile;
     }
 
-    if(settings->cube >= CUBERZERO_CUBE_COUNT) {
+    if(settings->cube >= COUNT_CUBERZEROCUBE) {
         settings->cube = DEFAULT_SETTINGS_CUBE;
     }
 
