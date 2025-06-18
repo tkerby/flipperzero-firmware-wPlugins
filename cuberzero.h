@@ -1,13 +1,15 @@
 #include <furi.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/variable_item_list.h>
+#include <gui/modules/widget.h>
 #include <applications/services/gui/view_dispatcher.h>
 #include <applications/services/gui/scene_manager.h>
 
 #ifndef __CUBERZERO_H__
 #define __CUBERZERO_H__
 
-#define CUBERZERO_TAG "CuberZero"
+#define CUBERZERO_TAG	  "CuberZero"
+#define CUBERZERO_VERSION "1.0.0"
 
 typedef struct {
 	uint8_t cube;
@@ -25,6 +27,7 @@ typedef struct {
 	struct {
 		Submenu* submenu;
 		VariableItemList* variableList;
+		Widget* widget;
 	} view;
 
 	ViewPort* viewport;
@@ -64,7 +67,8 @@ typedef enum {
 
 typedef enum {
 	CUBERZERO_VIEW_SUBMENU,
-	CUBERZERO_VIEW_VARIABLE_ITEM_LIST
+	CUBERZERO_VIEW_VARIABLE_ITEM_LIST,
+	CUBERZERO_VIEW_WIDGET
 } CUBERZEROVIEW;
 
 #ifdef __cplusplus
@@ -73,8 +77,6 @@ extern "C" {
 void CuberZeroSettingsLoad(const PCUBERZEROSETTINGS settings);
 void CuberZeroSettingsSave(const PCUBERZEROSETTINGS settings);
 void SceneAboutEnter(const PCUBERZERO instance);
-bool SceneAboutEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneAboutExit(const PCUBERZERO instance);
 void SceneCubeSelectEnter(const PCUBERZERO instance);
 bool SceneCubeSelectEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneHomeEnter(const PCUBERZERO instance);

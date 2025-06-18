@@ -56,9 +56,14 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto freeSubmenu;
 	}
 
+	if(!(instance->view.widget = widget_alloc())) {
+		messageError = "widget_alloc() failed";
+		goto freeVariableList;
+	}
+
 	if(!(instance->viewport = view_port_alloc())) {
 		messageError = "view_port_alloc() failed";
-		goto freeVariableList;
+		goto freeWidget;
 	}
 
 	if(!(instance->dispatcher = view_dispatcher_alloc())) {
@@ -67,8 +72,8 @@ int32_t cuberzeroMain(const void* const pointer) {
 	}
 
 	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
-	const AppSceneOnEventCallback onEvent[] = {(AppSceneOnEventCallback) SceneAboutEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, (AppSceneOnEventCallback) SceneTimerEvent};
-	const AppSceneOnExitCallback onExit[] = {(AppSceneOnExitCallback) SceneAboutExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
+	const AppSceneOnEventCallback onEvent[] = {callbackEmptyEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, (AppSceneOnEventCallback) SceneTimerEvent};
+	const AppSceneOnExitCallback onExit[] = {callbackEmptyExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
 	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
 	if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
@@ -81,16 +86,20 @@ int32_t cuberzeroMain(const void* const pointer) {
 	view_dispatcher_set_navigation_event_callback(instance->dispatcher, (ViewDispatcherNavigationEventCallback) callbackNavigationEvent);
 	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU, submenu_get_view(instance->view.submenu));
 	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST, variable_item_list_get_view(instance->view.variableList));
+	view_dispatcher_add_view(instance->dispatcher, CUBERZERO_VIEW_WIDGET, widget_get_view(instance->view.widget));
 	view_dispatcher_attach_to_gui(instance->dispatcher, instance->interface, ViewDispatcherTypeFullscreen);
 	scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_HOME);
 	view_dispatcher_run(instance->dispatcher);
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_SUBMENU);
 	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
+	view_dispatcher_remove_view(instance->dispatcher, CUBERZERO_VIEW_WIDGET);
 	scene_manager_free(instance->manager);
 freeDispatcher:
 	view_dispatcher_free(instance->dispatcher);
 freeViewport:
 	view_port_free(instance->viewport);
+freeWidget:
+	widget_free(instance->view.widget);
 freeVariableList:
 	variable_item_list_free(instance->view.variableList);
 freeSubmenu:
