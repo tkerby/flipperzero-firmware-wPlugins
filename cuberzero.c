@@ -1,5 +1,15 @@
 #include "cuberzero.h"
 
+static bool callbackEmptyEvent(void* const context, const SceneManagerEvent event) {
+	UNUSED(context);
+	UNUSED(event);
+	return false;
+}
+
+static void callbackEmptyExit(void* const context) {
+	UNUSED(context);
+}
+
 static bool callbackCustomEvent(const PCUBERZERO instance, const uint32_t event) {
 	if(!instance) {
 		return false;
@@ -19,8 +29,6 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
 	FURI_LOG_I(CUBERZERO_TAG, "Initializing");
-	FURI_LOG_I(CUBERZERO_TAG, "32-Bit Max: %lu", (uint32_t) (((uint32_t) 0) - 1));
-	FURI_LOG_I(CUBERZERO_TAG, "64-Bit Max: %llu", (uint64_t) (((uint64_t) 0) - 1));
 	const char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
@@ -59,9 +67,9 @@ int32_t cuberzeroMain(const void* const pointer) {
 	}
 
 	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
-	const AppSceneOnEventCallback onEvent[] = {(AppSceneOnEventCallback) SceneAboutEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, (AppSceneOnEventCallback) SceneSettingsEvent, (AppSceneOnEventCallback) SceneTimerEvent};
-	const AppSceneOnExitCallback onExit[] = {(AppSceneOnExitCallback) SceneAboutExit, (AppSceneOnExitCallback) SceneCubeSelectExit, (AppSceneOnExitCallback) SceneHomeExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
-	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, CUBERZERO_SCENE_COUNT};
+	const AppSceneOnEventCallback onEvent[] = {(AppSceneOnEventCallback) SceneAboutEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, (AppSceneOnEventCallback) SceneTimerEvent};
+	const AppSceneOnExitCallback onExit[] = {(AppSceneOnExitCallback) SceneAboutExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
+	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
 	if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
 		messageError = "scene_manager_alloc() failed";

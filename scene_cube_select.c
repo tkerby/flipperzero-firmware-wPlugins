@@ -1,6 +1,6 @@
 #include "cuberzero.h"
 
-static const char* const WCAEvents[] = {"3x3x3 Cube", "2x2x2 Cube", "4x4x4 Cube", "5x5x5 Cube", "6x6x6 Cube", "7x7x7 Cube", "3x3x3 Blindfolded", "3x3x3 Fewest Moves", "3x3x3 One-Handed", "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1", "4x4x4 Blindfolded", "5x5x5 Blindfolded", "3x3x3 Multi-Blind"};
+static const char* const Cubes[] = {"3x3x3 Cube", "2x2x2 Cube", "4x4x4 Cube", "5x5x5 Cube", "6x6x6 Cube", "7x7x7 Cube", "3x3x3 Blindfolded", "3x3x3 Fewest Moves", "3x3x3 One-Handed", "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1", "4x4x4 Blindfolded", "5x5x5 Blindfolded", "3x3x3 Multi-Blind"};
 
 static void callbackItem(const PCUBERZERO instance, const uint32_t index) {
 	scene_manager_handle_custom_event(instance->manager, index);
@@ -10,8 +10,8 @@ static void callbackItem(const PCUBERZERO instance, const uint32_t index) {
 void SceneCubeSelectEnter(const PCUBERZERO instance) {
 	submenu_reset(instance->view.submenu);
 
-	for(uint8_t i = 0; i < CUBERZERO_CUBE_COUNT; i++) {
-		submenu_add_item(instance->view.submenu, WCAEvents[i], i, (SubmenuItemCallback) callbackItem, instance);
+	for(uint8_t i = 0; i < COUNT_CUBERZEROCUBE; i++) {
+		submenu_add_item(instance->view.submenu, Cubes[i], i, (SubmenuItemCallback) callbackItem, instance);
 	}
 
 	submenu_set_selected_item(instance->view.submenu, instance->settings.cube);
@@ -19,15 +19,11 @@ void SceneCubeSelectEnter(const PCUBERZERO instance) {
 }
 
 bool SceneCubeSelectEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-	if(event.type != SceneManagerEventTypeCustom || event.event >= CUBERZERO_CUBE_COUNT) {
+	if(event.type != SceneManagerEventTypeCustom || event.event >= COUNT_CUBERZEROCUBE) {
 		return false;
 	}
 
 	instance->settings.cube = event.event;
 	CuberZeroSettingsSave(&instance->settings);
 	return true;
-}
-
-void SceneCubeSelectExit(const PCUBERZERO instance) {
-	submenu_reset(instance->view.submenu);
 }

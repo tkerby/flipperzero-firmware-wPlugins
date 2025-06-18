@@ -15,15 +15,11 @@ void SceneHomeEnter(const PCUBERZERO instance) {
 }
 
 bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-	if(event.type != SceneManagerEventTypeCustom || event.event >= CUBERZERO_SCENE_COUNT) {
+	if(event.type != SceneManagerEventTypeCustom || event.event >= COUNT_CUBERZEROSCENE) {
 		return false;
 	}
 
 	instance->scene.home.selectedItem = submenu_get_selected_item(instance->view.submenu);
 	scene_manager_next_scene(instance->manager, event.event);
 	return true;
-}
-
-void SceneHomeExit(const PCUBERZERO instance) {
-	submenu_reset(instance->view.submenu);
 }
