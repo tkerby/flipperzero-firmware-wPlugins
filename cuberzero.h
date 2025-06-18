@@ -9,7 +9,7 @@
 #define __CUBERZERO_H__
 
 #define CUBERZERO_TAG	  "CuberZero"
-#define CUBERZERO_VERSION "1.0.0"
+#define CUBERZERO_VERSION "0.0.1"
 
 typedef struct {
 	uint8_t cube;
