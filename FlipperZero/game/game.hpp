@@ -100,19 +100,19 @@ private:
     static void timerCallback(void *context);         // timer callback (workaround to force view redraw)
 
     // Drawing methods
-    uint8_t rainFrame = 0;                                   // frame counter for rain effect
-    uint8_t welcomeFrame = 0;                                // frame counter for welcome animation
-    void drawRainEffect(Canvas *canvas, uint8_t &rainFrame); // draw rain effect on the canvas
-    void drawTitleView(Canvas *canvas);                      // draw the title view
-    void drawSystemMenuView(Canvas *canvas);                 // draw the system menu view
-    void drawCurrentView(Canvas *canvas);                    // draw the current view based on the main view state
-    void drawLobbyMenuView(Canvas *canvas);                  // draw the lobby menu view
-    void drawGameLocalView(Canvas *canvas);                  // draw the local game view
-    void drawGameOnlineView(Canvas *canvas);                 // draw the online game view
-    void drawWelcomeView(Canvas *canvas);                    // draw the welcome view
-    void drawLoginView(Canvas *canvas);                      // draw the login view
-    void drawRegistrationView(Canvas *canvas);               // draw the registration view
-    void drawUserInfoView(Canvas *canvas);                   // draw the user info view
+    uint8_t rainFrame = 0;                     // frame counter for rain effect
+    uint8_t welcomeFrame = 0;                  // frame counter for welcome animation
+    void drawRainEffect(Canvas *canvas);       // draw rain effect on the canvas
+    void drawTitleView(Canvas *canvas);        // draw the title view
+    void drawSystemMenuView(Canvas *canvas);   // draw the system menu view
+    void drawCurrentView(Canvas *canvas);      // draw the current view based on the main view state
+    void drawLobbyMenuView(Canvas *canvas);    // draw the lobby menu view
+    void drawGameLocalView(Canvas *canvas);    // draw the local game view
+    void drawGameOnlineView(Canvas *canvas);   // draw the online game view
+    void drawWelcomeView(Canvas *canvas);      // draw the welcome view
+    void drawLoginView(Canvas *canvas);        // draw the login view
+    void drawRegistrationView(Canvas *canvas); // draw the registration view
+    void drawUserInfoView(Canvas *canvas);     // draw the user info view
 
     // Instance variables for state
     InputKey lastInput = InputKeyMAX;

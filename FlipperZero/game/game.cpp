@@ -644,7 +644,7 @@ void FreeRoamGame::drawCurrentView(Canvas *canvas)
     }
 }
 
-void FreeRoamGame::drawRainEffect(Canvas *canvas, uint8_t &rainFrame)
+void FreeRoamGame::drawRainEffect(Canvas *canvas)
 {
     // rain droplets/star droplets effect
     for (int i = 0; i < 8; i++)
@@ -661,6 +661,12 @@ void FreeRoamGame::drawRainEffect(Canvas *canvas, uint8_t &rainFrame)
         canvas_draw_dot(canvas, x, y - 1);
         canvas_draw_dot(canvas, x, y + 1);
     }
+
+    rainFrame += 1;
+    if (rainFrame > 128)
+    {
+        rainFrame = 0;
+    }
 }
 
 void FreeRoamGame::drawTitleView(Canvas *canvas)
@@ -668,12 +674,7 @@ void FreeRoamGame::drawTitleView(Canvas *canvas)
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if (rainFrame > 128)
-    {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // draw title text
     if (currentTitleIndex == TitleIndexStart)
@@ -821,12 +822,7 @@ void FreeRoamGame::drawLobbyMenuView(Canvas *canvas)
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if (rainFrame > 128)
-    {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // draw lobby text
     if (currentLobbyMenuIndex == LobbyMenuLocal)
@@ -892,12 +888,7 @@ void FreeRoamGame::drawWelcomeView(Canvas *canvas)
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if (rainFrame > 128)
-    {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // Draw welcome text with blinking effect
     // Blink every 15 frames (show for 15, hide for 15)
