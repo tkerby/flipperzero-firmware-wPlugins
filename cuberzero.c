@@ -19,6 +19,8 @@ static bool callbackNavigationEvent(const PCUBERZERO instance) {
 int32_t cuberzeroMain(const void* const pointer) {
 	UNUSED(pointer);
 	FURI_LOG_I(CUBERZERO_TAG, "Initializing");
+	FURI_LOG_I(CUBERZERO_TAG, "32-Bit Max: %lu", (uint32_t) (((uint32_t) 0) - 1));
+	FURI_LOG_I(CUBERZERO_TAG, "64-Bit Max: %llu", (uint64_t) (((uint64_t) 0) - 1));
 	const char* messageError = NULL;
 	const PCUBERZERO instance = malloc(sizeof(CUBERZERO));
 
