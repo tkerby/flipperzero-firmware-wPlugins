@@ -68,7 +68,6 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 			ready = false;
 			timing = true;
 			furi_hal_light_blink_start(LightRed, 255, 10, 50);
-			furi_hal_light_blink_start(LightGreen, 255, 10, 50);
 		}
 	}
 }
