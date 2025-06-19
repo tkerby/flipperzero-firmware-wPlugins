@@ -31,8 +31,13 @@ That's it.
 Disclaimers. 
 
 I'm sure there's still countless bugs, but this is the closest I got to stable so far.
+
 I only tried this with the Momentum firmware for the flipper, so heads up there. 
+
 I had a huge amount of help with various ai tools. 
+
 I only ever dabbled in HTML, this is the first thing that's come close to something actually "finished" (it's still a long way off). 
+
 My first time ever posting anything here. 
+
 I have no idea what i'm doing.
