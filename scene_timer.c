@@ -25,7 +25,10 @@ struct ViewDispatcher {
 static uint32_t pressed;
 static FuriTimer* timer;
 static bool ready;
-static bool timing;
+static volatile bool timing;
+static volatile bool timed;
+static volatile uint32_t startTime;
+static volatile uint32_t endTime;
 
 static void callbackTimer(void* const instance) {
 	UNUSED(instance);
@@ -51,6 +54,8 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 
 		if(!timing) {
 			furi_timer_start(timer, 500);
+		} else {
+			endTime = pressed;
 		}
 
 		timing = false;
@@ -67,6 +72,8 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 		if(ready) {
 			ready = false;
 			timing = true;
+			timed = true;
+			startTime = furi_get_tick();
 			furi_hal_light_blink_start(LightRed, 255, 10, 50);
 		}
 	}
@@ -75,7 +82,7 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
 	UNUSED(instance);
 	FuriString* string = furi_string_alloc();
-	uint32_t tick = furi_get_tick();
+	uint32_t tick = timed ? timing ? furi_get_tick() - startTime : endTime - startTime : 0;
 	uint32_t seconds = tick / 1000;
 	furi_string_printf(string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
 	canvas_set_font(canvas, FontBigNumbers);
