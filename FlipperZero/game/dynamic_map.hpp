@@ -12,8 +12,9 @@ enum TileType
     TILE_EMPTY = 0,
     TILE_WALL = 1,
     TILE_DOOR = 2,
-    TILE_ENEMY_SPAWN = 3,
-    TILE_ITEM_SPAWN = 4
+    TILE_TELEPORT = 3,
+    TILE_ENEMY_SPAWN = 4,
+    TILE_ITEM_SPAWN = 5
 };
 
 // Wall structure for dynamic walls

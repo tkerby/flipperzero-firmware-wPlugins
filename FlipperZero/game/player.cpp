@@ -19,18 +19,44 @@ bool Player::collisionMapCheck(Vector new_position)
     if (currentDynamicMap == nullptr)
         return false;
 
-    uint8_t x = (uint8_t)new_position.x;
-    uint8_t y = (uint8_t)new_position.y;
+    // Check multiple points around the player to prevent clipping through walls
+    // This accounts for player size and floating point positions
+    float offset = 0.2f; // Small offset to check around player position
 
-    // Bounds checking
-    if (x >= currentDynamicMap->getWidth() || y >= currentDynamicMap->getHeight())
+    Vector checkPoints[] = {
+        new_position,                                             // Center
+        Vector(new_position.x - offset, new_position.y - offset), // Top-left
+        Vector(new_position.x + offset, new_position.y - offset), // Top-right
+        Vector(new_position.x - offset, new_position.y + offset), // Bottom-left
+        Vector(new_position.x + offset, new_position.y + offset)  // Bottom-right
+    };
+
+    for (int i = 0; i < 5; i++)
     {
-        // Out of bounds, treat as collision
-        return true;
+        Vector point = checkPoints[i];
+
+        // Ensure we're checking within bounds
+        if (point.x < 0 || point.y < 0)
+            return true; // Collision (out of bounds)
+
+        uint8_t x = (uint8_t)point.x;
+        uint8_t y = (uint8_t)point.y;
+
+        // Bounds checking
+        if (x >= currentDynamicMap->getWidth() || y >= currentDynamicMap->getHeight())
+        {
+            // Out of bounds, treat as collision
+            return true;
+        }
+
+        TileType tile = currentDynamicMap->getTile(x, y);
+        if (tile == TILE_WALL)
+        {
+            return true; // Wall blocks movement
+        }
     }
 
-    TileType tile = currentDynamicMap->getTile(x, y);
-    return (tile == TILE_WALL); // Only walls block movement
+    return false; // No collision detected
 }
 
 void Player::debounceInput(Game *game)
@@ -48,6 +74,58 @@ void Player::debounceInput(Game *game)
         shouldDebounce = false;
         inputHeld = false;
     }
+}
+
+Vector Player::findSafeSpawnPosition(const char *levelName)
+{
+    Vector defaultPos = start_position;
+
+    if (strcmp(levelName, "Tutorial") == 0)
+    {
+        defaultPos = Vector(6, 6); // Center of tutorial room
+    }
+    else if (strcmp(levelName, "First") == 0)
+    {
+        // Try several safe positions in the First level
+        Vector candidates[] = {
+            Vector(12, 12), // Upper left room
+            Vector(8, 15),  // Left side of middle room
+            Vector(5, 12),  // Lower in middle room
+            Vector(3, 12),  // Even lower
+            Vector(20, 12), // Right side of middle room
+        };
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (isPositionSafe(candidates[i]))
+            {
+                return candidates[i];
+            }
+        }
+        defaultPos = Vector(12, 12); // Fallback
+    }
+    else if (strcmp(levelName, "Second") == 0)
+    {
+        // Try several safe positions in the Second level
+        Vector candidates[] = {
+            Vector(12, 10), // Upper left room
+            Vector(8, 8),   // Safe spot in starting room
+            Vector(15, 10), // Another spot in starting room
+            Vector(10, 12), // Lower in starting room
+            Vector(35, 25), // Central hub
+        };
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (isPositionSafe(candidates[i]))
+            {
+                return candidates[i];
+            }
+        }
+        defaultPos = Vector(12, 10); // Fallback
+    }
+
+    return defaultPos;
 }
 
 void Player::handleMenu(Draw *draw, Game *game)
@@ -344,6 +422,24 @@ void Player::handleMenu(Draw *draw, Game *game)
     };
 }
 
+bool Player::isPositionSafe(Vector pos)
+{
+    if (currentDynamicMap == nullptr)
+        return true;
+
+    // Check if position is within bounds
+    if (pos.x < 0 || pos.y < 0 ||
+        pos.x >= currentDynamicMap->getWidth() ||
+        pos.y >= currentDynamicMap->getHeight())
+    {
+        return false;
+    }
+
+    // Check if the tile at this position is safe (not a wall)
+    TileType tile = currentDynamicMap->getTile((uint8_t)pos.x, (uint8_t)pos.y);
+    return (tile != TILE_WALL);
+}
+
 void Player::render(Draw *canvas, Game *game)
 {
     if (!canvas || !game || !game->current_level)
@@ -352,6 +448,30 @@ void Player::render(Draw *canvas, Game *game)
     }
 
     static uint8_t _state = GameStatePlaying;
+    if (justSwitchedLevels && !justStarted)
+    {
+        // show message after switching levels
+        canvas_clear(canvas->display);
+        canvas_set_color(canvas->display, ColorBlack);
+        canvas_draw_icon(canvas->display, 0, 0, &I_icon_menu_128x64px);
+        canvas_set_font(canvas->display, FontPrimary);
+        canvas_draw_str(canvas->display, 5, 15, "New Level");
+        canvas_set_font_custom(canvas->display, FONT_SIZE_SMALL);
+        canvas_draw_str(canvas->display, 5, 30, game->current_level->name);
+        canvas_draw_str(canvas->display, 5, 58, "Tip: BACK opens the menu.");
+        is_visible = false; // hide player entity during level switch
+        if (levelSwitchCounter < 50)
+        {
+            levelSwitchCounter++;
+        }
+        else
+        {
+            justSwitchedLevels = false;
+            levelSwitchCounter = 0; // reset counter
+            is_visible = true;      // show player entity again
+        }
+        return;
+    }
 
     this->switchLevels(game);
 
@@ -387,19 +507,16 @@ void Player::render(Draw *canvas, Game *game)
                     position.x - 1.5f, // Fixed offset instead of direction-based
                     position.y - 1.5f);
 
-                // DEBUG: Ensure 3D sprite position is updated using Entity methods
                 if (has3DSprite())
                 {
                     // Use Entity's methods instead of direct Sprite3D access
                     update3DSpritePosition();
 
-                    // Force sprite to face the camera for testing
-                    float camera_to_player_angle = atan2f(
-                        position.y - camera_pos.y,
-                        position.x - camera_pos.x);
-                    set3DSpriteRotation(camera_to_player_angle);
+                    // Make sprite face the same direction as the camera (forward)
+                    // Add π/2 offset to correct sprite orientation (was facing left, now faces forward)
+                    float camera_direction_angle = atan2f(normalized_dir.y, normalized_dir.x) + M_PI_2;
+                    set3DSpriteRotation(camera_direction_angle);
                 }
-                // Note: If sprite is lost, we can't recreate it from here (private method)
 
                 // Render map from 3rd person camera position
                 currentDynamicMap->render(camera_height, canvas, camera_pos, normalized_dir, plane);
@@ -436,6 +553,7 @@ void Player::switchLevels(Game *game)
     if (currentDynamicMap == nullptr || strcmp(currentDynamicMap->getName(), game->current_level->name) != 0)
     {
         currentDynamicMap.reset(); // reset so we can delete the old map if it exists
+        Vector posi = start_position;
 
         if (strcmp(game->current_level->name, "Tutorial") == 0)
         {
@@ -452,24 +570,25 @@ void Player::switchLevels(Game *game)
 
         if (currentDynamicMap != nullptr)
         {
-            // Only set position if we haven't been positioned yet (first load)
-            // OR if we're switching to a different level
-            if (!hasBeenPositioned)
+            // Find a safe spawn position for the new level
+            posi = findSafeSpawnPosition(game->current_level->name);
+
+            // Always set position when switching levels to avoid being stuck
+            position_set(posi);
+            hasBeenPositioned = true;
+
+            // update 3D sprite position immediately after setting player position
+            if (has3DSprite())
             {
-                Vector spawn_pos = this->start_position; // Use start position from the player entity
-                position = spawn_pos;
-                hasBeenPositioned = true;
+                update3DSpritePosition();
 
-                // update 3D sprite position immediately after setting player position
-                if (has3DSprite())
-                {
-                    update3DSpritePosition();
-
-                    // Also ensure the sprite rotation and scale are set correctly
-                    set3DSpriteRotation(0.0f); // Face forward initially
-                    set3DSpriteScale(1.0f);    // Normal scale
-                }
+                // Also ensure the sprite rotation and scale are set correctly
+                set3DSpriteRotation(atan2f(direction.y, direction.x) + M_PI_2); // Face forward with orientation correction
+                set3DSpriteScale(1.0f);                                         // Normal scale
             }
+
+            justSwitchedLevels = true; // Indicate that we just switched levels
+            levelSwitchCounter = 0;    // Reset counter for level switch delay
         }
     }
 }
@@ -506,16 +625,19 @@ void Player::update(Game *game)
             // Move forward in the direction the player is facing
             this->position_set(new_pos);
 
-            // Update 3D sprite position and ensure rotation is correct
+            // Update 3D sprite position and rotation to match camera direction
             if (has3DSprite())
             {
                 update3DSpritePosition();
-                // Ensure sprite rotation matches current direction for proper visibility
-                float rotation_angle = atan2f(direction.y, direction.x);
+                // Make sprite face forward (add π/2 to correct orientation)
+                float rotation_angle = atan2f(direction.y, direction.x) + M_PI_2;
                 set3DSpriteRotation(rotation_angle);
             }
         }
         game->input = InputKeyMAX;
+        justStarted = false;
+        justSwitchedLevels = false;
+        is_visible = true;
     }
     break;
     case InputKeyDown:
@@ -531,16 +653,19 @@ void Player::update(Game *game)
             // Move backward (opposite to the direction)
             this->position_set(new_pos);
 
-            // Update 3D sprite position and ensure rotation is correct
+            // Update 3D sprite position and rotation to match camera direction
             if (has3DSprite())
             {
                 update3DSpritePosition();
-                // Ensure sprite rotation matches current direction for proper visibility
-                float rotation_angle = atan2f(direction.y, direction.x);
+                // Make sprite face forward (add π/2 to correct orientation)
+                float rotation_angle = atan2f(direction.y, direction.x) + M_PI_2;
                 set3DSpriteRotation(rotation_angle);
             }
         }
         game->input = InputKeyMAX;
+        justStarted = false;
+        justSwitchedLevels = false;
+        is_visible = true;
     }
     break;
     case InputKeyLeft:
@@ -553,14 +678,17 @@ void Player::update(Game *game)
         plane.x = plane.x * cos(-rotSpeed) - plane.y * sin(-rotSpeed);
         plane.y = old_plane_x * sin(-rotSpeed) + plane.y * cos(-rotSpeed);
 
-        // Update sprite rotation to face the new direction
+        // Update sprite rotation to match new camera direction
         if (has3DSprite())
         {
-            float rotation_angle = atan2f(direction.y, direction.x);
+            float rotation_angle = atan2f(direction.y, direction.x) + M_PI_2;
             set3DSpriteRotation(rotation_angle);
         }
 
         game->input = InputKeyMAX;
+        justStarted = false;
+        justSwitchedLevels = false;
+        is_visible = true;
     }
     break;
     case InputKeyRight:
@@ -573,17 +701,41 @@ void Player::update(Game *game)
         plane.x = plane.x * cos(rotSpeed) - plane.y * sin(rotSpeed);
         plane.y = old_plane_x * sin(rotSpeed) + plane.y * cos(rotSpeed);
 
-        // Update sprite rotation to face the new direction
+        // Update sprite rotation to match new camera direction
         if (has3DSprite())
         {
-            float rotation_angle = atan2f(direction.y, direction.x);
+            float rotation_angle = atan2f(direction.y, direction.x) + M_PI_2;
             set3DSpriteRotation(rotation_angle);
         }
 
         game->input = InputKeyMAX;
+        justStarted = false;
+        justSwitchedLevels = false;
+        is_visible = true;
     }
     break;
     default:
         break;
+    }
+
+    // if at teleport, then switch levels
+    if (currentDynamicMap != nullptr && currentDynamicMap->getTile(position.x, position.y) == TILE_TELEPORT)
+    {
+        // Switch to the next level or map
+        if (game->current_level != nullptr)
+        {
+            if (strcmp(game->current_level->name, "Tutorial") == 0)
+            {
+                game->level_switch("First"); // Switch to First level
+            }
+            else if (strcmp(game->current_level->name, "First") == 0)
+            {
+                game->level_switch("Second"); // Switch to Second level
+            }
+            else if (strcmp(game->current_level->name, "Second") == 0)
+            {
+                game->level_switch("Tutorial"); // Go back to Tutorial or main menu
+            }
+        }
     }
 }

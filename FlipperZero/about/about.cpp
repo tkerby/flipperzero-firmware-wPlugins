@@ -1,5 +1,4 @@
-#include "about.hpp"
-#include "app.hpp"
+#include "about/about.hpp"
 
 FreeRoamAbout::FreeRoamAbout()
 {

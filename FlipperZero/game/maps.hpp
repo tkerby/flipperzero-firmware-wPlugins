@@ -55,6 +55,11 @@ inline std::unique_ptr<DynamicMap> mapsFirst()
     // BOTTOM SECTION - Final area
     map->addHorizontalWall(10, 50, 52, TILE_WALL); // Bottom section wall
 
+    // Add teleport tiles for level transition (in the lower right room center)
+    map->setTile(45, 45, TILE_TELEPORT); // Teleport in center of lower right room
+    map->setTile(46, 45, TILE_TELEPORT); // Extra teleport area
+    map->setTile(45, 46, TILE_TELEPORT); // Extra teleport area
+
     return map;
 }
 
@@ -102,10 +107,31 @@ inline std::unique_ptr<DynamicMap> mapsSecond()
     map->addVerticalWall(12, 8, 12, TILE_WALL);    // Internal wall in starting room
     map->addHorizontalWall(42, 48, 30, TILE_WALL); // Internal wall in central area
 
+    // Add teleport tiles for level transition (in the final bottom area)
+    map->setTile(30, 48, TILE_TELEPORT); // Teleport in final bottom room
+    map->setTile(31, 48, TILE_TELEPORT); // Extra teleport area
+    map->setTile(30, 49, TILE_TELEPORT); // Extra teleport area
+
     return map;
 }
 
 inline std::unique_ptr<DynamicMap> mapsTutorial(uint8_t width = 10, uint8_t height = 10)
 {
-    return std::make_unique<DynamicMap>("Tutorial", width, height);
+    auto map = std::make_unique<DynamicMap>("Tutorial", width, height);
+
+    // Create a simple room with walls
+    map->addRoom(1, 1, width - 2, height - 2, true);
+
+    // doorway/corridor exit in the right wall (teleport to next area)
+
+    // Remove a section of the right wall to create an opening
+    map->setTile(width - 1, height / 2, TILE_EMPTY); // Create opening in right wall
+    map->setTile(width - 2, height / 2, TILE_EMPTY); // Make corridor deeper
+
+    // teleport tiles at the end of the corridor
+    map->setTile(width - 3, height / 2, TILE_TELEPORT);     // Teleport trigger tile
+    map->setTile(width - 3, height / 2 - 1, TILE_TELEPORT); // Extra teleport area (above)
+    map->setTile(width - 3, height / 2 + 1, TILE_TELEPORT); // Extra teleport area (below)
+
+    return map;
 }
