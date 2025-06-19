@@ -1,0 +1,9 @@
+App(
+    appid="mind_probe",
+    name="Mind Probe",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="mind_probe_app",
+    stack_size=4 * 1024,
+    fap_icon="icon.png",
+    fap_category="Games",
+)
