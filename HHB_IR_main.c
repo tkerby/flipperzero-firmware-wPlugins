@@ -52,12 +52,12 @@ void send_message_ir(App* app) {
         };
         infrared_send(&msg, 1);
         furi_delay_ms(50);
-        InfraredMessage msg = {
+        InfraredMessage end = {
             .protocol = InfraredProtocolNECext,
             .address = 0x1337,
             .command = 0x4,
         };
-        infrared_send(&msg, 1);
+        infrared_send(&end, 1);
     }
 }
 
