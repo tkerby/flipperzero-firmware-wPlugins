@@ -96,13 +96,3 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	view_dispatcher_run(instance->dispatcher);
 	furi_timer_free(timer);
 }
-
-bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-	UNUSED(instance);
-	UNUSED(event);
-	return false;
-}
-
-void SceneTimerExit(const PCUBERZERO instance) {
-	UNUSED(instance);
-}

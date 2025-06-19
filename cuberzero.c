@@ -72,8 +72,8 @@ int32_t cuberzeroMain(const void* const pointer) {
 	}
 
 	const AppSceneOnEnterCallback onEnter[] = {(AppSceneOnEnterCallback) SceneAboutEnter, (AppSceneOnEnterCallback) SceneCubeSelectEnter, (AppSceneOnEnterCallback) SceneHomeEnter, (AppSceneOnEnterCallback) SceneSettingsEnter, (AppSceneOnEnterCallback) SceneTimerEnter};
-	const AppSceneOnEventCallback onEvent[] = {callbackEmptyEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, (AppSceneOnEventCallback) SceneTimerEvent};
-	const AppSceneOnExitCallback onExit[] = {callbackEmptyExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, (AppSceneOnExitCallback) SceneTimerExit};
+	const AppSceneOnEventCallback onEvent[] = {callbackEmptyEvent, (AppSceneOnEventCallback) SceneCubeSelectEvent, (AppSceneOnEventCallback) SceneHomeEvent, callbackEmptyEvent, callbackEmptyEvent};
+	const AppSceneOnExitCallback onExit[] = {callbackEmptyExit, callbackEmptyExit, callbackEmptyExit, (AppSceneOnExitCallback) SceneSettingsExit, callbackEmptyExit};
 	const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
 	if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {

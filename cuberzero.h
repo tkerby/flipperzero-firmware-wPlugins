@@ -84,8 +84,6 @@ bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneSettingsEnter(const PCUBERZERO instance);
 void SceneSettingsExit(const PCUBERZERO instance);
 void SceneTimerEnter(const PCUBERZERO instance);
-bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneTimerExit(const PCUBERZERO instance);
 #ifdef __cplusplus
 }
 #endif
