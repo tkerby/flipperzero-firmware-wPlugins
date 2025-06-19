@@ -926,15 +926,24 @@ void FreeRoamGame::drawLoginView(Canvas *canvas)
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Logging in...");
+            if (loading)
+            {
+                loading->setText("Logging in...");
+            }
         }
         if (!this->httpRequestIsFinished())
         {
-            loading->animate();
+            if (loading)
+            {
+                loading->animate();
+            }
         }
         else
         {
-            loading->stop();
+            if (loading)
+            {
+                loading->stop();
+            }
             loadingStarted = false;
             char response[256];
             FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
@@ -998,15 +1007,24 @@ void FreeRoamGame::drawRegistrationView(Canvas *canvas)
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Registering...");
+            if (loading)
+            {
+                loading->setText("Registering...");
+            }
         }
         if (!this->httpRequestIsFinished())
         {
-            loading->animate();
+            if (loading)
+            {
+                loading->animate();
+            }
         }
         else
         {
-            loading->stop();
+            if (loading)
+            {
+                loading->stop();
+            }
             loadingStarted = false;
             char response[256];
             FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
@@ -1069,11 +1087,17 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Fetching...");
+            if (loading)
+            {
+                loading->setText("Fetching...");
+            }
         }
         if (!this->httpRequestIsFinished())
         {
-            loading->animate();
+            if (loading)
+            {
+                loading->animate();
+            }
         }
         else
         {
@@ -1091,7 +1115,10 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 {
                     FURI_LOG_E(TAG, "Failed to parse game_stats");
                     userInfoStatus = UserInfoParseError;
-                    loading->stop();
+                    if (loading)
+                    {
+                        loading->stop();
+                    }
                     loadingStarted = false;
                     return;
                 }
@@ -1120,7 +1147,10 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                     if (max_health)
                         ::free(max_health);
                     ::free(game_stats);
-                    loading->stop();
+                    if (loading)
+                    {
+                        loading->stop();
+                    }
                     loadingStarted = false;
                     return;
                 }
@@ -1135,7 +1165,10 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                     {
                         FURI_LOG_E("FreeRoamGame", "Failed to create Player object");
                         userInfoStatus = UserInfoParseError;
-                        loading->stop();
+                        if (loading)
+                        {
+                            loading->stop();
+                        }
                         loadingStarted = false;
                         return;
                     }
@@ -1176,7 +1209,10 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 {
                     currentMainview = GameViewGameOnline; // Switch to online game view
                 }
-                loading->stop();
+                if (loading)
+                {
+                    loading->stop();
+                }
                 loadingStarted = false;
 
                 canvas_clear(canvas);
@@ -1256,15 +1292,24 @@ void FreeRoamGame::userRequest(RequestType requestType)
         FURI_LOG_E(TAG, "FreeRoamGame::userRequest: App context is null");
         return;
     }
-    char username[64];
-    char password[64];
+    char *username = (char *)malloc(64);
+    char *password = (char *)malloc(64);
+    if (!username || !password)
+    {
+        FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for credentials");
+        if (username)
+            free(username);
+        if (password)
+            free(password);
+        return;
+    }
     bool credentialsLoaded = true;
-    if (!app->load_char("user_name", username, sizeof(username)))
+    if (!app->load_char("user_name", username, 64))
     {
         FURI_LOG_E(TAG, "Failed to load user_name");
         credentialsLoaded = false;
     }
-    if (!app->load_char("user_pass", password, sizeof(password)))
+    if (!app->load_char("user_pass", password, 64))
     {
         FURI_LOG_E(TAG, "Failed to load user_pass");
         credentialsLoaded = false;
@@ -1283,10 +1328,19 @@ void FreeRoamGame::userRequest(RequestType requestType)
             userInfoStatus = UserInfoCredentialsMissing;
             break;
         }
+        free(username);
+        free(password);
         return;
     }
-    char payload[256];
-    snprintf(payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+    char *payload = (char *)malloc(256);
+    if (!payload)
+    {
+        FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for payload");
+        free(username);
+        free(password);
+        return;
+    }
+    snprintf(payload, 256, "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
     switch (requestType)
     {
     case RequestTypeLogin:
@@ -1302,20 +1356,38 @@ void FreeRoamGame::userRequest(RequestType requestType)
         }
         break;
     case RequestTypeUserInfo:
-        char url[128];
-        snprintf(url, sizeof(url), "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
+    {
+        char *url = (char *)malloc(128);
+        if (!url)
+        {
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for url");
+            userInfoStatus = UserInfoRequestError;
+            free(username);
+            free(password);
+            free(payload);
+            return;
+        }
+        snprintf(url, 128, "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
         if (!app->httpRequestAsync("user_info.txt", url, GET, "{\"Content-Type\":\"application/json\"}"))
         {
             userInfoStatus = UserInfoRequestError;
         }
-        break;
+        free(url);
+    }
+    break;
     default:
         FURI_LOG_E(TAG, "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;
         registrationStatus = RegistrationRequestError;
         userInfoStatus = UserInfoRequestError;
+        free(username);
+        free(password);
+        free(payload);
         return;
     }
+    free(username);
+    free(password);
+    free(payload);
 }
 
 bool FreeRoamGame::init(ViewDispatcher **viewDispatcher, void *appContext)
