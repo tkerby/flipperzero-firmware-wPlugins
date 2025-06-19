@@ -24,12 +24,15 @@ struct ViewDispatcher {
 
 static uint32_t pressed;
 static FuriTimer* timer;
+static bool ready;
+static bool timing;
 
 static void callbackTimer(void* const instance) {
 	UNUSED(instance);
 	furi_hal_light_set(LightRed, 0);
 	furi_hal_light_set(LightGreen, 255);
 	furi_hal_light_set(LightBlue, 0);
+	ready = true;
 }
 
 static void callbackInput(const InputEvent* const event, const PCUBERZERO instance) {
@@ -44,7 +47,14 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 
 	if(event->type == InputTypePress) {
 		pressed = furi_get_tick();
-		furi_timer_start(timer, 500);
+		ready = false;
+
+		if(!timing) {
+			furi_timer_start(timer, 500);
+		}
+
+		timing = false;
+		furi_hal_light_blink_stop();
 		furi_hal_light_set(LightRed, 255);
 		furi_hal_light_set(LightGreen, 0);
 		furi_hal_light_set(LightBlue, 0);
@@ -53,6 +63,13 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 		furi_hal_light_set(LightRed, 0);
 		furi_hal_light_set(LightGreen, 0);
 		furi_hal_light_set(LightBlue, 0);
+
+		if(ready) {
+			ready = false;
+			timing = true;
+			furi_hal_light_blink_start(LightRed, 255, 10, 50);
+			furi_hal_light_blink_start(LightGreen, 255, 10, 50);
+		}
 	}
 }
 
