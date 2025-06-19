@@ -60,13 +60,8 @@ typedef enum {
 } RequestType;
 
 class FreeRoamApp;
-
 class FreeRoamGame {
 private:
-    View* view = nullptr;
-    ViewDispatcher** viewDispatcherRef = nullptr;
-    void* appContext = nullptr;
-
     GameMainView currentMainview = GameViewWelcome; // current main view of the game
     TitleIndex currentTitleIndex =
         TitleIndexStart; // current title index (must be in the GameViewTitle)
@@ -81,7 +76,6 @@ private:
 
     // helpers
     bool startGame(Canvas* canvas); // start the actual game
-    void endGame(); // end the game and return to the submenu
     void switchToNextLevel(); // switch to the next level in the game
     void switchToLevel(int levelIndex); // switch to a specific level by index
     void updateSoundToggle(); // update sound toggle state
@@ -100,10 +94,6 @@ private:
     void inputManager(); // manage input across all views
 
     // Static callback wrappers
-    static FreeRoamGame* instance_ptr; // track current instance for callbacks fallback
-    static void drawCallback(Canvas* canvas, void* model); // draw callback for canvas rendering
-    static bool
-        inputCallback(InputEvent* event, void* model); // input callback for handling input events
     static uint32_t
         callbackToSubmenu(void* context); // callback to send the user back to the submenu
     static void timerCallback(void* context); // timer callback (workaround to force view redraw)
@@ -111,7 +101,7 @@ private:
     // Drawing methods
     uint8_t rainFrame = 0; // frame counter for rain effect
     uint8_t welcomeFrame = 0; // frame counter for welcome animation
-    void drawRainEffect(Canvas* canvas, uint8_t& rainFrame); // draw rain effect on the canvas
+    void drawRainEffect(Canvas* canvas); // draw rain effect on the canvas
     void drawTitleView(Canvas* canvas); // draw the title view
     void drawSystemMenuView(Canvas* canvas); // draw the system menu view
     void drawCurrentView(Canvas* canvas); // draw the current view based on the main view state
@@ -126,13 +116,11 @@ private:
     // Instance variables for state
     InputKey lastInput = InputKeyMAX;
     bool inputHeld = false;
-    FuriTimer* timer = nullptr;
     void debounceInput();
     bool shouldDebounce = false;
 
     std::unique_ptr<GameEngine> engine; // Engine instance
-    std::unique_ptr<Draw> draw; // Draw instance - must live as long as game
-    bool isGameRunning = false; // flag to check if the game is running
+    std::unique_ptr<Draw> draw; // Draw instance
 
     // Level switching functionality
     int currentLevelIndex = 0; // Current level index
@@ -141,6 +129,7 @@ private:
 
     std::unique_ptr<Player> player; // Player instance
     std::unique_ptr<Loading> loading; // Loading instance for animations
+    bool isGameRunning = false; // Flag to check if the game is running
 
     // HTTP methods
     LoginStatus loginStatus = LoginNotStarted; // Current login status
@@ -170,6 +159,16 @@ public:
     FreeRoamGame();
     ~FreeRoamGame();
 
-    bool init(ViewDispatcher** viewDispatcher, void* appContext);
-    void free();
+    bool init(ViewDispatcher** viewDispatcher, void* appContext); // initialize the game
+    void endGame(); // end the game and return to the submenu
+    bool isActive() const {
+        return shouldReturnToMenu == false;
+    } // Check if the game is active
+    void updateDraw(Canvas* canvas); // update and draw the game
+    void updateInput(InputEvent* event); // update input for the game
+
+    // Public accessors needed for ViewPort callback
+    bool shouldReturnToMenu = false; // Flag to signal return to menu
+    ViewDispatcher** viewDispatcherRef = nullptr;
+    void* appContext = nullptr;
 };

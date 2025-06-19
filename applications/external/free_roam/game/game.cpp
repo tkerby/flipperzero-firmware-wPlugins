@@ -7,65 +7,41 @@
 #include "game/sprites.hpp"
 #include <math.h>
 
-// Define static instance_ptr for callback fallback
-FreeRoamGame* FreeRoamGame::instance_ptr = nullptr;
-
 FreeRoamGame::FreeRoamGame() {
     // nothing to do
 }
 
 FreeRoamGame::~FreeRoamGame() {
-    free();
+    // also nothing to do anymore since I moved the view/timer to the app
 }
 
-void FreeRoamGame::drawCallback(Canvas* canvas, void* model) {
-    // fallback to stored instance if model is null
-    FreeRoamGame* game = static_cast<FreeRoamGame*>(model ? model : instance_ptr);
-    if(!game) {
-        FURI_LOG_E("FreeRoamGame", "drawCallback: no game instance available");
+void FreeRoamGame::updateDraw(Canvas* canvas) {
+    this->drawCurrentView(canvas);
+
+    if(this->player && this->player->shouldLeaveGame()) {
+        this->soundToggle = this->player->getSoundToggle();
+        this->vibrationToggle = this->player->getVibrationToggle();
+        this->endGame(); // End the game if the player wants to leave
+    }
+}
+
+void FreeRoamGame::updateInput(InputEvent* event) {
+    if(!event) {
+        FURI_LOG_E("FreeRoamGame", "updateInput: no event available");
         return;
     }
+
+    this->lastInput = event->key;
 
     // Only run inputManager when not in an active game to avoid input conflicts
-    if(!(game->currentMainview == GameViewGameLocal && game->isGameRunning)) {
-        game->inputManager();
+    if(!(this->currentMainview == GameViewGameLocal && this->isGameRunning)) {
+        this->inputManager();
     }
-
-    game->drawCurrentView(canvas);
-
-    if(game->player && game->player->shouldLeaveGame()) {
-        game->soundToggle = game->player->getSoundToggle();
-        game->vibrationToggle = game->player->getVibrationToggle();
-        game->endGame(); // End the game if the player wants to leave
-        return;
-    }
-}
-
-bool FreeRoamGame::inputCallback(InputEvent* event, void* model) {
-    // fallback to stored instance if model is null
-    FreeRoamGame* game = static_cast<FreeRoamGame*>(model ? model : instance_ptr);
-    if(!game || !event) {
-        FURI_LOG_E("FreeRoamGame", "inputCallback: game=%p, event=%p", (void*)game, (void*)event);
-        return false;
-    }
-    game->lastInput = event->key;
-    return true;
 }
 
 uint32_t FreeRoamGame::callbackToSubmenu(void* context) {
     UNUSED(context);
     return FreeRoamViewSubmenu;
-}
-
-void FreeRoamGame::timerCallback(void* context) {
-    FreeRoamGame* game = (FreeRoamGame*)context;
-    if(game && game->view && game->viewDispatcherRef && *game->viewDispatcherRef) {
-        // Only trigger redraw if we're not currently in a game startup phase
-        if(game->currentMainview != GameViewGameLocal || game->isGameRunning) {
-            // Force view redraw by switching to the same view to trigger a refresh
-            view_dispatcher_switch_to_view(*game->viewDispatcherRef, FreeRoamViewMain);
-        }
-    }
 }
 
 void FreeRoamGame::debounceInput() {
@@ -159,6 +135,9 @@ bool FreeRoamGame::startGame(Canvas* canvas) {
 }
 
 void FreeRoamGame::endGame() {
+    shouldReturnToMenu = true;
+    isGameRunning = false;
+
     this->updateSoundToggle();
     this->updateVibrationToggle();
 
@@ -166,28 +145,9 @@ void FreeRoamGame::endGame() {
         engine->stop();
     }
 
-    // Clean up draw object
     if(draw) {
         draw.reset();
     }
-
-    // Mark game as not running
-    isGameRunning = false;
-
-    // Stop the timer if it exists
-    if(timer) {
-        furi_timer_stop(timer);
-        furi_timer_free(timer);
-        timer = nullptr;
-    }
-
-    // Switch back to the submenu view
-    if(viewDispatcherRef && *viewDispatcherRef) {
-        view_dispatcher_switch_to_view(*viewDispatcherRef, FreeRoamViewSubmenu);
-    }
-
-    // Clear the instance pointer
-    instance_ptr = nullptr;
 }
 
 void FreeRoamGame::switchToNextLevel() {
@@ -595,7 +555,7 @@ void FreeRoamGame::drawCurrentView(Canvas* canvas) {
     }
 }
 
-void FreeRoamGame::drawRainEffect(Canvas* canvas, uint8_t& rainFrame) {
+void FreeRoamGame::drawRainEffect(Canvas* canvas) {
     // rain droplets/star droplets effect
     for(int i = 0; i < 8; i++) {
         // Use pseudo-random offsets based on frame and droplet index
@@ -610,17 +570,18 @@ void FreeRoamGame::drawRainEffect(Canvas* canvas, uint8_t& rainFrame) {
         canvas_draw_dot(canvas, x, y - 1);
         canvas_draw_dot(canvas, x, y + 1);
     }
+
+    rainFrame += 1;
+    if(rainFrame > 128) {
+        rainFrame = 0;
+    }
 }
 
 void FreeRoamGame::drawTitleView(Canvas* canvas) {
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if(rainFrame > 128) {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // draw title text
     if(currentTitleIndex == TitleIndexStart) {
@@ -760,11 +721,7 @@ void FreeRoamGame::drawLobbyMenuView(Canvas* canvas) {
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if(rainFrame > 128) {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // draw lobby text
     if(currentLobbyMenuIndex == LobbyMenuLocal) {
@@ -818,11 +775,7 @@ void FreeRoamGame::drawWelcomeView(Canvas* canvas) {
     canvas_clear(canvas);
 
     // rain effect
-    drawRainEffect(canvas, rainFrame);
-    rainFrame += 1;
-    if(rainFrame > 128) {
-        rainFrame = 0;
-    }
+    drawRainEffect(canvas);
 
     // Draw welcome text with blinking effect
     // Blink every 15 frames (show for 15, hide for 15)
@@ -854,12 +807,18 @@ void FreeRoamGame::drawLoginView(Canvas* canvas) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Logging in...");
+            if(loading) {
+                loading->setText("Logging in...");
+            }
         }
         if(!this->httpRequestIsFinished()) {
-            loading->animate();
+            if(loading) {
+                loading->animate();
+            }
         } else {
-            loading->stop();
+            if(loading) {
+                loading->stop();
+            }
             loadingStarted = false;
             char response[256];
             FreeRoamApp* app = static_cast<FreeRoamApp*>(appContext);
@@ -911,12 +870,18 @@ void FreeRoamGame::drawRegistrationView(Canvas* canvas) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Registering...");
+            if(loading) {
+                loading->setText("Registering...");
+            }
         }
         if(!this->httpRequestIsFinished()) {
-            loading->animate();
+            if(loading) {
+                loading->animate();
+            }
         } else {
-            loading->stop();
+            if(loading) {
+                loading->stop();
+            }
             loadingStarted = false;
             char response[256];
             FreeRoamApp* app = static_cast<FreeRoamApp*>(appContext);
@@ -965,10 +930,14 @@ void FreeRoamGame::drawUserInfoView(Canvas* canvas) {
                 loading = std::make_unique<Loading>(canvas);
             }
             loadingStarted = true;
-            loading->setText("Fetching...");
+            if(loading) {
+                loading->setText("Fetching...");
+            }
         }
         if(!this->httpRequestIsFinished()) {
-            loading->animate();
+            if(loading) {
+                loading->animate();
+            }
         } else {
             canvas_draw_str(canvas, 0, 10, "Loading user info...");
             canvas_draw_str(canvas, 0, 20, "Please wait...");
@@ -982,15 +951,14 @@ void FreeRoamGame::drawUserInfoView(Canvas* canvas) {
                 if(!game_stats) {
                     FURI_LOG_E(TAG, "Failed to parse game_stats");
                     userInfoStatus = UserInfoParseError;
-                    loading->stop();
+                    if(loading) {
+                        loading->stop();
+                    }
                     loadingStarted = false;
                     return;
                 }
                 canvas_clear(canvas);
                 canvas_draw_str(canvas, 0, 10, "User info loaded!");
-                /*
-                {"game_stats":{"username":"JBlanked","level":18,"xp":77447,"health":270,"strength":28,"max_health":270,"health_regen":1,"elapsed_health_regen":36.133125,"attack_timer":0.1,"elapsed_attack_timer":62.666054,"direction":"right","state":"idle","start_position_x":384,"start_position_y":192,"dx":0,"dy":0}}
-                */
                 char* username = get_json_value("username", game_stats);
                 char* level = get_json_value("level", game_stats);
                 char* xp = get_json_value("xp", game_stats);
@@ -1007,7 +975,9 @@ void FreeRoamGame::drawUserInfoView(Canvas* canvas) {
                     if(strength) ::free(strength);
                     if(max_health) ::free(max_health);
                     ::free(game_stats);
-                    loading->stop();
+                    if(loading) {
+                        loading->stop();
+                    }
                     loadingStarted = false;
                     return;
                 }
@@ -1020,7 +990,9 @@ void FreeRoamGame::drawUserInfoView(Canvas* canvas) {
                     if(!player) {
                         FURI_LOG_E("FreeRoamGame", "Failed to create Player object");
                         userInfoStatus = UserInfoParseError;
-                        loading->stop();
+                        if(loading) {
+                            loading->stop();
+                        }
                         loadingStarted = false;
                         return;
                     }
@@ -1058,7 +1030,9 @@ void FreeRoamGame::drawUserInfoView(Canvas* canvas) {
                 } else if(currentLobbyMenuIndex == LobbyMenuOnline) {
                     currentMainview = GameViewGameOnline; // Switch to online game view
                 }
-                loading->stop();
+                if(loading) {
+                    loading->stop();
+                }
                 loadingStarted = false;
 
                 canvas_clear(canvas);
@@ -1130,14 +1104,20 @@ void FreeRoamGame::userRequest(RequestType requestType) {
         FURI_LOG_E(TAG, "FreeRoamGame::userRequest: App context is null");
         return;
     }
-    char username[64];
-    char password[64];
+    char* username = (char*)malloc(64);
+    char* password = (char*)malloc(64);
+    if(!username || !password) {
+        FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for credentials");
+        if(username) free(username);
+        if(password) free(password);
+        return;
+    }
     bool credentialsLoaded = true;
-    if(!app->load_char("user_name", username, sizeof(username))) {
+    if(!app->load_char("user_name", username, 64)) {
         FURI_LOG_E(TAG, "Failed to load user_name");
         credentialsLoaded = false;
     }
-    if(!app->load_char("user_pass", password, sizeof(password))) {
+    if(!app->load_char("user_pass", password, 64)) {
         FURI_LOG_E(TAG, "Failed to load user_pass");
         credentialsLoaded = false;
     }
@@ -1153,11 +1133,18 @@ void FreeRoamGame::userRequest(RequestType requestType) {
             userInfoStatus = UserInfoCredentialsMissing;
             break;
         }
+        free(username);
+        free(password);
         return;
     }
-    char payload[256];
-    snprintf(
-        payload, sizeof(payload), "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+    char* payload = (char*)malloc(256);
+    if(!payload) {
+        FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for payload");
+        free(username);
+        free(password);
+        return;
+    }
+    snprintf(payload, 256, "{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
     switch(requestType) {
     case RequestTypeLogin:
         if(!app->httpRequestAsync(
@@ -1179,79 +1166,61 @@ void FreeRoamGame::userRequest(RequestType requestType) {
             registrationStatus = RegistrationRequestError;
         }
         break;
-    case RequestTypeUserInfo:
-        char url[128];
-        snprintf(
-            url, sizeof(url), "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
+    case RequestTypeUserInfo: {
+        char* url = (char*)malloc(128);
+        if(!url) {
+            FURI_LOG_E(TAG, "userRequest: Failed to allocate memory for url");
+            userInfoStatus = UserInfoRequestError;
+            free(username);
+            free(password);
+            free(payload);
+            return;
+        }
+        snprintf(url, 128, "https://www.jblanked.com/flipper/api/user/game-stats/%s/", username);
         if(!app->httpRequestAsync(
                "user_info.txt", url, GET, "{\"Content-Type\":\"application/json\"}")) {
             userInfoStatus = UserInfoRequestError;
         }
-        break;
+        free(url);
+    } break;
     default:
         FURI_LOG_E(TAG, "Unknown request type: %d", requestType);
         loginStatus = LoginRequestError;
         registrationStatus = RegistrationRequestError;
         userInfoStatus = UserInfoRequestError;
+        free(username);
+        free(password);
+        free(payload);
         return;
     }
+    free(username);
+    free(password);
+    free(payload);
 }
 
 bool FreeRoamGame::init(ViewDispatcher** viewDispatcher, void* appContext) {
-    viewDispatcherRef = viewDispatcher;
+    this->shouldReturnToMenu = false;
+    this->viewDispatcherRef = viewDispatcher;
     this->appContext = appContext;
-    instance_ptr = this;
 
-    if(!easy_flipper_set_view(
-           &view,
-           FreeRoamViewMain,
-           drawCallback,
-           inputCallback,
-           callbackToSubmenu,
-           viewDispatcher,
-           this)) {
-        // clear fallback on failure
-        instance_ptr = nullptr;
+    FreeRoamApp* app = static_cast<FreeRoamApp*>(appContext);
+    if(!app) {
+        FURI_LOG_E(TAG, "FreeRoamGame::init: App context is null");
         return false;
     }
 
-    FreeRoamApp* app = static_cast<FreeRoamApp*>(appContext);
-
     // set sound/vibration toggle states
-    soundToggle = app->isSoundEnabled() ? ToggleOn : ToggleOff;
-    vibrationToggle = app->isVibrationEnabled() ? ToggleOn : ToggleOff;
-
-    // Create and start timer for continuous drawing updates
-    timer = furi_timer_alloc(timerCallback, FuriTimerTypePeriodic, this);
-    if(timer) {
-        furi_timer_start(timer, 100);
-    }
+    this->soundToggle = app->isSoundEnabled() ? ToggleOn : ToggleOff;
+    this->vibrationToggle = app->isVibrationEnabled() ? ToggleOn : ToggleOff;
 
     if(!app->isBoardConnected()) {
         FURI_LOG_E(TAG, "FreeRoamGame::init: Board is not connected");
         easy_flipper_dialog(
             "FlipperHTTP Error",
             "Ensure your WiFi Developer\nBoard or Pico W is connected\nand the latest FlipperHTTP\nfirmware is installed.");
-        endGame();
+        endGame(); // End the game if board is not connected
         return false;
     }
 
     return true;
-}
-
-void FreeRoamGame::free() {
-    // Stop and free timer when freeing the view
-    if(timer) {
-        furi_timer_stop(timer);
-        furi_timer_free(timer);
-        timer = nullptr;
-    }
-
-    // clear fallback when freeing view
-    if(instance_ptr == this) instance_ptr = nullptr;
-    if(view && viewDispatcherRef && *viewDispatcherRef) {
-        view_dispatcher_remove_view(*viewDispatcherRef, FreeRoamViewMain);
-        view_free(view);
-        view = nullptr;
-    }
 }
