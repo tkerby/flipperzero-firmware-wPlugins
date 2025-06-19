@@ -16,7 +16,7 @@ Enjoy. Or don't.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-To Install
+To Install:
 
 Download the "apps_data" folder and extract the "mind_probe" folder. (this mind_probe folder contain the database.csv and database.idx files)
 
@@ -28,7 +28,7 @@ That's it.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Disclaimers. 
+Disclaimers: 
 
 I'm sure there's still countless bugs, but this is the closest I got to stable so far.
 
