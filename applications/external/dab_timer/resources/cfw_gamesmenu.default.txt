@@ -54,6 +54,7 @@ GamesMenuList Version 0
 /ext/apps/Games/lifecounter.fap
 /ext/apps/Games/mandelbrotset.fap
 /ext/apps/Games/matagotchi.fap
+/ext/apps/Games/mind_probe.fap
 /ext/apps/Games/minesweeper.fap
 /ext/apps/Games/minesweeper_redux.fap
 /ext/apps/Games/mode7_demo.fap
