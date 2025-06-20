@@ -21,6 +21,12 @@ typedef struct {
 		struct {
 			uint8_t selectedItem;
 		} home;
+
+		struct {
+			ViewPort* viewport;
+			FuriTimer* timer;
+			FuriMessageQueue* queue;
+		} timer;
 	} scene;
 
 	Gui* interface;
@@ -30,7 +36,6 @@ typedef struct {
 		Widget* widget;
 	} view;
 
-	ViewPort* viewport;
 	ViewDispatcher* dispatcher;
 	SceneManager* manager;
 } CUBERZERO, *PCUBERZERO;
