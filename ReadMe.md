@@ -41,6 +41,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [IR Xbox Controller v1.4 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - Added: [FZ nRF24 Jammer v1.0 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Added: [Mind Probe v0.1 (By Miksang)](https://github.com/Miksang/flipper_guessing_game)
+- Updatgd: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 
 <a name="release">
 
