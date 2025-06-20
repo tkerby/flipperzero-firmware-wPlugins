@@ -13,6 +13,6 @@ App(
     fap_icon="anki_remote.png",  # 10x10 1-bit PNG
     fap_description="A customizable BLE keyboard remote",
     fap_author="Blue5GD",
-    fap_weburl="https://github.com/user/keyboard_remote", #DUMMY LINE REMEMBER TO CHANGE
+    fap_weburl="https://github.com/Blue5GD/Anki-Remote",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
