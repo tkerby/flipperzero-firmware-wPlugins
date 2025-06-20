@@ -24,12 +24,12 @@ Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once 
 
 ## Default Keymaps
 
-- **Up:** Up arrow  
-- **Down:** Down arrow  
-- **Left:** 1  
-- **Right:** 3  
-- **OK:** Space  
-- **Back:** u  
+- **Up:** Up arrow
+- **Down:** Down arrow
+- **Left:** 1 
+- **Right:** 3 
+- **OK:** Space
+- **Back:** u
 
 ---
 
@@ -37,11 +37,8 @@ Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once 
 
 The following projects were used or referenced to help me make my app:
 
-- [Flipper Zero's Official HID](https://github.com/flipperdevices/flipperzero-firmware/tree/dev/applications/system/hid_app)  
-  keyboard logic, core functionality, most images, and the remote screen layout.
+- [Flipper Zero's Official HID](https://github.com/flipperdevices/flipperzero-firmware/tree/dev/applications/system/hid_app) keyboard logic, core functionality, most images, and the remote screen layout.
 
-- [BT Trigger](https://github.com/xMasterX/all-the-plugins/tree/dev/apps_source_code/bluetooth-trigger)  
-  bluetooth cross-compatibility, the “awaiting bluetooth” screen design, and general example code.
+- [BT Trigger](https://github.com/xMasterX/all-the-plugins/tree/dev/apps_source_code/bluetooth-trigger) bluetooth cross-compatibility, the “awaiting bluetooth” screen design, and general example code.
 
-- [Instantiator’s Flipper Zero App Tutorial](https://instantiator.dev/post/flipper-zero-app-tutorial-01/)  
-  installing ufbt and setting up the development environment in VSCode.
+- [Instantiator’s Flipper Zero App Tutorial](https://instantiator.dev/post/flipper-zero-app-tutorial-01/) installing ufbt and setting up the development environment in VSCode.
