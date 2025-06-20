@@ -74,7 +74,7 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 			timing = true;
 			timed = true;
 			startTime = furi_get_tick();
-			furi_hal_light_blink_start(LightRed, 255, 10, 50);
+			furi_hal_light_blink_start(LightRed, 255, 25, 50);
 		}
 	}
 }
