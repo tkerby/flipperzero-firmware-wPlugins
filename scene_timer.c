@@ -63,6 +63,7 @@ static void callbackInput(const InputEvent* const event, const PCUBERZERO instan
 		furi_hal_light_set(LightRed, 255);
 		furi_hal_light_set(LightGreen, 0);
 		furi_hal_light_set(LightBlue, 0);
+		ready = true;
 	} else {
 		furi_timer_stop(timer);
 		furi_hal_light_set(LightRed, 0);
@@ -90,6 +91,7 @@ static void callbackRender(Canvas* const canvas, const PCUBERZERO instance) {
 	furi_string_free(string);
 	canvas_set_font(canvas, FontSecondary);
 	elements_button_left(canvas, "Exit");
+	view_port_update(instance->viewport);
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
