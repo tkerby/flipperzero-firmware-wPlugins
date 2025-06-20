@@ -6,7 +6,7 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="anki_remote_app",
     stack_size=2 * 1024,
-    fap_category="Bluetooth",
+    fap_category="bluetooth",
     # Optional values
     fap_libs=["ble_profile"],
     fap_version="1.0",
