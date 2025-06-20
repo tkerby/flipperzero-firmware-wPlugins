@@ -1,6 +1,6 @@
 # Anki-Remote
 
-This app lets you assign any keyboard key to each button on your Flipper Zero and use it as a BLE (Bluetooth Low Energy) remote. Key mappings are saved to the SD card inside the app data folder.
+This app lets you assign any keyboard key to each button on your Flipper Zero and use it as a BLE (Bluetooth Low Energy) remote. Key mappings are saved to the SD card inside the apps_data folder.
 
 ---
 
@@ -44,4 +44,4 @@ The following projects were used or referenced to help me make my app:
   bluetooth cross-compatibility, the “awaiting bluetooth” screen design, and general example code.
 
 - [Instantiator’s Flipper Zero App Tutorial](https://instantiator.dev/post/flipper-zero-app-tutorial-01/)  
-  installing ufbt and setting up the development environment in VSCode
+  installing ufbt and setting up the development environment in VSCode.
