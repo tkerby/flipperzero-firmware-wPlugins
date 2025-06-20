@@ -8,7 +8,7 @@ This app lets you assign any keyboard key to each button on your Flipper Zero an
 
 The purpose I originally had in mind for this app was to be used as a remote for [Anki](https://apps.ankiweb.net/), a popular spaced repetition flashcard app for med school students. Having some kind of remote really makes long study sessions more comfortable and lets you review flashcards in any position, not just sitting upright.
 
-However, this app doesn’t have to be used only with Anki; *you can use it for literally any other purpose or app* where a Bluetooth keyboard remote might be useful.
+However, this app doesn’t have to be used only with Anki; **you can use it for literally any other purpose or app** where a Bluetooth keyboard remote might be useful.
 
 The current HID keyboard in the BT remote app is limited for this use case because it takes a long time to get to a different button, and you have to keep looking at the Flipper’s screen at all times.
 
