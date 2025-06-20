@@ -307,7 +307,7 @@ Cody Tolene
 [github-profile-roguemaster]: https://github.com/RogueMaster
 [github-profile-sbrin]: https://github.com/sbrin
 [github-profile-talkingsasquach]: https://github.com/skizzophrenic
-[github-profile-willyjl]: https://github.com/Willy-JL
+[github-profile-willyjl]: https://github.com/WillyJL
 [github-profile-z4urce]: https://github.com/Z4urce
 [issues-link]: https://github.com/CodyTolene/Flipper-Zero-Camera-Suite/issues
 [lopaka]: https://github.com/sbrin/lopaka

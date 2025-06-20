@@ -1,9 +1,13 @@
 #include "wendigo_app_i.h"
+#include "wendigo_scan.h"
 
 #include <furi.h>
 #include <furi_hal.h>
 #include <expansion/expansion.h>
 #include <math.h>
+
+/* UART rx callback for Console Output scene */
+extern void wendigo_console_output_handle_rx_data_cb(uint8_t* buf, size_t len, void* context);
 
 static bool wendigo_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
@@ -20,7 +24,39 @@ static bool wendigo_app_back_event_callback(void* context) {
 static void wendigo_app_tick_event_callback(void* context) {
     furi_assert(context);
     WendigoApp* app = context;
+    if(app->is_scanning) {
+        /* Is it time to poll ESP32 to ensure it's still scanning? */
+        int32_t now = furi_hal_rtc_get_timestamp();
+        if(now - app->last_packet > ESP32_POLL_INTERVAL) {
+            wendigo_set_scanning_active(app, true);
+        }
+    }
+
     scene_manager_handle_tick_event(app->scene_manager);
+}
+
+/* Generic handler for app->popup that restores the previous view */
+void wendigo_popup_callback(void* context) {
+    WendigoApp* app = (WendigoApp*)context;
+    bool done = scene_manager_previous_scene(app->scene_manager);
+    if(!done) {
+        /* No previous scene - Start the main menu scene */
+        // TODO: Alongside wendigo_display_popup() (below), restore the scene that was actually running prior to the popup
+        scene_manager_next_scene(app->scene_manager, WendigoSceneStart);
+    }
+}
+
+void wendigo_display_popup(WendigoApp* app, char* header, char* body) {
+    popup_set_header(app->popup, header, 64, 3, AlignCenter, AlignTop);
+    popup_set_text(app->popup, body, 64, 22, AlignCenter, AlignTop);
+    popup_set_icon(app->popup, -1, -1, NULL); // TODO: Find a fun icon to use
+    popup_set_timeout(app->popup, 2000);
+    popup_enable_timeout(app->popup);
+    popup_set_callback(app->popup, wendigo_popup_callback);
+    popup_set_context(app->popup, app);
+    // TODO: Check which scene is active so we can restore it later. For now assuming we're on the main menu.
+    scene_manager_set_scene_state(app->scene_manager, WendigoSceneStart, app->selected_menu_index);
+    view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewPopup);
 }
 
 /* Initialise app->interfaces - Default all radios to on */
@@ -30,11 +66,11 @@ void wendigo_interface_init(WendigoApp* app) {
         app->interfaces[i].mutable = true;
     }
     // TODO: Retrieve actual MAC
-    const uint8_t mac_wifi[NUM_MAC_BYTES] = {0xa6, 0xe0, 0x57, 0x4f, 0x57, 0xac};
-    const uint8_t mac_bt[NUM_MAC_BYTES] = {0xa6, 0xe0, 0x57, 0x4f, 0x57, 0xaf};
-    memcpy(app->interfaces[IF_WIFI].mac_bytes, mac_wifi, NUM_MAC_BYTES);
-    memcpy(app->interfaces[IF_BT_CLASSIC].mac_bytes, mac_bt, NUM_MAC_BYTES);
-    memcpy(app->interfaces[IF_BLE].mac_bytes, mac_bt, NUM_MAC_BYTES);
+    const uint8_t mac_wifi[MAC_BYTES] = {0xa6, 0xe0, 0x57, 0x4f, 0x57, 0xac};
+    const uint8_t mac_bt[MAC_BYTES] = {0xa6, 0xe0, 0x57, 0x4f, 0x57, 0xaf};
+    memcpy(app->interfaces[IF_WIFI].mac_bytes, mac_wifi, MAC_BYTES);
+    memcpy(app->interfaces[IF_BT_CLASSIC].mac_bytes, mac_bt, MAC_BYTES);
+    memcpy(app->interfaces[IF_BLE].mac_bytes, mac_bt, MAC_BYTES);
 }
 
 WendigoApp* wendigo_app_alloc() {
@@ -70,10 +106,11 @@ WendigoApp* wendigo_app_alloc() {
         app->setup_selected_option_index[i] = 0;
     }
 
-    /* Initialise the channel bitmasks */
+    /* Initialise the channel bitmasks - pow() is slow so hardcode 0 & 1 and use multiplication for the rest */
     app->CH_MASK[0] = 0;
-    for(int i = 1; i <= SETUP_CHANNEL_MENU_ITEMS; ++i) {
-        app->CH_MASK[i] = pow(2, i - 1);
+    app->CH_MASK[1] = 1;
+    for(int i = 2; i <= SETUP_CHANNEL_MENU_ITEMS; ++i) {
+        app->CH_MASK[i] = app->CH_MASK[i - 1] * 2;
     }
 
     /* Default to enabling all channels */
@@ -117,6 +154,16 @@ WendigoApp* wendigo_app_alloc() {
     view_dispatcher_add_view(
         app->view_dispatcher, WendigoAppViewPopup, popup_get_view(app->popup));
 
+    /* Device list (all and tagged) */
+    app->devices_var_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        WendigoAppViewDeviceList,
+        variable_item_list_get_view(app->devices_var_item_list));
+
+    /* Initialise the last packet received time */
+    app->last_packet = furi_hal_rtc_get_timestamp();
+
     scene_manager_next_scene(app->scene_manager, WendigoSceneStart);
 
     return app;
@@ -133,6 +180,7 @@ void wendigo_app_free(WendigoApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, WendigoAppViewHexInput);
     view_dispatcher_remove_view(app->view_dispatcher, WendigoAppViewSetupMAC);
     view_dispatcher_remove_view(app->view_dispatcher, WendigoAppViewPopup);
+    view_dispatcher_remove_view(app->view_dispatcher, WendigoAppViewDeviceList);
 
     variable_item_list_free(app->var_item_list);
     widget_free(app->widget);
@@ -142,10 +190,16 @@ void wendigo_app_free(WendigoApp* app) {
     wendigo_hex_input_free(app->hex_input);
     byte_input_free(app->setup_mac);
     popup_free(app->popup);
+    variable_item_list_free(app->devices_var_item_list);
 
     // View dispatcher
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
+
+    /* Free device cache and UART buffer */
+    wendigo_free_uart_buffer();
+    wendigo_free_devices();
+    // TODO: WiFi device cache
 
     wendigo_uart_free(app->uart);
 
@@ -164,6 +218,8 @@ int32_t wendigo_app(void* p) {
     WendigoApp* wendigo_app = wendigo_app_alloc();
 
     wendigo_app->uart = wendigo_uart_init(wendigo_app);
+    /* Set UART callback using wendigo_scan */
+    wendigo_uart_set_binary_cb(wendigo_app->uart);
 
     view_dispatcher_run(wendigo_app->view_dispatcher);
 
@@ -174,4 +230,27 @@ int32_t wendigo_app(void* p) {
     furi_record_close(RECORD_EXPANSION);
 
     return 0;
+}
+
+void wendigo_uart_set_binary_cb(Wendigo_Uart* uart) {
+    wendigo_uart_set_handle_rx_data_cb(uart, wendigo_scan_handle_rx_data_cb);
+}
+
+void wendigo_uart_set_console_cb(Wendigo_Uart* uart) {
+    wendigo_uart_set_handle_rx_data_cb(uart, wendigo_console_output_handle_rx_data_cb);
+}
+
+/* Convert an array of bytesCount uint8_ts into a colon-separated string of bytes.
+   strBytes must be initialised with sufficient space to hold the output string.
+   For a MAC this is 18 bytes. In general it is 3 * byteCount */
+void bytes_to_string(uint8_t* bytes, uint16_t bytesCount, char* strBytes) {
+    uint8_t* p_in = bytes;
+    const char* hex = "0123456789ABCDEF";
+    char* p_out = strBytes;
+    for(; p_in < bytes + bytesCount; p_out += 3, ++p_in) {
+        p_out[0] = hex[(*p_in >> 4) & 0xF];
+        p_out[1] = hex[*p_in & 0xF];
+        p_out[2] = ':';
+    }
+    p_out[-1] = 0;
 }

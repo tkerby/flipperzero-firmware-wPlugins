@@ -1,40 +1,48 @@
 #include "nfc_comparator_led_worker.h"
 
-NotificationMessage blink_message_normal = {
+static NotificationMessage blink_message_running = {
    .type = NotificationMessageTypeLedBlinkStart,
    .data.led_blink.color = LightBlue | LightGreen,
    .data.led_blink.on_time = 10,
-   .data.led_blink.period = 100};
-const NotificationSequence blink_sequence_normal = {
-   &blink_message_normal,
+   .data.led_blink.period = 100,
+};
+static const NotificationSequence blink_sequence_running = {
+   &blink_message_running,
    &message_do_not_reset,
-   NULL};
+   NULL,
+};
 
-NotificationMessage blink_message_complete = {
+static NotificationMessage blink_message_complete = {
    .type = NotificationMessageTypeLedBlinkStart,
-   .data.led_blink.color = LightGreen};
-const NotificationSequence blink_sequence_complete = {
+   .data.led_blink.color = LightGreen
+};
+static const NotificationSequence blink_sequence_complete = {
    &blink_message_complete,
    &message_do_not_reset,
-   NULL};
+   NULL,
+};
 
-NotificationMessage blink_message_error = {
+static NotificationMessage blink_message_error = {
    .type = NotificationMessageTypeLedBlinkStart,
-   .data.led_blink.color = LightRed};
-const NotificationSequence blink_sequence_error = {
+   .data.led_blink.color = LightRed,
+};
+static const NotificationSequence blink_sequence_error = {
    &blink_message_error,
    &message_do_not_reset,
-   NULL};
+   NULL,
+};
 
-void start_led(NotificationApp* notification_app, NfcComparatorLedState state) {
+void nfc_comparator_led_worker_start(
+   NotificationApp* notification_app,
+   NfcComparatorLedState state) {
    switch(state) {
    case NfcComparatorLedState_Running:
-      notification_message_block(notification_app, &blink_sequence_normal);
+      notification_message_block(notification_app, &blink_sequence_running);
       break;
-   case NfcComparatorLedState_complete:
+   case NfcComparatorLedState_Complete:
       notification_message_block(notification_app, &blink_sequence_complete);
       break;
-   case NfcComparatorLedState_error:
+   case NfcComparatorLedState_Error:
       notification_message_block(notification_app, &blink_sequence_error);
       break;
    default:
@@ -42,6 +50,6 @@ void start_led(NotificationApp* notification_app, NfcComparatorLedState state) {
    }
 }
 
-void stop_led(NotificationApp* notification_app) {
+void nfc_comparator_led_worker_stop(NotificationApp* notification_app) {
    notification_message_block(notification_app, &sequence_blink_stop);
 }

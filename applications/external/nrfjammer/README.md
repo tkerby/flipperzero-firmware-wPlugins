@@ -11,14 +11,11 @@ Demo:
 https://bsky.app/profile/hookgab.bsky.social/post/3lcgnsx7wfk2x
 
 Example of the spectrum at 2.440 Ghz:
-![image](https://github.com/user-attachments/assets/57828280-70d6-4a57-aa5f-9b58bfec59b0)
+![spectrum](img/spectrum.png)
 
 # FAQ
 It's crashing, what do I do?
 * It's a known issue, stop bashing buttons randomly while the nRF is engaged. For anything else file a ticket with PRECISE steps to reproduce
-  
-It's not recognising my nRF!
-* Enable 5V on GPIO. Keep in mind this setting does not "stick" depending on your FW and needs to be enabled after a reboot.
   
 It's not working very well.
 * Set Log Level to None and disable any debugging features as they eat precious CPU cycles.

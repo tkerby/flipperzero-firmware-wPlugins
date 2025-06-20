@@ -22,31 +22,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "udecard_app_i.h"
 
-static const uint8_t UDECARD_KEYA_0[] = UDECARD_KEYA_0_BYTES;
-static const uint8_t UDECARD_KEYA_1[] = UDECARD_KEYA_1_BYTES;
-static const uint8_t UDECARD_KEYA_2[] = UDECARD_KEYA_2_BYTES;
-static const uint8_t UDECARD_KEYA_3[] = UDECARD_KEYA_3_BYTES;
-static const uint8_t UDECARD_KEYA_4[] = UDECARD_KEYA_4_BYTES;
-static const uint8_t UDECARD_KEYA_5[] = UDECARD_KEYA_5_BYTES;
-
-static const uint8_t* UDECARD_SECTOR_KEYS_A[16] = {
-    UDECARD_KEYA_0,
-    UDECARD_KEYA_1,
-    UDECARD_KEYA_1,
-    UDECARD_KEYA_1,
-    NULL,
-    UDECARD_KEYA_2,
-    UDECARD_KEYA_3,
-    NULL,
-    UDECARD_KEYA_4,
-    UDECARD_KEYA_5,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL};
-
 NfcCommand udecard_read_scene_nfc_poller_callback(NfcGenericEvent event, void* context) {
     App* app = context;
 
@@ -115,11 +90,10 @@ void udecard_read_scene_on_enter(void* context) {
 
     // set read targets
     app->target_manager = read_target_manager_alloc();
-    app->target_manager->head = read_target_alloc(0, UDECARD_KEYA_0);
+    app->target_manager->head = read_target_alloc(0, app->sector_keys[0]);
     for(int i = 1; i < 10; i++) {
         if(i == 4 || i == 7) continue; // skip 4 and 7
-        read_target_append(
-            app->target_manager->head, read_target_alloc(i, UDECARD_SECTOR_KEYS_A[i]));
+        read_target_append(app->target_manager->head, read_target_alloc(i, app->sector_keys[i]));
     }
 
     // create nfc device for data saving
@@ -152,6 +126,7 @@ bool udecard_read_scene_on_event(void* context, SceneManagerEvent event) {
             break;
         case UDECardReadSceneDoneEvent:
             udecard_app_blink_stop(app);
+            dolphin_deed(DolphinDeedNfcReadSuccess);
 
             // parse card data
             UDECardLoadingResult loading_result =
@@ -187,6 +162,7 @@ bool udecard_read_scene_on_event(void* context, SceneManagerEvent event) {
             break;
 
         case UDECardReadSceneLoadSuccessEvent:
+            notification_message(app->notifications, &sequence_single_vibro);
             scene_manager_next_scene(app->scene_manager, UDECardResultsScene);
             consumed = true;
             break;

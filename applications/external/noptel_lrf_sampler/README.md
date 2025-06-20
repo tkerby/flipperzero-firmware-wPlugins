@@ -1,5 +1,5 @@
 # Noptel LRF rangefinder sampler app for the Flipper Zero
-### Version 2.1
+### Version 2.2
 
 * [Usage](#Usage)
 * [Installation](#Installation)
@@ -21,6 +21,10 @@ Flipper Zero app to get range measurements from a [Noptel](https://noptel.fi/) [
 - USB serial passthrough with serial traffic display
 
 https://github.com/Giraut/flipper_zero_noptel_lrf_sampler/assets/37288252/32f0bf66-ff2f-47e1-9552-5453781482de
+
+If you would like a dedicated case for your Flipper Zero with a portable power supply, selectable supply voltage and selectable UART-RS232 serial voltage levels, for easy use of any Noptel rangefinder in the field or on the shop floor, you may be interested in the [Noptel LRF rangefinder sampler 3D-printed case companion project](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler_3d_printed_case).
+
+![Flipper Zero Noptel LRF case](images/flipper_zero_noptel_lrf_case.jpg)
 
 
 

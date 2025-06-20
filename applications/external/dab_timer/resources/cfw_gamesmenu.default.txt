@@ -24,6 +24,7 @@ GamesMenuList Version 0
 /ext/apps/Games/crossy_road.fap
 /ext/apps/Games/deadzone.fap
 /ext/apps/Games/dice_rm.fap
+/ext/apps/Games/digital_kaleidoscope.fap
 /ext/apps/Games/dnd_dice_app.fap
 /ext/apps/Games/doom.fap
 /ext/apps/Games/drifter.fap
@@ -45,6 +46,7 @@ GamesMenuList Version 0
 /ext/apps/Games/hangman.fap
 /ext/apps/Games/hanoi_towers.fap
 /ext/apps/Games/heap_defence.fap
+/ext/apps/Games/infinite_tic_tac_toe.fap
 /ext/apps/Games/insults.fap
 /ext/apps/Games/jetpack.fap
 /ext/apps/Games/kcline.fap
@@ -52,6 +54,7 @@ GamesMenuList Version 0
 /ext/apps/Games/lifecounter.fap
 /ext/apps/Games/mandelbrotset.fap
 /ext/apps/Games/matagotchi.fap
+/ext/apps/Games/mind_probe.fap
 /ext/apps/Games/minesweeper.fap
 /ext/apps/Games/minesweeper_redux.fap
 /ext/apps/Games/mode7_demo.fap
@@ -68,6 +71,7 @@ GamesMenuList Version 0
 /ext/apps/Games/paper_plane.fap
 /ext/apps/Games/pinball0.fap
 /ext/apps/Games/platformer_game.fap
+/ext/apps/Games/pocket_battle.fap
 /ext/apps/Games/pong.fap
 /ext/apps/Games/quadrastic.fap
 /ext/apps/Games/questions.fap
@@ -101,13 +105,13 @@ GamesMenuList Version 0
 /ext/apps/Games/tic_tac_toe_multi.fap
 /ext/apps/Games/tictactoe.fap
 /ext/apps/Games/trex_runner.fap
-/ext/apps/Games/uart_pong.fap
 /ext/apps/Games/ultimate_tic_tac_toe.fap
 /ext/apps/Games/umpire_indicator.fap
 /ext/apps/GPIO/VGM/vgm_air_mouse.fap
 /ext/apps/Games/vexed.fap
 /ext/apps/GPIO/VGM/video_game_module_tool.fap
 /ext/apps/Games/videopoker.fap
+/ext/apps/Games/wave.fap
 /ext/apps/Games/yapinvaders.fap
 /ext/apps/Games/yatzee.fap
 /ext/apps/Games/zero.fap

@@ -1,18 +1,18 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -84,8 +84,9 @@ const AppConfigOption* speed_mode_by_id(Slice slice) {
 const AppConfigOption speed_index_options[] = {
     {SpeedIndex_38400, "38400", "38.4K"},
     {SpeedIndex_57600, "57600", "57.6K"},
-    // {SpeedIndex_61440, "61440", "61.4K"},
-    // {SpeedIndex_68266, "68266", "68.3K"},
+    {SpeedIndex_61440, "61440", "61.4K"},
+    {SpeedIndex_68266, "68266", "68.3K"},
+    {SpeedIndex_73728, "73728", "73.7K"},
 };
 
 const AppConfigOption* speed_index_by_value(SpeedIndex value) {

@@ -25,11 +25,11 @@
 #define NUM_MENU_ITEMS (18)
 
 #define BLACKHAT_TEXT_BOX_STORE_SIZE (4096)
-#define UART_CH                      cfw_settings.uart_esp_channel
 
+#define UART_CH           cfw_settings.uart_esp_channel
 #define SHELL_CMD         "whoami"
 #define SCAN_CMD          "bh script scan"
-#define RUN_CMD           "bh scriptrun"
+#define RUN_CMD           "bh script run"
 #define WIFI_CON_CMD      "bh wifi connect"
 #define SET_INET_SSID_CMD "bh set SSID"
 #define SET_INET_PWD_CMD  "bh set PASS"

@@ -4,26 +4,11 @@
 #define IF_MAX_LEN (10)
 
 /* Local buffer for use of the view */
-uint8_t view_bytes[NUM_MAC_BYTES];
+uint8_t view_bytes[MAC_BYTES];
 
 /* Strings for popups */
 char popup_header_text[IF_MAX_LEN + 11] = "";
 char popup_text[IF_MAX_LEN + 50] = "";
-
-/* Convert an array of byteCount uint8_ts into a colon-separated string of bytes.
-   strBytes must be initialised with sufficient space to hold the output string.
-   For a MAC this is 18 bytes. In general it is 3 * byteCount */
-void bytes_to_string(uint8_t* bytes, uint16_t bytesCount, char* strBytes) {
-    uint8_t* p_in = bytes;
-    const char* hex = "0123456789ABCDEF";
-    char* p_out = strBytes;
-    for(; p_in < bytes + bytesCount; p_out += 3, ++p_in) {
-        p_out[0] = hex[(*p_in >> 4) & 0xF];
-        p_out[1] = hex[*p_in & 0xF];
-        p_out[2] = ':';
-    }
-    p_out[-1] = 0;
-}
 
 void wendigo_scene_setup_mac_popup_callback(void* context) {
     WendigoApp* app = (WendigoApp*)context;
@@ -36,7 +21,7 @@ void wendigo_scene_setup_mac_input_callback(void* context) {
     WendigoApp* app = context;
 
     /* Did the user change the MAC? */
-    if(memcmp(view_bytes, app->interfaces[app->active_interface].mac_bytes, NUM_MAC_BYTES)) {
+    if(memcmp(view_bytes, app->interfaces[app->active_interface].mac_bytes, MAC_BYTES)) {
         char result_if_text[IF_MAX_LEN] = "";
         /* MAC was changed - Update ESP32's MAC */
         /* Also set interface string for popups */
@@ -68,11 +53,11 @@ void wendigo_scene_setup_mac_input_callback(void* context) {
             switch(app->active_interface) {
             case IF_BT_CLASSIC:
             case IF_BLE:
-                memcpy(app->interfaces[IF_BT_CLASSIC].mac_bytes, view_bytes, NUM_MAC_BYTES);
-                memcpy(app->interfaces[IF_BLE].mac_bytes, view_bytes, NUM_MAC_BYTES);
+                memcpy(app->interfaces[IF_BT_CLASSIC].mac_bytes, view_bytes, MAC_BYTES);
+                memcpy(app->interfaces[IF_BLE].mac_bytes, view_bytes, MAC_BYTES);
                 break;
             case IF_WIFI:
-                memcpy(app->interfaces[IF_WIFI].mac_bytes, view_bytes, NUM_MAC_BYTES);
+                memcpy(app->interfaces[IF_WIFI].mac_bytes, view_bytes, MAC_BYTES);
                 break;
             default:
                 // Do nothing
@@ -89,16 +74,7 @@ void wendigo_scene_setup_mac_input_callback(void* context) {
                 "Failed to Update %s MAC!",
                 result_if_text);
         }
-        /* Configure popup */
-        popup_set_header(app->popup, popup_header_text, 64, 3, AlignCenter, AlignTop);
-        popup_set_text(app->popup, popup_text, 64, 22, AlignCenter, AlignTop);
-        popup_set_icon(app->popup, -1, -1, NULL);
-        popup_set_timeout(app->popup, 2000); // 3 secondsn
-        popup_enable_timeout(app->popup);
-        popup_set_callback(app->popup, wendigo_scene_setup_mac_popup_callback);
-        popup_set_context(app->popup, app);
-
-        view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewPopup);
+        wendigo_display_popup(app, popup_header_text, popup_text);
     } else {
         // Should this also be run after the popup?
         scene_manager_handle_back_event(app->scene_manager);
@@ -109,16 +85,17 @@ void wendigo_scene_setup_mac_changed_callback(void* context) {
     WendigoApp* app = context;
     /* Overwrite the change if the MAC isn't mutable */
     if(!app->interfaces[app->active_interface].mutable) {
-        memcpy(view_bytes, app->interfaces[app->active_interface].mac_bytes, NUM_MAC_BYTES);
+        memcpy(view_bytes, app->interfaces[app->active_interface].mac_bytes, MAC_BYTES);
     }
 }
 
 void wendigo_scene_setup_mac_on_enter(void* context) {
     WendigoApp* app = context;
     ByteInput* mac_input = app->setup_mac;
+    app->current_view = WendigoAppViewSetupMAC;
 
     /* Copy app->mac_bytes into a temp array for modification by the view */
-    memcpy(view_bytes, app->interfaces[app->active_interface].mac_bytes, NUM_MAC_BYTES);
+    memcpy(view_bytes, app->interfaces[app->active_interface].mac_bytes, MAC_BYTES);
 
     byte_input_set_header_text(mac_input, "MAC Address");
     byte_input_set_result_callback(
@@ -127,7 +104,7 @@ void wendigo_scene_setup_mac_on_enter(void* context) {
         wendigo_scene_setup_mac_changed_callback,
         app,
         view_bytes,
-        NUM_MAC_BYTES);
+        MAC_BYTES);
     view_dispatcher_switch_to_view(app->view_dispatcher, WendigoAppViewSetupMAC);
 }
 

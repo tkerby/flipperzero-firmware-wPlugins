@@ -1,18 +1,18 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -80,24 +80,36 @@ static void fdd_screen_draw_callback(Canvas* canvas, void* _model) {
     // Disk capacity & sector length
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
-    furi_string_printf(text, "%dKB", model->disk_size / 1024);
+    if(model->disk_size >= 5 * 1024 * 1024) {
+        furi_string_printf(text, "%.2gMB", (double)model->disk_size / (1024 * 1024));
+    } else {
+        furi_string_printf(text, "%dKB", model->disk_size / 1024);
+    }
     canvas_draw_str(canvas, 28, 36, furi_string_get_cstr(text));
     furi_string_printf(text, "%dB", model->sector_size);
     canvas_draw_str(canvas, 28, 46, furi_string_get_cstr(text));
 
     // FDD sector index
-    x = 66;
-    y = 27;
-    canvas_set_color(canvas, ColorBlack);
-    canvas_draw_rframe(canvas, x, y, 52, 20, 3);
-    canvas_set_color(canvas, ColorBlack);
-    canvas_set_font(canvas, FontBigNumbers);
     if(model->sector == 0) {
         furi_string_printf(text, "----");
-    } else {
+    } else if(model->sector < 10000) {
         furi_string_printf(text, "%04u", model->sector);
+    } else {
+        furi_string_printf(text, "%05u", model->sector);
     }
 
+    canvas_set_color(canvas, ColorBlack);
+    if(furi_string_size(text) <= 4) { // 4 and less digits
+        x = 66;
+        y = 27;
+        canvas_draw_rframe(canvas, x, y, 52, 20, 3);
+    } else { // 5 digits
+        x = 60;
+        y = 27;
+        canvas_draw_rframe(canvas, x, y, 64, 20, 3);
+    }
+    canvas_set_color(canvas, ColorBlack);
+    canvas_set_font(canvas, FontBigNumbers);
     canvas_draw_str(canvas, x + 3, y + 17, furi_string_get_cstr(text));
 
     // Left and right borders

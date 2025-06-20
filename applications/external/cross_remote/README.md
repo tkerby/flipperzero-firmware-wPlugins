@@ -62,7 +62,7 @@ This feature is only available in custom firmwares that support it or if you mod
 From the start screen on flipper press down to enter the favorites menu. Navigate left and right until you hit the tab "browser". From there navigate into the folder apps_data/xremote and select the command chain you want to add to your favorites. Select "Pin" from the context menu and your command chain will be available in the favorites menu. 
 
 ## Thank you notes
-- [Willy-JL](https://github.com/Willy-JL) for code contributions and distributing in Momentum Firmware
+- [WillyJL](https://github.com/WillyJL) for code contributions and distributing in Momentum Firmware
 - [Roguemaster](https://github.com/RogueMaster/flipperzero-firmware-wPlugins) for distributing in Roguemaster Firmware
 - [Miccayo](https://github.com/miccayo) for contributing the loop transmit feature
 

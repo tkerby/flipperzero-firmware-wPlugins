@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 typedef enum UDECardDetectSceneEvent {
     UDECardDetectSceneDetectedEvent,
     UDECardDetectSceneErrorEvent,
+    UDECardDetectSceneFatalErrorEvent,
 } UDECardDetectSceneEvent;
 
 void udecard_detect_scene_on_enter(void* context);

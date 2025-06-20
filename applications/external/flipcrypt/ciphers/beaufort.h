@@ -1,0 +1,1 @@
+char* beaufort_cipher_enrypt_and_decrypt(const char* text, const char* key);

@@ -264,3 +264,85 @@ char* udecard_loading_error_string(UDECardLoadingResult loading_result) {
         return "Unknown error.";
     }
 }
+
+bool udecard_gather_keys(uint8_t sector_keys[][6]) {
+    if(!keys_dict_check_presence(EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH))) {
+        FURI_LOG_E(
+            "UDECARD", "Keys dictionary not found at %s", EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH));
+        return false;
+    }
+    KeysDict* keys_dict =
+        keys_dict_alloc(EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH), KeysDictModeOpenExisting, 6);
+    if(!keys_dict) {
+        FURI_LOG_E(
+            "UDECARD",
+            "Failed to open keys dictionary at %s",
+            EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH));
+        return false;
+    }
+    if(FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS != keys_dict_get_total_keys(keys_dict)) {
+        FURI_LOG_I(
+            "UDECARD",
+            "Keys dictionary at %s has wrong number of keys: %d, expected: %d",
+            EXT_PATH(FLIPPER_MFCLASSIC_DICT_PATH),
+            keys_dict_get_total_keys(keys_dict),
+            FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS);
+        // only throw an error if it is LESS
+        if(keys_dict_get_total_keys(keys_dict) < FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS) {
+            FURI_LOG_E("UDECARD", "Keys dictionary is too small!");
+            keys_dict_free(keys_dict);
+            return false;
+        }
+    }
+
+    int udecard_keys_indices[] = {
+        UDECARD_KEYA_0_INDEX,
+        UDECARD_KEYA_1_INDEX,
+        UDECARD_KEYA_2_INDEX,
+        UDECARD_KEYA_3_INDEX,
+        UDECARD_KEYA_4_INDEX,
+        UDECARD_KEYA_5_INDEX,
+    };
+    int udecard_keys_total = sizeof(udecard_keys_indices) / sizeof(udecard_keys_indices[0]);
+    uint8_t gathered_keys[udecard_keys_total][16];
+
+    uint8_t curkey[6] = {0};
+    int found = 0;
+    for(int i = 1;
+        keys_dict_get_next_key(keys_dict, curkey, sizeof(curkey)) && found < udecard_keys_total;
+        i++) {
+        if(udecard_keys_indices[found] == i) {
+            memcpy(gathered_keys[found], curkey, sizeof(curkey));
+            found++;
+        }
+    }
+
+    for(int i = 0; i < udecard_keys_total; i++) {
+        FURI_LOG_I(
+            "UDECARD",
+            "Key %d: %02X %02X %02X %02X %02X %02X",
+            i,
+            gathered_keys[i][0],
+            gathered_keys[i][1],
+            gathered_keys[i][2],
+            gathered_keys[i][3],
+            gathered_keys[i][4],
+            gathered_keys[i][5]);
+    }
+
+    memcpy(sector_keys[0], gathered_keys[0], sizeof(gathered_keys[0]));
+    memcpy(sector_keys[1], gathered_keys[5], sizeof(gathered_keys[5]));
+    memcpy(sector_keys[2], gathered_keys[5], sizeof(gathered_keys[5]));
+    memcpy(sector_keys[3], gathered_keys[5], sizeof(gathered_keys[5]));
+    // 4
+    memcpy(sector_keys[5], gathered_keys[1], sizeof(gathered_keys[1]));
+    memcpy(sector_keys[6], gathered_keys[2], sizeof(gathered_keys[2]));
+    // 7
+    memcpy(sector_keys[8], gathered_keys[3], sizeof(gathered_keys[3]));
+    memcpy(sector_keys[9], gathered_keys[4], sizeof(gathered_keys[4]));
+    // 10...15
+
+    keys_dict_free(keys_dict);
+
+    return true;
+}

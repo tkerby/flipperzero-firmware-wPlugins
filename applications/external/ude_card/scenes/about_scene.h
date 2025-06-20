@@ -23,9 +23,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <gui/scene_manager.h>
 
-#define VERSION "v1.0.1"
+#define VERSION FAP_VERSION
 #define ABOUT_TEXT                                                          \
-    "UDECard Parser " VERSION "\n"                                          \
+    "UDECard Parser v" VERSION "\n"                                         \
     "by Alexander Hahn\n(github.com/hahnworks)\n\n"                         \
                                                                             \
     "Copyright (C) 2025\n"                                                  \

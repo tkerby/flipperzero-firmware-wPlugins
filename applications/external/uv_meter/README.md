@@ -1,8 +1,11 @@
 # UV Meter
 
-A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html). The application is available in the [Flipper App Catalog](https://lab.flipper.net/apps/uv_meter_as7331) and comes pre-installed on some custom firmware builds, such as the [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware).
+A Flipper Zero application designed to measure ultraviolet (UV) radiation levels using the [AS7331](https://ams-osram.com/products/sensor-solutions/ambient-light-color-spectral-proximity-sensors/ams-as7331-spectral-uv-sensor) sensor. It supports individual measurements for UV-A, UV-B, and UV-C wavelengths. The easiest way to hook everything up is to use a breakout board, such as the one from [SparkFun](https://www.sparkfun.com/sparkfun-spectral-uv-sensor-as7331-qwiic.html). The application is available in the [Flipper App Catalog](https://lab.flipper.net/apps/uv_meter_as7331) and comes pre-installed on some custom firmware builds, such as the [Momentum Firmware](https://github.com/Next-Flip/Momentum-Firmware). For more behind-the-scenes info, check out the [post on my website](https://michaelbais.ch/projects/personal/uv_meter_for_flipper).
 
-![Flipper with Sensor](images/flipper_with_sensor.jpeg)
+<p float="left">
+    <img src="images/flipper_zero_uv_meter_outside.jpg" alt="AS7331 Sensor Connected to Flipper Zero with UV Meter Adapter PCB" width="49%" />
+    <img src="images/flipper_with_sensor.jpg" alt="AS7331 Sensor Connected to Flipper Zero with cables" width="49%" />
+</p>
 
 
 
@@ -28,7 +31,7 @@ https://github.com/user-attachments/assets/cabb948c-9c79-4a1d-aab7-8789f0833f28
 
 Connect the AS7331 sensor to your Flipper Zero via I²C:
 
-![Wiring](screenshots/wiring.png)
+![Flipper Showing the Wiring Screen](images/wiring_screen.png)
 
 | Sensor Pin | Flipper Zero Pin   |
 |------------|--------------------|
@@ -45,11 +48,11 @@ By default, the application scans all possible I²C addresses for the sensor. Ho
 
 Once connected, the application automatically displays real-time UV measurements. The main screen shows individual UV-A, UV-B, and UV-C readings. Beneath the numbers you see the currently used unit (µW/cm², W/m² or mW/m²).
 
-![Data Screen](screenshots/data_1.png)
+![Data Screen with Explanations](images/main_screen_explanation.jpg)
 
 Next to each UV reading is a small meter indicating the raw sensor value. If this value is too high or too low, a warning symbol will appear, signaling potential sensor overexposure or underexposure. This condition will probably result in unreliable measurements. Adjusting the **Gain** and **Exposure Time** settings (similar to camera ISO and shutter speed) at the bottom of the screen can help correct this.
 
-In addition to direct sensor measurements, the application provides an interpretation of this irradiance data on human safety, displayed on the right side of the screen. The time (in minutes) indicates the recommended maximum daily exposure duration during an 8-hour work shift, based on the 2024 Threshold Limit Values (TLVs) and Biological Exposure Indices (BEIs) published by the [American Conference of Governmental Industrial Hygienists (ACGIH)](https://en.wikipedia.org/wiki/American_Conference_of_Governmental_Industrial_Hygienists).
+In addition to direct sensor measurements, the application provides an interpretation of this irradiance data on human safety, displayed on the right side of the screen. The time (in minutes) indicates the recommended maximum daily exposure duration during an 8-hour work shift, based on the 2024 Threshold Limit Values (TLVs) and Biological Exposure Indices (BEIs) published by the [American Conference of Governmental Industrial Hygienists (ACGIH)](https://en.wikipedia.org/wiki/American_Conference_of_Governmental_Industrial_Hygienists). According to ACGIH, the TLVs referenced apply only to incoherent UV radiation; coherent UV radiation such as that emitted by lasers is handled differently.
 
 Since UV radiation poses greater risks to the eyes, the app includes a setting to specify whether your eyes are protected. This adjusts the maximum daily exposure duration according to ACGIH recommendations.
 
@@ -79,6 +82,14 @@ if(eyes_protected) { // 😎
 ```
 
 You might wonder, "Where do these numbers come from?" Good question! To uncover the full story behind these values, check out the detailed explanation in the [Magic Numbers documentation](magic_numbers/README.md).
+
+
+
+## Adapter PCB
+
+As a final touch, I designed a tiny adapter PCB in KiCad that lets me connect the breakout board to the Flipper — no more cable fiddling required. (One might even call its color ~~dark purple~~ ultraviolet.) The front only shows the application icon and minimal labeling to help you avoid plugging things in the wrong way. On the back, the labels show which Flipper pins connect to which sensor pins. See the [adapter_pcb](adapter_pcb) directory for the KiCad and Gerber files.
+
+![Render of the UV Meter Adapter PCB](images/adapter_pcb.jpg)
 
 
 

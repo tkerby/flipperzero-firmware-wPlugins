@@ -158,83 +158,32 @@ static void jammer_state_init(PluginState* const plugin_state) {
 static int32_t mj_worker_thread(void* ctx) {
     PluginState* plugin_state = ctx;
     plugin_state->is_thread_running = true;
-    FURI_LOG_D(TAG, "starting to jam");
-    char tmp[128];
-    // make sure the NRF24 is powered down so we can do all the initial setup
-    nrf24_set_idle(nrf24_HANDLE);
-    uint8_t mac[] = {0xDE, 0xAD}; // DEAD BEEF FEED
-    uint8_t ping_packet[] = {
-        0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE,
-        0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD,
-        0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF}; // 32 bytes, in case we ever need to experiment with bigger packets
+    FURI_LOG_D(TAG, "Starting optimized carrier jamming");
 
-    uint8_t conf = 0;
-
-    nrf24_configure(nrf24_HANDLE, 2, mac, mac, 2, 1, true, true);
-    // set PA level to maximum
-    uint8_t setup;
-    nrf24_read_reg(nrf24_HANDLE, REG_RF_SETUP, &setup, 1);
-
-    setup &= 0xF8;
-    setup |= 7;
-
-    snprintf(tmp, 128, "NRF24 SETUP REGISTER: %d", setup);
-    FURI_LOG_D(TAG, tmp);
-
-    nrf24_read_reg(nrf24_HANDLE, REG_CONFIG, &conf, 1);
-    snprintf(tmp, 128, "NRF24 CONFIG REGISTER: %d", conf);
-    FURI_LOG_D(TAG, tmp);
-    nrf24_write_reg(nrf24_HANDLE, REG_RF_SETUP, setup);
-
-#define size 32
-    uint8_t status = 0;
-    uint8_t tx[size + 1];
-    uint8_t rx[size + 1];
-    memset(tx, 0, size + 1);
-    memset(rx, 0, size + 1);
-
-    tx[0] = W_TX_PAYLOAD_NOACK;
-
-    memcpy(&tx[1], ping_packet, size);
-
-#define nrf24_TIMEOUT 500
-    // push data to the TX register
-    nrf24_spi_trx(nrf24_HANDLE, tx, 0, size + 1, nrf24_TIMEOUT);
-    // put the module in TX mode
-    nrf24_set_tx_mode(nrf24_HANDLE);
-    // send one test packet (for debug reasons)
-    while(!(status & (TX_DS | MAX_RT))) {
-        status = nrf24_status(nrf24_HANDLE);
-        snprintf(tmp, 128, "NRF24 STATUS REGISTER: %d", status);
-
-        FURI_LOG_D(TAG, tmp);
-    }
     NotificationApp* notification = furi_record_open(RECORD_NOTIFICATION);
-
-    uint8_t chan = 0;
-    uint8_t limit = 0;
     notification_message(notification, &sequence_blink_red_100);
 
-    do {
-        limit = hopping_channels_len[plugin_state->jam_type];
-        for(int ch = 0; ch < limit; ch++) {
-            chan = hopping_channels[ch];
-            // change channel
-            nrf24_write_reg(nrf24_HANDLE, REG_RF_CH, chan);
-            // push new data to the TX register
-            nrf24_spi_trx(nrf24_HANDLE, tx, 0, 3, nrf24_TIMEOUT);
+    nrf24_startConstCarrier(nrf24_HANDLE, 3, hopping_channels[0]);
+
+    uint8_t current_channel = 0;
+    uint8_t limit = hopping_channels_len[plugin_state->jam_type];
+
+    while(!plugin_state->close_thread_please) {
+        for(int ch = 0; ch < limit && !plugin_state->close_thread_please; ch++) {
+            current_channel = hopping_channels[ch];
+            nrf24_write_reg(nrf24_HANDLE, REG_RF_CH, current_channel);
         }
-    } while(!plugin_state->close_thread_please);
+    }
 
+    nrf24_stopConstCarrier(nrf24_HANDLE);
     furi_record_close(RECORD_NOTIFICATION);
-
     plugin_state->is_thread_running = false;
-    nrf24_set_idle(nrf24_HANDLE);
     return 0;
 }
 
 int32_t jammer_app(void* p) {
     UNUSED(p);
+    if(!furi_hal_power_is_otg_enabled()) furi_hal_power_enable_otg();
     FuriMessageQueue* event_queue = furi_message_queue_alloc(8, sizeof(PluginEvent));
     dolphin_deed(DolphinDeedPluginStart);
     PluginState* plugin_state = malloc(sizeof(PluginState));
@@ -422,6 +371,7 @@ int32_t jammer_app(void* p) {
     furi_thread_free(plugin_state->jam_thread);
     FURI_LOG_D(TAG, "nrf24 deinit...");
     nrf24_deinit();
+    furi_hal_power_disable_otg();
     view_port_enabled_set(view_port, false);
     gui_remove_view_port(gui, view_port);
     furi_record_close(RECORD_GUI);

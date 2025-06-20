@@ -35,10 +35,10 @@
 
 ## v0.4
 - Added an option to delete apps
-- Edits by Willy-JL
+- Edits by WillyJL
 
 ## v0.3
-- Edits by Willy-JL
+- Edits by WillyJL
 - Improved memory allocation
 - Stability patch
 

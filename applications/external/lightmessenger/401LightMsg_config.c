@@ -131,17 +131,15 @@ const char* const lightmsg_mirror_text[] = {
 };
 
 // Speed (ms) to change text being display (0=never, 1 sec, 0.5 sec)
+// ERRATA: Now represent a "swipe number"
 const uint32_t lightmsg_speed_value[] = {
     UINT32_MAX,
-    1000,
-    500,
+    16,
+    8,
+    2,
 };
 
-const char* const lightmsg_speed_text[] = {
-    "Off",
-    "Slow",
-    "Fast",
-};
+const char* const lightmsg_speed_text[] = {"Off", "Slow", "Medium", "Fast"};
 
 // Delay in microseconds (us) to wait after rendering a column
 const uint32_t lightmsg_width_value[] = {

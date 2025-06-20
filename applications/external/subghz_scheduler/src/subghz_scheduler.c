@@ -14,6 +14,7 @@ struct Scheduler {
     char* file_name;
     SchedulerTxMode mode;
     bool timing_mode;
+    bool radio;
 };
 
 Scheduler* scheduler_alloc() {
@@ -62,6 +63,11 @@ void scheduler_set_mode(Scheduler* scheduler, SchedulerTxMode mode) {
 void scheduler_set_tx_delay(Scheduler* scheduler, uint8_t tx_delay) {
     furi_assert(scheduler);
     scheduler->tx_delay = tx_delay_value[tx_delay];
+}
+
+void scheduler_set_radio(Scheduler* scheduler, uint8_t radio) {
+    furi_assert(scheduler);
+    scheduler->radio = radio;
 }
 
 static const char* extract_filename(const char* filepath) {
@@ -146,6 +152,11 @@ SchedulerTxMode scheduler_get_mode(Scheduler* scheduler) {
 uint16_t scheduler_get_tx_delay(Scheduler* scheduler) {
     furi_assert(scheduler);
     return scheduler->tx_delay;
+}
+
+bool scheduler_get_radio(Scheduler* scheduler) {
+    furi_assert(scheduler);
+    return scheduler->radio;
 }
 
 uint8_t scheduler_get_tx_delay_index(Scheduler* scheduler) {

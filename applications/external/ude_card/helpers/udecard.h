@@ -69,19 +69,16 @@ static const uint8_t UDECARD_CONSTANT_BLOCK2_CONTENTS[] = UDECARD_CONSTANT_BLOCK
 #define UDECARD_MEMBER_NUMBER_BLOCK_4OCC (9 * BLOCKS_PER_SECTOR + 0)
 #define UDECARD_MEMBER_NUMBER_SIZE       12
 
-// keys
-// these are widely present in a lot of dictionaries (including the Flipper’s),
-// therefore they cannot be really considered private.
-// They only allow reading, no modification.
-// I am in no way publishing them, I am just using them.
-#define UDECARD_KEY_SIZE 6
-
-#define UDECARD_KEYA_0_BYTES {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}
-#define UDECARD_KEYA_1_BYTES {0xA2, 0x7D, 0x38, 0x04, 0xC2, 0x59}
-#define UDECARD_KEYA_2_BYTES {0x52, 0x8C, 0x9D, 0xFF, 0xE2, 0x8C}
-#define UDECARD_KEYA_3_BYTES {0x3E, 0x35, 0x54, 0xAF, 0x0E, 0x12}
-#define UDECARD_KEYA_4_BYTES {0x74, 0x0E, 0x9A, 0x4F, 0x9A, 0xAF}
-#define UDECARD_KEYA_5_BYTES {0x97, 0x18, 0x4D, 0x13, 0x62, 0x33}
+// key locations in flipper’s dictonary
+#define FLIPPER_MFCLASSIC_DICT_PATH       "nfc/assets/mf_classic_dict.nfc"
+#define FLIPPER_MFCLASSIC_DICT_TOTAL_KEYS 2042
+#define UDECARD_KEY_SIZE                  6
+#define UDECARD_KEYA_0_INDEX              3
+#define UDECARD_KEYA_1_INDEX              206
+#define UDECARD_KEYA_2_INDEX              208
+#define UDECARD_KEYA_3_INDEX              212
+#define UDECARD_KEYA_4_INDEX              214
+#define UDECARD_KEYA_5_INDEX              431
 
 #define UDECARD_KSNR_SIZE_MAX_LENGTH 10
 
@@ -138,11 +135,12 @@ UDECard* udecard_alloc();
 void udecard_free(UDECard* udecard);
 UDECardParsingResult udecard_parse(UDECard* udecard, MfClassicData* mfclassicdata);
 void uid_to_ksnr(char* ksnr, uint8_t* uid);
-int xor3_to_int(const uint8_t* balance_data);
+int xor3_to_int(const uint8_t* bytes);
 
 UDECardLoadingResult udecard_load_from_nfc_device(UDECard* udecard, NfcDevice* nfc_device);
 UDECardLoadingResult udecard_load_from_path(UDECard* udecard, FuriString* path);
 
 char* udecard_loading_error_string(UDECardLoadingResult loading_result);
+bool udecard_gather_keys(uint8_t sector_keys[][6]);
 
 #endif

@@ -25,5 +25,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 void reverse_string(char* str);
 void remove_leading_zeros_from_string(char* str);
+int fast_forward_to_next_line(FILE* file);
 
 #endif

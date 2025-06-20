@@ -1,19 +1,19 @@
-/* 
- * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero 
+/*
+ * This file is part of the 8-bit ATAR SIO Emulator for Flipper Zero
  * (https://github.com/cepetr/sio2flip).
  * Copyright (c) 2025
- * 
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * 
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -30,6 +30,20 @@
 
 // XF551 high-speed mode baudrate
 #define XF551_BAUDRATE 38400
+
+// FDD emulator specific SIO commands
+#define SIO_COMMAND_PUT              0x50 // Write sector without verification
+#define SIO_COMMAND_FORMAT           0x21 // Format disk
+#define SIO_COMMAND_FORMAT_MEDIUM    0x22 // Format disk (medium density)
+#define SIO_COMMAND_GET_HSI          0x3F // Get high-speed index
+#define SIO_COMMAND_READ_PERCOM      0x4E // Read PERCOM configuration
+#define SIO_COMMAND_WRITE_PERCOM     0x4F // Write PERCOM configuration
+#define SIO_COMMAND_FORMAT_WITH_SKEW 0x66 // Format disk with skew
+#define SIO_COMMAND_READ_HS          0xD2 // Read sector
+#define SIO_COMMAND_WRITE_HS         0xD7 // Write sector
+#define SIO_COMMAND_STATUS_HS        0xD3 // Get status
+#define SIO_COMMAND_PUT_HS           0xD0 // Write sector without verification
+#define SIO_COMMAND_FORMAT_HS        0xA1 // Format disk
 
 static SIOStatus fdd_command_callback(void* context, SIORequest* request);
 static SIOStatus fdd_data_callback(void* context, SIORequest* request);
@@ -148,6 +162,27 @@ void fdd_eject_disk(FddEmulator* fdd) {
     }
 }
 
+void fdd_swap_disk(FddEmulator* fdd, FddEmulator* other_fdd) {
+    furi_check(fdd != NULL);
+    furi_check(other_fdd != NULL);
+
+    DiskImage* tmp = fdd->image;
+    fdd->image = other_fdd->image;
+    other_fdd->image = tmp;
+
+    DiskGeometry tmp_geom = fdd->geometry;
+    fdd->geometry = other_fdd->geometry;
+    other_fdd->geometry = tmp_geom;
+
+    bool tmp_geom_changed = fdd->geometry_changed;
+    fdd->geometry_changed = other_fdd->geometry_changed;
+    other_fdd->geometry_changed = tmp_geom_changed;
+
+    size_t tmp_last_sector = fdd->last_sector;
+    fdd->last_sector = other_fdd->last_sector;
+    other_fdd->last_sector = tmp_last_sector;
+}
+
 SIODevice fdd_get_device(FddEmulator* fdd) {
     furi_check(fdd != NULL);
     return fdd->device;
@@ -188,6 +223,12 @@ static SIOStatus fdd_command_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
+    case SIO_COMMAND_STATUS_HS:
+        if(fdd->config->speed_mode != SpeedMode_XF551) {
+            return SIO_NAK;
+        }
+        request->baudrate = XF551_BAUDRATE;
+        // Fall through
     case SIO_COMMAND_STATUS:
         return SIO_ACK;
 
@@ -267,7 +308,8 @@ static SIOStatus fdd_data_callback(void* context, SIORequest* request) {
     }
 
     switch(request->command) {
-    case SIO_COMMAND_STATUS: {
+    case SIO_COMMAND_STATUS:
+    case SIO_COMMAND_STATUS_HS: {
         DiskGeometry geom = disk_geometry(fdd->image);
         bool write_protect = disk_image_get_write_protect(fdd->image);
 
