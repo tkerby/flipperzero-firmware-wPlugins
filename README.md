@@ -19,9 +19,7 @@ Then, go back to the main menu, press **Start**, and connect to Bluetooth. Once 
 
 ## Purpose
 
-The purpose I originally had in mind for this app was to be used as a remote for [Anki](https://apps.ankiweb.net/), a popular spaced repetition flashcard app for med school students. Having some kind of remote really makes long study sessions more comfortable and lets you review flashcards in any position, not just sitting upright.
-
-However, this app doesnt have to be used only with Anki; **you can use it for literally any other purpose or app** where a Bluetooth keyboard remote might be useful.
+The purpose I originally had in mind for this app was to be used as a remote for [Anki](https://apps.ankiweb.net/), a popular spaced repetition flashcard app for med school students. However, this app doesnt have to be used only with Anki; **you can use it for literally any other purpose or app** where a Bluetooth keyboard remote might be useful.
 
 The current HID keyboard in the BT remote app is limited for this use case because it takes a long time to get to a different button, and you have to keep looking at the Flippers screen at all times.
 
