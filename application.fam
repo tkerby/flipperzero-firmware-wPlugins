@@ -1,17 +1,23 @@
 # For details & more options, see documentation/AppManifests.md in firmware repo
 
 App(
-    appid="coinflip",  # Must be unique
-    name="Coinflip",  # Displayed in menus
+    appid="flipper_printer",  # Must be unique
+    name="Flipper Printer",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="coinflip_main",
+    entry_point="flipper_printer_main",
     stack_size=2 * 1024,
-    fap_category="Games",
+    fap_category="Tools",
+    sources=[
+        "flipper_printer.c",
+        "printer.c",
+        "coin_flip.c",
+        "menu.c",
+    ],
     # Optional values
-    # fap_version="0.1",
-    fap_icon="coinflip_1_10px.png",
-    # fap_description="A simple app",
-    # fap_author="J. Doe",
-    # fap_weburl="https://github.com/user/test_app",
+    fap_version="1.0",
+    fap_icon="flipper_printer_icon.png",
+    fap_description="Thermal printer app with coin flip game and text printing",
+    fap_author="Alex",
+    # fap_weburl="https://github.com/user/flipper_printer",
     fap_icon_assets="images",  # Image assets to compile for this application
 )
