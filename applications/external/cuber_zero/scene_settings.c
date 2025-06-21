@@ -24,7 +24,7 @@ static const char* const OptionCubes[] = {
     "3x3 MB"};
 
 static void callbackEnter(const PCUBERZERO instance, const uint32_t index) {
-    if(index == CUBERZERO_SCENE_SETTINGS_CUBE) {
+    if(instance && index == CUBERZERO_SCENE_SETTINGS_CUBE) {
         scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_CUBE_SELECT);
     }
 }
@@ -56,7 +56,6 @@ void SceneSettingsEnter(const PCUBERZERO instance) {
     view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
     return;
 error:
-    variable_item_list_reset(instance->view.variableList);
     scene_manager_handle_back_event(instance->manager);
 }
 

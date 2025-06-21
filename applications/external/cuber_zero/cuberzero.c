@@ -41,9 +41,30 @@ int32_t cuberzeroMain(const void* const pointer) {
     CuberZeroSettingsLoad(&instance->settings);
     instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
 
+    if(!(instance->scene.timer.queue = furi_message_queue_alloc(1, sizeof(InputEvent)))) {
+        messageError = "furi_message_queue_alloc() failed";
+        goto freeInstance;
+    }
+
+    if(!(instance->scene.timer.viewport = view_port_alloc())) {
+        messageError = "view_port_alloc() failed";
+        goto freeMessageQueue;
+    }
+
+    if(!(instance->scene.timer.timer = furi_timer_alloc(
+             (FuriTimerCallback)SceneTimerTick, FuriTimerTypePeriodic, instance))) {
+        messageError = "furi_timer_alloc() failed";
+        goto freeViewport;
+    }
+
+    if(!(instance->scene.timer.string = furi_string_alloc())) {
+        messageError = "furi_string_alloc() failed";
+        goto freeTimer;
+    }
+
     if(!(instance->interface = furi_record_open(RECORD_GUI))) {
         messageError = "furi_record_open(RECORD_GUI) failed";
-        goto freeInstance;
+        goto freeString;
     }
 
     if(!(instance->view.submenu = submenu_alloc())) {
@@ -61,14 +82,9 @@ int32_t cuberzeroMain(const void* const pointer) {
         goto freeVariableList;
     }
 
-    if(!(instance->viewport = view_port_alloc())) {
-        messageError = "view_port_alloc() failed";
-        goto freeWidget;
-    }
-
     if(!(instance->dispatcher = view_dispatcher_alloc())) {
         messageError = "view_dispatcher_alloc() failed";
-        goto freeViewport;
+        goto freeWidget;
     }
     view_dispatcher_enable_queue(instance->dispatcher);
 
@@ -83,13 +99,13 @@ int32_t cuberzeroMain(const void* const pointer) {
         (AppSceneOnEventCallback)SceneCubeSelectEvent,
         (AppSceneOnEventCallback)SceneHomeEvent,
         callbackEmptyEvent,
-        (AppSceneOnEventCallback)SceneTimerEvent};
+        callbackEmptyEvent};
     const AppSceneOnExitCallback onExit[] = {
         callbackEmptyExit,
         callbackEmptyExit,
         callbackEmptyExit,
         (AppSceneOnExitCallback)SceneSettingsExit,
-        (AppSceneOnExitCallback)SceneTimerExit};
+        callbackEmptyExit};
     const SceneManagerHandlers handlers = {onEnter, onEvent, onExit, COUNT_CUBERZEROSCENE};
 
     if(!(instance->manager = scene_manager_alloc(&handlers, instance))) {
@@ -97,6 +113,10 @@ int32_t cuberzeroMain(const void* const pointer) {
         goto freeDispatcher;
     }
 
+    view_port_draw_callback_set(
+        instance->scene.timer.viewport, (ViewPortDrawCallback)SceneTimerDraw, instance);
+    view_port_input_callback_set(
+        instance->scene.timer.viewport, (ViewPortInputCallback)SceneTimerInput, instance);
     view_dispatcher_set_event_callback_context(instance->dispatcher, instance);
     view_dispatcher_set_custom_event_callback(
         instance->dispatcher, (ViewDispatcherCustomEventCallback)callbackCustomEvent);
@@ -120,8 +140,6 @@ int32_t cuberzeroMain(const void* const pointer) {
     scene_manager_free(instance->manager);
 freeDispatcher:
     view_dispatcher_free(instance->dispatcher);
-freeViewport:
-    view_port_free(instance->viewport);
 freeWidget:
     widget_free(instance->view.widget);
 freeVariableList:
@@ -130,6 +148,14 @@ freeSubmenu:
     submenu_free(instance->view.submenu);
 closeInterface:
     furi_record_close(RECORD_GUI);
+freeString:
+    furi_string_free(instance->scene.timer.string);
+freeTimer:
+    furi_timer_free(instance->scene.timer.timer);
+freeViewport:
+    view_port_free(instance->scene.timer.viewport);
+freeMessageQueue:
+    furi_message_queue_free(instance->scene.timer.queue);
 freeInstance:
     CuberZeroSettingsSave(&instance->settings);
     free(instance);

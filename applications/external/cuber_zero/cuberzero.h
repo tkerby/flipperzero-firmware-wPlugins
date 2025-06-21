@@ -21,6 +21,14 @@ typedef struct {
         struct {
             uint8_t selectedItem;
         } home;
+
+        struct {
+            FuriMessageQueue* queue;
+            ViewPort* viewport;
+            FuriTimer* timer;
+            FuriString* string;
+            uint8_t state;
+        } timer;
     } scene;
 
     Gui* interface;
@@ -30,7 +38,6 @@ typedef struct {
         Widget* widget;
     } view;
 
-    ViewPort* viewport;
     ViewDispatcher* dispatcher;
     SceneManager* manager;
 } CUBERZERO, *PCUBERZERO;
@@ -83,9 +90,10 @@ void SceneHomeEnter(const PCUBERZERO instance);
 bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event);
 void SceneSettingsEnter(const PCUBERZERO instance);
 void SceneSettingsExit(const PCUBERZERO instance);
+void SceneTimerTick(const PCUBERZERO instance);
 void SceneTimerEnter(const PCUBERZERO instance);
-bool SceneTimerEvent(const PCUBERZERO instance, const SceneManagerEvent event);
-void SceneTimerExit(const PCUBERZERO instance);
+void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance);
+void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance);
 #ifdef __cplusplus
 }
 #endif

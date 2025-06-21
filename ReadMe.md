@@ -36,13 +36,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [FlipWorld v0.8.3 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32`
 - Updated: [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)
 - Updated: [Flipper Blackhat v0.4 (By o7-machinehum)](https://github.com/o7-machinehum/flipper-blackhat-app) `Req: Blackhat Board`
-- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 - Updated: [Free Roam v0.2 (By jblanked)](https://github.com/jblanked/Free-Roam) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - Updated: [IR Xbox Controller v1.4 (By gebeto)](https://github.com/gebeto/flipper-xbox-controller)
 - Added: [FZ nRF24 Jammer v1.0 (By W0rthlessS0ul)](https://github.com/W0rthlessS0ul/FZ_nRF24_jammer)
 - Added: [Mind Probe v0.1 (By Miksang)](https://github.com/Miksang/flipper_guessing_game)
 - Updatgd: [NRF24 Jammer v1.0 (By huuck)](https://github.com/huuck/FlipperZeroNRFJammer) (Exercise Caution and Follow Your Local Laws)
 - Updated: [Tarot v0.2 (By pionaiki & tihyltew)](https://github.com/pionaiki/fz-tarot)
+- Updated: [Rubiks Cube Timer v0.0.1 (By KHOPAN)](https://github.com/KHOPAN/Cuber-Zero)
 
 <a name="release">
 

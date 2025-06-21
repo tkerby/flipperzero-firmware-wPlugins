@@ -20,11 +20,17 @@ static const char* const Cubes[] = {
     "3x3x3 Multi-Blind"};
 
 static void callbackItem(const PCUBERZERO instance, const uint32_t index) {
-    scene_manager_handle_custom_event(instance->manager, index);
-    scene_manager_handle_back_event(instance->manager);
+    if(instance) {
+        scene_manager_handle_custom_event(instance->manager, index);
+        scene_manager_handle_back_event(instance->manager);
+    }
 }
 
 void SceneCubeSelectEnter(const PCUBERZERO instance) {
+    if(!instance) {
+        return;
+    }
+
     submenu_reset(instance->view.submenu);
 
     for(uint8_t i = 0; i < COUNT_CUBERZEROCUBE; i++) {
@@ -37,7 +43,8 @@ void SceneCubeSelectEnter(const PCUBERZERO instance) {
 }
 
 bool SceneCubeSelectEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-    if(event.type != SceneManagerEventTypeCustom || event.event >= COUNT_CUBERZEROCUBE) {
+    if(!instance || event.type != SceneManagerEventTypeCustom ||
+       event.event >= COUNT_CUBERZEROCUBE) {
         return false;
     }
 
