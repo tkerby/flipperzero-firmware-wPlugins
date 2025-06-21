@@ -14,8 +14,7 @@ enum TimerState {
 	TIMER_STATE_DEFAULT,
 	TIMER_STATE_WAIT_FOR_READY,
 	TIMER_STATE_READY,
-	TIMER_STATE_TIMING,
-	TIMER_STATE_HALT
+	TIMER_STATE_TIMING
 };
 
 void SceneTimerTick(const PCUBERZERO instance) {
@@ -27,7 +26,6 @@ void SceneTimerTick(const PCUBERZERO instance) {
 
 	switch(instance->scene.timer.state) {
 	case TIMER_STATE_WAIT_FOR_READY:
-	case TIMER_STATE_HALT:
 		furi_hal_light_set(LightRed, 255);
 		furi_hal_light_set(LightGreen, 0);
 		break;
@@ -87,8 +85,6 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 		return;
 	}
 
-	//furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
-
 	if(event->key == InputKeyOk && event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
 			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
@@ -105,8 +101,12 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 
 	if(event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
-			instance->scene.timer.state = TIMER_STATE_HALT;
+			instance->scene.timer.state = TIMER_STATE_DEFAULT;
 			return;
 		}
+	}
+
+	if(event->key == InputKeyBack && event->type == InputTypeShort && instance->scene.timer.state == TIMER_STATE_DEFAULT) {
+		furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
 	}
 }
