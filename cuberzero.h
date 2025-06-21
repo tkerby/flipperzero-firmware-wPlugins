@@ -27,6 +27,7 @@ typedef struct {
 			ViewPort* viewport;
 			FuriTimer* timer;
 			FuriString* string;
+			uint8_t state;
 		} timer;
 	} scene;
 

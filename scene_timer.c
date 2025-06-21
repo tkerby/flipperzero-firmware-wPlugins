@@ -9,6 +9,14 @@ struct ViewDispatcher {
 	ViewPort* viewport;
 };
 
+enum TimerState {
+	TIMER_STATE_DEFAULT,
+	TIMER_STATE_WAIT_FOR_READY,
+	TIMER_STATE_READY,
+	TIMER_STATE_TIMING,
+	TIMER_STATE_HALT
+};
+
 void SceneTimerTick(const PCUBERZERO instance) {
 	if(!instance) {
 		return;
@@ -25,6 +33,7 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	view_dispatcher_stop(instance->dispatcher);
 	gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
 	furi_message_queue_reset(instance->scene.timer.queue);
+	instance->scene.timer.state = TIMER_STATE_DEFAULT;
 	gui_add_view_port(instance->interface, instance->scene.timer.viewport, GuiLayerFullscreen);
 	furi_timer_start(instance->scene.timer.timer, 1);
 	const InputEvent* event;
@@ -45,12 +54,9 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 		return;
 	}
 
-	uint32_t tick = furi_get_tick();
-	uint32_t seconds = tick / 1000;
-	furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
 	canvas_clear(canvas);
-	canvas_set_font(canvas, FontBigNumbers);
-	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
+	canvas_set_font(canvas, FontSecondary);
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "F D L2 U2 D2 R' F' D' R U2 B R2 F U2 B U2 L2 D2");
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
