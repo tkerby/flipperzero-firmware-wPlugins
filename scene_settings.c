@@ -35,7 +35,6 @@ void SceneSettingsEnter(const PCUBERZERO instance) {
 	view_dispatcher_switch_to_view(instance->dispatcher, CUBERZERO_VIEW_VARIABLE_ITEM_LIST);
 	return;
 error:
-	variable_item_list_reset(instance->view.variableList);
 	scene_manager_handle_back_event(instance->manager);
 }
 

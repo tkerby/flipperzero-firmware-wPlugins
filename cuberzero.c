@@ -56,9 +56,14 @@ int32_t cuberzeroMain(const void* const pointer) {
 		goto freeViewport;
 	}
 
+	if(!(instance->scene.timer.string = furi_string_alloc())) {
+		messageError = "furi_string_alloc() failed";
+		goto freeTimer;
+	}
+
 	if(!(instance->interface = furi_record_open(RECORD_GUI))) {
 		messageError = "furi_record_open(RECORD_GUI) failed";
-		goto freeTimer;
+		goto freeString;
 	}
 
 	if(!(instance->view.submenu = submenu_alloc())) {
@@ -116,6 +121,8 @@ freeSubmenu:
 	submenu_free(instance->view.submenu);
 closeInterface:
 	furi_record_close(RECORD_GUI);
+freeString:
+	furi_string_free(instance->scene.timer.string);
 freeTimer:
 	furi_timer_free(instance->scene.timer.timer);
 freeViewport:

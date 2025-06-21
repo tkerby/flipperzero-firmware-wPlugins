@@ -26,6 +26,7 @@ typedef struct {
 			FuriMessageQueue* queue;
 			ViewPort* viewport;
 			FuriTimer* timer;
+			FuriString* string;
 		} timer;
 	} scene;
 
@@ -90,7 +91,7 @@ void SceneSettingsEnter(const PCUBERZERO instance);
 void SceneSettingsExit(const PCUBERZERO instance);
 void SceneTimerTick(const PCUBERZERO instance);
 void SceneTimerEnter(const PCUBERZERO instance);
-void SceneTimerDraw(const Canvas* const canvas, const PCUBERZERO instance);
+void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance);
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance);
 #ifdef __cplusplus
 }

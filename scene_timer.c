@@ -13,6 +13,8 @@ void SceneTimerTick(const PCUBERZERO instance) {
 	if(!instance) {
 		return;
 	}
+
+	view_port_update(instance->scene.timer.viewport);
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
@@ -38,10 +40,17 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	view_dispatcher_run(instance->dispatcher);
 }
 
-void SceneTimerDraw(const Canvas* const canvas, const PCUBERZERO instance) {
+void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	if(!canvas || !instance) {
 		return;
 	}
+
+	uint32_t tick = furi_get_tick();
+	uint32_t seconds = tick / 1000;
+	furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
+	canvas_clear(canvas);
+	canvas_set_font(canvas, FontBigNumbers);
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
