@@ -1,4 +1,5 @@
 #include "cuberzero.h"
+#include <furi_hal_light.h>
 
 struct ViewDispatcher {
 	bool eventLoopOwned;
@@ -20,6 +21,28 @@ enum TimerState {
 void SceneTimerTick(const PCUBERZERO instance) {
 	if(!instance) {
 		return;
+	}
+
+	furi_hal_light_set(LightBlue, 0);
+
+	switch(instance->scene.timer.state) {
+	case TIMER_STATE_WAIT_FOR_READY:
+	case TIMER_STATE_HALT:
+		furi_hal_light_set(LightRed, 255);
+		furi_hal_light_set(LightGreen, 0);
+		break;
+	case TIMER_STATE_READY:
+		furi_hal_light_set(LightRed, 0);
+		furi_hal_light_set(LightGreen, 255);
+		break;
+	default:
+		furi_hal_light_set(LightRed, 0);
+		furi_hal_light_set(LightGreen, 0);
+		break;
+	}
+
+	if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY) {
+		instance->scene.timer.state = TIMER_STATE_READY;
 	}
 
 	view_port_update(instance->scene.timer.viewport);
@@ -80,7 +103,7 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 		}
 	}
 
-	if(event->type == InputTypeRelease) {
+	if(event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
 			instance->scene.timer.state = TIMER_STATE_HALT;
 			return;
