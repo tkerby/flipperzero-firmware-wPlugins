@@ -135,14 +135,6 @@ void Player::handleMenu(Draw *draw, Game *game)
         return;
     }
 
-    // too lazy for now, but we should use the Draw methods instead of canvas directly
-    // I'll fix this before porting to Picoware
-    auto canvas = draw->display;
-    if (!canvas)
-    {
-        return;
-    }
-
     if (currentMenuIndex != MenuIndexSettings)
     {
         switch (game->input)
@@ -298,9 +290,9 @@ void Player::handleMenu(Draw *draw, Game *game)
         }
     }
 
-    canvas_clear(canvas);
-    canvas_set_color(canvas, ColorBlack);
-    canvas_draw_icon(canvas, 0, 0, &I_icon_menu_128x64px);
+    draw->fillScreen(ColorWhite);
+    draw->color(ColorBlack);
+    draw->icon(Vector(0, 0), &I_icon_menu_128x64px);
 
     switch (currentMenuIndex)
     {
@@ -316,28 +308,30 @@ void Player::handleMenu(Draw *draw, Game *game)
         snprintf(health, sizeof(health), "Health  : %d", (int)this->health);
         snprintf(xp, sizeof(xp), "XP      : %d", (int)this->xp);
         snprintf(strength, sizeof(strength), "Strength: %d", (int)this->strength);
-        canvas_set_font(canvas, FontPrimary);
+
+        draw->setFont(FontPrimary);
         if (this->name == nullptr || strlen(this->name) == 0)
         {
-            canvas_draw_str(canvas, 6, 16, "Unknown");
+            draw->text(Vector(6, 16), "Unknown");
         }
         else
         {
-            canvas_draw_str(canvas, 6, 16, this->name);
+            draw->text(Vector(6, 16), this->name);
         }
-        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-        canvas_draw_str(canvas, 6, 30, level);
-        canvas_draw_str(canvas, 6, 37, health);
-        canvas_draw_str(canvas, 6, 44, xp);
-        canvas_draw_str(canvas, 6, 51, strength);
+
+        draw->setFontCustom(FONT_SIZE_SMALL);
+        draw->text(Vector(6, 30), level);
+        draw->text(Vector(6, 37), health);
+        draw->text(Vector(6, 44), xp);
+        draw->text(Vector(6, 51), strength);
 
         // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 32, "Settings");
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 32), "Settings");
+        draw->text(Vector(80, 46), "About");
     }
     break;
     case MenuIndexSettings: // sound on/off, vibration on/off, and leave game
@@ -350,74 +344,73 @@ void Player::handleMenu(Draw *draw, Game *game)
         switch (currentSettingsIndex)
         {
         case MenuSettingsMain:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsSound:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsVibration:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsLeave:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         default:
             break;
         };
-        // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 79, 32, "Settings");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(79, 32), "Settings");
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 46), "About");
     }
     break;
     case MenuIndexAbout:
     {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 6, 16, "Free Roam");
-        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-        canvas_draw_str_multi(canvas, 6, 25, "Creator: JBlanked");
-        canvas_draw_str(canvas, 6, 59, "www.github.com/jblanked");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(6, 16), "Free Roam");
+        draw->setFontCustom(FONT_SIZE_SMALL);
+        draw->text(Vector(6, 25), "Creator: JBlanked");
+        draw->text(Vector(6, 59), "www.github.com/jblanked");
 
         // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_draw_str(canvas, 80, 32, "Settings");
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->text(Vector(80, 32), "Settings");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(80, 46), "About");
     }
     break;
     default:
-        canvas_clear(canvas);
-        canvas_draw_str(canvas, 0, 10, "Unknown Menu");
+        draw->fillScreen(ColorWhite);
+        draw->text(Vector(0, 10), "Unknown Menu");
         break;
     };
 }
@@ -451,14 +444,14 @@ void Player::render(Draw *canvas, Game *game)
     if (justSwitchedLevels && !justStarted)
     {
         // show message after switching levels
-        canvas_clear(canvas->display);
-        canvas_set_color(canvas->display, ColorBlack);
-        canvas_draw_icon(canvas->display, 0, 0, &I_icon_menu_128x64px);
-        canvas_set_font(canvas->display, FontPrimary);
-        canvas_draw_str(canvas->display, 5, 15, "New Level");
-        canvas_set_font_custom(canvas->display, FONT_SIZE_SMALL);
-        canvas_draw_str(canvas->display, 5, 30, game->current_level->name);
-        canvas_draw_str(canvas->display, 5, 58, "Tip: BACK opens the menu.");
+        game->draw->fillScreen(ColorWhite);
+        game->draw->color(ColorBlack);
+        game->draw->icon(Vector(0, 0), &I_icon_menu_128x64px);
+        game->draw->setFont(FontPrimary);
+        game->draw->text(Vector(5, 15), "New Level");
+        game->draw->setFontCustom(FONT_SIZE_SMALL);
+        game->draw->text(Vector(5, 30), game->current_level->name);
+        game->draw->text(Vector(5, 58), "Tip: BACK opens the menu.");
         is_visible = false; // hide player entity during level switch
         if (levelSwitchCounter < 50)
         {
