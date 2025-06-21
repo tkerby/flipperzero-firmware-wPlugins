@@ -64,5 +64,26 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 		return;
 	}
 
-	furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+	//furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
+
+	if(event->key == InputKeyOk && event->type == InputTypePress) {
+		if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
+			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+			return;
+		}
+	}
+
+	if(event->key == InputKeyOk && event->type == InputTypeRelease) {
+		if(instance->scene.timer.state == TIMER_STATE_READY) {
+			instance->scene.timer.state = TIMER_STATE_TIMING;
+			return;
+		}
+	}
+
+	if(event->type == InputTypeRelease) {
+		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
+			instance->scene.timer.state = TIMER_STATE_HALT;
+			return;
+		}
+	}
 }
