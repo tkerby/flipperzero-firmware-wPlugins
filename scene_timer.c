@@ -10,7 +10,9 @@ struct ViewDispatcher {
 };
 
 void SceneTimerTick(const PCUBERZERO instance) {
-	UNUSED(instance);
+	if(!instance) {
+		return;
+	}
 }
 
 void SceneTimerEnter(const PCUBERZERO instance) {
@@ -37,10 +39,15 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 }
 
 void SceneTimerDraw(const Canvas* const canvas, const PCUBERZERO instance) {
-	UNUSED(canvas);
-	UNUSED(instance);
+	if(!canvas || !instance) {
+		return;
+	}
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
+	if(!event || !instance) {
+		return;
+	}
+
 	furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
 }

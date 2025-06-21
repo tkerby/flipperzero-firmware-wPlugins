@@ -1,10 +1,16 @@
 #include "cuberzero.h"
 
 static void callbackItem(const PCUBERZERO instance, const uint32_t index) {
-	scene_manager_handle_custom_event(instance->manager, index);
+	if(instance) {
+		scene_manager_handle_custom_event(instance->manager, index);
+	}
 }
 
 void SceneHomeEnter(const PCUBERZERO instance) {
+	if(!instance) {
+		return;
+	}
+
 	submenu_reset(instance->view.submenu);
 	submenu_set_header(instance->view.submenu, "Cuber Zero");
 	submenu_add_item(instance->view.submenu, "Timer", CUBERZERO_SCENE_TIMER, (SubmenuItemCallback) callbackItem, instance);
@@ -15,7 +21,7 @@ void SceneHomeEnter(const PCUBERZERO instance) {
 }
 
 bool SceneHomeEvent(const PCUBERZERO instance, const SceneManagerEvent event) {
-	if(event.type != SceneManagerEventTypeCustom || event.event >= COUNT_CUBERZEROSCENE) {
+	if(!instance || event.type != SceneManagerEventTypeCustom || event.event >= COUNT_CUBERZEROSCENE) {
 		return false;
 	}
 

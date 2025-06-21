@@ -7,7 +7,7 @@ typedef enum {
 static const char* const OptionCubes[] = {"3x3", "2x2", "4x4", "5x5", "6x6", "7x7", "3x3 BLD", "3x3 FM", "3x3 OH", "Clock", "Mega", "Pyra", "Skewb", "SQ-1", "4x4 BLD", "5x5 BLD", "3x3 MB"};
 
 static void callbackEnter(const PCUBERZERO instance, const uint32_t index) {
-	if(index == CUBERZERO_SCENE_SETTINGS_CUBE) {
+	if(instance && index == CUBERZERO_SCENE_SETTINGS_CUBE) {
 		scene_manager_next_scene(instance->manager, CUBERZERO_SCENE_CUBE_SELECT);
 	}
 }
