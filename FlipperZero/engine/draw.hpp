@@ -13,6 +13,7 @@ public:
     Draw(Canvas *canvas);                                                               // Constructor that initializes the canvas and sets foreground and background colors.
     ~Draw() = default;                                                                  // Default destructor.
     void clear(Vector position, Vector size, Color color = ColorWhite);                 // Clears the display at the specified position and size with the specified color.
+    void color(Color color = ColorBlack);                                               // Sets the color for drawing.
     void drawCircle(Vector position, int16_t r, Color color = ColorBlack);              // Draws a circle on the display at the specified position with the specified radius and color.
     void drawLine(Vector position, Vector size, Color color = ColorBlack);              // Draws a line on the display at the specified position and size with the specified color.
     void drawPixel(Vector position, Color color = ColorBlack);                          // Draws a pixel on the display at the specified position with the specified color.

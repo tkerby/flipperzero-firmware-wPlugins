@@ -13,6 +13,11 @@ void Draw::clear(Vector position, Vector size, Color color)
     canvas_draw_box(display, position.x, position.y, size.x, size.y);
 }
 
+void Draw::color(Color color)
+{
+    canvas_set_color(display, color);
+}
+
 void Draw::drawCircle(Vector position, int16_t r, Color color)
 {
     canvas_set_color(display, color);
@@ -96,12 +101,12 @@ void Draw::setFont(Font font)
 
 void Draw::text(Vector position, const char *text)
 {
-    canvas_draw_str(display, position.x, position.x, text);
+    canvas_draw_str(display, position.x, position.y, text);
 }
 
 void Draw::text(Vector position, const char *text, Color color, Font font)
 {
     canvas_set_font(display, font);
     canvas_set_color(display, color);
-    canvas_draw_str(display, position.x, position.x, text);
+    canvas_draw_str(display, position.x, position.y, text);
 }
