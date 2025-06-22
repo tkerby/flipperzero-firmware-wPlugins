@@ -23,6 +23,7 @@ typedef struct {
 		} home;
 
 		struct {
+			FuriMutex* mutex;
 			FuriMessageQueue* queue;
 			ViewPort* viewport;
 			FuriTimer* timer;

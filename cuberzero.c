@@ -41,9 +41,14 @@ int32_t cuberzeroMain(const void* const pointer) {
 	CuberZeroSettingsLoad(&instance->settings);
 	instance->scene.home.selectedItem = CUBERZERO_SCENE_TIMER;
 
+	if(!(instance->scene.timer.mutex = furi_mutex_alloc(FuriMutexTypeNormal))) {
+		messageError = "furi_mutex_alloc() failed";
+		goto freeInstance;
+	}
+
 	if(!(instance->scene.timer.queue = furi_message_queue_alloc(1, sizeof(InputEvent)))) {
 		messageError = "furi_message_queue_alloc() failed";
-		goto freeInstance;
+		goto freeMutex;
 	}
 
 	if(!(instance->scene.timer.viewport = view_port_alloc())) {
@@ -129,6 +134,8 @@ freeViewport:
 	view_port_free(instance->scene.timer.viewport);
 freeMessageQueue:
 	furi_message_queue_free(instance->scene.timer.queue);
+freeMutex:
+	furi_mutex_free(instance->scene.timer.mutex);
 freeInstance:
 	CuberZeroSettingsSave(&instance->settings);
 	free(instance);
