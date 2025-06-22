@@ -2,6 +2,12 @@
 
 A Flipper Zero external application that combines a coin flip game with thermal printer functionality using the T7-US thermal printer module.
 
+## Demo Video
+
+https://github.com/alxcrt/flipper-zero-thermal-printer/assets/flipper_thermal_printer.mp4
+
+Watch the T7-US thermal printer in action with the Flipper Zero coin flip game and custom text printing.
+
 ## Features
 
 - **Coin Flip Game**: Interactive coin flipping with statistics tracking
