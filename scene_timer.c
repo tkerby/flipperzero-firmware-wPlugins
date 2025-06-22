@@ -90,7 +90,7 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 
 	canvas_clear(canvas);
 	canvas_set_font(canvas, FontBigNumbers);
-	uint32_t tick = furi_get_tick();
+	uint32_t tick = (instance->scene.timer.timing ? furi_get_tick() : instance->scene.timer.stopTimer) - instance->scene.timer.startTimer;
 	uint32_t seconds = tick / 1000;
 	furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
 	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
@@ -144,6 +144,7 @@ functionExit:
 			instance->scene.timer.timing = 0;
 			instance->scene.timer.waitForReady = 0;
 			instance->scene.timer.ready = 0;
+			instance->scene.timer.stopTimer = tick;
 			furi_hal_light_blink_stop();
 			furi_hal_light_set(LightRed, 255);
 			furi_hal_light_set(LightGreen, 0);
@@ -168,6 +169,7 @@ functionExit:
 				if(event->type == InputTypeRelease) {
 					instance->scene.timer.ready = 0;
 					instance->scene.timer.timing = 1;
+					instance->scene.timer.startTimer = tick;
 					furi_hal_light_set(LightRed, 0);
 					furi_hal_light_set(LightGreen, 0);
 					furi_hal_light_set(LightBlue, 0);

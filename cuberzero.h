@@ -29,6 +29,8 @@ typedef struct {
 			FuriTimer* timer;
 			FuriString* string;
 			uint32_t pressedTime;
+			uint32_t startTimer;
+			uint32_t stopTimer;
 			struct {
 				uint8_t waitForReady : 1;
 				uint8_t ready		 : 1;
