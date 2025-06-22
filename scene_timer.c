@@ -39,7 +39,7 @@ void SceneTimerTick(const PCUBERZERO instance) {
 		break;
 	}
 
-	if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY) {
+	if(instance->scene.timer.state == TIMER_STATE_WAIT_FOR_READY && furi_get_tick() - instance->scene.timer.pressedTime >= 500) {
 		instance->scene.timer.state = TIMER_STATE_READY;
 	}
 
@@ -76,8 +76,11 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 	}
 
 	canvas_clear(canvas);
-	canvas_set_font(canvas, FontSecondary);
-	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, "F D L2 U2 D2 R' F' D' R U2 B R2 F U2 B U2 L2 D2");
+	canvas_set_font(canvas, FontBigNumbers);
+	uint32_t tick = furi_get_tick();
+	uint32_t seconds = tick / 1000;
+	furi_string_printf(instance->scene.timer.string, "%lu:%02lu.%03lu", seconds / 60, seconds % 60, tick % 1000);
+	canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignCenter, furi_string_get_cstr(instance->scene.timer.string));
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
@@ -88,6 +91,7 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 	if(event->key == InputKeyOk && event->type == InputTypePress) {
 		if(instance->scene.timer.state == TIMER_STATE_DEFAULT) {
 			instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+			instance->scene.timer.pressedTime = furi_get_tick();
 			return;
 		}
 	}

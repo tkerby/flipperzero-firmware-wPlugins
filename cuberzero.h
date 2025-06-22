@@ -28,6 +28,7 @@ typedef struct {
 			FuriTimer* timer;
 			FuriString* string;
 			uint8_t state;
+			uint32_t pressedTime;
 		} timer;
 	} scene;
 
