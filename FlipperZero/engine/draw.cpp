@@ -104,6 +104,12 @@ void Draw::text(Vector position, const char *text)
     canvas_draw_str(display, position.x, position.y, text);
 }
 
+void Draw::text(Vector position, const char *text, Color color)
+{
+    canvas_set_color(display, color);
+    canvas_draw_str(display, position.x, position.y, text);
+}
+
 void Draw::text(Vector position, const char *text, Color color, Font font)
 {
     canvas_set_font(display, font);
