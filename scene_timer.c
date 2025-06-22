@@ -139,27 +139,40 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 functionExit:
 	furi_mutex_release(instance->scene.timer.mutex);*/
 
-	if(event->key == InputKeyOk) {
-		if(!instance->scene.timer.ready) {
-			if(event->type == InputTypePress) {
-				instance->scene.timer.pressedTime = tick;
-				instance->scene.timer.waitForReady = 1;
-				furi_hal_light_set(LightRed, 255);
-				furi_hal_light_set(LightGreen, 0);
-				furi_hal_light_set(LightBlue, 0);
-			} else if(event->type == InputTypeRelease) {
-				instance->scene.timer.waitForReady = 0;
-				furi_hal_light_set(LightRed, 0);
-				furi_hal_light_set(LightGreen, 0);
-				furi_hal_light_set(LightBlue, 0);
-			}
-		} else {
-			if(event->type == InputTypeRelease) {
-				instance->scene.timer.waitForReady = 0;
-				instance->scene.timer.ready = 0;
-				furi_hal_light_set(LightRed, 0);
-				furi_hal_light_set(LightGreen, 0);
-				furi_hal_light_set(LightBlue, 0);
+	if(instance->scene.timer.timing) {
+		if(event->type == InputTypePress) {
+			instance->scene.timer.timing = 0;
+			instance->scene.timer.waitForReady = 0;
+			instance->scene.timer.ready = 0;
+			furi_hal_light_blink_stop();
+			furi_hal_light_set(LightRed, 255);
+			furi_hal_light_set(LightGreen, 0);
+			furi_hal_light_set(LightBlue, 0);
+		}
+	} else {
+		if(event->key == InputKeyOk) {
+			if(!instance->scene.timer.ready) {
+				if(event->type == InputTypePress) {
+					instance->scene.timer.pressedTime = tick;
+					instance->scene.timer.waitForReady = 1;
+					furi_hal_light_set(LightRed, 255);
+					furi_hal_light_set(LightGreen, 0);
+					furi_hal_light_set(LightBlue, 0);
+				} else if(event->type == InputTypeRelease) {
+					instance->scene.timer.waitForReady = 0;
+					furi_hal_light_set(LightRed, 0);
+					furi_hal_light_set(LightGreen, 0);
+					furi_hal_light_set(LightBlue, 0);
+				}
+			} else {
+				if(event->type == InputTypeRelease) {
+					instance->scene.timer.ready = 0;
+					instance->scene.timer.timing = 1;
+					furi_hal_light_set(LightRed, 0);
+					furi_hal_light_set(LightGreen, 0);
+					furi_hal_light_set(LightBlue, 0);
+					furi_hal_light_blink_start(LightRed | LightGreen, 255, 25, 50);
+				}
 			}
 		}
 	}

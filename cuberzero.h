@@ -32,6 +32,7 @@ typedef struct {
 			struct {
 				uint8_t waitForReady : 1;
 				uint8_t ready		 : 1;
+				uint8_t timing		 : 1;
 			};
 		} timer;
 	} scene;
