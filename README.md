@@ -2,11 +2,11 @@
 
 A Flipper Zero external application that combines a coin flip game with thermal printer functionality using the T7-US thermal printer module.
 
-## Demo Video
+## Demo
 
-![Demo Video](assets/flipper_thermal_printer.mp4)
+![Demo](assets/CleanShot%202025-06-22%20at%2017.15.16@2x.png)
 
-*Watch the T7-US thermal printer in action with the Flipper Zero coin flip game and custom text printing.*
+*The T7-US thermal printer in action with the Flipper Zero coin flip game and custom text printing.*
 
 ## Features
 
