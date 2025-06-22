@@ -28,9 +28,11 @@ typedef struct {
 			ViewPort* viewport;
 			FuriTimer* timer;
 			FuriString* string;
-			uint8_t state;
 			uint32_t pressedTime;
-			uint32_t stopTime;
+			struct {
+				uint8_t waitForReady : 1;
+				uint8_t ready		 : 1;
+			};
 		} timer;
 	} scene;
 

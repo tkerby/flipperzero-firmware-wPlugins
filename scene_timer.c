@@ -22,6 +22,13 @@ void SceneTimerTick(const PCUBERZERO instance) {
 		return;
 	}
 
+	if(instance->scene.timer.waitForReady && furi_get_tick() - instance->scene.timer.pressedTime >= 500) {
+		instance->scene.timer.ready = 1;
+		furi_hal_light_set(LightRed, 0);
+		furi_hal_light_set(LightGreen, 255);
+		furi_hal_light_set(LightBlue, 0);
+	}
+
 	/*furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
 	furi_hal_light_set(LightBlue, 0);
 
@@ -58,7 +65,7 @@ void SceneTimerEnter(const PCUBERZERO instance) {
 	view_dispatcher_stop(instance->dispatcher);
 	gui_remove_view_port(instance->interface, instance->dispatcher->viewport);
 	furi_message_queue_reset(instance->scene.timer.queue);
-	instance->scene.timer.state = TIMER_STATE_DEFAULT;
+	//instance->scene.timer.state = TIMER_STATE_DEFAULT;
 	gui_add_view_port(instance->interface, instance->scene.timer.viewport, GuiLayerFullscreen);
 	furi_timer_start(instance->scene.timer.timer, 1);
 	const InputEvent* event;
@@ -90,7 +97,7 @@ void SceneTimerDraw(Canvas* const canvas, const PCUBERZERO instance) {
 }
 
 void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
-	//const uint32_t tick = furi_get_tick();
+	const uint32_t tick = furi_get_tick();
 
 	if(!event || !instance) {
 		return;
@@ -133,13 +140,31 @@ functionExit:
 	furi_mutex_release(instance->scene.timer.mutex);*/
 
 	if(event->key == InputKeyOk) {
-		if(event->type == InputTypePress) {
-			furi_hal_light_set(LightRed, 255);
-		} else if(event->type == InputTypeRelease) {
-			furi_hal_light_set(LightRed, 0);
+		if(!instance->scene.timer.ready) {
+			if(event->type == InputTypePress) {
+				instance->scene.timer.pressedTime = tick;
+				instance->scene.timer.waitForReady = 1;
+				furi_hal_light_set(LightRed, 255);
+				furi_hal_light_set(LightGreen, 0);
+				furi_hal_light_set(LightBlue, 0);
+			} else if(event->type == InputTypeRelease) {
+				instance->scene.timer.waitForReady = 0;
+				furi_hal_light_set(LightRed, 0);
+				furi_hal_light_set(LightGreen, 0);
+				furi_hal_light_set(LightBlue, 0);
+			}
+		} else {
+			if(event->type == InputTypeRelease) {
+				instance->scene.timer.waitForReady = 0;
+				instance->scene.timer.ready = 0;
+				furi_hal_light_set(LightRed, 0);
+				furi_hal_light_set(LightGreen, 0);
+				furi_hal_light_set(LightBlue, 0);
+			}
 		}
+	}
 
-		furi_hal_light_set(LightGreen, 0);
-		furi_hal_light_set(LightBlue, 0);
+	if(event->key == InputKeyBack) {
+		furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
 	}
 }
