@@ -19,7 +19,13 @@ FreeRoamGame::~FreeRoamGame()
 
 void FreeRoamGame::updateDraw(Canvas *canvas)
 {
-    this->drawCurrentView(canvas);
+    // set Draw instance
+    if (!draw)
+    {
+        draw = std::make_unique<Draw>(canvas);
+    }
+
+    this->drawCurrentView();
 
     if (this->player && this->player->shouldLeaveGame())
     {
@@ -69,10 +75,10 @@ void FreeRoamGame::debounceInput()
     }
 }
 
-bool FreeRoamGame::startGame(Canvas *canvas)
+bool FreeRoamGame::startGame()
 {
-    canvas_clear(canvas);
-    canvas_draw_str(canvas, 0, 10, "Initializing game...");
+    draw->fillScreen(ColorWhite);
+    draw->text(Vector(0, 10), "Initializing game...", ColorBlack);
 
     if (isGameRunning || engine)
     {
@@ -80,15 +86,8 @@ bool FreeRoamGame::startGame(Canvas *canvas)
         return true;
     }
 
-    auto drawTemp = std::make_unique<Draw>(canvas);
-    if (!drawTemp)
-    {
-        FURI_LOG_E("FreeRoamGame", "Failed to create Draw object");
-        return false;
-    }
-
     // Create the game instance with 3rd person perspective
-    auto game = std::make_unique<Game>("Free Roam", Vector(128, 64), drawTemp.get(), ColorBlack, ColorWhite, CAMERA_THIRD_PERSON);
+    auto game = std::make_unique<Game>("Free Roam", Vector(128, 64), draw.get(), ColorBlack, ColorWhite, CAMERA_THIRD_PERSON);
     if (!game)
     {
         FURI_LOG_E("FreeRoamGame", "Failed to create Game object");
@@ -110,8 +109,8 @@ bool FreeRoamGame::startGame(Canvas *canvas)
     player->setSoundToggle(soundToggle);
     player->setVibrationToggle(vibrationToggle);
 
-    canvas_clear(canvas);
-    canvas_draw_str(canvas, 0, 10, "Adding levels and player...");
+    draw->fillScreen(ColorWhite);
+    draw->text(Vector(0, 10), "Adding levels and player...", ColorBlack);
 
     // add levels and player to the game
     std::unique_ptr<Level> level1 = std::make_unique<Level>("Tutorial", Vector(128, 64), game.get());
@@ -139,11 +138,8 @@ bool FreeRoamGame::startGame(Canvas *canvas)
         return false;
     }
 
-    // i think if we store draw object, we can manage its lifetime
-    this->draw = std::move(drawTemp);
-
-    canvas_clear(canvas);
-    canvas_draw_str(canvas, 0, 10, "Starting game engine...");
+    draw->fillScreen(ColorWhite);
+    draw->text(Vector(0, 10), "Starting game engine...", ColorBlack);
 
     return true;
 }
@@ -606,46 +602,47 @@ void FreeRoamGame::inputManager()
     }
 }
 
-void FreeRoamGame::drawCurrentView(Canvas *canvas)
+void FreeRoamGame::drawCurrentView()
 {
     switch (currentMainview)
     {
     case GameViewTitle:
-        drawTitleView(canvas);
+        drawTitleView();
         break;
     case GameViewSystemMenu:
-        drawSystemMenuView(canvas);
+        drawSystemMenuView();
         break;
     case GameViewLobbyMenu:
-        drawLobbyMenuView(canvas);
+        drawLobbyMenuView();
         break;
     case GameViewGameLocal:
-        drawGameLocalView(canvas);
+        drawGameLocalView();
         break;
     case GameViewGameOnline:
-        drawGameOnlineView(canvas);
+        drawGameOnlineView();
         break;
     case GameViewWelcome:
-        drawWelcomeView(canvas);
+        drawWelcomeView();
         break;
     case GameViewLogin:
-        drawLoginView(canvas);
+        drawLoginView();
         break;
     case GameViewRegistration:
-        drawRegistrationView(canvas);
+        drawRegistrationView();
         break;
     case GameViewUserInfo:
-        drawUserInfoView(canvas);
+        drawUserInfoView();
         break;
     default:
-        canvas_clear(canvas);
-        canvas_draw_str(canvas, 0, 10, "Unknown View");
+        draw->fillScreen(ColorWhite);
+        draw->text(Vector(0, 10), "Unknown View", ColorBlack);
         break;
     }
 }
 
-void FreeRoamGame::drawRainEffect(Canvas *canvas)
+void FreeRoamGame::drawRainEffect()
 {
+
     // rain droplets/star droplets effect
     for (int i = 0; i < 8; i++)
     {
@@ -655,11 +652,11 @@ void FreeRoamGame::drawRainEffect(Canvas *canvas)
         uint8_t y = (rainFrame * 2 + seed * 7 + i * 23) & 0x3F;
 
         // Draw star-like droplet
-        canvas_draw_dot(canvas, x, y);
-        canvas_draw_dot(canvas, x - 1, y);
-        canvas_draw_dot(canvas, x + 1, y);
-        canvas_draw_dot(canvas, x, y - 1);
-        canvas_draw_dot(canvas, x, y + 1);
+        draw->drawPixel(Vector(x, y), ColorBlack);
+        draw->drawPixel(Vector(x - 1, y), ColorBlack);
+        draw->drawPixel(Vector(x + 1, y), ColorBlack);
+        draw->drawPixel(Vector(x, y - 1), ColorBlack);
+        draw->drawPixel(Vector(x, y + 1), ColorBlack);
     }
 
     rainFrame += 1;
@@ -669,40 +666,40 @@ void FreeRoamGame::drawRainEffect(Canvas *canvas)
     }
 }
 
-void FreeRoamGame::drawTitleView(Canvas *canvas)
+void FreeRoamGame::drawTitleView()
 {
-    canvas_clear(canvas);
+    draw->fillScreen(ColorWhite);
 
     // rain effect
-    drawRainEffect(canvas);
+    drawRainEffect();
 
     // draw title text
     if (currentTitleIndex == TitleIndexStart)
     {
-        canvas_draw_box(canvas, 36, 16, 56, 16);
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str(canvas, 54, 27, "Start");
-        canvas_draw_box(canvas, 36, 32, 56, 16);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 54, 42, "Menu");
+        draw->fillRect(Vector(36, 16), Vector(56, 16), ColorBlack);
+        draw->color(ColorWhite);
+        draw->text(Vector(54, 27), "Start");
+        draw->fillRect(Vector(36, 32), Vector(56, 16), ColorWhite);
+        draw->color(ColorBlack);
+        draw->text(Vector(54, 42), "Menu");
     }
     else if (currentTitleIndex == TitleIndexMenu)
     {
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_box(canvas, 36, 16, 56, 16);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 54, 27, "Start");
-        canvas_draw_box(canvas, 36, 32, 56, 16);
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str(canvas, 54, 42, "Menu");
-        canvas_set_color(canvas, ColorBlack);
+        draw->color(ColorWhite);
+        draw->fillRect(Vector(36, 16), Vector(56, 16), ColorWhite);
+        draw->color(ColorBlack);
+        draw->text(Vector(54, 27), "Start");
+        draw->fillRect(Vector(36, 32), Vector(56, 16), ColorBlack);
+        draw->color(ColorWhite);
+        draw->text(Vector(54, 42), "Menu");
+        draw->color(ColorBlack);
     }
 }
 
-void FreeRoamGame::drawSystemMenuView(Canvas *canvas)
+void FreeRoamGame::drawSystemMenuView()
 {
-    canvas_clear(canvas);
-    canvas_draw_icon(canvas, 0, 0, &I_icon_menu_128x64px);
+    draw->fillScreen(ColorWhite);
+    draw->icon(Vector(0, 0), &I_icon_menu_128x64px);
 
     switch (currentMenuIndex)
     {
@@ -718,21 +715,21 @@ void FreeRoamGame::drawSystemMenuView(Canvas *canvas)
         snprintf(health, sizeof(health), "Health  : %d", 0);
         snprintf(xp, sizeof(xp), "XP      : %d", 0);
         snprintf(strength, sizeof(strength), "Strength: %d", 0);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 6, 16, "Unknown");
-        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-        canvas_draw_str(canvas, 6, 30, level);
-        canvas_draw_str(canvas, 6, 37, health);
-        canvas_draw_str(canvas, 6, 44, xp);
-        canvas_draw_str(canvas, 6, 51, strength);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(6, 16), "Unknown");
+        draw->setFontCustom(FONT_SIZE_SMALL);
+        draw->text(Vector(6, 30), level);
+        draw->text(Vector(6, 37), health);
+        draw->text(Vector(6, 44), xp);
+        draw->text(Vector(6, 51), strength);
 
         // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 32, "Settings");
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 32), "Settings");
+        draw->text(Vector(80, 46), "About");
     }
     break;
     case MenuIndexSettings: // sound on/off, vibration on/off, and leave game
@@ -745,110 +742,111 @@ void FreeRoamGame::drawSystemMenuView(Canvas *canvas)
         switch (currentSettingsIndex)
         {
         case MenuSettingsMain:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsSound:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsVibration:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         case MenuSettingsLeave:
-            canvas_set_font(canvas, FontPrimary);
-            canvas_draw_str(canvas, 6, 16, "Settings");
-            canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-            canvas_draw_str(canvas, 6, 30, soundStatus);
-            canvas_draw_str(canvas, 6, 40, vibrationStatus);
-            canvas_set_font_custom(canvas, FONT_SIZE_LARGE);
-            canvas_draw_str(canvas, 6, 50, "Leave Game");
+            draw->setFont(FontPrimary);
+            draw->text(Vector(6, 16), "Settings");
+            draw->setFontCustom(FONT_SIZE_SMALL);
+            draw->text(Vector(6, 30), soundStatus);
+            draw->text(Vector(6, 40), vibrationStatus);
+            draw->setFontCustom(FONT_SIZE_LARGE);
+            draw->text(Vector(6, 50), "Leave Game");
             break;
         default:
             break;
         };
         // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 79, 32, "Settings");
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(79, 32), "Settings");
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 46), "About");
     }
     break;
     case MenuIndexAbout:
     {
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 6, 16, "Free Roam");
-        canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-        canvas_draw_str_multi(canvas, 6, 25, "Creator: JBlanked");
-        canvas_draw_str(canvas, 6, 59, "www.github.com/jblanked");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(6, 16), "Free Roam");
+        draw->setFontCustom(FONT_SIZE_SMALL);
+        draw->text(Vector(6, 25), "Creator: JBlanked");
+        draw->text(Vector(6, 59), "www.github.com/jblanked");
 
         // draw a box around the selected option
-        canvas_draw_frame(canvas, 76, 6, 46, 46);
-        canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str(canvas, 80, 18, "Profile");
-        canvas_draw_str(canvas, 80, 32, "Settings");
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 80, 46, "About");
+        draw->drawRect(Vector(76, 6), Vector(46, 46), ColorBlack);
+        draw->setFont(FontSecondary);
+        draw->text(Vector(80, 18), "Profile");
+        draw->text(Vector(80, 32), "Settings");
+        draw->setFont(FontPrimary);
+        draw->text(Vector(80, 46), "About");
     }
     break;
     default:
-        canvas_clear(canvas);
-        canvas_draw_str(canvas, 0, 10, "Unknown Menu");
+        draw->fillScreen(ColorWhite);
+        draw->text(Vector(0, 10), "Unknown Menu", ColorBlack);
         break;
     };
 }
 
-void FreeRoamGame::drawLobbyMenuView(Canvas *canvas)
+void FreeRoamGame::drawLobbyMenuView()
 {
-    canvas_clear(canvas);
+    draw->fillScreen(ColorWhite);
 
     // rain effect
-    drawRainEffect(canvas);
+    drawRainEffect();
 
     // draw lobby text
     if (currentLobbyMenuIndex == LobbyMenuLocal)
     {
-        canvas_draw_box(canvas, 36, 16, 56, 16);
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str(canvas, 54, 27, "Local");
-        canvas_draw_box(canvas, 36, 32, 56, 16);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 54, 42, "Online");
+        draw->fillRect(Vector(36, 16), Vector(56, 16), ColorBlack);
+        draw->color(ColorWhite);
+        draw->text(Vector(54, 27), "Local");
+        draw->fillRect(Vector(36, 32), Vector(56, 16), ColorWhite);
+        draw->color(ColorBlack);
+        draw->text(Vector(54, 42), "Online");
     }
     else if (currentLobbyMenuIndex == LobbyMenuOnline)
     {
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_box(canvas, 36, 16, 56, 16);
-        canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 54, 27, "Local");
-        canvas_draw_box(canvas, 36, 32, 56, 16);
-        canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str(canvas, 54, 42, "Online");
-        canvas_set_color(canvas, ColorBlack);
+        draw->color(ColorWhite);
+        draw->fillRect(Vector(36, 16), Vector(56, 16), ColorWhite);
+        draw->color(ColorBlack);
+        draw->text(Vector(54, 27), "Local");
+        draw->fillRect(Vector(36, 32), Vector(56, 16), ColorBlack);
+        draw->color(ColorWhite);
+        draw->text(Vector(54, 42), "Online");
+        draw->color(ColorBlack);
     }
 }
 
-void FreeRoamGame::drawGameLocalView(Canvas *canvas)
+void FreeRoamGame::drawGameLocalView()
 {
+
     if (this->isGameRunning)
     {
         if (engine)
@@ -866,36 +864,36 @@ void FreeRoamGame::drawGameLocalView(Canvas *canvas)
     }
     else
     {
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 25, 32, "Starting Game...");
-        isGameRunning = startGame(canvas);
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(25, 32), "Starting Game...", ColorBlack);
+        isGameRunning = startGame();
         if (isGameRunning && engine)
         {
             engine->runAsync(false); // Run the game engine immediately
         }
     }
 }
-void FreeRoamGame::drawGameOnlineView(Canvas *canvas)
+void FreeRoamGame::drawGameOnlineView()
 {
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 0, 10, "Not available yet");
+    draw->fillScreen(ColorWhite);
+    draw->setFont(FontPrimary);
+    draw->text(Vector(0, 10), "Not available yet", ColorBlack);
 }
 
-void FreeRoamGame::drawWelcomeView(Canvas *canvas)
+void FreeRoamGame::drawWelcomeView()
 {
-    canvas_clear(canvas);
+    draw->fillScreen(ColorWhite);
 
     // rain effect
-    drawRainEffect(canvas);
+    drawRainEffect();
 
     // Draw welcome text with blinking effect
     // Blink every 15 frames (show for 15, hide for 15)
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
+    draw->setFontCustom(FONT_SIZE_SMALL);
     if ((welcomeFrame / 15) % 2 == 0)
     {
-        canvas_draw_str(canvas, 34, 60, "Press OK to start");
+        draw->text(Vector(34, 60), "Press OK to start", ColorBlack);
     }
     welcomeFrame++;
 
@@ -906,15 +904,15 @@ void FreeRoamGame::drawWelcomeView(Canvas *canvas)
     }
 
     // Draw a box around the OK button
-    canvas_draw_box(canvas, 40, 25, 56, 16);
-    canvas_set_color(canvas, ColorWhite);
-    canvas_draw_str(canvas, 56, 35, "Welcome");
-    canvas_set_color(canvas, ColorBlack);
+    draw->fillRect(Vector(40, 25), Vector(56, 16), ColorBlack);
+    draw->color(ColorWhite);
+    draw->text(Vector(56, 35), "Welcome");
+    draw->color(ColorBlack);
 }
-void FreeRoamGame::drawLoginView(Canvas *canvas)
+void FreeRoamGame::drawLoginView()
 {
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
+    draw->fillScreen(ColorWhite);
+    draw->setFont(FontPrimary);
     static bool loadingStarted = false;
     switch (loginStatus)
     {
@@ -923,7 +921,7 @@ void FreeRoamGame::drawLoginView(Canvas *canvas)
         {
             if (!loading)
             {
-                loading = std::make_unique<Loading>(canvas);
+                loading = std::make_unique<Loading>(draw.get());
             }
             loadingStarted = true;
             if (loading)
@@ -973,29 +971,29 @@ void FreeRoamGame::drawLoginView(Canvas *canvas)
         }
         break;
     case LoginSuccess:
-        canvas_draw_str(canvas, 0, 10, "Login successful!");
-        canvas_draw_str(canvas, 0, 20, "Press OK to continue.");
+        draw->text(Vector(0, 10), "Login successful!", ColorBlack);
+        draw->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
         break;
     case LoginCredentialsMissing:
-        canvas_draw_str(canvas, 0, 10, "Missing credentials!");
-        canvas_draw_str(canvas, 0, 20, "Please set your username");
-        canvas_draw_str(canvas, 0, 30, "and password in the app.");
+        draw->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        draw->text(Vector(0, 20), "Please set your username", ColorBlack);
+        draw->text(Vector(0, 30), "and password in the app.", ColorBlack);
         break;
     case LoginRequestError:
-        canvas_draw_str(canvas, 0, 10, "Login request failed!");
-        canvas_draw_str(canvas, 0, 20, "Check your network and");
-        canvas_draw_str(canvas, 0, 30, "try again later.");
+        draw->text(Vector(0, 10), "Login request failed!", ColorBlack);
+        draw->text(Vector(0, 20), "Check your network and", ColorBlack);
+        draw->text(Vector(0, 30), "try again later.", ColorBlack);
         break;
     default:
-        canvas_draw_str(canvas, 0, 10, "Logging in...");
+        draw->text(Vector(0, 10), "Logging in...", ColorBlack);
         break;
     }
 }
 
-void FreeRoamGame::drawRegistrationView(Canvas *canvas)
+void FreeRoamGame::drawRegistrationView()
 {
-    canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
+    draw->fillScreen(ColorWhite);
+    draw->setFont(FontPrimary);
     static bool loadingStarted = false;
     switch (registrationStatus)
     {
@@ -1004,7 +1002,7 @@ void FreeRoamGame::drawRegistrationView(Canvas *canvas)
         {
             if (!loading)
             {
-                loading = std::make_unique<Loading>(canvas);
+                loading = std::make_unique<Loading>(draw.get());
             }
             loadingStarted = true;
             if (loading)
@@ -1055,27 +1053,28 @@ void FreeRoamGame::drawRegistrationView(Canvas *canvas)
         }
         break;
     case RegistrationSuccess:
-        canvas_draw_str(canvas, 0, 10, "Registration successful!");
-        canvas_draw_str(canvas, 0, 20, "Press OK to continue.");
+        draw->text(Vector(0, 10), "Registration successful!", ColorBlack);
+        draw->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
         break;
     case RegistrationCredentialsMissing:
-        canvas_draw_str(canvas, 0, 10, "Missing credentials!");
-        canvas_draw_str(canvas, 0, 20, "Please update your username");
-        canvas_draw_str(canvas, 0, 30, "and password in the settings.");
+        draw->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        draw->text(Vector(0, 20), "Please update your username", ColorBlack);
+        draw->text(Vector(0, 30), "and password in the settings.", ColorBlack);
         break;
     case RegistrationRequestError:
-        canvas_draw_str(canvas, 0, 10, "Registration request failed!");
-        canvas_draw_str(canvas, 0, 20, "Check your network and");
-        canvas_draw_str(canvas, 0, 30, "try again later.");
+        draw->text(Vector(0, 10), "Registration request failed!", ColorBlack);
+        draw->text(Vector(0, 20), "Check your network and", ColorBlack);
+        draw->text(Vector(0, 30), "try again later.", ColorBlack);
         break;
     default:
-        canvas_draw_str(canvas, 0, 10, "Registering...");
+        draw->text(Vector(0, 10), "Registering...", ColorBlack);
         break;
     }
 }
 
-void FreeRoamGame::drawUserInfoView(Canvas *canvas)
+void FreeRoamGame::drawUserInfoView()
 {
+
     static bool loadingStarted = false;
     switch (userInfoStatus)
     {
@@ -1084,7 +1083,7 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
         {
             if (!loading)
             {
-                loading = std::make_unique<Loading>(canvas);
+                loading = std::make_unique<Loading>(draw.get());
             }
             loadingStarted = true;
             if (loading)
@@ -1101,9 +1100,9 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
         }
         else
         {
-            canvas_draw_str(canvas, 0, 10, "Loading user info...");
-            canvas_draw_str(canvas, 0, 20, "Please wait...");
-            canvas_draw_str(canvas, 0, 30, "It may take up to 15 seconds.");
+            draw->text(Vector(0, 10), "Loading user info...", ColorBlack);
+            draw->text(Vector(0, 20), "Please wait...", ColorBlack);
+            draw->text(Vector(0, 30), "It may take up to 15 seconds.", ColorBlack);
             char response[512];
             FreeRoamApp *app = static_cast<FreeRoamApp *>(appContext);
             if (app && app->load_char("user_info", response, sizeof(response)))
@@ -1122,8 +1121,8 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                     loadingStarted = false;
                     return;
                 }
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "User info loaded!");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "User info loaded!", ColorBlack);
                 char *username = get_json_value("username", game_stats);
                 char *level = get_json_value("level", game_stats);
                 char *xp = get_json_value("xp", game_stats);
@@ -1155,8 +1154,8 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                     return;
                 }
 
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "User data found!");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "User data found!", ColorBlack);
 
                 if (!player)
                 {
@@ -1174,8 +1173,8 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                     }
                 }
 
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "Player created!");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "Player created!", ColorBlack);
 
                 // Update player info
                 snprintf(player->player_name, sizeof(player->player_name), "%s", username);
@@ -1186,8 +1185,8 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 player->strength = atoi(strength);
                 player->max_health = atoi(max_health);
 
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "Player info updated!");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "Player info updated!", ColorBlack);
 
                 // clean em up gang
                 ::free(username);
@@ -1198,8 +1197,8 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 ::free(max_health);
                 ::free(game_stats);
 
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "Memory freed!");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "Memory freed!", ColorBlack);
 
                 if (currentLobbyMenuIndex == LobbyMenuLocal)
                 {
@@ -1215,13 +1214,13 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
                 }
                 loadingStarted = false;
 
-                canvas_clear(canvas);
-                canvas_draw_str(canvas, 0, 10, "User info loaded successfully!");
-                canvas_draw_str(canvas, 0, 20, "Please wait...");
-                canvas_draw_str(canvas, 0, 30, "Starting game...");
-                canvas_draw_str(canvas, 0, 40, "It may take up to 15 seconds.");
+                draw->fillScreen(ColorWhite);
+                draw->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
+                draw->text(Vector(0, 20), "Please wait...", ColorBlack);
+                draw->text(Vector(0, 30), "Starting game...", ColorBlack);
+                draw->text(Vector(0, 40), "It may take up to 15 seconds.", ColorBlack);
 
-                this->isGameRunning = startGame(canvas);
+                this->isGameRunning = startGame();
                 return;
             }
             else
@@ -1231,35 +1230,35 @@ void FreeRoamGame::drawUserInfoView(Canvas *canvas)
         }
         break;
     case UserInfoSuccess:
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 0, 10, "User info loaded successfully!");
-        canvas_draw_str(canvas, 0, 20, "Press OK to continue.");
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(0, 10), "User info loaded successfully!", ColorBlack);
+        draw->text(Vector(0, 20), "Press OK to continue.", ColorBlack);
         break;
     case UserInfoCredentialsMissing:
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 0, 10, "Missing credentials!");
-        canvas_draw_str(canvas, 0, 20, "Please update your username");
-        canvas_draw_str(canvas, 0, 30, "and password in the settings.");
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(0, 10), "Missing credentials!", ColorBlack);
+        draw->text(Vector(0, 20), "Please update your username", ColorBlack);
+        draw->text(Vector(0, 30), "and password in the settings.", ColorBlack);
         break;
     case UserInfoRequestError:
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 0, 10, "User info request failed!");
-        canvas_draw_str(canvas, 0, 20, "Check your network and");
-        canvas_draw_str(canvas, 0, 30, "try again later.");
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(0, 10), "User info request failed!", ColorBlack);
+        draw->text(Vector(0, 20), "Check your network and", ColorBlack);
+        draw->text(Vector(0, 30), "try again later.", ColorBlack);
         break;
     case UserInfoParseError:
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 0, 10, "Failed to parse user info!");
-        canvas_draw_str(canvas, 0, 20, "Try again...");
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(0, 10), "Failed to parse user info!", ColorBlack);
+        draw->text(Vector(0, 20), "Try again...", ColorBlack);
         break;
     default:
-        canvas_clear(canvas);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 0, 10, "Loading user info...");
+        draw->fillScreen(ColorWhite);
+        draw->setFont(FontPrimary);
+        draw->text(Vector(0, 10), "Loading user info...", ColorBlack);
         break;
     }
 }

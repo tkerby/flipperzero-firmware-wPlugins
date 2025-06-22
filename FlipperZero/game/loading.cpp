@@ -2,8 +2,8 @@
 #include "font/font.h"
 #define millis() furi_get_tick() * 10
 #define PI 3.14159265358979323846f
-Loading::Loading(Canvas *canvas)
-    : canvas(canvas)
+Loading::Loading(Draw *draw)
+    : draw(draw)
 {
     spinnerPosition = 0;
     timeElapsed = 0;
@@ -18,8 +18,8 @@ void Loading::animate()
         timeStart = millis();
     }
     drawSpinner();
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 44, 5, currentText);
+    draw->setFontCustom(FONT_SIZE_SMALL);
+    draw->text(Vector(44, 5), currentText, ColorBlack);
     timeElapsed = millis() - timeStart;
     spinnerPosition = (spinnerPosition + 10) % 360; // Rotate by 10 degrees each frame
 }
@@ -55,12 +55,12 @@ void Loading::drawSpinner()
         int y2 = centerY + int(radius * sin(nextAngle * rad));
 
         // draw just the edge segment
-        canvas_draw_line(canvas, x1, y1, x2, y2);
+        draw->drawLine(Vector(x1, y1), Vector(x2, y2), ColorBlack);
     }
 
     // draw time elapsed in milliseconds
-    canvas_set_font_custom(canvas, FONT_SIZE_SMALL);
-    canvas_draw_str(canvas, 0, 60, "Time Elapsed:");
+    draw->setFontCustom(FONT_SIZE_SMALL);
+    draw->text(Vector(0, 60), "Time Elapsed:", ColorBlack);
     char timeStr[16];
     int seconds = timeElapsed / 10000;
     if (seconds < 60)
@@ -78,5 +78,5 @@ void Loading::drawSpinner()
     {
         snprintf(timeStr, sizeof(timeStr), "%u minutes", seconds / 60);
     }
-    canvas_draw_str(canvas, 90, 60, timeStr);
+    draw->text(Vector(90, 60), timeStr, ColorBlack);
 }

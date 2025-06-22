@@ -77,7 +77,7 @@ private:
     ToggleState vibrationToggle = ToggleOn;                    // vibration toggle state
 
     // helpers
-    bool startGame(Canvas *canvas);     // start the actual game
+    bool startGame();                   // start the actual game
     void switchToNextLevel();           // switch to the next level in the game
     void switchToLevel(int levelIndex); // switch to a specific level by index
     void updateSoundToggle();           // update sound toggle state
@@ -100,19 +100,19 @@ private:
     static void timerCallback(void *context);         // timer callback (workaround to force view redraw)
 
     // Drawing methods
-    uint8_t rainFrame = 0;                     // frame counter for rain effect
-    uint8_t welcomeFrame = 0;                  // frame counter for welcome animation
-    void drawRainEffect(Canvas *canvas);       // draw rain effect on the canvas
-    void drawTitleView(Canvas *canvas);        // draw the title view
-    void drawSystemMenuView(Canvas *canvas);   // draw the system menu view
-    void drawCurrentView(Canvas *canvas);      // draw the current view based on the main view state
-    void drawLobbyMenuView(Canvas *canvas);    // draw the lobby menu view
-    void drawGameLocalView(Canvas *canvas);    // draw the local game view
-    void drawGameOnlineView(Canvas *canvas);   // draw the online game view
-    void drawWelcomeView(Canvas *canvas);      // draw the welcome view
-    void drawLoginView(Canvas *canvas);        // draw the login view
-    void drawRegistrationView(Canvas *canvas); // draw the registration view
-    void drawUserInfoView(Canvas *canvas);     // draw the user info view
+    uint8_t rainFrame = 0;       // frame counter for rain effect
+    uint8_t welcomeFrame = 0;    // frame counter for welcome animation
+    void drawRainEffect();       // draw rain effect on the canvas
+    void drawTitleView();        // draw the title view
+    void drawSystemMenuView();   // draw the system menu view
+    void drawCurrentView();      // draw the current view based on the main view state
+    void drawLobbyMenuView();    // draw the lobby menu view
+    void drawGameLocalView();    // draw the local game view
+    void drawGameOnlineView();   // draw the online game view
+    void drawWelcomeView();      // draw the welcome view
+    void drawLoginView();        // draw the login view
+    void drawRegistrationView(); // draw the registration view
+    void drawUserInfoView();     // draw the user info view
 
     // Instance variables for state
     InputKey lastInput = InputKeyMAX;
