@@ -5,22 +5,51 @@
 static FuriHalSerialHandle* serial_handle = NULL;
 
 // Initialize UART for thermal printer communication
+// TWO METHODS AVAILABLE - Choose one by commenting/uncommenting:
+// METHOD 1: USART with C0/C1 pins (currently active) - Physical connection: RX/TX pins
+// METHOD 2: LPUART with direct RX/TX pins - Physical connection: C0/C1 pins  
 void printer_init(void) {
-    serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdLpuart);
+    // ===== METHOD 1: USART C0/C1 (CURRENT ACTIVE METHOD) =====
+    // Physical connection: Connect wires to RX/TX pins (13/14) on Flipper Zero
+    serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
     if(!serial_handle) {
         FURI_LOG_E(TAG, "Failed to acquire serial handle");
         return;
     }
 
-    // Configure PA7 (GPIO 2) for UART TX
+    // Configure C0/C1 for USART (maps to physical RX/TX pins)
     furi_hal_gpio_init_ex(
-        &gpio_ext_pa7,
+        &gpio_ext_pc0,
         GpioModeAltFunctionPushPull,
         GpioPullNo,
         GpioSpeedVeryHigh,
-        GpioAltFn8LPUART1);
+        GpioAltFn7USART1);
+        
+    furi_hal_gpio_init_ex(
+        &gpio_ext_pc1,
+        GpioModeAltFunctionPushPull,
+        GpioPullUp,
+        GpioSpeedVeryHigh,
+        GpioAltFn7USART1);
 
     furi_hal_serial_init(serial_handle, 9600);
+
+    /* ===== METHOD 2: LPUART DIRECT (ALTERNATIVE METHOD) =====
+     * To use this method: Comment out METHOD 1 above and uncomment below
+     * Physical connection: Connect wires to C0/C1 pins (15/16) on Flipper Zero
+     * 
+     * serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdLpuart);
+     * if(!serial_handle) {
+     *     FURI_LOG_E(TAG, "Failed to acquire serial handle");
+     *     return;
+     * }
+     * 
+     * // Configure PA7 for LPUART (maps to physical C0/C1 pins)
+     * furi_hal_gpio_init_ex(&gpio_ext_pa7, GpioModeAltFunctionPushPull, 
+     *                       GpioPullNo, GpioSpeedVeryHigh, GpioAltFn8LPUART1);
+     * 
+     * furi_hal_serial_init(serial_handle, 9600);
+     */
 }
 
 // Cleanup UART resources

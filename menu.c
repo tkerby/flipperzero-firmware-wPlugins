@@ -15,6 +15,11 @@ static void menu_callback(void* context, uint32_t index) {
             view_dispatcher_switch_to_view(app->view_dispatcher, ViewIdTextInput);
             break;
             
+        // DISABLED: Printer setup view causes system crashes
+        // case MenuItemPrinterSetup:
+        //     view_dispatcher_switch_to_view(app->view_dispatcher, ViewIdPrinterSetup);
+        //     break;
+            
         case MenuItemExit:
             view_dispatcher_stop(app->view_dispatcher);
             break;
@@ -28,6 +33,7 @@ Submenu* menu_alloc(FlipperPrinterApp* app) {
     submenu_set_header(menu, "Flipper Printer");
     submenu_add_item(menu, "Coin Flip Game", MenuItemCoinFlip, menu_callback, app);
     submenu_add_item(menu, "Print Custom Text", MenuItemTextPrint, menu_callback, app);
+    // DISABLED: Printer setup causes crashes - submenu_add_item(menu, "Printer Setup Info", MenuItemPrinterSetup, menu_callback, app);
     submenu_add_item(menu, "Exit", MenuItemExit, menu_callback, app);
     
     return menu;

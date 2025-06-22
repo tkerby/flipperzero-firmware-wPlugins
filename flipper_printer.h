@@ -18,12 +18,14 @@ typedef enum {
     ViewIdMenu,         // Main menu
     ViewIdCoinFlip,     // Coin flip game view
     ViewIdTextInput,    // Text input keyboard
+    ViewIdPrinterSetup, // Printer setup info view
 } ViewId;
 
 // Menu items
 typedef enum {
     MenuItemCoinFlip,
     MenuItemTextPrint,
+    MenuItemPrinterSetup,
     MenuItemExit,
 } MenuItem;
 
@@ -38,6 +40,7 @@ typedef struct {
     Submenu* menu;
     View* coin_flip_view;
     TextInput* text_input;
+    View* printer_setup_view;
     
     // Data
     char text_buffer[TEXT_BUFFER_SIZE];
@@ -67,3 +70,7 @@ void coin_flip_view_free(View* view);
 // Menu functions (menu.c)
 Submenu* menu_alloc(FlipperPrinterApp* app);
 void menu_free(Submenu* menu);
+
+// Printer setup view functions (printer_setup.c)
+View* printer_setup_view_alloc();
+void printer_setup_view_free(View* view);

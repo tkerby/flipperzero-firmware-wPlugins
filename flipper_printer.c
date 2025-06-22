@@ -80,6 +80,10 @@ static FlipperPrinterApp* flipper_printer_app_alloc(void) {
         true);
     view_dispatcher_add_view(app->view_dispatcher, ViewIdTextInput, text_input_get_view(app->text_input));
     
+    // DISABLED: Printer setup view causes system crashes
+    // app->printer_setup_view = printer_setup_view_alloc();
+    // view_dispatcher_add_view(app->view_dispatcher, ViewIdPrinterSetup, app->printer_setup_view);
+    
     return app;
 }
 
@@ -89,11 +93,13 @@ static void flipper_printer_app_free(FlipperPrinterApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, ViewIdMenu);
     view_dispatcher_remove_view(app->view_dispatcher, ViewIdCoinFlip);
     view_dispatcher_remove_view(app->view_dispatcher, ViewIdTextInput);
+    // DISABLED: view_dispatcher_remove_view(app->view_dispatcher, ViewIdPrinterSetup);
     
     // Free views
     menu_free(app->menu);
     coin_flip_view_free(app->coin_flip_view);
     text_input_free(app->text_input);
+    // DISABLED: printer_setup_view_free(app->printer_setup_view);
     
     // Free view dispatcher
     view_dispatcher_free(app->view_dispatcher);

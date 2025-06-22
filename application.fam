@@ -12,6 +12,7 @@ App(
         "printer.c",
         "coin_flip.c",
         "menu.c",
+        "printer_setup.c",
     ],
     # Optional values
     fap_version="1.0",
