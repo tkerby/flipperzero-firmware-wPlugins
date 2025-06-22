@@ -36,6 +36,8 @@ typedef struct {
 				uint8_t ready		 : 1;
 				uint8_t timing		 : 1;
 			};
+
+			uint8_t state;
 		} timer;
 	} scene;
 
