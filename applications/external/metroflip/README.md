@@ -88,7 +88,7 @@ This is a list of metro cards and transit systems that need support or have part
 
 # Credits
 - **App Author:** [@luu176](https://github.com/luu176)
-- **Info Slaves:** [@equipter](https://github.com/equipter), [@TheDingo8MyBaby](https://github.com/thedingo8mybaby)
+- **Info Slaves:** [@equipter](https://github.com/equipter), [@TheDingo8MyBaby](https://github.com/thedingo8mybaby), [@ry4000](https://github.com/ry4000), [@WillyJL](https://github.com/WillyJL)
 - **Bip! Parser:** [@rbasoalto](https://github.com/rbasoalto), [@gornekich](https://github.com/gornekich)
 - **Charliecard Parser:** [@ZacharyWeiss](https://github.com/zacharyweiss)
 - **Clipper Parser:** [@ke6jjj](https://github.com/ke6jjj)
