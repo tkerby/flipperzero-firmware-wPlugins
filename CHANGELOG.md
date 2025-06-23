@@ -1,11 +1,13 @@
 ## v0.8
 
-- Added 80+ Desfire card AIDs (can't all be parsed, just company names)  
-- Fixed Desfire parsing  
-- Added Calypso saving to save Calypso cards  
-- Fixed Navigo crash  
-- Fixed Clipper timestamp epoch  
-- Fixed Calypso file saving  
+- Added 80+ card AIDs (most may not be fully parsed)
+- Added more AIDs for DESFire
+- Added Calypso card saving support
+- Fixed DESFire parsing
+- Fixed Navigo crash
+- Fixed crash when opening Navigo files after exit
+- Fixed Clipper timestamp epoch conversion
+- Fixed Calypso file saving 
 
 ## v0.7
 
