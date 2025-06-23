@@ -5,7 +5,8 @@
 
 // Enums are just named numbers
 // This tells other files "a Pokemon type exists with these values"
-typedef enum {
+typedef enum
+{
     TYPE_NORMAL,
     TYPE_FIRE,
     TYPE_WATER,
@@ -28,8 +29,9 @@ typedef enum {
     TYPE_COUNT // Trick: This equals 18 (the count)
 } PokemonType;
 
-typedef struct {
-    const char* name;
+typedef struct
+{
+    const char *name;
     uint8_t power;
     PokemonType type;
     uint8_t accuracy;
@@ -38,10 +40,12 @@ typedef struct {
 
 // Structure definition
 // This tells other files "a Pokemon structure exists with these fields"
-typedef struct {
-    char name[16]; // Array of 16 chars
+typedef struct
+{
+    char name[16];    // Array of 16 chars
     PokemonType type; // Our enum
     uint8_t level;
+    uint8_t pokedexId;
     uint16_t max_hp;
     uint16_t current_hp;
     uint8_t attack;
@@ -51,8 +55,9 @@ typedef struct {
 } Pokemon;
 
 // Base Pokemon data (like from your CSV)
-typedef struct {
-    const char* name;
+typedef struct
+{
+    const char *name;
     PokemonType type;
     uint16_t base_hp;
     uint8_t base_attack;
@@ -62,12 +67,11 @@ typedef struct {
 
 // Function declarations (prototypes)
 //  These are function "promises" - implemented in pokemon.c
-Pokemon* pokemon_create(const char* name, PokemonType type, uint8_t level);
-Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t level);
-void pokemon_free(Pokemon* pokemon);
-uint16_t pokemon_calculate_damage(Pokemon* attacker, Pokemon* defender, uint8_t move_power);
+Pokemon *pokemon_create(const char *name, PokemonType type, uint8_t level);
+Pokemon *pokemon_create_from_species(const PokemonSpecies *species, uint8_t level, int pokedexId);
+void pokemon_free(Pokemon *pokemon);
+uint16_t pokemon_calculate_damage(Pokemon *attacker, Pokemon *defender, uint8_t move_power);
 
-//Get available Pokemon
-const PokemonSpecies* pokemon_get_species_list(void);
+// Get available Pokemon
+const PokemonSpecies *pokemon_get_species_list(void);
 int pokemon_get_species_count(void);
-

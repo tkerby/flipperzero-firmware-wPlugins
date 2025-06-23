@@ -1,4 +1,4 @@
-//Pokemon Data and Functions
+// Pokemon Data and Functions
 #include "pokemon.h"
 #include <stdlib.h> // For malloc/free
 #include <string.h> // For strcpy
@@ -161,23 +161,28 @@ static const PokemonSpecies pokemon_roster[] = {
     // Add more from your CSV...
 };
 
-const PokemonSpecies* pokemon_get_species_list(void) {
+const PokemonSpecies *pokemon_get_species_list(void)
+{
     return pokemon_roster;
 }
 
-int pokemon_get_species_count(void) {
+int pokemon_get_species_count(void)
+{
     return sizeof(pokemon_roster) / sizeof(pokemon_roster[0]);
 }
 
-Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t level) {
-    Pokemon* p = malloc(sizeof(Pokemon));
-    if(!p) return NULL;
+Pokemon *pokemon_create_from_species(const PokemonSpecies *species, uint8_t level, int pokedexId)
+{
+    Pokemon *p = malloc(sizeof(Pokemon));
+    if (!p)
+        return NULL;
 
     strncpy(p->name, species->name, 15);
     p->name[15] = '\0';
 
     p->type = species->type;
     p->level = level;
+    p->pokedexId = (uint8_t)pokedexId;
 
     // Calculate stats based on base stats and level
     p->max_hp = species->base_hp + (level * 2);
@@ -187,27 +192,36 @@ Pokemon* pokemon_create_from_species(const PokemonSpecies* species, uint8_t leve
     p->speed = species->base_speed + level;
 
     // Assign moves based on type
-    if(species->type == TYPE_FIRE) {
+    if (species->type == TYPE_FIRE)
+    {
         p->moves[0] = (Move){"Tackle", 35, TYPE_NORMAL, 95, 35};
         p->moves[1] = (Move){"Ember", 40, TYPE_FIRE, 100, 25};
         p->moves[2] = (Move){"Growl", 0, TYPE_NORMAL, 100, 40};
         p->moves[3] = (Move){"Fire Spin", 35, TYPE_FIRE, 85, 15};
-    } else if(species->type == TYPE_WATER) {
+    }
+    else if (species->type == TYPE_WATER)
+    {
         p->moves[0] = (Move){"Tackle", 35, TYPE_NORMAL, 95, 35};
         p->moves[1] = (Move){"Water Gun", 40, TYPE_WATER, 100, 25};
         p->moves[2] = (Move){"Tail Whip", 0, TYPE_NORMAL, 100, 40};
         p->moves[3] = (Move){"Bubble", 40, TYPE_WATER, 100, 30};
-    } else if(species->type == TYPE_GRASS) {
+    }
+    else if (species->type == TYPE_GRASS)
+    {
         p->moves[0] = (Move){"Tackle", 35, TYPE_NORMAL, 95, 35};
         p->moves[1] = (Move){"Vine Whip", 45, TYPE_GRASS, 100, 25};
         p->moves[2] = (Move){"Growl", 0, TYPE_NORMAL, 100, 40};
         p->moves[3] = (Move){"Razor Leaf", 55, TYPE_GRASS, 95, 25};
-    } else if(species->type == TYPE_ELECTRIC) {
+    }
+    else if (species->type == TYPE_ELECTRIC)
+    {
         p->moves[0] = (Move){"Quick Attack", 40, TYPE_NORMAL, 100, 30};
         p->moves[1] = (Move){"Thunder Shock", 40, TYPE_ELECTRIC, 100, 30};
         p->moves[2] = (Move){"Growl", 0, TYPE_NORMAL, 100, 40};
         p->moves[3] = (Move){"Thunderbolt", 90, TYPE_ELECTRIC, 100, 15};
-    } else {
+    }
+    else
+    {
         // Default moves for other types
         p->moves[0] = (Move){"Tackle", 35, TYPE_NORMAL, 95, 35};
         p->moves[1] = (Move){"Scratch", 40, TYPE_NORMAL, 100, 35};
@@ -228,10 +242,12 @@ static const uint8_t base_stats[TYPE_COUNT][3] = {
     {35, 55, 40}, // Electric
 };
 
-Pokemon* pokemon_create(const char* name, PokemonType type, uint8_t level) {
+Pokemon *pokemon_create(const char *name, PokemonType type, uint8_t level)
+{
     // Allocate memory
-    Pokemon* p = malloc(sizeof(Pokemon));
-    if(!p) return NULL; // Always check malloc success
+    Pokemon *p = malloc(sizeof(Pokemon));
+    if (!p)
+        return NULL; // Always check malloc success
 
     // Copy name (safe string copy)
     strncpy(p->name, name, 15);
@@ -241,6 +257,7 @@ Pokemon* pokemon_create(const char* name, PokemonType type, uint8_t level) {
     // Set all stats
     p->type = type;
     p->level = level;
+    p->pokedexId = 0;
     p->max_hp = base_stats[type][0] + (level * 2);
     p->current_hp = p->max_hp;
     p->attack = base_stats[type][1] + level;
@@ -251,7 +268,8 @@ Pokemon* pokemon_create(const char* name, PokemonType type, uint8_t level) {
 }
 
 // Calculate damage from one Pokemon to another
-uint16_t pokemon_calculate_damage(Pokemon* attacker, Pokemon* defender, uint8_t move_power) {
+uint16_t pokemon_calculate_damage(Pokemon *attacker, Pokemon *defender, uint8_t move_power)
+{
     // Simple damage formula
     float damage = ((2.0f * attacker->level / 5.0f + 2.0f) * move_power * attacker->attack /
                     defender->defense) /
@@ -259,15 +277,17 @@ uint16_t pokemon_calculate_damage(Pokemon* attacker, Pokemon* defender, uint8_t 
                    2.0f;
 
     // Type effectiveness
-    if((attacker->type == TYPE_FIRE && defender->type == TYPE_GRASS) ||
-       (attacker->type == TYPE_WATER && defender->type == TYPE_FIRE) ||
-       (attacker->type == TYPE_GRASS && defender->type == TYPE_WATER)) {
+    if ((attacker->type == TYPE_FIRE && defender->type == TYPE_GRASS) ||
+        (attacker->type == TYPE_WATER && defender->type == TYPE_FIRE) ||
+        (attacker->type == TYPE_GRASS && defender->type == TYPE_WATER))
+    {
         damage *= 2.0f; // Super effective
     }
 
     return (uint16_t)damage;
 }
 
-void pokemon_free(Pokemon* pokemon) {
+void pokemon_free(Pokemon *pokemon)
+{
     free(pokemon); // Simple - just free the memory
 }
