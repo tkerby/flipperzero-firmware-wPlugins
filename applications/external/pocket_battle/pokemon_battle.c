@@ -27,7 +27,6 @@ typedef struct {
 // This function is called by Flipper to draw the screen
 static void pocket_battle_draw_callback(Canvas* canvas, void* ctx) {
     ShowdownApp* app = (ShowdownApp*)ctx;
-
     switch(app->state) {
     case APP_STATE_MENU:
         menu_draw(app->menu, canvas);

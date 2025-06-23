@@ -1,4 +1,4 @@
-//Battle Definitions
+// Battle Definitions
 #pragma once
 
 #include <gui/gui.h>
