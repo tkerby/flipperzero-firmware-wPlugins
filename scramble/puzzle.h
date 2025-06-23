@@ -5,7 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+char* PuzzleScrambleClock(const int64_t seed);
 #ifdef __cplusplus
 }
 #endif
