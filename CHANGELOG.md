@@ -26,10 +26,10 @@
 Big update!
 
 - Custom API Added: A custom API for Metroflip has been introduced for smoother operation and better scalability  
-- Parsers Moved to Plugins: All parsers have been moved to individual plugins, loaded from the SD card as `.fal` files  
-- Scene Optimization: All scenes merged into `metroflip_scene_parse.c` for simplification  
+- Parsers Moved to Plugins: All parsers have been moved to individual plugins, loaded from the SD card as '.fal' files  
+- Scene Optimization: All scenes merged into 'metroflip_scene_parse.c' for simplification  
 - RAM Usage Reduced: Over 45% reduction in RAM usage  
-- Navigo Station List: Moved to `apps_assets`  
+- Navigo Station List: Moved to 'apps_assets'
 - Unified Calypso Parser: Thanks to DocSystem  
 - Rav-Kav Moved to Calypso Parser: Credit to luu176  
 
