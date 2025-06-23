@@ -2,7 +2,7 @@
 
 This app is designed to prevent eye strain when looking at a screen for extended periods of time. 69 percent of Americans have reported eye strain at least once a week, and this app is designed to minimize eye fatigue and discomfort.
 
-# Features?
+# Features:
 
 * Repeating 20 minute timer with haptic feedback
 * 20 second break in between timers with haptic feedback
