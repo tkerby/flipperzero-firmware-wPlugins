@@ -17,6 +17,12 @@ enum TimerState {
 	TIMER_STATE_TIMING
 };
 
+static inline void light(const uint8_t red, const uint8_t green, const uint8_t blue) {
+	furi_hal_light_set(LightRed, red);
+	furi_hal_light_set(LightGreen, green);
+	furi_hal_light_set(LightBlue, blue);
+}
+
 void SceneTimerTick(const PCUBERZERO instance) {
 	if(!instance) {
 		return;
@@ -27,6 +33,10 @@ void SceneTimerTick(const PCUBERZERO instance) {
 		furi_hal_light_set(LightRed, 0);
 		furi_hal_light_set(LightGreen, 255);
 		furi_hal_light_set(LightBlue, 0);
+	}
+
+	if(instance->scene.timer.timing) {
+		view_port_update(instance->scene.timer.viewport);
 	}
 
 	/*furi_mutex_acquire(instance->scene.timer.mutex, FuriWaitForever);
@@ -138,6 +148,21 @@ void SceneTimerInput(const InputEvent* const event, const PCUBERZERO instance) {
 	}
 functionExit:
 	furi_mutex_release(instance->scene.timer.mutex);*/
+
+	switch(event->type) {
+	case InputTypePress:
+		break;
+	case InputTypeRelease:
+		break;
+	}
+
+	if(instance->scene.timer.timing) {
+		if(event->type == InputTypePress) {
+			light(255, 0, 0);
+		}
+
+		return;
+	}
 
 	if(instance->scene.timer.timing) {
 		if(event->type == InputTypePress) {
