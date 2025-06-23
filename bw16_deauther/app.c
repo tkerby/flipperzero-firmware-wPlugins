@@ -785,7 +785,7 @@ static DeautherApp* deauther_app_alloc() {
         0,
         128,
         64,
-        "This is a sample application.\n---\nReplace code and message\nwith your content!\n\nauthor: @codeallnight\nhttps://discord.com/invite/NsjCvqwPAd\nhttps://youtube.com/@MrDerekJamison");
+        "This is my 5GHz deauther app for the BW16.\n---\nIt is still a work in progress.\n\n");
     view_set_previous_callback(
         widget_get_view(app->widget_about), deauther_navigation_submenu_callback);
     view_dispatcher_add_view(
