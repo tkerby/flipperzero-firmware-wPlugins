@@ -266,16 +266,17 @@ static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* a
     canvas_draw_str(canvas, 2, 25, "Logging Interval:");
     
     // Show all options with current selection highlighted
-    const char* intervals[] = {"15s", "30s", "60s"};
     LogIntervalOption options[] = {LogInterval15s, LogInterval30s, LogInterval60s};
     
     for(int i = 0; i < 3; i++) {
         int y_pos = 38 + (i * 12);
+        const char* interval_text = co2_logger_uart_get_log_interval_text(options[i]);
+        
         if(app->log_interval_option == options[i]) {
             canvas_draw_str(canvas, 10, y_pos, ">");
-            canvas_draw_str(canvas, 20, y_pos, intervals[i]);
+            canvas_draw_str(canvas, 20, y_pos, interval_text);
         } else {
-            canvas_draw_str(canvas, 20, y_pos, intervals[i]);
+            canvas_draw_str(canvas, 20, y_pos, interval_text);
         }
     }
     
