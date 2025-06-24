@@ -13,5 +13,5 @@ App(
     fap_author="@paul-sopin",
     fap_weburl="https://github.com/paul-sopin/flipper-eye-saver",
     fap_version="0.1",
-    fap_description="20-20-20 eye break reminder application for Flipper Zero",
+    fap_description="Simple eye strain prevention tool using the 20-20-20 rule.",
 )
