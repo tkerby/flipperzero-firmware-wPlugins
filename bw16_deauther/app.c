@@ -115,6 +115,9 @@ typedef struct {
 // Global/static variable to hold the current group for submenu_network
 static NetworkGroup* current_network_group = NULL;
 
+// Global variable to track attack state
+static bool g_attack_active = false;
+
 /**
  * @brief      Callback for exiting the application.
  * @details    This function is called when user press back button.  We return VIEW_NONE to
@@ -180,6 +183,23 @@ static void deauther_submenu_callback(void* context, uint32_t index) {
     }
 }
 
+// Helper to update the Attack label with the selected count or "Stop Attack"
+static void deauther_update_attack_label(DeautherApp* app) {
+    if(!app->deauth_submenu) return;
+    int selected_count = 0;
+    if(app->select_selected && app->select_capacity > 0) {
+        for(size_t i = 0; i < app->select_capacity; ++i) {
+            if(app->select_selected[i]) selected_count++;
+        }
+    }
+    char label[24];
+    if(g_attack_active) {
+        snprintf(label, sizeof(label), "Stop Attack");
+    } else {
+        snprintf(label, sizeof(label), "Attack %d/%d", selected_count, MAX_SELECTED);
+    }
+    submenu_change_item_label(app->deauth_submenu, DeautherSubmenuDeauthAttack, label);
+}
 
 // Callback for when a select submenu item is clicked
 static void deauther_network_mac_callback(void* context, uint32_t index) {
@@ -222,7 +242,6 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
                 int group_select_idx = group->indexes[0];
                 char group_label[MAX_LABEL_LEN + 8];
                 const char* name = group->name;
-                // uint8_t group_band = app->select_bands ? app->select_bands[group_select_idx] : 0; // Unused, remove to fix warning
                 // Check if any MAC in the group is selected
                 bool any_selected = false;
                 for(size_t i = 0; i < group->count; ++i) {
@@ -239,6 +258,8 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
                 }
                 submenu_change_item_label(app->submenu_select, group_select_idx, group_label);
             }
+            // Update Attack label after any MAC selection change
+            deauther_update_attack_label(app);
         }
     }
 }
@@ -281,7 +302,7 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
             for(size_t i = 0; i < groups[sel_group].count; ++i) {
                 int real_idx = groups[sel_group].indexes[i];
                 const char* mac_label = groups[sel_group].macs[i];
-                char label[MAX_MAC_LEN + 8];
+                char label[MAX_MAC_LEN + 8] = {0};
                 uint8_t band = app->select_bands ? app->select_bands[real_idx] : 0;
                 if(app->select_selected && app->select_selected[real_idx]) {
                     if(band == 1) {
@@ -318,7 +339,7 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
             return;
         }
         // Single selection logic
-        char label[MAX_LABEL_LEN + 8];
+        char label[MAX_LABEL_LEN + 8] = {0};
         const char* current_label = app->select_labels[index];
         uint8_t band = app->select_bands ? app->select_bands[index] : 0;
         if(app->select_selected[index]) {
@@ -343,6 +364,7 @@ static void deauther_select_item_callback(void* context, uint32_t index) {
             submenu_change_item_label(app->submenu_select, index, label);
             app->select_selected[index] = 1;
         }
+        deauther_update_attack_label(app); // Update Attack label
     }
 }
 
@@ -392,19 +414,31 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
         break;
     }
     case DeautherSubmenuDeauthAttack: {
-        // Send <dX> for each selected network
-        if(app->select_selected && app->select_labels) {
-            for(size_t i = 0; i < app->select_capacity; ++i) {
-                if(app->select_selected[i]) {
-                    char uart_cmd[16];
-                    snprintf(uart_cmd, sizeof(uart_cmd), "<d%zu>", i);
-                    uart_helper_send(app->uart_helper, uart_cmd, strlen(uart_cmd));
-                    furi_delay_ms(1000); // Add 1 second delay between each send
+        if(!g_attack_active) {
+            g_attack_active = true;
+            deauther_update_attack_label(app); // Show "Stop Attack" immediately
+            // Start attack
+            if(app->select_selected && app->select_labels) {
+                for(size_t i = 0; i < app->select_capacity; ++i) {
+                    if(app->select_selected[i]) {
+                        char uart_cmd[16];
+                        snprintf(uart_cmd, sizeof(uart_cmd), "<d%zu>", i);
+                        uart_helper_send(app->uart_helper, uart_cmd, strlen(uart_cmd));
+                        furi_delay_ms(1000); // Add 1 second delay between each send
+                    }
                 }
             }
+            FURI_LOG_I(TAG, "attack started");
+        } else if (g_attack_active) {
+            // Stop attack
+            uart_helper_send(app->uart_helper, "<ds>", 4);
+            g_attack_active = false;
+            deauther_update_attack_label(app);
+            FURI_LOG_I(TAG, "attack stopped");
+        } else {
+            // If attack is not active, do nothing
+            FURI_LOG_I(TAG, "attack already stopped");
         }
-        //view_dispatcher_switch_to_view(app->view_dispatcher, DeautherViewAttack);
-        FURI_LOG_I(TAG, "attack");
         break;
     }
     default:
@@ -454,10 +488,23 @@ static void deauther_build_select_submenu(DeautherApp* app) {
                     break;
                 }
             }
+            // Determine if this group is a single 5GHz network
+            uint8_t band = 0;
+            if(app->select_bands && groups[g].count == 1) {
+                band = app->select_bands[groups[g].indexes[0]];
+            }
             if(any_selected) {
-                snprintf(label, sizeof(label), "*%s", name);
+                if(band == 1 && groups[g].count == 1) {
+                    snprintf(label, sizeof(label), "* (5) %s", name);
+                } else {
+                    snprintf(label, sizeof(label), "*%s", name);
+                }
             } else {
-                snprintf(label, sizeof(label), "%s", name);
+                if(band == 1 && groups[g].count == 1) {
+                    snprintf(label, sizeof(label), "(5) %s", name);
+                } else {
+                    snprintf(label, sizeof(label), "%s", name);
+                }
             }
             submenu_add_item(
                 app->submenu_select,
@@ -706,12 +753,14 @@ static DeautherApp* deauther_app_alloc() {
         app->deauth_submenu, "Scan", DeautherSubmenuDeauthScan, deauth_submenu_callback, app);
     submenu_add_item(
         app->deauth_submenu, "Select", DeautherSubmenuDeauthSelect, deauth_submenu_callback, app);
+    // Add Attack label with initial counter 0/MAX_SELECTED
+    char attack_label[16];
+    snprintf(attack_label, sizeof(attack_label), "Attack 0/%d", MAX_SELECTED);
     submenu_add_item(
-        app->deauth_submenu, "Attack", DeautherSubmenuDeauthAttack, deauth_submenu_callback, app);
+        app->deauth_submenu, attack_label, DeautherSubmenuDeauthAttack, deauth_submenu_callback, app);
     view_set_previous_callback(submenu_get_view(app->deauth_submenu), deauther_navigation_submenu_callback);
     view_dispatcher_add_view(
         app->view_dispatcher, DeautherViewDeauth, submenu_get_view(app->deauth_submenu));
-    //view_dispatcher_switch_to_view(app->view_dispatcher, DeautherViewDeauth);
     /////////////////
 
 
@@ -810,7 +859,7 @@ static DeautherApp* deauther_app_alloc() {
         0,
         128,
         64,
-        "This is my 5GHz deauther app for the BW16.\n---\nIt is still a work in progress.\n\n");
+        "This is my 5GHz deauther app for the BW16.\nThe (5) means that its a 5Ghz network\n---\nIt is still a work in progress.\n\n");
     view_set_previous_callback(
         widget_get_view(app->widget_about), deauther_navigation_submenu_callback);
     view_dispatcher_add_view(
