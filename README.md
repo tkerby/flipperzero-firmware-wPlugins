@@ -20,7 +20,12 @@ Make sure to turn on 5V on GPIO on the Flipper Zero
 
 ## Screenshots
 
+Main Screen
+
 ![main_screen](https://github.com/KinimodD/Flipper-Zero-5GHz-Deauther/blob/main/Screenshots/Main.png)
+
+Deauth Screen
+
 ![deauth_screen](https://github.com/KinimodD/Flipper-Zero-5GHz-Deauther/blob/main/Screenshots/Deauth.png)
 
 
