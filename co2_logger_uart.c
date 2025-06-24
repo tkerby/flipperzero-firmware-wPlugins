@@ -10,7 +10,18 @@
 #include "co2_logger.h"
 
 #define CSV_FILE_PATH "/ext/apps_data/co2_logger/co2_log.csv"
-#define LOG_INTERVAL_MS (30 * 1000) // 30 seconds
+#define SENSOR_WARMUP_TIME_MS (60 * 1000) // 60 seconds warmup time
+
+typedef enum {
+    Co2LoggerViewMain,
+    Co2LoggerViewSettings
+} Co2LoggerView;
+
+typedef enum {
+    LogInterval15s,
+    LogInterval30s,
+    LogInterval60s
+} LogIntervalOption;
 
 typedef struct {
     Gui* gui;
@@ -22,10 +33,40 @@ typedef struct {
     co2_logger* co2_logger;
     FuriMutex* mutex;
     uint32_t last_log_time;
+    uint32_t startup_time;
+    uint32_t connection_start_time;
     uint32_t co2_value;
     bool connected;
     bool csv_enabled;
+    Co2LoggerView current_view;
+    LogIntervalOption log_interval_option;
 } co2_loggerUart;
+
+static uint32_t co2_logger_uart_get_log_interval_ms(LogIntervalOption option) {
+    switch(option) {
+        case LogInterval15s:
+            return 15 * 1000;
+        case LogInterval30s:
+            return 30 * 1000;
+        case LogInterval60s:
+            return 60 * 1000;
+        default:
+            return 30 * 1000;
+    }
+}
+
+static const char* co2_logger_uart_get_log_interval_text(LogIntervalOption option) {
+    switch(option) {
+        case LogInterval15s:
+            return "15s";
+        case LogInterval30s:
+            return "30s";
+        case LogInterval60s:
+            return "60s";
+        default:
+            return "30s";
+    }
+}
 
 static bool co2_logger_uart_check_sd_card(co2_loggerUart* state) {
     FURI_LOG_D("CSV", "Checking SD card status...");
@@ -101,7 +142,7 @@ static bool co2_logger_uart_create_csv_file(co2_loggerUart* state) {
         }
         
         // Write header
-        const char* header = "Timestamp,CO2_PPM,Status\n";
+        const char* header = "Timestamp,CO2_PPM\n";
         size_t header_len = strlen(header);
         size_t written = storage_file_write(state->csv_file, header, header_len);
         
@@ -130,19 +171,34 @@ static void co2_logger_uart_log_to_csv(co2_loggerUart* state, uint32_t co2_value
         return;
     }
     
-    FURI_LOG_D("CSV", "Logging to CSV: %lu ppm, connected: %s", co2_value, connected ? "true" : "false");
+    // Don't log if sensor hasn't warmed up yet
+    uint32_t current_time = furi_get_tick();
+    if(current_time - state->startup_time < SENSOR_WARMUP_TIME_MS) {
+        FURI_LOG_D("CSV", "Skipping log - sensor warming up (%lu seconds remaining)", 
+                   (SENSOR_WARMUP_TIME_MS - (current_time - state->startup_time)) / 1000);
+        return;
+    }
+    
+    // Don't log if not connected or invalid reading
+    if(!connected) {
+        FURI_LOG_D("CSV", "Skipping log - not connected: %lu ppm, connected: %s", 
+                   co2_value, connected ? "true" : "false");
+        return;
+    }
+    
+    FURI_LOG_D("CSV", "Logging to CSV: %lu ppm", co2_value);
     
     // Get current timestamp using the correct DateTime API
     DateTime datetime;
     furi_hal_rtc_get_datetime(&datetime);
     
-    // Format: YYYY-MM-DD HH:MM:SS,CO2_PPM,Status
+    // Format: YYYY-MM-DD HH:MM:SS,CO2_PPM
     char log_entry[128];
     int entry_len = snprintf(log_entry, sizeof(log_entry), 
-                            "%04d-%02d-%02d %02d:%02d:%02d,%lu,%s\n",
+                            "%04d-%02d-%02d %02d:%02d:%02d,%lu\n",
                             datetime.year, datetime.month, datetime.day,
                             datetime.hour, datetime.minute, datetime.second,
-                            co2_value, connected ? "Connected" : "Disconnected");
+                            co2_value);
     
     if(entry_len < 0 || entry_len >= (int)sizeof(log_entry)) {
         FURI_LOG_E("CSV", "Failed to format log entry");
@@ -173,35 +229,71 @@ static void co2_logger_uart_log_to_csv(co2_loggerUart* state, uint32_t co2_value
     FURI_LOG_D("CSV", "Successfully logged entry to CSV");
 }
 
+static void co2_logger_uart_draw_main_view(Canvas* canvas, co2_loggerUart* app) {
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 2, 12, "CO2 Logger");
+
+    canvas_set_font(canvas, FontBigNumbers);
+    if(app->connected) {
+        char co2_buffer[16];
+        snprintf(co2_buffer, sizeof(co2_buffer), "%lu", app->co2_value);
+        canvas_draw_str(canvas, 2, 35, co2_buffer);
+        
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 2, 45, "ppm");
+        
+        // Show connection time
+        uint32_t current_time = furi_get_tick();
+        uint32_t connected_seconds = (current_time - app->connection_start_time) / 1000;
+        char time_buffer[32];
+        snprintf(time_buffer, sizeof(time_buffer), "Connected: %lus", connected_seconds);
+        canvas_draw_str(canvas, 2, 58, time_buffer);
+    } else {
+        canvas_draw_str(canvas, 2, 35, "---");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str(canvas, 2, 45, "ppm");
+        canvas_draw_str(canvas, 2, 58, "Disconnected");
+    }
+    
+    canvas_draw_str(canvas, 2, 70, "RIGHT: Settings");
+}
+
+static void co2_logger_uart_draw_settings_view(Canvas* canvas, co2_loggerUart* app) {
+    canvas_set_font(canvas, FontPrimary);
+    canvas_draw_str(canvas, 2, 12, "Settings");
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 25, "Logging Interval:");
+    
+    // Show all options with current selection highlighted
+    const char* intervals[] = {"15s", "30s", "60s"};
+    LogIntervalOption options[] = {LogInterval15s, LogInterval30s, LogInterval60s};
+    
+    for(int i = 0; i < 3; i++) {
+        int y_pos = 38 + (i * 12);
+        if(app->log_interval_option == options[i]) {
+            canvas_draw_str(canvas, 10, y_pos, ">");
+            canvas_draw_str(canvas, 20, y_pos, intervals[i]);
+        } else {
+            canvas_draw_str(canvas, 20, y_pos, intervals[i]);
+        }
+    }
+    
+    canvas_draw_str(canvas, 2, 85, "UP/DOWN: Change");
+    canvas_draw_str(canvas, 2, 97, "LEFT: Back");
+}
+
 static void co2_logger_uart_draw_callback(Canvas* canvas, void* ctx) {
     co2_loggerUart* app = (co2_loggerUart*)ctx;
     furi_mutex_acquire(app->mutex, FuriWaitForever);
 
     canvas_clear(canvas);
-    canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str(canvas, 2, 10, "CO2 Logger");
-
-    canvas_set_font(canvas, FontSecondary);
-    if(app->connected) {
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer), "CO2: %lu ppm", app->co2_value);
-        canvas_draw_str(canvas, 2, 25, buffer);
-        canvas_draw_str(canvas, 2, 35, "Status: Connected");
+    
+    if(app->current_view == Co2LoggerViewMain) {
+        co2_logger_uart_draw_main_view(canvas, app);
     } else {
-        canvas_draw_str(canvas, 2, 25, "CO2: --- ppm");
-        canvas_draw_str(canvas, 2, 35, "Status: Disconnected");
+        co2_logger_uart_draw_settings_view(canvas, app);
     }
-    
-    canvas_draw_str(canvas, 2, 45, "Logging every 30s");
-    
-    // Show CSV status
-    if(app->csv_enabled) {
-        canvas_draw_str(canvas, 2, 55, "CSV: Enabled");
-    } else {
-        canvas_draw_str(canvas, 2, 55, "CSV: Disabled");
-    }
-    
-    canvas_draw_str(canvas, 2, 65, "Press BACK to exit");
 
     furi_mutex_release(app->mutex);
 }
@@ -324,6 +416,14 @@ int32_t co2_logger_app(void* p) {
     FURI_LOG_I("App", "Opening CO2 logger connection...");
     co2_logger_open(state->co2_logger);
 
+    // Record startup time for sensor warmup period
+    state->startup_time = furi_get_tick();
+    
+    // Initialize UI state
+    state->current_view = Co2LoggerViewMain;
+    state->log_interval_option = LogInterval30s; // Default to 30s
+    state->connection_start_time = furi_get_tick();
+
     FURI_LOG_I("App", "=== APP SETUP COMPLETE - ENTERING MAIN LOOP ===");
 
     InputEvent event;
@@ -338,9 +438,38 @@ int32_t co2_logger_app(void* p) {
         // Check for input events
         if(status == FuriStatusOk) {
             FURI_LOG_D("Input", "Received input: type=%d key=%d", event.type, event.key);
-            if(event.type == InputTypePress && event.key == InputKeyBack) {
-                FURI_LOG_I("App", "Back button pressed, exiting");
-                running = false;
+            
+            if(event.type == InputTypePress) {
+                bool view_updated = false;
+                
+                if(state->current_view == Co2LoggerViewMain) {
+                    if(event.key == InputKeyBack) {
+                        FURI_LOG_I("App", "Back button pressed, exiting");
+                        running = false;
+                    } else if(event.key == InputKeyRight) {
+                        state->current_view = Co2LoggerViewSettings;
+                        view_updated = true;
+                    }
+                } else if(state->current_view == Co2LoggerViewSettings) {
+                    if(event.key == InputKeyLeft || event.key == InputKeyBack) {
+                        state->current_view = Co2LoggerViewMain;
+                        view_updated = true;
+                    } else if(event.key == InputKeyUp) {
+                        if(state->log_interval_option > LogInterval15s) {
+                            state->log_interval_option--;
+                            view_updated = true;
+                        }
+                    } else if(event.key == InputKeyDown) {
+                        if(state->log_interval_option < LogInterval60s) {
+                            state->log_interval_option++;
+                            view_updated = true;
+                        }
+                    }
+                }
+                
+                if(view_updated) {
+                    view_port_update(state->view_port);
+                }
             }
         }
         
@@ -349,7 +478,14 @@ int32_t co2_logger_app(void* p) {
             FURI_LOG_D("Measure", "Taking CO2 measurement...");
             furi_mutex_acquire(state->mutex, FuriWaitForever);
             
+            bool was_connected = state->connected;
             state->connected = co2_logger_read_gas_concentration(state->co2_logger, &state->co2_value);
+            
+            // Update connection start time when transitioning from disconnected to connected
+            if(!was_connected && state->connected) {
+                state->connection_start_time = current_time;
+            }
+            
             if(state->connected) {
                 FURI_LOG_I("Measure", "CO2 reading: %lu ppm", state->co2_value);
             } else {
@@ -359,8 +495,9 @@ int32_t co2_logger_app(void* p) {
             furi_mutex_release(state->mutex);
             last_measurement_time = current_time;
             
-            // Log to CSV every 30 seconds
-            if(current_time - state->last_log_time > LOG_INTERVAL_MS) {
+            // Log to CSV at configurable interval
+            uint32_t log_interval_ms = co2_logger_uart_get_log_interval_ms(state->log_interval_option);
+            if(current_time - state->last_log_time > log_interval_ms) {
                 if(state->csv_enabled) {
                     co2_logger_uart_log_to_csv(state, state->co2_value, state->connected);
                 } else {
