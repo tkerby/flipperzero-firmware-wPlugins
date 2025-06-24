@@ -98,6 +98,7 @@ typedef struct {
     bool show_hidden_networks; // Toggle for showing hidden networks
     char** select_macs; // Dynamic array for MAC addresses
     uint8_t* select_bands; // Dynamic array for band (0=2.4, 1=5)
+    bool select_ready; // Set to true when <iX> is received and all <n...> are processed
 } DeautherApp;
 
 typedef struct {
@@ -190,6 +191,7 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
             char label[MAX_MAC_LEN + 8];
             const char* mac_label = app->select_macs[real_idx];
             uint8_t band = app->select_bands[real_idx];
+            // Toggle selection
             if(app->select_selected[real_idx]) {
                 if(band == 1) {
                     snprintf(label, sizeof(label), "%s (5)", mac_label);
@@ -212,6 +214,30 @@ static void deauther_network_mac_callback(void* context, uint32_t index) {
                 }
                 submenu_change_item_label(app->submenu_network, index, label);
                 app->select_selected[real_idx] = 1;
+            }
+
+            // --- Update the label in the select submenu as well ---
+            // Show * if any MAC in the group is selected
+            if(group->count > 0) {
+                int group_select_idx = group->indexes[0];
+                char group_label[MAX_LABEL_LEN + 8];
+                const char* name = group->name;
+                // uint8_t group_band = app->select_bands ? app->select_bands[group_select_idx] : 0; // Unused, remove to fix warning
+                // Check if any MAC in the group is selected
+                bool any_selected = false;
+                for(size_t i = 0; i < group->count; ++i) {
+                    int idx = group->indexes[i];
+                    if(app->select_selected[idx]) {
+                        any_selected = true;
+                        break;
+                    }
+                }
+                if(any_selected) {
+                    snprintf(group_label, sizeof(group_label), "*%s", name);
+                } else {
+                    snprintf(group_label, sizeof(group_label), "%s", name);
+                }
+                submenu_change_item_label(app->submenu_select, group_select_idx, group_label);
             }
         }
     }
@@ -355,77 +381,14 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
         // Clear previous entries in select submenu
         submenu_reset(app->submenu_select);
         app->select_index = 0;
-        // Repopulate submenu from current arrays if available
-        if(app->select_labels && app->select_macs && app->select_bands && app->select_capacity > 0) {
-            static NetworkGroup groups[32];
-            size_t group_count = 0;
-            // Build groups
-            for(size_t i = 0; i < app->select_capacity; ++i) {
-                if(app->select_labels[i][0] == '\0') continue;
-                if(!app->show_hidden_networks && strcmp(app->select_labels[i], "Hidden") == 0) continue;
-                const char* name = app->select_labels[i];
-                int gidx = find_group(groups, group_count, name);
-                if(gidx == -1) {
-                    strncpy(groups[group_count].name, name, MAX_LABEL_LEN);
-                    groups[group_count].count = 0;
-                    gidx = (int)group_count++;
-                }
-                if(groups[gidx].count < MAX_GROUPED) {
-                    groups[gidx].indexes[groups[gidx].count] = (int)i;
-                    if(app->select_macs && app->select_macs[i]) {
-                        strncpy(groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
-                    } else {
-                        strncpy(groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
-                    }
-                    groups[gidx].count++;
-                }
-            }
-            // Add group items
-            for(size_t g = 0; g < group_count; ++g) {
-                int idx = groups[g].indexes[0];
-                char* name = groups[g].name;
-                char label[MAX_LABEL_LEN + 8];
-                uint8_t band = app->select_bands ? app->select_bands[idx] : 0;
-                if(app->select_selected[idx]) {
-                    if(band == 1) {
-                        snprintf(label, sizeof(label), "* (5) %s", name);
-                    } else {
-                        snprintf(label, sizeof(label), "*%s", name);
-                    }
-                    submenu_add_item(
-                        app->submenu_select,
-                        label,
-                        idx,
-                        deauther_select_item_callback,
-                        app);
-                } else {
-                    if(band == 1) {
-                        snprintf(label, sizeof(label), "(5) %s", name);
-                        submenu_add_item(
-                            app->submenu_select,
-                            label,
-                            idx,
-                            deauther_select_item_callback,
-                            app);
-                    } else {
-                        snprintf(label, sizeof(label), "%s", name);
-                        submenu_add_item(
-                            app->submenu_select,
-                            label,
-                            idx,
-                            deauther_select_item_callback,
-                            app);
-                    }
-                }
-            }
-        }
         // Send a message via UART when select is selected
         const char* uart_cmd = "<g>";
         size_t uart_cmd_len = strlen(uart_cmd);
         uart_helper_send(app->uart_helper, uart_cmd, uart_cmd_len);
-        // Switch to the select view
-        view_dispatcher_switch_to_view(app->view_dispatcher, DeautherViewSelect);
-        FURI_LOG_I(TAG, "select");
+        // Do not switch to view or build submenu yet; wait for all <n...> to arrive
+        app->select_ready = false;
+        // The submenu will be built and view switched in deauther_select_process_uart when all <n...> are received
+        FURI_LOG_I(TAG, "select (waiting for networks)");
         break;
     }
     case DeautherSubmenuDeauthAttack: {
@@ -449,12 +412,65 @@ static void deauth_submenu_callback(void* context, uint32_t index) {
     }
 }
 
-
-
-
-
-
-
+// Helper to build and show the select submenu after all networks are received
+static void deauther_build_select_submenu(DeautherApp* app) {
+    submenu_reset(app->submenu_select);
+    app->select_index = 0;
+    if(app->select_labels && app->select_macs && app->select_bands && app->select_capacity > 0) {
+        static NetworkGroup groups[32];
+        size_t group_count = 0;
+        // Build groups
+        for(size_t i = 0; i < app->select_capacity; ++i) {
+            if(app->select_labels[i][0] == '\0') continue;
+            if(!app->show_hidden_networks && strcmp(app->select_labels[i], "Hidden") == 0) continue;
+            const char* name = app->select_labels[i];
+            int gidx = find_group(groups, group_count, name);
+            if(gidx == -1) {
+                strncpy(groups[group_count].name, name, MAX_LABEL_LEN);
+                groups[group_count].count = 0;
+                gidx = (int)group_count++;
+            }
+            if(groups[gidx].count < MAX_GROUPED) {
+                groups[gidx].indexes[groups[gidx].count] = (int)i;
+                if(app->select_macs && app->select_macs[i]) {
+                    strncpy(groups[gidx].macs[groups[gidx].count], app->select_macs[i], MAX_MAC_LEN);
+                } else {
+                    strncpy(groups[gidx].macs[groups[gidx].count], "XX:XX:XX:XX:XX:XX", MAX_MAC_LEN);
+                }
+                groups[gidx].count++;
+            }
+        }
+        // Add group items
+        for(size_t g = 0; g < group_count; ++g) {
+            int idx = groups[g].indexes[0];
+            char* name = groups[g].name;
+            char label[MAX_LABEL_LEN + 8];
+            // Show * if any MAC in the group is selected
+            bool any_selected = false;
+            for(size_t i = 0; i < groups[g].count; ++i) {
+                int mac_idx = groups[g].indexes[i];
+                if(app->select_selected[mac_idx]) {
+                    any_selected = true;
+                    break;
+                }
+            }
+            if(any_selected) {
+                snprintf(label, sizeof(label), "*%s", name);
+            } else {
+                snprintf(label, sizeof(label), "%s", name);
+            }
+            submenu_add_item(
+                app->submenu_select,
+                label,
+                idx,
+                deauther_select_item_callback,
+                app);
+        }
+    }
+    // Switch to the select view
+    view_dispatcher_switch_to_view(app->view_dispatcher, DeautherViewSelect);
+    FURI_LOG_I(TAG, "select");
+}
 
 static void deauther_select_process_uart(FuriString* line, void* context) {
     DeautherApp* app = (DeautherApp*)context;
@@ -494,6 +510,9 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
                 app->select_bands[i] = 0;
             }
         }
+        // Mark as not ready, and reset received count
+        app->select_ready = false;
+        app->select_index = 0;
     } else if(str[0] == '<' && str[1] == 'n') {
         char* sep1 = strchr(str, '\x1D');
         char* end = strchr(str, '>');
@@ -606,7 +625,13 @@ static void deauther_select_process_uart(FuriString* line, void* context) {
                         }
                     }
                 }
+                // Mark this index as received
                 if((uint32_t)idx >= app->select_index) app->select_index = idx + 1;
+            }
+            // If all expected networks have been received, mark ready and build submenu
+            if(app->select_index == app->select_capacity) {
+                app->select_ready = true;
+                deauther_build_select_submenu(app);
             }
         }
     }
