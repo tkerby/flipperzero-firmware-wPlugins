@@ -23,7 +23,7 @@ This project is for educational purposes only. Do not misuse or do illegal activ
 
 
 ## Credits
-For the BW16 code I based it on tesa-klebeband's deauther:
+For the BW16 code I based it on [tesa-klebeband's](https://github.com/tesa-klebeband) deauther:
 
 https://github.com/tesa-klebeband/RTL8720dn-Deauther
 
