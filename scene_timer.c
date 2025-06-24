@@ -14,7 +14,8 @@ enum TimerState {
 	TIMER_STATE_DEFAULT,
 	TIMER_STATE_WAIT_FOR_READY,
 	TIMER_STATE_READY,
-	TIMER_STATE_TIMING
+	TIMER_STATE_TIMING,
+	TIMER_STATE_HALT
 };
 
 /*static inline void light(const uint8_t red, const uint8_t green, const uint8_t blue) {
@@ -150,9 +151,49 @@ functionExit:
 	furi_mutex_release(instance->scene.timer.mutex);*/
 
 	if(event->type == InputTypePress) {
+		if(instance->scene.timer.state == TIMER_STATE_TIMING) {
+			instance->scene.timer.state = TIMER_STATE_HALT;
+		} else {
+			if(event->key == InputKeyOk) {
+				switch(instance->scene.timer.state) {
+				case TIMER_STATE_DEFAULT:
+					instance->scene.timer.state = TIMER_STATE_WAIT_FOR_READY;
+					break;
+				case TIMER_STATE_WAIT_FOR_READY:
+					break;
+				case TIMER_STATE_READY:
+					break;
+				case TIMER_STATE_TIMING:
+					break;
+				case TIMER_STATE_HALT:
+					break;
+				}
+			}
+		}
+	} else if(event->type == InputTypeRelease) {
+		if(instance->scene.timer.state == TIMER_STATE_HALT) {
+			instance->scene.timer.state = TIMER_STATE_DEFAULT;
+		} else {
+			if(event->key == InputKeyOk) {
+				switch(instance->scene.timer.state) {
+				case TIMER_STATE_DEFAULT:
+					break;
+				case TIMER_STATE_WAIT_FOR_READY:
+					instance->scene.timer.state = TIMER_STATE_DEFAULT;
+					break;
+				case TIMER_STATE_READY:
+					instance->scene.timer.state = TIMER_STATE_TIMING;
+					break;
+				case TIMER_STATE_TIMING:
+					break;
+				case TIMER_STATE_HALT:
+					break;
+				}
+			}
+		}
 	}
 
-	if(instance->scene.timer.timing) {
+	/*if(instance->scene.timer.timing) {
 		if(event->type == InputTypePress) {
 			instance->scene.timer.timing = 0;
 			instance->scene.timer.waitForReady = 0;
@@ -190,7 +231,7 @@ functionExit:
 				}
 			}
 		}
-	}
+	}*/
 
 	if(event->key == InputKeyBack) {
 		furi_message_queue_put(instance->scene.timer.queue, event, FuriWaitForever);
