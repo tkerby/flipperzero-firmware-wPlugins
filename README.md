@@ -1,11 +1,26 @@
-# Flipper Zero 5GHz Deauther (WIP)
+# Flipper Zero 5GHz Deauther
 Flipper Zero 5GHz Deauther using the BW16 (RTL8720dn)
 
 I made this project for the [Summer Hackclub](https://summer.hack.club/bc1) and because I have not seen any 5Ghz deauther projects for the Flipper Zero.
 
-I am still working on this so don't complain if there are any issues.
+## Features
+### Deauthentication
+- **2.4Ghz** & **5Ghz** Whole Network Deauthentication Attacks
+- MAC Address Selector
+- Hidden Network Selector
+- 5 Networks Max Simultaneous Deauth
+### Web Interface
+- Made by tesa-klebeband
 
-### Connection from the BW16 to the Flipper Zero:
+And more features coming soon...
+
+## Requirements
+
+- Flipper Zero
+- 5 Jumper Wires
+- RTL8720dn Black version
+
+## Hardware Connections:
 
 ![pinout](https://www.amebaiot.com/wp-content/uploads/2022/07/bw16_typec/P2.png)
 
@@ -17,6 +32,8 @@ Make sure to turn on 5V on GPIO on the Flipper Zero
 | TX | LOG_RX | 
 | RX | LOG_TX | 
 | GND | GND | 
+
+---
 
 ## Screenshots
 
