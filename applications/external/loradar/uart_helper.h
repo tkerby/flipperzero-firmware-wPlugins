@@ -30,7 +30,7 @@ typedef enum {
  * 
  * @param line The line of data to process.
 */
-typedef void (*ProcessLine)(FuriString * line, void *context);
+typedef void (*ProcessLine)(FuriString* line, void* context);
 
 /**
  * UartHelper is a utility class that helps with reading lines of data from a UART.
@@ -38,26 +38,25 @@ typedef void (*ProcessLine)(FuriString * line, void *context);
 typedef struct {
     // UART bus & channel to use
     FuriHalBus uart_bus;
-    FuriHalSerialHandle *serial_handle;
+    FuriHalSerialHandle* serial_handle;
     bool uart_init_by_app;
 
     // Stream buffer to hold incoming data (worker will dequeue and process)
-    FuriStreamBuffer *rx_stream;
+    FuriStreamBuffer* rx_stream;
 
     // Worker thread that dequeues data from the stream buffer and processes it
-    FuriThread *worker_thread;
+    FuriThread* worker_thread;
 
     FuriThreadId transmitter_thread_id;
 
     // Buffer to hold data until a delimiter is found
-    RingBuffer *ring_buffer;
+    RingBuffer* ring_buffer;
 
-    void *context;
+    void* context;
 
 } UartHelper;
 
-void uart_helper_set_transmitter_thread_id(void *context,
-                                           FuriThreadId thread_id);
+void uart_helper_set_transmitter_thread_id(void* context, FuriThreadId thread_id);
 
 /**
  * Allocates a new UartHelper.  The UartHelper will be initialized with a baud rate of 115200.
@@ -67,7 +66,7 @@ void uart_helper_set_transmitter_thread_id(void *context,
  * 
  * @return A new UartHelper.
 */
-UartHelper *uart_helper_alloc();
+UartHelper* uart_helper_alloc();
 
 /**
  * Sets the delimiter to use when parsing data.  The default delimeter is '\n' and
@@ -77,8 +76,7 @@ UartHelper *uart_helper_alloc();
  * @param delimiter         The delimiter to use.
  * @param include_delimiter If true, the delimiter will be included in the line of data passed to the callback function.
 */
-void uart_helper_set_delimiter(UartHelper * helper, char delimiter,
-                               bool include_delimiter);
+void uart_helper_set_delimiter(UartHelper* helper, char delimiter, bool include_delimiter);
 
 /**
  * Sets the baud rate for the UART.  The default is 115200.
@@ -86,27 +84,26 @@ void uart_helper_set_delimiter(UartHelper * helper, char delimiter,
  * @param helper    The UartHelper.
  * @param baud_rate The baud rate.
 */
-void uart_helper_set_baud_rate(UartHelper * helper, uint32_t baud_rate);
+void uart_helper_set_baud_rate(UartHelper* helper, uint32_t baud_rate);
 
 /**
  * Sets the read text in text variable.
  */
-bool uart_helper_read(UartHelper * helper, FuriString * text);
+bool uart_helper_read(UartHelper* helper, FuriString* text);
 
 /**
  * Sends data over the UART TX pin.
 */
-void uart_helper_send(UartHelper * helper, const char *data,
-                      size_t length, bool wait_response);
+void uart_helper_send(UartHelper* helper, const char* data, size_t length, bool wait_response);
 
 /**
  * Sends a string over the UART TX pin.
 */
-void uart_helper_send_string(UartHelper * helper, FuriString * string);
+void uart_helper_send_string(UartHelper* helper, FuriString* string);
 
 /**
  * Frees the UartHelper & enables log messages.
 */
-void uart_helper_free(UartHelper * helper);
+void uart_helper_free(UartHelper* helper);
 
 #endif

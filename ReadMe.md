@@ -50,6 +50,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Remove SubGHz settings for WeatherStation/TPMS (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/9671c878bc92ff4fbe7dd0838ec75abf1978cdca)
 - SubGHz: [Fix frequency analyzer deadlock when holding Ok (By WillyJL)](https://github.com/Next-Flip/Momentum-Firmware/commit/45cf599281840b1918821ce6d29253f0bc1a2844)
 - ESP Flasher: [Fix multiboardS3 builds, fix BLE spam not stopping (By WillyJL)](https://github.com/justcallmekoko/ESP32Marauder/pull/809)
+- Added: [LoRadar v0.1 (By baptleduc)](https://github.com/baptleduc/flipper-loradar-app)
 
 <a name="release">
 
@@ -565,6 +566,7 @@ $ ./fbt dolphin_ext
 - [LoRa Relay v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
 - [LoRa Sample v1.1.3 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-SX1262-LoRa) `Req: SX1262 By ElectronicCats`
 - [LORA Terminal (By aafksab)](https://github.com/aafksab/LORA-Term)
+- [LoRadar v0.1 (By baptleduc)](https://github.com/baptleduc/flipper-loradar-app)
 - [MagSpoof v0.10 (By zacharyweiss)](https://github.com/zacharyweiss/magspoof_flipper)
 - [MALVEKE GAME BOY ADVANCE Cartridge v2.2 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/MALVEKE-Flipper-Zero/tree/main/flipper_companion_apps/applications/external/malveke_gba_cartridge) `Req: Malveke`
 - [MALVEKE GAME BOY Cartridge (GB/GBC) v2.2 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/MALVEKE-Flipper-Zero/tree/main/flipper_companion_apps/applications/external/malveke_gb_cartridge) `Req: Malveke`

@@ -39,46 +39,46 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct {
-    Bt *bt;
-    FuriMutex *app_mutex;
-    FuriMessageQueue *event_queue;
-    NotificationApp *notification;
-    FuriHalBleProfileBase *ble_serial_profile;
+    Bt* bt;
+    FuriMutex* app_mutex;
+    FuriMessageQueue* event_queue;
+    NotificationApp* notification;
+    FuriHalBleProfileBase* ble_serial_profile;
 
     BtState bt_state;
     DataStruct data;
     uint8_t lines_count;
     uint32_t last_packet;
-    LoraStateManager *state_manager;
+    LoraStateManager* state_manager;
 
 } BtTransmitter;
 
 /**
  * @brief Allocate and initialize a BtTransmitter instance.
  */
-BtTransmitter *bt_transmitter_alloc(void);
+BtTransmitter* bt_transmitter_alloc(void);
 
 /**
  * @brief Free the BtTransmitter instance.
  */
-void bt_transmitter_free(BtTransmitter * bt_transmitter);
+void bt_transmitter_free(BtTransmitter* bt_transmitter);
 
 /**
  * @brief Set the state manager for the BtTransmitter instance.
  */
-void bt_transmitter_set_state_manager(BtTransmitter * bt_transmitter,
-                                      LoraStateManager * state_manager);
+void bt_transmitter_set_state_manager(
+    BtTransmitter* bt_transmitter,
+    LoraStateManager* state_manager);
 
 /**
  * @brief Start the Bluetooth transmitter.
  */
-void bt_transmitter_start(BtTransmitter * bt_transmitter);
+void bt_transmitter_start(BtTransmitter* bt_transmitter);
 
 /**
  * @brief Send by Bluetooth all data in its field data if ready
  */
-bool bt_transmitter_send(BtTransmitter * bt_transmitter);
-
+bool bt_transmitter_send(BtTransmitter* bt_transmitter);
 
 // -- PREPARE DATA TO BE SENT FUNCTIONS -----------------------------------------------
 
@@ -87,4 +87,4 @@ bool bt_transmitter_send(BtTransmitter * bt_transmitter);
  * @param bt_transmitter Pointer to the BtTransmitter instance.
  * @param data String to be sent.
  */
-void prepare_bt_data_str(BtTransmitter * bt_transmitter, const char *data);
+void prepare_bt_data_str(BtTransmitter* bt_transmitter, const char* data);

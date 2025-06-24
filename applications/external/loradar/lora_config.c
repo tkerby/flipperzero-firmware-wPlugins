@@ -7,20 +7,18 @@ const uint32_t bandwidth_list[] = {
 };
 
 const uint8_t canal_list[] = {
-    1,                          // 868.1 is canal 0
-    3,                          // 868.3 is canal 1
-    5,                          // 868.5 is canal 2
+    1, // 868.1 is canal 0
+    3, // 868.3 is canal 1
+    5, // 868.5 is canal 2
 };
 
-void init_lora_config_default(LoraConfigModel *cfg)
-{
+void init_lora_config_default(LoraConfigModel* cfg) {
     cfg->freq = DEFAULT_FREQ;
     cfg->canal_idx = DEFAULT_CANAL_NUM;
     cfg->sf = DEFAULT_SF;
 
-    for (size_t i = 0;
-         i < sizeof(bandwidth_list) / sizeof(bandwidth_list[0]); i++) {
-        if (bandwidth_list[i] == DEFAULT_BW) {
+    for(size_t i = 0; i < sizeof(bandwidth_list) / sizeof(bandwidth_list[0]); i++) {
+        if(bandwidth_list[i] == DEFAULT_BW) {
             cfg->bw_idx = i;
             break;
         }

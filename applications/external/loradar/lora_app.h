@@ -18,7 +18,7 @@
 #include "bt_transmitter.h"
 #include "lora_custom_event.h"
 
-#define DEVICE_BAUDRATE  9600
+#define DEVICE_BAUDRATE 9600
 
 // Comment out the following line to process data as it is received.
 #define DEMO_PROCESS_LINE
@@ -35,17 +35,17 @@ typedef enum {
 } LoraCmdType;
 
 typedef struct {
-    Gui *gui;
-    FuriTimer *timer;
-    ViewDispatcher *view_dispatcher;
-    SceneManager *scene_manager;
-    LoraStateManager *state_manager;
-    Submenu *submenu;
-    VariableItemList *var_item_list;
+    Gui* gui;
+    FuriTimer* timer;
+    ViewDispatcher* view_dispatcher;
+    SceneManager* scene_manager;
+    LoraStateManager* state_manager;
+    Submenu* submenu;
+    VariableItemList* var_item_list;
     uint32_t index;
-    LoraReceiver *receiver;
-    LoraTransmitter *transmitter;
-    BtTransmitter *bt_transmitter;
+    LoraReceiver* receiver;
+    LoraTransmitter* transmitter;
+    BtTransmitter* bt_transmitter;
     LoraState current_state;
 } LoraApp;
 
@@ -57,10 +57,9 @@ typedef enum {
 
 // Callback to handle UART responses
 // TODO: remove this
-void handle_default_response(FuriString * line, void *context);
-void lora_receiver_default_response_callback(FuriString * line,
-                                             void *context);
-void handle_join_response(FuriString * line, void *context);
+void handle_default_response(FuriString* line, void* context);
+void lora_receiver_default_response_callback(FuriString* line, void* context);
+void handle_join_response(FuriString* line, void* context);
 
 /**
  * @brief Handles the reception of a LoRa packet in TEST mode (P2P LoRa).
@@ -69,7 +68,7 @@ void handle_join_response(FuriString * line, void *context);
  * received from the transmitter during TEST mode operation. It decodes the
  * data and updates the LoRaMsgResponseModel structure with the received data.
  */
-void lora_receiver_rx_response_callback(FuriString * line, void *context);
+void lora_receiver_rx_response_callback(FuriString* line, void* context);
 
 // TODO: is this needed?
 extern LoraState lora_app_state;

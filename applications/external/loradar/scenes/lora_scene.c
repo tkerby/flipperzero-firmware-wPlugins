@@ -2,7 +2,7 @@
 
 // Generate scene on_enter handlers array
 #define ADD_SCENE(prefix, name, id) prefix##_scene_##name##_on_enter,
-void (*const lora_scene_on_enter_handlers[])(void *) = {
+void (*const lora_scene_on_enter_handlers[])(void*) = {
 #include "lora_scene_config.h"
 };
 
@@ -10,8 +10,7 @@ void (*const lora_scene_on_enter_handlers[])(void *) = {
 
 // Generate scene on_event handlers array
 #define ADD_SCENE(prefix, name, id) prefix##_scene_##name##_on_event,
-bool (*const lora_scene_on_event_handlers[])(void *context,
-                                             SceneManagerEvent event) = {
+bool (*const lora_scene_on_event_handlers[])(void* context, SceneManagerEvent event) = {
 #include "lora_scene_config.h"
 };
 
@@ -19,12 +18,11 @@ bool (*const lora_scene_on_event_handlers[])(void *context,
 
 // Generate scene on_exit handlers array
 #define ADD_SCENE(prefix, name, id) prefix##_scene_##name##_on_exit,
-void (*const lora_scene_on_exit_handlers[])(void *context) = {
+void (*const lora_scene_on_exit_handlers[])(void* context) = {
 #include "lora_scene_config.h"
 };
 
 #undef ADD_SCENE
-
 
 // Initializes the scene handlers configuration structure
 const SceneManagerHandlers lora_scene_handlers = {

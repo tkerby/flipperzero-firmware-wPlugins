@@ -15,7 +15,6 @@ typedef enum {
 #include "lora_scene_config.h"
 #undef ADD_SCENE
 
-
 // Generate scene on_event handlers declaration
 #define ADD_SCENE(prefix, name, id) \
     bool prefix##_scene_##name##_on_event(void* context, SceneManagerEvent event);
@@ -27,8 +26,6 @@ typedef enum {
 #include "lora_scene_config.h"
 #undef ADD_SCENE
 
-
 extern const SceneManagerHandlers lora_scene_handlers;
-
 
 #endif
