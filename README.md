@@ -30,7 +30,7 @@ https://github.com/tesa-klebeband/RTL8720dn-Deauther
 and added RTOS and a serial communication protocol.
 
 
-I also used this uart_demo and skeleton_app from jamisonderek to make the app:
+I also used this uart_demo and skeleton_app from [Derek Jamison](https://github.com/jamisonderek) to make the app:
 
 https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app
 
