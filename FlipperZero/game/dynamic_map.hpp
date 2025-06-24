@@ -44,7 +44,7 @@ private:
     bool fillIn;
 
 public:
-    const char *getName() const { return name; }
+    // Constructor
     DynamicMap(const char *name, uint8_t w, uint8_t h, bool addBorder = true, bool fillIn = false) : width(w), height(h), wall_count(0), name(name), fillIn(fillIn)
     {
         memset(tiles, 0, sizeof(tiles));
@@ -54,78 +54,14 @@ public:
         }
     }
 
-    // Basic tile operations
-    void setTile(uint8_t x, uint8_t y, TileType type)
+    // Methods in alphabetical order
+    void addBorderWalls()
     {
-        if (x < width && y < height)
-        {
-            tiles[y][x] = type;
-        }
-    }
-
-    TileType getTile(uint8_t x, uint8_t y) const
-    {
-        if (x >= width || y >= height)
-        {
-            return TILE_EMPTY; // Out of bounds = empty (no walls)
-        }
-        return tiles[y][x];
-    }
-
-    // Wall operations
-    void addWall(Vector start, Vector end, TileType type = TILE_WALL, uint8_t height = 255, bool solid = true)
-    {
-        if (wall_count < MAX_WALLS)
-        {
-            walls[wall_count].start = start;
-            walls[wall_count].end = end;
-            walls[wall_count].type = type;
-            walls[wall_count].height = height;
-            walls[wall_count].is_solid = solid;
-            wall_count++;
-        }
-    }
-
-    void addHorizontalWall(uint8_t x1, uint8_t x2, uint8_t y, TileType type = TILE_WALL)
-    {
-        for (uint8_t x = x1; x <= x2; x++)
-        {
-            setTile(x, y, type);
-        }
-    }
-
-    void addVerticalWall(uint8_t x, uint8_t y1, uint8_t y2, TileType type = TILE_WALL)
-    {
-        for (uint8_t y = y1; y <= y2; y++)
-        {
-            setTile(x, y, type);
-        }
-    }
-
-    void addRoom(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool add_walls = true)
-    {
-        // Clear the room area
-        for (uint8_t y = y1; y <= y2; y++)
-        {
-            for (uint8_t x = x1; x <= x2; x++)
-            {
-                setTile(x, y, TILE_EMPTY);
-            }
-        }
-
-        // Add walls around the room
-        if (add_walls)
-        {
-            addHorizontalWall(x1, x2, y1, TILE_WALL); // Top wall
-            addHorizontalWall(x1, x2, y2, TILE_WALL); // Bottom wall
-            addVerticalWall(x1, y1, y2, TILE_WALL);   // Left wall
-            addVerticalWall(x2, y1, y2, TILE_WALL);   // Right wall
-        }
-    }
-
-    void addDoor(uint8_t x, uint8_t y)
-    {
-        setTile(x, y, TILE_DOOR);
+        // Add walls around the entire map border
+        addHorizontalWall(0, width - 1, 0, TILE_WALL);          // Top border
+        addHorizontalWall(0, width - 1, height - 1, TILE_WALL); // Bottom border
+        addVerticalWall(0, 0, height - 1, TILE_WALL);           // Left border
+        addVerticalWall(width - 1, 0, height - 1, TILE_WALL);   // Right border
     }
 
     void addCorridor(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
@@ -170,20 +106,59 @@ public:
         }
     }
 
-    // Getters
-    uint8_t getWidth() const { return width; }
-    uint8_t getHeight() const { return height; }
-    bool getFillIn() const { return fillIn; }
-    void setFillIn(bool fill) { fillIn = fill; }
-
-    // Border walls utility
-    void addBorderWalls()
+    void addDoor(uint8_t x, uint8_t y)
     {
-        // Add walls around the entire map border
-        addHorizontalWall(0, width - 1, 0, TILE_WALL);          // Top border
-        addHorizontalWall(0, width - 1, height - 1, TILE_WALL); // Bottom border
-        addVerticalWall(0, 0, height - 1, TILE_WALL);           // Left border
-        addVerticalWall(width - 1, 0, height - 1, TILE_WALL);   // Right border
+        setTile(x, y, TILE_DOOR);
+    }
+
+    void addHorizontalWall(uint8_t x1, uint8_t x2, uint8_t y, TileType type = TILE_WALL)
+    {
+        for (uint8_t x = x1; x <= x2; x++)
+        {
+            setTile(x, y, type);
+        }
+    }
+
+    void addRoom(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool add_walls = true)
+    {
+        // Clear the room area
+        for (uint8_t y = y1; y <= y2; y++)
+        {
+            for (uint8_t x = x1; x <= x2; x++)
+            {
+                setTile(x, y, TILE_EMPTY);
+            }
+        }
+
+        // Add walls around the room
+        if (add_walls)
+        {
+            addHorizontalWall(x1, x2, y1, TILE_WALL); // Top wall
+            addHorizontalWall(x1, x2, y2, TILE_WALL); // Bottom wall
+            addVerticalWall(x1, y1, y2, TILE_WALL);   // Left wall
+            addVerticalWall(x2, y1, y2, TILE_WALL);   // Right wall
+        }
+    }
+
+    void addVerticalWall(uint8_t x, uint8_t y1, uint8_t y2, TileType type = TILE_WALL)
+    {
+        for (uint8_t y = y1; y <= y2; y++)
+        {
+            setTile(x, y, type);
+        }
+    }
+
+    void addWall(Vector start, Vector end, TileType type = TILE_WALL, uint8_t height = 255, bool solid = true)
+    {
+        if (wall_count < MAX_WALLS)
+        {
+            walls[wall_count].start = start;
+            walls[wall_count].end = end;
+            walls[wall_count].type = type;
+            walls[wall_count].height = height;
+            walls[wall_count].is_solid = solid;
+            wall_count++;
+        }
     }
 
     uint8_t getBlockAt(uint8_t x, uint8_t y) const
@@ -204,6 +179,23 @@ public:
             return 0x0;
         }
     }
+
+    bool getFillIn() const { return fillIn; }
+
+    uint8_t getHeight() const { return height; }
+
+    const char *getName() const { return name; }
+
+    TileType getTile(uint8_t x, uint8_t y) const
+    {
+        if (x >= width || y >= height)
+        {
+            return TILE_EMPTY; // Out of bounds = empty (no walls)
+        }
+        return tiles[y][x];
+    }
+
+    uint8_t getWidth() const { return width; }
 
     void render(float view_height, Draw *const canvas, Vector player_pos, Vector player_dir, Vector player_plane) const
     {
@@ -345,6 +337,16 @@ public:
                     }
                 }
             }
+        }
+    }
+
+    void setFillIn(bool fill) { fillIn = fill; }
+
+    void setTile(uint8_t x, uint8_t y, TileType type)
+    {
+        if (x < width && y < height)
+        {
+            tiles[y][x] = type;
         }
     }
 };
