@@ -3,7 +3,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/scene_manager.h>
 #include <gui/modules/widget.h>
-#include <gui/modules/text_input.h>
+#include "mntminput/text_input.h"
 #include <infrared.h>
 #include <infrared_worker.h>
 #include <infrared_transmit.h>
